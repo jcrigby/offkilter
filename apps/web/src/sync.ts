@@ -9,7 +9,8 @@
 import type { DocOp } from "./kernel";
 
 export type UserInfo = { id: string; name: string };
-export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[]; viewers?: UserInfo[] };
+export type Invite = { token: string; role: "editor" | "viewer"; created: number };
+export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[]; viewers?: UserInfo[]; invites?: Invite[] };
 export type VersionMeta = { id: string; name: string; created: number };
 
 type ServerMessage =
@@ -90,6 +91,35 @@ export class Sync {
     const r = await fetch(`${Sync.apiBase()}/docs/${id}/share`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, role }) });
     if (!r.ok) throw await Sync.failure(r);
     return (await r.json()) as DocMeta;
+  }
+
+  static async createInvite(id: string, role: "editor" | "viewer"): Promise<Invite> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/invites`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ role }) });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as Invite;
+  }
+
+  static async revokeInvite(id: string, token: string): Promise<DocMeta> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/invites/${token}`, { method: "DELETE" });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as DocMeta;
+  }
+
+  /** Joins the signed-in account to a document through an invitation link. */
+  static async acceptInvite(id: string, token: string): Promise<DocMeta> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/invites/${token}/accept`, { method: "POST" });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as DocMeta;
+  }
+
+  /** The URL that accepts an invitation when opened. */
+  static inviteUrl(id: string, token: string): string {
+    const url = new URL(location.href);
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("doc", id);
+    url.searchParams.set("invite", token);
+    return url.toString();
   }
 
   static async unshareDoc(id: string, userId: string): Promise<DocMeta> {

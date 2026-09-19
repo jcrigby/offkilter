@@ -100,7 +100,7 @@ test("accounts own documents and share them", async ({ browser }) => {
   // Prompts answer the share dialog with bob's name (as an editor first, then
   // read-only); confirms are accepted.
   let shares = 0;
-  for (const p of [a, b]) p.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.message().startsWith("Share") ? (shares++ === 0 ? bob : `${bob} viewer`) : "Private part") : d.defaultValue()));
+  for (const p of [a, b]) p.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.message().startsWith("Share") ? (shares++ === 0 ? bob : `${bob} viewer`) : d.message().startsWith("Invite") ? "editor" : "Private part") : d.defaultValue()));
 
   // Alice creates an account through the dialog.
   await a.goto(`${SERVER}/`);
@@ -163,6 +163,28 @@ test("accounts own documents and share them", async ({ browser }) => {
   expect(await b.evaluate(() => (window as unknown as { offkilter: any }).offkilter.readOnly)).toBe(true);
   expect(await featureNames(b)).not.toContain("#width");
   await expect(a.locator("#read-only")).toBeHidden();
+
+  // An editor invitation link from Alice makes Bob an editor when he opens it.
+  await a.click("#btn-docs");
+  await a.getByRole("button", { name: "Invite link…" }).first().click();
+  await expect(a.locator("#docs-note")).toContainText("Invite link (editor):");
+  const link = (await a.locator("#docs-note").textContent())!.match(/https?:\/\/\S+/)![0];
+  expect(link).toContain("invite=");
+  await expect(a.getByRole("button", { name: "− link (editor)" })).toHaveCount(1);
+  await a.click("#docs-close");
+  await b.goto(link);
+  await ready(b);
+  await expect(b.locator("#status-text")).toContainText("Joined", { timeout: 10_000 });
+  await expect(b.locator("#read-only")).toBeHidden();
+  expect(await b.evaluate(() => (window as unknown as { offkilter: any }).offkilter.readOnly)).toBe(false);
+  expect(b.url()).not.toContain("invite=");
+  await a.click("#btn-docs");
+  await expect(a.locator("#docs-list")).toContainText(`shared with ${bob}`);
+  // Withdrawing the link keeps Bob's access.
+  await a.getByRole("button", { name: "− link (editor)" }).click();
+  await expect(a.getByRole("button", { name: "− link (editor)" })).toHaveCount(0);
+  await expect(a.locator("#docs-list")).toContainText(`shared with ${bob}`);
+  await a.click("#docs-close");
 
   // Signing out closes the live document.
   await b.click("#btn-account");

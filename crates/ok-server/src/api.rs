@@ -95,6 +95,9 @@ pub fn router(store: DocStore, users: UserStore, static_dir: Option<PathBuf>) ->
         .route("/docs/{id}/meta", get(get_meta))
         .route("/docs/{id}/share", post(share_doc))
         .route("/docs/{id}/share/{user}", delete(unshare_doc))
+        .route("/docs/{id}/invites", post(create_invite))
+        .route("/docs/{id}/invites/{token}", delete(revoke_invite))
+        .route("/docs/{id}/invites/{token}/accept", post(accept_invite))
         .route("/docs/{id}/ws", get(ws_upgrade))
         .route("/docs/{id}/versions", get(list_versions).post(save_version))
         .route("/docs/{id}/versions/{vid}", get(get_version))
@@ -266,6 +269,7 @@ async fn list_docs(State(hub): State<DocHub>, CurrentUser(user): CurrentUser) ->
         Ok(list) => Json(
             list.into_iter()
                 .filter(|m| m.can_access(user.as_ref()))
+                .map(|m| m.visible_to(user.as_ref()))
                 .collect::<Vec<_>>(),
         )
         .into_response(),
@@ -307,7 +311,7 @@ async fn get_meta(
     Path(id): Path<String>,
 ) -> impl IntoResponse {
     match accessible(&hub, &id, user.as_ref()) {
-        Ok(meta) => Json(meta).into_response(),
+        Ok(meta) => Json(meta.visible_to(user.as_ref())).into_response(),
         Err(code) => code.into_response(),
     }
 }
@@ -406,6 +410,70 @@ async fn unshare_doc(
     }
     match hub.store().unshare(&id, &target) {
         Ok(meta) => Json(meta).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+struct CreateInvite {
+    #[serde(default)]
+    role: Option<ShareRole>,
+}
+
+async fn create_invite(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    Json(body): Json<CreateInvite>,
+) -> impl IntoResponse {
+    if let Err(code) = manageable(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    match hub
+        .store()
+        .create_invite(&id, body.role.unwrap_or(ShareRole::Editor))
+    {
+        Ok(invite) => (StatusCode::CREATED, Json(invite)).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn revoke_invite(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path((id, token)): Path<(String, String)>,
+) -> impl IntoResponse {
+    if let Err(code) = manageable(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    match hub.store().revoke_invite(&id, &token) {
+        Ok(meta) => Json(meta).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+/// A signed-in account joins a document through an invitation link. The
+/// document need not be visible to it beforehand; a wrong token is a 404
+/// like a document that does not exist.
+async fn accept_invite(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path((id, token)): Path<(String, String)>,
+) -> impl IntoResponse {
+    let Some(user) = user else {
+        return (StatusCode::UNAUTHORIZED, "sign in to accept an invitation").into_response();
+    };
+    if hub.store().meta(&id).is_none() {
+        return StatusCode::NOT_FOUND.into_response();
+    }
+    match hub
+        .store()
+        .accept_invite(&id, &token, crate::auth::UserInfo::from(&user))
+    {
+        Ok(meta) => Json(meta.visible_to(Some(&user))).into_response(),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            (StatusCode::NOT_FOUND, e.to_string()).into_response()
+        }
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
@@ -771,6 +839,131 @@ mod tests {
         )
         .await;
         assert_eq!(status, StatusCode::NO_CONTENT);
+    }
+
+    #[tokio::test]
+    async fn invitation_links_join_accounts_in_the_invited_role() {
+        let users = temp_users();
+        let app = router(temp_store(), users.clone(), None);
+        let (_, owner_tok) = users.register("olive", "olives-password").unwrap();
+        let (_, guest_tok) = users.register("gus", "guss-password").unwrap();
+        let (owner, guest) = (
+            format!("ok_session={owner_tok}"),
+            format!("ok_session={guest_tok}"),
+        );
+        let (_, _, text) = call(
+            &app,
+            "POST",
+            "/api/docs",
+            Some(r#"{"name":"plans"}"#),
+            Some(&owner),
+        )
+        .await;
+        let id = serde_json::from_str::<serde_json::Value>(&text).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        // Only the owner may create links; the guest cannot even see the document.
+        let (status, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/invites"),
+            Some(r#"{"role":"viewer"}"#),
+            Some(&guest),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/invites"),
+            Some(r#"{"role":"viewer"}"#),
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::CREATED, "{text}");
+        let invite: crate::store::Invite = serde_json::from_str(&text).unwrap();
+        assert_eq!(invite.token.len(), 64);
+        // Anonymous callers are told to sign in; a wrong token is a 404.
+        let (status, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/invites/{}/accept", invite.token),
+            None,
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::UNAUTHORIZED);
+        let (status, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/invites/deadbeef/accept"),
+            None,
+            Some(&guest),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        // The guest joins as a viewer and never sees the token list.
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/invites/{}/accept", invite.token),
+            None,
+            Some(&guest),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let meta: DocMeta = serde_json::from_str(&text).unwrap();
+        assert_eq!(meta.viewers.len(), 1);
+        assert!(meta.invites.is_empty(), "{text}");
+        let (_, _, text) = call(&app, "GET", "/api/docs", None, Some(&guest)).await;
+        assert!(!text.contains(&invite.token));
+        let (_, _, text) = call(&app, "GET", "/api/docs", None, Some(&owner)).await;
+        assert!(text.contains(&invite.token));
+        // An editor link promotes; revoking it stops further joins but keeps members.
+        let (_, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/invites"),
+            Some(r#"{}"#),
+            Some(&owner),
+        )
+        .await;
+        let editor: crate::store::Invite = serde_json::from_str(&text).unwrap();
+        assert_eq!(editor.role, ShareRole::Editor);
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/invites/{}/accept", editor.token),
+            None,
+            Some(&guest),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let meta: DocMeta = serde_json::from_str(&text).unwrap();
+        assert!(meta.viewers.is_empty());
+        assert_eq!(meta.collaborators.len(), 1);
+        let (status, _, text) = call(
+            &app,
+            "DELETE",
+            &format!("/api/docs/{id}/invites/{}", editor.token),
+            None,
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let meta: DocMeta = serde_json::from_str(&text).unwrap();
+        assert_eq!(meta.invites.len(), 1);
+        assert_eq!(meta.collaborators.len(), 1);
+        let (status, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/invites/{}/accept", editor.token),
+            None,
+            Some(&guest),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]

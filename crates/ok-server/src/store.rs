@@ -25,6 +25,18 @@ pub struct DocMeta {
     /// Accounts the owner shared the document with read-only.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub viewers: Vec<UserInfo>,
+    /// Open invitation links: any signed-in account that presents a token
+    /// joins in that role. Only the owner ever sees these.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub invites: Vec<Invite>,
+}
+
+/// An invitation link to a document.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Invite {
+    pub token: String,
+    pub role: ShareRole,
+    pub created: u64,
 }
 
 /// What a shared account may do with a document.
@@ -64,6 +76,16 @@ impl DocMeta {
             None => true,
             Some(o) => user.is_some_and(|u| u.id == o.id),
         }
+    }
+
+    /// The metadata as `user` may see it: invitation tokens are the
+    /// owner's business only (with one, a viewer could make itself an
+    /// editor).
+    pub fn visible_to(mut self, user: Option<&User>) -> DocMeta {
+        if !self.can_manage(user) {
+            self.invites.clear();
+        }
+        self
     }
 }
 
@@ -160,6 +182,7 @@ impl DocStore {
             owner,
             collaborators: Vec::new(),
             viewers: Vec::new(),
+            invites: Vec::new(),
         };
         std::fs::write(self.doc_path(&id), json)?;
         std::fs::write(self.meta_path(&id), serde_json::to_string_pretty(&meta)?)?;
@@ -228,6 +251,45 @@ impl DocStore {
         meta.viewers.retain(|c| c.id != user_id);
         self.write_meta(&meta)?;
         Ok(meta)
+    }
+
+    fn meta_or_not_found(&self, id: &str) -> std::io::Result<DocMeta> {
+        self.meta(id)
+            .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "no such document"))
+    }
+
+    /// Creates an invitation link for a document.
+    pub fn create_invite(&self, id: &str, role: ShareRole) -> std::io::Result<Invite> {
+        let mut meta = self.meta_or_not_found(id)?;
+        let invite = Invite {
+            token: crate::auth::token(),
+            role,
+            created: now(),
+        };
+        meta.invites.push(invite.clone());
+        self.write_meta(&meta)?;
+        Ok(invite)
+    }
+
+    /// Withdraws an invitation link; accounts that already joined stay.
+    pub fn revoke_invite(&self, id: &str, token: &str) -> std::io::Result<DocMeta> {
+        let mut meta = self.meta_or_not_found(id)?;
+        meta.invites.retain(|i| i.token != token);
+        self.write_meta(&meta)?;
+        Ok(meta)
+    }
+
+    /// Joins `user` to the document in the invited role, or `NotFound`
+    /// when the token is not an open invitation of that document.
+    pub fn accept_invite(&self, id: &str, token: &str, user: UserInfo) -> std::io::Result<DocMeta> {
+        let meta = self.meta_or_not_found(id)?;
+        let Some(invite) = meta.invites.iter().find(|i| i.token == token) else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "no such invitation",
+            ));
+        };
+        self.share(id, user, invite.role)
     }
 
     /// Reserves and returns the next client id-range prefix for a document.

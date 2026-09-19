@@ -39,7 +39,8 @@ works today, all in the browser:
 - Cloud: a small document server with real-time multi-user editing;
   concurrent edits converge without conflicts, documents keep named
   versions, and optional accounts own documents and share them with
-  other accounts as editors or read-only viewers.
+  other accounts as editors or read-only viewers, by name or by
+  invitation link.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
 resolution, 5° by default), drawing dimensions, STEP, and teams. See
@@ -94,7 +95,8 @@ Open http://localhost:8080, click **Docs**, create a document, and share
 its URL (`?doc=<id>`): everyone with it edits the same feature list live.
 Click **Sign in** to create an account: documents you create while signed
 in are yours, listed only for you and the accounts you share them with
-(**Share…** in the Docs dialog). Documents created without signing in stay
+(**Share…** by account name, or **Invite link…** for a URL that lets any
+signed-in account join, in the Docs dialog). Documents created without signing in stay
 open to everyone on the server. Passwords are stored as argon2id hashes in
 `data/users.json`; sessions are cookies. Put the server behind HTTPS
 before exposing it beyond a trusted network.

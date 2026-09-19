@@ -70,7 +70,8 @@ fn now() -> u64 {
         .unwrap_or(0)
 }
 
-fn token() -> String {
+/// 32 random bytes as hex: session and invitation tokens.
+pub(crate) fn token() -> String {
     let mut bytes = [0u8; 32];
     rand::thread_rng().fill_bytes(&mut bytes);
     bytes.iter().map(|b| format!("{b:02x}")).collect()

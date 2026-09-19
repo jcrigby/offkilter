@@ -2285,6 +2285,10 @@ async function main(): Promise<void> {
       ($("#account-password") as HTMLInputElement).value = "";
       note.textContent = "";
       accountDialog.close();
+      if (pendingInvite) {
+        await acceptPendingInvite();
+        return;
+      }
       // Reconnect so presence shows the account name.
       if (app.sync.docId) openDoc(app.sync.docId);
     } catch (e) {
@@ -2380,6 +2384,39 @@ async function main(): Promise<void> {
         });
         share.className = "dshare";
         li.appendChild(share);
+        const invite = button("Invite link…", async () => {
+          const answer = prompt(`Invite link for "${d.name}": anyone signed in who opens it joins as an editor or a viewer. Which role?`, "editor");
+          if (!answer) return;
+          const role = answer.trim().toLowerCase().startsWith("v") ? "viewer" : "editor";
+          try {
+            const inv = await Sync.createInvite(d.id, role);
+            const url = Sync.inviteUrl(d.id, inv.token);
+            await renderDocs();
+            let copied = "";
+            try {
+              await navigator.clipboard.writeText(url);
+              copied = " (copied)";
+            } catch {
+              // No clipboard access: the link is on screen.
+            }
+            note.textContent = `Invite link (${role}): ${url}${copied}`;
+          } catch (e) {
+            note.textContent = `Could not create the link: ${(e as Error).message}`;
+          }
+        });
+        invite.className = "dshare";
+        li.appendChild(invite);
+        for (const inv of d.invites ?? []) {
+          const url = Sync.inviteUrl(d.id, inv.token);
+          const un = button(`− link (${inv.role})`, async () => {
+            if (!confirm(`Withdraw this ${inv.role} invitation link? Accounts that already joined keep their access.`)) return;
+            await Sync.revokeInvite(d.id, inv.token);
+            await renderDocs();
+          });
+          un.className = "dshare";
+          un.title = url;
+          li.appendChild(un);
+        }
         for (const c of [...shared, ...viewers]) {
           const un = button(`− ${c.name}`, async () => {
             await Sync.unshareDoc(d.id, c.id);
@@ -2454,7 +2491,25 @@ async function main(): Promise<void> {
     app.sync.connect(id);
     const url = new URL(location.href);
     url.searchParams.set("doc", id);
+    url.searchParams.delete("invite");
     history.replaceState(null, "", url.toString());
+  };
+  let pendingInvite: { doc: string; token: string } | null = null;
+  const acceptPendingInvite = async () => {
+    const inv = pendingInvite;
+    if (!inv) return;
+    pendingInvite = null;
+    try {
+      const meta = await Sync.acceptInvite(inv.doc, inv.token);
+      app.setStatus(`Joined "${meta.name}" through an invitation link.`);
+      openDoc(inv.doc);
+    } catch (e) {
+      app.setStatus(`Invitation not accepted: ${(e as Error).message}`);
+      const url = new URL(location.href);
+      url.searchParams.delete("invite");
+      url.searchParams.delete("doc");
+      history.replaceState(null, "", url.toString());
+    }
   };
   $("#btn-docs").onclick = async () => {
     await renderDocs();
@@ -2481,8 +2536,18 @@ async function main(): Promise<void> {
       $("#docs-note").textContent = `Could not upload: ${(e as Error).message}`;
     }
   };
-  const docParam = new URL(location.href).searchParams.get("doc");
-  if (docParam) openDoc(docParam);
+  const startUrl = new URL(location.href);
+  const docParam = startUrl.searchParams.get("doc");
+  const inviteParam = startUrl.searchParams.get("invite");
+  if (docParam && inviteParam) {
+    // An invitation link: accept it once signed in, then open the document.
+    pendingInvite = { doc: docParam, token: inviteParam };
+    if (user) await acceptPendingInvite();
+    else {
+      $("#account-note").textContent = "Sign in or register to accept the invitation.";
+      accountDialog.showModal();
+    }
+  } else if (docParam) openDoc(docParam);
   ($("#quality") as HTMLSelectElement).onchange = (e) => {
     app.apply({ type: "set_settings", facet_angle: Number((e.target as HTMLSelectElement).value) });
     app.setStatus(app.statusLine() + " · quality changed");

@@ -434,9 +434,17 @@ relays edits between clients:
   a document created anonymously has no owner and is open to everyone on
   the server; one created while signed in belongs to that account, is
   listed only for the owner and the accounts it is shared with (404 for
-  anyone else), and only the owner can delete or share it. The WebSocket
-  applies the same check and shows a signed-in client under its account
-  name.
+  anyone else), and only the owner can delete or share it. Sharing is by
+  account name (`POST /api/docs/:id/share`, editor or viewer role) or by
+  invitation link: the owner mints a token (`POST /api/docs/:id/invites`,
+  32 random bytes as hex, stored in the document's metadata with its
+  role) and hands out `?doc=<id>&invite=<token>`; any signed-in account
+  that presents it (`POST .../invites/:token/accept`) joins in that role
+  until the owner withdraws the link (`DELETE .../invites/:token`),
+  which keeps the accounts that already joined. Tokens are stripped from
+  metadata served to anyone but the owner, so a viewer cannot use an
+  editor link it was never given. The WebSocket applies the same access
+  check and shows a signed-in client under its account name.
 - WebSocket `/api/docs/:id/ws`: a client sends `hello`, then `op`
   messages carrying `ok_model::Op` JSON. The server applies each op to
   its own copy of the document (rejecting invalid ones with an `error`
