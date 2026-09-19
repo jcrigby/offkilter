@@ -62,7 +62,9 @@ export type FeatureKind =
   | { type: "mirror"; plane: PlaneRef; op: CopyOp }
   | { type: "pattern"; kind: PatternKind; count: number; op: CopyOp }
   | { type: "variable"; name: string; expression: string }
-  | { type: "hole"; sketch: number; diameter: number; depth: number; through_all: boolean; direction: ExtrudeDirection; counterbore: Counterbore | null };
+  | { type: "hole"; sketch: number; diameter: number; depth: number; through_all: boolean; direction: ExtrudeDirection; counterbore: Counterbore | null }
+  | { type: "sweep"; sketch: number; profiles: ProfileSelection; path: number; op: BodyOp }
+  | { type: "loft"; sketch: number; sketch_b: number; op: BodyOp };
 export type Counterbore = { diameter: number; depth: number };
 
 export type FeatureSummary = {
@@ -141,6 +143,10 @@ export type Op =
   | { type: "set_binding"; id: number; field: string; expression: string | null }
   | { type: "add_hole"; sketch: number; diameter: number; depth?: number; through_all?: boolean; direction?: ExtrudeDirection; counterbore?: Counterbore | null; name: string | null }
   | { type: "set_hole"; id: number; diameter?: number | null; depth?: number | null; through_all?: boolean | null; direction?: ExtrudeDirection | null; counterbore?: Counterbore | null }
+  | { type: "add_sweep"; sketch: number; path: number; profiles?: ProfileSelection; op?: BodyOp; name: string | null }
+  | { type: "set_sweep"; id: number; path?: number | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
+  | { type: "add_loft"; sketch: number; sketch_b: number; op?: BodyOp; name: string | null }
+  | { type: "set_loft"; id: number; sketch_b?: number | null; op?: BodyOp | null }
   | { type: "set_settings"; facet_angle: number }
   | { type: "replace_document"; json: string }
   | { type: "set_sketch_plane"; id: number; plane: PlaneRef }

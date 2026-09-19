@@ -286,6 +286,24 @@ pub struct Counterbore {
     pub depth: f64,
 }
 
+/// Sweeps a profile region along the open chain of curves in another sketch.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SweepFeature {
+    pub sketch: FeatureId,
+    pub profiles: ProfileSelection,
+    /// Sketch whose (non-construction) lines and arcs form the path.
+    pub path: FeatureId,
+    pub op: BodyOp,
+}
+
+/// Lofts between the largest region of two sketches.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LoftFeature {
+    pub sketch: FeatureId,
+    pub sketch_b: FeatureId,
+    pub op: BodyOp,
+}
+
 /// A named value later features can use in expressions as `#name`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VariableFeature {
@@ -304,6 +322,8 @@ pub enum FeatureKind {
     Pattern(PatternFeature),
     Variable(VariableFeature),
     Hole(HoleFeature),
+    Sweep(SweepFeature),
+    Loft(LoftFeature),
 }
 
 impl FeatureKind {
@@ -320,6 +340,8 @@ impl FeatureKind {
             FeatureKind::Pattern(_) => "Pattern",
             FeatureKind::Variable(_) => "Variable",
             FeatureKind::Hole(_) => "Hole",
+            FeatureKind::Sweep(_) => "Sweep",
+            FeatureKind::Loft(_) => "Loft",
         }
     }
 
@@ -345,6 +367,7 @@ impl FeatureKind {
                 PatternKind::Circular { .. } => vec!["angle".into(), "count".into()],
             },
             FeatureKind::Variable(_) => vec![],
+            FeatureKind::Sweep(_) | FeatureKind::Loft(_) => vec![],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
                 "depth".into(),
@@ -444,6 +467,8 @@ impl FeatureKind {
             FeatureKind::Extrude(e) => Some(e.sketch),
             FeatureKind::Revolve(r) => Some(r.sketch),
             FeatureKind::Hole(h) => Some(h.sketch),
+            FeatureKind::Sweep(sw) => Some(sw.sketch),
+            FeatureKind::Loft(l) => Some(l.sketch),
             FeatureKind::Blend(_)
             | FeatureKind::Mirror(_)
             | FeatureKind::Pattern(_)

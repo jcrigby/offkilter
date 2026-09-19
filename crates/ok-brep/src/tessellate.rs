@@ -19,7 +19,7 @@ pub fn tessellate_with_faces(solid: &Solid) -> (TriMesh, Vec<u32>) {
     for f in &solid.faces {
         if matches!(
             solid.surfaces.get(f.surface),
-            Some(Surface::Revolved { .. })
+            Some(Surface::Revolved { .. } | Surface::Ruled)
         ) {
             let l = &f.loops[0];
             let mut n = Vec3::ZERO;
@@ -53,7 +53,7 @@ pub fn tessellate_with_faces(solid: &Solid) -> (TriMesh, Vec<u32>) {
         let surface = solid.surfaces.get(f.surface).copied();
         let normal_at = |v: u32, p: Vec3| -> Vec3 {
             match surface {
-                Some(Surface::Revolved { .. }) => averaged
+                Some(Surface::Revolved { .. } | Surface::Ruled) => averaged
                     .get(&(f.surface, v))
                     .and_then(|n| n.normalized())
                     .unwrap_or(f.plane.normal),

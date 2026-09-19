@@ -233,7 +233,7 @@ pub fn revolve(
     Solid::from_polygons(polys, surfaces)
 }
 
-fn newell_normal(pts: &[Vec3]) -> Vec3 {
+pub(crate) fn newell_normal(pts: &[Vec3]) -> Vec3 {
     let mut n = Vec3::ZERO;
     for i in 0..pts.len() {
         let a = pts[i];

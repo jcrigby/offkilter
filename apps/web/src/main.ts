@@ -507,7 +507,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎" };
+      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀" };
       icon.textContent = icons[f.kind.type] ?? "•";
       const name = document.createElement("span");
       name.className = "name";
@@ -548,6 +548,9 @@ class App implements SketchHost {
     ($("#btn-add-extrude") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
     ($("#btn-add-revolve") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
     ($("#btn-add-hole") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
+    const sketchCount = this.summary.features.filter((f) => f.kind.type === "sketch").length;
+    ($("#btn-add-sweep") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch" && sketchCount >= 2);
+    ($("#btn-add-loft") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch" && sketchCount >= 2);
     const hasBody = this.summary.bodies.length > 0;
     ($("#btn-add-fillet") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-chamfer") as HTMLButtonElement).disabled = !hasBody;
@@ -609,6 +612,8 @@ class App implements SketchHost {
     else if (f.kind.type === "mirror") this.renderMirrorDetail(f, body);
     else if (f.kind.type === "variable") this.renderVariableDetail(f, body);
     else if (f.kind.type === "hole") this.renderHoleDetail(f, body);
+    else if (f.kind.type === "sweep") this.renderSweepDetail(f, body);
+    else if (f.kind.type === "loft") this.renderLoftDetail(f, body);
     else this.renderPatternDetail(f, body);
 
     const row = document.createElement("div");
@@ -891,6 +896,41 @@ class App implements SketchHost {
       wrap.appendChild(v);
     }
     return wrap;
+  }
+
+  /** A select over the sketches before `before` (or all), labelled "id: name". */
+  sketchChooser(current: number, before: number, exclude: number | null, onChange: (id: number) => void): HTMLSelectElement {
+    const idx = this.summary.features.findIndex((f) => f.id === before);
+    const names = this.summary.features
+      .filter((s, i) => s.kind.type === "sketch" && (idx < 0 || i < idx) && s.id !== exclude)
+      .map((s) => `${s.id}: ${s.name}`);
+    const cur = names.find((n) => n.startsWith(`${current}:`)) ?? `${current}: (missing)`;
+    return select(names.includes(cur) ? names : [cur, ...names], cur, (v) => onChange(Number(v.split(":")[0])));
+  }
+
+  renderSweepDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "sweep") return;
+    const k = f.kind;
+    body.appendChild(this.sketchField(k.sketch));
+    body.appendChild(field("Path sketch", this.sketchChooser(k.path, f.id, k.sketch, (id) => this.apply({ type: "set_sweep", id: f.id, path: id }))));
+    body.appendChild(this.regionField(k.sketch, k.profiles, (profiles) => this.apply({ type: "set_sweep", id: f.id, profiles })));
+    body.appendChild(field("Result", select(["new", "add", "remove", "intersect"], k.op, (v) => this.apply({ type: "set_sweep", id: f.id, op: v as typeof k.op }))));
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "The path is the open chain of lines and arcs in the path sketch. The profile's sketch origin is carried to the path's start, with the profile plane turned to face along the path.";
+    body.appendChild(note);
+  }
+
+  renderLoftDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "loft") return;
+    const k = f.kind;
+    body.appendChild(this.sketchField(k.sketch));
+    body.appendChild(field("To sketch", this.sketchChooser(k.sketch_b, f.id, k.sketch, (id) => this.apply({ type: "set_loft", id: f.id, sketch_b: id }))));
+    body.appendChild(field("Result", select(["new", "add", "remove", "intersect"], k.op, (v) => this.apply({ type: "set_loft", id: f.id, op: v as typeof k.op }))));
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Lofts between the largest region of each sketch; both need the same number of holes.";
+    body.appendChild(note);
   }
 
   renderHoleDetail(f: FeatureSummary, body: HTMLElement): void {
@@ -1481,6 +1521,23 @@ async function main(): Promise<void> {
     if (!f || f.kind.type !== "sketch") return;
     app.sketcher.exit();
     app.apply({ type: "add_hole", sketch: f.id, diameter: 6, through_all: true, direction: "reverse", name: app.autoName("Hole") });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  const otherSketch = (f: FeatureSummary) => app.summary.features.find((s) => s.kind.type === "sketch" && s.id !== f.id);
+  $("#btn-add-sweep").onclick = () => {
+    const f = app.feature(app.selected);
+    const other = f && otherSketch(f);
+    if (!f || f.kind.type !== "sketch" || !other) return;
+    app.sketcher.exit();
+    app.apply({ type: "add_sweep", sketch: f.id, path: other.id, profiles: { type: "all" }, name: app.autoName("Sweep") });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-loft").onclick = () => {
+    const f = app.feature(app.selected);
+    const other = f && otherSketch(f);
+    if (!f || f.kind.type !== "sketch" || !other) return;
+    app.sketcher.exit();
+    app.apply({ type: "add_loft", sketch: f.id, sketch_b: other.id, name: app.autoName("Loft") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   $("#btn-add-revolve").onclick = () => {

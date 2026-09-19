@@ -1,8 +1,8 @@
 use crate::{
     BlendFeature, BlendKind, BodyOp, CopyOp, Counterbore, EdgeRef, ExtrudeDirection, ExtrudeEnd,
-    ExtrudeFeature, FeatureId, FeatureKind, HoleFeature, MirrorFeature, ModelError, PartStudio,
-    PatternFeature, PatternKind, PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature,
-    SketchFeature, VariableFeature,
+    ExtrudeFeature, FeatureId, FeatureKind, HoleFeature, LoftFeature, MirrorFeature, ModelError,
+    PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection, RevolveAxis,
+    RevolveFeature, SketchFeature, SweepFeature, VariableFeature,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, EntityId, Sketch};
@@ -200,6 +200,38 @@ pub enum Op {
         /// `Some(None)` clears the counterbore; `None` leaves it as is.
         #[serde(default, with = "double_option")]
         counterbore: Option<Option<Counterbore>>,
+    },
+    AddSweep {
+        sketch: FeatureId,
+        path: FeatureId,
+        #[serde(default = "default_profiles")]
+        profiles: ProfileSelection,
+        #[serde(default = "default_body_op")]
+        op: BodyOp,
+        name: Option<String>,
+    },
+    SetSweep {
+        id: FeatureId,
+        #[serde(default)]
+        path: Option<FeatureId>,
+        #[serde(default)]
+        profiles: Option<ProfileSelection>,
+        #[serde(default)]
+        op: Option<BodyOp>,
+    },
+    AddLoft {
+        sketch: FeatureId,
+        sketch_b: FeatureId,
+        #[serde(default = "default_body_op")]
+        op: BodyOp,
+        name: Option<String>,
+    },
+    SetLoft {
+        id: FeatureId,
+        #[serde(default)]
+        sketch_b: Option<FeatureId>,
+        #[serde(default)]
+        op: Option<BodyOp>,
     },
     /// Sets document-wide regeneration settings.
     SetSettings {
@@ -558,6 +590,80 @@ impl PartStudio {
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "hole")),
+            },
+            Op::AddSweep {
+                sketch,
+                path,
+                profiles,
+                op,
+                name,
+            } => {
+                for id in [sketch, path] {
+                    match &self.feature(id)?.kind {
+                        FeatureKind::Sketch(_) => {}
+                        _ => return Err(ModelError::WrongFeatureKind(id, "sketch")),
+                    }
+                }
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Sweep(SweepFeature {
+                        sketch,
+                        profiles,
+                        path,
+                        op,
+                    }),
+                    name,
+                ));
+            }
+            Op::SetSweep {
+                id,
+                path,
+                profiles,
+                op,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Sweep(sw) => {
+                    if let Some(p) = path {
+                        sw.path = p;
+                    }
+                    if let Some(p) = profiles {
+                        sw.profiles = p;
+                    }
+                    if let Some(o) = op {
+                        sw.op = o;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "sweep")),
+            },
+            Op::AddLoft {
+                sketch,
+                sketch_b,
+                op,
+                name,
+            } => {
+                for id in [sketch, sketch_b] {
+                    match &self.feature(id)?.kind {
+                        FeatureKind::Sketch(_) => {}
+                        _ => return Err(ModelError::WrongFeatureKind(id, "sketch")),
+                    }
+                }
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Loft(LoftFeature {
+                        sketch,
+                        sketch_b,
+                        op,
+                    }),
+                    name,
+                ));
+            }
+            Op::SetLoft { id, sketch_b, op } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Loft(l) => {
+                    if let Some(b) = sketch_b {
+                        l.sketch_b = b;
+                    }
+                    if let Some(o) = op {
+                        l.op = o;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "loft")),
             },
             Op::SetSettings { facet_angle } => {
                 if !(facet_angle.is_finite() && (0.5..=30.0).contains(&facet_angle)) {

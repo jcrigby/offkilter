@@ -379,6 +379,14 @@ impl PartStudio {
                     let hf = hf.clone();
                     Self::regen_hole(&mut result, id, &hf, pos, &self.features, &opts)
                 }
+                FeatureKind::Sweep(sw) => {
+                    let sw = sw.clone();
+                    Self::regen_sweep(&mut result, id, &sw, pos, &self.features, &opts)
+                }
+                FeatureKind::Loft(lf) => {
+                    let lf = lf.clone();
+                    Self::regen_loft(&mut result, id, &lf, pos, &self.features)
+                }
                 FeatureKind::Pattern(pf) => {
                     let pf = pf.clone();
                     if pf.count < 2 {
@@ -677,6 +685,182 @@ impl PartStudio {
             Err(e) => return Some(e),
         };
         Self::apply_tool(result, id, tool, BodyOp::Remove)
+    }
+
+    /// The open chain of non-construction lines and arcs of a sketch as a
+    /// 3D polyline, sampled at the facet angle.
+    fn sketch_path(
+        sketch: &ok_sketch::Sketch,
+        plane: &Plane,
+        opts: &ProfileOptions,
+    ) -> Result<Vec<Vec3>, String> {
+        use ok_sketch::Entity;
+        // Segments as sampled 2D polylines.
+        let mut segs: Vec<Vec<Vec2>> = Vec::new();
+        for (id, e) in sketch.entities() {
+            if sketch.is_construction(id) {
+                continue;
+            }
+            match e {
+                Entity::Line { start, end } => {
+                    let (a, b) = (
+                        sketch.point(*start).map_err(|e| e.to_string())?,
+                        sketch.point(*end).map_err(|e| e.to_string())?,
+                    );
+                    if a.distance(b) > 1e-9 {
+                        segs.push(vec![a, b]);
+                    }
+                }
+                Entity::Arc { center, start, end } => {
+                    let c = sketch.point(*center).map_err(|e| e.to_string())?;
+                    let a = sketch.point(*start).map_err(|e| e.to_string())?;
+                    let b = sketch.point(*end).map_err(|e| e.to_string())?;
+                    let r = 0.5 * (a.distance(c) + b.distance(c));
+                    let a0 = (a - c).angle();
+                    let mut sweep = ((b - c).angle() - a0).rem_euclid(std::f64::consts::TAU);
+                    if sweep < 1e-12 {
+                        sweep = std::f64::consts::TAU;
+                    }
+                    let n = ((sweep / opts.arc_segment_angle).ceil() as usize).max(2);
+                    segs.push(
+                        (0..=n)
+                            .map(|i| c + Vec2::from_angle(a0 + sweep * i as f64 / n as f64) * r)
+                            .collect(),
+                    );
+                }
+                _ => {}
+            }
+        }
+        if segs.is_empty() {
+            return Err("path sketch has no lines or arcs".into());
+        }
+        // Chain segments end to end (either direction), starting from a free end.
+        let tol = 1e-6;
+        let ends = |s: &Vec<Vec2>| (s[0], *s.last().unwrap());
+        let mut degree: Vec<usize> = vec![0; segs.len()];
+        for i in 0..segs.len() {
+            for j in 0..segs.len() {
+                if i == j {
+                    continue;
+                }
+                let (a0, a1) = ends(&segs[i]);
+                let (b0, b1) = ends(&segs[j]);
+                if a0.distance(b0) <= tol || a0.distance(b1) <= tol {
+                    degree[i] += 1;
+                }
+                if a1.distance(b0) <= tol || a1.distance(b1) <= tol {
+                    degree[i] += 1;
+                }
+            }
+        }
+        let start = (0..segs.len())
+            .find(|&i| degree[i] < 2)
+            .ok_or("path must be an open chain (no loops)")?;
+        let mut used = vec![false; segs.len()];
+        let mut path: Vec<Vec2> = Vec::new();
+        let mut cur = start;
+        // Orient the first segment so its free end comes first.
+        let mut seg = segs[start].clone();
+        {
+            let (a0, _) = ends(&seg);
+            let free_first = !(0..segs.len()).filter(|&j| j != start).any(|j| {
+                let (b0, b1) = ends(&segs[j]);
+                a0.distance(b0) <= tol || a0.distance(b1) <= tol
+            });
+            if !free_first {
+                seg.reverse();
+            }
+        }
+        loop {
+            used[cur] = true;
+            path.extend(seg.iter().copied());
+            let tail = *path.last().unwrap();
+            let next = (0..segs.len()).find(|&j| {
+                let (b0, b1) = ends(&segs[j]);
+                !used[j] && (b0.distance(tail) <= tol || b1.distance(tail) <= tol)
+            });
+            match next {
+                Some(j) => {
+                    seg = segs[j].clone();
+                    if seg[0].distance(tail) > tol {
+                        seg.reverse();
+                    }
+                    seg.remove(0);
+                    cur = j;
+                }
+                None => break,
+            }
+        }
+        if used.iter().any(|u| !u) {
+            return Err("path sketch has disconnected pieces".into());
+        }
+        Ok(path.into_iter().map(|p| plane.to_world(p)).collect())
+    }
+
+    fn regen_sweep(
+        result: &mut RegenResult,
+        id: FeatureId,
+        sw: &crate::SweepFeature,
+        pos: usize,
+        features: &[crate::Feature],
+        opts: &ProfileOptions,
+    ) -> Option<String> {
+        let sr = match Self::source_sketch(result, sw.sketch, pos, features, "sweep") {
+            Ok(sr) => sr,
+            Err(e) => return Some(e),
+        };
+        let selected = match Self::select_profiles(sr, &sw.profiles) {
+            Ok(v) => v,
+            Err(e) => return Some(e),
+        };
+        let path_pos = match features.iter().position(|f| f.id == sw.path) {
+            None => return Some("path sketch no longer exists".into()),
+            Some(pp) if pp >= pos => return Some("sweep must come after its path sketch".into()),
+            Some(pp) => pp,
+        };
+        let Some(path_result) = result.sketches.get(&sw.path) else {
+            return Some("path sketch did not regenerate".into());
+        };
+        let FeatureKind::Sketch(path_sketch) = &features[path_pos].kind else {
+            return Some("path must be a sketch".into());
+        };
+        let path = match Self::sketch_path(&path_sketch.sketch, &path_result.plane, opts) {
+            Ok(p) => p,
+            Err(e) => return Some(e),
+        };
+        let plane = sr.plane;
+        let tool = match Self::build_tool(
+            selected
+                .into_iter()
+                .map(|p| ok_brep::sweep(p, &plane, &path, id.0)),
+        ) {
+            Ok(t) => t,
+            Err(e) => return Some(e),
+        };
+        Self::apply_tool(result, id, tool, sw.op)
+    }
+
+    fn regen_loft(
+        result: &mut RegenResult,
+        id: FeatureId,
+        lf: &crate::LoftFeature,
+        pos: usize,
+        features: &[crate::Feature],
+    ) -> Option<String> {
+        let sa = match Self::source_sketch(result, lf.sketch, pos, features, "loft") {
+            Ok(sr) => sr,
+            Err(e) => return Some(e),
+        };
+        let sb = match Self::source_sketch(result, lf.sketch_b, pos, features, "loft") {
+            Ok(sr) => sr,
+            Err(e) => return Some(e),
+        };
+        let (pa, pb) = (&sa.profiles[0], &sb.profiles[0]);
+        let tool = match ok_brep::loft(pa, &sa.plane, pb, &sb.plane, id.0) {
+            Ok(t) => t,
+            Err(e) => return Some(e.to_string()),
+        };
+        Self::apply_tool(result, id, tool, lf.op)
     }
 
     fn regen_blend(
@@ -2042,6 +2226,145 @@ mod tests {
         // Settings persist in the document.
         let again = PartStudio::from_json(&ps.to_json()).unwrap();
         assert_eq!(again.settings.facet_angle, 1.0);
+    }
+
+    #[test]
+    fn sweep_and_loft_features() {
+        let mut ps = PartStudio::new("t");
+        // Path: an L on the Top plane from the origin.
+        let path = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let r = ps
+            .apply(Op::Sketch {
+                id: path,
+                op: SketchOp::AddLine {
+                    a: Vec2::ZERO,
+                    b: Vec2::new(10.0, 0.0),
+                },
+            })
+            .unwrap();
+        let end1 = r.entities[2];
+        let r2 = ps
+            .apply(Op::Sketch {
+                id: path,
+                op: SketchOp::AddLine {
+                    a: Vec2::new(10.0, 0.0),
+                    b: Vec2::new(10.0, 6.0),
+                },
+            })
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: path,
+            op: SketchOp::AddConstraint {
+                constraint: ok_sketch::Constraint::Coincident {
+                    a: end1,
+                    b: r2.entities[1],
+                },
+            },
+        })
+        .unwrap();
+        // Profile: 2x2 square centred on the origin of the Right plane (normal +X).
+        let prof = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Right),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: prof,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(-1.0, -1.0),
+                b: Vec2::new(1.0, 1.0),
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddSweep {
+            sketch: prof,
+            path,
+            profiles: ProfileSelection::All,
+            op: BodyOp::New,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert!(
+            (r.bodies[0].solid.volume() - 4.0 * 16.0).abs() < 1e-6,
+            "vol {}",
+            r.bodies[0].solid.volume()
+        );
+
+        // Loft between a square and a smaller square 3 up, as a new body.
+        let a = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::Standard {
+                    base: StandardPlane::Top,
+                    offset: 20.0,
+                },
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: a,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(-2.0, -2.0),
+                b: Vec2::new(2.0, 2.0),
+            },
+        })
+        .unwrap();
+        let b = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::Standard {
+                    base: StandardPlane::Top,
+                    offset: 23.0,
+                },
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: b,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(-1.0, -1.0),
+                b: Vec2::new(1.0, 1.0),
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddLoft {
+            sketch: a,
+            sketch_b: b,
+            op: BodyOp::New,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 2);
+        let expected = 16.0 + 4.0 + 8.0;
+        assert!(
+            (r.bodies[1].solid.volume() - expected).abs() < 1e-6,
+            "vol {}",
+            r.bodies[1].solid.volume()
+        );
     }
 
     #[test]

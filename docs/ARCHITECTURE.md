@@ -28,6 +28,9 @@ A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable
 - `Sketch { plane: PlaneRef, sketch: ok_sketch::Sketch }`
 - `Extrude { sketch: FeatureId, profiles, depth, direction, end, op }`
 - `Revolve { sketch: FeatureId, profiles, axis, angle, op }`
+- `Sweep { sketch, profiles, path: FeatureId, op }`: the path sketch's
+  non-construction lines and arcs are chained into one open polyline.
+- `Loft { sketch, sketch_b, op }`: joins the largest region of each sketch.
 
 - `Hole { sketch, diameter, depth, through_all, direction, counterbore }`:
   drills at every standalone point of the sketch.
@@ -188,6 +191,11 @@ segment becomes a `Surface::Revolved` group (arc segments share one), and
 the tessellator shades those with area-weighted averaged normals since
 there is no single analytic form. Profile edges lying on the axis sweep
 nothing, so a half-profile touching the axis yields a plain solid.
+`sweep` carries a profile along a 3D polyline using rotation-minimising
+frames, mitring the profile onto the bisector plane at each corner; `loft`
+resamples two loops by arc length, aligns their start points, and joins
+them with triangles. Both tag their walls `Surface::Ruled`, which shades
+with averaged normals like `Revolved`.
 `Solid::from_polygons` is the single assembly path: it merges vertices
 within a size-relative tolerance, inserts vertices that lie on other
 polygons' edges (T-junctions), strips zero-width spikes, and validates

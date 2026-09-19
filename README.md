@@ -12,8 +12,8 @@ works today, all in the browser:
   degrees-of-freedom reporting), inferred coincident / horizontal /
   vertical constraints while drawing, point dragging, construction
   geometry, and dimension labels you click to edit.
-- Solids: extrude (blind, through all, up to face), revolve, holes with
-  counterbores, fillet and
+- Solids: extrude (blind, through all, up to face), revolve, sweep along a
+  sketched path, loft between two sketches, holes with counterbores, fillet and
   chamfer on straight edges, mirror and linear / circular patterns, with
   boolean new / add / remove / intersect on a polyhedral
   boundary-representation kernel that tags curved faces with their
@@ -30,7 +30,7 @@ works today, all in the browser:
   versions.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
-resolution, 5° by default), sweeps and lofts,
+resolution, 5° by default),
 shells, assemblies, drawings, STEP, and accounts. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout

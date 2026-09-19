@@ -14,15 +14,19 @@
 mod blend;
 mod boolean;
 mod extrude;
+mod loft;
 mod revolve;
 mod section;
+mod sweep;
 mod tessellate;
 mod transform;
 
 pub use blend::{blend_edges, BlendKind};
 pub use boolean::{boolean, BoolOp};
 pub use extrude::extrude;
+pub use loft::loft;
 pub use revolve::revolve;
+pub use sweep::sweep;
 pub use tessellate::{display_edges, tessellate, tessellate_with_faces, DisplayEdge};
 pub use transform::Transform;
 
@@ -60,6 +64,9 @@ pub enum Surface {
         origin: Vec3,
         axis: Vec3,
     },
+    /// A ruled or swept surface without a simple analytic form; facets
+    /// sharing it are shaded with averaged normals.
+    Ruled,
 }
 
 impl Surface {

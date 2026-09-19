@@ -109,6 +109,7 @@ impl Solid {
                     axis: xf.apply_vector(axis),
                     radius,
                 },
+                Surface::Ruled => Surface::Ruled,
                 Surface::Revolved { origin, axis } => Surface::Revolved {
                     origin: xf.apply_point(origin),
                     axis: xf.apply_vector(axis),

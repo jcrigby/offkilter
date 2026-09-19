@@ -149,3 +149,42 @@ test("hole feature drills at sketch points on a face", async ({ page }) => {
   expect(before - drilled).toBeCloseTo(2 * Math.PI * 9 * 8, -1);
   expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
 });
+
+test("sweep and loft between sketches", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  // Path: a single 10 mm line on the Top plane starting at the origin.
+  // Profile: a 2x2 square centred on the origin of the Right plane (normal +X).
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Path" });
+    const path = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: path, op: { type: "add_line", a: { x: 0, y: 0 }, b: { x: 10, y: 0 } } });
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "right", offset: 0 }, name: "Profile" });
+    const prof = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: prof, op: { type: "add_rectangle", a: { x: -1, y: -1 }, b: { x: 1, y: 1 } } });
+    app.select(prof);
+  });
+  await page.click("#btn-add-sweep");
+  await page.waitForTimeout(300);
+  expect(await featureNames(page)).toContain("Sweep 1");
+  expect(await volume(page)).toBeCloseTo(40, 0);
+  // Loft from the profile square to a larger square 6 mm further along +X.
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "right", offset: 12 }, name: "Top square" });
+    const b = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: b, op: { type: "add_rectangle", a: { x: -2, y: -2 }, b: { x: 2, y: 2 } } });
+    const prof = app.summary.features.find((f: any) => f.name === "Profile").id;
+    app.apply({ type: "add_loft", sketch: b, sketch_b: prof, op: "new", name: "Loft 1" });
+  });
+  await page.waitForTimeout(300);
+  expect(await featureNames(page)).toContain("Loft 1");
+  // Frustum between 2x2 and 4x4 squares, 12 mm tall: h/3 (A1 + A2 + sqrt(A1 A2)) = 4 (4 + 16 + 8) = 112.
+  const total = await volume(page);
+  expect(total).toBeCloseTo(40 + 112, 0);
+  expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
+});
