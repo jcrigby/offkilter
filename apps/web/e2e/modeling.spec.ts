@@ -458,6 +458,12 @@ test("assembly tab: edge and corner mate connectors", async ({ page }) => {
 
 test("standard views, measure, section and part rename", async ({ page }) => {
   await openDemo(page);
+  // The shortcuts dialog opens with ? and from the toolbar.
+  await page.keyboard.press("?");
+  await expect(page.locator("#help-dialog")).toBeVisible();
+  await expect(page.locator("#help-dialog")).toContainText("Spline");
+  await page.click("#help-close");
+  await expect(page.locator("#help-dialog")).toBeHidden();
   // Standard views look straight down an axis.
   await page.keyboard.press("1");
   await page.waitForTimeout(200);

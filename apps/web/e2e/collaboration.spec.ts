@@ -81,6 +81,25 @@ test("two clients edit one document live", async ({ browser }) => {
   expect(await featureNames(a)).toEqual(await featureNames(b));
   expect(await resyncs(a)).toBe(resyncA);
   expect(await resyncs(b)).toBe(resyncB);
+
+  // Save a version, change more, then compare: the new feature and the
+  // renamed one show up; nothing else.
+  await a.click("#btn-docs");
+  await a.click("#versions-save");
+  await expect(a.locator("#versions-list li")).toHaveCount(1);
+  await a.click("#docs-close");
+  await addVar(a, "after");
+  await a.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const f = app.summary.features.find((x: any) => x.name === "#ub");
+    app.apply({ type: "rename_feature", id: f.id, name: "#ub2" });
+  });
+  await a.click("#btn-docs");
+  await a.getByRole("button", { name: "Compare" }).click();
+  await expect(a.locator("#versions-diff")).toContainText("2 changes");
+  await expect(a.locator("#versions-diff li.added")).toHaveText(/#after added/);
+  await expect(a.locator("#versions-diff li.changed")).toHaveText(/#ub2 changed \(was #ub\)/);
+  await a.click("#docs-close");
 });
 
 test("accounts own documents and share them", async ({ browser }) => {

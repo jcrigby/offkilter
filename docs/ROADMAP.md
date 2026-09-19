@@ -75,7 +75,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Document server (`ok-server`): storage, static app, REST
 - [ ] Server-side regeneration / validation beyond op checking
 - [x] Named versions of a document (save / restore on the server)
-- [ ] Branches, merges and diffs over the op log
+- [x] Diffs: compare a saved version with the document now (features added / changed / removed per tab)
+- [ ] Branches and merges over the op log
 - [x] Real-time multi-user editing (ops relayed in server order)
 - [x] Conflict-free concurrent editing: per-client id ranges make ops commute; structural hashes detect and repair any divergence
 - [x] Per-user undo in shared documents (inverse ops instead of document replacement)

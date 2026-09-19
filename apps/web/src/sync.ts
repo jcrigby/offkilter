@@ -157,6 +157,13 @@ export class Sync {
     return (await r.json()) as VersionMeta;
   }
 
+  /** The document JSON saved as a version. */
+  static async getVersion(id: string, vid: string): Promise<string> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/versions/${vid}`);
+    if (!r.ok) throw await Sync.failure(r);
+    return await r.text();
+  }
+
   /** Restores a version; every connected client reloads the document. */
   static async restoreVersion(id: string, vid: string): Promise<void> {
     const r = await fetch(`${Sync.apiBase()}/docs/${id}/versions/${vid}/restore`, { method: "POST" });

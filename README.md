@@ -103,7 +103,9 @@ open to everyone on the server. Passwords are stored as argon2id hashes in
 before exposing it beyond a trusted network.
 During development run `npm run dev` in `apps/web`; it proxies `/api` to
 the server on port 8080. The Docs dialog also saves and restores named
-versions of a document.
+versions of a document and compares any of them with the document as it
+is now (features added, changed or removed, per tab). Press `?` for the
+keyboard shortcuts.
 
 Or with Docker: `docker build -t offkilter . && docker run -p 8080:8080 -v offkilter-data:/data offkilter`.
 

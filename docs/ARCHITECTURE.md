@@ -443,7 +443,12 @@ documents as `.okpart` JSON files with a small metadata file each, and
 relays edits between clients:
 
 - REST: `GET/POST /api/docs`, `GET/PUT/DELETE /api/docs/:id`,
-  `POST/DELETE /api/docs/:id/share`, versions under `/api/docs/:id/versions`.
+  `POST/DELETE /api/docs/:id/share`, versions under `/api/docs/:id/versions`
+  (list, save, fetch one, restore). Comparing a version with the current
+  document happens in the client: both JSON documents are loaded into
+  their own wasm `Doc`, every tab is regenerated in each, and features
+  are matched by id (added, removed, or changed when their name, kind,
+  suppression or bindings differ).
 - Accounts (`auth.rs`): `POST /api/auth/register|login|logout`,
   `GET /api/auth/me`. Users live in `users.json` with argon2id password
   hashes; a session is a random token in an `HttpOnly` cookie, persisted

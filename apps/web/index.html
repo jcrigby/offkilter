@@ -45,6 +45,7 @@
         <span class="divider"></span>
         <button id="btn-docs" title="Documents on the server">Docs</button>
         <button id="btn-account" title="Sign in to own and share documents">Sign in</button>
+        <button id="btn-help" title="Keyboard shortcuts (?)">?</button>
         <span id="presence" class="presence" hidden></span>
         <span id="read-only" class="read-only" title="This document is shared with you read-only: edits are refused" hidden>read-only</span>
         <button id="btn-new" title="New empty part studio">New</button>
@@ -127,8 +128,39 @@
       <div id="versions" hidden>
         <h3>Versions of this document</h3>
         <ul id="versions-list" class="docs-list"></ul>
+        <ul id="versions-diff" class="docs-list diff" hidden></ul>
         <div class="row"><button id="versions-save">Save version</button></div>
       </div>
+    </dialog>
+    <dialog id="help-dialog">
+      <h3>Keyboard shortcuts</h3>
+      <div class="shortcuts">
+        <h4>Viewport</h4>
+        <dl>
+          <dt>F</dt><dd>Fit all</dd>
+          <dt>1 / 2 / 3 / 0</dt><dd>Top / front / right / isometric view</dd>
+          <dt>Ctrl+Z / Ctrl+Y</dt><dd>Undo / redo (your own edits)</dd>
+          <dt>Esc</dt><dd>Cancel the current pick, measure, drag or animation; clear the selection</dd>
+          <dt>Right-drag</dt><dd>Orbit · wheel zooms · middle-drag pans</dd>
+        </dl>
+        <h4>Sketch mode</h4>
+        <dl>
+          <dt>S</dt><dd>Select (click entities, then a constraint; drag points)</dd>
+          <dt>L / R / C / A</dt><dd>Line / rectangle / circle / arc</dd>
+          <dt>B / P / N</dt><dd>Spline (Enter finishes) / polygon / slot</dd>
+          <dt>T / O / M / Y</dt><dd>Trim / offset selection / mirror selection / pattern selection</dd>
+          <dt>U</dt><dd>Use: project a body edge or face into the sketch</dd>
+          <dt>Q</dt><dd>Toggle construction on the selection</dd>
+          <dt>Delete</dt><dd>Delete the selection</dd>
+          <dt>Esc</dt><dd>Cancel the tool, then back to Select, then leave the sketch</dd>
+        </dl>
+        <h4>Assemblies</h4>
+        <dl>
+          <dt>+ Mate</dt><dd>Click a face, edge or corner on each of two instances</dd>
+          <dt>Move</dt><dd>Drag a free instance in the view plane</dd>
+        </dl>
+      </div>
+      <div class="row"><button id="help-close" class="primary">Close</button></div>
     </dialog>
     <dialog id="account-dialog">
       <h3 id="account-title">Sign in</h3>

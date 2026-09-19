@@ -2472,7 +2472,48 @@ async function main(): Promise<void> {
       list.appendChild(li);
     }
   };
+  /** Lists the features that differ between a saved version and the document now, per tab. */
+  const compareWithVersion = (versionJson: string): string[] => {
+    const then = Kernel.fromJson(versionJson);
+    const now = Kernel.fromJson(app.kernel.toJson());
+    const thenTabs = then.regenerate(null).tabs;
+    const nowTabs = now.regenerate(null).tabs;
+    const lines: string[] = [];
+    const key = (f: FeatureSummary) => JSON.stringify({ name: f.name, suppressed: f.suppressed, kind: f.kind, bindings: f.bindings });
+    const seen = new Set<number>();
+    for (const tab of [...nowTabs, ...thenTabs]) {
+      if (seen.has(tab.id)) continue;
+      seen.add(tab.id);
+      const inNow = nowTabs.some((t) => t.id === tab.id), inThen = thenTabs.some((t) => t.id === tab.id);
+      if (!inThen) { lines.push(`+ tab ${tab.name} (new)`); continue; }
+      if (!inNow) { lines.push(`− tab ${tab.name} (removed)`); continue; }
+      const before = new Map(then.regenerate(tab.id).features.map((f) => [f.id, f] as const));
+      const after = new Map(now.regenerate(tab.id).features.map((f) => [f.id, f] as const));
+      for (const [id, f] of after) {
+        const b = before.get(id);
+        if (!b) lines.push(`+ ${tab.name}: ${f.name} added`);
+        else if (key(b) !== key(f)) lines.push(`~ ${tab.name}: ${f.name} changed${b.name !== f.name ? ` (was ${b.name})` : ""}`);
+      }
+      for (const [id, f] of before) if (!after.has(id)) lines.push(`− ${tab.name}: ${f.name} removed`);
+    }
+    return lines;
+  };
+  const showDiff = (v: VersionMeta, lines: string[]) => {
+    const list = $("#versions-diff");
+    list.innerHTML = "";
+    list.hidden = false;
+    const head = document.createElement("li");
+    head.textContent = lines.length === 0 ? `No changes since version "${v.name}".` : `Since version "${v.name}": ${lines.length} change${lines.length === 1 ? "" : "s"}`;
+    list.appendChild(head);
+    for (const line of lines) {
+      const li = document.createElement("li");
+      li.className = line.startsWith("+") ? "added" : line.startsWith("−") ? "removed" : "changed";
+      li.textContent = line;
+      list.appendChild(li);
+    }
+  };
   const renderVersions = async () => {
+    ($("#versions-diff") as HTMLElement).hidden = true;
     const box = $("#versions");
     const list = $("#versions-list");
     list.innerHTML = "";
@@ -2504,7 +2545,16 @@ async function main(): Promise<void> {
       const when = document.createElement("span");
       when.className = "dwhen";
       when.textContent = new Date(v.created * 1000).toLocaleString();
-      li.append(name, when);
+      const compare = button("Compare", async () => {
+        try {
+          showDiff(v, compareWithVersion(await Sync.getVersion(id, v.id)));
+        } catch (e) {
+          showDiff(v, [`Could not compare: ${(e as Error).message}`]);
+        }
+      });
+      compare.className = "dshare";
+      compare.title = "What changed since this version";
+      li.append(name, when, compare);
       list.appendChild(li);
     }
   };
@@ -2544,6 +2594,9 @@ async function main(): Promise<void> {
     await renderDocs();
     dialog.showModal();
   };
+  const helpDialog = $("#help-dialog") as HTMLDialogElement;
+  $("#btn-help").onclick = () => helpDialog.showModal();
+  $("#help-close").onclick = () => helpDialog.close();
   $("#docs-close").onclick = () => dialog.close();
   $("#docs-create").onclick = async () => {
     const name = prompt("Document name", "Untitled");
@@ -2783,6 +2836,12 @@ async function main(): Promise<void> {
       return;
     }
     if (e.key === "f") app.viewer.fitAll();
+    if (e.key === "?") {
+      const d = $("#help-dialog") as HTMLDialogElement;
+      if (d.open) d.close();
+      else d.showModal();
+      return;
+    }
     if (!app.sketcher.active) {
       const view = ({ "1": "top", "2": "front", "3": "right", "0": "iso" } as Record<string, "top" | "front" | "right" | "iso">)[e.key];
       if (view) app.viewer.setStandardView(view);
