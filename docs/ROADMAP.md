@@ -37,7 +37,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Fillets and chamfers on curved edges (a rim is one chain, blended with one mitred sweep)
 - [ ] Proper corner patches where blends meet; variable-dihedral chains
 - [x] Shell (uniform wall, chosen faces open; an offset polyhedron subtracted in one boolean; cavities whose offset changes the topology are reported, not guessed)
-- [ ] Draft
+- [x] Draft (tilt planar faces about a neutral plane) and Move face (push / pull planar faces): direct edits that re-solve the surrounding corners
 - [x] Mirror and linear / circular patterns of bodies
 - [x] Boolean feature between existing bodies (union / subtract / intersect, tools optionally kept)
 - [x] Patterns and mirrors of features (the named features' tool volumes are replayed with their own add / remove operation)

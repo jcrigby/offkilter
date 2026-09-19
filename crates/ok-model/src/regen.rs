@@ -47,6 +47,25 @@ impl Body {
             .find(|f| face_ref.matches(&f.origin))
     }
 
+    /// Indices of every face on the surfaces the referenced faces lie on
+    /// (so one facet of a cylinder names the whole cylinder).
+    pub fn faces_on_surfaces_of(&self, refs: &[FaceRef]) -> Vec<usize> {
+        let surfaces: Vec<usize> = self
+            .solid
+            .faces
+            .iter()
+            .filter(|f| refs.iter().any(|r| r.matches(&f.origin)))
+            .map(|f| f.surface)
+            .collect();
+        self.solid
+            .faces
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| surfaces.contains(&f.surface))
+            .map(|(i, _)| i)
+            .collect()
+    }
+
     /// Face index pairs for every edge between the two referenced faces.
     pub fn find_edge(&self, edge: &EdgeRef) -> Vec<(usize, usize)> {
         let mut out = Vec::new();
@@ -460,6 +479,25 @@ impl PartStudio {
                 FeatureKind::Shell(sf) => {
                     let sf = sf.clone();
                     Self::regen_shell(&mut result, id, &sf)
+                }
+                FeatureKind::MoveFace(mf) => {
+                    let mf = mf.clone();
+                    Self::regen_face_edit(&mut result, id, &mf.faces, "move", |solid, faces| {
+                        ok_brep::move_faces(solid, faces, mf.distance)
+                    })
+                }
+                FeatureKind::Draft(df) => {
+                    let df = df.clone();
+                    match result.resolve_plane(&df.neutral) {
+                        Ok(neutral) => Self::regen_face_edit(
+                            &mut result,
+                            id,
+                            &df.faces,
+                            "draft",
+                            |solid, faces| ok_brep::draft_faces(solid, faces, &neutral, df.angle),
+                        ),
+                        Err(e) => Some(e),
+                    }
                 }
                 FeatureKind::Boolean(bf) => {
                     let bf = bf.clone();
@@ -1008,6 +1046,38 @@ impl PartStudio {
     }
 
     /// Applies each transform to every existing body, merging or adding copies.
+    /// Applies a face edit (move, draft) to every body holding one of the
+    /// referenced faces; a reference on a curved surface names all its facets.
+    fn regen_face_edit(
+        result: &mut RegenResult,
+        _id: FeatureId,
+        refs: &[FaceRef],
+        what: &str,
+        edit: impl Fn(&Solid, &[usize]) -> Result<Solid, ok_brep::BrepError>,
+    ) -> Option<String> {
+        if refs.is_empty() {
+            return None; // nothing picked yet: a no-op rather than an error
+        }
+        let mut matched = 0usize;
+        for i in 0..result.bodies.len() {
+            let body = &result.bodies[i];
+            let faces = body.faces_on_surfaces_of(refs);
+            if faces.is_empty() {
+                continue;
+            }
+            matched += faces.len();
+            let edited = match edit(&body.solid, &faces) {
+                Ok(s) => s,
+                Err(e) => return Some(format!("{what} failed: {e}")),
+            };
+            result.bodies[i] = Body::new(body.name.clone(), body.source, edited);
+        }
+        if matched == 0 {
+            return Some("none of the referenced faces exist any more".into());
+        }
+        None
+    }
+
     /// Hollows bodies (see `ShellFeature`).
     fn regen_shell(result: &mut RegenResult, id: FeatureId, sf: &ShellFeature) -> Option<String> {
         if result.bodies.is_empty() {

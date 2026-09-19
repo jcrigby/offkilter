@@ -58,36 +58,25 @@ pub fn shell(
 }
 
 /// The solid with every face plane moved inward by `t` (outward for open
-/// faces). Each face keeps its outline, edge by edge: every edge moves to
-/// the line where the face's offset plane meets the offset plane of the
-/// face across that edge, and corners are where consecutive edge lines
-/// meet. An edge whose offset would run backwards has been swallowed by
-/// its neighbours (a short facet next to a sharp corner) and is dropped,
-/// its neighbours meeting directly; a loop left with fewer than three
-/// edges vanishes. Faces built this way agree exactly along shared edges
-/// at corners where three faces meet, and disagree by a little where more
-/// meet or where edges were dropped; the assembly closes those gaps.
+/// faces): the offset planes and surfaces, reshaped.
 fn offset_polyhedron(
     solid: &Solid,
     t: f64,
     open: &[usize],
     feature: u32,
 ) -> Result<Solid, BrepError> {
-    let (min, max) = solid.bounds().unwrap();
-    let scale = (max - min).length().max(1.0);
     let dist = |i: usize| if open.contains(&i) { -t } else { t };
-    let plane_of = |i: usize| -> (Vec3, f64) {
-        let f = &solid.faces[i];
-        let n = f.plane.normal;
-        (n, n.dot(f.plane.origin) - dist(i))
-    };
-    let edge_faces = solid.edge_faces();
-    let across = |a: u32, b: u32, me: usize| -> Option<usize> {
-        edge_faces
-            .get(&crate::edge_key(a, b))
-            .and_then(|fs| fs.iter().copied().find(|&f| f != me))
-    };
-
+    let planes: Vec<Option<Plane>> = solid
+        .faces
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            Some(Plane {
+                origin: f.plane.origin - f.plane.normal * dist(i),
+                ..f.plane
+            })
+        })
+        .collect();
     let surfaces: Vec<Surface> = solid
         .surfaces
         .iter()
@@ -99,9 +88,171 @@ fn offset_polyhedron(
             },
         )
         .collect();
+    reshape(
+        solid,
+        &planes,
+        surfaces,
+        4.0 * t,
+        "the wall thickness",
+        Some(feature),
+    )
+}
+
+/// Moves the given planar faces along their normals by `distance`
+/// (negative moves them into the body), re-solving the corners of every
+/// face they touch. Faces on curved surfaces are refused.
+pub fn move_faces(solid: &Solid, faces: &[usize], distance: f64) -> Result<Solid, BrepError> {
+    if !distance.is_finite() || distance.abs() <= 1e-12 {
+        return Err(BrepError::Degenerate(
+            "move distance must be non-zero".into(),
+        ));
+    }
+    let mut planes: Vec<Option<Plane>> = vec![None; solid.faces.len()];
+    let mut surfaces = solid.surfaces.clone();
+    for &i in faces {
+        let f = solid
+            .faces
+            .get(i)
+            .ok_or_else(|| BrepError::Degenerate(format!("face {i} does not exist")))?;
+        let Surface::Plane { normal, offset } = solid.surfaces[f.surface] else {
+            return Err(BrepError::Degenerate(
+                "only planar faces can be moved".into(),
+            ));
+        };
+        planes[i] = Some(Plane {
+            origin: f.plane.origin + f.plane.normal * distance,
+            ..f.plane
+        });
+        surfaces[f.surface] = Surface::Plane {
+            normal,
+            offset: offset + distance,
+        };
+    }
+    reshape(
+        solid,
+        &planes,
+        surfaces,
+        4.0 * distance.abs(),
+        "the move",
+        None,
+    )
+}
+
+/// Tilts the given planar faces by `angle_deg` about the line where each
+/// meets the neutral plane, so the body tapers towards the neutral
+/// plane's normal (the pull direction); a negative angle tapers the
+/// other way. Faces parallel to the neutral plane or on curved surfaces
+/// are refused.
+pub fn draft_faces(
+    solid: &Solid,
+    faces: &[usize],
+    neutral: &Plane,
+    angle_deg: f64,
+) -> Result<Solid, BrepError> {
+    if !angle_deg.is_finite() || angle_deg.abs() <= 1e-9 || angle_deg.abs() >= 89.0 {
+        return Err(BrepError::Degenerate(
+            "draft angle must be between -89 and 89 degrees and non-zero".into(),
+        ));
+    }
+    let pull = neutral
+        .normal
+        .normalized()
+        .ok_or_else(|| BrepError::Degenerate("neutral plane has no normal".into()))?;
+    let theta = angle_deg.to_radians();
+    let mut planes: Vec<Option<Plane>> = vec![None; solid.faces.len()];
+    let mut surfaces = solid.surfaces.clone();
+    let mut moved = 0.0f64;
+    for &i in faces {
+        let f = solid
+            .faces
+            .get(i)
+            .ok_or_else(|| BrepError::Degenerate(format!("face {i} does not exist")))?;
+        if !matches!(solid.surfaces[f.surface], Surface::Plane { .. }) {
+            return Err(BrepError::Degenerate(
+                "only planar faces can be drafted".into(),
+            ));
+        }
+        let n = f.plane.normal;
+        // Hinge: the line where the face plane meets the neutral plane.
+        let axis = n.cross(pull);
+        let Some(axis_dir) = axis.normalized() else {
+            return Err(BrepError::Degenerate(format!(
+                "face {} of feature {} is parallel to the neutral plane",
+                f.origin.local, f.origin.feature
+            )));
+        };
+        // A point on both planes nearest the face's first vertex.
+        let p0 = solid.vertices[f.loops[0][0] as usize];
+        let hinge = solve_point(
+            &[(n, n.dot(f.plane.origin)), (pull, pull.dot(neutral.origin))],
+            p0,
+        );
+        let side = axis_dir.cross(n); // in-plane, perpendicular to the hinge
+        let new_normal = (n * theta.cos() + side * theta.sin())
+            .normalized()
+            .unwrap_or(n);
+        let plane = Plane::from_origin_normal(hinge, new_normal)
+            .ok_or_else(|| BrepError::Degenerate("degenerate draft plane".into()))?;
+        for l in &f.loops {
+            for &v in l {
+                let p = solid.vertices[v as usize];
+                moved = moved.max((new_normal.dot(p - hinge)).abs());
+            }
+        }
+        planes[i] = Some(plane);
+        surfaces[f.surface] = Surface::Plane {
+            normal: new_normal,
+            offset: new_normal.dot(hinge),
+        };
+    }
+    reshape(
+        solid,
+        &planes,
+        surfaces,
+        4.0 * moved.max(1e-6),
+        "the draft",
+        None,
+    )
+}
+
+/// The solid with some face planes replaced (`planes[i]` is the new plane
+/// of face `i`; `None` keeps it). Each face keeps its outline, edge by
+/// edge: every edge moves to the line where the face's new plane meets
+/// the new plane of the face across that edge, and corners are where
+/// consecutive edge lines meet. An edge whose new position would run
+/// backwards has been swallowed by its neighbours (a short facet next to
+/// a sharp corner) and is dropped, its neighbours meeting directly; a
+/// loop left with fewer than three edges vanishes. Faces built this way
+/// agree exactly along shared edges at corners where three faces meet,
+/// and disagree by a little where more meet or where edges were dropped;
+/// the assembly closes rings of open edges up to `gap` across. `what`
+/// names the change in error messages. Faces keep their origins unless
+/// `new_feature` is given (a shell's cavity is new geometry of that feature).
+fn reshape(
+    solid: &Solid,
+    planes: &[Option<Plane>],
+    surfaces: Vec<Surface>,
+    gap: f64,
+    what: &str,
+    new_feature: Option<u32>,
+) -> Result<Solid, BrepError> {
+    let (min, max) = solid.bounds().unwrap();
+    let scale = (max - min).length().max(1.0);
+    let new_plane = |i: usize| planes[i].unwrap_or(solid.faces[i].plane);
+    let plane_of = |i: usize| -> (Vec3, f64) {
+        let p = new_plane(i);
+        (p.normal, p.normal.dot(p.origin))
+    };
+    let edge_faces = solid.edge_faces();
+    let across = |a: u32, b: u32, me: usize| -> Option<usize> {
+        edge_faces
+            .get(&crate::edge_key(a, b))
+            .and_then(|fs| fs.iter().copied().find(|&f| f != me))
+    };
+
     let mut polys = Vec::with_capacity(solid.faces.len());
     for (i, f) in solid.faces.iter().enumerate() {
-        let n = f.plane.normal;
+        let n = new_plane(i).normal;
         let mut loops = Vec::with_capacity(f.loops.len());
         for (li, l) in f.loops.iter().enumerate() {
             // One entry per edge: the face across it, a point near it and
@@ -231,30 +382,28 @@ fn offset_polyhedron(
         let area = crate::revolve::newell_normal(&loops[0]);
         if area.dot(n) <= 0.0 || area.length() > 4.0 * face_area(solid, f) {
             return Err(BrepError::Degenerate(format!(
-                "the wall thickness {t} is too large for the feature at face {} of feature {}",
+                "{what} is too large for the feature at face {} of feature {}",
                 f.origin.local, f.origin.feature
             )));
         }
         polys.push(Polygon {
-            plane: Plane {
-                origin: f.plane.origin - n * dist(i),
-                ..f.plane
-            },
+            plane: new_plane(i),
             loops,
             surface: f.surface,
-            origin: FaceOrigin {
-                feature,
-                local: f.origin.local,
+            origin: match new_feature {
+                Some(feature) => FaceOrigin {
+                    feature,
+                    local: f.origin.local,
+                },
+                None => f.origin,
             },
         });
     }
     if polys.len() < 4 {
-        return Err(BrepError::Degenerate(format!(
-            "the wall thickness {t} leaves no cavity"
-        )));
+        return Err(BrepError::Degenerate(format!("{what} leaves no cavity")));
     }
     let tol = crate::merge_tolerance(scale);
-    Solid::from_polygons_closing_gaps(polys, surfaces, tol, 4.0 * t)
+    Solid::from_polygons_closing_gaps(polys, surfaces, tol, gap.max(tol * 10.0))
 }
 
 /// Twice the outer-loop area of a face (the length of its Newell normal).
@@ -494,6 +643,61 @@ mod tests {
             "{} vs {expected}",
             s.volume()
         );
+    }
+
+    #[test]
+    fn move_face_pushes_and_pulls_a_box_face() {
+        let b = block(30.0, 20.0, 10.0);
+        let top = face_with_normal(&b, Vec3::Z);
+        let taller = move_faces(&b, &[top], 5.0).unwrap();
+        assert!((taller.volume() - 30.0 * 20.0 * 15.0).abs() < 1e-6);
+        let right = face_with_normal(&b, Vec3::X);
+        let narrower = move_faces(&b, &[right], -12.0).unwrap();
+        assert!((narrower.volume() - 18.0 * 20.0 * 10.0).abs() < 1e-6);
+        assert_eq!(narrower.faces.len(), 6);
+        // Moving a face past the opposite one collapses the box.
+        assert!(move_faces(&b, &[right], -31.0).is_err());
+    }
+
+    #[test]
+    fn draft_tapers_a_box_towards_the_pull_direction() {
+        let b = block(30.0, 20.0, 10.0);
+        let sides: Vec<usize> = [Vec3::X, -Vec3::X, Vec3::Y, -Vec3::Y]
+            .into_iter()
+            .map(|n| face_with_normal(&b, n))
+            .collect();
+        let neutral = Plane::XY; // pull direction +Z: the top shrinks
+        let d = draft_faces(&b, &sides, &neutral, 10.0).unwrap();
+        d.validate().unwrap();
+        let k = 10f64.to_radians().tan();
+        // Width and depth shrink linearly with height.
+        let expected: f64 = (0..1000)
+            .map(|i| {
+                let z = (i as f64 + 0.5) / 100.0;
+                (30.0 - 2.0 * k * z) * (20.0 - 2.0 * k * z) * 0.01
+            })
+            .sum();
+        assert!(
+            (d.volume() - expected).abs() < 1e-3,
+            "{} vs {expected}",
+            d.volume()
+        );
+        // The top face is smaller than the bottom by the taper.
+        let top = d
+            .faces
+            .iter()
+            .find(|f| f.plane.normal.approx_eq(Vec3::Z))
+            .unwrap();
+        let xs: Vec<f64> = top.loops[0]
+            .iter()
+            .map(|&v| d.vertices[v as usize].x)
+            .collect();
+        let w = xs.iter().cloned().fold(f64::MIN, f64::max)
+            - xs.iter().cloned().fold(f64::MAX, f64::min);
+        assert!((w - (30.0 - 2.0 * 10.0 * k)).abs() < 1e-6, "{w}");
+        // A face parallel to the neutral plane cannot be drafted.
+        let top_i = face_with_normal(&b, Vec3::Z);
+        assert!(draft_faces(&b, &[top_i], &neutral, 10.0).is_err());
     }
 
     #[test]

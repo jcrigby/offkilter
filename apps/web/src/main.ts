@@ -1058,7 +1058,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀", boolean: "∪", shell: "◱" };
+      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀", boolean: "∪", shell: "◱", move_face: "⇥", draft: "◿" };
       icon.textContent = icons[f.kind.type] ?? "•";
       const name = document.createElement("span");
       name.className = "name";
@@ -1108,6 +1108,8 @@ class App implements SketchHost {
     ($("#btn-add-mirror") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-boolean") as HTMLButtonElement).disabled = this.summary.bodies.length < 2;
     ($("#btn-add-shell") as HTMLButtonElement).disabled = !hasBody;
+    ($("#btn-add-move-face") as HTMLButtonElement).disabled = !hasBody;
+    ($("#btn-add-draft") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-pattern") as HTMLButtonElement).disabled = !hasBody;
   }
 
@@ -1212,6 +1214,8 @@ class App implements SketchHost {
     else if (f.kind.type === "loft") this.renderLoftDetail(f, body);
     else if (f.kind.type === "boolean") this.renderBooleanDetail(f, body);
     else if (f.kind.type === "shell") this.renderShellDetail(f, body);
+    else if (f.kind.type === "move_face") this.renderMoveFaceDetail(f, body);
+    else if (f.kind.type === "draft") this.renderDraftDetail(f, body);
     else this.renderPatternDetail(f, body);
 
     const row = document.createElement("div");
@@ -1664,40 +1668,68 @@ class App implements SketchHost {
     if (f.kind.type !== "shell") return;
     const k = f.kind;
     body.appendChild(field("Thickness", this.exprInput(f, "thickness", k.thickness, (v) => this.apply({ type: "set_shell", id: f.id, thickness: v }))));
-    const picking = this.facePicker !== null;
-    const row = document.createElement("div");
-    row.className = "row";
-    row.appendChild(button(picking ? "Click a face…" : "Add open face", () => {
-      if (picking) return;
-      this.beginFacePick((face) => {
-        if (k.faces.some((x) => x.feature === face.feature && x.local === face.local)) return;
-        this.apply({ type: "set_shell", id: f.id, faces: [...k.faces, face] });
-      });
-      this.renderDetail();
-    }, picking ? "primary" : ""));
-    if (k.faces.length > 0) row.appendChild(button("Clear", () => this.apply({ type: "set_shell", id: f.id, faces: [] })));
-    body.appendChild(row);
-    const ul = document.createElement("ul");
-    ul.className = "edge-list";
-    for (const face of k.faces) {
-      const li = document.createElement("li");
-      const label = document.createElement("span");
-      label.textContent = this.describeFace(face);
-      li.appendChild(label);
-      li.appendChild(button("×", () => this.apply({ type: "set_shell", id: f.id, faces: k.faces.filter((x) => x !== face) }), "danger"));
-      ul.appendChild(li);
-    }
-    if (k.faces.length === 0) {
-      const li = document.createElement("li");
-      li.className = "note";
-      li.textContent = "No open faces: every body becomes a closed hollow.";
-      ul.appendChild(li);
-    }
-    body.appendChild(ul);
+    this.faceListFields(body, k.faces, "Add open face", "No open faces: every body becomes a closed hollow.", (faces) => this.apply({ type: "set_shell", id: f.id, faces }));
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Walls keep this thickness inside every face; open faces are removed so the cavity is reachable. A face on a curved surface opens the whole surface.";
     body.appendChild(note);
+  }
+
+  renderMoveFaceDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "move_face") return;
+    const k = f.kind;
+    body.appendChild(field("Distance", this.exprInput(f, "distance", k.distance, (v) => this.apply({ type: "set_move_face", id: f.id, distance: v }))));
+    this.faceListFields(body, k.faces, "Add face", "No faces yet. Pick planar faces to move.", (faces) => this.apply({ type: "set_move_face", id: f.id, faces }));
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Moves each face along its normal (negative pushes into the body); the faces around it stretch to follow.";
+    body.appendChild(note);
+  }
+
+  renderDraftDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "draft") return;
+    const k = f.kind;
+    body.appendChild(field("Angle °", this.exprInput(f, "angle", k.angle, (v) => this.apply({ type: "set_draft", id: f.id, angle: v }))));
+    this.planeFieldsFor(f, body, k.neutral, (neutral) => this.apply({ type: "set_draft", id: f.id, neutral }));
+    this.faceListFields(body, k.faces, "Add face", "No faces yet. Pick the planar faces to tilt.", (faces) => this.apply({ type: "set_draft", id: f.id, faces }));
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Each face tilts about the line where it meets the neutral plane, so the body tapers towards the plane's normal (the pull direction).";
+    body.appendChild(note);
+  }
+
+  /** A pick-to-add list of face references with per-face removal and a Clear button. */
+  private faceListFields(body: HTMLElement, faces: FaceRef[], addLabel: string, emptyNote: string, setFaces: (faces: FaceRef[]) => void): void {
+    const picking = this.facePicker !== null;
+    const row = document.createElement("div");
+    row.className = "row";
+    row.appendChild(button(picking ? "Click a face…" : addLabel, () => {
+      if (picking) return;
+      this.beginFacePick((face) => {
+        if (faces.some((x) => x.feature === face.feature && x.local === face.local)) return;
+        setFaces([...faces, face]);
+      });
+      this.renderDetail();
+    }, picking ? "primary" : ""));
+    if (faces.length > 0) row.appendChild(button("Clear", () => setFaces([])));
+    body.appendChild(row);
+    const ul = document.createElement("ul");
+    ul.className = "edge-list";
+    for (const face of faces) {
+      const li = document.createElement("li");
+      const label = document.createElement("span");
+      label.textContent = this.describeFace(face);
+      li.appendChild(label);
+      li.appendChild(button("×", () => setFaces(faces.filter((x) => x !== face)), "danger"));
+      ul.appendChild(li);
+    }
+    if (faces.length === 0) {
+      const li = document.createElement("li");
+      li.className = "note";
+      li.textContent = emptyNote;
+      ul.appendChild(li);
+    }
+    body.appendChild(ul);
   }
 
   renderBooleanDetail(f: FeatureSummary, body: HTMLElement): void {
@@ -2395,6 +2427,18 @@ async function main(): Promise<void> {
     // A face selected in the viewport becomes the first open face.
     const faces = app.selectedFace ? [app.selectedFace] : [];
     app.apply({ type: "add_shell", thickness: 2, faces, name: app.autoName("Shell") });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-move-face").onclick = () => {
+    app.sketcher.exit();
+    const faces = app.selectedFace ? [app.selectedFace] : [];
+    app.apply({ type: "add_move_face", faces, distance: 5, name: app.autoName("Move face") });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-draft").onclick = () => {
+    app.sketcher.exit();
+    const faces = app.selectedFace ? [app.selectedFace] : [];
+    app.apply({ type: "add_draft", faces, neutral: { type: "standard", base: "top", offset: 0 }, angle: 5, name: app.autoName("Draft") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   $("#btn-add-pattern").onclick = () => {

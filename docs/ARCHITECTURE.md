@@ -317,6 +317,11 @@ when the thickness swallows features in ways that change the topology
 (a slot through a faceted boss at a sharp angle); that case needs a true
 offset with topology changes, not attempted here.
 
+The same machinery (`reshape`, private to `shell.rs`) takes any set of
+new face planes, so `move_faces` translates planar faces along their
+normals and `draft_faces` tilts them about the line where each meets a
+neutral plane; the faces around them re-solve their corners as above.
+
 ### Drawing views (`drawing.rs`)
 
 `project_view` projects solids orthographically along a view direction

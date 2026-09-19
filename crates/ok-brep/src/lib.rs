@@ -29,7 +29,7 @@ pub use drawing::{project_view, View, ViewLines};
 pub use extrude::extrude;
 pub use loft::loft;
 pub use revolve::revolve;
-pub use shell::shell;
+pub use shell::{draft_faces, move_faces, shell};
 pub use sweep::{sweep, sweep_closed};
 pub use tessellate::{display_edges, tessellate, tessellate_with_faces, DisplayEdge};
 pub use transform::Transform;

@@ -45,6 +45,8 @@ impl PartStudio {
             | Op::AddLoft { .. }
             | Op::AddBoolean { .. }
             | Op::AddShell { .. }
+            | Op::AddMoveFace { .. }
+            | Op::AddDraft { .. }
             | Op::InsertFeature { .. } => result
                 .feature
                 .map(|id| vec![Op::DeleteFeature { id }])
@@ -202,6 +204,32 @@ impl PartStudio {
                 }],
                 _ => Vec::new(),
             },
+            Op::SetMoveFace {
+                id,
+                faces,
+                distance,
+            } => match before.kind() {
+                Some(FeatureKind::MoveFace(m)) => vec![Op::SetMoveFace {
+                    id,
+                    faces: faces.map(|_| m.faces.clone()),
+                    distance: distance.map(|_| m.distance),
+                }],
+                _ => Vec::new(),
+            },
+            Op::SetDraft {
+                id,
+                faces,
+                neutral,
+                angle,
+            } => match before.kind() {
+                Some(FeatureKind::Draft(d)) => vec![Op::SetDraft {
+                    id,
+                    faces: faces.map(|_| d.faces.clone()),
+                    neutral: neutral.map(|_| d.neutral),
+                    angle: angle.map(|_| d.angle),
+                }],
+                _ => Vec::new(),
+            },
             Op::SetLoft { id, sketch_b, op } => match before.kind() {
                 Some(FeatureKind::Loft(l)) => vec![Op::SetLoft {
                     id,
@@ -320,6 +348,8 @@ impl Before {
             | Op::SetLoft { id, .. }
             | Op::SetBoolean { id, .. }
             | Op::SetShell { id, .. }
+            | Op::SetMoveFace { id, .. }
+            | Op::SetDraft { id, .. }
             | Op::SetSketchPlane { id, .. }
             | Op::RenameFeature { id, .. }
             | Op::SetSuppressed { id, .. }
@@ -613,6 +643,46 @@ mod tests {
             },
         );
         round_trip(&mut ps, Op::DeleteFeature { id: shell });
+        let face = crate::FaceRef {
+            feature: extrude,
+            local: 1,
+        };
+        let r = ps
+            .apply(Op::AddMoveFace {
+                faces: vec![face],
+                distance: 2.0,
+                name: None,
+            })
+            .unwrap();
+        let mv = r.feature.unwrap();
+        round_trip(
+            &mut ps,
+            Op::SetMoveFace {
+                id: mv,
+                faces: Some(vec![]),
+                distance: Some(-1.0),
+            },
+        );
+        round_trip(&mut ps, Op::DeleteFeature { id: mv });
+        let r = ps
+            .apply(Op::AddDraft {
+                faces: vec![face],
+                neutral: PlaneRef::standard(StandardPlane::Top),
+                angle: 5.0,
+                name: None,
+            })
+            .unwrap();
+        let draft = r.feature.unwrap();
+        round_trip(
+            &mut ps,
+            Op::SetDraft {
+                id: draft,
+                faces: None,
+                neutral: Some(PlaneRef::standard(StandardPlane::Front)),
+                angle: Some(-3.0),
+            },
+        );
+        round_trip(&mut ps, Op::DeleteFeature { id: draft });
         round_trip(&mut ps, Op::DeleteFeature { id: extrude });
         round_trip(
             &mut ps,

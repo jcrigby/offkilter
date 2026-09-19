@@ -21,10 +21,11 @@ pub use assembly::{
 pub use document::{AssemblyOp, DocOp, DocOpResult, Document, Tab, TabKind};
 pub use feature::{
     canonical_frame, Axis, BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp,
-    Counterbore, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature,
-    FeatureId, FeatureKind, HoleFeature, LoftFeature, MirrorFeature, PatternFeature, PatternKind,
-    PlaneRef, ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature,
-    ShellFeature, SketchFeature, StandardPlane, SweepFeature, VariableFeature, PROJECTION_BLOCK,
+    Counterbore, DraftFeature, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef,
+    Feature, FeatureId, FeatureKind, HoleFeature, LoftFeature, MirrorFeature, MoveFaceFeature,
+    PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection, ProjectionSource,
+    RevolveAxis, RevolveFeature, ShellFeature, SketchFeature, StandardPlane, SweepFeature,
+    VariableFeature, PROJECTION_BLOCK,
 };
 pub use ops::{Op, OpResult, SketchOp};
 pub use regen::{Body, FeatureStatus, RegenResult, SketchCurve, SketchResult};

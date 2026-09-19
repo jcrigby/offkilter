@@ -364,6 +364,24 @@ pub struct ShellFeature {
     pub faces: Vec<FaceRef>,
 }
 
+/// Moves planar faces along their normals (a direct edit: push or pull).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MoveFaceFeature {
+    pub faces: Vec<FaceRef>,
+    /// Along the face normal; negative pushes into the body.
+    pub distance: f64,
+}
+
+/// Tilts planar faces about the line where each meets a neutral plane, so
+/// the body tapers towards the neutral plane's normal (the pull direction).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DraftFeature {
+    pub faces: Vec<FaceRef>,
+    pub neutral: PlaneRef,
+    /// Degrees; negative tapers the other way.
+    pub angle: f64,
+}
+
 /// How a boolean feature combines its target bodies with its tool bodies.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -411,6 +429,8 @@ pub enum FeatureKind {
     Loft(LoftFeature),
     Boolean(BooleanFeature),
     Shell(ShellFeature),
+    MoveFace(MoveFaceFeature),
+    Draft(DraftFeature),
 }
 
 impl FeatureKind {
@@ -435,6 +455,8 @@ impl FeatureKind {
                 BooleanOp::Intersect => "Intersect",
             },
             FeatureKind::Shell(_) => "Shell",
+            FeatureKind::MoveFace(_) => "Move face",
+            FeatureKind::Draft(_) => "Draft",
         }
     }
 
@@ -462,6 +484,8 @@ impl FeatureKind {
             FeatureKind::Variable(_) => vec![],
             FeatureKind::Sweep(_) | FeatureKind::Loft(_) | FeatureKind::Boolean(_) => vec![],
             FeatureKind::Shell(_) => vec!["thickness".into()],
+            FeatureKind::MoveFace(_) => vec!["distance".into()],
+            FeatureKind::Draft(_) => vec!["angle".into(), "plane.offset".into()],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
                 "depth".into(),
@@ -486,6 +510,9 @@ impl FeatureKind {
             (FeatureKind::Revolve(r), "angle") => Some(r.angle),
             (FeatureKind::Blend(b), "size") => Some(b.size),
             (FeatureKind::Shell(sh), "thickness") => Some(sh.thickness),
+            (FeatureKind::MoveFace(m), "distance") => Some(m.distance),
+            (FeatureKind::Draft(d), "angle") => Some(d.angle),
+            (FeatureKind::Draft(d), "plane.offset") => Some(d.neutral.offset()),
             (FeatureKind::Mirror(m), "plane.offset") => Some(m.plane.offset()),
             (FeatureKind::Pattern(p), "count") => Some(p.count as f64),
             (FeatureKind::Pattern(p), "spacing") => match &p.kind {
@@ -536,6 +563,18 @@ impl FeatureKind {
             }
             (FeatureKind::Shell(sh), "thickness") => {
                 sh.thickness = value;
+                Ok(())
+            }
+            (FeatureKind::MoveFace(m), "distance") => {
+                m.distance = value;
+                Ok(())
+            }
+            (FeatureKind::Draft(d), "angle") => {
+                d.angle = value;
+                Ok(())
+            }
+            (FeatureKind::Draft(d), "plane.offset") => {
+                d.neutral = d.neutral.with_offset(value);
                 Ok(())
             }
             (FeatureKind::Mirror(m), "plane.offset") => {
@@ -604,7 +643,9 @@ impl FeatureKind {
             | FeatureKind::Pattern(_)
             | FeatureKind::Variable(_)
             | FeatureKind::Boolean(_)
-            | FeatureKind::Shell(_) => None,
+            | FeatureKind::Shell(_)
+            | FeatureKind::MoveFace(_)
+            | FeatureKind::Draft(_) => None,
         }
     }
 }

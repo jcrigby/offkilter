@@ -850,3 +850,57 @@ fn shelled_enclosure_with_a_boss_inside() {
     assert!(close(block.solid.volume(), 1000.0 - 512.0, 1e-9));
     assert_eq!(block.solid.shells().len(), 2);
 }
+
+/// Direct edits on a bracket: the top face is pulled up, a side face is
+/// pushed in, and the four walls get a draft about the base.
+#[test]
+fn move_face_and_draft_on_a_block() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (0.0, 0.0), (60.0, 40.0));
+    let block = p.extrude(s, 20.0, BodyOp::New);
+    let top = FaceRef {
+        feature: block,
+        local: 1,
+    };
+    let mv = p.op(Op::AddMoveFace {
+        faces: vec![top],
+        distance: 5.0,
+        name: None,
+    });
+    assert!(close(p.volume(), 60.0 * 40.0 * 25.0, 1e-9));
+    // Push the +X wall in by 10 instead.
+    let east = p.face(|n, cyl, _| !cyl && (n.x - 1.0).abs() < 1e-9);
+    p.op(Op::SetMoveFace {
+        id: mv,
+        faces: Some(vec![east]),
+        distance: Some(-10.0),
+    });
+    assert!(close(p.volume(), 50.0 * 40.0 * 20.0, 1e-9));
+    // Draft all four walls 8° about the base plane (pull +Z).
+    let walls: Vec<FaceRef> = (2..6)
+        .map(|local| FaceRef {
+            feature: block,
+            local,
+        })
+        .collect();
+    p.op(Op::AddDraft {
+        faces: walls,
+        neutral: PlaneRef::standard(StandardPlane::Top),
+        angle: 8.0,
+        name: None,
+    });
+    let k = 8f64.to_radians().tan();
+    let expected: f64 = (0..2000)
+        .map(|i| {
+            let z = (i as f64 + 0.5) / 100.0;
+            (50.0 - 2.0 * k * z) * (40.0 - 2.0 * k * z) * 0.01
+        })
+        .sum();
+    let v = p.volume();
+    assert!(close(v, expected, 1e-4), "{v} vs {expected}");
+    // The drafted walls are still four planar faces and the body is one shell.
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 1);
+    assert_eq!(r.bodies[0].solid.faces.len(), 6);
+}

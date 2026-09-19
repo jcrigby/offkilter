@@ -75,7 +75,9 @@ export type FeatureKind =
   | { type: "sweep"; sketch: number; profiles: ProfileSelection; path: number; op: BodyOp }
   | { type: "loft"; sketch: number; sketch_b: number; op: BodyOp }
   | { type: "boolean"; op: BooleanOp; targets: number[]; tools: number[]; keep_tools: boolean }
-  | { type: "shell"; thickness: number; faces: FaceRef[] };
+  | { type: "shell"; thickness: number; faces: FaceRef[] }
+  | { type: "move_face"; faces: FaceRef[]; distance: number }
+  | { type: "draft"; faces: FaceRef[]; neutral: PlaneRef; angle: number };
 export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 
@@ -218,6 +220,10 @@ export type Op =
   | { type: "set_boolean"; id: number; op?: BooleanOp | null; targets?: number[] | null; tools?: number[] | null; keep_tools?: boolean | null }
   | { type: "add_shell"; thickness: number; faces?: FaceRef[]; name: string | null }
   | { type: "set_shell"; id: number; thickness?: number | null; faces?: FaceRef[] | null }
+  | { type: "add_move_face"; faces?: FaceRef[]; distance: number; name: string | null }
+  | { type: "set_move_face"; id: number; faces?: FaceRef[] | null; distance?: number | null }
+  | { type: "add_draft"; faces?: FaceRef[]; neutral: PlaneRef; angle: number; name: string | null }
+  | { type: "set_draft"; id: number; faces?: FaceRef[] | null; neutral?: PlaneRef | null; angle?: number | null }
   | { type: "set_settings"; facet_angle: number }
   | { type: "replace_document"; json: string }
   /** Inverse ops (undo) carry saved state; the client never builds these itself. */

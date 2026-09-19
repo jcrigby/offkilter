@@ -601,3 +601,51 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   expect((dxf.match(/\r\nHIDDEN\r\n/g) ?? []).length).toBeGreaterThan(0);
   expect((dxf.match(/\r\nLINE\r\n/g) ?? []).length).toBeGreaterThan(20);
 });
+
+test("move face and draft edit a box directly", async ({ page }) => {
+  await openDemo(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(300);
+  const block: number = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Sketch 1" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: s, op: { type: "add_rectangle", a: { x: 0, y: 0 }, b: { x: 60, y: 40 } } });
+    app.apply({ type: "add_extrude", sketch: s, depth: 20, op: "new", name: "Extrude 1" });
+    return app.summary.features[app.summary.features.length - 1].id;
+  });
+  await page.waitForTimeout(300);
+  // Pick the top face, then Move face pulls it 5 mm by default.
+  await page.keyboard.press("f");
+  await page.waitForTimeout(300);
+  let picked = "";
+  for (const [fx, fy] of [[0.5, 0.45], [0.5, 0.4], [0.45, 0.5], [0.55, 0.42]] as const) {
+    await clickViewport(page, fx, fy);
+    picked = await status(page);
+    if (picked.startsWith("Face:")) break;
+  }
+  expect(picked).toContain("Face: Extrude 1");
+  await page.click("#btn-add-move-face");
+  await page.waitForTimeout(500);
+  expect(await featureNames(page)).toContain("Move face 1");
+  expect(await volume(page)).toBeCloseTo(60 * 40 * 25, 3);
+  expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
+  // Draft the four walls 10° about the base: the box tapers upward.
+  await page.evaluate((block) => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const faces = [2, 3, 4, 5].map((local) => ({ feature: block, local }));
+    app.apply({ type: "add_draft", faces, neutral: { type: "standard", base: "top", offset: 0 }, angle: 10, name: "Draft 1" });
+  }, block);
+  await page.waitForTimeout(500);
+  const k = Math.tan((10 * Math.PI) / 180);
+  let expected = 0;
+  for (let i = 0; i < 2500; i++) {
+    const z = (i + 0.5) / 100;
+    expected += (60 - 2 * k * z) * (40 - 2 * k * z) * 0.01;
+  }
+  expect(await volume(page)).toBeCloseTo(expected, 0);
+  expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
+  await page.click("#feature-list li:last-child");
+  await page.waitForTimeout(300);
+  expect(await page.$$eval("#detail-body .edge-list li", (els) => els.length)).toBe(4);
+});

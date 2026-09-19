@@ -1,9 +1,10 @@
 use crate::{
-    BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, EdgeRef,
-    ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind,
-    HoleFeature, LoftFeature, MirrorFeature, ModelError, PartStudio, PatternFeature, PatternKind,
-    PlaneRef, ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature,
-    ShellFeature, SketchFeature, SweepFeature, VariableFeature, PROJECTION_BLOCK,
+    BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, DraftFeature,
+    EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId,
+    FeatureKind, HoleFeature, LoftFeature, MirrorFeature, ModelError, MoveFaceFeature, PartStudio,
+    PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection, ProjectionSource,
+    RevolveAxis, RevolveFeature, ShellFeature, SketchFeature, SweepFeature, VariableFeature,
+    PROJECTION_BLOCK,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, Entity, EntityId};
@@ -335,6 +336,35 @@ pub enum Op {
         thickness: Option<f64>,
         #[serde(default)]
         faces: Option<Vec<FaceRef>>,
+    },
+    AddMoveFace {
+        #[serde(default)]
+        faces: Vec<FaceRef>,
+        distance: f64,
+        name: Option<String>,
+    },
+    SetMoveFace {
+        id: FeatureId,
+        #[serde(default)]
+        faces: Option<Vec<FaceRef>>,
+        #[serde(default)]
+        distance: Option<f64>,
+    },
+    AddDraft {
+        #[serde(default)]
+        faces: Vec<FaceRef>,
+        neutral: PlaneRef,
+        angle: f64,
+        name: Option<String>,
+    },
+    SetDraft {
+        id: FeatureId,
+        #[serde(default)]
+        faces: Option<Vec<FaceRef>>,
+        #[serde(default)]
+        neutral: Option<PlaneRef>,
+        #[serde(default)]
+        angle: Option<f64>,
     },
     /// Sets document-wide regeneration settings.
     SetSettings {
@@ -868,6 +898,65 @@ impl PartStudio {
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "shell")),
+            },
+            Op::AddMoveFace {
+                faces,
+                distance,
+                name,
+            } => {
+                out.feature = Some(self.push_feature(
+                    FeatureKind::MoveFace(MoveFaceFeature { faces, distance }),
+                    name,
+                ));
+            }
+            Op::SetMoveFace {
+                id,
+                faces,
+                distance,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::MoveFace(m) => {
+                    if let Some(f) = faces {
+                        m.faces = f;
+                    }
+                    if let Some(d) = distance {
+                        m.distance = d;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "move face")),
+            },
+            Op::AddDraft {
+                faces,
+                neutral,
+                angle,
+                name,
+            } => {
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Draft(DraftFeature {
+                        faces,
+                        neutral,
+                        angle,
+                    }),
+                    name,
+                ));
+            }
+            Op::SetDraft {
+                id,
+                faces,
+                neutral,
+                angle,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Draft(d) => {
+                    if let Some(f) = faces {
+                        d.faces = f;
+                    }
+                    if let Some(n) = neutral {
+                        d.neutral = n;
+                    }
+                    if let Some(a) = angle {
+                        d.angle = a;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "draft")),
             },
             Op::SetLoft { id, sketch_b, op } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Loft(l) => {
