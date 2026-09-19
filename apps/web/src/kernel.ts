@@ -215,7 +215,8 @@ export type Op =
   | { type: "delete_feature"; id: number }
   | { type: "move_feature"; id: number; index: number }
   | { type: "sketch"; id: number; op: SketchOp }
-  | { type: "rename_studio"; name: string };
+  | { type: "rename_studio"; name: string }
+  | { type: "rename_part"; source: number; name: string | null };
 
 /** Ops that undo an applied op come back with its result (see `inverse`). */
 export type OpResult = { feature: number | null; entities: number[]; constraint: number | null; inverse?: Op[] };

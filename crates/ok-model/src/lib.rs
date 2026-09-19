@@ -66,6 +66,9 @@ pub struct PartStudio {
     /// Regeneration settings such as facet resolution.
     #[serde(default)]
     pub settings: Settings,
+    /// User names for parts, by the feature that created the body.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub part_names: std::collections::BTreeMap<FeatureId, String>,
     /// Per-feature regeneration cache; never persisted.
     #[serde(skip)]
     cache: regen::RegenCache,
@@ -107,6 +110,7 @@ impl PartStudio {
             features: Vec::new(),
             next_id: 1,
             settings: Settings::default(),
+            part_names: Default::default(),
             cache: Default::default(),
         }
     }

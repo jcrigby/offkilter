@@ -65,7 +65,16 @@ button.active { background: rgba(78, 161, 255, 0.25); border-color: var(--accent
 .parts-title { border-top: 1px solid var(--border); margin-top: 4px; }
 .part-list { list-style: none; margin: 0; padding: 0 12px 8px; font-size: 12px; }
 .part-list li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; color: var(--text-dim); }
-.part-list li .pname { color: var(--text); }
+.part-list li .pname { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.part-list li .pstats { white-space: nowrap; }
+.part-list li .eye { padding: 0 4px; border: none; background: none; color: var(--accent); font-size: 11px; line-height: 1; }
+.part-list li .eye.off { color: var(--text-dim); }
+.part-list li .pname-edit { flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--accent); border-radius: 3px; padding: 0 4px; font: inherit; }
+.views { display: flex; gap: 2px; }
+.views button, .section button { padding: 3px 7px; font-size: 12px; }
+.section { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
+.section select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; font: inherit; }
+.section input[type="range"] { width: 90px; }
 .feature-list .icon { width: 16px; text-align: center; color: var(--text-dim); font-family: var(--mono); }
 .feature-list .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }
@@ -105,6 +114,7 @@ h4 { margin: 14px 0 4px; font-size: 12px; color: var(--text-dim); text-transform
 .label.clickable:hover { border-color: var(--accent); color: var(--accent); }
 .label.bound { color: #c9a5ff; }
 .label.error { border-color: var(--err); color: var(--err); }
+.label.measure { border-color: var(--accent); color: var(--accent); transform: translate(-50%, -160%); }
 #statusbar { grid-area: status; display: flex; align-items: center; padding: 0 12px; background: var(--bg-panel); border-top: 1px solid var(--border); color: var(--text-dim); font-size: 12px; font-family: var(--mono); }
 
 .docs-list li .downer { color: var(--text-dim); font-size: 11px; }

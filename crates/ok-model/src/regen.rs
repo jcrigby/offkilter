@@ -465,6 +465,7 @@ impl PartStudio {
             self.cache.entries.push((chain, result.clone()));
         }
         self.cache.entries.truncate(self.features.len());
+        self.apply_part_names(&mut result);
         result
     }
 
@@ -478,11 +479,23 @@ impl PartStudio {
         if count == 0 {
             return RegenResult::default();
         }
-        self.cache
+        let mut r = self
+            .cache
             .entries
             .get(count - 1)
             .map(|(_, r)| r.clone())
-            .unwrap_or(full)
+            .unwrap_or(full);
+        self.apply_part_names(&mut r);
+        r
+    }
+
+    /// Gives bodies their user-chosen names (by creating feature).
+    fn apply_part_names(&self, result: &mut RegenResult) {
+        for b in &mut result.bodies {
+            if let Some(n) = self.part_names.get(&b.source) {
+                b.name = n.clone();
+            }
+        }
     }
 
     /// Drops the regeneration cache (e.g. after loading a document).

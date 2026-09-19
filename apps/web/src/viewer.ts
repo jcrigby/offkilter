@@ -66,6 +66,10 @@ export class Viewer {
   private previewMaterial = new THREE.LineBasicMaterial({ color: SKETCH_SELECTED, depthTest: false });
   private labelRenderer = new CSS2DRenderer();
   private labels = new THREE.Group();
+  /** Measurement overlay: two points, a line and a label. */
+  private measure = new THREE.Group();
+  /** Body indices hidden by the user; they are neither drawn nor picked. */
+  private hidden = new Set<number>();
 
   constructor(private container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -109,6 +113,8 @@ export class Viewer {
     this.scene.add(this.preview);
     this.scene.add(this.frames);
     this.scene.add(this.labels);
+    this.scene.add(this.measure);
+    this.renderer.localClippingEnabled = true;
     const el = this.renderer.domElement;
     el.addEventListener("contextmenu", (e) => e.preventDefault());
     el.addEventListener("pointerdown", (e) => {
@@ -181,6 +187,7 @@ export class Viewer {
       geom.setIndex(new THREE.BufferAttribute(m.indices, 1));
       const mesh = new THREE.Mesh(geom, this.bodyMaterial);
       mesh.userData.body = this.meshes.length;
+      mesh.visible = !this.hidden.has(this.meshes.length);
       this.meshes.push(mesh);
       this.bodies.add(mesh);
       if (m.edges.length > 0) {
@@ -188,10 +195,131 @@ export class Viewer {
         eg.setAttribute("position", new THREE.BufferAttribute(m.edges, 3));
         const lines = new THREE.LineSegments(eg, this.edgeMaterial);
         lines.userData.body = this.meshes.length - 1;
+        lines.visible = mesh.visible;
         this.edgeLines.push(lines);
         this.bodies.add(lines);
       }
     }
+  }
+
+  /** Shows or hides one body (by index) without touching the document. */
+  setBodyVisible(index: number, visible: boolean): void {
+    if (visible) this.hidden.delete(index);
+    else this.hidden.add(index);
+    for (const m of this.meshes) if (m.userData.body === index) m.visible = visible;
+    for (const l of this.edgeLines) if (l.userData.body === index) l.visible = visible;
+  }
+
+  /** Body indices currently hidden. */
+  hiddenBodies(): ReadonlySet<number> {
+    return this.hidden;
+  }
+
+  /** Forgets all hidden bodies (e.g. when switching tabs). */
+  showAllBodies(): void {
+    for (const i of [...this.hidden]) this.setBodyVisible(i, true);
+  }
+
+  /** Moves the camera to a standard orthographic-style direction, keeping the target and distance. */
+  setStandardView(view: "top" | "front" | "right" | "iso"): void {
+    const target = this.controls.target.clone();
+    const dist = this.camera.position.distanceTo(target);
+    const dir =
+      view === "top" ? new THREE.Vector3(0, 0, 1) : view === "front" ? new THREE.Vector3(0, -1, 0) : view === "right" ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0.6, -0.7, 0.5).normalize();
+    this.camera.up.set(0, view === "top" ? 1 : 0, view === "top" ? 0 : 1);
+    this.camera.position.copy(target).addScaledVector(dir, dist);
+    this.camera.lookAt(target);
+    this.controls.update();
+  }
+
+  /**
+   * Clips everything on one side of an axis-aligned plane so the inside of
+   * bodies can be seen; `null` turns the section off.
+   */
+  setSection(section: { axis: "x" | "y" | "z"; offset: number; flip: boolean } | null): void {
+    const planes: THREE.Plane[] = [];
+    if (section) {
+      const n = new THREE.Vector3(section.axis === "x" ? 1 : 0, section.axis === "y" ? 1 : 0, section.axis === "z" ? 1 : 0);
+      if (section.flip) n.negate();
+      // Keep the half-space n·p <= offset·|n| side of the plane (three.js keeps n·p + c >= 0).
+      const sign = section.flip ? 1 : -1;
+      planes.push(new THREE.Plane(n, sign * section.offset));
+    }
+    for (const m of [this.bodyMaterial, this.selectedBodyMaterial, this.edgeMaterial]) {
+      m.clippingPlanes = planes;
+      m.needsUpdate = true;
+    }
+    this.bodyMaterial.side = section ? THREE.DoubleSide : THREE.FrontSide;
+    this.selectedBodyMaterial.side = section ? THREE.DoubleSide : THREE.FrontSide;
+  }
+
+  /** Unit vector the camera looks along. */
+  viewDirection(): Vec3 {
+    const d = this.controls.target.clone().sub(this.camera.position).normalize();
+    return { x: d.x, y: d.y, z: d.z };
+  }
+
+  /** Bounding box of the shown bodies, or null when there are none. */
+  bodyBounds(): { min: Vec3; max: Vec3 } | null {
+    const box = new THREE.Box3();
+    for (const m of this.meshes) if (m.visible) box.expandByObject(m);
+    if (box.isEmpty()) return null;
+    return { min: { x: box.min.x, y: box.min.y, z: box.min.z }, max: { x: box.max.x, y: box.max.y, z: box.max.z } };
+  }
+
+  /** Point on a body under the pointer, snapped to the nearest mesh vertex when within a few pixels. */
+  pickPoint(e: PointerEvent): { point: Vec3; body: number; face: number; snapped: boolean } | null {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hit = this.raycaster.intersectObjects(this.meshes.filter((m) => m.visible), false)[0];
+    if (!hit || hit.faceIndex === undefined || hit.faceIndex === null || !hit.face) return null;
+    const body = hit.object.userData.body as number;
+    const data = this.meshData[body];
+    if (!data) return null;
+    const face = data.faceIds[hit.faceIndex];
+    if (face === undefined) return null;
+    let point: THREE.Vector3 = hit.point.clone();
+    let snapped = false;
+    // Snap to the closest corner of the hit triangle when it is within 8 screen pixels.
+    const px = this.eventPx(e);
+    for (const vi of [hit.face.a, hit.face.b, hit.face.c]) {
+      const v = new THREE.Vector3(data.positions[3 * vi]!, data.positions[3 * vi + 1]!, data.positions[3 * vi + 2]!);
+      const s = this.toScreen({ x: v.x, y: v.y, z: v.z });
+      if (Math.hypot(s.x - px.x, s.y - px.y) < 8) {
+        point = v;
+        snapped = true;
+        break;
+      }
+    }
+    return { point: { x: point.x, y: point.y, z: point.z }, body, face, snapped };
+  }
+
+  /** Draws a measurement between two points with a label; `null` clears it. */
+  setMeasure(m: { a: Vec3; b: Vec3 | null; text: string } | null): void {
+    this.clear(this.measure);
+    if (!m) return;
+    const mk = (p: Vec3): THREE.Mesh => {
+      const s = new THREE.Mesh(new THREE.SphereGeometry(0.6, 12, 12), new THREE.MeshBasicMaterial({ color: SKETCH_SELECTED, depthTest: false }));
+      s.position.set(p.x, p.y, p.z);
+      s.renderOrder = 10;
+      return s;
+    };
+    this.measure.add(mk(m.a));
+    if (m.b) {
+      this.measure.add(mk(m.b));
+      const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(m.a.x, m.a.y, m.a.z), new THREE.Vector3(m.b.x, m.b.y, m.b.z)]);
+      const line = new THREE.Line(g, this.previewMaterial);
+      line.renderOrder = 10;
+      this.measure.add(line);
+    }
+    const div = document.createElement("div");
+    div.className = "label measure";
+    div.textContent = m.text;
+    const obj = new CSS2DObject(div);
+    const mid = m.b ? { x: (m.a.x + m.b.x) / 2, y: (m.a.y + m.b.y) / 2, z: (m.a.z + m.b.z) / 2 } : m.a;
+    obj.position.set(mid.x, mid.y, mid.z);
+    this.measure.add(obj);
   }
 
   setSketches(sketches: Record<string, SketchResult>, selected: number | null, selectedEntities: ReadonlySet<number> = new Set()): void {
@@ -327,7 +455,7 @@ export class Viewer {
     const rect = this.renderer.domElement.getBoundingClientRect();
     const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.camera);
-    const hit = this.raycaster.intersectObjects(this.meshes, false)[0];
+    const hit = this.raycaster.intersectObjects(this.meshes.filter((m) => m.visible), false)[0];
     if (!hit || hit.faceIndex === undefined || hit.faceIndex === null) return null;
     const body = hit.object.userData.body as number;
     const face = this.meshData[body]?.faceIds[hit.faceIndex];
@@ -343,7 +471,7 @@ export class Viewer {
     const dist = this.camera.position.distanceTo(this.controls.target);
     const pxWorld = (2 * dist * Math.tan((this.camera.fov * Math.PI) / 360)) / rect.height;
     this.raycaster.params.Line.threshold = pxWorld * 6;
-    const hit = this.raycaster.intersectObjects(this.edgeLines, false)[0];
+    const hit = this.raycaster.intersectObjects(this.edgeLines.filter((l) => l.visible), false)[0];
     if (!hit || hit.index === undefined) return null;
     const body = hit.object.userData.body as number;
     const segment = Math.floor(hit.index / 2);

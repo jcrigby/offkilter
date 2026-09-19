@@ -49,7 +49,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Face selection in the viewport with picking
 - [x] Edge selection (edges are named by their two faces)
 - [x] Rollback bar in the feature list
-- [ ] Body selection, hide/show, rename
+- [x] Part hide/show and rename from the parts list; standard views (top/front/right/iso); measure tool (point to point, corner snap); section view (axis-aligned clipping)
 - [x] Multiple part studios per document; assemblies with fastened / revolute / slider / cylindrical mates resolved as chains from fixed instances
 - [x] Interference check between placed instances (boolean intersection, on demand)
 - [x] Numeric mate solver: closed loops and redundant mates solved over the free degrees of freedom of revolute, slider and cylindrical mates

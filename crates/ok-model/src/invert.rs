@@ -224,6 +224,10 @@ impl PartStudio {
                 Before::Name(name) => vec![Op::RenameStudio { name }],
                 _ => Vec::new(),
             },
+            Op::RenamePart { source, .. } => match before {
+                Before::PartName(name) => vec![Op::RenamePart { source, name }],
+                _ => Vec::new(),
+            },
             Op::ReplaceDocument { .. } => match before {
                 Before::Document(json) => vec![Op::ReplaceDocument { json }],
                 _ => Vec::new(),
@@ -251,6 +255,7 @@ enum Before {
     Sketch(SketchFeature),
     Settings(crate::Settings),
     Name(String),
+    PartName(Option<String>),
     Document(String),
 }
 
@@ -288,6 +293,7 @@ impl Before {
             },
             Op::SetSettings { .. } => Before::Settings(ps.settings),
             Op::RenameStudio { .. } => Before::Name(ps.name.clone()),
+            Op::RenamePart { source, .. } => Before::PartName(ps.part_names.get(source).cloned()),
             Op::ReplaceDocument { .. } => Before::Document(ps.to_json()),
             _ => Before::None,
         }
@@ -453,6 +459,13 @@ mod tests {
             &mut ps,
             Op::RenameStudio {
                 name: "renamed".into(),
+            },
+        );
+        round_trip(
+            &mut ps,
+            Op::RenamePart {
+                source: extrude,
+                name: Some("Plate".into()),
             },
         );
         round_trip(

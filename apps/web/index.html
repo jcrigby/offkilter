@@ -22,6 +22,24 @@
           </select>
         </label>
         <span class="divider"></span>
+        <span class="views" title="Standard views (keys 1, 2, 3, 0)">
+          <button id="btn-view-top" title="Top view (1)">Top</button>
+          <button id="btn-view-front" title="Front view (2)">Front</button>
+          <button id="btn-view-right" title="Right view (3)">Right</button>
+          <button id="btn-view-iso" title="Isometric view (0)">Iso</button>
+        </span>
+        <button id="btn-measure" title="Measure: click two points on bodies (Esc to stop)">Measure</button>
+        <label class="section" title="Section view: clip the model with an axis-aligned plane">Section
+          <select id="section-axis">
+            <option value="">off</option>
+            <option value="x">X</option>
+            <option value="y">Y</option>
+            <option value="z">Z</option>
+          </select>
+          <input id="section-offset" type="range" min="0" max="1000" value="500" hidden />
+          <button id="section-flip" title="Flip which side is removed" hidden>Flip</button>
+        </label>
+        <span class="divider"></span>
         <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
         <button id="btn-redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
         <span class="divider"></span>

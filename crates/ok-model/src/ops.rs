@@ -325,6 +325,11 @@ pub enum Op {
     RenameStudio {
         name: String,
     },
+    /// Names the part(s) created by a feature; `None` restores "Part N".
+    RenamePart {
+        source: FeatureId,
+        name: Option<String>,
+    },
 }
 
 fn default_reverse() -> ExtrudeDirection {
@@ -910,6 +915,14 @@ impl PartStudio {
                 }
             },
             Op::RenameStudio { name } => self.name = name,
+            Op::RenamePart { source, name } => match name.map(|n| n.trim().to_string()) {
+                Some(n) if !n.is_empty() => {
+                    self.part_names.insert(source, n);
+                }
+                _ => {
+                    self.part_names.remove(&source);
+                }
+            },
         }
         Ok(out)
     }

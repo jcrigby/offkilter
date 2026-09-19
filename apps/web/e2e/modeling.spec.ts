@@ -350,3 +350,74 @@ test("assembly tab: insert two instances and mate them face to face", async ({ p
   await page.getByRole("button", { name: /Part Studio 1/ }).click();
   await expect(page.locator("#feature-list")).toContainText("Block");
 });
+
+test("standard views, measure, section and part rename", async ({ page }) => {
+  await openDemo(page);
+  // Standard views look straight down an axis.
+  await page.keyboard.press("1");
+  await page.waitForTimeout(200);
+  let dir = await page.evaluate(() => (window as any).offkilter.viewer.viewDirection());
+  expect(dir.z).toBeCloseTo(-1, 6);
+  await page.click("#btn-view-front");
+  dir = await page.evaluate(() => (window as any).offkilter.viewer.viewDirection());
+  expect(dir.y).toBeCloseTo(1, 6);
+  await page.keyboard.press("f");
+  await page.keyboard.press("1");
+  await page.waitForTimeout(200);
+
+  // Measure across the plate's top face, near two opposite corners (seen from above).
+  const bounds = await page.evaluate(() => (window as any).offkilter.summary.bodies[0].bounds);
+  const plateTop = await page.evaluate(() => {
+    const faces = (window as any).offkilter.summary.bodies[0].faces as { origin: { feature: number }; normal: { z: number } }[];
+    return faces.some((f) => f.origin.feature === 2 && f.normal.z > 0.99);
+  });
+  expect(plateTop).toBe(true);
+  await page.click("#btn-measure");
+  expect(await status(page)).toContain("Measure:");
+  const vp = (await page.locator("#viewport").boundingBox())!;
+  const corners = [
+    { x: bounds[0].x + 1.5, y: bounds[0].y + 1.5, z: bounds[0].z + 1 },
+    { x: bounds[1].x - 1.5, y: bounds[1].y - 1.5, z: bounds[0].z + 1 },
+  ];
+  for (const c of corners) {
+    const s = await page.evaluate((c) => (window as any).offkilter.viewer.toScreen(c), c);
+    await page.mouse.move(vp.x + s.x, vp.y + s.y);
+    await page.mouse.down();
+    await page.mouse.up();
+    await page.waitForTimeout(150);
+  }
+  const measured = await status(page);
+  const m = measured.match(/Distance ([\d.]+) mm · dx (-?[\d.]+) · dy (-?[\d.]+) · dz (-?[\d.]+)/);
+  expect(m, measured).not.toBeNull();
+  const diag = Math.hypot(bounds[1].x - bounds[0].x, bounds[1].y - bounds[0].y);
+  // Both clicks landed on the plate top (dz = 0) roughly a diagonal apart.
+  expect(Number(m![1])).toBeGreaterThan(diag * 0.8);
+  expect(Number(m![1])).toBeCloseTo(Math.hypot(Number(m![2]), Number(m![3]), Number(m![4])), 2);
+  expect(Math.abs(Number(m![4]))).toBeLessThan(1e-6);
+  await page.keyboard.press("Escape");
+  expect(await status(page)).not.toContain("Distance");
+
+  // Section view exposes the slider; turning it off hides it again.
+  await page.selectOption("#section-axis", "z");
+  await expect(page.locator("#section-offset")).toBeVisible();
+  expect(await page.evaluate(() => (window as any).offkilter.section.axis)).toBe("z");
+  await page.selectOption("#section-axis", "");
+  await expect(page.locator("#section-offset")).toBeHidden();
+
+  // Hide and show the part from the parts list.
+  await page.click("#part-list li .eye");
+  expect(await page.evaluate(() => (window as any).offkilter.viewer.hiddenBodies().size)).toBe(1);
+  await page.click("#part-list li .eye");
+  expect(await page.evaluate(() => (window as any).offkilter.viewer.hiddenBodies().size)).toBe(0);
+
+  // Rename the part; undo restores the default name.
+  const original = (await page.textContent("#part-list li .pname")) ?? "";
+  await page.dblclick("#part-list li .pname");
+  await page.fill("#part-list li .pname-edit", "Plate");
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(200);
+  expect(await page.textContent("#part-list li .pname")).toBe("Plate");
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(200);
+  expect(await page.textContent("#part-list li .pname")).toBe(original);
+});

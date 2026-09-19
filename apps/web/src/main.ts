@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import type { Axis, BlendKind, Connector, Constraint, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
+import type { Axis, BlendKind, Connector, Constraint, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -281,6 +281,95 @@ class App implements SketchHost {
     this.viewer.setFrames([]);
   }
 
+  // ------------------------------------------------------------ measure
+
+  /** Measure mode: the first picked point, or null while waiting for it. */
+  measure: { a: { point: Vec3; body: number; face: number } | null } | null = null;
+
+  beginMeasure(): void {
+    if (this.sketcher.active) this.sketcher.exit();
+    this.endFacePick();
+    this.endEdgePick();
+    this.endMatePick();
+    this.measure = { a: null };
+    ($("#btn-measure") as HTMLButtonElement).classList.add("active");
+    let down: { x: number; y: number } | null = null;
+    this.viewer.pointerHandler = {
+      down: (e) => {
+        down = { x: e.clientX, y: e.clientY };
+      },
+      move: () => {},
+      up: (e) => {
+        const d = down;
+        down = null;
+        if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 4) return;
+        this.measureClick(e);
+      },
+      cancel: () => this.endMeasure(),
+    };
+    this.setStatus("Measure: click a point on a body (corners snap), then a second point. Esc stops.");
+  }
+
+  private measureClick(e: PointerEvent): void {
+    if (!this.measure) return;
+    const hit = this.viewer.pickPoint(e);
+    if (!hit) return;
+    const fmt = (p: Vec3): string => `(${p.x.toFixed(3)}, ${p.y.toFixed(3)}, ${p.z.toFixed(3)})`;
+    if (!this.measure.a) {
+      this.measure.a = hit;
+      this.viewer.setMeasure({ a: hit.point, b: null, text: fmt(hit.point) });
+      const body = this.summary.bodies[hit.body];
+      const face = body?.faces[hit.face];
+      const what = face ? `${face.surface} face of ${body!.name}` : "point";
+      this.setStatus(`Measure: ${what} at ${fmt(hit.point)}${hit.snapped ? " (corner)" : ""}. Click the second point.`);
+      return;
+    }
+    const a = this.measure.a.point;
+    const b = hit.point;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const dz = b.z - a.z;
+    const dist = Math.hypot(dx, dy, dz);
+    this.viewer.setMeasure({ a, b, text: `${dist.toFixed(3)} mm` });
+    this.setStatus(`Distance ${dist.toFixed(3)} mm · dx ${dx.toFixed(3)} · dy ${dy.toFixed(3)} · dz ${dz.toFixed(3)} · from ${fmt(a)} to ${fmt(b)}. Click to measure again, Esc stops.`);
+    this.measure.a = null;
+  }
+
+  endMeasure(): void {
+    if (!this.measure) return;
+    this.measure = null;
+    this.viewer.pointerHandler = null;
+    this.viewer.setMeasure(null);
+    ($("#btn-measure") as HTMLButtonElement).classList.remove("active");
+    this.setStatus(this.statusLine());
+  }
+
+  // ------------------------------------------------------------ section view
+
+  /** Section view state: clipping axis, position as a fraction of the model extent, and side. */
+  section: { axis: "x" | "y" | "z"; t: number; flip: boolean } | null = null;
+
+  setSection(section: { axis: "x" | "y" | "z"; t: number; flip: boolean } | null): void {
+    this.section = section;
+    ($("#section-offset") as HTMLInputElement).hidden = !section;
+    ($("#section-flip") as HTMLButtonElement).hidden = !section;
+    this.applySection();
+  }
+
+  /** Re-applies the section plane against the current body extents. */
+  applySection(): void {
+    const sec = this.section;
+    if (!sec) {
+      this.viewer.setSection(null);
+      return;
+    }
+    const bounds = this.viewer.bodyBounds();
+    const lo = bounds ? bounds.min[sec.axis] : -50;
+    const hi = bounds ? bounds.max[sec.axis] : 50;
+    const offset = lo + (hi - lo) * sec.t;
+    this.viewer.setSection({ axis: sec.axis, offset, flip: sec.flip });
+  }
+
   // ------------------------------------------------------------ tabs
 
   switchTab(id: number): void {
@@ -289,6 +378,8 @@ class App implements SketchHost {
     this.endFacePick();
     this.endEdgePick();
     this.endMatePick();
+    this.endMeasure();
+    this.viewer.showAllBodies();
     this.selected = null;
     this.selectedFace = null;
     this.selectedInstance = null;
@@ -773,6 +864,7 @@ class App implements SketchHost {
     ($("#assembly-panel") as HTMLElement).hidden = !assembly;
     ($("#studio-panel") as HTMLElement).hidden = assembly;
     this.viewer.setBodies(this.kernel.bodyMeshes());
+    this.applySection();
     this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
     if (!assembly) this.viewer.setSelectedFace(this.selectedFace ? this.findFace(this.selectedFace) : null);
     this.highlightBlendEdges();
@@ -1001,23 +1093,62 @@ class App implements SketchHost {
   renderParts(target = "#part-list"): void {
     const ul = $(target);
     ul.innerHTML = "";
-    for (const b of this.summary.bodies) {
+    const hidden = this.viewer.hiddenBodies();
+    this.summary.bodies.forEach((b, index) => {
       const li = document.createElement("li");
+      li.dataset.body = String(index);
+      const eye = document.createElement("button");
+      eye.className = "eye" + (hidden.has(index) ? " off" : "");
+      eye.title = hidden.has(index) ? "Show this part" : "Hide this part";
+      eye.textContent = hidden.has(index) ? "○" : "●";
+      eye.onclick = () => {
+        this.viewer.setBodyVisible(index, hidden.has(index));
+        this.applySection();
+        this.renderParts(target);
+      };
       const name = document.createElement("span");
       name.className = "pname";
       name.textContent = b.name;
+      if (this.summary.kind !== "assembly") {
+        name.title = "Double-click to rename";
+        name.ondblclick = () => this.editPartName(li, name, b.source, b.name);
+      }
       const stats = document.createElement("span");
+      stats.className = "pstats";
       const c = b.centroid;
       stats.textContent = `${b.volume.toFixed(1)} mm³ · ${b.area.toFixed(1)} mm²`;
       stats.title = c ? `centre of mass (${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)}) · ${b.face_count} faces` : "";
-      li.append(name, stats);
+      li.append(eye, name, stats);
       ul.appendChild(li);
-    }
+    });
     if (this.summary.bodies.length === 0) {
       const li = document.createElement("li");
       li.textContent = "no parts";
       ul.appendChild(li);
     }
+  }
+
+  /** Replaces a part's name span with an input; Enter or blur commits, Escape cancels. */
+  private editPartName(li: HTMLElement, name: HTMLElement, source: number, current: string): void {
+    const input = document.createElement("input");
+    input.className = "pname-edit";
+    input.value = current;
+    let done = false;
+    const finish = (commit: boolean) => {
+      if (done) return;
+      done = true;
+      const value = input.value.trim();
+      if (commit && value !== current) this.apply({ type: "rename_part", source, name: value === "" ? null : value });
+      else this.renderParts(li.parentElement?.id ? `#${li.parentElement.id}` : "#part-list");
+    };
+    input.onkeydown = (e) => {
+      if (e.key === "Enter") finish(true);
+      if (e.key === "Escape") finish(false);
+    };
+    input.onblur = () => finish(true);
+    li.replaceChild(input, name);
+    input.focus();
+    input.select();
   }
 
   sketchWarn(f: FeatureSummary): boolean {
@@ -2015,6 +2146,24 @@ async function main(): Promise<void> {
   };
   $("#btn-undo").onclick = () => app.undo();
   $("#btn-redo").onclick = () => app.redo();
+  $("#btn-view-top").onclick = () => app.viewer.setStandardView("top");
+  $("#btn-view-front").onclick = () => app.viewer.setStandardView("front");
+  $("#btn-view-right").onclick = () => app.viewer.setStandardView("right");
+  $("#btn-view-iso").onclick = () => app.viewer.setStandardView("iso");
+  $("#btn-measure").onclick = () => (app.measure ? app.endMeasure() : app.beginMeasure());
+  const sectionAxis = $("#section-axis") as HTMLSelectElement;
+  const sectionOffset = $("#section-offset") as HTMLInputElement;
+  sectionAxis.onchange = () => {
+    const axis = sectionAxis.value as "" | "x" | "y" | "z";
+    if (axis === "") app.setSection(null);
+    else app.setSection({ axis, t: Number(sectionOffset.value) / 1000, flip: app.section?.flip ?? false });
+  };
+  sectionOffset.oninput = () => {
+    if (app.section) app.setSection({ ...app.section, t: Number(sectionOffset.value) / 1000 });
+  };
+  $("#section-flip").onclick = () => {
+    if (app.section) app.setSection({ ...app.section, flip: !app.section.flip });
+  };
   app.undo(); // no-op that initialises the button states
   $("#btn-stl").onclick = () => {
     const a = document.createElement("a");
@@ -2157,8 +2306,13 @@ async function main(): Promise<void> {
       return;
     }
     if (e.key === "f") app.viewer.fitAll();
+    if (!app.sketcher.active) {
+      const view = ({ "1": "top", "2": "front", "3": "right", "0": "iso" } as Record<string, "top" | "front" | "right" | "iso">)[e.key];
+      if (view) app.viewer.setStandardView(view);
+    }
     if (e.key === "Escape") {
-      if (app.matePick) {
+      if (app.measure) app.endMeasure();
+      else if (app.matePick) {
         app.endMatePick();
         app.setStatus(app.statusLine());
       } else if (app.facePicker) app.endFacePick();
