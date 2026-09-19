@@ -649,3 +649,66 @@ test("move face and draft edit a box directly", async ({ page }) => {
   await page.waitForTimeout(300);
   expect(await page.$$eval("#detail-body .edge-list li", (els) => els.length)).toBe(4);
 });
+
+test("assembly explode slider and dragging a free instance", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Sketch 1" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: s, op: { type: "add_rectangle", a: { x: 0, y: 0 }, b: { x: 10, y: 10 } } });
+    app.apply({ type: "add_extrude", sketch: s, depth: 5, name: "Block" });
+  });
+  await page.getByRole("button", { name: "+ Assembly" }).click();
+  await expect(page.locator("#assembly-panel")).toBeVisible();
+  await page.getByRole("button", { name: "Insert", exact: true }).click();
+  await page.click("#btn-insert-instance");
+  await page.getByRole("button", { name: "Insert", exact: true }).click();
+  await expect(page.locator("#instance-list li")).toHaveCount(2);
+  // Place the second instance 30 mm along X so the two are apart.
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const b = app.summary.instances[1].id;
+    app.applyDoc({ type: "assembly", tab: app.tab, op: { type: "set_instance", id: b, placement: { position: { x: 30, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 } } } });
+  });
+  await page.waitForTimeout(200);
+  // Explode: bodies slide apart in the viewer only; the document is unchanged.
+  await page.locator("#explode").fill("100");
+  await page.locator("#explode").dispatchEvent("input");
+  const offsets = await page.evaluate(() => {
+    const v = (window as unknown as { offkilter: any }).offkilter.viewer;
+    return [v.bodyOffset(0), v.bodyOffset(1)];
+  });
+  expect(offsets[0].x).toBeLessThan(-10);
+  expect(offsets[1].x).toBeGreaterThan(10);
+  expect(await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.instances[1].placement.position.x)).toBe(30);
+  await page.locator("#explode").fill("0");
+  await page.locator("#explode").dispatchEvent("input");
+  // Move mode: drag the second instance by 80 pixels; its placement follows.
+  await page.keyboard.press("f");
+  await page.waitForTimeout(300);
+  await page.click("#btn-move-instance");
+  const centre = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const [lo, hi] = app.summary.bodies[1].bounds;
+    return app.viewer.toScreen({ x: (lo.x + hi.x) / 2, y: (lo.y + hi.y) / 2, z: hi.z });
+  });
+  const vp = (await page.locator("#viewport").boundingBox())!;
+  await page.mouse.move(vp.x + centre.x, vp.y + centre.y);
+  await page.mouse.down();
+  await page.mouse.move(vp.x + centre.x + 40, vp.y + centre.y, { steps: 4 });
+  await page.mouse.move(vp.x + centre.x + 80, vp.y + centre.y, { steps: 4 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
+  const after = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.instances[1].placement.position);
+  expect(Math.hypot(after.x - 30, after.y, after.z)).toBeGreaterThan(1);
+  await page.keyboard.press("Escape");
+  // One undo step reverts the whole drag.
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.instances[1].placement.position.x)).toBeCloseTo(30, 6);
+});

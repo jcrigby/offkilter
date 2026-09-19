@@ -1,6 +1,6 @@
 import { Kernel } from "./kernel";
 import { to3mf, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingView } from "./export";
-import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -282,6 +282,73 @@ class App implements SketchHost {
     this.viewer.setFrames([]);
   }
 
+  // ------------------------------------------------------------ instance drag
+
+  /** Drag mode for free instances in an assembly tab. */
+  instanceDrag: { active: { id: number; start: Placement; origin: Vec3; from: Vec3 } | null } | null = null;
+
+  beginInstanceDrag(): void {
+    if (this.summary.kind !== "assembly") return;
+    this.endMatePick();
+    this.endMeasure();
+    this.instanceDrag = { active: null };
+    ($("#btn-move-instance") as HTMLButtonElement).classList.add("active");
+    this.viewer.pointerHandler = {
+      down: (e) => this.instanceDragDown(e),
+      move: (e) => this.instanceDragMove(e),
+      up: () => {
+        if (this.instanceDrag) this.instanceDrag.active = null;
+      },
+      cancel: () => this.endInstanceDrag(),
+    };
+    this.setStatus("Move: drag an instance that is not fixed or mated. Esc stops.");
+  }
+
+  private instanceDragDown(e: PointerEvent): void {
+    if (!this.instanceDrag) return;
+    const body = this.viewer.pickBodyIndex(e);
+    const inst = body === null ? undefined : this.instanceAt(body);
+    if (!inst) return;
+    if (inst.fixed) {
+      this.setStatus(`${inst.name} is fixed; untick Fixed in its panel to move it.`);
+      return;
+    }
+    if (this.summary.mates.some((m) => !m.error && (m.a.instance === inst.id || m.b.instance === inst.id))) {
+      this.setStatus(`${inst.name} is positioned by its mates; edit the mate instead.`);
+      return;
+    }
+    const origin = inst.transform?.t ?? inst.placement.position;
+    const from = this.viewer.pickOnViewPlane(e, origin);
+    if (!from) return;
+    this.snapshot();
+    this.instanceDrag.active = { id: inst.id, start: { position: { ...inst.placement.position }, rotation: { ...inst.placement.rotation } }, origin, from };
+    this.selectedInstance = inst.id;
+    this.selectedMate = null;
+  }
+
+  private instanceDragMove(e: PointerEvent): void {
+    const active = this.instanceDrag?.active;
+    if (!active) return;
+    const to = this.viewer.pickOnViewPlane(e, active.origin);
+    if (!to) return;
+    const position = { x: active.start.position.x + to.x - active.from.x, y: active.start.position.y + to.y - active.from.y, z: active.start.position.z + to.z - active.from.z };
+    try {
+      this.applyDocRaw({ type: "assembly", tab: this.tab!, op: { type: "set_instance", id: active.id, placement: { position, rotation: active.start.rotation } } });
+    } catch (err) {
+      this.setStatus(`error: ${(err as Error).message}`);
+      return;
+    }
+    this.regenerate();
+  }
+
+  endInstanceDrag(): void {
+    if (!this.instanceDrag) return;
+    this.instanceDrag = null;
+    this.viewer.pointerHandler = null;
+    ($("#btn-move-instance") as HTMLButtonElement).classList.remove("active");
+    this.setStatus(this.statusLine());
+  }
+
   // ------------------------------------------------------------ measure
 
   /** Measure mode: the first picked point, or null while waiting for it. */
@@ -380,6 +447,7 @@ class App implements SketchHost {
     this.endEdgePick();
     this.endMatePick();
     this.endMeasure();
+    this.endInstanceDrag();
     this.viewer.showAllBodies();
     this.selected = null;
     this.selectedFace = null;
@@ -2300,6 +2368,8 @@ async function main(): Promise<void> {
   $("#btn-view-right").onclick = () => app.viewer.setStandardView("right");
   $("#btn-view-iso").onclick = () => app.viewer.setStandardView("iso");
   $("#btn-measure").onclick = () => (app.measure ? app.endMeasure() : app.beginMeasure());
+  $("#btn-move-instance").onclick = () => (app.instanceDrag ? app.endInstanceDrag() : app.beginInstanceDrag());
+  ($("#explode") as HTMLInputElement).oninput = (e) => app.viewer.setExplode((Number((e.target as HTMLInputElement).value) / 100) * 1.5);
   const sectionAxis = $("#section-axis") as HTMLSelectElement;
   const sectionOffset = $("#section-offset") as HTMLInputElement;
   sectionAxis.onchange = () => {
@@ -2499,6 +2569,7 @@ async function main(): Promise<void> {
     }
     if (e.key === "Escape") {
       if (app.measure) app.endMeasure();
+      else if (app.instanceDrag) app.endInstanceDrag();
       else if (app.matePick) {
         app.endMatePick();
         app.setStatus(app.statusLine());

@@ -58,7 +58,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Interference check between placed instances (boolean intersection, on demand)
 - [x] Numeric mate solver: closed loops and redundant mates solved over the free degrees of freedom of revolute, slider and cylindrical mates
 - [x] Planar and ball mates; sub-assemblies (an assembly tab inserted as one rigid group, cycles refused); mate frames drawn in the viewer
-- [ ] Mate connectors on edges and vertices; explode views; mate animation
+- [x] Explode view slider (display only) and dragging free instances in the viewport (one undo step per drag)
+- [ ] Mate connectors on edges and vertices; mate animation
 - [x] STL and 3MF export of bodies (3MF keeps part names); DXF export of a sketch
 - [x] Drawings: front / top / right / isometric views with exact hidden-line removal for the faceted geometry, laid out third-angle on an A4 sheet (SVG) or as DXF lines
 - [ ] Drawing dimensions, section views and detail views; STEP once faces are exact

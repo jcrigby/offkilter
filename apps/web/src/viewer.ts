@@ -70,6 +70,9 @@ export class Viewer {
   private measure = new THREE.Group();
   /** Body indices hidden by the user; they are neither drawn nor picked. */
   private hidden = new Set<number>();
+  /** Explode factor: bodies slide away from the common centre by this fraction of their distance. */
+  private explode = 0;
+  private offsets: Vec3[] = [];
 
   constructor(private container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -200,6 +203,53 @@ export class Viewer {
         this.bodies.add(lines);
       }
     }
+    if (this.explode !== 0) this.setExplode(this.explode);
+    else this.offsets = meshes.map(() => ({ x: 0, y: 0, z: 0 }));
+  }
+
+  /** Slides every body away from the bodies' common centre (0 = in place). */
+  setExplode(factor: number): void {
+    this.explode = factor;
+    const centres = this.meshes.map((m) => {
+      m.geometry.computeBoundingBox();
+      return m.geometry.boundingBox!.getCenter(new THREE.Vector3());
+    });
+    if (centres.length === 0) return;
+    const all = centres.reduce((a, c) => a.add(c), new THREE.Vector3()).divideScalar(centres.length);
+    this.offsets = centres.map((c) => {
+      const d = c.clone().sub(all).multiplyScalar(factor);
+      return { x: d.x, y: d.y, z: d.z };
+    });
+    for (const m of this.meshes) {
+      const o = this.offsets[m.userData.body as number]!;
+      m.position.set(o.x, o.y, o.z);
+    }
+    for (const l of this.edgeLines) {
+      const o = this.offsets[l.userData.body as number]!;
+      l.position.set(o.x, o.y, o.z);
+    }
+  }
+
+  /** Current explode displacement of a body (for tests and labels). */
+  bodyOffset(index: number): Vec3 {
+    return this.offsets[index] ?? { x: 0, y: 0, z: 0 };
+  }
+
+  /** Index of the body under the pointer, if any. */
+  pickBodyIndex(e: PointerEvent): number | null {
+    return this.pickAt(e)?.body ?? null;
+  }
+
+  /** Where the pointer ray meets the plane through `origin` facing the camera. */
+  pickOnViewPlane(e: PointerEvent, origin: Vec3): Vec3 | null {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const n = this.camera.getWorldDirection(new THREE.Vector3());
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(n, new THREE.Vector3(origin.x, origin.y, origin.z));
+    const hit = new THREE.Vector3();
+    if (!this.raycaster.ray.intersectPlane(plane, hit)) return null;
+    return { x: hit.x, y: hit.y, z: hit.z };
   }
 
   /** Shows or hides one body (by index) without touching the document. */
