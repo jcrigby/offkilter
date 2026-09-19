@@ -115,6 +115,8 @@ export type SolveResult = {
 };
 export type SketchCurve = { entity: number; kind: string; construction: boolean; projected: boolean; points: Vec3[] };
 export type PlaneFrame = { origin: Vec3; x_axis: Vec3; y_axis: Vec3; normal: Vec3 };
+/** Segments of a drawing view in view millimetres (x right, y up). */
+export type ViewLines = { visible: [Vec2, Vec2][]; hidden: [Vec2, Vec2][] };
 export type Loop = { points: Vec2[] };
 export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
 export type Settings = { facet_angle: number };
@@ -307,6 +309,13 @@ export class Kernel {
   /** Overlapping instance pairs of the last regenerated assembly tab. */
   interferences(): { overlaps: { a: number; b: number; volume: number }[]; failed: [number, number][] } {
     return JSON.parse(this.studio.interferences()) as { overlaps: { a: number; b: number; volume: number }[]; failed: [number, number][] };
+  }
+
+  /** Orthographic projection of the current tab's bodies with hidden lines removed. */
+  drawingView(dir: Vec3, up: Vec3): ViewLines {
+    const r = JSON.parse(this.studio.drawing_view(JSON.stringify({ dir: [dir.x, dir.y, dir.z], up: [up.x, up.y, up.z] }))) as ViewLines & { error?: string };
+    if (r.error) throw new Error(r.error);
+    return r;
   }
 
   /** Names of the bodies a part studio tab produces. */

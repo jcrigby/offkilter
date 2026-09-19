@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import { to3mf, toDxf, toStl } from "./export";
+import { to3mf, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingView } from "./export";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
@@ -817,6 +817,27 @@ class App implements SketchHost {
     const f = this.feature(this.selected);
     if (!f || f.kind.type !== "sketch") return null;
     return toDxf(f.kind.sketch);
+  }
+
+  /** Front, top, right and isometric views of the current bodies with hidden lines removed. */
+  drawingViews(): DrawingView[] {
+    const z = { x: 0, y: 0, z: 1 };
+    return [
+      { name: "front", lines: this.kernel.drawingView({ x: 0, y: 1, z: 0 }, z) },
+      { name: "top", lines: this.kernel.drawingView({ x: 0, y: 0, z: -1 }, { x: 0, y: 1, z: 0 }) },
+      { name: "right", lines: this.kernel.drawingView({ x: -1, y: 0, z: 0 }, z) },
+      { name: "iso", lines: this.kernel.drawingView({ x: -0.6, y: 0.7, z: -0.5 }, z) },
+    ];
+  }
+
+  /** A drawing sheet of the current bodies as SVG. */
+  toDrawingSvg(): string {
+    return toDrawingSvg(this.drawingViews(), this.summary.name);
+  }
+
+  /** The drawing views as DXF lines at 1:1. */
+  toDrawingDxf(): string {
+    return toDrawingDxf(this.drawingViews());
   }
 
   /** Triggers a browser download of `blob` named after the document. */
@@ -2267,6 +2288,8 @@ async function main(): Promise<void> {
     exportSelect.value = "";
     if (what === "stl") app.download(app.toStl(), "stl");
     else if (what === "3mf") app.download(app.to3mf(), "3mf");
+    else if (what === "svg-drawing") app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
+    else if (what === "dxf-drawing") app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
     else if (what === "dxf") {
       const dxf = app.toDxf();
       if (dxf === null) {

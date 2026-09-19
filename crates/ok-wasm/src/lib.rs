@@ -356,6 +356,28 @@ impl Doc {
         self.bodies.len()
     }
 
+    /// Orthographic view of the current tab's bodies with hidden lines
+    /// removed. `view_json` is `{"dir":[x,y,z],"up":[x,y,z]}` (the viewer
+    /// looks along `dir`); the result is `{"visible":[[[x,y],[x,y]],..],
+    /// "hidden":[..]}` in view millimetres, x right and y up.
+    pub fn drawing_view(&self, view_json: &str) -> String {
+        #[derive(serde::Deserialize)]
+        struct ViewSpec {
+            dir: [f64; 3],
+            up: [f64; 3],
+        }
+        let spec: ViewSpec = match serde_json::from_str(view_json) {
+            Ok(v) => v,
+            Err(e) => return serde_json::json!({ "error": e.to_string() }).to_string(),
+        };
+        let solids: Vec<&ok_brep::Solid> = self.bodies.iter().map(|b| &b.solid).collect();
+        let view = ok_brep::View {
+            dir: ok_math::Vec3::new(spec.dir[0], spec.dir[1], spec.dir[2]),
+            up: ok_math::Vec3::new(spec.up[0], spec.up[1], spec.up[2]),
+        };
+        serde_json::to_string(&ok_brep::project_view(&solids, view)).unwrap()
+    }
+
     pub fn body_positions(&self, i: usize) -> Vec<f32> {
         self.bodies
             .get(i)

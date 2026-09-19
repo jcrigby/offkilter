@@ -317,6 +317,21 @@ when the thickness swallows features in ways that change the topology
 (a slot through a faceted boss at a sharp angle); that case needs a true
 offset with topology changes, not attempted here.
 
+### Drawing views (`drawing.rs`)
+
+`project_view` projects solids orthographically along a view direction
+and removes hidden lines exactly for the faceted geometry: every display
+edge, plus every silhouette seam of a curved surface (a facet facing the
+viewer next to one facing away), is split into the parts covered by a
+nearer face that faces the viewer and the parts that are not. Coverage is
+decided per face by cutting the projected edge at the face outline's
+crossings and testing each piece's midpoint (even-odd, outline counts as
+covered), and depth is compared linearly along the piece, splitting where
+the edge passes through the face's plane. Collinear overlaps are merged
+with visible lines winning, so the back edges of a box seen square on
+draw once. The client lays front, top, right and isometric views out in
+third angle and writes an SVG sheet or DXF lines.
+
 ### Booleans (`boolean.rs`)
 
 Booleans work face by face. For a face `F` of `A` with plane `P`, take two

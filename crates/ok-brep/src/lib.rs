@@ -13,6 +13,7 @@
 
 mod blend;
 mod boolean;
+mod drawing;
 mod extrude;
 mod loft;
 mod revolve;
@@ -24,6 +25,7 @@ mod transform;
 
 pub use blend::{blend_edges, BlendKind};
 pub use boolean::{boolean, BoolOp};
+pub use drawing::{project_view, View, ViewLines};
 pub use extrude::extrude;
 pub use loft::loft;
 pub use revolve::revolve;

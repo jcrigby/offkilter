@@ -32,8 +32,8 @@ works today, all in the browser:
   with offset, angle and flip, resolved as chains from fixed instances,
   plus an interference check between instances.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
-  document only reverts your own edit), `.okpart` JSON documents, STL, 3MF and DXF export, mass
-  properties.
+  document only reverts your own edit), `.okpart` JSON documents, STL, 3MF and DXF export, drawing
+  sheets (SVG/DXF) with hidden-line removal, mass properties.
 
 - Cloud: a small document server with real-time multi-user editing;
   concurrent edits converge without conflicts, documents keep named
@@ -41,8 +41,8 @@ works today, all in the browser:
   other accounts.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
-resolution, 5° by default),
-shells, drawings, STEP, and teams. See [docs/ROADMAP.md](docs/ROADMAP.md).
+resolution, 5° by default), drawing dimensions, STEP, and teams. See
+[docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout
 

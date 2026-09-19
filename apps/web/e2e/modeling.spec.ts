@@ -580,3 +580,24 @@ test("polygon and slot sketch tools", async ({ page }) => {
   await page.waitForTimeout(300);
   expect(await status(page)).toContain("1 body");
 });
+
+test("drawing views remove hidden lines and export as SVG and DXF", async ({ page }) => {
+  await openDemo(page);
+  const counts = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const views = app.drawingViews();
+    return Object.fromEntries(views.map((v: any) => [v.name, { visible: v.lines.visible.length, hidden: v.lines.hidden.length }]));
+  });
+  // Every view has an outline; the front view hides the slot and boss behind the plate face.
+  for (const name of ["front", "top", "right", "iso"]) expect(counts[name].visible).toBeGreaterThan(3);
+  expect(counts.front.hidden).toBeGreaterThan(0);
+  const svg: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingSvg());
+  expect(svg.startsWith("<svg")).toBe(true);
+  expect(svg).toContain('id="view-front"');
+  expect(svg).toContain('id="view-iso"');
+  expect(svg).toContain('class="hidden"');
+  expect(svg).toContain("Scale 1:");
+  const dxf: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingDxf());
+  expect((dxf.match(/\r\nHIDDEN\r\n/g) ?? []).length).toBeGreaterThan(0);
+  expect((dxf.match(/\r\nLINE\r\n/g) ?? []).length).toBeGreaterThan(20);
+});
