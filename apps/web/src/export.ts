@@ -226,55 +226,123 @@ export function toDxf(sketch: SketchData): string {
 /** A named view with its lines, as the kernel projects it. */
 export type DrawingView = { name: string; lines: ViewLines };
 
-type Placed = DrawingView & { dx: number; dy: number };
+type Bounds = { minx: number; miny: number; maxx: number; maxy: number };
+type Placed = DrawingView & { dx: number; dy: number; b: Bounds };
+
+/** An overall dimension: a measured span with its dimension line offset from the view. */
+type Dimension = {
+  /** Endpoints of the measured span, in sheet millimetres (view coordinates plus offset). */
+  a: { x: number; y: number };
+  b: { x: number; y: number };
+  /** Where the dimension line runs: a signed offset perpendicular to the span. */
+  offset: number;
+  value: number;
+};
+
+function boundsOf(v: ViewLines): Bounds {
+  let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  for (const [a, b] of [...v.visible, ...v.hidden]) {
+    for (const p of [a, b]) {
+      minx = Math.min(minx, p.x); miny = Math.min(miny, p.y);
+      maxx = Math.max(maxx, p.x); maxy = Math.max(maxy, p.y);
+    }
+  }
+  return Number.isFinite(minx) ? { minx, miny, maxx, maxy } : { minx: 0, miny: 0, maxx: 0, maxy: 0 };
+}
+
+/** Distance from the view outline to a dimension line, and its extension lines' overshoot. */
+const DIM_OFFSET = 10;
+const DIM_OVERSHOOT = 2;
 
 /**
  * Third-angle layout in model millimetres: front at the origin, top above
- * it, right to its right, isometric top right. Views are positioned by
- * name; unknown names are stacked to the right.
+ * it, right to its right, isometric top right. Overall dimensions go
+ * below and left of the front view (width, height) and left of the top
+ * view (depth). Views are positioned by name; unknown names are stacked
+ * to the right.
  */
-function layout(views: DrawingView[], gap = 15): { placed: Placed[]; min: { x: number; y: number }; max: { x: number; y: number } } {
-  const bounds = (v: ViewLines) => {
-    let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
-    for (const [a, b] of [...v.visible, ...v.hidden]) {
-      for (const p of [a, b]) {
-        minx = Math.min(minx, p.x); miny = Math.min(miny, p.y);
-        maxx = Math.max(maxx, p.x); maxy = Math.max(maxy, p.y);
-      }
-    }
-    return Number.isFinite(minx) ? { minx, miny, maxx, maxy } : { minx: 0, miny: 0, maxx: 0, maxy: 0 };
-  };
+function layout(views: DrawingView[], gap = 15): { placed: Placed[]; dims: Dimension[]; min: { x: number; y: number }; max: { x: number; y: number } } {
   const by = (name: string) => views.find((v) => v.name === name);
   const placed: Placed[] = [];
   const front = by("front");
-  const fb = front ? bounds(front.lines) : { minx: 0, miny: 0, maxx: 0, maxy: 0 };
-  if (front) placed.push({ ...front, dx: 0, dy: 0 });
+  const fb = front ? boundsOf(front.lines) : { minx: 0, miny: 0, maxx: 0, maxy: 0 };
+  // Room on the left of the front and top views for their vertical dimensions.
+  const dimGap = DIM_OFFSET + 8;
+  if (front) placed.push({ ...front, dx: 0, dy: 0, b: fb });
   const top = by("top");
   if (top) {
-    const tb = bounds(top.lines);
-    placed.push({ ...top, dx: 0, dy: fb.maxy + gap - tb.miny });
+    const tb = boundsOf(top.lines);
+    placed.push({ ...top, dx: 0, dy: fb.maxy + gap + dimGap - tb.miny, b: tb });
   }
   const right = by("right");
   if (right) {
-    const rb = bounds(right.lines);
-    placed.push({ ...right, dx: fb.maxx + gap - rb.minx, dy: 0 });
+    const rb = boundsOf(right.lines);
+    placed.push({ ...right, dx: fb.maxx + gap - rb.minx, dy: 0, b: rb });
   }
-  let cursorX = Math.max(fb.maxx, ...placed.map((p) => bounds(p.lines).maxx + p.dx)) + gap;
+  let cursorX = Math.max(fb.maxx, ...placed.map((p) => p.b.maxx + p.dx)) + gap;
   for (const v of views) {
     if (["front", "top", "right"].includes(v.name)) continue;
-    const vb = bounds(v.lines);
-    const dy = v.name === "iso" && top ? fb.maxy + gap - vb.miny : -vb.miny;
-    placed.push({ ...v, dx: cursorX - vb.minx, dy });
+    const vb = boundsOf(v.lines);
+    const dy = v.name === "iso" && top ? fb.maxy + gap + dimGap - vb.miny : -vb.miny;
+    placed.push({ ...v, dx: cursorX - vb.minx, dy, b: vb });
     cursorX += vb.maxx - vb.minx + gap;
+  }
+  // Overall dimensions: width below the front view, height left of it,
+  // depth left of the top view.
+  const dims: Dimension[] = [];
+  const span = (p: Placed) => ({ w: p.b.maxx - p.b.minx, h: p.b.maxy - p.b.miny });
+  for (const p of placed) {
+    if (p.name === "front" && span(p).w > 0) {
+      dims.push({ a: { x: p.b.minx + p.dx, y: p.b.miny + p.dy }, b: { x: p.b.maxx + p.dx, y: p.b.miny + p.dy }, offset: -DIM_OFFSET, value: span(p).w });
+      if (span(p).h > 0) dims.push({ a: { x: p.b.minx + p.dx, y: p.b.miny + p.dy }, b: { x: p.b.minx + p.dx, y: p.b.maxy + p.dy }, offset: DIM_OFFSET, value: span(p).h });
+    }
+    if (p.name === "top" && span(p).h > 0) {
+      dims.push({ a: { x: p.b.minx + p.dx, y: p.b.miny + p.dy }, b: { x: p.b.minx + p.dx, y: p.b.maxy + p.dy }, offset: DIM_OFFSET, value: span(p).h });
+    }
   }
   let min = { x: Infinity, y: Infinity }, max = { x: -Infinity, y: -Infinity };
   for (const p of placed) {
-    const b = bounds(p.lines);
-    min = { x: Math.min(min.x, b.minx + p.dx), y: Math.min(min.y, b.miny + p.dy) };
-    max = { x: Math.max(max.x, b.maxx + p.dx), y: Math.max(max.y, b.maxy + p.dy) };
+    min = { x: Math.min(min.x, p.b.minx + p.dx), y: Math.min(min.y, p.b.miny + p.dy) };
+    max = { x: Math.max(max.x, p.b.maxx + p.dx), y: Math.max(max.y, p.b.maxy + p.dy) };
   }
   if (!Number.isFinite(min.x)) { min = { x: 0, y: 0 }; max = { x: 0, y: 0 }; }
-  return { placed, min, max };
+  if (dims.length > 0) {
+    // The dimensions sit up to an offset plus text height outside the views.
+    min = { x: min.x - dimGap, y: min.y - dimGap };
+  }
+  return { placed, dims, min, max };
+}
+
+/** Number text for a dimension: up to two decimals, no trailing zeros. */
+function dimText(v: number): string {
+  return v.toFixed(2).replace(/\.?0+$/, "");
+}
+
+/**
+ * Geometry of one dimension in sheet millimetres: the two extension lines,
+ * the dimension line, its arrowheads (as triangles) and the text anchor
+ * with its rotation in degrees (0 for horizontal spans, 90 for vertical).
+ */
+function dimensionGeometry(d: Dimension): { lines: [{ x: number; y: number }, { x: number; y: number }][]; arrows: { x: number; y: number }[][]; text: { x: number; y: number; angle: number } } {
+  const dx = d.b.x - d.a.x, dy = d.b.y - d.a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const u = { x: dx / len, y: dy / len };
+  const n = { x: -u.y, y: u.x }; // left normal of the span
+  const at = (p: { x: number; y: number }, along: number, across: number) => ({ x: p.x + u.x * along + n.x * across, y: p.y + u.y * along + n.y * across });
+  const over = d.offset + Math.sign(d.offset) * DIM_OVERSHOOT;
+  const lines: [{ x: number; y: number }, { x: number; y: number }][] = [
+    [at(d.a, 0, 0), at(d.a, 0, over)],
+    [at(d.b, 0, 0), at(d.b, 0, over)],
+    [at(d.a, 0, d.offset), at(d.b, 0, d.offset)],
+  ];
+  const head = 2.5, half = 0.8;
+  const arrows = [
+    [at(d.a, 0, d.offset), at(d.a, head, d.offset + half), at(d.a, head, d.offset - half)],
+    [at(d.b, 0, d.offset), at(d.b, -head, d.offset + half), at(d.b, -head, d.offset - half)],
+  ];
+  const mid = at(d.a, len / 2, d.offset + (d.offset < 0 ? -1.2 : 1.2));
+  const angle = Math.abs(u.x) >= Math.abs(u.y) ? 0 : 90;
+  return { lines, arrows, text: { x: mid.x, y: mid.y, angle } };
 }
 
 const STANDARD_SCALES = [10, 5, 2, 1, 1 / 2, 1 / 5, 1 / 10, 1 / 20, 1 / 50, 1 / 100];
@@ -290,7 +358,7 @@ function scaleLabel(s: number): string {
  */
 export function toDrawingSvg(views: DrawingView[], title: string): string {
   const sheet = { w: 297, h: 210, margin: 10, block: 24 };
-  const { placed, min, max } = layout(views);
+  const { placed, dims, min, max } = layout(views);
   const availW = sheet.w - 2 * sheet.margin;
   const availH = sheet.h - 2 * sheet.margin - sheet.block;
   const extentW = Math.max(max.x - min.x, 1e-9), extentH = Math.max(max.y - min.y, 1e-9);
@@ -316,6 +384,16 @@ export function toDrawingSvg(views: DrawingView[], title: string): string {
     }
     out.push(`</g>`);
   }
+  // Overall dimensions.
+  for (const d of dims) {
+    const g = dimensionGeometry(d);
+    out.push(`<g class="dimension">`);
+    out.push(`<path fill="none" stroke="black" stroke-width="0.18" d="${g.lines.map(([a, b]) => `M${X(a.x)} ${Y(a.y)}L${X(b.x)} ${Y(b.y)}`).join("")}"/>`);
+    for (const tri of g.arrows) out.push(`<polygon fill="black" points="${tri.map((p) => `${X(p.x)},${Y(p.y)}`).join(" ")}"/>`);
+    const tx = X(g.text.x), ty = Y(g.text.y);
+    out.push(`<text x="${tx}" y="${ty}" font-family="Helvetica, Arial, sans-serif" font-size="3" fill="black" text-anchor="middle" dominant-baseline="middle"${g.text.angle ? ` transform="rotate(-90 ${tx} ${ty})"` : ""}>${dimText(d.value)}</text>`);
+    out.push(`</g>`);
+  }
   // Title block along the bottom edge.
   const by = sheet.h - sheet.margin - sheet.block;
   out.push(`<rect x="${sheet.margin}" y="${by}" width="${sheet.w - 2 * sheet.margin}" height="${sheet.block}" fill="none" stroke="black" stroke-width="0.5"/>`);
@@ -331,8 +409,19 @@ export function toDrawingSvg(views: DrawingView[], title: string): string {
 
 /** The same layout as a DXF at 1:1 in millimetres, hidden lines on their own layer. */
 export function toDrawingDxf(views: DrawingView[]): string {
-  const { placed } = layout(views);
-  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"]]);
+  const { placed, dims } = layout(views);
+  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"]]);
+  for (const d of dims) {
+    const g = dimensionGeometry(d);
+    for (const [a, b] of g.lines) lines.push("0", "LINE", "8", "DIMENSIONS", "10", fmt(a.x), "20", fmt(a.y), "30", "0", "11", fmt(b.x), "21", fmt(b.y), "31", "0");
+    for (const tri of g.arrows) {
+      for (let i = 0; i < 3; i++) {
+        const a = tri[i]!, b = tri[(i + 1) % 3]!;
+        lines.push("0", "LINE", "8", "DIMENSIONS", "10", fmt(a.x), "20", fmt(a.y), "30", "0", "11", fmt(b.x), "21", fmt(b.y), "31", "0");
+      }
+    }
+    lines.push("0", "TEXT", "8", "DIMENSIONS", "10", fmt(g.text.x), "20", fmt(g.text.y), "30", "0", "40", "3", "50", String(g.text.angle), "72", "1", "11", fmt(g.text.x), "21", fmt(g.text.y), "31", "0", "1", dimText(d.value));
+  }
   for (const p of placed) {
     const add = (layer: string, segs: [{ x: number; y: number }, { x: number; y: number }][]) => {
       for (const [a, b] of segs) lines.push("0", "LINE", "8", layer, "10", fmt(a.x + p.dx), "20", fmt(a.y + p.dy), "30", "0", "11", fmt(b.x + p.dx), "21", fmt(b.y + p.dy), "31", "0");

@@ -597,8 +597,13 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   expect(svg).toContain('id="view-iso"');
   expect(svg).toContain('class="hidden"');
   expect(svg).toContain("Scale 1:");
+  // Overall dimensions of the 60 x 40 plate: width and height on the front view, depth on the top view.
+  expect((svg.match(/class="dimension"/g) ?? []).length).toBe(3);
+  expect(svg).toMatch(/>60<\/text>/);
+  expect(svg).toMatch(/>40<\/text>/);
   const dxf: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingDxf());
   expect((dxf.match(/\r\nHIDDEN\r\n/g) ?? []).length).toBeGreaterThan(0);
+  expect((dxf.match(/\r\nDIMENSIONS\r\n/g) ?? []).length).toBeGreaterThan(3);
   expect((dxf.match(/\r\nLINE\r\n/g) ?? []).length).toBeGreaterThan(20);
 });
 
