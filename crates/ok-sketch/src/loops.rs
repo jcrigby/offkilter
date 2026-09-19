@@ -21,7 +21,15 @@ use std::collections::{BTreeMap, HashMap};
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum SegmentCurve {
     Line,
-    Arc { center: Vec2, radius: f64 },
+    Arc {
+        center: Vec2,
+        radius: f64,
+    },
+    /// A straight piece sampled from the spline entity `id`; consecutive
+    /// pieces with the same id form one smooth surface when swept.
+    Spline {
+        id: u32,
+    },
 }
 
 /// A closed polygon loop with a curve tag per segment.
@@ -193,6 +201,8 @@ struct Edge {
     curve: Curve,
     #[allow(dead_code)]
     source: EntityId,
+    /// The spline this straight edge was sampled from, if any.
+    spline: Option<u32>,
 }
 
 /// Directed half-edge: edge index plus direction (`forward` = a -> b).
@@ -276,6 +286,7 @@ impl Graph {
                                 b,
                                 curve: Curve::Line,
                                 source: id,
+                                spline: None,
                             });
                         }
                     }
@@ -290,8 +301,45 @@ impl Graph {
                                 b,
                                 curve: Curve::Arc { center: c },
                                 source: id,
+                                spline: None,
                             });
                         }
+                    }
+                }
+                Entity::Spline { .. } => {
+                    // Sampled into straight edges between fresh vertices;
+                    // the control points are the sketch's own vertices.
+                    let Ok(pts) = sketch.spline_points(id) else {
+                        continue;
+                    };
+                    let Some(Entity::Spline { points }) = sketch.entity(id) else {
+                        continue;
+                    };
+                    let pieces = crate::spline::spline_pieces(opts);
+                    let poly = crate::spline::spline_polyline(&pts, pieces);
+                    let mut prev: Option<usize> = None;
+                    for (k, p) in poly.iter().enumerate() {
+                        let v = if k % pieces == 0 {
+                            match vert(points[k / pieces]) {
+                                Some(v) => v,
+                                None => continue,
+                            }
+                        } else {
+                            verts.push(*p);
+                            verts.len() - 1
+                        };
+                        if let Some(a) = prev {
+                            if a != v {
+                                edges.push(Edge {
+                                    a,
+                                    b: v,
+                                    curve: Curve::Line,
+                                    source: id,
+                                    spline: Some(id.0),
+                                });
+                            }
+                        }
+                        prev = Some(v);
                     }
                 }
                 _ => {}
@@ -474,6 +522,7 @@ impl Graph {
                         b: v,
                         curve: e.curve,
                         source: e.source,
+                        spline: e.spline,
                     });
                     prev = v;
                 }
@@ -484,6 +533,7 @@ impl Graph {
                     b: e.b,
                     curve: e.curve,
                     source: e.source,
+                    spline: e.spline,
                 });
             }
         }
@@ -548,7 +598,10 @@ impl Graph {
         match e.curve {
             Curve::Line => {
                 out.points.push(from);
-                out.curves.push(SegmentCurve::Line);
+                out.curves.push(match e.spline {
+                    Some(id) => SegmentCurve::Spline { id },
+                    None => SegmentCurve::Line,
+                });
             }
             Curve::Arc { center } => {
                 let r = 0.5 * (from.distance(center) + to.distance(center));
@@ -637,11 +690,33 @@ impl Graph {
                     }
                 }
                 if poly.signed_area() > 1e-12 {
+                    poly.start_off_spline();
                     faces.push(poly);
                 }
             }
         }
         faces
+    }
+}
+
+impl Loop {
+    /// Rotates the loop so it does not begin in the middle of a spline
+    /// run: consumers that group consecutive spline pieces into one
+    /// surface then see each spline as a single run instead of one split
+    /// across the loop's seam. A loop that is one spline stays as it is.
+    fn start_off_spline(&mut self) {
+        let n = self.curves.len();
+        if n < 2 {
+            return;
+        }
+        let same_spline = |a: &SegmentCurve, b: &SegmentCurve| matches!((a, b), (SegmentCurve::Spline { id: x }, SegmentCurve::Spline { id: y }) if x == y);
+        if !same_spline(&self.curves[n - 1], &self.curves[0]) {
+            return;
+        }
+        if let Some(k) = (1..n).find(|&k| !same_spline(&self.curves[k - 1], &self.curves[k])) {
+            self.points.rotate_left(k);
+            self.curves.rotate_left(k);
+        }
     }
 }
 
@@ -857,6 +932,47 @@ mod tests {
         assert_eq!(r.curves[2], arc);
         assert_eq!(r.curves.iter().filter(|c| **c == arc).count(), 1);
         assert!((r.signed_area() + l.signed_area()).abs() < 1e-12);
+    }
+
+    #[test]
+    fn spline_closed_by_a_line_bounds_one_region() {
+        let mut s = Sketch::new();
+        let (_, ids) = s
+            .add_spline(&[
+                Vec2::new(0.0, 0.0),
+                Vec2::new(5.0, 4.0),
+                Vec2::new(10.0, 0.0),
+            ])
+            .unwrap();
+        let (_, a, b) = s.add_line(Vec2::new(10.0, 0.0), Vec2::new(0.0, 0.0));
+        s.add_constraint(Constraint::Coincident { a: ids[2], b: a });
+        s.add_constraint(Constraint::Coincident { a: ids[0], b });
+        let opts = ProfileOptions::default();
+        let p = s.profiles(&opts);
+        assert_eq!(p.len(), 1);
+        let pieces = crate::spline::spline_pieces(&opts);
+        assert_eq!(p[0].outer.len(), 2 * pieces + 1);
+        assert!(
+            p[0].outer
+                .curves
+                .iter()
+                .filter(|c| matches!(c, SegmentCurve::Spline { .. }))
+                .count()
+                == 2 * pieces
+        );
+        // The hump through (5, 4) encloses more than the triangle under it.
+        let area = p[0].area();
+        assert!(area > 20.0 && area < 40.0, "{area}");
+        // The same shape sampled by hand has the same area.
+        let poly = crate::spline::spline_polyline(
+            &[
+                Vec2::new(0.0, 0.0),
+                Vec2::new(5.0, 4.0),
+                Vec2::new(10.0, 0.0),
+            ],
+            pieces,
+        );
+        assert!((area - signed_area(&poly).abs()).abs() < 1e-9);
     }
 
     #[test]

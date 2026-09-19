@@ -66,6 +66,7 @@ pub fn extrude(
     let mut walls = |ring: &Loop| {
         let count = ring.len();
         let mut cyl: Option<(Vec2, f64, usize)> = None;
+        let mut spline: Option<(u32, usize)> = None;
         for i in 0..count {
             let a = ring.points[i];
             let b = ring.points[(i + 1) % count];
@@ -106,9 +107,20 @@ pub fn extrude(
                         }
                     }
                 }
+                SegmentCurve::Spline { id } => match spline.filter(|(s, _)| *s == id) {
+                    Some((_, surface)) => surface,
+                    None => {
+                        surfaces.push(Surface::Ruled);
+                        spline = Some((id, surfaces.len() - 1));
+                        surfaces.len() - 1
+                    }
+                },
             };
             if !matches!(ring.curves[i], SegmentCurve::Arc { .. }) {
                 cyl = None;
+            }
+            if !matches!(ring.curves[i], SegmentCurve::Spline { .. }) {
+                spline = None;
             }
             polys.push(Polygon {
                 plane: face_plane,
@@ -131,6 +143,34 @@ pub fn extrude(
 mod tests {
     use super::*;
     use ok_sketch::{ProfileOptions, Sketch};
+
+    #[test]
+    fn spline_profile_extrudes_to_one_smooth_wall() {
+        let mut s = Sketch::new();
+        let (_, ids) = s
+            .add_spline(&[
+                Vec2::new(0.0, 0.0),
+                Vec2::new(5.0, 4.0),
+                Vec2::new(10.0, 0.0),
+            ])
+            .unwrap();
+        let (_, a, b) = s.add_line(Vec2::new(10.0, 0.0), Vec2::new(0.0, 0.0));
+        s.add_constraint(ok_sketch::Constraint::Coincident { a: ids[2], b: a });
+        s.add_constraint(ok_sketch::Constraint::Coincident { a: ids[0], b });
+        let opts = ProfileOptions::default();
+        let p = s.profiles(&opts).remove(0);
+        let solid = extrude(&p, &Plane::XY, 0.0, 3.0, 1).unwrap();
+        assert!((solid.volume() - p.area() * 3.0).abs() < 1e-9);
+        // Bottom, top, the spline wall (one shared ruled surface) and the flat wall.
+        assert_eq!(solid.surfaces.len(), 4);
+        let ruled = solid
+            .surfaces
+            .iter()
+            .position(|s| matches!(s, Surface::Ruled))
+            .unwrap();
+        let facets = solid.faces.iter().filter(|f| f.surface == ruled).count();
+        assert_eq!(facets, 2 * ok_sketch::spline_pieces(&opts));
+    }
 
     fn rect_profile(w: f64, h: f64) -> Profile {
         let mut s = Sketch::new();

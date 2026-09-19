@@ -228,6 +228,16 @@ fn tessellate_entity(
                     .collect(),
             )
         }
+        Entity::Spline { points } => {
+            let pts: Vec<Vec2> = points
+                .iter()
+                .map(|p| sketch.point(*p).ok())
+                .collect::<Option<_>>()?;
+            Some(ok_sketch::spline_polyline(
+                &pts,
+                ok_sketch::spline_pieces(opts),
+            ))
+        }
     }
 }
 
@@ -886,6 +896,13 @@ impl PartStudio {
                             .map(|i| c + Vec2::from_angle(a0 + sweep * i as f64 / n as f64) * r)
                             .collect(),
                     );
+                }
+                Entity::Spline { .. } => {
+                    let pts = sketch.spline_points(id).map_err(|e| e.to_string())?;
+                    segs.push(ok_sketch::spline_polyline(
+                        &pts,
+                        ok_sketch::spline_pieces(opts),
+                    ));
                 }
                 _ => {}
             }

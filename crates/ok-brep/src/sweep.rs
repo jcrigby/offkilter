@@ -217,6 +217,18 @@ fn sweep_path(
                         id
                     }
                 },
+                SegmentCurve::Spline { id } => {
+                    let key = ok_math::Vec2::new(id as f64, f64::NAN);
+                    match shared.filter(|(c, _, _)| c.x == key.x && c.y.is_nan()) {
+                        Some((_, _, s)) => s,
+                        None => {
+                            surfaces.push(Surface::Ruled);
+                            let s = surfaces.len() - 1;
+                            shared = Some((key, 0.0, s));
+                            s
+                        }
+                    }
+                }
             };
             for k in 0..seg_count {
                 let k1 = (k + 1) % n;

@@ -686,6 +686,48 @@ test("polygon and slot sketch tools", async ({ page }) => {
   expect(await status(page)).toContain("1 body");
 });
 
+test("spline sketch tool draws a smooth curve that bounds a region", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue() || "top"));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.click("#btn-add-sketch");
+  await page.waitForTimeout(300);
+  // Four points, Enter finishes; then a line back from the last point to the first.
+  await page.keyboard.press("b");
+  await clickViewport(page, 0.35, 0.5);
+  await clickViewport(page, 0.45, 0.38);
+  await clickViewport(page, 0.55, 0.38);
+  await clickViewport(page, 0.65, 0.5);
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(200);
+  await page.keyboard.press("l");
+  await clickViewport(page, 0.65, 0.5);
+  await clickViewport(page, 0.35, 0.5);
+  const info = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const f = app.summary.features.find((x: any) => x.kind.type === "sketch");
+    const counts: Record<string, number> = {};
+    for (const e of f.kind.sketch.entities) counts[e.type] = (counts[e.type] ?? 0) + 1;
+    const sk = app.summary.sketches[String(f.id)];
+    return { counts, regions: sk.profiles.length, dof: sk.solve.dof, coincident: f.kind.sketch.constraints.filter((c: any) => c.type === "coincident").length };
+  });
+  expect(info.counts.spline).toBe(1);
+  expect(info.counts.line).toBe(1);
+  expect(info.counts.point).toBe(6);
+  expect(info.coincident).toBe(2);
+  expect(info.regions).toBe(1);
+  // Four free spline points and nothing else: the line's ends are tied to them.
+  expect(info.dof).toBe(8);
+  await page.getByRole("button", { name: "Done" }).click();
+  await page.click("#btn-add-extrude");
+  await page.waitForTimeout(300);
+  expect(await status(page)).toContain("1 body");
+  // The spline wall is one smooth surface: bottom, top, spline, line.
+  const surfaces = await page.evaluate(() => new Set((window as any).offkilter.kernel.studio.body_face_surfaces(0)).size);
+  expect(surfaces).toBe(4);
+});
+
 test("drawing views remove hidden lines and export as SVG and DXF", async ({ page }) => {
   await openDemo(page);
   const counts = await page.evaluate(() => {

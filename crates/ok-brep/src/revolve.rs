@@ -213,6 +213,23 @@ pub fn revolve(
                         }
                     }
                 }
+                SegmentCurve::Spline { id } => {
+                    // Pieces of one spline share a surface; the spline id
+                    // stands in for the centre/radius key.
+                    let key = Vec2::new(id as f64, f64::NAN);
+                    match shared.filter(|(c, _, _)| c.x == key.x && c.y.is_nan()) {
+                        Some((_, _, s)) => s,
+                        None => {
+                            surfaces.push(Surface::Revolved {
+                                origin: origin3,
+                                axis: axis3,
+                            });
+                            let s = surfaces.len() - 1;
+                            shared = Some((key, 0.0, s));
+                            s
+                        }
+                    }
+                }
             };
             for k in 0..steps {
                 let k1 = ring_index(k + 1);

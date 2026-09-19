@@ -15,7 +15,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Trim, offset, mirror within a sketch (symmetric constraints on mirrored points)
 - [x] Dimension labels in the viewport with click-to-edit (values or expressions)
 - [x] Sparse Jacobian: analytic rows for the common constraints, local differences for the rest; rank from the normal matrix
-- [ ] Splines (B-spline entity + point-on-curve)
+- [x] Splines (interpolating Catmull–Rom through sketch points; sampled into one smooth wall)
+- [ ] Point-on-spline and tangent constraints for splines
 - [x] Sketch on planar faces of bodies (face references)
 - [x] Project / use edges and face outlines from bodies in sketches (fixed entities that follow the model)
 - [x] Construction geometry, mirror

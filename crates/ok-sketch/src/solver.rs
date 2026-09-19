@@ -459,6 +459,11 @@ impl Eval<'_> {
                 point(*start);
                 point(*end);
             }
+            Some(Entity::Spline { points }) => {
+                for p in points {
+                    point(*p);
+                }
+            }
             None => {}
         }
     }

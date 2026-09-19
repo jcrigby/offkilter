@@ -42,7 +42,8 @@ export type Entity =
   | { type: "point"; pos: Vec2 }
   | { type: "line"; start: number; end: number }
   | { type: "circle"; center: number; radius: number }
-  | { type: "arc"; center: number; start: number; end: number };
+  | { type: "arc"; center: number; start: number; end: number }
+  | { type: "spline"; points: number[] };
 
 export type SketchData = {
   entities: ({ id: number } & Entity)[];
@@ -185,6 +186,7 @@ export type SketchOp =
   | { type: "add_polygon"; center: Vec2; vertex: Vec2; sides: number }
   | { type: "add_slot"; a: Vec2; b: Vec2; width: number }
   | { type: "add_arc"; center: Vec2; start: Vec2; end: Vec2 }
+  | { type: "add_spline"; points: Vec2[] }
   | { type: "add_constraint"; constraint: Constraint }
   | { type: "remove_constraint"; id: number }
   | { type: "remove_entity"; id: number }

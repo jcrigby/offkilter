@@ -9,7 +9,29 @@
 import type { Constraint, Entity, Op, OpResult, PlaneFrame, SketchCurve, SketchData, SketchOp, Summary, Vec2, Vec3 } from "./kernel";
 import type { PointerHandler, Viewer } from "./viewer";
 
-export type Tool = "select" | "line" | "rectangle" | "circle" | "arc" | "polygon" | "slot" | "trim" | "use";
+export type Tool = "select" | "line" | "rectangle" | "circle" | "arc" | "spline" | "polygon" | "slot" | "trim" | "use";
+
+/** Catmull–Rom spline through `pts` (matches the kernel's `spline_polyline`), for previews. */
+export function splinePolyline(pts: Vec2[], pieces: number): Vec2[] {
+  if (pts.length < 2) return pts.slice();
+  const n = pts.length;
+  const tangent = (i: number): Vec2 => {
+    if (i === 0) return { x: pts[1]!.x - pts[0]!.x, y: pts[1]!.y - pts[0]!.y };
+    if (i === n - 1) return { x: pts[n - 1]!.x - pts[n - 2]!.x, y: pts[n - 1]!.y - pts[n - 2]!.y };
+    return { x: (pts[i + 1]!.x - pts[i - 1]!.x) / 2, y: (pts[i + 1]!.y - pts[i - 1]!.y) / 2 };
+  };
+  const out: Vec2[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[i]!, p1 = pts[i + 1]!, m0 = tangent(i), m1 = tangent(i + 1);
+    for (let k = 0; k < pieces; k++) {
+      const t = k / pieces, t2 = t * t, t3 = t2 * t;
+      const h00 = 2 * t3 - 3 * t2 + 1, h10 = t3 - 2 * t2 + t, h01 = -2 * t3 + 3 * t2, h11 = t3 - t2;
+      out.push({ x: p0.x * h00 + m0.x * h10 + p1.x * h01 + m1.x * h11, y: p0.y * h00 + m0.y * h10 + p1.y * h01 + m1.y * h11 });
+    }
+  }
+  out.push(pts[n - 1]!);
+  return out;
+}
 
 export interface SketchHost {
   summary: Summary;
@@ -56,7 +78,7 @@ export class Sketcher implements PointerHandler {
     this.host.viewer.setSketchMouse(true);
     const plane = this.plane();
     if (plane) this.host.viewer.lookAtPlane(plane);
-    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · P polygon · N slot · T trim · O offset · M mirror · Y pattern · U use · S select · Q construction · right-drag orbits · Esc finishes");
+    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · B spline · P polygon · N slot · T trim · O offset · M mirror · Y pattern · U use · S select · Q construction · right-drag orbits · Esc finishes");
   }
 
   exit(): void {
@@ -81,6 +103,12 @@ export class Sketcher implements PointerHandler {
     else this.host.selectionChanged();
     if (tool === "use") this.host.setStatus("Use: click a body edge or face to project it into the sketch (only bodies before this sketch are shown)");
     if (tool === "trim") this.host.setStatus("Trim: click the piece of a line, arc or circle to remove (between its crossings)");
+    if (tool === "spline") this.host.setStatus("Spline: click the points the curve passes through; click the last point again or press Enter to finish");
+  }
+
+  /** Finishes a multi-point tool (Enter): the spline through the points clicked so far. */
+  finish(): void {
+    if (this.tool === "spline") this.finishSpline();
   }
 
   /** Offsets the selected chain by a distance asked from the user (O). */
@@ -344,6 +372,9 @@ export class Sketcher implements PointerHandler {
       case "arc":
         this.clickArc(s);
         break;
+      case "spline":
+        this.clickSpline(s);
+        break;
       case "polygon":
         this.clickPolygon(s);
         break;
@@ -405,6 +436,8 @@ export class Sketcher implements PointerHandler {
         }
         return [[this.lift(a), this.lift(start)], pts];
       }
+      case "spline":
+        return [splinePolyline([...this.pending, cur], 12).map((p) => this.lift(p))];
       case "polygon": {
         const n = this.polygonSides;
         const pts: Vec3[] = [];
@@ -438,6 +471,41 @@ export class Sketcher implements PointerHandler {
       default:
         return [];
     }
+  }
+
+  /** Spline tool: every click adds a point; clicking the last point again finishes. */
+  private clickSpline(s: { pos: Vec2; id: number | null }): void {
+    const last = this.pending[this.pending.length - 1];
+    if (last && Math.hypot(s.pos.x - last.x, s.pos.y - last.y) < 1e-9) {
+      this.finishSpline();
+      return;
+    }
+    this.pending.push(s.pos);
+    this.pendingIds.push(s.id);
+    this.host.setStatus(`Spline: ${this.pending.length} point${this.pending.length === 1 ? "" : "s"} · click more, click the last point again or press Enter to finish, Esc cancels`);
+  }
+
+  private finishSpline(): void {
+    if (this.pending.length < 2) {
+      this.cancel();
+      this.host.setStatus("A spline needs at least two points.");
+      return;
+    }
+    const points = this.pending.slice();
+    const ids = this.pendingIds.slice();
+    this.host.snapshot();
+    try {
+      const res = this.sketchOp({ type: "add_spline", points });
+      const [, ...pointIds] = res.entities;
+      ids.forEach((id, i) => {
+        const p = pointIds[i];
+        if (id !== null && id !== undefined && p !== undefined) this.constrain({ type: "coincident", a: p, b: id });
+      });
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.cancel();
+    this.host.regenerate();
   }
 
   /** Sides for the polygon tool; asked for on the first click and remembered. */

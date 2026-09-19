@@ -10,10 +10,12 @@ mod edit;
 mod entity;
 mod loops;
 mod solver;
+mod spline;
 
 pub use entity::{Constraint, ConstraintId, Entity, EntityId};
 pub use loops::{point_in_polygon, signed_area, Loop, Profile, ProfileOptions, SegmentCurve};
 pub use solver::{SolveResult, SolveStatus};
+pub use spline::{spline_pieces, spline_polyline};
 
 use ok_math::Vec2;
 use serde::{Deserialize, Serialize};
@@ -60,6 +62,8 @@ pub enum SketchError {
     WrongKind(EntityId, &'static str),
     #[error("entity {0:?} already exists")]
     DuplicateEntity(EntityId),
+    #[error("{0}")]
+    Invalid(String),
 }
 
 /// A 2D sketch: geometry plus constraints, in plane coordinates.
@@ -246,6 +250,33 @@ impl Sketch {
             s,
             e,
         )
+    }
+
+    /// Adds a spline through fresh points at `points` (at least two).
+    /// Returns `(spline, points)`.
+    pub fn add_spline(
+        &mut self,
+        points: &[Vec2],
+    ) -> Result<(EntityId, Vec<EntityId>), SketchError> {
+        if points.len() < 2 {
+            return Err(SketchError::Invalid(
+                "a spline needs at least two points".into(),
+            ));
+        }
+        let ids: Vec<EntityId> = points.iter().map(|p| self.add_point(*p)).collect();
+        let id = self.alloc_entity(Entity::Spline {
+            points: ids.clone(),
+        });
+        Ok((id, ids))
+    }
+
+    /// The positions of a spline's points in order.
+    pub fn spline_points(&self, id: EntityId) -> Result<Vec<Vec2>, SketchError> {
+        match self.entity(id) {
+            Some(Entity::Spline { points }) => points.iter().map(|p| self.point(*p)).collect(),
+            Some(_) => Err(SketchError::WrongKind(id, "spline")),
+            None => Err(SketchError::UnknownEntity(id)),
+        }
     }
 
     /// Adds an axis-aligned rectangle made of four lines whose corners are

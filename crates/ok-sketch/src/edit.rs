@@ -173,7 +173,9 @@ fn shape_of(sketch: &Sketch, id: EntityId) -> Result<Shape, SketchError> {
             c: sketch.point(*center)?,
             r: *radius,
         }),
-        Entity::Point { .. } => Err(SketchError::WrongKind(id, "curve")),
+        Entity::Point { .. } | Entity::Spline { .. } => {
+            Err(SketchError::WrongKind(id, "line, arc or circle"))
+        }
     }
 }
 
@@ -307,7 +309,8 @@ impl Sketch {
                     out.push(piece(self, p, end));
                 }
             }
-            Entity::Point { .. } => unreachable!(),
+            // `shape_of` refused these already.
+            Entity::Point { .. } | Entity::Spline { .. } => unreachable!(),
         }
         for e in &out {
             if construction {
@@ -639,6 +642,13 @@ impl Sketch {
                     self.add_constraint(Constraint::Equal { a: id, b: n });
                     n
                 }
+                Entity::Spline { points } => {
+                    let ps = points
+                        .iter()
+                        .map(|p| point_of(self, *p))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    self.alloc_entity(Entity::Spline { points: ps })
+                }
             };
             if construction {
                 let _ = self.set_construction(new, true);
@@ -763,6 +773,13 @@ impl Sketch {
                     let n = self.alloc_entity(Entity::Circle { center: c, radius });
                     self.add_constraint(Constraint::Equal { a: id, b: n });
                     n
+                }
+                Entity::Spline { points } => {
+                    let ps = points
+                        .iter()
+                        .map(|p| point_of(self, *p, tie))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    self.alloc_entity(Entity::Spline { points: ps })
                 }
             };
             if construction {

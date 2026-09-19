@@ -7,7 +7,7 @@ part studio, and a web client, all under the MIT license.
 **Status: usable for simple parts, early for everything else.** What
 works today, all in the browser:
 
-- Sketching: lines, rectangles, circles and arcs drawn on standard planes
+- Sketching: lines, rectangles, circles, arcs and splines drawn on standard planes
   or on faces of bodies, with a constraint solver (18 constraint types,
   degrees-of-freedom reporting), inferred coincident / horizontal /
   vertical constraints while drawing, point dragging, construction
@@ -78,7 +78,7 @@ cd apps/web && npm install && npm run dev
 
 Open http://localhost:5173. The app loads an example plate on first run.
 Select a feature to edit it; press `f` to fit the view. In sketch mode:
-`L` line, `R` rectangle, `C` circle, `A` arc, `S` select, `Q` construction,
+`L` line, `R` rectangle, `C` circle, `A` arc, `B` spline, `S` select, `Q` construction,
 `Esc` finishes; right-drag orbits. Click a face to select it, then
 "+ Sketch" sketches on it. Documents are saved as `.okpart` JSON files and
 also kept in the browser's local storage.

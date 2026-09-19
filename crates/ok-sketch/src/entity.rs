@@ -32,6 +32,10 @@ pub enum Entity {
         start: EntityId,
         end: EntityId,
     },
+    /// A smooth open curve through `points` in order (see `spline.rs`).
+    Spline {
+        points: Vec<EntityId>,
+    },
 }
 
 impl Entity {
@@ -42,6 +46,7 @@ impl Entity {
             Entity::Line { start, end } => vec![*start, *end],
             Entity::Circle { center, .. } => vec![*center],
             Entity::Arc { center, start, end } => vec![*center, *start, *end],
+            Entity::Spline { points } => points.clone(),
         }
     }
 
@@ -51,6 +56,7 @@ impl Entity {
             Entity::Line { .. } => "line",
             Entity::Circle { .. } => "circle",
             Entity::Arc { .. } => "arc",
+            Entity::Spline { .. } => "spline",
         }
     }
 }

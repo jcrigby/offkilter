@@ -187,10 +187,18 @@ their originals or keep them as new bodies.
 
 ## Sketching (`ok-sketch`)
 
-Entities: `Point`, `Line`, `Circle`, `Arc`. Curves reference point entities
-for their defining positions, so constraints only ever act on points and
-radii. Arcs carry an implicit "start and end equidistant from centre"
-equation.
+Entities: `Point`, `Line`, `Circle`, `Arc`, `Spline`. Curves reference
+point entities for their defining positions, so constraints only ever act
+on points and radii. Arcs carry an implicit "start and end equidistant
+from centre" equation. A spline is a Catmull–Rom curve through its points
+(`spline.rs`): each span is a cubic Hermite segment whose end tangents are
+half the chord between the neighbouring points, so it interpolates every
+point and moving one only reshapes the spans beside it. Region extraction
+samples it into straight graph edges (a number of pieces per span set by
+the facet angle) whose polygon segments are tagged `SegmentCurve::Spline`
+with the entity id, so extrude, revolve, sweep and loft give all of a
+spline's facets one smooth surface. Trim and offset refuse splines; mirror
+and patterns copy them.
 
 Constraints (`entity.rs`): coincident, fixed, horizontal, vertical,
 distance, horizontal/vertical distance, length, radius, diameter, equal,

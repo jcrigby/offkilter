@@ -169,6 +169,18 @@ pub fn loft(
                         id
                     }
                 },
+                SegmentCurve::Spline { id } => {
+                    let key = ok_math::Vec2::new(id as f64, f64::NAN);
+                    match shared.filter(|(c, _, _)| c.x == key.x && c.y.is_nan()) {
+                        Some((_, _, s)) => s,
+                        None => {
+                            surfaces.push(Surface::Ruled);
+                            let s = surfaces.len() - 1;
+                            shared = Some((key, 0.0, s));
+                            s
+                        }
+                    }
+                }
             };
             let j = (i + 1) % count;
             let quad = [ra[i], ra[j], rb[j], rb[i]];

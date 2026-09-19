@@ -84,6 +84,8 @@ test("two clients edit one document live", async ({ browser }) => {
 });
 
 test("accounts own documents and share them", async ({ browser }) => {
+  // Several argon2 registrations and page loads: allow three times the usual budget.
+  test.slow();
   let up = false;
   try {
     up = (await fetch(`${SERVER}/api/health`)).ok;

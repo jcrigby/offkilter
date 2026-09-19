@@ -34,6 +34,10 @@ pub enum SketchOp {
         start: Vec2,
         end: Vec2,
     },
+    /// Smooth open curve through `points` in order (at least two).
+    AddSpline {
+        points: Vec<Vec2>,
+    },
     /// Regular polygon centred on `center` with a corner at `vertex`.
     AddPolygon {
         center: Vec2,
@@ -1119,6 +1123,11 @@ impl PartStudio {
                         SketchOp::AddArc { center, start, end } => {
                             let (a, c, s, e) = sk.add_arc(center, start, end);
                             out.entities.extend([a, c, s, e]);
+                        }
+                        SketchOp::AddSpline { points } => {
+                            let (id, pts) = sk.add_spline(&points)?;
+                            out.entities.push(id);
+                            out.entities.extend(pts);
                         }
                         SketchOp::AddPolygon {
                             center,
