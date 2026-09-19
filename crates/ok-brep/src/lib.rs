@@ -26,7 +26,7 @@ pub use boolean::{boolean, BoolOp};
 pub use extrude::extrude;
 pub use loft::loft;
 pub use revolve::revolve;
-pub use sweep::sweep;
+pub use sweep::{sweep, sweep_closed};
 pub use tessellate::{display_edges, tessellate, tessellate_with_faces, DisplayEdge};
 pub use transform::Transform;
 

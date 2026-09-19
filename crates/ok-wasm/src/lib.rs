@@ -231,6 +231,16 @@ impl Studio {
             .unwrap_or_default()
     }
 
+    /// Surface index of every face, so the client can treat all facets of
+    /// one curved surface as one face (edge highlighting, picking).
+    pub fn body_face_surfaces(&self, i: usize) -> Vec<u32> {
+        self.last
+            .bodies
+            .get(i)
+            .map(|b| b.solid.faces.iter().map(|f| f.surface as u32).collect())
+            .unwrap_or_default()
+    }
+
     /// The two face indices of every display edge, parallel to `body_edges`.
     pub fn body_edge_faces(&self, i: usize) -> Vec<u32> {
         self.last

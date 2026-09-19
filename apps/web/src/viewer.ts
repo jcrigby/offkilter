@@ -359,9 +359,13 @@ export class Viewer {
     for (const p of picks) {
       const m = this.meshData[p.body];
       if (!m) continue;
+      // Match by surface: every segment between the same two surfaces is
+      // one edge to the user (the rim of a faceted cylinder, say).
+      const sf = (f: number) => m.faceSurfaces[f] ?? -1;
+      const [pa, pb] = [sf(p.faces[0]), sf(p.faces[1])];
       for (let s = 0; s < m.edgeFaces.length / 2; s++) {
-        const a = m.edgeFaces[2 * s]!, b = m.edgeFaces[2 * s + 1]!;
-        const match = (a === p.faces[0] && b === p.faces[1]) || (a === p.faces[1] && b === p.faces[0]);
+        const a = sf(m.edgeFaces[2 * s]!), b = sf(m.edgeFaces[2 * s + 1]!);
+        const match = (a === pa && b === pb) || (a === pb && b === pa);
         if (match) for (let k = 0; k < 6; k++) pts.push(m.edges[6 * s + k]!);
       }
     }

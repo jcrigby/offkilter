@@ -32,7 +32,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Hole feature (through / blind, optional counterbore) at sketch points
 - [x] Sweep (profile along a sketched polyline / arc path) and loft (between two sketch regions)
 - [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
-- [ ] Fillets on curved edges and proper corner patches where blends meet
+- [x] Fillets and chamfers on curved edges (a rim is one chain, blended with one mitred sweep)
+- [ ] Proper corner patches where blends meet; variable-dihedral chains
 - [ ] Shell, draft
 - [x] Mirror and linear / circular patterns of bodies
 - [ ] Patterns of features and of faces; mirror selected bodies only

@@ -42,30 +42,77 @@ pub fn sweep(
     path: &[Vec3],
     feature: u32,
 ) -> Result<Solid, BrepError> {
+    sweep_path(profile, plane, path, false, feature)
+}
+
+/// Sweeps `profile` around a closed `path` (the last point joins back to
+/// the first): a ring with mitred joints and no caps. Frames are
+/// transported around the loop; a non-planar loop may leave a small twist
+/// where the ends meet.
+pub fn sweep_closed(
+    profile: &Profile,
+    plane: &Plane,
+    path: &[Vec3],
+    feature: u32,
+) -> Result<Solid, BrepError> {
+    sweep_path(profile, plane, path, true, feature)
+}
+
+fn sweep_path(
+    profile: &Profile,
+    plane: &Plane,
+    path: &[Vec3],
+    closed: bool,
+    feature: u32,
+) -> Result<Solid, BrepError> {
     if profile.outer.len() < 3 {
         return Err(BrepError::Degenerate(
             "profile has fewer than three points".into(),
         ));
     }
-    // Drop repeated points.
+    // Drop repeated points (and, for a loop, a repeated first point).
     let mut pts: Vec<Vec3> = Vec::new();
     for &p in path {
         if pts.last().is_none_or(|q: &Vec3| q.distance(p) > 1e-9) {
             pts.push(p);
         }
     }
-    if pts.len() < 2 {
+    if closed && pts.len() > 1 && pts[0].distance(*pts.last().unwrap()) <= 1e-9 {
+        pts.pop();
+    }
+    if pts.len() < if closed { 3 } else { 2 } {
         return Err(BrepError::Degenerate(
             "path needs at least two distinct points".into(),
         ));
     }
     let n = pts.len();
-    let tangents: Vec<Vec3> = (0..n - 1)
-        .map(|i| (pts[i + 1] - pts[i]).normalized().unwrap())
+    // Segment tangents; a loop has one more segment, back to the start.
+    let seg_count = if closed { n } else { n - 1 };
+    let tangents: Vec<Vec3> = (0..seg_count)
+        .map(|i| (pts[(i + 1) % n] - pts[i]).normalized().unwrap())
         .collect();
+    // Tangents into and out of each ring.
+    let t_in = |i: usize| -> Vec3 {
+        if i == 0 {
+            if closed {
+                tangents[n - 1]
+            } else {
+                tangents[0]
+            }
+        } else {
+            tangents[i - 1]
+        }
+    };
+    let t_out = |i: usize| -> Vec3 {
+        if i < seg_count {
+            tangents[i]
+        } else {
+            tangents[i - 1]
+        }
+    };
 
-    // Frame at each ring: (origin, x, y, normal). Start aligned with the
-    // first segment, then transported segment to segment.
+    // Frame at each ring, perpendicular to its outgoing tangent: start
+    // aligned with the first segment, then transported segment to segment.
     let mut frames: Vec<Plane> = Vec::with_capacity(n);
     let x0 = rotate_between(plane.normal, tangents[0], plane.x_axis);
     let y0 = rotate_between(plane.normal, tangents[0], plane.y_axis);
@@ -77,51 +124,41 @@ pub fn sweep(
     });
     for i in 1..n {
         let prev = frames[i - 1];
-        let t_in = tangents[i - 1];
-        let t_out = if i < n - 1 {
-            tangents[i]
-        } else {
-            tangents[i - 1]
-        };
-        // Transported frame keeps the incoming normal; the ring is then
-        // projected onto the bisector plane along the incoming direction.
-        let x = rotate_between(t_in, t_out, prev.x_axis);
-        let y = rotate_between(t_in, t_out, prev.y_axis);
+        let x = rotate_between(t_in(i), t_out(i), prev.x_axis);
+        let y = rotate_between(t_in(i), t_out(i), prev.y_axis);
         frames.push(Plane {
             origin: pts[i],
             x_axis: x,
             y_axis: y,
-            normal: t_out,
+            normal: t_out(i),
         });
     }
 
-    // Ring points: for interior joints, place the profile in the incoming
-    // frame and project along t_in onto the bisector plane.
+    // Ring points: place the profile in the incoming orientation (the ring
+    // frame rotated back to the incoming tangent) and project it along the
+    // incoming direction onto the bisector plane, which mitres the joint.
     let ring = |i: usize, p: Vec2| -> Vec3 {
         let f = frames[i];
-        if i == 0 || i == n - 1 {
+        let (ti, to) = (t_in(i), t_out(i));
+        if ti.distance(to) <= 1e-12 {
             return f.origin + f.x_axis * p.x + f.y_axis * p.y;
         }
-        let t_in = tangents[i - 1];
-        let t_out = tangents[i];
-        let incoming = frames[i - 1];
-        // Profile in the incoming orientation, positioned at this joint.
-        let ix = rotate_between(tangents[i - 1], tangents[i - 1], incoming.x_axis);
-        let iy = incoming.y_axis;
+        let ix = rotate_between(to, ti, f.x_axis);
+        let iy = rotate_between(to, ti, f.y_axis);
         let r = f.origin + ix * p.x + iy * p.y;
-        let nb = (t_in + t_out).normalized().unwrap_or(t_out);
-        let denom = t_in.dot(nb);
+        let nb = (ti + to).normalized().unwrap_or(to);
+        let denom = ti.dot(nb);
         if denom.abs() < 1e-9 {
             return r;
         }
         let s = -(r - f.origin).dot(nb) / denom;
-        r + t_in * s
+        r + ti * s
     };
 
     let mut surfaces: Vec<Surface> = Vec::new();
     let mut polys: Vec<Polygon> = Vec::new();
 
-    // Caps.
+    // Caps (open sweeps only).
     let loops_of = |i: usize, reversed: bool| -> Vec<Vec<Vec3>> {
         std::iter::once(&profile.outer)
             .chain(profile.holes.iter())
@@ -131,28 +168,30 @@ pub fn sweep(
             })
             .collect()
     };
-    let start_plane = flip_plane(&frames[0]);
-    surfaces.push(Surface::Plane {
-        normal: start_plane.normal,
-        offset: start_plane.normal.dot(start_plane.origin),
-    });
-    polys.push(Polygon {
-        plane: start_plane,
-        loops: loops_of(0, true),
-        surface: 0,
-        origin: FaceOrigin { feature, local: 0 },
-    });
-    let end_plane = frames[n - 1];
-    surfaces.push(Surface::Plane {
-        normal: end_plane.normal,
-        offset: end_plane.normal.dot(end_plane.origin),
-    });
-    polys.push(Polygon {
-        plane: end_plane,
-        loops: loops_of(n - 1, false),
-        surface: 1,
-        origin: FaceOrigin { feature, local: 1 },
-    });
+    if !closed {
+        let start_plane = flip_plane(&frames[0]);
+        surfaces.push(Surface::Plane {
+            normal: start_plane.normal,
+            offset: start_plane.normal.dot(start_plane.origin),
+        });
+        polys.push(Polygon {
+            plane: start_plane,
+            loops: loops_of(0, true),
+            surface: 0,
+            origin: FaceOrigin { feature, local: 0 },
+        });
+        let end_plane = frames[n - 1];
+        surfaces.push(Surface::Plane {
+            normal: end_plane.normal,
+            offset: end_plane.normal.dot(end_plane.origin),
+        });
+        polys.push(Polygon {
+            plane: end_plane,
+            loops: loops_of(n - 1, false),
+            surface: 1,
+            origin: FaceOrigin { feature, local: 1 },
+        });
+    }
 
     let mut local = 2u32;
     let mut walls = |ring_loop: &Loop| {
@@ -179,8 +218,9 @@ pub fn sweep(
                     }
                 },
             };
-            for k in 0..n - 1 {
-                let quad = [ring(k, a), ring(k, b), ring(k + 1, b), ring(k + 1, a)];
+            for k in 0..seg_count {
+                let k1 = (k + 1) % n;
+                let quad = [ring(k, a), ring(k, b), ring(k1, b), ring(k1, a)];
                 for tri in [[quad[0], quad[1], quad[2]], [quad[0], quad[2], quad[3]]] {
                     let Some(normal) = newell_normal(&tri).normalized() else {
                         continue;
@@ -301,5 +341,56 @@ mod tests {
         solid.validate().unwrap();
         let expected = std::f64::consts::PI * (9.0 - 4.0) * 8.0;
         assert!(((solid.volume() - expected) / expected).abs() < 3e-3);
+    }
+
+    #[test]
+    fn closed_sweep_around_a_square_ring() {
+        // A 1x1 profile carried around a 10x10 square loop: a picture-frame
+        // ring with mitred corners, no caps. Volume = perimeter along the
+        // centreline (4 * 10) times the section area (1).
+        let path = [
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(10.0, 0.0, 0.0),
+            Vec3::new(10.0, 10.0, 0.0),
+            Vec3::new(0.0, 10.0, 0.0),
+        ];
+        let solid = sweep_closed(&square(1.0), &Plane::YZ, &path, 1).unwrap();
+        solid.validate().unwrap();
+        assert!(
+            (solid.volume() - 40.0).abs() < 1e-9,
+            "vol {}",
+            solid.volume()
+        );
+        // Every face is a wall: no planar caps.
+        assert!(solid.surfaces.iter().all(|s| matches!(s, Surface::Ruled)));
+    }
+
+    #[test]
+    fn closed_sweep_around_a_circle_is_a_torus() {
+        let r = 10.0;
+        let n = 72;
+        let path: Vec<Vec3> = (0..n)
+            .map(|i| {
+                let a = std::f64::consts::TAU * i as f64 / n as f64;
+                Vec3::new(r * a.cos(), r * a.sin(), 0.0)
+            })
+            .collect();
+        // Profile on the ZX plane at (r, 0, 0) (right-handed: Z x X = Y).
+        let plane = Plane {
+            origin: Vec3::new(r, 0.0, 0.0),
+            x_axis: Vec3::Z,
+            y_axis: Vec3::X,
+            normal: Vec3::Y,
+        };
+        let solid = sweep_closed(&square(2.0), &plane, &path, 1).unwrap();
+        solid.validate().unwrap();
+        // Pappus with the polygonal centreline: 72 * chord * 4.
+        let chord = 2.0 * r * (std::f64::consts::PI / n as f64).sin();
+        let expected = n as f64 * chord * 4.0;
+        assert!(
+            (solid.volume() - expected).abs() / expected < 1e-3,
+            "vol {} expected {expected}",
+            solid.volume()
+        );
     }
 }

@@ -6,6 +6,8 @@
 //! subtracted; concave edges have it added. The arc is tagged as a cylinder
 //! about the edge, so fillets shade smoothly and are one selectable face.
 
+#[cfg(test)]
+use crate::Surface;
 use crate::{boolean, extrude, BoolOp, BrepError, Solid};
 use ok_math::{Plane, Vec2, Vec3};
 use ok_sketch::{Loop, Profile, SegmentCurve};
@@ -86,6 +88,13 @@ fn cross_section(
 }
 
 /// Fillets or chamfers every edge between the given face-index pairs.
+///
+/// Segments between the same two surfaces that join end to end (the rim
+/// of a faceted cylinder, say) are blended as one chain: the cross-section
+/// of the first segment is swept along the chain with mitred joints, so
+/// the blend is continuous around the rim. The section is that of the
+/// first segment, which is exact when the dihedral angle is constant along
+/// the chain (rims on planar faces) and an approximation otherwise.
 pub fn blend_edges(
     solid: &Solid,
     pairs: &[(usize, usize)],
@@ -102,12 +111,27 @@ pub fn blend_edges(
             .iter()
             .any(|&(x, y)| (x == fa && y == fb) || (x == fb && y == fa))
     };
-    let mut segments: Vec<EdgeSegment> = Vec::new();
+    // Segments, each oriented as its face A traverses it, where A is the
+    // face on the lower-numbered surface so a chain is oriented consistently.
+    struct Seg {
+        a: u32,
+        b: u32,
+        geom: EdgeSegment,
+        surfaces: (usize, usize),
+    }
+    let mut segments: Vec<Seg> = Vec::new();
     for (key, faces) in solid.edge_faces() {
         if faces.len() != 2 || !wanted(faces[0], faces[1]) {
             continue;
         }
-        let (fa, fb) = (&solid.faces[faces[0]], &solid.faces[faces[1]]);
+        let (mut ia, mut ib) = (faces[0], faces[1]);
+        if solid.faces[ia].surface > solid.faces[ib].surface {
+            std::mem::swap(&mut ia, &mut ib);
+        }
+        let (fa, fb) = (&solid.faces[ia], &solid.faces[ib]);
+        if fa.surface == fb.surface {
+            continue; // a seam inside one surface is not an edge to blend
+        }
         // Direction of the edge as face A traverses it.
         let mut dir: Option<(u32, u32)> = None;
         for l in &fa.loops {
@@ -128,45 +152,103 @@ pub fn blend_edges(
         let inward_a = na.cross(e);
         let inward_b = -(nb.cross(e));
         let convex = inward_a.dot(nb) < 0.0;
-        segments.push(EdgeSegment {
-            p,
-            q,
-            inward_a,
-            inward_b,
-            convex,
+        segments.push(Seg {
+            a,
+            b,
+            geom: EdgeSegment {
+                p,
+                q,
+                inward_a,
+                inward_b,
+                convex,
+            },
+            surfaces: (fa.surface, fb.surface),
         });
     }
     if segments.is_empty() {
         return Err(BrepError::Degenerate("no matching edges to blend".into()));
     }
 
+    // Chain segments head to tail within one surface pair and convexity.
+    let mut used = vec![false; segments.len()];
+    let mut chains: Vec<(Vec<usize>, bool)> = Vec::new();
+    let same_kind = |i: usize, j: usize| {
+        segments[i].surfaces == segments[j].surfaces
+            && segments[i].geom.convex == segments[j].geom.convex
+    };
+    for start in 0..segments.len() {
+        if used[start] {
+            continue;
+        }
+        used[start] = true;
+        let mut chain = vec![start];
+        // Extend forward (q -> p of the next) and backward (p <- q of the previous).
+        loop {
+            let last = *chain.last().unwrap();
+            let next = (0..segments.len())
+                .find(|&j| !used[j] && same_kind(last, j) && segments[j].a == segments[last].b);
+            match next {
+                Some(j) => {
+                    used[j] = true;
+                    chain.push(j);
+                }
+                None => break,
+            }
+        }
+        let closed = chain.len() > 1 && segments[*chain.last().unwrap()].b == segments[start].a;
+        if !closed {
+            loop {
+                let first = chain[0];
+                let prev = (0..segments.len()).find(|&j| {
+                    !used[j] && same_kind(first, j) && segments[j].b == segments[first].a
+                });
+                match prev {
+                    Some(j) => {
+                        used[j] = true;
+                        chain.insert(0, j);
+                    }
+                    None => break,
+                }
+            }
+        }
+        chains.push((chain, closed));
+    }
+
     let mut cutters = Solid::default();
     let mut fillers = Solid::default();
-    for (k, seg) in segments.iter().enumerate() {
-        let e = (seg.q - seg.p).normalized().unwrap();
-        let x = seg.inward_a;
+    for (k, (chain, closed)) in chains.iter().enumerate() {
+        let first = &segments[chain[0]].geom;
+        let e = (first.q - first.p).normalized().unwrap();
+        let x = first.inward_a;
         let y = e.cross(x);
-        let section = cross_section(seg, x, y, size, kind, segment_angle)?;
+        let section = cross_section(first, x, y, size, kind, segment_angle)?;
         let frame = Plane {
-            origin: seg.p,
+            origin: first.p,
             x_axis: x,
             y_axis: y,
             normal: e,
         };
-        let mut prism = extrude(
-            &Profile {
-                outer: section,
-                holes: vec![],
-            },
-            &frame,
-            0.0,
-            seg.q.distance(seg.p),
-            feature,
-        )?;
+        let profile = Profile {
+            outer: section,
+            holes: vec![],
+        };
+        let mut prism = if chain.len() == 1 {
+            extrude(&profile, &frame, 0.0, first.q.distance(first.p), feature)?
+        } else {
+            let mut path: Vec<Vec3> = chain.iter().map(|&i| segments[i].geom.p).collect();
+            if !closed {
+                path.push(segments[*chain.last().unwrap()].geom.q);
+            }
+            if *closed {
+                crate::sweep_closed(&profile, &frame, &path, feature)?
+            } else {
+                crate::sweep(&profile, &frame, &path, feature)?
+            }
+        };
         for f in &mut prism.faces {
             f.origin.local += (k as u32) * 1000;
         }
-        if seg.convex {
+        if first.convex {
             cutters = boolean(&cutters, &prism, BoolOp::Union)?;
         } else {
             fillers = boolean(&fillers, &prism, BoolOp::Union)?;
@@ -332,6 +414,75 @@ mod tests {
             c.volume() < 1000.0 - 3.0 * 20.0 + 10.0 && c.volume() > 1000.0 - 3.0 * 20.0 - 10.0,
             "vol {}",
             c.volume()
+        );
+    }
+
+    fn cylinder(r: f64, h: f64) -> Solid {
+        let mut s = Sketch::new();
+        s.add_circle(Vec2::ZERO, r);
+        let p = s.profiles(&ProfileOptions::default()).remove(0);
+        extrude(&p, &Plane::XY, 0.0, h, 1).unwrap()
+    }
+
+    /// Face pairs between the top cap and every wall facet of a cylinder.
+    fn rim_pairs(solid: &Solid) -> Vec<(usize, usize)> {
+        let top = solid
+            .faces
+            .iter()
+            .position(|f| f.plane.normal.approx_eq(Vec3::Z))
+            .unwrap();
+        (0..solid.faces.len())
+            .filter(|&i| {
+                matches!(
+                    solid.surfaces[solid.faces[i].surface],
+                    Surface::Cylinder { .. }
+                )
+            })
+            .map(|i| (top, i))
+            .collect()
+    }
+
+    #[test]
+    fn fillet_the_rim_of_a_cylinder() {
+        // Removed material is the corner square minus the tangent quarter
+        // disc, revolved about the axis (Pappus): 2π (r²(R − r/2) − (πr²/4)(R − r) − r³/3).
+        let (big_r, h, r) = (10.0, 5.0, 2.0);
+        let solid = cylinder(big_r, h);
+        let before = solid.volume();
+        let out = blend_edges(&solid, &rim_pairs(&solid), r, BlendKind::Fillet, SEG, 7).unwrap();
+        out.validate().unwrap();
+        let removed = std::f64::consts::TAU
+            * (r * r * (big_r - r / 2.0)
+                - std::f64::consts::PI * r * r / 4.0 * (big_r - r)
+                - r * r * r / 3.0);
+        let got = before - out.volume();
+        assert!(
+            (got - removed).abs() / removed < 0.02,
+            "removed {got}, expected {removed}"
+        );
+        // One continuous blend: the top cap's outline is one circle again,
+        // so the top face keeps a single loop.
+        let top = out
+            .faces
+            .iter()
+            .find(|f| f.plane.normal.approx_eq(Vec3::Z))
+            .unwrap();
+        assert_eq!(top.loops.len(), 1);
+    }
+
+    #[test]
+    fn chamfer_the_rim_of_a_cylinder() {
+        // Removed: a triangle r²/2 with centroid at R − r/3, revolved.
+        let (big_r, h, r) = (10.0, 5.0, 2.0);
+        let solid = cylinder(big_r, h);
+        let before = solid.volume();
+        let out = blend_edges(&solid, &rim_pairs(&solid), r, BlendKind::Chamfer, SEG, 7).unwrap();
+        out.validate().unwrap();
+        let removed = std::f64::consts::PI * r * r * (big_r - r / 3.0);
+        let got = before - out.volume();
+        assert!(
+            (got - removed).abs() / removed < 0.02,
+            "removed {got}, expected {removed}"
         );
     }
 }

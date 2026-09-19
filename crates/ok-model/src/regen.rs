@@ -69,6 +69,44 @@ impl Body {
         out
     }
 
+    /// Face index pairs for every edge between the surfaces of the two
+    /// referenced faces, so one picked segment of a faceted rim names the
+    /// whole rim.
+    pub fn find_edge_on_surfaces(&self, edge: &EdgeRef) -> Vec<(usize, usize)> {
+        let surfaces_of = |r: &FaceRef| -> Vec<usize> {
+            self.solid
+                .faces
+                .iter()
+                .filter(|f| r.matches(&f.origin))
+                .map(|f| f.surface)
+                .collect()
+        };
+        let (sa, sb) = (surfaces_of(&edge.a), surfaces_of(&edge.b));
+        if sa.is_empty() || sb.is_empty() {
+            return Vec::new();
+        }
+        let mut out = Vec::new();
+        for (_, faces) in self.solid.edge_faces() {
+            if faces.len() != 2 {
+                continue;
+            }
+            let (s0, s1) = (
+                self.solid.faces[faces[0]].surface,
+                self.solid.faces[faces[1]].surface,
+            );
+            if s0 == s1 {
+                continue;
+            }
+            if (sa.contains(&s0) && sb.contains(&s1)) || (sa.contains(&s1) && sb.contains(&s0)) {
+                let pair = (faces[0], faces[1]);
+                if !out.contains(&pair) {
+                    out.push(pair);
+                }
+            }
+        }
+        out
+    }
+
     pub fn bounds(&self) -> Option<(Vec3, Vec3)> {
         self.solid.bounds()
     }
@@ -894,7 +932,7 @@ impl PartStudio {
             let pairs: Vec<(usize, usize)> = bf
                 .edges
                 .iter()
-                .flat_map(|e| result.bodies[i].find_edge(e))
+                .flat_map(|e| result.bodies[i].find_edge_on_surfaces(e))
                 .collect();
             if pairs.is_empty() {
                 continue;
@@ -2519,6 +2557,70 @@ mod tests {
         assert!(r
             .errors()
             .any(|(id, e)| id == s3 && e.contains("not found")));
+    }
+
+    #[test]
+    fn fillet_on_one_rim_segment_blends_the_whole_rim() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddCircle {
+                center: Vec2::ZERO,
+                radius: 10.0,
+            },
+        })
+        .unwrap();
+        let e1 = ps
+            .apply(Op::AddExtrude {
+                sketch: s,
+                depth: 5.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let before = ps.regenerate().bodies[0].solid.volume();
+        // One facet (local 2) against the top cap (local 1) stands for the rim.
+        ps.apply(Op::AddBlend {
+            kind: BlendKind::Chamfer,
+            edges: vec![EdgeRef {
+                a: FaceRef {
+                    feature: e1,
+                    local: 1,
+                },
+                b: FaceRef {
+                    feature: e1,
+                    local: 2,
+                },
+            }],
+            size: 2.0,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let removed = before - r.bodies[0].solid.volume();
+        let expected = std::f64::consts::PI * 4.0 * (10.0 - 2.0 / 3.0);
+        assert!(
+            (removed - expected).abs() / expected < 0.02,
+            "removed {removed}, expected {expected}"
+        );
     }
 
     #[test]

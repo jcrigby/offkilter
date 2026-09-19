@@ -167,7 +167,7 @@ export type Op =
 
 export type OpResult = { feature: number | null; entities: number[]; constraint: number | null };
 
-export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array; edgeFaces: Uint32Array; faceIds: Uint32Array };
+export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array; edgeFaces: Uint32Array; faceIds: Uint32Array; faceSurfaces: Uint32Array };
 
 export class Kernel {
   private studio: Studio;
@@ -226,6 +226,7 @@ export class Kernel {
         edges: this.studio.body_edges(i),
         edgeFaces: this.studio.body_edge_faces(i),
         faceIds: this.studio.body_face_ids(i),
+        faceSurfaces: this.studio.body_face_surfaces(i),
       });
     }
     return out;
