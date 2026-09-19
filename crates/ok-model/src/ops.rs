@@ -201,6 +201,10 @@ pub enum Op {
         #[serde(default, with = "double_option")]
         counterbore: Option<Option<Counterbore>>,
     },
+    /// Sets document-wide regeneration settings.
+    SetSettings {
+        facet_angle: f64,
+    },
     /// Replaces the whole document (used to sync undo/redo between clients).
     ReplaceDocument {
         json: String,
@@ -555,6 +559,14 @@ impl PartStudio {
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "hole")),
             },
+            Op::SetSettings { facet_angle } => {
+                if !(facet_angle.is_finite() && (0.5..=30.0).contains(&facet_angle)) {
+                    return Err(ModelError::Invalid(
+                        "facet angle must be between 0.5 and 30 degrees".into(),
+                    ));
+                }
+                self.settings.facet_angle = facet_angle;
+            }
             Op::ReplaceDocument { json } => {
                 let replacement =
                     PartStudio::from_json(&json).map_err(|e| ModelError::Invalid(e.to_string()))?;

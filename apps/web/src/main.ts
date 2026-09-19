@@ -347,6 +347,9 @@ class App implements SketchHost {
     this.lastRegenMs = dt;
     this.setStatus(this.statusLine());
     ($("#studio-name") as HTMLInputElement).value = this.summary.name;
+    const quality = $("#quality") as HTMLSelectElement;
+    const current = String(this.summary.settings.facet_angle);
+    if ([...quality.options].some((o) => o.value === current)) quality.value = current;
     if (!this.sync.connected) {
       try {
         localStorage.setItem(STORAGE_KEY, this.kernel.toJson());
@@ -1379,6 +1382,10 @@ async function main(): Promise<void> {
   };
   const docParam = new URL(location.href).searchParams.get("doc");
   if (docParam) openDoc(docParam);
+  ($("#quality") as HTMLSelectElement).onchange = (e) => {
+    app.apply({ type: "set_settings", facet_angle: Number((e.target as HTMLSelectElement).value) });
+    app.setStatus(app.statusLine() + " · quality changed");
+  };
   $("#btn-undo").onclick = () => app.undo();
   $("#btn-redo").onclick = () => app.redo();
   app.undo(); // no-op that initialises the button states

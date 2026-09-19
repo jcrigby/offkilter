@@ -197,6 +197,13 @@ impl RegenCache {
     }
 }
 
+fn feature_hash_seed(settings: &crate::Settings) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut h = std::hash::DefaultHasher::new();
+    settings.facet_angle.to_bits().hash(&mut h);
+    h.finish()
+}
+
 fn feature_hash(prev: u64, f: &crate::Feature) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut h = std::hash::DefaultHasher::new();
@@ -220,10 +227,11 @@ impl PartStudio {
     /// document always stores solved geometry. Unchanged prefixes of the
     /// feature list are served from the cache.
     pub fn regenerate(&mut self) -> RegenResult {
-        let opts = ProfileOptions::default();
+        let opts = self.settings.profile_options();
         let mut result = RegenResult::default();
         let ids: Vec<FeatureId> = self.features.iter().map(|f| f.id).collect();
-        let mut chain = 0u64;
+        // Settings seed the cache chain so a resolution change regenerates everything.
+        let mut chain = feature_hash_seed(&self.settings);
         let mut cache_valid = true;
         for (index, id) in ids.into_iter().enumerate() {
             let pos = self.position(id).expect("feature present");
@@ -351,11 +359,11 @@ impl PartStudio {
                 }
                 FeatureKind::Revolve(rf) => {
                     let rf = rf.clone();
-                    Self::regen_revolve(&mut result, id, &rf, pos, &self.features)
+                    Self::regen_revolve(&mut result, id, &rf, pos, &self.features, &opts)
                 }
                 FeatureKind::Blend(bf) => {
                     let bf = bf.clone();
-                    Self::regen_blend(&mut result, id, &bf)
+                    Self::regen_blend(&mut result, id, &bf, &opts)
                 }
                 FeatureKind::Mirror(mf) => {
                     let mf = mf.clone();
@@ -369,7 +377,7 @@ impl PartStudio {
                 FeatureKind::Variable(_) => unreachable!("handled above"),
                 FeatureKind::Hole(hf) => {
                     let hf = hf.clone();
-                    Self::regen_hole(&mut result, id, &hf, pos, &self.features)
+                    Self::regen_hole(&mut result, id, &hf, pos, &self.features, &opts)
                 }
                 FeatureKind::Pattern(pf) => {
                     let pf = pf.clone();
@@ -530,6 +538,7 @@ impl PartStudio {
         rf: &crate::RevolveFeature,
         pos: usize,
         features: &[crate::Feature],
+        opts: &ProfileOptions,
     ) -> Option<String> {
         let sr = match Self::source_sketch(result, rf.sketch, pos, features, "revolve") {
             Ok(sr) => sr,
@@ -559,7 +568,7 @@ impl PartStudio {
         }
         let angle = rf.angle.clamp(-360.0, 360.0).to_radians();
         let plane = sr.plane;
-        let seg = ProfileOptions::default().arc_segment_angle;
+        let seg = opts.arc_segment_angle;
         let tool = match Self::build_tool(
             selected
                 .into_iter()
@@ -577,6 +586,7 @@ impl PartStudio {
         hf: &crate::HoleFeature,
         pos: usize,
         features: &[crate::Feature],
+        opts: &ProfileOptions,
     ) -> Option<String> {
         // The sketch must exist and precede this feature (regions are not needed).
         let sketch_pos = match features.iter().position(|f| f.id == hf.sketch) {
@@ -642,7 +652,7 @@ impl PartStudio {
             |c: Vec2, diameter: f64, start: f64, end: f64| -> Result<Solid, ok_brep::BrepError> {
                 let mut sk = ok_sketch::Sketch::new();
                 sk.add_circle(c, diameter / 2.0);
-                let profile = sk.profiles(&ProfileOptions::default()).remove(0);
+                let profile = sk.profiles(opts).remove(0);
                 ok_brep::extrude(&profile, &plane, start, end, id.0)
             };
         let (start, end) = match range(hf.depth, hf.through_all) {
@@ -673,6 +683,7 @@ impl PartStudio {
         result: &mut RegenResult,
         id: FeatureId,
         bf: &crate::BlendFeature,
+        opts: &ProfileOptions,
     ) -> Option<String> {
         if bf.edges.is_empty() {
             return None; // nothing selected yet: a no-op rather than an error
@@ -681,7 +692,7 @@ impl PartStudio {
             BlendKind::Fillet => ok_brep::BlendKind::Fillet,
             BlendKind::Chamfer => ok_brep::BlendKind::Chamfer,
         };
-        let seg = ProfileOptions::default().arc_segment_angle;
+        let seg = opts.arc_segment_angle;
         let mut matched = 0usize;
         for i in 0..result.bodies.len() {
             let pairs: Vec<(usize, usize)> = bf
@@ -1986,6 +1997,51 @@ mod tests {
         })
         .unwrap();
         assert_eq!(r1.structural_hash(), h2);
+    }
+
+    #[test]
+    fn facet_angle_setting_changes_resolution_and_invalidates_cache() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddCircle {
+                center: Vec2::ZERO,
+                radius: 10.0,
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddExtrude {
+            sketch: s,
+            depth: 1.0,
+            direction: ExtrudeDirection::Normal,
+            end: ExtrudeEnd::Blind,
+            profiles: ProfileSelection::All,
+            op: BodyOp::New,
+            name: None,
+        })
+        .unwrap();
+        let coarse = ps.regenerate();
+        let faces_coarse = coarse.bodies[0].solid.faces.len();
+        let vol_coarse = coarse.bodies[0].solid.volume();
+        ps.apply(Op::SetSettings { facet_angle: 1.0 }).unwrap();
+        let fine = ps.regenerate();
+        assert_eq!(fine.bodies[0].solid.faces.len(), 360 + 2);
+        assert_eq!(faces_coarse, 72 + 2);
+        let exact = std::f64::consts::PI * 100.0;
+        assert!((fine.bodies[0].solid.volume() - exact).abs() < (vol_coarse - exact).abs());
+        assert!((fine.bodies[0].solid.volume() - exact).abs() / exact < 1e-4);
+        assert!(ps.apply(Op::SetSettings { facet_angle: 0.0 }).is_err());
+        // Settings persist in the document.
+        let again = PartStudio::from_json(&ps.to_json()).unwrap();
+        assert_eq!(again.settings.facet_angle, 1.0);
     }
 
     #[test]

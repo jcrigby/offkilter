@@ -29,7 +29,8 @@ works today, all in the browser:
   concurrent edits converge without conflicts, and documents keep named
   versions.
 
-Not yet: exact curved surfaces (arcs are 5° facets), sweeps and lofts,
+Not yet: exact curved surfaces (curved faces are facets at an adjustable
+resolution, 5° by default), sweeps and lofts,
 shells, assemblies, drawings, STEP, and accounts. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout

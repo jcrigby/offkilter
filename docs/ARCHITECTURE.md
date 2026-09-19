@@ -42,6 +42,12 @@ Onshape does. Each feature produces a `FeatureStatus` with an optional
 error; later features that depend on a failed feature report their own
 error rather than aborting the whole regen.
 
+`PartStudio.settings` holds document-wide regeneration settings; today
+that is `facet_angle`, the maximum angle per facet for arcs, circles,
+revolves and blends (default 5°). It is persisted, edited through
+`Op::SetSettings` so it syncs between clients, and seeds the cache hash
+chain so changing it regenerates everything.
+
 Regeneration keeps a cache of the result state after each feature, keyed
 by a hash chain of the solved feature definitions. A regeneration reuses
 the longest unchanged prefix, so editing or dragging in the last feature

@@ -24,6 +24,7 @@ struct Summary<'a> {
     bodies: Vec<BodySummary<'a>>,
     variables: &'a std::collections::BTreeMap<String, f64>,
     sketches: &'a std::collections::BTreeMap<ok_model::FeatureId, ok_model::SketchResult>,
+    settings: ok_model::Settings,
 }
 
 #[derive(Serialize)]
@@ -169,6 +170,7 @@ impl Studio {
             bodies,
             sketches: &self.last.sketches,
             variables: &self.last.variables,
+            settings: self.inner.settings,
         })
         .unwrap()
     }

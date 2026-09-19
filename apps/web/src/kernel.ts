@@ -101,7 +101,15 @@ export type SketchCurve = { entity: number; kind: string; construction: boolean;
 export type PlaneFrame = { origin: Vec3; x_axis: Vec3; y_axis: Vec3; normal: Vec3 };
 export type Loop = { points: Vec2[] };
 export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
-export type Summary = { name: string; features: FeatureSummary[]; bodies: BodySummary[]; sketches: Record<string, SketchResult>; variables: Record<string, number> };
+export type Settings = { facet_angle: number };
+export type Summary = {
+  name: string;
+  features: FeatureSummary[];
+  bodies: BodySummary[];
+  sketches: Record<string, SketchResult>;
+  variables: Record<string, number>;
+  settings: Settings;
+};
 
 export type SketchOp =
   | { type: "add_point"; pos: Vec2 }
@@ -133,6 +141,7 @@ export type Op =
   | { type: "set_binding"; id: number; field: string; expression: string | null }
   | { type: "add_hole"; sketch: number; diameter: number; depth?: number; through_all?: boolean; direction?: ExtrudeDirection; counterbore?: Counterbore | null; name: string | null }
   | { type: "set_hole"; id: number; diameter?: number | null; depth?: number | null; through_all?: boolean | null; direction?: ExtrudeDirection | null; counterbore?: Counterbore | null }
+  | { type: "set_settings"; facet_angle: number }
   | { type: "replace_document"; json: string }
   | { type: "set_sketch_plane"; id: number; plane: PlaneRef }
   | { type: "rename_feature"; id: number; name: string }

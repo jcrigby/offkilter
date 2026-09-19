@@ -53,9 +53,35 @@ pub struct PartStudio {
     pub name: String,
     features: Vec<Feature>,
     next_id: u32,
+    /// Regeneration settings such as facet resolution.
+    #[serde(default)]
+    pub settings: Settings,
     /// Per-feature regeneration cache; never persisted.
     #[serde(skip)]
     cache: regen::RegenCache,
+}
+
+/// Document-wide regeneration settings.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Settings {
+    /// Maximum angle per facet when approximating arcs, circles, revolves
+    /// and fillets, in degrees. Smaller is rounder and slower.
+    pub facet_angle: f64,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Settings { facet_angle: 5.0 }
+    }
+}
+
+impl Settings {
+    pub fn profile_options(&self) -> ok_sketch::ProfileOptions {
+        ok_sketch::ProfileOptions {
+            arc_segment_angle: self.facet_angle.clamp(0.5, 30.0).to_radians(),
+            ..Default::default()
+        }
+    }
 }
 
 impl Default for PartStudio {
@@ -70,6 +96,7 @@ impl PartStudio {
             name: name.into(),
             features: Vec::new(),
             next_id: 1,
+            settings: Settings::default(),
             cache: Default::default(),
         }
     }
