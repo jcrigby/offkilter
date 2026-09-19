@@ -81,6 +81,9 @@ pub struct SketchCurve {
     pub kind: String,
     #[serde(default)]
     pub construction: bool,
+    /// Projected from body geometry; fixed for the solver.
+    #[serde(default)]
+    pub projected: bool,
     pub points: Vec<Vec3>,
 }
 
@@ -174,6 +177,7 @@ fn tessellate_sketch(
                 entity: id,
                 kind: e.kind_name().to_string(),
                 construction: sketch.is_construction(id),
+                projected: sketch.is_projected(id),
                 points: pts.into_iter().map(|p| plane.to_world(p)).collect(),
             });
         }
@@ -252,6 +256,14 @@ impl PartStudio {
                     }
                 }
                 if let FeatureKind::Sketch(sf) = &mut self.features[pos].kind {
+                    if !sf.projections.is_empty() {
+                        let projected = result.resolve_plane(&sf.plane).and_then(|plane| {
+                            crate::project::update_projections(&result, &plane, sf)
+                        });
+                        if let Err(e) = projected {
+                            binding_error.get_or_insert(e);
+                        }
+                    }
                     sf.sketch.solve();
                 }
             }
@@ -2226,6 +2238,287 @@ mod tests {
         // Settings persist in the document.
         let again = PartStudio::from_json(&ps.to_json()).unwrap();
         assert_eq!(again.settings.facet_angle, 1.0);
+    }
+
+    #[test]
+    fn projections_follow_the_model() {
+        use crate::ProjectionSource;
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(0.0, 0.0),
+                b: Vec2::new(10.0, 6.0),
+            },
+        })
+        .unwrap();
+        let e1 = ps
+            .apply(Op::AddExtrude {
+                sketch: s,
+                depth: 5.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        // Sketch on the top face; project the face outline.
+        let top = FaceRef {
+            feature: e1,
+            local: 1,
+        };
+        let s2 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::Face {
+                    face: top,
+                    offset: 0.0,
+                },
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s2,
+            op: SketchOp::Project {
+                source: ProjectionSource::Face { face: top },
+            },
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let sk = &r.sketches[&s2];
+        assert_eq!(sk.profiles.len(), 1);
+        assert!(
+            (sk.profiles[0].area().abs() - 60.0).abs() < 1e-9,
+            "area {} curves {:?}",
+            sk.profiles[0].area(),
+            sk.curves
+                .iter()
+                .map(|c| (c.kind.clone(), c.points.clone()))
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(sk.solve.status, ok_sketch::SolveStatus::FullyConstrained);
+        let entities: Vec<EntityId> = match &ps.feature(s2).unwrap().kind {
+            FeatureKind::Sketch(sf) => sf.projections[0].entities.clone(),
+            _ => unreachable!(),
+        };
+        assert_eq!(entities.len(), 8, "4 shared points + 4 lines");
+        let block = entities[0];
+        // Extrude the projected outline into a second body.
+        ps.apply(Op::AddExtrude {
+            sketch: s2,
+            depth: 3.0,
+            direction: ExtrudeDirection::Normal,
+            end: ExtrudeEnd::Blind,
+            profiles: ProfileSelection::All,
+            op: BodyOp::New,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(r.errors().next().is_none());
+        let vol: f64 = r.bodies.iter().map(|b| b.solid.volume()).sum();
+        assert!((vol - (300.0 + 180.0)).abs() < 1e-6, "vol {vol}");
+        // Widen the base rectangle: the projection follows, keeping its ids.
+        let (right, _) = {
+            let sk = match &ps.feature(s).unwrap().kind {
+                FeatureKind::Sketch(sf) => &sf.sketch,
+                _ => unreachable!(),
+            };
+            let p = sk
+                .entities()
+                .find_map(|(id, e)| match e {
+                    Entity::Point { pos } if (pos.x - 10.0).abs() < 1e-9 && pos.y.abs() < 1e-9 => {
+                        Some(id)
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            (p, ())
+        };
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::MovePoint {
+                id: right,
+                pos: Vec2::new(14.0, 0.0),
+            },
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        // The solver spreads the move over the rectangle; whatever the base
+        // became, the projected outline matches it exactly.
+        let base = r.bodies[0].solid.volume();
+        assert!(base > 300.0 + 1.0, "base grew: {base}");
+        let top = r.bodies[1].solid.volume();
+        assert!(
+            (top - base * 3.0 / 5.0).abs() < 1e-6,
+            "base {base} top {top}"
+        );
+        match &ps.feature(s2).unwrap().kind {
+            FeatureKind::Sketch(sf) => {
+                assert_eq!(sf.projections[0].entities[0], block);
+                assert!(sf.sketch.is_projected(block));
+            }
+            _ => unreachable!(),
+        }
+        // Removing the projection removes its entities and the region.
+        ps.apply(Op::Sketch {
+            id: s2,
+            op: SketchOp::RemoveProjection { index: 0 },
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(r.sketches[&s2].profiles.is_empty());
+        assert!(
+            r.errors().any(|(id, _)| id != s2),
+            "extrude of empty sketch fails"
+        );
+    }
+
+    #[test]
+    fn projected_cylinder_edges_become_circles() {
+        use crate::ProjectionSource;
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddCircle {
+                center: Vec2::new(2.0, 1.0),
+                radius: 3.0,
+            },
+        })
+        .unwrap();
+        let e1 = ps
+            .apply(Op::AddExtrude {
+                sketch: s,
+                depth: 5.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        // Sketch on the Top plane offset above the cylinder; project the top
+        // rim edge (wall face 2 meets cap face 1) and the wall face outline.
+        let s2 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::Standard {
+                    base: StandardPlane::Top,
+                    offset: 8.0,
+                },
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let wall = FaceRef {
+            feature: e1,
+            local: 2,
+        };
+        let cap = FaceRef {
+            feature: e1,
+            local: 1,
+        };
+        ps.apply(Op::Sketch {
+            id: s2,
+            op: SketchOp::Project {
+                source: ProjectionSource::Edge {
+                    edge: EdgeRef { a: wall, b: cap },
+                },
+            },
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let sf = match &ps.feature(s2).unwrap().kind {
+            FeatureKind::Sketch(sf) => sf,
+            _ => unreachable!(),
+        };
+        assert_eq!(sf.projections[0].entities.len(), 2, "centre point + circle");
+        let circle = sf.sketch.entity(sf.projections[0].entities[1]).unwrap();
+        match circle {
+            Entity::Circle { center, radius } => {
+                assert!((radius - 3.0).abs() < 1e-9);
+                let c = sf.sketch.point(*center).unwrap();
+                assert!(c.distance(Vec2::new(2.0, 1.0)) < 1e-9, "{c:?}");
+            }
+            other => panic!("{other:?}"),
+        }
+        let area = r.sketches[&s2].profiles[0].area().abs();
+        let expected = 36.0 * 9.0 * (5.0f64).to_radians().sin(); // 72-gon
+        assert!((area - expected).abs() < 1e-6, "{area} vs {expected}");
+        // The whole wall projects to the same circle (both rims coincide).
+        ps.apply(Op::Sketch {
+            id: s2,
+            op: SketchOp::Project {
+                source: ProjectionSource::Face { face: wall },
+            },
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(r.errors().next().is_none());
+        let sf = match &ps.feature(s2).unwrap().kind {
+            FeatureKind::Sketch(sf) => sf,
+            _ => unreachable!(),
+        };
+        assert_eq!(sf.projections[1].entities.len(), 2);
+        assert_ne!(sf.projections[0].block, sf.projections[1].block);
+        // A projection of a face that comes later in the list is an error.
+        let s3 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::MoveFeature { id: s3, index: 0 }).unwrap();
+        ps.apply(Op::Sketch {
+            id: s3,
+            op: SketchOp::Project {
+                source: ProjectionSource::Face { face: cap },
+            },
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(r
+            .errors()
+            .any(|(id, e)| id == s3 && e.contains("not found")));
     }
 
     #[test]

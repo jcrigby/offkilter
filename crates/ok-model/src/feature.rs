@@ -1,5 +1,5 @@
 use ok_math::Plane;
-use ok_sketch::Sketch;
+use ok_sketch::{EntityId, Sketch};
 use serde::{Deserialize, Serialize};
 
 /// Stable identifier of a feature within a part studio.
@@ -91,6 +91,45 @@ pub fn canonical_frame(plane: &Plane) -> Plane {
 pub struct SketchFeature {
     pub plane: PlaneRef,
     pub sketch: Sketch,
+    /// Body geometry projected into this sketch ("Use"); rebuilt on every
+    /// regeneration from the bodies that exist before the sketch.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub projections: Vec<Projection>,
+}
+
+impl SketchFeature {
+    pub fn new(plane: PlaneRef) -> SketchFeature {
+        SketchFeature {
+            plane,
+            sketch: Sketch::new(),
+            projections: Vec::new(),
+        }
+    }
+}
+
+/// Entity ids reserved for each projection; its geometry may not need more.
+pub const PROJECTION_BLOCK: u32 = 192;
+
+/// What a projection copies into the sketch.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ProjectionSource {
+    /// One edge (all of its display segments), by the faces meeting there.
+    Edge { edge: EdgeRef },
+    /// The boundary of a face.
+    Face { face: FaceRef },
+}
+
+/// Body geometry mirrored into a sketch. The sketch entities are fixed for
+/// the solver and follow the model when it changes.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Projection {
+    pub source: ProjectionSource,
+    /// First id of the reserved entity block; the entities are `block + k`.
+    pub block: EntityId,
+    /// The sketch entities currently built for this projection.
+    #[serde(default)]
+    pub entities: Vec<EntityId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]

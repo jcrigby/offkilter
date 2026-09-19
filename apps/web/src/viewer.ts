@@ -28,6 +28,7 @@ export interface PointerHandler {
 }
 
 const SKETCH_ENTITY_SELECTED = 0xff7b3a;
+const SKETCH_PROJECTED = 0xb48cff;
 
 export class Viewer {
   private renderer: THREE.WebGLRenderer;
@@ -196,6 +197,8 @@ export class Viewer {
       const color = isSelected ? SKETCH_SELECTED : SKETCH_COLOR;
       const lineMat = new THREE.LineBasicMaterial({ color, depthTest: !isSelected });
       const pointMat = new THREE.PointsMaterial({ color, size: isSelected ? 7 : 4, sizeAttenuation: false, depthTest: !isSelected });
+      const projLineMat = new THREE.LineBasicMaterial({ color: SKETCH_PROJECTED, depthTest: !isSelected });
+      const projPointMat = new THREE.PointsMaterial({ color: SKETCH_PROJECTED, size: isSelected ? 7 : 4, sizeAttenuation: false, depthTest: !isSelected });
       const selLineMat = new THREE.LineBasicMaterial({ color: SKETCH_ENTITY_SELECTED, depthTest: false, linewidth: 2 });
       const selPointMat = new THREE.PointsMaterial({ color: SKETCH_ENTITY_SELECTED, size: 10, sizeAttenuation: false, depthTest: false });
       const dashMat = new THREE.LineDashedMaterial({ color, depthTest: !isSelected, dashSize: 1.5, gapSize: 1 });
@@ -204,7 +207,9 @@ export class Viewer {
         const pts = c.points.map((p: Vec3) => new THREE.Vector3(p.x, p.y, p.z));
         const sel = isSelected && selectedEntities.has(c.entity);
         if (c.kind === "point") {
-          this.sketches.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints(pts), sel ? selPointMat : pointMat));
+          this.sketches.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints(pts), sel ? selPointMat : c.projected ? projPointMat : pointMat));
+        } else if (c.projected && !c.construction) {
+          this.sketches.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), sel ? selLineMat : projLineMat));
         } else if (c.construction) {
           const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), sel ? selDashMat : dashMat);
           line.computeLineDistances();
@@ -296,6 +301,21 @@ export class Viewer {
     this.controls.mouseButtons = on
       ? { LEFT: null as unknown as THREE.MOUSE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE }
       : { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+  }
+
+  /** The edge under the pointer if one is within a few pixels, else the face. */
+  pickEdgeOrFace(e: PointerEvent): { edge: EdgePick } | { face: FacePick } | null {
+    const edge = this.pickEdgeAt(e);
+    if (edge) return { edge };
+    const face = this.pickAt(e);
+    return face ? { face } : null;
+  }
+
+  /** Hover preview for `pickEdgeOrFace` (used by the sketch "Use" tool). */
+  hoverEdgeOrFace(e: PointerEvent | null): void {
+    const pick = e ? this.pickEdgeOrFace(e) : null;
+    this.showEdges(this.edgeHover, pick && "edge" in pick ? [pick.edge] : [], FACE_HOVER);
+    this.showFace(this.hover, pick && "face" in pick ? pick.face : null, FACE_HOVER, 0.35);
   }
 
   /** Face under a pointer event, if any. */

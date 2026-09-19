@@ -45,7 +45,13 @@ export type SketchData = {
   constraints: ({ id: number } & Constraint)[];
   /** Ids of construction entities (absent when none). */
   construction?: number[];
+  /** Ids of entities projected from body geometry (absent when none). */
+  projected?: number[];
 };
+
+/** Body geometry mirrored into a sketch ("Use"). */
+export type ProjectionSource = { type: "edge"; edge: EdgeRef } | { type: "face"; face: FaceRef };
+export type Projection = { source: ProjectionSource; block: number; entities: number[] };
 
 export type RevolveAxis = { type: "x_axis" } | { type: "y_axis" } | { type: "line"; line: number };
 /** An edge of a body, named by the two faces that meet there. */
@@ -55,7 +61,7 @@ export type CopyOp = "add" | "new";
 export type Axis = "x" | "y" | "z";
 export type PatternKind = { type: "linear"; axis: Axis; spacing: number } | { type: "circular"; axis: Axis; angle: number };
 export type FeatureKind =
-  | { type: "sketch"; plane: PlaneRef; sketch: SketchData }
+  | { type: "sketch"; plane: PlaneRef; sketch: SketchData; projections?: Projection[] }
   | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; end: ExtrudeEnd; op: BodyOp }
   | { type: "revolve"; sketch: number; profiles: ProfileSelection; axis: RevolveAxis; angle: number; op: BodyOp }
   | { type: "blend"; kind: BlendKind; edges: EdgeRef[]; size: number }
@@ -99,7 +105,7 @@ export type SolveResult = {
   equations: number;
   parameters: number;
 };
-export type SketchCurve = { entity: number; kind: string; construction: boolean; points: Vec3[] };
+export type SketchCurve = { entity: number; kind: string; construction: boolean; projected: boolean; points: Vec3[] };
 export type PlaneFrame = { origin: Vec3; x_axis: Vec3; y_axis: Vec3; normal: Vec3 };
 export type Loop = { points: Vec2[] };
 export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
@@ -124,7 +130,9 @@ export type SketchOp =
   | { type: "remove_entity"; id: number }
   | { type: "set_constraint_value"; id: number; value: number }
   | { type: "move_point"; id: number; pos: Vec2 }
-  | { type: "set_construction"; id: number; construction: boolean };
+  | { type: "set_construction"; id: number; construction: boolean }
+  | { type: "project"; source: ProjectionSource }
+  | { type: "remove_projection"; index: number };
 
 export type Op =
   | { type: "add_sketch"; plane: PlaneRef; name: string | null }

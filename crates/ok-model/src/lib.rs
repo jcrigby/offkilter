@@ -8,14 +8,15 @@
 pub mod expr;
 mod feature;
 mod ops;
+mod project;
 mod regen;
 
 pub use feature::{
     canonical_frame, Axis, BlendFeature, BlendKind, BodyOp, CopyOp, Counterbore, EdgeRef,
     ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind,
     HoleFeature, LoftFeature, MirrorFeature, PatternFeature, PatternKind, PlaneRef,
-    ProfileSelection, RevolveAxis, RevolveFeature, SketchFeature, StandardPlane, SweepFeature,
-    VariableFeature,
+    ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature, SketchFeature,
+    StandardPlane, SweepFeature, VariableFeature, PROJECTION_BLOCK,
 };
 pub use ops::{Op, OpResult, SketchOp};
 pub use regen::{Body, FeatureStatus, RegenResult, SketchCurve, SketchResult};
@@ -207,10 +208,7 @@ impl PartStudio {
         use ok_sketch::Constraint;
         let mut ps = PartStudio::new("Demo plate");
         let s1 = ps.push_feature(
-            FeatureKind::Sketch(SketchFeature {
-                plane: PlaneRef::standard(StandardPlane::Top),
-                sketch: ok_sketch::Sketch::new(),
-            }),
+            FeatureKind::Sketch(SketchFeature::new(PlaneRef::standard(StandardPlane::Top))),
             None,
         );
         {
@@ -256,16 +254,13 @@ impl PartStudio {
         // The boss is sketched on the plate's top face (extrude local face 1).
         let e1 = ps.features.last().unwrap().id;
         let s2 = ps.push_feature(
-            FeatureKind::Sketch(SketchFeature {
-                plane: PlaneRef::Face {
-                    face: FaceRef {
-                        feature: e1,
-                        local: 1,
-                    },
-                    offset: 0.0,
+            FeatureKind::Sketch(SketchFeature::new(PlaneRef::Face {
+                face: FaceRef {
+                    feature: e1,
+                    local: 1,
                 },
-                sketch: ok_sketch::Sketch::new(),
-            }),
+                offset: 0.0,
+            })),
             None,
         );
         {
@@ -296,10 +291,7 @@ impl PartStudio {
             None,
         );
         let s3 = ps.push_feature(
-            FeatureKind::Sketch(SketchFeature {
-                plane: PlaneRef::standard(StandardPlane::Front),
-                sketch: ok_sketch::Sketch::new(),
-            }),
+            FeatureKind::Sketch(SketchFeature::new(PlaneRef::standard(StandardPlane::Front))),
             None,
         );
         {
@@ -332,8 +324,12 @@ impl PartStudio {
     }
 
     fn sketch_mut(&mut self, id: FeatureId) -> Result<&mut ok_sketch::Sketch, ModelError> {
+        Ok(&mut self.sketch_feature_mut(id)?.sketch)
+    }
+
+    fn sketch_feature_mut(&mut self, id: FeatureId) -> Result<&mut SketchFeature, ModelError> {
         match &mut self.feature_mut(id)?.kind {
-            FeatureKind::Sketch(s) => Ok(&mut s.sketch),
+            FeatureKind::Sketch(s) => Ok(s),
             _ => Err(ModelError::WrongFeatureKind(id, "sketch")),
         }
     }

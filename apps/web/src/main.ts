@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import type { Axis, BlendKind, Constraint, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
+import type { Axis, BlendKind, Constraint, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -113,7 +113,44 @@ class App implements SketchHost {
       const i = this.summary?.features.findIndex((f) => f.id === this.edgePicking) ?? -1;
       return i < 0 ? null : i;
     }
+    if (this.sketcher.active && this.sketcher.tool === "use") {
+      // Only bodies that exist before the sketch can be projected into it.
+      const i = this.summary?.features.findIndex((f) => f.id === this.sketcher.sketchId) ?? -1;
+      return i < 0 ? null : i + 1;
+    }
     return this.rollbackCount;
+  }
+
+  /** "Use" tool: projects the picked body edge (or face) into the sketch being edited. */
+  projectAt(e: PointerEvent): void {
+    const id = this.sketcher.sketchId;
+    if (id === null) return;
+    const pick = this.viewer.pickEdgeOrFace(e);
+    if (!pick) return;
+    const source: ProjectionSource | null =
+      "edge" in pick
+        ? (() => {
+            const edge = this.edgeRefOf(pick.edge);
+            return edge ? { type: "edge", edge } : null;
+          })()
+        : (() => {
+            const face = this.faceRefOf(pick.face);
+            return face ? { type: "face", face } : null;
+          })();
+    if (!source) return;
+    this.snapshot();
+    try {
+      this.applyRaw({ type: "sketch", id, op: { type: "project", source } });
+    } catch (err) {
+      this.setStatus(`error: ${(err as Error).message}`);
+      return;
+    }
+    this.regenerate();
+    this.viewer.hoverEdgeOrFace(null);
+  }
+
+  describeProjection(p: ProjectionSource): string {
+    return p.type === "face" ? `Face: ${this.describeFace(p.face)}` : `Edge: ${this.describeFace(p.edge.a)} / ${this.describeFace(p.edge.b)}`;
   }
 
   setRollback(count: number | null): void {
@@ -650,7 +687,7 @@ class App implements SketchHost {
     if (!editing) {
       tools.appendChild(button("Edit sketch", () => this.editSketch(f.id), "primary"));
     } else {
-      for (const [tool, label, key] of [["select", "Select", "S"], ["line", "Line", "L"], ["rectangle", "Rectangle", "R"], ["circle", "Circle", "C"], ["arc", "Arc", "A"]] as [Tool, string, string][]) {
+      for (const [tool, label, key] of [["select", "Select", "S"], ["line", "Line", "L"], ["rectangle", "Rectangle", "R"], ["circle", "Circle", "C"], ["arc", "Arc", "A"], ["use", "Use", "U"]] as [Tool, string, string][]) {
         const b = button(label, () => this.sketcher.setTool(tool), this.sketcher.tool === tool ? "active" : "");
         b.title = `${label} (${key})`;
         tools.appendChild(b);
@@ -723,6 +760,24 @@ class App implements SketchHost {
       p.className = "note";
       p.innerHTML = `Solver: <span class="badge ${cls}">${label}</span> · ${s.equations} equations, ${s.parameters} parameters · ${result.profiles.length} closed region${result.profiles.length === 1 ? "" : "s"}`;
       body.appendChild(p);
+    }
+
+    const projections = kind.projections ?? [];
+    if (projections.length > 0) {
+      body.appendChild(heading("Projected geometry"));
+      const ul = document.createElement("ul");
+      ul.className = "constraint-list";
+      projections.forEach((p, index) => {
+        const li = document.createElement("li");
+        const k = document.createElement("span");
+        k.className = "kind";
+        k.innerHTML = `${p.source.type === "face" ? "face outline" : "edge"}<br><span class="refs">${this.describeProjection(p.source)} · ${p.entities.length} entities</span>`;
+        li.appendChild(k);
+        li.appendChild(document.createElement("span"));
+        li.appendChild(button("×", () => this.apply({ type: "sketch", id: f.id, op: { type: "remove_projection", index } }), "danger"));
+        ul.appendChild(li);
+      });
+      body.appendChild(ul);
     }
 
     body.appendChild(heading("Geometry"));
@@ -1577,7 +1632,7 @@ async function main(): Promise<void> {
       } else app.onViewportPick(null);
     }
     if (app.sketcher.active) {
-      const tool = ({ s: "select", l: "line", r: "rectangle", c: "circle", a: "arc" } as Record<string, Tool>)[e.key.toLowerCase()];
+      const tool = ({ s: "select", l: "line", r: "rectangle", c: "circle", a: "arc", u: "use" } as Record<string, Tool>)[e.key.toLowerCase()];
       if (tool) app.sketcher.setTool(tool);
       if (e.key.toLowerCase() === "q") app.sketcher.toggleConstruction();
       if (e.key === "Delete" || e.key === "Backspace") app.sketcher.deleteSelection();

@@ -25,7 +25,7 @@ crates/ok-math   Vec2 / Vec3 / Plane / tolerances
 A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable
 `FeatureId`, a name, a `suppressed` flag and a `FeatureKind`:
 
-- `Sketch { plane: PlaneRef, sketch: ok_sketch::Sketch }`
+- `Sketch { plane: PlaneRef, sketch: ok_sketch::Sketch, projections }`
 - `Extrude { sketch: FeatureId, profiles, depth, direction, end, op }`
 - `Revolve { sketch: FeatureId, profiles, axis, angle, op }`
 - `Sweep { sketch, profiles, path: FeatureId, op }`: the path sketch's
@@ -152,6 +152,25 @@ After solving, the rank of the Jacobian gives the remaining degrees of
 freedom: `dof = parameters − rank`. The result is reported as
 fully constrained, under-constrained (with DOF count) or inconsistent (the
 residual did not converge). A conflict is reported rather than "fixed".
+
+### Projected geometry (`ok-model/src/project.rs`)
+
+A sketch can carry projections of body geometry ("Use"): an edge, named
+by the two faces meeting there, or the outline of a face. Faces are
+matched by origin and widened to every face on the same surface, so one
+segment of a faceted rim stands for the whole rim. On each regeneration the
+matching display segments of the bodies that exist before the sketch are
+projected onto the sketch plane, chained through shared endpoints, and
+turned into a circle or arc when the source lies on a cylinder whose axis
+is normal to the plane (or when a long chain fits one), otherwise into
+lines sharing their endpoints. The entities are marked projected: the
+solver holds them fixed and they cannot be moved or deleted on their own.
+
+Projected entities need deterministic ids so collaborating replicas agree:
+each projection reserves a block of entity ids when it is added (an op),
+and regeneration fills the block in order. When the model changes but the
+projected shape keeps its kinds, positions are updated in place so
+constraints attached to projected points survive.
 
 ### Regions (`loops.rs`)
 

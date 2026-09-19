@@ -57,6 +57,8 @@ pub enum SketchError {
     UnknownEntity(EntityId),
     #[error("entity {0:?} is not a {1}")]
     WrongKind(EntityId, &'static str),
+    #[error("entity {0:?} already exists")]
+    DuplicateEntity(EntityId),
 }
 
 /// A 2D sketch: geometry plus constraints, in plane coordinates.
@@ -69,6 +71,10 @@ pub struct Sketch {
     /// Construction entities take part in constraints but not in regions.
     #[serde(default, skip_serializing_if = "std::collections::BTreeSet::is_empty")]
     construction: std::collections::BTreeSet<EntityId>,
+    /// Entities projected from body geometry: driven by the model, so the
+    /// solver holds them fixed. Their ids come from a reserved block.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeSet::is_empty")]
+    projected: std::collections::BTreeSet<EntityId>,
     next_entity: u32,
     next_constraint: u32,
 }
@@ -129,6 +135,41 @@ impl Sketch {
         self.next_entity += 1;
         self.entities.insert(id, e);
         id
+    }
+
+    /// Reserves `n` consecutive entity ids and returns the first. Projected
+    /// geometry is rebuilt on every regeneration but must keep stable,
+    /// deterministic ids, so the block is allocated once when the projection
+    /// is added and reused through [`Sketch::insert_projected`].
+    pub fn reserve_entity_ids(&mut self, n: u32) -> EntityId {
+        let id = EntityId(self.next_entity);
+        self.next_entity += n;
+        id
+    }
+
+    /// Inserts a projected entity under a chosen id (from a reserved block).
+    pub fn insert_projected(&mut self, id: EntityId, e: Entity) -> Result<(), SketchError> {
+        if self.entities.contains_key(&id) {
+            return Err(SketchError::DuplicateEntity(id));
+        }
+        self.entities.insert(id, e);
+        self.projected.insert(id);
+        Ok(())
+    }
+
+    /// Replaces a projected entity's geometry in place (same id and kind).
+    pub fn replace_projected(&mut self, id: EntityId, e: Entity) {
+        if self.projected.contains(&id) {
+            self.entities.insert(id, e);
+        }
+    }
+
+    pub fn is_projected(&self, id: EntityId) -> bool {
+        self.projected.contains(&id)
+    }
+
+    pub fn projected_ids(&self) -> impl Iterator<Item = EntityId> + '_ {
+        self.projected.iter().copied()
     }
 
     pub fn add_point(&mut self, pos: Vec2) -> EntityId {
@@ -262,6 +303,7 @@ impl Sketch {
         self.constraints
             .retain(|_, c| !c.references().contains(&id));
         self.construction.remove(&id);
+        self.projected.remove(&id);
     }
 
     /// Replaces the numeric value of a dimensional constraint.

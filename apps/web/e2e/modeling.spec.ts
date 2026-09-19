@@ -188,3 +188,41 @@ test("sweep and loft between sketches", async ({ page }) => {
   expect(total).toBeCloseTo(40 + 112, 0);
   expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
 });
+
+test("use tool projects a face outline into a sketch", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Base" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: s, op: { type: "add_rectangle", a: { x: 0, y: 0 }, b: { x: 10, y: 6 } } });
+    app.apply({ type: "add_extrude", sketch: s, depth: 5, name: "Extrude 1" });
+    const e1 = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "add_sketch", plane: { type: "face", face: { feature: e1, local: 1 }, offset: 0 }, name: "On top" });
+    app.editSketch(app.summary.features[app.summary.features.length - 1].id);
+  });
+  const bodyVolume = () => page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies.reduce((n: number, b: any) => n + b.volume, 0));
+  expect(await bodyVolume()).toBeCloseTo(300, 0);
+  // The Use tool is offered while editing and hides later bodies.
+  await page.getByRole("button", { name: "Use" }).click();
+  await expect(page.locator("#status-text")).toContainText("Use:");
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const e1 = app.summary.features.find((f: any) => f.name === "Extrude 1").id;
+    app.apply({ type: "sketch", id: app.sketcher.sketchId, op: { type: "project", source: { type: "face", face: { feature: e1, local: 1 } } } });
+  });
+  await expect(page.locator("#detail-body")).toContainText("face outline");
+  await expect(page.locator("#detail-body")).toContainText("fully constrained");
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.sketcher.exit();
+    app.apply({ type: "add_extrude", sketch: app.selected, depth: 3, op: "new", name: "Extrude 2" });
+  });
+  await page.waitForTimeout(300);
+  expect(await bodyVolume()).toBeCloseTo(480, 0);
+  expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
+});

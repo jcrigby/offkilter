@@ -56,6 +56,8 @@ struct ParamMap {
     radii: BTreeMap<EntityId, usize>,
     /// Positions of fixed points (not in the parameter vector).
     fixed: BTreeMap<EntityId, Vec2>,
+    /// Radii of projected circles (not in the parameter vector).
+    fixed_radii: BTreeMap<EntityId, f64>,
     len: usize,
 }
 
@@ -72,21 +74,26 @@ impl ParamMap {
             points: BTreeMap::new(),
             radii: BTreeMap::new(),
             fixed: BTreeMap::new(),
+            fixed_radii: BTreeMap::new(),
             len: 0,
         };
         for (id, e) in sketch.entities() {
             match e {
                 Entity::Point { pos } => {
-                    if fixed_ids.contains(&id) {
+                    if fixed_ids.contains(&id) || sketch.is_projected(id) {
                         m.fixed.insert(id, *pos);
                     } else {
                         m.points.insert(id, m.len);
                         m.len += 2;
                     }
                 }
-                Entity::Circle { .. } => {
-                    m.radii.insert(id, m.len);
-                    m.len += 1;
+                Entity::Circle { radius, .. } => {
+                    if sketch.is_projected(id) {
+                        m.fixed_radii.insert(id, *radius);
+                    } else {
+                        m.radii.insert(id, m.len);
+                        m.len += 1;
+                    }
                 }
                 _ => {}
             }
@@ -158,7 +165,10 @@ impl<'a> Eval<'a> {
         match self.sketch.entity(id)? {
             Entity::Circle { center, .. } => {
                 let c = self.point(*center)?;
-                let r = self.x[*self.map.radii.get(&id)?];
+                let r = match self.map.radii.get(&id) {
+                    Some(&i) => self.x[i],
+                    None => *self.map.fixed_radii.get(&id)?,
+                };
                 Some((c, r))
             }
             Entity::Arc { center, start, .. } => {

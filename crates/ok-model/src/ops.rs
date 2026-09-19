@@ -1,11 +1,12 @@
 use crate::{
     BlendFeature, BlendKind, BodyOp, CopyOp, Counterbore, EdgeRef, ExtrudeDirection, ExtrudeEnd,
     ExtrudeFeature, FeatureId, FeatureKind, HoleFeature, LoftFeature, MirrorFeature, ModelError,
-    PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection, RevolveAxis,
-    RevolveFeature, SketchFeature, SweepFeature, VariableFeature,
+    PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection,
+    ProjectionSource, RevolveAxis, RevolveFeature, SketchFeature, SweepFeature, VariableFeature,
+    PROJECTION_BLOCK,
 };
 use ok_math::Vec2;
-use ok_sketch::{Constraint, ConstraintId, EntityId, Sketch};
+use ok_sketch::{Constraint, ConstraintId, EntityId};
 use serde::{Deserialize, Serialize};
 
 /// Edits to a sketch feature.
@@ -55,6 +56,15 @@ pub enum SketchOp {
     SetConstruction {
         id: EntityId,
         construction: bool,
+    },
+    /// Project body geometry into the sketch ("Use"). The entities are
+    /// built by regeneration and follow the model.
+    Project {
+        source: ProjectionSource,
+    },
+    /// Remove a projection (by index) and the entities it built.
+    RemoveProjection {
+        index: usize,
     },
 }
 
@@ -321,13 +331,8 @@ impl PartStudio {
         let mut out = OpResult::default();
         match op {
             Op::AddSketch { plane, name } => {
-                out.feature = Some(self.push_feature(
-                    FeatureKind::Sketch(SketchFeature {
-                        plane,
-                        sketch: Sketch::new(),
-                    }),
-                    name,
-                ));
+                out.feature =
+                    Some(self.push_feature(FeatureKind::Sketch(SketchFeature::new(plane)), name));
             }
             Op::AddExtrude {
                 sketch,
@@ -696,53 +701,87 @@ impl PartStudio {
                 let index = index.min(self.features.len());
                 self.features.insert(index, f);
             }
-            Op::Sketch { id, op } => {
-                let sk = self.sketch_mut(id)?;
-                match op {
-                    SketchOp::AddPoint { pos } => out.entities.push(sk.add_point(pos)),
-                    SketchOp::AddLine { a, b } => {
-                        let (l, s, e) = sk.add_line(a, b);
-                        out.entities.extend([l, s, e]);
+            Op::Sketch { id, op } => match op {
+                SketchOp::Project { source } => {
+                    let sf = self.sketch_feature_mut(id)?;
+                    let block = sf.sketch.reserve_entity_ids(PROJECTION_BLOCK);
+                    sf.projections.push(Projection {
+                        source,
+                        block,
+                        entities: Vec::new(),
+                    });
+                }
+                SketchOp::RemoveProjection { index } => {
+                    let sf = self.sketch_feature_mut(id)?;
+                    if index >= sf.projections.len() {
+                        return Err(ModelError::Invalid(format!("no projection {index}")));
                     }
-                    SketchOp::AddRectangle { a, b } => out.entities.extend(sk.add_rectangle(a, b)),
-                    SketchOp::AddCircle { center, radius } => {
-                        let (c, p) = sk.add_circle(center, radius);
-                        out.entities.extend([c, p]);
-                    }
-                    SketchOp::AddArc { center, start, end } => {
-                        let (a, c, s, e) = sk.add_arc(center, start, end);
-                        out.entities.extend([a, c, s, e]);
-                    }
-                    SketchOp::AddConstraint { constraint } => {
-                        for r in constraint.references() {
-                            if sk.entity(r).is_none() {
-                                return Err(ModelError::Sketch(
-                                    ok_sketch::SketchError::UnknownEntity(r),
-                                ));
-                            }
-                        }
-                        out.constraint = Some(sk.add_constraint(constraint));
-                    }
-                    SketchOp::RemoveConstraint { id } => {
-                        sk.remove_constraint(id);
-                    }
-                    SketchOp::RemoveEntity { id } => sk.remove_entity(id),
-                    SketchOp::SetConstraintValue { id, value } => {
-                        if !sk.set_constraint_value(id, value) {
-                            return Err(ModelError::Invalid(format!(
-                                "constraint {id:?} has no value"
-                            )));
-                        }
-                    }
-                    SketchOp::MovePoint { id, pos } => {
-                        sk.point(id)?;
-                        sk.set_point_pub(id, pos);
-                    }
-                    SketchOp::SetConstruction { id, construction } => {
-                        sk.set_construction(id, construction)?;
+                    let p = sf.projections.remove(index);
+                    for e in p.entities {
+                        sf.sketch.remove_entity(e);
                     }
                 }
-            }
+                op => {
+                    let sk = self.sketch_mut(id)?;
+                    match op {
+                        SketchOp::AddPoint { pos } => out.entities.push(sk.add_point(pos)),
+                        SketchOp::AddLine { a, b } => {
+                            let (l, s, e) = sk.add_line(a, b);
+                            out.entities.extend([l, s, e]);
+                        }
+                        SketchOp::AddRectangle { a, b } => {
+                            out.entities.extend(sk.add_rectangle(a, b))
+                        }
+                        SketchOp::AddCircle { center, radius } => {
+                            let (c, p) = sk.add_circle(center, radius);
+                            out.entities.extend([c, p]);
+                        }
+                        SketchOp::AddArc { center, start, end } => {
+                            let (a, c, s, e) = sk.add_arc(center, start, end);
+                            out.entities.extend([a, c, s, e]);
+                        }
+                        SketchOp::AddConstraint { constraint } => {
+                            for r in constraint.references() {
+                                if sk.entity(r).is_none() {
+                                    return Err(ModelError::Sketch(
+                                        ok_sketch::SketchError::UnknownEntity(r),
+                                    ));
+                                }
+                            }
+                            out.constraint = Some(sk.add_constraint(constraint));
+                        }
+                        SketchOp::RemoveConstraint { id } => {
+                            sk.remove_constraint(id);
+                        }
+                        SketchOp::RemoveEntity { id } => {
+                            if sk.is_projected(id) {
+                                return Err(ModelError::Invalid(
+                                "entity is projected from the model; remove the projection instead"
+                                    .into(),
+                            ));
+                            }
+                            sk.remove_entity(id)
+                        }
+                        SketchOp::SetConstraintValue { id, value } => {
+                            if !sk.set_constraint_value(id, value) {
+                                return Err(ModelError::Invalid(format!(
+                                    "constraint {id:?} has no value"
+                                )));
+                            }
+                        }
+                        SketchOp::MovePoint { id, pos } => {
+                            sk.point(id)?;
+                            sk.set_point_pub(id, pos);
+                        }
+                        SketchOp::SetConstruction { id, construction } => {
+                            sk.set_construction(id, construction)?;
+                        }
+                        SketchOp::Project { .. } | SketchOp::RemoveProjection { .. } => {
+                            unreachable!()
+                        }
+                    }
+                }
+            },
             Op::RenameStudio { name } => self.name = name,
         }
         Ok(out)

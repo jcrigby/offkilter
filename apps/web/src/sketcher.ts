@@ -9,7 +9,7 @@
 import type { Constraint, Entity, Op, OpResult, PlaneFrame, SketchCurve, SketchData, SketchOp, Summary, Vec2, Vec3 } from "./kernel";
 import type { PointerHandler, Viewer } from "./viewer";
 
-export type Tool = "select" | "line" | "rectangle" | "circle" | "arc";
+export type Tool = "select" | "line" | "rectangle" | "circle" | "arc" | "use";
 
 export interface SketchHost {
   summary: Summary;
@@ -22,6 +22,8 @@ export interface SketchHost {
   setStatus(text: string): void;
   /** Records an undo point before a user-level edit. */
   snapshot(): void;
+  /** Projects the body edge or face under the pointer into the sketch ("Use" tool). */
+  projectAt(e: PointerEvent): void;
 }
 
 const SNAP_PX = 10;
@@ -52,7 +54,7 @@ export class Sketcher implements PointerHandler {
     this.host.viewer.setSketchMouse(true);
     const plane = this.plane();
     if (plane) this.host.viewer.lookAtPlane(plane);
-    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · S select · Q construction · right-drag orbits · Esc finishes");
+    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · U use (project edges) · S select · Q construction · right-drag orbits · Esc finishes");
   }
 
   exit(): void {
@@ -69,8 +71,21 @@ export class Sketcher implements PointerHandler {
 
   setTool(tool: Tool): void {
     this.cancel();
+    const wasUse = this.tool === "use";
     this.tool = tool;
-    this.host.selectionChanged();
+    if (wasUse) this.host.viewer.hoverEdgeOrFace(null);
+    // Entering or leaving "use" changes which bodies are shown.
+    if (wasUse !== (tool === "use")) this.host.regenerate();
+    else this.host.selectionChanged();
+    if (tool === "use") this.host.setStatus("Use: click a body edge or face to project it into the sketch (only bodies before this sketch are shown)");
+  }
+
+  /** Entities that belong to a projection, with the projection's index. */
+  projectionOf(entity: number): number | null {
+    const f = this.host.summary.features.find((f) => f.id === this.sketchId);
+    const list = f && f.kind.type === "sketch" ? f.kind.projections ?? [] : [];
+    const i = list.findIndex((p) => p.entities.includes(entity));
+    return i < 0 ? null : i;
   }
 
   // ------------------------------------------------------------ data access
@@ -169,7 +184,7 @@ export class Sketcher implements PointerHandler {
         this.selection.clear();
         this.selection.add(hit);
       }
-      if (point) {
+      if (point && this.projectionOf(point.id) === null) {
         this.drag = { entity: point.id, moved: false };
         this.host.snapshot();
       }
@@ -197,6 +212,10 @@ export class Sketcher implements PointerHandler {
       }
       return;
     }
+    if (this.tool === "use") {
+      this.host.viewer.hoverEdgeOrFace(e);
+      return;
+    }
     if (this.tool !== "select" && this.pending.length > 0) {
       const s = this.snap(e);
       if (s) this.host.viewer.setPreview(this.previewFor(this.inferred(s).pos));
@@ -209,6 +228,10 @@ export class Sketcher implements PointerHandler {
       return;
     }
     if (this.tool === "select") return;
+    if (this.tool === "use") {
+      this.host.projectAt(e);
+      return;
+    }
     const s = this.snap(e);
     if (!s) return;
     switch (this.tool) {
@@ -417,7 +440,16 @@ export class Sketcher implements PointerHandler {
   deleteSelection(): void {
     if (this.selection.size === 0) return;
     this.host.snapshot();
+    // Projected entities go with their projection (highest index first so
+    // the remaining indices stay valid).
+    const projections = new Set<number>();
     for (const id of this.selection) {
+      const p = this.projectionOf(id);
+      if (p !== null) projections.add(p);
+    }
+    for (const index of [...projections].sort((a, b) => b - a)) this.sketchOp({ type: "remove_projection", index });
+    for (const id of this.selection) {
+      if (this.projectionOf(id) !== null) continue;
       try {
         this.sketchOp({ type: "remove_entity", id });
       } catch {

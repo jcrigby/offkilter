@@ -16,7 +16,7 @@ top are concrete and self-contained; items lower down are directions.
 - [ ] Analytic Jacobians for the common constraints (performance)
 - [ ] Splines (B-spline entity + point-on-curve)
 - [x] Sketch on planar faces of bodies (face references)
-- [ ] Project / use edges from bodies in sketches
+- [x] Project / use edges and face outlines from bodies in sketches (fixed entities that follow the model)
 - [ ] Construction geometry, mirror, patterns
 
 ## Solids

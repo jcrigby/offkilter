@@ -11,7 +11,9 @@ works today, all in the browser:
   or on faces of bodies, with a constraint solver (18 constraint types,
   degrees-of-freedom reporting), inferred coincident / horizontal /
   vertical constraints while drawing, point dragging, construction
-  geometry, and dimension labels you click to edit.
+  geometry, dimension labels you click to edit, and a Use tool that
+  projects body edges and face outlines into the sketch as geometry that
+  follows the model.
 - Solids: extrude (blind, through all, up to face), revolve, sweep along a
   sketched path, loft between two sketches, holes with counterbores, fillet and
   chamfer on straight edges, mirror and linear / circular patterns, with
