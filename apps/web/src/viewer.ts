@@ -12,6 +12,8 @@ const FACE_HOVER = 0x4ea1ff;
 
 /** A picked face: body index and face index within that body's solid. */
 export type FacePick = { body: number; face: number };
+/** A picked edge: body index and the two face indices it separates. */
+export type EdgePick = { body: number; faces: [number, number]; segment: number };
 
 /** Pointer events routed to a sketch tool while sketch mode is active. */
 export interface PointerHandler {
@@ -41,8 +43,15 @@ export class Viewer {
   private pointerDown: { x: number; y: number } | null = null;
   /** Called when the user clicks a face (or empty space with `null`). */
   onPick: ((pick: FacePick | null) => void) | null = null;
+  /** Called instead of `onPick` while `edgePickMode` is on. */
+  onEdgePick: ((pick: EdgePick | null) => void) | null = null;
   /** When true, hovering previews faces; used while a panel waits for a face. */
   pickMode = false;
+  /** When true, clicks pick edges rather than faces. */
+  edgePickMode = false;
+  private edgeLines: THREE.LineSegments[] = [];
+  private edgeHighlight = new THREE.Group();
+  private edgeHover = new THREE.Group();
   /** Receives left-button pointer events instead of picking while set. */
   pointerHandler: PointerHandler | null = null;
   private preview = new THREE.Group();
@@ -82,6 +91,8 @@ export class Viewer {
     this.scene.add(this.sketches);
     this.scene.add(this.highlight);
     this.scene.add(this.hover);
+    this.scene.add(this.edgeHighlight);
+    this.scene.add(this.edgeHover);
 
     this.scene.add(this.preview);
     const el = this.renderer.domElement;
@@ -105,15 +116,17 @@ export class Viewer {
       this.pointerDown = null;
       if (!down || e.button !== 0) return;
       if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4) return; // it was a drag
-      this.onPick?.(this.pickAt(e));
+      if (this.edgePickMode) this.onEdgePick?.(this.pickEdgeAt(e));
+      else this.onPick?.(this.pickAt(e));
     });
     el.addEventListener("pointermove", (e) => {
       if (this.pointerHandler) {
         this.pointerHandler.move(e);
         return;
       }
-      if (!this.pickMode || this.pointerDown) return;
-      this.showFace(this.hover, this.pickAt(e), FACE_HOVER, 0.35);
+      if (this.pointerDown) return;
+      if (this.edgePickMode) this.showEdges(this.edgeHover, this.pickEdgeAt(e) ? [this.pickEdgeAt(e)!] : [], FACE_HOVER);
+      else if (this.pickMode) this.showFace(this.hover, this.pickAt(e), FACE_HOVER, 0.35);
     });
     el.addEventListener("pointerleave", () => this.clear(this.hover));
 
@@ -140,7 +153,10 @@ export class Viewer {
     this.clear(this.bodies);
     this.clear(this.highlight);
     this.clear(this.hover);
+    this.clear(this.edgeHighlight);
+    this.clear(this.edgeHover);
     this.meshes = [];
+    this.edgeLines = [];
     this.meshData = meshes;
     for (const m of meshes) {
       const geom = new THREE.BufferGeometry();
@@ -154,7 +170,10 @@ export class Viewer {
       if (m.edges.length > 0) {
         const eg = new THREE.BufferGeometry();
         eg.setAttribute("position", new THREE.BufferAttribute(m.edges, 3));
-        this.bodies.add(new THREE.LineSegments(eg, this.edgeMaterial));
+        const lines = new THREE.LineSegments(eg, this.edgeMaterial);
+        lines.userData.body = this.meshes.length - 1;
+        this.edgeLines.push(lines);
+        this.bodies.add(lines);
       }
     }
   }
@@ -250,6 +269,51 @@ export class Viewer {
     const body = hit.object.userData.body as number;
     const face = this.meshData[body]?.faceIds[hit.faceIndex];
     return face === undefined ? null : { body, face };
+  }
+
+  /** Edge under a pointer event, if any (within a few pixels). */
+  private pickEdgeAt(e: PointerEvent): EdgePick | null {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    // Threshold in world units scaled with distance so it is ~6px on screen.
+    const dist = this.camera.position.distanceTo(this.controls.target);
+    const pxWorld = (2 * dist * Math.tan((this.camera.fov * Math.PI) / 360)) / rect.height;
+    this.raycaster.params.Line.threshold = pxWorld * 6;
+    const hit = this.raycaster.intersectObjects(this.edgeLines, false)[0];
+    if (!hit || hit.index === undefined) return null;
+    const body = hit.object.userData.body as number;
+    const segment = Math.floor(hit.index / 2);
+    const ef = this.meshData[body]?.edgeFaces;
+    if (!ef) return null;
+    return { body, segment, faces: [ef[2 * segment]!, ef[2 * segment + 1]!] };
+  }
+
+  /** Highlights edges: all display segments of the given body between the given face pairs. */
+  setSelectedEdges(picks: { body: number; faces: [number, number] }[]): void {
+    this.showEdges(this.edgeHighlight, picks, FACE_SELECTED);
+  }
+
+  private showEdges(group: THREE.Group, picks: { body: number; faces: [number, number] }[], color: number): void {
+    this.clear(group);
+    const pts: number[] = [];
+    for (const p of picks) {
+      const m = this.meshData[p.body];
+      if (!m) continue;
+      for (let s = 0; s < m.edgeFaces.length / 2; s++) {
+        const a = m.edgeFaces[2 * s]!, b = m.edgeFaces[2 * s + 1]!;
+        const match = (a === p.faces[0] && b === p.faces[1]) || (a === p.faces[1] && b === p.faces[0]);
+        if (match) for (let k = 0; k < 6; k++) pts.push(m.edges[6 * s + k]!);
+      }
+    }
+    if (pts.length === 0) return;
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    const mat = new THREE.LineBasicMaterial({ color, depthTest: false });
+    group.add(new THREE.LineSegments(geom, mat));
+    // Fatten the highlight with points at segment ends so it reads at any zoom.
+    const pmat = new THREE.PointsMaterial({ color, size: 5, sizeAttenuation: false, depthTest: false });
+    group.add(new THREE.Points(geom, pmat));
   }
 
   /** Highlights a face (or clears the highlight with `null`). */

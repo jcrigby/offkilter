@@ -1,7 +1,7 @@
 import { Kernel } from "./kernel";
-import type { Constraint, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PlaneRef, ProfileSelection, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
+import type { BlendKind, Constraint, EdgeRef, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PlaneRef, ProfileSelection, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
 import { Viewer } from "./viewer";
-import type { FacePick } from "./viewer";
+import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
 import type { SketchHost, Tool } from "./sketcher";
 
@@ -22,13 +22,82 @@ class App implements SketchHost {
   selectedFace: FaceRef | null = null;
   /** Pending face request from a panel: receives the picked face. */
   facePicker: ((face: FaceRef) => void) | null = null;
+  /** Blend feature currently collecting edges; the view rolls back to before it. */
+  edgePicking: number | null = null;
   viewer = new Viewer($("#viewport"));
 
   constructor(kernel: Kernel) {
     this.kernel = kernel;
     this.viewer.onPick = (pick) => this.onViewportPick(pick);
+    this.viewer.onEdgePick = (pick) => this.onEdgePick(pick);
     this.regenerate();
     this.viewer.fitAll();
+  }
+
+  // ------------------------------------------------------------ edges
+
+  edgeRefOf(pick: EdgePick): EdgeRef | null {
+    const faces = this.summary.bodies[pick.body]?.faces;
+    const a = faces?.[pick.faces[0]]?.origin;
+    const b = faces?.[pick.faces[1]]?.origin;
+    return a && b ? { a, b } : null;
+  }
+
+  /** Locates an edge reference among the current bodies (first match). */
+  findEdge(ref: EdgeRef): { body: number; faces: [number, number] } | null {
+    for (let b = 0; b < this.summary.bodies.length; b++) {
+      const body = this.summary.bodies[b]!;
+      for (let s = 0; s < body.faces.length; s++) {
+        for (let t = s + 1; t < body.faces.length; t++) {
+          const o1 = body.faces[s]!.origin, o2 = body.faces[t]!.origin;
+          const same = (x: FaceRef, y: FaceRef) => x.feature === y.feature && x.local === y.local;
+          if ((same(o1, ref.a) && same(o2, ref.b)) || (same(o1, ref.b) && same(o2, ref.a))) return { body: b, faces: [s, t] };
+        }
+      }
+    }
+    return null;
+  }
+
+  describeEdge(ref: EdgeRef): string {
+    const name = (f: FaceRef) => `${this.feature(f.feature)?.name ?? `feature ${f.feature}`}·${f.local}`;
+    return `${name(ref.a)} / ${name(ref.b)}`;
+  }
+
+  sameEdge(x: EdgeRef, y: EdgeRef): boolean {
+    const same = (a: FaceRef, b: FaceRef) => a.feature === b.feature && a.local === b.local;
+    return (same(x.a, y.a) && same(x.b, y.b)) || (same(x.a, y.b) && same(x.b, y.a));
+  }
+
+  onEdgePick(pick: EdgePick | null): void {
+    if (this.edgePicking === null) return;
+    const f = this.feature(this.edgePicking);
+    if (!f || f.kind.type !== "blend") return;
+    const ref = pick ? this.edgeRefOf(pick) : null;
+    if (!ref) return;
+    const edges = f.kind.edges.some((e) => this.sameEdge(e, ref)) ? f.kind.edges.filter((e) => !this.sameEdge(e, ref)) : [...f.kind.edges, ref];
+    this.apply({ type: "set_blend", id: f.id, edges });
+  }
+
+  beginEdgePick(featureId: number): void {
+    this.endFacePick();
+    this.edgePicking = featureId;
+    this.viewer.edgePickMode = true;
+    this.regenerate();
+    this.setStatus("Click edges to add or remove them (Esc when done). The view shows the part before this feature.");
+  }
+
+  endEdgePick(): void {
+    if (this.edgePicking === null) return;
+    this.edgePicking = null;
+    this.viewer.edgePickMode = false;
+    this.regenerate();
+  }
+
+  /** Rollback count for regeneration while picking edges. */
+  private rollback(): number | null {
+    if (this.edgePicking === null) return null;
+    const i = this.summary?.features.findIndex((f) => f.id === this.edgePicking) ?? -1;
+    return i < 0 ? null : i;
   }
 
   // ------------------------------------------------------------ faces
@@ -202,11 +271,12 @@ class App implements SketchHost {
 
   regenerate(): void {
     const t0 = performance.now();
-    this.summary = this.kernel.regenerate();
+    this.summary = this.kernel.regenerate(this.rollback());
     const dt = performance.now() - t0;
     this.viewer.setBodies(this.kernel.bodyMeshes());
     this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
     this.viewer.setSelectedFace(this.selectedFace ? this.findFace(this.selectedFace) : null);
+    this.highlightBlendEdges();
     this.renderFeatures();
     this.renderDetail();
     this.lastRegenMs = dt;
@@ -236,9 +306,22 @@ class App implements SketchHost {
     $("#status-text").textContent = text;
   }
 
+  /** Highlights the edges of the selected blend feature when they are visible. */
+  highlightBlendEdges(): void {
+    const f = this.feature(this.selected);
+    if (!f || f.kind.type !== "blend") {
+      this.viewer.setSelectedEdges([]);
+      return;
+    }
+    const picks = f.kind.edges.map((e) => this.findEdge(e)).filter((p): p is { body: number; faces: [number, number] } => p !== null);
+    this.viewer.setSelectedEdges(picks);
+  }
+
   select(id: number | null): void {
     if (this.sketcher.active && this.sketcher.sketchId !== id) this.sketcher.exit();
+    if (this.edgePicking !== null && this.edgePicking !== id) this.endEdgePick();
     this.selected = id;
+    this.highlightBlendEdges();
     this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
     this.renderFeatures();
     this.renderDetail();
@@ -268,7 +351,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      icon.textContent = f.kind.type === "sketch" ? "✎" : f.kind.type === "revolve" ? "◑" : "⬒";
+      icon.textContent = f.kind.type === "sketch" ? "✎" : f.kind.type === "revolve" ? "◑" : f.kind.type === "blend" ? "◜" : "⬒";
       const name = document.createElement("span");
       name.className = "name";
       name.textContent = f.name;
@@ -289,6 +372,9 @@ class App implements SketchHost {
     const sel = this.feature(this.selected);
     ($("#btn-add-extrude") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
     ($("#btn-add-revolve") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
+    const hasBody = this.summary.bodies.length > 0;
+    ($("#btn-add-fillet") as HTMLButtonElement).disabled = !hasBody;
+    ($("#btn-add-chamfer") as HTMLButtonElement).disabled = !hasBody;
   }
 
   sketchWarn(f: FeatureSummary): boolean {
@@ -318,7 +404,8 @@ class App implements SketchHost {
     }
     if (f.kind.type === "sketch") this.renderSketchDetail(f, body);
     else if (f.kind.type === "extrude") this.renderExtrudeDetail(f, body);
-    else this.renderRevolveDetail(f, body);
+    else if (f.kind.type === "revolve") this.renderRevolveDetail(f, body);
+    else this.renderBlendDetail(f, body);
 
     const row = document.createElement("div");
     row.className = "row";
@@ -553,6 +640,43 @@ class App implements SketchHost {
     return field("Sketch", s);
   }
 
+  renderBlendDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "blend") return;
+    const k = f.kind;
+    body.appendChild(field(k.kind === "fillet" ? "Radius" : "Distance", numberInput(k.size, (v) => this.apply({ type: "set_blend", id: f.id, size: v }))));
+    const picking = this.edgePicking === f.id;
+    const row = document.createElement("div");
+    row.className = "row";
+    row.appendChild(button(picking ? "Done picking" : "Pick edges", () => {
+      if (picking) this.endEdgePick();
+      else this.beginEdgePick(f.id);
+      this.renderDetail();
+    }, picking ? "primary" : ""));
+    if (k.edges.length > 0) row.appendChild(button("Clear", () => this.apply({ type: "set_blend", id: f.id, edges: [] })));
+    body.appendChild(row);
+    const ul = document.createElement("ul");
+    ul.className = "edge-list";
+    for (const e of k.edges) {
+      const li = document.createElement("li");
+      const label = document.createElement("span");
+      label.textContent = this.describeEdge(e);
+      li.appendChild(label);
+      li.appendChild(button("×", () => this.apply({ type: "set_blend", id: f.id, edges: k.edges.filter((x) => x !== e) }), "danger"));
+      ul.appendChild(li);
+    }
+    if (k.edges.length === 0) {
+      const li = document.createElement("li");
+      li.className = "note";
+      li.textContent = "No edges yet. Pick edges in the viewport.";
+      ul.appendChild(li);
+    }
+    body.appendChild(ul);
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Edges are remembered by the two faces that meet there, so they follow later edits.";
+    body.appendChild(note);
+  }
+
   renderRevolveDetail(f: FeatureSummary, body: HTMLElement): void {
     if (f.kind.type !== "revolve") return;
     const k = f.kind;
@@ -733,6 +857,8 @@ async function main(): Promise<void> {
     kernel = null;
   }
   const app = new App(kernel ?? Kernel.demo());
+  // Exposed for debugging and end-to-end tests.
+  (window as unknown as { offkilter: App }).offkilter = app;
 
   $("#btn-new").onclick = () => {
     if (confirm("Start a new empty part studio? Unsaved work is lost.")) app.replace(Kernel.empty());
@@ -799,6 +925,18 @@ async function main(): Promise<void> {
     app.apply({ type: "add_extrude", sketch: f.id, depth: 10, profiles: { type: "all" }, name: null });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
+  const addBlend = (kind: BlendKind) => {
+    app.sketcher.exit();
+    app.apply({ type: "add_blend", kind, edges: [], size: kind === "fillet" ? 2 : 1, name: null });
+    const id = app.summary.features[app.summary.features.length - 1]?.id ?? null;
+    app.select(id);
+    if (id !== null) {
+      app.beginEdgePick(id);
+      app.renderDetail();
+    }
+  };
+  $("#btn-add-fillet").onclick = () => addBlend("fillet");
+  $("#btn-add-chamfer").onclick = () => addBlend("chamfer");
   $("#btn-add-revolve").onclick = () => {
     const f = app.feature(app.selected);
     if (!f || f.kind.type !== "sketch") return;
@@ -823,7 +961,10 @@ async function main(): Promise<void> {
     if (e.key === "f") app.viewer.fitAll();
     if (e.key === "Escape") {
       if (app.facePicker) app.endFacePick();
-      else if (app.sketcher.active) {
+      else if (app.edgePicking !== null) {
+        app.endEdgePick();
+        app.renderDetail();
+      } else if (app.sketcher.active) {
         app.sketcher.cancel();
         if (app.sketcher.tool !== "select") app.sketcher.setTool("select");
         else {

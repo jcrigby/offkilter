@@ -92,9 +92,14 @@ impl Studio {
         Ok(serde_json::to_string(&r).unwrap())
     }
 
-    /// Regenerates the part and returns a JSON summary.
-    pub fn regenerate(&mut self) -> String {
-        self.last = self.inner.regenerate();
+    /// Regenerates the part and returns a JSON summary. With `rollback`
+    /// set, the summary and meshes reflect the state after that many
+    /// features (used while editing a feature).
+    pub fn regenerate(&mut self, rollback: Option<usize>) -> String {
+        self.last = match rollback {
+            Some(n) => self.inner.regenerate_to(n),
+            None => self.inner.regenerate(),
+        };
         let features = self
             .inner
             .features()
@@ -193,11 +198,26 @@ impl Studio {
             .map(|b| {
                 b.edges
                     .iter()
-                    .flat_map(|[a, b]| {
+                    .flat_map(|e| {
+                        let [a, b] = e.points;
                         [
                             a.x as f32, a.y as f32, a.z as f32, b.x as f32, b.y as f32, b.z as f32,
                         ]
                     })
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// The two face indices of every display edge, parallel to `body_edges`.
+    pub fn body_edge_faces(&self, i: usize) -> Vec<u32> {
+        self.last
+            .bodies
+            .get(i)
+            .map(|b| {
+                b.edges
+                    .iter()
+                    .flat_map(|e| [e.faces[0] as u32, e.faces[1] as u32])
                     .collect()
             })
             .unwrap_or_default()

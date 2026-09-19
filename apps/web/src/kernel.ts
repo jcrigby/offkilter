@@ -46,10 +46,14 @@ export type SketchData = {
 };
 
 export type RevolveAxis = { type: "x_axis" } | { type: "y_axis" } | { type: "line"; line: number };
+/** An edge of a body, named by the two faces that meet there. */
+export type EdgeRef = { a: FaceRef; b: FaceRef };
+export type BlendKind = "fillet" | "chamfer";
 export type FeatureKind =
   | { type: "sketch"; plane: PlaneRef; sketch: SketchData }
   | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; end: ExtrudeEnd; op: BodyOp }
-  | { type: "revolve"; sketch: number; profiles: ProfileSelection; axis: RevolveAxis; angle: number; op: BodyOp };
+  | { type: "revolve"; sketch: number; profiles: ProfileSelection; axis: RevolveAxis; angle: number; op: BodyOp }
+  | { type: "blend"; kind: BlendKind; edges: EdgeRef[]; size: number };
 
 export type FeatureSummary = { id: number; name: string; suppressed: boolean; kind: FeatureKind; error: string | null };
 export type FaceInfo = { origin: FaceRef; surface: "plane" | "cylinder"; normal: Vec3 };
@@ -95,6 +99,8 @@ export type Op =
   | { type: "set_extrude"; id: number; depth?: number | null; direction?: ExtrudeDirection | null; end?: ExtrudeEnd | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
   | { type: "add_revolve"; sketch: number; axis: RevolveAxis; angle?: number; profiles?: ProfileSelection; op?: BodyOp; name: string | null }
   | { type: "set_revolve"; id: number; axis?: RevolveAxis | null; angle?: number | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
+  | { type: "add_blend"; kind: BlendKind; edges: EdgeRef[]; size: number; name: string | null }
+  | { type: "set_blend"; id: number; edges?: EdgeRef[] | null; size?: number | null }
   | { type: "set_sketch_plane"; id: number; plane: PlaneRef }
   | { type: "rename_feature"; id: number; name: string }
   | { type: "set_suppressed"; id: number; suppressed: boolean }
@@ -105,7 +111,7 @@ export type Op =
 
 export type OpResult = { feature: number | null; entities: number[]; constraint: number | null };
 
-export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array; faceIds: Uint32Array };
+export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array; edgeFaces: Uint32Array; faceIds: Uint32Array };
 
 export class Kernel {
   private studio: Studio;
@@ -143,8 +149,9 @@ export class Kernel {
     return JSON.parse(this.studio.apply(JSON.stringify(op))) as OpResult;
   }
 
-  regenerate(): Summary {
-    return JSON.parse(this.studio.regenerate()) as Summary;
+  /** Regenerates; with `rollback`, the result reflects the state after that many features. */
+  regenerate(rollback: number | null = null): Summary {
+    return JSON.parse(this.studio.regenerate(rollback ?? undefined)) as Summary;
   }
 
   bodyMeshes(): BodyMesh[] {
@@ -155,6 +162,7 @@ export class Kernel {
         normals: this.studio.body_normals(i),
         indices: this.studio.body_indices(i),
         edges: this.studio.body_edges(i),
+        edgeFaces: this.studio.body_edge_faces(i),
         faceIds: this.studio.body_face_ids(i),
       });
     }

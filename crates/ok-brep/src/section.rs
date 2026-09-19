@@ -58,28 +58,42 @@ pub fn section(
         }
     };
 
+    // Crossing nodes. A crossing that lands exactly on a vertex is shared by
+    // every edge through that vertex, so a face merely touching the plane at
+    // a vertex contributes a zero-length (skipped) segment and chains pass
+    // through the vertex consistently.
     let mut crossings: Vec<Crossing> = Vec::new();
     let mut by_edge: HashMap<EdgeKey, usize> = HashMap::new();
-    // Returns the crossing id and its point for an edge that crosses.
+    let mut by_vertex: HashMap<u32, usize> = HashMap::new();
     let mut crossing_of = |a: u32, b: u32| -> Option<(usize, Vec3)> {
         if above(a) == above(b) {
             return None;
         }
         let key = edge_key(a, b);
-        let id = *by_edge.entry(key).or_insert_with(|| {
-            let (lo, hi) = key;
-            let (dl, dh) = (dist[lo as usize], dist[hi as usize]);
-            let t = dl / (dl - dh);
-            let p = solid.vertices[lo as usize]
-                + (solid.vertices[hi as usize] - solid.vertices[lo as usize]) * t;
-            crossings.push(Crossing { point: p });
-            crossings.len() - 1
-        });
+        let (lo, hi) = key;
+        let (dl, dh) = (dist[lo as usize], dist[hi as usize]);
+        let t = dl / (dl - dh);
+        let id = if t <= 0.0 || t >= 1.0 {
+            let v = if t <= 0.0 { lo } else { hi };
+            *by_vertex.entry(v).or_insert_with(|| {
+                crossings.push(Crossing {
+                    point: solid.vertices[v as usize],
+                });
+                crossings.len() - 1
+            })
+        } else {
+            *by_edge.entry(key).or_insert_with(|| {
+                let p = solid.vertices[lo as usize]
+                    + (solid.vertices[hi as usize] - solid.vertices[lo as usize]) * t;
+                crossings.push(Crossing { point: p });
+                crossings.len() - 1
+            })
+        };
         Some((id, crossings[id].point))
     };
 
-    // Directed segments between crossing ids: start -> end.
-    let mut next: HashMap<usize, usize> = HashMap::new();
+    // Directed segments between crossing nodes: start -> ends.
+    let mut next: HashMap<usize, Vec<usize>> = HashMap::new();
     let mut segment_count = 0usize;
     for f in &solid.faces {
         let Some(dir) = n.cross(f.plane.normal).normalized() else {
@@ -109,39 +123,35 @@ pub fn section(
             if s == e {
                 continue;
             }
-            if next.insert(s, e).is_some() {
-                return Err(BrepError::OpenSection(format!(
-                    "inconsistent segment orientation at face {:?} (normal {:?})",
-                    f.origin, f.plane.normal
-                )));
-            }
+            next.entry(s).or_default().push(e);
             segment_count += 1;
         }
     }
-
     let _ = &mut crossing_of;
-    // Chain segments into loops.
+
+    // Chain segments into loops. Every node has as many outgoing as
+    // incoming segments in a valid section, so following unused outgoing
+    // segments from any node always returns to it.
     let mut loops = Vec::new();
-    let mut used: HashMap<usize, bool> = HashMap::new();
-    let starts: Vec<usize> = next.keys().copied().collect();
-    for s in starts {
-        if used.contains_key(&s) {
-            continue;
-        }
+    let mut remaining = segment_count;
+    while remaining > 0 {
+        let Some((&start, _)) = next.iter().find(|(_, v)| !v.is_empty()) else {
+            break;
+        };
         let mut poly = Vec::new();
-        let mut cur = s;
+        let mut cur = start;
         loop {
-            used.insert(cur, true);
             poly.push(plane.to_plane(crossings[cur].point));
-            let Some(&nx) = next.get(&cur) else {
+            let Some(nx) = next.get_mut(&cur).and_then(|v| v.pop()) else {
                 return Err(BrepError::OpenSection(format!(
                     "chain broke after {} of {} segments",
                     poly.len(),
                     segment_count
                 )));
             };
+            remaining -= 1;
             cur = nx;
-            if cur == s {
+            if cur == start {
                 break;
             }
             if poly.len() > segment_count + 1 {

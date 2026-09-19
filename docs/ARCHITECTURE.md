@@ -74,6 +74,24 @@ split into several fragments resolve to the first one found, and there is
 no disambiguation when a feature's face is later divided by another
 operation.
 
+### Edge references and blends
+
+An `EdgeRef` is the unordered pair of `FaceRef`s that meet at the edge.
+It resolves to every edge segment between those two faces, so a straight
+edge split by a T-junction is still one edge. `Blend` features (fillet or
+chamfer) build, per edge segment, a prism whose cross-section is the
+corner between the two faces: a triangle for a chamfer, or the corner
+minus the tangent arc for a fillet (tagged as a cylinder about the edge
+so it shades smoothly and selects as one face). Convex edges have the
+prism subtracted, concave edges have it added. This is "blend by
+boolean": it handles straight edges between planar faces, and where
+blends meet at a corner the union of cutters gives a plausible faceted
+corner rather than the exact patch a surface-based kernel would make.
+
+While a blend feature is collecting edges, the client asks for a
+"rollback" regeneration (`regenerate_to`), which returns the cached state
+after the previous feature so the original edges are visible to pick.
+
 ## Sketching (`ok-sketch`)
 
 Entities: `Point`, `Line`, `Circle`, `Arc`. Curves reference point entities

@@ -11,16 +11,18 @@
 //! clockwise. Edges are implicit (consecutive loop vertices) and every edge
 //! of a valid solid is shared by exactly two faces in opposite directions.
 
+mod blend;
 mod boolean;
 mod extrude;
 mod revolve;
 mod section;
 mod tessellate;
 
+pub use blend::{blend_edges, BlendKind};
 pub use boolean::{boolean, BoolOp};
 pub use extrude::extrude;
 pub use revolve::revolve;
-pub use tessellate::{display_edges, tessellate, tessellate_with_faces};
+pub use tessellate::{display_edges, tessellate, tessellate_with_faces, DisplayEdge};
 
 use ok_math::{Plane, Vec3};
 use serde::{Deserialize, Serialize};

@@ -180,12 +180,36 @@ pub struct RevolveFeature {
     pub op: BodyOp,
 }
 
+/// An edge of a body, named by the two faces that meet there.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct EdgeRef {
+    pub a: FaceRef,
+    pub b: FaceRef,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BlendKind {
+    Fillet,
+    Chamfer,
+}
+
+/// A fillet (rounded) or chamfer (flat) blend along edges.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BlendFeature {
+    pub kind: BlendKind,
+    pub edges: Vec<EdgeRef>,
+    /// Fillet radius or chamfer distance.
+    pub size: f64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FeatureKind {
     Sketch(SketchFeature),
     Extrude(ExtrudeFeature),
     Revolve(RevolveFeature),
+    Blend(BlendFeature),
 }
 
 impl FeatureKind {
@@ -194,6 +218,10 @@ impl FeatureKind {
             FeatureKind::Sketch(_) => "Sketch",
             FeatureKind::Extrude(_) => "Extrude",
             FeatureKind::Revolve(_) => "Revolve",
+            FeatureKind::Blend(b) => match b.kind {
+                BlendKind::Fillet => "Fillet",
+                BlendKind::Chamfer => "Chamfer",
+            },
         }
     }
 
@@ -203,6 +231,7 @@ impl FeatureKind {
             FeatureKind::Sketch(_) => None,
             FeatureKind::Extrude(e) => Some(e.sketch),
             FeatureKind::Revolve(r) => Some(r.sketch),
+            FeatureKind::Blend(_) => None,
         }
     }
 }

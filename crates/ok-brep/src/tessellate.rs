@@ -89,9 +89,16 @@ pub fn tessellate_with_faces(solid: &Solid) -> (TriMesh, Vec<u32>) {
     (mesh, triangle_faces)
 }
 
+/// A drawable edge with the (first two) faces it separates.
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct DisplayEdge {
+    pub points: [Vec3; 2],
+    pub faces: [usize; 2],
+}
+
 /// Edges worth drawing: those between different surfaces, excluding
 /// seams between coplanar planar faces.
-pub fn display_edges(solid: &Solid) -> Vec<[Vec3; 2]> {
+pub fn display_edges(solid: &Solid) -> Vec<DisplayEdge> {
     let mut out = Vec::new();
     for ((a, b), faces) in solid.edge_faces() {
         let show = match faces.as_slice() {
@@ -109,7 +116,10 @@ pub fn display_edges(solid: &Solid) -> Vec<[Vec3; 2]> {
             _ => true,
         };
         if show {
-            out.push([solid.vertices[a as usize], solid.vertices[b as usize]]);
+            out.push(DisplayEdge {
+                points: [solid.vertices[a as usize], solid.vertices[b as usize]],
+                faces: [faces[0], *faces.get(1).unwrap_or(&faces[0])],
+            });
         }
     }
     out

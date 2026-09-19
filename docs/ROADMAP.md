@@ -28,7 +28,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Extrude up-to-face / through-all
 - [x] Revolve (about a sketch axis or sketch line, full or partial)
 - [ ] Sweep, loft
-- [ ] Fillet and chamfer
+- [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
+- [ ] Fillets on curved edges and proper corner patches where blends meet
 - [ ] Shell, draft
 - [ ] Feature patterns and mirror
 - [~] Persistent naming: face origins survive booleans; needs disambiguation for split faces and edge/vertex references
@@ -40,7 +41,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Undo/redo (document snapshots in the client; op-log based undo later)
 - [ ] Variables and expressions in dimensions (`width / 2`)
 - [x] Face selection in the viewport with picking
-- [ ] Edge and body selection
+- [x] Edge selection (edges are named by their two faces)
+- [ ] Body selection; rollback bar in the feature list
 - [ ] Multiple part studios per document; assemblies with mates
 - [x] STL export
 - [ ] Drawings (2D projections); 3MF export; STEP once faces are exact

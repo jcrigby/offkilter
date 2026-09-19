@@ -1,6 +1,7 @@
 use crate::{
-    BodyOp, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FeatureId, FeatureKind, ModelError,
-    PartStudio, PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature, SketchFeature,
+    BlendFeature, BlendKind, BodyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature,
+    FeatureId, FeatureKind, ModelError, PartStudio, PlaneRef, ProfileSelection, RevolveAxis,
+    RevolveFeature, SketchFeature,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, EntityId, Sketch};
@@ -106,6 +107,20 @@ pub enum Op {
         profiles: Option<ProfileSelection>,
         #[serde(default)]
         op: Option<BodyOp>,
+    },
+    AddBlend {
+        kind: BlendKind,
+        #[serde(default)]
+        edges: Vec<EdgeRef>,
+        size: f64,
+        name: Option<String>,
+    },
+    SetBlend {
+        id: FeatureId,
+        #[serde(default)]
+        edges: Option<Vec<EdgeRef>>,
+        #[serde(default)]
+        size: Option<f64>,
     },
     SetSketchPlane {
         id: FeatureId,
@@ -267,6 +282,27 @@ impl PartStudio {
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "revolve")),
+            },
+            Op::AddBlend {
+                kind,
+                edges,
+                size,
+                name,
+            } => {
+                out.feature = Some(
+                    self.push_feature(FeatureKind::Blend(BlendFeature { kind, edges, size }), name),
+                );
+            }
+            Op::SetBlend { id, edges, size } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Blend(b) => {
+                    if let Some(e) = edges {
+                        b.edges = e;
+                    }
+                    if let Some(s) = size {
+                        b.size = s;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "blend")),
             },
             Op::SetSketchPlane { id, plane } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Sketch(s) => s.plane = plane,

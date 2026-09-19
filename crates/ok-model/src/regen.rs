@@ -1,6 +1,6 @@
 use crate::{
-    canonical_frame, BodyOp, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId, FeatureKind,
-    PartStudio, PlaneRef, ProfileSelection, RevolveAxis,
+    canonical_frame, BlendKind, BodyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId,
+    FeatureKind, PartStudio, PlaneRef, ProfileSelection, RevolveAxis,
 };
 use ok_brep::{boolean, BoolOp, Solid};
 use ok_math::{Plane, Vec2, Vec3};
@@ -21,7 +21,7 @@ pub struct Body {
     /// Index into `solid.faces` for every triangle of `mesh`, for picking.
     pub triangle_faces: Vec<u32>,
     /// Display edges of `solid` (between distinct surfaces).
-    pub edges: Vec<[Vec3; 2]>,
+    pub edges: Vec<ok_brep::DisplayEdge>,
 }
 
 impl Body {
@@ -44,6 +44,29 @@ impl Body {
             .faces
             .iter()
             .find(|f| face_ref.matches(&f.origin))
+    }
+
+    /// Face index pairs for every edge between the two referenced faces.
+    pub fn find_edge(&self, edge: &EdgeRef) -> Vec<(usize, usize)> {
+        let mut out = Vec::new();
+        for (_, faces) in self.solid.edge_faces() {
+            if faces.len() != 2 {
+                continue;
+            }
+            let (fa, fb) = (
+                &self.solid.faces[faces[0]].origin,
+                &self.solid.faces[faces[1]].origin,
+            );
+            if (edge.a.matches(fa) && edge.b.matches(fb))
+                || (edge.a.matches(fb) && edge.b.matches(fa))
+            {
+                let pair = (faces[0], faces[1]);
+                if !out.contains(&pair) {
+                    out.push(pair);
+                }
+            }
+        }
+        out
     }
 
     pub fn bounds(&self) -> Option<(Vec3, Vec3)> {
@@ -260,12 +283,33 @@ impl PartStudio {
                     let rf = rf.clone();
                     Self::regen_revolve(&mut result, id, &rf, pos, &self.features)
                 }
+                FeatureKind::Blend(bf) => {
+                    let bf = bf.clone();
+                    Self::regen_blend(&mut result, id, &bf)
+                }
             };
             result.statuses.push(FeatureStatus { id, error });
             self.cache.entries.push((chain, result.clone()));
         }
         self.cache.entries.truncate(self.features.len());
         result
+    }
+
+    /// Regenerates fully, then returns the state after the first `count`
+    /// features (a "rollback" view used while editing a feature).
+    pub fn regenerate_to(&mut self, count: usize) -> RegenResult {
+        let full = self.regenerate();
+        if count >= self.features.len() {
+            return full;
+        }
+        if count == 0 {
+            return RegenResult::default();
+        }
+        self.cache
+            .entries
+            .get(count - 1)
+            .map(|(_, r)| r.clone())
+            .unwrap_or(full)
     }
 
     /// Drops the regeneration cache (e.g. after loading a document).
@@ -418,6 +462,50 @@ impl PartStudio {
             Err(e) => return Some(e),
         };
         Self::apply_tool(result, id, tool, rf.op)
+    }
+
+    fn regen_blend(
+        result: &mut RegenResult,
+        id: FeatureId,
+        bf: &crate::BlendFeature,
+    ) -> Option<String> {
+        if bf.edges.is_empty() {
+            return None; // nothing selected yet: a no-op rather than an error
+        }
+        let kind = match bf.kind {
+            BlendKind::Fillet => ok_brep::BlendKind::Fillet,
+            BlendKind::Chamfer => ok_brep::BlendKind::Chamfer,
+        };
+        let seg = ProfileOptions::default().arc_segment_angle;
+        let mut matched = 0usize;
+        for i in 0..result.bodies.len() {
+            let pairs: Vec<(usize, usize)> = bf
+                .edges
+                .iter()
+                .flat_map(|e| result.bodies[i].find_edge(e))
+                .collect();
+            if pairs.is_empty() {
+                continue;
+            }
+            matched += pairs.len();
+            let blended = match ok_brep::blend_edges(
+                &result.bodies[i].solid,
+                &pairs,
+                bf.size,
+                kind,
+                seg,
+                id.0,
+            ) {
+                Ok(s) => s,
+                Err(e) => return Some(e.to_string()),
+            };
+            let body = &result.bodies[i];
+            result.bodies[i] = Body::new(body.name.clone(), body.source, blended);
+        }
+        if matched == 0 {
+            return Some("none of the referenced edges exist any more".into());
+        }
+        None
     }
 
     /// Combines a finished tool volume with the existing bodies.
@@ -1135,6 +1223,86 @@ mod tests {
             "vol2 {vol2}, expected {}",
             vol - groove
         );
+    }
+
+    #[test]
+    fn fillet_feature_by_edge_reference() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddRectangle {
+                a: Vec2::ZERO,
+                b: Vec2::new(10.0, 10.0),
+            },
+        })
+        .unwrap();
+        let e = ps
+            .apply(Op::AddExtrude {
+                sketch: s,
+                depth: 10.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        // Top cap is local 1; walls are local 2.. in loop order (bottom, right, top, left).
+        let top = crate::FaceRef {
+            feature: e,
+            local: 1,
+        };
+        let front = crate::FaceRef {
+            feature: e,
+            local: 2,
+        };
+        let f = ps
+            .apply(Op::AddBlend {
+                kind: BlendKind::Fillet,
+                edges: vec![crate::EdgeRef { a: top, b: front }],
+                size: 2.0,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let expected = 1000.0 - (4.0 - std::f64::consts::PI) * 10.0;
+        let vol = r.bodies[0].solid.volume();
+        assert!(((vol - expected) / expected).abs() < 2e-3, "vol {vol}");
+        assert_eq!(ps.feature(f).unwrap().name, "Fillet 1");
+        // Rollback view before the fillet shows the plain block.
+        let rolled = ps.regenerate_to(2);
+        assert!((rolled.bodies[0].solid.volume() - 1000.0).abs() < 1e-6);
+        // Growing the block keeps the fillet on the same edge.
+        ps.apply(Op::SetExtrude {
+            id: e,
+            depth: Some(20.0),
+            direction: None,
+            end: None,
+            profiles: None,
+            op: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(r.errors().next().is_none());
+        let expected = 2000.0 - (4.0 - std::f64::consts::PI) * 10.0;
+        assert!(((r.bodies[0].solid.volume() - expected) / expected).abs() < 2e-3);
     }
 
     #[test]
