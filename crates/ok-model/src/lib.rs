@@ -121,6 +121,48 @@ impl PartStudio {
         id
     }
 
+    /// A hash of the document's structure: feature order, ids and kinds,
+    /// sketch entity and constraint ids and types, references between
+    /// features. It deliberately excludes floating-point values, which can
+    /// differ in the last bits between native and wasm builds, so replicas
+    /// that applied the same ops agree on it.
+    pub fn structural_hash(&self) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut h = std::hash::DefaultHasher::new();
+        for f in &self.features {
+            f.id.hash(&mut h);
+            f.suppressed.hash(&mut h);
+            f.kind.display_kind().hash(&mut h);
+            f.kind.source_sketch().hash(&mut h);
+            for (k, v) in &f.bindings {
+                k.hash(&mut h);
+                v.hash(&mut h);
+            }
+            match &f.kind {
+                FeatureKind::Sketch(sf) => {
+                    for (id, e) in sf.sketch.entities() {
+                        id.hash(&mut h);
+                        e.kind_name().hash(&mut h);
+                        e.references().hash(&mut h);
+                        sf.sketch.is_construction(id).hash(&mut h);
+                    }
+                    for (id, c) in sf.sketch.constraints() {
+                        id.hash(&mut h);
+                        c.kind_name().hash(&mut h);
+                        c.references().hash(&mut h);
+                    }
+                }
+                FeatureKind::Blend(b) => b.edges.hash(&mut h),
+                FeatureKind::Variable(v) => {
+                    v.name.hash(&mut h);
+                    v.expression.hash(&mut h);
+                }
+                _ => {}
+            }
+        }
+        h.finish()
+    }
+
     pub fn to_json(&self) -> String {
         serde_json::to_string_pretty(self).expect("part studio serialises")
     }

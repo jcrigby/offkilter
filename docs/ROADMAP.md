@@ -58,8 +58,9 @@ top are concrete and self-contained; items lower down are directions.
 - [ ] Server-side regeneration / validation beyond op checking
 - [x] Named versions of a document (save / restore on the server)
 - [ ] Branches, merges and diffs over the op log
-- [x] Real-time multi-user editing (ops relayed in server order; resync on concurrent edits)
-- [ ] Conflict-free concurrent editing (transform or CRDT over the op log)
+- [x] Real-time multi-user editing (ops relayed in server order)
+- [x] Conflict-free concurrent editing: per-client id ranges make ops commute; structural hashes detect and repair any divergence
+- [ ] Per-user undo in shared documents (inverse ops instead of document replacement)
 - [ ] Accounts, sharing, teams
 
 ## Engineering

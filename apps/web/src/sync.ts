@@ -12,15 +12,17 @@ export type DocMeta = { id: string; name: string; created: number; updated: numb
 export type VersionMeta = { id: string; name: string; created: number };
 
 type ServerMessage =
-  | { type: "welcome"; client: number; seq: number; doc: string; clients: number }
-  | { type: "op"; op: Op; seq: number; from: number; id: number }
+  | { type: "welcome"; client: number; prefix: number; seq: number; doc: string; clients: number }
+  | { type: "op"; op: Op; seq: number; from: number; id: number; base: number | null; hash: string }
   | { type: "error"; message: string; id: number }
   | { type: "snapshot"; doc: string; seq: number }
   | { type: "presence"; clients: number; names: string[] };
 
 export interface SyncHandlers {
-  /** Apply an op that came from another client. */
-  remoteOp(op: Op): void;
+  /** Apply an op that came from another client, allocating ids from `base`. */
+  remoteOp(op: Op, base: number | null): void;
+  /** Current structural hash of the local document. */
+  localHash(): string;
   /** Replace the whole document (welcome, resync, or a remote undo). */
   loadDocument(json: string): void;
   presence(clients: number, names: string[]): void;
@@ -32,6 +34,11 @@ export class Sync {
   private nextId = 1;
   private inflight = new Set<number>();
   private clientId = 0;
+  /** Id-range prefix from the server; ids are (prefix << 20) | counter. */
+  private prefix = 0;
+  private counter = 0;
+  /** Ids allocated per op; ops allocate far fewer than this. */
+  private static readonly STRIDE = 256;
   docId: string | null = null;
   connected = false;
 
@@ -110,12 +117,22 @@ export class Sync {
     this.inflight.clear();
   }
 
-  /** Sends an op this client already applied locally. */
-  send(op: Op): void {
+  /**
+   * A fresh id base for the next local op, from this client's range, or
+   * null when not connected (the document's own counters are used).
+   */
+  nextBase(): number | null {
+    if (!this.connected) return null;
+    this.counter += Sync.STRIDE;
+    return (this.prefix << 20) | this.counter;
+  }
+
+  /** Sends an op this client already applied locally with `base`. */
+  send(op: Op, base: number | null): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
     const id = this.nextId++;
     this.inflight.add(id);
-    this.ws.send(JSON.stringify({ type: "op", op, id }));
+    this.ws.send(JSON.stringify({ type: "op", op, id, base }));
   }
 
   private requestSnapshot(): void {
@@ -127,6 +144,8 @@ export class Sync {
     switch (m.type) {
       case "welcome":
         this.clientId = m.client;
+        this.prefix = m.prefix;
+        this.counter = 0;
         this.connected = true;
         this.handlers.loadDocument(m.doc);
         this.handlers.presence(m.clients, []);
@@ -135,13 +154,17 @@ export class Sync {
       case "op":
         if (m.from === this.clientId) {
           this.inflight.delete(m.id);
-        } else if (this.inflight.size > 0) {
-          // Concurrent edits: server order may differ from ours; resync.
-          this.requestSnapshot();
         } else if (m.op.type === "replace_document") {
           this.handlers.loadDocument(m.op.json);
+          return;
         } else {
-          this.handlers.remoteOp(m.op);
+          // Ids come from the sender's range, so applying out of order is safe.
+          this.handlers.remoteOp(m.op, m.base);
+        }
+        // With nothing of ours in flight, our document must match the server's.
+        if (this.inflight.size === 0 && this.handlers.localHash() !== m.hash) {
+          this.handlers.status("replica diverged; resyncing");
+          this.requestSnapshot();
         }
         break;
       case "error":

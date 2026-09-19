@@ -89,12 +89,17 @@ impl Studio {
     }
 
     /// Applies an `Op` (JSON) and returns the `OpResult` as JSON.
-    pub fn apply(&mut self, op_json: &str) -> Result<String, JsError> {
+    pub fn apply(&mut self, op_json: &str, base: Option<u32>) -> Result<String, JsError> {
         let r = self
             .inner
-            .apply_json(op_json)
+            .apply_json_with_base(op_json, base)
             .map_err(|e| JsError::new(&e.to_string()))?;
         Ok(serde_json::to_string(&r).unwrap())
+    }
+
+    /// Structural hash of the document as hex, for replica consistency checks.
+    pub fn structural_hash(&self) -> String {
+        format!("{:016x}", self.inner.structural_hash())
     }
 
     /// Regenerates the part and returns a JSON summary. With `rollback`

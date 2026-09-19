@@ -116,6 +116,14 @@ impl Sketch {
 
     // -------------------------------------------------------------- building
 
+    /// Makes the next allocated entity and constraint ids start at `base`.
+    /// Used by collaborative editing, where each client owns an id range so
+    /// that ops allocate the same ids whatever order they are applied in.
+    pub fn set_id_base(&mut self, base: u32) {
+        self.next_entity = base;
+        self.next_constraint = base;
+    }
+
     fn alloc_entity(&mut self, e: Entity) -> EntityId {
         let id = EntityId(self.next_entity);
         self.next_entity += 1;

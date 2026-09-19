@@ -178,8 +178,14 @@ export class Kernel {
     return this.studio.to_json();
   }
 
-  apply(op: Op): OpResult {
-    return JSON.parse(this.studio.apply(JSON.stringify(op))) as OpResult;
+  /** Applies an op; `base` makes new ids start there (collaborative id ranges). */
+  apply(op: Op, base: number | null = null): OpResult {
+    return JSON.parse(this.studio.apply(JSON.stringify(op), base ?? undefined)) as OpResult;
+  }
+
+  /** Structural hash (hex) for replica consistency checks. */
+  structuralHash(): string {
+    return this.studio.structural_hash();
   }
 
   /** Regenerates; with `rollback`, the result reflects the state after that many features. */

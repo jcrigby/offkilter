@@ -635,4 +635,30 @@ impl PartStudio {
         let op: Op = serde_json::from_str(op).map_err(|e| ModelError::Invalid(e.to_string()))?;
         self.apply(op)
     }
+
+    /// Applies an op allocating any new ids from `base` upward. Each
+    /// collaborating client passes bases from its own range, so concurrent
+    /// ops produce the same ids on every replica regardless of order.
+    pub fn apply_with_base(&mut self, op: Op, base: Option<u32>) -> Result<OpResult, ModelError> {
+        if let Some(b) = base {
+            self.next_id = b;
+            if let Op::Sketch { id, .. } = &op {
+                if let Ok(f) = self.feature_mut(*id) {
+                    if let FeatureKind::Sketch(sf) = &mut f.kind {
+                        sf.sketch.set_id_base(b);
+                    }
+                }
+            }
+        }
+        self.apply(op)
+    }
+
+    pub fn apply_json_with_base(
+        &mut self,
+        op: &str,
+        base: Option<u32>,
+    ) -> Result<OpResult, ModelError> {
+        let op: Op = serde_json::from_str(op).map_err(|e| ModelError::Invalid(e.to_string()))?;
+        self.apply_with_base(op, base)
+    }
 }

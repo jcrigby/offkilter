@@ -35,4 +35,25 @@ test("two clients edit one document live", async ({ browser }) => {
   // B adds a variable; A sees the new feature.
   await b.click("#btn-add-variable");
   await expect.poll(async () => featureNames(a), { timeout: 10_000 }).toContain("#width");
+
+  // Both add a sketch at the same moment: ids come from each client's own
+  // range, so both replicas and the server converge without a resync.
+  const ids = (p: typeof a) => p.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.features.map((f: any) => f.id));
+  const addSketch = (p: typeof a) =>
+    p.evaluate(() => {
+      const app = (window as unknown as { offkilter: any }).offkilter;
+      app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: app.autoName("Sketch") });
+    });
+  await Promise.all([addSketch(a), addSketch(b)]);
+  await expect.poll(async () => (await ids(a)).length, { timeout: 10_000 }).toBe(9);
+  await expect.poll(async () => (await ids(b)).length, { timeout: 10_000 }).toBe(9);
+  const [idsA, idsB] = await Promise.all([ids(a), ids(b)]);
+  expect(new Set(idsA)).toEqual(new Set(idsB));
+  const docId = new URL(a.url()).searchParams.get("doc");
+  const server = (await (await fetch(`${SERVER}/api/docs/${docId}`)).json()) as { features: { id: number }[] };
+  expect(new Set(server.features.map((f) => f.id))).toEqual(new Set(idsA));
+  // The two new sketches got ids from different prefixes (>= 1 << 20).
+  const fresh = idsA.filter((id: number) => id >= 1 << 20);
+  expect(fresh.length).toBeGreaterThanOrEqual(2);
+  expect(new Set(fresh.map((id: number) => id >> 20)).size).toBe(2);
 });

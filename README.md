@@ -25,12 +25,12 @@ works today, all in the browser:
 - Workflow: undo/redo, `.okpart` JSON documents, STL export, mass
   properties.
 
-- Cloud: a small document server with real-time multi-user editing
-  (ops relayed in server order).
+- Cloud: a small document server with real-time multi-user editing;
+  concurrent edits converge without conflicts, and documents keep named
+  versions.
 
 Not yet: exact curved surfaces (arcs are 5° facets), sweeps and lofts,
-shells, assemblies, drawings, STEP, accounts, and merge-friendly
-concurrent editing (concurrent edits resync from the server). See [docs/ROADMAP.md](docs/ROADMAP.md).
+shells, assemblies, drawings, STEP, and accounts. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout
 

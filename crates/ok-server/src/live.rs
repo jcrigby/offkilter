@@ -12,8 +12,15 @@ use tokio::sync::broadcast;
 #[derive(Debug, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ClientMessage {
-    Hello { name: Option<String> },
-    Op { op: serde_json::Value, id: u64 },
+    Hello {
+        name: Option<String>,
+    },
+    Op {
+        op: serde_json::Value,
+        id: u64,
+        #[serde(default)]
+        base: Option<u32>,
+    },
     Snapshot,
 }
 
@@ -21,17 +28,24 @@ pub enum ClientMessage {
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ServerMessage {
+    /// `prefix` is this client's 12-bit id-range prefix: allocate ids as
+    /// `(prefix << 20) | counter`.
     Welcome {
         client: u64,
+        prefix: u32,
         seq: u64,
         doc: String,
         clients: usize,
     },
+    /// `hash` is the document's structural hash after this op, so replicas
+    /// can detect divergence.
     Op {
         op: serde_json::Value,
         seq: u64,
         from: u64,
         id: u64,
+        base: Option<u32>,
+        hash: String,
     },
     Error {
         message: String,
@@ -81,6 +95,7 @@ impl LiveDoc {
 
     /// Registers a client and returns its id plus a welcome message.
     pub fn join(&self, name: Option<String>) -> (u64, ServerMessage) {
+        let prefix = self.store.take_prefix(&self.id).unwrap_or(1);
         let mut st = self.state.lock().unwrap();
         let client = st.next_client;
         st.next_client += 1;
@@ -88,6 +103,7 @@ impl LiveDoc {
             .insert(client, name.unwrap_or_else(|| format!("client {client}")));
         let msg = ServerMessage::Welcome {
             client,
+            prefix,
             seq: st.seq,
             doc: st.studio.to_json(),
             clients: st.clients.len(),
@@ -117,17 +133,33 @@ impl LiveDoc {
 
     /// Applies an op from a client; on success broadcasts it, on failure
     /// returns the error for that client only.
-    pub fn apply(&self, from: u64, id: u64, op: serde_json::Value) -> Result<u64, String> {
+    pub fn apply(
+        &self,
+        from: u64,
+        id: u64,
+        op: serde_json::Value,
+        base: Option<u32>,
+    ) -> Result<u64, String> {
         let mut st = self.state.lock().unwrap();
         let text = op.to_string();
-        st.studio.apply_json(&text).map_err(|e| e.to_string())?;
+        st.studio
+            .apply_json_with_base(&text, base)
+            .map_err(|e| e.to_string())?;
         st.seq += 1;
         let seq = st.seq;
         let json = st.studio.to_json();
         let name = st.studio.name.clone();
+        let hash = format!("{:016x}", st.studio.structural_hash());
         drop(st);
         let _ = self.store.write(&self.id, &json, Some(&name));
-        let _ = self.tx.send(ServerMessage::Op { op, seq, from, id });
+        let _ = self.tx.send(ServerMessage::Op {
+            op,
+            seq,
+            from,
+            id,
+            base,
+            hash,
+        });
         Ok(seq)
     }
 
@@ -142,12 +174,20 @@ impl LiveDoc {
         let name = st.studio.name.clone();
         drop(st);
         let _ = self.store.write(&self.id, json, Some(&name));
+        let hash = format!(
+            "{:016x}",
+            PartStudio::from_json(json)
+                .map(|s| s.structural_hash())
+                .unwrap_or(0)
+        );
         let op = serde_json::json!({ "type": "replace_document", "json": json });
         let _ = self.tx.send(ServerMessage::Op {
             op,
             seq,
             from: 0,
             id: 0,
+            base: None,
+            hash,
         });
         Ok(())
     }

@@ -227,7 +227,7 @@ async fn handle_socket(socket: WebSocket, hub: DocHub, doc: std::sync::Arc<crate
     let handle = |msg: ClientMessage, doc: &crate::live::LiveDoc| -> Option<ServerMessage> {
         match msg {
             ClientMessage::Hello { .. } => None,
-            ClientMessage::Op { op, id } => match doc.apply(client, id, op) {
+            ClientMessage::Op { op, id, base } => match doc.apply(client, id, op, base) {
                 Ok(_) => None,
                 Err(message) => Some(ServerMessage::Error { message, id }),
             },
@@ -462,6 +462,7 @@ mod tests {
         let welcome_a: serde_json::Value =
             serde_json::from_str(&a.next().await.unwrap().unwrap().into_text().unwrap()).unwrap();
         assert_eq!(welcome_a["type"], "welcome");
+        assert_eq!(welcome_a["prefix"], 1);
         // Alice's own presence update (1 online).
         let presence_a: serde_json::Value =
             serde_json::from_str(&a.next().await.unwrap().unwrap().into_text().unwrap()).unwrap();
@@ -474,6 +475,7 @@ mod tests {
         let welcome_b: serde_json::Value =
             serde_json::from_str(&b.next().await.unwrap().unwrap().into_text().unwrap()).unwrap();
         assert_eq!(welcome_b["clients"], 2);
+        assert_eq!(welcome_b["prefix"], 2);
         // Alice is told about Bob joining; Bob's own presence follows his welcome.
         let presence: serde_json::Value =
             serde_json::from_str(&a.next().await.unwrap().unwrap().into_text().unwrap()).unwrap();
@@ -484,7 +486,7 @@ mod tests {
         assert_eq!(presence_b["type"], "presence");
 
         // Alice adds a sketch; both receive the op with seq 1.
-        a.send(WsMessage::Text(r#"{"type":"op","id":7,"op":{"type":"add_sketch","plane":{"type":"standard","base":"top"},"name":null}}"#.into())).await.unwrap();
+        a.send(WsMessage::Text(r#"{"type":"op","id":7,"base":1048576,"op":{"type":"add_sketch","plane":{"type":"standard","base":"top"},"name":null}}"#.into())).await.unwrap();
         let mut got_a = None;
         let mut got_b = None;
         for _ in 0..4 {
@@ -513,6 +515,8 @@ mod tests {
         assert_eq!(mb["seq"], 1);
         assert_eq!(mb["id"], 7);
         assert_eq!(mb["from"], welcome_a["client"]);
+        assert_eq!(mb["base"], 1048576);
+        assert_eq!(mb["hash"].as_str().unwrap().len(), 16);
 
         // A bad op is rejected for the sender only.
         b.send(WsMessage::Text(
@@ -534,5 +538,10 @@ mod tests {
         assert_eq!(snap["type"], "snapshot");
         let studio = ok_model::PartStudio::from_json(snap["doc"].as_str().unwrap()).unwrap();
         assert_eq!(studio.features().len(), 1);
+        assert_eq!(
+            studio.features()[0].id.0,
+            1048576,
+            "id allocated from the client's base"
+        );
     }
 }

@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 
 /** Waits until the kernel has loaded and regenerated once. */
 export async function ready(page: Page): Promise<void> {
-  await page.waitForFunction(() => /bod(y|ies)/.test(document.querySelector("#status-text")?.textContent ?? ""), null, { timeout: 30_000 });
+  await page.waitForFunction(() => Boolean((window as unknown as { offkilter?: { summary?: unknown } }).offkilter?.summary), null, { timeout: 30_000 });
 }
 
 export async function status(page: Page): Promise<string> {

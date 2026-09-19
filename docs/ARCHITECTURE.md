@@ -258,12 +258,24 @@ relays edits between clients:
   document; `presence` announces who is connected.
 
 The client applies its own ops optimistically and sends them; ops from
-others are applied on arrival. Because feature ids are allocated in op
-order, two clients that edit concurrently can diverge, so a client that
-receives someone else's op while its own ops are unacknowledged resyncs
-from a snapshot. Undo/redo while connected is sent as `replace_document`.
-This is deliberately simple; operational transformation or CRDT-style
-merging is future work.
+others are applied on arrival. Ops commute because every replica
+allocates the same ids for the same op: on `welcome` the server hands the
+client a persistent 12-bit id-range prefix (stored in the document's
+metadata and never reused), and each op carries an id base
+`(prefix << 20) | counter` from which `PartStudio::apply_with_base`
+allocates any new feature, entity and constraint ids. Concurrent adds
+therefore never collide, and applying two clients' ops in different
+orders yields the same document. Default feature names are chosen by the
+client for the same reason.
+
+Every broadcast op carries the server's structural hash of the document
+(feature order, ids, kinds and references, but no floating-point values,
+which can differ in the last bits between native and wasm). A client with
+nothing in flight compares its own hash and resyncs from a snapshot on a
+mismatch, which covers the remaining order-dependent edits such as two
+simultaneous feature reorders. Undo/redo while connected is sent as
+`replace_document`. Semantic conflicts (editing a feature someone just
+deleted) are rejected by the server and trigger a resync on that client.
 
 ## Conventions
 

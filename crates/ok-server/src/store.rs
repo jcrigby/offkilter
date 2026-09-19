@@ -12,6 +12,13 @@ pub struct DocMeta {
     pub name: String,
     pub created: u64,
     pub updated: u64,
+    /// Next id-range prefix to hand to a connecting client (monotonic).
+    #[serde(default = "first_prefix")]
+    pub next_prefix: u32,
+}
+
+fn first_prefix() -> u32 {
+    1
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -94,6 +101,7 @@ impl DocStore {
             name: name.to_string(),
             created: now(),
             updated: now(),
+            next_prefix: 1,
         };
         std::fs::write(self.doc_path(&id), json)?;
         std::fs::write(self.meta_path(&id), serde_json::to_string_pretty(&meta)?)?;
@@ -121,6 +129,20 @@ impl DocStore {
         std::fs::write(self.doc_path(id), json)?;
         std::fs::write(self.meta_path(id), serde_json::to_string_pretty(&meta)?)?;
         Ok(())
+    }
+
+    /// Reserves and returns the next client id-range prefix for a document.
+    pub fn take_prefix(&self, id: &str) -> std::io::Result<u32> {
+        let Some(mut meta) = self.meta(id) else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "no such document",
+            ));
+        };
+        let prefix = meta.next_prefix;
+        meta.next_prefix = (prefix.wrapping_add(1) & 0xfff).max(1);
+        std::fs::write(self.meta_path(id), serde_json::to_string_pretty(&meta)?)?;
+        Ok(prefix)
     }
 
     fn versions_dir(&self, id: &str) -> PathBuf {

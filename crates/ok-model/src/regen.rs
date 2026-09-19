@@ -1883,6 +1883,112 @@ mod tests {
     }
 
     #[test]
+    fn ops_with_id_bases_commute() {
+        // Two replicas apply the same two clients' ops in opposite orders.
+        let base_a = 1 << 20;
+        let base_b = 2 << 20;
+        let ops_a = [
+            (
+                Op::AddSketch {
+                    plane: PlaneRef::standard(StandardPlane::Top),
+                    name: Some("A sketch".into()),
+                },
+                base_a,
+            ),
+            (
+                Op::Sketch {
+                    id: crate::FeatureId(base_a),
+                    op: SketchOp::AddRectangle {
+                        a: Vec2::ZERO,
+                        b: Vec2::new(4.0, 4.0),
+                    },
+                },
+                base_a + 256,
+            ),
+        ];
+        let ops_b = [
+            (
+                Op::AddSketch {
+                    plane: PlaneRef::standard(StandardPlane::Front),
+                    name: Some("B sketch".into()),
+                },
+                base_b,
+            ),
+            (
+                Op::Sketch {
+                    id: crate::FeatureId(base_b),
+                    op: SketchOp::AddCircle {
+                        center: Vec2::ZERO,
+                        radius: 1.0,
+                    },
+                },
+                base_b + 256,
+            ),
+        ];
+        let mut r1 = PartStudio::new("doc");
+        let mut r2 = PartStudio::new("doc");
+        for (op, base) in ops_a.iter().chain(ops_b.iter()) {
+            r1.apply_with_base(op.clone(), Some(*base)).unwrap();
+        }
+        for (op, base) in ops_b.iter().chain(ops_a.iter()) {
+            r2.apply_with_base(op.clone(), Some(*base)).unwrap();
+        }
+        // Same ids, same entities, same structural hash; only the order differs.
+        let ids1: Vec<u32> = r1.features().iter().map(|f| f.id.0).collect();
+        let ids2: Vec<u32> = r2.features().iter().map(|f| f.id.0).collect();
+        assert_eq!(ids1, vec![base_a, base_b]);
+        assert_eq!(ids2, vec![base_b, base_a]);
+        r2.apply(Op::MoveFeature {
+            id: crate::FeatureId(base_a),
+            index: 0,
+        })
+        .unwrap();
+        assert_eq!(r1.structural_hash(), r2.structural_hash());
+        // Sketch entity ids come from the base too.
+        let FeatureKind::Sketch(sf) = &r1.feature(crate::FeatureId(base_a)).unwrap().kind else {
+            unreachable!()
+        };
+        assert!(sf.sketch.entities().all(|(id, _)| id.0 >= base_a + 256));
+        // And the hash changes with structure but not with a value edit.
+        let h = r1.structural_hash();
+        let len_id = {
+            let FeatureKind::Sketch(sf) = &r1.feature(crate::FeatureId(base_a)).unwrap().kind
+            else {
+                unreachable!()
+            };
+            sf.sketch
+                .entities()
+                .find(|(_, e)| e.kind_name() == "line")
+                .map(|(id, _)| id)
+                .unwrap()
+        };
+        r1.apply_with_base(
+            Op::Sketch {
+                id: crate::FeatureId(base_a),
+                op: SketchOp::AddConstraint {
+                    constraint: ok_sketch::Constraint::Length {
+                        line: len_id,
+                        value: 5.0,
+                    },
+                },
+            },
+            Some(base_a + 512),
+        )
+        .unwrap();
+        assert_ne!(r1.structural_hash(), h);
+        let h2 = r1.structural_hash();
+        r1.apply(Op::Sketch {
+            id: crate::FeatureId(base_a),
+            op: SketchOp::SetConstraintValue {
+                id: ok_sketch::ConstraintId(base_a + 512),
+                value: 7.0,
+            },
+        })
+        .unwrap();
+        assert_eq!(r1.structural_hash(), h2);
+    }
+
+    #[test]
     fn deleted_face_reference_is_an_error() {
         let mut ps = PartStudio::new("t");
         let s = ps

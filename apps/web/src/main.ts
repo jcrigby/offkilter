@@ -22,7 +22,8 @@ class App implements SketchHost {
   sketcher = new Sketcher(this);
   sync = new Sync(
     {
-      remoteOp: (op) => this.applyRemote(op),
+      remoteOp: (op, base) => this.applyRemote(op, base),
+      localHash: () => this.kernel.structuralHash(),
       loadDocument: (json) => this.loadDocument(json),
       presence: (clients, names) => this.showPresence(clients, names),
       status: (text) => this.setStatus(text),
@@ -189,21 +190,22 @@ class App implements SketchHost {
 
   apply(op: Op): void {
     this.snapshot();
+    const base = this.sync.nextBase();
     try {
-      this.kernel.apply(op);
+      this.kernel.apply(op, base);
     } catch (e) {
       this.setStatus(`error: ${(e as Error).message}`);
       this.history.pop();
       return;
     }
-    this.sync.send(op);
+    this.sync.send(op, base);
     this.regenerate();
   }
 
   /** An op from another client: apply without touching undo history. */
-  applyRemote(op: Op): void {
+  applyRemote(op: Op, base: number | null): void {
     try {
-      this.kernel.apply(op);
+      this.kernel.apply(op, base);
     } catch (e) {
       this.setStatus(`remote edit failed locally: ${(e as Error).message}`);
       return;
@@ -260,7 +262,7 @@ class App implements SketchHost {
 
   /** Loads a document state while keeping selection and sketch mode where possible. */
   private restore(json: string): void {
-    if (this.sync.connected) this.sync.send({ type: "replace_document", json });
+    if (this.sync.connected) this.sync.send({ type: "replace_document", json }, null);
     const sketchId = this.sketcher.active ? this.sketcher.sketchId : null;
     this.sketcher.cancel();
     this.sketcher.selection.clear();
@@ -314,9 +316,16 @@ class App implements SketchHost {
   }
 
   applyRaw(op: Op): OpResult {
-    const r = this.kernel.apply(op);
-    this.sync.send(op);
+    const base = this.sync.nextBase();
+    const r = this.kernel.apply(op, base);
+    this.sync.send(op, base);
     return r;
+  }
+
+  /** "Sketch 3"-style default name, decided here so replicas agree on it. */
+  autoName(kind: string): string {
+    const n = this.summary.features.filter((f) => f.name.startsWith(kind + " ")).length + 1;
+    return `${kind} ${n}`;
   }
 
   selectionChanged(): void {
@@ -438,7 +447,7 @@ class App implements SketchHost {
           const n = Number(text);
           if (text === "") return;
           if (Number.isFinite(n)) {
-            if (bound) this.kernel.apply({ type: "set_binding", id: f.id, field, expression: null });
+            if (bound) this.applyRaw({ type: "set_binding", id: f.id, field, expression: null });
             this.apply({ type: "sketch", id: f.id, op: { type: "set_constraint_value", id: c.id, value: n } });
           } else {
             this.apply({ type: "set_binding", id: f.id, field, expression: text });
@@ -858,7 +867,7 @@ class App implements SketchHost {
       if (text === "" ) return;
       const n = Number(text);
       if (Number.isFinite(n)) {
-        if (bound) this.kernel.apply({ type: "set_binding", id: f.id, field, expression: null });
+        if (bound) this.applyRaw({ type: "set_binding", id: f.id, field, expression: null });
         if (n !== value || bound) onNumber(n);
         else this.regenerate();
       } else if (text !== bound) {
@@ -1405,12 +1414,12 @@ async function main(): Promise<void> {
   };
   $("#btn-add-sketch").onclick = () => {
     const addOn = (plane: PlaneRef) => {
-      const r = app.kernel.apply({ type: "add_sketch", plane, name: null });
       app.selectedFace = null;
       app.viewer.setSelectedFace(null);
-      app.selected = r.feature;
-      app.regenerate();
-      if (r.feature !== null) app.editSketch(r.feature);
+      app.apply({ type: "add_sketch", plane, name: app.autoName("Sketch") });
+      const id = app.summary.features[app.summary.features.length - 1]?.id ?? null;
+      app.selected = id;
+      if (id !== null) app.editSketch(id);
     };
     if (app.selectedFace) {
       addOn({ type: "face", face: app.selectedFace, offset: 0 });
@@ -1428,12 +1437,12 @@ async function main(): Promise<void> {
     const f = app.feature(app.selected);
     if (!f || f.kind.type !== "sketch") return;
     app.sketcher.exit();
-    app.apply({ type: "add_extrude", sketch: f.id, depth: 10, profiles: { type: "all" }, name: null });
+    app.apply({ type: "add_extrude", sketch: f.id, depth: 10, profiles: { type: "all" }, name: app.autoName("Extrude") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   const addBlend = (kind: BlendKind) => {
     app.sketcher.exit();
-    app.apply({ type: "add_blend", kind, edges: [], size: kind === "fillet" ? 2 : 1, name: null });
+    app.apply({ type: "add_blend", kind, edges: [], size: kind === "fillet" ? 2 : 1, name: app.autoName(kind === "fillet" ? "Fillet" : "Chamfer") });
     const id = app.summary.features[app.summary.features.length - 1]?.id ?? null;
     app.select(id);
     if (id !== null) {
@@ -1451,12 +1460,12 @@ async function main(): Promise<void> {
   };
   $("#btn-add-mirror").onclick = () => {
     app.sketcher.exit();
-    app.apply({ type: "add_mirror", plane: { type: "standard", base: "right", offset: 0 }, op: "add", name: null });
+    app.apply({ type: "add_mirror", plane: { type: "standard", base: "right", offset: 0 }, op: "add", name: app.autoName("Mirror") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   $("#btn-add-pattern").onclick = () => {
     app.sketcher.exit();
-    app.apply({ type: "add_pattern", kind: { type: "linear", axis: "x", spacing: 20 }, count: 2, op: "add", name: null });
+    app.apply({ type: "add_pattern", kind: { type: "linear", axis: "x", spacing: 20 }, count: 2, op: "add", name: app.autoName("Pattern") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   $("#btn-add-chamfer").onclick = () => addBlend("chamfer");
@@ -1464,14 +1473,14 @@ async function main(): Promise<void> {
     const f = app.feature(app.selected);
     if (!f || f.kind.type !== "sketch") return;
     app.sketcher.exit();
-    app.apply({ type: "add_hole", sketch: f.id, diameter: 6, through_all: true, direction: "reverse", name: null });
+    app.apply({ type: "add_hole", sketch: f.id, diameter: 6, through_all: true, direction: "reverse", name: app.autoName("Hole") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   $("#btn-add-revolve").onclick = () => {
     const f = app.feature(app.selected);
     if (!f || f.kind.type !== "sketch") return;
     app.sketcher.exit();
-    app.apply({ type: "add_revolve", sketch: f.id, axis: { type: "y_axis" }, angle: 360, profiles: { type: "all" }, name: null });
+    app.apply({ type: "add_revolve", sketch: f.id, axis: { type: "y_axis" }, angle: 360, profiles: { type: "all" }, name: app.autoName("Revolve") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   window.addEventListener("keydown", (e) => {
