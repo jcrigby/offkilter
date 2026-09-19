@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import type { Constraint, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PlaneRef, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
+import type { Constraint, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PlaneRef, ProfileSelection, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
 import { Viewer } from "./viewer";
 import type { FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -268,7 +268,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      icon.textContent = f.kind.type === "sketch" ? "✎" : "⬒";
+      icon.textContent = f.kind.type === "sketch" ? "✎" : f.kind.type === "revolve" ? "◑" : "⬒";
       const name = document.createElement("span");
       name.className = "name";
       name.textContent = f.name;
@@ -288,6 +288,7 @@ class App implements SketchHost {
     }
     const sel = this.feature(this.selected);
     ($("#btn-add-extrude") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
+    ($("#btn-add-revolve") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
   }
 
   sketchWarn(f: FeatureSummary): boolean {
@@ -316,7 +317,8 @@ class App implements SketchHost {
       body.appendChild(e);
     }
     if (f.kind.type === "sketch") this.renderSketchDetail(f, body);
-    else this.renderExtrudeDetail(f, body);
+    else if (f.kind.type === "extrude") this.renderExtrudeDetail(f, body);
+    else this.renderRevolveDetail(f, body);
 
     const row = document.createElement("div");
     row.className = "row";
@@ -531,6 +533,46 @@ class App implements SketchHost {
     };
     render();
     return wrap;
+  }
+
+  /** A "Regions" field shared by solid features built from a sketch. */
+  regionField(sketchId: number, current: ProfileSelection, onChange: (p: ProfileSelection) => void): HTMLElement {
+    const regions = this.summary.sketches[String(sketchId)]?.profiles.length ?? 0;
+    const choices = ["all", "largest", ...Array.from({ length: regions }, (_, i) => `region ${i}`)];
+    const value = current.type === "indices" ? `region ${current.indices[0] ?? 0}` : current.type;
+    return field("Regions", select(choices, value, (v) => {
+      onChange(v === "all" ? { type: "all" } : v === "largest" ? { type: "largest" } : { type: "indices", indices: [Number(v.slice(7))] });
+    }));
+  }
+
+  sketchField(sketchId: number): HTMLElement {
+    const names = this.summary.features.filter((s) => s.kind.type === "sketch").map((s) => `${s.id}: ${s.name}`);
+    const current = names.find((n) => n.startsWith(`${sketchId}:`)) ?? `${sketchId}: (missing)`;
+    const s = select(names.includes(current) ? names : [current, ...names], current, () => {});
+    s.disabled = true;
+    return field("Sketch", s);
+  }
+
+  renderRevolveDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "revolve") return;
+    const k = f.kind;
+    body.appendChild(this.sketchField(k.sketch));
+    const sketch = this.feature(k.sketch);
+    const lines = sketch && sketch.kind.type === "sketch" ? sketch.kind.sketch.entities.filter((e) => e.type === "line").map((e) => `line ${e.id}`) : [];
+    const axisValue = k.axis.type === "line" ? `line ${k.axis.line}` : k.axis.type;
+    body.appendChild(
+      field("Axis", select(["x_axis", "y_axis", ...lines], axisValue, (v) => {
+        const axis: RevolveAxis = v.startsWith("line ") ? { type: "line", line: Number(v.slice(5)) } : { type: v as "x_axis" | "y_axis" };
+        this.apply({ type: "set_revolve", id: f.id, axis });
+      })),
+    );
+    body.appendChild(field("Angle (°)", numberInput(k.angle, (v) => this.apply({ type: "set_revolve", id: f.id, angle: v }))));
+    body.appendChild(this.regionField(k.sketch, k.profiles, (profiles) => this.apply({ type: "set_revolve", id: f.id, profiles })));
+    body.appendChild(field("Result", select(["new", "add", "remove", "intersect"], k.op, (v) => this.apply({ type: "set_revolve", id: f.id, op: v as typeof k.op }))));
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "The axis is in sketch coordinates: the sketch's own X or Y axis, or one of its lines. The profile must stay on one side of it.";
+    body.appendChild(note);
   }
 
   renderExtrudeDetail(f: FeatureSummary, body: HTMLElement): void {
@@ -753,9 +795,16 @@ async function main(): Promise<void> {
   $("#btn-add-extrude").onclick = () => {
     const f = app.feature(app.selected);
     if (!f || f.kind.type !== "sketch") return;
-    const r = app.kernel.apply({ type: "add_extrude", sketch: f.id, depth: 10, profiles: { type: "all" }, name: null });
-    app.selected = r.feature;
-    app.regenerate();
+    app.sketcher.exit();
+    app.apply({ type: "add_extrude", sketch: f.id, depth: 10, profiles: { type: "all" }, name: null });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-revolve").onclick = () => {
+    const f = app.feature(app.selected);
+    if (!f || f.kind.type !== "sketch") return;
+    app.sketcher.exit();
+    app.apply({ type: "add_revolve", sketch: f.id, axis: { type: "y_axis" }, angle: 360, profiles: { type: "all" }, name: null });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   window.addEventListener("keydown", (e) => {
     const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement;

@@ -26,7 +26,8 @@ top are concrete and self-contained; items lower down are directions.
 - [ ] Exact curved faces (cylinder, later general surfaces) instead of facets, with curve/surface intersection
 - [ ] Merge coplanar faces of the same body after a union
 - [x] Extrude up-to-face / through-all
-- [ ] Revolve, sweep, loft
+- [x] Revolve (about a sketch axis or sketch line, full or partial)
+- [ ] Sweep, loft
 - [ ] Fillet and chamfer
 - [ ] Shell, draft
 - [ ] Feature patterns and mirror

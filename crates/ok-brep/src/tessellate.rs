@@ -1,6 +1,7 @@
 use crate::{Solid, Surface};
 use ok_math::Vec3;
 use ok_mesh::TriMesh;
+use std::collections::HashMap;
 
 /// Triangulates every face. Planar faces get their face normal; facets on a
 /// cylinder get analytic per-vertex normals so the surface shades smoothly.
@@ -12,10 +13,31 @@ pub fn tessellate(solid: &Solid) -> TriMesh {
 pub fn tessellate_with_faces(solid: &Solid) -> (TriMesh, Vec<u32>) {
     let mut mesh = TriMesh::new();
     let mut triangle_faces = Vec::new();
+    // Area-weighted normal sums per (surface, vertex) for smooth surfaces
+    // without an analytic normal (surfaces of revolution).
+    let mut averaged: HashMap<(usize, u32), Vec3> = HashMap::new();
+    for f in &solid.faces {
+        if matches!(
+            solid.surfaces.get(f.surface),
+            Some(Surface::Revolved { .. })
+        ) {
+            let l = &f.loops[0];
+            let mut n = Vec3::ZERO;
+            for i in 0..l.len() {
+                n += solid.vertices[l[i] as usize]
+                    .cross(solid.vertices[l[(i + 1) % l.len()] as usize]);
+            }
+            for loop_ in &f.loops {
+                for &v in loop_ {
+                    *averaged.entry((f.surface, v)).or_insert(Vec3::ZERO) += n;
+                }
+            }
+        }
+    }
     for (fi, f) in solid.faces.iter().enumerate() {
         let mut flat: Vec<f64> = Vec::new();
         let mut holes: Vec<usize> = Vec::new();
-        let mut verts: Vec<Vec3> = Vec::new();
+        let mut verts: Vec<(u32, Vec3)> = Vec::new();
         for (li, l) in f.loops.iter().enumerate() {
             if li > 0 {
                 holes.push(flat.len() / 2);
@@ -24,13 +46,17 @@ pub fn tessellate_with_faces(solid: &Solid) -> (TriMesh, Vec<u32>) {
                 let p = solid.vertices[v as usize];
                 let q = f.plane.to_plane(p);
                 flat.extend([q.x, q.y]);
-                verts.push(p);
+                verts.push((v, p));
             }
         }
         let tris = earcutr::earcut(&flat, &holes, 2).unwrap_or_default();
         let surface = solid.surfaces.get(f.surface).copied();
-        let normal_at = |p: Vec3| -> Vec3 {
+        let normal_at = |v: u32, p: Vec3| -> Vec3 {
             match surface {
+                Some(Surface::Revolved { .. }) => averaged
+                    .get(&(f.surface, v))
+                    .and_then(|n| n.normalized())
+                    .unwrap_or(f.plane.normal),
                 Some(Surface::Cylinder { origin, axis, .. }) => {
                     let d = p - origin;
                     let radial = d - axis * d.dot(axis);
@@ -49,9 +75,8 @@ pub fn tessellate_with_faces(solid: &Solid) -> (TriMesh, Vec<u32>) {
             }
         };
         let base = mesh.vertex_count() as u32;
-        for (i, p) in verts.iter().enumerate() {
-            let n = normal_at(*p);
-            let _ = i;
+        for (v, p) in verts.iter() {
+            let n = normal_at(*v, *p);
             mesh.positions.extend([p.x as f32, p.y as f32, p.z as f32]);
             mesh.normals.extend([n.x as f32, n.y as f32, n.z as f32]);
         }
@@ -76,8 +101,8 @@ pub fn display_edges(solid: &Solid) -> Vec<[Vec3; 2]> {
                     false
                 } else {
                     let coplanar = fa.plane.normal.dot(fb.plane.normal) > 1.0 - 1e-9;
-                    let both_planar = matches!(solid.surfaces[fa.surface], Surface::Plane { .. })
-                        && matches!(solid.surfaces[fb.surface], Surface::Plane { .. });
+                    let both_planar = !solid.surfaces[fa.surface].is_smooth()
+                        && !solid.surfaces[fb.surface].is_smooth();
                     !(coplanar && both_planar)
                 }
             }

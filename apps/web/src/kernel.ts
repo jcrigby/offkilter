@@ -45,9 +45,11 @@ export type SketchData = {
   constraints: ({ id: number } & Constraint)[];
 };
 
+export type RevolveAxis = { type: "x_axis" } | { type: "y_axis" } | { type: "line"; line: number };
 export type FeatureKind =
   | { type: "sketch"; plane: PlaneRef; sketch: SketchData }
-  | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; end: ExtrudeEnd; op: BodyOp };
+  | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; end: ExtrudeEnd; op: BodyOp }
+  | { type: "revolve"; sketch: number; profiles: ProfileSelection; axis: RevolveAxis; angle: number; op: BodyOp };
 
 export type FeatureSummary = { id: number; name: string; suppressed: boolean; kind: FeatureKind; error: string | null };
 export type FaceInfo = { origin: FaceRef; surface: "plane" | "cylinder"; normal: Vec3 };
@@ -91,6 +93,8 @@ export type Op =
   | { type: "add_sketch"; plane: PlaneRef; name: string | null }
   | { type: "add_extrude"; sketch: number; depth: number; direction?: ExtrudeDirection; end?: ExtrudeEnd; profiles?: ProfileSelection; op?: BodyOp; name: string | null }
   | { type: "set_extrude"; id: number; depth?: number | null; direction?: ExtrudeDirection | null; end?: ExtrudeEnd | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
+  | { type: "add_revolve"; sketch: number; axis: RevolveAxis; angle?: number; profiles?: ProfileSelection; op?: BodyOp; name: string | null }
+  | { type: "set_revolve"; id: number; axis?: RevolveAxis | null; angle?: number | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
   | { type: "set_sketch_plane"; id: number; plane: PlaneRef }
   | { type: "rename_feature"; id: number; name: string }
   | { type: "set_suppressed"; id: number; suppressed: boolean }

@@ -158,11 +158,34 @@ pub struct ExtrudeFeature {
     pub op: BodyOp,
 }
 
+/// The axis a revolve turns about, in the sketch's own coordinates.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum RevolveAxis {
+    /// The sketch's horizontal axis through its origin.
+    XAxis,
+    /// The sketch's vertical axis through its origin.
+    YAxis,
+    /// A line entity of the sketch.
+    Line { line: ok_sketch::EntityId },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RevolveFeature {
+    pub sketch: FeatureId,
+    pub profiles: ProfileSelection,
+    pub axis: RevolveAxis,
+    /// Angle in degrees; positive is a right-hand turn about the axis.
+    pub angle: f64,
+    pub op: BodyOp,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FeatureKind {
     Sketch(SketchFeature),
     Extrude(ExtrudeFeature),
+    Revolve(RevolveFeature),
 }
 
 impl FeatureKind {
@@ -170,6 +193,16 @@ impl FeatureKind {
         match self {
             FeatureKind::Sketch(_) => "Sketch",
             FeatureKind::Extrude(_) => "Extrude",
+            FeatureKind::Revolve(_) => "Revolve",
+        }
+    }
+
+    /// The sketch a solid feature is built from, if any.
+    pub fn source_sketch(&self) -> Option<FeatureId> {
+        match self {
+            FeatureKind::Sketch(_) => None,
+            FeatureKind::Extrude(e) => Some(e.sketch),
+            FeatureKind::Revolve(r) => Some(r.sketch),
         }
     }
 }

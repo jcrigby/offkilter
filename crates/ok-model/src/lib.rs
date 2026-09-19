@@ -11,7 +11,8 @@ mod regen;
 
 pub use feature::{
     canonical_frame, BodyOp, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature,
-    FeatureId, FeatureKind, PlaneRef, ProfileSelection, SketchFeature, StandardPlane,
+    FeatureId, FeatureKind, PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature, SketchFeature,
+    StandardPlane,
 };
 pub use ops::{Op, OpResult, SketchOp};
 pub use regen::{Body, FeatureStatus, RegenResult, SketchCurve, SketchResult};

@@ -1,6 +1,6 @@
 use crate::{
     BodyOp, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FeatureId, FeatureKind, ModelError,
-    PartStudio, PlaneRef, ProfileSelection, SketchFeature,
+    PartStudio, PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature, SketchFeature,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, EntityId, Sketch};
@@ -85,6 +85,28 @@ pub enum Op {
         #[serde(default)]
         op: Option<BodyOp>,
     },
+    AddRevolve {
+        sketch: FeatureId,
+        axis: RevolveAxis,
+        #[serde(default = "default_angle")]
+        angle: f64,
+        #[serde(default = "default_profiles")]
+        profiles: ProfileSelection,
+        #[serde(default = "default_body_op")]
+        op: BodyOp,
+        name: Option<String>,
+    },
+    SetRevolve {
+        id: FeatureId,
+        #[serde(default)]
+        axis: Option<RevolveAxis>,
+        #[serde(default)]
+        angle: Option<f64>,
+        #[serde(default)]
+        profiles: Option<ProfileSelection>,
+        #[serde(default)]
+        op: Option<BodyOp>,
+    },
     SetSketchPlane {
         id: FeatureId,
         plane: PlaneRef,
@@ -114,6 +136,9 @@ pub enum Op {
     },
 }
 
+fn default_angle() -> f64 {
+    360.0
+}
 fn default_direction() -> ExtrudeDirection {
     ExtrudeDirection::Normal
 }
@@ -196,6 +221,52 @@ impl PartStudio {
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "extrude")),
+            },
+            Op::AddRevolve {
+                sketch,
+                axis,
+                angle,
+                profiles,
+                op,
+                name,
+            } => {
+                match &self.feature(sketch)?.kind {
+                    FeatureKind::Sketch(_) => {}
+                    _ => return Err(ModelError::WrongFeatureKind(sketch, "sketch")),
+                }
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Revolve(RevolveFeature {
+                        sketch,
+                        profiles,
+                        axis,
+                        angle,
+                        op,
+                    }),
+                    name,
+                ));
+            }
+            Op::SetRevolve {
+                id,
+                axis,
+                angle,
+                profiles,
+                op,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Revolve(r) => {
+                    if let Some(a) = axis {
+                        r.axis = a;
+                    }
+                    if let Some(a) = angle {
+                        r.angle = a;
+                    }
+                    if let Some(p) = profiles {
+                        r.profiles = p;
+                    }
+                    if let Some(o) = op {
+                        r.op = o;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "revolve")),
             },
             Op::SetSketchPlane { id, plane } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Sketch(s) => s.plane = plane,

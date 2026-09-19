@@ -13,11 +13,13 @@
 
 mod boolean;
 mod extrude;
+mod revolve;
 mod section;
 mod tessellate;
 
 pub use boolean::{boolean, BoolOp};
 pub use extrude::extrude;
+pub use revolve::revolve;
 pub use tessellate::{display_edges, tessellate, tessellate_with_faces};
 
 use ok_math::{Plane, Vec3};
@@ -48,6 +50,19 @@ pub enum Surface {
         axis: Vec3,
         radius: f64,
     },
+    /// A surface of revolution about the line through `origin` along unit
+    /// `axis`; facets sharing it are shaded with averaged normals.
+    Revolved {
+        origin: Vec3,
+        axis: Vec3,
+    },
+}
+
+impl Surface {
+    /// Whether facets on this surface should shade smoothly.
+    pub fn is_smooth(&self) -> bool {
+        !matches!(self, Surface::Plane { .. })
+    }
 }
 
 /// Where a face came from, for persistent naming across regenerations.

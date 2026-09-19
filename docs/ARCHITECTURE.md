@@ -25,8 +25,12 @@ crates/ok-math   Vec2 / Vec3 / Plane / tolerances
 A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable
 `FeatureId`, a name, a `suppressed` flag and a `FeatureKind`:
 
-- `Sketch { plane: PlaneSpec, sketch: ok_sketch::Sketch }`
-- `Extrude { sketch: FeatureId, profiles, depth, direction, op }`
+- `Sketch { plane: PlaneRef, sketch: ok_sketch::Sketch }`
+- `Extrude { sketch: FeatureId, profiles, depth, direction, end, op }`
+- `Revolve { sketch: FeatureId, profiles, axis, angle, op }`
+
+Solid features share one path: select regions, build a tool solid (the
+union of one solid per region), then apply the body operation.
 
 Regeneration (`PartStudio::regenerate`) walks the list in order. Sketches
 are solved in place so the document always stores solved geometry, as
@@ -124,7 +128,12 @@ face also carries a `FaceOrigin` (feature id + local index) as the seed of
 persistent naming.
 
 `extrude` builds a solid from a profile: two caps and one wall facet per
-polygon segment, with arc segments sharing a cylinder surface.
+polygon segment, with arc segments sharing a cylinder surface. `revolve`
+sweeps a profile about an axis in its plane in 5° steps; each profile
+segment becomes a `Surface::Revolved` group (arc segments share one), and
+the tessellator shades those with area-weighted averaged normals since
+there is no single analytic form. Profile edges lying on the axis sweep
+nothing, so a half-profile touching the axis yields a plain solid.
 `Solid::from_polygons` is the single assembly path: it merges vertices
 within a size-relative tolerance, inserts vertices that lie on other
 polygons' edges (T-junctions), strips zero-width spikes, and validates

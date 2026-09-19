@@ -1,6 +1,6 @@
 use crate::{
     canonical_frame, BodyOp, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId, FeatureKind,
-    PartStudio, PlaneRef, ProfileSelection,
+    PartStudio, PlaneRef, ProfileSelection, RevolveAxis,
 };
 use ok_brep::{boolean, BoolOp, Solid};
 use ok_math::{Plane, Vec2, Vec3};
@@ -256,6 +256,10 @@ impl PartStudio {
                     let ef = ef.clone();
                     Self::regen_extrude(&mut result, id, &ef, pos, &self.features)
                 }
+                FeatureKind::Revolve(rf) => {
+                    let rf = rf.clone();
+                    Self::regen_revolve(&mut result, id, &rf, pos, &self.features)
+                }
             };
             result.statuses.push(FeatureStatus { id, error });
             self.cache.entries.push((chain, result.clone()));
@@ -269,29 +273,38 @@ impl PartStudio {
         self.cache.clear();
     }
 
-    fn regen_extrude(
-        result: &mut RegenResult,
-        id: FeatureId,
-        ef: &crate::ExtrudeFeature,
+    /// Checks that a solid feature's sketch exists, precedes it, and is
+    /// active, then returns its regenerated result.
+    fn source_sketch<'a>(
+        result: &'a RegenResult,
+        sketch: FeatureId,
         pos: usize,
         features: &[crate::Feature],
-    ) -> Option<String> {
-        let sketch_pos = features.iter().position(|f| f.id == ef.sketch);
-        match sketch_pos {
-            None => return Some(format!("sketch {:?} no longer exists", ef.sketch)),
-            Some(sp) if sp >= pos => return Some("extrude must come after its sketch".into()),
+        what: &str,
+    ) -> Result<&'a SketchResult, String> {
+        match features.iter().position(|f| f.id == sketch) {
+            None => return Err(format!("sketch {:?} no longer exists", sketch)),
+            Some(sp) if sp >= pos => return Err(format!("{what} must come after its sketch")),
             Some(sp) if features[sp].suppressed => {
-                return Some(format!("sketch '{}' is suppressed", features[sp].name))
+                return Err(format!("sketch '{}' is suppressed", features[sp].name))
             }
             _ => {}
         }
-        let Some(sr) = result.sketches.get(&ef.sketch) else {
-            return Some("sketch did not regenerate".into());
-        };
+        let sr = result
+            .sketches
+            .get(&sketch)
+            .ok_or("sketch did not regenerate")?;
         if sr.profiles.is_empty() {
-            return Some("sketch has no closed regions to extrude".into());
+            return Err(format!("sketch has no closed regions to {what}"));
         }
-        let selected: Vec<&Profile> = match &ef.profiles {
+        Ok(sr)
+    }
+
+    fn select_profiles<'a>(
+        sr: &'a SketchResult,
+        selection: &ProfileSelection,
+    ) -> Result<Vec<&'a Profile>, String> {
+        let selected: Vec<&Profile> = match selection {
             ProfileSelection::All => sr.profiles.iter().collect(),
             ProfileSelection::Largest => sr.profiles.iter().take(1).collect(),
             ProfileSelection::Indices { indices } => {
@@ -300,7 +313,7 @@ impl PartStudio {
                     match sr.profiles.get(i) {
                         Some(p) => v.push(p),
                         None => {
-                            return Some(format!(
+                            return Err(format!(
                                 "region {i} does not exist (sketch has {})",
                                 sr.profiles.len()
                             ))
@@ -311,25 +324,110 @@ impl PartStudio {
             }
         };
         if selected.is_empty() {
-            return Some("no regions selected".into());
+            return Err("no regions selected".into());
         }
+        Ok(selected)
+    }
+
+    /// Unions per-region solids into one tool volume.
+    fn build_tool(
+        parts: impl Iterator<Item = Result<Solid, ok_brep::BrepError>>,
+    ) -> Result<Solid, String> {
+        let mut tool = Solid::default();
+        for part in parts {
+            let part = part.map_err(|e| e.to_string())?;
+            tool = boolean(&tool, &part, BoolOp::Union)
+                .map_err(|e| format!("could not combine regions: {e}"))?;
+        }
+        Ok(tool)
+    }
+
+    fn regen_extrude(
+        result: &mut RegenResult,
+        id: FeatureId,
+        ef: &crate::ExtrudeFeature,
+        pos: usize,
+        features: &[crate::Feature],
+    ) -> Option<String> {
+        let sr = match Self::source_sketch(result, ef.sketch, pos, features, "extrude") {
+            Ok(sr) => sr,
+            Err(e) => return Some(e),
+        };
+        let selected = match Self::select_profiles(sr, &ef.profiles) {
+            Ok(v) => v,
+            Err(e) => return Some(e),
+        };
         let (start, end) = match result.extrude_range(ef, &sr.plane) {
             Ok(r) => r,
             Err(e) => return Some(e),
         };
+        let plane = sr.plane;
+        let tool = match Self::build_tool(
+            selected
+                .into_iter()
+                .map(|p| ok_brep::extrude(p, &plane, start, end, id.0)),
+        ) {
+            Ok(t) => t,
+            Err(e) => return Some(e),
+        };
+        Self::apply_tool(result, id, tool, ef.op)
+    }
 
-        // Build the tool volume: the union of the selected regions.
-        let mut tool = Solid::default();
-        for p in selected {
-            let part = match ok_brep::extrude(p, &sr.plane, start, end, id.0) {
-                Ok(s) => s,
-                Err(e) => return Some(e.to_string()),
-            };
-            tool = match boolean(&tool, &part, BoolOp::Union) {
-                Ok(s) => s,
-                Err(e) => return Some(format!("could not combine regions: {e}")),
-            };
+    fn regen_revolve(
+        result: &mut RegenResult,
+        id: FeatureId,
+        rf: &crate::RevolveFeature,
+        pos: usize,
+        features: &[crate::Feature],
+    ) -> Option<String> {
+        let sr = match Self::source_sketch(result, rf.sketch, pos, features, "revolve") {
+            Ok(sr) => sr,
+            Err(e) => return Some(e),
+        };
+        let selected = match Self::select_profiles(sr, &rf.profiles) {
+            Ok(v) => v,
+            Err(e) => return Some(e),
+        };
+        let (axis_point, axis_dir) = match rf.axis {
+            RevolveAxis::XAxis => (Vec2::ZERO, Vec2::X),
+            RevolveAxis::YAxis => (Vec2::ZERO, Vec2::Y),
+            RevolveAxis::Line { line } => {
+                let sketch_pos = features.iter().position(|f| f.id == rf.sketch).unwrap();
+                let FeatureKind::Sketch(sf) = &features[sketch_pos].kind else {
+                    unreachable!()
+                };
+                let Ok((a, b)) = sf.sketch.line(line) else {
+                    return Some(format!("axis line {:?} does not exist in the sketch", line));
+                };
+                let (pa, pb) = (sf.sketch.point(a).ok()?, sf.sketch.point(b).ok()?);
+                (pa, pb - pa)
+            }
+        };
+        if !rf.angle.is_finite() || rf.angle.abs() < 1e-9 {
+            return Some("angle must be non-zero".into());
         }
+        let angle = rf.angle.clamp(-360.0, 360.0).to_radians();
+        let plane = sr.plane;
+        let seg = ProfileOptions::default().arc_segment_angle;
+        let tool = match Self::build_tool(
+            selected
+                .into_iter()
+                .map(|p| ok_brep::revolve(p, &plane, axis_point, axis_dir, angle, seg, id.0)),
+        ) {
+            Ok(t) => t,
+            Err(e) => return Some(e),
+        };
+        Self::apply_tool(result, id, tool, rf.op)
+    }
+
+    /// Combines a finished tool volume with the existing bodies.
+    fn apply_tool(
+        result: &mut RegenResult,
+        id: FeatureId,
+        tool: Solid,
+        op: BodyOp,
+    ) -> Option<String> {
+        let ef_op = op;
         let tool_bounds = tool.bounds()?;
 
         // Bodies the tool touches (bounding boxes overlap).
@@ -341,7 +439,7 @@ impl PartStudio {
             .map(|(i, _)| i)
             .collect();
 
-        match ef.op {
+        match ef_op {
             BodyOp::New => {
                 result.push_body(id, tool);
             }
@@ -365,7 +463,7 @@ impl PartStudio {
                 if touched.is_empty() {
                     return Some("the tool volume does not touch any body".into());
                 }
-                let op = if ef.op == BodyOp::Remove {
+                let op = if ef_op == BodyOp::Remove {
                     BoolOp::Difference
                 } else {
                     BoolOp::Intersection
@@ -949,6 +1047,94 @@ mod tests {
         );
         let vol2 = r.bodies[0].solid.volume();
         assert!((vol2 - (vol - 10.0)).abs() < 0.05, "vol2 {vol2}");
+    }
+
+    #[test]
+    fn revolve_feature_makes_a_ring_and_cuts() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Front),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(3.0, 0.0),
+                b: Vec2::new(5.0, 1.0),
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddRevolve {
+            sketch: s,
+            axis: crate::RevolveAxis::YAxis,
+            angle: 360.0,
+            profiles: ProfileSelection::All,
+            op: BodyOp::New,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let expected = std::f64::consts::TAU * 4.0 * 2.0;
+        let vol = r.bodies[0].solid.volume();
+        assert!(((vol - expected) / expected).abs() < 3e-3, "vol {vol}");
+        // A revolve about a sketch line, removing material: a groove.
+        let s2 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Front),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let r2 = ps
+            .apply(Op::Sketch {
+                id: s2,
+                op: SketchOp::AddLine {
+                    a: Vec2::new(0.0, -10.0),
+                    b: Vec2::new(0.0, 10.0),
+                },
+            })
+            .unwrap();
+        let axis_line = r2.entities[0];
+        ps.apply(Op::Sketch {
+            id: s2,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(4.5, 0.4),
+                b: Vec2::new(6.0, 0.6),
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddRevolve {
+            sketch: s2,
+            axis: crate::RevolveAxis::Line { line: axis_line },
+            angle: 360.0,
+            profiles: ProfileSelection::All,
+            op: BodyOp::Remove,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let groove = std::f64::consts::TAU * 4.75 * (0.5 * 0.2);
+        let vol2 = r.bodies[0].solid.volume();
+        assert!(
+            ((vol2 - (vol - groove)) / vol).abs() < 3e-3,
+            "vol2 {vol2}, expected {}",
+            vol - groove
+        );
     }
 
     #[test]
