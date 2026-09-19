@@ -1,0 +1,623 @@
+//! A corpus of realistic parts built through ops, as a regression net for
+//! the kernel: every part must regenerate without feature errors, every
+//! body must validate as closed, and volumes must land where hand
+//! calculation says.
+
+use ok_math::{Vec2, Vec3};
+use ok_model::{
+    Axis, BlendKind, BodyOp, CopyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId, Op,
+    PartStudio, PatternKind, PlaneRef, ProfileSelection, RegenResult, RevolveAxis, SketchOp,
+    StandardPlane,
+};
+use ok_sketch::EntityId;
+use std::f64::consts::PI;
+
+/// Builder around a part studio that panics with context on any failure.
+struct Part {
+    ps: PartStudio,
+}
+
+impl Part {
+    fn new() -> Part {
+        Part {
+            ps: PartStudio::new("part"),
+        }
+    }
+
+    fn op(&mut self, op: Op) -> FeatureId {
+        let r = self
+            .ps
+            .apply(op.clone())
+            .unwrap_or_else(|e| panic!("{op:?}: {e}"));
+        r.feature.unwrap_or(FeatureId(0))
+    }
+
+    fn sketch(&mut self, plane: PlaneRef) -> FeatureId {
+        self.op(Op::AddSketch { plane, name: None })
+    }
+
+    fn sketch_on(&mut self, face: FaceRef) -> FeatureId {
+        self.sketch(PlaneRef::Face { face, offset: 0.0 })
+    }
+
+    fn draw(&mut self, sketch: FeatureId, op: SketchOp) -> Vec<EntityId> {
+        self.ps
+            .apply(Op::Sketch { id: sketch, op })
+            .unwrap()
+            .entities
+    }
+
+    fn rect(&mut self, sketch: FeatureId, a: (f64, f64), b: (f64, f64)) {
+        self.draw(
+            sketch,
+            SketchOp::AddRectangle {
+                a: Vec2::new(a.0, a.1),
+                b: Vec2::new(b.0, b.1),
+            },
+        );
+    }
+
+    fn circle(&mut self, sketch: FeatureId, c: (f64, f64), r: f64) {
+        self.draw(
+            sketch,
+            SketchOp::AddCircle {
+                center: Vec2::new(c.0, c.1),
+                radius: r,
+            },
+        );
+    }
+
+    fn point(&mut self, sketch: FeatureId, p: (f64, f64)) {
+        self.draw(
+            sketch,
+            SketchOp::AddPoint {
+                pos: Vec2::new(p.0, p.1),
+            },
+        );
+    }
+
+    fn polygon(&mut self, sketch: FeatureId, pts: &[(f64, f64)]) {
+        for i in 0..pts.len() {
+            let a = pts[i];
+            let b = pts[(i + 1) % pts.len()];
+            self.draw(
+                sketch,
+                SketchOp::AddLine {
+                    a: Vec2::new(a.0, a.1),
+                    b: Vec2::new(b.0, b.1),
+                },
+            );
+        }
+    }
+
+    fn extrude(&mut self, sketch: FeatureId, depth: f64, op: BodyOp) -> FeatureId {
+        self.op(Op::AddExtrude {
+            sketch,
+            depth,
+            direction: ExtrudeDirection::Normal,
+            end: ExtrudeEnd::Blind,
+            profiles: ProfileSelection::All,
+            op,
+            name: None,
+        })
+    }
+
+    fn extrude_dir(
+        &mut self,
+        sketch: FeatureId,
+        depth: f64,
+        direction: ExtrudeDirection,
+        end: ExtrudeEnd,
+        op: BodyOp,
+    ) -> FeatureId {
+        self.op(Op::AddExtrude {
+            sketch,
+            depth,
+            direction,
+            end,
+            profiles: ProfileSelection::All,
+            op,
+            name: None,
+        })
+    }
+
+    fn hole(
+        &mut self,
+        sketch: FeatureId,
+        diameter: f64,
+        counterbore: Option<ok_model::Counterbore>,
+    ) {
+        self.op(Op::AddHole {
+            sketch,
+            diameter,
+            depth: 0.0,
+            through_all: true,
+            direction: ExtrudeDirection::Reverse,
+            counterbore,
+            name: None,
+        });
+    }
+
+    fn regen(&mut self) -> RegenResult {
+        let r = self.ps.regenerate();
+        let errors: Vec<_> = r.errors().collect();
+        assert!(errors.is_empty(), "feature errors: {errors:?}");
+        for b in &r.bodies {
+            b.solid
+                .validate()
+                .unwrap_or_else(|e| panic!("body {} invalid: {e}", b.name));
+        }
+        r
+    }
+
+    fn volume(&mut self) -> f64 {
+        self.regen().bodies.iter().map(|b| b.solid.volume()).sum()
+    }
+
+    /// The reference of the first face matching `pred(normal, is_cylinder, centroid)`.
+    fn face(&mut self, pred: impl Fn(Vec3, bool, Vec3) -> bool) -> FaceRef {
+        let r = self.regen();
+        for b in &r.bodies {
+            for f in &b.solid.faces {
+                let cyl = matches!(
+                    b.solid.surfaces[f.surface],
+                    ok_brep::Surface::Cylinder { .. }
+                );
+                let centroid = f.loops[0]
+                    .iter()
+                    .fold(Vec3::ZERO, |acc, &v| acc + b.solid.vertices[v as usize])
+                    / f.loops[0].len() as f64;
+                if pred(f.plane.normal, cyl, centroid) {
+                    return FaceRef {
+                        feature: FeatureId(f.origin.feature),
+                        local: f.origin.local,
+                    };
+                }
+            }
+        }
+        panic!("no face matches");
+    }
+
+    fn blend(&mut self, kind: BlendKind, edges: Vec<EdgeRef>, size: f64) -> FeatureId {
+        self.op(Op::AddBlend {
+            kind,
+            edges,
+            size,
+            name: None,
+        })
+    }
+}
+
+fn close(a: f64, b: f64, rel: f64) -> bool {
+    (a - b).abs() <= rel * b.abs().max(1.0)
+}
+
+#[test]
+fn l_bracket_with_holes_fillet_and_chamfer() {
+    let mut p = Part::new();
+    // Base plate 60 x 40 x 6, wall 60 x 6 x 30 along the back edge.
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (0.0, 0.0), (60.0, 40.0));
+    let base = p.extrude(s, 6.0, BodyOp::New);
+    let top = FaceRef {
+        feature: base,
+        local: 1,
+    };
+    let s2 = p.sketch_on(top);
+    p.rect(s2, (0.0, 34.0), (60.0, 40.0));
+    p.extrude(s2, 30.0, BodyOp::Add);
+    assert!(close(
+        p.volume(),
+        60.0 * 40.0 * 6.0 + 60.0 * 6.0 * 30.0,
+        1e-9
+    ));
+    // Two through holes in the base.
+    let s3 = p.sketch_on(top);
+    p.point(s3, (15.0, 15.0));
+    p.point(s3, (45.0, 15.0));
+    p.hole(s3, 6.0, None);
+    let v = p.volume();
+    let holes = 2.0 * PI * 9.0 * 6.0;
+    assert!(
+        close(v, 60.0 * 40.0 * 6.0 + 60.0 * 6.0 * 30.0 - holes, 3e-3),
+        "{v}"
+    );
+    // Fillet the inner corner (base top meets wall front) and chamfer the wall top edges.
+    let wall_front = p.face(|n, cyl, c| !cyl && (n.y + 1.0).abs() < 1e-9 && c.z > 6.0);
+    let base_top = p.face(|n, cyl, c| !cyl && (n.z - 1.0).abs() < 1e-9 && c.z < 7.0 && c.y < 34.0);
+    p.blend(
+        BlendKind::Fillet,
+        vec![EdgeRef {
+            a: base_top,
+            b: wall_front,
+        }],
+        3.0,
+    );
+    let v2 = p.volume();
+    // A concave fillet adds material: (1 - π/4) r² per unit length.
+    let added = (1.0 - PI / 4.0) * 9.0 * 60.0;
+    assert!(close(v2, v + added, 2e-2), "{v2} vs {}", v + added);
+    let wall_top = p.face(|n, cyl, c| !cyl && (n.z - 1.0).abs() < 1e-9 && c.z > 30.0);
+    let wall_back = p.face(|n, cyl, _| !cyl && (n.y - 1.0).abs() < 1e-9);
+    p.blend(
+        BlendKind::Chamfer,
+        vec![EdgeRef {
+            a: wall_top,
+            b: wall_back,
+        }],
+        2.0,
+    );
+    let v3 = p.volume();
+    assert!(
+        close(v3, v2 - 2.0 * 60.0, 2e-2),
+        "{v3} vs {}",
+        v2 - 2.0 * 60.0
+    );
+}
+
+#[test]
+fn flanged_bushing_by_revolve_with_bolt_holes() {
+    let mut p = Part::new();
+    // Half profile on the Front plane, revolved about the sketch Y axis:
+    // bore r=5, body r=10 for 30 tall, flange r=20 by 5 thick at the bottom.
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Front));
+    p.polygon(
+        s,
+        &[
+            (5.0, 0.0),
+            (20.0, 0.0),
+            (20.0, 5.0),
+            (10.0, 5.0),
+            (10.0, 30.0),
+            (5.0, 30.0),
+        ],
+    );
+    p.op(Op::AddRevolve {
+        sketch: s,
+        axis: RevolveAxis::YAxis,
+        angle: 360.0,
+        profiles: ProfileSelection::All,
+        op: BodyOp::New,
+        name: None,
+    });
+    let v = p.volume();
+    let expected = PI * (400.0 - 25.0) * 5.0 + PI * (100.0 - 25.0) * 25.0;
+    assert!(close(v, expected, 5e-3), "{v} vs {expected}");
+    // Six bolt holes through the flange, sketched on its top face.
+    // The Front sketch's Y axis is world Z, so the flange top is the
+    // annular face at z = 5 facing +Z.
+    let flange_top =
+        p.face(|n, cyl, c| !cyl && (n.z - 1.0).abs() < 1e-9 && (c.z - 5.0).abs() < 1e-6);
+    let s2 = p.sketch_on(flange_top);
+    for k in 0..6 {
+        let a = k as f64 * PI / 3.0;
+        p.point(s2, (15.0 * a.cos(), 15.0 * a.sin()));
+    }
+    p.hole(s2, 3.0, None);
+    let v2 = p.volume();
+    assert!(close(v2, expected - 6.0 * PI * 2.25 * 5.0, 5e-3), "{v2}");
+}
+
+#[test]
+fn pocketed_box_with_rounded_corners_and_counterbored_holes() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (0.0, 0.0), (80.0, 50.0));
+    let body = p.extrude(s, 20.0, BodyOp::New);
+    // Fillet all four vertical edges.
+    let sides: Vec<FaceRef> = (2..6)
+        .map(|local| FaceRef {
+            feature: body,
+            local,
+        })
+        .collect();
+    let edges: Vec<EdgeRef> = (0..4)
+        .map(|i| EdgeRef {
+            a: sides[i],
+            b: sides[(i + 1) % 4],
+        })
+        .collect();
+    p.blend(BlendKind::Fillet, edges, 8.0);
+    let v = p.volume();
+    let expected = 80.0 * 50.0 * 20.0 - 4.0 * (1.0 - PI / 4.0) * 64.0 * 20.0;
+    assert!(close(v, expected, 2e-2), "{v} vs {expected}");
+    // Pocket from the top, 5 mm walls, 15 deep.
+    let top = FaceRef {
+        feature: body,
+        local: 1,
+    };
+    let s2 = p.sketch_on(top);
+    p.rect(s2, (5.0, 5.0), (75.0, 45.0));
+    p.extrude_dir(
+        s2,
+        15.0,
+        ExtrudeDirection::Reverse,
+        ExtrudeEnd::Blind,
+        BodyOp::Remove,
+    );
+    let v2 = p.volume();
+    assert!(close(v2, expected - 70.0 * 40.0 * 15.0, 2e-2), "{v2}");
+    // Counterbored mounting holes in the floor of the pocket.
+    let floor = p.face(|n, cyl, c| !cyl && (n.z - 1.0).abs() < 1e-9 && (c.z - 5.0).abs() < 1e-6);
+    let s3 = p.sketch_on(floor);
+    p.point(s3, (12.0, 12.0));
+    p.point(s3, (68.0, 38.0));
+    p.hole(
+        s3,
+        4.0,
+        Some(ok_model::Counterbore {
+            diameter: 8.0,
+            depth: 2.0,
+        }),
+    );
+    let v3 = p.volume();
+    let removed = 2.0 * (PI * 4.0 * 5.0 + PI * 16.0 * 2.0 - PI * 4.0 * 2.0);
+    assert!(close(v3, v2 - removed, 2e-2), "{v3} vs {}", v2 - removed);
+}
+
+#[test]
+fn boss_on_an_oblique_face_with_a_filleted_rim() {
+    let mut p = Part::new();
+    // A wedge: right triangle profile extruded, giving one oblique face.
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Front));
+    p.polygon(s, &[(0.0, 0.0), (40.0, 0.0), (0.0, 30.0)]);
+    p.extrude(s, 30.0, BodyOp::New);
+    let v = p.volume();
+    assert!(close(v, 0.5 * 40.0 * 30.0 * 30.0, 1e-9));
+    // The hypotenuse face: the one whose normal has both x and z components.
+    let slope = p.face(|n, cyl, _| !cyl && n.x.abs() > 0.3 && n.z.abs() > 0.3);
+    let s2 = p.sketch_on(slope);
+    p.circle(s2, (0.0, 0.0), 6.0);
+    p.extrude(s2, 8.0, BodyOp::Add);
+    let v2 = p.volume();
+    assert!(close(v2, v + PI * 36.0 * 8.0, 5e-3), "{v2}");
+    // Fillet where the boss meets the slope (a concave rim on an oblique plane).
+    let boss_wall = p.face(|_, cyl, _| cyl);
+    p.blend(
+        BlendKind::Fillet,
+        vec![EdgeRef {
+            a: slope,
+            b: boss_wall,
+        }],
+        1.5,
+    );
+    let v3 = p.volume();
+    assert!(v3 > v2 && v3 < v2 + 2.0 * PI * 7.5 * 2.25, "{v3} vs {v2}");
+}
+
+#[test]
+fn pulley_with_keyway_lightening_holes_and_mirror() {
+    let mut p = Part::new();
+    // V-groove pulley profile revolved about Y: outer r 40, bore r 6.
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Front));
+    p.polygon(
+        s,
+        &[
+            (6.0, 0.0),
+            (40.0, 0.0),
+            (40.0, 4.0),
+            (34.0, 10.0),
+            (40.0, 16.0),
+            (40.0, 20.0),
+            (6.0, 20.0),
+        ],
+    );
+    p.op(Op::AddRevolve {
+        sketch: s,
+        axis: RevolveAxis::YAxis,
+        angle: 360.0,
+        profiles: ProfileSelection::All,
+        op: BodyOp::New,
+        name: None,
+    });
+    let v = p.volume();
+    assert!(v > 0.0);
+    // Keyway: a slot along the bore, cut through everything.
+    let s2 = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s2, (4.0, -2.0), (9.0, 2.0));
+    p.extrude_dir(
+        s2,
+        100.0,
+        ExtrudeDirection::Symmetric,
+        ExtrudeEnd::ThroughAll,
+        BodyOp::Remove,
+    );
+    let v2 = p.volume();
+    assert!(v2 < v && v2 > v - 5.0 * 4.0 * 20.0, "{v2} vs {v}");
+    // Three lightening holes through the web, then mirror the part across the Top plane.
+    let s3 = p.sketch(PlaneRef::Standard {
+        base: StandardPlane::Top,
+        offset: 20.0,
+    });
+    for k in 0..3 {
+        let a = k as f64 * 2.0 * PI / 3.0;
+        p.point(s3, (22.0 * a.cos(), 22.0 * a.sin()));
+    }
+    p.hole(s3, 8.0, None);
+    let v3 = p.volume();
+    assert!(v3 < v2, "{v3} vs {v2}");
+    p.op(Op::AddMirror {
+        plane: PlaneRef::standard(StandardPlane::Top),
+        op: CopyOp::Add,
+        name: None,
+    });
+    let v4 = p.volume();
+    assert!(close(v4, 2.0 * v3, 1e-6), "{v4} vs {}", 2.0 * v3);
+}
+
+#[test]
+fn grazing_cuts_tangent_bosses_and_coincident_cylinders() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (0.0, 0.0), (20.0, 20.0));
+    let block = p.extrude(s, 10.0, BodyOp::New);
+    // A cut whose edge passes exactly through the block's vertical edge.
+    let s2 = p.sketch(PlaneRef::Standard {
+        base: StandardPlane::Top,
+        offset: 10.0,
+    });
+    p.polygon(s2, &[(20.0, 20.0), (30.0, 20.0), (20.0, 30.0)]);
+    p.extrude_dir(
+        s2,
+        4.0,
+        ExtrudeDirection::Reverse,
+        ExtrudeEnd::Blind,
+        BodyOp::Remove,
+    );
+    assert!(close(p.volume(), 4000.0, 1e-9));
+    // A boss tangent to a side of the block, unioned.
+    let s3 = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.circle(s3, (25.0, 10.0), 5.0);
+    p.extrude(s3, 10.0, BodyOp::Add);
+    let v = p.volume();
+    assert!(close(v, 4000.0 + PI * 25.0 * 10.0, 5e-3), "{v}");
+    // A second cylinder on the same axis and radius stacked on the first:
+    // coincident cylinder surfaces along the seam.
+    let boss_top = p.face(|n, cyl, c| !cyl && (n.z - 1.0).abs() < 1e-9 && c.x > 20.0);
+    let s4 = p.sketch_on(boss_top);
+    p.circle(s4, (0.0, 0.0), 5.0);
+    p.extrude(s4, 6.0, BodyOp::Add);
+    let v2 = p.volume();
+    assert!(close(v2, v + PI * 25.0 * 6.0, 5e-3), "{v2}");
+    // A cut exactly the size of the top face, one unit deep (coplanar all round).
+    let s5 = p.sketch_on(FaceRef {
+        feature: block,
+        local: 1,
+    });
+    p.rect(s5, (0.0, 0.0), (20.0, 20.0));
+    p.extrude_dir(
+        s5,
+        1.0,
+        ExtrudeDirection::Reverse,
+        ExtrudeEnd::Blind,
+        BodyOp::Remove,
+    );
+    let v3 = p.volume();
+    assert!(close(v3, v2 - 400.0, 5e-3), "{v3} vs {}", v2 - 400.0);
+}
+
+#[test]
+fn sweep_tube_union_block_and_loft_cut_by_hole() {
+    let mut p = Part::new();
+    // Path: an L on the Top plane; profile: a ring on the Right plane.
+    let path = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    let r1 = p.draw(
+        path,
+        SketchOp::AddLine {
+            a: Vec2::ZERO,
+            b: Vec2::new(30.0, 0.0),
+        },
+    );
+    let r2 = p.draw(
+        path,
+        SketchOp::AddLine {
+            a: Vec2::new(30.0, 0.0),
+            b: Vec2::new(30.0, 25.0),
+        },
+    );
+    p.draw(
+        path,
+        SketchOp::AddConstraint {
+            constraint: ok_sketch::Constraint::Coincident { a: r1[2], b: r2[1] },
+        },
+    );
+    let prof = p.sketch(PlaneRef::standard(StandardPlane::Right));
+    p.circle(prof, (0.0, 0.0), 4.0);
+    p.circle(prof, (0.0, 0.0), 3.0);
+    // Regions come area-descending: the inner disc first, the annulus second.
+    p.op(Op::AddSweep {
+        sketch: prof,
+        path,
+        profiles: ProfileSelection::Indices { indices: vec![1] },
+        op: BodyOp::New,
+        name: None,
+    });
+    let v = p.volume();
+    let ring = PI * (16.0 - 9.0);
+    assert!(close(v, ring * 55.0, 2e-2), "{v} vs {}", ring * 55.0);
+    // A block around the corner of the tube, unioned.
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (25.0, -5.0), (35.0, 5.0));
+    p.extrude_dir(
+        s,
+        12.0,
+        ExtrudeDirection::Symmetric,
+        ExtrudeEnd::Blind,
+        BodyOp::Add,
+    );
+    let v2 = p.volume();
+    assert!(v2 > v && v2 < v + 1200.0, "{v2} vs {v}");
+    // A lofted frustum elsewhere, then a hole through it.
+    let a = p.sketch(PlaneRef::Standard {
+        base: StandardPlane::Top,
+        offset: 40.0,
+    });
+    p.rect(a, (-10.0, -10.0), (10.0, 10.0));
+    let b = p.sketch(PlaneRef::Standard {
+        base: StandardPlane::Top,
+        offset: 55.0,
+    });
+    p.circle(b, (0.0, 0.0), 5.0);
+    p.op(Op::AddLoft {
+        sketch: a,
+        sketch_b: b,
+        op: BodyOp::New,
+        name: None,
+    });
+    let v3 = p.volume();
+    assert!(v3 > v2 + 1000.0 && v3 < v2 + 5000.0, "{v3} vs {v2}");
+    let h = p.sketch(PlaneRef::Standard {
+        base: StandardPlane::Top,
+        offset: 55.0,
+    });
+    p.point(h, (0.0, 0.0));
+    p.hole(h, 4.0, None);
+    let v4 = p.volume();
+    assert!(
+        close(v4, v3 - PI * 4.0 * 15.0, 2e-2),
+        "{v4} vs {}",
+        v3 - PI * 4.0 * 15.0
+    );
+}
+
+#[test]
+fn linear_pattern_of_a_ribbed_plate_then_fillet_after_pattern() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (0.0, 0.0), (10.0, 30.0));
+    let plate = p.extrude(s, 4.0, BodyOp::New);
+    let s2 = p.sketch_on(FaceRef {
+        feature: plate,
+        local: 1,
+    });
+    p.rect(s2, (4.0, 0.0), (6.0, 30.0));
+    p.extrude(s2, 10.0, BodyOp::Add);
+    let v = p.volume();
+    assert!(close(v, 10.0 * 30.0 * 4.0 + 2.0 * 30.0 * 10.0, 1e-9));
+    p.op(Op::AddPattern {
+        kind: PatternKind::Linear {
+            axis: Axis::X,
+            spacing: 10.0,
+        },
+        count: 4,
+        op: CopyOp::Add,
+        name: None,
+    });
+    let v2 = p.volume();
+    assert!(close(v2, 4.0 * v, 1e-6), "{v2} vs {}", 4.0 * v);
+    // The copies share faces edge to edge and merge into one plate. Fillet
+    // one rib's top edge.
+    let rib_top = p.face(|n, cyl, c| !cyl && (n.z - 1.0).abs() < 1e-9 && c.z > 13.0 && c.x < 10.0);
+    let rib_side =
+        p.face(|n, cyl, c| !cyl && (n.x + 1.0).abs() < 1e-9 && c.z > 4.0 && c.x < 5.0 && c.x > 3.0);
+    p.blend(
+        BlendKind::Fillet,
+        vec![EdgeRef {
+            a: rib_top,
+            b: rib_side,
+        }],
+        0.5,
+    );
+    let v3 = p.volume();
+    assert!(v3 < v2 && v3 > v2 - 30.0, "{v3} vs {v2}");
+}

@@ -407,6 +407,20 @@ edit and leaves everyone else's in place; the inverses of the inverses
 form the redo stack. An inverse that no longer applies (someone deleted
 the feature meanwhile) is skipped with a status message.
 
+## Testing
+
+Three layers guard the kernel. Unit tests in each crate check numbers
+(areas, volumes, DOF counts). Two randomised boolean tests in
+`crates/ok-brep/tests/fuzz.rs` run sequences of unions, differences and
+intersections and check closure and volume bounds: one on an integer grid
+so coplanar and touching cases are common, one in general position with
+rotated tools and tiny nudges (`OK_FUZZ_EPS` picks the nudge sizes) so
+nearly coincident geometry is common. `crates/ok-model/tests/parts.rs`
+is a corpus of realistic parts built through ops, each regenerated
+without errors, validated closed and checked against hand-calculated
+volumes. Booleans merge their fragments at the same tolerance the
+classification used, so seams between fragments of the two inputs meet.
+
 ## Conventions
 
 - Model units are millimetres; angles in the document are degrees.

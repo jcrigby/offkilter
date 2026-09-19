@@ -252,6 +252,16 @@ impl Solid {
             return Ok(Solid::default());
         };
         let tol = merge_tolerance((max - min).length());
+        Self::from_polygons_with_tolerance(polys, surfaces, tol)
+    }
+
+    /// `from_polygons` with an explicit vertex-merge tolerance, for callers
+    /// (the booleans) whose fragments were built at a known tolerance.
+    pub fn from_polygons_with_tolerance(
+        polys: Vec<Polygon>,
+        surfaces: Vec<Surface>,
+        tol: f64,
+    ) -> Result<Solid, BrepError> {
         let mut merger = VertexMerger::new(tol);
         let mut faces = Vec::new();
         for p in polys {

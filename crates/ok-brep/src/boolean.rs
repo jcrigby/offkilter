@@ -24,7 +24,7 @@ use crate::{
 use i_overlay::core::fill_rule::FillRule;
 use i_overlay::core::overlay_rule::OverlayRule;
 use i_overlay::float::single::SingleFloatOverlay;
-use ok_math::Vec2;
+use ok_math::{Vec2, Vec3};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BoolOp {
@@ -221,6 +221,89 @@ fn fragments_to_polygons(
 
 /// Combines two solids. The result keeps the surface tags and face origins
 /// of both inputs.
+/// Snaps the vertices of `s` that lie within `tol` of a vertex or a face
+/// plane of `other` exactly onto it, so that nearly coincident geometry
+/// becomes exactly coincident, which the classification handles exactly.
+/// Faces whose vertices moved get their plane recomputed.
+fn snap_to(s: &mut Solid, other: &Solid, tol: f64) {
+    if s.is_empty() || other.is_empty() {
+        return;
+    }
+    // Face bounding boxes of `other`, expanded by tol, to limit plane snaps
+    // to vertices that are actually near the face rather than its plane.
+    let face_boxes: Vec<(Vec3, Vec3)> = other
+        .faces
+        .iter()
+        .map(|f| {
+            let (lo, hi) = bounds_of(
+                f.loops
+                    .iter()
+                    .flatten()
+                    .map(|&v| other.vertices[v as usize]),
+            )
+            .unwrap_or((Vec3::ZERO, Vec3::ZERO));
+            (lo - Vec3::new(tol, tol, tol), hi + Vec3::new(tol, tol, tol))
+        })
+        .collect();
+    let inside = |p: Vec3, b: &(Vec3, Vec3)| {
+        p.x >= b.0.x && p.x <= b.1.x && p.y >= b.0.y && p.y <= b.1.y && p.z >= b.0.z && p.z <= b.1.z
+    };
+    let mut moved = vec![false; s.vertices.len()];
+    for (vi, v) in s.vertices.iter_mut().enumerate() {
+        // Vertex-to-vertex snap wins outright.
+        if let Some(q) = other
+            .vertices
+            .iter()
+            .find(|q| q.distance(*v) <= tol && q.distance(*v) > 0.0)
+        {
+            *v = *q;
+            moved[vi] = true;
+            continue;
+        }
+        // Then onto up to three nearby face planes, one after another, so a
+        // vertex near a corner of `other` lands on the corner.
+        let mut p = *v;
+        let mut hits = 0;
+        for (f, b) in other.faces.iter().zip(&face_boxes) {
+            if !inside(p, b) {
+                continue;
+            }
+            let d = f.plane.normal.dot(p - f.plane.origin);
+            if d != 0.0 && d.abs() <= tol {
+                p -= f.plane.normal * d;
+                hits += 1;
+                if hits == 3 {
+                    break;
+                }
+            }
+        }
+        if hits > 0 {
+            *v = p;
+            moved[vi] = true;
+        }
+    }
+    if !moved.iter().any(|m| *m) {
+        return;
+    }
+    for f in &mut s.faces {
+        if !f.loops[0].iter().any(|&v| moved[v as usize]) {
+            continue;
+        }
+        let pts: Vec<Vec3> = f.loops[0].iter().map(|&v| s.vertices[v as usize]).collect();
+        let Some(n) = crate::revolve::newell_normal(&pts).normalized() else {
+            continue;
+        };
+        let x = f.plane.x_axis - n * f.plane.x_axis.dot(n);
+        let Some(x) = x.normalized() else { continue };
+        f.plane = ok_math::Plane {
+            origin: pts[0],
+            x_axis: x,
+            y_axis: n.cross(x),
+            normal: n,
+        };
+    }
+}
+
 pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
     if a.is_empty() || b.is_empty() {
         return Ok(match op {
@@ -240,6 +323,13 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
         });
     }
 
+    // Nearly coincident geometry is made exactly coincident first (within
+    // the tolerance the classification already treats as "on").
+    let (mut a_snapped, mut b_snapped) = (a.clone(), b.clone());
+    snap_to(&mut b_snapped, a, tol);
+    snap_to(&mut a_snapped, &b_snapped, tol);
+    let (a, b) = (&a_snapped, &b_snapped);
+
     let (keep_a, keep_b, flip_b) = match op {
         BoolOp::Union => (Keep::NotAbove, Keep::NotAboveNorBelow, false),
         BoolOp::Difference => (Keep::NotBelow, Keep::Inside, true),
@@ -257,7 +347,7 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
     }
     let mut surfaces = a.surfaces.clone();
     surfaces.extend_from_slice(&b.surfaces);
-    let mut solid = Solid::from_polygons(polys, surfaces)?;
+    let mut solid = Solid::from_polygons_with_tolerance(polys, surfaces, tol)?;
     solid.merge_coplanar_faces();
     solid.compact_surfaces();
     solid.validate()?;

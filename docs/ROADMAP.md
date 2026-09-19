@@ -75,7 +75,8 @@ top are concrete and self-contained; items lower down are directions.
 
 - [x] CI: fmt, clippy, tests, wasm build, web build, browser end-to-end suite
 - [x] Dockerfile for the server + web app
-- [x] Randomised boolean robustness test (grid-aligned box/cylinder sequences; `--ignored` long run)
+- [x] Randomised boolean robustness tests: grid-aligned box/cylinder sequences, and general-position sequences with rotated tools and near-coincident nudges (`--ignored` long runs)
+- [x] Realistic-parts corpus (`crates/ok-model/tests/parts.rs`): brackets, revolved flanges, pockets with counterbores, bosses on oblique faces, pulleys, grazing cuts, sweeps and lofts, patterns then fillets
 - [ ] Property tests for the solver and region extraction
 - [x] Regeneration cache: unchanged feature prefixes are reused, so editing late features is cheap
 - [ ] Benchmarks for regeneration time on realistic parts

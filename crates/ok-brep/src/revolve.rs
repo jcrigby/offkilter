@@ -160,11 +160,38 @@ pub fn revolve(
                 shared = None;
                 continue;
             }
+            // A line segment perpendicular to the axis sweeps a plane, one
+            // parallel to it a cylinder; anything else is a cone, kept as a
+            // generic revolved surface.
+            let line_kind = match ring.curves[i] {
+                SegmentCurve::Line => {
+                    let d = b - a;
+                    let len = d.length();
+                    if len <= ok_math::tol::LINEAR {
+                        None
+                    } else if d.dot(axis_dir).abs() <= 1e-9 * len {
+                        Some("plane")
+                    } else if d.cross(axis_dir).abs() <= 1e-9 * len {
+                        Some("cylinder")
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
+            };
             let surface = match ring.curves[i] {
                 SegmentCurve::Line => {
-                    surfaces.push(Surface::Revolved {
-                        origin: origin3,
-                        axis: axis3,
+                    surfaces.push(match line_kind {
+                        Some("cylinder") => Surface::Cylinder {
+                            origin: origin3,
+                            axis: axis3,
+                            radius: side(a).abs(),
+                        },
+                        // Planar: the normal is fixed up from the first facet below.
+                        _ => Surface::Revolved {
+                            origin: origin3,
+                            axis: axis3,
+                        },
                     });
                     shared = None;
                     surfaces.len() - 1
@@ -209,6 +236,14 @@ pub fn revolve(
                 let Some(normal) = newell_normal(&pts).normalized() else {
                     continue;
                 };
+                if line_kind == Some("plane") {
+                    if let Surface::Revolved { .. } = surfaces[surface] {
+                        surfaces[surface] = Surface::Plane {
+                            normal,
+                            offset: normal.dot(pts[0]),
+                        };
+                    }
+                }
                 let x_axis = (pts[1] - pts[0]).normalized().unwrap();
                 let face_plane = Plane {
                     origin: pts[0],
