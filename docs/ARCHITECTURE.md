@@ -371,6 +371,16 @@ with visible lines winning, so the back edges of a box seen square on
 draw once. The client lays front, top, right and isometric views out in
 third angle and writes an SVG sheet or DXF lines.
 
+A section view (`section_view`) cuts each solid with a boolean
+difference against a box covering the removed side of the cutting plane,
+draws what remains with the same hidden-line removal, and returns the
+outlines of the faces lying in the cut plane. The client hatches those at
+45° (clipped by the even-odd rule, so holes stay clear), captions the view
+"SECTION A-A" and draws the cutting-plane trace, lettered at both ends,
+across the view where the plane shows edge-on. The plane is the
+viewport's section plane when one is shown, else a cut through the middle
+of the model parallel to the front view.
+
 ### Booleans (`boolean.rs`)
 
 Booleans work face by face. For a face `F` of `A` with plane `P`, take two

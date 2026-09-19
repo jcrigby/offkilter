@@ -34,7 +34,8 @@ works today, all in the browser:
   animation of any spinning or sliding mate.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
   document only reverts your own edit), `.okpart` JSON documents, STL, 3MF and DXF export, drawing
-  sheets (SVG/DXF) with hidden-line removal, mass properties.
+  sheets (SVG/DXF) with hidden-line removal, overall dimensions and a
+  hatched section view, mass properties.
 
 - Cloud: a small document server with real-time multi-user editing;
   concurrent edits converge without conflicts, documents keep named
@@ -43,7 +44,7 @@ works today, all in the browser:
   invitation link.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
-resolution, 5° by default), drawing dimensions, STEP, and teams. See
+resolution, 5° by default), user-placed drawing dimensions, STEP, and teams. See
 [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout

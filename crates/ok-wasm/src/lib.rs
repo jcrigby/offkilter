@@ -377,6 +377,36 @@ impl Doc {
         serde_json::to_string(&deltas).unwrap()
     }
 
+    /// A section view of the current tab's bodies: `view_json` is
+    /// `{"dir":[..],"up":[..],"origin":[..],"normal":[..]}`; the material
+    /// on the plane's normal side is removed and the rest drawn looking
+    /// along `dir`. The result adds `"cut":[[[x,y],..],..]`, the outlines
+    /// of the faces in the cut plane, to the visible and hidden lines.
+    pub fn drawing_section(&self, view_json: &str) -> String {
+        #[derive(serde::Deserialize)]
+        struct SectionSpec {
+            dir: [f64; 3],
+            up: [f64; 3],
+            origin: [f64; 3],
+            normal: [f64; 3],
+        }
+        let spec: SectionSpec = match serde_json::from_str(view_json) {
+            Ok(v) => v,
+            Err(e) => return serde_json::json!({ "error": e.to_string() }).to_string(),
+        };
+        let v3 = |a: [f64; 3]| ok_math::Vec3::new(a[0], a[1], a[2]);
+        let Some(plane) = ok_math::Plane::from_origin_normal(v3(spec.origin), v3(spec.normal))
+        else {
+            return serde_json::json!({ "error": "degenerate section plane" }).to_string();
+        };
+        let solids: Vec<&ok_brep::Solid> = self.bodies.iter().map(|b| &b.solid).collect();
+        let view = ok_brep::View {
+            dir: v3(spec.dir),
+            up: v3(spec.up),
+        };
+        serde_json::to_string(&ok_brep::section_view(&solids, view, &plane)).unwrap()
+    }
+
     pub fn body_count(&self) -> usize {
         self.bodies.len()
     }

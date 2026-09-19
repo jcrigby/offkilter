@@ -66,7 +66,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] STL and 3MF export of bodies (3MF keeps part names); DXF export of a sketch
 - [x] Drawings: front / top / right / isometric views with exact hidden-line removal for the faceted geometry, laid out third-angle on an A4 sheet (SVG) or as DXF lines
 - [x] Automatic overall dimensions (width, height, depth) on drawing sheets
-- [ ] Driven dimensions placed by the user, section and detail views on drawings; STEP once faces are exact
+- [x] Section views on drawings (hatched cut faces, lettered cutting-plane trace; follows the viewport section plane)
+- [ ] Driven dimensions placed by the user and detail views on drawings; STEP once faces are exact
 - [ ] Import: STEP via a B-rep reader
 
 ## Platform

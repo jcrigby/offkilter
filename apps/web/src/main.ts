@@ -979,12 +979,41 @@ class App implements SketchHost {
   /** Front, top, right and isometric views of the current bodies with hidden lines removed. */
   drawingViews(): DrawingView[] {
     const z = { x: 0, y: 0, z: 1 };
-    return [
+    const views: DrawingView[] = [
       { name: "front", lines: this.kernel.drawingView({ x: 0, y: 1, z: 0 }, z) },
       { name: "top", lines: this.kernel.drawingView({ x: 0, y: 0, z: -1 }, { x: 0, y: 1, z: 0 }) },
       { name: "right", lines: this.kernel.drawingView({ x: -1, y: 0, z: 0 }, z) },
       { name: "iso", lines: this.kernel.drawingView({ x: -0.6, y: 0.7, z: -0.5 }, z) },
     ];
+    const section = this.drawingSectionView();
+    if (section) views.push(section);
+    return views;
+  }
+
+  /**
+   * Section A-A: the viewport's section plane when one is shown, else a cut through the
+   * middle of the model parallel to the front view. The removed side is the one the
+   * viewport removes (the axis coordinate beyond the offset, or before it when flipped).
+   */
+  drawingSectionView(): DrawingView | null {
+    const bounds = this.viewer.bodyBounds();
+    if (!bounds) return null;
+    const sec = this.section ?? { axis: "y" as const, t: 0.5, flip: true };
+    const at = bounds.min[sec.axis] + (bounds.max[sec.axis] - bounds.min[sec.axis]) * sec.t;
+    const unit = { x: sec.axis === "x" ? 1 : 0, y: sec.axis === "y" ? 1 : 0, z: sec.axis === "z" ? 1 : 0 };
+    const sign = sec.flip ? -1 : 1;
+    const normal = { x: unit.x * sign, y: unit.y * sign, z: unit.z * sign };
+    // Look at the cut from the removed side: along -normal, with z (or y for a horizontal cut) up.
+    const dir = { x: -normal.x, y: -normal.y, z: -normal.z };
+    const up = sec.axis === "z" ? { x: 0, y: 1, z: 0 } : { x: 0, y: 0, z: 1 };
+    const origin = { x: unit.x * at, y: unit.y * at, z: unit.z * at };
+    const lines = this.kernel.drawingSection(dir, up, origin, normal);
+    if (lines.cut.length === 0) return null;
+    // Where the cutting plane shows edge-on: a horizontal trace on the top view for a
+    // y cut (top view y = model y), vertical on the top view for an x cut, and a
+    // horizontal trace on the front view for a z cut (front view y = model z).
+    const trace = sec.axis === "y" ? { on: "top", horizontal: true, at } : sec.axis === "x" ? { on: "top", horizontal: false, at } : { on: "front", horizontal: true, at };
+    return { name: "section", lines, cut: lines.cut, trace: { ...trace, label: "A", towards: sign } };
   }
 
   /** A drawing sheet of the current bodies as SVG. */

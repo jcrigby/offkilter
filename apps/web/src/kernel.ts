@@ -121,6 +121,8 @@ export type SketchCurve = { entity: number; kind: string; construction: boolean;
 export type PlaneFrame = { origin: Vec3; x_axis: Vec3; y_axis: Vec3; normal: Vec3 };
 /** Segments of a drawing view in view millimetres (x right, y up). */
 export type ViewLines = { visible: [Vec2, Vec2][]; hidden: [Vec2, Vec2][] };
+/** A section view: what is left after the cut, plus the cut faces' outlines (closed polygons) for hatching. */
+export type SectionLines = ViewLines & { cut: Vec2[][] };
 export type Loop = { points: Vec2[] };
 export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
 export type Settings = { facet_angle: number };
@@ -331,6 +333,14 @@ export class Kernel {
   /** Overlapping instance pairs of the last regenerated assembly tab. */
   interferences(): { overlaps: { a: number; b: number; volume: number }[]; failed: [number, number][] } {
     return JSON.parse(this.studio.interferences()) as { overlaps: { a: number; b: number; volume: number }[]; failed: [number, number][] };
+  }
+
+  /** Section of the current tab's bodies: material on the plane's normal side removed, the rest seen along `dir`. */
+  drawingSection(dir: Vec3, up: Vec3, origin: Vec3, normal: Vec3): SectionLines {
+    const v = (p: Vec3) => [p.x, p.y, p.z];
+    const r = JSON.parse(this.studio.drawing_section(JSON.stringify({ dir: v(dir), up: v(up), origin: v(origin), normal: v(normal) }))) as SectionLines & { error?: string };
+    if (r.error) throw new Error(r.error);
+    return r;
   }
 
   /** Orthographic projection of the current tab's bodies with hidden lines removed. */

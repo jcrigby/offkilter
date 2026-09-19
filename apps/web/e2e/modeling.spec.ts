@@ -748,6 +748,18 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   expect((svg.match(/class="dimension"/g) ?? []).length).toBe(3);
   expect(svg).toMatch(/>60<\/text>/);
   expect(svg).toMatch(/>40<\/text>/);
+  // A section A-A through the middle of the plate: hatched cut faces and a trace on the top view.
+  const section = await page.evaluate(() => {
+    const v = (window as unknown as { offkilter: any }).offkilter.drawingViews().find((x: any) => x.name === "section");
+    return v ? { cut: v.cut.length, visible: v.lines.visible.length, trace: v.trace } : null;
+  });
+  expect(section).not.toBeNull();
+  expect(section!.cut).toBeGreaterThan(0);
+  expect(section!.trace.on).toBe("top");
+  expect(svg).toContain('id="view-section"');
+  expect(svg).toContain('class="hatch"');
+  expect(svg).toContain("SECTION A-A");
+  expect(svg).toContain('class="trace"');
   const dxf: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingDxf());
   expect((dxf.match(/\r\nHIDDEN\r\n/g) ?? []).length).toBeGreaterThan(0);
   expect((dxf.match(/\r\nDIMENSIONS\r\n/g) ?? []).length).toBeGreaterThan(3);

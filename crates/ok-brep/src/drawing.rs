@@ -10,13 +10,110 @@
 //! get their outline.
 
 use crate::Solid;
-use ok_math::{Vec2, Vec3};
+use ok_math::{Plane, Vec2, Vec3};
 
 /// Segments of a view in view coordinates (x right, y up, millimetres).
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ViewLines {
     pub visible: Vec<[Vec2; 2]>,
     pub hidden: Vec<[Vec2; 2]>,
+}
+
+/// A section view: the lines of what is left after cutting, plus the
+/// outlines of the cut faces (each a closed polygon in view coordinates)
+/// for hatching.
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct SectionLines {
+    pub visible: Vec<[Vec2; 2]>,
+    pub hidden: Vec<[Vec2; 2]>,
+    pub cut: Vec<Vec<Vec2>>,
+}
+
+/// Cuts every solid by `plane`, removing the material on its normal side,
+/// and draws what remains as seen from `view` (normally looking along
+/// `-plane.normal`, at the cut). Faces lying in the cut plane come back
+/// as `cut` polygons. A solid the cut fails on is drawn whole.
+pub fn section_view(solids: &[&Solid], view: View, plane: &Plane) -> SectionLines {
+    let Some((u, v, _)) = view.basis() else {
+        return SectionLines::default();
+    };
+    let to2 = |p: Vec3| Vec2::new(p.dot(u), p.dot(v));
+    let halves: Vec<Solid> = solids.iter().map(|s| cut_solid(s, plane)).collect();
+    let mut cut = Vec::new();
+    let level = plane.normal.dot(plane.origin);
+    for half in &halves {
+        let eps = 1e-6
+            * half
+                .bounds()
+                .map_or(1.0, |(lo, hi)| (hi - lo).length().max(1.0));
+        for f in &half.faces {
+            let on_plane = f.plane.normal.dot(plane.normal) > 1.0 - 1e-6
+                && (f.plane.normal.dot(f.plane.origin) - level).abs() <= eps;
+            if !on_plane {
+                continue;
+            }
+            for l in &f.loops {
+                cut.push(l.iter().map(|&i| to2(half.vertices[i as usize])).collect());
+            }
+        }
+    }
+    let refs: Vec<&Solid> = halves.iter().collect();
+    let lines = project_view(&refs, view);
+    SectionLines {
+        visible: lines.visible,
+        hidden: lines.hidden,
+        cut,
+    }
+}
+
+/// The part of `solid` on the far side of `plane` (against its normal):
+/// the solid minus a box covering the normal side. The solid itself when
+/// the plane misses it or the boolean fails.
+fn cut_solid(solid: &Solid, plane: &Plane) -> Solid {
+    let Some((lo, hi)) = solid.bounds() else {
+        return solid.clone();
+    };
+    let extent = (hi - lo).length().max(1.0);
+    let centre = (lo + hi) * 0.5;
+    let level = plane.normal.dot(plane.origin);
+    let (mut min_d, mut max_d) = (f64::MAX, f64::MIN);
+    for v in &solid.vertices {
+        let d = plane.normal.dot(*v) - level;
+        min_d = min_d.min(d);
+        max_d = max_d.max(d);
+    }
+    if max_d <= 1e-9 {
+        return solid.clone();
+    }
+    if min_d >= -1e-9 {
+        // Entirely on the removed side: nothing left; keep it drawn whole
+        // rather than vanish (a section through empty air is a user slip).
+        return solid.clone();
+    }
+    // A box on the normal side, big enough to cover the solid; its base
+    // sits in the cut plane and is centred under the solid.
+    let base = Plane {
+        origin: plane.origin,
+        ..*plane
+    };
+    let c2 = base.to_plane(centre);
+    let half = extent * 4.0;
+    let mut sk = ok_sketch::Sketch::new();
+    sk.add_rectangle(
+        Vec2::new(c2.x - half, c2.y - half),
+        Vec2::new(c2.x + half, c2.y + half),
+    );
+    let Some(profile) = sk
+        .profiles(&ok_sketch::ProfileOptions::default())
+        .into_iter()
+        .next()
+    else {
+        return solid.clone();
+    };
+    let Ok(cutter) = crate::extrude(&profile, &base, 0.0, half, u32::MAX) else {
+        return solid.clone();
+    };
+    crate::boolean(solid, &cutter, crate::BoolOp::Difference).unwrap_or_else(|_| solid.clone())
 }
 
 /// Frame of a view: the viewer looks along `dir`; `up` is the screen's up.
@@ -328,6 +425,51 @@ mod tests {
         s.add_rectangle(Vec2::ZERO, Vec2::new(w, d));
         let p = s.profiles(&ProfileOptions::default()).remove(0);
         extrude(&p, &Plane::XY, 0.0, h, 1).unwrap()
+    }
+
+    fn polygon_area(poly: &[Vec2]) -> f64 {
+        let n = poly.len();
+        (0..n)
+            .map(|i| poly[i].cross(poly[(i + 1) % n]))
+            .sum::<f64>()
+            .abs()
+            / 2.0
+    }
+
+    #[test]
+    fn section_through_a_block_with_a_hole_shows_the_hole_in_the_cut() {
+        // 20 x 10 x 5 block with a vertical 4 mm hole through its middle.
+        let block = block(20.0, 10.0, 5.0);
+        let mut s = Sketch::new();
+        s.add_circle(Vec2::new(10.0, 5.0), 2.0);
+        let p = s.profiles(&ProfileOptions::default()).remove(0);
+        let drill = extrude(&p, &Plane::XY, -1.0, 6.0, 2).unwrap();
+        let solid = boolean(&block, &drill, BoolOp::Difference).unwrap();
+        // Cut at y = 5 through the hole's axis, removing the front (y < 5)
+        // half, seen from the front (looking along +y).
+        let plane = Plane::from_origin_normal(Vec3::new(0.0, 5.0, 0.0), -Vec3::Y).unwrap();
+        let view = View {
+            dir: Vec3::Y,
+            up: Vec3::Z,
+        };
+        let sec = section_view(&[&solid], view, &plane);
+        // The cut face is the 20 x 5 rectangle minus a 4 mm wide slot: two
+        // 8 x 5 pieces (or one polygon with the slot taken out).
+        let area: f64 = sec.cut.iter().map(|l| polygon_area(l)).sum();
+        assert!((area - (20.0 * 5.0 - 4.0 * 5.0)).abs() < 1e-6, "{area}");
+        assert!(!sec.visible.is_empty());
+        // Nothing is hidden: everything behind the cut is solid.
+        assert!(sec.hidden.is_empty(), "{:?}", sec.hidden);
+        // The cut outline spans the full width and height in view space.
+        let (mut lo, mut hi) = (Vec2::new(f64::MAX, f64::MAX), Vec2::new(f64::MIN, f64::MIN));
+        for p in sec.cut.iter().flatten() {
+            lo = Vec2::new(lo.x.min(p.x), lo.y.min(p.y));
+            hi = Vec2::new(hi.x.max(p.x), hi.y.max(p.y));
+        }
+        assert!((hi.x - lo.x - 20.0).abs() < 1e-9 && (hi.y - lo.y - 5.0).abs() < 1e-9);
+        // A plane that misses the block leaves it whole: no cut faces.
+        let miss = Plane::from_origin_normal(Vec3::new(0.0, 50.0, 0.0), -Vec3::Y).unwrap();
+        assert!(section_view(&[&solid], view, &miss).cut.is_empty());
     }
 
     const FRONT: View = View {

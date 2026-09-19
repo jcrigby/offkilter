@@ -1,7 +1,7 @@
 // File exporters: STL and 3MF for bodies, DXF for sketches. All are
 // written by hand so the client carries no extra dependencies.
 
-import type { BodyMesh, BodySummary, SketchData, ViewLines } from "./kernel";
+import type { BodyMesh, BodySummary, SketchData, Vec2, ViewLines } from "./kernel";
 
 /** All bodies as one binary STL file. */
 export function toStl(meshes: BodyMesh[]): Blob {
@@ -224,7 +224,42 @@ export function toDxf(sketch: SketchData): string {
 // ---- drawings
 
 /** A named view with its lines, as the kernel projects it. */
-export type DrawingView = { name: string; lines: ViewLines };
+/** Where a section's cutting plane shows edge-on in another view, as a line across that view at `at` (view millimetres). */
+export type SectionTrace = { on: string; horizontal: boolean; at: number; label: string; /** +1 when the removed side is towards larger coordinates, -1 otherwise. */ towards: number };
+export type DrawingView = { name: string; lines: ViewLines; /** Closed outlines of cut faces (section views), hatched on the sheet. */ cut?: Vec2[][]; trace?: SectionTrace };
+
+/**
+ * Hatch lines at 45° with the given spacing clipped to the polygons by the
+ * even-odd rule, so holes in a cut face stay clear. Segments are in the
+ * polygons' coordinates.
+ */
+export function hatch(polys: Vec2[][], spacing: number): [Vec2, Vec2][] {
+  const out: [Vec2, Vec2][] = [];
+  if (polys.length === 0 || spacing <= 0) return out;
+  // Rotate by -45°: hatch lines become horizontal lines v = const.
+  const c = Math.SQRT1_2;
+  const rot = (p: Vec2): Vec2 => ({ x: (p.x + p.y) * c, y: (p.y - p.x) * c });
+  const unrot = (p: Vec2): Vec2 => ({ x: (p.x - p.y) * c, y: (p.x + p.y) * c });
+  const rp = polys.map((poly) => poly.map(rot));
+  let minv = Infinity, maxv = -Infinity;
+  for (const poly of rp) for (const p of poly) { minv = Math.min(minv, p.y); maxv = Math.max(maxv, p.y); }
+  if (!Number.isFinite(minv)) return out;
+  for (let v = Math.ceil(minv / spacing) * spacing; v < maxv; v += spacing) {
+    const xs: number[] = [];
+    for (const poly of rp) {
+      for (let i = 0; i < poly.length; i++) {
+        const a = poly[i]!, b = poly[(i + 1) % poly.length]!;
+        // Half-open rule on y so a vertex exactly on the line counts once.
+        if ((a.y <= v && b.y > v) || (b.y <= v && a.y > v)) xs.push(a.x + ((v - a.y) / (b.y - a.y)) * (b.x - a.x));
+      }
+    }
+    xs.sort((p, q) => p - q);
+    for (let i = 0; i + 1 < xs.length; i += 2) {
+      if (xs[i + 1]! - xs[i]! > 1e-9) out.push([unrot({ x: xs[i]!, y: v }), unrot({ x: xs[i + 1]!, y: v })]);
+    }
+  }
+  return out;
+}
 
 type Bounds = { minx: number; miny: number; maxx: number; maxy: number };
 type Placed = DrawingView & { dx: number; dy: number; b: Bounds };
@@ -313,6 +348,26 @@ function layout(views: DrawingView[], gap = 15): { placed: Placed[]; dims: Dimen
   return { placed, dims, min, max };
 }
 
+/** Cutting-plane traces in sheet coordinates: across the view they cut, extended past its outline. */
+function traces(placed: Placed[]): { a: Vec2; b: Vec2; label: string; labelOffset: Vec2 }[] {
+  const out: { a: Vec2; b: Vec2; label: string; labelOffset: Vec2 }[] = [];
+  for (const p of placed) {
+    const t = p.trace;
+    if (!t) continue;
+    const on = placed.find((q) => q.name === t.on);
+    if (!on) continue;
+    const ext = 5;
+    if (t.horizontal) {
+      const y = t.at + on.dy;
+      out.push({ a: { x: on.b.minx + on.dx - ext, y }, b: { x: on.b.maxx + on.dx + ext, y }, label: t.label, labelOffset: { x: 0, y: 3 * t.towards } });
+    } else {
+      const x = t.at + on.dx;
+      out.push({ a: { x, y: on.b.miny + on.dy - ext }, b: { x, y: on.b.maxy + on.dy + ext }, label: t.label, labelOffset: { x: 3 * t.towards, y: 0 } });
+    }
+  }
+  return out;
+}
+
 /** Number text for a dimension: up to two decimals, no trailing zeros. */
 function dimText(v: number): string {
   return v.toFixed(2).replace(/\.?0+$/, "");
@@ -382,6 +437,21 @@ export function toDrawingSvg(views: DrawingView[], title: string): string {
     if (p.lines.visible.length > 0) {
       out.push(`<path class="visible" fill="none" stroke="black" stroke-width="0.5" stroke-linecap="round" d="${p.lines.visible.map(([a, b]) => seg(a, b)).join("")}"/>`);
     }
+    if (p.cut && p.cut.length > 0) {
+      const lines = hatch(p.cut, 3 / scale);
+      if (lines.length > 0) out.push(`<path class="hatch" fill="none" stroke="black" stroke-width="0.18" d="${lines.map(([a, b]) => seg(a, b)).join("")}"/>`);
+    }
+    if (p.name === "section") {
+      const label = p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION";
+      out.push(`<text class="caption" x="${X((p.b.minx + p.b.maxx) / 2 + p.dx)}" y="${Y(p.b.miny + p.dy - 6)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="black" text-anchor="middle">${label}</text>`);
+    }
+    out.push(`</g>`);
+  }
+  // Cutting-plane traces: a chain line across the view the plane cuts edge-on, lettered at both ends.
+  for (const t of traces(placed)) {
+    out.push(`<g class="trace">`);
+    out.push(`<path fill="none" stroke="black" stroke-width="0.5" stroke-dasharray="6 1.5 1 1.5" d="M${X(t.a.x)} ${Y(t.a.y)}L${X(t.b.x)} ${Y(t.b.y)}"/>`);
+    for (const e of [t.a, t.b]) out.push(`<text x="${X(e.x + t.labelOffset.x)}" y="${Y(e.y + t.labelOffset.y)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="black" text-anchor="middle" dominant-baseline="middle">${t.label}</text>`);
     out.push(`</g>`);
   }
   // Overall dimensions.
@@ -410,7 +480,11 @@ export function toDrawingSvg(views: DrawingView[], title: string): string {
 /** The same layout as a DXF at 1:1 in millimetres, hidden lines on their own layer. */
 export function toDrawingDxf(views: DrawingView[]): string {
   const { placed, dims } = layout(views);
-  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"]]);
+  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"], ["SECTION", 1, "CONTINUOUS"]]);
+  for (const t of traces(placed)) {
+    lines.push("0", "LINE", "8", "SECTION", "10", fmt(t.a.x), "20", fmt(t.a.y), "30", "0", "11", fmt(t.b.x), "21", fmt(t.b.y), "31", "0");
+    for (const e of [t.a, t.b]) lines.push("0", "TEXT", "8", "SECTION", "10", fmt(e.x + t.labelOffset.x), "20", fmt(e.y + t.labelOffset.y), "30", "0", "40", "3.5", "72", "1", "11", fmt(e.x + t.labelOffset.x), "21", fmt(e.y + t.labelOffset.y), "31", "0", "1", t.label);
+  }
   for (const d of dims) {
     const g = dimensionGeometry(d);
     for (const [a, b] of g.lines) lines.push("0", "LINE", "8", "DIMENSIONS", "10", fmt(a.x), "20", fmt(a.y), "30", "0", "11", fmt(b.x), "21", fmt(b.y), "31", "0");
@@ -428,6 +502,11 @@ export function toDrawingDxf(views: DrawingView[]): string {
     };
     add("VISIBLE", p.lines.visible);
     add("HIDDEN", p.lines.hidden);
+    if (p.cut && p.cut.length > 0) add("SECTION", hatch(p.cut, 3));
+    if (p.name === "section") {
+      const x = (p.b.minx + p.b.maxx) / 2 + p.dx, y = p.b.miny + p.dy - 6;
+      lines.push("0", "TEXT", "8", "SECTION", "10", fmt(x), "20", fmt(y), "30", "0", "40", "3.5", "72", "1", "11", fmt(x), "21", fmt(y), "31", "0", "1", p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION");
+    }
   }
   lines.push("0", "ENDSEC", "0", "EOF");
   return lines.join("\r\n") + "\r\n";
