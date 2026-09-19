@@ -17,7 +17,7 @@
 //! into a new solid by merging vertices, and the result is validated to be
 //! closed; a non-closed result is reported as an error rather than shown.
 
-use crate::section::{section, Section};
+use crate::section::{face_bboxes, section_with_bboxes, Section};
 use crate::{
     bounds_of, bounds_overlap, flip_plane, merge_tolerance, BrepError, Face, Polygon, Solid,
 };
@@ -39,6 +39,31 @@ fn to_contours(loops: &[Vec<Vec2>]) -> Vec<Contour> {
     loops
         .iter()
         .map(|l| l.iter().map(|p| [p.x, p.y]).collect())
+        .collect()
+}
+
+/// Keeps the contours whose bounding box overlaps the region's (grown by
+/// `tol`); a contour entirely outside neither encloses nor crosses it.
+fn near_region(contours: Vec<Contour>, region: &[Contour], tol: f64) -> Vec<Contour> {
+    let bbox = |cs: &[Contour]| {
+        let mut b = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+        for p in cs.iter().flatten() {
+            b = [
+                b[0].min(p[0]),
+                b[1].min(p[1]),
+                b[2].max(p[0]),
+                b[3].max(p[1]),
+            ];
+        }
+        b
+    };
+    let r = bbox(region);
+    contours
+        .into_iter()
+        .filter(|c| {
+            let b = bbox(std::slice::from_ref(c));
+            b[2] >= r[0] - tol && b[0] <= r[2] + tol && b[3] >= r[1] - tol && b[1] <= r[3] + tol
+        })
         .collect()
 }
 
@@ -134,6 +159,7 @@ fn classify_face(
     solid: &Solid,
     f: &Face,
     other: &Solid,
+    other_boxes: &[(ok_math::Vec3, ok_math::Vec3)],
     other_bounds: (ok_math::Vec3, ok_math::Vec3),
     keep: Keep,
     tol: f64,
@@ -152,16 +178,19 @@ fn classify_face(
             Keep::Inside | Keep::Below => vec![],
         });
     }
-    let above: Section = section(other, &f.plane, false, tol)?;
-    let below: Section = section(other, &f.plane, true, tol)?;
+    let above: Section = section_with_bboxes(other, other_boxes, &f.plane, false, tol)?;
+    let below: Section = section_with_bboxes(other, other_boxes, &f.plane, true, tol)?;
     if above.is_empty() && below.is_empty() {
         return Ok(match keep {
             Keep::NotAbove | Keep::NotAboveNorBelow | Keep::NotBelow => vec![region],
             Keep::Inside | Keep::Below => vec![],
         });
     }
-    let mut above = to_contours(&above.loops);
-    let mut below = to_contours(&below.loops);
+    // Loops of the section that stay clear of this face cannot enclose or
+    // cut it, so they are left out of the overlay (a large part sectioned
+    // by one of its facets otherwise drags every hole into every overlay).
+    let mut above = near_region(to_contours(&above.loops), &region, tol);
+    let mut below = near_region(to_contours(&below.loops), &region, tol);
     snap_to_region(&mut above, &region, tol);
     snap_to_region(&mut below, &region, tol);
     Ok(match keep {
@@ -336,13 +365,14 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
         BoolOp::Intersection => (Keep::Below, Keep::Inside, false),
     };
 
+    let (boxes_a, boxes_b) = (face_bboxes(a), face_bboxes(b));
     let mut polys: Vec<Polygon> = Vec::new();
     for f in &a.faces {
-        let shapes = classify_face(a, f, b, bb, keep_a, tol)?;
+        let shapes = classify_face(a, f, b, &boxes_b, bb, keep_a, tol)?;
         polys.extend(fragments_to_polygons(f, shapes, false, 0));
     }
     for f in &b.faces {
-        let shapes = classify_face(b, f, a, ab, keep_b, tol)?;
+        let shapes = classify_face(b, f, a, &boxes_a, ab, keep_b, tol)?;
         polys.extend(fragments_to_polygons(f, shapes, flip_b, a.surfaces.len()));
     }
     let mut surfaces = a.surfaces.clone();

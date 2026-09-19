@@ -84,5 +84,5 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Realistic-parts corpus (`crates/ok-model/tests/parts.rs`): brackets, revolved flanges, pockets with counterbores, bosses on oblique faces, pulleys, grazing cuts, sweeps and lofts, patterns then fillets
 - [ ] Property tests for the solver and region extraction
 - [x] Regeneration cache: unchanged feature prefixes are reused, so editing late features is cheap
-- [ ] Benchmarks for regeneration time on realistic parts
-- [ ] `wasm-opt` in the release pipeline
+- [x] Benchmarks for regeneration time on realistic parts (`scripts/bench.sh`); the boolean's T-junction grid and section prefilters came out of the first run (a 4000-face cover shells in 0.65 s, from 3.9 s)
+- [x] `wasm-opt` in the release pipeline (from the binaryen npm package when present)

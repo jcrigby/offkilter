@@ -952,8 +952,14 @@ struct PointGrid {
 }
 
 impl PointGrid {
+    /// Cells are sized to the model (about 1/32 of its extent, never
+    /// below 64 tolerances) so a query along an edge touches a bounded
+    /// number of cells however long the edge is.
     fn new(points: &[Vec3], tol: f64) -> Self {
-        let cell = (tol * 64.0).max(1e-3);
+        let extent = bounds_of(points.iter().copied())
+            .map(|(lo, hi)| (hi - lo).length())
+            .unwrap_or(1.0);
+        let cell = (tol * 64.0).max(extent / 32.0).max(1e-3);
         let mut g = PointGrid {
             cell,
             cells: HashMap::new(),
@@ -972,22 +978,28 @@ impl PointGrid {
         )
     }
 
+    /// Points in the cells the segment passes through, with a one-cell
+    /// margin, so every point within a cell width of the segment is
+    /// included (and some further away, which callers filter).
     fn candidates_near_segment(&self, a: Vec3, b: Vec3) -> Vec<u32> {
-        let (ka, kb) = (self.key(a), self.key(b));
-        let (x0, x1) = (ka.0.min(kb.0) - 1, ka.0.max(kb.0) + 1);
-        let (y0, y1) = (ka.1.min(kb.1) - 1, ka.1.max(kb.1) + 1);
-        let (z0, z1) = (ka.2.min(kb.2) - 1, ka.2.max(kb.2) + 1);
-        let span = (x1 - x0 + 1) * (y1 - y0 + 1) * (z1 - z0 + 1);
-        if span > 4096 {
-            // Long edge relative to the grid: fall back to scanning all cells.
+        if self.cells.len() <= 8 {
             return self.cells.values().flatten().copied().collect();
         }
+        let steps = ((b - a).length() / self.cell).ceil().max(1.0) as usize;
+        let mut seen: std::collections::HashSet<(i64, i64, i64)> = std::collections::HashSet::new();
         let mut out = Vec::new();
-        for x in x0..=x1 {
-            for y in y0..=y1 {
-                for z in z0..=z1 {
-                    if let Some(v) = self.cells.get(&(x, y, z)) {
-                        out.extend_from_slice(v);
+        for i in 0..=steps {
+            let p = a + (b - a) * (i as f64 / steps as f64);
+            let k = self.key(p);
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    for dz in -1..=1 {
+                        let key = (k.0 + dx, k.1 + dy, k.2 + dz);
+                        if seen.insert(key) {
+                            if let Some(v) = self.cells.get(&key) {
+                                out.extend_from_slice(v);
+                            }
+                        }
                     }
                 }
             }

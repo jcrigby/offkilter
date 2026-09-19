@@ -459,6 +459,19 @@ edit and leaves everyone else's in place; the inverses of the inverses
 form the redo stack. An inverse that no longer applies (someone deleted
 the feature meanwhile) is skipped with a status message.
 
+## Performance
+
+`scripts/bench.sh` prints regeneration timings (release build) for the demo
+plate and a 4000-face cover (bosses, 24 holes, a shell), cold and with only
+the last feature edited. Booleans are the cost that scales: every face of
+one solid is classified against a cross-section of the other, so the
+section skips faces whose bounding box lies on one side of the plane
+(boxes are computed once per boolean), the overlay leaves out section
+loops clear of the face, and the assembly's T-junction grid is sized to
+the model so long edges touch a bounded number of cells. The wasm build
+runs `wasm-opt -O3` when binaryen is available (the web app's dev
+dependencies provide it).
+
 ## Testing
 
 Three layers guard the kernel. Unit tests in each crate check numbers

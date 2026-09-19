@@ -29,14 +29,56 @@ struct Crossing {
     point: Vec3,
 }
 
+#[cfg(test)]
 pub fn section(
     solid: &Solid,
     plane: &Plane,
     zero_is_above: bool,
     eps: f64,
 ) -> Result<Section, BrepError> {
+    let bboxes = face_bboxes(solid);
+    section_with_bboxes(solid, &bboxes, plane, zero_is_above, eps)
+}
+
+/// Bounding box of every face, for repeated sections of one solid.
+pub fn face_bboxes(solid: &Solid) -> Vec<(Vec3, Vec3)> {
+    solid
+        .faces
+        .iter()
+        .map(|f| {
+            crate::bounds_of(
+                f.loops
+                    .iter()
+                    .flatten()
+                    .map(|&v| solid.vertices[v as usize]),
+            )
+            .unwrap_or((Vec3::ZERO, Vec3::ZERO))
+        })
+        .collect()
+}
+
+/// `section` with the faces' bounding boxes precomputed (`face_bboxes`):
+/// faces whose box lies entirely on one side of the plane are skipped
+/// without visiting their edges.
+pub fn section_with_bboxes(
+    solid: &Solid,
+    bboxes: &[(Vec3, Vec3)],
+    plane: &Plane,
+    zero_is_above: bool,
+    eps: f64,
+) -> Result<Section, BrepError> {
     let n = plane.normal;
     let d0 = n.dot(plane.origin);
+    // Extreme signed distances of a box's corners along the normal.
+    let straddles = |(lo, hi): &(Vec3, Vec3)| -> bool {
+        let pick = |c: f64, l: f64, h: f64| if c >= 0.0 { (h, l) } else { (l, h) };
+        let (xh, xl) = pick(n.x, lo.x, hi.x);
+        let (yh, yl) = pick(n.y, lo.y, hi.y);
+        let (zh, zl) = pick(n.z, lo.z, hi.z);
+        let dmax = n.x * xh + n.y * yh + n.z * zh - d0;
+        let dmin = n.x * xl + n.y * yl + n.z * zl - d0;
+        dmin <= eps && dmax >= -eps
+    };
     let dist: Vec<f64> = solid
         .vertices
         .iter()
@@ -95,7 +137,12 @@ pub fn section(
     // Directed segments between crossing nodes: start -> ends.
     let mut next: HashMap<usize, Vec<usize>> = HashMap::new();
     let mut segment_count = 0usize;
-    for f in &solid.faces {
+    for (fi, f) in solid.faces.iter().enumerate() {
+        if let Some(bb) = bboxes.get(fi) {
+            if !straddles(bb) {
+                continue;
+            }
+        }
         let Some(dir) = n.cross(f.plane.normal).normalized() else {
             continue; // parallel to the section plane
         };
