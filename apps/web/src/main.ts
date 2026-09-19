@@ -1,4 +1,5 @@
 import { Kernel } from "./kernel";
+import { to3mf, toDxf, toStl } from "./export";
 import type { Axis, BlendKind, Connector, Constraint, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
@@ -803,31 +804,28 @@ class App implements SketchHost {
 
   /** All bodies as one binary STL file. */
   toStl(): Blob {
-    const meshes = this.kernel.bodyMeshes();
-    const count = meshes.reduce((n, m) => n + m.indices.length / 3, 0);
-    const buf = new ArrayBuffer(84 + count * 50);
-    const view = new DataView(buf);
-    new Uint8Array(buf, 0, 80).set(new TextEncoder().encode("offkilter binary STL").subarray(0, 80));
-    view.setUint32(80, count, true);
-    let off = 84;
-    for (const m of meshes) {
-      for (let t = 0; t < m.indices.length; t += 3) {
-        const idx = [m.indices[t]!, m.indices[t + 1]!, m.indices[t + 2]!];
-        const p = idx.map((i) => [m.positions[3 * i]!, m.positions[3 * i + 1]!, m.positions[3 * i + 2]!]);
-        const ux = p[1]![0]! - p[0]![0]!, uy = p[1]![1]! - p[0]![1]!, uz = p[1]![2]! - p[0]![2]!;
-        const vx = p[2]![0]! - p[0]![0]!, vy = p[2]![1]! - p[0]![1]!, vz = p[2]![2]! - p[0]![2]!;
-        let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
-        const len = Math.hypot(nx, ny, nz) || 1;
-        nx /= len; ny /= len; nz /= len;
-        for (const v of [nx, ny, nz, ...p.flat()]) {
-          view.setFloat32(off, v, true);
-          off += 4;
-        }
-        view.setUint16(off, 0, true);
-        off += 2;
-      }
-    }
-    return new Blob([buf], { type: "model/stl" });
+    return toStl(this.kernel.bodyMeshes());
+  }
+
+  /** All bodies as a 3MF package with part names. */
+  to3mf(): Blob {
+    return to3mf(this.summary.bodies, this.kernel.bodyMeshes(), this.summary.name);
+  }
+
+  /** The selected sketch as DXF text, or null when no sketch is selected. */
+  toDxf(): string | null {
+    const f = this.feature(this.selected);
+    if (!f || f.kind.type !== "sketch") return null;
+    return toDxf(f.kind.sketch);
+  }
+
+  /** Triggers a browser download of `blob` named after the document. */
+  download(blob: Blob, ext: string, stem = this.summary.name): void {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${stem.replace(/[^\w.-]+/g, "_")}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   }
 
   /** Applies a studio op on the active tab without regenerating; throws on failure. */
@@ -2165,12 +2163,20 @@ async function main(): Promise<void> {
     if (app.section) app.setSection({ ...app.section, flip: !app.section.flip });
   };
   app.undo(); // no-op that initialises the button states
-  $("#btn-stl").onclick = () => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(app.toStl());
-    a.download = `${app.summary.name.replace(/[^\w.-]+/g, "_")}.stl`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+  const exportSelect = $("#export") as HTMLSelectElement;
+  exportSelect.onchange = () => {
+    const what = exportSelect.value;
+    exportSelect.value = "";
+    if (what === "stl") app.download(app.toStl(), "stl");
+    else if (what === "3mf") app.download(app.to3mf(), "3mf");
+    else if (what === "dxf") {
+      const dxf = app.toDxf();
+      if (dxf === null) {
+        app.setStatus("Select a sketch in the feature list to export it as DXF.");
+        return;
+      }
+      app.download(new Blob([dxf], { type: "application/dxf" }), "dxf", `${app.summary.name}-${app.feature(app.selected)!.name}`);
+    }
   };
   $("#btn-save").onclick = () => {
     const blob = new Blob([app.kernel.toJson()], { type: "application/json" });

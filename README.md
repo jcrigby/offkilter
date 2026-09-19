@@ -32,7 +32,7 @@ works today, all in the browser:
   with offset, angle and flip, resolved as chains from fixed instances,
   plus an interference check between instances.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
-  document only reverts your own edit), `.okpart` JSON documents, STL export, mass
+  document only reverts your own edit), `.okpart` JSON documents, STL, 3MF and DXF export, mass
   properties.
 
 - Cloud: a small document server with real-time multi-user editing;

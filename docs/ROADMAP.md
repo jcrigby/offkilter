@@ -55,8 +55,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Numeric mate solver: closed loops and redundant mates solved over the free degrees of freedom of revolute, slider and cylindrical mates
 - [x] Planar and ball mates; sub-assemblies (an assembly tab inserted as one rigid group, cycles refused); mate frames drawn in the viewer
 - [ ] Mate connectors on edges and vertices; explode views; mate animation
-- [x] STL export
-- [ ] Drawings (2D projections); 3MF export; STEP once faces are exact
+- [x] STL and 3MF export of bodies (3MF keeps part names); DXF export of a sketch
+- [ ] Drawings (2D projections); STEP once faces are exact
 - [ ] Import: STEP via a B-rep reader
 
 ## Platform

@@ -421,3 +421,23 @@ test("standard views, measure, section and part rename", async ({ page }) => {
   await page.waitForTimeout(200);
   expect(await page.textContent("#part-list li .pname")).toBe(original);
 });
+
+test("export bodies as STL and 3MF and a sketch as DXF", async ({ page }) => {
+  await openDemo(page);
+  const sizes = await page.evaluate(async () => {
+    const app = (window as any).offkilter;
+    const stl = app.toStl();
+    const mf = app.to3mf();
+    const head = new Uint8Array(await mf.slice(0, 2).arrayBuffer());
+    return { stl: stl.size, mf: mf.size, sig: String.fromCharCode(...head), dxfWithoutSketch: app.toDxf() };
+  });
+  expect(sizes.stl).toBe(84 + 50 * (await page.evaluate(() => (window as any).offkilter.summary.bodies.reduce((n: number, b: any) => n + b.triangles, 0))));
+  expect(sizes.mf).toBeGreaterThan(1000);
+  expect(sizes.sig).toBe("PK");
+  expect(sizes.dxfWithoutSketch).toBeNull();
+  await page.click("#feature-list li:nth-child(1)");
+  const dxf: string = await page.evaluate(() => (window as any).offkilter.toDxf());
+  expect(dxf).toContain("ENTITIES");
+  expect((dxf.match(/\r\nLINE\r\n/g) ?? []).length).toBeGreaterThanOrEqual(4);
+  expect(dxf.trimEnd().endsWith("EOF")).toBe(true);
+});

@@ -50,7 +50,12 @@
         <button id="btn-demo" title="Load the example part">Demo</button>
         <button id="btn-open" title="Open a .okpart JSON file">Open</button>
         <button id="btn-save" title="Download as .okpart JSON">Save</button>
-        <button id="btn-stl" title="Export all bodies as binary STL">STL</button>
+        <select id="export" title="Export bodies (STL, 3MF) or the selected sketch (DXF)">
+          <option value="">Export…</option>
+          <option value="stl">STL (bodies)</option>
+          <option value="3mf">3MF (bodies, named)</option>
+          <option value="dxf">DXF (selected sketch)</option>
+        </select>
         <input id="file-input" type="file" accept=".okpart,.json" hidden />
       </header>
       <aside id="sidebar">
