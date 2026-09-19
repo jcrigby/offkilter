@@ -360,10 +360,7 @@ impl Doc {
             return "null".into();
         };
         let mate = ok_model::MateId(mate);
-        let Ok(next) = self
-            .inner
-            .preview_assembly(TabId(tab), mate, angle, offset)
-        else {
+        let Ok(next) = self.inner.preview_assembly(TabId(tab), mate, angle, offset) else {
             return "null".into();
         };
         if next.mate_errors.contains_key(&mate) || next.placed != current.placed {

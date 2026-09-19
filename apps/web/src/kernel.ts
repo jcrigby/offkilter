@@ -268,6 +268,7 @@ export type DocOp =
 
 export type DocOpResult = { tab: number | null; instance: number | null; mate: number | null; studio?: OpResult; inverse?: DocOp[] };
 
+export type RigidTransform = { m: [[number, number, number], [number, number, number], [number, number, number]]; t: Vec3 };
 export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array; edgeFaces: Uint32Array; faceIds: Uint32Array; faceSurfaces: Uint32Array };
 
 export class Kernel {
@@ -315,6 +316,14 @@ export class Kernel {
   /** World connector frame of a face on an instance of the last regenerated assembly tab. */
   connectorFrame(c: Connector): PlaneFrame | null {
     return JSON.parse(this.studio.connector_frame(JSON.stringify(c))) as PlaneFrame | null;
+  }
+
+  /**
+   * One frame of a mate animation: per shown body, the rigid transform (row-major 3x3 `m`, translation `t`)
+   * from where it is to where it would be with the mate at `angle` and `offset`; null when the frame cannot be resolved.
+   */
+  matePreview(tab: number, mate: number, angle: number, offset: number): (RigidTransform | null)[] | null {
+    return JSON.parse(this.studio.mate_preview(tab, mate, angle, offset)) as (RigidTransform | null)[] | null;
   }
 
   /** Overlapping instance pairs of the last regenerated assembly tab. */

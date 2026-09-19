@@ -65,6 +65,12 @@ freedom. A mate that still has a residual afterwards (inconsistent with
 the others) is reported on that mate; a chain with no fixed instance
 falls back to placements with an error on each instance.
 
+A mate animation never touches the document: `Document::preview_assembly`
+resolves the tab with one mate's angle and offset overridden, and the
+wasm `mate_preview` call turns that into a rigid delta transform per
+shown body (new placement composed with the inverse of the current one),
+which the client applies to the meshes each frame.
+
 ### Part studios
 
 A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable

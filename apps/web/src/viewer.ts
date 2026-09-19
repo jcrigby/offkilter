@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
-import type { BodyMesh, PlaneFrame, SketchResult, Vec2, Vec3 } from "./kernel";
+import type { BodyMesh, PlaneFrame, RigidTransform, SketchResult, Vec2, Vec3 } from "./kernel";
 
 const BODY_COLOR = 0x8fa8c8;
 const SKETCH_COLOR = 0x4ea1ff;
@@ -231,6 +231,36 @@ export class Viewer {
       const o = this.offsets[l.userData.body as number]!;
       l.position.set(o.x, o.y, o.z);
     }
+  }
+
+  /**
+   * Moves bodies by rigid transforms on top of their placement (a mate animation frame); `null` entries
+   * and a `null` list leave bodies where the kernel put them. Explode offsets still apply.
+   */
+  setBodyTransforms(deltas: (RigidTransform | null)[] | null): void {
+    for (const obj of [...this.meshes, ...this.edgeLines]) {
+      const i = obj.userData.body as number;
+      const d = deltas?.[i] ?? null;
+      const o = this.offsets[i] ?? { x: 0, y: 0, z: 0 };
+      if (!d) {
+        obj.matrixAutoUpdate = true;
+        obj.rotation.set(0, 0, 0);
+        obj.position.set(o.x, o.y, o.z);
+        obj.updateMatrix();
+        continue;
+      }
+      obj.matrixAutoUpdate = false;
+      obj.matrix.set(d.m[0][0], d.m[0][1], d.m[0][2], d.t.x + o.x, d.m[1][0], d.m[1][1], d.m[1][2], d.t.y + o.y, d.m[2][0], d.m[2][1], d.m[2][2], d.t.z + o.z, 0, 0, 0, 1);
+      obj.matrixWorldNeedsUpdate = true;
+    }
+  }
+
+  /** The matrix currently placing a body (for tests): identity unless a transform or explode offset is set. */
+  bodyMatrix(i: number): number[] {
+    const m = this.meshes[i];
+    if (!m) return [];
+    m.updateMatrixWorld(true);
+    return m.matrixWorld.toArray();
   }
 
   /** Current explode displacement of a body (for tests and labels). */

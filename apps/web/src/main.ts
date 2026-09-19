@@ -47,6 +47,8 @@ class App implements SketchHost {
   selectedMate: number | null = null;
   /** "+ Mate" in progress: the first connector once picked. */
   matePick: { a: Connector | null } | null = null;
+  /** A running mate animation: display only, nothing is written to the document. */
+  mateAnimation: { id: number; raf: number; start: number; angle: number; offset: number; spin: boolean; travel: number } | null = null;
   viewer = new Viewer($("#viewport"));
 
   constructor(kernel: Kernel) {
@@ -319,6 +321,43 @@ class App implements SketchHost {
     this.viewer.setSelectedEdges([]);
     this.viewer.hoverEdgeOrFace(null);
     this.viewer.setFrames([]);
+  }
+
+  // ------------------------------------------------------------ mate animation
+
+  /** Sweeps a mate's free motion for display: a full turn every 4 s for spinning mates, a there-and-back slide for sliders. */
+  startMateAnimation(id: number): void {
+    const m = this.mate(id);
+    if (!m || this.summary.kind !== "assembly" || this.tab === null) return;
+    this.stopMateAnimation();
+    const spin = m.kind === "revolute" || m.kind === "cylindrical";
+    const slide = m.kind === "slider";
+    if (!spin && !slide) return;
+    const bounds = this.viewer.bodyBounds();
+    const size = bounds ? Math.hypot(bounds.max.x - bounds.min.x, bounds.max.y - bounds.min.y, bounds.max.z - bounds.min.z) : 20;
+    const anim = { id, raf: 0, start: performance.now(), angle: m.angle, offset: m.offset, spin, travel: slide ? size / 4 : 0 };
+    this.mateAnimation = anim;
+    const frame = (now: number) => {
+      if (this.mateAnimation !== anim) return;
+      const t = (now - anim.start) / 4000;
+      const angle = anim.spin ? anim.angle + (t * 360) % 360 : anim.angle;
+      const offset = anim.travel ? anim.offset + anim.travel * Math.sin(t * 2 * Math.PI) : anim.offset;
+      const deltas = this.kernel.matePreview(this.tab!, anim.id, angle, offset);
+      this.viewer.setBodyTransforms(deltas);
+      this.setStatus(deltas ? `Animating ${m.name}: ${anim.spin ? `${angle.toFixed(0)}°` : `${offset.toFixed(1)} mm`} (Esc stops)` : `Animating ${m.name}: cannot resolve this frame`);
+      anim.raf = requestAnimationFrame(frame);
+    };
+    anim.raf = requestAnimationFrame(frame);
+    this.renderDetail();
+  }
+
+  stopMateAnimation(): void {
+    const anim = this.mateAnimation;
+    if (!anim) return;
+    cancelAnimationFrame(anim.raf);
+    this.mateAnimation = null;
+    this.viewer.setBodyTransforms(null);
+    this.setStatus(this.statusLine());
   }
 
   // ------------------------------------------------------------ instance drag
@@ -740,6 +779,17 @@ class App implements SketchHost {
       body.appendChild(field("Offset", numberInput(m.offset, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, offset: v } }))));
       body.appendChild(field("Angle°", numberInput(m.angle, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, angle: v } }))));
       body.appendChild(field("Flip", checkbox(m.flip, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, flip: v } }))));
+      if (m.kind === "revolute" || m.kind === "cylindrical" || m.kind === "slider") {
+        const running = this.mateAnimation?.id === m.id;
+        const b = button(running ? "Stop animation" : "Animate", () => {
+          if (running) this.stopMateAnimation();
+          else this.startMateAnimation(m.id);
+          this.renderDetail();
+        });
+        b.id = "btn-animate-mate";
+        b.title = m.kind === "slider" ? "Slide back and forth along the mate axis (display only)" : "Spin a full turn about the mate axis (display only)";
+        body.appendChild(field("", b));
+      }
       body.appendChild(field("", button("Remove mate", () => {
         this.applyDoc({ type: "assembly", tab, op: { type: "remove_mate", id: m.id } });
         this.selectedMate = null;
@@ -992,6 +1042,7 @@ class App implements SketchHost {
   }
 
   regenerate(): void {
+    this.stopMateAnimation();
     const t0 = performance.now();
     this.summary = this.kernel.regenerate(this.tab, this.rollback());
     this.tab = this.summary.tab;
@@ -2643,7 +2694,10 @@ async function main(): Promise<void> {
       if (view) app.viewer.setStandardView(view);
     }
     if (e.key === "Escape") {
-      if (app.measure) app.endMeasure();
+      if (app.mateAnimation) {
+        app.stopMateAnimation();
+        app.renderDetail();
+      } else if (app.measure) app.endMeasure();
       else if (app.instanceDrag) app.endInstanceDrag();
       else if (app.matePick) {
         app.endMatePick();

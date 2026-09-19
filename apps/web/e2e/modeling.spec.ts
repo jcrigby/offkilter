@@ -387,9 +387,25 @@ test("assembly tab: edge and corner mate connectors", async ({ page }) => {
   expect(b[1].z).toBeCloseTo(5, 5);
   expect(b[1].y).toBeCloseTo(0, 5);
   expect(b[0].y).toBeCloseTo(-10, 5);
-  // Opening the hinge by 90° stands B up along the shared edge.
+  // Animating the hinge moves B on screen only: no ops, no change to the mate.
   await page.click("#mate-list li");
   await expect(page.locator("#detail-body")).toContainText("edge 1/2");
+  const opCount = () => page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.history.length as number);
+  const before = await opCount();
+  await page.click("#btn-animate-mate");
+  await page.waitForTimeout(700);
+  expect(await status(page)).toMatch(/Animating .*°/);
+  const during = await page.evaluate(() => (window as any).offkilter.viewer.bodyMatrix(1));
+  const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+  expect(Math.max(...during.map((v: number, i: number) => Math.abs(v - identity[i]!)))).toBeGreaterThan(0.05);
+  expect(await page.evaluate(() => (window as any).offkilter.viewer.bodyMatrix(0))).toEqual(identity);
+  await expect(page.locator("#btn-animate-mate")).toHaveText("Stop animation");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#btn-animate-mate")).toHaveText("Animate");
+  expect(await page.evaluate(() => (window as any).offkilter.viewer.bodyMatrix(1))).toEqual(identity);
+  expect(await opCount()).toBe(before);
+  expect(await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.mates[0].angle)).toBe(0);
+  // Opening the hinge by 90° stands B up along the shared edge.
   await page.evaluate(() => {
     const app = (window as unknown as { offkilter: any }).offkilter;
     app.applyDoc({ type: "assembly", tab: app.tab, op: { type: "set_mate", id: app.summary.mates[0].id, angle: 90 } });

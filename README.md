@@ -30,7 +30,8 @@ works today, all in the browser:
   with fastened, revolute, slider, cylindrical, planar and ball mates
   between faces, edges or corners (closed loops solved numerically), sub-assemblies,
   with offset, angle and flip, resolved as chains from fixed instances,
-  plus an interference check between instances.
+  plus an interference check between instances and a display-only
+  animation of any spinning or sliding mate.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
   document only reverts your own edit), `.okpart` JSON documents, STL, 3MF and DXF export, drawing
   sheets (SVG/DXF) with hidden-line removal, mass properties.

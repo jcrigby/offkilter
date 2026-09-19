@@ -80,7 +80,10 @@ impl Transform {
                 rt[j][i] = *v;
             }
         }
-        let inv = Transform { m: rt, t: Vec3::ZERO };
+        let inv = Transform {
+            m: rt,
+            t: Vec3::ZERO,
+        };
         let inv = Transform {
             m: rt,
             t: -inv.apply_vector(from.t),
@@ -207,7 +210,11 @@ mod tests {
             ..to
         };
         let d = to.then_inverse_of(&from);
-        for p in [Vec3::ZERO, Vec3::new(1.0, -2.0, 0.5), Vec3::new(-3.0, 4.0, 9.0)] {
+        for p in [
+            Vec3::ZERO,
+            Vec3::new(1.0, -2.0, 0.5),
+            Vec3::new(-3.0, 4.0, 9.0),
+        ] {
             let placed = from.apply_point(p);
             assert!(d.apply_point(placed).distance(to.apply_point(p)) < 1e-12);
         }
