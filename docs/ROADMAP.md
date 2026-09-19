@@ -14,7 +14,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Regular polygon and slot tools (constrained to stay regular / tangent)
 - [x] Trim, offset, mirror within a sketch (symmetric constraints on mirrored points)
 - [x] Dimension labels in the viewport with click-to-edit (values or expressions)
-- [ ] Analytic Jacobians for the common constraints (performance)
+- [x] Sparse Jacobian: analytic rows for the common constraints, local differences for the rest; rank from the normal matrix
 - [ ] Splines (B-spline entity + point-on-curve)
 - [x] Sketch on planar faces of bodies (face references)
 - [x] Project / use edges and face outlines from bodies in sketches (fixed entities that follow the model)

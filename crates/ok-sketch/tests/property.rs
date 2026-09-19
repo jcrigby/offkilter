@@ -114,3 +114,52 @@ fn random_dimensioned_rectangles_solve_to_their_dimensions() {
         );
     }
 }
+
+/// A grid of dimensioned, chained rectangles: `OK_BENCH_CELLS` per side
+/// (default 8), printed with its solve time. Run with `--ignored --nocapture`.
+#[test]
+#[ignore]
+fn solve_time_for_a_grid_of_dimensioned_rectangles() {
+    let cells: usize = std::env::var("OK_BENCH_CELLS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(8);
+    let mut s = Sketch::new();
+    let mut corners = Vec::new();
+    for i in 0..cells {
+        for j in 0..cells {
+            let a = Vec2::new(i as f64 * 10.3, j as f64 * 10.7);
+            let lines = s.add_rectangle(a, a + Vec2::new(9.0, 9.0));
+            s.add_constraint(Constraint::Length {
+                line: lines[0],
+                value: 10.0,
+            });
+            s.add_constraint(Constraint::Length {
+                line: lines[1],
+                value: 10.0,
+            });
+            let (corner, _) = s.line(lines[0]).unwrap();
+            corners.push(corner);
+        }
+    }
+    // Chain: each rectangle's first corner sits 10 right (or up) of the previous.
+    for w in corners.windows(2) {
+        s.add_constraint(Constraint::Distance {
+            a: w[0],
+            b: w[1],
+            value: 10.0,
+        });
+    }
+    s.add_constraint(Constraint::Fixed { point: corners[0] });
+    let t = std::time::Instant::now();
+    let res = s.solve();
+    println!(
+        "{} params, {} equations: {:?} in {} iterations, {:.1} ms",
+        res.parameters,
+        res.equations,
+        res.status,
+        res.iterations,
+        t.elapsed().as_secs_f64() * 1e3
+    );
+    assert!(res.max_residual < 1e-6, "{res:?}");
+}

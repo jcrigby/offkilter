@@ -219,15 +219,29 @@ follows the original under the solver.
 
 Levenberg–Marquardt over a parameter vector of free point coordinates and
 circle radii. Fixed points are removed from the parameter set rather than
-expressed as residuals. The Jacobian is numeric (central differences),
-which keeps adding constraints trivial; analytic derivatives are a
-performance item for later. Damping keeps under-constrained sketches close
-to their starting geometry, which is what a user dragging a point expects.
+expressed as residuals. The Jacobian is sparse: a constraint only
+depends on the parameters of the entities it names, so each row holds a
+handful of entries. Coincident, horizontal/vertical, the distances,
+length, radius, diameter, equal, point-on-line, point-on-circle,
+midpoint and the implicit arc equation have analytic rows; the
+trigonometric ones (parallel, perpendicular, angle, symmetric, rotated,
+tangent) are differenced over just their own parameters, so adding a
+constraint stays trivial (a test checks the sparse Jacobian against dense
+central differences over every parameter). The normal matrix `JᵀJ` is
+accumulated from those rows. Damping keeps under-constrained sketches
+close to their starting geometry, which is what a user dragging a point
+expects.
 
 After solving, the rank of the Jacobian gives the remaining degrees of
-freedom: `dof = parameters − rank`. The result is reported as
-fully constrained, under-constrained (with DOF count) or inconsistent (the
-residual did not converge). A conflict is reported rather than "fixed".
+freedom: `dof = parameters − rank`. It is read off the normal matrix by
+elimination with diagonal pivots (no row swaps on a positive
+semidefinite matrix, so it stays as sparse as the sketch), treating a
+pivot that has shrunk to noise relative to its original diagonal entry
+as a dependent parameter. The result is reported as fully constrained,
+under-constrained (with DOF count) or inconsistent (the residual did not
+converge). A conflict is reported rather than "fixed". A grid of 128
+dimensioned rectangles (about 1000 parameters) solves in under 0.1 s
+(`solve_time_for_a_grid_of_dimensioned_rectangles`, ignored by default).
 
 ### Projected geometry (`ok-model/src/project.rs`)
 
