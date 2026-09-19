@@ -1,15 +1,15 @@
 [package]
-name = "ok-model"
+name = "ok-brep"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Parametric document model: part studios, features and regeneration"
+description = "Boundary representation solids and boolean operations for the offkilter kernel"
 
 [dependencies]
 ok-math = { workspace = true }
 ok-sketch = { workspace = true }
 ok-mesh = { workspace = true }
-ok-brep = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
 thiserror = { workspace = true }
+earcutr = "0.4"
+i_overlay = "8.1"

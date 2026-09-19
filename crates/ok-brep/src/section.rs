@@ -1,0 +1,199 @@
+//! Planar cross-sections of solids.
+//!
+//! The section of a solid by a plane is a set of oriented 2D loops in the
+//! plane's coordinates, counter-clockwise around solid material. Vertices
+//! that lie exactly on the plane are treated as being on one side, chosen
+//! by `zero_is_above`; this is the classic simulation-of-simplicity trick
+//! and lets callers ask for the section "just above" or "just below" a
+//! plane without perturbing coordinates. Crossing points are computed once
+//! per edge, so the loops chain together exactly by edge identity.
+//! Vertices within `eps` of the plane are snapped onto it first, so that
+//! faces built to be coplanar are treated as exactly coplanar.
+
+use crate::{edge_key, BrepError, EdgeKey, Solid};
+use ok_math::{Plane, Vec2, Vec3};
+use std::collections::HashMap;
+
+pub struct Section {
+    /// Loops in plane coordinates; CCW encloses material.
+    pub loops: Vec<Vec<Vec2>>,
+}
+
+impl Section {
+    pub fn is_empty(&self) -> bool {
+        self.loops.is_empty()
+    }
+}
+
+struct Crossing {
+    point: Vec3,
+}
+
+pub fn section(
+    solid: &Solid,
+    plane: &Plane,
+    zero_is_above: bool,
+    eps: f64,
+) -> Result<Section, BrepError> {
+    let n = plane.normal;
+    let d0 = n.dot(plane.origin);
+    let dist: Vec<f64> = solid
+        .vertices
+        .iter()
+        .map(|v| {
+            let d = n.dot(*v) - d0;
+            if d.abs() <= eps {
+                0.0
+            } else {
+                d
+            }
+        })
+        .collect();
+    let above = |v: u32| -> bool {
+        let d = dist[v as usize];
+        if zero_is_above {
+            d >= 0.0
+        } else {
+            d > 0.0
+        }
+    };
+
+    let mut crossings: Vec<Crossing> = Vec::new();
+    let mut by_edge: HashMap<EdgeKey, usize> = HashMap::new();
+    // Returns the crossing id and its point for an edge that crosses.
+    let mut crossing_of = |a: u32, b: u32| -> Option<(usize, Vec3)> {
+        if above(a) == above(b) {
+            return None;
+        }
+        let key = edge_key(a, b);
+        let id = *by_edge.entry(key).or_insert_with(|| {
+            let (lo, hi) = key;
+            let (dl, dh) = (dist[lo as usize], dist[hi as usize]);
+            let t = dl / (dl - dh);
+            let p = solid.vertices[lo as usize]
+                + (solid.vertices[hi as usize] - solid.vertices[lo as usize]) * t;
+            crossings.push(Crossing { point: p });
+            crossings.len() - 1
+        });
+        Some((id, crossings[id].point))
+    };
+
+    // Directed segments between crossing ids: start -> end.
+    let mut next: HashMap<usize, usize> = HashMap::new();
+    let mut segment_count = 0usize;
+    for f in &solid.faces {
+        let Some(dir) = n.cross(f.plane.normal).normalized() else {
+            continue; // parallel to the section plane
+        };
+        let mut hits: Vec<(f64, usize)> = Vec::new();
+        for l in &f.loops {
+            let count = l.len();
+            for i in 0..count {
+                if let Some((c, p)) = crossing_of(l[i], l[(i + 1) % count]) {
+                    hits.push((p.dot(dir), c));
+                }
+            }
+        }
+        if hits.is_empty() {
+            continue;
+        }
+        if !hits.len().is_multiple_of(2) {
+            return Err(BrepError::OpenSection(format!(
+                "face crossed an odd number of times ({})",
+                hits.len()
+            )));
+        }
+        hits.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+        for pair in hits.chunks_exact(2) {
+            let (s, e) = (pair[0].1, pair[1].1);
+            if s == e {
+                continue;
+            }
+            if next.insert(s, e).is_some() {
+                return Err(BrepError::OpenSection(format!(
+                    "inconsistent segment orientation at face {:?} (normal {:?})",
+                    f.origin, f.plane.normal
+                )));
+            }
+            segment_count += 1;
+        }
+    }
+
+    let _ = &mut crossing_of;
+    // Chain segments into loops.
+    let mut loops = Vec::new();
+    let mut used: HashMap<usize, bool> = HashMap::new();
+    let starts: Vec<usize> = next.keys().copied().collect();
+    for s in starts {
+        if used.contains_key(&s) {
+            continue;
+        }
+        let mut poly = Vec::new();
+        let mut cur = s;
+        loop {
+            used.insert(cur, true);
+            poly.push(plane.to_plane(crossings[cur].point));
+            let Some(&nx) = next.get(&cur) else {
+                return Err(BrepError::OpenSection(format!(
+                    "chain broke after {} of {} segments",
+                    poly.len(),
+                    segment_count
+                )));
+            };
+            cur = nx;
+            if cur == s {
+                break;
+            }
+            if poly.len() > segment_count + 1 {
+                return Err(BrepError::OpenSection("chain did not close".into()));
+            }
+        }
+        if poly.len() >= 3 && ok_sketch::signed_area(&poly).abs() > 1e-18 {
+            loops.push(poly);
+        }
+    }
+    Ok(Section { loops })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::extrude;
+    use ok_math::Vec2;
+    use ok_sketch::{ProfileOptions, Sketch};
+
+    fn box_solid(w: f64, h: f64, d: f64) -> Solid {
+        let mut s = Sketch::new();
+        s.add_rectangle(Vec2::ZERO, Vec2::new(w, h));
+        let p = s.profiles(&ProfileOptions::default()).remove(0);
+        extrude(&p, &Plane::XY, 0.0, d, 1).unwrap()
+    }
+
+    #[test]
+    fn mid_section_of_box_is_ccw_rectangle() {
+        let b = box_solid(4.0, 2.0, 3.0);
+        let plane = Plane::XY.offset(1.5);
+        let sec = section(&b, &plane, true, 1e-9).unwrap();
+        assert_eq!(sec.loops.len(), 1);
+        assert!((ok_sketch::signed_area(&sec.loops[0]) - 8.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn section_through_top_face_depends_on_side() {
+        let b = box_solid(4.0, 2.0, 3.0);
+        let top = Plane::XY.offset(3.0);
+        // Just below the top: material.
+        assert_eq!(section(&b, &top, true, 1e-9).unwrap().loops.len(), 1);
+        // Just above the top: nothing.
+        assert!(section(&b, &top, false, 1e-9).unwrap().is_empty());
+    }
+
+    #[test]
+    fn vertical_section_is_ccw_about_material() {
+        let b = box_solid(4.0, 2.0, 3.0);
+        let plane = Plane::YZ.offset(2.0);
+        let sec = section(&b, &plane, true, 1e-9).unwrap();
+        assert_eq!(sec.loops.len(), 1);
+        assert!((ok_sketch::signed_area(&sec.loops[0]) - 6.0).abs() < 1e-9);
+    }
+}

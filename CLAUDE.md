@@ -21,4 +21,6 @@ kernel and `docs/ROADMAP.md` to see what is planned.
 - Keep the wasm API narrow (JSON in/out + typed arrays). Add TypeScript
   types in `apps/web/src/kernel.ts` when `Op`/summary shapes change.
 - Geometry changes need numeric tests (areas, volumes, DOF counts).
+- Solids are only ever built through `ok_brep::Solid::from_polygons`, which
+  validates closure. Never construct a `Solid` by hand or skip validation.
 - `apps/web/src/wasm/` is generated and git-ignored; never edit it.

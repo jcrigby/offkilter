@@ -15,18 +15,66 @@ use ok_math::Vec2;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
+/// The curve a polygon segment was sampled from. Lets downstream code
+/// rebuild analytic surfaces (a cylinder for an arc) from the polygon.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum SegmentCurve {
+    Line,
+    Arc { center: Vec2, radius: f64 },
+}
+
+/// A closed polygon loop with a curve tag per segment.
+/// `curves[i]` describes the segment from `points[i]` to `points[(i + 1) % n]`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Loop {
+    pub points: Vec<Vec2>,
+    pub curves: Vec<SegmentCurve>,
+}
+
+impl Loop {
+    pub fn polygon(points: Vec<Vec2>) -> Loop {
+        let n = points.len();
+        Loop {
+            points,
+            curves: vec![SegmentCurve::Line; n],
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.points.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.points.is_empty()
+    }
+
+    pub fn signed_area(&self) -> f64 {
+        signed_area(&self.points)
+    }
+
+    /// Returns the loop traversed in the opposite direction, starting at the
+    /// same point, with curve tags moved to their reversed segments.
+    pub fn reversed(&self) -> Loop {
+        let n = self.points.len();
+        let points = (0..n).map(|j| self.points[(n - j) % n]).collect();
+        let curves = (0..n).map(|j| self.curves[(n - j - 1) % n]).collect();
+        Loop { points, curves }
+    }
+}
+
 /// A closed planar region: an outer loop (counter-clockwise) and zero or
 /// more hole loops (clockwise), each polygonised.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Profile {
-    pub outer: Vec<Vec2>,
-    pub holes: Vec<Vec<Vec2>>,
+    pub outer: Loop,
+    pub holes: Vec<Loop>,
 }
 
 impl Profile {
     /// Signed area of the outer loop minus the holes.
     pub fn area(&self) -> f64 {
-        signed_area(&self.outer) + self.holes.iter().map(|h| signed_area(h)).sum::<f64>()
+        self.outer.signed_area() + self.holes.iter().map(|h| h.signed_area()).sum::<f64>()
     }
 }
 
@@ -300,7 +348,7 @@ impl Graph {
     }
 
     /// Polygonises a half-edge from its origin, excluding the final vertex.
-    fn polygonise(&self, h: Half, opts: &ProfileOptions, out: &mut Vec<Vec2>) {
+    fn polygonise(&self, h: Half, opts: &ProfileOptions, out: &mut Loop) {
         let e = &self.edges[h.edge];
         let (from, to) = if h.forward {
             (self.verts[e.a], self.verts[e.b])
@@ -308,7 +356,10 @@ impl Graph {
             (self.verts[e.b], self.verts[e.a])
         };
         match e.curve {
-            Curve::Line => out.push(from),
+            Curve::Line => {
+                out.points.push(from);
+                out.curves.push(SegmentCurve::Line);
+            }
             Curve::Arc { center } => {
                 let r = 0.5 * (from.distance(center) + to.distance(center));
                 let a0 = (from - center).angle();
@@ -325,7 +376,8 @@ impl Graph {
                 let n = ((sweep.abs() / opts.arc_segment_angle).ceil() as usize).max(2);
                 for i in 0..n {
                     let t = a0 + sweep * (i as f64 / n as f64);
-                    out.push(center + Vec2::from_angle(t) * r);
+                    out.points.push(center + Vec2::from_angle(t) * r);
+                    out.curves.push(SegmentCurve::Arc { center, radius: r });
                 }
             }
         }
@@ -333,7 +385,7 @@ impl Graph {
 
     /// Traces every face of the planar graph and returns the polygons of the
     /// bounded (positive-area) ones.
-    fn bounded_faces(&self, opts: &ProfileOptions) -> Vec<Vec<Vec2>> {
+    fn bounded_faces(&self, opts: &ProfileOptions) -> Vec<Loop> {
         // Outgoing half-edges per vertex, sorted by angle CCW.
         let mut out: Vec<Vec<Half>> = vec![Vec::new(); self.verts.len()];
         for (i, e) in self.edges.iter().enumerate() {
@@ -381,7 +433,10 @@ impl Graph {
                 if visited.contains_key(&start) {
                     continue;
                 }
-                let mut poly = Vec::new();
+                let mut poly = Loop {
+                    points: Vec::new(),
+                    curves: Vec::new(),
+                };
                 let mut h = start;
                 loop {
                     visited.insert(h, true);
@@ -391,7 +446,7 @@ impl Graph {
                         break;
                     }
                 }
-                if signed_area(&poly) > 1e-12 {
+                if poly.signed_area() > 1e-12 {
                     faces.push(poly);
                 }
             }
@@ -404,29 +459,36 @@ impl Sketch {
     /// Extracts the closed regions bounded by the sketch geometry.
     pub fn profiles(&self, opts: &ProfileOptions) -> Vec<Profile> {
         let graph = Graph::from_sketch(self, opts);
-        let mut loops: Vec<Vec<Vec2>> = graph.bounded_faces(opts);
+        let mut loops: Vec<Loop> = graph.bounded_faces(opts);
         for (_, e) in self.entities() {
             if let Entity::Circle { center, radius } = e {
                 if let Ok(c) = self.point(*center) {
                     if *radius > 0.0 {
                         let n = ((std::f64::consts::TAU / opts.arc_segment_angle).ceil() as usize)
                             .max(8);
-                        loops.push(
-                            (0..n)
-                                .map(|i| {
-                                    c + Vec2::from_angle(
-                                        std::f64::consts::TAU * i as f64 / n as f64,
-                                    ) * *radius
-                                })
-                                .collect(),
-                        );
+                        let points = (0..n)
+                            .map(|i| {
+                                c + Vec2::from_angle(std::f64::consts::TAU * i as f64 / n as f64)
+                                    * *radius
+                            })
+                            .collect();
+                        loops.push(Loop {
+                            points,
+                            curves: vec![
+                                SegmentCurve::Arc {
+                                    center: c,
+                                    radius: *radius
+                                };
+                                n
+                            ],
+                        });
                     }
                 }
             }
         }
         // Nest loops: parent = smallest loop that contains this loop.
-        let areas: Vec<f64> = loops.iter().map(|l| signed_area(l)).collect();
-        let probes: Vec<Vec2> = loops.iter().map(|l| probe_point(l)).collect();
+        let areas: Vec<f64> = loops.iter().map(|l| l.signed_area()).collect();
+        let probes: Vec<Vec2> = loops.iter().map(|l| probe_point(&l.points)).collect();
         let mut parent: Vec<Option<usize>> = vec![None; loops.len()];
         for i in 0..loops.len() {
             let mut best: Option<usize> = None;
@@ -434,7 +496,7 @@ impl Sketch {
                 if i == j || areas[j] <= areas[i] {
                     continue;
                 }
-                if point_in_polygon(probes[i], &loops[j])
+                if point_in_polygon(probes[i], &loops[j].points)
                     && best.is_none_or(|b| areas[j] < areas[b])
                 {
                     best = Some(j);
@@ -455,15 +517,7 @@ impl Sketch {
                 outer: outer.clone(),
                 holes: children
                     .get(&i)
-                    .map(|hs| {
-                        hs.iter()
-                            .map(|&h| {
-                                let mut hole = loops[h].clone();
-                                hole.reverse();
-                                hole
-                            })
-                            .collect()
-                    })
+                    .map(|hs| hs.iter().map(|&h| loops[h].reversed()).collect())
                     .unwrap_or_default(),
             })
             .collect()
@@ -534,6 +588,42 @@ mod tests {
         for f in &p {
             assert!((f.area() - 6.0).abs() < 1e-9);
         }
+    }
+
+    #[test]
+    fn reversed_loop_keeps_curve_tags_on_segments() {
+        let arc = SegmentCurve::Arc {
+            center: Vec2::ZERO,
+            radius: 1.0,
+        };
+        let l = Loop {
+            points: vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(1.0, 0.0),
+                Vec2::new(1.0, 1.0),
+                Vec2::new(0.0, 1.0),
+            ],
+            curves: vec![
+                SegmentCurve::Line,
+                arc,
+                SegmentCurve::Line,
+                SegmentCurve::Line,
+            ],
+        };
+        let r = l.reversed();
+        assert_eq!(
+            r.points,
+            vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(0.0, 1.0),
+                Vec2::new(1.0, 1.0),
+                Vec2::new(1.0, 0.0)
+            ]
+        );
+        // Segment (1,1)->(1,0) is the reversed arc.
+        assert_eq!(r.curves[2], arc);
+        assert_eq!(r.curves.iter().filter(|c| **c == arc).count(), 1);
+        assert!((r.signed_area() + l.signed_area()).abs() < 1e-12);
     }
 
     #[test]

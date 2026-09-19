@@ -50,10 +50,11 @@ class App {
     this.viewer.setSketches(this.summary.sketches, this.selected);
     this.renderFeatures();
     this.renderDetail();
-    const tris = this.summary.bodies.reduce((n, b) => n + b.triangles, 0);
+    const faces = this.summary.bodies.reduce((n, b) => n + b.faces, 0);
+    const volume = this.summary.bodies.reduce((n, b) => n + b.volume, 0);
     const errors = this.summary.features.filter((f) => f.error).length;
     this.setStatus(
-      `${this.summary.bodies.length} bodies · ${tris} triangles · regen ${dt.toFixed(1)} ms` +
+      `${this.summary.bodies.length} ${this.summary.bodies.length === 1 ? "body" : "bodies"} · ${faces} faces · ${volume.toFixed(1)} mm³ · regen ${dt.toFixed(1)} ms` +
         (errors ? ` · ${errors} feature error${errors > 1 ? "s" : ""}` : "") +
         ` · kernel v${Kernel.version()}`,
     );
@@ -329,11 +330,11 @@ class App {
       })),
     );
     body.appendChild(
-      field("Result", select(["new", "add"], k.op, (v) => this.apply({ type: "set_extrude", id: f.id, op: v as typeof k.op }))),
+      field("Result", select(["new", "add", "remove", "intersect"], k.op, (v) => this.apply({ type: "set_extrude", id: f.id, op: v as typeof k.op }))),
     );
     const note = document.createElement("p");
     note.className = "note";
-    note.textContent = "“Add” merges into the previous body. Boolean union is not implemented yet, so overlapping volumes are drawn twice.";
+    note.textContent = "New creates a body. Add, remove and intersect apply to every existing body the extrusion touches.";
     body.appendChild(note);
   }
 }

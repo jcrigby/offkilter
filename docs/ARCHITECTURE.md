@@ -14,7 +14,8 @@ crates/ok-wasm  (wasm-bindgen facade)
 crates/ok-model  PartStudio ─ Feature list ─ Op ─ regenerate()
    │                              │
    │                              ├─ Sketch feature  → ok-sketch (solve, profiles)
-   │                              └─ Extrude feature → ok-mesh   (extrude_profile)
+   │                              └─ Extrude feature → ok-brep   (extrude, boolean)
+   │                                                      └→ ok-mesh (tessellation for display)
    ▼
 crates/ok-math   Vec2 / Vec3 / Plane / tolerances
 ```
@@ -38,8 +39,12 @@ types. This is deliberate: an op log gives undo/redo for free, is the unit
 of a future version history, and is what real-time collaboration will
 synchronise. Do not add mutating methods outside `apply`.
 
-Bodies are currently `TriMesh`es. "Add" merges by concatenating meshes;
-there is no boolean yet. The `Body` type is where a B-rep solid will go.
+A `Body` holds an `ok_brep::Solid` plus its display tessellation and
+edges. Extrude builds a tool solid from the selected regions and then, per
+`BodyOp`, creates a new body, unions it with every body its bounding box
+touches, subtracts it from them, or intersects with them. A cut that
+splits a body yields separate bodies (one per shell). Boolean failures are
+reported as feature errors and leave the existing bodies untouched.
 
 ## Sketching (`ok-sketch`)
 
@@ -82,12 +87,65 @@ Known gaps: edges that cross mid-span are not split (no intersection
 insertion yet), and two curves leaving a vertex with the same tangent are
 ordered by direction only (no curvature tie-break).
 
+## Solids (`ok-brep`)
+
+A `Solid` is a closed set of planar polygonal faces (loops of shared
+vertex indices; outer loop counter-clockwise about the outward normal,
+holes clockwise). Every face references an analytic `Surface`: either its
+plane or, for facets produced from a sketch arc or circle, the cylinder
+they approximate. This is a polyhedral B-rep with surface tags: facets on
+one cylinder shade smoothly, hide their internal edges, and can later be
+replaced by exact curved faces without changing the topology model. Each
+face also carries a `FaceOrigin` (feature id + local index) as the seed of
+persistent naming.
+
+`extrude` builds a solid from a profile: two caps and one wall facet per
+polygon segment, with arc segments sharing a cylinder surface.
+`Solid::from_polygons` is the single assembly path: it merges vertices
+within a size-relative tolerance, inserts vertices that lie on other
+polygons' edges (T-junctions), strips zero-width spikes, and validates
+that every edge is used an even number of times with balanced orientation.
+Anything that fails validation is an error, never a displayed body.
+
+### Booleans (`boolean.rs`)
+
+Booleans work face by face. For a face `F` of `A` with plane `P`, take two
+cross-sections of `B` in `P`: one infinitesimally above the plane (`X+`)
+and one below (`X-`). "Infinitesimally" is implemented exactly by treating
+vertices on the plane as belonging to one side or the other (simulation of
+simplicity), so no coordinates are perturbed. In `P`'s 2D frame:
+
+| region of `P`                          | in X+ | in X- |
+|----------------------------------------|-------|-------|
+| inside `B`                             | yes   | yes   |
+| outside `B`                            | no    | no    |
+| on a `B` face with the same normal     | no    | yes   |
+| on a `B` face with the opposite normal | yes   | no    |
+
+The part of `F` to keep is then a 2D polygon boolean (via `i_overlay`)
+of `F`'s region against those sections. Union keeps `F − X+`; difference
+keeps `F − X-`; intersection keeps `F ∩ X-`; the faces of `B` use the
+symmetric rules (and are flipped for difference). This treats coplanar
+faces, which are the common case in CAD (a boss on a plate, a cut from a
+face), exactly and without special cases.
+
+Cross-sections (`section.rs`) compute one crossing point per edge and
+chain segments by edge identity, so section loops close exactly for a
+valid solid. Section vertices within tolerance of the face boundary are
+snapped onto it before clipping, and the clipper runs with a 64-bit grid,
+so shared boundaries come out coincident rather than as hairline slivers.
+
+Known limits: results are polyhedral (arcs are 5° facets), overlapping
+coplanar faces from different features stay separate faces rather than
+merging, and the merge scope is "every body whose bounding box touches
+the tool".
+
 ## Meshes (`ok-mesh`)
 
-`TriMesh` is flat shaded (vertices duplicated per face) with `f32`
-buffers, ready for GPU upload. `extrude_profile` triangulates the caps with
-`earcutr` and builds side walls per loop edge. `signed_volume` is used by
-tests to check orientation and correctness.
+`TriMesh` carries `f32` position, normal and index buffers ready for GPU
+upload. `ok_brep::tessellate` triangulates each face with `earcutr` and
+emits analytic normals on cylinder facets. `signed_volume` is used by tests
+to check orientation and correctness.
 
 ## Web client (`apps/web`)
 

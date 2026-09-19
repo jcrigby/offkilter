@@ -8,7 +8,7 @@ export type Vec3 = { x: number; y: number; z: number };
 export type StandardPlane = "top" | "front" | "right";
 export type PlaneSpec = { base: StandardPlane; offset: number };
 export type ExtrudeDirection = "normal" | "reverse" | "symmetric";
-export type BodyOp = "new" | "add";
+export type BodyOp = "new" | "add" | "remove" | "intersect";
 export type ProfileSelection = { type: "all" } | { type: "largest" } | { type: "indices"; indices: number[] };
 
 export type Constraint =
@@ -47,7 +47,7 @@ export type FeatureKind =
   | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; op: BodyOp };
 
 export type FeatureSummary = { id: number; name: string; suppressed: boolean; kind: FeatureKind; error: string | null };
-export type BodySummary = { name: string; source: number; vertices: number; triangles: number; bounds: [Vec3, Vec3] | null; volume: number };
+export type BodySummary = { name: string; source: number; vertices: number; triangles: number; faces: number; bounds: [Vec3, Vec3] | null; volume: number };
 export type SolveResult = {
   status: "fully_constrained" | "under_constrained" | "inconsistent";
   iterations: number;
@@ -86,7 +86,7 @@ export type Op =
 
 export type OpResult = { feature: number | null; entities: number[]; constraint: number | null };
 
-export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array };
+export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array };
 
 export class Kernel {
   private studio: Studio;
@@ -135,6 +135,7 @@ export class Kernel {
         positions: this.studio.body_positions(i),
         normals: this.studio.body_normals(i),
         indices: this.studio.body_indices(i),
+        edges: this.studio.body_edges(i),
       });
     }
     return out;

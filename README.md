@@ -4,11 +4,13 @@ An experiment in building an open source, browser-based parametric CAD
 system in the spirit of Onshape: a real geometry kernel, a feature-based
 part studio, and a web client, all under the MIT license.
 
-**Status: early foundation.** The kernel can solve 2D sketches with
-geometric and dimensional constraints, find their closed regions, and
-extrude them into solid meshes. The web client edits the feature list and
-regenerates the part live. There are no booleans, fillets, assemblies or
-collaboration yet. See [docs/ROADMAP.md](docs/ROADMAP.md).
+**Status: early foundation.** The kernel solves 2D sketches with
+geometric and dimensional constraints, finds their closed regions, extrudes
+them into boundary-representation solids, and combines solids with
+boolean union, subtract and intersect. The web client edits the feature
+list and regenerates the part live. Curved faces are still faceted, and
+there are no fillets, assemblies or collaboration yet. See
+[docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout
 
@@ -16,7 +18,8 @@ collaboration yet. See [docs/ROADMAP.md](docs/ROADMAP.md).
 | --- | --- |
 | `crates/ok-math` | Vectors, planes, tolerances. |
 | `crates/ok-sketch` | Sketch entities, constraints, Levenberg–Marquardt solver, closed-region extraction. |
-| `crates/ok-mesh` | Triangle meshes and extrusion. |
+| `crates/ok-brep` | Boundary-representation solids: extrusion, cross-sections, booleans. |
+| `crates/ok-mesh` | Triangle meshes for display. |
 | `crates/ok-model` | Part studio, features, operations (`Op`) and regeneration. |
 | `crates/ok-wasm` | WebAssembly bindings used by the web client. |
 | `apps/web` | Vite + TypeScript + three.js client. |

@@ -19,8 +19,10 @@ top are concrete and self-contained; items lower down are directions.
 ## Solids
 
 - [x] Extrude regions (normal / reverse / symmetric)
-- [ ] Boundary representation (B-rep): vertices, edges, faces with planar and cylindrical surfaces first, then general
-- [ ] Booleans (union / subtract / intersect) — the enabler for cut extrudes, holes, and "Add" that actually merges
+- [x] Boundary representation: shared-vertex planar faces with analytic surface tags (plane, cylinder) and face origins
+- [x] Booleans (union / subtract / intersect) on polyhedral solids, with exact coplanar handling
+- [ ] Exact curved faces (cylinder, later general surfaces) instead of facets, with curve/surface intersection
+- [ ] Merge coplanar faces of the same body after a union
 - [ ] Extrude up-to-face / through-all
 - [ ] Revolve, sweep, loft
 - [ ] Fillet and chamfer
@@ -49,6 +51,6 @@ top are concrete and self-contained; items lower down are directions.
 ## Engineering
 
 - [x] CI: fmt, clippy, tests, wasm build, web build
-- [ ] Property/fuzz tests for the solver and region extraction
+- [ ] Property/fuzz tests for the solver, region extraction and booleans (random box/cylinder stacks compared against analytic volumes)
 - [ ] Benchmarks for regeneration time on realistic parts
 - [ ] `wasm-opt` in the release pipeline

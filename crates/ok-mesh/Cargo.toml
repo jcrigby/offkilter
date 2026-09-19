@@ -7,6 +7,4 @@ description = "Triangle meshes and tessellation for the offkilter kernel"
 
 [dependencies]
 ok-math = { workspace = true }
-ok-sketch = { workspace = true }
 serde = { workspace = true }
-earcutr = "0.4"

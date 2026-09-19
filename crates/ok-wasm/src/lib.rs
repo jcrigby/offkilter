@@ -40,6 +40,7 @@ struct BodySummary<'a> {
     source: ok_model::FeatureId,
     vertices: usize,
     triangles: usize,
+    faces: usize,
     bounds: Option<(ok_math::Vec3, ok_math::Vec3)>,
     volume: f64,
 }
@@ -112,8 +113,9 @@ impl Studio {
                 source: b.source,
                 vertices: b.mesh.vertex_count(),
                 triangles: b.mesh.triangle_count(),
-                bounds: b.mesh.bounds(),
-                volume: b.mesh.signed_volume(),
+                faces: b.solid.faces.len(),
+                bounds: b.solid.bounds(),
+                volume: b.solid.volume(),
             })
             .collect();
         serde_json::to_string(&Summary {
@@ -150,6 +152,24 @@ impl Studio {
             .bodies
             .get(i)
             .map(|b| b.mesh.indices.clone())
+            .unwrap_or_default()
+    }
+
+    /// Display edges as flat xyz pairs: `[x0, y0, z0, x1, y1, z1, ...]`.
+    pub fn body_edges(&self, i: usize) -> Vec<f32> {
+        self.last
+            .bodies
+            .get(i)
+            .map(|b| {
+                b.edges
+                    .iter()
+                    .flat_map(|[a, b]| {
+                        [
+                            a.x as f32, a.y as f32, a.z as f32, b.x as f32, b.y as f32, b.z as f32,
+                        ]
+                    })
+                    .collect()
+            })
             .unwrap_or_default()
     }
 }

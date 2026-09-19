@@ -11,7 +11,7 @@ mod loops;
 mod solver;
 
 pub use entity::{Constraint, ConstraintId, Entity, EntityId};
-pub use loops::{Profile, ProfileOptions};
+pub use loops::{point_in_polygon, signed_area, Loop, Profile, ProfileOptions, SegmentCurve};
 pub use solver::{SolveResult, SolveStatus};
 
 use ok_math::Vec2;

@@ -62,16 +62,20 @@ pub enum ExtrudeDirection {
     Symmetric,
 }
 
-/// How a feature's result combines with existing bodies.
+/// How a feature's result combines with existing bodies. `Add`, `Remove`
+/// and `Intersect` act on every existing body the tool volume touches.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum BodyOp {
     /// Create a new body.
     #[default]
     New,
-    /// Merge into the most recent body. Until the kernel has booleans this
-    /// concatenates meshes, so overlapping volume is drawn twice.
+    /// Union with the bodies it touches (or a new body if none).
     Add,
+    /// Subtract from the bodies it touches.
+    Remove,
+    /// Keep only the overlap with the bodies it touches.
+    Intersect,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]

@@ -1,6 +1,7 @@
 use crate::{BodyOp, ExtrudeDirection, FeatureId, FeatureKind, PartStudio, ProfileSelection};
+use ok_brep::{boolean, BoolOp, Solid};
 use ok_math::{Plane, Vec2, Vec3};
-use ok_mesh::{extrude_profile, TriMesh};
+use ok_mesh::TriMesh;
 use ok_sketch::{Entity, EntityId, Profile, ProfileOptions, SolveResult};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -11,7 +12,29 @@ pub struct Body {
     pub name: String,
     /// Feature that created the body.
     pub source: FeatureId,
+    pub solid: Solid,
+    /// Display tessellation of `solid`.
     pub mesh: TriMesh,
+    /// Display edges of `solid` (between distinct surfaces).
+    pub edges: Vec<[Vec3; 2]>,
+}
+
+impl Body {
+    fn new(name: String, source: FeatureId, solid: Solid) -> Body {
+        let mesh = ok_brep::tessellate(&solid);
+        let edges = ok_brep::display_edges(&solid);
+        Body {
+            name,
+            source,
+            solid,
+            mesh,
+            edges,
+        }
+    }
+
+    pub fn bounds(&self) -> Option<(Vec3, Vec3)> {
+        self.solid.bounds()
+    }
 }
 
 /// A sketch entity tessellated into model space for display.
@@ -42,6 +65,8 @@ pub struct RegenResult {
     pub bodies: Vec<Body>,
     pub sketches: BTreeMap<FeatureId, SketchResult>,
     pub statuses: Vec<FeatureStatus>,
+    /// Running count used to name bodies "Part N".
+    next_part: usize,
 }
 
 impl RegenResult {
@@ -156,8 +181,7 @@ impl PartStudio {
                 }
                 FeatureKind::Extrude(ef) => {
                     let ef = ef.clone();
-                    let name = self.features[pos].name.clone();
-                    Self::regen_extrude(&mut result, id, &name, &ef, pos, &self.features)
+                    Self::regen_extrude(&mut result, id, &ef, pos, &self.features)
                 }
             };
             result.statuses.push(FeatureStatus { id, error });
@@ -168,7 +192,6 @@ impl PartStudio {
     fn regen_extrude(
         result: &mut RegenResult,
         id: FeatureId,
-        name: &str,
         ef: &crate::ExtrudeFeature,
         pos: usize,
         features: &[crate::Feature],
@@ -218,24 +241,124 @@ impl PartStudio {
             ExtrudeDirection::Reverse => (0.0, -ef.depth),
             ExtrudeDirection::Symmetric => (-ef.depth / 2.0, ef.depth / 2.0),
         };
-        let mut mesh = TriMesh::new();
+
+        // Build the tool volume: the union of the selected regions.
+        let mut tool = Solid::default();
         for p in selected {
-            mesh.append(&extrude_profile(p, &sr.plane, start, end));
+            let part = match ok_brep::extrude(p, &sr.plane, start, end, id.0) {
+                Ok(s) => s,
+                Err(e) => return Some(e.to_string()),
+            };
+            tool = match boolean(&tool, &part, BoolOp::Union) {
+                Ok(s) => s,
+                Err(e) => return Some(format!("could not combine regions: {e}")),
+            };
         }
+        let tool_bounds = tool.bounds()?;
+
+        // Bodies the tool touches (bounding boxes overlap).
+        let touched: Vec<usize> = result
+            .bodies
+            .iter()
+            .enumerate()
+            .filter(|(_, b)| b.bounds().is_some_and(|bb| boxes_touch(bb, tool_bounds)))
+            .map(|(i, _)| i)
+            .collect();
+
         match ef.op {
-            BodyOp::Add if !result.bodies.is_empty() => {
-                result.bodies.last_mut().unwrap().mesh.append(&mesh);
+            BodyOp::New => {
+                result.push_body(id, tool);
             }
-            _ => {
-                let n = result.bodies.len() + 1;
-                result.bodies.push(Body {
-                    name: format!("{name} (Body {n})"),
-                    source: id,
-                    mesh,
-                });
+            BodyOp::Add if touched.is_empty() => {
+                result.push_body(id, tool);
+            }
+            BodyOp::Add => {
+                let mut merged = tool;
+                for &i in &touched {
+                    merged = match boolean(&result.bodies[i].solid, &merged, BoolOp::Union) {
+                        Ok(s) => s,
+                        Err(e) => return Some(format!("union failed: {e}")),
+                    };
+                }
+                let name = result.bodies[touched[0]].name.clone();
+                let source = result.bodies[touched[0]].source;
+                result.remove_bodies(&touched);
+                result.bodies.push(Body::new(name, source, merged));
+            }
+            BodyOp::Remove | BodyOp::Intersect => {
+                if touched.is_empty() {
+                    return Some("the tool volume does not touch any body".into());
+                }
+                let op = if ef.op == BodyOp::Remove {
+                    BoolOp::Difference
+                } else {
+                    BoolOp::Intersection
+                };
+                let mut replacements: Vec<(usize, Vec<Solid>)> = Vec::new();
+                for &i in &touched {
+                    match boolean(&result.bodies[i].solid, &tool, op) {
+                        Ok(s) => replacements.push((i, s.shells())),
+                        Err(e) => {
+                            return Some(format!(
+                                "{} failed: {e}",
+                                if op == BoolOp::Difference {
+                                    "cut"
+                                } else {
+                                    "intersect"
+                                }
+                            ))
+                        }
+                    }
+                }
+                let mut removed_everything = true;
+                for (i, shells) in replacements {
+                    let body = &result.bodies[i];
+                    let (name, source) = (body.name.clone(), body.source);
+                    let mut shells = shells.into_iter();
+                    match shells.next() {
+                        Some(first) => {
+                            removed_everything = false;
+                            result.bodies[i] = Body::new(name, source, first);
+                            for extra in shells {
+                                result.push_body(id, extra);
+                            }
+                        }
+                        None => result.bodies[i].solid = Solid::default(),
+                    }
+                }
+                result.bodies.retain(|b| !b.solid.is_empty());
+                if removed_everything {
+                    return Some("the operation removed every touched body".into());
+                }
             }
         }
         None
+    }
+}
+
+fn boxes_touch(a: (Vec3, Vec3), b: (Vec3, Vec3)) -> bool {
+    let t = 1e-6;
+    a.0.x <= b.1.x + t
+        && b.0.x <= a.1.x + t
+        && a.0.y <= b.1.y + t
+        && b.0.y <= a.1.y + t
+        && a.0.z <= b.1.z + t
+        && b.0.z <= a.1.z + t
+}
+
+impl RegenResult {
+    fn push_body(&mut self, source: FeatureId, solid: Solid) {
+        self.next_part += 1;
+        self.bodies
+            .push(Body::new(format!("Part {}", self.next_part), source, solid));
+    }
+
+    fn remove_bodies(&mut self, indices: &[usize]) {
+        let mut sorted = indices.to_vec();
+        sorted.sort_unstable_by(|a, b| b.cmp(a));
+        for i in sorted {
+            self.bodies.remove(i);
+        }
     }
 }
 
@@ -254,11 +377,17 @@ mod tests {
         assert_eq!(r.bodies.len(), 1);
         let plate = 60.0 * 40.0 * 8.0 - std::f64::consts::PI * 36.0 * 8.0;
         let boss = std::f64::consts::PI * (100.0 - 36.0) * 6.0;
-        let vol = r.bodies[0].mesh.signed_volume();
+        // The slot removes the boss material within |x - 30| < 5 for z in 10..14:
+        // 4 * (band area of the r=10 disc minus band area of the r=6 hole).
+        let band = |r: f64| 2.0 * (5.0 * (r * r - 25.0).sqrt() + r * r * (5.0 / r).asin());
+        let slot = 4.0 * (band(10.0) - band(6.0));
+        let expected = plate + boss - slot;
+        let vol = r.bodies[0].solid.volume();
         assert!(
-            (vol - (plate + boss)).abs() / (plate + boss) < 0.01,
-            "vol {vol}"
+            (vol - expected).abs() / expected < 5e-3,
+            "vol {vol}, expected {expected}"
         );
+        r.bodies[0].solid.validate().unwrap();
     }
 
     #[test]
@@ -309,7 +438,7 @@ mod tests {
         let r = ps2.regenerate();
         assert!(r.errors().next().is_none());
         assert_eq!(r.bodies.len(), 1);
-        assert!((r.bodies[0].mesh.signed_volume() - 4.0 * 2.0 * 5.0).abs() < 1e-3);
+        assert!((r.bodies[0].solid.volume() - 4.0 * 2.0 * 5.0).abs() < 1e-6);
         let (min, max) = r.bodies[0].mesh.bounds().unwrap();
         assert!(
             (min.y + 2.5).abs() < 1e-6 && (max.y - 2.5).abs() < 1e-6,
@@ -369,6 +498,103 @@ mod tests {
         .unwrap();
         let r = ps.regenerate();
         assert_eq!(r.bodies.len(), 1);
-        assert!((r.bodies[0].mesh.signed_volume() - std::f64::consts::PI * 9.0 * 2.0).abs() < 0.2);
+        assert!((r.bodies[0].solid.volume() - std::f64::consts::PI * 9.0 * 2.0).abs() < 0.2);
+    }
+
+    #[test]
+    fn remove_cuts_and_splits_bodies() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneSpec::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddRectangle {
+                a: Vec2::ZERO,
+                b: Vec2::new(10.0, 2.0),
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddExtrude {
+            sketch: s,
+            depth: 2.0,
+            direction: ExtrudeDirection::Normal,
+            profiles: ProfileSelection::All,
+            op: BodyOp::New,
+            name: None,
+        })
+        .unwrap();
+        let s2 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneSpec::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s2,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(4.0, -1.0),
+                b: Vec2::new(6.0, 3.0),
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddExtrude {
+            sketch: s2,
+            depth: 10.0,
+            direction: ExtrudeDirection::Symmetric,
+            profiles: ProfileSelection::All,
+            op: BodyOp::Remove,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 2, "the cut split the bar in two");
+        let total: f64 = r.bodies.iter().map(|b| b.solid.volume()).sum();
+        assert!((total - 32.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn remove_touching_nothing_is_an_error() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneSpec::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddCircle {
+                center: Vec2::ZERO,
+                radius: 1.0,
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddExtrude {
+            sketch: s,
+            depth: 1.0,
+            direction: ExtrudeDirection::Normal,
+            profiles: ProfileSelection::All,
+            op: BodyOp::Remove,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert_eq!(r.errors().count(), 1);
+        assert!(r.bodies.is_empty());
     }
 }

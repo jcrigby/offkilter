@@ -4,6 +4,7 @@ members = [
     "crates/ok-math",
     "crates/ok-sketch",
     "crates/ok-mesh",
+    "crates/ok-brep",
     "crates/ok-model",
     "crates/ok-wasm",
 ]
@@ -18,6 +19,7 @@ repository = "https://github.com/jcrigby/offkilter"
 ok-math = { path = "crates/ok-math" }
 ok-sketch = { path = "crates/ok-sketch" }
 ok-mesh = { path = "crates/ok-mesh" }
+ok-brep = { path = "crates/ok-brep" }
 ok-model = { path = "crates/ok-model" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

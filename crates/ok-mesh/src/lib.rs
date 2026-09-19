@@ -1,13 +1,8 @@
 //! Triangle meshes for display and export.
 //!
-//! Until the kernel has a boundary representation, solid bodies are
-//! represented directly as closed triangle meshes. Meshes are flat shaded:
-//! vertices are duplicated per face so that each triangle carries its own
-//! normal.
-
-mod extrude;
-
-pub use extrude::extrude_profile;
+//! Solids are tessellated into these for the viewport. Vertices are
+//! duplicated per face so each face carries its own normals; curved
+//! surfaces get per-vertex analytic normals so they shade smoothly.
 
 use ok_math::Vec3;
 use serde::{Deserialize, Serialize};

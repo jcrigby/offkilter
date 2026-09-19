@@ -122,7 +122,8 @@ impl PartStudio {
     }
 
     /// A small example part used by the web client on first launch: a
-    /// dimensioned plate with a through hole, and a boss on top.
+    /// dimensioned plate with a through hole, a boss on top, and a slot cut
+    /// across the boss.
     pub fn demo() -> PartStudio {
         use ok_math::Vec2;
         use ok_sketch::Constraint;
@@ -206,6 +207,38 @@ impl PartStudio {
                 depth: 6.0,
                 direction: ExtrudeDirection::Normal,
                 op: BodyOp::Add,
+            }),
+            None,
+        );
+        let s3 = ps.push_feature(
+            FeatureKind::Sketch(SketchFeature {
+                plane: PlaneSpec::standard(StandardPlane::Front),
+                sketch: ok_sketch::Sketch::new(),
+            }),
+            None,
+        );
+        {
+            let sk = ps.sketch_mut(s3).unwrap();
+            let [bottom, right, ..] =
+                sk.add_rectangle(Vec2::new(25.0, 10.0), Vec2::new(35.0, 20.0));
+            let (bl, _) = sk.line(bottom).unwrap();
+            sk.add_constraint(Constraint::Fixed { point: bl });
+            sk.add_constraint(Constraint::Length {
+                line: bottom,
+                value: 10.0,
+            });
+            sk.add_constraint(Constraint::Length {
+                line: right,
+                value: 10.0,
+            });
+        }
+        ps.push_feature(
+            FeatureKind::Extrude(ExtrudeFeature {
+                sketch: s3,
+                profiles: ProfileSelection::All,
+                depth: 100.0,
+                direction: ExtrudeDirection::Symmetric,
+                op: BodyOp::Remove,
             }),
             None,
         );

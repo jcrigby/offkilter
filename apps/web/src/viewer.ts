@@ -15,7 +15,8 @@ export class Viewer {
   private controls: OrbitControls;
   private bodies = new THREE.Group();
   private sketches = new THREE.Group();
-  private bodyMaterial = new THREE.MeshStandardMaterial({ color: BODY_COLOR, metalness: 0.1, roughness: 0.6, flatShading: true });
+  // Normals come from the kernel (analytic on curved surfaces), so no flat shading.
+  private bodyMaterial = new THREE.MeshStandardMaterial({ color: BODY_COLOR, metalness: 0.1, roughness: 0.6 });
   private edgeMaterial = new THREE.LineBasicMaterial({ color: 0x1b1d21 });
 
   constructor(private container: HTMLElement) {
@@ -79,8 +80,11 @@ export class Viewer {
       geom.setIndex(new THREE.BufferAttribute(m.indices, 1));
       const mesh = new THREE.Mesh(geom, this.bodyMaterial);
       this.bodies.add(mesh);
-      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geom, 20), this.edgeMaterial);
-      this.bodies.add(edges);
+      if (m.edges.length > 0) {
+        const eg = new THREE.BufferGeometry();
+        eg.setAttribute("position", new THREE.BufferAttribute(m.edges, 3));
+        this.bodies.add(new THREE.LineSegments(eg, this.edgeMaterial));
+      }
     }
   }
 
