@@ -1037,7 +1037,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀", boolean: "∪" };
+      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀", boolean: "∪", shell: "◱" };
       icon.textContent = icons[f.kind.type] ?? "•";
       const name = document.createElement("span");
       name.className = "name";
@@ -1086,6 +1086,7 @@ class App implements SketchHost {
     ($("#btn-add-chamfer") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-mirror") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-boolean") as HTMLButtonElement).disabled = this.summary.bodies.length < 2;
+    ($("#btn-add-shell") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-pattern") as HTMLButtonElement).disabled = !hasBody;
   }
 
@@ -1189,6 +1190,7 @@ class App implements SketchHost {
     else if (f.kind.type === "sweep") this.renderSweepDetail(f, body);
     else if (f.kind.type === "loft") this.renderLoftDetail(f, body);
     else if (f.kind.type === "boolean") this.renderBooleanDetail(f, body);
+    else if (f.kind.type === "shell") this.renderShellDetail(f, body);
     else this.renderPatternDetail(f, body);
 
     const row = document.createElement("div");
@@ -1635,6 +1637,46 @@ class App implements SketchHost {
     this.planeFields(body, plane, onChange);
     const last = body.lastElementChild as HTMLElement;
     last.replaceWith(field("Offset", this.exprInput(f, "plane.offset", plane.offset, (v) => onChange({ ...plane, offset: v }))));
+  }
+
+  renderShellDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "shell") return;
+    const k = f.kind;
+    body.appendChild(field("Thickness", this.exprInput(f, "thickness", k.thickness, (v) => this.apply({ type: "set_shell", id: f.id, thickness: v }))));
+    const picking = this.facePicker !== null;
+    const row = document.createElement("div");
+    row.className = "row";
+    row.appendChild(button(picking ? "Click a face…" : "Add open face", () => {
+      if (picking) return;
+      this.beginFacePick((face) => {
+        if (k.faces.some((x) => x.feature === face.feature && x.local === face.local)) return;
+        this.apply({ type: "set_shell", id: f.id, faces: [...k.faces, face] });
+      });
+      this.renderDetail();
+    }, picking ? "primary" : ""));
+    if (k.faces.length > 0) row.appendChild(button("Clear", () => this.apply({ type: "set_shell", id: f.id, faces: [] })));
+    body.appendChild(row);
+    const ul = document.createElement("ul");
+    ul.className = "edge-list";
+    for (const face of k.faces) {
+      const li = document.createElement("li");
+      const label = document.createElement("span");
+      label.textContent = this.describeFace(face);
+      li.appendChild(label);
+      li.appendChild(button("×", () => this.apply({ type: "set_shell", id: f.id, faces: k.faces.filter((x) => x !== face) }), "danger"));
+      ul.appendChild(li);
+    }
+    if (k.faces.length === 0) {
+      const li = document.createElement("li");
+      li.className = "note";
+      li.textContent = "No open faces: every body becomes a closed hollow.";
+      ul.appendChild(li);
+    }
+    body.appendChild(ul);
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Walls keep this thickness inside every face; open faces are removed so the cavity is reachable. A face on a curved surface opens the whole surface.";
+    body.appendChild(note);
   }
 
   renderBooleanDetail(f: FeatureSummary, body: HTMLElement): void {
@@ -2323,6 +2365,13 @@ async function main(): Promise<void> {
     const tool = bodies[bodies.length - 1]?.source;
     const target = bodies.find((b) => b.source !== tool)?.source;
     app.apply({ type: "add_boolean", op: "subtract", targets: target === undefined ? [] : [target], tools: tool === undefined ? [] : [tool], name: app.autoName("Boolean") });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-shell").onclick = () => {
+    app.sketcher.exit();
+    // A face selected in the viewport becomes the first open face.
+    const faces = app.selectedFace ? [app.selectedFace] : [];
+    app.apply({ type: "add_shell", thickness: 2, faces, name: app.autoName("Shell") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   $("#btn-add-pattern").onclick = () => {

@@ -353,6 +353,17 @@ pub struct LoftFeature {
     pub op: BodyOp,
 }
 
+/// Hollows bodies to a uniform wall thickness. `faces` are removed so the
+/// cavity is reachable (a face on a curved surface opens the whole
+/// surface); with none, every body gets a closed void. When faces are
+/// given only the bodies holding them are shelled.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ShellFeature {
+    pub thickness: f64,
+    #[serde(default)]
+    pub faces: Vec<FaceRef>,
+}
+
 /// How a boolean feature combines its target bodies with its tool bodies.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -399,6 +410,7 @@ pub enum FeatureKind {
     Sweep(SweepFeature),
     Loft(LoftFeature),
     Boolean(BooleanFeature),
+    Shell(ShellFeature),
 }
 
 impl FeatureKind {
@@ -422,6 +434,7 @@ impl FeatureKind {
                 BooleanOp::Subtract => "Subtract",
                 BooleanOp::Intersect => "Intersect",
             },
+            FeatureKind::Shell(_) => "Shell",
         }
     }
 
@@ -448,6 +461,7 @@ impl FeatureKind {
             },
             FeatureKind::Variable(_) => vec![],
             FeatureKind::Sweep(_) | FeatureKind::Loft(_) | FeatureKind::Boolean(_) => vec![],
+            FeatureKind::Shell(_) => vec!["thickness".into()],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
                 "depth".into(),
@@ -471,6 +485,7 @@ impl FeatureKind {
             (FeatureKind::Extrude(e), "depth") => Some(e.depth),
             (FeatureKind::Revolve(r), "angle") => Some(r.angle),
             (FeatureKind::Blend(b), "size") => Some(b.size),
+            (FeatureKind::Shell(sh), "thickness") => Some(sh.thickness),
             (FeatureKind::Mirror(m), "plane.offset") => Some(m.plane.offset()),
             (FeatureKind::Pattern(p), "count") => Some(p.count as f64),
             (FeatureKind::Pattern(p), "spacing") => match &p.kind {
@@ -517,6 +532,10 @@ impl FeatureKind {
             }
             (FeatureKind::Blend(b), "size") => {
                 b.size = value;
+                Ok(())
+            }
+            (FeatureKind::Shell(sh), "thickness") => {
+                sh.thickness = value;
                 Ok(())
             }
             (FeatureKind::Mirror(m), "plane.offset") => {
@@ -584,7 +603,8 @@ impl FeatureKind {
             | FeatureKind::Mirror(_)
             | FeatureKind::Pattern(_)
             | FeatureKind::Variable(_)
-            | FeatureKind::Boolean(_) => None,
+            | FeatureKind::Boolean(_)
+            | FeatureKind::Shell(_) => None,
         }
     }
 }

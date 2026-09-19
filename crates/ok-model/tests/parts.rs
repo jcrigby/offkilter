@@ -803,3 +803,50 @@ fn feature_pattern_and_mirror_replay_tools() {
     let r = p.ps.regenerate();
     assert!(r.errors().any(|(_, e)| e.contains("no tool volume")));
 }
+
+/// An open-top enclosure: a box shelled to 2 mm with its top face open,
+/// then a boss added inside and a hole through the floor.
+#[test]
+fn shelled_enclosure_with_a_boss_inside() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (0.0, 0.0), (60.0, 40.0));
+    let box_id = p.extrude(s, 25.0, BodyOp::New);
+    let top = p.face(|n, cyl, c| !cyl && (n.z - 1.0).abs() < 1e-9 && (c.z - 25.0).abs() < 1e-6);
+    p.op(Op::AddShell {
+        thickness: 2.0,
+        faces: vec![top],
+        name: None,
+    });
+    let v = p.volume();
+    let expected = 60.0 * 40.0 * 25.0 - 56.0 * 36.0 * 23.0;
+    assert!(close(v, expected, 1e-9), "{v} vs {expected}");
+    // The floor's inside face (z = 2, normal +Z) exists and is planar: sketch on it.
+    let floor = p.face(|n, cyl, c| !cyl && (n.z - 1.0).abs() < 1e-9 && (c.z - 2.0).abs() < 1e-6);
+    let s2 = p.sketch_on(floor);
+    p.circle(s2, (30.0, 20.0), 5.0);
+    p.extrude(s2, 10.0, BodyOp::Add);
+    let v2 = p.volume();
+    let boss = v2 - v;
+    assert!(
+        boss > 0.0 && close(boss, PI * 25.0 * 10.0, 5e-3),
+        "boss {boss}"
+    );
+    // Closed shell of a separate block: two shells, one body.
+    let s3 = p.sketch(PlaneRef::Standard {
+        base: StandardPlane::Top,
+        offset: 40.0,
+    });
+    p.rect(s3, (0.0, 0.0), (10.0, 10.0));
+    p.extrude(s3, 10.0, BodyOp::New);
+    p.op(Op::AddShell {
+        thickness: 1.0,
+        faces: vec![],
+        name: None,
+    });
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 2);
+    let block = r.bodies.iter().find(|b| b.source != box_id).unwrap();
+    assert!(close(block.solid.volume(), 1000.0 - 512.0, 1e-9));
+    assert_eq!(block.solid.shells().len(), 2);
+}

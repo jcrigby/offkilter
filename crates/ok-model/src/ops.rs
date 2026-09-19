@@ -1,9 +1,9 @@
 use crate::{
     BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, EdgeRef,
-    ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, Feature, FeatureId, FeatureKind, HoleFeature,
-    LoftFeature, MirrorFeature, ModelError, PartStudio, PatternFeature, PatternKind, PlaneRef,
-    ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature, SketchFeature,
-    SweepFeature, VariableFeature, PROJECTION_BLOCK,
+    ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind,
+    HoleFeature, LoftFeature, MirrorFeature, ModelError, PartStudio, PatternFeature, PatternKind,
+    PlaneRef, ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature,
+    ShellFeature, SketchFeature, SweepFeature, VariableFeature, PROJECTION_BLOCK,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, Entity, EntityId};
@@ -310,6 +310,19 @@ pub enum Op {
         tools: Option<Vec<FeatureId>>,
         #[serde(default)]
         keep_tools: Option<bool>,
+    },
+    AddShell {
+        thickness: f64,
+        #[serde(default)]
+        faces: Vec<FaceRef>,
+        name: Option<String>,
+    },
+    SetShell {
+        id: FeatureId,
+        #[serde(default)]
+        thickness: Option<f64>,
+        #[serde(default)]
+        faces: Option<Vec<FaceRef>>,
     },
     /// Sets document-wide regeneration settings.
     SetSettings {
@@ -819,6 +832,30 @@ impl PartStudio {
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "boolean")),
+            },
+            Op::AddShell {
+                thickness,
+                faces,
+                name,
+            } => {
+                out.feature = Some(
+                    self.push_feature(FeatureKind::Shell(ShellFeature { thickness, faces }), name),
+                );
+            }
+            Op::SetShell {
+                id,
+                thickness,
+                faces,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Shell(sh) => {
+                    if let Some(t) = thickness {
+                        sh.thickness = t;
+                    }
+                    if let Some(f) = faces {
+                        sh.faces = f;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "shell")),
             },
             Op::SetLoft { id, sketch_b, op } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Loft(l) => {

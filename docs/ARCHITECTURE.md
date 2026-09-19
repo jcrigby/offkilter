@@ -292,6 +292,31 @@ on it by slightly more than the merge tolerance (a sliver triangle or two
 near-coincident corner vertices). Anything that still fails validation is
 an error, never a displayed body.
 
+### Shell (`shell.rs`)
+
+`shell` hollows a solid by subtracting an offset polyhedron: every kept
+face's plane moves inward by the wall thickness (open faces move outward
+so the cavity breaks through them), and each face keeps its outline edge
+by edge. An edge moves to the line where the face's offset plane meets
+the offset plane of the face across it, and corners are where consecutive
+edge lines meet; faces that only touch a corner at a vertex (the ring of
+faces around it holds more than the two across the loop's edges) are
+inserted as extra edges so the corner is consistent all round. Edges whose
+offset would run backwards were swallowed by their neighbours (a short
+facet next to a sharp corner) and are dropped; consecutive parallel edges
+are resolved by keeping the more restrictive one, or dropping the one
+whose line lies far from the outline. Faces then meet exactly along
+offset edges at three-face corners and disagree by a little where more
+faces meet, and the assembly (`from_polygons_closing_gaps`) fills those
+small rings of open edges with fan triangles. Slab bottoms carry the
+face's surface moved inward (planes shifted, cylinders shrunk or grown),
+so a shelled cylinder shades smoothly inside. A wall thicker than the
+feature it hollows (a rim narrower than twice the thickness) is an error,
+as is a cavity the face offsets cannot make consistent, which happens
+when the thickness swallows features in ways that change the topology
+(a slot through a faceted boss at a sharp angle); that case needs a true
+offset with topology changes, not attempted here.
+
 ### Booleans (`boolean.rs`)
 
 Booleans work face by face. For a face `F` of `A` with plane `P`, take two

@@ -74,7 +74,8 @@ export type FeatureKind =
   | { type: "hole"; sketch: number; diameter: number; depth: number; through_all: boolean; direction: ExtrudeDirection; counterbore: Counterbore | null }
   | { type: "sweep"; sketch: number; profiles: ProfileSelection; path: number; op: BodyOp }
   | { type: "loft"; sketch: number; sketch_b: number; op: BodyOp }
-  | { type: "boolean"; op: BooleanOp; targets: number[]; tools: number[]; keep_tools: boolean };
+  | { type: "boolean"; op: BooleanOp; targets: number[]; tools: number[]; keep_tools: boolean }
+  | { type: "shell"; thickness: number; faces: FaceRef[] };
 export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 
@@ -211,6 +212,8 @@ export type Op =
   | { type: "set_loft"; id: number; sketch_b?: number | null; op?: BodyOp | null }
   | { type: "add_boolean"; op: BooleanOp; targets: number[]; tools: number[]; keep_tools?: boolean; name: string | null }
   | { type: "set_boolean"; id: number; op?: BooleanOp | null; targets?: number[] | null; tools?: number[] | null; keep_tools?: boolean | null }
+  | { type: "add_shell"; thickness: number; faces?: FaceRef[]; name: string | null }
+  | { type: "set_shell"; id: number; thickness?: number | null; faces?: FaceRef[] | null }
   | { type: "set_settings"; facet_angle: number }
   | { type: "replace_document"; json: string }
   /** Inverse ops (undo) carry saved state; the client never builds these itself. */

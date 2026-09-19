@@ -1,7 +1,7 @@
 use crate::{
     canonical_frame, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, EdgeRef,
     ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId, FeatureKind, PartStudio, PatternKind,
-    PlaneRef, ProfileSelection, RevolveAxis,
+    PlaneRef, ProfileSelection, RevolveAxis, ShellFeature,
 };
 use ok_brep::{boolean, BoolOp, Solid, Transform};
 use ok_math::{Plane, Vec2, Vec3};
@@ -456,6 +456,10 @@ impl PartStudio {
                 FeatureKind::Loft(lf) => {
                     let lf = lf.clone();
                     Self::regen_loft(&mut result, id, &lf, pos, &self.features)
+                }
+                FeatureKind::Shell(sf) => {
+                    let sf = sf.clone();
+                    Self::regen_shell(&mut result, id, &sf)
                 }
                 FeatureKind::Boolean(bf) => {
                     let bf = bf.clone();
@@ -1004,6 +1008,46 @@ impl PartStudio {
     }
 
     /// Applies each transform to every existing body, merging or adding copies.
+    /// Hollows bodies (see `ShellFeature`).
+    fn regen_shell(result: &mut RegenResult, id: FeatureId, sf: &ShellFeature) -> Option<String> {
+        if result.bodies.is_empty() {
+            return Some("there are no bodies to shell".into());
+        }
+        let mut matched = 0usize;
+        for i in 0..result.bodies.len() {
+            let body = &result.bodies[i];
+            // Open every face on the surfaces the referenced faces lie on.
+            let surfaces: Vec<usize> = body
+                .solid
+                .faces
+                .iter()
+                .filter(|f| sf.faces.iter().any(|r| r.matches(&f.origin)))
+                .map(|f| f.surface)
+                .collect();
+            if !sf.faces.is_empty() && surfaces.is_empty() {
+                continue;
+            }
+            let open: Vec<usize> = body
+                .solid
+                .faces
+                .iter()
+                .enumerate()
+                .filter(|(_, f)| surfaces.contains(&f.surface))
+                .map(|(i, _)| i)
+                .collect();
+            matched += 1;
+            let shelled = match ok_brep::shell(&body.solid, sf.thickness, &open, id.0) {
+                Ok(s) => s,
+                Err(e) => return Some(e.to_string()),
+            };
+            result.bodies[i] = Body::new(body.name.clone(), body.source, shelled);
+        }
+        if matched == 0 {
+            return Some("none of the referenced faces exist any more".into());
+        }
+        None
+    }
+
     /// Combines target bodies with tool bodies (see `BooleanFeature`).
     fn regen_boolean(
         result: &mut RegenResult,

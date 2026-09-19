@@ -44,6 +44,7 @@ impl PartStudio {
             | Op::AddSweep { .. }
             | Op::AddLoft { .. }
             | Op::AddBoolean { .. }
+            | Op::AddShell { .. }
             | Op::InsertFeature { .. } => result
                 .feature
                 .map(|id| vec![Op::DeleteFeature { id }])
@@ -189,6 +190,18 @@ impl PartStudio {
                 }],
                 _ => Vec::new(),
             },
+            Op::SetShell {
+                id,
+                thickness,
+                faces,
+            } => match before.kind() {
+                Some(FeatureKind::Shell(sh)) => vec![Op::SetShell {
+                    id,
+                    thickness: thickness.map(|_| sh.thickness),
+                    faces: faces.map(|_| sh.faces.clone()),
+                }],
+                _ => Vec::new(),
+            },
             Op::SetLoft { id, sketch_b, op } => match before.kind() {
                 Some(FeatureKind::Loft(l)) => vec![Op::SetLoft {
                     id,
@@ -306,6 +319,7 @@ impl Before {
             | Op::SetSweep { id, .. }
             | Op::SetLoft { id, .. }
             | Op::SetBoolean { id, .. }
+            | Op::SetShell { id, .. }
             | Op::SetSketchPlane { id, .. }
             | Op::RenameFeature { id, .. }
             | Op::SetSuppressed { id, .. }
@@ -579,6 +593,26 @@ mod tests {
                 size: Some(2.0),
             },
         );
+        let r = ps
+            .apply(Op::AddShell {
+                thickness: 1.0,
+                faces: vec![],
+                name: None,
+            })
+            .unwrap();
+        let shell = r.feature.unwrap();
+        round_trip(
+            &mut ps,
+            Op::SetShell {
+                id: shell,
+                thickness: Some(2.5),
+                faces: Some(vec![crate::FaceRef {
+                    feature: extrude,
+                    local: 1,
+                }]),
+            },
+        );
+        round_trip(&mut ps, Op::DeleteFeature { id: shell });
         round_trip(&mut ps, Op::DeleteFeature { id: extrude });
         round_trip(
             &mut ps,

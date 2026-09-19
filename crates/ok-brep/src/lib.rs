@@ -17,6 +17,7 @@ mod extrude;
 mod loft;
 mod revolve;
 mod section;
+mod shell;
 mod sweep;
 mod tessellate;
 mod transform;
@@ -26,6 +27,7 @@ pub use boolean::{boolean, BoolOp};
 pub use extrude::extrude;
 pub use loft::loft;
 pub use revolve::revolve;
+pub use shell::shell;
 pub use sweep::{sweep, sweep_closed};
 pub use tessellate::{display_edges, tessellate, tessellate_with_faces, DisplayEdge};
 pub use transform::Transform;
@@ -262,6 +264,28 @@ impl Solid {
         surfaces: Vec<Surface>,
         tol: f64,
     ) -> Result<Solid, BrepError> {
+        Self::assemble(polys, surfaces, tol, None)
+    }
+
+    /// `from_polygons_with_tolerance` that also closes small holes in the
+    /// result: rings of unmatched edges no larger than `max_gap` across are
+    /// filled with a fan of triangles. Offsetting uses this where the faces
+    /// around a corner legitimately disagree by a little.
+    pub fn from_polygons_closing_gaps(
+        polys: Vec<Polygon>,
+        surfaces: Vec<Surface>,
+        tol: f64,
+        max_gap: f64,
+    ) -> Result<Solid, BrepError> {
+        Self::assemble(polys, surfaces, tol, Some(max_gap))
+    }
+
+    fn assemble(
+        polys: Vec<Polygon>,
+        surfaces: Vec<Surface>,
+        tol: f64,
+        max_gap: Option<f64>,
+    ) -> Result<Solid, BrepError> {
         let mut merger = VertexMerger::new(tol);
         let mut faces = Vec::new();
         for p in polys {
@@ -295,9 +319,6 @@ impl Solid {
             faces,
             surfaces,
         };
-        // Splitting an edge at a T-junction can expose a short edge, and
-        // collapsing one can create a new T-junction, so alternate until
-        // stable (two rounds in practice).
         // Splitting an edge at a T-junction can expose a short edge or an
         // open vertex, and merging vertices can create a new T-junction,
         // so alternate until stable (two rounds in practice).
@@ -309,11 +330,101 @@ impl Solid {
                 break;
             }
         }
+        if let Some(max_gap) = max_gap {
+            if solid.close_small_gaps(max_gap) {
+                solid.repair_t_junctions(tol);
+            }
+        }
         solid.remove_spikes(tol);
         solid.remove_degenerate_faces();
         solid.compact_surfaces();
         solid.validate()?;
         Ok(solid)
+    }
+
+    /// Fills rings of unmatched edges no larger than `max_gap` across with
+    /// fan triangles from the ring's centroid. Returns whether any were added.
+    fn close_small_gaps(&mut self, max_gap: f64) -> bool {
+        // Directed edges the faces still owe: the reverse of each unmatched one.
+        let mut sum: HashMap<EdgeKey, (i32, usize)> = HashMap::new();
+        for (a, b, f) in self.directed_edges() {
+            let e = sum.entry(edge_key(a, b)).or_insert((0, f));
+            e.0 += if a < b { 1 } else { -1 };
+        }
+        let mut owed: HashMap<u32, Vec<(u32, usize)>> = HashMap::new();
+        for ((a, b), (s, f)) in &sum {
+            match s.signum() {
+                1 => owed.entry(*b).or_default().push((*a, *f)), // a->b present once more: owe b->a
+                -1 => owed.entry(*a).or_default().push((*b, *f)),
+                _ => {}
+            }
+        }
+        if owed.is_empty() {
+            return false;
+        }
+        let mut added = false;
+        while let Some((&start, _)) = owed.iter().next() {
+            // Walk head to tail until the ring closes.
+            let mut ring = vec![start];
+            let mut origin = None;
+            let mut cur = start;
+            loop {
+                let Some(list) = owed.get_mut(&cur) else {
+                    break;
+                };
+                let Some((next, f)) = list.pop() else {
+                    owed.remove(&cur);
+                    break;
+                };
+                if list.is_empty() {
+                    owed.remove(&cur);
+                }
+                origin.get_or_insert(self.faces[f].origin);
+                if next == start {
+                    break;
+                }
+                ring.push(next);
+                cur = next;
+            }
+            if ring.len() < 3 || ring.last() == Some(&start) {
+                continue;
+            }
+            let pts: Vec<Vec3> = ring.iter().map(|&v| self.vertices[v as usize]).collect();
+            let Some((min, max)) = bounds_of(pts.iter().copied()) else {
+                continue;
+            };
+            if (max - min).length() > max_gap {
+                continue;
+            }
+            let centre = pts.iter().fold(Vec3::ZERO, |a, &p| a + p) / pts.len() as f64;
+            let c = self.vertices.len() as u32;
+            self.vertices.push(centre);
+            for k in 0..ring.len() {
+                let (a, b) = (ring[k], ring[(k + 1) % ring.len()]);
+                let (pa, pb) = (self.vertices[a as usize], self.vertices[b as usize]);
+                let Some(normal) = (pa - centre).cross(pb - centre).normalized() else {
+                    continue;
+                };
+                let Some(plane) = Plane::from_origin_normal(centre, normal) else {
+                    continue;
+                };
+                self.surfaces.push(Surface::Plane {
+                    normal,
+                    offset: normal.dot(centre),
+                });
+                self.faces.push(Face {
+                    plane,
+                    loops: vec![vec![c, a, b]],
+                    surface: self.surfaces.len() - 1,
+                    origin: origin.unwrap_or(FaceOrigin {
+                        feature: 0,
+                        local: 0,
+                    }),
+                });
+                added = true;
+            }
+        }
+        added
     }
 
     /// Merges the endpoints of every edge shorter than `thr`. Grazing

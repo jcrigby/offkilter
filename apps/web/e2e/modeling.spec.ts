@@ -505,3 +505,44 @@ test("feature pattern replays a hole instead of copying bodies", async ({ page }
   expect(before - (await volume(page))).toBeCloseTo(2 * holeVolume, 0);
   expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
 });
+
+test("shell hollows a box and opens a picked face", async ({ page }) => {
+  await openDemo(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(300);
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Sketch 1" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: s, op: { type: "add_rectangle", a: { x: 0, y: 0 }, b: { x: 60, y: 40 } } });
+    app.apply({ type: "add_extrude", sketch: s, depth: 20, op: "new", name: "Extrude 1" });
+  });
+  await page.waitForTimeout(300);
+  const before = await volume(page);
+  expect(before).toBeCloseTo(60 * 40 * 20, 3);
+  // Select the top face by clicking it, then add a shell: the selected face opens.
+  await page.keyboard.press("f");
+  await page.waitForTimeout(300);
+  let picked = "";
+  for (const [fx, fy] of [[0.5, 0.45], [0.5, 0.4], [0.45, 0.5], [0.55, 0.42]] as const) {
+    await clickViewport(page, fx, fy);
+    picked = await status(page);
+    if (picked.startsWith("Face:")) break;
+  }
+  expect(picked).toContain("Face: Extrude 1");
+  await page.click("#btn-add-shell");
+  await page.waitForTimeout(600);
+  expect(await featureNames(page)).toContain("Shell 1");
+  expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
+  expect(await page.$$eval("#detail-body .edge-list li", (els) => els.length)).toBe(1);
+  expect(await volume(page)).toBeCloseTo(60 * 40 * 20 - 56 * 36 * 18, 3);
+  // Closing the face again gives a closed hollow.
+  await page.getByRole("button", { name: "Clear" }).click();
+  await page.waitForTimeout(600);
+  expect(await volume(page)).toBeCloseTo(60 * 40 * 20 - 56 * 36 * 16, 3);
+  // Undo twice restores the solid box.
+  await page.keyboard.press("Control+z");
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(500);
+  expect(await volume(page)).toBeCloseTo(before, 3);
+});

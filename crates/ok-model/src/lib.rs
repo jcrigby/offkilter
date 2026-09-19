@@ -24,7 +24,7 @@ pub use feature::{
     Counterbore, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature,
     FeatureId, FeatureKind, HoleFeature, LoftFeature, MirrorFeature, PatternFeature, PatternKind,
     PlaneRef, ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature,
-    SketchFeature, StandardPlane, SweepFeature, VariableFeature, PROJECTION_BLOCK,
+    ShellFeature, SketchFeature, StandardPlane, SweepFeature, VariableFeature, PROJECTION_BLOCK,
 };
 pub use ops::{Op, OpResult, SketchOp};
 pub use regen::{Body, FeatureStatus, RegenResult, SketchCurve, SketchResult};
