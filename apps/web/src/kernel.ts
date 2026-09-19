@@ -49,11 +49,16 @@ export type RevolveAxis = { type: "x_axis" } | { type: "y_axis" } | { type: "lin
 /** An edge of a body, named by the two faces that meet there. */
 export type EdgeRef = { a: FaceRef; b: FaceRef };
 export type BlendKind = "fillet" | "chamfer";
+export type CopyOp = "add" | "new";
+export type Axis = "x" | "y" | "z";
+export type PatternKind = { type: "linear"; axis: Axis; spacing: number } | { type: "circular"; axis: Axis; angle: number };
 export type FeatureKind =
   | { type: "sketch"; plane: PlaneRef; sketch: SketchData }
   | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; end: ExtrudeEnd; op: BodyOp }
   | { type: "revolve"; sketch: number; profiles: ProfileSelection; axis: RevolveAxis; angle: number; op: BodyOp }
-  | { type: "blend"; kind: BlendKind; edges: EdgeRef[]; size: number };
+  | { type: "blend"; kind: BlendKind; edges: EdgeRef[]; size: number }
+  | { type: "mirror"; plane: PlaneRef; op: CopyOp }
+  | { type: "pattern"; kind: PatternKind; count: number; op: CopyOp };
 
 export type FeatureSummary = { id: number; name: string; suppressed: boolean; kind: FeatureKind; error: string | null };
 export type FaceInfo = { origin: FaceRef; surface: "plane" | "cylinder"; normal: Vec3 };
@@ -101,6 +106,10 @@ export type Op =
   | { type: "set_revolve"; id: number; axis?: RevolveAxis | null; angle?: number | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
   | { type: "add_blend"; kind: BlendKind; edges: EdgeRef[]; size: number; name: string | null }
   | { type: "set_blend"; id: number; edges?: EdgeRef[] | null; size?: number | null }
+  | { type: "add_mirror"; plane: PlaneRef; op?: CopyOp; name: string | null }
+  | { type: "set_mirror"; id: number; plane?: PlaneRef | null; op?: CopyOp | null }
+  | { type: "add_pattern"; kind: PatternKind; count: number; op?: CopyOp; name: string | null }
+  | { type: "set_pattern"; id: number; kind?: PatternKind | null; count?: number | null; op?: CopyOp | null }
   | { type: "set_sketch_plane"; id: number; plane: PlaneRef }
   | { type: "rename_feature"; id: number; name: string }
   | { type: "set_suppressed"; id: number; suppressed: boolean }

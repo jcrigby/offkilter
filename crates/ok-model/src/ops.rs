@@ -1,7 +1,7 @@
 use crate::{
-    BlendFeature, BlendKind, BodyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature,
-    FeatureId, FeatureKind, ModelError, PartStudio, PlaneRef, ProfileSelection, RevolveAxis,
-    RevolveFeature, SketchFeature,
+    BlendFeature, BlendKind, BodyOp, CopyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature,
+    FeatureId, FeatureKind, MirrorFeature, ModelError, PartStudio, PatternFeature, PatternKind,
+    PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature, SketchFeature,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, EntityId, Sketch};
@@ -121,6 +121,35 @@ pub enum Op {
         edges: Option<Vec<EdgeRef>>,
         #[serde(default)]
         size: Option<f64>,
+    },
+    AddMirror {
+        plane: PlaneRef,
+        #[serde(default)]
+        op: CopyOp,
+        name: Option<String>,
+    },
+    SetMirror {
+        id: FeatureId,
+        #[serde(default)]
+        plane: Option<PlaneRef>,
+        #[serde(default)]
+        op: Option<CopyOp>,
+    },
+    AddPattern {
+        kind: PatternKind,
+        count: u32,
+        #[serde(default)]
+        op: CopyOp,
+        name: Option<String>,
+    },
+    SetPattern {
+        id: FeatureId,
+        #[serde(default)]
+        kind: Option<PatternKind>,
+        #[serde(default)]
+        count: Option<u32>,
+        #[serde(default)]
+        op: Option<CopyOp>,
     },
     SetSketchPlane {
         id: FeatureId,
@@ -303,6 +332,51 @@ impl PartStudio {
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "blend")),
+            },
+            Op::AddMirror { plane, op, name } => {
+                out.feature =
+                    Some(self.push_feature(FeatureKind::Mirror(MirrorFeature { plane, op }), name));
+            }
+            Op::SetMirror { id, plane, op } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Mirror(m) => {
+                    if let Some(p) = plane {
+                        m.plane = p;
+                    }
+                    if let Some(o) = op {
+                        m.op = o;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "mirror")),
+            },
+            Op::AddPattern {
+                kind,
+                count,
+                op,
+                name,
+            } => {
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Pattern(PatternFeature { kind, count, op }),
+                    name,
+                ));
+            }
+            Op::SetPattern {
+                id,
+                kind,
+                count,
+                op,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Pattern(p) => {
+                    if let Some(k) = kind {
+                        p.kind = k;
+                    }
+                    if let Some(c) = count {
+                        p.count = c;
+                    }
+                    if let Some(o) = op {
+                        p.op = o;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "pattern")),
             },
             Op::SetSketchPlane { id, plane } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Sketch(s) => s.plane = plane,

@@ -203,6 +203,62 @@ pub struct BlendFeature {
     pub size: f64,
 }
 
+/// How copies made by a mirror or pattern combine with the originals.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CopyOp {
+    /// Union each copy into the body it was made from.
+    #[default]
+    Add,
+    /// Keep copies as separate bodies.
+    New,
+}
+
+/// Mirrors every body across a plane.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MirrorFeature {
+    pub plane: PlaneRef,
+    #[serde(default)]
+    pub op: CopyOp,
+}
+
+/// A world axis direction.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Axis {
+    X,
+    Y,
+    Z,
+}
+
+impl Axis {
+    pub fn vector(self) -> ok_math::Vec3 {
+        match self {
+            Axis::X => ok_math::Vec3::X,
+            Axis::Y => ok_math::Vec3::Y,
+            Axis::Z => ok_math::Vec3::Z,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum PatternKind {
+    /// Copies spaced along a world axis.
+    Linear { axis: Axis, spacing: f64 },
+    /// Copies rotated about a world axis through the origin, spread over `angle` degrees.
+    Circular { axis: Axis, angle: f64 },
+}
+
+/// Repeats every body `count` times (the original included).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PatternFeature {
+    pub kind: PatternKind,
+    pub count: u32,
+    #[serde(default)]
+    pub op: CopyOp,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FeatureKind {
@@ -210,6 +266,8 @@ pub enum FeatureKind {
     Extrude(ExtrudeFeature),
     Revolve(RevolveFeature),
     Blend(BlendFeature),
+    Mirror(MirrorFeature),
+    Pattern(PatternFeature),
 }
 
 impl FeatureKind {
@@ -222,6 +280,8 @@ impl FeatureKind {
                 BlendKind::Fillet => "Fillet",
                 BlendKind::Chamfer => "Chamfer",
             },
+            FeatureKind::Mirror(_) => "Mirror",
+            FeatureKind::Pattern(_) => "Pattern",
         }
     }
 
@@ -231,7 +291,7 @@ impl FeatureKind {
             FeatureKind::Sketch(_) => None,
             FeatureKind::Extrude(e) => Some(e.sketch),
             FeatureKind::Revolve(r) => Some(r.sketch),
-            FeatureKind::Blend(_) => None,
+            FeatureKind::Blend(_) | FeatureKind::Mirror(_) | FeatureKind::Pattern(_) => None,
         }
     }
 }

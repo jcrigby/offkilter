@@ -17,12 +17,14 @@ mod extrude;
 mod revolve;
 mod section;
 mod tessellate;
+mod transform;
 
 pub use blend::{blend_edges, BlendKind};
 pub use boolean::{boolean, BoolOp};
 pub use extrude::extrude;
 pub use revolve::revolve;
 pub use tessellate::{display_edges, tessellate, tessellate_with_faces, DisplayEdge};
+pub use transform::Transform;
 
 use ok_math::{Plane, Vec3};
 use serde::{Deserialize, Serialize};

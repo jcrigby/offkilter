@@ -92,6 +92,14 @@ While a blend feature is collecting edges, the client asks for a
 "rollback" regeneration (`regenerate_to`), which returns the cached state
 after the previous feature so the original edges are visible to pick.
 
+### Transforms, mirror and patterns
+
+`Transform` is an orthogonal 3x3 matrix plus translation. `Solid::transformed`
+maps vertices, planes and surfaces; a reflection reverses every loop and
+swaps the frame axes so faces stay outward. `Mirror` and `Pattern`
+features apply transforms to every body and either union the copies into
+their originals or keep them as new bodies.
+
 ## Sketching (`ok-sketch`)
 
 Entities: `Point`, `Line`, `Circle`, `Arc`. Curves reference point entities

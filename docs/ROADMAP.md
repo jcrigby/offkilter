@@ -31,7 +31,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
 - [ ] Fillets on curved edges and proper corner patches where blends meet
 - [ ] Shell, draft
-- [ ] Feature patterns and mirror
+- [x] Mirror and linear / circular patterns of bodies
+- [ ] Patterns of features and of faces; mirror selected bodies only
 - [~] Persistent naming: face origins survive booleans; needs disambiguation for split faces and edge/vertex references
 
 ## Document and client
@@ -58,7 +59,8 @@ top are concrete and self-contained; items lower down are directions.
 ## Engineering
 
 - [x] CI: fmt, clippy, tests, wasm build, web build
-- [ ] Property/fuzz tests for the solver, region extraction and booleans (random box/cylinder stacks compared against analytic volumes)
+- [x] Randomised boolean robustness test (grid-aligned box/cylinder sequences; `--ignored` long run)
+- [ ] Property tests for the solver and region extraction
 - [x] Regeneration cache: unchanged feature prefixes are reused, so editing late features is cheap
 - [ ] Benchmarks for regeneration time on realistic parts
 - [ ] `wasm-opt` in the release pipeline

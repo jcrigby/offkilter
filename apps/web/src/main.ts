@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import type { BlendKind, Constraint, EdgeRef, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PlaneRef, ProfileSelection, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
+import type { Axis, BlendKind, Constraint, EdgeRef, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -351,7 +351,8 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      icon.textContent = f.kind.type === "sketch" ? "✎" : f.kind.type === "revolve" ? "◑" : f.kind.type === "blend" ? "◜" : "⬒";
+      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝" };
+      icon.textContent = icons[f.kind.type] ?? "•";
       const name = document.createElement("span");
       name.className = "name";
       name.textContent = f.name;
@@ -375,6 +376,8 @@ class App implements SketchHost {
     const hasBody = this.summary.bodies.length > 0;
     ($("#btn-add-fillet") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-chamfer") as HTMLButtonElement).disabled = !hasBody;
+    ($("#btn-add-mirror") as HTMLButtonElement).disabled = !hasBody;
+    ($("#btn-add-pattern") as HTMLButtonElement).disabled = !hasBody;
   }
 
   sketchWarn(f: FeatureSummary): boolean {
@@ -405,7 +408,9 @@ class App implements SketchHost {
     if (f.kind.type === "sketch") this.renderSketchDetail(f, body);
     else if (f.kind.type === "extrude") this.renderExtrudeDetail(f, body);
     else if (f.kind.type === "revolve") this.renderRevolveDetail(f, body);
-    else this.renderBlendDetail(f, body);
+    else if (f.kind.type === "blend") this.renderBlendDetail(f, body);
+    else if (f.kind.type === "mirror") this.renderMirrorDetail(f, body);
+    else this.renderPatternDetail(f, body);
 
     const row = document.createElement("div");
     row.className = "row";
@@ -638,6 +643,66 @@ class App implements SketchHost {
     const s = select(names.includes(current) ? names : [current, ...names], current, () => {});
     s.disabled = true;
     return field("Sketch", s);
+  }
+
+  /** Plane chooser shared by sketches and mirrors. */
+  planeFields(body: HTMLElement, plane: PlaneRef, onChange: (p: PlaneRef) => void): void {
+    const planeValue = plane.type === "standard" ? plane.base : "face";
+    body.appendChild(
+      field("Plane", select(["top", "front", "right", "face"], planeValue, (v) => {
+        if (v === "face") this.beginFacePick((face) => onChange({ type: "face", face, offset: plane.offset }));
+        else onChange({ type: "standard", base: v as StandardPlane, offset: plane.offset });
+      })),
+    );
+    if (plane.type === "face") {
+      const row = document.createElement("div");
+      row.className = "field";
+      const l = document.createElement("label");
+      l.textContent = "Face";
+      const v = document.createElement("span");
+      v.className = "note";
+      v.textContent = this.describeFace(plane.face);
+      row.append(l, v);
+      body.appendChild(row);
+      body.appendChild(field("", button("Pick another face", () => this.beginFacePick((face) => onChange({ type: "face", face, offset: plane.offset })))));
+    }
+    body.appendChild(field("Offset", numberInput(plane.offset, (v) => onChange({ ...plane, offset: v }))));
+  }
+
+  renderMirrorDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "mirror") return;
+    const k = f.kind;
+    this.planeFields(body, k.plane, (plane) => this.apply({ type: "set_mirror", id: f.id, plane }));
+    body.appendChild(field("Copies", select(["add", "new"], k.op, (v) => this.apply({ type: "set_mirror", id: f.id, op: v as "add" | "new" }))));
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Mirrors every body across the plane. “Add” unions each copy with its original; “New” keeps copies as separate bodies.";
+    body.appendChild(note);
+  }
+
+  renderPatternDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "pattern") return;
+    const k = f.kind;
+    const setKind = (kind: PatternKind) => this.apply({ type: "set_pattern", id: f.id, kind });
+    body.appendChild(
+      field("Type", select(["linear", "circular"], k.kind.type, (v) =>
+        setKind(v === "linear" ? { type: "linear", axis: k.kind.axis, spacing: 10 } : { type: "circular", axis: k.kind.axis, angle: 360 }),
+      )),
+    );
+    body.appendChild(field("Axis", select(["x", "y", "z"], k.kind.axis, (v) => setKind({ ...k.kind, axis: v as Axis }))));
+    if (k.kind.type === "linear") {
+      const kind = k.kind;
+      body.appendChild(field("Spacing", numberInput(kind.spacing, (v) => setKind({ ...kind, spacing: v }))));
+    } else {
+      const kind = k.kind;
+      body.appendChild(field("Total angle (°)", numberInput(kind.angle, (v) => setKind({ ...kind, angle: v }))));
+    }
+    body.appendChild(field("Count", numberInput(k.count, (v) => this.apply({ type: "set_pattern", id: f.id, count: Math.max(2, Math.round(v)) }))));
+    body.appendChild(field("Copies", select(["add", "new"], k.op, (v) => this.apply({ type: "set_pattern", id: f.id, op: v as "add" | "new" }))));
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Repeats every body along or about a world axis through the origin; the count includes the original.";
+    body.appendChild(note);
   }
 
   renderBlendDetail(f: FeatureSummary, body: HTMLElement): void {
@@ -936,6 +1001,16 @@ async function main(): Promise<void> {
     }
   };
   $("#btn-add-fillet").onclick = () => addBlend("fillet");
+  $("#btn-add-mirror").onclick = () => {
+    app.sketcher.exit();
+    app.apply({ type: "add_mirror", plane: { type: "standard", base: "right", offset: 0 }, op: "add", name: null });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-pattern").onclick = () => {
+    app.sketcher.exit();
+    app.apply({ type: "add_pattern", kind: { type: "linear", axis: "x", spacing: 20 }, count: 2, op: "add", name: null });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
   $("#btn-add-chamfer").onclick = () => addBlend("chamfer");
   $("#btn-add-revolve").onclick = () => {
     const f = app.feature(app.selected);

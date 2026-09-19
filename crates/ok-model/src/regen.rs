@@ -1,8 +1,8 @@
 use crate::{
-    canonical_frame, BlendKind, BodyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId,
-    FeatureKind, PartStudio, PlaneRef, ProfileSelection, RevolveAxis,
+    canonical_frame, BlendKind, BodyOp, CopyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef,
+    FeatureId, FeatureKind, PartStudio, PatternKind, PlaneRef, ProfileSelection, RevolveAxis,
 };
-use ok_brep::{boolean, BoolOp, Solid};
+use ok_brep::{boolean, BoolOp, Solid, Transform};
 use ok_math::{Plane, Vec2, Vec3};
 use ok_mesh::TriMesh;
 use ok_sketch::{Entity, EntityId, Profile, ProfileOptions, SolveResult};
@@ -287,6 +287,34 @@ impl PartStudio {
                     let bf = bf.clone();
                     Self::regen_blend(&mut result, id, &bf)
                 }
+                FeatureKind::Mirror(mf) => {
+                    let mf = mf.clone();
+                    match result.resolve_plane(&mf.plane) {
+                        Ok(plane) => {
+                            Self::regen_copies(&mut result, id, &[Transform::mirror(&plane)], mf.op)
+                        }
+                        Err(e) => Some(e),
+                    }
+                }
+                FeatureKind::Pattern(pf) => {
+                    let pf = pf.clone();
+                    if pf.count < 2 {
+                        Some("count must be at least 2".into())
+                    } else {
+                        let transforms: Vec<Transform> = (1..pf.count)
+                            .map(|i| match pf.kind {
+                                PatternKind::Linear { axis, spacing } => {
+                                    Transform::translation(axis.vector() * (spacing * i as f64))
+                                }
+                                PatternKind::Circular { axis, angle } => {
+                                    let step = angle.to_radians() / pf.count as f64;
+                                    Transform::rotation(Vec3::ZERO, axis.vector(), step * i as f64)
+                                }
+                            })
+                            .collect();
+                        Self::regen_copies(&mut result, id, &transforms, pf.op)
+                    }
+                }
             };
             result.statuses.push(FeatureStatus { id, error });
             self.cache.entries.push((chain, result.clone()));
@@ -504,6 +532,37 @@ impl PartStudio {
         }
         if matched == 0 {
             return Some("none of the referenced edges exist any more".into());
+        }
+        None
+    }
+
+    /// Applies each transform to every existing body, merging or adding copies.
+    fn regen_copies(
+        result: &mut RegenResult,
+        id: FeatureId,
+        transforms: &[Transform],
+        op: CopyOp,
+    ) -> Option<String> {
+        if result.bodies.is_empty() {
+            return Some("there are no bodies to copy".into());
+        }
+        let count = result.bodies.len();
+        for i in 0..count {
+            let original = result.bodies[i].solid.clone();
+            for xf in transforms {
+                let copy = original.transformed(xf);
+                match op {
+                    CopyOp::New => result.push_body(id, copy),
+                    CopyOp::Add => {
+                        let merged = match boolean(&result.bodies[i].solid, &copy, BoolOp::Union) {
+                            Ok(s) => s,
+                            Err(e) => return Some(format!("could not merge copy: {e}")),
+                        };
+                        let body = &result.bodies[i];
+                        result.bodies[i] = Body::new(body.name.clone(), body.source, merged);
+                    }
+                }
+            }
         }
         None
     }
@@ -1303,6 +1362,108 @@ mod tests {
         assert!(r.errors().next().is_none());
         let expected = 2000.0 - (4.0 - std::f64::consts::PI) * 10.0;
         assert!(((r.bodies[0].solid.volume() - expected) / expected).abs() < 2e-3);
+    }
+
+    #[test]
+    fn mirror_and_patterns() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(1.0, 0.0),
+                b: Vec2::new(3.0, 2.0),
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddExtrude {
+            sketch: s,
+            depth: 1.0,
+            direction: ExtrudeDirection::Normal,
+            end: ExtrudeEnd::Blind,
+            profiles: ProfileSelection::All,
+            op: BodyOp::New,
+            name: None,
+        })
+        .unwrap();
+        // Mirror across the Right plane (x = 0): a separate copy.
+        let m = ps
+            .apply(Op::AddMirror {
+                plane: PlaneRef::standard(StandardPlane::Right),
+                op: crate::CopyOp::New,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 2);
+        assert!((r.bodies[1].solid.volume() - 4.0).abs() < 1e-9);
+        // Mirror across a touching plane with Add merges into one body.
+        ps.apply(Op::SetMirror {
+            id: m,
+            plane: Some(PlaneRef::Standard {
+                base: StandardPlane::Right,
+                offset: 1.0,
+            }),
+            op: Some(crate::CopyOp::Add),
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert_eq!(r.bodies.len(), 1);
+        assert!((r.bodies[0].solid.volume() - 8.0).abs() < 1e-9);
+        // Linear pattern of 3 along X with gaps: three lumps, one body.
+        ps.apply(Op::AddPattern {
+            kind: PatternKind::Linear {
+                axis: crate::Axis::X,
+                spacing: 10.0,
+            },
+            count: 3,
+            op: crate::CopyOp::Add,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 1);
+        assert!((r.bodies[0].solid.volume() - 24.0).abs() < 1e-9);
+        assert_eq!(r.bodies[0].solid.shells().len(), 3);
+        // Circular pattern as new bodies: 4 around Z.
+        ps.apply(Op::AddPattern {
+            kind: PatternKind::Circular {
+                axis: crate::Axis::Z,
+                angle: 360.0,
+            },
+            count: 4,
+            op: crate::CopyOp::New,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 4);
+        let total: f64 = r.bodies.iter().map(|b| b.solid.volume()).sum();
+        assert!((total - 96.0).abs() < 1e-6, "total {total}");
     }
 
     #[test]
