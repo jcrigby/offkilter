@@ -46,6 +46,15 @@ button.active { background: rgba(78, 161, 255, 0.25); border-color: var(--accent
 .feature-list li:hover { background: var(--bg-elev); }
 .feature-list li.selected { background: rgba(78, 161, 255, 0.18); outline: 1px solid rgba(78, 161, 255, 0.5); }
 .feature-list li.suppressed { opacity: 0.5; text-decoration: line-through; }
+.feature-list li.rolled { opacity: 0.4; }
+.feature-list li.rollbar { cursor: default; padding: 0 8px; height: 6px; background: var(--accent); border-radius: 2px; margin: 2px 8px; }
+.feature-list li.rollbar:hover { background: var(--accent); }
+.feature-list .roll { visibility: hidden; padding: 0 5px; font-size: 11px; }
+.feature-list li:hover .roll { visibility: visible; }
+.parts-title { border-top: 1px solid var(--border); margin-top: 4px; }
+.part-list { list-style: none; margin: 0; padding: 0 12px 8px; font-size: 12px; }
+.part-list li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; color: var(--text-dim); }
+.part-list li .pname { color: var(--text); }
 .feature-list .icon { width: 16px; text-align: center; color: var(--text-dim); font-family: var(--mono); }
 .feature-list .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }

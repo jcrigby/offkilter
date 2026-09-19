@@ -84,6 +84,8 @@ export type BodySummary = {
   faces: FaceInfo[];
   bounds: [Vec3, Vec3] | null;
   volume: number;
+  area: number;
+  centroid: Vec3 | null;
 };
 export type SolveResult = {
   status: "fully_constrained" | "under_constrained" | "inconsistent";

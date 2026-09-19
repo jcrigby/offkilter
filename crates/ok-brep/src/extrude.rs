@@ -148,6 +148,14 @@ mod tests {
     }
 
     #[test]
+    fn area_and_centroid_of_a_box() {
+        let solid = extrude(&rect_profile(4.0, 2.0), &Plane::XY, 0.0, 3.0, 1).unwrap();
+        assert!((solid.surface_area() - 2.0 * (8.0 + 12.0 + 6.0)).abs() < 1e-9);
+        let c = solid.centroid().unwrap();
+        assert!(c.approx_eq(ok_math::Vec3::new(2.0, 1.0, 1.5)), "{c:?}");
+    }
+
+    #[test]
     fn reversed_extrude_is_outward() {
         let solid = extrude(&rect_profile(1.0, 1.0), &Plane::XZ, 0.0, -2.0, 1).unwrap();
         assert!((solid.volume() - 2.0).abs() < 1e-9);

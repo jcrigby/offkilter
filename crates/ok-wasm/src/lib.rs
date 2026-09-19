@@ -47,6 +47,8 @@ struct BodySummary<'a> {
     faces: Vec<FaceInfo>,
     bounds: Option<(ok_math::Vec3, ok_math::Vec3)>,
     volume: f64,
+    area: f64,
+    centroid: Option<ok_math::Vec3>,
 }
 
 #[derive(Serialize)]
@@ -152,6 +154,8 @@ impl Studio {
                     .collect(),
                 bounds: b.solid.bounds(),
                 volume: b.solid.volume(),
+                area: b.solid.surface_area(),
+                centroid: b.solid.centroid(),
             })
             .collect();
         serde_json::to_string(&Summary {

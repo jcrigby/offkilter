@@ -44,7 +44,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Variables and expressions in dimensions (`#width / 2`) via per-field bindings
 - [x] Face selection in the viewport with picking
 - [x] Edge selection (edges are named by their two faces)
-- [ ] Body selection; rollback bar in the feature list
+- [x] Rollback bar in the feature list
+- [ ] Body selection, hide/show, rename
 - [ ] Multiple part studios per document; assemblies with mates
 - [x] STL export
 - [ ] Drawings (2D projections); 3MF export; STEP once faces are exact

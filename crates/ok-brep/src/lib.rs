@@ -197,6 +197,45 @@ impl Solid {
         mesh.signed_volume()
     }
 
+    /// Total surface area.
+    pub fn surface_area(&self) -> f64 {
+        let mesh = tessellate(self);
+        let p = |i: u32| {
+            let i = i as usize * 3;
+            Vec3::new(
+                mesh.positions[i] as f64,
+                mesh.positions[i + 1] as f64,
+                mesh.positions[i + 2] as f64,
+            )
+        };
+        mesh.indices
+            .chunks_exact(3)
+            .map(|t| (p(t[1]) - p(t[0])).cross(p(t[2]) - p(t[0])).length() * 0.5)
+            .sum()
+    }
+
+    /// Centre of mass assuming uniform density, or `None` for an empty solid.
+    pub fn centroid(&self) -> Option<Vec3> {
+        let mesh = tessellate(self);
+        let p = |i: u32| {
+            let i = i as usize * 3;
+            Vec3::new(
+                mesh.positions[i] as f64,
+                mesh.positions[i + 1] as f64,
+                mesh.positions[i + 2] as f64,
+            )
+        };
+        let mut volume = 0.0;
+        let mut sum = Vec3::ZERO;
+        for t in mesh.indices.chunks_exact(3) {
+            let (a, b, c) = (p(t[0]), p(t[1]), p(t[2]));
+            let v = a.dot(b.cross(c)) / 6.0;
+            volume += v;
+            sum += (a + b + c) * (v / 4.0);
+        }
+        (volume.abs() > 1e-12).then(|| sum / volume)
+    }
+
     /// Builds a solid from polygons, merging coincident vertices, inserting
     /// vertices that lie on edges of other polygons (T-junctions), dropping
     /// degenerate loops, and validating closure.

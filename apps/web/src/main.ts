@@ -24,6 +24,8 @@ class App implements SketchHost {
   facePicker: ((face: FaceRef) => void) | null = null;
   /** Blend feature currently collecting edges; the view rolls back to before it. */
   edgePicking: number | null = null;
+  /** Feature-list rollback: number of features shown, or null for all. */
+  rollbackCount: number | null = null;
   viewer = new Viewer($("#viewport"));
 
   constructor(kernel: Kernel) {
@@ -93,11 +95,18 @@ class App implements SketchHost {
     this.regenerate();
   }
 
-  /** Rollback count for regeneration while picking edges. */
+  /** Rollback count for regeneration: edge picking wins, then the rollback bar. */
   private rollback(): number | null {
-    if (this.edgePicking === null) return null;
-    const i = this.summary?.features.findIndex((f) => f.id === this.edgePicking) ?? -1;
-    return i < 0 ? null : i;
+    if (this.edgePicking !== null) {
+      const i = this.summary?.features.findIndex((f) => f.id === this.edgePicking) ?? -1;
+      return i < 0 ? null : i;
+    }
+    return this.rollbackCount;
+  }
+
+  setRollback(count: number | null): void {
+    this.rollbackCount = count;
+    this.regenerate();
   }
 
   // ------------------------------------------------------------ faces
@@ -443,7 +452,24 @@ class App implements SketchHost {
       const name = document.createElement("span");
       name.className = "name";
       name.textContent = f.name;
-      li.append(dot, icon, name);
+      const index = this.summary.features.indexOf(f);
+      if (this.rollbackCount !== null && index >= this.rollbackCount) li.classList.add("rolled");
+      const roll = document.createElement("button");
+      roll.className = "roll";
+      roll.textContent = "⏶";
+      roll.title = "Roll back to before this feature";
+      roll.onclick = (e) => {
+        e.stopPropagation();
+        this.setRollback(index);
+      };
+      li.append(dot, icon, name, roll);
+      if (this.rollbackCount === index) {
+        const bar = document.createElement("li");
+        bar.className = "rollbar";
+        bar.title = "Rollback bar: features below are not applied. Click to roll to the end.";
+        bar.onclick = () => this.setRollback(null);
+        ul.appendChild(bar);
+      }
       li.onclick = () => this.select(f.id);
       li.ondblclick = () => {
         const n = prompt("Rename feature", f.name);
@@ -457,6 +483,7 @@ class App implements SketchHost {
       li.textContent = "No features yet. Add a sketch to begin.";
       ul.appendChild(li);
     }
+    this.renderParts();
     const sel = this.feature(this.selected);
     ($("#btn-add-extrude") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
     ($("#btn-add-revolve") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
@@ -465,6 +492,28 @@ class App implements SketchHost {
     ($("#btn-add-chamfer") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-mirror") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-pattern") as HTMLButtonElement).disabled = !hasBody;
+  }
+
+  renderParts(): void {
+    const ul = $("#part-list");
+    ul.innerHTML = "";
+    for (const b of this.summary.bodies) {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.className = "pname";
+      name.textContent = b.name;
+      const stats = document.createElement("span");
+      const c = b.centroid;
+      stats.textContent = `${b.volume.toFixed(1)} mm³ · ${b.area.toFixed(1)} mm²`;
+      stats.title = c ? `centre of mass (${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)}) · ${b.face_count} faces` : "";
+      li.append(name, stats);
+      ul.appendChild(li);
+    }
+    if (this.summary.bodies.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "no parts";
+      ul.appendChild(li);
+    }
   }
 
   sketchWarn(f: FeatureSummary): boolean {
