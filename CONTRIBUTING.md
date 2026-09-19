@@ -26,9 +26,12 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ./scripts/build-wasm.sh
 cd apps/web && npm run build
+npm run e2e        # browser tests against the build (needs Playwright's Chromium: npx playwright install chromium)
 ```
 
-CI runs the same steps.
+CI runs the same steps, plus the end-to-end suite against a running
+`ok-server`. Set `PW_CHROMIUM=/path/to/chromium` to use a pre-installed
+browser.
 
 ## Style
 

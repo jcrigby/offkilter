@@ -14,6 +14,13 @@ pub struct DocMeta {
     pub updated: u64,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VersionMeta {
+    pub id: String,
+    pub name: String,
+    pub created: u64,
+}
+
 #[derive(Clone)]
 pub struct DocStore {
     root: PathBuf,
@@ -116,6 +123,63 @@ impl DocStore {
         Ok(())
     }
 
+    fn versions_dir(&self, id: &str) -> PathBuf {
+        self.root.join("docs").join(format!("{id}.versions"))
+    }
+
+    /// Saves the current document as a named version.
+    pub fn save_version(&self, id: &str, name: &str) -> std::io::Result<VersionMeta> {
+        let Some(json) = self.read(id) else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "no such document",
+            ));
+        };
+        let dir = self.versions_dir(id);
+        std::fs::create_dir_all(&dir)?;
+        let vid = new_id();
+        let meta = VersionMeta {
+            id: vid.clone(),
+            name: name.to_string(),
+            created: now(),
+        };
+        std::fs::write(dir.join(format!("{vid}.okpart")), json)?;
+        std::fs::write(
+            dir.join(format!("{vid}.meta.json")),
+            serde_json::to_string_pretty(&meta)?,
+        )?;
+        Ok(meta)
+    }
+
+    pub fn list_versions(&self, id: &str) -> std::io::Result<Vec<VersionMeta>> {
+        if !Self::valid_id(id) {
+            return Ok(Vec::new());
+        }
+        let dir = self.versions_dir(id);
+        let mut out = Vec::new();
+        if let Ok(entries) = std::fs::read_dir(&dir) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                if name.ends_with(".meta.json") {
+                    if let Ok(text) = std::fs::read_to_string(entry.path()) {
+                        if let Ok(meta) = serde_json::from_str::<VersionMeta>(&text) {
+                            out.push(meta);
+                        }
+                    }
+                }
+            }
+        }
+        out.sort_by(|a, b| b.created.cmp(&a.created));
+        Ok(out)
+    }
+
+    pub fn read_version(&self, id: &str, vid: &str) -> Option<String> {
+        if !Self::valid_id(id) || !Self::valid_id(vid) {
+            return None;
+        }
+        std::fs::read_to_string(self.versions_dir(id).join(format!("{vid}.okpart"))).ok()
+    }
+
     pub fn delete(&self, id: &str) -> std::io::Result<()> {
         if !Self::valid_id(id) {
             return Err(std::io::Error::new(
@@ -125,6 +189,7 @@ impl DocStore {
         }
         std::fs::remove_file(self.doc_path(id))?;
         std::fs::remove_file(self.meta_path(id))?;
+        let _ = std::fs::remove_dir_all(self.versions_dir(id));
         Ok(())
     }
 }

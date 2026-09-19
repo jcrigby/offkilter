@@ -55,14 +55,16 @@ top are concrete and self-contained; items lower down are directions.
 
 - [x] Document server (`ok-server`): storage, static app, REST
 - [ ] Server-side regeneration / validation beyond op checking
-- [ ] Version history: branches, merges and diffs over the op log
+- [x] Named versions of a document (save / restore on the server)
+- [ ] Branches, merges and diffs over the op log
 - [x] Real-time multi-user editing (ops relayed in server order; resync on concurrent edits)
 - [ ] Conflict-free concurrent editing (transform or CRDT over the op log)
 - [ ] Accounts, sharing, teams
 
 ## Engineering
 
-- [x] CI: fmt, clippy, tests, wasm build, web build
+- [x] CI: fmt, clippy, tests, wasm build, web build, browser end-to-end suite
+- [x] Dockerfile for the server + web app
 - [x] Randomised boolean robustness test (grid-aligned box/cylinder sequences; `--ignored` long run)
 - [ ] Property tests for the solver and region extraction
 - [x] Regeneration cache: unchanged feature prefixes are reused, so editing late features is cheap

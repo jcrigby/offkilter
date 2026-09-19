@@ -9,6 +9,7 @@
 import type { Op } from "./kernel";
 
 export type DocMeta = { id: string; name: string; created: number; updated: number };
+export type VersionMeta = { id: string; name: string; created: number };
 
 type ServerMessage =
   | { type: "welcome"; client: number; seq: number; doc: string; clients: number }
@@ -54,6 +55,24 @@ export class Sync {
 
   static async deleteDoc(id: string): Promise<void> {
     await fetch(`${Sync.apiBase()}/docs/${id}`, { method: "DELETE" });
+  }
+
+  static async listVersions(id: string): Promise<VersionMeta[]> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/versions`);
+    if (!r.ok) throw new Error(`server said ${r.status}`);
+    return (await r.json()) as VersionMeta[];
+  }
+
+  static async saveVersion(id: string, name: string): Promise<VersionMeta> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/versions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+    if (!r.ok) throw new Error(`server said ${r.status}`);
+    return (await r.json()) as VersionMeta;
+  }
+
+  /** Restores a version; every connected client reloads the document. */
+  static async restoreVersion(id: string, vid: string): Promise<void> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/versions/${vid}/restore`, { method: "POST" });
+    if (!r.ok) throw new Error(`server said ${r.status}`);
   }
 
   /** Whether a server is reachable at this origin. */

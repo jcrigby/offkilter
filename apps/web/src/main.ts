@@ -5,7 +5,7 @@ import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
 import type { SketchHost, Tool } from "./sketcher";
 import { Sync } from "./sync";
-import type { DocMeta } from "./sync";
+import type { DocMeta, VersionMeta } from "./sync";
 
 const $ = <T extends HTMLElement>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -1236,6 +1236,7 @@ async function main(): Promise<void> {
       li.textContent = "No documents yet.";
       list.appendChild(li);
     }
+    await renderVersions();
     for (const d of docs) {
       const li = document.createElement("li");
       const name = document.createElement("span");
@@ -1257,6 +1258,50 @@ async function main(): Promise<void> {
       }, "danger"));
       list.appendChild(li);
     }
+  };
+  const renderVersions = async () => {
+    const box = $("#versions");
+    const list = $("#versions-list");
+    list.innerHTML = "";
+    const id = app.sync.docId;
+    box.hidden = !id;
+    if (!id) return;
+    let versions: VersionMeta[] = [];
+    try {
+      versions = await Sync.listVersions(id);
+    } catch {
+      return;
+    }
+    if (versions.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No saved versions.";
+      list.appendChild(li);
+    }
+    for (const v of versions) {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.className = "dname";
+      name.textContent = v.name;
+      name.title = "Restore this version";
+      name.onclick = async () => {
+        if (!confirm(`Restore version "${v.name}"? Everyone editing this document gets it.`)) return;
+        await Sync.restoreVersion(id, v.id);
+        dialog.close();
+      };
+      const when = document.createElement("span");
+      when.className = "dwhen";
+      when.textContent = new Date(v.created * 1000).toLocaleString();
+      li.append(name, when);
+      list.appendChild(li);
+    }
+  };
+  $("#versions-save").onclick = async () => {
+    const id = app.sync.docId;
+    if (!id) return;
+    const name = prompt("Version name", `v${new Date().toISOString().slice(0, 16).replace("T", " ")}`);
+    if (!name) return;
+    await Sync.saveVersion(id, name);
+    await renderVersions();
   };
   const openDoc = (id: string) => {
     app.sync.connect(id);

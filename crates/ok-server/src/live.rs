@@ -131,6 +131,27 @@ impl LiveDoc {
         Ok(seq)
     }
 
+    /// Replaces the live document (e.g. restoring a version) and tells
+    /// every client to reload it.
+    pub fn replace(&self, json: &str) -> Result<(), String> {
+        let studio = PartStudio::from_json(json).map_err(|e| e.to_string())?;
+        let mut st = self.state.lock().unwrap();
+        st.studio = studio;
+        st.seq += 1;
+        let seq = st.seq;
+        let name = st.studio.name.clone();
+        drop(st);
+        let _ = self.store.write(&self.id, json, Some(&name));
+        let op = serde_json::json!({ "type": "replace_document", "json": json });
+        let _ = self.tx.send(ServerMessage::Op {
+            op,
+            seq,
+            from: 0,
+            id: 0,
+        });
+        Ok(())
+    }
+
     pub fn snapshot(&self) -> ServerMessage {
         let st = self.state.lock().unwrap();
         ServerMessage::Snapshot {

@@ -45,3 +45,39 @@ jobs:
         working-directory: apps/web
       - run: npm run build
         working-directory: apps/web
+
+  e2e:
+    name: End-to-end (browser + server)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli --version "$WASM_BINDGEN_VERSION" --locked
+      - run: ./scripts/build-wasm.sh
+      - run: cargo build -p ok-server
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm run build
+        working-directory: apps/web
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Start document server
+        run: |
+          ./target/debug/ok-server --static apps/web/dist --data /tmp/okdata --port 8080 &
+          sleep 1
+      - run: npm run e2e
+        working-directory: apps/web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/test-results

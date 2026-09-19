@@ -19,6 +19,12 @@ pub fn router(store: DocStore, static_dir: Option<PathBuf>) -> Router {
         .route("/docs", get(list_docs).post(create_doc))
         .route("/docs/{id}", get(get_doc).put(put_doc).delete(delete_doc))
         .route("/docs/{id}/ws", get(ws_upgrade))
+        .route("/docs/{id}/versions", get(list_versions).post(save_version))
+        .route("/docs/{id}/versions/{vid}", get(get_version))
+        .route(
+            "/docs/{id}/versions/{vid}/restore",
+            axum::routing::post(restore_version),
+        )
         .route("/health", get(|| async { "ok" }))
         .with_state(hub);
     let mut app = Router::new().nest("/api", api);
@@ -96,6 +102,61 @@ async fn delete_doc(State(hub): State<DocHub>, Path(id): Path<String>) -> impl I
     match hub.store().delete(&id) {
         Ok(()) => StatusCode::NO_CONTENT,
         Err(_) => StatusCode::NOT_FOUND,
+    }
+}
+
+async fn list_versions(State(hub): State<DocHub>, Path(id): Path<String>) -> impl IntoResponse {
+    match hub.store().list_versions(&id) {
+        Ok(v) => Json(v).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+struct SaveVersion {
+    name: String,
+}
+
+async fn save_version(
+    State(hub): State<DocHub>,
+    Path(id): Path<String>,
+    Json(body): Json<SaveVersion>,
+) -> impl IntoResponse {
+    match hub.store().save_version(&id, &body.name) {
+        Ok(meta) => (StatusCode::CREATED, Json(meta)).into_response(),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn get_version(
+    State(hub): State<DocHub>,
+    Path((id, vid)): Path<(String, String)>,
+) -> impl IntoResponse {
+    match hub.store().read_version(&id, &vid) {
+        Some(json) => (
+            [(axum::http::header::CONTENT_TYPE, "application/json")],
+            json,
+        )
+            .into_response(),
+        None => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
+/// Restores a version: connected clients receive a replace_document op.
+async fn restore_version(
+    State(hub): State<DocHub>,
+    Path((id, vid)): Path<(String, String)>,
+) -> impl IntoResponse {
+    let Some(json) = hub.store().read_version(&id, &vid) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    match hub.get(&id) {
+        Some(doc) => match doc.replace(&json) {
+            Ok(()) => StatusCode::NO_CONTENT.into_response(),
+            Err(e) => (StatusCode::BAD_REQUEST, e).into_response(),
+        },
+        None => StatusCode::NOT_FOUND.into_response(),
     }
 }
 
@@ -280,6 +341,84 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+
+        // Versions: save, list, read, restore.
+        let res = app
+            .clone()
+            .oneshot(
+                Request::post(format!("/api/docs/{id}/versions"))
+                    .header("content-type", "application/json")
+                    .body(Body::from(r#"{"name":"v1"}"#))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::CREATED);
+        let vmeta: serde_json::Value =
+            serde_json::from_slice(&res.into_body().collect().await.unwrap().to_bytes()).unwrap();
+        let vid = vmeta["id"].as_str().unwrap().to_string();
+        let res = app
+            .clone()
+            .oneshot(
+                Request::get(format!("/api/docs/{id}/versions"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let versions: Vec<serde_json::Value> =
+            serde_json::from_slice(&res.into_body().collect().await.unwrap().to_bytes()).unwrap();
+        assert_eq!(versions.len(), 1);
+        assert_eq!(versions[0]["name"], "v1");
+        let res = app
+            .clone()
+            .oneshot(
+                Request::get(format!("/api/docs/{id}/versions/{vid}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        // Overwrite the document with an empty one, then restore v1 (the demo).
+        let res = app
+            .clone()
+            .oneshot(
+                Request::put(format!("/api/docs/{id}"))
+                    .body(Body::from(ok_model::PartStudio::new("empty").to_json()))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::NO_CONTENT);
+        let res = app
+            .clone()
+            .oneshot(
+                Request::post(format!("/api/docs/{id}/versions/{vid}/restore"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::NO_CONTENT);
+        let res = app
+            .clone()
+            .oneshot(
+                Request::get(format!("/api/docs/{id}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let json = String::from_utf8(res.into_body().collect().await.unwrap().to_bytes().to_vec())
+            .unwrap();
+        assert_eq!(
+            ok_model::PartStudio::from_json(&json)
+                .unwrap()
+                .features()
+                .len(),
+            6
+        );
 
         let res = app
             .clone()

@@ -56,7 +56,7 @@ in `crates/ok-wasm/Cargo.toml`, and Node 22.
 
 ```sh
 cargo install wasm-bindgen-cli --version 0.2.128 --locked
-cargo test --workspace          # kernel tests
+cargo test --workspace          # kernel and server tests
 ./scripts/build-wasm.sh         # compile kernel to apps/web/src/wasm
 cd apps/web && npm install && npm run dev
 ```
@@ -78,7 +78,10 @@ cargo run -p ok-server -- --static apps/web/dist --data ./data --port 8080
 Open http://localhost:8080, click **Docs**, create a document, and share
 its URL (`?doc=<id>`): everyone with it edits the same feature list live.
 During development run `npm run dev` in `apps/web`; it proxies `/api` to
-the server on port 8080.
+the server on port 8080. The Docs dialog also saves and restores named
+versions of a document.
+
+Or with Docker: `docker build -t offkilter . && docker run -p 8080:8080 -v offkilter-data:/data offkilter`.
 
 ## Using the kernel from Rust
 

@@ -64,6 +64,7 @@ export class Sketcher implements PointerHandler {
     this.host.viewer.setSketchMouse(false);
     this.host.viewer.setPreview([]);
     this.host.viewer.resetUp();
+    this.host.regenerate(); // refreshes the status line and selection colours
   }
 
   setTool(tool: Tool): void {
