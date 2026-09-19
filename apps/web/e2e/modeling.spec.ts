@@ -226,3 +226,65 @@ test("use tool projects a face outline into a sketch", async ({ page }) => {
   expect(await bodyVolume()).toBeCloseTo(480, 0);
   expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
 });
+
+test("sketch trim, offset and mirror", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.type() === "prompt" ? "-1" : d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  const regions = () => page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    return app.summary.sketches[String(app.sketcher.sketchId)].profiles.length as number;
+  });
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Sketch 1" });
+    const id = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id, op: { type: "add_rectangle", a: { x: 0, y: 0 }, b: { x: 10, y: 6 } } });
+    app.apply({ type: "sketch", id, op: { type: "add_line", a: { x: -2, y: 3 }, b: { x: 12, y: 3 } } });
+    app.editSketch(id);
+  });
+  // The crossing line splits the rectangle in two.
+  expect(await regions()).toBe(2);
+  await page.getByRole("button", { name: "Trim" }).click();
+  await expect(page.locator("#status-text")).toContainText("Trim:");
+  // Trim the middle piece of the crossing line: one region again.
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const id = app.sketcher.sketchId;
+    const line = app.summary.features.find((f: any) => f.id === id).kind.sketch.entities.filter((e: any) => e.type === "line").pop();
+    app.apply({ type: "sketch", id, op: { type: "trim", entity: line.id, at: { x: 5, y: 3 } } });
+  });
+  expect(await regions()).toBe(1);
+  // Select the rectangle and offset it outward through the panel button.
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const id = app.sketcher.sketchId;
+    const lines = app.summary.features.find((f: any) => f.id === id).kind.sketch.entities.filter((e: any) => e.type === "line").slice(0, 4);
+    app.sketcher.selection = new Set(lines.map((l: any) => l.id));
+    app.selectionChanged();
+  });
+  await page.getByRole("button", { name: "Offset…" }).click();
+  await page.waitForTimeout(300);
+  // Inner rectangle plus the ring, which the two stubs of the trimmed
+  // line cut into a top and a bottom half.
+  expect(await regions()).toBe(3);
+  // Mirror the rectangle across a construction line at x = 20: a copy at 30..40.
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const id = app.sketcher.sketchId;
+    const lines = app.summary.features.find((f: any) => f.id === id).kind.sketch.entities.filter((e: any) => e.type === "line").slice(0, 4);
+    const r = app.applyRaw({ type: "sketch", id, op: { type: "add_line", a: { x: 20, y: -5 }, b: { x: 20, y: 10 } } });
+    app.applyRaw({ type: "sketch", id, op: { type: "set_construction", id: r.entities[0], construction: true } });
+    app.apply({ type: "sketch", id, op: { type: "mirror", entities: lines.map((l: any) => l.id), axis: r.entities[0] } });
+  });
+  await page.waitForTimeout(300);
+  expect(await regions()).toBe(4);
+  await expect(page.locator("#detail-body")).toContainText("symmetric");
+  // Undo the mirror.
+  await page.click("#viewport");
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(300);
+  expect(await regions()).toBe(3);
+});

@@ -9,7 +9,7 @@
 import type { Constraint, Entity, Op, OpResult, PlaneFrame, SketchCurve, SketchData, SketchOp, Summary, Vec2, Vec3 } from "./kernel";
 import type { PointerHandler, Viewer } from "./viewer";
 
-export type Tool = "select" | "line" | "rectangle" | "circle" | "arc" | "use";
+export type Tool = "select" | "line" | "rectangle" | "circle" | "arc" | "trim" | "use";
 
 export interface SketchHost {
   summary: Summary;
@@ -38,6 +38,8 @@ export class Sketcher implements PointerHandler {
   private pendingIds: (number | null)[] = [];
   private drag: { entity: number; moved: boolean } | null = null;
   private regenQueued = false;
+  /** Set while "Mirror" waits for the user to click the axis line. */
+  awaitingMirrorAxis = false;
 
   constructor(private host: SketchHost) {}
 
@@ -54,7 +56,7 @@ export class Sketcher implements PointerHandler {
     this.host.viewer.setSketchMouse(true);
     const plane = this.plane();
     if (plane) this.host.viewer.lookAtPlane(plane);
-    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · U use (project edges) · S select · Q construction · right-drag orbits · Esc finishes");
+    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · T trim · O offset · M mirror · U use · S select · Q construction · right-drag orbits · Esc finishes");
   }
 
   exit(): void {
@@ -78,6 +80,63 @@ export class Sketcher implements PointerHandler {
     if (wasUse !== (tool === "use")) this.host.regenerate();
     else this.host.selectionChanged();
     if (tool === "use") this.host.setStatus("Use: click a body edge or face to project it into the sketch (only bodies before this sketch are shown)");
+    if (tool === "trim") this.host.setStatus("Trim: click the piece of a line, arc or circle to remove (between its crossings)");
+  }
+
+  /** Offsets the selected chain by a distance asked from the user (O). */
+  offsetSelection(): void {
+    const entities = [...this.selection].filter((id) => this.entity(id)?.type !== "point");
+    if (entities.length === 0) return;
+    const text = prompt("Offset distance (negative for the other side)", "1");
+    if (text === null) return;
+    const distance = Number(text);
+    if (!Number.isFinite(distance) || distance === 0) return;
+    this.host.snapshot();
+    try {
+      const r = this.sketchOp({ type: "offset", entities, distance });
+      this.selection = new Set(r.entities);
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.host.regenerate();
+  }
+
+  /** Starts a mirror of the selection: the next clicked line is the axis (M). */
+  beginMirror(): void {
+    if (this.selection.size === 0) return;
+    this.cancel();
+    this.tool = "select";
+    this.awaitingMirrorAxis = true;
+    this.host.selectionChanged();
+    this.host.setStatus("Mirror: click the line to mirror across (Esc cancels)");
+  }
+
+  private finishMirror(axis: number): void {
+    const entities = [...this.selection].filter((id) => id !== axis);
+    this.awaitingMirrorAxis = false;
+    this.host.snapshot();
+    try {
+      const r = this.sketchOp({ type: "mirror", entities, axis });
+      this.selection = new Set(r.entities);
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.host.regenerate();
+  }
+
+  private clickTrim(e: PointerEvent): void {
+    const id = this.nearestCurve(e);
+    const plane = this.plane();
+    if (id === null || !plane) return;
+    const at = this.host.viewer.toPlane(e, plane);
+    if (!at) return;
+    this.host.snapshot();
+    try {
+      this.sketchOp({ type: "trim", entity: id, at });
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.host.regenerate();
   }
 
   /** Entities that belong to a projection, with the projection's index. */
@@ -172,6 +231,12 @@ export class Sketcher implements PointerHandler {
 
   down(e: PointerEvent): void {
     if (this.tool !== "select") return;
+    if (this.awaitingMirrorAxis) {
+      const line = this.nearestCurve(e);
+      if (line !== null && this.entity(line)?.type === "line") this.finishMirror(line);
+      else this.host.setStatus("Mirror: that is not a line; click a line or press Esc");
+      return;
+    }
     const point = this.nearestPoint(e);
     const hit = point?.id ?? this.nearestCurve(e);
     if (hit === null || hit === undefined) {
@@ -232,6 +297,10 @@ export class Sketcher implements PointerHandler {
       this.host.projectAt(e);
       return;
     }
+    if (this.tool === "trim") {
+      this.clickTrim(e);
+      return;
+    }
     const s = this.snap(e);
     if (!s) return;
     switch (this.tool) {
@@ -254,6 +323,7 @@ export class Sketcher implements PointerHandler {
     this.pending = [];
     this.pendingIds = [];
     this.drag = null;
+    this.awaitingMirrorAxis = false;
     this.host.viewer.setPreview([]);
   }
 
@@ -518,6 +588,10 @@ export class Sketcher implements PointerHandler {
       const [point, line] = sorted("point", "line")!;
       out.push({ label: "On line", build: () => ({ type: "point_on_line", point, line }) });
       out.push({ label: "Midpoint", build: () => ({ type: "midpoint", point, line }) });
+    } else if (kinds.length === 3 && kinds.filter((k) => k === "point").length === 2 && kinds.includes("line")) {
+      const [a, b] = ids.filter((id) => this.entity(id)?.type === "point") as [number, number];
+      const line = ids.find((id) => this.entity(id)?.type === "line")!;
+      out.push({ label: "Symmetric", build: () => ({ type: "symmetric", a, b, line }) });
     } else if (is("round")) {
       const entity = ids[0]!;
       out.push({ label: "Radius", build: () => { const v = ask("Radius", radiusOf(entity)); return v === null ? null : { type: "radius", entity, value: v }; } });

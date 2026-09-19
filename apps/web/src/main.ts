@@ -718,7 +718,7 @@ class App implements SketchHost {
     if (!editing) {
       tools.appendChild(button("Edit sketch", () => this.editSketch(f.id), "primary"));
     } else {
-      for (const [tool, label, key] of [["select", "Select", "S"], ["line", "Line", "L"], ["rectangle", "Rectangle", "R"], ["circle", "Circle", "C"], ["arc", "Arc", "A"], ["use", "Use", "U"]] as [Tool, string, string][]) {
+      for (const [tool, label, key] of [["select", "Select", "S"], ["line", "Line", "L"], ["rectangle", "Rectangle", "R"], ["circle", "Circle", "C"], ["arc", "Arc", "A"], ["trim", "Trim", "T"], ["use", "Use", "U"]] as [Tool, string, string][]) {
         const b = button(label, () => this.sketcher.setTool(tool), this.sketcher.tool === tool ? "active" : "");
         b.title = `${label} (${key})`;
         tools.appendChild(b);
@@ -747,6 +747,15 @@ class App implements SketchHost {
           b.title = "Toggle construction geometry (Q)";
           row.appendChild(b);
         }
+        const curves = sel.filter((id) => this.sketcher.entity(id)?.type !== "point");
+        if (curves.length > 0) {
+          const o = button("Offset…", () => this.sketcher.offsetSelection());
+          o.title = "Copy the selected chain at a distance (O); negative distances go to the other side";
+          row.appendChild(o);
+        }
+        const m = button(this.sketcher.awaitingMirrorAxis ? "Click a line…" : "Mirror…", () => this.sketcher.beginMirror());
+        m.title = "Mirror the selection across a line you click next (M)";
+        row.appendChild(m);
         row.appendChild(button("Delete selected", () => this.sketcher.deleteSelection(), "danger"));
         body.appendChild(row);
       }
@@ -1344,6 +1353,7 @@ function constraintRefFields(t: string): string[] {
     case "point_on_line": case "midpoint": return ["point", "line"];
     case "point_on_circle": return ["point", "entity"];
     case "tangent": return ["line", "entity"];
+    case "symmetric": return ["a", "b", "line"];
     default: return [];
   }
 }
@@ -1756,8 +1766,10 @@ async function main(): Promise<void> {
       } else app.onViewportPick(null);
     }
     if (app.sketcher.active) {
-      const tool = ({ s: "select", l: "line", r: "rectangle", c: "circle", a: "arc", u: "use" } as Record<string, Tool>)[e.key.toLowerCase()];
+      const tool = ({ s: "select", l: "line", r: "rectangle", c: "circle", a: "arc", t: "trim", u: "use" } as Record<string, Tool>)[e.key.toLowerCase()];
       if (tool) app.sketcher.setTool(tool);
+      if (e.key.toLowerCase() === "o") app.sketcher.offsetSelection();
+      if (e.key.toLowerCase() === "m") app.sketcher.beginMirror();
       if (e.key.toLowerCase() === "q") app.sketcher.toggleConstruction();
       if (e.key === "Delete" || e.key === "Backspace") app.sketcher.deleteSelection();
     }

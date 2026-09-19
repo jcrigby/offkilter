@@ -57,6 +57,22 @@ pub enum SketchOp {
         id: EntityId,
         construction: bool,
     },
+    /// Remove the piece of a curve nearest `at`, between its intersections.
+    Trim {
+        entity: EntityId,
+        at: Vec2,
+    },
+    /// Offset a connected chain of lines and arcs (or a circle) to the left
+    /// of the first entity's direction; negative distances go right.
+    Offset {
+        entities: Vec<EntityId>,
+        distance: f64,
+    },
+    /// Mirror entities across a line with symmetric constraints.
+    Mirror {
+        entities: Vec<EntityId>,
+        axis: EntityId,
+    },
     /// Project body geometry into the sketch ("Use"). The entities are
     /// built by regeneration and follow the model.
     Project {
@@ -867,6 +883,25 @@ impl PartStudio {
                         }
                         SketchOp::SetConstruction { id, construction } => {
                             sk.set_construction(id, construction)?;
+                        }
+                        SketchOp::Trim { entity, at } => {
+                            if sk.is_projected(entity) {
+                                return Err(ModelError::Invalid(
+                                    "projected geometry cannot be trimmed".into(),
+                                ));
+                            }
+                            out.entities.extend(sk.trim(entity, at)?);
+                        }
+                        SketchOp::Offset { entities, distance } => {
+                            if !distance.is_finite() || distance.abs() <= 1e-9 {
+                                return Err(ModelError::Invalid(
+                                    "offset distance must be non-zero".into(),
+                                ));
+                            }
+                            out.entities.extend(sk.offset(&entities, distance)?);
+                        }
+                        SketchOp::Mirror { entities, axis } => {
+                            out.entities.extend(sk.mirror(&entities, axis)?);
                         }
                         SketchOp::Project { .. }
                         | SketchOp::RemoveProjection { .. }

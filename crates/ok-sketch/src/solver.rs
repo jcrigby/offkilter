@@ -270,6 +270,19 @@ impl<'a> Eval<'a> {
                 r(d.map(|d| d.x));
                 r(d.map(|d| d.y));
             }
+            Symmetric { a, b, line } => {
+                // The midpoint lies on the line and a-b is perpendicular to it.
+                let v = (|| {
+                    let (pa, pb) = (self.point(*a)?, self.point(*b)?);
+                    let (s, e) = self.line_points(*line)?;
+                    let d = e - s;
+                    let len = d.length().max(tol::LINEAR);
+                    let mid = (pa + pb) * 0.5;
+                    Some(((mid - s).cross(d) / len, (pb - pa).dot(d) / len))
+                })();
+                r(v.map(|v| v.0));
+                r(v.map(|v| v.1));
+            }
             Tangent { line, entity } => {
                 r((|| {
                     let (s, e) = self.line_points(*line)?;

@@ -560,6 +560,7 @@ mod tests {
             },
         );
         let line = r.entities[0];
+        let right = r.entities[1];
         let (start, _) = match &ps.feature(sketch).unwrap().kind {
             crate::FeatureKind::Sketch(sf) => sf.sketch.line(line).unwrap(),
             _ => unreachable!(),
@@ -599,6 +600,48 @@ mod tests {
             Op::Sketch {
                 id: sketch,
                 op: SketchOp::RemoveConstraint { id: c },
+            },
+        );
+        // Trim, offset and mirror create and remove several entities at once.
+        let r = round_trip(
+            &mut ps,
+            Op::Sketch {
+                id: sketch,
+                op: SketchOp::AddLine {
+                    a: Vec2::new(65.0, 2.0),
+                    b: Vec2::new(85.0, 2.0),
+                },
+            },
+        );
+        let crossing = r.entities[0];
+        round_trip(
+            &mut ps,
+            Op::Sketch {
+                id: sketch,
+                op: SketchOp::Trim {
+                    entity: crossing,
+                    at: Vec2::new(75.0, 2.0),
+                },
+            },
+        );
+        round_trip(
+            &mut ps,
+            Op::Sketch {
+                id: sketch,
+                op: SketchOp::Offset {
+                    entities: vec![line],
+                    distance: 1.0,
+                },
+            },
+        );
+        round_trip(
+            &mut ps,
+            Op::Sketch {
+                id: sketch,
+                op: SketchOp::Mirror {
+                    entities: vec![line],
+                    axis: right,
+                },
             },
         );
         // Removing a point takes its line and constraints with it; the

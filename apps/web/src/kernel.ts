@@ -32,7 +32,8 @@ export type Constraint =
   | { type: "point_on_line"; point: number; line: number }
   | { type: "point_on_circle"; point: number; entity: number }
   | { type: "midpoint"; point: number; line: number }
-  | { type: "tangent"; line: number; entity: number };
+  | { type: "tangent"; line: number; entity: number }
+  | { type: "symmetric"; a: number; b: number; line: number };
 
 export type Entity =
   | { type: "point"; pos: Vec2 }
@@ -131,6 +132,9 @@ export type SketchOp =
   | { type: "set_constraint_value"; id: number; value: number }
   | { type: "move_point"; id: number; pos: Vec2 }
   | { type: "set_construction"; id: number; construction: boolean }
+  | { type: "trim"; entity: number; at: Vec2 }
+  | { type: "offset"; entities: number[]; distance: number }
+  | { type: "mirror"; entities: number[]; axis: number }
   | { type: "project"; source: ProjectionSource }
   | { type: "remove_projection"; index: number }
   | { type: "restore"; [key: string]: unknown };

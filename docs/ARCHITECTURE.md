@@ -144,7 +144,25 @@ equation.
 Constraints (`entity.rs`): coincident, fixed, horizontal, vertical,
 distance, horizontal/vertical distance, length, radius, diameter, equal,
 parallel, perpendicular, angle, point-on-line, point-on-circle, midpoint,
-tangent. Angles are stored in degrees, lengths in model units (mm).
+tangent, symmetric. Angles are stored in degrees, lengths in model units
+(mm).
+
+### Editing (`edit.rs`)
+
+Trim, offset and mirror produce ordinary entities and constraints, so
+their results stay editable. `trim` removes the piece of a curve nearest
+the click between its intersections with any other entity (construction
+included) or points lying on it; the original endpoints are kept, new
+cut points get point-on-line / point-on-circle (or coincident)
+constraints to what cut them, and a circle becomes an arc. `offset`
+orders the selected lines and arcs into one chain, offsets each to the
+left of the chain's direction (negative distances go right), mitres
+line corners, trims overlapping offsets at their intersection, rounds
+gaps with an arc about the original corner, keeps arcs concentric by
+reusing their centre point, and adds parallel constraints for lines.
+`mirror` reflects entities across a line and adds a `Symmetric`
+constraint per point pair (and `Equal` for circle radii), so the copy
+follows the original under the solver.
 
 ### Solver (`solver.rs`)
 

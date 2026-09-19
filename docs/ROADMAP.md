@@ -11,13 +11,14 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Split edges at crossings and T-junctions so intersecting lines and arcs form regions
 - [x] Interactive sketch mode in the client: draw on the plane, drag points, click to pick entities for constraints, inferred coincident / horizontal / vertical constraints while drawing
 - [x] Arc tool (centre, start, end) and construction geometry
-- [ ] Trim, offset, mirror within a sketch
+- [x] Trim, offset, mirror within a sketch (symmetric constraints on mirrored points)
 - [x] Dimension labels in the viewport with click-to-edit (values or expressions)
 - [ ] Analytic Jacobians for the common constraints (performance)
 - [ ] Splines (B-spline entity + point-on-curve)
 - [x] Sketch on planar faces of bodies (face references)
 - [x] Project / use edges and face outlines from bodies in sketches (fixed entities that follow the model)
-- [ ] Construction geometry, mirror, patterns
+- [x] Construction geometry, mirror
+- [ ] Sketch patterns (linear / circular copies with constraints)
 
 ## Solids
 

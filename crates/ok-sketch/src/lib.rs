@@ -6,6 +6,7 @@
 //! [`Sketch::profiles`] extracts the closed regions bounded by the solved
 //! geometry so they can be fed to 3D features such as extrude.
 
+mod edit;
 mod entity;
 mod loops;
 mod solver;
@@ -192,6 +193,14 @@ impl Sketch {
 
     pub fn projected_ids(&self) -> impl Iterator<Item = EntityId> + '_ {
         self.projected.iter().copied()
+    }
+
+    /// Adds a curve entity referencing existing point entities.
+    pub fn add_entity(&mut self, e: Entity) -> Result<EntityId, SketchError> {
+        for r in e.references() {
+            self.point(r)?;
+        }
+        Ok(self.alloc_entity(e))
     }
 
     pub fn add_point(&mut self, pos: Vec2) -> EntityId {

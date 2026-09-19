@@ -144,6 +144,12 @@ pub enum Constraint {
         line: EntityId,
         entity: EntityId,
     },
+    /// Points `a` and `b` mirror each other across `line`.
+    Symmetric {
+        a: EntityId,
+        b: EntityId,
+        line: EntityId,
+    },
 }
 
 impl Constraint {
@@ -165,6 +171,7 @@ impl Constraint {
             PointOnLine { point, line } | Midpoint { point, line } => vec![*point, *line],
             PointOnCircle { point, entity } => vec![*point, *entity],
             Tangent { line, entity } => vec![*line, *entity],
+            Symmetric { a, b, line } => vec![*a, *b, *line],
         }
     }
 
@@ -223,6 +230,7 @@ impl Constraint {
             PointOnCircle { .. } => "point_on_circle",
             Midpoint { .. } => "midpoint",
             Tangent { .. } => "tangent",
+            Symmetric { .. } => "symmetric",
         }
     }
 }
