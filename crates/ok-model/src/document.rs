@@ -373,9 +373,15 @@ impl Document {
         out: &mut DocOpResult,
     ) -> Result<(), ModelError> {
         // Validate references against the document before touching the assembly.
-        if let AssemblyOp::AddInstance { studio, body, .. } = &op {
-            let s = self.studio(*studio)?;
-            let _ = (s, body);
+        if let AssemblyOp::AddInstance { studio, .. } = &op {
+            if self.tab(*studio).is_none() {
+                return Err(ModelError::Invalid(format!("no tab {}", studio.0)));
+            }
+            if *studio == tab {
+                return Err(ModelError::Invalid(
+                    "an assembly cannot contain itself".into(),
+                ));
+            }
         }
         let new_id = |d: &mut Document| d.alloc();
         match op {
@@ -747,28 +753,55 @@ impl Document {
     }
 
     /// Regenerates an assembly tab: every referenced studio first (their
-    /// caches make repeats cheap), then the placement.
+    /// caches make repeats cheap) and every referenced sub-assembly
+    /// recursively, then the placement. An assembly that would contain
+    /// itself leaves those instances without bodies (reported on them).
     pub fn regenerate_assembly(&mut self, tab: TabId) -> Result<AssemblyResult, ModelError> {
+        let mut visiting = vec![tab];
+        self.regenerate_assembly_inner(tab, &mut visiting)
+    }
+
+    fn regenerate_assembly_inner(
+        &mut self,
+        tab: TabId,
+        visiting: &mut Vec<TabId>,
+    ) -> Result<AssemblyResult, ModelError> {
         let asm = self.assembly(tab)?.clone();
-        let studios: Vec<TabId> = {
-            let mut v: Vec<TabId> = asm.instances.iter().map(|i| i.studio).collect();
-            v.sort();
-            v.dedup();
-            v
-        };
-        let mut results: BTreeMap<TabId, RegenResult> = BTreeMap::new();
-        for s in studios {
-            if let Ok(r) = self.regenerate_studio(s, None) {
-                results.insert(s, r);
+        let mut studios: BTreeMap<TabId, RegenResult> = BTreeMap::new();
+        let mut subs: BTreeMap<TabId, AssemblyResult> = BTreeMap::new();
+        for inst in &asm.instances {
+            let source = inst.studio;
+            match self.tab(source).map(|t| t.kind_name()) {
+                Some("part_studio") => {
+                    if let std::collections::btree_map::Entry::Vacant(e) = studios.entry(source) {
+                        if let Ok(r) = self.regenerate_studio(source, None) {
+                            e.insert(r);
+                        }
+                    }
+                }
+                Some("assembly") => {
+                    if !subs.contains_key(&source) && !visiting.contains(&source) {
+                        visiting.push(source);
+                        if let Ok(r) = self.regenerate_assembly_inner(source, visiting) {
+                            subs.insert(source, r);
+                        }
+                        visiting.pop();
+                    }
+                }
+                _ => {}
             }
         }
-        let mut solids = BTreeMap::new();
+        let mut solids: BTreeMap<InstanceId, Vec<ok_brep::Solid>> = BTreeMap::new();
         for inst in &asm.instances {
-            if let Some(b) = results
+            if let Some(b) = studios
                 .get(&inst.studio)
                 .and_then(|r| r.bodies.get(inst.body))
             {
-                solids.insert(inst.id, b.solid.clone());
+                solids.insert(inst.id, vec![b.solid.clone()]);
+            } else if let Some(r) = subs.get(&inst.studio) {
+                if !r.bodies.is_empty() {
+                    solids.insert(inst.id, r.bodies.iter().map(|b| b.solid.clone()).collect());
+                }
             }
         }
         Ok(asm.resolve(&solids))
@@ -1048,6 +1081,119 @@ mod tests {
                 json: Document::new("x").to_json(),
             },
         );
+    }
+
+    #[test]
+    fn sub_assemblies_are_rigid_groups_and_cycles_are_refused() {
+        let (mut d, studio, asm, e) = block_doc();
+        let add = |d: &mut Document, tab: TabId, source: TabId, fixed: bool| -> InstanceId {
+            d.apply_with_base(
+                DocOp::Assembly {
+                    tab,
+                    op: AssemblyOp::AddInstance {
+                        studio: source,
+                        body: 0,
+                        name: None,
+                        fixed,
+                        placement: Placement::default(),
+                    },
+                },
+                None,
+            )
+            .unwrap()
+            .instance
+            .unwrap()
+        };
+        // Sub-assembly: two blocks stacked.
+        let a = add(&mut d, asm, studio, true);
+        let b = add(&mut d, asm, studio, false);
+        d.apply_with_base(
+            DocOp::Assembly {
+                tab: asm,
+                op: AssemblyOp::AddMate {
+                    kind: MateKind::Fastened,
+                    a: Connector {
+                        instance: a,
+                        face: FaceRef {
+                            feature: e,
+                            local: 1,
+                        },
+                    },
+                    b: Connector {
+                        instance: b,
+                        face: FaceRef {
+                            feature: e,
+                            local: 0,
+                        },
+                    },
+                    offset: 0.0,
+                    angle: 0.0,
+                    flip: false,
+                    name: None,
+                },
+            },
+            None,
+        )
+        .unwrap();
+        // Top-level assembly with the stack inserted twice, the second fastened
+        // to the first's top face (the top block's top: feature e, local 1 on
+        // the second body of the group resolves to the first body with that
+        // face, the bottom block, so use an explicit placement instead).
+        let top = d
+            .apply_with_base(DocOp::AddAssembly { name: None }, None)
+            .unwrap()
+            .tab
+            .unwrap();
+        let s1 = add(&mut d, top, asm, true);
+        let s2 = add(&mut d, top, asm, false);
+        d.apply_with_base(
+            DocOp::Assembly {
+                tab: top,
+                op: AssemblyOp::SetInstance {
+                    id: s2,
+                    name: None,
+                    fixed: None,
+                    placement: Some(Placement {
+                        position: ok_math::Vec3::new(20.0, 0.0, 0.0),
+                        rotation: ok_math::Vec3::ZERO,
+                    }),
+                },
+            },
+            None,
+        )
+        .unwrap();
+        let r = d.regenerate_assembly(top).unwrap();
+        assert!(r.instance_errors.is_empty(), "{:?}", r.instance_errors);
+        assert_eq!(r.bodies.len(), 4);
+        assert_eq!(r.placed, vec![s1, s1, s2, s2]);
+        let (lo, hi) = r.bodies[3].solid.bounds().unwrap();
+        assert!(
+            (lo.x - 20.0).abs() < 1e-9 && (hi.z - 10.0).abs() < 1e-9,
+            "{lo:?} {hi:?}"
+        );
+        let (overlaps, _) = r.interferences();
+        assert!(overlaps.is_empty());
+        // The sub-assembly cannot contain the top-level one (a cycle): the
+        // instance is refused nothing at op time (tabs are valid) but gets
+        // no bodies and an error at regeneration.
+        let cyc = add(&mut d, asm, top, false);
+        let r = d.regenerate_assembly(asm).unwrap();
+        assert!(r.instance_errors.contains_key(&cyc));
+        assert!(d
+            .apply_with_base(
+                DocOp::Assembly {
+                    tab: asm,
+                    op: AssemblyOp::AddInstance {
+                        studio: asm,
+                        body: 0,
+                        name: None,
+                        fixed: false,
+                        placement: Placement::default()
+                    }
+                },
+                None
+            )
+            .is_err());
     }
 
     #[test]

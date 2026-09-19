@@ -82,8 +82,8 @@ struct FaceInfo {
 struct InstanceSummary<'a> {
     #[serde(flatten)]
     instance: &'a ok_model::Instance,
-    /// Index into `bodies` when the instance resolved.
-    body_index: Option<usize>,
+    /// Indices into `bodies` of the instance's placed bodies (empty if unresolved).
+    body_indices: Vec<usize>,
     transform: Option<ok_brep::Transform>,
     error: Option<&'a str>,
 }
@@ -93,6 +93,23 @@ struct MateSummary<'a> {
     #[serde(flatten)]
     mate: &'a ok_model::Mate,
     error: Option<&'a str>,
+    /// World connector frames at the solution, for drawing.
+    frame_a: Option<ok_math::Plane>,
+    frame_b: Option<ok_math::Plane>,
+}
+
+/// World connector frame of a face on a placed instance: the placed bodies
+/// are already in world coordinates.
+fn world_frame(
+    result: &ok_model::AssemblyResult,
+    c: &ok_model::Connector,
+) -> Option<ok_math::Plane> {
+    result
+        .bodies
+        .iter()
+        .zip(&result.placed)
+        .filter(|(_, id)| **id == c.instance)
+        .find_map(|(b, _)| ok_model::connector_frame(&b.solid, &c.face))
 }
 
 fn body_summary(b: &Body) -> BodySummary<'_> {
@@ -217,7 +234,13 @@ impl Doc {
                 for i in &a.instances {
                     instances.push(InstanceSummary {
                         instance: i,
-                        body_index: asm_result.placed.iter().position(|p| *p == i.id),
+                        body_indices: asm_result
+                            .placed
+                            .iter()
+                            .enumerate()
+                            .filter(|(_, p)| **p == i.id)
+                            .map(|(k, _)| k)
+                            .collect(),
                         transform: asm_result.transforms.get(&i.id).copied(),
                         error: asm_result.instance_errors.get(&i.id).map(|s| s.as_str()),
                     });
@@ -226,6 +249,8 @@ impl Doc {
                     mates.push(MateSummary {
                         mate: m,
                         error: asm_result.mate_errors.get(&m.id).map(|s| s.as_str()),
+                        frame_a: world_frame(&asm_result, &m.a),
+                        frame_b: world_frame(&asm_result, &m.b),
                     });
                 }
             }
@@ -291,6 +316,20 @@ impl Doc {
             mates,
         };
         serde_json::to_string(&summary).unwrap()
+    }
+
+    /// World connector frame of a face on an instance of the last
+    /// regenerated assembly tab (JSON plane, or null).
+    pub fn connector_frame(&self, instance: u32, feature: u32, local: u32) -> String {
+        let c = ok_model::Connector {
+            instance: ok_model::InstanceId(instance),
+            face: ok_model::FaceRef {
+                feature: ok_model::FeatureId(feature),
+                local,
+            },
+        };
+        let frame = self.assembly.as_ref().and_then(|r| world_frame(r, &c));
+        serde_json::to_string(&frame).unwrap()
     }
 
     /// Overlapping instance pairs of the last regenerated assembly tab, as

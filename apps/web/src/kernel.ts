@@ -118,7 +118,7 @@ export type TabSummary = { id: number; name: string; kind: TabKind };
 
 // ---- assemblies
 export type Placement = { position: Vec3; rotation: Vec3 };
-export type MateKind = "fastened" | "revolute" | "slider" | "cylindrical";
+export type MateKind = "fastened" | "revolute" | "slider" | "cylindrical" | "planar" | "ball";
 /** A face of an instance's body, used as a mate connector. */
 export type Connector = { instance: number; face: FaceRef };
 export type Transform = { m: number[][]; t: Vec3 };
@@ -129,8 +129,8 @@ export type InstanceSummary = {
   body: number;
   fixed: boolean;
   placement: Placement;
-  /** Index into `bodies` when the instance resolved. */
-  body_index: number | null;
+  /** Indices into `bodies` of the instance's placed bodies (empty if unresolved). */
+  body_indices: number[];
   transform: Transform | null;
   error: string | null;
 };
@@ -144,6 +144,8 @@ export type MateSummary = {
   angle: number;
   flip: boolean;
   error: string | null;
+  frame_a: PlaneFrame | null;
+  frame_b: PlaneFrame | null;
 };
 
 export type Summary = {
@@ -283,6 +285,11 @@ export class Kernel {
   /** The first part studio tab, if any. */
   firstStudio(): number | null {
     return this.studio.first_studio() ?? null;
+  }
+
+  /** World connector frame of a face on an instance of the last regenerated assembly tab. */
+  connectorFrame(instance: number, face: FaceRef): PlaneFrame | null {
+    return JSON.parse(this.studio.connector_frame(instance, face.feature, face.local)) as PlaneFrame | null;
   }
 
   /** Overlapping instance pairs of the last regenerated assembly tab. */

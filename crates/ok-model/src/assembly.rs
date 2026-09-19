@@ -93,6 +93,10 @@ pub enum MateKind {
     Slider,
     /// Both rotation and translation along z are free.
     Cylindrical,
+    /// Faces stay parallel at `offset`; sliding and spinning in the plane are free.
+    Planar,
+    /// Only the connector origins coincide (a ball joint).
+    Ball,
 }
 
 /// A face of an instance's body, used as a mate connector.
@@ -151,14 +155,20 @@ impl Assembly {
 /// Where the assembly put everything.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AssemblyResult {
-    /// One placed body per instance that resolved, in instance order.
+    /// The placed bodies of every instance that resolved, in instance
+    /// order (a sub-assembly instance contributes several).
     #[serde(skip)]
     pub bodies: Vec<crate::Body>,
-    /// Instance ids in the same order as `bodies`.
+    /// The instance each entry of `bodies` belongs to.
     pub placed: Vec<InstanceId>,
     pub transforms: BTreeMap<InstanceId, Transform>,
     pub instance_errors: BTreeMap<InstanceId, String>,
     pub mate_errors: BTreeMap<MateId, String>,
+}
+
+/// Connector frame of a face on the first body of a group that has it.
+pub fn group_frame(group: &[Solid], face: &FaceRef) -> Option<Plane> {
+    group.iter().find_map(|s| connector_frame(s, face))
 }
 
 /// Connector frame of a face in body coordinates: origin at the face
@@ -260,16 +270,18 @@ pub fn transform_plane(xf: &Transform, p: &Plane) -> Plane {
 }
 
 impl Assembly {
-    /// Places every instance given each instance's source solid (in body
-    /// coordinates), resolving mates as chains from fixed instances.
-    pub fn resolve(&self, solids: &BTreeMap<InstanceId, Solid>) -> AssemblyResult {
+    /// Places every instance given each instance's source solids (a body,
+    /// or every body of a sub-assembly, in source coordinates), resolving
+    /// mates as chains from fixed instances and then numerically.
+    pub fn resolve(&self, solids: &BTreeMap<InstanceId, Vec<Solid>>) -> AssemblyResult {
         let mut result = AssemblyResult::default();
         let mut placed: BTreeMap<InstanceId, Transform> = BTreeMap::new();
         for inst in &self.instances {
             if !solids.contains_key(&inst.id) {
-                result
-                    .instance_errors
-                    .insert(inst.id, "the part studio no longer has this body".into());
+                result.instance_errors.insert(
+                    inst.id,
+                    "the source tab no longer has this body, or would contain itself".into(),
+                );
                 continue;
             }
             let mated = self
@@ -281,10 +293,10 @@ impl Assembly {
             }
         }
         let frame = |c: &Connector| -> Result<Plane, String> {
-            let solid = solids
+            let group = solids
                 .get(&c.instance)
                 .ok_or_else(|| "instance has no body".to_string())?;
-            connector_frame(solid, &c.face).ok_or_else(|| {
+            group_frame(group, &c.face).ok_or_else(|| {
                 format!(
                     "face {} of feature {} not found on the instance",
                     c.face.local, c.face.feature.0
@@ -390,15 +402,22 @@ impl Assembly {
             }
         }
         for inst in &self.instances {
-            let (Some(solid), Some(xf)) = (solids.get(&inst.id), placed.get(&inst.id)) else {
+            let (Some(group), Some(xf)) = (solids.get(&inst.id), placed.get(&inst.id)) else {
                 continue;
             };
-            result.bodies.push(crate::Body::new(
-                inst.name.clone(),
-                FeatureId(inst.id.0),
-                solid.transformed(xf),
-            ));
-            result.placed.push(inst.id);
+            for (k, solid) in group.iter().enumerate() {
+                let name = if group.len() == 1 {
+                    inst.name.clone()
+                } else {
+                    format!("{} / {}", inst.name, k + 1)
+                };
+                result.bodies.push(crate::Body::new(
+                    name,
+                    FeatureId(inst.id.0),
+                    solid.transformed(xf),
+                ));
+                result.placed.push(inst.id);
+            }
             result.transforms.insert(inst.id, *xf);
         }
         result
@@ -425,18 +444,21 @@ impl Assembly {
         let origin = fa.origin + fa.normal * mate.offset;
         let d = fb.origin - origin;
         let push = |out: &mut Vec<f64>, v: Vec3| out.extend([v.x, v.y, v.z]);
-        push(out, fb.normal - z);
+        if mate.kind != MateKind::Ball {
+            push(out, fb.normal - z);
+        }
         match mate.kind {
             MateKind::Fastened => {
                 push(out, d);
                 push(out, fb.x_axis - x);
             }
-            MateKind::Revolute => push(out, d),
+            MateKind::Revolute | MateKind::Ball => push(out, d),
             MateKind::Slider => {
                 push(out, d - z * d.dot(z));
                 push(out, fb.x_axis - x);
             }
             MateKind::Cylindrical => push(out, d - z * d.dot(z)),
+            MateKind::Planar => out.push(d.dot(z)),
         }
     }
 
@@ -445,7 +467,7 @@ impl Assembly {
     /// Returns each mate's final residual norm.
     fn refine(
         &self,
-        solids: &BTreeMap<InstanceId, Solid>,
+        solids: &BTreeMap<InstanceId, Vec<Solid>>,
         placed: &mut BTreeMap<InstanceId, Transform>,
     ) -> Vec<(MateId, f64)> {
         let mates: Vec<&Mate> = self
@@ -460,7 +482,7 @@ impl Assembly {
             .iter()
             .flat_map(|m| [m.a, m.b])
             .filter_map(|c| {
-                let f = connector_frame(solids.get(&c.instance)?, &c.face)?;
+                let f = group_frame(solids.get(&c.instance)?, &c.face)?;
                 Some(((c.instance, c.face.feature.0, c.face.local), f))
             })
             .collect();
@@ -618,6 +640,9 @@ impl AssemblyResult {
         let mut failed = Vec::new();
         for i in 0..self.bodies.len() {
             for j in i + 1..self.bodies.len() {
+                if self.placed[i] == self.placed[j] {
+                    continue; // bodies of one sub-assembly instance
+                }
                 let (a, b) = (&self.bodies[i].solid, &self.bodies[j].solid);
                 let (Some((alo, ahi)), Some((blo, bhi))) = (a.bounds(), b.bounds()) else {
                     continue;
@@ -720,9 +745,9 @@ mod tests {
             angle: 0.0,
             flip: false,
         });
-        let solids: BTreeMap<InstanceId, Solid> = [
-            (InstanceId(1), solid.clone()),
-            (InstanceId(2), solid.clone()),
+        let solids: BTreeMap<InstanceId, Vec<Solid>> = [
+            (InstanceId(1), vec![solid.clone()]),
+            (InstanceId(2), vec![solid.clone()]),
         ]
         .into_iter()
         .collect();
@@ -816,8 +841,9 @@ mod tests {
         // 3 sits on 2, 2 sits on 1: listed in the "wrong" order on purpose.
         asm.mates.push(mate(10, 2, 3));
         asm.mates.push(mate(11, 1, 2));
-        let solids: BTreeMap<InstanceId, Solid> =
-            (1..=3).map(|i| (InstanceId(i), solid.clone())).collect();
+        let solids: BTreeMap<InstanceId, Vec<Solid>> = (1..=3)
+            .map(|i| (InstanceId(i), vec![solid.clone()]))
+            .collect();
         let r = asm.resolve(&solids);
         assert!(r.mate_errors.is_empty() && r.instance_errors.is_empty());
         let (lo, _) = r.bodies[2].solid.bounds().unwrap();
@@ -888,9 +914,9 @@ mod tests {
             angle: 0.0,
             flip: true,
         });
-        let solids: BTreeMap<InstanceId, Solid> = [
-            (InstanceId(1), solid.clone()),
-            (InstanceId(2), solid.clone()),
+        let solids: BTreeMap<InstanceId, Vec<Solid>> = [
+            (InstanceId(1), vec![solid.clone()]),
+            (InstanceId(2), vec![solid.clone()]),
         ]
         .into_iter()
         .collect();

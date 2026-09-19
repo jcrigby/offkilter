@@ -27,7 +27,8 @@ works today, all in the browser:
   dimension; a regeneration cache so late edits are cheap.
 - Assemblies: a document holds part studio and assembly tabs; an
   assembly inserts bodies from part studios as instances and joins them
-  with fastened, revolute, slider and cylindrical mates between faces,
+  with fastened, revolute, slider, cylindrical, planar and ball mates
+  between faces (closed loops solved numerically), sub-assemblies,
   with offset, angle and flip, resolved as chains from fixed instances,
   plus an interference check between instances.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared

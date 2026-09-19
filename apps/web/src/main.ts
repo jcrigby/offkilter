@@ -192,7 +192,7 @@ class App implements SketchHost {
 
   /** The instance shown as body `bodyIndex` in an assembly tab. */
   instanceAt(bodyIndex: number): InstanceSummary | undefined {
-    return this.summary.instances.find((i) => i.body_index === bodyIndex);
+    return this.summary.instances.find((i) => i.body_indices.includes(bodyIndex));
   }
 
   instance(id: number | null): InstanceSummary | undefined {
@@ -213,6 +213,8 @@ class App implements SketchHost {
         if (!this.matePick.a) {
           this.matePick.a = connector;
           this.viewer.setSelectedFace(pick);
+          const f = this.kernel.connectorFrame(inst.id, ref);
+          this.viewer.setFrames(f ? [f] : []);
           this.setStatus(`First connector: ${inst.name}. Now click a face on the other instance (Esc cancels).`);
           return;
         }
@@ -276,6 +278,7 @@ class App implements SketchHost {
     this.matePick = null;
     this.viewer.pickMode = false;
     this.viewer.setSelectedFace(null);
+    this.viewer.setFrames([]);
   }
 
   // ------------------------------------------------------------ tabs
@@ -374,7 +377,7 @@ class App implements SketchHost {
       dot.title = m.error ?? "ok";
       const icon = document.createElement("span");
       icon.className = "icon";
-      icon.textContent = { fastened: "⊠", revolute: "↻", slider: "↔", cylindrical: "⟳" }[m.kind];
+      icon.textContent = { fastened: "⊠", revolute: "↻", slider: "↔", cylindrical: "⟳", planar: "▱", ball: "●" }[m.kind];
       const name = document.createElement("span");
       name.className = "name";
       name.textContent = `${m.name} · ${this.instance(m.a.instance)?.name ?? "?"} ↔ ${this.instance(m.b.instance)?.name ?? "?"}`;
@@ -395,8 +398,9 @@ class App implements SketchHost {
     }
     ($("#btn-add-mate") as HTMLButtonElement).disabled = this.summary.instances.length < 2;
     ($("#btn-interference") as HTMLButtonElement).disabled = this.summary.instances.length < 2;
-    const selectedBody = this.instance(this.selectedInstance)?.body_index;
-    this.viewer.setSelectedBodies(new Set(selectedBody === null || selectedBody === undefined ? [] : [selectedBody]));
+    this.viewer.setSelectedBodies(new Set(this.instance(this.selectedInstance)?.body_indices ?? []));
+    const m = this.mate(this.selectedMate);
+    this.viewer.setFrames(m ? [m.frame_a, m.frame_b].filter((f): f is NonNullable<typeof f> => f !== null) : []);
   }
 
   /** Runs the interference check and shows the overlapping pairs in the detail panel. */
@@ -427,11 +431,11 @@ class App implements SketchHost {
       ul.appendChild(li);
     }
     body.appendChild(ul);
-    this.viewer.setSelectedBodies(new Set(r.overlaps.flatMap((o) => [this.instance(o.a)?.body_index, this.instance(o.b)?.body_index]).filter((i): i is number => i !== null && i !== undefined)));
+    this.viewer.setSelectedBodies(new Set(r.overlaps.flatMap((o) => [...(this.instance(o.a)?.body_indices ?? []), ...(this.instance(o.b)?.body_indices ?? [])])));
   }
 
   renderInsertForm(body: HTMLElement): void {
-    const studios = this.summary.tabs.filter((t) => t.kind === "part_studio");
+    const studios = this.summary.tabs.filter((t) => t.id !== this.tab);
     if (studios.length === 0) {
       body.innerHTML = `<p class="note">Add a part studio tab first.</p>`;
       return;
@@ -441,7 +445,8 @@ class App implements SketchHost {
     const bodySel = document.createElement("select");
     const fillBodies = () => {
       bodySel.innerHTML = "";
-      const names = this.kernel.studioBodies(studio);
+      const source = studios.find((t) => t.id === studio)!;
+      const names = source.kind === "assembly" ? ["(whole assembly, as one rigid group)"] : this.kernel.studioBodies(studio);
       names.forEach((n, i) => {
         const o = document.createElement("option");
         o.value = String(i);
@@ -458,7 +463,7 @@ class App implements SketchHost {
     };
     bodySel.onchange = () => (bodyIndex = Number(bodySel.value));
     body.appendChild(
-      field("Part studio", select(studios.map((t) => t.name), studios[0]!.name, (v) => {
+      field("Source tab", select(studios.map((t) => t.name), studios[0]!.name, (v) => {
         studio = studios.find((t) => t.name === v)!.id;
         fillBodies();
       })),
@@ -494,7 +499,7 @@ class App implements SketchHost {
       const src = this.summary.tabs.find((t) => t.id === inst.studio);
       const note = document.createElement("p");
       note.className = "note";
-      note.textContent = `Body ${inst.body + 1} of ${src?.name ?? `tab ${inst.studio}`}. ${inst.fixed ? "Fixed: anchors mate chains." : "Positioned by mates when mated, else by the placement below."}`;
+      note.textContent = `${src?.kind === "assembly" ? "Sub-assembly" : `Body ${inst.body + 1}`} of ${src?.name ?? `tab ${inst.studio}`}. ${inst.fixed ? "Fixed: anchors mate chains." : "Positioned by mates when mated, else by the placement below."}`;
       body.appendChild(note);
       body.appendChild(field("Name", textInput(inst.name, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_instance", id: inst.id, name: v } }))));
       body.appendChild(field("Fixed", checkbox(inst.fixed, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_instance", id: inst.id, fixed: v } }))));
@@ -527,7 +532,7 @@ class App implements SketchHost {
         body.appendChild(e);
       }
       body.appendChild(field("Name", textInput(m.name, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, name: v } }))));
-      body.appendChild(field("Kind", select(["fastened", "revolute", "slider", "cylindrical"], m.kind, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, kind: v as MateKind } }))));
+      body.appendChild(field("Kind", select(["fastened", "revolute", "slider", "cylindrical", "planar", "ball"], m.kind, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, kind: v as MateKind } }))));
       const describe = (c: Connector) => `${this.instance(c.instance)?.name ?? "?"} · face ${c.face.local} of feature ${c.face.feature}`;
       const note = document.createElement("p");
       note.className = "note";
@@ -773,7 +778,10 @@ class App implements SketchHost {
     this.updateDimensionLabels();
     this.renderTabs();
     if (assembly) this.renderAssembly();
-    else this.renderFeatures();
+    else {
+      this.viewer.setFrames([]);
+      this.renderFeatures();
+    }
     this.renderDetail();
     this.lastRegenMs = dt;
     this.setStatus(this.statusLine());

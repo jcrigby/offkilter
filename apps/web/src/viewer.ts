@@ -61,6 +61,8 @@ export class Viewer {
   /** Receives left-button pointer events instead of picking while set. */
   pointerHandler: PointerHandler | null = null;
   private preview = new THREE.Group();
+  /** Mate connector frames drawn as axis triads. */
+  private frames = new THREE.Group();
   private previewMaterial = new THREE.LineBasicMaterial({ color: SKETCH_SELECTED, depthTest: false });
   private labelRenderer = new CSS2DRenderer();
   private labels = new THREE.Group();
@@ -105,6 +107,7 @@ export class Viewer {
     this.scene.add(this.edgeHover);
 
     this.scene.add(this.preview);
+    this.scene.add(this.frames);
     this.scene.add(this.labels);
     const el = this.renderer.domElement;
     el.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -378,6 +381,23 @@ export class Viewer {
     // Fatten the highlight with points at segment ends so it reads at any zoom.
     const pmat = new THREE.PointsMaterial({ color, size: 5, sizeAttenuation: false, depthTest: false });
     group.add(new THREE.Points(geom, pmat));
+  }
+
+  /** Draws connector frames as axis triads (x red, y green, z blue). */
+  setFrames(frames: PlaneFrame[]): void {
+    this.clear(this.frames);
+    if (frames.length === 0) return;
+    const box = new THREE.Box3().expandByObject(this.bodies);
+    const len = box.isEmpty() ? 5 : Math.max(2, box.getSize(new THREE.Vector3()).length() * 0.06);
+    for (const f of frames) {
+      const o = new THREE.Vector3(f.origin.x, f.origin.y, f.origin.z);
+      for (const [axis, color] of [[f.x_axis, 0xff5555], [f.y_axis, 0x55dd55], [f.normal, 0x5599ff]] as [Vec3, number][]) {
+        const geom = new THREE.BufferGeometry().setFromPoints([o, o.clone().add(new THREE.Vector3(axis.x, axis.y, axis.z).multiplyScalar(len))]);
+        this.frames.add(new THREE.Line(geom, new THREE.LineBasicMaterial({ color, depthTest: false, linewidth: 2 })));
+      }
+      const dot = new THREE.Points(new THREE.BufferGeometry().setFromPoints([o]), new THREE.PointsMaterial({ color: 0xffffff, size: 8, sizeAttenuation: false, depthTest: false }));
+      this.frames.add(dot);
+    }
   }
 
   /** Tints whole bodies (by index) as selected; others keep the body colour. */

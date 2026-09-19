@@ -34,21 +34,26 @@ and mates, with the bodies of its instances as the displayed bodies.
 ### Assemblies (`assembly.rs`)
 
 An `Instance` names a body of a part studio tab in the same document
-(by tab and body index) and carries a `Placement` (position and Euler
-rotation) used when nothing mates it. A `Mate` joins two instances
-through `Connector`s, each a face reference on an instance's body. The
+(by tab and body index), or an assembly tab, whose placed bodies then
+move as one rigid group (an assembly that would contain itself gets no
+bodies and an error on that instance). It carries a `Placement`
+(position and Euler rotation) used when nothing mates it. A `Mate` joins two instances
+through `Connector`s, each a face reference on an instance's body (for a
+sub-assembly instance, the first of its bodies that has the face). The
 connector frame comes from the face: origin at the face centroid (on the
 axis for a cylindrical face, with z along the axis), z along the normal,
 x and y canonical for that normal. Mates are resolved as directed chains:
 fixed instances and unmated instances sit at their own placement, then
 every mate whose one side is placed moves the other side so that the
 connector frames meet, z axes opposed (or aligned with `flip`), rotated
-by `angle` about z and separated by `offset` along it. Revolute, slider
-and cylindrical mates use the same placement; the kind only says which
-parameter the user is meant to vary. The chain result is then refined
+by `angle` about z and separated by `offset` along it. Revolute, slider,
+cylindrical, planar and ball mates use the same placement as the initial
+guess; the kind decides what the numeric solve pins. The chain result is then refined
 numerically: a Levenberg–Marquardt solve over the pose (rotation vector
 and translation) of every movable mated instance, with residuals per
-mate that pin what its kind pins and leave its free axis alone, so
+mate that pin what its kind pins (fastened: everything; revolute: all but
+spin about z; slider: all but travel along z; cylindrical: both free;
+planar: parallel faces at the offset; ball: coincident origins), so
 closed loops and redundant mates are solved through the free degrees of
 freedom. A mate that still has a residual afterwards (inconsistent with
 the others) is reported on that mate; a chain with no fixed instance
