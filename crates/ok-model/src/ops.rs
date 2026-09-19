@@ -205,6 +205,8 @@ pub enum Op {
         op: CopyOp,
         #[serde(default)]
         features: Vec<FeatureId>,
+        #[serde(default)]
+        bodies: Vec<FeatureId>,
         name: Option<String>,
     },
     SetMirror {
@@ -215,6 +217,8 @@ pub enum Op {
         op: Option<CopyOp>,
         #[serde(default)]
         features: Option<Vec<FeatureId>>,
+        #[serde(default)]
+        bodies: Option<Vec<FeatureId>>,
     },
     AddPattern {
         kind: PatternKind,
@@ -223,6 +227,8 @@ pub enum Op {
         op: CopyOp,
         #[serde(default)]
         features: Vec<FeatureId>,
+        #[serde(default)]
+        bodies: Vec<FeatureId>,
         name: Option<String>,
     },
     SetPattern {
@@ -235,6 +241,8 @@ pub enum Op {
         op: Option<CopyOp>,
         #[serde(default)]
         features: Option<Vec<FeatureId>>,
+        #[serde(default)]
+        bodies: Option<Vec<FeatureId>>,
     },
     AddVariable {
         name: String,
@@ -608,6 +616,7 @@ impl PartStudio {
                 plane,
                 op,
                 features,
+                bodies,
                 name,
             } => {
                 out.feature = Some(self.push_feature(
@@ -615,6 +624,7 @@ impl PartStudio {
                         plane,
                         op,
                         features,
+                        bodies,
                     }),
                     name,
                 ));
@@ -624,6 +634,7 @@ impl PartStudio {
                 plane,
                 op,
                 features,
+                bodies,
             } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Mirror(m) => {
                     if let Some(p) = plane {
@@ -635,6 +646,9 @@ impl PartStudio {
                     if let Some(f) = features {
                         m.features = f;
                     }
+                    if let Some(b) = bodies {
+                        m.bodies = b;
+                    }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "mirror")),
             },
@@ -643,6 +657,7 @@ impl PartStudio {
                 count,
                 op,
                 features,
+                bodies,
                 name,
             } => {
                 out.feature = Some(self.push_feature(
@@ -651,6 +666,7 @@ impl PartStudio {
                         count,
                         op,
                         features,
+                        bodies,
                     }),
                     name,
                 ));
@@ -661,6 +677,7 @@ impl PartStudio {
                 count,
                 op,
                 features,
+                bodies,
             } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Pattern(p) => {
                     if let Some(k) = kind {
@@ -674,6 +691,9 @@ impl PartStudio {
                     }
                     if let Some(f) = features {
                         p.features = f;
+                    }
+                    if let Some(b) = bodies {
+                        p.bodies = b;
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "pattern")),

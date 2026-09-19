@@ -440,6 +440,7 @@ fn pulley_with_keyway_lightening_holes_and_mirror() {
         plane: PlaneRef::standard(StandardPlane::Top),
         op: CopyOp::Add,
         features: vec![],
+        bodies: vec![],
         name: None,
     });
     let v4 = p.volume();
@@ -603,6 +604,7 @@ fn linear_pattern_of_a_ribbed_plate_then_fillet_after_pattern() {
         count: 4,
         op: CopyOp::Add,
         features: vec![],
+        bodies: vec![],
         name: None,
     });
     let v2 = p.volume();
@@ -763,6 +765,7 @@ fn feature_pattern_and_mirror_replay_tools() {
         count: 4,
         op: CopyOp::Add,
         features: vec![boss, hole],
+        bodies: vec![],
         name: None,
     });
     let r = p.regen();
@@ -780,6 +783,7 @@ fn feature_pattern_and_mirror_replay_tools() {
         },
         op: CopyOp::Add,
         features: vec![boss, hole],
+        bodies: vec![],
         name: None,
     });
     // The mirror names the original features only, so it adds one boss
@@ -797,6 +801,7 @@ fn feature_pattern_and_mirror_replay_tools() {
         count: 2,
         op: CopyOp::Add,
         features: vec![pat],
+        bodies: vec![],
         name: None,
     })
     .unwrap();
@@ -903,4 +908,36 @@ fn move_face_and_draft_on_a_block() {
     let r = p.regen();
     assert_eq!(r.bodies.len(), 1);
     assert_eq!(r.bodies[0].solid.faces.len(), 6);
+}
+
+/// A mirror restricted to one of two bodies copies only that body.
+#[test]
+fn mirror_of_chosen_bodies_only() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (2.0, 0.0), (10.0, 10.0));
+    let a = p.extrude(s, 5.0, BodyOp::New);
+    let s2 = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s2, (2.0, 20.0), (10.0, 30.0));
+    let b = p.extrude(s2, 5.0, BodyOp::New);
+    assert_eq!(p.regen().bodies.len(), 2);
+    let m = p.op(Op::AddMirror {
+        plane: PlaneRef::standard(StandardPlane::Right),
+        op: CopyOp::New,
+        features: vec![],
+        bodies: vec![a],
+        name: None,
+    });
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 3);
+    assert_eq!(r.bodies.iter().filter(|x| x.source == b).count(), 1);
+    // Choosing both (or none) mirrors both.
+    p.op(Op::SetMirror {
+        id: m,
+        plane: None,
+        op: None,
+        features: None,
+        bodies: Some(vec![]),
+    });
+    assert_eq!(p.regen().bodies.len(), 4);
 }

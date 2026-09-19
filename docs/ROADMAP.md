@@ -41,7 +41,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Mirror and linear / circular patterns of bodies
 - [x] Boolean feature between existing bodies (union / subtract / intersect, tools optionally kept)
 - [x] Patterns and mirrors of features (the named features' tool volumes are replayed with their own add / remove operation)
-- [ ] Patterns of faces; mirror selected bodies only
+- [x] Mirror / pattern selected bodies only (tick bodies in the panel)
+- [ ] Patterns of faces
 - [~] Persistent naming: face origins survive booleans; needs disambiguation for split faces and edge/vertex references
 
 ## Document and client
@@ -84,7 +85,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Dockerfile for the server + web app
 - [x] Randomised boolean robustness tests: grid-aligned box/cylinder sequences, and general-position sequences with rotated tools and near-coincident nudges (`--ignored` long runs; `OK_FUZZ_SEED` replays one seed)
 - [x] Realistic-parts corpus (`crates/ok-model/tests/parts.rs`): brackets, revolved flanges, pockets with counterbores, bosses on oblique faces, pulleys, grazing cuts, sweeps and lofts, patterns then fillets
-- [ ] Property tests for the solver and region extraction
+- [x] Randomised property tests for the solver and region extraction (`crates/ok-sketch/tests/property.rs`)
 - [x] Regeneration cache: unchanged feature prefixes are reused, so editing late features is cheap
 - [x] Benchmarks for regeneration time on realistic parts (`scripts/bench.sh`); the boolean's T-junction grid and section prefilters came out of the first run (a 4000-face cover shells in 0.65 s, from 3.9 s)
 - [x] `wasm-opt` in the release pipeline (from the binaryen npm package when present)

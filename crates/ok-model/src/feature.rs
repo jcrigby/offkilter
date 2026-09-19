@@ -264,6 +264,10 @@ pub struct MirrorFeature {
     /// empty copies every body.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub features: Vec<FeatureId>,
+    /// Bodies (by creating feature) to copy when `features` is empty;
+    /// empty copies every body.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub bodies: Vec<FeatureId>,
 }
 
 /// A world axis direction.
@@ -306,6 +310,10 @@ pub struct PatternFeature {
     /// empty copies every body.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub features: Vec<FeatureId>,
+    /// Bodies (by creating feature) to copy when `features` is empty;
+    /// empty copies every body.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub bodies: Vec<FeatureId>,
 }
 
 /// A drilled hole at every standalone point of a sketch.

@@ -107,12 +107,14 @@ impl PartStudio {
                 plane,
                 op,
                 features,
+                bodies,
             } => match before.kind() {
                 Some(FeatureKind::Mirror(m)) => vec![Op::SetMirror {
                     id,
                     plane: plane.map(|_| m.plane),
                     op: op.map(|_| m.op),
                     features: features.map(|_| m.features.clone()),
+                    bodies: bodies.map(|_| m.bodies.clone()),
                 }],
                 _ => Vec::new(),
             },
@@ -122,6 +124,7 @@ impl PartStudio {
                 count,
                 op,
                 features,
+                bodies,
             } => match before.kind() {
                 Some(FeatureKind::Pattern(p)) => vec![Op::SetPattern {
                     id,
@@ -129,6 +132,7 @@ impl PartStudio {
                     count: count.map(|_| p.count),
                     op: op.map(|_| p.op),
                     features: features.map(|_| p.features.clone()),
+                    bodies: bodies.map(|_| p.bodies.clone()),
                 }],
                 _ => Vec::new(),
             },

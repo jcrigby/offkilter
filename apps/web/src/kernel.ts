@@ -69,8 +69,8 @@ export type FeatureKind =
   | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; end: ExtrudeEnd; op: BodyOp }
   | { type: "revolve"; sketch: number; profiles: ProfileSelection; axis: RevolveAxis; angle: number; op: BodyOp }
   | { type: "blend"; kind: BlendKind; edges: EdgeRef[]; size: number }
-  | { type: "mirror"; plane: PlaneRef; op: CopyOp; features?: number[] }
-  | { type: "pattern"; kind: PatternKind; count: number; op: CopyOp; features?: number[] }
+  | { type: "mirror"; plane: PlaneRef; op: CopyOp; features?: number[]; bodies?: number[] }
+  | { type: "pattern"; kind: PatternKind; count: number; op: CopyOp; features?: number[]; bodies?: number[] }
   | { type: "variable"; name: string; expression: string }
   | { type: "hole"; sketch: number; diameter: number; depth: number; through_all: boolean; direction: ExtrudeDirection; counterbore: Counterbore | null }
   | { type: "sweep"; sketch: number; profiles: ProfileSelection; path: number; op: BodyOp }
@@ -206,10 +206,10 @@ export type Op =
   | { type: "set_revolve"; id: number; axis?: RevolveAxis | null; angle?: number | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
   | { type: "add_blend"; kind: BlendKind; edges: EdgeRef[]; size: number; name: string | null }
   | { type: "set_blend"; id: number; edges?: EdgeRef[] | null; size?: number | null }
-  | { type: "add_mirror"; plane: PlaneRef; op?: CopyOp; features?: number[]; name: string | null }
-  | { type: "set_mirror"; id: number; plane?: PlaneRef | null; op?: CopyOp | null; features?: number[] | null }
-  | { type: "add_pattern"; kind: PatternKind; count: number; op?: CopyOp; features?: number[]; name: string | null }
-  | { type: "set_pattern"; id: number; kind?: PatternKind | null; count?: number | null; op?: CopyOp | null; features?: number[] | null }
+  | { type: "add_mirror"; plane: PlaneRef; op?: CopyOp; features?: number[]; bodies?: number[]; name: string | null }
+  | { type: "set_mirror"; id: number; plane?: PlaneRef | null; op?: CopyOp | null; features?: number[] | null; bodies?: number[] | null }
+  | { type: "add_pattern"; kind: PatternKind; count: number; op?: CopyOp; features?: number[]; bodies?: number[]; name: string | null }
+  | { type: "set_pattern"; id: number; kind?: PatternKind | null; count?: number | null; op?: CopyOp | null; features?: number[] | null; bodies?: number[] | null }
   | { type: "add_variable"; name: string; expression: string }
   | { type: "set_variable"; id: number; name?: string | null; expression?: string | null }
   | { type: "set_binding"; id: number; field: string; expression: string | null }

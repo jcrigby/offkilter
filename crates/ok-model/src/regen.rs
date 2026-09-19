@@ -452,6 +452,13 @@ impl PartStudio {
                 }
                 FeatureKind::Mirror(mf) => {
                     let mf = mf.clone();
+                    candidates = Some(
+                        result
+                            .bodies
+                            .iter()
+                            .map(|b| (b.source, b.name.clone()))
+                            .collect(),
+                    );
                     match result.resolve_plane(&mf.plane) {
                         Ok(plane) => Self::regen_copies(
                             &mut result,
@@ -459,6 +466,7 @@ impl PartStudio {
                             &[Transform::mirror(&plane)],
                             mf.op,
                             &mf.features,
+                            &mf.bodies,
                         ),
                         Err(e) => Some(e),
                     }
@@ -512,6 +520,13 @@ impl PartStudio {
                 }
                 FeatureKind::Pattern(pf) => {
                     let pf = pf.clone();
+                    candidates = Some(
+                        result
+                            .bodies
+                            .iter()
+                            .map(|b| (b.source, b.name.clone()))
+                            .collect(),
+                    );
                     if pf.count < 2 {
                         Some("count must be at least 2".into())
                     } else {
@@ -526,7 +541,14 @@ impl PartStudio {
                                 }
                             })
                             .collect();
-                        Self::regen_copies(&mut result, id, &transforms, pf.op, &pf.features)
+                        Self::regen_copies(
+                            &mut result,
+                            id,
+                            &transforms,
+                            pf.op,
+                            &pf.features,
+                            &pf.bodies,
+                        )
                     }
                 }
             };
@@ -1204,6 +1226,7 @@ impl PartStudio {
         transforms: &[Transform],
         op: CopyOp,
         features: &[FeatureId],
+        bodies: &[FeatureId],
     ) -> Option<String> {
         if !features.is_empty() {
             return Self::regen_feature_copies(result, id, transforms, features);
@@ -1212,7 +1235,13 @@ impl PartStudio {
             return Some("there are no bodies to copy".into());
         }
         let count = result.bodies.len();
-        for i in 0..count {
+        let chosen: Vec<usize> = (0..count)
+            .filter(|&i| bodies.is_empty() || bodies.contains(&result.bodies[i].source))
+            .collect();
+        if chosen.is_empty() {
+            return Some("none of the chosen bodies exist any more".into());
+        }
+        for i in chosen {
             let original = result.bodies[i].solid.clone();
             for xf in transforms {
                 let copy = original.transformed(xf);
@@ -2099,6 +2128,7 @@ mod tests {
                 plane: PlaneRef::standard(StandardPlane::Right),
                 op: crate::CopyOp::New,
                 features: vec![],
+                bodies: vec![],
                 name: None,
             })
             .unwrap()
@@ -2121,6 +2151,7 @@ mod tests {
             }),
             op: Some(crate::CopyOp::Add),
             features: None,
+            bodies: None,
         })
         .unwrap();
         let r = ps.regenerate();
@@ -2135,6 +2166,7 @@ mod tests {
             count: 3,
             op: crate::CopyOp::Add,
             features: vec![],
+            bodies: vec![],
             name: None,
         })
         .unwrap();
@@ -2156,6 +2188,7 @@ mod tests {
             count: 4,
             op: crate::CopyOp::New,
             features: vec![],
+            bodies: vec![],
             name: None,
         })
         .unwrap();

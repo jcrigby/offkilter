@@ -1833,10 +1833,29 @@ class App implements SketchHost {
   }
 
   /** "Copies" mode plus the list of solid features a pattern or mirror may replay instead of whole bodies. */
-  private copyScopeFields(f: FeatureSummary, body: HTMLElement, chosen: number[], op: CopyOp, setFeatures: (ids: number[]) => void, setOp: (op: CopyOp) => void): void {
+  private copyScopeFields(f: FeatureSummary, body: HTMLElement, chosen: number[], op: CopyOp, setFeatures: (ids: number[]) => void, setOp: (op: CopyOp) => void, chosenBodies: number[] = [], setBodies?: (ids: number[]) => void): void {
     const copies = select(["add", "new"], op, (v) => setOp(v as CopyOp));
     copies.disabled = chosen.length > 0;
     body.appendChild(field("Copies", copies));
+    // Whole-body copies can be limited to some of the bodies that exist before this feature.
+    if (chosen.length === 0 && setBodies && (f.candidates ?? []).length > 1) {
+      const ul = document.createElement("ul");
+      ul.className = "body-pick";
+      for (const [src, name] of f.candidates!) {
+        const li = document.createElement("li");
+        const cb = checkbox(chosenBodies.length === 0 || chosenBodies.includes(src), (on) => {
+          const all = f.candidates!.map(([s]) => s);
+          const current = chosenBodies.length === 0 ? all : chosenBodies;
+          const next = on ? [...current, src] : current.filter((s) => s !== src);
+          setBodies(next.length === all.length ? [] : next);
+        });
+        const text = document.createElement("span");
+        text.textContent = name;
+        li.append(cb, text);
+        ul.appendChild(li);
+      }
+      body.appendChild(field("Bodies", ul));
+    }
     const pos = this.summary.features.findIndex((g) => g.id === f.id);
     const solidKinds = new Set(["extrude", "revolve", "hole", "sweep", "loft"]);
     const candidates = this.summary.features.filter((g, i) => i < pos && solidKinds.has(g.kind.type) && !g.suppressed);
@@ -1858,7 +1877,7 @@ class App implements SketchHost {
     if (f.kind.type !== "mirror") return;
     const k = f.kind;
     this.planeFieldsFor(f, body, k.plane, (plane) => this.apply({ type: "set_mirror", id: f.id, plane }));
-    this.copyScopeFields(f, body, k.features ?? [], k.op, (features) => this.apply({ type: "set_mirror", id: f.id, features }), (op) => this.apply({ type: "set_mirror", id: f.id, op }));
+    this.copyScopeFields(f, body, k.features ?? [], k.op, (features) => this.apply({ type: "set_mirror", id: f.id, features }), (op) => this.apply({ type: "set_mirror", id: f.id, op }), k.bodies ?? [], (bodies) => this.apply({ type: "set_mirror", id: f.id, bodies }));
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Mirrors across the plane. With no features ticked every body is copied: “Add” unions each copy with its original, “New” keeps copies separate. Ticked features are replayed mirrored with their own add / remove operation.";
@@ -1883,7 +1902,7 @@ class App implements SketchHost {
       body.appendChild(field("Total angle (°)", this.exprInput(f, "angle", kind.angle, (v) => setKind({ ...kind, angle: v }))));
     }
     body.appendChild(field("Count", this.exprInput(f, "count", k.count, (v) => this.apply({ type: "set_pattern", id: f.id, count: Math.max(2, Math.round(v)) }))));
-    this.copyScopeFields(f, body, k.features ?? [], k.op, (features) => this.apply({ type: "set_pattern", id: f.id, features }), (op) => this.apply({ type: "set_pattern", id: f.id, op }));
+    this.copyScopeFields(f, body, k.features ?? [], k.op, (features) => this.apply({ type: "set_pattern", id: f.id, features }), (op) => this.apply({ type: "set_pattern", id: f.id, op }), k.bodies ?? [], (bodies) => this.apply({ type: "set_pattern", id: f.id, bodies }));
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Repeats every body along or about a world axis through the origin; the count includes the original.";
