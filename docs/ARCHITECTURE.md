@@ -34,6 +34,11 @@ Onshape does. Each feature produces a `FeatureStatus` with an optional
 error; later features that depend on a failed feature report their own
 error rather than aborting the whole regen.
 
+Regeneration keeps a cache of the result state after each feature, keyed
+by a hash chain of the solved feature definitions. A regeneration reuses
+the longest unchanged prefix, so editing or dragging in the last feature
+never re-runs the booleans before it. The cache is in-memory only.
+
 All mutation goes through `Op` / `SketchOp` (`ops.rs`). Ops are plain serde
 types. This is deliberate: an op log gives undo/redo for free, is the unit
 of a future version history, and is what real-time collaboration will

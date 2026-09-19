@@ -26,6 +26,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .studio-name { background: transparent; border: 1px solid transparent; color: var(--text); padding: 3px 6px; border-radius: 4px; width: 220px; font: inherit; }
 .studio-name:hover, .studio-name:focus { border-color: var(--border); background: var(--bg); outline: none; }
 .spacer { flex: 1; }
+.divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
 button { background: var(--bg-elev); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font: inherit; cursor: pointer; }
 button:hover { border-color: var(--accent); }
 button.primary { background: var(--accent); border-color: var(--accent); color: #0b1a2a; font-weight: 600; }

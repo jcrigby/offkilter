@@ -150,17 +150,69 @@ fn tessellate_sketch(
     out
 }
 
+/// Regeneration cache: the result state after each feature, keyed by a
+/// hash chain of the (solved) feature definitions up to that point. A
+/// regeneration reuses the longest unchanged prefix, so editing the last
+/// feature, or dragging a point in the last sketch, does not re-run the
+/// booleans of everything before it.
+#[derive(Debug, Clone, Default)]
+pub struct RegenCache {
+    entries: Vec<(u64, RegenResult)>,
+}
+
+impl RegenCache {
+    pub fn clear(&mut self) {
+        self.entries.clear();
+    }
+}
+
+fn feature_hash(prev: u64, f: &crate::Feature) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut h = std::hash::DefaultHasher::new();
+    prev.hash(&mut h);
+    f.id.hash(&mut h);
+    f.suppressed.hash(&mut h);
+    // The kind (including solved sketch geometry) as JSON; cheap for the
+    // sizes involved and avoids a second hashing scheme for every type.
+    serde_json::to_string(&f.kind)
+        .unwrap_or_default()
+        .hash(&mut h);
+    h.finish()
+}
+
 impl PartStudio {
     /// Evaluates every feature in order. Sketches are solved in place so the
-    /// document always stores solved geometry.
+    /// document always stores solved geometry. Unchanged prefixes of the
+    /// feature list are served from the cache.
     pub fn regenerate(&mut self) -> RegenResult {
         let opts = ProfileOptions::default();
         let mut result = RegenResult::default();
         let ids: Vec<FeatureId> = self.features.iter().map(|f| f.id).collect();
-        for id in ids {
+        let mut chain = 0u64;
+        let mut cache_valid = true;
+        for (index, id) in ids.into_iter().enumerate() {
             let pos = self.position(id).expect("feature present");
+            // Solve sketches first so the hash covers solved geometry, which
+            // makes a second regeneration with no edits a full cache hit.
+            if !self.features[pos].suppressed {
+                if let FeatureKind::Sketch(sf) = &mut self.features[pos].kind {
+                    sf.sketch.solve();
+                }
+            }
+            chain = feature_hash(chain, &self.features[pos]);
+            if cache_valid {
+                if let Some((h, cached)) = self.cache.entries.get(index) {
+                    if *h == chain {
+                        result = cached.clone();
+                        continue;
+                    }
+                }
+                cache_valid = false;
+                self.cache.entries.truncate(index);
+            }
             if self.features[pos].suppressed {
                 result.statuses.push(FeatureStatus { id, error: None });
+                self.cache.entries.push((chain, result.clone()));
                 continue;
             }
             let error = match &mut self.features[pos].kind {
@@ -169,6 +221,7 @@ impl PartStudio {
                         Ok(p) => p,
                         Err(e) => {
                             result.statuses.push(FeatureStatus { id, error: Some(e) });
+                            self.cache.entries.push((chain, result.clone()));
                             continue;
                         }
                     };
@@ -205,8 +258,15 @@ impl PartStudio {
                 }
             };
             result.statuses.push(FeatureStatus { id, error });
+            self.cache.entries.push((chain, result.clone()));
         }
+        self.cache.entries.truncate(self.features.len());
         result
+    }
+
+    /// Drops the regeneration cache (e.g. after loading a document).
+    pub fn clear_cache(&mut self) {
+        self.cache.clear();
     }
 
     fn regen_extrude(
@@ -945,6 +1005,51 @@ mod tests {
         let r = ps.regenerate();
         assert_eq!(r.errors().count(), 1);
         assert!(r.errors().next().unwrap().0 == s2);
+    }
+
+    #[test]
+    fn cache_reuses_unchanged_prefix_and_invalidates_edits() {
+        let mut ps = PartStudio::demo();
+        let r1 = ps.regenerate();
+        let v1 = r1.bodies[0].solid.volume();
+        // A no-op regeneration is a full cache hit and gives the same result.
+        let before = ps.cache.entries.len();
+        let r2 = ps.regenerate();
+        assert_eq!(before, ps.cache.entries.len());
+        assert!((r2.bodies[0].solid.volume() - v1).abs() < 1e-9);
+        // Editing the last feature keeps the earlier entries.
+        let last = ps.features().last().unwrap().id;
+        ps.apply(Op::SetSuppressed {
+            id: last,
+            suppressed: true,
+        })
+        .unwrap();
+        let r3 = ps.regenerate();
+        assert!(r3.bodies[0].solid.volume() > v1, "slot no longer cut");
+        // Editing the first sketch invalidates everything after it.
+        let first = ps.features()[0].id;
+        let c = ps.features()[0].kind.clone();
+        let dim = match c {
+            FeatureKind::Sketch(s) => s
+                .sketch
+                .constraints()
+                .find(|(_, c)| c.value() == Some(60.0))
+                .map(|(id, _)| id)
+                .unwrap(),
+            _ => unreachable!(),
+        };
+        ps.apply(Op::Sketch {
+            id: first,
+            op: SketchOp::SetConstraintValue {
+                id: dim,
+                value: 80.0,
+            },
+        })
+        .unwrap();
+        let r4 = ps.regenerate();
+        let (min, max) = r4.bodies[0].bounds().unwrap();
+        assert!((max.x - min.x - 80.0).abs() < 1e-6, "plate is now 80 wide");
+        assert!(r4.errors().next().is_none());
     }
 
     #[test]

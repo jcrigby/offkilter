@@ -50,6 +50,9 @@ pub struct PartStudio {
     pub name: String,
     features: Vec<Feature>,
     next_id: u32,
+    /// Per-feature regeneration cache; never persisted.
+    #[serde(skip)]
+    cache: regen::RegenCache,
 }
 
 impl Default for PartStudio {
@@ -64,6 +67,7 @@ impl PartStudio {
             name: name.into(),
             features: Vec::new(),
             next_id: 1,
+            cache: Default::default(),
         }
     }
 

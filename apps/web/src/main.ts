@@ -86,21 +86,109 @@ class App implements SketchHost {
   // ------------------------------------------------------------ document
 
   replace(kernel: Kernel): void {
+    this.sketcher.exit();
     this.kernel.dispose();
     this.kernel = kernel;
     this.selected = null;
+    this.selectedFace = null;
+    this.history = [];
+    this.future = [];
+    this.updateHistoryButtons();
     this.regenerate();
     this.viewer.fitAll();
   }
 
   apply(op: Op): void {
+    this.snapshot();
     try {
       this.kernel.apply(op);
     } catch (e) {
       this.setStatus(`error: ${(e as Error).message}`);
+      this.history.pop();
       return;
     }
     this.regenerate();
+  }
+
+  // ------------------------------------------------------------ undo / redo
+
+  private history: string[] = [];
+  private future: string[] = [];
+  private static readonly HISTORY_LIMIT = 200;
+
+  snapshot(): void {
+    this.history.push(this.kernel.toJson());
+    if (this.history.length > App.HISTORY_LIMIT) this.history.shift();
+    this.future = [];
+    this.updateHistoryButtons();
+  }
+
+  undo(): void {
+    const json = this.history.pop();
+    if (json === undefined) return;
+    this.future.push(this.kernel.toJson());
+    this.restore(json);
+  }
+
+  redo(): void {
+    const json = this.future.pop();
+    if (json === undefined) return;
+    this.history.push(this.kernel.toJson());
+    this.restore(json);
+  }
+
+  /** Loads a document state while keeping selection and sketch mode where possible. */
+  private restore(json: string): void {
+    const sketchId = this.sketcher.active ? this.sketcher.sketchId : null;
+    this.sketcher.cancel();
+    this.sketcher.selection.clear();
+    const fresh = Kernel.fromJson(json);
+    this.kernel.dispose();
+    this.kernel = fresh;
+    this.regenerate();
+    if (!this.feature(this.selected)) this.selected = null;
+    if (sketchId !== null && !this.feature(sketchId)) {
+      this.sketcher.exit();
+    }
+    this.renderFeatures();
+    this.renderDetail();
+    this.updateHistoryButtons();
+  }
+
+  private updateHistoryButtons(): void {
+    ($("#btn-undo") as HTMLButtonElement).disabled = this.history.length === 0;
+    ($("#btn-redo") as HTMLButtonElement).disabled = this.future.length === 0;
+  }
+
+  // ------------------------------------------------------------ export
+
+  /** All bodies as one binary STL file. */
+  toStl(): Blob {
+    const meshes = this.kernel.bodyMeshes();
+    const count = meshes.reduce((n, m) => n + m.indices.length / 3, 0);
+    const buf = new ArrayBuffer(84 + count * 50);
+    const view = new DataView(buf);
+    new Uint8Array(buf, 0, 80).set(new TextEncoder().encode("offkilter binary STL").subarray(0, 80));
+    view.setUint32(80, count, true);
+    let off = 84;
+    for (const m of meshes) {
+      for (let t = 0; t < m.indices.length; t += 3) {
+        const idx = [m.indices[t]!, m.indices[t + 1]!, m.indices[t + 2]!];
+        const p = idx.map((i) => [m.positions[3 * i]!, m.positions[3 * i + 1]!, m.positions[3 * i + 2]!]);
+        const ux = p[1]![0]! - p[0]![0]!, uy = p[1]![1]! - p[0]![1]!, uz = p[1]![2]! - p[0]![2]!;
+        const vx = p[2]![0]! - p[0]![0]!, vy = p[2]![1]! - p[0]![1]!, vz = p[2]![2]! - p[0]![2]!;
+        let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+        const len = Math.hypot(nx, ny, nz) || 1;
+        nx /= len; ny /= len; nz /= len;
+        for (const v of [nx, ny, nz, ...p.flat()]) {
+          view.setFloat32(off, v, true);
+          off += 4;
+        }
+        view.setUint16(off, 0, true);
+        off += 2;
+      }
+    }
+    return new Blob([buf], { type: "model/stl" });
   }
 
   applyRaw(op: Op): OpResult {
@@ -608,6 +696,16 @@ async function main(): Promise<void> {
     if (confirm("Start a new empty part studio? Unsaved work is lost.")) app.replace(Kernel.empty());
   };
   $("#btn-demo").onclick = () => app.replace(Kernel.demo());
+  $("#btn-undo").onclick = () => app.undo();
+  $("#btn-redo").onclick = () => app.redo();
+  app.undo(); // no-op that initialises the button states
+  $("#btn-stl").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(app.toStl());
+    a.download = `${app.summary.name.replace(/[^\w.-]+/g, "_")}.stl`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
   $("#btn-save").onclick = () => {
     const blob = new Blob([app.kernel.toJson()], { type: "application/json" });
     const a = document.createElement("a");
@@ -662,6 +760,17 @@ async function main(): Promise<void> {
   window.addEventListener("keydown", (e) => {
     const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement;
     if (typing) return;
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+      e.preventDefault();
+      if (e.shiftKey) app.redo();
+      else app.undo();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+      e.preventDefault();
+      app.redo();
+      return;
+    }
     if (e.key === "f") app.viewer.fitAll();
     if (e.key === "Escape") {
       if (app.facePicker) app.endFacePick();

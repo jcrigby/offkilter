@@ -20,6 +20,8 @@ export interface SketchHost {
   /** Re-renders the panels after the sketch selection changed. */
   selectionChanged(): void;
   setStatus(text: string): void;
+  /** Records an undo point before a user-level edit. */
+  snapshot(): void;
 }
 
 const SNAP_PX = 10;
@@ -166,7 +168,10 @@ export class Sketcher implements PointerHandler {
         this.selection.clear();
         this.selection.add(hit);
       }
-      if (point) this.drag = { entity: point.id, moved: false };
+      if (point) {
+        this.drag = { entity: point.id, moved: false };
+        this.host.snapshot();
+      }
     }
     this.host.selectionChanged();
   }
@@ -276,6 +281,7 @@ export class Sketcher implements PointerHandler {
     const end = this.inferred(s);
     const a = this.pending[0]!;
     if (Math.hypot(end.pos.x - a.x, end.pos.y - a.y) < 1e-9) return;
+    this.host.snapshot();
     try {
       const r = this.sketchOp({ type: "add_line", a, b: end.pos });
       const [line, start, finish] = r.entities as [number, number, number];
@@ -308,6 +314,7 @@ export class Sketcher implements PointerHandler {
     }
     const a = this.pending[0]!;
     if (Math.abs(s.pos.x - a.x) < 1e-9 || Math.abs(s.pos.y - a.y) < 1e-9) return;
+    this.host.snapshot();
     try {
       this.sketchOp({ type: "add_rectangle", a, b: s.pos });
     } catch (err) {
@@ -326,6 +333,7 @@ export class Sketcher implements PointerHandler {
     const c = this.pending[0]!;
     const radius = Math.hypot(s.pos.x - c.x, s.pos.y - c.y);
     if (radius < 1e-9) return;
+    this.host.snapshot();
     try {
       const r = this.sketchOp({ type: "add_circle", center: c, radius });
       const centerId = this.pendingIds[0];
@@ -341,6 +349,7 @@ export class Sketcher implements PointerHandler {
 
   deleteSelection(): void {
     if (this.selection.size === 0) return;
+    this.host.snapshot();
     for (const id of this.selection) {
       try {
         this.sketchOp({ type: "remove_entity", id });
@@ -430,6 +439,7 @@ export class Sketcher implements PointerHandler {
   applyQuick(build: () => Constraint | null): void {
     const c = build();
     if (!c) return;
+    this.host.snapshot();
     try {
       this.constrain(c);
     } catch (err) {

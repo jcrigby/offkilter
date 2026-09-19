@@ -36,12 +36,13 @@ top are concrete and self-contained; items lower down are directions.
 
 - [x] Ordered feature list with suppression, reorder, delete
 - [x] JSON document format and browser persistence
-- [ ] Undo/redo from the op log
+- [x] Undo/redo (document snapshots in the client; op-log based undo later)
 - [ ] Variables and expressions in dimensions (`width / 2`)
 - [x] Face selection in the viewport with picking
 - [ ] Edge and body selection
 - [ ] Multiple part studios per document; assemblies with mates
-- [ ] Drawings (2D projections) and export: STL/3MF now, STEP once there is a B-rep
+- [x] STL export
+- [ ] Drawings (2D projections); 3MF export; STEP once faces are exact
 - [ ] Import: STEP via a B-rep reader
 
 ## Platform
@@ -55,5 +56,6 @@ top are concrete and self-contained; items lower down are directions.
 
 - [x] CI: fmt, clippy, tests, wasm build, web build
 - [ ] Property/fuzz tests for the solver, region extraction and booleans (random box/cylinder stacks compared against analytic volumes)
+- [x] Regeneration cache: unchanged feature prefixes are reused, so editing late features is cheap
 - [ ] Benchmarks for regeneration time on realistic parts
 - [ ] `wasm-opt` in the release pipeline
