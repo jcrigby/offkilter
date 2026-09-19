@@ -351,6 +351,95 @@ test("assembly tab: insert two instances and mate them face to face", async ({ p
   await expect(page.locator("#feature-list")).toContainText("Block");
 });
 
+test("assembly tab: edge and corner mate connectors", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  const extrude = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Sketch 1" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: s, op: { type: "add_rectangle", a: { x: 0, y: 0 }, b: { x: 10, y: 10 } } });
+    app.apply({ type: "add_extrude", sketch: s, depth: 5, name: "Block" });
+    return app.summary.features[app.summary.features.length - 1].id as number;
+  });
+  await page.getByRole("button", { name: "+ Assembly" }).click();
+  await page.getByRole("button", { name: "Insert", exact: true }).click();
+  await page.click("#btn-insert-instance");
+  await page.getByRole("button", { name: "Insert", exact: true }).click();
+  await expect(page.locator("#instance-list li")).toHaveCount(2);
+  const bounds = (i: number) => page.evaluate((i) => (window as unknown as { offkilter: any }).offkilter.summary.bodies[i].bounds, i);
+
+  // A hinge: B's bottom-front edge on A's top-front edge. Frames meet with
+  // z (along the edge) opposed, so B folds under, beside A (y < 0).
+  await page.evaluate((e) => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const [a, b] = app.summary.instances.map((i: any) => i.id);
+    const f = (local: number) => ({ feature: e, local });
+    app.applyDoc({ type: "assembly", tab: app.tab, op: { type: "add_mate", kind: "revolute", a: { instance: a, face: f(1), anchor: { type: "edge", other: f(2) } }, b: { instance: b, face: f(0), anchor: { type: "edge", other: f(2) } }, offset: 0, angle: 0, flip: false, name: null } });
+  }, extrude);
+  await expect(page.locator("#mate-list li")).toHaveCount(1);
+  expect(await page.$$eval("#mate-list .dot.err", (els) => els.length)).toBe(0);
+  let b = await bounds(1);
+  expect(b[0].z).toBeCloseTo(0, 5);
+  expect(b[1].z).toBeCloseTo(5, 5);
+  expect(b[1].y).toBeCloseTo(0, 5);
+  expect(b[0].y).toBeCloseTo(-10, 5);
+  // Opening the hinge by 90° stands B up along the shared edge.
+  await page.click("#mate-list li");
+  await expect(page.locator("#detail-body")).toContainText("edge 1/2");
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.applyDoc({ type: "assembly", tab: app.tab, op: { type: "set_mate", id: app.summary.mates[0].id, angle: 90 } });
+  });
+  b = await bounds(1);
+  expect(b[1].z - b[0].z).toBeCloseTo(10, 5);
+  expect(b[1].y - b[0].y).toBeCloseTo(5, 5);
+  expect(b[1].x - b[0].x).toBeCloseTo(10, 5);
+
+  // Corner connectors picked in the viewport: remove the hinge, park B
+  // beside A, then click near a top corner of each block.
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.applyDoc({ type: "assembly", tab: app.tab, op: { type: "remove_mate", id: app.summary.mates[0].id } });
+    app.applyDoc({ type: "assembly", tab: app.tab, op: { type: "set_instance", id: app.summary.instances[1].id, placement: { position: { x: 20, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 } } } });
+  });
+  await page.keyboard.press("1");
+  await page.keyboard.press("f");
+  await page.waitForTimeout(300);
+  await page.click("#btn-add-mate");
+  expect(await status(page)).toContain("corner");
+  const vp = (await page.locator("#viewport").boundingBox())!;
+  const clickNearCorner = async (corner: { x: number; y: number; z: number }, centre: { x: number; y: number; z: number }) => {
+    const [c, m] = await page.evaluate(([c, m]) => {
+      const v = (window as any).offkilter.viewer;
+      return [v.toScreen(c), v.toScreen(m)];
+    }, [corner, centre]);
+    const d = Math.hypot(m.x - c.x, m.y - c.y);
+    const x = c.x + ((m.x - c.x) / d) * 3, y = c.y + ((m.y - c.y) / d) * 3;
+    await page.mouse.move(vp.x + x, vp.y + y);
+    await page.mouse.down();
+    await page.mouse.up();
+    await page.waitForTimeout(200);
+  };
+  await clickNearCorner({ x: 10, y: 0, z: 5 }, { x: 5, y: 5, z: 5 });
+  expect(await status(page)).toMatch(/First connector: .* corner 1\//);
+  await clickNearCorner({ x: 20, y: 0, z: 5 }, { x: 25, y: 5, z: 5 });
+  await expect(page.locator("#mate-list li")).toHaveCount(1);
+  const mate = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.mates[0]);
+  expect(mate.a.anchor.type).toBe("vertex");
+  expect(mate.b.anchor.type).toBe("vertex");
+  expect(mate.error ?? null).toBeNull();
+  // Corners coincide with the top normals opposed: B sits upside down on A's corner.
+  b = await bounds(1);
+  expect(b[0].z).toBeCloseTo(5, 5);
+  expect(b[1].z).toBeCloseTo(10, 5);
+  expect(Math.min(Math.abs(b[0].x - 10), Math.abs(b[1].x - 10))).toBeLessThan(1e-5);
+  expect(Math.min(Math.abs(b[0].y), Math.abs(b[1].y))).toBeLessThan(1e-5);
+});
+
 test("standard views, measure, section and part rename", async ({ page }) => {
   await openDemo(page);
   // Standard views look straight down an axis.

@@ -99,11 +99,55 @@ pub enum MateKind {
     Ball,
 }
 
-/// A face of an instance's body, used as a mate connector.
+/// Where on its face a connector sits.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum Anchor {
+    /// The face itself: origin at its centroid, z along its normal.
+    #[default]
+    Face,
+    /// The edge the face shares with `other`: origin at the middle of the
+    /// edge, z along it (or along the axis of a circular edge).
+    Edge { other: FaceRef },
+    /// The vertex where the face meets both `others`: origin there, z
+    /// along the face normal.
+    Vertex { others: [FaceRef; 2] },
+}
+
+/// A face, edge or vertex of an instance's body, used as a mate connector.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Connector {
     pub instance: InstanceId,
     pub face: FaceRef,
+    #[serde(default, skip_serializing_if = "is_face")]
+    pub anchor: Anchor,
+}
+
+fn is_face(a: &Anchor) -> bool {
+    *a == Anchor::Face
+}
+
+/// "face 2", "edge 2/3" or "vertex 2/3/4" for messages.
+pub fn describe_anchor(c: &Connector) -> String {
+    match c.anchor {
+        Anchor::Face => format!("face {}", c.face.local),
+        Anchor::Edge { other } => format!("edge {}/{}", c.face.local, other.local),
+        Anchor::Vertex { others } => format!(
+            "vertex {}/{}/{}",
+            c.face.local, others[0].local, others[1].local
+        ),
+    }
+}
+
+impl Connector {
+    /// A connector on a face.
+    pub fn face(instance: InstanceId, face: FaceRef) -> Connector {
+        Connector {
+            instance,
+            face,
+            anchor: Anchor::Face,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -166,15 +210,151 @@ pub struct AssemblyResult {
     pub mate_errors: BTreeMap<MateId, String>,
 }
 
-/// Connector frame of a face on the first body of a group that has it.
-pub fn group_frame(group: &[Solid], face: &FaceRef) -> Option<Plane> {
-    group.iter().find_map(|s| connector_frame(s, face))
+/// Connector frame on the first body of a group that has the face.
+pub fn group_frame(group: &[Solid], face: &FaceRef, anchor: &Anchor) -> Option<Plane> {
+    group.iter().find_map(|s| connector_frame(s, face, anchor))
 }
 
-/// Connector frame of a face in body coordinates: origin at the face
+/// Connector frame in body coordinates. On a face: origin at the face
 /// centroid (on the axis for a cylindrical face), z along the normal or
-/// axis, x and y canonical for that normal.
-pub fn connector_frame(solid: &Solid, face: &FaceRef) -> Option<Plane> {
+/// axis, x and y canonical for that normal. On an edge: origin at the
+/// middle of the edge, z along it, x along the face normal (a circular
+/// edge takes the cylinder axis and its centre). On a vertex: origin at
+/// the vertex, z along the face normal, x along the edge shared with the
+/// first other face.
+pub fn connector_frame(solid: &Solid, face: &FaceRef, anchor: &Anchor) -> Option<Plane> {
+    match anchor {
+        Anchor::Face => face_frame(solid, face),
+        Anchor::Edge { other } => edge_frame(solid, face, other),
+        Anchor::Vertex { others } => vertex_frame(solid, face, others),
+    }
+}
+
+/// Every facet of the surfaces that the referenced face lies on.
+fn surface_facets<'a>(solid: &'a Solid, face: &FaceRef) -> Vec<&'a ok_brep::Face> {
+    let surfaces: Vec<usize> = solid
+        .faces
+        .iter()
+        .filter(|f| face.matches(&f.origin))
+        .map(|f| f.surface)
+        .collect();
+    solid
+        .faces
+        .iter()
+        .filter(|f| surfaces.contains(&f.surface))
+        .collect()
+}
+
+/// The axis of the surface under a face, if it is a surface of revolution.
+fn surface_axis(solid: &Solid, f: &ok_brep::Face) -> Option<(Vec3, Vec3)> {
+    match solid.surfaces.get(f.surface) {
+        Some(Surface::Cylinder { origin, axis, .. }) | Some(Surface::Revolved { origin, axis }) => {
+            Some((*origin, *axis))
+        }
+        _ => None,
+    }
+}
+
+/// A frame with the given z and an x hint (projected perpendicular to z).
+fn frame_with_x(origin: Vec3, z: Vec3, x_hint: Vec3) -> Option<Plane> {
+    let z = z.normalized()?;
+    let x = (x_hint - z * x_hint.dot(z)).normalized();
+    match x {
+        Some(x) => Some(Plane {
+            origin,
+            x_axis: x,
+            y_axis: z.cross(x),
+            normal: z,
+        }),
+        None => Plane::from_origin_normal(origin, z),
+    }
+}
+
+fn edge_frame(solid: &Solid, face: &FaceRef, other: &FaceRef) -> Option<Plane> {
+    let mine = surface_facets(solid, face);
+    let theirs = surface_facets(solid, other);
+    let mine_idx: Vec<usize> = mine.iter().map(|f| index_of(solid, f)).collect();
+    let their_idx: Vec<usize> = theirs.iter().map(|f| index_of(solid, f)).collect();
+    // Directed segments of my facets that a facet of the other face walks
+    // the opposite way.
+    let mut segments: Vec<(Vec3, Vec3)> = Vec::new();
+    for (a, b, f) in solid.directed_edges() {
+        if !mine_idx.contains(&f) {
+            continue;
+        }
+        let shared = solid
+            .directed_edges()
+            .any(|(c, d, g)| c == b && d == a && their_idx.contains(&g));
+        if shared {
+            segments.push((solid.vertices[a as usize], solid.vertices[b as usize]));
+        }
+    }
+    if segments.is_empty() {
+        return None;
+    }
+    let first = *mine.first()?;
+    let centroid = segments
+        .iter()
+        .fold(Vec3::ZERO, |s, (a, b)| s + (*a + *b) * 0.5)
+        / segments.len() as f64;
+    // A rim between a cylinder and something else is a circle: its frame
+    // sits on the axis, z along it.
+    let axis = surface_axis(solid, first).or_else(|| surface_axis(solid, theirs.first()?));
+    if let Some((origin, axis)) = axis {
+        if segments.len() > 1 {
+            let on_axis = origin + axis * (centroid - origin).dot(axis);
+            return Plane::from_origin_normal(on_axis, axis);
+        }
+    }
+    let (a, b) = segments
+        .iter()
+        .max_by(|p, q| p.0.distance(p.1).total_cmp(&q.0.distance(q.1)))?;
+    frame_with_x(centroid, *b - *a, first.plane.normal)
+}
+
+fn index_of(solid: &Solid, f: &ok_brep::Face) -> usize {
+    solid
+        .faces
+        .iter()
+        .position(|g| std::ptr::eq(g, f))
+        .unwrap_or(usize::MAX)
+}
+
+fn vertex_frame(solid: &Solid, face: &FaceRef, others: &[FaceRef; 2]) -> Option<Plane> {
+    let mine = surface_facets(solid, face);
+    let vertex_set = |facets: &[&ok_brep::Face]| -> Vec<u32> {
+        let mut vs: Vec<u32> = facets
+            .iter()
+            .flat_map(|f| f.loops.iter().flatten().copied())
+            .collect();
+        vs.sort_unstable();
+        vs.dedup();
+        vs
+    };
+    let mut common = vertex_set(&mine);
+    for o in others {
+        let vs = vertex_set(&surface_facets(solid, o));
+        common.retain(|v| vs.contains(v));
+    }
+    let v = *common.first()?;
+    let origin = solid.vertices[v as usize];
+    let facet = mine
+        .iter()
+        .find(|f| f.loops.iter().flatten().any(|&i| i == v))?;
+    // x runs along the edge shared with the first other face, if there is one.
+    let x_hint = solid
+        .directed_edges()
+        .filter(|(a, b, f)| (*a == v || *b == v) && std::ptr::eq(&solid.faces[*f], *facet))
+        .map(|(a, b, _)| {
+            let far = if a == v { b } else { a };
+            solid.vertices[far as usize] - origin
+        })
+        .find(|d| d.length() > 0.0)
+        .unwrap_or(Vec3::X);
+    frame_with_x(origin, facet.plane.normal, x_hint)
+}
+
+fn face_frame(solid: &Solid, face: &FaceRef) -> Option<Plane> {
     let faces: Vec<&ok_brep::Face> = solid
         .faces
         .iter()
@@ -296,10 +476,11 @@ impl Assembly {
             let group = solids
                 .get(&c.instance)
                 .ok_or_else(|| "instance has no body".to_string())?;
-            group_frame(group, &c.face).ok_or_else(|| {
+            group_frame(group, &c.face, &c.anchor).ok_or_else(|| {
                 format!(
-                    "face {} of feature {} not found on the instance",
-                    c.face.local, c.face.feature.0
+                    "{} of feature {} not found on the instance",
+                    describe_anchor(c),
+                    c.face.feature.0
                 )
             })
         };
@@ -478,15 +659,15 @@ impl Assembly {
         if mates.is_empty() {
             return Vec::new();
         }
-        let frames: BTreeMap<(InstanceId, u32, u32), Plane> = mates
+        let frames: Vec<(Connector, Plane)> = mates
             .iter()
             .flat_map(|m| [m.a, m.b])
             .filter_map(|c| {
-                let f = group_frame(solids.get(&c.instance)?, &c.face)?;
-                Some(((c.instance, c.face.feature.0, c.face.local), f))
+                let f = group_frame(solids.get(&c.instance)?, &c.face, &c.anchor)?;
+                Some((c, f))
             })
             .collect();
-        let frame_of = |c: &Connector| frames.get(&(c.instance, c.face.feature.0, c.face.local));
+        let frame_of = |c: &Connector| frames.iter().find(|(k, _)| k == c).map(|(_, f)| f);
         let movable: Vec<InstanceId> = self
             .instances
             .iter()
@@ -736,10 +917,12 @@ mod tests {
             a: Connector {
                 instance: InstanceId(1),
                 face: top,
+                anchor: Anchor::Face,
             },
             b: Connector {
                 instance: InstanceId(2),
                 face: bottom,
+                anchor: Anchor::Face,
             },
             offset: 0.0,
             angle: 0.0,
@@ -826,10 +1009,12 @@ mod tests {
             a: Connector {
                 instance: InstanceId(a),
                 face: top,
+                anchor: Anchor::Face,
             },
             b: Connector {
                 instance: InstanceId(b),
                 face: bottom,
+                anchor: Anchor::Face,
             },
             offset: 0.0,
             angle: 0.0,
@@ -889,10 +1074,12 @@ mod tests {
             a: Connector {
                 instance: InstanceId(1),
                 face: face(1),
+                anchor: Anchor::Face,
             },
             b: Connector {
                 instance: InstanceId(2),
                 face: face(0),
+                anchor: Anchor::Face,
             },
             offset: 0.0,
             angle: 45.0,
@@ -905,10 +1092,12 @@ mod tests {
             a: Connector {
                 instance: InstanceId(1),
                 face: face(3),
+                anchor: Anchor::Face,
             },
             b: Connector {
                 instance: InstanceId(2),
                 face: face(3),
+                anchor: Anchor::Face,
             },
             offset: 0.0,
             angle: 0.0,
@@ -935,10 +1124,12 @@ mod tests {
             a: Connector {
                 instance: InstanceId(1),
                 face: face(1),
+                anchor: Anchor::Face,
             },
             b: Connector {
                 instance: InstanceId(2),
                 face: face(1),
+                anchor: Anchor::Face,
             },
             offset: 7.0,
             angle: 0.0,
@@ -947,6 +1138,146 @@ mod tests {
         let r = asm.resolve(&solids);
         assert!(!r.mate_errors.is_empty());
         assert_eq!(r.bodies.len(), 2);
+    }
+
+    fn fref(local: u32) -> FaceRef {
+        FaceRef {
+            feature: FeatureId(1),
+            local,
+        }
+    }
+
+    #[test]
+    fn edge_connector_sits_mid_edge_with_z_along_it() {
+        // Block 10x10x5: top is local 1; walls 2..6 follow the rectangle
+        // (0,0)->(10,0)->(10,10)->(0,10). The edge between the top and the
+        // first wall (y = 0) runs along x at y = 0, z = 5.
+        let b = block(10.0, 10.0, 5.0, 1);
+        let f = connector_frame(&b, &fref(1), &Anchor::Edge { other: fref(2) }).unwrap();
+        assert!(
+            f.origin.distance(Vec3::new(5.0, 0.0, 5.0)) < 1e-9,
+            "{:?}",
+            f.origin
+        );
+        assert!((f.normal.x.abs() - 1.0).abs() < 1e-9, "{:?}", f.normal);
+        // x follows the top face normal.
+        assert!((f.x_axis.z - 1.0).abs() < 1e-9, "{:?}", f.x_axis);
+        // The same edge named from the wall side has x along the wall normal.
+        let g = connector_frame(&b, &fref(2), &Anchor::Edge { other: fref(1) }).unwrap();
+        assert!(g.origin.distance(f.origin) < 1e-9);
+        assert!((g.x_axis.y + 1.0).abs() < 1e-9, "{:?}", g.x_axis);
+        // Faces that share no edge give no frame.
+        assert!(connector_frame(&b, &fref(1), &Anchor::Edge { other: fref(0) }).is_none());
+    }
+
+    #[test]
+    fn circular_edge_connector_sits_at_the_circle_centre() {
+        let mut s = Sketch::new();
+        s.add_circle(Vec2::new(4.0, 3.0), 2.0);
+        let p = s.profiles(&ProfileOptions::default()).remove(0);
+        let cyl = ok_brep::extrude(&p, &Plane::XY, 0.0, 6.0, 1).unwrap();
+        // Top rim: the top face (1) against the cylinder wall (2).
+        let f = connector_frame(&cyl, &fref(1), &Anchor::Edge { other: fref(2) }).unwrap();
+        assert!(
+            f.origin.distance(Vec3::new(4.0, 3.0, 6.0)) < 1e-9,
+            "{:?}",
+            f.origin
+        );
+        assert!((f.normal.z.abs() - 1.0).abs() < 1e-9, "{:?}", f.normal);
+    }
+
+    #[test]
+    fn vertex_connector_sits_on_the_corner() {
+        let b = block(10.0, 10.0, 5.0, 1);
+        // Top (1), wall y=0 (2) and wall x=10 (3) meet at (10,0,5).
+        let f = connector_frame(
+            &b,
+            &fref(1),
+            &Anchor::Vertex {
+                others: [fref(2), fref(3)],
+            },
+        )
+        .unwrap();
+        assert!(
+            f.origin.distance(Vec3::new(10.0, 0.0, 5.0)) < 1e-9,
+            "{:?}",
+            f.origin
+        );
+        assert!((f.normal.z - 1.0).abs() < 1e-9, "{:?}", f.normal);
+        assert!(f.x_axis.z.abs() < 1e-9 && f.x_axis.length() > 0.999);
+        // Opposite walls never meet the top at one vertex.
+        assert!(connector_frame(
+            &b,
+            &fref(1),
+            &Anchor::Vertex {
+                others: [fref(2), fref(4)],
+            },
+        )
+        .is_none());
+    }
+
+    #[test]
+    fn edge_mate_hinges_two_blocks_along_a_shared_edge() {
+        // B's bottom-front edge meets A's top-front edge (z opposed, so the
+        // edges run opposite ways and the blocks stack corner to corner).
+        let solid = block(10.0, 10.0, 5.0, 1);
+        let mut asm = Assembly::new("asm");
+        for (id, name, fixed) in [(1, "A", true), (2, "B", false)] {
+            asm.instances.push(Instance {
+                id: InstanceId(id),
+                name: name.into(),
+                studio: TabId(1),
+                body: 0,
+                fixed,
+                placement: Placement::default(),
+            });
+        }
+        asm.mates.push(Mate {
+            id: MateId(10),
+            name: "hinge".into(),
+            kind: MateKind::Revolute,
+            a: Connector {
+                instance: InstanceId(1),
+                face: fref(1),
+                anchor: Anchor::Edge { other: fref(2) },
+            },
+            b: Connector {
+                instance: InstanceId(2),
+                face: fref(0),
+                anchor: Anchor::Edge { other: fref(2) },
+            },
+            offset: 0.0,
+            angle: 0.0,
+            flip: false,
+        });
+        let mut solids = BTreeMap::new();
+        solids.insert(InstanceId(1), vec![solid.clone()]);
+        solids.insert(InstanceId(2), vec![solid]);
+        let r = asm.resolve(&solids);
+        assert!(r.mate_errors.is_empty(), "{:?}", r.mate_errors);
+        let t = r.transforms[&InstanceId(2)];
+        // B's bottom-front edge midpoint (5,0,0) lands on A's (5,0,5).
+        let m = t.apply_point(Vec3::new(5.0, 0.0, 0.0));
+        assert!(m.distance(Vec3::new(5.0, 0.0, 5.0)) < 1e-6, "{m:?}");
+        // The edge stays along x.
+        let d = t.apply_vector(Vec3::X);
+        assert!(d.y.abs() < 1e-6 && d.z.abs() < 1e-6, "{d:?}");
+    }
+
+    #[test]
+    fn connector_without_anchor_still_deserialises_as_a_face() {
+        let c: Connector =
+            serde_json::from_str(r#"{"instance":1,"face":{"feature":1,"local":2}}"#).unwrap();
+        assert_eq!(c.anchor, Anchor::Face);
+        let s = serde_json::to_string(&c).unwrap();
+        assert!(!s.contains("anchor"), "{s}");
+        let e = Connector {
+            anchor: Anchor::Edge { other: fref(3) },
+            ..c
+        };
+        let s = serde_json::to_string(&e).unwrap();
+        assert!(s.contains(r#""anchor":{"type":"edge""#), "{s}");
+        assert_eq!(serde_json::from_str::<Connector>(&s).unwrap(), e);
     }
 
     #[test]
@@ -961,6 +1292,7 @@ mod tests {
                 feature: FeatureId(1),
                 local: 2,
             },
+            &Anchor::Face,
         )
         .unwrap();
         assert!(

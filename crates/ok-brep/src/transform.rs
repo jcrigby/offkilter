@@ -69,6 +69,34 @@ impl Transform {
         self.apply_vector(p) + self.t
     }
 
+    /// The rigid transform taking points placed by `from` to where this
+    /// transform places them: `self ∘ from⁻¹`. Both must be rigid (their
+    /// matrices orthonormal), as assembly placements are.
+    pub fn then_inverse_of(&self, from: &Transform) -> Transform {
+        // from⁻¹ = (Rᵀ, -Rᵀ t) for a rigid `from`.
+        let mut rt = [[0.0; 3]; 3];
+        for (i, row) in from.m.iter().enumerate() {
+            for (j, v) in row.iter().enumerate() {
+                rt[j][i] = *v;
+            }
+        }
+        let inv = Transform { m: rt, t: Vec3::ZERO };
+        let inv = Transform {
+            m: rt,
+            t: -inv.apply_vector(from.t),
+        };
+        let mut m = [[0.0; 3]; 3];
+        for (i, row) in m.iter_mut().enumerate() {
+            for (j, v) in row.iter_mut().enumerate() {
+                *v = (0..3).map(|k| self.m[i][k] * inv.m[k][j]).sum();
+            }
+        }
+        Transform {
+            m,
+            t: self.apply_point(inv.t),
+        }
+    }
+
     pub fn determinant(&self) -> f64 {
         let m = &self.m;
         m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
@@ -169,6 +197,21 @@ impl Solid {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn then_inverse_of_maps_between_two_placements() {
+        let from = Transform::rotation(Vec3::new(1.0, 2.0, 3.0), Vec3::Z, 0.7);
+        let to = Transform::rotation(Vec3::new(-2.0, 0.5, 1.0), Vec3::new(0.0, 1.0, 0.0), -1.3);
+        let to = Transform {
+            t: to.t + Vec3::new(4.0, 5.0, 6.0),
+            ..to
+        };
+        let d = to.then_inverse_of(&from);
+        for p in [Vec3::ZERO, Vec3::new(1.0, -2.0, 0.5), Vec3::new(-3.0, 4.0, 9.0)] {
+            let placed = from.apply_point(p);
+            assert!(d.apply_point(placed).distance(to.apply_point(p)) < 1e-12);
+        }
+    }
     use crate::extrude;
     use ok_math::Vec2;
     use ok_sketch::{ProfileOptions, Sketch};

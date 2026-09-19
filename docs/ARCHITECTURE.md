@@ -39,10 +39,16 @@ move as one rigid group (an assembly that would contain itself gets no
 bodies and an error on that instance). It carries a `Placement`
 (position and Euler rotation) used when nothing mates it. A `Mate` joins two instances
 through `Connector`s, each a face reference on an instance's body (for a
-sub-assembly instance, the first of its bodies that has the face). The
-connector frame comes from the face: origin at the face centroid (on the
-axis for a cylindrical face, with z along the axis), z along the normal,
-x and y canonical for that normal. Mates are resolved as directed chains:
+sub-assembly instance, the first of its bodies that has the face) plus an
+`Anchor` saying where on that face the connector sits. On the face
+itself the frame has its origin at the face centroid (on the axis for a
+cylindrical face, with z along the axis), z along the normal, x and y
+canonical for that normal. On an edge (the face plus the other face
+across the edge) the origin is the middle of the edge and z runs along
+it, with x along the face normal; a circular rim takes the centre and
+axis of its cylinder instead. On a vertex (the face plus two more faces
+meeting there) the origin is the vertex, z the face normal and x the edge
+shared with the first other face. Mates are resolved as directed chains:
 fixed instances and unmated instances sit at their own placement, then
 every mate whose one side is placed moves the other side so that the
 connector frames meet, z axes opposed (or aligned with `flip`), rotated

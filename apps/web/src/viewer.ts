@@ -48,7 +48,9 @@ export class Viewer {
   private raycaster = new THREE.Raycaster();
   private pointerDown: { x: number; y: number } | null = null;
   /** Called when the user clicks a face (or empty space with `null`). */
-  onPick: ((pick: FacePick | null) => void) | null = null;
+  onPick: ((pick: FacePick | null, e?: PointerEvent) => void) | null = null;
+  /** In `pickMode`, also hover edges (mate connectors sit on faces, edges or corners). */
+  pickConnectors = false;
   /** Called instead of `onPick` while `edgePickMode` is on. */
   onEdgePick: ((pick: EdgePick | null) => void) | null = null;
   /** When true, hovering previews faces; used while a panel waits for a face. */
@@ -140,7 +142,7 @@ export class Viewer {
       if (!down || e.button !== 0) return;
       if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4) return; // it was a drag
       if (this.edgePickMode) this.onEdgePick?.(this.pickEdgeAt(e));
-      else this.onPick?.(this.pickAt(e));
+      else this.onPick?.(this.pickAt(e), e);
     });
     el.addEventListener("pointermove", (e) => {
       if (this.pointerHandler) {
@@ -149,6 +151,7 @@ export class Viewer {
       }
       if (this.pointerDown) return;
       if (this.edgePickMode) this.showEdges(this.edgeHover, this.pickEdgeAt(e) ? [this.pickEdgeAt(e)!] : [], FACE_HOVER);
+      else if (this.pickMode && this.pickConnectors) this.hoverEdgeOrFace(e);
       else if (this.pickMode) this.showFace(this.hover, this.pickAt(e), FACE_HOVER, 0.35);
     });
     el.addEventListener("pointerleave", () => this.clear(this.hover));
@@ -343,6 +346,27 @@ export class Viewer {
       }
     }
     return { point: { x: point.x, y: point.y, z: point.z }, body, face, snapped };
+  }
+
+  /** The body corner within 8 screen pixels of the pointer, with every face that meets there. */
+  pickVertex(e: PointerEvent): { body: number; point: Vec3; faces: number[] } | null {
+    const hit = this.pickPoint(e);
+    if (!hit || !hit.snapped) return null;
+    const data = this.meshData[hit.body];
+    if (!data) return null;
+    const faces = new Set<number>();
+    const p = hit.point;
+    for (let t = 0; t < data.faceIds.length; t++) {
+      for (let k = 0; k < 3; k++) {
+        const vi = data.indices[3 * t + k]!;
+        const d = Math.abs(data.positions[3 * vi]! - p.x) + Math.abs(data.positions[3 * vi + 1]! - p.y) + Math.abs(data.positions[3 * vi + 2]! - p.z);
+        if (d < 1e-6) {
+          faces.add(data.faceIds[t]!);
+          break;
+        }
+      }
+    }
+    return { body: hit.body, point: p, faces: [...faces] };
   }
 
   /** Draws a measurement between two points with a label; `null` clears it. */

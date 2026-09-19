@@ -130,7 +130,9 @@ export type TabSummary = { id: number; name: string; kind: TabKind };
 export type Placement = { position: Vec3; rotation: Vec3 };
 export type MateKind = "fastened" | "revolute" | "slider" | "cylindrical" | "planar" | "ball";
 /** A face of an instance's body, used as a mate connector. */
-export type Connector = { instance: number; face: FaceRef };
+/** Where a connector sits on its face: the face, the edge shared with `other`, or the corner shared with both `others`. */
+export type Anchor = { type: "face" } | { type: "edge"; other: FaceRef } | { type: "vertex"; others: [FaceRef, FaceRef] };
+export type Connector = { instance: number; face: FaceRef; anchor?: Anchor };
 export type Transform = { m: number[][]; t: Vec3 };
 export type InstanceSummary = {
   id: number;
@@ -311,8 +313,8 @@ export class Kernel {
   }
 
   /** World connector frame of a face on an instance of the last regenerated assembly tab. */
-  connectorFrame(instance: number, face: FaceRef): PlaneFrame | null {
-    return JSON.parse(this.studio.connector_frame(instance, face.feature, face.local)) as PlaneFrame | null;
+  connectorFrame(c: Connector): PlaneFrame | null {
+    return JSON.parse(this.studio.connector_frame(JSON.stringify(c))) as PlaneFrame | null;
   }
 
   /** Overlapping instance pairs of the last regenerated assembly tab. */

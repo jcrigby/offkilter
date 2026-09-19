@@ -112,7 +112,7 @@ fn world_frame(
         .iter()
         .zip(&result.placed)
         .filter(|(_, id)| **id == c.instance)
-        .find_map(|(b, _)| ok_model::connector_frame(&b.solid, &c.face))
+        .find_map(|(b, _)| ok_model::connector_frame(&b.solid, &c.face, &c.anchor))
 }
 
 fn body_summary(b: &Body) -> BodySummary<'_> {
@@ -327,15 +327,12 @@ impl Doc {
         serde_json::to_string(&summary).unwrap()
     }
 
-    /// World connector frame of a face on an instance of the last
-    /// regenerated assembly tab (JSON plane, or null).
-    pub fn connector_frame(&self, instance: u32, feature: u32, local: u32) -> String {
-        let c = ok_model::Connector {
-            instance: ok_model::InstanceId(instance),
-            face: ok_model::FaceRef {
-                feature: ok_model::FeatureId(feature),
-                local,
-            },
+    /// World frame of a connector (JSON `{instance, face, anchor?}`) on the
+    /// last regenerated assembly tab (JSON plane, or null).
+    pub fn connector_frame(&self, connector_json: &str) -> String {
+        let c: ok_model::Connector = match serde_json::from_str(connector_json) {
+            Ok(c) => c,
+            Err(_) => return "null".into(),
         };
         let frame = self.assembly.as_ref().and_then(|r| world_frame(r, &c));
         serde_json::to_string(&frame).unwrap()
@@ -350,6 +347,37 @@ impl Doc {
             .map(|r| r.interferences())
             .unwrap_or_default();
         serde_json::json!({ "overlaps": overlaps, "failed": failed }).to_string()
+    }
+
+    /// One frame of a mate animation: the last regenerated assembly tab
+    /// resolved as if mate `mate` had `angle` and `offset`, as a JSON list
+    /// of rigid transforms (row-major 3x3 `m` and `t`), one per shown
+    /// body, that move it from where it is to where it would be; `null`
+    /// for a body that does not move, or overall when the frame cannot be
+    /// resolved (an unknown mate, or one that then fails).
+    pub fn mate_preview(&mut self, tab: u32, mate: u32, angle: f64, offset: f64) -> String {
+        let Some(current) = self.assembly.as_ref() else {
+            return "null".into();
+        };
+        let mate = ok_model::MateId(mate);
+        let Ok(next) = self
+            .inner
+            .preview_assembly(TabId(tab), mate, angle, offset)
+        else {
+            return "null".into();
+        };
+        if next.mate_errors.contains_key(&mate) || next.placed != current.placed {
+            return "null".into();
+        }
+        let deltas: Vec<Option<ok_brep::Transform>> = current
+            .placed
+            .iter()
+            .map(|id| {
+                let (from, to) = (current.transforms.get(id)?, next.transforms.get(id)?);
+                Some(to.then_inverse_of(from))
+            })
+            .collect();
+        serde_json::to_string(&deltas).unwrap()
     }
 
     pub fn body_count(&self) -> usize {

@@ -51,7 +51,7 @@ class App implements SketchHost {
 
   constructor(kernel: Kernel) {
     this.kernel = kernel;
-    this.viewer.onPick = (pick) => this.onViewportPick(pick);
+    this.viewer.onPick = (pick, e) => this.onViewportPick(pick, e);
     this.viewer.onEdgePick = (pick) => this.onEdgePick(pick);
     this.regenerate();
     this.viewer.fitAll();
@@ -205,23 +205,57 @@ class App implements SketchHost {
     return this.summary.mates.find((m) => m.id === id);
   }
 
-  onViewportPick(pick: FacePick | null): void {
+  /** The connector under the pointer: a corner when snapped to one, else an edge, else the picked face. */
+  connectorAt(e: PointerEvent | undefined, pick: FacePick | null): { connector: Connector; pick: FacePick; edge?: EdgePick } | null {
+    const inst = pick ? this.instanceAt(pick.body) : undefined;
+    const ref = pick ? this.faceRefOf(pick) : null;
+    if (!e || !pick || !inst || !ref) return null;
+    const corner = this.viewer.pickVertex(e);
+    if (corner && corner.body === pick.body) {
+      const refs = corner.faces.map((f) => this.summary.bodies[corner.body]!.faces[f]!.origin);
+      const distinct = refs.filter((r, i) => refs.findIndex((q) => q.feature === r.feature && q.local === r.local) === i);
+      const others = distinct.filter((r) => r.feature !== ref.feature || r.local !== ref.local);
+      if (others.length >= 2) return { connector: { instance: inst.id, face: ref, anchor: { type: "vertex", others: [others[0]!, others[1]!] } }, pick };
+    }
+    const edgeOrFace = this.viewer.pickEdgeOrFace(e);
+    if (edgeOrFace && "edge" in edgeOrFace && edgeOrFace.edge.body === pick.body) {
+      const edge = this.edgeRefOf(edgeOrFace.edge);
+      if (edge) {
+        const face = edge.a.feature === ref.feature && edge.a.local === ref.local ? edge.a : edge.b;
+        const other = face === edge.a ? edge.b : edge.a;
+        return { connector: { instance: inst.id, face, anchor: { type: "edge", other } }, pick, edge: edgeOrFace.edge };
+      }
+    }
+    return { connector: { instance: inst.id, face: ref }, pick };
+  }
+
+  describeConnector(c: Connector): string {
+    const name = this.instance(c.instance)?.name ?? "?";
+    const a = c.anchor ?? { type: "face" };
+    if (a.type === "edge") return `${name} · edge ${c.face.local}/${a.other.local} of feature ${c.face.feature}`;
+    if (a.type === "vertex") return `${name} · corner ${c.face.local}/${a.others[0].local}/${a.others[1].local} of feature ${c.face.feature}`;
+    return `${name} · face ${c.face.local} of feature ${c.face.feature}`;
+  }
+
+  onViewportPick(pick: FacePick | null, e?: PointerEvent): void {
     const ref = pick ? this.faceRefOf(pick) : null;
     if (this.summary.kind === "assembly") {
       const inst = pick ? this.instanceAt(pick.body) : undefined;
       if (this.matePick) {
-        if (!inst || !ref) return;
-        const connector: Connector = { instance: inst.id, face: ref };
+        const hit = this.connectorAt(e, pick);
+        if (!hit || !inst) return;
+        const connector = hit.connector;
         if (!this.matePick.a) {
           this.matePick.a = connector;
-          this.viewer.setSelectedFace(pick);
-          const f = this.kernel.connectorFrame(inst.id, ref);
+          this.viewer.setSelectedFace(hit.edge ? null : hit.pick);
+          this.viewer.setSelectedEdges(hit.edge ? [hit.edge] : []);
+          const f = this.kernel.connectorFrame(connector);
           this.viewer.setFrames(f ? [f] : []);
-          this.setStatus(`First connector: ${inst.name}. Now click a face on the other instance (Esc cancels).`);
+          this.setStatus(`First connector: ${this.describeConnector(connector)}. Now click a face, edge or corner on the other instance (Esc cancels).`);
           return;
         }
         if (this.matePick.a.instance === inst.id) {
-          this.setStatus("Pick a face on a different instance (Esc cancels).");
+          this.setStatus("Pick a face, edge or corner on a different instance (Esc cancels).");
           return;
         }
         const a = this.matePick.a;
@@ -273,13 +307,17 @@ class App implements SketchHost {
     }
     this.matePick = { a: null };
     this.viewer.pickMode = true;
-    this.setStatus("Mate: click a face on the first instance (Esc cancels)");
+    this.viewer.pickConnectors = true;
+    this.setStatus("Mate: click a face, edge or corner on the first instance (Esc cancels)");
   }
 
   endMatePick(): void {
     this.matePick = null;
     this.viewer.pickMode = false;
+    this.viewer.pickConnectors = false;
     this.viewer.setSelectedFace(null);
+    this.viewer.setSelectedEdges([]);
+    this.viewer.hoverEdgeOrFace(null);
     this.viewer.setFrames([]);
   }
 
@@ -695,10 +733,9 @@ class App implements SketchHost {
       }
       body.appendChild(field("Name", textInput(m.name, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, name: v } }))));
       body.appendChild(field("Kind", select(["fastened", "revolute", "slider", "cylindrical", "planar", "ball"], m.kind, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, kind: v as MateKind } }))));
-      const describe = (c: Connector) => `${this.instance(c.instance)?.name ?? "?"} · face ${c.face.local} of feature ${c.face.feature}`;
       const note = document.createElement("p");
       note.className = "note";
-      note.textContent = `A: ${describe(m.a)}\nB: ${describe(m.b)}. B moves onto A (or A onto B when only B is placed); faces meet with normals opposed unless flipped.`;
+      note.textContent = `A: ${this.describeConnector(m.a)}\nB: ${this.describeConnector(m.b)}. B moves onto A (or A onto B when only B is placed); connector frames meet with z axes opposed unless flipped (a face's z is its normal, an edge's runs along it, a corner's follows its face).`;
       body.appendChild(note);
       body.appendChild(field("Offset", numberInput(m.offset, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, offset: v } }))));
       body.appendChild(field("Angle°", numberInput(m.angle, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, angle: v } }))));
@@ -714,7 +751,7 @@ class App implements SketchHost {
     title.textContent = "Insert instance";
     const intro = document.createElement("p");
     intro.className = "note";
-    intro.textContent = "Pick a part studio and one of its bodies. The first instance is fixed; mate the rest to it with “+ Mate”: click a face on each of two instances and they meet face to face.";
+    intro.textContent = "Pick a part studio and one of its bodies. The first instance is fixed; mate the rest to it with “+ Mate”: click a face, edge or corner on each of two instances and their connector frames meet.";
     body.appendChild(intro);
     this.renderInsertForm(body);
   }

@@ -758,15 +758,39 @@ impl Document {
     /// itself leaves those instances without bodies (reported on them).
     pub fn regenerate_assembly(&mut self, tab: TabId) -> Result<AssemblyResult, ModelError> {
         let mut visiting = vec![tab];
-        self.regenerate_assembly_inner(tab, &mut visiting)
+        self.regenerate_assembly_inner(tab, &mut visiting, None)
+    }
+
+    /// Resolves an assembly tab as if mate `mate` had the given angle and
+    /// offset, without changing the document: the placement a mate
+    /// animation shows for one frame.
+    pub fn preview_assembly(
+        &mut self,
+        tab: TabId,
+        mate: MateId,
+        angle: f64,
+        offset: f64,
+    ) -> Result<AssemblyResult, ModelError> {
+        let mut visiting = vec![tab];
+        self.regenerate_assembly_inner(tab, &mut visiting, Some((mate, angle, offset)))
     }
 
     fn regenerate_assembly_inner(
         &mut self,
         tab: TabId,
         visiting: &mut Vec<TabId>,
+        tweak: Option<(MateId, f64, f64)>,
     ) -> Result<AssemblyResult, ModelError> {
-        let asm = self.assembly(tab)?.clone();
+        let mut asm = self.assembly(tab)?.clone();
+        if let Some((id, angle, offset)) = tweak {
+            let m = asm
+                .mates
+                .iter_mut()
+                .find(|m| m.id == id)
+                .ok_or_else(|| ModelError::Invalid(format!("no mate {}", id.0)))?;
+            m.angle = angle;
+            m.offset = offset;
+        }
         let mut studios: BTreeMap<TabId, RegenResult> = BTreeMap::new();
         let mut subs: BTreeMap<TabId, AssemblyResult> = BTreeMap::new();
         for inst in &asm.instances {
@@ -782,7 +806,7 @@ impl Document {
                 Some("assembly") => {
                     if !subs.contains_key(&source) && !visiting.contains(&source) {
                         visiting.push(source);
-                        if let Ok(r) = self.regenerate_assembly_inner(source, visiting) {
+                        if let Ok(r) = self.regenerate_assembly_inner(source, visiting, None) {
                             subs.insert(source, r);
                         }
                         visiting.pop();
@@ -988,6 +1012,7 @@ mod tests {
                             feature: e,
                             local: 1,
                         },
+                        anchor: crate::Anchor::Face,
                     },
                     b: Connector {
                         instance: b,
@@ -995,6 +1020,7 @@ mod tests {
                             feature: e,
                             local: 0,
                         },
+                        anchor: crate::Anchor::Face,
                     },
                     offset: 0.0,
                     angle: 0.0,
@@ -1118,6 +1144,7 @@ mod tests {
                             feature: e,
                             local: 1,
                         },
+                        anchor: crate::Anchor::Face,
                     },
                     b: Connector {
                         instance: b,
@@ -1125,6 +1152,7 @@ mod tests {
                             feature: e,
                             local: 0,
                         },
+                        anchor: crate::Anchor::Face,
                     },
                     offset: 0.0,
                     angle: 0.0,
