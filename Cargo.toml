@@ -7,6 +7,7 @@ members = [
     "crates/ok-brep",
     "crates/ok-model",
     "crates/ok-wasm",
+    "crates/ok-server",
 ]
 
 [workspace.package]

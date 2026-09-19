@@ -27,6 +27,15 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .studio-name:hover, .studio-name:focus { border-color: var(--border); background: var(--bg); outline: none; }
 .spacer { flex: 1; }
 .divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+.presence { font-size: 12px; color: var(--ok); padding: 0 6px; }
+dialog { background: var(--bg-panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px; min-width: 420px; padding: 16px; }
+dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+dialog h3 { margin: 0 0 8px; }
+.docs-list { list-style: none; padding: 0; margin: 8px 0; max-height: 300px; overflow-y: auto; }
+.docs-list li { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px dashed var(--border); }
+.docs-list li .dname { flex: 1; cursor: pointer; }
+.docs-list li .dname:hover { color: var(--accent); }
+.docs-list li .dwhen { color: var(--text-dim); font-size: 11px; }
 button { background: var(--bg-elev); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font: inherit; cursor: pointer; }
 button:hover { border-color: var(--accent); }
 button.primary { background: var(--accent); border-color: var(--accent); color: #0b1a2a; font-weight: 600; }

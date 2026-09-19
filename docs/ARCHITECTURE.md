@@ -239,6 +239,28 @@ existing point adds a coincident constraint and nearly axis-aligned lines
 get horizontal / vertical constraints. State lives in the kernel; the UI
 re-renders from the regen summary after every op.
 
+## Server and collaboration (`ok-server`)
+
+`ok-server` is an Axum binary that serves the built web app, stores
+documents as `.okpart` JSON files with a small metadata file each, and
+relays edits between clients:
+
+- REST: `GET/POST /api/docs`, `GET/PUT/DELETE /api/docs/:id`.
+- WebSocket `/api/docs/:id/ws`: a client sends `hello`, then `op`
+  messages carrying `ok_model::Op` JSON. The server applies each op to
+  its own copy of the document (rejecting invalid ones with an `error`
+  to the sender only), assigns a sequence number, persists, and
+  broadcasts the op to every client. `snapshot` returns the current
+  document; `presence` announces who is connected.
+
+The client applies its own ops optimistically and sends them; ops from
+others are applied on arrival. Because feature ids are allocated in op
+order, two clients that edit concurrently can diverge, so a client that
+receives someone else's op while its own ops are unacknowledged resyncs
+from a snapshot. Undo/redo while connected is sent as `replace_document`.
+This is deliberately simple; operational transformation or CRDT-style
+merging is future work.
+
 ## Conventions
 
 - Model units are millimetres; angles in the document are degrees.

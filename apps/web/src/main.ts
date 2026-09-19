@@ -4,6 +4,8 @@ import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
 import type { SketchHost, Tool } from "./sketcher";
+import { Sync } from "./sync";
+import type { DocMeta } from "./sync";
 
 const $ = <T extends HTMLElement>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -18,6 +20,15 @@ class App implements SketchHost {
   summary!: Summary;
   selected: number | null = null;
   sketcher = new Sketcher(this);
+  sync = new Sync(
+    {
+      remoteOp: (op) => this.applyRemote(op),
+      loadDocument: (json) => this.loadDocument(json),
+      presence: (clients, names) => this.showPresence(clients, names),
+      status: (text) => this.setStatus(text),
+    },
+    localStorage.getItem("offkilter.user") ?? `user-${Math.floor(Math.random() * 1000)}`,
+  );
   /** Face selected in the viewport, if any. */
   selectedFace: FaceRef | null = null;
   /** Pending face request from a panel: receives the picked face. */
@@ -185,7 +196,39 @@ class App implements SketchHost {
       this.history.pop();
       return;
     }
+    this.sync.send(op);
     this.regenerate();
+  }
+
+  /** An op from another client: apply without touching undo history. */
+  applyRemote(op: Op): void {
+    try {
+      this.kernel.apply(op);
+    } catch (e) {
+      this.setStatus(`remote edit failed locally: ${(e as Error).message}`);
+      return;
+    }
+    this.regenerate();
+  }
+
+  /** Replaces the document from the server (welcome or resync). */
+  loadDocument(json: string): void {
+    const fresh = Kernel.fromJson(json);
+    this.sketcher.exit();
+    this.kernel.dispose();
+    this.kernel = fresh;
+    this.history = [];
+    this.future = [];
+    this.updateHistoryButtons();
+    if (!this.summary || !this.feature(this.selected)) this.selected = null;
+    this.regenerate();
+  }
+
+  showPresence(clients: number, names: string[]): void {
+    const el = $("#presence");
+    el.hidden = !this.sync.connected;
+    el.textContent = `● ${clients} online`;
+    el.title = names.join(", ");
   }
 
   // ------------------------------------------------------------ undo / redo
@@ -217,6 +260,7 @@ class App implements SketchHost {
 
   /** Loads a document state while keeping selection and sketch mode where possible. */
   private restore(json: string): void {
+    if (this.sync.connected) this.sync.send({ type: "replace_document", json });
     const sketchId = this.sketcher.active ? this.sketcher.sketchId : null;
     this.sketcher.cancel();
     this.sketcher.selection.clear();
@@ -270,7 +314,9 @@ class App implements SketchHost {
   }
 
   applyRaw(op: Op): OpResult {
-    return this.kernel.apply(op);
+    const r = this.kernel.apply(op);
+    this.sync.send(op);
+    return r;
   }
 
   selectionChanged(): void {
@@ -292,10 +338,12 @@ class App implements SketchHost {
     this.lastRegenMs = dt;
     this.setStatus(this.statusLine());
     ($("#studio-name") as HTMLInputElement).value = this.summary.name;
-    try {
-      localStorage.setItem(STORAGE_KEY, this.kernel.toJson());
-    } catch {
-      /* storage unavailable */
+    if (!this.sync.connected) {
+      try {
+        localStorage.setItem(STORAGE_KEY, this.kernel.toJson());
+      } catch {
+        /* storage unavailable */
+      }
     }
   }
 
@@ -1160,7 +1208,89 @@ async function main(): Promise<void> {
   $("#btn-new").onclick = () => {
     if (confirm("Start a new empty part studio? Unsaved work is lost.")) app.replace(Kernel.empty());
   };
-  $("#btn-demo").onclick = () => app.replace(Kernel.demo());
+  $("#btn-demo").onclick = () => {
+    app.sync.disconnect();
+    app.showPresence(0, []);
+    app.replace(Kernel.demo());
+  };
+  // ---- documents on the server
+  const dialog = $("#docs-dialog") as HTMLDialogElement;
+  const renderDocs = async () => {
+    const list = $("#docs-list");
+    list.innerHTML = "";
+    const note = $("#docs-note");
+    if (!(await Sync.available())) {
+      note.textContent = "No document server at this origin. Run `cargo run -p ok-server -- --static apps/web/dist` and open its address to share documents.";
+      return;
+    }
+    note.textContent = app.sync.docId ? `Editing document ${app.sync.docId} live.` : "Open a document to edit it with others in real time.";
+    let docs: DocMeta[] = [];
+    try {
+      docs = await Sync.listDocs();
+    } catch (e) {
+      note.textContent = `Could not list documents: ${(e as Error).message}`;
+      return;
+    }
+    if (docs.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No documents yet.";
+      list.appendChild(li);
+    }
+    for (const d of docs) {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.className = "dname";
+      name.textContent = d.name;
+      name.onclick = () => {
+        dialog.close();
+        openDoc(d.id);
+      };
+      const when = document.createElement("span");
+      when.className = "dwhen";
+      when.textContent = new Date(d.updated * 1000).toLocaleString();
+      li.append(name, when, button("×", async () => {
+        if (confirm(`Delete "${d.name}" from the server?`)) {
+          await Sync.deleteDoc(d.id);
+          if (app.sync.docId === d.id) app.sync.disconnect();
+          await renderDocs();
+        }
+      }, "danger"));
+      list.appendChild(li);
+    }
+  };
+  const openDoc = (id: string) => {
+    app.sync.connect(id);
+    const url = new URL(location.href);
+    url.searchParams.set("doc", id);
+    history.replaceState(null, "", url.toString());
+  };
+  $("#btn-docs").onclick = async () => {
+    await renderDocs();
+    dialog.showModal();
+  };
+  $("#docs-close").onclick = () => dialog.close();
+  $("#docs-create").onclick = async () => {
+    const name = prompt("Document name", "Untitled");
+    if (!name) return;
+    try {
+      const meta = await Sync.createDoc(name);
+      dialog.close();
+      openDoc(meta.id);
+    } catch (e) {
+      $("#docs-note").textContent = `Could not create: ${(e as Error).message}`;
+    }
+  };
+  $("#docs-upload").onclick = async () => {
+    try {
+      const meta = await Sync.createDoc(app.summary.name, app.kernel.toJson());
+      dialog.close();
+      openDoc(meta.id);
+    } catch (e) {
+      $("#docs-note").textContent = `Could not upload: ${(e as Error).message}`;
+    }
+  };
+  const docParam = new URL(location.href).searchParams.get("doc");
+  if (docParam) openDoc(docParam);
   $("#btn-undo").onclick = () => app.undo();
   $("#btn-redo").onclick = () => app.redo();
   app.undo(); // no-op that initialises the button states

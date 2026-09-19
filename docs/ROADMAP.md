@@ -53,9 +53,11 @@ top are concrete and self-contained; items lower down are directions.
 
 ## Platform
 
-- [ ] Server-side regeneration using the same crates
+- [x] Document server (`ok-server`): storage, static app, REST
+- [ ] Server-side regeneration / validation beyond op checking
 - [ ] Version history: branches, merges and diffs over the op log
-- [ ] Real-time multi-user editing (op-based sync)
+- [x] Real-time multi-user editing (ops relayed in server order; resync on concurrent edits)
+- [ ] Conflict-free concurrent editing (transform or CRDT over the op log)
 - [ ] Accounts, sharing, teams
 
 ## Engineering

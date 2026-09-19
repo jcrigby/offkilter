@@ -24,9 +24,12 @@ works today, all in the browser:
 - Workflow: undo/redo, `.okpart` JSON documents, STL export, mass
   properties.
 
+- Cloud: a small document server with real-time multi-user editing
+  (ops relayed in server order).
+
 Not yet: exact curved surfaces (arcs are 5° facets), sweeps and lofts,
-shells, assemblies, drawings, STEP, server-side regeneration and
-collaboration. See [docs/ROADMAP.md](docs/ROADMAP.md).
+shells, assemblies, drawings, STEP, accounts, and merge-friendly
+concurrent editing (concurrent edits resync from the server). See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout
 
@@ -38,6 +41,7 @@ collaboration. See [docs/ROADMAP.md](docs/ROADMAP.md).
 | `crates/ok-mesh` | Triangle meshes for display. |
 | `crates/ok-model` | Part studio, features, operations (`Op`) and regeneration. |
 | `crates/ok-wasm` | WebAssembly bindings used by the web client. |
+| `crates/ok-server` | Document server: storage, static app, real-time op relay. |
 | `apps/web` | Vite + TypeScript + three.js client. |
 | `docs/` | Architecture and roadmap. |
 
@@ -63,6 +67,18 @@ Select a feature to edit it; press `f` to fit the view. In sketch mode:
 `Esc` finishes; right-drag orbits. Click a face to select it, then
 "+ Sketch" sketches on it. Documents are saved as `.okpart` JSON files and
 also kept in the browser's local storage.
+
+## Running the document server
+
+```sh
+cd apps/web && npm run build && cd ../..
+cargo run -p ok-server -- --static apps/web/dist --data ./data --port 8080
+```
+
+Open http://localhost:8080, click **Docs**, create a document, and share
+its URL (`?doc=<id>`): everyone with it edits the same feature list live.
+During development run `npm run dev` in `apps/web`; it proxies `/api` to
+the server on port 8080.
 
 ## Using the kernel from Rust
 

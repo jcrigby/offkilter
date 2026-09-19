@@ -173,6 +173,10 @@ pub enum Op {
         field: String,
         expression: Option<String>,
     },
+    /// Replaces the whole document (used to sync undo/redo between clients).
+    ReplaceDocument {
+        json: String,
+    },
     SetSketchPlane {
         id: FeatureId,
         plane: PlaneRef,
@@ -445,6 +449,11 @@ impl PartStudio {
                         f.bindings.remove(&field);
                     }
                 }
+            }
+            Op::ReplaceDocument { json } => {
+                let replacement =
+                    PartStudio::from_json(&json).map_err(|e| ModelError::Invalid(e.to_string()))?;
+                *self = replacement;
             }
             Op::SetSketchPlane { id, plane } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Sketch(s) => s.plane = plane,

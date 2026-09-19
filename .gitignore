@@ -4,3 +4,4 @@
 /apps/web/src/wasm/
 *.log
 .DS_Store
+/data

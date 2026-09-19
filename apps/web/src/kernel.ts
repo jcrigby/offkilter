@@ -129,6 +129,7 @@ export type Op =
   | { type: "add_variable"; name: string; expression: string }
   | { type: "set_variable"; id: number; name?: string | null; expression?: string | null }
   | { type: "set_binding"; id: number; field: string; expression: string | null }
+  | { type: "replace_document"; json: string }
   | { type: "set_sketch_plane"; id: number; plane: PlaneRef }
   | { type: "rename_feature"; id: number; name: string }
   | { type: "set_suppressed"; id: number; suppressed: boolean }

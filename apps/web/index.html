@@ -16,6 +16,8 @@
         <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
         <button id="btn-redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
         <span class="divider"></span>
+        <button id="btn-docs" title="Documents on the server">Docs</button>
+        <span id="presence" class="presence" hidden></span>
         <button id="btn-new" title="New empty part studio">New</button>
         <button id="btn-demo" title="Load the example part">Demo</button>
         <button id="btn-open" title="Open a .okpart JSON file">Open</button>
@@ -50,6 +52,16 @@
       <main id="viewport"></main>
       <footer id="statusbar"><span id="status-text">loading kernel…</span></footer>
     </div>
+    <dialog id="docs-dialog">
+      <h3>Documents</h3>
+      <p class="note" id="docs-note"></p>
+      <ul id="docs-list" class="docs-list"></ul>
+      <div class="row">
+        <button id="docs-create" class="primary">New document</button>
+        <button id="docs-upload">Upload current</button>
+        <button id="docs-close">Close</button>
+      </div>
+    </dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
