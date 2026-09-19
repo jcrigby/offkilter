@@ -295,12 +295,122 @@ impl Solid {
             faces,
             surfaces,
         };
-        solid.repair_t_junctions(tol);
+        // Splitting an edge at a T-junction can expose a short edge, and
+        // collapsing one can create a new T-junction, so alternate until
+        // stable (two rounds in practice).
+        // Splitting an edge at a T-junction can expose a short edge or an
+        // open vertex, and merging vertices can create a new T-junction,
+        // so alternate until stable (two rounds in practice).
+        for _ in 0..4 {
+            solid.repair_t_junctions(tol);
+            let mut changed = solid.collapse_short_edges(tol * 10.0);
+            changed |= solid.stitch_open_vertices(tol * 10.0);
+            if !changed {
+                break;
+            }
+        }
         solid.remove_spikes(tol);
         solid.remove_degenerate_faces();
         solid.compact_surfaces();
         solid.validate()?;
         Ok(solid)
+    }
+
+    /// Merges the endpoints of every edge shorter than `thr`. Grazing
+    /// intersections leave the faces around a corner disagreeing by a sliver
+    /// a few tolerances across; collapsing those edges brings the corner
+    /// back to one vertex.
+    fn collapse_short_edges(&mut self, thr: f64) -> bool {
+        let mut pairs = Vec::new();
+        for f in &self.faces {
+            for l in &f.loops {
+                for i in 0..l.len() {
+                    let (a, b) = (l[i], l[(i + 1) % l.len()]);
+                    if self.vertices[a as usize].distance(self.vertices[b as usize]) < thr {
+                        pairs.push((a, b));
+                    }
+                }
+            }
+        }
+        self.merge_vertex_pairs(&pairs, thr)
+    }
+
+    /// Merges vertices on open (unmatched) edges that lie within `thr` of
+    /// each other: two faces that should share a corner but disagree on it
+    /// by slightly more than the merge tolerance.
+    fn stitch_open_vertices(&mut self, thr: f64) -> bool {
+        let mut dir: HashMap<EdgeKey, (i32, usize)> = HashMap::new();
+        for (a, b, _) in self.directed_edges() {
+            let e = dir.entry(edge_key(a, b)).or_insert((0, 0));
+            e.0 += if a < b { 1 } else { -1 };
+            e.1 += 1;
+        }
+        let mut open: Vec<u32> = dir
+            .iter()
+            .filter(|(_, (sum, count))| *count % 2 != 0 || *sum != 0)
+            .flat_map(|((a, b), _)| [*a, *b])
+            .collect();
+        open.sort_unstable();
+        open.dedup();
+        if open.len() < 2 {
+            return false;
+        }
+        let mut pairs = Vec::new();
+        for (i, &a) in open.iter().enumerate() {
+            for &b in &open[i + 1..] {
+                if self.vertices[a as usize].distance(self.vertices[b as usize]) < thr {
+                    pairs.push((a, b));
+                }
+            }
+        }
+        self.merge_vertex_pairs(&pairs, thr)
+    }
+
+    /// Unifies the given vertex pairs (union-find), rewriting every loop.
+    /// Clusters stay within `thr` of their representative so chains of
+    /// close vertices never collapse into one point. Returns whether
+    /// anything changed.
+    fn merge_vertex_pairs(&mut self, pairs: &[(u32, u32)], thr: f64) -> bool {
+        if pairs.is_empty() {
+            return false;
+        }
+        let n = self.vertices.len();
+        let mut parent: Vec<u32> = (0..n as u32).collect();
+        fn find(parent: &mut [u32], mut i: u32) -> u32 {
+            while parent[i as usize] != i {
+                parent[i as usize] = parent[parent[i as usize] as usize];
+                i = parent[i as usize];
+            }
+            i
+        }
+        let mut merged = false;
+        for &(a, b) in pairs {
+            let (ra, rb) = (find(&mut parent, a), find(&mut parent, b));
+            if ra == rb {
+                continue;
+            }
+            if self.vertices[ra as usize].distance(self.vertices[rb as usize]) < thr {
+                parent[rb as usize] = ra;
+                merged = true;
+            }
+        }
+        if !merged {
+            return false;
+        }
+        for f in &mut self.faces {
+            for l in &mut f.loops {
+                for v in l.iter_mut() {
+                    *v = find(&mut parent, *v);
+                }
+                l.dedup();
+                while l.len() > 1 && l.first() == l.last() {
+                    l.pop();
+                }
+            }
+            f.loops.retain(|l| l.len() >= 3);
+        }
+        self.faces.retain(|f| !f.loops.is_empty());
+        true
     }
 
     /// Inserts any vertex lying strictly inside an edge into that edge.

@@ -258,3 +258,14 @@ fn general_position_boolean_sequences_stay_closed() {
 fn general_position_boolean_sequences_stay_closed_long() {
     run_general(41..=400);
 }
+
+/// Reruns one general-position seed: `OK_FUZZ_SEED=186 cargo test -p ok-brep --test fuzz general_position_seed -- --ignored --nocapture`.
+#[test]
+#[ignore]
+fn general_position_seed() {
+    let seed: u64 = std::env::var("OK_FUZZ_SEED")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1);
+    run_general(seed..=seed);
+}

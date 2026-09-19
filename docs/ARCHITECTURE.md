@@ -283,7 +283,14 @@ with averaged normals like `Revolved`.
 within a size-relative tolerance, inserts vertices that lie on other
 polygons' edges (T-junctions), strips zero-width spikes, and validates
 that every edge is used an even number of times with balanced orientation.
-Anything that fails validation is an error, never a displayed body.
+Two repairs run between the T-junction pass and validation, and the three
+alternate until nothing changes: edges shorter than ten tolerances are
+collapsed, and vertices on still-open edges that lie within ten
+tolerances of each other are merged. Both target the same defect, a
+grazing intersection that leaves the faces around one corner disagreeing
+on it by slightly more than the merge tolerance (a sliver triangle or two
+near-coincident corner vertices). Anything that still fails validation is
+an error, never a displayed body.
 
 ### Booleans (`boolean.rs`)
 
@@ -414,7 +421,7 @@ Three layers guard the kernel. Unit tests in each crate check numbers
 `crates/ok-brep/tests/fuzz.rs` run sequences of unions, differences and
 intersections and check closure and volume bounds: one on an integer grid
 so coplanar and touching cases are common, one in general position with
-rotated tools and tiny nudges (`OK_FUZZ_EPS` picks the nudge sizes) so
+rotated tools and tiny nudges (`OK_FUZZ_EPS` picks the nudge sizes, `OK_FUZZ_SEED` replays one seed) so
 nearly coincident geometry is common. `crates/ok-model/tests/parts.rs`
 is a corpus of realistic parts built through ops, each regenerated
 without errors, validated closed and checked against hand-calculated
