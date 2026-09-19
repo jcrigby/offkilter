@@ -546,3 +546,37 @@ test("shell hollows a box and opens a picked face", async ({ page }) => {
   await page.waitForTimeout(500);
   expect(await volume(page)).toBeCloseTo(before, 3);
 });
+
+test("polygon and slot sketch tools", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.defaultValue() || "top") : d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.click("#btn-add-sketch");
+  await page.waitForTimeout(300);
+  // Hexagon (the prompt's default of 6 sides is accepted): centre then a corner.
+  await page.keyboard.press("p");
+  await clickViewport(page, 0.35, 0.5);
+  await clickViewport(page, 0.42, 0.5);
+  // Slot: two centres and a width point.
+  await page.keyboard.press("n");
+  await clickViewport(page, 0.55, 0.45);
+  await clickViewport(page, 0.7, 0.45);
+  await clickViewport(page, 0.6, 0.5);
+  const kinds = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const f = app.summary.features.find((x: any) => x.kind.type === "sketch");
+    const counts: Record<string, number> = {};
+    for (const e of f.kind.sketch.entities) counts[e.type] = (counts[e.type] ?? 0) + 1;
+    return { counts, regions: app.summary.sketches[String(f.id)].profiles.length, dof: app.summary.sketches[String(f.id)].solve.dof };
+  });
+  expect(kinds.counts.line).toBe(6 + 2);
+  expect(kinds.counts.arc).toBe(2);
+  expect(kinds.regions).toBe(2);
+  // Hexagon: centre, size, rotation (4); slot: two centres and the radius (5).
+  expect(kinds.dof).toBe(9);
+  await page.getByRole("button", { name: "Done" }).click();
+  await page.click("#btn-add-extrude");
+  await page.waitForTimeout(300);
+  expect(await status(page)).toContain("1 body");
+});

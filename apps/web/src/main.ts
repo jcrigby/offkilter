@@ -2449,7 +2449,7 @@ async function main(): Promise<void> {
       } else app.onViewportPick(null);
     }
     if (app.sketcher.active) {
-      const tool = ({ s: "select", l: "line", r: "rectangle", c: "circle", a: "arc", t: "trim", u: "use" } as Record<string, Tool>)[e.key.toLowerCase()];
+      const tool = ({ s: "select", l: "line", r: "rectangle", c: "circle", a: "arc", p: "polygon", n: "slot", t: "trim", u: "use" } as Record<string, Tool>)[e.key.toLowerCase()];
       if (tool) app.sketcher.setTool(tool);
       if (e.key.toLowerCase() === "o") app.sketcher.offsetSelection();
       if (e.key.toLowerCase() === "m") app.sketcher.beginMirror();

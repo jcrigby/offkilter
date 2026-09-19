@@ -832,6 +832,45 @@ mod tests {
     }
 
     #[test]
+    fn regular_polygon_and_slot_form_regions_with_the_expected_areas() {
+        let mut s = Sketch::new();
+        let lines = s.add_regular_polygon(v(0.0, 0.0), v(10.0, 0.0), 6);
+        assert_eq!(lines.len(), 6);
+        let solve = s.solve();
+        assert!(matches!(solve.status, SolveStatus::UnderConstrained));
+        let profiles = s.profiles(&ProfileOptions::default());
+        assert_eq!(profiles.len(), 1);
+        let hexagon = 1.5 * 3f64.sqrt() * 100.0;
+        assert!(
+            (profiles[0].area().abs() - hexagon).abs() < 1e-6,
+            "{}",
+            profiles[0].area()
+        );
+        // Centre (2), one corner (2): four degrees of freedom remain.
+        assert_eq!(solve.dof, 4);
+
+        let mut s = Sketch::new();
+        let ids = s.add_slot(v(0.0, 0.0), v(20.0, 0.0), 6.0);
+        assert_eq!(ids.len(), 4);
+        let solve = s.solve();
+        assert!(matches!(solve.status, SolveStatus::UnderConstrained));
+        let opts = ProfileOptions {
+            arc_segment_angle: 0.5f64.to_radians(),
+            ..Default::default()
+        };
+        let profiles = s.profiles(&opts);
+        assert_eq!(profiles.len(), 1);
+        let slot = 20.0 * 6.0 + std::f64::consts::PI * 9.0;
+        assert!(
+            (profiles[0].area().abs() - slot).abs() < 0.05,
+            "{}",
+            profiles[0].area()
+        );
+        // Two centres (4) and the radius (1).
+        assert_eq!(solve.dof, 5, "{solve:?}");
+    }
+
+    #[test]
     fn mirror_a_triangle_across_a_construction_line() {
         let mut s = Sketch::new();
         let (axis, _, _) = s.add_line(v(0.0, -10.0), v(0.0, 10.0));

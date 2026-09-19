@@ -175,6 +175,8 @@ export type SketchOp =
   | { type: "add_line"; a: Vec2; b: Vec2 }
   | { type: "add_rectangle"; a: Vec2; b: Vec2 }
   | { type: "add_circle"; center: Vec2; radius: number }
+  | { type: "add_polygon"; center: Vec2; vertex: Vec2; sides: number }
+  | { type: "add_slot"; a: Vec2; b: Vec2; width: number }
   | { type: "add_arc"; center: Vec2; start: Vec2; end: Vec2 }
   | { type: "add_constraint"; constraint: Constraint }
   | { type: "remove_constraint"; id: number }

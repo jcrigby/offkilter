@@ -9,7 +9,7 @@
 import type { Constraint, Entity, Op, OpResult, PlaneFrame, SketchCurve, SketchData, SketchOp, Summary, Vec2, Vec3 } from "./kernel";
 import type { PointerHandler, Viewer } from "./viewer";
 
-export type Tool = "select" | "line" | "rectangle" | "circle" | "arc" | "trim" | "use";
+export type Tool = "select" | "line" | "rectangle" | "circle" | "arc" | "polygon" | "slot" | "trim" | "use";
 
 export interface SketchHost {
   summary: Summary;
@@ -56,7 +56,7 @@ export class Sketcher implements PointerHandler {
     this.host.viewer.setSketchMouse(true);
     const plane = this.plane();
     if (plane) this.host.viewer.lookAtPlane(plane);
-    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · T trim · O offset · M mirror · U use · S select · Q construction · right-drag orbits · Esc finishes");
+    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · P polygon · N slot · T trim · O offset · M mirror · U use · S select · Q construction · right-drag orbits · Esc finishes");
   }
 
   exit(): void {
@@ -316,6 +316,12 @@ export class Sketcher implements PointerHandler {
       case "arc":
         this.clickArc(s);
         break;
+      case "polygon":
+        this.clickPolygon(s);
+        break;
+      case "slot":
+        this.clickSlot(s);
+        break;
     }
   }
 
@@ -371,9 +377,102 @@ export class Sketcher implements PointerHandler {
         }
         return [[this.lift(a), this.lift(start)], pts];
       }
+      case "polygon": {
+        const n = this.polygonSides;
+        const pts: Vec3[] = [];
+        for (let i = 0; i <= n; i++) {
+          const t = (Math.PI * 2 * i) / n;
+          const dx = cur.x - a.x, dy = cur.y - a.y;
+          pts.push(this.lift({ x: a.x + dx * Math.cos(t) - dy * Math.sin(t), y: a.y + dx * Math.sin(t) + dy * Math.cos(t) }));
+        }
+        return [pts];
+      }
+      case "slot": {
+        if (this.pending.length === 1) return [[this.lift(a), this.lift(cur)]];
+        const b = this.pending[1]!;
+        const r = slotHalfWidth(a, b, cur);
+        if (r < 1e-9) return [[this.lift(a), this.lift(b)]];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        const ux = (b.x - a.x) / len, uy = (b.y - a.y) / len;
+        const pts: Vec3[] = [];
+        const t0 = Math.atan2(uy, ux);
+        for (let i = 0; i <= 18; i++) {
+          const t = t0 - Math.PI / 2 + (Math.PI * i) / 18;
+          pts.push(this.lift({ x: b.x + r * Math.cos(t), y: b.y + r * Math.sin(t) }));
+        }
+        for (let i = 0; i <= 18; i++) {
+          const t = t0 + Math.PI / 2 + (Math.PI * i) / 18;
+          pts.push(this.lift({ x: a.x + r * Math.cos(t), y: a.y + r * Math.sin(t) }));
+        }
+        pts.push(pts[0]!);
+        return [pts];
+      }
       default:
         return [];
     }
+  }
+
+  /** Sides for the polygon tool; asked for on the first click and remembered. */
+  polygonSides = 6;
+
+  /** Polygon tool: centre, then one corner. */
+  private clickPolygon(s: { pos: Vec2; id: number | null }): void {
+    if (this.pending.length === 0) {
+      const answer = prompt("Number of sides", String(this.polygonSides));
+      if (answer === null) return;
+      const n = Math.round(Number(answer));
+      if (!Number.isFinite(n) || n < 3 || n > 64) {
+        this.host.setStatus("A polygon needs between 3 and 64 sides.");
+        return;
+      }
+      this.polygonSides = n;
+      this.pending = [s.pos];
+      this.pendingIds = [s.id];
+      return;
+    }
+    const c = this.pending[0]!;
+    if (Math.hypot(s.pos.x - c.x, s.pos.y - c.y) < 1e-9) return;
+    this.host.snapshot();
+    try {
+      this.sketchOp({ type: "add_polygon", center: c, vertex: s.pos, sides: this.polygonSides });
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.cancel();
+    this.host.regenerate();
+  }
+
+  /** Slot tool: one centre, the other centre, then a point setting the width. */
+  private clickSlot(s: { pos: Vec2; id: number | null }): void {
+    if (this.pending.length < 2) {
+      if (this.pending.length === 1 && Math.hypot(s.pos.x - this.pending[0]!.x, s.pos.y - this.pending[0]!.y) < 1e-9) return;
+      this.pending.push(s.pos);
+      this.pendingIds.push(s.id);
+      return;
+    }
+    const [a, b] = [this.pending[0]!, this.pending[1]!];
+    const r = slotHalfWidth(a, b, s.pos);
+    if (r < 1e-9) return;
+    this.host.snapshot();
+    try {
+      const out = this.sketchOp({ type: "add_slot", a, b, width: 2 * r });
+      // Snapped centres stay tied to what they snapped to: the arcs' centres are entities 1 and 3.
+      const arcB = out.entities[1], arcA = out.entities[3];
+      const centreOf = (arc: number | undefined) => {
+        const e = this.host.summary.features.find((f) => f.id === this.sketchId)?.kind;
+        if (!e || e.type !== "sketch" || arc === undefined) return null;
+        const ent = e.sketch.entities.find((x) => x.id === arc);
+        return ent && ent.type === "arc" ? ent.center : null;
+      };
+      const [idA, idB] = [this.pendingIds[0], this.pendingIds[1]];
+      const ca = centreOf(arcA), cb = centreOf(arcB);
+      if (idA !== null && idA !== undefined && ca !== null) this.constrain({ type: "coincident", a: ca, b: idA });
+      if (idB !== null && idB !== undefined && cb !== null) this.constrain({ type: "coincident", a: cb, b: idB });
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.cancel();
+    this.host.regenerate();
   }
 
   private sketchOp(op: SketchOp): OpResult {
@@ -628,4 +727,11 @@ function segmentDistance(p: { x: number; y: number }, a: { x: number; y: number 
   const len2 = dx * dx + dy * dy;
   const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
   return Math.hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t));
+}
+
+/** Half the width of a slot from `a` to `b` whose edge passes through `p`. */
+function slotHalfWidth(a: Vec2, b: Vec2, p: Vec2): number {
+  const len = Math.hypot(b.x - a.x, b.y - a.y);
+  if (len < 1e-9) return 0;
+  return Math.abs(((b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x)) / len);
 }

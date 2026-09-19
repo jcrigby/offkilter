@@ -280,6 +280,81 @@ impl Sketch {
         lines
     }
 
+    /// Adds a regular polygon with `sides` sides centred on `center` with
+    /// one corner at `vertex`: lines tied corner to corner, held equal in
+    /// length and at equal turns, so it stays regular while its centre,
+    /// size and rotation move. Returns the line ids in order.
+    pub fn add_regular_polygon(
+        &mut self,
+        center: Vec2,
+        vertex: Vec2,
+        sides: usize,
+    ) -> Vec<EntityId> {
+        let sides = sides.max(3);
+        let r = vertex - center;
+        let corners: Vec<Vec2> = (0..sides)
+            .map(|i| {
+                let t = std::f64::consts::TAU * i as f64 / sides as f64;
+                let (sn, cs) = t.sin_cos();
+                center + Vec2::new(r.x * cs - r.y * sn, r.x * sn + r.y * cs)
+            })
+            .collect();
+        let mut lines = Vec::with_capacity(sides);
+        let mut ends: Vec<(EntityId, EntityId)> = Vec::new();
+        for i in 0..sides {
+            let (l, a, b) = self.add_line(corners[i], corners[(i + 1) % sides]);
+            lines.push(l);
+            ends.push((a, b));
+        }
+        for i in 0..sides {
+            let (_, e) = ends[i];
+            let (a, _) = ends[(i + 1) % sides];
+            self.add_constraint(Constraint::Coincident { a: e, b: a });
+        }
+        for i in 1..sides {
+            self.add_constraint(Constraint::Equal {
+                a: lines[0],
+                b: lines[i],
+            });
+        }
+        // Equal sides alone still flex; fixing the turn between
+        // consecutive sides makes it regular. The last two turns follow
+        // from closure, so constraining them would be redundant.
+        for i in 0..sides.saturating_sub(3) {
+            self.add_constraint(Constraint::Angle {
+                a: lines[i],
+                b: lines[i + 1],
+                value: 360.0 / sides as f64,
+            });
+        }
+        lines
+    }
+
+    /// Adds a slot: two lines joined by semicircular ends of `width / 2`
+    /// radius around the centres `a` and `b`. The lines are tangent to the
+    /// arcs and the arcs share their radius. Returns [line, arc at `b`,
+    /// line, arc at `a`].
+    pub fn add_slot(&mut self, a: Vec2, b: Vec2, width: f64) -> Vec<EntityId> {
+        let r = width.abs() / 2.0;
+        let d = b - a;
+        let len = d.length().max(1e-9);
+        let perp = Vec2::new(-d.y / len, d.x / len) * r;
+        let (p1, p2, p3, p4) = (a + perp, b + perp, b - perp, a - perp);
+        let (l1, l1s, l1e) = self.add_line(p1, p2);
+        let (arc_b, cb, bs, be) = self.add_arc(b, p3, p2);
+        let (l2, l2s, l2e) = self.add_line(p3, p4);
+        let (arc_a, ca, as_, ae) = self.add_arc(a, p1, p4);
+        for (x, y) in [(l1e, be), (bs, l2s), (l2e, ae), (as_, l1s)] {
+            self.add_constraint(Constraint::Coincident { a: x, b: y });
+        }
+        for (line, entity) in [(l1, arc_a), (l1, arc_b), (l2, arc_a), (l2, arc_b)] {
+            self.add_constraint(Constraint::Tangent { line, entity });
+        }
+        self.add_constraint(Constraint::Equal { a: arc_a, b: arc_b });
+        let _ = (cb, ca);
+        vec![l1, arc_b, l2, arc_a]
+    }
+
     pub fn is_construction(&self, id: EntityId) -> bool {
         self.construction.contains(&id)
     }

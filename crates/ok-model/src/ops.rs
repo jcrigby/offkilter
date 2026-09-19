@@ -33,6 +33,18 @@ pub enum SketchOp {
         start: Vec2,
         end: Vec2,
     },
+    /// Regular polygon centred on `center` with a corner at `vertex`.
+    AddPolygon {
+        center: Vec2,
+        vertex: Vec2,
+        sides: u32,
+    },
+    /// Slot between centres `a` and `b` of the given width.
+    AddSlot {
+        a: Vec2,
+        b: Vec2,
+        width: f64,
+    },
     AddConstraint {
         constraint: Constraint,
     },
@@ -985,6 +997,30 @@ impl PartStudio {
                         SketchOp::AddArc { center, start, end } => {
                             let (a, c, s, e) = sk.add_arc(center, start, end);
                             out.entities.extend([a, c, s, e]);
+                        }
+                        SketchOp::AddPolygon {
+                            center,
+                            vertex,
+                            sides,
+                        } => {
+                            if !(3..=64).contains(&sides) {
+                                return Err(ModelError::Invalid(
+                                    "a polygon needs between 3 and 64 sides".into(),
+                                ));
+                            }
+                            out.entities.extend(sk.add_regular_polygon(
+                                center,
+                                vertex,
+                                sides as usize,
+                            ));
+                        }
+                        SketchOp::AddSlot { a, b, width } => {
+                            if width <= 0.0 || !width.is_finite() || (b - a).length() < 1e-9 {
+                                return Err(ModelError::Invalid(
+                                    "a slot needs distinct centres and a positive width".into(),
+                                ));
+                            }
+                            out.entities.extend(sk.add_slot(a, b, width));
                         }
                         SketchOp::AddConstraint { constraint } => {
                             for r in constraint.references() {

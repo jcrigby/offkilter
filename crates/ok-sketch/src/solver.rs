@@ -288,8 +288,19 @@ impl<'a> Eval<'a> {
                     let (s, e) = self.line_points(*line)?;
                     let (c, rad) = self.circular(*entity)?;
                     let d = e - s;
-                    let dist = ((c - s).cross(d) / d.length().max(tol::LINEAR)).abs();
-                    Some(dist - rad)
+                    let len = d.length().max(tol::LINEAR);
+                    // When an endpoint sits on the circle (a slot's line
+                    // meeting its arc) the distance form is at a maximum
+                    // there and has no gradient; the radius must then be
+                    // perpendicular to the line instead.
+                    let near = 1e-6 * rad.max(1.0);
+                    let at_end = [s, e]
+                        .into_iter()
+                        .find(|p| (p.distance(c) - rad).abs() <= near);
+                    Some(match at_end {
+                        Some(p) => (p - c).dot(d) / len,
+                        None => ((c - s).cross(d) / len).abs() - rad,
+                    })
                 })());
             }
         }
