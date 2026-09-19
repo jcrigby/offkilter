@@ -259,6 +259,33 @@ pub struct PatternFeature {
     pub op: CopyOp,
 }
 
+/// A drilled hole at every standalone point of a sketch.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HoleFeature {
+    pub sketch: FeatureId,
+    pub diameter: f64,
+    /// Depth from the sketch plane; ignored when `through_all`.
+    pub depth: f64,
+    #[serde(default)]
+    pub through_all: bool,
+    /// Drilling direction relative to the sketch normal.
+    #[serde(default = "reverse")]
+    pub direction: ExtrudeDirection,
+    /// Optional counterbore: a wider, shallower cylinder from the plane.
+    #[serde(default)]
+    pub counterbore: Option<Counterbore>,
+}
+
+fn reverse() -> ExtrudeDirection {
+    ExtrudeDirection::Reverse
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Counterbore {
+    pub diameter: f64,
+    pub depth: f64,
+}
+
 /// A named value later features can use in expressions as `#name`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VariableFeature {
@@ -276,6 +303,7 @@ pub enum FeatureKind {
     Mirror(MirrorFeature),
     Pattern(PatternFeature),
     Variable(VariableFeature),
+    Hole(HoleFeature),
 }
 
 impl FeatureKind {
@@ -291,6 +319,7 @@ impl FeatureKind {
             FeatureKind::Mirror(_) => "Mirror",
             FeatureKind::Pattern(_) => "Pattern",
             FeatureKind::Variable(_) => "Variable",
+            FeatureKind::Hole(_) => "Hole",
         }
     }
 
@@ -316,6 +345,12 @@ impl FeatureKind {
                 PatternKind::Circular { .. } => vec!["angle".into(), "count".into()],
             },
             FeatureKind::Variable(_) => vec![],
+            FeatureKind::Hole(_) => vec![
+                "diameter".into(),
+                "depth".into(),
+                "cbore_diameter".into(),
+                "cbore_depth".into(),
+            ],
         }
     }
 
@@ -372,6 +407,32 @@ impl FeatureKind {
                 }
                 _ => Err("angle applies to circular patterns".into()),
             },
+            (FeatureKind::Hole(h), "diameter") => {
+                h.diameter = value;
+                Ok(())
+            }
+            (FeatureKind::Hole(h), "depth") => {
+                h.depth = value;
+                Ok(())
+            }
+            (FeatureKind::Hole(h), "cbore_diameter") => {
+                let mut cb = h.counterbore.unwrap_or(Counterbore {
+                    diameter: value,
+                    depth: 1.0,
+                });
+                cb.diameter = value;
+                h.counterbore = Some(cb);
+                Ok(())
+            }
+            (FeatureKind::Hole(h), "cbore_depth") => {
+                let mut cb = h.counterbore.unwrap_or(Counterbore {
+                    diameter: h.diameter * 2.0,
+                    depth: value,
+                });
+                cb.depth = value;
+                h.counterbore = Some(cb);
+                Ok(())
+            }
             (_, f) => Err(format!("no bindable field '{f}'")),
         }
     }
@@ -382,6 +443,7 @@ impl FeatureKind {
             FeatureKind::Sketch(_) => None,
             FeatureKind::Extrude(e) => Some(e.sketch),
             FeatureKind::Revolve(r) => Some(r.sketch),
+            FeatureKind::Hole(h) => Some(h.sketch),
             FeatureKind::Blend(_)
             | FeatureKind::Mirror(_)
             | FeatureKind::Pattern(_)

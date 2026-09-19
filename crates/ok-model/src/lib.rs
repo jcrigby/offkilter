@@ -11,10 +11,10 @@ mod ops;
 mod regen;
 
 pub use feature::{
-    canonical_frame, Axis, BlendFeature, BlendKind, BodyOp, CopyOp, EdgeRef, ExtrudeDirection,
-    ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind, MirrorFeature,
-    PatternFeature, PatternKind, PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature,
-    SketchFeature, StandardPlane, VariableFeature,
+    canonical_frame, Axis, BlendFeature, BlendKind, BodyOp, CopyOp, Counterbore, EdgeRef,
+    ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind,
+    HoleFeature, MirrorFeature, PatternFeature, PatternKind, PlaneRef, ProfileSelection,
+    RevolveAxis, RevolveFeature, SketchFeature, StandardPlane, VariableFeature,
 };
 pub use ops::{Op, OpResult, SketchOp};
 pub use regen::{Body, FeatureStatus, RegenResult, SketchCurve, SketchResult};

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { featureNames, ready, status } from "./helpers";
+import { featureNames, ready } from "./helpers";
 
 const SERVER = process.env.OK_SERVER ?? "http://localhost:8080";
 
@@ -21,18 +21,18 @@ test("two clients edit one document live", async ({ browser }) => {
   await a.click("#btn-docs");
   await a.click("#docs-upload");
   await a.waitForFunction(() => new URL(location.href).searchParams.get("doc") !== null);
-  await a.waitForTimeout(300);
+  await expect(a.locator("#presence")).toContainText("1 online", { timeout: 10_000 });
   await b.goto(a.url());
   await ready(b);
-  await b.waitForTimeout(300);
-  expect(await a.textContent("#presence")).toContain("2 online");
+  await expect(a.locator("#presence")).toContainText("2 online", { timeout: 10_000 });
+  await expect(b.locator("#presence")).toContainText("2 online", { timeout: 10_000 });
 
+  // A suppresses the slot; B sees the lighter body.
   await a.click("#feature-list li:nth-child(6)");
   await a.getByRole("button", { name: "Suppress" }).click();
-  await b.waitForTimeout(600);
-  expect(await status(b)).toContain("223 faces");
+  await expect(b.locator("#status-text")).toContainText("223 faces", { timeout: 10_000 });
 
+  // B adds a variable; A sees the new feature.
   await b.click("#btn-add-variable");
-  await a.waitForTimeout(600);
-  expect(await featureNames(a)).toContain("#width");
+  await expect.poll(async () => featureNames(a), { timeout: 10_000 }).toContain("#width");
 });

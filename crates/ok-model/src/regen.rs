@@ -367,6 +367,10 @@ impl PartStudio {
                     }
                 }
                 FeatureKind::Variable(_) => unreachable!("handled above"),
+                FeatureKind::Hole(hf) => {
+                    let hf = hf.clone();
+                    Self::regen_hole(&mut result, id, &hf, pos, &self.features)
+                }
                 FeatureKind::Pattern(pf) => {
                     let pf = pf.clone();
                     if pf.count < 2 {
@@ -565,6 +569,104 @@ impl PartStudio {
             Err(e) => return Some(e),
         };
         Self::apply_tool(result, id, tool, rf.op)
+    }
+
+    fn regen_hole(
+        result: &mut RegenResult,
+        id: FeatureId,
+        hf: &crate::HoleFeature,
+        pos: usize,
+        features: &[crate::Feature],
+    ) -> Option<String> {
+        // The sketch must exist and precede this feature (regions are not needed).
+        let sketch_pos = match features.iter().position(|f| f.id == hf.sketch) {
+            None => return Some(format!("sketch {:?} no longer exists", hf.sketch)),
+            Some(sp) if sp >= pos => return Some("hole must come after its sketch".into()),
+            Some(sp) if features[sp].suppressed => {
+                return Some(format!("sketch '{}' is suppressed", features[sp].name))
+            }
+            Some(sp) => sp,
+        };
+        let Some(sr) = result.sketches.get(&hf.sketch) else {
+            return Some("sketch did not regenerate".into());
+        };
+        let FeatureKind::Sketch(sf) = &features[sketch_pos].kind else {
+            unreachable!()
+        };
+        // Standalone points: not referenced by any curve.
+        let referenced: std::collections::HashSet<ok_sketch::EntityId> = sf
+            .sketch
+            .entities()
+            .flat_map(|(_, e)| e.references())
+            .collect();
+        let centers: Vec<Vec2> = sf
+            .sketch
+            .entities()
+            .filter_map(|(eid, e)| match e {
+                ok_sketch::Entity::Point { pos } if !referenced.contains(&eid) => Some(*pos),
+                _ => None,
+            })
+            .collect();
+        if centers.is_empty() {
+            return Some("the sketch has no standalone points to drill at".into());
+        }
+        if !(hf.diameter.is_finite() && hf.diameter > ok_math::tol::LINEAR) {
+            return Some("diameter must be positive".into());
+        }
+        let plane = sr.plane;
+        let n = plane.normal;
+        let fwd = result.extent_along(plane.origin, n);
+        let back = result.extent_along(plane.origin, -n);
+        let range = |depth: f64, through: bool| -> Result<(f64, f64), String> {
+            if through {
+                let (Some(fwd), Some(back)) = (fwd, back) else {
+                    return Err("through all needs an existing body".into());
+                };
+                Ok(match hf.direction {
+                    ExtrudeDirection::Normal => (0.0, fwd),
+                    ExtrudeDirection::Reverse => (0.0, -back),
+                    ExtrudeDirection::Symmetric => (-back, fwd),
+                })
+            } else {
+                if !(depth.is_finite() && depth > ok_math::tol::LINEAR) {
+                    return Err("depth must be positive".into());
+                }
+                Ok(match hf.direction {
+                    ExtrudeDirection::Normal => (0.0, depth),
+                    ExtrudeDirection::Reverse => (0.0, -depth),
+                    ExtrudeDirection::Symmetric => (-depth / 2.0, depth / 2.0),
+                })
+            }
+        };
+        let cylinder =
+            |c: Vec2, diameter: f64, start: f64, end: f64| -> Result<Solid, ok_brep::BrepError> {
+                let mut sk = ok_sketch::Sketch::new();
+                sk.add_circle(c, diameter / 2.0);
+                let profile = sk.profiles(&ProfileOptions::default()).remove(0);
+                ok_brep::extrude(&profile, &plane, start, end, id.0)
+            };
+        let (start, end) = match range(hf.depth, hf.through_all) {
+            Ok(r) => r,
+            Err(e) => return Some(e),
+        };
+        let mut parts: Vec<Result<Solid, ok_brep::BrepError>> = Vec::new();
+        for &c in &centers {
+            parts.push(cylinder(c, hf.diameter, start, end));
+            if let Some(cb) = hf.counterbore {
+                if cb.diameter <= hf.diameter {
+                    return Some("counterbore diameter must exceed the hole diameter".into());
+                }
+                match range(cb.depth, false) {
+                    Ok((s, e)) => parts.push(cylinder(c, cb.diameter, s, e)),
+                    Err(e) => return Some(format!("counterbore: {e}")),
+                }
+            }
+        }
+        let tool = match Self::build_tool(parts.into_iter()) {
+            Ok(t) => t,
+            Err(e) => return Some(e),
+        };
+        Self::apply_tool(result, id, tool, BodyOp::Remove)
     }
 
     fn regen_blend(
@@ -1663,6 +1765,121 @@ mod tests {
                 expression: Some("1".into())
             })
             .is_err());
+    }
+
+    #[test]
+    fn hole_feature_drills_points_with_counterbore() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddRectangle {
+                a: Vec2::ZERO,
+                b: Vec2::new(40.0, 20.0),
+            },
+        })
+        .unwrap();
+        let e = ps
+            .apply(Op::AddExtrude {
+                sketch: s,
+                depth: 10.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        // Points sketched on the top face; the hole drills into the part.
+        let s2 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::Face {
+                    face: crate::FaceRef {
+                        feature: e,
+                        local: 1,
+                    },
+                    offset: 0.0,
+                },
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s2,
+            op: SketchOp::AddPoint {
+                pos: Vec2::new(10.0, 10.0),
+            },
+        })
+        .unwrap();
+        ps.apply(Op::Sketch {
+            id: s2,
+            op: SketchOp::AddPoint {
+                pos: Vec2::new(30.0, 10.0),
+            },
+        })
+        .unwrap();
+        let h = ps
+            .apply(Op::AddHole {
+                sketch: s2,
+                diameter: 4.0,
+                depth: 0.0,
+                through_all: true,
+                direction: ExtrudeDirection::Reverse,
+                counterbore: None,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let pi = std::f64::consts::PI;
+        let expected = 8000.0 - 2.0 * pi * 4.0 * 10.0;
+        let vol = r.bodies[0].solid.volume();
+        assert!(
+            ((vol - expected) / expected).abs() < 3e-3,
+            "vol {vol} expected {expected}"
+        );
+        // Blind 3 mm with a counterbore 8 mm wide, 2 mm deep.
+        ps.apply(Op::SetHole {
+            id: h,
+            diameter: None,
+            depth: Some(3.0),
+            through_all: Some(false),
+            direction: None,
+            counterbore: Some(Some(crate::Counterbore {
+                diameter: 8.0,
+                depth: 2.0,
+            })),
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let expected = 8000.0 - 2.0 * (pi * 4.0 * 3.0 + pi * (16.0 - 4.0) * 2.0);
+        let vol = r.bodies[0].solid.volume();
+        assert!(
+            ((vol - expected) / expected).abs() < 3e-3,
+            "vol {vol} expected {expected}"
+        );
+        assert_eq!(ps.feature(h).unwrap().name, "Hole 1");
     }
 
     #[test]

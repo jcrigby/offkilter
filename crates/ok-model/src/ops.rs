@@ -1,7 +1,8 @@
 use crate::{
-    BlendFeature, BlendKind, BodyOp, CopyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature,
-    FeatureId, FeatureKind, MirrorFeature, ModelError, PartStudio, PatternFeature, PatternKind,
-    PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature, SketchFeature, VariableFeature,
+    BlendFeature, BlendKind, BodyOp, CopyOp, Counterbore, EdgeRef, ExtrudeDirection, ExtrudeEnd,
+    ExtrudeFeature, FeatureId, FeatureKind, HoleFeature, MirrorFeature, ModelError, PartStudio,
+    PatternFeature, PatternKind, PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature,
+    SketchFeature, VariableFeature,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, EntityId, Sketch};
@@ -173,6 +174,33 @@ pub enum Op {
         field: String,
         expression: Option<String>,
     },
+    AddHole {
+        sketch: FeatureId,
+        diameter: f64,
+        #[serde(default)]
+        depth: f64,
+        #[serde(default)]
+        through_all: bool,
+        #[serde(default = "default_reverse")]
+        direction: ExtrudeDirection,
+        #[serde(default)]
+        counterbore: Option<Counterbore>,
+        name: Option<String>,
+    },
+    SetHole {
+        id: FeatureId,
+        #[serde(default)]
+        diameter: Option<f64>,
+        #[serde(default)]
+        depth: Option<f64>,
+        #[serde(default)]
+        through_all: Option<bool>,
+        #[serde(default)]
+        direction: Option<ExtrudeDirection>,
+        /// `Some(None)` clears the counterbore; `None` leaves it as is.
+        #[serde(default, with = "double_option")]
+        counterbore: Option<Option<Counterbore>>,
+    },
     /// Replaces the whole document (used to sync undo/redo between clients).
     ReplaceDocument {
         json: String,
@@ -204,6 +232,31 @@ pub enum Op {
     RenameStudio {
         name: String,
     },
+}
+
+fn default_reverse() -> ExtrudeDirection {
+    ExtrudeDirection::Reverse
+}
+
+/// Serde helper distinguishing "absent" from "explicitly null".
+mod double_option {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<T: Serialize, S: Serializer>(
+        v: &Option<Option<T>>,
+        s: S,
+    ) -> Result<S::Ok, S::Error> {
+        match v {
+            Some(inner) => inner.serialize(s),
+            None => s.serialize_none(),
+        }
+    }
+
+    pub fn deserialize<'de, T: Deserialize<'de>, D: Deserializer<'de>>(
+        d: D,
+    ) -> Result<Option<Option<T>>, D::Error> {
+        Option::<T>::deserialize(d).map(Some)
+    }
 }
 
 fn default_angle() -> f64 {
@@ -450,6 +503,58 @@ impl PartStudio {
                     }
                 }
             }
+            Op::AddHole {
+                sketch,
+                diameter,
+                depth,
+                through_all,
+                direction,
+                counterbore,
+                name,
+            } => {
+                match &self.feature(sketch)?.kind {
+                    FeatureKind::Sketch(_) => {}
+                    _ => return Err(ModelError::WrongFeatureKind(sketch, "sketch")),
+                }
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Hole(HoleFeature {
+                        sketch,
+                        diameter,
+                        depth,
+                        through_all,
+                        direction,
+                        counterbore,
+                    }),
+                    name,
+                ));
+            }
+            Op::SetHole {
+                id,
+                diameter,
+                depth,
+                through_all,
+                direction,
+                counterbore,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Hole(h) => {
+                    if let Some(v) = diameter {
+                        h.diameter = v;
+                    }
+                    if let Some(v) = depth {
+                        h.depth = v;
+                    }
+                    if let Some(v) = through_all {
+                        h.through_all = v;
+                    }
+                    if let Some(v) = direction {
+                        h.direction = v;
+                    }
+                    if let Some(v) = counterbore {
+                        h.counterbore = v;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "hole")),
+            },
             Op::ReplaceDocument { json } => {
                 let replacement =
                     PartStudio::from_json(&json).map_err(|e| ModelError::Invalid(e.to_string()))?;

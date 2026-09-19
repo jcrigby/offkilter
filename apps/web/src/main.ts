@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import type { Axis, BlendKind, Constraint, EdgeRef, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
+import type { Axis, BlendKind, Constraint, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -495,7 +495,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#" };
+      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎" };
       icon.textContent = icons[f.kind.type] ?? "•";
       const name = document.createElement("span");
       name.className = "name";
@@ -535,6 +535,7 @@ class App implements SketchHost {
     const sel = this.feature(this.selected);
     ($("#btn-add-extrude") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
     ($("#btn-add-revolve") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
+    ($("#btn-add-hole") as HTMLButtonElement).disabled = !(sel && sel.kind.type === "sketch");
     const hasBody = this.summary.bodies.length > 0;
     ($("#btn-add-fillet") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-chamfer") as HTMLButtonElement).disabled = !hasBody;
@@ -595,6 +596,7 @@ class App implements SketchHost {
     else if (f.kind.type === "blend") this.renderBlendDetail(f, body);
     else if (f.kind.type === "mirror") this.renderMirrorDetail(f, body);
     else if (f.kind.type === "variable") this.renderVariableDetail(f, body);
+    else if (f.kind.type === "hole") this.renderHoleDetail(f, body);
     else this.renderPatternDetail(f, body);
 
     const row = document.createElement("div");
@@ -877,6 +879,38 @@ class App implements SketchHost {
       wrap.appendChild(v);
     }
     return wrap;
+  }
+
+  renderHoleDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "hole") return;
+    const k = f.kind;
+    body.appendChild(this.sketchField(k.sketch));
+    body.appendChild(field("Diameter", this.exprInput(f, "diameter", k.diameter, (v) => this.apply({ type: "set_hole", id: f.id, diameter: v }))));
+    body.appendChild(
+      field("Depth", select(["through_all", "blind"], k.through_all ? "through_all" : "blind", (v) =>
+        this.apply({ type: "set_hole", id: f.id, through_all: v === "through_all", depth: v === "blind" && k.depth <= 0 ? 5 : null }),
+      )),
+    );
+    if (!k.through_all) {
+      body.appendChild(field("Blind depth", this.exprInput(f, "depth", k.depth, (v) => this.apply({ type: "set_hole", id: f.id, depth: v }))));
+    }
+    body.appendChild(
+      field("Direction", select(["reverse", "normal", "symmetric"], k.direction, (v) => this.apply({ type: "set_hole", id: f.id, direction: v as ExtrudeDirection }))),
+    );
+    body.appendChild(
+      field("Counterbore", select(["none", "yes"], k.counterbore ? "yes" : "none", (v) =>
+        this.apply({ type: "set_hole", id: f.id, counterbore: v === "yes" ? { diameter: k.diameter * 2, depth: 2 } : null }),
+      )),
+    );
+    if (k.counterbore) {
+      const cb = k.counterbore;
+      body.appendChild(field("C'bore ⌀", this.exprInput(f, "cbore_diameter", cb.diameter, (v) => this.apply({ type: "set_hole", id: f.id, counterbore: { ...cb, diameter: v } }))));
+      body.appendChild(field("C'bore depth", this.exprInput(f, "cbore_depth", cb.depth, (v) => this.apply({ type: "set_hole", id: f.id, counterbore: { ...cb, depth: v } }))));
+    }
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Drills at every standalone point of the sketch (points not used by lines, arcs or circles). “Reverse” drills into the face the sketch sits on.";
+    body.appendChild(note);
   }
 
   renderVariableDetail(f: FeatureSummary, body: HTMLElement): void {
@@ -1426,6 +1460,13 @@ async function main(): Promise<void> {
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   $("#btn-add-chamfer").onclick = () => addBlend("chamfer");
+  $("#btn-add-hole").onclick = () => {
+    const f = app.feature(app.selected);
+    if (!f || f.kind.type !== "sketch") return;
+    app.sketcher.exit();
+    app.apply({ type: "add_hole", sketch: f.id, diameter: 6, through_all: true, direction: "reverse", name: null });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
   $("#btn-add-revolve").onclick = () => {
     const f = app.feature(app.selected);
     if (!f || f.kind.type !== "sketch") return;

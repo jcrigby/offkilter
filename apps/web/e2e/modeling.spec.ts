@@ -117,3 +117,35 @@ test("variables drive dimensions and undo restores", async ({ page }) => {
   await page.waitForTimeout(300);
   expect(await volume(page)).toBeCloseTo(19152.5, 0);
 });
+
+test("hole feature drills at sketch points on a face", async ({ page }) => {
+  await openDemo(page);
+  const before = await volume(page);
+  // Select the plate top face, sketch two points on it via the geometry form.
+  await page.keyboard.press("f");
+  await page.waitForTimeout(300);
+  let picked = "";
+  for (const [fx, fy] of [[0.5, 0.62], [0.35, 0.6], [0.6, 0.55], [0.45, 0.7]] as const) {
+    await clickViewport(page, fx, fy);
+    picked = await status(page);
+    if (picked.startsWith("Face:")) break;
+  }
+  expect(picked).toContain("Face: Extrude 1");
+  await page.click("#btn-add-sketch");
+  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: "Done" }).click();
+  // Add two standalone points through ops exposed on the app object.
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const id = app.selected;
+    app.apply({ type: "sketch", id, op: { type: "add_point", pos: { x: 10, y: 10 } } });
+    app.apply({ type: "sketch", id, op: { type: "add_point", pos: { x: 50, y: 10 } } });
+  });
+  await page.click("#btn-add-hole");
+  await page.waitForTimeout(400);
+  expect(await featureNames(page)).toContain("Hole 1");
+  const drilled = await volume(page);
+  // Two ⌀6 through holes in the 8 mm plate.
+  expect(before - drilled).toBeCloseTo(2 * Math.PI * 9 * 8, -1);
+  expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
+});

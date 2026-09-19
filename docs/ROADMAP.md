@@ -28,6 +28,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Merge coplanar faces of the same body after a boolean
 - [x] Extrude up-to-face / through-all
 - [x] Revolve (about a sketch axis or sketch line, full or partial)
+- [x] Hole feature (through / blind, optional counterbore) at sketch points
 - [ ] Sweep, loft
 - [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
 - [ ] Fillets on curved edges and proper corner patches where blends meet

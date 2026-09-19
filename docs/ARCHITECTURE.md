@@ -29,8 +29,12 @@ A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable
 - `Extrude { sketch: FeatureId, profiles, depth, direction, end, op }`
 - `Revolve { sketch: FeatureId, profiles, axis, angle, op }`
 
-Solid features share one path: select regions, build a tool solid (the
-union of one solid per region), then apply the body operation.
+- `Hole { sketch, diameter, depth, through_all, direction, counterbore }`:
+  drills at every standalone point of the sketch.
+
+Solid features share one path: select regions (or points for holes),
+build a tool solid (the union of one solid per region), then apply the
+body operation.
 
 Regeneration (`PartStudio::regenerate`) walks the list in order. Sketches
 are solved in place so the document always stores solved geometry, as

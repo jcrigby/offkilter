@@ -61,7 +61,9 @@ export type FeatureKind =
   | { type: "blend"; kind: BlendKind; edges: EdgeRef[]; size: number }
   | { type: "mirror"; plane: PlaneRef; op: CopyOp }
   | { type: "pattern"; kind: PatternKind; count: number; op: CopyOp }
-  | { type: "variable"; name: string; expression: string };
+  | { type: "variable"; name: string; expression: string }
+  | { type: "hole"; sketch: number; diameter: number; depth: number; through_all: boolean; direction: ExtrudeDirection; counterbore: Counterbore | null };
+export type Counterbore = { diameter: number; depth: number };
 
 export type FeatureSummary = {
   id: number;
@@ -129,6 +131,8 @@ export type Op =
   | { type: "add_variable"; name: string; expression: string }
   | { type: "set_variable"; id: number; name?: string | null; expression?: string | null }
   | { type: "set_binding"; id: number; field: string; expression: string | null }
+  | { type: "add_hole"; sketch: number; diameter: number; depth?: number; through_all?: boolean; direction?: ExtrudeDirection; counterbore?: Counterbore | null; name: string | null }
+  | { type: "set_hole"; id: number; diameter?: number | null; depth?: number | null; through_all?: boolean | null; direction?: ExtrudeDirection | null; counterbore?: Counterbore | null }
   | { type: "replace_document"; json: string }
   | { type: "set_sketch_plane"; id: number; plane: PlaneRef }
   | { type: "rename_feature"; id: number; name: string }
