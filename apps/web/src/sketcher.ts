@@ -1,0 +1,448 @@
+// Interactive sketch mode: drawing tools, snapping, dragging, selection.
+//
+// Everything here turns pointer input into ops (`add_line`, `add_constraint`,
+// `move_point`, ...); the kernel solves and the viewer redraws from the regen
+// summary. Snapping to an existing point adds a coincident constraint, and
+// nearly horizontal/vertical lines get the matching constraint, which is how
+// most CAD sketchers infer intent while drawing.
+
+import type { Constraint, Entity, Op, OpResult, PlaneFrame, SketchCurve, SketchData, SketchOp, Summary, Vec2, Vec3 } from "./kernel";
+import type { PointerHandler, Viewer } from "./viewer";
+
+export type Tool = "select" | "line" | "rectangle" | "circle";
+
+export interface SketchHost {
+  summary: Summary;
+  viewer: Viewer;
+  /** Applies an op without regenerating; throws on failure. */
+  applyRaw(op: Op): OpResult;
+  regenerate(): void;
+  /** Re-renders the panels after the sketch selection changed. */
+  selectionChanged(): void;
+  setStatus(text: string): void;
+}
+
+const SNAP_PX = 10;
+const CURVE_PX = 6;
+const INFER_TAN = Math.tan((5 * Math.PI) / 180);
+
+export class Sketcher implements PointerHandler {
+  sketchId: number | null = null;
+  tool: Tool = "select";
+  selection = new Set<number>();
+  private pending: Vec2[] = [];
+  private pendingIds: (number | null)[] = [];
+  private drag: { entity: number; moved: boolean } | null = null;
+  private regenQueued = false;
+
+  constructor(private host: SketchHost) {}
+
+  get active(): boolean {
+    return this.sketchId !== null;
+  }
+
+  enter(sketchId: number): void {
+    if (this.sketchId === sketchId) return;
+    this.exit();
+    this.sketchId = sketchId;
+    this.tool = "select";
+    this.host.viewer.pointerHandler = this;
+    this.host.viewer.setSketchMouse(true);
+    const plane = this.plane();
+    if (plane) this.host.viewer.lookAtPlane(plane);
+    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · S select · right-drag orbits · Esc finishes");
+  }
+
+  exit(): void {
+    if (!this.active) return;
+    this.cancel();
+    this.sketchId = null;
+    this.selection.clear();
+    this.host.viewer.pointerHandler = null;
+    this.host.viewer.setSketchMouse(false);
+    this.host.viewer.setPreview([]);
+    this.host.viewer.resetUp();
+  }
+
+  setTool(tool: Tool): void {
+    this.cancel();
+    this.tool = tool;
+    this.host.selectionChanged();
+  }
+
+  // ------------------------------------------------------------ data access
+
+  private plane(): PlaneFrame | null {
+    return this.host.summary.sketches[String(this.sketchId)]?.plane ?? null;
+  }
+
+  private curves(): SketchCurve[] {
+    return this.host.summary.sketches[String(this.sketchId)]?.curves ?? [];
+  }
+
+  sketchData(): SketchData | null {
+    const f = this.host.summary.features.find((f) => f.id === this.sketchId);
+    return f && f.kind.type === "sketch" ? f.kind.sketch : null;
+  }
+
+  entity(id: number): ({ id: number } & Entity) | undefined {
+    return this.sketchData()?.entities.find((e) => e.id === id);
+  }
+
+  pointPos(id: number): Vec2 | null {
+    const e = this.entity(id);
+    return e && e.type === "point" ? e.pos : null;
+  }
+
+  private lift(p: Vec2): Vec3 {
+    const pl = this.plane()!;
+    return {
+      x: pl.origin.x + pl.x_axis.x * p.x + pl.y_axis.x * p.y,
+      y: pl.origin.y + pl.x_axis.y * p.x + pl.y_axis.y * p.y,
+      z: pl.origin.z + pl.x_axis.z * p.x + pl.y_axis.z * p.y,
+    };
+  }
+
+  // ------------------------------------------------------------ hit testing
+
+  /** Nearest point entity to the pointer within the snap radius. */
+  private nearestPoint(e: PointerEvent): { id: number; pos: Vec2 } | null {
+    const px = this.host.viewer.eventPx(e);
+    let best: { id: number; pos: Vec2; d: number } | null = null;
+    for (const c of this.curves()) {
+      if (c.kind !== "point") continue;
+      const s = this.host.viewer.toScreen(c.points[0]!);
+      const d = Math.hypot(s.x - px.x, s.y - px.y);
+      if (d <= SNAP_PX && (!best || d < best.d)) {
+        const pos = this.pointPos(c.entity);
+        if (pos) best = { id: c.entity, pos, d };
+      }
+    }
+    return best;
+  }
+
+  /** Nearest curve (line, circle, arc) within a few pixels. */
+  private nearestCurve(e: PointerEvent): number | null {
+    const px = this.host.viewer.eventPx(e);
+    let best: { id: number; d: number } | null = null;
+    for (const c of this.curves()) {
+      if (c.kind === "point") continue;
+      const pts = c.points.map((p) => this.host.viewer.toScreen(p));
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const d = segmentDistance(px, pts[i]!, pts[i + 1]!);
+        if (d <= CURVE_PX && (!best || d < best.d)) best = { id: c.entity, d };
+      }
+    }
+    return best?.id ?? null;
+  }
+
+  /** Pointer position on the sketch plane, snapped to a nearby point or the origin. */
+  private snap(e: PointerEvent): { pos: Vec2; id: number | null } | null {
+    const near = this.nearestPoint(e);
+    if (near) return { pos: near.pos, id: near.id };
+    const plane = this.plane();
+    if (!plane) return null;
+    const raw = this.host.viewer.toPlane(e, plane);
+    if (!raw) return null;
+    const o = this.host.viewer.toScreen(this.lift({ x: 0, y: 0 }));
+    const px = this.host.viewer.eventPx(e);
+    if (Math.hypot(o.x - px.x, o.y - px.y) <= SNAP_PX) return { pos: { x: 0, y: 0 }, id: null };
+    return { pos: raw, id: null };
+  }
+
+  // ------------------------------------------------------------ pointer handler
+
+  down(e: PointerEvent): void {
+    if (this.tool !== "select") return;
+    const point = this.nearestPoint(e);
+    const hit = point?.id ?? this.nearestCurve(e);
+    if (hit === null || hit === undefined) {
+      if (!e.shiftKey) this.selection.clear();
+    } else if (e.shiftKey) {
+      if (this.selection.has(hit)) this.selection.delete(hit);
+      else this.selection.add(hit);
+    } else {
+      if (!this.selection.has(hit)) {
+        this.selection.clear();
+        this.selection.add(hit);
+      }
+      if (point) this.drag = { entity: point.id, moved: false };
+    }
+    this.host.selectionChanged();
+  }
+
+  move(e: PointerEvent): void {
+    if (this.drag) {
+      const plane = this.plane();
+      const pos = plane && this.host.viewer.toPlane(e, plane);
+      if (!pos) return;
+      this.drag.moved = true;
+      try {
+        this.host.applyRaw({ type: "sketch", id: this.sketchId!, op: { type: "move_point", id: this.drag.entity, pos } });
+      } catch {
+        return;
+      }
+      if (!this.regenQueued) {
+        this.regenQueued = true;
+        requestAnimationFrame(() => {
+          this.regenQueued = false;
+          this.host.regenerate();
+        });
+      }
+      return;
+    }
+    if (this.tool !== "select" && this.pending.length > 0) {
+      const s = this.snap(e);
+      if (s) this.host.viewer.setPreview(this.previewFor(this.inferred(s).pos));
+    }
+  }
+
+  up(e: PointerEvent): void {
+    if (this.drag) {
+      this.drag = null;
+      return;
+    }
+    if (this.tool === "select") return;
+    const s = this.snap(e);
+    if (!s) return;
+    switch (this.tool) {
+      case "line":
+        this.clickLine(s);
+        break;
+      case "rectangle":
+        this.clickRectangle(s);
+        break;
+      case "circle":
+        this.clickCircle(s);
+        break;
+    }
+  }
+
+  cancel(): void {
+    this.pending = [];
+    this.pendingIds = [];
+    this.drag = null;
+    this.host.viewer.setPreview([]);
+  }
+
+  // ------------------------------------------------------------ tools
+
+  /** Applies horizontal/vertical inference relative to the pending start point. */
+  private inferred(s: { pos: Vec2; id: number | null }): { pos: Vec2; id: number | null; h: boolean; v: boolean } {
+    if (this.tool !== "line" || this.pending.length === 0 || s.id !== null) return { ...s, h: false, v: false };
+    const a = this.pending[0]!;
+    const dx = s.pos.x - a.x;
+    const dy = s.pos.y - a.y;
+    if (Math.abs(dy) <= INFER_TAN * Math.abs(dx)) return { pos: { x: s.pos.x, y: a.y }, id: null, h: true, v: false };
+    if (Math.abs(dx) <= INFER_TAN * Math.abs(dy)) return { pos: { x: a.x, y: s.pos.y }, id: null, h: false, v: true };
+    return { ...s, h: false, v: false };
+  }
+
+  private previewFor(cur: Vec2): Vec3[][] {
+    const a = this.pending[0]!;
+    switch (this.tool) {
+      case "line":
+        return [[this.lift(a), this.lift(cur)]];
+      case "rectangle":
+        return [[this.lift(a), this.lift({ x: cur.x, y: a.y }), this.lift(cur), this.lift({ x: a.x, y: cur.y }), this.lift(a)]];
+      case "circle": {
+        const r = Math.hypot(cur.x - a.x, cur.y - a.y);
+        const pts: Vec3[] = [];
+        for (let i = 0; i <= 64; i++) {
+          const t = (i / 64) * Math.PI * 2;
+          pts.push(this.lift({ x: a.x + r * Math.cos(t), y: a.y + r * Math.sin(t) }));
+        }
+        return [pts];
+      }
+      default:
+        return [];
+    }
+  }
+
+  private sketchOp(op: SketchOp): OpResult {
+    return this.host.applyRaw({ type: "sketch", id: this.sketchId!, op });
+  }
+
+  private constrain(constraint: Constraint): void {
+    this.sketchOp({ type: "add_constraint", constraint });
+  }
+
+  private clickLine(s: { pos: Vec2; id: number | null }): void {
+    if (this.pending.length === 0) {
+      this.pending = [s.pos];
+      this.pendingIds = [s.id];
+      return;
+    }
+    const end = this.inferred(s);
+    const a = this.pending[0]!;
+    if (Math.hypot(end.pos.x - a.x, end.pos.y - a.y) < 1e-9) return;
+    try {
+      const r = this.sketchOp({ type: "add_line", a, b: end.pos });
+      const [line, start, finish] = r.entities as [number, number, number];
+      const startId = this.pendingIds[0];
+      if (startId !== null && startId !== undefined) this.constrain({ type: "coincident", a: start, b: startId });
+      if (end.id !== null) this.constrain({ type: "coincident", a: finish, b: end.id });
+      if (end.h) this.constrain({ type: "horizontal", line });
+      if (end.v) this.constrain({ type: "vertical", line });
+      // Chain: the next segment starts at this end, unless we closed onto an existing point.
+      if (end.id !== null) {
+        this.pending = [];
+        this.pendingIds = [];
+        this.host.viewer.setPreview([]);
+      } else {
+        this.pending = [end.pos];
+        this.pendingIds = [finish];
+      }
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+      this.cancel();
+    }
+    this.host.regenerate();
+  }
+
+  private clickRectangle(s: { pos: Vec2; id: number | null }): void {
+    if (this.pending.length === 0) {
+      this.pending = [s.pos];
+      this.pendingIds = [s.id];
+      return;
+    }
+    const a = this.pending[0]!;
+    if (Math.abs(s.pos.x - a.x) < 1e-9 || Math.abs(s.pos.y - a.y) < 1e-9) return;
+    try {
+      this.sketchOp({ type: "add_rectangle", a, b: s.pos });
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.cancel();
+    this.host.regenerate();
+  }
+
+  private clickCircle(s: { pos: Vec2; id: number | null }): void {
+    if (this.pending.length === 0) {
+      this.pending = [s.pos];
+      this.pendingIds = [s.id];
+      return;
+    }
+    const c = this.pending[0]!;
+    const radius = Math.hypot(s.pos.x - c.x, s.pos.y - c.y);
+    if (radius < 1e-9) return;
+    try {
+      const r = this.sketchOp({ type: "add_circle", center: c, radius });
+      const centerId = this.pendingIds[0];
+      if (centerId !== null && centerId !== undefined) this.constrain({ type: "coincident", a: r.entities[1]!, b: centerId });
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.cancel();
+    this.host.regenerate();
+  }
+
+  // ------------------------------------------------------------ selection helpers
+
+  deleteSelection(): void {
+    if (this.selection.size === 0) return;
+    for (const id of this.selection) {
+      try {
+        this.sketchOp({ type: "remove_entity", id });
+      } catch {
+        /* already gone */
+      }
+    }
+    this.selection.clear();
+    this.host.regenerate();
+  }
+
+  /** Constraints that can be applied to the current selection, with a
+   *  builder that may ask for a value. */
+  quickConstraints(): { label: string; build: () => Constraint | null }[] {
+    const ids = [...this.selection];
+    const kinds = ids.map((id) => this.entity(id)?.type ?? "?");
+    const out: { label: string; build: () => Constraint | null }[] = [];
+    const ask = (label: string, def: number): number | null => {
+      const v = Number(prompt(label, String(Number(def.toFixed(4)))));
+      return Number.isFinite(v) ? v : null;
+    };
+    const pos = (id: number) => this.pointPos(id)!;
+    const lineLen = (id: number) => {
+      const l = this.entity(id);
+      if (!l || l.type !== "line") return 0;
+      const a = pos(l.start), b = pos(l.end);
+      return Math.hypot(b.x - a.x, b.y - a.y);
+    };
+    const radiusOf = (id: number) => {
+      const e = this.entity(id);
+      if (!e) return 0;
+      if (e.type === "circle") return e.radius;
+      if (e.type === "arc") {
+        const c = pos(e.center), s = pos(e.start);
+        return Math.hypot(s.x - c.x, s.y - c.y);
+      }
+      return 0;
+    };
+    const is = (...want: string[]) => kinds.length === want.length && want.every((w, i) => (w === "round" ? kinds[i] === "circle" || kinds[i] === "arc" : kinds[i] === w));
+    const sorted = (a: string, b: string): [number, number] | null => {
+      if (kinds.length !== 2) return null;
+      const ia = kinds.findIndex((k) => (a === "round" ? k === "circle" || k === "arc" : k === a));
+      const ib = kinds.findIndex((k, i) => i !== ia && (b === "round" ? k === "circle" || k === "arc" : k === b));
+      return ia >= 0 && ib >= 0 ? [ids[ia]!, ids[ib]!] : null;
+    };
+    if (is("line")) {
+      const line = ids[0]!;
+      out.push({ label: "Horizontal", build: () => ({ type: "horizontal", line }) });
+      out.push({ label: "Vertical", build: () => ({ type: "vertical", line }) });
+      out.push({ label: "Length", build: () => { const v = ask("Length", lineLen(line)); return v === null ? null : { type: "length", line, value: v }; } });
+    } else if (is("line", "line")) {
+      const [a, b] = ids as [number, number];
+      out.push({ label: "Parallel", build: () => ({ type: "parallel", a, b }) });
+      out.push({ label: "Perpendicular", build: () => ({ type: "perpendicular", a, b }) });
+      out.push({ label: "Equal", build: () => ({ type: "equal", a, b }) });
+      out.push({ label: "Angle", build: () => { const v = ask("Angle (degrees, from first to second)", 90); return v === null ? null : { type: "angle", a, b, value: v }; } });
+    } else if (is("point")) {
+      out.push({ label: "Fix", build: () => ({ type: "fixed", point: ids[0]! }) });
+    } else if (is("point", "point")) {
+      const [a, b] = ids as [number, number];
+      const pa = pos(a), pb = pos(b);
+      out.push({ label: "Coincident", build: () => ({ type: "coincident", a, b }) });
+      out.push({ label: "Distance", build: () => { const v = ask("Distance", Math.hypot(pb.x - pa.x, pb.y - pa.y)); return v === null ? null : { type: "distance", a, b, value: v }; } });
+      out.push({ label: "Horizontal dist.", build: () => { const v = ask("Horizontal distance", pb.x - pa.x); return v === null ? null : { type: "horizontal_distance", a, b, value: v }; } });
+      out.push({ label: "Vertical dist.", build: () => { const v = ask("Vertical distance", pb.y - pa.y); return v === null ? null : { type: "vertical_distance", a, b, value: v }; } });
+    } else if (sorted("point", "line")) {
+      const [point, line] = sorted("point", "line")!;
+      out.push({ label: "On line", build: () => ({ type: "point_on_line", point, line }) });
+      out.push({ label: "Midpoint", build: () => ({ type: "midpoint", point, line }) });
+    } else if (is("round")) {
+      const entity = ids[0]!;
+      out.push({ label: "Radius", build: () => { const v = ask("Radius", radiusOf(entity)); return v === null ? null : { type: "radius", entity, value: v }; } });
+      out.push({ label: "Diameter", build: () => { const v = ask("Diameter", 2 * radiusOf(entity)); return v === null ? null : { type: "diameter", entity, value: v }; } });
+    } else if (is("round", "round")) {
+      out.push({ label: "Equal", build: () => ({ type: "equal", a: ids[0]!, b: ids[1]! }) });
+    } else if (sorted("point", "round")) {
+      const [point, entity] = sorted("point", "round")!;
+      out.push({ label: "On circle", build: () => ({ type: "point_on_circle", point, entity }) });
+    } else if (sorted("line", "round")) {
+      const [line, entity] = sorted("line", "round")!;
+      out.push({ label: "Tangent", build: () => ({ type: "tangent", line, entity }) });
+      out.push({ label: "Equal", build: () => ({ type: "equal", a: line, b: entity }) });
+    }
+    return out;
+  }
+
+  applyQuick(build: () => Constraint | null): void {
+    const c = build();
+    if (!c) return;
+    try {
+      this.constrain(c);
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.host.regenerate();
+  }
+}
+
+function segmentDistance(p: { x: number; y: number }, a: { x: number; y: number }, b: { x: number; y: number }): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+  return Math.hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t));
+}

@@ -169,10 +169,15 @@ to check orientation and correctness.
 ## Web client (`apps/web`)
 
 `kernel.ts` is the typed wrapper around the wasm `Studio`. `viewer.ts` is
-the three.js scene (Z up, orbit controls, flat shaded bodies with edge
-overlay, sketch curves drawn on their planes). `main.ts` renders the
-feature list and detail panels and sends ops. State lives in the kernel;
-the UI re-renders from the regen summary after every op.
+the three.js scene (Z up, orbit controls, bodies with kernel-computed
+normals and edges, sketch curves drawn on their planes, face picking by
+raycast). `main.ts` renders the feature list and detail panels and sends
+ops. `sketcher.ts` is sketch mode: it turns pointer input on the sketch
+plane into ops (draw line / rectangle / circle, drag points via
+`move_point`, select entities and apply constraints). Snapping to an
+existing point adds a coincident constraint and nearly axis-aligned lines
+get horizontal / vertical constraints. State lives in the kernel; the UI
+re-renders from the regen summary after every op.
 
 ## Conventions
 

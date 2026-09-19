@@ -9,7 +9,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Geometric and dimensional constraints with DOF reporting
 - [x] Closed-region extraction with holes
 - [ ] Split edges at crossings so intersecting lines form regions
-- [ ] Interactive sketch mode in the client: draw on the plane, drag points, click to pick entities for constraints, inferred constraints while drawing
+- [x] Interactive sketch mode in the client: draw on the plane, drag points, click to pick entities for constraints, inferred coincident / horizontal / vertical constraints while drawing
+- [ ] Arc and polyline-with-arcs tools; trim; construction lines
 - [ ] Dimension display in the viewport
 - [ ] Analytic Jacobians for the common constraints (performance)
 - [ ] Splines (B-spline entity + point-on-curve)

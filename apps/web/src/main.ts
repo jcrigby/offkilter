@@ -1,7 +1,9 @@
 import { Kernel } from "./kernel";
-import type { Constraint, ExtrudeEnd, FaceRef, FeatureSummary, Op, PlaneRef, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
+import type { Constraint, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PlaneRef, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
 import { Viewer } from "./viewer";
 import type { FacePick } from "./viewer";
+import { Sketcher } from "./sketcher";
+import type { SketchHost, Tool } from "./sketcher";
 
 const $ = <T extends HTMLElement>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -11,10 +13,11 @@ const $ = <T extends HTMLElement>(sel: string): T => {
 
 const STORAGE_KEY = "offkilter.partstudio";
 
-class App {
+class App implements SketchHost {
   kernel: Kernel;
   summary!: Summary;
   selected: number | null = null;
+  sketcher = new Sketcher(this);
   /** Face selected in the viewport, if any. */
   selectedFace: FaceRef | null = null;
   /** Pending face request from a panel: receives the picked face. */
@@ -100,12 +103,21 @@ class App {
     this.regenerate();
   }
 
+  applyRaw(op: Op): OpResult {
+    return this.kernel.apply(op);
+  }
+
+  selectionChanged(): void {
+    this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
+    this.renderDetail();
+  }
+
   regenerate(): void {
     const t0 = performance.now();
     this.summary = this.kernel.regenerate();
     const dt = performance.now() - t0;
     this.viewer.setBodies(this.kernel.bodyMeshes());
-    this.viewer.setSketches(this.summary.sketches, this.selected);
+    this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
     this.viewer.setSelectedFace(this.selectedFace ? this.findFace(this.selectedFace) : null);
     this.renderFeatures();
     this.renderDetail();
@@ -137,8 +149,16 @@ class App {
   }
 
   select(id: number | null): void {
+    if (this.sketcher.active && this.sketcher.sketchId !== id) this.sketcher.exit();
     this.selected = id;
-    this.viewer.setSketches(this.summary.sketches, this.selected);
+    this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
+    this.renderFeatures();
+    this.renderDetail();
+  }
+
+  editSketch(id: number): void {
+    this.selected = id;
+    this.sketcher.enter(id);
     this.renderFeatures();
     this.renderDetail();
   }
@@ -237,6 +257,41 @@ class App {
     if (f.kind.type !== "sketch") return;
     const kind = f.kind;
     const result = this.summary.sketches[String(f.id)];
+
+    const editing = this.sketcher.active && this.sketcher.sketchId === f.id;
+    const tools = document.createElement("div");
+    tools.className = "row tools";
+    if (!editing) {
+      tools.appendChild(button("Edit sketch", () => this.editSketch(f.id), "primary"));
+    } else {
+      for (const [tool, label, key] of [["select", "Select", "S"], ["line", "Line", "L"], ["rectangle", "Rectangle", "R"], ["circle", "Circle", "C"]] as [Tool, string, string][]) {
+        const b = button(label, () => this.sketcher.setTool(tool), this.sketcher.tool === tool ? "active" : "");
+        b.title = `${label} (${key})`;
+        tools.appendChild(b);
+      }
+      tools.appendChild(button("Done", () => { this.sketcher.exit(); this.renderDetail(); }, "primary"));
+    }
+    body.appendChild(tools);
+    if (editing) {
+      const sel = [...this.sketcher.selection];
+      const p = document.createElement("p");
+      p.className = "note";
+      p.textContent = sel.length === 0 ? "Click entities to select them (shift for more). Drag points to move them. Delete removes the selection." : `Selected: ${sel.map((id) => `${this.sketcher.entity(id)?.type ?? "?"} ${id}`).join(", ")}`;
+      body.appendChild(p);
+      const quick = this.sketcher.quickConstraints();
+      if (quick.length > 0) {
+        const row = document.createElement("div");
+        row.className = "row";
+        for (const q of quick) row.appendChild(button(q.label, () => this.sketcher.applyQuick(q.build)));
+        body.appendChild(row);
+      }
+      if (sel.length > 0) {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.appendChild(button("Delete selected", () => this.sketcher.deleteSelection(), "danger"));
+        body.appendChild(row);
+      }
+    }
 
     const plane = kind.plane;
     const planeValue = plane.type === "standard" ? plane.base : "face";
@@ -579,8 +634,11 @@ async function main(): Promise<void> {
   $("#btn-add-sketch").onclick = () => {
     const addOn = (plane: PlaneRef) => {
       const r = app.kernel.apply({ type: "add_sketch", plane, name: null });
+      app.selectedFace = null;
+      app.viewer.setSelectedFace(null);
       app.selected = r.feature;
       app.regenerate();
+      if (r.feature !== null) app.editSketch(r.feature);
     };
     if (app.selectedFace) {
       addOn({ type: "face", face: app.selectedFace, offset: 0 });
@@ -602,10 +660,24 @@ async function main(): Promise<void> {
     app.regenerate();
   };
   window.addEventListener("keydown", (e) => {
-    if (e.key === "f" && !(e.target instanceof HTMLInputElement)) app.viewer.fitAll();
+    const typing = e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement;
+    if (typing) return;
+    if (e.key === "f") app.viewer.fitAll();
     if (e.key === "Escape") {
       if (app.facePicker) app.endFacePick();
-      else app.onViewportPick(null);
+      else if (app.sketcher.active) {
+        app.sketcher.cancel();
+        if (app.sketcher.tool !== "select") app.sketcher.setTool("select");
+        else {
+          app.sketcher.exit();
+          app.renderDetail();
+        }
+      } else app.onViewportPick(null);
+    }
+    if (app.sketcher.active) {
+      const tool = ({ s: "select", l: "line", r: "rectangle", c: "circle" } as Record<string, Tool>)[e.key.toLowerCase()];
+      if (tool) app.sketcher.setTool(tool);
+      if (e.key === "Delete" || e.key === "Backspace") app.sketcher.deleteSelection();
     }
   });
 }

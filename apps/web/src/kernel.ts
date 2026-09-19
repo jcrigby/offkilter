@@ -70,7 +70,9 @@ export type SolveResult = {
   parameters: number;
 };
 export type SketchCurve = { entity: number; kind: string; points: Vec3[] };
-export type SketchResult = { solve: SolveResult; profiles: { outer: Vec2[]; holes: Vec2[][] }[]; curves: SketchCurve[] };
+export type PlaneFrame = { origin: Vec3; x_axis: Vec3; y_axis: Vec3; normal: Vec3 };
+export type Loop = { points: Vec2[] };
+export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
 export type Summary = { name: string; features: FeatureSummary[]; bodies: BodySummary[]; sketches: Record<string, SketchResult> };
 
 export type SketchOp =
