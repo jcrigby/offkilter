@@ -97,8 +97,10 @@ test("accounts own documents and share them", async ({ browser }) => {
 
   const a = await (await browser.newContext()).newPage();
   const b = await (await browser.newContext()).newPage();
-  // Prompts answer the share dialog with bob's name; confirms are accepted.
-  for (const p of [a, b]) p.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.message().startsWith("Share") ? bob : "Private part") : d.defaultValue()));
+  // Prompts answer the share dialog with bob's name (as an editor first, then
+  // read-only); confirms are accepted.
+  let shares = 0;
+  for (const p of [a, b]) p.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.message().startsWith("Share") ? (shares++ === 0 ? bob : `${bob} viewer`) : "Private part") : d.defaultValue()));
 
   // Alice creates an account through the dialog.
   await a.goto(`${SERVER}/`);
@@ -147,6 +149,20 @@ test("accounts own documents and share them", async ({ browser }) => {
   await ready(b);
   await expect(a.locator("#presence")).toContainText("2 online", { timeout: 10_000 });
   await expect(a.locator("#presence")).toHaveAttribute("title", `${alice}, ${bob}`);
+
+  // Shared again as a viewer, Bob sees a read-only badge and his edits are refused.
+  await a.click("#btn-docs");
+  await a.getByRole("button", { name: "Share…" }).first().click();
+  await expect(a.locator("#docs-list")).toContainText(`read-only: ${bob}`);
+  await a.click("#docs-close");
+  await b.goto(docUrl);
+  await ready(b);
+  await expect(b.locator("#read-only")).toBeVisible();
+  await b.click("#btn-add-variable");
+  await b.waitForTimeout(300);
+  expect(await b.evaluate(() => (window as unknown as { offkilter: any }).offkilter.readOnly)).toBe(true);
+  expect(await featureNames(b)).not.toContain("#width");
+  await expect(a.locator("#read-only")).toBeHidden();
 
   // Signing out closes the live document.
   await b.click("#btn-account");

@@ -38,7 +38,7 @@ works today, all in the browser:
 - Cloud: a small document server with real-time multi-user editing;
   concurrent edits converge without conflicts, documents keep named
   versions, and optional accounts own documents and share them with
-  other accounts.
+  other accounts as editors or read-only viewers.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
 resolution, 5° by default), drawing dimensions, STEP, and teams. See

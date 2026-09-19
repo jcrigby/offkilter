@@ -28,6 +28,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .spacer { flex: 1; }
 .divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
 .presence { font-size: 12px; color: var(--ok); padding: 0 6px; }
+.read-only { font-size: 11px; color: #ffb454; border: 1px solid #ffb454; border-radius: 3px; padding: 1px 6px; text-transform: uppercase; letter-spacing: 0.05em; }
 .quality { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
 .quality select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; font: inherit; }
 dialog { background: var(--bg-panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px; min-width: 420px; padding: 16px; }

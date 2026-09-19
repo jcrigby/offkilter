@@ -36,6 +36,9 @@ pub enum ServerMessage {
         seq: u64,
         doc: String,
         clients: usize,
+        /// The document is shared with this client read-only.
+        #[serde(default)]
+        read_only: bool,
     },
     /// `hash` is the document's structural hash after this op, so replicas
     /// can detect divergence.
@@ -94,7 +97,7 @@ impl LiveDoc {
     }
 
     /// Registers a client and returns its id plus a welcome message.
-    pub fn join(&self, name: Option<String>) -> (u64, ServerMessage) {
+    pub fn join(&self, name: Option<String>, read_only: bool) -> (u64, ServerMessage) {
         let prefix = self.store.take_prefix(&self.id).unwrap_or(1);
         let mut st = self.state.lock().unwrap();
         let client = st.next_client;
@@ -107,6 +110,7 @@ impl LiveDoc {
             seq: st.seq,
             doc: st.doc.to_json(),
             clients: st.clients.len(),
+            read_only,
         };
         let presence = self.presence_locked(&st);
         drop(st);

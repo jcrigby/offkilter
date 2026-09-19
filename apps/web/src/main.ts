@@ -28,6 +28,7 @@ class App implements SketchHost {
       loadDocument: (json) => this.loadDocument(json),
       presence: (clients, names) => this.showPresence(clients, names),
       status: (text) => this.setStatus(text),
+      readOnly: (ro) => this.setReadOnly(ro),
     },
     localStorage.getItem("offkilter.user") ?? `user-${Math.floor(Math.random() * 1000)}`,
   );
@@ -722,6 +723,7 @@ class App implements SketchHost {
 
   replace(kernel: Kernel): void {
     this.sketcher.exit();
+    this.setReadOnly(false);
     this.kernel.dispose();
     this.kernel = kernel;
     this.selected = null;
@@ -923,7 +925,17 @@ class App implements SketchHost {
     return r.studio ?? { feature: null, entities: [], constraint: null };
   }
 
+  /** The open server document is shared with this account read-only. */
+  readOnly = false;
+
+  setReadOnly(readOnly: boolean): void {
+    this.readOnly = readOnly;
+    document.body.classList.toggle("read-only", readOnly);
+    ($("#read-only") as HTMLElement).hidden = !readOnly;
+  }
+
   applyDocRaw(op: DocOp): DocOpResult {
+    if (this.readOnly) throw new Error("this document is shared with you read-only");
     const base = this.sync.nextBase();
     const r = this.kernel.apply(op, base);
     this.sync.send(op, base);
@@ -2256,17 +2268,23 @@ async function main(): Promise<void> {
       owner.className = "downer";
       const mine = !!user && d.owner?.id === user.id;
       const shared = d.collaborators ?? [];
-      owner.textContent = d.owner ? (mine ? "yours" : `by ${d.owner.name}`) + (shared.length ? ` · shared with ${shared.map((c) => c.name).join(", ")}` : "") : "open to all";
+      const viewers = d.viewers ?? [];
+      owner.textContent = d.owner
+        ? (mine ? "yours" : `by ${d.owner.name}`) + (shared.length ? ` · shared with ${shared.map((c) => c.name).join(", ")}` : "") + (viewers.length ? ` · read-only: ${viewers.map((c) => c.name).join(", ")}` : "")
+        : "open to all";
       const when = document.createElement("span");
       when.className = "dwhen";
       when.textContent = new Date(d.updated * 1000).toLocaleString();
       li.append(name, owner, when);
       if (mine) {
         const share = button("Share…", async () => {
-          const who = prompt(`Share "${d.name}" with which account name?`);
+          const who = prompt(`Share "${d.name}" with which account name? Add " viewer" for read-only access.`);
           if (!who) return;
+          const parts = who.trim().split(/\s+/);
+          const role = parts.length > 1 && parts[parts.length - 1]!.toLowerCase() === "viewer" ? "viewer" : "editor";
+          const name = role === "viewer" ? parts.slice(0, -1).join(" ") : who.trim();
           try {
-            await Sync.shareDoc(d.id, who.trim());
+            await Sync.shareDoc(d.id, name, role);
             await renderDocs();
           } catch (e) {
             note.textContent = `Could not share: ${(e as Error).message}`;
@@ -2274,7 +2292,7 @@ async function main(): Promise<void> {
         });
         share.className = "dshare";
         li.appendChild(share);
-        for (const c of shared) {
+        for (const c of [...shared, ...viewers]) {
           const un = button(`− ${c.name}`, async () => {
             await Sync.unshareDoc(d.id, c.id);
             await renderDocs();

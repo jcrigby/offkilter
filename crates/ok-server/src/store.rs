@@ -19,14 +19,38 @@ pub struct DocMeta {
     /// The account that created the document; `None` means open to all.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub owner: Option<UserInfo>,
-    /// Accounts the owner shared the document with.
+    /// Accounts the owner shared the document with, who may edit it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub collaborators: Vec<UserInfo>,
+    /// Accounts the owner shared the document with read-only.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub viewers: Vec<UserInfo>,
+}
+
+/// What a shared account may do with a document.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ShareRole {
+    Editor,
+    Viewer,
 }
 
 impl DocMeta {
     /// Whether `user` may open and edit the document.
     pub fn can_access(&self, user: Option<&User>) -> bool {
+        match &self.owner {
+            None => true,
+            Some(o) => user.is_some_and(|u| {
+                u.id == o.id
+                    || self.collaborators.iter().any(|c| c.id == u.id)
+                    || self.viewers.iter().any(|c| c.id == u.id)
+            }),
+        }
+    }
+
+    /// Whether `user` may change the document (owner and editors; anyone
+    /// for a document without an owner).
+    pub fn can_edit(&self, user: Option<&User>) -> bool {
         match &self.owner {
             None => true,
             Some(o) => user
@@ -135,6 +159,7 @@ impl DocStore {
             next_prefix: 1,
             owner,
             collaborators: Vec::new(),
+            viewers: Vec::new(),
         };
         std::fs::write(self.doc_path(&id), json)?;
         std::fs::write(self.meta_path(&id), serde_json::to_string_pretty(&meta)?)?;
@@ -172,17 +197,21 @@ impl DocStore {
     }
 
     /// Adds a collaborator (idempotent).
-    pub fn share(&self, id: &str, user: UserInfo) -> std::io::Result<DocMeta> {
+    /// Shares with `user` in `role`, replacing any earlier role.
+    pub fn share(&self, id: &str, user: UserInfo, role: ShareRole) -> std::io::Result<DocMeta> {
         let Some(mut meta) = self.meta(id) else {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
                 "no such document",
             ));
         };
-        if !meta.collaborators.iter().any(|c| c.id == user.id)
-            && meta.owner.as_ref().is_none_or(|o| o.id != user.id)
-        {
-            meta.collaborators.push(user);
+        if meta.owner.as_ref().is_none_or(|o| o.id != user.id) {
+            meta.collaborators.retain(|c| c.id != user.id);
+            meta.viewers.retain(|c| c.id != user.id);
+            match role {
+                ShareRole::Editor => meta.collaborators.push(user),
+                ShareRole::Viewer => meta.viewers.push(user),
+            }
             self.write_meta(&meta)?;
         }
         Ok(meta)
@@ -196,6 +225,7 @@ impl DocStore {
             ));
         };
         meta.collaborators.retain(|c| c.id != user_id);
+        meta.viewers.retain(|c| c.id != user_id);
         self.write_meta(&meta)?;
         Ok(meta)
     }

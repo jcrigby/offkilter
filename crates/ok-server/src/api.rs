@@ -7,7 +7,7 @@
 
 use crate::auth::{clear_cookie, session_cookie, AuthError, CurrentUser, User, UserStore};
 use crate::live::{ClientMessage, DocHub, ServerMessage};
-use crate::store::{DocMeta, DocStore};
+use crate::store::{DocMeta, DocStore, ShareRole};
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{ConnectInfo, DefaultBodyLimit, FromRef, Path, State};
 use axum::http::{header, HeaderValue, StatusCode};
@@ -242,6 +242,16 @@ fn accessible(hub: &DocHub, id: &str, user: Option<&User>) -> Result<DocMeta, St
     }
 }
 
+/// The document when `user` may change it; 403 for read-only viewers.
+fn editable(hub: &DocHub, id: &str, user: Option<&User>) -> Result<DocMeta, StatusCode> {
+    let meta = accessible(hub, id, user)?;
+    if meta.can_edit(user) {
+        Ok(meta)
+    } else {
+        Err(StatusCode::FORBIDDEN)
+    }
+}
+
 fn manageable(hub: &DocHub, id: &str, user: Option<&User>) -> Result<DocMeta, StatusCode> {
     let meta = accessible(hub, id, user)?;
     if meta.can_manage(user) {
@@ -322,7 +332,7 @@ async fn put_doc(
     Path(id): Path<String>,
     body: String,
 ) -> impl IntoResponse {
-    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+    if let Err(code) = editable(&hub, &id, user.as_ref()) {
         return code.into_response();
     }
     let studio = match ok_model::Document::from_json(&body) {
@@ -359,6 +369,9 @@ async fn delete_doc(
 #[derive(Deserialize)]
 struct ShareDoc {
     name: String,
+    /// "editor" (default) or "viewer" (read-only).
+    #[serde(default)]
+    role: Option<ShareRole>,
 }
 
 async fn share_doc(
@@ -373,11 +386,11 @@ async fn share_doc(
     let Some(target) = state.users.user_by_name(&body.name) else {
         return (StatusCode::NOT_FOUND, "no such user").into_response();
     };
-    match state
-        .hub
-        .store()
-        .share(&id, crate::auth::UserInfo::from(&target))
-    {
+    match state.hub.store().share(
+        &id,
+        crate::auth::UserInfo::from(&target),
+        body.role.unwrap_or(ShareRole::Editor),
+    ) {
         Ok(meta) => Json(meta).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
@@ -422,7 +435,7 @@ async fn save_version(
     Path(id): Path<String>,
     Json(body): Json<SaveVersion>,
 ) -> impl IntoResponse {
-    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+    if let Err(code) = editable(&hub, &id, user.as_ref()) {
         return code.into_response();
     }
     match hub.store().save_version(&id, &body.name) {
@@ -451,7 +464,7 @@ async fn restore_version(
     CurrentUser(user): CurrentUser,
     Path((id, vid)): Path<(String, String)>,
 ) -> impl IntoResponse {
-    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+    if let Err(code) = editable(&hub, &id, user.as_ref()) {
         return code.into_response();
     }
     let Some(json) = hub.store().read_version(&id, &vid) else {
@@ -472,14 +485,16 @@ async fn ws_upgrade(
     Path(id): Path<String>,
     ws: WebSocketUpgrade,
 ) -> impl IntoResponse {
-    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
-        return code.into_response();
-    }
+    let meta = match accessible(&hub, &id, user.as_ref()) {
+        Ok(m) => m,
+        Err(code) => return code.into_response(),
+    };
+    let read_only = !meta.can_edit(user.as_ref());
     match hub.get(&id) {
         Some(doc) => ws
             .max_message_size(MAX_BODY_BYTES)
             .max_frame_size(MAX_BODY_BYTES)
-            .on_upgrade(move |socket| handle_socket(socket, hub, doc, user))
+            .on_upgrade(move |socket| handle_socket(socket, hub, doc, user, read_only))
             .into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
     }
@@ -490,6 +505,7 @@ async fn handle_socket(
     hub: DocHub,
     doc: std::sync::Arc<crate::live::LiveDoc>,
     user: Option<User>,
+    read_only: bool,
 ) {
     let (mut sink, mut stream) = socket.split();
     // First message may be a hello with a display name; a signed-in user
@@ -508,7 +524,7 @@ async fn handle_socket(
     }
     // Subscribe before joining so this client also sees its own presence update.
     let mut rx = doc.tx.subscribe();
-    let (client, welcome) = doc.join(name);
+    let (client, welcome) = doc.join(name, read_only);
     if sink
         .send(Message::Text(
             serde_json::to_string(&welcome).unwrap().into(),
@@ -545,10 +561,18 @@ async fn handle_socket(
     let handle = |msg: ClientMessage, doc: &crate::live::LiveDoc| -> Option<ServerMessage> {
         match msg {
             ClientMessage::Hello { .. } => None,
-            ClientMessage::Op { op, id, base } => match doc.apply(client, id, op, base) {
-                Ok(_) => None,
-                Err(message) => Some(ServerMessage::Error { message, id }),
-            },
+            ClientMessage::Op { op, id, base } => {
+                if read_only {
+                    return Some(ServerMessage::Error {
+                        message: "this document is shared with you read-only".into(),
+                        id,
+                    });
+                }
+                match doc.apply(client, id, op, base) {
+                    Ok(_) => None,
+                    Err(message) => Some(ServerMessage::Error { message, id }),
+                }
+            }
             ClientMessage::Snapshot => Some(doc.snapshot()),
         }
     };
@@ -663,6 +687,90 @@ mod tests {
         assert!(statuses[..AUTH_ATTEMPTS_PER_WINDOW as usize]
             .iter()
             .all(|s| *s == StatusCode::UNAUTHORIZED));
+    }
+
+    #[tokio::test]
+    async fn viewers_can_read_but_not_write() {
+        let users = temp_users();
+        let app = router(temp_store(), users.clone(), None);
+        let (_, owner_tok) = users.register("olive", "olives-password").unwrap();
+        let (_, viewer_tok) = users.register("vic", "vics-password").unwrap();
+        let (owner, viewer) = (
+            format!("ok_session={owner_tok}"),
+            format!("ok_session={viewer_tok}"),
+        );
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            "/api/docs",
+            Some(r#"{"name":"plans"}"#),
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::CREATED, "{text}");
+        let id = serde_json::from_str::<serde_json::Value>(&text).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        // Share read-only.
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/share"),
+            Some(r#"{"name":"vic","role":"viewer"}"#),
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let meta: DocMeta = serde_json::from_str(&text).unwrap();
+        assert_eq!(meta.viewers.len(), 1);
+        assert!(meta.collaborators.is_empty());
+        // The viewer sees and reads the document but cannot replace it.
+        let (status, _, _) = call(&app, "GET", "/api/docs", None, Some(&viewer)).await;
+        assert_eq!(status, StatusCode::OK);
+        let (status, _, doc) =
+            call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&viewer)).await;
+        assert_eq!(status, StatusCode::OK);
+        let (status, _, _) = call(
+            &app,
+            "PUT",
+            &format!("/api/docs/{id}"),
+            Some(&doc),
+            Some(&viewer),
+        )
+        .await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        let (status, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/versions"),
+            Some(r#"{"name":"v1"}"#),
+            Some(&viewer),
+        )
+        .await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        // Promoting to editor moves the account between the lists.
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/share"),
+            Some(r#"{"name":"vic","role":"editor"}"#),
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let meta: DocMeta = serde_json::from_str(&text).unwrap();
+        assert!(meta.viewers.is_empty());
+        assert_eq!(meta.collaborators.len(), 1);
+        let (status, _, _) = call(
+            &app,
+            "PUT",
+            &format!("/api/docs/{id}"),
+            Some(&doc),
+            Some(&viewer),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
     }
 
     #[tokio::test]

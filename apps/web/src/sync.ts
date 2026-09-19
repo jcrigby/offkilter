@@ -9,11 +9,11 @@
 import type { DocOp } from "./kernel";
 
 export type UserInfo = { id: string; name: string };
-export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[] };
+export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[]; viewers?: UserInfo[] };
 export type VersionMeta = { id: string; name: string; created: number };
 
 type ServerMessage =
-  | { type: "welcome"; client: number; prefix: number; seq: number; doc: string; clients: number }
+  | { type: "welcome"; client: number; prefix: number; seq: number; doc: string; clients: number; read_only?: boolean }
   | { type: "op"; op: DocOp; seq: number; from: number; id: number; base: number | null; hash: string }
   | { type: "error"; message: string; id: number }
   | { type: "snapshot"; doc: string; seq: number }
@@ -28,6 +28,8 @@ export interface SyncHandlers {
   loadDocument(json: string): void;
   presence(clients: number, names: string[]): void;
   status(text: string): void;
+  /** The server shared this document with the current account read-only (or not). */
+  readOnly(readOnly: boolean): void;
 }
 
 export class Sync {
@@ -84,8 +86,8 @@ export class Sync {
     await fetch(`${Sync.apiBase()}/auth/logout`, { method: "POST" });
   }
 
-  static async shareDoc(id: string, name: string): Promise<DocMeta> {
-    const r = await fetch(`${Sync.apiBase()}/docs/${id}/share`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+  static async shareDoc(id: string, name: string, role: "editor" | "viewer" = "editor"): Promise<DocMeta> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/share`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, role }) });
     if (!r.ok) throw await Sync.failure(r);
     return (await r.json()) as DocMeta;
   }
@@ -197,6 +199,7 @@ export class Sync {
         this.prefix = m.prefix;
         this.counter = 0;
         this.connected = true;
+        this.handlers.readOnly(!!m.read_only);
         this.handlers.loadDocument(m.doc);
         this.handlers.presence(m.clients, []);
         this.handlers.status(`connected · ${m.clients} online`);
