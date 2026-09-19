@@ -40,9 +40,17 @@ struct BodySummary<'a> {
     source: ok_model::FeatureId,
     vertices: usize,
     triangles: usize,
-    faces: usize,
+    face_count: usize,
+    faces: Vec<FaceInfo>,
     bounds: Option<(ok_math::Vec3, ok_math::Vec3)>,
     volume: f64,
+}
+
+#[derive(Serialize)]
+struct FaceInfo {
+    origin: ok_brep::FaceOrigin,
+    surface: &'static str,
+    normal: ok_math::Vec3,
 }
 
 #[wasm_bindgen]
@@ -113,7 +121,20 @@ impl Studio {
                 source: b.source,
                 vertices: b.mesh.vertex_count(),
                 triangles: b.mesh.triangle_count(),
-                faces: b.solid.faces.len(),
+                face_count: b.solid.faces.len(),
+                faces: b
+                    .solid
+                    .faces
+                    .iter()
+                    .map(|f| FaceInfo {
+                        origin: f.origin,
+                        surface: match b.solid.surfaces.get(f.surface) {
+                            Some(ok_brep::Surface::Cylinder { .. }) => "cylinder",
+                            _ => "plane",
+                        },
+                        normal: f.plane.normal,
+                    })
+                    .collect(),
                 bounds: b.solid.bounds(),
                 volume: b.solid.volume(),
             })
@@ -152,6 +173,15 @@ impl Studio {
             .bodies
             .get(i)
             .map(|b| b.mesh.indices.clone())
+            .unwrap_or_default()
+    }
+
+    /// Face index of every triangle, parallel to `body_indices` / 3.
+    pub fn body_face_ids(&self, i: usize) -> Vec<u32> {
+        self.last
+            .bodies
+            .get(i)
+            .map(|b| b.triangle_faces.clone())
             .unwrap_or_default()
     }
 

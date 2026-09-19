@@ -1,6 +1,6 @@
 use crate::{
-    BodyOp, ExtrudeDirection, ExtrudeFeature, FeatureId, FeatureKind, ModelError, PartStudio,
-    PlaneSpec, ProfileSelection, SketchFeature,
+    BodyOp, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FeatureId, FeatureKind, ModelError,
+    PartStudio, PlaneRef, ProfileSelection, SketchFeature,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, EntityId, Sketch};
@@ -56,7 +56,7 @@ pub enum SketchOp {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Op {
     AddSketch {
-        plane: PlaneSpec,
+        plane: PlaneRef,
         name: Option<String>,
     },
     AddExtrude {
@@ -64,6 +64,8 @@ pub enum Op {
         depth: f64,
         #[serde(default = "default_direction")]
         direction: ExtrudeDirection,
+        #[serde(default)]
+        end: ExtrudeEnd,
         #[serde(default = "default_profiles")]
         profiles: ProfileSelection,
         #[serde(default = "default_body_op")]
@@ -72,14 +74,20 @@ pub enum Op {
     },
     SetExtrude {
         id: FeatureId,
+        #[serde(default)]
         depth: Option<f64>,
+        #[serde(default)]
         direction: Option<ExtrudeDirection>,
+        #[serde(default)]
+        end: Option<ExtrudeEnd>,
+        #[serde(default)]
         profiles: Option<ProfileSelection>,
+        #[serde(default)]
         op: Option<BodyOp>,
     },
     SetSketchPlane {
         id: FeatureId,
-        plane: PlaneSpec,
+        plane: PlaneRef,
     },
     RenameFeature {
         id: FeatureId,
@@ -141,6 +149,7 @@ impl PartStudio {
                 sketch,
                 depth,
                 direction,
+                end,
                 profiles,
                 op,
                 name,
@@ -155,6 +164,7 @@ impl PartStudio {
                         profiles,
                         depth,
                         direction,
+                        end,
                         op,
                     }),
                     name,
@@ -164,6 +174,7 @@ impl PartStudio {
                 id,
                 depth,
                 direction,
+                end,
                 profiles,
                 op,
             } => match &mut self.feature_mut(id)?.kind {
@@ -173,6 +184,9 @@ impl PartStudio {
                     }
                     if let Some(d) = direction {
                         e.direction = d;
+                    }
+                    if let Some(x) = end {
+                        e.end = x;
                     }
                     if let Some(p) = profiles {
                         e.profiles = p;

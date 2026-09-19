@@ -10,8 +10,8 @@ mod ops;
 mod regen;
 
 pub use feature::{
-    BodyOp, ExtrudeDirection, ExtrudeFeature, Feature, FeatureId, FeatureKind, PlaneSpec,
-    ProfileSelection, SketchFeature, StandardPlane,
+    canonical_frame, BodyOp, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature,
+    FeatureId, FeatureKind, PlaneRef, ProfileSelection, SketchFeature, StandardPlane,
 };
 pub use ops::{Op, OpResult, SketchOp};
 pub use regen::{Body, FeatureStatus, RegenResult, SketchCurve, SketchResult};
@@ -34,12 +34,12 @@ pub enum ModelError {
 ///
 /// ```
 /// use ok_math::Vec2;
-/// use ok_model::{Op, PartStudio, PlaneSpec, SketchOp, StandardPlane};
+/// use ok_model::{Op, PartStudio, PlaneRef, SketchOp, StandardPlane};
 ///
 /// let mut ps = PartStudio::new("bracket");
-/// let s = ps.apply(Op::AddSketch { plane: PlaneSpec::standard(StandardPlane::Top), name: None })?.feature.unwrap();
+/// let s = ps.apply(Op::AddSketch { plane: PlaneRef::standard(StandardPlane::Top), name: None })?.feature.unwrap();
 /// ps.apply(Op::Sketch { id: s, op: SketchOp::AddRectangle { a: Vec2::ZERO, b: Vec2::new(40.0, 20.0) } })?;
-/// ps.apply(Op::AddExtrude { sketch: s, depth: 10.0, direction: Default::default(), profiles: Default::default(), op: Default::default(), name: None })?;
+/// ps.apply(Op::AddExtrude { sketch: s, depth: 10.0, direction: Default::default(), end: Default::default(), profiles: Default::default(), op: Default::default(), name: None })?;
 /// let result = ps.regenerate();
 /// assert_eq!(result.bodies.len(), 1);
 /// assert!((result.bodies[0].mesh.signed_volume() - 8000.0).abs() < 1e-3);
@@ -130,7 +130,7 @@ impl PartStudio {
         let mut ps = PartStudio::new("Demo plate");
         let s1 = ps.push_feature(
             FeatureKind::Sketch(SketchFeature {
-                plane: PlaneSpec::standard(StandardPlane::Top),
+                plane: PlaneRef::standard(StandardPlane::Top),
                 sketch: ok_sketch::Sketch::new(),
             }),
             None,
@@ -170,15 +170,21 @@ impl PartStudio {
                 profiles: ProfileSelection::Largest,
                 depth: 8.0,
                 direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
                 op: BodyOp::New,
             }),
             None,
         );
+        // The boss is sketched on the plate's top face (extrude local face 1).
+        let e1 = ps.features.last().unwrap().id;
         let s2 = ps.push_feature(
             FeatureKind::Sketch(SketchFeature {
-                plane: PlaneSpec {
-                    base: StandardPlane::Top,
-                    offset: 8.0,
+                plane: PlaneRef::Face {
+                    face: FaceRef {
+                        feature: e1,
+                        local: 1,
+                    },
+                    offset: 0.0,
                 },
                 sketch: ok_sketch::Sketch::new(),
             }),
@@ -206,13 +212,14 @@ impl PartStudio {
                 profiles: ProfileSelection::Largest,
                 depth: 6.0,
                 direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
                 op: BodyOp::Add,
             }),
             None,
         );
         let s3 = ps.push_feature(
             FeatureKind::Sketch(SketchFeature {
-                plane: PlaneSpec::standard(StandardPlane::Front),
+                plane: PlaneRef::standard(StandardPlane::Front),
                 sketch: ok_sketch::Sketch::new(),
             }),
             None,
@@ -238,6 +245,7 @@ impl PartStudio {
                 profiles: ProfileSelection::All,
                 depth: 100.0,
                 direction: ExtrudeDirection::Symmetric,
+                end: ExtrudeEnd::ThroughAll,
                 op: BodyOp::Remove,
             }),
             None,

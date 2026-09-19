@@ -12,6 +12,7 @@ crate-type = ["cdylib", "rlib"]
 ok-math = { workspace = true }
 ok-sketch = { workspace = true }
 ok-mesh = { workspace = true }
+ok-brep = { workspace = true }
 ok-model = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

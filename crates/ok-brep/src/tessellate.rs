@@ -5,8 +5,14 @@ use ok_mesh::TriMesh;
 /// Triangulates every face. Planar faces get their face normal; facets on a
 /// cylinder get analytic per-vertex normals so the surface shades smoothly.
 pub fn tessellate(solid: &Solid) -> TriMesh {
+    tessellate_with_faces(solid).0
+}
+
+/// Like [`tessellate`], also returning the face index of every triangle.
+pub fn tessellate_with_faces(solid: &Solid) -> (TriMesh, Vec<u32>) {
     let mut mesh = TriMesh::new();
-    for f in &solid.faces {
+    let mut triangle_faces = Vec::new();
+    for (fi, f) in solid.faces.iter().enumerate() {
         let mut flat: Vec<f64> = Vec::new();
         let mut holes: Vec<usize> = Vec::new();
         let mut verts: Vec<Vec3> = Vec::new();
@@ -52,9 +58,10 @@ pub fn tessellate(solid: &Solid) -> TriMesh {
         for t in tris.chunks_exact(3) {
             mesh.indices
                 .extend([base + t[0] as u32, base + t[1] as u32, base + t[2] as u32]);
+            triangle_faces.push(fi as u32);
         }
     }
-    mesh
+    (mesh, triangle_faces)
 }
 
 /// Edges worth drawing: those between different surfaces, excluding

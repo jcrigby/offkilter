@@ -39,12 +39,31 @@ types. This is deliberate: an op log gives undo/redo for free, is the unit
 of a future version history, and is what real-time collaboration will
 synchronise. Do not add mutating methods outside `apply`.
 
-A `Body` holds an `ok_brep::Solid` plus its display tessellation and
-edges. Extrude builds a tool solid from the selected regions and then, per
+A `Body` holds an `ok_brep::Solid` plus its display tessellation, a
+triangle-to-face map for picking, and display edges. Extrude builds a tool solid from the selected regions and then, per
 `BodyOp`, creates a new body, unions it with every body its bounding box
 touches, subtracts it from them, or intersects with them. A cut that
 splits a body yields separate bodies (one per shell). Boolean failures are
 reported as feature errors and leave the existing bodies untouched.
+
+### Face references
+
+A `FaceRef` names a face by the feature that created it and that
+feature's local face index (extrude: 0 = start cap, 1 = end cap, 2+ =
+walls in loop order). Every face carries this as its `FaceOrigin`, and
+boolean fragments keep the origin of the face they came from, so the
+reference survives later cuts and unions as long as some part of the
+original face remains. A sketch `PlaneRef::Face` resolves to that face's
+plane at regeneration time (through `canonical_frame`, which derives a
+stable sketch frame from the plane alone), and `ExtrudeEnd::UpToFace`
+extrudes to that face's plane. `ExtrudeEnd::ThroughAll` extends past the
+bounding boxes of all existing bodies. A reference whose face no longer
+exists is a feature error.
+
+This is a first, deliberately simple form of persistent naming. Faces
+split into several fragments resolve to the first one found, and there is
+no disambiguation when a feature's face is later divided by another
+operation.
 
 ## Sketching (`ok-sketch`)
 

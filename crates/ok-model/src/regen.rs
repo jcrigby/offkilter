@@ -1,4 +1,7 @@
-use crate::{BodyOp, ExtrudeDirection, FeatureId, FeatureKind, PartStudio, ProfileSelection};
+use crate::{
+    canonical_frame, BodyOp, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId, FeatureKind,
+    PartStudio, PlaneRef, ProfileSelection,
+};
 use ok_brep::{boolean, BoolOp, Solid};
 use ok_math::{Plane, Vec2, Vec3};
 use ok_mesh::TriMesh;
@@ -15,21 +18,32 @@ pub struct Body {
     pub solid: Solid,
     /// Display tessellation of `solid`.
     pub mesh: TriMesh,
+    /// Index into `solid.faces` for every triangle of `mesh`, for picking.
+    pub triangle_faces: Vec<u32>,
     /// Display edges of `solid` (between distinct surfaces).
     pub edges: Vec<[Vec3; 2]>,
 }
 
 impl Body {
     fn new(name: String, source: FeatureId, solid: Solid) -> Body {
-        let mesh = ok_brep::tessellate(&solid);
+        let (mesh, triangle_faces) = ok_brep::tessellate_with_faces(&solid);
         let edges = ok_brep::display_edges(&solid);
         Body {
             name,
             source,
             solid,
             mesh,
+            triangle_faces,
             edges,
         }
+    }
+
+    /// The first face created by `face_ref`, if this body still has it.
+    pub fn find_face(&self, face_ref: &FaceRef) -> Option<&ok_brep::Face> {
+        self.solid
+            .faces
+            .iter()
+            .find(|f| face_ref.matches(&f.origin))
     }
 
     pub fn bounds(&self) -> Option<(Vec3, Vec3)> {
@@ -151,7 +165,13 @@ impl PartStudio {
             }
             let error = match &mut self.features[pos].kind {
                 FeatureKind::Sketch(sf) => {
-                    let plane = sf.plane.plane();
+                    let plane = match result.resolve_plane(&sf.plane) {
+                        Ok(p) => p,
+                        Err(e) => {
+                            result.statuses.push(FeatureStatus { id, error: Some(e) });
+                            continue;
+                        }
+                    };
                     let solve = sf.sketch.solve();
                     let mut profiles = sf.sketch.profiles(&opts);
                     profiles.sort_by(|a, b| {
@@ -233,13 +253,9 @@ impl PartStudio {
         if selected.is_empty() {
             return Some("no regions selected".into());
         }
-        if !(ef.depth.is_finite() && ef.depth.abs() > ok_math::tol::LINEAR) {
-            return Some("depth must be non-zero".into());
-        }
-        let (start, end) = match ef.direction {
-            ExtrudeDirection::Normal => (0.0, ef.depth),
-            ExtrudeDirection::Reverse => (0.0, -ef.depth),
-            ExtrudeDirection::Symmetric => (-ef.depth / 2.0, ef.depth / 2.0),
+        let (start, end) = match result.extrude_range(ef, &sr.plane) {
+            Ok(r) => r,
+            Err(e) => return Some(e),
         };
 
         // Build the tool volume: the union of the selected regions.
@@ -347,6 +363,127 @@ fn boxes_touch(a: (Vec3, Vec3), b: (Vec3, Vec3)) -> bool {
 }
 
 impl RegenResult {
+    /// Finds a referenced face among the current bodies.
+    fn find_face(&self, face_ref: &FaceRef) -> Result<&ok_brep::Face, String> {
+        self.bodies
+            .iter()
+            .find_map(|b| b.find_face(face_ref))
+            .ok_or_else(|| {
+                format!(
+                    "referenced face (feature {}, face {}) no longer exists",
+                    face_ref.feature.0, face_ref.local
+                )
+            })
+    }
+
+    /// Finds a referenced face and requires it to be planar.
+    fn find_planar_face(&self, face_ref: &FaceRef) -> Result<Plane, String> {
+        let face = self.find_face(face_ref)?;
+        let solid_face_plane = face.plane;
+        // Surface lookup: any body that owns the face has the matching surface table.
+        let planar = self.bodies.iter().any(|b| {
+            b.solid.faces.iter().any(|f| std::ptr::eq(f, face))
+                && matches!(
+                    b.solid.surfaces.get(face.surface),
+                    Some(ok_brep::Surface::Plane { .. })
+                )
+        });
+        if !planar {
+            return Err("referenced face is not planar".into());
+        }
+        Ok(solid_face_plane)
+    }
+
+    /// Resolves a plane reference to a sketch frame.
+    pub fn resolve_plane(&self, plane: &PlaneRef) -> Result<Plane, String> {
+        match plane {
+            PlaneRef::Standard { base, offset } => Ok(base.plane().offset(*offset)),
+            PlaneRef::Face { face, offset } => {
+                let p = self.find_planar_face(face)?;
+                Ok(canonical_frame(&p).offset(*offset))
+            }
+        }
+    }
+
+    /// Largest extent of all bodies from `origin` along `dir`, plus margin.
+    fn extent_along(&self, origin: Vec3, dir: Vec3) -> Option<f64> {
+        let mut max: Option<f64> = None;
+        for b in &self.bodies {
+            if let Some((lo, hi)) = b.bounds() {
+                for corner in [
+                    Vec3::new(lo.x, lo.y, lo.z),
+                    Vec3::new(hi.x, lo.y, lo.z),
+                    Vec3::new(lo.x, hi.y, lo.z),
+                    Vec3::new(hi.x, hi.y, lo.z),
+                    Vec3::new(lo.x, lo.y, hi.z),
+                    Vec3::new(hi.x, lo.y, hi.z),
+                    Vec3::new(lo.x, hi.y, hi.z),
+                    Vec3::new(hi.x, hi.y, hi.z),
+                ] {
+                    let d = (corner - origin).dot(dir);
+                    max = Some(max.map_or(d, |m: f64| m.max(d)));
+                }
+            }
+        }
+        max.map(|m| m.max(0.0) + 1.0)
+    }
+
+    /// Start and end heights (along the sketch normal) of an extrusion.
+    fn extrude_range(
+        &self,
+        ef: &crate::ExtrudeFeature,
+        plane: &Plane,
+    ) -> Result<(f64, f64), String> {
+        let n = plane.normal;
+        match ef.end {
+            ExtrudeEnd::Blind
+                if !(ef.depth.is_finite() && ef.depth.abs() > ok_math::tol::LINEAR) =>
+            {
+                Err("depth must be non-zero".into())
+            }
+            ExtrudeEnd::Blind => Ok(match ef.direction {
+                ExtrudeDirection::Normal => (0.0, ef.depth),
+                ExtrudeDirection::Reverse => (0.0, -ef.depth),
+                ExtrudeDirection::Symmetric => (-ef.depth / 2.0, ef.depth / 2.0),
+            }),
+            ExtrudeEnd::ThroughAll => {
+                let fwd = self.extent_along(plane.origin, n);
+                let back = self.extent_along(plane.origin, -n);
+                let (Some(fwd), Some(back)) = (fwd, back) else {
+                    return Err("through all needs an existing body".into());
+                };
+                Ok(match ef.direction {
+                    ExtrudeDirection::Normal => (0.0, fwd),
+                    ExtrudeDirection::Reverse => (0.0, -back),
+                    ExtrudeDirection::Symmetric => (-back, fwd),
+                })
+            }
+            ExtrudeEnd::UpToFace { face } => {
+                let target = self.find_planar_face(&face)?;
+                let dir = match ef.direction {
+                    ExtrudeDirection::Normal => n,
+                    ExtrudeDirection::Reverse => -n,
+                    ExtrudeDirection::Symmetric => {
+                        return Err("up to face cannot be symmetric".into())
+                    }
+                };
+                let denom = target.normal.dot(dir);
+                if denom.abs() < 1e-9 {
+                    return Err("target face is parallel to the extrude direction".into());
+                }
+                let t = target.normal.dot(target.origin - plane.origin) / denom;
+                if t <= ok_math::tol::LINEAR {
+                    return Err("target face is behind the sketch plane".into());
+                }
+                Ok(if ef.direction == ExtrudeDirection::Reverse {
+                    (0.0, -t)
+                } else {
+                    (0.0, t)
+                })
+            }
+        }
+    }
+
     fn push_body(&mut self, source: FeatureId, solid: Solid) {
         self.next_part += 1;
         self.bodies
@@ -365,7 +502,7 @@ impl RegenResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Op, PlaneSpec, SketchOp, StandardPlane};
+    use crate::{ExtrudeEnd, Op, PlaneRef, SketchOp, StandardPlane};
     use ok_sketch::Constraint;
 
     #[test]
@@ -395,7 +532,7 @@ mod tests {
         let mut ps = PartStudio::new("t");
         let s = ps
             .apply(Op::AddSketch {
-                plane: PlaneSpec::standard(StandardPlane::Front),
+                plane: PlaneRef::standard(StandardPlane::Front),
                 name: None,
             })
             .unwrap()
@@ -426,6 +563,7 @@ mod tests {
                 sketch: s,
                 depth: 5.0,
                 direction: ExtrudeDirection::Symmetric,
+                end: ExtrudeEnd::Blind,
                 profiles: ProfileSelection::All,
                 op: BodyOp::New,
                 name: None,
@@ -452,7 +590,7 @@ mod tests {
         let mut ps = PartStudio::new("t");
         let s = ps
             .apply(Op::AddSketch {
-                plane: PlaneSpec::standard(StandardPlane::Top),
+                plane: PlaneRef::standard(StandardPlane::Top),
                 name: None,
             })
             .unwrap()
@@ -471,6 +609,7 @@ mod tests {
                 sketch: s,
                 depth: 1.0,
                 direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
                 profiles: ProfileSelection::All,
                 op: BodyOp::New,
                 name: None,
@@ -488,7 +627,9 @@ mod tests {
     fn apply_json_ops() {
         let mut ps = PartStudio::new("t");
         let r = ps
-            .apply_json(r#"{"type":"add_sketch","plane":{"base":"top"},"name":null}"#)
+            .apply_json(
+                r#"{"type":"add_sketch","plane":{"type":"standard","base":"top"},"name":null}"#,
+            )
             .unwrap();
         let id = r.feature.unwrap().0;
         ps.apply_json(&format!(r#"{{"type":"sketch","id":{id},"op":{{"type":"add_circle","center":{{"x":0,"y":0}},"radius":3}}}}"#)).unwrap();
@@ -506,7 +647,7 @@ mod tests {
         let mut ps = PartStudio::new("t");
         let s = ps
             .apply(Op::AddSketch {
-                plane: PlaneSpec::standard(StandardPlane::Top),
+                plane: PlaneRef::standard(StandardPlane::Top),
                 name: None,
             })
             .unwrap()
@@ -524,6 +665,7 @@ mod tests {
             sketch: s,
             depth: 2.0,
             direction: ExtrudeDirection::Normal,
+            end: ExtrudeEnd::Blind,
             profiles: ProfileSelection::All,
             op: BodyOp::New,
             name: None,
@@ -531,7 +673,7 @@ mod tests {
         .unwrap();
         let s2 = ps
             .apply(Op::AddSketch {
-                plane: PlaneSpec::standard(StandardPlane::Top),
+                plane: PlaneRef::standard(StandardPlane::Top),
                 name: None,
             })
             .unwrap()
@@ -549,6 +691,7 @@ mod tests {
             sketch: s2,
             depth: 10.0,
             direction: ExtrudeDirection::Symmetric,
+            end: ExtrudeEnd::Blind,
             profiles: ProfileSelection::All,
             op: BodyOp::Remove,
             name: None,
@@ -566,11 +709,250 @@ mod tests {
     }
 
     #[test]
+    fn sketch_on_face_and_extrude_up_to_face() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddRectangle {
+                a: Vec2::ZERO,
+                b: Vec2::new(10.0, 10.0),
+            },
+        })
+        .unwrap();
+        let e = ps
+            .apply(Op::AddExtrude {
+                sketch: s,
+                depth: 4.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        // Sketch on the top face (local 1) of the block; a 2x2 square at its centre.
+        let top = crate::FaceRef {
+            feature: e,
+            local: 1,
+        };
+        let s2 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::Face {
+                    face: top,
+                    offset: 0.0,
+                },
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s2,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(4.0, 4.0),
+                b: Vec2::new(6.0, 6.0),
+            },
+        })
+        .unwrap();
+        let e2 = ps
+            .apply(Op::AddExtrude {
+                sketch: s2,
+                depth: 3.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::Add,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 1);
+        assert!(
+            (r.bodies[0].solid.volume() - 412.0).abs() < 1e-6,
+            "boss sits on top: {}",
+            r.bodies[0].solid.volume()
+        );
+        let (_, max) = r.bodies[0].bounds().unwrap();
+        assert!((max.z - 7.0).abs() < 1e-9);
+
+        // Grow the block: the boss sketch follows the top face.
+        ps.apply(Op::SetExtrude {
+            id: e,
+            depth: Some(6.0),
+            direction: None,
+            end: None,
+            profiles: None,
+            op: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(r.errors().next().is_none());
+        let (_, max) = r.bodies[0].bounds().unwrap();
+        assert!((max.z - 9.0).abs() < 1e-9);
+
+        // A cut from the boss top down to the block's top face.
+        let boss_top = crate::FaceRef {
+            feature: e2,
+            local: 1,
+        };
+        let s3 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::Face {
+                    face: boss_top,
+                    offset: 0.0,
+                },
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s3,
+            op: SketchOp::AddCircle {
+                center: Vec2::new(5.0, 5.0),
+                radius: 0.5,
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddExtrude {
+            sketch: s3,
+            depth: 0.0,
+            direction: ExtrudeDirection::Reverse,
+            end: ExtrudeEnd::UpToFace { face: top },
+            profiles: ProfileSelection::All,
+            op: BodyOp::Remove,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let expected = 600.0 + 12.0 - std::f64::consts::PI * 0.25 * 3.0;
+        let vol = r.bodies[0].solid.volume();
+        assert!(
+            (vol - expected).abs() < 0.05,
+            "vol {vol} expected {expected}"
+        );
+
+        // Through all from the side splits nothing but cuts the whole width.
+        let s4 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Front),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s4,
+            op: SketchOp::AddRectangle {
+                a: Vec2::new(1.0, 1.0),
+                b: Vec2::new(2.0, 2.0),
+            },
+        })
+        .unwrap();
+        ps.apply(Op::AddExtrude {
+            sketch: s4,
+            depth: 0.0,
+            direction: ExtrudeDirection::Symmetric,
+            end: ExtrudeEnd::ThroughAll,
+            profiles: ProfileSelection::All,
+            op: BodyOp::Remove,
+            name: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let vol2 = r.bodies[0].solid.volume();
+        assert!((vol2 - (vol - 10.0)).abs() < 0.05, "vol2 {vol2}");
+    }
+
+    #[test]
+    fn deleted_face_reference_is_an_error() {
+        let mut ps = PartStudio::new("t");
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddRectangle {
+                a: Vec2::ZERO,
+                b: Vec2::new(2.0, 2.0),
+            },
+        })
+        .unwrap();
+        let e = ps
+            .apply(Op::AddExtrude {
+                sketch: s,
+                depth: 1.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let s2 = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::Face {
+                    face: crate::FaceRef {
+                        feature: e,
+                        local: 1,
+                    },
+                    offset: 0.0,
+                },
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::SetSuppressed {
+            id: e,
+            suppressed: true,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert_eq!(r.errors().count(), 1);
+        assert!(r.errors().next().unwrap().0 == s2);
+    }
+
+    #[test]
     fn remove_touching_nothing_is_an_error() {
         let mut ps = PartStudio::new("t");
         let s = ps
             .apply(Op::AddSketch {
-                plane: PlaneSpec::standard(StandardPlane::Top),
+                plane: PlaneRef::standard(StandardPlane::Top),
                 name: None,
             })
             .unwrap()
@@ -588,6 +970,7 @@ mod tests {
             sketch: s,
             depth: 1.0,
             direction: ExtrudeDirection::Normal,
+            end: ExtrudeEnd::Blind,
             profiles: ProfileSelection::All,
             op: BodyOp::Remove,
             name: None,

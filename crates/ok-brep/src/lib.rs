@@ -18,7 +18,7 @@ mod tessellate;
 
 pub use boolean::{boolean, BoolOp};
 pub use extrude::extrude;
-pub use tessellate::{display_edges, tessellate};
+pub use tessellate::{display_edges, tessellate, tessellate_with_faces};
 
 use ok_math::{Plane, Vec3};
 use serde::{Deserialize, Serialize};

@@ -27,26 +27,69 @@ impl StandardPlane {
     }
 }
 
-/// A sketch plane: a standard plane offset along its normal.
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
-pub struct PlaneSpec {
-    pub base: StandardPlane,
-    #[serde(default)]
-    pub offset: f64,
+/// A reference to a face of a body, by the feature that created the face
+/// and that feature's local face index. Survives regeneration as long as
+/// the originating feature still produces the face.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct FaceRef {
+    pub feature: FeatureId,
+    pub local: u32,
 }
 
-impl PlaneSpec {
+impl FaceRef {
+    pub fn matches(&self, origin: &ok_brep::FaceOrigin) -> bool {
+        origin.feature == self.feature.0 && origin.local == self.local
+    }
+}
+
+/// A sketch plane: a standard plane or a planar face of a body, offset
+/// along its normal.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum PlaneRef {
+    Standard {
+        base: StandardPlane,
+        #[serde(default)]
+        offset: f64,
+    },
+    Face {
+        face: FaceRef,
+        #[serde(default)]
+        offset: f64,
+    },
+}
+
+impl PlaneRef {
     pub fn standard(base: StandardPlane) -> Self {
-        Self { base, offset: 0.0 }
+        PlaneRef::Standard { base, offset: 0.0 }
     }
-    pub fn plane(&self) -> Plane {
-        self.base.plane().offset(self.offset)
+
+    pub fn offset(&self) -> f64 {
+        match self {
+            PlaneRef::Standard { offset, .. } | PlaneRef::Face { offset, .. } => *offset,
+        }
     }
+
+    pub fn with_offset(self, offset: f64) -> Self {
+        match self {
+            PlaneRef::Standard { base, .. } => PlaneRef::Standard { base, offset },
+            PlaneRef::Face { face, .. } => PlaneRef::Face { face, offset },
+        }
+    }
+}
+
+/// A canonical sketch frame on a face plane: origin at the projection of
+/// the world origin onto the plane, axes chosen from the normal alone, so
+/// the frame is stable across regenerations that keep the plane.
+pub fn canonical_frame(plane: &Plane) -> Plane {
+    let n = plane.normal;
+    let origin = n * n.dot(plane.origin);
+    Plane::from_origin_normal(origin, n).unwrap_or(*plane)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SketchFeature {
-    pub plane: PlaneSpec,
+    pub plane: PlaneRef,
     pub sketch: Sketch,
 }
 
@@ -90,12 +133,28 @@ pub enum ProfileSelection {
     Indices { indices: Vec<usize> },
 }
 
+/// Where an extrusion stops.
+#[derive(Debug, Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ExtrudeEnd {
+    /// A fixed depth.
+    #[default]
+    Blind,
+    /// Past every existing body in the extrude direction.
+    ThroughAll,
+    /// To the plane of a planar face.
+    UpToFace { face: FaceRef },
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExtrudeFeature {
     pub sketch: FeatureId,
     pub profiles: ProfileSelection,
+    /// Depth for a blind extrusion; ignored for other end conditions.
     pub depth: f64,
     pub direction: ExtrudeDirection,
+    #[serde(default)]
+    pub end: ExtrudeEnd,
     pub op: BodyOp,
 }
 

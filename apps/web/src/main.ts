@@ -1,6 +1,7 @@
 import { Kernel } from "./kernel";
-import type { Constraint, FeatureSummary, Op, PlaneSpec, SketchData, SketchOp, Summary } from "./kernel";
+import type { Constraint, ExtrudeEnd, FaceRef, FeatureSummary, Op, PlaneRef, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
 import { Viewer } from "./viewer";
+import type { FacePick } from "./viewer";
 
 const $ = <T extends HTMLElement>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -14,12 +15,69 @@ class App {
   kernel: Kernel;
   summary!: Summary;
   selected: number | null = null;
+  /** Face selected in the viewport, if any. */
+  selectedFace: FaceRef | null = null;
+  /** Pending face request from a panel: receives the picked face. */
+  facePicker: ((face: FaceRef) => void) | null = null;
   viewer = new Viewer($("#viewport"));
 
   constructor(kernel: Kernel) {
     this.kernel = kernel;
+    this.viewer.onPick = (pick) => this.onViewportPick(pick);
     this.regenerate();
     this.viewer.fitAll();
+  }
+
+  // ------------------------------------------------------------ faces
+
+  faceRefOf(pick: FacePick): FaceRef | null {
+    return this.summary.bodies[pick.body]?.faces[pick.face]?.origin ?? null;
+  }
+
+  /** Locates a face reference among the current bodies. */
+  findFace(ref: FaceRef): FacePick | null {
+    for (let b = 0; b < this.summary.bodies.length; b++) {
+      const faces = this.summary.bodies[b]!.faces;
+      for (let f = 0; f < faces.length; f++) {
+        const o = faces[f]!.origin;
+        if (o.feature === ref.feature && o.local === ref.local) return { body: b, face: f };
+      }
+    }
+    return null;
+  }
+
+  describeFace(ref: FaceRef): string {
+    const feature = this.feature(ref.feature);
+    const pick = this.findFace(ref);
+    const surface = pick ? this.summary.bodies[pick.body]!.faces[pick.face]!.surface : "missing";
+    return `${feature?.name ?? `feature ${ref.feature}`} · face ${ref.local} (${surface})`;
+  }
+
+  onViewportPick(pick: FacePick | null): void {
+    const ref = pick ? this.faceRefOf(pick) : null;
+    if (this.facePicker) {
+      if (ref) {
+        const cb = this.facePicker;
+        this.endFacePick();
+        cb(ref);
+      }
+      return;
+    }
+    this.selectedFace = ref;
+    this.viewer.setSelectedFace(pick);
+    this.setStatus(ref ? `Face: ${this.describeFace(ref)}` : this.statusLine());
+  }
+
+  beginFacePick(cb: (face: FaceRef) => void): void {
+    this.facePicker = cb;
+    this.viewer.pickMode = true;
+    this.setStatus("Click a planar face in the viewport (Esc to cancel)");
+  }
+
+  endFacePick(): void {
+    this.facePicker = null;
+    this.viewer.pickMode = false;
+    this.setStatus(this.statusLine());
   }
 
   // ------------------------------------------------------------ document
@@ -48,22 +106,30 @@ class App {
     const dt = performance.now() - t0;
     this.viewer.setBodies(this.kernel.bodyMeshes());
     this.viewer.setSketches(this.summary.sketches, this.selected);
+    this.viewer.setSelectedFace(this.selectedFace ? this.findFace(this.selectedFace) : null);
     this.renderFeatures();
     this.renderDetail();
-    const faces = this.summary.bodies.reduce((n, b) => n + b.faces, 0);
-    const volume = this.summary.bodies.reduce((n, b) => n + b.volume, 0);
-    const errors = this.summary.features.filter((f) => f.error).length;
-    this.setStatus(
-      `${this.summary.bodies.length} ${this.summary.bodies.length === 1 ? "body" : "bodies"} · ${faces} faces · ${volume.toFixed(1)} mm³ · regen ${dt.toFixed(1)} ms` +
-        (errors ? ` · ${errors} feature error${errors > 1 ? "s" : ""}` : "") +
-        ` · kernel v${Kernel.version()}`,
-    );
+    this.lastRegenMs = dt;
+    this.setStatus(this.statusLine());
     ($("#studio-name") as HTMLInputElement).value = this.summary.name;
     try {
       localStorage.setItem(STORAGE_KEY, this.kernel.toJson());
     } catch {
       /* storage unavailable */
     }
+  }
+
+  lastRegenMs = 0;
+
+  statusLine(): string {
+    const faces = this.summary.bodies.reduce((n, b) => n + b.face_count, 0);
+    const volume = this.summary.bodies.reduce((n, b) => n + b.volume, 0);
+    const errors = this.summary.features.filter((f) => f.error).length;
+    return (
+      `${this.summary.bodies.length} ${this.summary.bodies.length === 1 ? "body" : "bodies"} · ${faces} faces · ${volume.toFixed(1)} mm³ · regen ${this.lastRegenMs.toFixed(1)} ms` +
+      (errors ? ` · ${errors} feature error${errors > 1 ? "s" : ""}` : "") +
+      ` · kernel v${Kernel.version()}`
+    );
   }
 
   setStatus(text: string): void {
@@ -131,7 +197,7 @@ class App {
     body.innerHTML = "";
     if (!f) {
       title.textContent = "Nothing selected";
-      body.innerHTML = `<p class="note">Select a feature to edit it. Drag to orbit, scroll to zoom, right-drag to pan.</p>`;
+      body.innerHTML = `<p class="note">Select a feature to edit it. Click a face to select it, then “+ Sketch” sketches on that face. Drag to orbit, scroll to zoom, right-drag to pan, F to fit.</p>`;
       return;
     }
     title.textContent = f.name;
@@ -172,16 +238,36 @@ class App {
     const kind = f.kind;
     const result = this.summary.sketches[String(f.id)];
 
+    const plane = kind.plane;
+    const planeValue = plane.type === "standard" ? plane.base : "face";
     body.appendChild(
-      field("Plane", select(["top", "front", "right"], kind.plane.base, (v) =>
-        this.apply({ type: "set_sketch_plane", id: f.id, plane: { base: v as PlaneSpec["base"], offset: kind.plane.offset } }),
-      )),
+      field("Plane", select(["top", "front", "right", "face"], planeValue, (v) => {
+        if (v === "face") {
+          this.beginFacePick((face) => this.apply({ type: "set_sketch_plane", id: f.id, plane: { type: "face", face, offset: plane.offset } }));
+        } else {
+          this.apply({ type: "set_sketch_plane", id: f.id, plane: { type: "standard", base: v as StandardPlane, offset: plane.offset } });
+        }
+      })),
     );
+    if (plane.type === "face") {
+      const row = document.createElement("div");
+      row.className = "field";
+      const l = document.createElement("label");
+      l.textContent = "Face";
+      const v = document.createElement("span");
+      v.className = "note";
+      v.textContent = this.describeFace(plane.face);
+      row.append(l, v);
+      body.appendChild(row);
+      body.appendChild(
+        field("", button("Pick another face", () =>
+          this.beginFacePick((face) => this.apply({ type: "set_sketch_plane", id: f.id, plane: { type: "face", face, offset: plane.offset } })),
+        )),
+      );
+    }
     body.appendChild(
-      field("Offset", numberInput(kind.plane.offset, (v) =>
-        this.apply({ type: "set_sketch_plane", id: f.id, plane: { base: kind.plane.base, offset: v } }),
-      )),
-    );
+      field("Offset", numberInput(plane.offset, (v) => this.apply({ type: "set_sketch_plane", id: f.id, plane: { ...plane, offset: v } })),
+    ));
 
     if (result) {
       const s = result.solve;
@@ -314,7 +400,35 @@ class App {
       s.disabled = true;
       return s;
     })()));
-    body.appendChild(field("Depth", numberInput(k.depth, (v) => this.apply({ type: "set_extrude", id: f.id, depth: v }))));
+    body.appendChild(
+      field("End", select(["blind", "through_all", "up_to_face"], k.end.type, (v) => {
+        if (v === "up_to_face") {
+          this.beginFacePick((face) => this.apply({ type: "set_extrude", id: f.id, end: { type: "up_to_face", face } }));
+        } else {
+          this.apply({ type: "set_extrude", id: f.id, end: { type: v as "blind" | "through_all" } });
+        }
+      })),
+    );
+    if (k.end.type === "blind") {
+      body.appendChild(field("Depth", numberInput(k.depth, (v) => this.apply({ type: "set_extrude", id: f.id, depth: v }))));
+    }
+    if (k.end.type === "up_to_face") {
+      const end: ExtrudeEnd = k.end;
+      const row = document.createElement("div");
+      row.className = "field";
+      const l = document.createElement("label");
+      l.textContent = "Face";
+      const v = document.createElement("span");
+      v.className = "note";
+      v.textContent = this.describeFace(end.face);
+      row.append(l, v);
+      body.appendChild(row);
+      body.appendChild(
+        field("", button("Pick another face", () =>
+          this.beginFacePick((face) => this.apply({ type: "set_extrude", id: f.id, end: { type: "up_to_face", face } })),
+        )),
+      );
+    }
     body.appendChild(
       field("Direction", select(["normal", "reverse", "symmetric"], k.direction, (v) =>
         this.apply({ type: "set_extrude", id: f.id, direction: v as typeof k.direction }),
@@ -463,11 +577,22 @@ async function main(): Promise<void> {
     app.apply({ type: "rename_studio", name: (e.target as HTMLInputElement).value });
   };
   $("#btn-add-sketch").onclick = () => {
-    const base = (prompt("Sketch plane: top, front or right", "top") ?? "").trim().toLowerCase();
+    const addOn = (plane: PlaneRef) => {
+      const r = app.kernel.apply({ type: "add_sketch", plane, name: null });
+      app.selected = r.feature;
+      app.regenerate();
+    };
+    if (app.selectedFace) {
+      addOn({ type: "face", face: app.selectedFace, offset: 0 });
+      return;
+    }
+    const base = (prompt("Sketch plane: top, front, right, or 'face' to pick one", "top") ?? "").trim().toLowerCase();
+    if (base === "face") {
+      app.beginFacePick((face) => addOn({ type: "face", face, offset: 0 }));
+      return;
+    }
     if (!["top", "front", "right"].includes(base)) return;
-    const r = app.kernel.apply({ type: "add_sketch", plane: { base: base as PlaneSpec["base"], offset: 0 }, name: null });
-    app.selected = r.feature;
-    app.regenerate();
+    addOn({ type: "standard", base: base as StandardPlane, offset: 0 });
   };
   $("#btn-add-extrude").onclick = () => {
     const f = app.feature(app.selected);
@@ -478,6 +603,10 @@ async function main(): Promise<void> {
   };
   window.addEventListener("keydown", (e) => {
     if (e.key === "f" && !(e.target instanceof HTMLInputElement)) app.viewer.fitAll();
+    if (e.key === "Escape") {
+      if (app.facePicker) app.endFacePick();
+      else app.onViewportPick(null);
+    }
   });
 }
 

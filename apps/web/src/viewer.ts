@@ -7,6 +7,11 @@ import type { BodyMesh, SketchResult, Vec3 } from "./kernel";
 const BODY_COLOR = 0x8fa8c8;
 const SKETCH_COLOR = 0x4ea1ff;
 const SKETCH_SELECTED = 0xffd166;
+const FACE_SELECTED = 0xffd166;
+const FACE_HOVER = 0x4ea1ff;
+
+/** A picked face: body index and face index within that body's solid. */
+export type FacePick = { body: number; face: number };
 
 export class Viewer {
   private renderer: THREE.WebGLRenderer;
@@ -18,6 +23,16 @@ export class Viewer {
   // Normals come from the kernel (analytic on curved surfaces), so no flat shading.
   private bodyMaterial = new THREE.MeshStandardMaterial({ color: BODY_COLOR, metalness: 0.1, roughness: 0.6 });
   private edgeMaterial = new THREE.LineBasicMaterial({ color: 0x1b1d21 });
+  private meshes: THREE.Mesh[] = [];
+  private meshData: BodyMesh[] = [];
+  private highlight = new THREE.Group();
+  private hover = new THREE.Group();
+  private raycaster = new THREE.Raycaster();
+  private pointerDown: { x: number; y: number } | null = null;
+  /** Called when the user clicks a face (or empty space with `null`). */
+  onPick: ((pick: FacePick | null) => void) | null = null;
+  /** When true, hovering previews faces; used while a panel waits for a face. */
+  pickMode = false;
 
   constructor(private container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -51,6 +66,25 @@ export class Viewer {
 
     this.scene.add(this.bodies);
     this.scene.add(this.sketches);
+    this.scene.add(this.highlight);
+    this.scene.add(this.hover);
+
+    const el = this.renderer.domElement;
+    el.addEventListener("pointerdown", (e) => {
+      this.pointerDown = { x: e.clientX, y: e.clientY };
+    });
+    el.addEventListener("pointerup", (e) => {
+      const down = this.pointerDown;
+      this.pointerDown = null;
+      if (!down || e.button !== 0) return;
+      if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > 4) return; // it was a drag
+      this.onPick?.(this.pickAt(e));
+    });
+    el.addEventListener("pointermove", (e) => {
+      if (!this.pickMode || this.pointerDown) return;
+      this.showFace(this.hover, this.pickAt(e), FACE_HOVER, 0.35);
+    });
+    el.addEventListener("pointerleave", () => this.clear(this.hover));
 
     new ResizeObserver(() => this.resize()).observe(container);
     this.resize();
@@ -73,12 +107,18 @@ export class Viewer {
 
   setBodies(meshes: BodyMesh[]): void {
     this.clear(this.bodies);
+    this.clear(this.highlight);
+    this.clear(this.hover);
+    this.meshes = [];
+    this.meshData = meshes;
     for (const m of meshes) {
       const geom = new THREE.BufferGeometry();
       geom.setAttribute("position", new THREE.BufferAttribute(m.positions, 3));
       geom.setAttribute("normal", new THREE.BufferAttribute(m.normals, 3));
       geom.setIndex(new THREE.BufferAttribute(m.indices, 1));
       const mesh = new THREE.Mesh(geom, this.bodyMaterial);
+      mesh.userData.body = this.meshes.length;
+      this.meshes.push(mesh);
       this.bodies.add(mesh);
       if (m.edges.length > 0) {
         const eg = new THREE.BufferGeometry();
@@ -104,6 +144,40 @@ export class Viewer {
         }
       }
     }
+  }
+
+  /** Face under a pointer event, if any. */
+  private pickAt(e: PointerEvent): FacePick | null {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.camera);
+    const hit = this.raycaster.intersectObjects(this.meshes, false)[0];
+    if (!hit || hit.faceIndex === undefined || hit.faceIndex === null) return null;
+    const body = hit.object.userData.body as number;
+    const face = this.meshData[body]?.faceIds[hit.faceIndex];
+    return face === undefined ? null : { body, face };
+  }
+
+  /** Highlights a face (or clears the highlight with `null`). */
+  setSelectedFace(pick: FacePick | null): void {
+    this.showFace(this.highlight, pick, FACE_SELECTED, 0.55);
+  }
+
+  private showFace(group: THREE.Group, pick: FacePick | null, color: number, opacity: number): void {
+    this.clear(group);
+    if (!pick) return;
+    const m = this.meshData[pick.body];
+    if (!m) return;
+    const tris: number[] = [];
+    for (let t = 0; t < m.faceIds.length; t++) {
+      if (m.faceIds[t] === pick.face) tris.push(m.indices[3 * t]!, m.indices[3 * t + 1]!, m.indices[3 * t + 2]!);
+    }
+    if (tris.length === 0) return;
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute("position", new THREE.BufferAttribute(m.positions, 3));
+    geom.setIndex(tris);
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthTest: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, side: THREE.DoubleSide });
+    group.add(new THREE.Mesh(geom, mat));
   }
 
   /** Frames the camera on everything currently shown. */

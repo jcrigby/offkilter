@@ -13,7 +13,8 @@ top are concrete and self-contained; items lower down are directions.
 - [ ] Dimension display in the viewport
 - [ ] Analytic Jacobians for the common constraints (performance)
 - [ ] Splines (B-spline entity + point-on-curve)
-- [ ] Sketch on planar faces of bodies; project/use edges from bodies
+- [x] Sketch on planar faces of bodies (face references)
+- [ ] Project / use edges from bodies in sketches
 - [ ] Construction geometry, mirror, patterns
 
 ## Solids
@@ -23,12 +24,12 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Booleans (union / subtract / intersect) on polyhedral solids, with exact coplanar handling
 - [ ] Exact curved faces (cylinder, later general surfaces) instead of facets, with curve/surface intersection
 - [ ] Merge coplanar faces of the same body after a union
-- [ ] Extrude up-to-face / through-all
+- [x] Extrude up-to-face / through-all
 - [ ] Revolve, sweep, loft
 - [ ] Fillet and chamfer
 - [ ] Shell, draft
 - [ ] Feature patterns and mirror
-- [ ] Persistent naming of topology across regeneration (so downstream features survive edits)
+- [~] Persistent naming: face origins survive booleans; needs disambiguation for split faces and edge/vertex references
 
 ## Document and client
 
@@ -36,7 +37,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] JSON document format and browser persistence
 - [ ] Undo/redo from the op log
 - [ ] Variables and expressions in dimensions (`width / 2`)
-- [ ] Face/edge/body selection in the viewport with picking
+- [x] Face selection in the viewport with picking
+- [ ] Edge and body selection
 - [ ] Multiple part studios per document; assemblies with mates
 - [ ] Drawings (2D projections) and export: STL/3MF now, STEP once there is a B-rep
 - [ ] Import: STEP via a B-rep reader

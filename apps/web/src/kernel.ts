@@ -6,7 +6,10 @@ import init, { Studio, version as kernelVersion } from "./wasm/ok_wasm.js";
 export type Vec2 = { x: number; y: number };
 export type Vec3 = { x: number; y: number; z: number };
 export type StandardPlane = "top" | "front" | "right";
-export type PlaneSpec = { base: StandardPlane; offset: number };
+/** A face of a body, by the feature that made it and its local face index. */
+export type FaceRef = { feature: number; local: number };
+export type PlaneRef = { type: "standard"; base: StandardPlane; offset: number } | { type: "face"; face: FaceRef; offset: number };
+export type ExtrudeEnd = { type: "blind" } | { type: "through_all" } | { type: "up_to_face"; face: FaceRef };
 export type ExtrudeDirection = "normal" | "reverse" | "symmetric";
 export type BodyOp = "new" | "add" | "remove" | "intersect";
 export type ProfileSelection = { type: "all" } | { type: "largest" } | { type: "indices"; indices: number[] };
@@ -43,11 +46,21 @@ export type SketchData = {
 };
 
 export type FeatureKind =
-  | { type: "sketch"; plane: PlaneSpec; sketch: SketchData }
-  | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; op: BodyOp };
+  | { type: "sketch"; plane: PlaneRef; sketch: SketchData }
+  | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; end: ExtrudeEnd; op: BodyOp };
 
 export type FeatureSummary = { id: number; name: string; suppressed: boolean; kind: FeatureKind; error: string | null };
-export type BodySummary = { name: string; source: number; vertices: number; triangles: number; faces: number; bounds: [Vec3, Vec3] | null; volume: number };
+export type FaceInfo = { origin: FaceRef; surface: "plane" | "cylinder"; normal: Vec3 };
+export type BodySummary = {
+  name: string;
+  source: number;
+  vertices: number;
+  triangles: number;
+  face_count: number;
+  faces: FaceInfo[];
+  bounds: [Vec3, Vec3] | null;
+  volume: number;
+};
 export type SolveResult = {
   status: "fully_constrained" | "under_constrained" | "inconsistent";
   iterations: number;
@@ -73,10 +86,10 @@ export type SketchOp =
   | { type: "move_point"; id: number; pos: Vec2 };
 
 export type Op =
-  | { type: "add_sketch"; plane: PlaneSpec; name: string | null }
-  | { type: "add_extrude"; sketch: number; depth: number; direction?: ExtrudeDirection; profiles?: ProfileSelection; op?: BodyOp; name: string | null }
-  | { type: "set_extrude"; id: number; depth?: number | null; direction?: ExtrudeDirection | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
-  | { type: "set_sketch_plane"; id: number; plane: PlaneSpec }
+  | { type: "add_sketch"; plane: PlaneRef; name: string | null }
+  | { type: "add_extrude"; sketch: number; depth: number; direction?: ExtrudeDirection; end?: ExtrudeEnd; profiles?: ProfileSelection; op?: BodyOp; name: string | null }
+  | { type: "set_extrude"; id: number; depth?: number | null; direction?: ExtrudeDirection | null; end?: ExtrudeEnd | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
+  | { type: "set_sketch_plane"; id: number; plane: PlaneRef }
   | { type: "rename_feature"; id: number; name: string }
   | { type: "set_suppressed"; id: number; suppressed: boolean }
   | { type: "delete_feature"; id: number }
@@ -86,7 +99,7 @@ export type Op =
 
 export type OpResult = { feature: number | null; entities: number[]; constraint: number | null };
 
-export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array };
+export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array; faceIds: Uint32Array };
 
 export class Kernel {
   private studio: Studio;
@@ -136,6 +149,7 @@ export class Kernel {
         normals: this.studio.body_normals(i),
         indices: this.studio.body_indices(i),
         edges: this.studio.body_edges(i),
+        faceIds: this.studio.body_face_ids(i),
       });
     }
     return out;
