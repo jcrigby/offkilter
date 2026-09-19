@@ -57,3 +57,74 @@ test("two clients edit one document live", async ({ browser }) => {
   expect(fresh.length).toBeGreaterThanOrEqual(2);
   expect(new Set(fresh.map((id: number) => id >> 20)).size).toBe(2);
 });
+
+test("accounts own documents and share them", async ({ browser }) => {
+  let up = false;
+  try {
+    up = (await fetch(`${SERVER}/api/health`)).ok;
+  } catch {
+    up = false;
+  }
+  test.skip(!up, `no document server at ${SERVER}`);
+  const stamp = Date.now().toString(36);
+  const alice = `alice_${stamp}`;
+  const bob = `bob_${stamp}`;
+
+  const a = await (await browser.newContext()).newPage();
+  const b = await (await browser.newContext()).newPage();
+  // Prompts answer the share dialog with bob's name; confirms are accepted.
+  for (const p of [a, b]) p.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.message().startsWith("Share") ? bob : "Private part") : d.defaultValue()));
+
+  // Alice creates an account through the dialog.
+  await a.goto(`${SERVER}/`);
+  await ready(a);
+  await a.click("#btn-account");
+  await a.fill("#account-name", alice);
+  await a.fill("#account-password", "correct horse battery");
+  await a.click("#account-register");
+  await expect(a.locator("#btn-account")).toHaveText(alice);
+  // The session survives a reload.
+  await a.reload();
+  await ready(a);
+  await expect(a.locator("#btn-account")).toHaveText(alice);
+
+  // She creates a document: it is hers and shows her account name in presence.
+  await a.click("#btn-docs");
+  await a.click("#docs-create");
+  await a.waitForFunction(() => new URL(location.href).searchParams.get("doc") !== null);
+  await expect(a.locator("#presence")).toContainText("1 online", { timeout: 10_000 });
+  await expect(a.locator("#presence")).toHaveAttribute("title", alice);
+  const docUrl = a.url();
+
+  // Bob registers; the document is invisible to him until it is shared.
+  await b.goto(`${SERVER}/`);
+  await ready(b);
+  await b.click("#btn-account");
+  await b.fill("#account-name", bob);
+  await b.fill("#account-password", "bobs long password");
+  await b.click("#account-register");
+  await expect(b.locator("#btn-account")).toHaveText(bob);
+  await b.click("#btn-docs");
+  await expect(b.locator("#docs-list")).not.toContainText("Private part");
+  await b.click("#docs-close");
+
+  await a.click("#btn-docs");
+  await expect(a.locator("#docs-list")).toContainText("yours");
+  await a.getByRole("button", { name: "Share…" }).first().click();
+  await expect(a.locator("#docs-list")).toContainText(`shared with ${bob}`);
+  await a.click("#docs-close");
+
+  await b.click("#btn-docs");
+  await expect(b.locator("#docs-list")).toContainText("Private part");
+  await expect(b.locator("#docs-list")).toContainText(`by ${alice}`);
+  await b.click("#docs-close");
+  await b.goto(docUrl);
+  await ready(b);
+  await expect(a.locator("#presence")).toContainText("2 online", { timeout: 10_000 });
+  await expect(a.locator("#presence")).toHaveAttribute("title", `${alice}, ${bob}`);
+
+  // Signing out closes the live document.
+  await b.click("#btn-account");
+  await expect(b.locator("#btn-account")).toHaveText("Sign in");
+  await expect(a.locator("#presence")).toContainText("1 online", { timeout: 10_000 });
+});

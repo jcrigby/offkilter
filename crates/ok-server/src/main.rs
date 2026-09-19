@@ -7,6 +7,7 @@
 //! number, and broadcasts it. Clients apply ops in server order.
 
 mod api;
+mod auth;
 mod live;
 mod store;
 
@@ -43,7 +44,8 @@ async fn main() {
         }
     }
     let store = store::DocStore::open(&data).expect("open data directory");
-    let app = api::router(store, static_dir);
+    let users = auth::UserStore::open(&data).expect("open data directory");
+    let app = api::router(store, users, static_dir);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(addr).await.expect("bind");
     println!(

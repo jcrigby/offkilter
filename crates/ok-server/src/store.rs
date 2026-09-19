@@ -1,6 +1,7 @@
 //! On-disk document storage: one `.okpart` JSON file per document plus a
 //! small metadata file.
 
+use crate::auth::{User, UserInfo};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -15,6 +16,31 @@ pub struct DocMeta {
     /// Next id-range prefix to hand to a connecting client (monotonic).
     #[serde(default = "first_prefix")]
     pub next_prefix: u32,
+    /// The account that created the document; `None` means open to all.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owner: Option<UserInfo>,
+    /// Accounts the owner shared the document with.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub collaborators: Vec<UserInfo>,
+}
+
+impl DocMeta {
+    /// Whether `user` may open and edit the document.
+    pub fn can_access(&self, user: Option<&User>) -> bool {
+        match &self.owner {
+            None => true,
+            Some(o) => user
+                .is_some_and(|u| u.id == o.id || self.collaborators.iter().any(|c| c.id == u.id)),
+        }
+    }
+
+    /// Whether `user` may delete or share the document.
+    pub fn can_manage(&self, user: Option<&User>) -> bool {
+        match &self.owner {
+            None => true,
+            Some(o) => user.is_some_and(|u| u.id == o.id),
+        }
+    }
 }
 
 fn first_prefix() -> u32 {
@@ -94,7 +120,12 @@ impl DocStore {
         serde_json::from_str(&text).ok()
     }
 
-    pub fn create(&self, name: &str, json: &str) -> std::io::Result<DocMeta> {
+    pub fn create(
+        &self,
+        name: &str,
+        json: &str,
+        owner: Option<UserInfo>,
+    ) -> std::io::Result<DocMeta> {
         let id = new_id();
         let meta = DocMeta {
             id: id.clone(),
@@ -102,6 +133,8 @@ impl DocStore {
             created: now(),
             updated: now(),
             next_prefix: 1,
+            owner,
+            collaborators: Vec::new(),
         };
         std::fs::write(self.doc_path(&id), json)?;
         std::fs::write(self.meta_path(&id), serde_json::to_string_pretty(&meta)?)?;
@@ -129,6 +162,42 @@ impl DocStore {
         std::fs::write(self.doc_path(id), json)?;
         std::fs::write(self.meta_path(id), serde_json::to_string_pretty(&meta)?)?;
         Ok(())
+    }
+
+    fn write_meta(&self, meta: &DocMeta) -> std::io::Result<()> {
+        std::fs::write(
+            self.meta_path(&meta.id),
+            serde_json::to_string_pretty(meta)?,
+        )
+    }
+
+    /// Adds a collaborator (idempotent).
+    pub fn share(&self, id: &str, user: UserInfo) -> std::io::Result<DocMeta> {
+        let Some(mut meta) = self.meta(id) else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "no such document",
+            ));
+        };
+        if !meta.collaborators.iter().any(|c| c.id == user.id)
+            && meta.owner.as_ref().is_none_or(|o| o.id != user.id)
+        {
+            meta.collaborators.push(user);
+            self.write_meta(&meta)?;
+        }
+        Ok(meta)
+    }
+
+    pub fn unshare(&self, id: &str, user_id: &str) -> std::io::Result<DocMeta> {
+        let Some(mut meta) = self.meta(id) else {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "no such document",
+            ));
+        };
+        meta.collaborators.retain(|c| c.id != user_id);
+        self.write_meta(&meta)?;
+        Ok(meta)
     }
 
     /// Reserves and returns the next client id-range prefix for a document.

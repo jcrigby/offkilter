@@ -62,7 +62,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Real-time multi-user editing (ops relayed in server order)
 - [x] Conflict-free concurrent editing: per-client id ranges make ops commute; structural hashes detect and repair any divergence
 - [ ] Per-user undo in shared documents (inverse ops instead of document replacement)
-- [ ] Accounts, sharing, teams
+- [x] Accounts (argon2id passwords, cookie sessions) and per-document sharing
+- [ ] Teams, roles (read-only collaborators), invitations by link
 
 ## Engineering
 

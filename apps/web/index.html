@@ -26,6 +26,7 @@
         <button id="btn-redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
         <span class="divider"></span>
         <button id="btn-docs" title="Documents on the server">Docs</button>
+        <button id="btn-account" title="Sign in to own and share documents">Sign in</button>
         <span id="presence" class="presence" hidden></span>
         <button id="btn-new" title="New empty part studio">New</button>
         <button id="btn-demo" title="Load the example part">Demo</button>
@@ -78,6 +79,20 @@
         <ul id="versions-list" class="docs-list"></ul>
         <div class="row"><button id="versions-save">Save version</button></div>
       </div>
+    </dialog>
+    <dialog id="account-dialog">
+      <h3 id="account-title">Sign in</h3>
+      <p class="note">Signing in is optional. Documents you create while signed in belong to you and can be shared with other accounts; documents created anonymously are open to everyone on this server.</p>
+      <form id="account-form" method="dialog">
+        <div class="field"><label for="account-name">Name</label><input id="account-name" autocomplete="username" spellcheck="false" /></div>
+        <div class="field"><label for="account-password">Password</label><input id="account-password" type="password" autocomplete="current-password" /></div>
+        <p class="note" id="account-note"></p>
+        <div class="row">
+          <button id="account-login" class="primary" type="submit">Sign in</button>
+          <button id="account-register" type="button">Create account</button>
+          <button id="account-close" type="button">Close</button>
+        </div>
+      </form>
     </dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>

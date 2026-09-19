@@ -8,7 +8,8 @@
 
 import type { Op } from "./kernel";
 
-export type DocMeta = { id: string; name: string; created: number; updated: number };
+export type UserInfo = { id: string; name: string };
+export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[] };
 export type VersionMeta = { id: string; name: string; created: number };
 
 type ServerMessage =
@@ -48,6 +49,51 @@ export class Sync {
     return `${location.origin}/api`;
   }
 
+  /** Error text from a failed response: the body when the server explains, else the status. */
+  private static async failure(r: Response): Promise<Error> {
+    const text = (await r.text()).trim();
+    return new Error(text && text.length < 200 ? text : `server said ${r.status}`);
+  }
+
+  // ---- accounts (cookie sessions; same-origin fetches carry the cookie)
+
+  static async me(): Promise<UserInfo | null> {
+    try {
+      const r = await fetch(`${Sync.apiBase()}/auth/me`);
+      return r.ok ? ((await r.json()) as UserInfo) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static async register(name: string, password: string): Promise<UserInfo> {
+    const r = await fetch(`${Sync.apiBase()}/auth/register`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, password }) });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as UserInfo;
+  }
+
+  static async login(name: string, password: string): Promise<UserInfo> {
+    const r = await fetch(`${Sync.apiBase()}/auth/login`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, password }) });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as UserInfo;
+  }
+
+  static async logout(): Promise<void> {
+    await fetch(`${Sync.apiBase()}/auth/logout`, { method: "POST" });
+  }
+
+  static async shareDoc(id: string, name: string): Promise<DocMeta> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/share`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as DocMeta;
+  }
+
+  static async unshareDoc(id: string, userId: string): Promise<DocMeta> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/share/${userId}`, { method: "DELETE" });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as DocMeta;
+  }
+
   static async listDocs(): Promise<DocMeta[]> {
     const r = await fetch(`${Sync.apiBase()}/docs`);
     if (!r.ok) throw new Error(`server said ${r.status}`);
@@ -61,7 +107,8 @@ export class Sync {
   }
 
   static async deleteDoc(id: string): Promise<void> {
-    await fetch(`${Sync.apiBase()}/docs/${id}`, { method: "DELETE" });
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}`, { method: "DELETE" });
+    if (!r.ok) throw await Sync.failure(r);
   }
 
   static async listVersions(id: string): Promise<VersionMeta[]> {

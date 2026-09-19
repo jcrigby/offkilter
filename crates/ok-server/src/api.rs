@@ -1,32 +1,63 @@
 //! HTTP and WebSocket routes.
+//!
+//! Signing in is optional. Documents created anonymously have no owner and
+//! are open to everyone on the server; documents created while signed in
+//! belong to that account and are visible only to the owner and the people
+//! it was shared with.
 
+use crate::auth::{clear_cookie, session_cookie, AuthError, CurrentUser, User, UserStore};
 use crate::live::{ClientMessage, DocHub, ServerMessage};
-use crate::store::DocStore;
+use crate::store::{DocMeta, DocStore};
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-use axum::extract::{Path, State};
-use axum::http::StatusCode;
+use axum::extract::{FromRef, Path, State};
+use axum::http::{header, StatusCode};
 use axum::response::IntoResponse;
-use axum::routing::get;
+use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use futures_util::{SinkExt, StreamExt};
 use serde::Deserialize;
 use std::path::PathBuf;
 use tower_http::services::{ServeDir, ServeFile};
 
-pub fn router(store: DocStore, static_dir: Option<PathBuf>) -> Router {
-    let hub = DocHub::new(store);
+#[derive(Clone)]
+pub struct AppState {
+    hub: DocHub,
+    users: UserStore,
+}
+
+impl FromRef<AppState> for DocHub {
+    fn from_ref(s: &AppState) -> DocHub {
+        s.hub.clone()
+    }
+}
+
+impl FromRef<AppState> for UserStore {
+    fn from_ref(s: &AppState) -> UserStore {
+        s.users.clone()
+    }
+}
+
+pub fn router(store: DocStore, users: UserStore, static_dir: Option<PathBuf>) -> Router {
+    let state = AppState {
+        hub: DocHub::new(store),
+        users,
+    };
     let api = Router::new()
+        .route("/auth/register", post(register))
+        .route("/auth/login", post(login))
+        .route("/auth/logout", post(logout))
+        .route("/auth/me", get(me))
         .route("/docs", get(list_docs).post(create_doc))
         .route("/docs/{id}", get(get_doc).put(put_doc).delete(delete_doc))
+        .route("/docs/{id}/meta", get(get_meta))
+        .route("/docs/{id}/share", post(share_doc))
+        .route("/docs/{id}/share/{user}", delete(unshare_doc))
         .route("/docs/{id}/ws", get(ws_upgrade))
         .route("/docs/{id}/versions", get(list_versions).post(save_version))
         .route("/docs/{id}/versions/{vid}", get(get_version))
-        .route(
-            "/docs/{id}/versions/{vid}/restore",
-            axum::routing::post(restore_version),
-        )
+        .route("/docs/{id}/versions/{vid}/restore", post(restore_version))
         .route("/health", get(|| async { "ok" }))
-        .with_state(hub);
+        .with_state(state);
     let mut app = Router::new().nest("/api", api);
     if let Some(dir) = static_dir {
         let index = dir.join("index.html");
@@ -35,9 +66,90 @@ pub fn router(store: DocStore, static_dir: Option<PathBuf>) -> Router {
     app.layer(tower_http::cors::CorsLayer::permissive())
 }
 
-async fn list_docs(State(hub): State<DocHub>) -> impl IntoResponse {
+// ---------------------------------------------------------------- accounts
+
+#[derive(Deserialize)]
+struct Credentials {
+    name: String,
+    password: String,
+}
+
+fn auth_status(e: &AuthError) -> StatusCode {
+    match e {
+        AuthError::BadName | AuthError::BadPassword => StatusCode::BAD_REQUEST,
+        AuthError::Taken => StatusCode::CONFLICT,
+        AuthError::Denied => StatusCode::UNAUTHORIZED,
+        AuthError::Io(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
+fn signed_in(result: Result<(User, String), AuthError>) -> axum::response::Response {
+    match result {
+        Ok((user, tok)) => (
+            [(header::SET_COOKIE, session_cookie(&tok))],
+            Json(crate::auth::UserInfo::from(&user)),
+        )
+            .into_response(),
+        Err(e) => (auth_status(&e), e.to_string()).into_response(),
+    }
+}
+
+async fn register(State(users): State<UserStore>, Json(c): Json<Credentials>) -> impl IntoResponse {
+    signed_in(users.register(&c.name, &c.password))
+}
+
+async fn login(State(users): State<UserStore>, Json(c): Json<Credentials>) -> impl IntoResponse {
+    signed_in(users.login(&c.name, &c.password))
+}
+
+async fn logout(State(users): State<UserStore>, req: axum::extract::Request) -> impl IntoResponse {
+    let (parts, _) = req.into_parts();
+    if let Some(tok) = crate::auth::token_from_parts(&parts) {
+        users.logout(&tok);
+    }
+    (
+        [(header::SET_COOKIE, clear_cookie())],
+        StatusCode::NO_CONTENT,
+    )
+}
+
+async fn me(CurrentUser(user): CurrentUser) -> impl IntoResponse {
+    match user {
+        Some(u) => Json(crate::auth::UserInfo::from(&u)).into_response(),
+        None => StatusCode::UNAUTHORIZED.into_response(),
+    }
+}
+
+// ---------------------------------------------------------------- documents
+
+/// The document's metadata if `user` may open it; 404 hides documents the
+/// user cannot see, 403 marks ones they know of but may not manage.
+fn accessible(hub: &DocHub, id: &str, user: Option<&User>) -> Result<DocMeta, StatusCode> {
+    let meta = hub.store().meta(id).ok_or(StatusCode::NOT_FOUND)?;
+    if meta.can_access(user) {
+        Ok(meta)
+    } else {
+        Err(StatusCode::NOT_FOUND)
+    }
+}
+
+fn manageable(hub: &DocHub, id: &str, user: Option<&User>) -> Result<DocMeta, StatusCode> {
+    let meta = accessible(hub, id, user)?;
+    if meta.can_manage(user) {
+        Ok(meta)
+    } else {
+        Err(StatusCode::FORBIDDEN)
+    }
+}
+
+async fn list_docs(State(hub): State<DocHub>, CurrentUser(user): CurrentUser) -> impl IntoResponse {
     match hub.store().list() {
-        Ok(list) => Json(list).into_response(),
+        Ok(list) => Json(
+            list.into_iter()
+                .filter(|m| m.can_access(user.as_ref()))
+                .collect::<Vec<_>>(),
+        )
+        .into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
@@ -49,7 +161,11 @@ struct CreateDoc {
     json: Option<String>,
 }
 
-async fn create_doc(State(hub): State<DocHub>, Json(body): Json<CreateDoc>) -> impl IntoResponse {
+async fn create_doc(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Json(body): Json<CreateDoc>,
+) -> impl IntoResponse {
     let json = match body.json {
         Some(j) => match ok_model::PartStudio::from_json(&j) {
             Ok(_) => j,
@@ -59,28 +175,47 @@ async fn create_doc(State(hub): State<DocHub>, Json(body): Json<CreateDoc>) -> i
         },
         None => ok_model::PartStudio::new(body.name.clone()).to_json(),
     };
-    match hub.store().create(&body.name, &json) {
+    let owner = user.as_ref().map(crate::auth::UserInfo::from);
+    match hub.store().create(&body.name, &json, owner) {
         Ok(meta) => (StatusCode::CREATED, Json(meta)).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
 
-async fn get_doc(State(hub): State<DocHub>, Path(id): Path<String>) -> impl IntoResponse {
+async fn get_meta(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    match accessible(&hub, &id, user.as_ref()) {
+        Ok(meta) => Json(meta).into_response(),
+        Err(code) => code.into_response(),
+    }
+}
+
+async fn get_doc(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
     match hub.store().read(&id) {
-        Some(json) => (
-            [(axum::http::header::CONTENT_TYPE, "application/json")],
-            json,
-        )
-            .into_response(),
+        Some(json) => ([(header::CONTENT_TYPE, "application/json")], json).into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
     }
 }
 
 async fn put_doc(
     State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
     Path(id): Path<String>,
     body: String,
 ) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
     let studio = match ok_model::PartStudio::from_json(&body) {
         Ok(s) => s,
         Err(e) => {
@@ -97,7 +232,14 @@ async fn put_doc(
     }
 }
 
-async fn delete_doc(State(hub): State<DocHub>, Path(id): Path<String>) -> impl IntoResponse {
+async fn delete_doc(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    if let Err(code) = manageable(&hub, &id, user.as_ref()) {
+        return code;
+    }
     hub.evict(&id);
     match hub.store().delete(&id) {
         Ok(()) => StatusCode::NO_CONTENT,
@@ -105,7 +247,55 @@ async fn delete_doc(State(hub): State<DocHub>, Path(id): Path<String>) -> impl I
     }
 }
 
-async fn list_versions(State(hub): State<DocHub>, Path(id): Path<String>) -> impl IntoResponse {
+#[derive(Deserialize)]
+struct ShareDoc {
+    name: String,
+}
+
+async fn share_doc(
+    State(state): State<AppState>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    Json(body): Json<ShareDoc>,
+) -> impl IntoResponse {
+    if let Err(code) = manageable(&state.hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(target) = state.users.user_by_name(&body.name) else {
+        return (StatusCode::NOT_FOUND, "no such user").into_response();
+    };
+    match state
+        .hub
+        .store()
+        .share(&id, crate::auth::UserInfo::from(&target))
+    {
+        Ok(meta) => Json(meta).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn unshare_doc(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path((id, target)): Path<(String, String)>,
+) -> impl IntoResponse {
+    if let Err(code) = manageable(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    match hub.store().unshare(&id, &target) {
+        Ok(meta) => Json(meta).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn list_versions(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
     match hub.store().list_versions(&id) {
         Ok(v) => Json(v).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
@@ -119,11 +309,15 @@ struct SaveVersion {
 
 async fn save_version(
     State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
     Path(id): Path<String>,
     Json(body): Json<SaveVersion>,
 ) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
     match hub.store().save_version(&id, &body.name) {
-        Ok(meta) => (StatusCode::CREATED, Json(meta)).into_response(),
+        Ok(v) => (StatusCode::CREATED, Json(v)).into_response(),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => StatusCode::NOT_FOUND.into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
@@ -131,23 +325,26 @@ async fn save_version(
 
 async fn get_version(
     State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
     Path((id, vid)): Path<(String, String)>,
 ) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
     match hub.store().read_version(&id, &vid) {
-        Some(json) => (
-            [(axum::http::header::CONTENT_TYPE, "application/json")],
-            json,
-        )
-            .into_response(),
+        Some(json) => ([(header::CONTENT_TYPE, "application/json")], json).into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
     }
 }
 
-/// Restores a version: connected clients receive a replace_document op.
 async fn restore_version(
     State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
     Path((id, vid)): Path<(String, String)>,
 ) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
     let Some(json) = hub.store().read_version(&id, &vid) else {
         return StatusCode::NOT_FOUND.into_response();
     };
@@ -162,26 +359,36 @@ async fn restore_version(
 
 async fn ws_upgrade(
     State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
     Path(id): Path<String>,
     ws: WebSocketUpgrade,
 ) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
     match hub.get(&id) {
         Some(doc) => ws
-            .on_upgrade(move |socket| handle_socket(socket, hub, doc))
+            .on_upgrade(move |socket| handle_socket(socket, hub, doc, user))
             .into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
     }
 }
 
-async fn handle_socket(socket: WebSocket, hub: DocHub, doc: std::sync::Arc<crate::live::LiveDoc>) {
+async fn handle_socket(
+    socket: WebSocket,
+    hub: DocHub,
+    doc: std::sync::Arc<crate::live::LiveDoc>,
+    user: Option<User>,
+) {
     let (mut sink, mut stream) = socket.split();
-    // First message may be a hello with a display name.
-    let mut name: Option<String> = None;
+    // First message may be a hello with a display name; a signed-in user
+    // is always shown under their account name.
+    let mut name: Option<String> = user.map(|u| u.name);
     let first = stream.next().await;
     let mut pending_after_hello: Option<ClientMessage> = None;
     if let Some(Ok(Message::Text(text))) = &first {
         match serde_json::from_str::<ClientMessage>(text) {
-            Ok(ClientMessage::Hello { name: n }) => name = n,
+            Ok(ClientMessage::Hello { name: n }) => name = name.or(n),
             Ok(other) => pending_after_hello = Some(other),
             Err(_) => {}
         }
@@ -277,9 +484,202 @@ mod tests {
         DocStore::open(&dir).unwrap()
     }
 
+    fn temp_users() -> UserStore {
+        let dir = std::env::temp_dir().join(format!(
+            "ok-server-users-{}-{}",
+            std::process::id(),
+            rand::random::<u64>()
+        ));
+        UserStore::open(&dir).unwrap()
+    }
+
+    /// Sends a JSON request, returning status, headers and body text.
+    async fn call(
+        app: &Router,
+        method: &str,
+        path: &str,
+        body: Option<&str>,
+        cookie: Option<&str>,
+    ) -> (StatusCode, axum::http::HeaderMap, String) {
+        let mut req = Request::builder().method(method).uri(path);
+        if body.is_some() {
+            req = req.header("content-type", "application/json");
+        }
+        if let Some(c) = cookie {
+            req = req.header("cookie", c);
+        }
+        let req = req
+            .body(
+                body.map(|b| Body::from(b.to_string()))
+                    .unwrap_or_else(Body::empty),
+            )
+            .unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        let status = res.status();
+        let headers = res.headers().clone();
+        let text = String::from_utf8(res.into_body().collect().await.unwrap().to_bytes().to_vec())
+            .unwrap();
+        (status, headers, text)
+    }
+
+    fn cookie_of(headers: &axum::http::HeaderMap) -> String {
+        let set = headers.get("set-cookie").unwrap().to_str().unwrap();
+        set.split(';').next().unwrap().to_string()
+    }
+
+    #[tokio::test]
+    async fn accounts_own_and_share_documents() {
+        let app = router(temp_store(), temp_users(), None);
+        // Anonymous: no session.
+        let (st, _, _) = call(&app, "GET", "/api/auth/me", None, None).await;
+        assert_eq!(st, StatusCode::UNAUTHORIZED);
+        // Register alice and bob.
+        let (st, h, text) = call(
+            &app,
+            "POST",
+            "/api/auth/register",
+            Some(r#"{"name":"alice","password":"hunter2hunter2"}"#),
+            None,
+        )
+        .await;
+        assert_eq!(st, StatusCode::OK, "{text}");
+        let alice = cookie_of(&h);
+        let (st, _, _) = call(
+            &app,
+            "POST",
+            "/api/auth/register",
+            Some(r#"{"name":"alice","password":"hunter2hunter2"}"#),
+            None,
+        )
+        .await;
+        assert_eq!(st, StatusCode::CONFLICT);
+        let (_, h, _) = call(
+            &app,
+            "POST",
+            "/api/auth/register",
+            Some(r#"{"name":"bob","password":"bobs-password"}"#),
+            None,
+        )
+        .await;
+        let bob = cookie_of(&h);
+        let (st, _, text) = call(&app, "GET", "/api/auth/me", None, Some(&alice)).await;
+        assert_eq!(st, StatusCode::OK);
+        assert!(text.contains(r#""name":"alice""#), "{text}");
+
+        // Alice creates a document: she owns it, bob and anonymous cannot see it.
+        let (st, _, text) = call(
+            &app,
+            "POST",
+            "/api/docs",
+            Some(r#"{"name":"secret"}"#),
+            Some(&alice),
+        )
+        .await;
+        assert_eq!(st, StatusCode::CREATED);
+        let meta: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(meta["owner"]["name"], "alice");
+        let id = meta["id"].as_str().unwrap().to_string();
+        let (st, _, _) = call(&app, "GET", &format!("/api/docs/{id}"), None, None).await;
+        assert_eq!(st, StatusCode::NOT_FOUND);
+        let (st, _, _) = call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&bob)).await;
+        assert_eq!(st, StatusCode::NOT_FOUND);
+        let (_, _, text) = call(&app, "GET", "/api/docs", None, Some(&bob)).await;
+        assert_eq!(text, "[]");
+
+        // Bob cannot share it; alice shares it with bob, who can then open but not delete it.
+        let (st, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/share"),
+            Some(r#"{"name":"bob"}"#),
+            Some(&bob),
+        )
+        .await;
+        assert_eq!(st, StatusCode::NOT_FOUND);
+        let (st, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/share"),
+            Some(r#"{"name":"BOB"}"#),
+            Some(&alice),
+        )
+        .await;
+        assert_eq!(st, StatusCode::OK, "{text}");
+        let meta: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(meta["collaborators"][0]["name"], "bob");
+        let bob_id = meta["collaborators"][0]["id"].as_str().unwrap().to_string();
+        let (st, _, _) = call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&bob)).await;
+        assert_eq!(st, StatusCode::OK);
+        let (st, _, _) = call(&app, "DELETE", &format!("/api/docs/{id}"), None, Some(&bob)).await;
+        assert_eq!(st, StatusCode::FORBIDDEN);
+        let (st, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/share"),
+            Some(r#"{"name":"nobody"}"#),
+            Some(&alice),
+        )
+        .await;
+        assert_eq!(st, StatusCode::NOT_FOUND);
+        // Unshare: bob loses access.
+        let (st, _, _) = call(
+            &app,
+            "DELETE",
+            &format!("/api/docs/{id}/share/{bob_id}"),
+            None,
+            Some(&alice),
+        )
+        .await;
+        assert_eq!(st, StatusCode::OK);
+        let (st, _, _) = call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&bob)).await;
+        assert_eq!(st, StatusCode::NOT_FOUND);
+
+        // Anonymous documents stay open to everyone, signed in or not.
+        let (st, _, text) = call(&app, "POST", "/api/docs", Some(r#"{"name":"open"}"#), None).await;
+        assert_eq!(st, StatusCode::CREATED);
+        let open: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert!(open.get("owner").is_none());
+        let oid = open["id"].as_str().unwrap();
+        let (st, _, _) = call(&app, "GET", &format!("/api/docs/{oid}"), None, Some(&bob)).await;
+        assert_eq!(st, StatusCode::OK);
+
+        // Logout invalidates the session; a wrong password is refused.
+        let (st, h, _) = call(&app, "POST", "/api/auth/logout", None, Some(&alice)).await;
+        assert_eq!(st, StatusCode::NO_CONTENT);
+        assert!(h
+            .get("set-cookie")
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .contains("Max-Age=0"));
+        let (st, _, _) = call(&app, "GET", "/api/auth/me", None, Some(&alice)).await;
+        assert_eq!(st, StatusCode::UNAUTHORIZED);
+        let (st, _, _) = call(
+            &app,
+            "POST",
+            "/api/auth/login",
+            Some(r#"{"name":"alice","password":"wrong-password"}"#),
+            None,
+        )
+        .await;
+        assert_eq!(st, StatusCode::UNAUTHORIZED);
+        let (st, h, _) = call(
+            &app,
+            "POST",
+            "/api/auth/login",
+            Some(r#"{"name":"alice","password":"hunter2hunter2"}"#),
+            None,
+        )
+        .await;
+        assert_eq!(st, StatusCode::OK);
+        let alice2 = cookie_of(&h);
+        let (st, _, _) = call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&alice2)).await;
+        assert_eq!(st, StatusCode::OK);
+    }
+
     #[tokio::test]
     async fn create_list_get_put_delete() {
-        let app = router(temp_store(), None);
+        let app = router(temp_store(), temp_users(), None);
         let res = app
             .clone()
             .oneshot(
@@ -443,13 +843,60 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn websocket_requires_access_and_uses_account_names() {
+        use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+        use tokio_tungstenite::tungstenite::Message as WsMessage;
+        let store = temp_store();
+        let users = temp_users();
+        let (owner, tok) = users.register("carol", "carols-password").unwrap();
+        let meta = store
+            .create(
+                "mine",
+                &ok_model::PartStudio::new("mine").to_json(),
+                Some(crate::auth::UserInfo::from(&owner)),
+            )
+            .unwrap();
+        let app = router(store, users, None);
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let url = format!("ws://{addr}/api/docs/{}/ws", meta.id);
+        // Anonymous: refused.
+        let err = tokio_tungstenite::connect_async(&url).await.err().unwrap();
+        assert!(err.to_string().contains("404"), "{err}");
+        // The owner connects and is listed under the account name, whatever
+        // the hello says.
+        let mut req = url.into_client_request().unwrap();
+        req.headers_mut().insert(
+            "cookie",
+            format!("{}={tok}", crate::auth::COOKIE).parse().unwrap(),
+        );
+        let (mut ws, _) = tokio_tungstenite::connect_async(req).await.unwrap();
+        ws.send(WsMessage::Text(
+            r#"{"type":"hello","name":"someone"}"#.into(),
+        ))
+        .await
+        .unwrap();
+        let welcome: serde_json::Value =
+            serde_json::from_str(&ws.next().await.unwrap().unwrap().into_text().unwrap()).unwrap();
+        assert_eq!(welcome["type"], "welcome");
+        let presence: serde_json::Value =
+            serde_json::from_str(&ws.next().await.unwrap().unwrap().into_text().unwrap()).unwrap();
+        assert_eq!(presence["names"], serde_json::json!(["carol"]));
+    }
+
+    #[tokio::test]
     async fn two_clients_see_each_others_ops() {
         use tokio_tungstenite::tungstenite::Message as WsMessage;
         let store = temp_store();
         let meta = store
-            .create("shared", &ok_model::PartStudio::new("shared").to_json())
+            .create(
+                "shared",
+                &ok_model::PartStudio::new("shared").to_json(),
+                None,
+            )
             .unwrap();
-        let app = router(store, None);
+        let app = router(store, temp_users(), None);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });

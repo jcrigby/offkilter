@@ -28,12 +28,13 @@ works today, all in the browser:
   properties.
 
 - Cloud: a small document server with real-time multi-user editing;
-  concurrent edits converge without conflicts, and documents keep named
-  versions.
+  concurrent edits converge without conflicts, documents keep named
+  versions, and optional accounts own documents and share them with
+  other accounts.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
 resolution, 5° by default),
-shells, assemblies, drawings, STEP, and accounts. See [docs/ROADMAP.md](docs/ROADMAP.md).
+shells, assemblies, drawings, STEP, and teams. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout
 
@@ -81,6 +82,12 @@ cargo run -p ok-server -- --static apps/web/dist --data ./data --port 8080
 
 Open http://localhost:8080, click **Docs**, create a document, and share
 its URL (`?doc=<id>`): everyone with it edits the same feature list live.
+Click **Sign in** to create an account: documents you create while signed
+in are yours, listed only for you and the accounts you share them with
+(**Share…** in the Docs dialog). Documents created without signing in stay
+open to everyone on the server. Passwords are stored as argon2id hashes in
+`data/users.json`; sessions are cookies. Put the server behind HTTPS
+before exposing it beyond a trusted network.
 During development run `npm run dev` in `apps/web`; it proxies `/api` to
 the server on port 8080. The Docs dialog also saves and restores named
 versions of a document.

@@ -5,7 +5,7 @@ import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
 import type { SketchHost, Tool } from "./sketcher";
 import { Sync } from "./sync";
-import type { DocMeta, VersionMeta } from "./sync";
+import type { DocMeta, UserInfo, VersionMeta } from "./sync";
 
 const $ = <T extends HTMLElement>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -1354,6 +1354,64 @@ async function main(): Promise<void> {
     app.showPresence(0, []);
     app.replace(Kernel.demo());
   };
+  // ---- account
+  let user: UserInfo | null = null;
+  const accountDialog = $("#account-dialog") as HTMLDialogElement;
+  const showUser = () => {
+    const b = $("#btn-account") as HTMLButtonElement;
+    b.textContent = user ? user.name : "Sign in";
+    b.title = user ? `Signed in as ${user.name} (click to sign out)` : "Sign in to own and share documents";
+  };
+  const setUser = (u: UserInfo | null) => {
+    user = u;
+    showUser();
+    if (u) localStorage.setItem("offkilter.user", u.name);
+  };
+  if (await Sync.available()) setUser(await Sync.me());
+  showUser();
+  const accountForm = async (register: boolean) => {
+    const name = ($("#account-name") as HTMLInputElement).value.trim();
+    const password = ($("#account-password") as HTMLInputElement).value;
+    const note = $("#account-note");
+    try {
+      setUser(register ? await Sync.register(name, password) : await Sync.login(name, password));
+      ($("#account-password") as HTMLInputElement).value = "";
+      note.textContent = "";
+      accountDialog.close();
+      // Reconnect so presence shows the account name.
+      if (app.sync.docId) openDoc(app.sync.docId);
+    } catch (e) {
+      note.textContent = (e as Error).message;
+    }
+  };
+  $("#btn-account").onclick = async () => {
+    if (user) {
+      if (confirm(`Sign out ${user.name}?`)) {
+        await Sync.logout();
+        setUser(null);
+        if (app.sync.docId) {
+          app.sync.disconnect();
+          app.showPresence(0, []);
+          app.setStatus("signed out; the document was closed");
+        }
+      }
+      return;
+    }
+    if (!(await Sync.available())) {
+      alert("No document server at this origin, so there is nothing to sign in to.");
+      return;
+    }
+    $("#account-note").textContent = "";
+    accountDialog.showModal();
+    ($("#account-name") as HTMLInputElement).focus();
+  };
+  ($("#account-form") as HTMLFormElement).onsubmit = (e) => {
+    e.preventDefault();
+    void accountForm(false);
+  };
+  $("#account-register").onclick = () => void accountForm(true);
+  $("#account-close").onclick = () => accountDialog.close();
+
   // ---- documents on the server
   const dialog = $("#docs-dialog") as HTMLDialogElement;
   const renderDocs = async () => {
@@ -1364,7 +1422,7 @@ async function main(): Promise<void> {
       note.textContent = "No document server at this origin. Run `cargo run -p ok-server -- --static apps/web/dist` and open its address to share documents.";
       return;
     }
-    note.textContent = app.sync.docId ? `Editing document ${app.sync.docId} live.` : "Open a document to edit it with others in real time.";
+    note.textContent = (app.sync.docId ? `Editing document ${app.sync.docId} live. ` : "Open a document to edit it with others in real time. ") + (user ? `Signed in as ${user.name}; new documents are yours.` : "Not signed in; new documents are open to everyone here.");
     let docs: DocMeta[] = [];
     try {
       docs = await Sync.listDocs();
@@ -1387,16 +1445,51 @@ async function main(): Promise<void> {
         dialog.close();
         openDoc(d.id);
       };
+      const owner = document.createElement("span");
+      owner.className = "downer";
+      const mine = !!user && d.owner?.id === user.id;
+      const shared = d.collaborators ?? [];
+      owner.textContent = d.owner ? (mine ? "yours" : `by ${d.owner.name}`) + (shared.length ? ` · shared with ${shared.map((c) => c.name).join(", ")}` : "") : "open to all";
       const when = document.createElement("span");
       when.className = "dwhen";
       when.textContent = new Date(d.updated * 1000).toLocaleString();
-      li.append(name, when, button("×", async () => {
-        if (confirm(`Delete "${d.name}" from the server?`)) {
-          await Sync.deleteDoc(d.id);
-          if (app.sync.docId === d.id) app.sync.disconnect();
-          await renderDocs();
+      li.append(name, owner, when);
+      if (mine) {
+        const share = button("Share…", async () => {
+          const who = prompt(`Share "${d.name}" with which account name?`);
+          if (!who) return;
+          try {
+            await Sync.shareDoc(d.id, who.trim());
+            await renderDocs();
+          } catch (e) {
+            note.textContent = `Could not share: ${(e as Error).message}`;
+          }
+        });
+        share.className = "dshare";
+        li.appendChild(share);
+        for (const c of shared) {
+          const un = button(`− ${c.name}`, async () => {
+            await Sync.unshareDoc(d.id, c.id);
+            await renderDocs();
+          });
+          un.className = "dshare";
+          un.title = `Stop sharing with ${c.name}`;
+          li.appendChild(un);
         }
-      }, "danger"));
+      }
+      if (!d.owner || mine) {
+        li.appendChild(button("×", async () => {
+          if (confirm(`Delete "${d.name}" from the server?`)) {
+            try {
+              await Sync.deleteDoc(d.id);
+            } catch (e) {
+              note.textContent = `Could not delete: ${(e as Error).message}`;
+            }
+            if (app.sync.docId === d.id) app.sync.disconnect();
+            await renderDocs();
+          }
+        }, "danger"));
+      }
       list.appendChild(li);
     }
   };

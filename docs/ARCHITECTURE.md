@@ -282,7 +282,19 @@ re-renders from the regen summary after every op.
 documents as `.okpart` JSON files with a small metadata file each, and
 relays edits between clients:
 
-- REST: `GET/POST /api/docs`, `GET/PUT/DELETE /api/docs/:id`.
+- REST: `GET/POST /api/docs`, `GET/PUT/DELETE /api/docs/:id`,
+  `POST/DELETE /api/docs/:id/share`, versions under `/api/docs/:id/versions`.
+- Accounts (`auth.rs`): `POST /api/auth/register|login|logout`,
+  `GET /api/auth/me`. Users live in `users.json` with argon2id password
+  hashes; a session is a random token in an `HttpOnly` cookie, persisted
+  in `sessions.json` and expiring after 30 days idle. The `CurrentUser`
+  extractor resolves the cookie on every request. Signing in is optional:
+  a document created anonymously has no owner and is open to everyone on
+  the server; one created while signed in belongs to that account, is
+  listed only for the owner and the accounts it is shared with (404 for
+  anyone else), and only the owner can delete or share it. The WebSocket
+  applies the same check and shows a signed-in client under its account
+  name.
 - WebSocket `/api/docs/:id/ws`: a client sends `hello`, then `op`
   messages carrying `ok_model::Op` JSON. The server applies each op to
   its own copy of the document (rejecting invalid ones with an `error`
