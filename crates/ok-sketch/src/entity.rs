@@ -150,6 +150,14 @@ pub enum Constraint {
         b: EntityId,
         line: EntityId,
     },
+    /// Point `b` is point `a` turned about point `center` by `value`
+    /// degrees counter-clockwise (a circular pattern copy).
+    Rotated {
+        a: EntityId,
+        b: EntityId,
+        center: EntityId,
+        value: f64,
+    },
 }
 
 impl Constraint {
@@ -172,6 +180,7 @@ impl Constraint {
             PointOnCircle { point, entity } => vec![*point, *entity],
             Tangent { line, entity } => vec![*line, *entity],
             Symmetric { a, b, line } => vec![*a, *b, *line],
+            Rotated { a, b, center, .. } => vec![*a, *b, *center],
         }
     }
 
@@ -185,7 +194,8 @@ impl Constraint {
             | Length { value, .. }
             | Radius { value, .. }
             | Diameter { value, .. }
-            | Angle { value, .. } => Some(*value),
+            | Angle { value, .. }
+            | Rotated { value, .. } => Some(*value),
             _ => None,
         }
     }
@@ -201,7 +211,8 @@ impl Constraint {
             | Length { value, .. }
             | Radius { value, .. }
             | Diameter { value, .. }
-            | Angle { value, .. } => {
+            | Angle { value, .. }
+            | Rotated { value, .. } => {
                 *value = v;
                 true
             }
@@ -231,6 +242,7 @@ impl Constraint {
             Midpoint { .. } => "midpoint",
             Tangent { .. } => "tangent",
             Symmetric { .. } => "symmetric",
+            Rotated { .. } => "rotated",
         }
     }
 }

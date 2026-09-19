@@ -56,7 +56,7 @@ export class Sketcher implements PointerHandler {
     this.host.viewer.setSketchMouse(true);
     const plane = this.plane();
     if (plane) this.host.viewer.lookAtPlane(plane);
-    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · P polygon · N slot · T trim · O offset · M mirror · U use · S select · Q construction · right-drag orbits · Esc finishes");
+    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · P polygon · N slot · T trim · O offset · M mirror · Y pattern · U use · S select · Q construction · right-drag orbits · Esc finishes");
   }
 
   exit(): void {
@@ -94,6 +94,34 @@ export class Sketcher implements PointerHandler {
     this.host.snapshot();
     try {
       const r = this.sketchOp({ type: "offset", entities, distance });
+      this.selection = new Set(r.entities);
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.host.regenerate();
+  }
+
+  /** Pattern the selection (Y): a prompt takes "linear COUNT,DX,DY" or "circular COUNT,CX,CY,ANGLE". */
+  patternSelection(): void {
+    const entities = [...this.selection];
+    if (entities.length === 0) return;
+    const text = prompt("Pattern the selection: linear COUNT,DX,DY  or  circular COUNT,CX,CY,ANGLE", "linear 3,20,0");
+    if (text === null) return;
+    const m = text.trim().match(/^(linear|circular)\s+([-\d.,\s]+)$/i);
+    const nums = m ? m[2]!.split(",").map((x) => Number(x.trim())) : [];
+    let op: SketchOp | null = null;
+    if (m && m[1]!.toLowerCase() === "linear" && nums.length === 3 && nums.every(Number.isFinite)) {
+      op = { type: "pattern_linear", entities, count: Math.round(nums[0]!), step: { x: nums[1]!, y: nums[2]! } };
+    } else if (m && m[1]!.toLowerCase() === "circular" && nums.length === 4 && nums.every(Number.isFinite)) {
+      op = { type: "pattern_circular", entities, count: Math.round(nums[0]!), center: { x: nums[1]!, y: nums[2]! }, angle: nums[3]! };
+    }
+    if (!op) {
+      this.host.setStatus('Pattern: use "linear 3,20,0" (count, dx, dy) or "circular 6,0,0,60" (count, centre x, centre y, angle).');
+      return;
+    }
+    this.host.snapshot();
+    try {
+      const r = this.sketchOp(op);
       this.selection = new Set(r.entities);
     } catch (err) {
       this.host.setStatus(`error: ${(err as Error).message}`);

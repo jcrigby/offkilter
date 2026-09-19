@@ -2100,12 +2100,13 @@ function constraintRefFields(t: string): string[] {
     case "point_on_circle": return ["point", "entity"];
     case "tangent": return ["line", "entity"];
     case "symmetric": return ["a", "b", "line"];
+    case "rotated": return ["a", "b", "center"];
     default: return [];
   }
 }
 
 function constraintHasValue(t: string): boolean {
-  return ["distance", "horizontal_distance", "vertical_distance", "length", "radius", "diameter", "angle"].includes(t);
+  return ["distance", "horizontal_distance", "vertical_distance", "length", "radius", "diameter", "angle", "rotated"].includes(t);
 }
 
 function describeRefs(c: Constraint & { id: number }, sketch: SketchData): string {
@@ -2591,6 +2592,7 @@ async function main(): Promise<void> {
       if (tool) app.sketcher.setTool(tool);
       if (e.key.toLowerCase() === "o") app.sketcher.offsetSelection();
       if (e.key.toLowerCase() === "m") app.sketcher.beginMirror();
+      if (e.key.toLowerCase() === "y") app.sketcher.patternSelection();
       if (e.key.toLowerCase() === "q") app.sketcher.toggleConstruction();
       if (e.key === "Delete" || e.key === "Backspace") app.sketcher.deleteSelection();
     }

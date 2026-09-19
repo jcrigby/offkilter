@@ -19,7 +19,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Sketch on planar faces of bodies (face references)
 - [x] Project / use edges and face outlines from bodies in sketches (fixed entities that follow the model)
 - [x] Construction geometry, mirror
-- [ ] Sketch patterns (linear / circular copies with constraints)
+- [x] Sketch patterns: linear copies held by distance constraints, circular copies by a rotated-point constraint about a construction centre
 
 ## Solids
 

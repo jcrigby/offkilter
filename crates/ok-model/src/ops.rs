@@ -86,6 +86,19 @@ pub enum SketchOp {
         entities: Vec<EntityId>,
         axis: EntityId,
     },
+    /// Copies entities along a step, `count` in total, tied to the originals.
+    PatternLinear {
+        entities: Vec<EntityId>,
+        count: u32,
+        step: Vec2,
+    },
+    /// Copies entities around a centre, `count` in total, `angle` degrees apart.
+    PatternCircular {
+        entities: Vec<EntityId>,
+        count: u32,
+        center: Vec2,
+        angle: f64,
+    },
     /// Project body geometry into the sketch ("Use"). The entities are
     /// built by regeneration and follow the model.
     Project {
@@ -1165,6 +1178,40 @@ impl PartStudio {
                         }
                         SketchOp::Mirror { entities, axis } => {
                             out.entities.extend(sk.mirror(&entities, axis)?);
+                        }
+                        SketchOp::PatternLinear {
+                            entities,
+                            count,
+                            step,
+                        } => {
+                            if !(2..=200).contains(&count) {
+                                return Err(ModelError::Invalid(
+                                    "a pattern needs between 2 and 200 copies".into(),
+                                ));
+                            }
+                            out.entities.extend(sk.pattern_linear(
+                                &entities,
+                                count as usize,
+                                step,
+                            )?);
+                        }
+                        SketchOp::PatternCircular {
+                            entities,
+                            count,
+                            center,
+                            angle,
+                        } => {
+                            if !(2..=200).contains(&count) {
+                                return Err(ModelError::Invalid(
+                                    "a pattern needs between 2 and 200 copies".into(),
+                                ));
+                            }
+                            out.entities.extend(sk.pattern_circular(
+                                &entities,
+                                count as usize,
+                                center,
+                                angle,
+                            )?);
                         }
                         SketchOp::Project { .. }
                         | SketchOp::RemoveProjection { .. }

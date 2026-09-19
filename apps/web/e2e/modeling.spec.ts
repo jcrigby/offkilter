@@ -712,3 +712,35 @@ test("assembly explode slider and dragging a free instance", async ({ page }) =>
   await page.waitForTimeout(300);
   expect(await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.instances[1].placement.position.x)).toBeCloseTo(30, 6);
 });
+
+test("sketch pattern copies the selection with constraints", async ({ page }) => {
+  // The pattern prompt's default ("linear 3,20,0") is accepted as is.
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.click("#btn-add-sketch");
+  await page.waitForTimeout(300);
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const id = app.selected;
+    const r = app.applyRaw({ type: "sketch", id, op: { type: "add_rectangle", a: { x: 0, y: 0 }, b: { x: 10, y: 5 } } });
+    app.sketcher.selection = new Set(r.entities);
+    app.regenerate();
+  });
+  await page.keyboard.press("y");
+  await page.waitForTimeout(400);
+  const info = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const f = app.summary.features.find((x: any) => x.kind.type === "sketch");
+    const r = app.summary.sketches[String(f.id)];
+    return { lines: f.kind.sketch.entities.filter((e: any) => e.type === "line").length, regions: r.profiles.length, dof: r.solve.dof };
+  });
+  expect(info.lines).toBe(12);
+  expect(info.regions).toBe(3);
+  expect(info.dof).toBe(4);
+  await page.getByRole("button", { name: "Done" }).click();
+  await page.click("#btn-add-extrude");
+  await page.waitForTimeout(300);
+  expect(await volume(page)).toBeCloseTo(3 * 10 * 5 * 10, 3);
+});

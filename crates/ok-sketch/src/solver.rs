@@ -283,6 +283,23 @@ impl<'a> Eval<'a> {
                 r(v.map(|v| v.0));
                 r(v.map(|v| v.1));
             }
+            Rotated {
+                a,
+                b,
+                center,
+                value,
+            } => {
+                let v = (|| {
+                    let (pa, pb, c) = (self.point(*a)?, self.point(*b)?, self.point(*center)?);
+                    let (sn, cs) = value.to_radians().sin_cos();
+                    let d = pa - c;
+                    let turned = Vec2::new(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
+                    let diff = pb - c - turned;
+                    Some((diff.x, diff.y))
+                })();
+                r(v.map(|v| v.0));
+                r(v.map(|v| v.1));
+            }
             Tangent { line, entity } => {
                 r((|| {
                     let (s, e) = self.line_points(*line)?;

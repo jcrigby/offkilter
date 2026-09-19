@@ -649,6 +649,131 @@ impl Sketch {
     }
 }
 
+impl Sketch {
+    /// Copies entities `count - 1` times, each copy shifted by one more
+    /// `step`. Every copied point is held at its offset from the original
+    /// by horizontal and vertical distance constraints, so the copies follow
+    /// the originals. Returns the new entity ids.
+    pub fn pattern_linear(
+        &mut self,
+        ids: &[EntityId],
+        count: usize,
+        step: Vec2,
+    ) -> Result<Vec<EntityId>, SketchError> {
+        let mut out = Vec::new();
+        for k in 1..count.max(1) {
+            let shift = step * k as f64;
+            let copied = self.copy_entities(ids, &|p| p + shift, &mut |sk, orig, copy| {
+                sk.add_constraint(Constraint::HorizontalDistance {
+                    a: orig,
+                    b: copy,
+                    value: shift.x,
+                });
+                sk.add_constraint(Constraint::VerticalDistance {
+                    a: orig,
+                    b: copy,
+                    value: shift.y,
+                });
+            })?;
+            out.extend(copied);
+        }
+        Ok(out)
+    }
+
+    /// Copies entities `count - 1` times around `center`, each copy turned by
+    /// one more `angle_deg`. Every copied point is held rotated about the
+    /// centre point (a new construction point) from its original.
+    pub fn pattern_circular(
+        &mut self,
+        ids: &[EntityId],
+        count: usize,
+        center: Vec2,
+        angle_deg: f64,
+    ) -> Result<Vec<EntityId>, SketchError> {
+        let c = self.add_point(center);
+        self.set_construction(c, true)?;
+        let mut out = vec![c];
+        for k in 1..count.max(1) {
+            let angle = angle_deg * k as f64;
+            let (sn, cs) = angle.to_radians().sin_cos();
+            let turn = move |p: Vec2| {
+                let d = p - center;
+                center + Vec2::new(d.x * cs - d.y * sn, d.x * sn + d.y * cs)
+            };
+            let copied = self.copy_entities(ids, &turn, &mut |sk, orig, copy| {
+                sk.add_constraint(Constraint::Rotated {
+                    a: orig,
+                    b: copy,
+                    center: c,
+                    value: angle,
+                });
+            })?;
+            out.extend(copied);
+        }
+        Ok(out)
+    }
+
+    /// Copies entities under a rigid map, calling `tie` for every copied
+    /// point (original, copy) so the caller can constrain it. Circles keep
+    /// an equal radius; construction status is copied.
+    fn copy_entities(
+        &mut self,
+        ids: &[EntityId],
+        map: &dyn Fn(Vec2) -> Vec2,
+        tie: &mut dyn FnMut(&mut Sketch, EntityId, EntityId),
+    ) -> Result<Vec<EntityId>, SketchError> {
+        let mut copies: HashMap<EntityId, EntityId> = HashMap::new();
+        let mut point_of = |sk: &mut Sketch,
+                            pid: EntityId,
+                            tie: &mut dyn FnMut(&mut Sketch, EntityId, EntityId)|
+         -> Result<EntityId, SketchError> {
+            if let Some(&m) = copies.get(&pid) {
+                return Ok(m);
+            }
+            let p = sk.point(pid)?;
+            let m = sk.add_point(map(p));
+            tie(sk, pid, m);
+            copies.insert(pid, m);
+            Ok(m)
+        };
+        let mut out = Vec::new();
+        for &id in ids {
+            let e = self
+                .entity(id)
+                .ok_or(SketchError::UnknownEntity(id))?
+                .clone();
+            let construction = self.is_construction(id);
+            let new = match e {
+                Entity::Point { .. } => point_of(self, id, tie)?,
+                Entity::Line { start, end } => {
+                    let (a, b) = (point_of(self, start, tie)?, point_of(self, end, tie)?);
+                    self.add_line_between(a, b)
+                }
+                Entity::Arc { center, start, end } => {
+                    let c = point_of(self, center, tie)?;
+                    let (a, b) = (point_of(self, start, tie)?, point_of(self, end, tie)?);
+                    self.alloc_entity(Entity::Arc {
+                        center: c,
+                        start: a,
+                        end: b,
+                    })
+                }
+                Entity::Circle { center, radius } => {
+                    let c = point_of(self, center, tie)?;
+                    let n = self.alloc_entity(Entity::Circle { center: c, radius });
+                    self.add_constraint(Constraint::Equal { a: id, b: n });
+                    n
+                }
+            };
+            if construction {
+                self.set_construction(new, true)?;
+            }
+            out.push(new);
+        }
+        Ok(out)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -829,6 +954,41 @@ mod tests {
         assert!(
             matches!(u.entity(out[0]), Some(Entity::Circle { center: k, radius }) if *k == center && (*radius - 2.5).abs() < 1e-12)
         );
+    }
+
+    #[test]
+    fn linear_and_circular_patterns_copy_regions_and_follow_the_original() {
+        let mut s = Sketch::new();
+        let lines = s.add_rectangle(v(0.0, 0.0), v(10.0, 5.0));
+        let copies = s.pattern_linear(&lines, 3, v(20.0, 0.0)).unwrap();
+        assert_eq!(copies.len(), 8);
+        let solve = s.solve();
+        assert_eq!(solve.status, SolveStatus::UnderConstrained, "{solve:?}");
+        // Copies add no freedom: still the original rectangle's four.
+        assert_eq!(solve.dof, 4);
+        assert_eq!(s.profiles(&ProfileOptions::default()).len(), 3);
+        // Dragging a corner of the original keeps every copy at its offset.
+        let (_, corner) = s.line(lines[0]).unwrap();
+        let before = s.point(corner).unwrap();
+        s.set_point_pub(corner, before + v(0.0, 3.0));
+        s.solve();
+        let after = s.point(corner).unwrap();
+        let (_, c2) = s.line(copies[0]).unwrap();
+        let moved = s.point(c2).unwrap();
+        assert!(
+            (moved.x - (after.x + 20.0)).abs() < 1e-6 && (moved.y - after.y).abs() < 1e-6,
+            "{moved:?} vs {after:?}"
+        );
+
+        let mut s = Sketch::new();
+        let (circle, _) = s.add_circle(v(30.0, 0.0), 4.0);
+        let copies = s.pattern_circular(&[circle], 6, v(0.0, 0.0), 60.0).unwrap();
+        assert_eq!(copies.len(), 6, "centre point plus five circles");
+        let solve = s.solve();
+        assert_eq!(solve.status, SolveStatus::UnderConstrained, "{solve:?}");
+        assert_eq!(s.profiles(&ProfileOptions::default()).len(), 6);
+        // Circle, its centre, radius and the pattern centre: 2 + 1 + 2 = 5.
+        assert_eq!(solve.dof, 5);
     }
 
     #[test]
