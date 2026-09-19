@@ -394,6 +394,40 @@ class App implements SketchHost {
       ml.appendChild(li);
     }
     ($("#btn-add-mate") as HTMLButtonElement).disabled = this.summary.instances.length < 2;
+    ($("#btn-interference") as HTMLButtonElement).disabled = this.summary.instances.length < 2;
+    const selectedBody = this.instance(this.selectedInstance)?.body_index;
+    this.viewer.setSelectedBodies(new Set(selectedBody === null || selectedBody === undefined ? [] : [selectedBody]));
+  }
+
+  /** Runs the interference check and shows the overlapping pairs in the detail panel. */
+  checkInterference(): void {
+    const r = this.kernel.interferences();
+    const title = $("#detail-title");
+    const body = $("#detail-body");
+    this.selectedInstance = null;
+    this.selectedMate = null;
+    this.renderAssembly();
+    body.innerHTML = "";
+    title.textContent = "Interference";
+    const name = (id: number) => this.instance(id)?.name ?? `instance ${id}`;
+    if (r.overlaps.length === 0 && r.failed.length === 0) {
+      body.innerHTML = `<p class="note">No overlapping instances.</p>`;
+      return;
+    }
+    const ul = document.createElement("ul");
+    ul.className = "constraint-list";
+    for (const o of r.overlaps) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="kind">${name(o.a)} ∩ ${name(o.b)}<br><span class="refs">${o.volume.toFixed(2)} mm³ overlap</span></span>`;
+      ul.appendChild(li);
+    }
+    for (const [a, b] of r.failed) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="kind">${name(a)} ∩ ${name(b)}<br><span class="refs">could not be checked</span></span>`;
+      ul.appendChild(li);
+    }
+    body.appendChild(ul);
+    this.viewer.setSelectedBodies(new Set(r.overlaps.flatMap((o) => [this.instance(o.a)?.body_index, this.instance(o.b)?.body_index]).filter((i): i is number => i !== null && i !== undefined)));
   }
 
   renderInsertForm(body: HTMLElement): void {
@@ -2010,6 +2044,7 @@ async function main(): Promise<void> {
     app.renderDetail();
   };
   $("#btn-add-mate").onclick = () => app.beginMatePick();
+  $("#btn-interference").onclick = () => app.checkInterference();
   $("#btn-add-sketch").onclick = () => {
     const addOn = (plane: PlaneRef) => {
       app.selectedFace = null;

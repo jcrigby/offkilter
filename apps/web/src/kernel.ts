@@ -285,6 +285,11 @@ export class Kernel {
     return this.studio.first_studio() ?? null;
   }
 
+  /** Overlapping instance pairs of the last regenerated assembly tab. */
+  interferences(): { overlaps: { a: number; b: number; volume: number }[]; failed: [number, number][] } {
+    return JSON.parse(this.studio.interferences()) as { overlaps: { a: number; b: number; volume: number }[]; failed: [number, number][] };
+  }
+
   /** Names of the bodies a part studio tab produces. */
   studioBodies(tab: number): string[] {
     return JSON.parse(this.studio.studio_bodies(tab)) as string[];

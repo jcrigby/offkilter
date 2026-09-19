@@ -333,11 +333,20 @@ test("assembly tab: insert two instances and mate them face to face", async ({ p
   await page.waitForTimeout(300);
   expect(await top()).toBeCloseTo(8, 6);
   expect(await page.$$eval("#mate-list .dot.err, #instance-list .dot.err", (els) => els.length)).toBe(0);
-  // Undo the offset edit; the part studio tab still holds the block.
+  // Touching blocks do not interfere; sinking B by 1 mm overlaps 10x10x1.
+  await page.click("#btn-interference");
+  await expect(page.locator("#detail-body")).toContainText("No overlapping instances");
+  await page.click("#mate-list li");
+  await offset.fill("-1");
+  await offset.press("Enter");
+  await page.waitForTimeout(300);
+  await page.click("#btn-interference");
+  await expect(page.locator("#detail-body")).toContainText("100.00 mm³ overlap");
+  // Undo the last offset edit (back to 3); the part studio tab still holds the block.
   await page.click("#viewport");
   await page.keyboard.press("Control+z");
   await page.waitForTimeout(300);
-  expect(await top()).toBeCloseTo(5, 6);
+  expect(await top()).toBeCloseTo(8, 6);
   await page.getByRole("button", { name: /Part Studio 1/ }).click();
   await expect(page.locator("#feature-list")).toContainText("Block");
 });

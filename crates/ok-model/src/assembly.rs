@@ -392,6 +392,57 @@ impl Assembly {
     }
 }
 
+/// Overlap between two placed instances.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Interference {
+    pub a: InstanceId,
+    pub b: InstanceId,
+    /// Overlapping volume (mm³).
+    pub volume: f64,
+}
+
+impl AssemblyResult {
+    /// Pairs of placed instances whose bodies overlap, by boolean
+    /// intersection of their solids. Bounding boxes prune the pairs first.
+    /// Pairs whose boolean fails are skipped (reported as `None`).
+    pub fn interferences(&self) -> (Vec<Interference>, Vec<(InstanceId, InstanceId)>) {
+        let mut out = Vec::new();
+        let mut failed = Vec::new();
+        for i in 0..self.bodies.len() {
+            for j in i + 1..self.bodies.len() {
+                let (a, b) = (&self.bodies[i].solid, &self.bodies[j].solid);
+                let (Some((alo, ahi)), Some((blo, bhi))) = (a.bounds(), b.bounds()) else {
+                    continue;
+                };
+                let tol = ok_math::tol::LINEAR;
+                if alo.x > bhi.x + tol
+                    || blo.x > ahi.x + tol
+                    || alo.y > bhi.y + tol
+                    || blo.y > ahi.y + tol
+                    || alo.z > bhi.z + tol
+                    || blo.z > ahi.z + tol
+                {
+                    continue;
+                }
+                match ok_brep::boolean(a, b, ok_brep::BoolOp::Intersection) {
+                    Ok(x) => {
+                        let volume = x.volume();
+                        if volume > 1e-6 {
+                            out.push(Interference {
+                                a: self.placed[i],
+                                b: self.placed[j],
+                                volume,
+                            });
+                        }
+                    }
+                    Err(_) => failed.push((self.placed[i], self.placed[j])),
+                }
+            }
+        }
+        (out, failed)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -482,6 +533,16 @@ mod tests {
         // The union of both would be 10x10x10: volumes add, no overlap.
         let total: f64 = r.bodies.iter().map(|b| b.solid.volume()).sum();
         assert!((total - 1000.0).abs() < 1e-9);
+        // Touching faces are not an interference; sinking B by 1 mm is.
+        let (overlaps, failed) = r.interferences();
+        assert!(
+            overlaps.is_empty() && failed.is_empty(),
+            "{overlaps:?} {failed:?}"
+        );
+        asm.mates[0].offset = -1.0;
+        let (overlaps, _) = asm.resolve(&solids).interferences();
+        assert_eq!(overlaps.len(), 1);
+        assert!((overlaps[0].volume - 100.0).abs() < 1e-6, "{overlaps:?}");
         // An offset lifts B; flip turns it upside down onto the same face.
         asm.mates[0].offset = 2.0;
         let r = asm.resolve(&solids);

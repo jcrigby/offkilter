@@ -28,7 +28,8 @@ works today, all in the browser:
 - Assemblies: a document holds part studio and assembly tabs; an
   assembly inserts bodies from part studios as instances and joins them
   with fastened, revolute, slider and cylindrical mates between faces,
-  with offset, angle and flip, resolved as chains from fixed instances.
+  with offset, angle and flip, resolved as chains from fixed instances,
+  plus an interference check between instances.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
   document only reverts your own edit), `.okpart` JSON documents, STL export, mass
   properties.

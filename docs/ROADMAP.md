@@ -51,7 +51,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Rollback bar in the feature list
 - [ ] Body selection, hide/show, rename
 - [x] Multiple part studios per document; assemblies with fastened / revolute / slider / cylindrical mates resolved as chains from fixed instances
-- [ ] Numeric mate solver for closed loops; mate connectors on edges and vertices; sub-assemblies; interference check
+- [x] Interference check between placed instances (boolean intersection, on demand)
+- [ ] Numeric mate solver for closed loops; mate connectors on edges and vertices; sub-assemblies
 - [x] STL export
 - [ ] Drawings (2D projections); 3MF export; STEP once faces are exact
 - [ ] Import: STEP via a B-rep reader

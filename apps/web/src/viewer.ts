@@ -39,6 +39,7 @@ export class Viewer {
   private sketches = new THREE.Group();
   // Normals come from the kernel (analytic on curved surfaces), so no flat shading.
   private bodyMaterial = new THREE.MeshStandardMaterial({ color: BODY_COLOR, metalness: 0.1, roughness: 0.6 });
+  private selectedBodyMaterial = new THREE.MeshStandardMaterial({ color: FACE_SELECTED, metalness: 0.1, roughness: 0.6 });
   private edgeMaterial = new THREE.LineBasicMaterial({ color: 0x1b1d21 });
   private meshes: THREE.Mesh[] = [];
   private meshData: BodyMesh[] = [];
@@ -377,6 +378,14 @@ export class Viewer {
     // Fatten the highlight with points at segment ends so it reads at any zoom.
     const pmat = new THREE.PointsMaterial({ color, size: 5, sizeAttenuation: false, depthTest: false });
     group.add(new THREE.Points(geom, pmat));
+  }
+
+  /** Tints whole bodies (by index) as selected; others keep the body colour. */
+  setSelectedBodies(indices: ReadonlySet<number>): void {
+    for (const m of this.meshes) {
+      const i = m.userData.body as number;
+      m.material = indices.has(i) ? this.selectedBodyMaterial : this.bodyMaterial;
+    }
   }
 
   /** Highlights a face (or clears the highlight with `null`). */

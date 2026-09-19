@@ -16,7 +16,7 @@ mod regen;
 
 pub use assembly::{
     connector_frame, mate_transform, Assembly, AssemblyResult, Connector, Instance, InstanceId,
-    Mate, MateId, MateKind, Placement, TabId,
+    Interference, Mate, MateId, MateKind, Placement, TabId,
 };
 pub use document::{AssemblyOp, DocOp, DocOpResult, Document, Tab, TabKind};
 pub use feature::{

@@ -17,6 +17,8 @@ pub struct Doc {
     last: RegenResult,
     /// Bodies shown for the last regenerated tab (studio bodies or placed instances).
     bodies: Vec<Body>,
+    /// Last assembly regeneration, for on-demand checks.
+    assembly: Option<ok_model::AssemblyResult>,
 }
 
 #[derive(Serialize)]
@@ -128,6 +130,7 @@ impl Doc {
             inner: Document::default(),
             last: RegenResult::default(),
             bodies: Vec::new(),
+            assembly: None,
         }
     }
 
@@ -137,6 +140,7 @@ impl Doc {
             inner: Document::demo(),
             last: RegenResult::default(),
             bodies: Vec::new(),
+            assembly: None,
         }
     }
 
@@ -147,6 +151,7 @@ impl Doc {
             inner,
             last: RegenResult::default(),
             bodies: Vec::new(),
+            assembly: None,
         })
     }
 
@@ -207,6 +212,7 @@ impl Doc {
             self.last = RegenResult::default();
             asm_result = self.inner.regenerate_assembly(tab).unwrap_or_default();
             self.bodies = asm_result.bodies.clone();
+            self.assembly = Some(asm_result.clone());
             if let Ok(a) = self.inner.assembly(tab) {
                 for i in &a.instances {
                     instances.push(InstanceSummary {
@@ -224,6 +230,7 @@ impl Doc {
                 }
             }
         } else {
+            self.assembly = None;
             self.last = self
                 .inner
                 .regenerate_studio(tab, rollback)
@@ -284,6 +291,17 @@ impl Doc {
             mates,
         };
         serde_json::to_string(&summary).unwrap()
+    }
+
+    /// Overlapping instance pairs of the last regenerated assembly tab, as
+    /// JSON `{ "overlaps": [{a, b, volume}], "failed": [[a, b]] }`.
+    pub fn interferences(&self) -> String {
+        let (overlaps, failed) = self
+            .assembly
+            .as_ref()
+            .map(|r| r.interferences())
+            .unwrap_or_default();
+        serde_json::json!({ "overlaps": overlaps, "failed": failed }).to_string()
     }
 
     pub fn body_count(&self) -> usize {
