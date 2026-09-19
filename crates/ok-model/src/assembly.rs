@@ -376,6 +376,19 @@ impl Assembly {
                 );
             }
         }
+        // Numeric refinement: closed loops and redundant mates are solved
+        // over the free degrees of freedom, starting from the chain result.
+        let unsatisfied = self.refine(solids, &mut placed);
+        for (mate, residual) in unsatisfied {
+            if residual > 1e-5 {
+                result.mate_errors.insert(
+                    mate,
+                    format!("cannot be satisfied together with the other mates (residual {residual:.3})"),
+                );
+            } else {
+                result.mate_errors.remove(&mate);
+            }
+        }
         for inst in &self.instances {
             let (Some(solid), Some(xf)) = (solids.get(&inst.id), placed.get(&inst.id)) else {
                 continue;
@@ -389,6 +402,201 @@ impl Assembly {
             result.transforms.insert(inst.id, *xf);
         }
         result
+    }
+}
+
+/// Rotation vector `r` (axis times angle, radians) as a transform about the origin.
+fn rotation_vector(r: Vec3) -> Transform {
+    let angle = r.length();
+    if angle <= 1e-15 {
+        return Transform::IDENTITY;
+    }
+    Transform::rotation(Vec3::ZERO, r / angle, angle)
+}
+
+impl Assembly {
+    /// Residuals of one mate given both world connector frames: what a
+    /// fastened mate pins fully, a revolute mate frees about z, a slider
+    /// along z, a cylindrical mate both.
+    fn mate_residuals(mate: &Mate, fa: &Plane, fb: &Plane, out: &mut Vec<f64>) {
+        let z = if mate.flip { fa.normal } else { -fa.normal };
+        let spin = Transform::rotation(Vec3::ZERO, z, mate.angle.to_radians());
+        let x = spin.apply_vector(fa.x_axis);
+        let origin = fa.origin + fa.normal * mate.offset;
+        let d = fb.origin - origin;
+        let push = |out: &mut Vec<f64>, v: Vec3| out.extend([v.x, v.y, v.z]);
+        push(out, fb.normal - z);
+        match mate.kind {
+            MateKind::Fastened => {
+                push(out, d);
+                push(out, fb.x_axis - x);
+            }
+            MateKind::Revolute => push(out, d),
+            MateKind::Slider => {
+                push(out, d - z * d.dot(z));
+                push(out, fb.x_axis - x);
+            }
+            MateKind::Cylindrical => push(out, d - z * d.dot(z)),
+        }
+    }
+
+    /// Levenberg–Marquardt over the pose (rotation vector + translation)
+    /// of every movable mated instance, applied on top of `placed`.
+    /// Returns each mate's final residual norm.
+    fn refine(
+        &self,
+        solids: &BTreeMap<InstanceId, Solid>,
+        placed: &mut BTreeMap<InstanceId, Transform>,
+    ) -> Vec<(MateId, f64)> {
+        let mates: Vec<&Mate> = self
+            .mates
+            .iter()
+            .filter(|m| placed.contains_key(&m.a.instance) && placed.contains_key(&m.b.instance))
+            .collect();
+        if mates.is_empty() {
+            return Vec::new();
+        }
+        let frames: BTreeMap<(InstanceId, u32, u32), Plane> = mates
+            .iter()
+            .flat_map(|m| [m.a, m.b])
+            .filter_map(|c| {
+                let f = connector_frame(solids.get(&c.instance)?, &c.face)?;
+                Some(((c.instance, c.face.feature.0, c.face.local), f))
+            })
+            .collect();
+        let frame_of = |c: &Connector| frames.get(&(c.instance, c.face.feature.0, c.face.local));
+        let movable: Vec<InstanceId> = self
+            .instances
+            .iter()
+            .filter(|i| !i.fixed && placed.contains_key(&i.id))
+            .filter(|i| {
+                mates
+                    .iter()
+                    .any(|m| m.a.instance == i.id || m.b.instance == i.id)
+            })
+            .map(|i| i.id)
+            .collect();
+        let base: Vec<Transform> = movable.iter().map(|id| placed[id]).collect();
+        let fixed_poses: BTreeMap<InstanceId, Transform> = placed.clone();
+        let pose = |x: &[f64], k: usize| -> Transform {
+            let r = Vec3::new(x[6 * k], x[6 * k + 1], x[6 * k + 2]);
+            let t = Vec3::new(x[6 * k + 3], x[6 * k + 4], x[6 * k + 5]);
+            let delta = Transform {
+                t,
+                ..rotation_vector(r)
+            };
+            compose(&delta, &base[k])
+        };
+        let world = |x: &[f64], id: InstanceId| -> Transform {
+            match movable.iter().position(|m| *m == id) {
+                Some(k) => pose(x, k),
+                None => fixed_poses[&id],
+            }
+        };
+        let residuals = |x: &[f64]| -> Vec<f64> {
+            let mut out = Vec::new();
+            for m in &mates {
+                let (Some(fa), Some(fb)) = (frame_of(&m.a), frame_of(&m.b)) else {
+                    continue;
+                };
+                let wa = transform_plane(&world(x, m.a.instance), fa);
+                let wb = transform_plane(&world(x, m.b.instance), fb);
+                Self::mate_residuals(m, &wa, &wb, &mut out);
+            }
+            out
+        };
+        let n = 6 * movable.len();
+        let mut x = vec![0.0; n];
+        let norm = |r: &[f64]| r.iter().map(|v| v * v).sum::<f64>().sqrt();
+        let mut r = residuals(&x);
+        let mut lambda = 1e-3;
+        if n > 0 {
+            for _ in 0..60 {
+                let cost = norm(&r);
+                if cost < 1e-10 {
+                    break;
+                }
+                // Numeric Jacobian (central differences).
+                let m = r.len();
+                let mut jac = vec![vec![0.0; n]; m];
+                for j in 0..n {
+                    let h = 1e-6;
+                    let mut xp = x.clone();
+                    xp[j] += h;
+                    let mut xm = x.clone();
+                    xm[j] -= h;
+                    let (rp, rm) = (residuals(&xp), residuals(&xm));
+                    for i in 0..m {
+                        jac[i][j] = (rp[i] - rm[i]) / (2.0 * h);
+                    }
+                }
+                // Normal equations (JᵀJ + λ diag) δ = -Jᵀr, solved by Gaussian elimination.
+                let mut a = vec![vec![0.0; n + 1]; n];
+                for i in 0..n {
+                    for j in 0..n {
+                        a[i][j] = (0..m).map(|k| jac[k][i] * jac[k][j]).sum();
+                    }
+                    a[i][n] = -(0..m).map(|k| jac[k][i] * r[k]).sum::<f64>();
+                    a[i][i] += lambda * (a[i][i] + 1e-9);
+                }
+                let mut delta = vec![0.0; n];
+                let mut singular = false;
+                for col in 0..n {
+                    let pivot = (col..n)
+                        .max_by(|p, q| a[*p][col].abs().total_cmp(&a[*q][col].abs()))
+                        .unwrap();
+                    a.swap(col, pivot);
+                    if a[col][col].abs() < 1e-14 {
+                        singular = true;
+                        break;
+                    }
+                    let pivot_row = a[col].clone();
+                    for (row, entries) in a.iter_mut().enumerate() {
+                        if row != col {
+                            let f = entries[col] / pivot_row[col];
+                            for (e, p) in entries.iter_mut().zip(&pivot_row).skip(col) {
+                                *e -= f * p;
+                            }
+                        }
+                    }
+                }
+                if singular {
+                    lambda *= 10.0;
+                    continue;
+                }
+                for i in 0..n {
+                    delta[i] = a[i][n] / a[i][i];
+                }
+                let xn: Vec<f64> = x.iter().zip(&delta).map(|(a, d)| a + d).collect();
+                let rn = residuals(&xn);
+                if norm(&rn) < cost {
+                    x = xn;
+                    r = rn;
+                    lambda = (lambda * 0.3).max(1e-12);
+                } else {
+                    lambda *= 10.0;
+                    if lambda > 1e8 {
+                        break;
+                    }
+                }
+            }
+            for (k, id) in movable.iter().enumerate() {
+                placed.insert(*id, pose(&x, k));
+            }
+        }
+        // Per-mate residual norms at the solution.
+        let mut per_mate = Vec::new();
+        for m in &mates {
+            let (Some(fa), Some(fb)) = (frame_of(&m.a), frame_of(&m.b)) else {
+                continue;
+            };
+            let wa = transform_plane(&world(&x, m.a.instance), fa);
+            let wb = transform_plane(&world(&x, m.b.instance), fb);
+            let mut out = Vec::new();
+            Self::mate_residuals(m, &wa, &wb, &mut out);
+            per_mate.push((m.id, norm(&out)));
+        }
+        per_mate
     }
 }
 
@@ -624,6 +832,95 @@ mod tests {
         fewer.remove(&InstanceId(3));
         let r = asm.resolve(&fewer);
         assert!(r.instance_errors.contains_key(&InstanceId(3)));
+    }
+
+    #[test]
+    fn closed_loop_is_solved_through_free_degrees_of_freedom() {
+        // A fixed. B sits on A's top through a cylindrical mate (free spin
+        // and height), so the chain places it at 45° on top. A second,
+        // slider mate between the +x faces demands parallel faces and no
+        // sideways offset: the solver spins B back to 0° and drops it so it
+        // coincides with A.
+        let solid = block(10.0, 10.0, 5.0, 1);
+        let mk = |id: u32, fixed: bool| Instance {
+            id: InstanceId(id),
+            name: format!("i{id}"),
+            studio: TabId(1),
+            body: 0,
+            fixed,
+            placement: Placement::default(),
+        };
+        let face = |local: u32| FaceRef {
+            feature: FeatureId(1),
+            local,
+        };
+        let mut asm = Assembly::new("loop");
+        asm.instances.extend([mk(1, true), mk(2, false)]);
+        asm.mates.push(Mate {
+            id: MateId(10),
+            name: "spin".into(),
+            kind: MateKind::Cylindrical,
+            a: Connector {
+                instance: InstanceId(1),
+                face: face(1),
+            },
+            b: Connector {
+                instance: InstanceId(2),
+                face: face(0),
+            },
+            offset: 0.0,
+            angle: 45.0,
+            flip: false,
+        });
+        asm.mates.push(Mate {
+            id: MateId(11),
+            name: "side".into(),
+            kind: MateKind::Slider,
+            a: Connector {
+                instance: InstanceId(1),
+                face: face(3),
+            },
+            b: Connector {
+                instance: InstanceId(2),
+                face: face(3),
+            },
+            offset: 0.0,
+            angle: 0.0,
+            flip: true,
+        });
+        let solids: BTreeMap<InstanceId, Solid> = [
+            (InstanceId(1), solid.clone()),
+            (InstanceId(2), solid.clone()),
+        ]
+        .into_iter()
+        .collect();
+        let r = asm.resolve(&solids);
+        assert!(r.mate_errors.is_empty(), "{:?}", r.mate_errors);
+        let (lo, hi) = r.bodies[1].solid.bounds().unwrap();
+        assert!(
+            lo.distance(Vec3::ZERO) < 1e-6 && hi.distance(Vec3::new(10.0, 10.0, 5.0)) < 1e-6,
+            "{lo:?} {hi:?}"
+        );
+        // An inconsistent extra mate stays reported, without breaking the rest.
+        asm.mates.push(Mate {
+            id: MateId(12),
+            name: "bad".into(),
+            kind: MateKind::Fastened,
+            a: Connector {
+                instance: InstanceId(1),
+                face: face(1),
+            },
+            b: Connector {
+                instance: InstanceId(2),
+                face: face(1),
+            },
+            offset: 7.0,
+            angle: 0.0,
+            flip: false,
+        });
+        let r = asm.resolve(&solids);
+        assert!(!r.mate_errors.is_empty());
+        assert_eq!(r.bodies.len(), 2);
     }
 
     #[test]

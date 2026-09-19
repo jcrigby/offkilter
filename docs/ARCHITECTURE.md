@@ -45,10 +45,14 @@ every mate whose one side is placed moves the other side so that the
 connector frames meet, z axes opposed (or aligned with `flip`), rotated
 by `angle` about z and separated by `offset` along it. Revolute, slider
 and cylindrical mates use the same placement; the kind only says which
-parameter the user is meant to vary. A second mate on an already placed
-instance is checked and reported rather than solved, and a chain with no
-fixed instance falls back to placements with an error on each instance.
-A numeric mate solver for closed loops is a later item.
+parameter the user is meant to vary. The chain result is then refined
+numerically: a Levenberg–Marquardt solve over the pose (rotation vector
+and translation) of every movable mated instance, with residuals per
+mate that pin what its kind pins and leave its free axis alone, so
+closed loops and redundant mates are solved through the free degrees of
+freedom. A mate that still has a residual afterwards (inconsistent with
+the others) is reported on that mate; a chain with no fixed instance
+falls back to placements with an error on each instance.
 
 ### Part studios
 
