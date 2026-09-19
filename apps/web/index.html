@@ -11,7 +11,7 @@
     <div id="app">
       <header id="topbar">
         <span class="brand">offkilter</span>
-        <input id="studio-name" class="studio-name" value="Part Studio 1" spellcheck="false" />
+        <input id="studio-name" class="studio-name" value="Document" spellcheck="false" title="Document name" />
         <span class="spacer"></span>
         <label class="quality" title="Facet resolution for curved faces (degrees per facet). Finer is rounder and slower.">Quality
           <select id="quality">
@@ -36,7 +36,20 @@
         <input id="file-input" type="file" accept=".okpart,.json" hidden />
       </header>
       <aside id="sidebar">
-        <div class="panel">
+        <div id="tabbar" class="tabbar"></div>
+        <div class="panel" id="assembly-panel" hidden>
+          <div class="panel-title">
+            <span>Instances</span>
+            <span class="panel-actions">
+              <button id="btn-insert-instance" title="Insert a body from a part studio tab">+ Insert</button>
+              <button id="btn-add-mate" title="Mate two instances: click a face on each">+ Mate</button>
+            </span>
+          </div>
+          <ul id="instance-list" class="feature-list"></ul>
+          <div class="panel-title parts-title"><span>Mates</span></div>
+          <ul id="mate-list" class="feature-list"></ul>
+        </div>
+        <div class="panel" id="studio-panel">
           <div class="panel-title">
             <span>Features</span>
             <span class="panel-actions">

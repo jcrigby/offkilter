@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import type { Axis, BlendKind, Constraint, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
+import type { Axis, BlendKind, Connector, Constraint, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -38,6 +38,13 @@ class App implements SketchHost {
   edgePicking: number | null = null;
   /** Feature-list rollback: number of features shown, or null for all. */
   rollbackCount: number | null = null;
+  /** Active tab id; null until the first regeneration picks the first part studio. */
+  tab: number | null = null;
+  /** Assembly selection. */
+  selectedInstance: number | null = null;
+  selectedMate: number | null = null;
+  /** "+ Mate" in progress: the first connector once picked. */
+  matePick: { a: Connector | null } | null = null;
   viewer = new Viewer($("#viewport"));
 
   constructor(kernel: Kernel) {
@@ -183,8 +190,53 @@ class App implements SketchHost {
     return `${feature?.name ?? `feature ${ref.feature}`} · face ${ref.local} (${surface})`;
   }
 
+  /** The instance shown as body `bodyIndex` in an assembly tab. */
+  instanceAt(bodyIndex: number): InstanceSummary | undefined {
+    return this.summary.instances.find((i) => i.body_index === bodyIndex);
+  }
+
+  instance(id: number | null): InstanceSummary | undefined {
+    return this.summary.instances.find((i) => i.id === id);
+  }
+
+  mate(id: number | null): MateSummary | undefined {
+    return this.summary.mates.find((m) => m.id === id);
+  }
+
   onViewportPick(pick: FacePick | null): void {
     const ref = pick ? this.faceRefOf(pick) : null;
+    if (this.summary.kind === "assembly") {
+      const inst = pick ? this.instanceAt(pick.body) : undefined;
+      if (this.matePick) {
+        if (!inst || !ref) return;
+        const connector: Connector = { instance: inst.id, face: ref };
+        if (!this.matePick.a) {
+          this.matePick.a = connector;
+          this.viewer.setSelectedFace(pick);
+          this.setStatus(`First connector: ${inst.name}. Now click a face on the other instance (Esc cancels).`);
+          return;
+        }
+        if (this.matePick.a.instance === inst.id) {
+          this.setStatus("Pick a face on a different instance (Esc cancels).");
+          return;
+        }
+        const a = this.matePick.a;
+        this.endMatePick();
+        this.applyDoc({ type: "assembly", tab: this.tab!, op: { type: "add_mate", kind: "fastened", a, b: connector, name: null } });
+        this.selectedMate = this.summary.mates[this.summary.mates.length - 1]?.id ?? null;
+        this.selectedInstance = null;
+        this.renderAssembly();
+        this.renderDetail();
+        return;
+      }
+      this.selectedInstance = inst?.id ?? null;
+      this.selectedMate = null;
+      this.viewer.setSelectedFace(pick);
+      this.renderAssembly();
+      this.renderDetail();
+      this.setStatus(inst && ref ? `${inst.name} · face ${ref.local} of feature ${ref.feature}` : this.statusLine());
+      return;
+    }
     if (this.facePicker) {
       if (ref) {
         const cb = this.facePicker;
@@ -210,6 +262,262 @@ class App implements SketchHost {
     this.setStatus(this.statusLine());
   }
 
+  beginMatePick(): void {
+    if (this.summary.instances.length < 2) {
+      this.setStatus("Insert at least two instances before mating them.");
+      return;
+    }
+    this.matePick = { a: null };
+    this.viewer.pickMode = true;
+    this.setStatus("Mate: click a face on the first instance (Esc cancels)");
+  }
+
+  endMatePick(): void {
+    this.matePick = null;
+    this.viewer.pickMode = false;
+    this.viewer.setSelectedFace(null);
+  }
+
+  // ------------------------------------------------------------ tabs
+
+  switchTab(id: number): void {
+    if (id === this.tab) return;
+    this.sketcher.exit();
+    this.endFacePick();
+    this.endEdgePick();
+    this.endMatePick();
+    this.selected = null;
+    this.selectedFace = null;
+    this.selectedInstance = null;
+    this.selectedMate = null;
+    this.rollbackCount = null;
+    this.tab = id;
+    this.regenerate();
+    this.viewer.fitAll();
+  }
+
+  renderTabs(): void {
+    const bar = $("#tabbar");
+    bar.innerHTML = "";
+    for (const t of this.summary.tabs) {
+      const b = button(`${t.kind === "assembly" ? "⚙ " : "◧ "}${t.name}`, () => this.switchTab(t.id), t.id === this.summary.tab ? "active" : "");
+      b.title = `${t.kind === "assembly" ? "Assembly" : "Part studio"} · double-click to rename`;
+      b.ondblclick = () => {
+        const name = prompt("Tab name", t.name);
+        if (name && name !== t.name) this.applyDoc({ type: "rename_tab", tab: t.id, name });
+      };
+      bar.appendChild(b);
+    }
+    const addStudio = button("+ Part Studio", () => {
+      this.applyDoc({ type: "add_part_studio", name: null });
+      this.switchTab(this.summary.tabs[this.summary.tabs.length - 1]!.id);
+    }, "add");
+    const addAsm = button("+ Assembly", () => {
+      this.applyDoc({ type: "add_assembly", name: null });
+      this.switchTab(this.summary.tabs[this.summary.tabs.length - 1]!.id);
+    }, "add");
+    bar.append(addStudio, addAsm);
+    if (this.summary.tabs.length > 1) {
+      const del = button("×", () => {
+        if (confirm(`Delete tab "${this.summary.tab_name}"?`)) {
+          const gone = this.summary.tab;
+          this.applyDoc({ type: "delete_tab", tab: gone });
+          this.tab = this.summary.tabs.find((t) => t.id !== gone)?.id ?? null;
+          this.regenerate();
+        }
+      }, "add danger");
+      del.title = "Delete this tab";
+      bar.appendChild(del);
+    }
+  }
+
+  // ------------------------------------------------------------ assembly panel
+
+  renderAssembly(): void {
+    const ul = $("#instance-list");
+    ul.innerHTML = "";
+    for (const i of this.summary.instances) {
+      const li = document.createElement("li");
+      li.className = i.id === this.selectedInstance ? "selected" : "";
+      const dot = document.createElement("span");
+      dot.className = "dot " + (i.error ? "err" : "");
+      dot.title = i.error ?? (i.fixed ? "fixed" : "placed by mates");
+      const icon = document.createElement("span");
+      icon.className = "icon";
+      icon.textContent = i.fixed ? "⚓" : "◧";
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = i.name;
+      li.append(dot, icon, name);
+      li.onclick = () => {
+        this.selectedInstance = i.id;
+        this.selectedMate = null;
+        this.viewer.setSelectedFace(null);
+        this.renderAssembly();
+        this.renderDetail();
+      };
+      ul.appendChild(li);
+    }
+    if (this.summary.instances.length === 0) {
+      const li = document.createElement("li");
+      li.className = "note";
+      li.textContent = "No instances yet. “+ Insert” places a body from a part studio.";
+      ul.appendChild(li);
+    }
+    const ml = $("#mate-list");
+    ml.innerHTML = "";
+    for (const m of this.summary.mates) {
+      const li = document.createElement("li");
+      li.className = m.id === this.selectedMate ? "selected" : "";
+      const dot = document.createElement("span");
+      dot.className = "dot " + (m.error ? "err" : "");
+      dot.title = m.error ?? "ok";
+      const icon = document.createElement("span");
+      icon.className = "icon";
+      icon.textContent = { fastened: "⊠", revolute: "↻", slider: "↔", cylindrical: "⟳" }[m.kind];
+      const name = document.createElement("span");
+      name.className = "name";
+      name.textContent = `${m.name} · ${this.instance(m.a.instance)?.name ?? "?"} ↔ ${this.instance(m.b.instance)?.name ?? "?"}`;
+      li.append(dot, icon, name);
+      li.onclick = () => {
+        this.selectedMate = m.id;
+        this.selectedInstance = null;
+        this.renderAssembly();
+        this.renderDetail();
+      };
+      ml.appendChild(li);
+    }
+    if (this.summary.mates.length === 0) {
+      const li = document.createElement("li");
+      li.className = "note";
+      li.textContent = "No mates. “+ Mate” joins two instances face to face.";
+      ml.appendChild(li);
+    }
+    ($("#btn-add-mate") as HTMLButtonElement).disabled = this.summary.instances.length < 2;
+  }
+
+  renderInsertForm(body: HTMLElement): void {
+    const studios = this.summary.tabs.filter((t) => t.kind === "part_studio");
+    if (studios.length === 0) {
+      body.innerHTML = `<p class="note">Add a part studio tab first.</p>`;
+      return;
+    }
+    let studio = studios[0]!.id;
+    let bodyIndex = 0;
+    const bodySel = document.createElement("select");
+    const fillBodies = () => {
+      bodySel.innerHTML = "";
+      const names = this.kernel.studioBodies(studio);
+      names.forEach((n, i) => {
+        const o = document.createElement("option");
+        o.value = String(i);
+        o.textContent = n;
+        bodySel.appendChild(o);
+      });
+      if (names.length === 0) {
+        const o = document.createElement("option");
+        o.textContent = "(no bodies)";
+        o.value = "-1";
+        bodySel.appendChild(o);
+      }
+      bodyIndex = names.length > 0 ? 0 : -1;
+    };
+    bodySel.onchange = () => (bodyIndex = Number(bodySel.value));
+    body.appendChild(
+      field("Part studio", select(studios.map((t) => t.name), studios[0]!.name, (v) => {
+        studio = studios.find((t) => t.name === v)!.id;
+        fillBodies();
+      })),
+    );
+    fillBodies();
+    body.appendChild(field("Body", bodySel));
+    body.appendChild(
+      field("", button("Insert", () => {
+        if (bodyIndex < 0) return;
+        this.applyDoc({ type: "assembly", tab: this.tab!, op: { type: "add_instance", studio, body: bodyIndex, name: null, fixed: this.summary.instances.length === 0 } });
+        this.selectedInstance = this.summary.instances[this.summary.instances.length - 1]?.id ?? null;
+        this.renderAssembly();
+        this.renderDetail();
+      }, "primary")),
+    );
+  }
+
+  renderAssemblyDetail(): void {
+    const title = $("#detail-title");
+    const body = $("#detail-body");
+    body.innerHTML = "";
+    const tab = this.tab!;
+    const inst = this.instance(this.selectedInstance);
+    const m = this.mate(this.selectedMate);
+    if (inst) {
+      title.textContent = inst.name;
+      if (inst.error) {
+        const e = document.createElement("div");
+        e.className = "error";
+        e.textContent = inst.error;
+        body.appendChild(e);
+      }
+      const src = this.summary.tabs.find((t) => t.id === inst.studio);
+      const note = document.createElement("p");
+      note.className = "note";
+      note.textContent = `Body ${inst.body + 1} of ${src?.name ?? `tab ${inst.studio}`}. ${inst.fixed ? "Fixed: anchors mate chains." : "Positioned by mates when mated, else by the placement below."}`;
+      body.appendChild(note);
+      body.appendChild(field("Name", textInput(inst.name, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_instance", id: inst.id, name: v } }))));
+      body.appendChild(field("Fixed", checkbox(inst.fixed, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_instance", id: inst.id, fixed: v } }))));
+      const p = inst.placement;
+      const setPlacement = (k: "position" | "rotation", axis: "x" | "y" | "z", v: number) => {
+        const next = { position: { ...p.position }, rotation: { ...p.rotation } };
+        next[k][axis] = v;
+        this.applyDoc({ type: "assembly", tab, op: { type: "set_instance", id: inst.id, placement: next } });
+      };
+      for (const axis of ["x", "y", "z"] as const) {
+        body.appendChild(field(`Position ${axis}`, numberInput(p.position[axis], (v) => setPlacement("position", axis, v))));
+      }
+      for (const axis of ["x", "y", "z"] as const) {
+        body.appendChild(field(`Rotation ${axis}°`, numberInput(p.rotation[axis], (v) => setPlacement("rotation", axis, v))));
+      }
+      body.appendChild(field("", button("Remove instance", () => {
+        this.applyDoc({ type: "assembly", tab, op: { type: "remove_instance", id: inst.id } });
+        this.selectedInstance = null;
+        this.renderAssembly();
+        this.renderDetail();
+      }, "danger")));
+      return;
+    }
+    if (m) {
+      title.textContent = m.name;
+      if (m.error) {
+        const e = document.createElement("div");
+        e.className = "error";
+        e.textContent = m.error;
+        body.appendChild(e);
+      }
+      body.appendChild(field("Name", textInput(m.name, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, name: v } }))));
+      body.appendChild(field("Kind", select(["fastened", "revolute", "slider", "cylindrical"], m.kind, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, kind: v as MateKind } }))));
+      const describe = (c: Connector) => `${this.instance(c.instance)?.name ?? "?"} · face ${c.face.local} of feature ${c.face.feature}`;
+      const note = document.createElement("p");
+      note.className = "note";
+      note.textContent = `A: ${describe(m.a)}\nB: ${describe(m.b)}. B moves onto A (or A onto B when only B is placed); faces meet with normals opposed unless flipped.`;
+      body.appendChild(note);
+      body.appendChild(field("Offset", numberInput(m.offset, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, offset: v } }))));
+      body.appendChild(field("Angle°", numberInput(m.angle, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, angle: v } }))));
+      body.appendChild(field("Flip", checkbox(m.flip, (v) => this.applyDoc({ type: "assembly", tab, op: { type: "set_mate", id: m.id, flip: v } }))));
+      body.appendChild(field("", button("Remove mate", () => {
+        this.applyDoc({ type: "assembly", tab, op: { type: "remove_mate", id: m.id } });
+        this.selectedMate = null;
+        this.renderAssembly();
+        this.renderDetail();
+      }, "danger")));
+      return;
+    }
+    title.textContent = "Insert instance";
+    const intro = document.createElement("p");
+    intro.className = "note";
+    intro.textContent = "Pick a part studio and one of its bodies. The first instance is fixed; mate the rest to it with “+ Mate”: click a face on each of two instances and they meet face to face.";
+    body.appendChild(intro);
+    this.renderInsertForm(body);
+  }
+
   // ------------------------------------------------------------ document
 
   replace(kernel: Kernel): void {
@@ -225,10 +533,19 @@ class App implements SketchHost {
     this.viewer.fitAll();
   }
 
+  /** Applies a part-studio op to the active tab as one undo step. */
   apply(op: Op): void {
+    if (this.summary?.kind !== "part_studio") {
+      this.setStatus("switch to a part studio tab for that");
+      return;
+    }
+    this.applyDoc({ type: "studio", tab: this.tab!, op });
+  }
+
+  applyDoc(op: DocOp): void {
     this.snapshot();
     try {
-      this.applyRaw(op);
+      this.applyDocRaw(op);
     } catch (e) {
       this.setStatus(`error: ${(e as Error).message}`);
       if (this.history[this.history.length - 1]?.length === 0) this.history.pop();
@@ -239,7 +556,7 @@ class App implements SketchHost {
   }
 
   /** An op from another client: apply without touching undo history. */
-  applyRemote(op: Op, base: number | null): void {
+  applyRemote(op: DocOp, base: number | null): void {
     try {
       this.kernel.apply(op, base);
     } catch (e) {
@@ -276,8 +593,8 @@ class App implements SketchHost {
   // document this reverts only our own edit and leaves everyone else's in
   // place. A history entry is one user-level edit: the inverses of every op
   // applied since the last `snapshot()`, in application order.
-  private history: Op[][] = [];
-  private future: Op[][] = [];
+  private history: DocOp[][] = [];
+  private future: DocOp[][] = [];
   private static readonly HISTORY_LIMIT = 200;
 
   /** Starts a new undo step; the ops applied next are undone together. */
@@ -289,7 +606,7 @@ class App implements SketchHost {
     this.updateHistoryButtons();
   }
 
-  private recordInverse(inverse: Op[] | undefined): void {
+  private recordInverse(inverse: DocOp[] | undefined): void {
     if (!inverse || inverse.length === 0) return;
     if (this.history.length === 0) this.history.push([]);
     this.history[this.history.length - 1]!.push(...inverse);
@@ -316,8 +633,8 @@ class App implements SketchHost {
   }
 
   /** Applies a step's ops last-first and returns the ops that reverse it. */
-  private applyStep(step: Op[]): Op[] {
-    const reverse: Op[] = [];
+  private applyStep(step: DocOp[]): DocOp[] {
+    const reverse: DocOp[] = [];
     for (let i = step.length - 1; i >= 0; i--) {
       const op = step[i]!;
       const base = this.sync.nextBase();
@@ -382,7 +699,13 @@ class App implements SketchHost {
     return new Blob([buf], { type: "model/stl" });
   }
 
+  /** Applies a studio op on the active tab without regenerating; throws on failure. */
   applyRaw(op: Op): OpResult {
+    const r = this.applyDocRaw({ type: "studio", tab: this.tab!, op });
+    return r.studio ?? { feature: null, entities: [], constraint: null };
+  }
+
+  applyDocRaw(op: DocOp): DocOpResult {
     const base = this.sync.nextBase();
     const r = this.kernel.apply(op, base);
     this.sync.send(op, base);
@@ -403,14 +726,20 @@ class App implements SketchHost {
 
   regenerate(): void {
     const t0 = performance.now();
-    this.summary = this.kernel.regenerate(this.rollback());
+    this.summary = this.kernel.regenerate(this.tab, this.rollback());
+    this.tab = this.summary.tab;
     const dt = performance.now() - t0;
+    const assembly = this.summary.kind === "assembly";
+    ($("#assembly-panel") as HTMLElement).hidden = !assembly;
+    ($("#studio-panel") as HTMLElement).hidden = assembly;
     this.viewer.setBodies(this.kernel.bodyMeshes());
     this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
-    this.viewer.setSelectedFace(this.selectedFace ? this.findFace(this.selectedFace) : null);
+    if (!assembly) this.viewer.setSelectedFace(this.selectedFace ? this.findFace(this.selectedFace) : null);
     this.highlightBlendEdges();
     this.updateDimensionLabels();
-    this.renderFeatures();
+    this.renderTabs();
+    if (assembly) this.renderAssembly();
+    else this.renderFeatures();
     this.renderDetail();
     this.lastRegenMs = dt;
     this.setStatus(this.statusLine());
@@ -432,7 +761,7 @@ class App implements SketchHost {
   statusLine(): string {
     const faces = this.summary.bodies.reduce((n, b) => n + b.face_count, 0);
     const volume = this.summary.bodies.reduce((n, b) => n + b.volume, 0);
-    const errors = this.summary.features.filter((f) => f.error).length;
+    const errors = this.summary.features.filter((f) => f.error).length + this.summary.instances.filter((i) => i.error).length + this.summary.mates.filter((m) => m.error).length;
     return (
       `${this.summary.bodies.length} ${this.summary.bodies.length === 1 ? "body" : "bodies"} · ${faces} faces · ${volume.toFixed(1)} mm³ · regen ${this.lastRegenMs.toFixed(1)} ms` +
       (errors ? ` · ${errors} feature error${errors > 1 ? "s" : ""}` : "") +
@@ -657,6 +986,10 @@ class App implements SketchHost {
   // ------------------------------------------------------------ detail panel
 
   renderDetail(): void {
+    if (this.summary.kind === "assembly") {
+      this.renderAssemblyDetail();
+      return;
+    }
     const f = this.feature(this.selected);
     const title = $("#detail-title");
     const body = $("#detail-body");
@@ -1329,6 +1662,28 @@ function numberInput(value: number, onCommit: (v: number) => void): HTMLInputEle
   return i;
 }
 
+function textInput(value: string, onCommit: (v: string) => void): HTMLInputElement {
+  const i = document.createElement("input");
+  i.type = "text";
+  i.value = value;
+  i.onchange = () => {
+    const v = i.value.trim();
+    if (v && v !== value) onCommit(v);
+  };
+  i.onkeydown = (e) => {
+    if (e.key === "Enter") i.blur();
+  };
+  return i;
+}
+
+function checkbox(value: boolean, onChange: (v: boolean) => void): HTMLInputElement {
+  const i = document.createElement("input");
+  i.type = "checkbox";
+  i.checked = value;
+  i.onchange = () => onChange(i.checked);
+  return i;
+}
+
 function select(options: string[], value: string, onChange: (v: string) => void): HTMLSelectElement {
   const s = document.createElement("select");
   for (const o of options) {
@@ -1646,8 +2001,15 @@ async function main(): Promise<void> {
     fileInput.value = "";
   };
   ($("#studio-name") as HTMLInputElement).onchange = (e) => {
-    app.apply({ type: "rename_studio", name: (e.target as HTMLInputElement).value });
+    app.applyDoc({ type: "rename_document", name: (e.target as HTMLInputElement).value });
   };
+  $("#btn-insert-instance").onclick = () => {
+    app.selectedInstance = null;
+    app.selectedMate = null;
+    app.renderAssembly();
+    app.renderDetail();
+  };
+  $("#btn-add-mate").onclick = () => app.beginMatePick();
   $("#btn-add-sketch").onclick = () => {
     const addOn = (plane: PlaneRef) => {
       app.selectedFace = null;
@@ -1752,7 +2114,10 @@ async function main(): Promise<void> {
     }
     if (e.key === "f") app.viewer.fitAll();
     if (e.key === "Escape") {
-      if (app.facePicker) app.endFacePick();
+      if (app.matePick) {
+        app.endMatePick();
+        app.setStatus(app.statusLine());
+      } else if (app.facePicker) app.endFacePick();
       else if (app.edgePicking !== null) {
         app.endEdgePick();
         app.renderDetail();

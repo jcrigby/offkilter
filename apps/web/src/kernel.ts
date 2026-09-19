@@ -1,7 +1,9 @@
-// Typed wrapper around the WebAssembly kernel. All document edits are `Op`
-// values (see crates/ok-model/src/ops.rs) sent as JSON.
+// Typed wrapper around the WebAssembly kernel. All document edits are
+// `DocOp` values (see crates/ok-model/src/document.rs) sent as JSON: an
+// `Op` on a part studio tab, an `AssemblyOp` on an assembly tab, or a
+// tab-level change.
 
-import init, { Studio, version as kernelVersion } from "./wasm/ok_wasm.js";
+import init, { Doc, version as kernelVersion } from "./wasm/ok_wasm.js";
 
 export type Vec2 = { x: number; y: number };
 export type Vec3 = { x: number; y: number; z: number };
@@ -111,13 +113,54 @@ export type PlaneFrame = { origin: Vec3; x_axis: Vec3; y_axis: Vec3; normal: Vec
 export type Loop = { points: Vec2[] };
 export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
 export type Settings = { facet_angle: number };
-export type Summary = {
+export type TabKind = "part_studio" | "assembly";
+export type TabSummary = { id: number; name: string; kind: TabKind };
+
+// ---- assemblies
+export type Placement = { position: Vec3; rotation: Vec3 };
+export type MateKind = "fastened" | "revolute" | "slider" | "cylindrical";
+/** A face of an instance's body, used as a mate connector. */
+export type Connector = { instance: number; face: FaceRef };
+export type Transform = { m: number[][]; t: Vec3 };
+export type InstanceSummary = {
+  id: number;
   name: string;
+  studio: number;
+  body: number;
+  fixed: boolean;
+  placement: Placement;
+  /** Index into `bodies` when the instance resolved. */
+  body_index: number | null;
+  transform: Transform | null;
+  error: string | null;
+};
+export type MateSummary = {
+  id: number;
+  name: string;
+  kind: MateKind;
+  a: Connector;
+  b: Connector;
+  offset: number;
+  angle: number;
+  flip: boolean;
+  error: string | null;
+};
+
+export type Summary = {
+  /** Document name. */
+  name: string;
+  tabs: TabSummary[];
+  /** The regenerated tab. */
+  tab: number;
+  kind: TabKind;
+  tab_name: string;
   features: FeatureSummary[];
   bodies: BodySummary[];
   sketches: Record<string, SketchResult>;
   variables: Record<string, number>;
   settings: Settings;
+  instances: InstanceSummary[];
+  mates: MateSummary[];
 };
 
 export type SketchOp =
@@ -175,12 +218,35 @@ export type Op =
 /** Ops that undo an applied op come back with its result (see `inverse`). */
 export type OpResult = { feature: number | null; entities: number[]; constraint: number | null; inverse?: Op[] };
 
+export type AssemblyOp =
+  | { type: "add_instance"; studio: number; body: number; name: string | null; fixed?: boolean; placement?: Placement }
+  | { type: "remove_instance"; id: number }
+  | { type: "set_instance"; id: number; name?: string | null; fixed?: boolean | null; placement?: Placement | null }
+  | { type: "add_mate"; kind?: MateKind; a: Connector; b: Connector; offset?: number; angle?: number; flip?: boolean; name: string | null }
+  | { type: "set_mate"; id: number; name?: string | null; kind?: MateKind | null; a?: Connector | null; b?: Connector | null; offset?: number | null; angle?: number | null; flip?: boolean | null }
+  | { type: "remove_mate"; id: number }
+  | { type: "restore"; instances: unknown[]; mates: unknown[] };
+
+/** An edit to the document: a studio op on a tab, an assembly op, or a tab change. */
+export type DocOp =
+  | { type: "add_part_studio"; name: string | null }
+  | { type: "add_assembly"; name: string | null }
+  | { type: "rename_tab"; tab: number; name: string }
+  | { type: "delete_tab"; tab: number }
+  | { type: "insert_tab"; index: number; tab: unknown }
+  | { type: "rename_document"; name: string }
+  | { type: "studio"; tab: number; op: Op }
+  | { type: "assembly"; tab: number; op: AssemblyOp }
+  | { type: "replace_document"; json: string };
+
+export type DocOpResult = { tab: number | null; instance: number | null; mate: number | null; studio?: OpResult; inverse?: DocOp[] };
+
 export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array; edgeFaces: Uint32Array; faceIds: Uint32Array; faceSurfaces: Uint32Array };
 
 export class Kernel {
-  private studio: Studio;
+  private studio: Doc;
 
-  private constructor(studio: Studio) {
+  private constructor(studio: Doc) {
     this.studio = studio;
   }
 
@@ -190,15 +256,15 @@ export class Kernel {
   }
 
   static empty(): Kernel {
-    return new Kernel(new Studio());
+    return new Kernel(new Doc());
   }
 
   static demo(): Kernel {
-    return new Kernel(Studio.demo());
+    return new Kernel(Doc.demo());
   }
 
   static fromJson(json: string): Kernel {
-    return new Kernel(Studio.from_json(json));
+    return new Kernel(Doc.from_json(json));
   }
 
   static version(): string {
@@ -209,9 +275,19 @@ export class Kernel {
     return this.studio.to_json();
   }
 
-  /** Applies an op; `base` makes new ids start there (collaborative id ranges). */
-  apply(op: Op, base: number | null = null): OpResult {
-    return JSON.parse(this.studio.apply(JSON.stringify(op), base ?? undefined)) as OpResult;
+  /** Applies a document op; `base` makes new ids start there (collaborative id ranges). */
+  apply(op: DocOp, base: number | null = null): DocOpResult {
+    return JSON.parse(this.studio.apply(JSON.stringify(op), base ?? undefined)) as DocOpResult;
+  }
+
+  /** The first part studio tab, if any. */
+  firstStudio(): number | null {
+    return this.studio.first_studio() ?? null;
+  }
+
+  /** Names of the bodies a part studio tab produces. */
+  studioBodies(tab: number): string[] {
+    return JSON.parse(this.studio.studio_bodies(tab)) as string[];
   }
 
   /** Structural hash (hex) for replica consistency checks. */
@@ -219,9 +295,9 @@ export class Kernel {
     return this.studio.structural_hash();
   }
 
-  /** Regenerates; with `rollback`, the result reflects the state after that many features. */
-  regenerate(rollback: number | null = null): Summary {
-    return JSON.parse(this.studio.regenerate(rollback ?? undefined)) as Summary;
+  /** Regenerates a tab (the first part studio when `tab` is null); with `rollback`, a studio reflects the state after that many features. */
+  regenerate(tab: number | null = null, rollback: number | null = null): Summary {
+    return JSON.parse(this.studio.regenerate(tab ?? undefined, rollback ?? undefined)) as Summary;
   }
 
   bodyMeshes(): BodyMesh[] {

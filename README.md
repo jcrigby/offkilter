@@ -25,6 +25,10 @@ works today, all in the browser:
   rollback bar; faces and edges referenced by origin so downstream features
   survive edits; variables and expressions (`#width / 2`) bound to any
   dimension; a regeneration cache so late edits are cheap.
+- Assemblies: a document holds part studio and assembly tabs; an
+  assembly inserts bodies from part studios as instances and joins them
+  with fastened, revolute, slider and cylindrical mates between faces,
+  with offset, angle and flip, resolved as chains from fixed instances.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
   document only reverts your own edit), `.okpart` JSON documents, STL export, mass
   properties.
@@ -36,7 +40,7 @@ works today, all in the browser:
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
 resolution, 5° by default),
-shells, assemblies, drawings, STEP, and teams. See [docs/ROADMAP.md](docs/ROADMAP.md).
+shells, drawings, STEP, and teams. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout
 
@@ -46,7 +50,7 @@ shells, assemblies, drawings, STEP, and teams. See [docs/ROADMAP.md](docs/ROADMA
 | `crates/ok-sketch` | Sketch entities, constraints, Levenberg–Marquardt solver, closed-region extraction. |
 | `crates/ok-brep` | Boundary-representation solids: extrude, revolve, booleans, blends, transforms. |
 | `crates/ok-mesh` | Triangle meshes for display. |
-| `crates/ok-model` | Part studio, features, operations (`Op`) and regeneration. |
+| `crates/ok-model` | Documents with part studio and assembly tabs, features, operations (`DocOp`, `Op`) and regeneration. |
 | `crates/ok-wasm` | WebAssembly bindings used by the web client. |
 | `crates/ok-server` | Document server: storage, static app, real-time op relay. |
 | `apps/web` | Vite + TypeScript + three.js client. |

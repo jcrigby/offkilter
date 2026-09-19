@@ -5,6 +5,8 @@
 //! bodies. Every edit goes through [`Op`], which keeps the door open for an
 //! operation log (undo/redo, branching, real-time collaboration) later.
 
+mod assembly;
+mod document;
 pub mod expr;
 mod feature;
 mod invert;
@@ -12,6 +14,11 @@ mod ops;
 mod project;
 mod regen;
 
+pub use assembly::{
+    connector_frame, mate_transform, Assembly, AssemblyResult, Connector, Instance, InstanceId,
+    Mate, MateId, MateKind, Placement, TabId,
+};
+pub use document::{AssemblyOp, DocOp, DocOpResult, Document, Tab, TabKind};
 pub use feature::{
     canonical_frame, Axis, BlendFeature, BlendKind, BodyOp, CopyOp, Counterbore, EdgeRef,
     ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind,

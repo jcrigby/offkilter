@@ -167,13 +167,13 @@ async fn create_doc(
     Json(body): Json<CreateDoc>,
 ) -> impl IntoResponse {
     let json = match body.json {
-        Some(j) => match ok_model::PartStudio::from_json(&j) {
+        Some(j) => match ok_model::Document::from_json(&j) {
             Ok(_) => j,
             Err(e) => {
                 return (StatusCode::BAD_REQUEST, format!("invalid document: {e}")).into_response()
             }
         },
-        None => ok_model::PartStudio::new(body.name.clone()).to_json(),
+        None => ok_model::Document::new(body.name.clone()).to_json(),
     };
     let owner = user.as_ref().map(crate::auth::UserInfo::from);
     match hub.store().create(&body.name, &json, owner) {
@@ -216,7 +216,7 @@ async fn put_doc(
     if let Err(code) = accessible(&hub, &id, user.as_ref()) {
         return code.into_response();
     }
-    let studio = match ok_model::PartStudio::from_json(&body) {
+    let studio = match ok_model::Document::from_json(&body) {
         Ok(s) => s,
         Err(e) => {
             return (StatusCode::BAD_REQUEST, format!("invalid document: {e}")).into_response()
@@ -717,7 +717,7 @@ mod tests {
         assert_eq!(res.status(), StatusCode::OK);
         let json = String::from_utf8(res.into_body().collect().await.unwrap().to_bytes().to_vec())
             .unwrap();
-        let studio = ok_model::PartStudio::from_json(&json).unwrap();
+        let studio = ok_model::Document::from_json(&json).unwrap();
         assert_eq!(studio.name, "bracket");
 
         let demo = ok_model::PartStudio::demo().to_json();
@@ -785,7 +785,7 @@ mod tests {
             .clone()
             .oneshot(
                 Request::put(format!("/api/docs/{id}"))
-                    .body(Body::from(ok_model::PartStudio::new("empty").to_json()))
+                    .body(Body::from(ok_model::Document::new("empty").to_json()))
                     .unwrap(),
             )
             .await
@@ -813,10 +813,13 @@ mod tests {
         let json = String::from_utf8(res.into_body().collect().await.unwrap().to_bytes().to_vec())
             .unwrap();
         assert_eq!(
-            ok_model::PartStudio::from_json(&json)
-                .unwrap()
-                .features()
-                .len(),
+            {
+                let d = ok_model::Document::from_json(&json).unwrap();
+                d.studio(d.first_studio().unwrap())
+                    .unwrap()
+                    .features()
+                    .len()
+            },
             6
         );
 
@@ -852,7 +855,7 @@ mod tests {
         let meta = store
             .create(
                 "mine",
-                &ok_model::PartStudio::new("mine").to_json(),
+                &ok_model::Document::new("mine").to_json(),
                 Some(crate::auth::UserInfo::from(&owner)),
             )
             .unwrap();
@@ -890,11 +893,7 @@ mod tests {
         use tokio_tungstenite::tungstenite::Message as WsMessage;
         let store = temp_store();
         let meta = store
-            .create(
-                "shared",
-                &ok_model::PartStudio::new("shared").to_json(),
-                None,
-            )
+            .create("shared", &ok_model::Document::new("shared").to_json(), None)
             .unwrap();
         let app = router(store, temp_users(), None);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -933,7 +932,7 @@ mod tests {
         assert_eq!(presence_b["type"], "presence");
 
         // Alice adds a sketch; both receive the op with seq 1.
-        a.send(WsMessage::Text(r#"{"type":"op","id":7,"base":1048576,"op":{"type":"add_sketch","plane":{"type":"standard","base":"top"},"name":null}}"#.into())).await.unwrap();
+        a.send(WsMessage::Text(r#"{"type":"op","id":7,"base":1048576,"op":{"type":"studio","tab":1,"op":{"type":"add_sketch","plane":{"type":"standard","base":"top"},"name":null}}}"#.into())).await.unwrap();
         let mut got_a = None;
         let mut got_b = None;
         for _ in 0..4 {
@@ -967,7 +966,7 @@ mod tests {
 
         // A bad op is rejected for the sender only.
         b.send(WsMessage::Text(
-            r#"{"type":"op","id":8,"op":{"type":"delete_feature","id":999}}"#.into(),
+            r#"{"type":"op","id":8,"op":{"type":"studio","tab":1,"op":{"type":"delete_feature","id":999}}}"#.into(),
         ))
         .await
         .unwrap();
@@ -983,7 +982,8 @@ mod tests {
         let snap: serde_json::Value =
             serde_json::from_str(&b.next().await.unwrap().unwrap().into_text().unwrap()).unwrap();
         assert_eq!(snap["type"], "snapshot");
-        let studio = ok_model::PartStudio::from_json(snap["doc"].as_str().unwrap()).unwrap();
+        let doc = ok_model::Document::from_json(snap["doc"].as_str().unwrap()).unwrap();
+        let studio = doc.studio(doc.first_studio().unwrap()).unwrap();
         assert_eq!(studio.features().len(), 1);
         assert_eq!(
             studio.features()[0].id.0,

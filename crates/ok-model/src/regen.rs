@@ -25,7 +25,7 @@ pub struct Body {
 }
 
 impl Body {
-    fn new(name: String, source: FeatureId, solid: Solid) -> Body {
+    pub(crate) fn new(name: String, source: FeatureId, solid: Solid) -> Body {
         let (mesh, triangle_faces) = ok_brep::tessellate_with_faces(&solid);
         let edges = ok_brep::display_edges(&solid);
         Body {

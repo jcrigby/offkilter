@@ -50,8 +50,8 @@ test("two clients edit one document live", async ({ browser }) => {
   const [idsA, idsB] = await Promise.all([ids(a), ids(b)]);
   expect(new Set(idsA)).toEqual(new Set(idsB));
   const docId = new URL(a.url()).searchParams.get("doc");
-  const server = (await (await fetch(`${SERVER}/api/docs/${docId}`)).json()) as { features: { id: number }[] };
-  expect(new Set(server.features.map((f) => f.id))).toEqual(new Set(idsA));
+  const server = (await (await fetch(`${SERVER}/api/docs/${docId}`)).json()) as { tabs: { kind: { features: { id: number }[] } }[] };
+  expect(new Set(server.tabs[0]!.kind.features.map((f) => f.id))).toEqual(new Set(idsA));
   // The two new sketches got ids from different prefixes (>= 1 << 20).
   const fresh = idsA.filter((id: number) => id >= 1 << 20);
   expect(fresh.length).toBeGreaterThanOrEqual(2);

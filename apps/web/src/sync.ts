@@ -6,7 +6,7 @@
 // own ops are still unacknowledged, the two sides may have applied them in
 // different orders, so we resync from a server snapshot.
 
-import type { Op } from "./kernel";
+import type { DocOp } from "./kernel";
 
 export type UserInfo = { id: string; name: string };
 export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[] };
@@ -14,14 +14,14 @@ export type VersionMeta = { id: string; name: string; created: number };
 
 type ServerMessage =
   | { type: "welcome"; client: number; prefix: number; seq: number; doc: string; clients: number }
-  | { type: "op"; op: Op; seq: number; from: number; id: number; base: number | null; hash: string }
+  | { type: "op"; op: DocOp; seq: number; from: number; id: number; base: number | null; hash: string }
   | { type: "error"; message: string; id: number }
   | { type: "snapshot"; doc: string; seq: number }
   | { type: "presence"; clients: number; names: string[] };
 
 export interface SyncHandlers {
   /** Apply an op that came from another client, allocating ids from `base`. */
-  remoteOp(op: Op, base: number | null): void;
+  remoteOp(op: DocOp, base: number | null): void;
   /** Current structural hash of the local document. */
   localHash(): string;
   /** Replace the whole document (welcome, resync, or a remote undo). */
@@ -177,7 +177,7 @@ export class Sync {
   }
 
   /** Sends an op this client already applied locally with `base`. */
-  send(op: Op, base: number | null): void {
+  send(op: DocOp, base: number | null): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
     const id = this.nextId++;
     this.inflight.add(id);

@@ -2,7 +2,7 @@
 //! and a broadcast channel to connected clients.
 
 use crate::store::DocStore;
-use ok_model::PartStudio;
+use ok_model::Document;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -69,7 +69,7 @@ pub struct LiveDoc {
 }
 
 struct LiveState {
-    studio: PartStudio,
+    doc: Document,
     seq: u64,
     next_client: u64,
     clients: HashMap<u64, String>,
@@ -78,12 +78,12 @@ struct LiveState {
 impl LiveDoc {
     fn load(id: &str, store: DocStore) -> Option<Arc<LiveDoc>> {
         let json = store.read(id)?;
-        let studio = PartStudio::from_json(&json).ok()?;
+        let doc = Document::from_json(&json).ok()?;
         let (tx, _) = broadcast::channel(256);
         Some(Arc::new(LiveDoc {
             id: id.to_string(),
             state: Mutex::new(LiveState {
-                studio,
+                doc,
                 seq: 0,
                 next_client: 1,
                 clients: HashMap::new(),
@@ -105,7 +105,7 @@ impl LiveDoc {
             client,
             prefix,
             seq: st.seq,
-            doc: st.studio.to_json(),
+            doc: st.doc.to_json(),
             clients: st.clients.len(),
         };
         let presence = self.presence_locked(&st);
@@ -142,14 +142,14 @@ impl LiveDoc {
     ) -> Result<u64, String> {
         let mut st = self.state.lock().unwrap();
         let text = op.to_string();
-        st.studio
+        st.doc
             .apply_json_with_base(&text, base)
             .map_err(|e| e.to_string())?;
         st.seq += 1;
         let seq = st.seq;
-        let json = st.studio.to_json();
-        let name = st.studio.name.clone();
-        let hash = format!("{:016x}", st.studio.structural_hash());
+        let json = st.doc.to_json();
+        let name = st.doc.name.clone();
+        let hash = format!("{:016x}", st.doc.structural_hash());
         drop(st);
         let _ = self.store.write(&self.id, &json, Some(&name));
         let _ = self.tx.send(ServerMessage::Op {
@@ -166,17 +166,17 @@ impl LiveDoc {
     /// Replaces the live document (e.g. restoring a version) and tells
     /// every client to reload it.
     pub fn replace(&self, json: &str) -> Result<(), String> {
-        let studio = PartStudio::from_json(json).map_err(|e| e.to_string())?;
+        let doc = Document::from_json(json).map_err(|e| e.to_string())?;
         let mut st = self.state.lock().unwrap();
-        st.studio = studio;
+        st.doc = doc;
         st.seq += 1;
         let seq = st.seq;
-        let name = st.studio.name.clone();
+        let name = st.doc.name.clone();
         drop(st);
         let _ = self.store.write(&self.id, json, Some(&name));
         let hash = format!(
             "{:016x}",
-            PartStudio::from_json(json)
+            Document::from_json(json)
                 .map(|s| s.structural_hash())
                 .unwrap_or(0)
         );
@@ -195,7 +195,7 @@ impl LiveDoc {
     pub fn snapshot(&self) -> ServerMessage {
         let st = self.state.lock().unwrap();
         ServerMessage::Snapshot {
-            doc: st.studio.to_json(),
+            doc: st.doc.to_json(),
             seq: st.seq,
         }
     }

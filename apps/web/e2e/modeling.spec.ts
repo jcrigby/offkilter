@@ -288,3 +288,56 @@ test("sketch trim, offset and mirror", async ({ page }) => {
   await page.waitForTimeout(300);
   expect(await regions()).toBe(3);
 });
+
+test("assembly tab: insert two instances and mate them face to face", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  // A 10x10x5 block in the part studio.
+  const extrude = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Sketch 1" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: s, op: { type: "add_rectangle", a: { x: 0, y: 0 }, b: { x: 10, y: 10 } } });
+    app.apply({ type: "add_extrude", sketch: s, depth: 5, name: "Block" });
+    return app.summary.features[app.summary.features.length - 1].id as number;
+  });
+  // A new assembly tab through the tab bar.
+  await page.getByRole("button", { name: "+ Assembly" }).click();
+  await expect(page.locator("#tabbar button.active")).toContainText("Assembly 1");
+  await expect(page.locator("#assembly-panel")).toBeVisible();
+  await expect(page.locator("#detail-title")).toHaveText("Insert instance");
+  // Insert the block twice through the form, then mate B's bottom onto A's top.
+  await page.getByRole("button", { name: "Insert", exact: true }).click();
+  await expect(page.locator("#instance-list li")).toHaveCount(1);
+  await page.click("#btn-insert-instance");
+  await page.getByRole("button", { name: "Insert", exact: true }).click();
+  await expect(page.locator("#instance-list li")).toHaveCount(2);
+  const count = () => page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies.length as number);
+  expect(await count()).toBe(2);
+  await page.evaluate((e) => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const [a, b] = app.summary.instances.map((i: any) => i.id);
+    app.applyDoc({ type: "assembly", tab: app.tab, op: { type: "add_mate", kind: "fastened", a: { instance: a, face: { feature: e, local: 1 } }, b: { instance: b, face: { feature: e, local: 0 } }, offset: 0, angle: 0, flip: false, name: null } });
+  }, extrude);
+  await expect(page.locator("#mate-list li")).toHaveCount(1);
+  const top = () => page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies[1].bounds[0].z as number);
+  expect(await top()).toBeCloseTo(5, 6);
+  // Editing the mate offset through the panel moves the instance.
+  await page.click("#mate-list li");
+  const offset = page.locator("#detail-body .field input[type=number]").first();
+  await offset.fill("3");
+  await offset.press("Enter");
+  await page.waitForTimeout(300);
+  expect(await top()).toBeCloseTo(8, 6);
+  expect(await page.$$eval("#mate-list .dot.err, #instance-list .dot.err", (els) => els.length)).toBe(0);
+  // Undo the offset edit; the part studio tab still holds the block.
+  await page.click("#viewport");
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(300);
+  expect(await top()).toBeCloseTo(5, 6);
+  await page.getByRole("button", { name: /Part Studio 1/ }).click();
+  await expect(page.locator("#feature-list")).toContainText("Block");
+});

@@ -11,7 +11,7 @@ apps/web  (Vite + three.js)
    ▼
 crates/ok-wasm  (wasm-bindgen facade)
    ▼
-crates/ok-model  PartStudio ─ Feature list ─ Op ─ regenerate()
+crates/ok-model  Document ─ tabs: PartStudio (Feature list ─ Op) | Assembly (instances, mates)
    │                              │
    │                              ├─ Sketch feature  → ok-sketch (solve, profiles)
    │                              └─ Extrude feature → ok-brep   (extrude, boolean)
@@ -21,6 +21,36 @@ crates/ok-math   Vec2 / Vec3 / Plane / tolerances
 ```
 
 ## Document model (`ok-model`)
+
+A `Document` (`document.rs`) is a list of tabs, each a `PartStudio` or an
+`Assembly`, plus a document-level id counter for tabs, instances and
+mates. Every edit is a `DocOp`: a studio `Op` addressed to a tab, an
+`AssemblyOp`, or a tab change (add, rename, delete, insert-back). Older
+`.okpart` files holding a bare part studio load as a one-tab document.
+The wasm facade regenerates one tab at a time: a studio tab yields its
+features, sketches and bodies; an assembly tab yields placed instances
+and mates, with the bodies of its instances as the displayed bodies.
+
+### Assemblies (`assembly.rs`)
+
+An `Instance` names a body of a part studio tab in the same document
+(by tab and body index) and carries a `Placement` (position and Euler
+rotation) used when nothing mates it. A `Mate` joins two instances
+through `Connector`s, each a face reference on an instance's body. The
+connector frame comes from the face: origin at the face centroid (on the
+axis for a cylindrical face, with z along the axis), z along the normal,
+x and y canonical for that normal. Mates are resolved as directed chains:
+fixed instances and unmated instances sit at their own placement, then
+every mate whose one side is placed moves the other side so that the
+connector frames meet, z axes opposed (or aligned with `flip`), rotated
+by `angle` about z and separated by `offset` along it. Revolute, slider
+and cylindrical mates use the same placement; the kind only says which
+parameter the user is meant to vary. A second mate on an already placed
+instance is checked and reported rather than solved, and a chain with no
+fixed instance falls back to placements with an error on each instance.
+A numeric mate solver for closed loops is a later item.
+
+### Part studios
 
 A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable
 `FeatureId`, a name, a `suppressed` flag and a `FeatureKind`:
