@@ -24,7 +24,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Boundary representation: shared-vertex planar faces with analytic surface tags (plane, cylinder) and face origins
 - [x] Booleans (union / subtract / intersect) on polyhedral solids, with exact coplanar handling
 - [ ] Exact curved faces (cylinder, later general surfaces) instead of facets, with curve/surface intersection
-- [ ] Merge coplanar faces of the same body after a union
+- [x] Merge coplanar faces of the same body after a boolean
 - [x] Extrude up-to-face / through-all
 - [x] Revolve (about a sketch axis or sketch line, full or partial)
 - [ ] Sweep, loft

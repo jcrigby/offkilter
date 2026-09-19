@@ -168,10 +168,12 @@ valid solid. Section vertices within tolerance of the face boundary are
 snapped onto it before clipping, and the clipper runs with a 64-bit grid,
 so shared boundaries come out coincident rather than as hairline slivers.
 
-Known limits: results are polyhedral (arcs are 5° facets), overlapping
-coplanar faces from different features stay separate faces rather than
-merging, and the merge scope is "every body whose bounding box touches
-the tool".
+After assembly, planar faces in the same plane that share an edge are
+merged into one face (`merge_coplanar_faces`), keeping the surface and
+origin of the largest member, so flush unions produce single faces.
+
+Known limits: results are polyhedral (arcs are 5° facets), and the merge
+scope is "every body whose bounding box touches the tool".
 
 ## Meshes (`ok-mesh`)
 

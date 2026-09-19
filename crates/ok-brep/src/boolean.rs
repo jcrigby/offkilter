@@ -257,7 +257,11 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
     }
     let mut surfaces = a.surfaces.clone();
     surfaces.extend_from_slice(&b.surfaces);
-    Solid::from_polygons(polys, surfaces)
+    let mut solid = Solid::from_polygons(polys, surfaces)?;
+    solid.merge_coplanar_faces();
+    solid.compact_surfaces();
+    solid.validate()?;
+    Ok(solid)
 }
 
 #[cfg(test)]
@@ -362,10 +366,11 @@ mod tests {
         );
         let u = boolean(&a, &b, BoolOp::Union).unwrap();
         assert_vol(&u, 128.0, 1e-9);
+        assert_eq!(u.faces.len(), 6, "internal wall gone; flush faces merged");
         assert_eq!(
-            u.faces.len(),
-            10,
-            "internal wall gone; other faces stay separate"
+            u.vertices.len(),
+            12,
+            "merged faces keep the mid-edge vertices"
         );
     }
 
@@ -517,7 +522,7 @@ mod tests {
         let b = rect(&Plane::XY, Vec2::ZERO, Vec2::new(3.0, 3.0), 1.0, 2.0, 2);
         let u = boolean(&a, &b, BoolOp::Union).unwrap();
         assert_vol(&u, 18.0, 1e-9);
-        assert_eq!(u.faces.len(), 10, "touching caps vanish, walls stay split");
+        assert_eq!(u.faces.len(), 6, "touching caps vanish, walls merge");
     }
 
     #[test]
@@ -550,6 +555,28 @@ mod tests {
         );
         let u = boolean(&a, &b, BoolOp::Union).unwrap();
         assert_vol(&u, 16.0, 1e-9);
+    }
+
+    #[test]
+    fn merged_faces_survive_further_booleans() {
+        let a = rect(&Plane::XY, Vec2::ZERO, Vec2::new(4.0, 4.0), 0.0, 4.0, 1);
+        let b = rect(
+            &Plane::XY,
+            Vec2::new(4.0, 0.0),
+            Vec2::new(8.0, 4.0),
+            0.0,
+            4.0,
+            2,
+        );
+        let u = boolean(&a, &b, BoolOp::Union).unwrap();
+        let drill = cylinder(&Plane::XY, Vec2::new(4.0, 2.0), 1.0, -1.0, 5.0, 3);
+        let cut = boolean(&u, &drill, BoolOp::Difference).unwrap();
+        assert_vol(&cut, 128.0 - PI * 4.0, 2e-3);
+        assert_eq!(
+            cut.faces.iter().filter(|f| f.loops.len() == 2).count(),
+            2,
+            "one hole in the merged top and bottom"
+        );
     }
 
     #[test]

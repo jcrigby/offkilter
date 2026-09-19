@@ -362,6 +362,167 @@ impl Solid {
         }
     }
 
+    /// Merges planar faces that lie in the same plane (same normal) and
+    /// share an edge, as booleans between flush bodies leave behind. The
+    /// merged face keeps the surface and origin of its largest member.
+    /// Vertices on the merged boundary that were T-junction splits stay in
+    /// place so neighbouring faces remain matched.
+    pub fn merge_coplanar_faces(&mut self) {
+        let n = self.faces.len();
+        if n == 0 {
+            return;
+        }
+        let planar = |f: &Face| matches!(self.surfaces.get(f.surface), Some(Surface::Plane { .. }));
+        // Union-find over faces joined by a shared edge with matching planes.
+        let mut parent: Vec<usize> = (0..n).collect();
+        fn find(p: &mut [usize], i: usize) -> usize {
+            let mut r = i;
+            while p[r] != r {
+                r = p[r];
+            }
+            let mut c = i;
+            while p[c] != r {
+                let nx = p[c];
+                p[c] = r;
+                c = nx;
+            }
+            r
+        }
+        let coplanar = |a: &Face, b: &Face| -> bool {
+            a.plane.normal.dot(b.plane.normal) > 1.0 - 1e-9
+                && (a.plane.normal.dot(b.plane.origin - a.plane.origin)).abs() <= 1e-6
+        };
+        for (_, faces) in self.edge_faces() {
+            if faces.len() != 2 {
+                continue;
+            }
+            let (fa, fb) = (&self.faces[faces[0]], &self.faces[faces[1]]);
+            if planar(fa) && planar(fb) && coplanar(fa, fb) {
+                let (ra, rb) = (find(&mut parent, faces[0]), find(&mut parent, faces[1]));
+                if ra != rb {
+                    parent[ra] = rb;
+                }
+            }
+        }
+        let mut groups: HashMap<usize, Vec<usize>> = HashMap::new();
+        for i in 0..n {
+            let r = find(&mut parent, i);
+            groups.entry(r).or_default().push(i);
+        }
+        if groups.values().all(|g| g.len() == 1) {
+            return;
+        }
+        let mut new_faces: Vec<Face> = Vec::new();
+        let mut merged_any = false;
+        let mut sorted_groups: Vec<Vec<usize>> = groups.into_values().collect();
+        sorted_groups.sort_by_key(|g| g[0]);
+        for group in sorted_groups {
+            if group.len() == 1 {
+                new_faces.push(self.faces[group[0]].clone());
+                continue;
+            }
+            // Directed edges of all member loops; internal shared edges
+            // appear in both directions and cancel out.
+            let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
+            for &fi in &group {
+                for l in &self.faces[fi].loops {
+                    for i in 0..l.len() {
+                        let (a, b) = (l[i], l[(i + 1) % l.len()]);
+                        *directed.entry((a, b)).or_insert(0) += 1;
+                    }
+                }
+            }
+            let mut boundary: HashMap<u32, Vec<u32>> = HashMap::new();
+            for (&(a, b), &count) in &directed {
+                let reverse = directed.get(&(b, a)).copied().unwrap_or(0);
+                if count > reverse {
+                    for _ in 0..(count - reverse) {
+                        boundary.entry(a).or_default().push(b);
+                    }
+                }
+            }
+            // Chain into loops. At vertices with several outgoing edges
+            // (a boundary touching itself) any consistent choice keeps the
+            // loop closed; area sign then classifies outer vs hole.
+            let mut loops: Vec<Vec<u32>> = Vec::new();
+            while let Some((&start, _)) = boundary.iter().find(|(_, v)| !v.is_empty()) {
+                let mut l = vec![start];
+                let mut cur = start;
+                loop {
+                    let Some(next) = boundary.get_mut(&cur).and_then(|v| v.pop()) else {
+                        break;
+                    };
+                    if next == start {
+                        break;
+                    }
+                    l.push(next);
+                    cur = next;
+                    if l.len() > directed.len() + 1 {
+                        break;
+                    }
+                }
+                if l.len() >= 3 {
+                    loops.push(l);
+                }
+            }
+            let largest = *group
+                .iter()
+                .max_by(|&&a, &&b| {
+                    self.face_area(a)
+                        .partial_cmp(&self.face_area(b))
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
+                .unwrap();
+            let template = &self.faces[largest];
+            let area_of = |l: &Vec<u32>| -> f64 {
+                let pts: Vec<ok_math::Vec2> = l
+                    .iter()
+                    .map(|&v| template.plane.to_plane(self.vertices[v as usize]))
+                    .collect();
+                ok_sketch::signed_area(&pts)
+            };
+            let mut outers: Vec<Vec<u32>> = Vec::new();
+            let mut holes: Vec<Vec<u32>> = Vec::new();
+            for l in loops {
+                if area_of(&l) > 0.0 {
+                    outers.push(l);
+                } else {
+                    holes.push(l);
+                }
+            }
+            if outers.len() != 1 {
+                // Unexpected topology (should not happen for edge-connected
+                // coplanar faces); keep the originals untouched.
+                for &fi in &group {
+                    new_faces.push(self.faces[fi].clone());
+                }
+                continue;
+            }
+            let mut face_loops = vec![outers.remove(0)];
+            face_loops.extend(holes);
+            new_faces.push(Face {
+                plane: template.plane,
+                loops: face_loops,
+                surface: template.surface,
+                origin: template.origin,
+            });
+            merged_any = true;
+        }
+        if merged_any {
+            self.faces = new_faces;
+        }
+    }
+
+    fn face_area(&self, fi: usize) -> f64 {
+        let f = &self.faces[fi];
+        let l = &f.loops[0];
+        let pts: Vec<ok_math::Vec2> = l
+            .iter()
+            .map(|&v| f.plane.to_plane(self.vertices[v as usize]))
+            .collect();
+        ok_sketch::signed_area(&pts).abs()
+    }
+
     /// Drops unreferenced surfaces and renumbers.
     pub fn compact_surfaces(&mut self) {
         let mut map: HashMap<usize, usize> = HashMap::new();
