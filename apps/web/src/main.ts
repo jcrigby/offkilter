@@ -227,15 +227,14 @@ class App implements SketchHost {
 
   apply(op: Op): void {
     this.snapshot();
-    const base = this.sync.nextBase();
     try {
-      this.kernel.apply(op, base);
+      this.applyRaw(op);
     } catch (e) {
       this.setStatus(`error: ${(e as Error).message}`);
-      this.history.pop();
+      if (this.history[this.history.length - 1]?.length === 0) this.history.pop();
+      this.updateHistoryButtons();
       return;
     }
-    this.sync.send(op, base);
     this.regenerate();
   }
 
@@ -272,52 +271,83 @@ class App implements SketchHost {
 
   // ------------------------------------------------------------ undo / redo
 
-  private history: string[] = [];
-  private future: string[] = [];
+  // Undo is op-based: every applied op comes back with the ops that undo
+  // it, and undoing applies those as ordinary (synced) ops. In a shared
+  // document this reverts only our own edit and leaves everyone else's in
+  // place. A history entry is one user-level edit: the inverses of every op
+  // applied since the last `snapshot()`, in application order.
+  private history: Op[][] = [];
+  private future: Op[][] = [];
   private static readonly HISTORY_LIMIT = 200;
 
+  /** Starts a new undo step; the ops applied next are undone together. */
   snapshot(): void {
-    this.history.push(this.kernel.toJson());
+    if (this.history.length > 0 && this.history[this.history.length - 1]!.length === 0) return;
+    this.history.push([]);
     if (this.history.length > App.HISTORY_LIMIT) this.history.shift();
     this.future = [];
     this.updateHistoryButtons();
   }
 
+  private recordInverse(inverse: Op[] | undefined): void {
+    if (!inverse || inverse.length === 0) return;
+    if (this.history.length === 0) this.history.push([]);
+    this.history[this.history.length - 1]!.push(...inverse);
+  }
+
   undo(): void {
-    const json = this.history.pop();
-    if (json === undefined) return;
-    this.future.push(this.kernel.toJson());
-    this.restore(json);
+    while (this.history.length > 0 && this.history[this.history.length - 1]!.length === 0) this.history.pop();
+    const step = this.history.pop();
+    if (step === undefined) {
+      this.updateHistoryButtons();
+      return;
+    }
+    const redo = this.applyStep(step);
+    if (redo.length > 0) this.future.push(redo);
+    this.afterHistoryStep();
   }
 
   redo(): void {
-    const json = this.future.pop();
-    if (json === undefined) return;
-    this.history.push(this.kernel.toJson());
-    this.restore(json);
+    const step = this.future.pop();
+    if (step === undefined) return;
+    const undo = this.applyStep(step);
+    if (undo.length > 0) this.history.push(undo);
+    this.afterHistoryStep();
   }
 
-  /** Loads a document state while keeping selection and sketch mode where possible. */
-  private restore(json: string): void {
-    if (this.sync.connected) this.sync.send({ type: "replace_document", json }, null);
+  /** Applies a step's ops last-first and returns the ops that reverse it. */
+  private applyStep(step: Op[]): Op[] {
+    const reverse: Op[] = [];
+    for (let i = step.length - 1; i >= 0; i--) {
+      const op = step[i]!;
+      const base = this.sync.nextBase();
+      try {
+        const r = this.kernel.apply(op, base);
+        reverse.push(...(r.inverse ?? []));
+      } catch (e) {
+        // Someone else changed what this op touches; skip just that op.
+        this.setStatus(`undo skipped an edit: ${(e as Error).message}`);
+        continue;
+      }
+      this.sync.send(op, base);
+    }
+    return reverse;
+  }
+
+  private afterHistoryStep(): void {
     const sketchId = this.sketcher.active ? this.sketcher.sketchId : null;
     this.sketcher.cancel();
     this.sketcher.selection.clear();
-    const fresh = Kernel.fromJson(json);
-    this.kernel.dispose();
-    this.kernel = fresh;
     this.regenerate();
     if (!this.feature(this.selected)) this.selected = null;
-    if (sketchId !== null && !this.feature(sketchId)) {
-      this.sketcher.exit();
-    }
+    if (sketchId !== null && !this.feature(sketchId)) this.sketcher.exit();
     this.renderFeatures();
     this.renderDetail();
     this.updateHistoryButtons();
   }
 
   private updateHistoryButtons(): void {
-    ($("#btn-undo") as HTMLButtonElement).disabled = this.history.length === 0;
+    ($("#btn-undo") as HTMLButtonElement).disabled = !this.history.some((s) => s.length > 0);
     ($("#btn-redo") as HTMLButtonElement).disabled = this.future.length === 0;
   }
 
@@ -356,6 +386,7 @@ class App implements SketchHost {
     const base = this.sync.nextBase();
     const r = this.kernel.apply(op, base);
     this.sync.send(op, base);
+    this.recordInverse(r.inverse);
     return r;
   }
 

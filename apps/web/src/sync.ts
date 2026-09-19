@@ -42,6 +42,8 @@ export class Sync {
   private static readonly STRIDE = 256;
   docId: string | null = null;
   connected = false;
+  /** Snapshot resyncs so far (a diverged replica or a rejected op); tests expect none. */
+  resyncs = 0;
 
   constructor(private handlers: SyncHandlers, private userName: string) {}
 
@@ -183,6 +185,7 @@ export class Sync {
   }
 
   private requestSnapshot(): void {
+    this.resyncs++;
     this.inflight.clear();
     this.ws?.send(JSON.stringify({ type: "snapshot" }));
   }

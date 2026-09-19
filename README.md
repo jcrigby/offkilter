@@ -24,7 +24,8 @@ works today, all in the browser:
   rollback bar; faces and edges referenced by origin so downstream features
   survive edits; variables and expressions (`#width / 2`) bound to any
   dimension; a regeneration cache so late edits are cheap.
-- Workflow: undo/redo, `.okpart` JSON documents, STL export, mass
+- Workflow: per-user undo/redo (inverse ops, so undoing in a shared
+  document only reverts your own edit), `.okpart` JSON documents, STL export, mass
   properties.
 
 - Cloud: a small document server with real-time multi-user editing;

@@ -1,12 +1,12 @@
 use crate::{
     BlendFeature, BlendKind, BodyOp, CopyOp, Counterbore, EdgeRef, ExtrudeDirection, ExtrudeEnd,
-    ExtrudeFeature, FeatureId, FeatureKind, HoleFeature, LoftFeature, MirrorFeature, ModelError,
-    PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection,
+    ExtrudeFeature, Feature, FeatureId, FeatureKind, HoleFeature, LoftFeature, MirrorFeature,
+    ModelError, PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection,
     ProjectionSource, RevolveAxis, RevolveFeature, SketchFeature, SweepFeature, VariableFeature,
     PROJECTION_BLOCK,
 };
 use ok_math::Vec2;
-use ok_sketch::{Constraint, ConstraintId, EntityId};
+use ok_sketch::{Constraint, ConstraintId, Entity, EntityId};
 use serde::{Deserialize, Serialize};
 
 /// Edits to a sketch feature.
@@ -65,6 +65,25 @@ pub enum SketchOp {
     /// Remove a projection (by index) and the entities it built.
     RemoveProjection {
         index: usize,
+    },
+    /// Puts entities, constraints and flags back exactly as given (the
+    /// inverse of any other sketch op, computed by `apply_with_inverse`).
+    /// Removals happen first, then inserts overwrite by id.
+    Restore {
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        remove: Vec<EntityId>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        remove_constraints: Vec<ConstraintId>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        entities: Vec<(EntityId, Entity)>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        constraints: Vec<(ConstraintId, Constraint)>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        construction: Vec<(EntityId, bool)>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        projected: Vec<(EntityId, bool)>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        projections: Option<Vec<Projection>>,
     },
 }
 
@@ -184,6 +203,12 @@ pub enum Op {
         field: String,
         expression: Option<String>,
     },
+    /// Sets a bindable numeric field by name (see `FeatureKind::set_field`).
+    SetField {
+        id: FeatureId,
+        field: String,
+        value: f64,
+    },
     AddHole {
         sketch: FeatureId,
         diameter: f64,
@@ -266,6 +291,12 @@ pub enum Op {
     DeleteFeature {
         id: FeatureId,
     },
+    /// Puts a feature back at `index` with its id and state (the inverse of
+    /// `DeleteFeature`).
+    InsertFeature {
+        index: usize,
+        feature: Feature,
+    },
     /// Move a feature to a new index in the feature list.
     MoveFeature {
         id: FeatureId,
@@ -324,6 +355,10 @@ pub struct OpResult {
     pub feature: Option<FeatureId>,
     pub entities: Vec<EntityId>,
     pub constraint: Option<ConstraintId>,
+    /// Ops that undo this one, in the order to apply them (filled by
+    /// `apply_with_inverse`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inverse: Vec<Op>,
 }
 
 impl PartStudio {
@@ -524,6 +559,15 @@ impl PartStudio {
                     _ => return Err(ModelError::WrongFeatureKind(id, "variable")),
                 }
             }
+            Op::SetField { id, field, value } => {
+                if !value.is_finite() {
+                    return Err(ModelError::Invalid(format!("{field} must be finite")));
+                }
+                self.feature_mut(id)?
+                    .kind
+                    .set_field(&field, value)
+                    .map_err(ModelError::Invalid)?;
+            }
             Op::SetBinding {
                 id,
                 field,
@@ -701,6 +745,18 @@ impl PartStudio {
                 let index = index.min(self.features.len());
                 self.features.insert(index, f);
             }
+            Op::InsertFeature { index, feature } => {
+                if self.position(feature.id).is_some() {
+                    return Err(ModelError::Invalid(format!(
+                        "feature {:?} already exists",
+                        feature.id
+                    )));
+                }
+                self.next_id = self.next_id.max(feature.id.0 + 1);
+                let index = index.min(self.features.len());
+                out.feature = Some(feature.id);
+                self.features.insert(index, feature);
+            }
             Op::Sketch { id, op } => match op {
                 SketchOp::Project { source } => {
                     let sf = self.sketch_feature_mut(id)?;
@@ -719,6 +775,42 @@ impl PartStudio {
                     let p = sf.projections.remove(index);
                     for e in p.entities {
                         sf.sketch.remove_entity(e);
+                    }
+                }
+                SketchOp::Restore {
+                    remove,
+                    remove_constraints,
+                    entities,
+                    constraints,
+                    construction,
+                    projected,
+                    projections,
+                } => {
+                    let sf = self.sketch_feature_mut(id)?;
+                    for e in remove {
+                        sf.sketch.remove_entity(e);
+                    }
+                    for c in remove_constraints {
+                        sf.sketch.remove_constraint(c);
+                    }
+                    // Points before curves so nothing dangles in between.
+                    let (points, curves): (Vec<_>, Vec<_>) = entities
+                        .into_iter()
+                        .partition(|(_, e)| matches!(e, Entity::Point { .. }));
+                    for (eid, e) in points.into_iter().chain(curves) {
+                        sf.sketch.insert_entity_with_id(eid, e);
+                    }
+                    for (cid, c) in constraints {
+                        sf.sketch.insert_constraint_with_id(cid, c);
+                    }
+                    for (eid, on) in construction {
+                        let _ = sf.sketch.set_construction(eid, on);
+                    }
+                    for (eid, on) in projected {
+                        sf.sketch.set_projected(eid, on);
+                    }
+                    if let Some(p) = projections {
+                        sf.projections = p;
                     }
                 }
                 op => {
@@ -776,9 +868,9 @@ impl PartStudio {
                         SketchOp::SetConstruction { id, construction } => {
                             sk.set_construction(id, construction)?;
                         }
-                        SketchOp::Project { .. } | SketchOp::RemoveProjection { .. } => {
-                            unreachable!()
-                        }
+                        SketchOp::Project { .. }
+                        | SketchOp::RemoveProjection { .. }
+                        | SketchOp::Restore { .. } => unreachable!(),
                     }
                 }
             },

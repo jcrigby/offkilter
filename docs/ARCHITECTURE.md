@@ -322,12 +322,33 @@ client for the same reason.
 
 Every broadcast op carries the server's structural hash of the document
 (feature order, ids, kinds and references, but no floating-point values,
-which can differ in the last bits between native and wasm). A client with
-nothing in flight compares its own hash and resyncs from a snapshot on a
-mismatch, which covers the remaining order-dependent edits such as two
-simultaneous feature reorders. Undo/redo while connected is sent as
-`replace_document`. Semantic conflicts (editing a feature someone just
-deleted) are rejected by the server and trigger a resync on that client.
+which can differ in the last bits between native and wasm). The hash is
+computed with fixed-width writes only, because the standard `Hash` impls
+for slices, strings and enums write `usize`/`isize` values whose width
+differs between the 32-bit wasm client and the 64-bit server. A client
+with nothing in flight compares its own hash and resyncs from a snapshot
+on a mismatch, which covers the remaining order-dependent edits such as
+two simultaneous adds (same ids, different list order until the server
+order wins). Semantic conflicts (editing a feature someone just deleted)
+are rejected by the server and trigger a resync on that client.
+
+### Undo (`ok-model/src/invert.rs`)
+
+Undo is op-based and per user. `PartStudio::apply_with_inverse` applies
+an op and returns, in `OpResult::inverse`, the ops that undo it, computed
+from the state before and after: creations are undone by `DeleteFeature`,
+a deletion by `InsertFeature` carrying the saved feature at its old index,
+`Set*` ops by the same op with the old values of just the fields they
+changed, a binding change by restoring the binding and the field's old
+value, and any sketch op by `SketchOp::Restore`, a patch obtained by
+diffing the sketch: entities and constraints the op created are removed,
+those it removed or changed are put back by id, flags and projections
+follow. The client keeps a stack of these inverse lists (one entry per
+user-level edit, so a drag with many `move_point`s is one step) and undoes
+by applying them as ordinary synced ops, which reverts only that user's
+edit and leaves everyone else's in place; the inverses of the inverses
+form the redo stack. An inverse that no longer applies (someone deleted
+the feature meanwhile) is skipped with a status message.
 
 ## Conventions
 

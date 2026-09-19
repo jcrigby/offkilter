@@ -56,6 +56,31 @@ test("two clients edit one document live", async ({ browser }) => {
   const fresh = idsA.filter((id: number) => id >= 1 << 20);
   expect(fresh.length).toBeGreaterThanOrEqual(2);
   expect(new Set(fresh.map((id: number) => id >> 20)).size).toBe(2);
+
+  // Undo is per user: A adds a variable, B adds one, A undoes. Only A's
+  // goes, on both replicas, and B's edit survives. (The simultaneous adds
+  // above may have resynced once to agree on feature order; from here on
+  // replicas must agree with the server without any resync.)
+  const resyncs = (p: typeof a) => p.evaluate(() => (window as unknown as { offkilter: any }).offkilter.sync.resyncs as number);
+  const [resyncA, resyncB] = [await resyncs(a), await resyncs(b)];
+  const addVar = (p: typeof a, name: string) =>
+    p.evaluate((n) => (window as unknown as { offkilter: any }).offkilter.apply({ type: "add_variable", name: n, expression: "1" }), name);
+  await addVar(a, "ua");
+  await expect.poll(async () => featureNames(b), { timeout: 10_000 }).toContain("#ua");
+  await addVar(b, "ub");
+  await expect.poll(async () => featureNames(a), { timeout: 10_000 }).toContain("#ub");
+  await a.click("#viewport");
+  await a.keyboard.press("Control+z");
+  await expect.poll(async () => featureNames(a), { timeout: 10_000 }).not.toContain("#ua");
+  expect(await featureNames(a)).toContain("#ub");
+  await expect.poll(async () => featureNames(b), { timeout: 10_000 }).not.toContain("#ua");
+  expect(await featureNames(b)).toContain("#ub");
+  // Redo brings it back everywhere.
+  await a.keyboard.press("Control+y");
+  await expect.poll(async () => featureNames(b), { timeout: 10_000 }).toContain("#ua");
+  expect(await featureNames(a)).toEqual(await featureNames(b));
+  expect(await resyncs(a)).toBe(resyncA);
+  expect(await resyncs(b)).toBe(resyncB);
 });
 
 test("accounts own documents and share them", async ({ browser }) => {

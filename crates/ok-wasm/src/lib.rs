@@ -89,11 +89,14 @@ impl Studio {
         self.inner.to_json()
     }
 
-    /// Applies an `Op` (JSON) and returns the `OpResult` as JSON.
+    /// Applies an `Op` (JSON) and returns the `OpResult` as JSON, including
+    /// the `inverse` ops that undo it.
     pub fn apply(&mut self, op_json: &str, base: Option<u32>) -> Result<String, JsError> {
+        let op: ok_model::Op =
+            serde_json::from_str(op_json).map_err(|e| JsError::new(&e.to_string()))?;
         let r = self
             .inner
-            .apply_json_with_base(op_json, base)
+            .apply_with_inverse(op, base)
             .map_err(|e| JsError::new(&e.to_string()))?;
         Ok(serde_json::to_string(&r).unwrap())
     }

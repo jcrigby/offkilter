@@ -7,6 +7,7 @@
 
 pub mod expr;
 mod feature;
+mod invert;
 mod ops;
 mod project;
 mod regen;
@@ -156,35 +157,82 @@ impl PartStudio {
     /// differ in the last bits between native and wasm builds, so replicas
     /// that applied the same ops agree on it.
     pub fn structural_hash(&self) -> u64 {
-        use std::hash::{Hash, Hasher};
+        // Only fixed-width writes: `Hash` impls for slices, `str` and enums
+        // write `usize`/`isize` values, whose width differs between the
+        // wasm client (32-bit) and the native server (64-bit).
+        use std::hash::Hasher;
         let mut h = std::hash::DefaultHasher::new();
+        fn str_(h: &mut std::hash::DefaultHasher, s: &str) {
+            h.write_u32(s.len() as u32);
+            h.write(s.as_bytes());
+        }
+        fn ids(h: &mut std::hash::DefaultHasher, ids: &[u32]) {
+            h.write_u32(ids.len() as u32);
+            for id in ids {
+                h.write_u32(*id);
+            }
+        }
+        fn face(h: &mut std::hash::DefaultHasher, f: &FaceRef) {
+            h.write_u32(f.feature.0);
+            h.write_u32(f.local);
+        }
+        h.write_u32(self.features.len() as u32);
         for f in &self.features {
-            f.id.hash(&mut h);
-            f.suppressed.hash(&mut h);
-            f.kind.display_kind().hash(&mut h);
-            f.kind.source_sketch().hash(&mut h);
+            h.write_u32(f.id.0);
+            h.write_u8(f.suppressed as u8);
+            str_(&mut h, f.kind.display_kind());
+            h.write_u32(f.kind.source_sketch().map_or(u32::MAX, |s| s.0));
+            h.write_u32(f.bindings.len() as u32);
             for (k, v) in &f.bindings {
-                k.hash(&mut h);
-                v.hash(&mut h);
+                str_(&mut h, k);
+                str_(&mut h, v);
             }
             match &f.kind {
                 FeatureKind::Sketch(sf) => {
                     for (id, e) in sf.sketch.entities() {
-                        id.hash(&mut h);
-                        e.kind_name().hash(&mut h);
-                        e.references().hash(&mut h);
-                        sf.sketch.is_construction(id).hash(&mut h);
+                        h.write_u32(id.0);
+                        str_(&mut h, e.kind_name());
+                        ids(
+                            &mut h,
+                            &e.references().iter().map(|r| r.0).collect::<Vec<_>>(),
+                        );
+                        h.write_u8(sf.sketch.is_construction(id) as u8);
+                        h.write_u8(sf.sketch.is_projected(id) as u8);
                     }
                     for (id, c) in sf.sketch.constraints() {
-                        id.hash(&mut h);
-                        c.kind_name().hash(&mut h);
-                        c.references().hash(&mut h);
+                        h.write_u32(id.0);
+                        str_(&mut h, c.kind_name());
+                        ids(
+                            &mut h,
+                            &c.references().iter().map(|r| r.0).collect::<Vec<_>>(),
+                        );
+                    }
+                    h.write_u32(sf.projections.len() as u32);
+                    for p in &sf.projections {
+                        h.write_u32(p.block.0);
+                        match p.source {
+                            ProjectionSource::Edge { edge } => {
+                                h.write_u8(0);
+                                face(&mut h, &edge.a);
+                                face(&mut h, &edge.b);
+                            }
+                            ProjectionSource::Face { face: fr } => {
+                                h.write_u8(1);
+                                face(&mut h, &fr);
+                            }
+                        }
                     }
                 }
-                FeatureKind::Blend(b) => b.edges.hash(&mut h),
+                FeatureKind::Blend(b) => {
+                    h.write_u32(b.edges.len() as u32);
+                    for e in &b.edges {
+                        face(&mut h, &e.a);
+                        face(&mut h, &e.b);
+                    }
+                }
                 FeatureKind::Variable(v) => {
-                    v.name.hash(&mut h);
-                    v.expression.hash(&mut h);
+                    str_(&mut h, &v.name);
+                    str_(&mut h, &v.expression);
                 }
                 _ => {}
             }

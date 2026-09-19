@@ -62,7 +62,7 @@ pub enum SketchError {
 }
 
 /// A 2D sketch: geometry plus constraints, in plane coordinates.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Sketch {
     #[serde(with = "id_map")]
     entities: BTreeMap<EntityId, Entity>,
@@ -161,6 +161,28 @@ impl Sketch {
     pub fn replace_projected(&mut self, id: EntityId, e: Entity) {
         if self.projected.contains(&id) {
             self.entities.insert(id, e);
+        }
+    }
+
+    /// Inserts or overwrites an entity under a chosen id (undo of a removal
+    /// or a move). Counters are untouched: the id was allocated before.
+    pub fn insert_entity_with_id(&mut self, id: EntityId, e: Entity) {
+        self.entities.insert(id, e);
+    }
+
+    /// Inserts or overwrites a constraint under a chosen id.
+    pub fn insert_constraint_with_id(&mut self, id: ConstraintId, c: Constraint) {
+        self.constraints.insert(id, c);
+    }
+
+    /// Marks an entity as projected (or not) without touching its geometry.
+    pub fn set_projected(&mut self, id: EntityId, projected: bool) {
+        if projected {
+            if self.entities.contains_key(&id) {
+                self.projected.insert(id);
+            }
+        } else {
+            self.projected.remove(&id);
         }
     }
 

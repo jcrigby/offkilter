@@ -132,7 +132,8 @@ export type SketchOp =
   | { type: "move_point"; id: number; pos: Vec2 }
   | { type: "set_construction"; id: number; construction: boolean }
   | { type: "project"; source: ProjectionSource }
-  | { type: "remove_projection"; index: number };
+  | { type: "remove_projection"; index: number }
+  | { type: "restore"; [key: string]: unknown };
 
 export type Op =
   | { type: "add_sketch"; plane: PlaneRef; name: string | null }
@@ -157,6 +158,8 @@ export type Op =
   | { type: "set_loft"; id: number; sketch_b?: number | null; op?: BodyOp | null }
   | { type: "set_settings"; facet_angle: number }
   | { type: "replace_document"; json: string }
+  /** Inverse ops (undo) carry saved state; the client never builds these itself. */
+  | { type: "insert_feature"; index: number; feature: unknown }
   | { type: "set_sketch_plane"; id: number; plane: PlaneRef }
   | { type: "rename_feature"; id: number; name: string }
   | { type: "set_suppressed"; id: number; suppressed: boolean }
@@ -165,7 +168,8 @@ export type Op =
   | { type: "sketch"; id: number; op: SketchOp }
   | { type: "rename_studio"; name: string };
 
-export type OpResult = { feature: number | null; entities: number[]; constraint: number | null };
+/** Ops that undo an applied op come back with its result (see `inverse`). */
+export type OpResult = { feature: number | null; entities: number[]; constraint: number | null; inverse?: Op[] };
 
 export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array; edges: Float32Array; edgeFaces: Uint32Array; faceIds: Uint32Array; faceSurfaces: Uint32Array };
 

@@ -87,7 +87,7 @@ pub fn canonical_frame(plane: &Plane) -> Plane {
     Plane::from_origin_normal(origin, n).unwrap_or(*plane)
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SketchFeature {
     pub plane: PlaneRef,
     pub sketch: Sketch,
@@ -185,7 +185,7 @@ pub enum ExtrudeEnd {
     UpToFace { face: FaceRef },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ExtrudeFeature {
     pub sketch: FeatureId,
     pub profiles: ProfileSelection,
@@ -209,7 +209,7 @@ pub enum RevolveAxis {
     Line { line: ok_sketch::EntityId },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RevolveFeature {
     pub sketch: FeatureId,
     pub profiles: ProfileSelection,
@@ -234,7 +234,7 @@ pub enum BlendKind {
 }
 
 /// A fillet (rounded) or chamfer (flat) blend along edges.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BlendFeature {
     pub kind: BlendKind,
     pub edges: Vec<EdgeRef>,
@@ -254,7 +254,7 @@ pub enum CopyOp {
 }
 
 /// Mirrors every body across a plane.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MirrorFeature {
     pub plane: PlaneRef,
     #[serde(default)]
@@ -290,7 +290,7 @@ pub enum PatternKind {
 }
 
 /// Repeats every body `count` times (the original included).
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PatternFeature {
     pub kind: PatternKind,
     pub count: u32,
@@ -299,7 +299,7 @@ pub struct PatternFeature {
 }
 
 /// A drilled hole at every standalone point of a sketch.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HoleFeature {
     pub sketch: FeatureId,
     pub diameter: f64,
@@ -326,7 +326,7 @@ pub struct Counterbore {
 }
 
 /// Sweeps a profile region along the open chain of curves in another sketch.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SweepFeature {
     pub sketch: FeatureId,
     pub profiles: ProfileSelection,
@@ -336,7 +336,7 @@ pub struct SweepFeature {
 }
 
 /// Lofts between the largest region of two sketches.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LoftFeature {
     pub sketch: FeatureId,
     pub sketch_b: FeatureId,
@@ -344,13 +344,13 @@ pub struct LoftFeature {
 }
 
 /// A named value later features can use in expressions as `#name`.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct VariableFeature {
     pub name: String,
     pub expression: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FeatureKind {
     Sketch(SketchFeature),
@@ -417,6 +417,37 @@ impl FeatureKind {
     }
 
     /// Writes an evaluated binding into the named numeric field.
+    /// Current value of a bindable numeric field (see `set_field`).
+    pub fn field(&self, field: &str) -> Option<f64> {
+        match (self, field) {
+            (FeatureKind::Sketch(s), "plane.offset") => Some(s.plane.offset()),
+            (FeatureKind::Sketch(s), f) if f.starts_with("constraint.") => {
+                let id: u32 = f["constraint.".len()..].parse().ok()?;
+                s.sketch
+                    .constraint(ok_sketch::ConstraintId(id))
+                    .and_then(|c| c.value())
+            }
+            (FeatureKind::Extrude(e), "depth") => Some(e.depth),
+            (FeatureKind::Revolve(r), "angle") => Some(r.angle),
+            (FeatureKind::Blend(b), "size") => Some(b.size),
+            (FeatureKind::Mirror(m), "plane.offset") => Some(m.plane.offset()),
+            (FeatureKind::Pattern(p), "count") => Some(p.count as f64),
+            (FeatureKind::Pattern(p), "spacing") => match &p.kind {
+                PatternKind::Linear { spacing, .. } => Some(*spacing),
+                _ => None,
+            },
+            (FeatureKind::Pattern(p), "angle") => match &p.kind {
+                PatternKind::Circular { angle, .. } => Some(*angle),
+                _ => None,
+            },
+            (FeatureKind::Hole(h), "diameter") => Some(h.diameter),
+            (FeatureKind::Hole(h), "depth") => Some(h.depth),
+            (FeatureKind::Hole(h), "cbore_diameter") => h.counterbore.map(|c| c.diameter),
+            (FeatureKind::Hole(h), "cbore_depth") => h.counterbore.map(|c| c.depth),
+            _ => None,
+        }
+    }
+
     pub fn set_field(&mut self, field: &str, value: f64) -> Result<(), String> {
         match (self, field) {
             (FeatureKind::Sketch(s), "plane.offset") => {
@@ -516,7 +547,7 @@ impl FeatureKind {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Feature {
     pub id: FeatureId,
     pub name: String,
