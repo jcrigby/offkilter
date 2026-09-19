@@ -396,6 +396,7 @@ class App implements SketchHost {
       li.textContent = "No mates. “+ Mate” joins two instances face to face.";
       ml.appendChild(li);
     }
+    this.renderParts("#asm-part-list");
     ($("#btn-add-mate") as HTMLButtonElement).disabled = this.summary.instances.length < 2;
     ($("#btn-interference") as HTMLButtonElement).disabled = this.summary.instances.length < 2;
     this.viewer.setSelectedBodies(new Set(this.instance(this.selectedInstance)?.body_indices ?? []));
@@ -997,8 +998,8 @@ class App implements SketchHost {
     ($("#btn-add-pattern") as HTMLButtonElement).disabled = !hasBody;
   }
 
-  renderParts(): void {
-    const ul = $("#part-list");
+  renderParts(target = "#part-list"): void {
+    const ul = $(target);
     ul.innerHTML = "";
     for (const b of this.summary.bodies) {
       const li = document.createElement("li");
