@@ -9,7 +9,7 @@
 import type { Constraint, Entity, Op, OpResult, PlaneFrame, SketchCurve, SketchData, SketchOp, Summary, Vec2, Vec3 } from "./kernel";
 import type { PointerHandler, Viewer } from "./viewer";
 
-export type Tool = "select" | "line" | "rectangle" | "circle";
+export type Tool = "select" | "line" | "rectangle" | "circle" | "arc";
 
 export interface SketchHost {
   summary: Summary;
@@ -52,7 +52,7 @@ export class Sketcher implements PointerHandler {
     this.host.viewer.setSketchMouse(true);
     const plane = this.plane();
     if (plane) this.host.viewer.lookAtPlane(plane);
-    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · S select · right-drag orbits · Esc finishes");
+    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · S select · Q construction · right-drag orbits · Esc finishes");
   }
 
   exit(): void {
@@ -220,6 +220,9 @@ export class Sketcher implements PointerHandler {
       case "circle":
         this.clickCircle(s);
         break;
+      case "arc":
+        this.clickArc(s);
+        break;
     }
   }
 
@@ -258,6 +261,21 @@ export class Sketcher implements PointerHandler {
           pts.push(this.lift({ x: a.x + r * Math.cos(t), y: a.y + r * Math.sin(t) }));
         }
         return [pts];
+      }
+      case "arc": {
+        if (this.pending.length === 1) return [[this.lift(a), this.lift(cur)]];
+        const start = this.pending[1]!;
+        const r = Math.hypot(start.x - a.x, start.y - a.y);
+        const a0 = Math.atan2(start.y - a.y, start.x - a.x);
+        let sweep = Math.atan2(cur.y - a.y, cur.x - a.x) - a0;
+        while (sweep <= 0) sweep += Math.PI * 2;
+        const n = Math.max(2, Math.ceil(sweep / (Math.PI / 36)));
+        const pts: Vec3[] = [];
+        for (let i = 0; i <= n; i++) {
+          const t = a0 + (sweep * i) / n;
+          pts.push(this.lift({ x: a.x + r * Math.cos(t), y: a.y + r * Math.sin(t) }));
+        }
+        return [[this.lift(a), this.lift(start)], pts];
       }
       default:
         return [];
@@ -342,6 +360,54 @@ export class Sketcher implements PointerHandler {
       this.host.setStatus(`error: ${(err as Error).message}`);
     }
     this.cancel();
+    this.host.regenerate();
+  }
+
+  /** Arc tool: centre, start, then end (projected onto the radius; counter-clockwise from start). */
+  private clickArc(s: { pos: Vec2; id: number | null }): void {
+    if (this.pending.length < 2) {
+      if (this.pending.length === 1 && Math.hypot(s.pos.x - this.pending[0]!.x, s.pos.y - this.pending[0]!.y) < 1e-9) return;
+      this.pending.push(s.pos);
+      this.pendingIds.push(s.id);
+      return;
+    }
+    const c = this.pending[0]!;
+    const start = this.pending[1]!;
+    const r = Math.hypot(start.x - c.x, start.y - c.y);
+    const ang = Math.atan2(s.pos.y - c.y, s.pos.x - c.x);
+    const end = { x: c.x + r * Math.cos(ang), y: c.y + r * Math.sin(ang) };
+    if (Math.hypot(end.x - start.x, end.y - start.y) < 1e-9) return;
+    this.host.snapshot();
+    try {
+      const res = this.sketchOp({ type: "add_arc", center: c, start, end });
+      const [, centerId, startId, endId] = res.entities as [number, number, number, number];
+      const cId = this.pendingIds[0];
+      const sId = this.pendingIds[1];
+      if (cId !== null && cId !== undefined) this.constrain({ type: "coincident", a: centerId, b: cId });
+      if (sId !== null && sId !== undefined) this.constrain({ type: "coincident", a: startId, b: sId });
+      if (s.id !== null) this.constrain({ type: "coincident", a: endId, b: s.id });
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.cancel();
+    this.host.regenerate();
+  }
+
+  /** Toggles construction on the selected curves. */
+  toggleConstruction(): void {
+    const data = this.sketchData();
+    if (!data || this.selection.size === 0) return;
+    const construction = new Set(data.construction ?? []);
+    this.host.snapshot();
+    for (const id of this.selection) {
+      const e = this.entity(id);
+      if (!e || e.type === "point") continue;
+      try {
+        this.sketchOp({ type: "set_construction", id, construction: !construction.has(id) });
+      } catch {
+        /* ignore */
+      }
+    }
     this.host.regenerate();
   }
 

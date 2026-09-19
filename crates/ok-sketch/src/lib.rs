@@ -66,6 +66,9 @@ pub struct Sketch {
     entities: BTreeMap<EntityId, Entity>,
     #[serde(with = "id_map")]
     constraints: BTreeMap<ConstraintId, Constraint>,
+    /// Construction entities take part in constraints but not in regions.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeSet::is_empty")]
+    construction: std::collections::BTreeSet<EntityId>,
     next_entity: u32,
     next_constraint: u32,
 }
@@ -197,6 +200,31 @@ impl Sketch {
         lines
     }
 
+    pub fn is_construction(&self, id: EntityId) -> bool {
+        self.construction.contains(&id)
+    }
+
+    pub fn construction_ids(&self) -> impl Iterator<Item = EntityId> + '_ {
+        self.construction.iter().copied()
+    }
+
+    /// Marks an entity as construction geometry (or back to regular).
+    pub fn set_construction(
+        &mut self,
+        id: EntityId,
+        construction: bool,
+    ) -> Result<(), SketchError> {
+        if !self.entities.contains_key(&id) {
+            return Err(SketchError::UnknownEntity(id));
+        }
+        if construction {
+            self.construction.insert(id);
+        } else {
+            self.construction.remove(&id);
+        }
+        Ok(())
+    }
+
     pub fn add_constraint(&mut self, c: Constraint) -> ConstraintId {
         let id = ConstraintId(self.next_constraint);
         self.next_constraint += 1;
@@ -225,6 +253,7 @@ impl Sketch {
         }
         self.constraints
             .retain(|_, c| !c.references().contains(&id));
+        self.construction.remove(&id);
     }
 
     /// Replaces the numeric value of a dimensional constraint.

@@ -43,6 +43,8 @@ export type Entity =
 export type SketchData = {
   entities: ({ id: number } & Entity)[];
   constraints: ({ id: number } & Constraint)[];
+  /** Ids of construction entities (absent when none). */
+  construction?: number[];
 };
 
 export type RevolveAxis = { type: "x_axis" } | { type: "y_axis" } | { type: "line"; line: number };
@@ -91,7 +93,7 @@ export type SolveResult = {
   equations: number;
   parameters: number;
 };
-export type SketchCurve = { entity: number; kind: string; points: Vec3[] };
+export type SketchCurve = { entity: number; kind: string; construction: boolean; points: Vec3[] };
 export type PlaneFrame = { origin: Vec3; x_axis: Vec3; y_axis: Vec3; normal: Vec3 };
 export type Loop = { points: Vec2[] };
 export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
@@ -107,7 +109,8 @@ export type SketchOp =
   | { type: "remove_constraint"; id: number }
   | { type: "remove_entity"; id: number }
   | { type: "set_constraint_value"; id: number; value: number }
-  | { type: "move_point"; id: number; pos: Vec2 };
+  | { type: "move_point"; id: number; pos: Vec2 }
+  | { type: "set_construction"; id: number; construction: boolean };
 
 export type Op =
   | { type: "add_sketch"; plane: PlaneRef; name: string | null }

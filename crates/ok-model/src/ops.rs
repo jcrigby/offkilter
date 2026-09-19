@@ -50,6 +50,11 @@ pub enum SketchOp {
         id: EntityId,
         pos: Vec2,
     },
+    /// Mark geometry as construction (used by constraints and axes, not regions).
+    SetConstruction {
+        id: EntityId,
+        construction: bool,
+    },
 }
 
 /// Edits to a part studio. Every mutation goes through here.
@@ -500,6 +505,9 @@ impl PartStudio {
                     SketchOp::MovePoint { id, pos } => {
                         sk.point(id)?;
                         sk.set_point_pub(id, pos);
+                    }
+                    SketchOp::SetConstruction { id, construction } => {
+                        sk.set_construction(id, construction)?;
                     }
                 }
             }

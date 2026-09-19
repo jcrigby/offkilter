@@ -2,6 +2,7 @@
 
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { CSS2DObject, CSS2DRenderer } from "three/examples/jsm/renderers/CSS2DRenderer.js";
 import type { BodyMesh, PlaneFrame, SketchResult, Vec2, Vec3 } from "./kernel";
 
 const BODY_COLOR = 0x8fa8c8;
@@ -14,6 +15,9 @@ const FACE_HOVER = 0x4ea1ff;
 export type FacePick = { body: number; face: number };
 /** A picked edge: body index and the two face indices it separates. */
 export type EdgePick = { body: number; faces: [number, number]; segment: number };
+
+/** A clickable text label anchored to a world position. */
+export type Label = { position: Vec3; text: string; className?: string; onClick?: () => void; title?: string };
 
 /** Pointer events routed to a sketch tool while sketch mode is active. */
 export interface PointerHandler {
@@ -56,12 +60,16 @@ export class Viewer {
   pointerHandler: PointerHandler | null = null;
   private preview = new THREE.Group();
   private previewMaterial = new THREE.LineBasicMaterial({ color: SKETCH_SELECTED, depthTest: false });
+  private labelRenderer = new CSS2DRenderer();
+  private labels = new THREE.Group();
 
   constructor(private container: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(0x1b1d21);
     container.appendChild(this.renderer.domElement);
+    this.labelRenderer.domElement.className = "labels";
+    container.appendChild(this.labelRenderer.domElement);
 
     // CAD convention: Z up.
     this.camera = new THREE.PerspectiveCamera(40, 1, 0.1, 10000);
@@ -95,6 +103,7 @@ export class Viewer {
     this.scene.add(this.edgeHover);
 
     this.scene.add(this.preview);
+    this.scene.add(this.labels);
     const el = this.renderer.domElement;
     el.addEventListener("contextmenu", (e) => e.preventDefault());
     el.addEventListener("pointerdown", (e) => {
@@ -139,6 +148,7 @@ export class Viewer {
     const w = this.container.clientWidth || 1;
     const h = this.container.clientHeight || 1;
     this.renderer.setSize(w, h, false);
+    this.labelRenderer.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
   }
@@ -147,6 +157,7 @@ export class Viewer {
     requestAnimationFrame(this.animate);
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
+    this.labelRenderer.render(this.scene, this.camera);
   };
 
   setBodies(meshes: BodyMesh[]): void {
@@ -187,15 +198,43 @@ export class Viewer {
       const pointMat = new THREE.PointsMaterial({ color, size: isSelected ? 7 : 4, sizeAttenuation: false, depthTest: !isSelected });
       const selLineMat = new THREE.LineBasicMaterial({ color: SKETCH_ENTITY_SELECTED, depthTest: false, linewidth: 2 });
       const selPointMat = new THREE.PointsMaterial({ color: SKETCH_ENTITY_SELECTED, size: 10, sizeAttenuation: false, depthTest: false });
+      const dashMat = new THREE.LineDashedMaterial({ color, depthTest: !isSelected, dashSize: 1.5, gapSize: 1 });
+      const selDashMat = new THREE.LineDashedMaterial({ color: SKETCH_ENTITY_SELECTED, depthTest: false, dashSize: 1.5, gapSize: 1 });
       for (const c of sk.curves) {
         const pts = c.points.map((p: Vec3) => new THREE.Vector3(p.x, p.y, p.z));
         const sel = isSelected && selectedEntities.has(c.entity);
         if (c.kind === "point") {
           this.sketches.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints(pts), sel ? selPointMat : pointMat));
+        } else if (c.construction) {
+          const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), sel ? selDashMat : dashMat);
+          line.computeLineDistances();
+          this.sketches.add(line);
         } else {
           this.sketches.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), sel ? selLineMat : lineMat));
         }
       }
+    }
+  }
+
+  /** Replaces the clickable labels shown over the scene. */
+  setLabels(labels: Label[]): void {
+    this.clear(this.labels);
+    for (const l of labels) {
+      const div = document.createElement("div");
+      div.className = "label " + (l.className ?? "");
+      div.textContent = l.text;
+      if (l.title) div.title = l.title;
+      if (l.onClick) {
+        div.classList.add("clickable");
+        div.onpointerdown = (e) => e.stopPropagation();
+        div.onclick = (e) => {
+          e.stopPropagation();
+          l.onClick?.();
+        };
+      }
+      const obj = new CSS2DObject(div);
+      obj.position.set(l.position.x, l.position.y, l.position.z);
+      this.labels.add(obj);
     }
   }
 
@@ -358,6 +397,8 @@ export class Viewer {
       group.remove(child);
       const obj = child as THREE.Mesh;
       obj.geometry?.dispose();
+      const css = child as CSS2DObject;
+      if (css.element && css.element.parentNode) css.element.parentNode.removeChild(css.element);
     }
   }
 }

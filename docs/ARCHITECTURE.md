@@ -151,9 +151,13 @@ become loops directly. Loops are nested by containment so a region that
 encloses another gets it as a hole, while the inner region is still a
 profile in its own right.
 
-Known gaps: edges that cross mid-span are not split (no intersection
-insertion yet), and two curves leaving a vertex with the same tangent are
-ordered by direction only (no curvature tie-break).
+Before tracing, edges are split where they cross (line-line, line-arc,
+arc-arc) and where another edge's endpoint lies on them, so the graph only
+meets at vertices and crossing lines form regions. Construction entities
+are skipped when building the graph but still take part in constraints.
+
+Known gap: two curves leaving a vertex with the same tangent are ordered
+by direction only (no curvature tie-break).
 
 ## Solids (`ok-brep`)
 

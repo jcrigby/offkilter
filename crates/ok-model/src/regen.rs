@@ -79,6 +79,8 @@ impl Body {
 pub struct SketchCurve {
     pub entity: EntityId,
     pub kind: String,
+    #[serde(default)]
+    pub construction: bool,
     pub points: Vec<Vec3>,
 }
 
@@ -171,6 +173,7 @@ fn tessellate_sketch(
             out.push(SketchCurve {
                 entity: id,
                 kind: e.kind_name().to_string(),
+                construction: sketch.is_construction(id),
                 points: pts.into_iter().map(|p| plane.to_world(p)).collect(),
             });
         }

@@ -261,9 +261,12 @@ impl Graph {
         }
         let vert = |id: EntityId| index.get(&id).map(|&i| vert_of[i]);
 
-        // 2. Edges from lines and arcs.
+        // 2. Edges from lines and arcs (construction geometry bounds nothing).
         let mut edges = Vec::new();
         for (id, e) in sketch.entities() {
+            if sketch.is_construction(id) {
+                continue;
+            }
             match e {
                 Entity::Line { start, end } => {
                     if let (Some(a), Some(b)) = (vert(*start), vert(*end)) {
@@ -295,8 +298,195 @@ impl Graph {
             }
         }
         let mut g = Graph { verts, edges };
+        g.split_at_crossings(opts.merge_tolerance);
         g.prune_dangling();
         g
+    }
+
+    /// Parameter of `p` along an edge if `p` lies on it strictly inside
+    /// (not at an endpoint), within `tol`.
+    fn param_on_edge(&self, e: &Edge, p: Vec2, tol: f64) -> Option<f64> {
+        let (a, b) = (self.verts[e.a], self.verts[e.b]);
+        match e.curve {
+            Curve::Line => {
+                let d = b - a;
+                let len2 = d.length_squared();
+                if len2 == 0.0 {
+                    return None;
+                }
+                let t = (p - a).dot(d) / len2;
+                if t <= 1e-9 || t >= 1.0 - 1e-9 {
+                    return None;
+                }
+                ((p - (a + d * t)).length() <= tol).then_some(t)
+            }
+            Curve::Arc { center } => {
+                let r = 0.5 * (a.distance(center) + b.distance(center));
+                if (p.distance(center) - r).abs() > tol {
+                    return None;
+                }
+                let a0 = (a - center).angle();
+                let mut sweep = ((b - center).angle() - a0).rem_euclid(std::f64::consts::TAU);
+                if sweep < 1e-12 {
+                    sweep = std::f64::consts::TAU;
+                }
+                let t = ((p - center).angle() - a0).rem_euclid(std::f64::consts::TAU) / sweep;
+                (t > 1e-9 && t < 1.0 - 1e-9).then_some(t)
+            }
+        }
+    }
+
+    /// Intersection points of two edges away from shared endpoints.
+    fn crossings(&self, e1: &Edge, e2: &Edge, tol: f64) -> Vec<Vec2> {
+        let (a1, b1) = (self.verts[e1.a], self.verts[e1.b]);
+        let (a2, b2) = (self.verts[e2.a], self.verts[e2.b]);
+        let mut out = Vec::new();
+        match (e1.curve, e2.curve) {
+            (Curve::Line, Curve::Line) => {
+                let d1 = b1 - a1;
+                let d2 = b2 - a2;
+                let den = d1.cross(d2);
+                if den.abs() < 1e-12 {
+                    return out;
+                }
+                let t = (a2 - a1).cross(d2) / den;
+                let u = (a2 - a1).cross(d1) / den;
+                if t > 1e-9 && t < 1.0 - 1e-9 && u > 1e-9 && u < 1.0 - 1e-9 {
+                    out.push(a1 + d1 * t);
+                }
+            }
+            (Curve::Line, Curve::Arc { center }) | (Curve::Arc { center }, Curve::Line) => {
+                let (la, lb, arc) = if matches!(e1.curve, Curve::Line) {
+                    (a1, b1, e2)
+                } else {
+                    (a2, b2, e1)
+                };
+                let (aa, ab) = (self.verts[arc.a], self.verts[arc.b]);
+                let r = 0.5 * (aa.distance(center) + ab.distance(center));
+                let d = lb - la;
+                let f = la - center;
+                let qa = d.dot(d);
+                let qb = 2.0 * f.dot(d);
+                let qc = f.dot(f) - r * r;
+                let disc = qb * qb - 4.0 * qa * qc;
+                if disc < 0.0 || qa == 0.0 {
+                    return out;
+                }
+                for sign in [-1.0, 1.0] {
+                    let t = (-qb + sign * disc.sqrt()) / (2.0 * qa);
+                    if t > 1e-9 && t < 1.0 - 1e-9 {
+                        let p = la + d * t;
+                        if self.param_on_edge(arc, p, tol).is_some() {
+                            out.push(p);
+                        }
+                    }
+                }
+            }
+            (Curve::Arc { center: c1 }, Curve::Arc { center: c2 }) => {
+                let r1 = 0.5 * (a1.distance(c1) + b1.distance(c1));
+                let r2 = 0.5 * (a2.distance(c2) + b2.distance(c2));
+                let d = c2.distance(c1);
+                if d < 1e-12 || d > r1 + r2 || d < (r1 - r2).abs() {
+                    return out;
+                }
+                let x = (d * d - r2 * r2 + r1 * r1) / (2.0 * d);
+                let h2 = r1 * r1 - x * x;
+                if h2 < 0.0 {
+                    return out;
+                }
+                let h = h2.sqrt();
+                let dir = (c2 - c1) / d;
+                let base = c1 + dir * x;
+                for sign in [-1.0, 1.0] {
+                    let p = base + dir.perp() * (h * sign);
+                    if self.param_on_edge(e1, p, tol).is_some()
+                        && self.param_on_edge(e2, p, tol).is_some()
+                    {
+                        out.push(p);
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    /// Splits edges where they cross each other and where another edge's
+    /// endpoint lies on them, so the graph only meets at vertices.
+    #[allow(clippy::needless_range_loop)]
+    fn split_at_crossings(&mut self, tol: f64) {
+        let n = self.edges.len();
+        let mut splits: Vec<Vec<(f64, usize)>> = vec![Vec::new(); n];
+        let mut new_verts: Vec<Vec2> = Vec::new();
+        // Endpoints lying on other edges.
+        for i in 0..n {
+            for j in 0..n {
+                if i == j {
+                    continue;
+                }
+                for v in [self.edges[j].a, self.edges[j].b] {
+                    if v == self.edges[i].a || v == self.edges[i].b {
+                        continue;
+                    }
+                    if let Some(t) = self.param_on_edge(&self.edges[i], self.verts[v], tol) {
+                        splits[i].push((t, v));
+                    }
+                }
+            }
+        }
+        // Proper crossings.
+        for i in 0..n {
+            for j in i + 1..n {
+                for p in self.crossings(&self.edges[i], &self.edges[j], tol) {
+                    let existing = self.verts.iter().position(|v| v.distance(p) <= tol);
+                    let v = match existing {
+                        Some(v) => v,
+                        None => match new_verts.iter().position(|v| v.distance(p) <= tol) {
+                            Some(k) => self.verts.len() + k,
+                            None => {
+                                new_verts.push(p);
+                                self.verts.len() + new_verts.len() - 1
+                            }
+                        },
+                    };
+                    if let Some(t) = self.param_on_edge(&self.edges[i], p, tol) {
+                        splits[i].push((t, v));
+                    }
+                    if let Some(t) = self.param_on_edge(&self.edges[j], p, tol) {
+                        splits[j].push((t, v));
+                    }
+                }
+            }
+        }
+        if splits.iter().all(|s| s.is_empty()) {
+            return;
+        }
+        self.verts.extend(new_verts);
+        let old = std::mem::take(&mut self.edges);
+        for (i, e) in old.into_iter().enumerate() {
+            let mut cuts = std::mem::take(&mut splits[i]);
+            cuts.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap());
+            cuts.dedup_by(|x, y| x.1 == y.1);
+            let mut prev = e.a;
+            for (_, v) in cuts {
+                if v != prev {
+                    self.edges.push(Edge {
+                        a: prev,
+                        b: v,
+                        curve: e.curve,
+                        source: e.source,
+                    });
+                    prev = v;
+                }
+            }
+            if prev != e.b {
+                self.edges.push(Edge {
+                    a: prev,
+                    b: e.b,
+                    curve: e.curve,
+                    source: e.source,
+                });
+            }
+        }
     }
 
     /// Repeatedly removes edges with an endpoint of degree one; they cannot
@@ -566,9 +756,52 @@ mod tests {
             line: top,
         });
         let _ = l;
-        // Endpoints do not coincide with existing vertices, so the divider
-        // is dangling until the T-junctions are split: expect one face.
+        // The divider's endpoints lie on the rectangle's edges: T-junctions
+        // are split, giving two faces of equal area.
+        let p = s.profiles(&ProfileOptions::default());
+        assert_eq!(p.len(), 2);
+        assert!((p[0].area() - 4.0).abs() < 1e-9 && (p[1].area() - 4.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn crossing_lines_form_regions() {
+        let mut s = Sketch::new();
+        s.add_rectangle(Vec2::ZERO, Vec2::new(2.0, 2.0));
+        s.add_line(Vec2::ZERO, Vec2::new(2.0, 2.0));
+        s.add_line(Vec2::new(0.0, 2.0), Vec2::new(2.0, 0.0));
+        let p = s.profiles(&ProfileOptions::default());
+        assert_eq!(p.len(), 4);
+        for f in &p {
+            assert!((f.area() - 1.0).abs() < 1e-9, "area {}", f.area());
+        }
+    }
+
+    #[test]
+    fn line_crossing_an_arc_splits_it() {
+        let mut s = Sketch::new();
+        let (_, a, b) = s.add_line(Vec2::new(-2.0, 0.0), Vec2::new(2.0, 0.0));
+        let (_, _, s0, s1) = s.add_arc(Vec2::ZERO, Vec2::new(2.0, 0.0), Vec2::new(-2.0, 0.0));
+        s.add_constraint(Constraint::Coincident { a: b, b: s0 });
+        s.add_constraint(Constraint::Coincident { a, b: s1 });
+        s.add_line(Vec2::new(0.0, -1.0), Vec2::new(0.0, 3.0));
+        let p = s.profiles(&ProfileOptions::default());
+        assert_eq!(p.len(), 2);
+        let total: f64 = p.iter().map(|f| f.area()).sum();
+        assert!(
+            (total - std::f64::consts::PI * 2.0).abs() < 0.02,
+            "total {total}"
+        );
+    }
+
+    #[test]
+    fn construction_geometry_bounds_nothing() {
+        let mut s = Sketch::new();
+        s.add_rectangle(Vec2::ZERO, Vec2::new(2.0, 2.0));
+        let (l, _, _) = s.add_line(Vec2::ZERO, Vec2::new(2.0, 2.0));
+        s.set_construction(l, true).unwrap();
         assert_eq!(s.profiles(&ProfileOptions::default()).len(), 1);
+        s.set_construction(l, false).unwrap();
+        assert_eq!(s.profiles(&ProfileOptions::default()).len(), 2);
     }
 
     #[test]

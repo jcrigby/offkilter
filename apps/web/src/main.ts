@@ -277,6 +277,7 @@ class App implements SketchHost {
     this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
     this.viewer.setSelectedFace(this.selectedFace ? this.findFace(this.selectedFace) : null);
     this.highlightBlendEdges();
+    this.updateDimensionLabels();
     this.renderFeatures();
     this.renderDetail();
     this.lastRegenMs = dt;
@@ -306,6 +307,91 @@ class App implements SketchHost {
     $("#status-text").textContent = text;
   }
 
+  /** Shows the selected sketch's dimensions as clickable labels in the viewport. */
+  updateDimensionLabels(): void {
+    const f = this.feature(this.selected);
+    const result = f ? this.summary.sketches[String(f.id)] : undefined;
+    if (!f || f.kind.type !== "sketch" || !result) {
+      this.viewer.setLabels([]);
+      return;
+    }
+    const sketch = f.kind.sketch;
+    const plane = result.plane;
+    const lift = (p: { x: number; y: number }) => ({
+      x: plane.origin.x + plane.x_axis.x * p.x + plane.y_axis.x * p.y,
+      y: plane.origin.y + plane.x_axis.y * p.x + plane.y_axis.y * p.y,
+      z: plane.origin.z + plane.x_axis.z * p.x + plane.y_axis.z * p.y,
+    });
+    const pos = (id: number) => {
+      const e = sketch.entities.find((e) => e.id === id);
+      return e && e.type === "point" ? e.pos : null;
+    };
+    const lineEnds = (id: number) => {
+      const e = sketch.entities.find((e) => e.id === id);
+      if (!e || e.type !== "line") return null;
+      const a = pos(e.start), b = pos(e.end);
+      return a && b ? [a, b] : null;
+    };
+    const mid = (a: { x: number; y: number }, b: { x: number; y: number }) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+    const labels = [];
+    for (const c of sketch.constraints) {
+      if (!("value" in c)) continue;
+      let anchor: { x: number; y: number } | null = null;
+      let prefix = "";
+      switch (c.type) {
+        case "length": {
+          const e = lineEnds(c.line);
+          if (e) anchor = mid(e[0]!, e[1]!);
+          break;
+        }
+        case "distance": case "horizontal_distance": case "vertical_distance": {
+          const a = pos(c.a), b = pos(c.b);
+          if (a && b) anchor = mid(a, b);
+          prefix = c.type === "horizontal_distance" ? "↔ " : c.type === "vertical_distance" ? "↕ " : "";
+          break;
+        }
+        case "radius": case "diameter": {
+          const e = sketch.entities.find((e) => e.id === c.entity);
+          const center = e && (e.type === "circle" || e.type === "arc") ? pos(e.center) : null;
+          const r = e?.type === "circle" ? e.radius : e?.type === "arc" ? (() => { const s0 = pos(e.start); return center && s0 ? Math.hypot(s0.x - center.x, s0.y - center.y) : 0; })() : 0;
+          if (center) anchor = { x: center.x + r * Math.SQRT1_2, y: center.y + r * Math.SQRT1_2 };
+          prefix = c.type === "radius" ? "R" : "⌀";
+          break;
+        }
+        case "angle": {
+          const a = lineEnds(c.a), b = lineEnds(c.b);
+          if (a && b) anchor = mid(mid(a[0]!, a[1]!), mid(b[0]!, b[1]!));
+          prefix = "∠";
+          break;
+        }
+      }
+      if (!anchor) continue;
+      const field = `constraint.${c.id}`;
+      const bound = f.bindings[field];
+      const text = `${prefix}${Number(c.value.toFixed(3))}${c.type === "angle" ? "°" : ""}`;
+      labels.push({
+        position: lift(anchor),
+        text,
+        className: bound ? "bound" : "",
+        title: bound ? `${bound} (click to edit)` : "Click to edit",
+        onClick: () => {
+          const input = prompt(`${c.type.replace(/_/g, " ")} value or expression`, bound ?? String(Number(c.value.toFixed(6))));
+          if (input === null) return;
+          const text = input.trim();
+          const n = Number(text);
+          if (text === "") return;
+          if (Number.isFinite(n)) {
+            if (bound) this.kernel.apply({ type: "set_binding", id: f.id, field, expression: null });
+            this.apply({ type: "sketch", id: f.id, op: { type: "set_constraint_value", id: c.id, value: n } });
+          } else {
+            this.apply({ type: "set_binding", id: f.id, field, expression: text });
+          }
+        },
+      });
+    }
+    this.viewer.setLabels(labels);
+  }
+
   /** Highlights the edges of the selected blend feature when they are visible. */
   highlightBlendEdges(): void {
     const f = this.feature(this.selected);
@@ -322,6 +408,7 @@ class App implements SketchHost {
     if (this.edgePicking !== null && this.edgePicking !== id) this.endEdgePick();
     this.selected = id;
     this.highlightBlendEdges();
+    this.updateDimensionLabels();
     this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
     this.renderFeatures();
     this.renderDetail();
@@ -447,7 +534,7 @@ class App implements SketchHost {
     if (!editing) {
       tools.appendChild(button("Edit sketch", () => this.editSketch(f.id), "primary"));
     } else {
-      for (const [tool, label, key] of [["select", "Select", "S"], ["line", "Line", "L"], ["rectangle", "Rectangle", "R"], ["circle", "Circle", "C"]] as [Tool, string, string][]) {
+      for (const [tool, label, key] of [["select", "Select", "S"], ["line", "Line", "L"], ["rectangle", "Rectangle", "R"], ["circle", "Circle", "C"], ["arc", "Arc", "A"]] as [Tool, string, string][]) {
         const b = button(label, () => this.sketcher.setTool(tool), this.sketcher.tool === tool ? "active" : "");
         b.title = `${label} (${key})`;
         tools.appendChild(b);
@@ -471,6 +558,11 @@ class App implements SketchHost {
       if (sel.length > 0) {
         const row = document.createElement("div");
         row.className = "row";
+        if (sel.some((id) => this.sketcher.entity(id)?.type !== "point")) {
+          const b = button("Construction", () => this.sketcher.toggleConstruction());
+          b.title = "Toggle construction geometry (Q)";
+          row.appendChild(b);
+        }
         row.appendChild(button("Delete selected", () => this.sketcher.deleteSelection(), "danger"));
         body.appendChild(row);
       }
@@ -1147,8 +1239,9 @@ async function main(): Promise<void> {
       } else app.onViewportPick(null);
     }
     if (app.sketcher.active) {
-      const tool = ({ s: "select", l: "line", r: "rectangle", c: "circle" } as Record<string, Tool>)[e.key.toLowerCase()];
+      const tool = ({ s: "select", l: "line", r: "rectangle", c: "circle", a: "arc" } as Record<string, Tool>)[e.key.toLowerCase()];
       if (tool) app.sketcher.setTool(tool);
+      if (e.key.toLowerCase() === "q") app.sketcher.toggleConstruction();
       if (e.key === "Delete" || e.key === "Backspace") app.sketcher.deleteSelection();
     }
   });
