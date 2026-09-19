@@ -1,0 +1,146 @@
+// Typed wrapper around the WebAssembly kernel. All document edits are `Op`
+// values (see crates/ok-model/src/ops.rs) sent as JSON.
+
+import init, { Studio, version as kernelVersion } from "./wasm/ok_wasm.js";
+
+export type Vec2 = { x: number; y: number };
+export type Vec3 = { x: number; y: number; z: number };
+export type StandardPlane = "top" | "front" | "right";
+export type PlaneSpec = { base: StandardPlane; offset: number };
+export type ExtrudeDirection = "normal" | "reverse" | "symmetric";
+export type BodyOp = "new" | "add";
+export type ProfileSelection = { type: "all" } | { type: "largest" } | { type: "indices"; indices: number[] };
+
+export type Constraint =
+  | { type: "coincident"; a: number; b: number }
+  | { type: "fixed"; point: number }
+  | { type: "horizontal"; line: number }
+  | { type: "vertical"; line: number }
+  | { type: "distance"; a: number; b: number; value: number }
+  | { type: "horizontal_distance"; a: number; b: number; value: number }
+  | { type: "vertical_distance"; a: number; b: number; value: number }
+  | { type: "length"; line: number; value: number }
+  | { type: "radius"; entity: number; value: number }
+  | { type: "diameter"; entity: number; value: number }
+  | { type: "equal"; a: number; b: number }
+  | { type: "parallel"; a: number; b: number }
+  | { type: "perpendicular"; a: number; b: number }
+  | { type: "angle"; a: number; b: number; value: number }
+  | { type: "point_on_line"; point: number; line: number }
+  | { type: "point_on_circle"; point: number; entity: number }
+  | { type: "midpoint"; point: number; line: number }
+  | { type: "tangent"; line: number; entity: number };
+
+export type Entity =
+  | { type: "point"; pos: Vec2 }
+  | { type: "line"; start: number; end: number }
+  | { type: "circle"; center: number; radius: number }
+  | { type: "arc"; center: number; start: number; end: number };
+
+export type SketchData = {
+  entities: ({ id: number } & Entity)[];
+  constraints: ({ id: number } & Constraint)[];
+};
+
+export type FeatureKind =
+  | { type: "sketch"; plane: PlaneSpec; sketch: SketchData }
+  | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; op: BodyOp };
+
+export type FeatureSummary = { id: number; name: string; suppressed: boolean; kind: FeatureKind; error: string | null };
+export type BodySummary = { name: string; source: number; vertices: number; triangles: number; bounds: [Vec3, Vec3] | null; volume: number };
+export type SolveResult = {
+  status: "fully_constrained" | "under_constrained" | "inconsistent";
+  iterations: number;
+  max_residual: number;
+  dof: number;
+  equations: number;
+  parameters: number;
+};
+export type SketchCurve = { entity: number; kind: string; points: Vec3[] };
+export type SketchResult = { solve: SolveResult; profiles: { outer: Vec2[]; holes: Vec2[][] }[]; curves: SketchCurve[] };
+export type Summary = { name: string; features: FeatureSummary[]; bodies: BodySummary[]; sketches: Record<string, SketchResult> };
+
+export type SketchOp =
+  | { type: "add_point"; pos: Vec2 }
+  | { type: "add_line"; a: Vec2; b: Vec2 }
+  | { type: "add_rectangle"; a: Vec2; b: Vec2 }
+  | { type: "add_circle"; center: Vec2; radius: number }
+  | { type: "add_arc"; center: Vec2; start: Vec2; end: Vec2 }
+  | { type: "add_constraint"; constraint: Constraint }
+  | { type: "remove_constraint"; id: number }
+  | { type: "remove_entity"; id: number }
+  | { type: "set_constraint_value"; id: number; value: number }
+  | { type: "move_point"; id: number; pos: Vec2 };
+
+export type Op =
+  | { type: "add_sketch"; plane: PlaneSpec; name: string | null }
+  | { type: "add_extrude"; sketch: number; depth: number; direction?: ExtrudeDirection; profiles?: ProfileSelection; op?: BodyOp; name: string | null }
+  | { type: "set_extrude"; id: number; depth?: number | null; direction?: ExtrudeDirection | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
+  | { type: "set_sketch_plane"; id: number; plane: PlaneSpec }
+  | { type: "rename_feature"; id: number; name: string }
+  | { type: "set_suppressed"; id: number; suppressed: boolean }
+  | { type: "delete_feature"; id: number }
+  | { type: "move_feature"; id: number; index: number }
+  | { type: "sketch"; id: number; op: SketchOp }
+  | { type: "rename_studio"; name: string };
+
+export type OpResult = { feature: number | null; entities: number[]; constraint: number | null };
+
+export type BodyMesh = { positions: Float32Array; normals: Float32Array; indices: Uint32Array };
+
+export class Kernel {
+  private studio: Studio;
+
+  private constructor(studio: Studio) {
+    this.studio = studio;
+  }
+
+  static async load(): Promise<typeof Kernel> {
+    await init();
+    return Kernel;
+  }
+
+  static empty(): Kernel {
+    return new Kernel(new Studio());
+  }
+
+  static demo(): Kernel {
+    return new Kernel(Studio.demo());
+  }
+
+  static fromJson(json: string): Kernel {
+    return new Kernel(Studio.from_json(json));
+  }
+
+  static version(): string {
+    return kernelVersion();
+  }
+
+  toJson(): string {
+    return this.studio.to_json();
+  }
+
+  apply(op: Op): OpResult {
+    return JSON.parse(this.studio.apply(JSON.stringify(op))) as OpResult;
+  }
+
+  regenerate(): Summary {
+    return JSON.parse(this.studio.regenerate()) as Summary;
+  }
+
+  bodyMeshes(): BodyMesh[] {
+    const out: BodyMesh[] = [];
+    for (let i = 0; i < this.studio.body_count(); i++) {
+      out.push({
+        positions: this.studio.body_positions(i),
+        normals: this.studio.body_normals(i),
+        indices: this.studio.body_indices(i),
+      });
+    }
+    return out;
+  }
+
+  dispose(): void {
+    this.studio.free();
+  }
+}

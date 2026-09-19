@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/ok-math",
+    "crates/ok-sketch",
+    "crates/ok-mesh",
+    "crates/ok-model",
+    "crates/ok-wasm",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/jcrigby/offkilter"
+
+[workspace.dependencies]
+ok-math = { path = "crates/ok-math" }
+ok-sketch = { path = "crates/ok-sketch" }
+ok-mesh = { path = "crates/ok-mesh" }
+ok-model = { path = "crates/ok-model" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

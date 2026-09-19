@@ -1,0 +1,9 @@
+[package]
+name = "ok-math"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Core numeric types and tolerances for the offkilter CAD kernel"
+
+[dependencies]
+serde = { workspace = true }

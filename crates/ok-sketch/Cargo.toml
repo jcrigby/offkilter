@@ -1,0 +1,11 @@
+[package]
+name = "ok-sketch"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "2D parametric sketching with a geometric constraint solver"
+
+[dependencies]
+ok-math = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }

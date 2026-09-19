@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>offkilter</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M4 10 16 3l12 7v12l-12 7-12-7z%27 fill=%27%234ea1ff%27/%3E%3Cpath d=%27M16 3v14M4 10l12 7 12-7%27 stroke=%27%231b1d21%27 stroke-width=%272%27 fill=%27none%27/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="topbar">
+        <span class="brand">offkilter</span>
+        <input id="studio-name" class="studio-name" value="Part Studio 1" spellcheck="false" />
+        <span class="spacer"></span>
+        <button id="btn-new" title="New empty part studio">New</button>
+        <button id="btn-demo" title="Load the example part">Demo</button>
+        <button id="btn-open" title="Open a .okpart JSON file">Open</button>
+        <button id="btn-save" title="Download as .okpart JSON">Save</button>
+        <input id="file-input" type="file" accept=".okpart,.json" hidden />
+      </header>
+      <aside id="sidebar">
+        <div class="panel">
+          <div class="panel-title">
+            <span>Features</span>
+            <span class="panel-actions">
+              <button id="btn-add-sketch" title="Add a sketch on a standard plane">+ Sketch</button>
+              <button id="btn-add-extrude" title="Extrude the selected sketch">+ Extrude</button>
+            </span>
+          </div>
+          <ul id="feature-list" class="feature-list"></ul>
+        </div>
+        <div class="panel" id="detail-panel">
+          <div class="panel-title"><span id="detail-title">Nothing selected</span></div>
+          <div id="detail-body" class="detail-body"></div>
+        </div>
+      </aside>
+      <main id="viewport"></main>
+      <footer id="statusbar"><span id="status-text">loading kernel…</span></footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
