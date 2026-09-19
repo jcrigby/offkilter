@@ -1,9 +1,9 @@
 use crate::{
-    BlendFeature, BlendKind, BodyOp, CopyOp, Counterbore, EdgeRef, ExtrudeDirection, ExtrudeEnd,
-    ExtrudeFeature, Feature, FeatureId, FeatureKind, HoleFeature, LoftFeature, MirrorFeature,
-    ModelError, PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection,
-    ProjectionSource, RevolveAxis, RevolveFeature, SketchFeature, SweepFeature, VariableFeature,
-    PROJECTION_BLOCK,
+    BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, EdgeRef,
+    ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, Feature, FeatureId, FeatureKind, HoleFeature,
+    LoftFeature, MirrorFeature, ModelError, PartStudio, PatternFeature, PatternKind, PlaneRef,
+    ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature, SketchFeature,
+    SweepFeature, VariableFeature, PROJECTION_BLOCK,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, Entity, EntityId};
@@ -177,6 +177,8 @@ pub enum Op {
         plane: PlaneRef,
         #[serde(default)]
         op: CopyOp,
+        #[serde(default)]
+        features: Vec<FeatureId>,
         name: Option<String>,
     },
     SetMirror {
@@ -185,12 +187,16 @@ pub enum Op {
         plane: Option<PlaneRef>,
         #[serde(default)]
         op: Option<CopyOp>,
+        #[serde(default)]
+        features: Option<Vec<FeatureId>>,
     },
     AddPattern {
         kind: PatternKind,
         count: u32,
         #[serde(default)]
         op: CopyOp,
+        #[serde(default)]
+        features: Vec<FeatureId>,
         name: Option<String>,
     },
     SetPattern {
@@ -201,6 +207,8 @@ pub enum Op {
         count: Option<u32>,
         #[serde(default)]
         op: Option<CopyOp>,
+        #[serde(default)]
+        features: Option<Vec<FeatureId>>,
     },
     AddVariable {
         name: String,
@@ -283,6 +291,25 @@ pub enum Op {
         sketch_b: Option<FeatureId>,
         #[serde(default)]
         op: Option<BodyOp>,
+    },
+    AddBoolean {
+        op: BooleanOp,
+        targets: Vec<FeatureId>,
+        tools: Vec<FeatureId>,
+        #[serde(default)]
+        keep_tools: bool,
+        name: Option<String>,
+    },
+    SetBoolean {
+        id: FeatureId,
+        #[serde(default)]
+        op: Option<BooleanOp>,
+        #[serde(default)]
+        targets: Option<Vec<FeatureId>>,
+        #[serde(default)]
+        tools: Option<Vec<FeatureId>>,
+        #[serde(default)]
+        keep_tools: Option<bool>,
     },
     /// Sets document-wide regeneration settings.
     SetSettings {
@@ -509,17 +536,36 @@ impl PartStudio {
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "blend")),
             },
-            Op::AddMirror { plane, op, name } => {
-                out.feature =
-                    Some(self.push_feature(FeatureKind::Mirror(MirrorFeature { plane, op }), name));
+            Op::AddMirror {
+                plane,
+                op,
+                features,
+                name,
+            } => {
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Mirror(MirrorFeature {
+                        plane,
+                        op,
+                        features,
+                    }),
+                    name,
+                ));
             }
-            Op::SetMirror { id, plane, op } => match &mut self.feature_mut(id)?.kind {
+            Op::SetMirror {
+                id,
+                plane,
+                op,
+                features,
+            } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Mirror(m) => {
                     if let Some(p) = plane {
                         m.plane = p;
                     }
                     if let Some(o) = op {
                         m.op = o;
+                    }
+                    if let Some(f) = features {
+                        m.features = f;
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "mirror")),
@@ -528,10 +574,16 @@ impl PartStudio {
                 kind,
                 count,
                 op,
+                features,
                 name,
             } => {
                 out.feature = Some(self.push_feature(
-                    FeatureKind::Pattern(PatternFeature { kind, count, op }),
+                    FeatureKind::Pattern(PatternFeature {
+                        kind,
+                        count,
+                        op,
+                        features,
+                    }),
                     name,
                 ));
             }
@@ -540,6 +592,7 @@ impl PartStudio {
                 kind,
                 count,
                 op,
+                features,
             } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Pattern(p) => {
                     if let Some(k) = kind {
@@ -550,6 +603,9 @@ impl PartStudio {
                     }
                     if let Some(o) = op {
                         p.op = o;
+                    }
+                    if let Some(f) = features {
+                        p.features = f;
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "pattern")),
@@ -724,6 +780,46 @@ impl PartStudio {
                     name,
                 ));
             }
+            Op::AddBoolean {
+                op,
+                targets,
+                tools,
+                keep_tools,
+                name,
+            } => {
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Boolean(BooleanFeature {
+                        op,
+                        targets,
+                        tools,
+                        keep_tools,
+                    }),
+                    name,
+                ));
+            }
+            Op::SetBoolean {
+                id,
+                op,
+                targets,
+                tools,
+                keep_tools,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Boolean(b) => {
+                    if let Some(o) = op {
+                        b.op = o;
+                    }
+                    if let Some(t) = targets {
+                        b.targets = t;
+                    }
+                    if let Some(t) = tools {
+                        b.tools = t;
+                    }
+                    if let Some(k) = keep_tools {
+                        b.keep_tools = k;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "boolean")),
+            },
             Op::SetLoft { id, sketch_b, op } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Loft(l) => {
                     if let Some(b) = sketch_b {

@@ -43,6 +43,7 @@ impl PartStudio {
             | Op::AddHole { .. }
             | Op::AddSweep { .. }
             | Op::AddLoft { .. }
+            | Op::AddBoolean { .. }
             | Op::InsertFeature { .. } => result
                 .feature
                 .map(|id| vec![Op::DeleteFeature { id }])
@@ -98,11 +99,17 @@ impl PartStudio {
                 }],
                 _ => Vec::new(),
             },
-            Op::SetMirror { id, plane, op } => match before.kind() {
+            Op::SetMirror {
+                id,
+                plane,
+                op,
+                features,
+            } => match before.kind() {
                 Some(FeatureKind::Mirror(m)) => vec![Op::SetMirror {
                     id,
                     plane: plane.map(|_| m.plane),
                     op: op.map(|_| m.op),
+                    features: features.map(|_| m.features.clone()),
                 }],
                 _ => Vec::new(),
             },
@@ -111,12 +118,14 @@ impl PartStudio {
                 kind,
                 count,
                 op,
+                features,
             } => match before.kind() {
                 Some(FeatureKind::Pattern(p)) => vec![Op::SetPattern {
                     id,
                     kind: kind.map(|_| p.kind),
                     count: count.map(|_| p.count),
                     op: op.map(|_| p.op),
+                    features: features.map(|_| p.features.clone()),
                 }],
                 _ => Vec::new(),
             },
@@ -161,6 +170,22 @@ impl PartStudio {
                     path: path.map(|_| s.path),
                     profiles: profiles.map(|_| s.profiles.clone()),
                     op: op.map(|_| s.op),
+                }],
+                _ => Vec::new(),
+            },
+            Op::SetBoolean {
+                id,
+                op,
+                targets,
+                tools,
+                keep_tools,
+            } => match before.kind() {
+                Some(FeatureKind::Boolean(b)) => vec![Op::SetBoolean {
+                    id,
+                    op: op.map(|_| b.op),
+                    targets: targets.map(|_| b.targets.clone()),
+                    tools: tools.map(|_| b.tools.clone()),
+                    keep_tools: keep_tools.map(|_| b.keep_tools),
                 }],
                 _ => Vec::new(),
             },
@@ -280,6 +305,7 @@ impl Before {
             | Op::SetHole { id, .. }
             | Op::SetSweep { id, .. }
             | Op::SetLoft { id, .. }
+            | Op::SetBoolean { id, .. }
             | Op::SetSketchPlane { id, .. }
             | Op::RenameFeature { id, .. }
             | Op::SetSuppressed { id, .. }

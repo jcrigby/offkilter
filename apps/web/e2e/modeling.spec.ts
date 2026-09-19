@@ -441,3 +441,67 @@ test("export bodies as STL and 3MF and a sketch as DXF", async ({ page }) => {
   expect((dxf.match(/\r\nLINE\r\n/g) ?? []).length).toBeGreaterThanOrEqual(4);
   expect(dxf.trimEnd().endsWith("EOF")).toBe(true);
 });
+
+test("boolean feature subtracts and unions separate bodies", async ({ page }) => {
+  await openDemo(page);
+  const plate = await volume(page);
+  // A separate cylinder body through the plate.
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: -5 }, name: "Pin" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: s, op: { type: "add_circle", center: { x: 10, y: 10 }, radius: 3 } });
+    app.apply({ type: "add_extrude", sketch: s, depth: 30, op: "new", name: "Pin body" });
+  });
+  await page.waitForTimeout(300);
+  expect(await page.$$eval("#part-list li .pname", (els) => els.length)).toBe(2);
+  const both = await volume(page);
+  const pin = both - plate;
+  await page.click("#btn-add-boolean");
+  await page.waitForTimeout(400);
+  expect(await featureNames(page)).toContain("Boolean 1");
+  // Subtract by default: the pin is consumed and its slice through the plate removed.
+  expect(await page.$$eval("#part-list li .pname", (els) => els.length)).toBe(1);
+  const cut = await volume(page);
+  expect(cut).toBeLessThan(plate);
+  expect(await page.$$eval("#detail-body .body-pick input", (els) => els.length)).toBe(4);
+  // Switch to union: one body holding everything.
+  await page.selectOption("#detail-body select", "union");
+  await page.waitForTimeout(400);
+  expect(await page.$$eval("#part-list li .pname", (els) => els.length)).toBe(1);
+  const united = await volume(page);
+  expect(united).toBeGreaterThan(plate);
+  expect(united).toBeLessThan(plate + pin);
+  expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
+});
+
+test("feature pattern replays a hole instead of copying bodies", async ({ page }) => {
+  await openDemo(page);
+  const before = await volume(page);
+  // A hole through the plate, then a pattern that names the hole feature.
+  const hole = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Hole points" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: s, op: { type: "add_point", pos: { x: 8, y: 8 } } });
+    app.apply({ type: "add_hole", sketch: s, diameter: 4, through_all: true, direction: "normal", name: "Hole 1" });
+    return app.summary.features[app.summary.features.length - 1].id;
+  });
+  await page.waitForTimeout(300);
+  const oneHole = await volume(page);
+  const holeVolume = before - oneHole;
+  expect(holeVolume).toBeGreaterThan(50);
+  await page.click("#btn-add-pattern");
+  await page.waitForTimeout(300);
+  // Tick the hole in the pattern's feature list.
+  const labels = await page.$$eval("#detail-body .body-pick li span", (els) => els.map((e) => e.textContent));
+  expect(labels).toContain("Hole 1");
+  const index = labels.indexOf("Hole 1");
+  await page.locator("#detail-body .body-pick input").nth(index).check();
+  await page.waitForTimeout(400);
+  expect(await page.evaluate((id) => (window as unknown as { offkilter: any }).offkilter.summary.features.at(-1).kind.features, hole)).toEqual([hole]);
+  // Two holes 20 mm apart along X, still one body.
+  expect(await page.$$eval("#part-list li .pname", (els) => els.length)).toBe(1);
+  expect(before - (await volume(page))).toBeCloseTo(2 * holeVolume, 0);
+  expect(await page.$$eval("#feature-list li .dot.err", (els) => els.length)).toBe(0);
+});

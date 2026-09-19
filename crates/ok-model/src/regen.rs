@@ -1,6 +1,7 @@
 use crate::{
-    canonical_frame, BlendKind, BodyOp, CopyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef,
-    FeatureId, FeatureKind, PartStudio, PatternKind, PlaneRef, ProfileSelection, RevolveAxis,
+    canonical_frame, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, EdgeRef,
+    ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId, FeatureKind, PartStudio, PatternKind,
+    PlaneRef, ProfileSelection, RevolveAxis,
 };
 use ok_brep::{boolean, BoolOp, Solid, Transform};
 use ok_math::{Plane, Vec2, Vec3};
@@ -141,6 +142,10 @@ pub struct FeatureStatus {
     /// Evaluated value of a variable feature.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub value: Option<f64>,
+    /// Bodies that existed just before a boolean feature, as (source, name),
+    /// so a client can offer them as targets and tools.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub candidates: Option<Vec<(FeatureId, String)>>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -152,6 +157,10 @@ pub struct RegenResult {
     pub variables: BTreeMap<String, f64>,
     /// Running count used to name bodies "Part N".
     next_part: usize,
+    /// Tool volume and body operation of every solid feature so far, for
+    /// feature patterns and mirrors to replay.
+    #[serde(skip)]
+    tools: BTreeMap<FeatureId, (Solid, BodyOp)>,
 }
 
 impl RegenResult {
@@ -321,6 +330,7 @@ impl PartStudio {
                     id,
                     error: None,
                     value: None,
+                    candidates: None,
                 });
                 self.cache.entries.push((chain, result.clone()));
                 continue;
@@ -330,6 +340,7 @@ impl PartStudio {
                     id,
                     error: Some(e),
                     value: None,
+                    candidates: None,
                 });
                 self.cache.entries.push((chain, result.clone()));
                 continue;
@@ -345,23 +356,27 @@ impl PartStudio {
                             id,
                             error: None,
                             value: Some(value),
+                            candidates: None,
                         }
                     }
                     Ok(_) => FeatureStatus {
                         id,
                         error: Some(format!("'{}' is not a valid variable name", v.name)),
                         value: None,
+                        candidates: None,
                     },
                     Err(e) => FeatureStatus {
                         id,
                         error: Some(e),
                         value: None,
+                        candidates: None,
                     },
                 };
                 result.statuses.push(status);
                 self.cache.entries.push((chain, result.clone()));
                 continue;
             }
+            let mut candidates = None;
             let error = match &mut self.features[pos].kind {
                 FeatureKind::Sketch(sf) => {
                     let plane = match result.resolve_plane(&sf.plane) {
@@ -371,6 +386,7 @@ impl PartStudio {
                                 id,
                                 error: Some(e),
                                 value: None,
+                                candidates: None,
                             });
                             self.cache.entries.push((chain, result.clone()));
                             continue;
@@ -418,9 +434,13 @@ impl PartStudio {
                 FeatureKind::Mirror(mf) => {
                     let mf = mf.clone();
                     match result.resolve_plane(&mf.plane) {
-                        Ok(plane) => {
-                            Self::regen_copies(&mut result, id, &[Transform::mirror(&plane)], mf.op)
-                        }
+                        Ok(plane) => Self::regen_copies(
+                            &mut result,
+                            id,
+                            &[Transform::mirror(&plane)],
+                            mf.op,
+                            &mf.features,
+                        ),
                         Err(e) => Some(e),
                     }
                 }
@@ -436,6 +456,17 @@ impl PartStudio {
                 FeatureKind::Loft(lf) => {
                     let lf = lf.clone();
                     Self::regen_loft(&mut result, id, &lf, pos, &self.features)
+                }
+                FeatureKind::Boolean(bf) => {
+                    let bf = bf.clone();
+                    candidates = Some(
+                        result
+                            .bodies
+                            .iter()
+                            .map(|b| (b.source, b.name.clone()))
+                            .collect(),
+                    );
+                    Self::regen_boolean(&mut result, id, &bf)
                 }
                 FeatureKind::Pattern(pf) => {
                     let pf = pf.clone();
@@ -453,7 +484,7 @@ impl PartStudio {
                                 }
                             })
                             .collect();
-                        Self::regen_copies(&mut result, id, &transforms, pf.op)
+                        Self::regen_copies(&mut result, id, &transforms, pf.op, &pf.features)
                     }
                 }
             };
@@ -461,6 +492,7 @@ impl PartStudio {
                 id,
                 error,
                 value: None,
+                candidates,
             });
             self.cache.entries.push((chain, result.clone()));
         }
@@ -972,12 +1004,96 @@ impl PartStudio {
     }
 
     /// Applies each transform to every existing body, merging or adding copies.
+    /// Combines target bodies with tool bodies (see `BooleanFeature`).
+    fn regen_boolean(
+        result: &mut RegenResult,
+        id: FeatureId,
+        bf: &BooleanFeature,
+    ) -> Option<String> {
+        let targets: Vec<usize> = (0..result.bodies.len())
+            .filter(|&i| bf.targets.contains(&result.bodies[i].source))
+            .collect();
+        let tools: Vec<usize> = (0..result.bodies.len())
+            .filter(|&i| bf.tools.contains(&result.bodies[i].source) && !targets.contains(&i))
+            .collect();
+        if targets.is_empty() {
+            return Some("pick at least one target body".into());
+        }
+        if tools.is_empty() {
+            return Some("pick at least one tool body (other than the targets)".into());
+        }
+        let op_name = match bf.op {
+            BooleanOp::Union => "union",
+            BooleanOp::Subtract => "subtract",
+            BooleanOp::Intersect => "intersect",
+        };
+        let mut new_bodies: Vec<Body> = Vec::new();
+        match bf.op {
+            BooleanOp::Union => {
+                let mut merged = result.bodies[targets[0]].solid.clone();
+                for &i in targets.iter().skip(1).chain(tools.iter()) {
+                    merged = match boolean(&merged, &result.bodies[i].solid, BoolOp::Union) {
+                        Ok(s) => s,
+                        Err(e) => return Some(format!("{op_name} failed: {e}")),
+                    };
+                }
+                let first = &result.bodies[targets[0]];
+                new_bodies.push(Body::new(first.name.clone(), first.source, merged));
+            }
+            BooleanOp::Subtract | BooleanOp::Intersect => {
+                let op = if bf.op == BooleanOp::Subtract {
+                    BoolOp::Difference
+                } else {
+                    BoolOp::Intersection
+                };
+                let mut any = false;
+                for &t in &targets {
+                    let mut solid = result.bodies[t].solid.clone();
+                    for &i in &tools {
+                        solid = match boolean(&solid, &result.bodies[i].solid, op) {
+                            Ok(s) => s,
+                            Err(e) => return Some(format!("{op_name} failed: {e}")),
+                        };
+                    }
+                    let body = &result.bodies[t];
+                    let mut shells = solid.shells().into_iter();
+                    if let Some(first) = shells.next() {
+                        any = true;
+                        new_bodies.push(Body::new(body.name.clone(), body.source, first));
+                        for extra in shells {
+                            result.next_part += 1;
+                            new_bodies.push(Body::new(
+                                format!("Part {}", result.next_part),
+                                id,
+                                extra,
+                            ));
+                        }
+                    }
+                }
+                if !any {
+                    return Some(format!("the {op_name} left nothing of the targets"));
+                }
+            }
+        }
+        let mut remove: Vec<usize> = targets.clone();
+        if !bf.keep_tools {
+            remove.extend(tools.iter().copied());
+        }
+        result.remove_bodies(&remove);
+        result.bodies.extend(new_bodies);
+        None
+    }
+
     fn regen_copies(
         result: &mut RegenResult,
         id: FeatureId,
         transforms: &[Transform],
         op: CopyOp,
+        features: &[FeatureId],
     ) -> Option<String> {
+        if !features.is_empty() {
+            return Self::regen_feature_copies(result, id, transforms, features);
+        }
         if result.bodies.is_empty() {
             return Some("there are no bodies to copy".into());
         }
@@ -1003,6 +1119,39 @@ impl PartStudio {
     }
 
     /// Combines a finished tool volume with the existing bodies.
+    /// Replays the tool volumes of `features` under each transform, with
+    /// each feature's own body operation (a feature pattern or mirror).
+    fn regen_feature_copies(
+        result: &mut RegenResult,
+        id: FeatureId,
+        transforms: &[Transform],
+        features: &[FeatureId],
+    ) -> Option<String> {
+        let mut tools = Vec::with_capacity(features.len());
+        for fid in features {
+            match result.tools.get(fid) {
+                Some((tool, op)) => tools.push((tool.clone(), *op)),
+                None => {
+                    return Some(format!(
+                        "feature {} has no tool volume to copy (it must be an extrude, revolve, hole, sweep or loft that comes earlier)",
+                        fid.0
+                    ))
+                }
+            }
+        }
+        for xf in transforms {
+            for (tool, op) in &tools {
+                if let Some(e) = Self::apply_tool(result, id, tool.transformed(xf), *op) {
+                    return Some(format!("copy failed: {e}"));
+                }
+            }
+        }
+        // The copies are not one tool volume, so a later pattern cannot
+        // replay this feature; it names the original features instead.
+        result.tools.remove(&id);
+        None
+    }
+
     fn apply_tool(
         result: &mut RegenResult,
         id: FeatureId,
@@ -1011,6 +1160,8 @@ impl PartStudio {
     ) -> Option<String> {
         let ef_op = op;
         let tool_bounds = tool.bounds()?;
+        // Remember the tool so feature patterns and mirrors can replay it.
+        result.tools.insert(id, (tool.clone(), op));
 
         // Bodies the tool touches (bounding boxes overlap).
         let touched: Vec<usize> = result
@@ -1833,6 +1984,7 @@ mod tests {
             .apply(Op::AddMirror {
                 plane: PlaneRef::standard(StandardPlane::Right),
                 op: crate::CopyOp::New,
+                features: vec![],
                 name: None,
             })
             .unwrap()
@@ -1854,6 +2006,7 @@ mod tests {
                 offset: 1.0,
             }),
             op: Some(crate::CopyOp::Add),
+            features: None,
         })
         .unwrap();
         let r = ps.regenerate();
@@ -1867,6 +2020,7 @@ mod tests {
             },
             count: 3,
             op: crate::CopyOp::Add,
+            features: vec![],
             name: None,
         })
         .unwrap();
@@ -1887,6 +2041,7 @@ mod tests {
             },
             count: 4,
             op: crate::CopyOp::New,
+            features: vec![],
             name: None,
         })
         .unwrap();

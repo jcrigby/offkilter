@@ -5,9 +5,9 @@
 
 use ok_math::{Vec2, Vec3};
 use ok_model::{
-    Axis, BlendKind, BodyOp, CopyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId, Op,
-    PartStudio, PatternKind, PlaneRef, ProfileSelection, RegenResult, RevolveAxis, SketchOp,
-    StandardPlane,
+    Axis, BlendKind, BodyOp, BooleanOp, CopyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef,
+    FeatureId, Op, PartStudio, PatternKind, PlaneRef, ProfileSelection, RegenResult, RevolveAxis,
+    SketchOp, StandardPlane,
 };
 use ok_sketch::EntityId;
 use std::f64::consts::PI;
@@ -439,6 +439,7 @@ fn pulley_with_keyway_lightening_holes_and_mirror() {
     p.op(Op::AddMirror {
         plane: PlaneRef::standard(StandardPlane::Top),
         op: CopyOp::Add,
+        features: vec![],
         name: None,
     });
     let v4 = p.volume();
@@ -601,6 +602,7 @@ fn linear_pattern_of_a_ribbed_plate_then_fillet_after_pattern() {
         },
         count: 4,
         op: CopyOp::Add,
+        features: vec![],
         name: None,
     });
     let v2 = p.volume();
@@ -620,4 +622,184 @@ fn linear_pattern_of_a_ribbed_plate_then_fillet_after_pattern() {
     );
     let v3 = p.volume();
     assert!(v3 < v2 && v3 > v2 - 30.0, "{v3} vs {v2}");
+}
+
+/// Two separate bodies combined by boolean features: a block with a
+/// cylinder subtracted (tool consumed), then the same cylinder kept as a
+/// tool and intersected, then everything unioned back into one body.
+#[test]
+fn boolean_feature_between_bodies() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (0.0, 0.0), (40.0, 30.0));
+    let block = p.extrude(s, 10.0, BodyOp::New);
+    let s2 = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.circle(s2, (20.0, 15.0), 5.0);
+    let pin = p.extrude(s2, 30.0, BodyOp::New);
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 2);
+    let v_block = 40.0 * 30.0 * 10.0;
+    let v_pin_in_block = r.bodies[1].solid.volume() / 3.0;
+
+    // Subtract: one body left, the pin's slice through the block removed.
+    let cut = p.op(Op::AddBoolean {
+        op: BooleanOp::Subtract,
+        targets: vec![block],
+        tools: vec![pin],
+        keep_tools: false,
+        name: None,
+    });
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 1, "tool consumed");
+    assert!(close(
+        r.bodies[0].solid.volume(),
+        v_block - v_pin_in_block,
+        1e-6
+    ));
+    let candidates = r
+        .statuses
+        .iter()
+        .find(|s| s.id == cut)
+        .and_then(|s| s.candidates.clone())
+        .expect("boolean status lists candidate bodies");
+    assert_eq!(candidates.len(), 2);
+
+    // Keep the tool: two bodies, the pin untouched.
+    p.op(Op::SetBoolean {
+        id: cut,
+        op: None,
+        targets: None,
+        tools: None,
+        keep_tools: Some(true),
+    });
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 2);
+    let kept = r.bodies.iter().find(|b| b.source == pin).expect("pin kept");
+    assert!(close(kept.solid.volume(), 3.0 * v_pin_in_block, 1e-6));
+
+    // Intersect instead: only the pin's slice through the block remains.
+    p.op(Op::SetBoolean {
+        id: cut,
+        op: Some(BooleanOp::Intersect),
+        targets: None,
+        tools: None,
+        keep_tools: Some(false),
+    });
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 1);
+    assert!(close(r.bodies[0].solid.volume(), v_pin_in_block, 1e-6));
+
+    // Union of both: block plus the parts of the pin outside it.
+    p.op(Op::SetBoolean {
+        id: cut,
+        op: Some(BooleanOp::Union),
+        targets: None,
+        tools: None,
+        keep_tools: None,
+    });
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 1);
+    assert!(close(
+        r.bodies[0].solid.volume(),
+        v_block + 2.0 * v_pin_in_block,
+        1e-6
+    ));
+
+    // A boolean whose target no longer exists reports an error, not a panic.
+    p.ps.apply(Op::SetBoolean {
+        id: cut,
+        op: None,
+        targets: Some(vec![FeatureId(999)]),
+        tools: None,
+        keep_tools: None,
+    })
+    .unwrap();
+    let r = p.ps.regenerate();
+    assert!(r.errors().next().is_some());
+}
+
+/// A feature pattern replays a boss and a hole (with their own add / remove
+/// operations) instead of copying whole bodies, so the plate stays one
+/// body and grows by exactly the copied features.
+#[test]
+fn feature_pattern_and_mirror_replay_tools() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (0.0, 0.0), (100.0, 30.0));
+    p.extrude(s, 5.0, BodyOp::New);
+    let plate = p.volume();
+    let s2 = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.circle(s2, (10.0, 15.0), 4.0);
+    let boss = p.extrude_dir(
+        s2,
+        10.0,
+        ExtrudeDirection::Normal,
+        ExtrudeEnd::Blind,
+        BodyOp::Add,
+    );
+    let with_boss = p.volume();
+    let boss_v = with_boss - plate; // 5 mm of it stands above the plate
+    let s3 = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.point(s3, (10.0, 15.0));
+    let hole = p.op(Op::AddHole {
+        sketch: s3,
+        diameter: 2.0,
+        depth: 0.0,
+        through_all: true,
+        direction: ExtrudeDirection::Normal,
+        counterbore: None,
+        name: None,
+    });
+    let with_hole = p.volume();
+    let hole_v = with_boss - with_hole;
+    assert!(hole_v > 0.0);
+
+    // Pattern the boss and hole along X: four in total.
+    let pat = p.op(Op::AddPattern {
+        kind: PatternKind::Linear {
+            axis: Axis::X,
+            spacing: 25.0,
+        },
+        count: 4,
+        op: CopyOp::Add,
+        features: vec![boss, hole],
+        name: None,
+    });
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 1, "copies merge into the plate");
+    let v = r.bodies[0].solid.volume();
+    let expected = with_hole + 3.0 * (boss_v - hole_v);
+    assert!(close(v, expected, 1e-6), "{v} vs {expected}");
+
+    // Mirror the same features across x = 52.5: the original boss and hole
+    // land at x = 95, still on the plate and clear of the pattern.
+    p.op(Op::AddMirror {
+        plane: PlaneRef::Standard {
+            base: StandardPlane::Right,
+            offset: 52.5,
+        },
+        op: CopyOp::Add,
+        features: vec![boss, hole],
+        name: None,
+    });
+    // The mirror names the original features only, so it adds one boss
+    // and one hole mirrored, not the whole pattern.
+    let v2 = p.volume();
+    let expected2 = expected + boss_v - hole_v;
+    assert!(close(v2, expected2, 1e-6), "{v2} vs {expected2}");
+
+    // Naming a feature without a tool volume (the pattern itself) is an error.
+    p.ps.apply(Op::AddPattern {
+        kind: PatternKind::Linear {
+            axis: Axis::Y,
+            spacing: 10.0,
+        },
+        count: 2,
+        op: CopyOp::Add,
+        features: vec![pat],
+        name: None,
+    })
+    .unwrap();
+    let r = p.ps.regenerate();
+    assert!(r.errors().any(|(_, e)| e.contains("no tool volume")));
 }

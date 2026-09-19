@@ -37,7 +37,9 @@ top are concrete and self-contained; items lower down are directions.
 - [ ] Proper corner patches where blends meet; variable-dihedral chains
 - [ ] Shell, draft
 - [x] Mirror and linear / circular patterns of bodies
-- [ ] Patterns of features and of faces; mirror selected bodies only
+- [x] Boolean feature between existing bodies (union / subtract / intersect, tools optionally kept)
+- [x] Patterns and mirrors of features (the named features' tool volumes are replayed with their own add / remove operation)
+- [ ] Patterns of faces; mirror selected bodies only
 - [~] Persistent naming: face origins survive booleans; needs disambiguation for split faces and edge/vertex references
 
 ## Document and client
@@ -75,7 +77,7 @@ top are concrete and self-contained; items lower down are directions.
 
 - [x] CI: fmt, clippy, tests, wasm build, web build, browser end-to-end suite
 - [x] Dockerfile for the server + web app
-- [x] Randomised boolean robustness tests: grid-aligned box/cylinder sequences, and general-position sequences with rotated tools and near-coincident nudges (`--ignored` long runs)
+- [x] Randomised boolean robustness tests: grid-aligned box/cylinder sequences, and general-position sequences with rotated tools and near-coincident nudges (`--ignored` long runs; `OK_FUZZ_SEED` replays one seed)
 - [x] Realistic-parts corpus (`crates/ok-model/tests/parts.rs`): brackets, revolved flanges, pockets with counterbores, bosses on oblique faces, pulleys, grazing cuts, sweeps and lofts, patterns then fillets
 - [ ] Property tests for the solver and region extraction
 - [x] Regeneration cache: unchanged feature prefixes are reused, so editing late features is cheap

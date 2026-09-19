@@ -1,6 +1,6 @@
 import { Kernel } from "./kernel";
 import { to3mf, toDxf, toStl } from "./export";
-import type { Axis, BlendKind, Connector, Constraint, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -1037,7 +1037,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀" };
+      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀", boolean: "∪" };
       icon.textContent = icons[f.kind.type] ?? "•";
       const name = document.createElement("span");
       name.className = "name";
@@ -1085,6 +1085,7 @@ class App implements SketchHost {
     ($("#btn-add-fillet") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-chamfer") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-mirror") as HTMLButtonElement).disabled = !hasBody;
+    ($("#btn-add-boolean") as HTMLButtonElement).disabled = this.summary.bodies.length < 2;
     ($("#btn-add-pattern") as HTMLButtonElement).disabled = !hasBody;
   }
 
@@ -1187,6 +1188,7 @@ class App implements SketchHost {
     else if (f.kind.type === "hole") this.renderHoleDetail(f, body);
     else if (f.kind.type === "sweep") this.renderSweepDetail(f, body);
     else if (f.kind.type === "loft") this.renderLoftDetail(f, body);
+    else if (f.kind.type === "boolean") this.renderBooleanDetail(f, body);
     else this.renderPatternDetail(f, body);
 
     const row = document.createElement("div");
@@ -1635,14 +1637,68 @@ class App implements SketchHost {
     last.replaceWith(field("Offset", this.exprInput(f, "plane.offset", plane.offset, (v) => onChange({ ...plane, offset: v }))));
   }
 
+  renderBooleanDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "boolean") return;
+    const k = f.kind;
+    body.appendChild(field("Operation", select(["union", "subtract", "intersect"], k.op, (v) => this.apply({ type: "set_boolean", id: f.id, op: v as BooleanOp }))));
+    // Bodies that existed before this feature, plus any referenced ones that no longer do.
+    const candidates: [number, string][] = [...(f.candidates ?? [])];
+    for (const src of [...k.targets, ...k.tools]) {
+      if (!candidates.some(([s]) => s === src)) candidates.push([src, `${this.feature(src)?.name ?? `feature ${src}`} (missing)`]);
+    }
+    const pickList = (label: string, chosen: number[], other: number[], set: (ids: number[]) => void) => {
+      const ul = document.createElement("ul");
+      ul.className = "body-pick";
+      for (const [src, name] of candidates) {
+        const li = document.createElement("li");
+        const cb = checkbox(chosen.includes(src), (on) => set(on ? [...chosen, src] : chosen.filter((s) => s !== src)));
+        cb.disabled = other.includes(src);
+        const text = document.createElement("span");
+        text.textContent = name;
+        li.append(cb, text);
+        ul.appendChild(li);
+      }
+      body.appendChild(field(label, ul));
+    };
+    pickList("Targets", k.targets, k.tools, (targets) => this.apply({ type: "set_boolean", id: f.id, targets }));
+    pickList("Tools", k.tools, k.targets, (tools) => this.apply({ type: "set_boolean", id: f.id, tools }));
+    body.appendChild(field("Keep tools", checkbox(k.keep_tools, (v) => this.apply({ type: "set_boolean", id: f.id, keep_tools: v }))));
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = k.op === "union" ? "Merges the targets and tools into one body." : k.op === "subtract" ? "Removes every tool from each target." : "Keeps only where each target overlaps every tool.";
+    body.appendChild(note);
+  }
+
+  /** "Copies" mode plus the list of solid features a pattern or mirror may replay instead of whole bodies. */
+  private copyScopeFields(f: FeatureSummary, body: HTMLElement, chosen: number[], op: CopyOp, setFeatures: (ids: number[]) => void, setOp: (op: CopyOp) => void): void {
+    const copies = select(["add", "new"], op, (v) => setOp(v as CopyOp));
+    copies.disabled = chosen.length > 0;
+    body.appendChild(field("Copies", copies));
+    const pos = this.summary.features.findIndex((g) => g.id === f.id);
+    const solidKinds = new Set(["extrude", "revolve", "hole", "sweep", "loft"]);
+    const candidates = this.summary.features.filter((g, i) => i < pos && solidKinds.has(g.kind.type) && !g.suppressed);
+    if (candidates.length === 0) return;
+    const ul = document.createElement("ul");
+    ul.className = "body-pick";
+    for (const g of candidates) {
+      const li = document.createElement("li");
+      const cb = checkbox(chosen.includes(g.id), (on) => setFeatures(on ? [...chosen, g.id] : chosen.filter((id) => id !== g.id)));
+      const text = document.createElement("span");
+      text.textContent = g.name;
+      li.append(cb, text);
+      ul.appendChild(li);
+    }
+    body.appendChild(field("Features", ul));
+  }
+
   renderMirrorDetail(f: FeatureSummary, body: HTMLElement): void {
     if (f.kind.type !== "mirror") return;
     const k = f.kind;
     this.planeFieldsFor(f, body, k.plane, (plane) => this.apply({ type: "set_mirror", id: f.id, plane }));
-    body.appendChild(field("Copies", select(["add", "new"], k.op, (v) => this.apply({ type: "set_mirror", id: f.id, op: v as "add" | "new" }))));
+    this.copyScopeFields(f, body, k.features ?? [], k.op, (features) => this.apply({ type: "set_mirror", id: f.id, features }), (op) => this.apply({ type: "set_mirror", id: f.id, op }));
     const note = document.createElement("p");
     note.className = "note";
-    note.textContent = "Mirrors every body across the plane. “Add” unions each copy with its original; “New” keeps copies as separate bodies.";
+    note.textContent = "Mirrors across the plane. With no features ticked every body is copied: “Add” unions each copy with its original, “New” keeps copies separate. Ticked features are replayed mirrored with their own add / remove operation.";
     body.appendChild(note);
   }
 
@@ -1664,7 +1720,7 @@ class App implements SketchHost {
       body.appendChild(field("Total angle (°)", this.exprInput(f, "angle", kind.angle, (v) => setKind({ ...kind, angle: v }))));
     }
     body.appendChild(field("Count", this.exprInput(f, "count", k.count, (v) => this.apply({ type: "set_pattern", id: f.id, count: Math.max(2, Math.round(v)) }))));
-    body.appendChild(field("Copies", select(["add", "new"], k.op, (v) => this.apply({ type: "set_pattern", id: f.id, op: v as "add" | "new" }))));
+    this.copyScopeFields(f, body, k.features ?? [], k.op, (features) => this.apply({ type: "set_pattern", id: f.id, features }), (op) => this.apply({ type: "set_pattern", id: f.id, op }));
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Repeats every body along or about a world axis through the origin; the count includes the original.";
@@ -2258,6 +2314,15 @@ async function main(): Promise<void> {
   $("#btn-add-mirror").onclick = () => {
     app.sketcher.exit();
     app.apply({ type: "add_mirror", plane: { type: "standard", base: "right", offset: 0 }, op: "add", name: app.autoName("Mirror") });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-boolean").onclick = () => {
+    app.sketcher.exit();
+    // Default to the two most recent bodies: the newest is the tool.
+    const bodies = app.summary.bodies;
+    const tool = bodies[bodies.length - 1]?.source;
+    const target = bodies.find((b) => b.source !== tool)?.source;
+    app.apply({ type: "add_boolean", op: "subtract", targets: target === undefined ? [] : [target], tools: tool === undefined ? [] : [tool], name: app.autoName("Boolean") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   $("#btn-add-pattern").onclick = () => {

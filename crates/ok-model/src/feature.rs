@@ -253,12 +253,17 @@ pub enum CopyOp {
     New,
 }
 
-/// Mirrors every body across a plane.
+/// Mirrors every body across a plane, or, when `features` is set, replays
+/// those features' tool volumes mirrored (a feature mirror).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MirrorFeature {
     pub plane: PlaneRef,
     #[serde(default)]
     pub op: CopyOp,
+    /// Solid features whose tools are copied instead of whole bodies;
+    /// empty copies every body.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub features: Vec<FeatureId>,
 }
 
 /// A world axis direction.
@@ -289,13 +294,18 @@ pub enum PatternKind {
     Circular { axis: Axis, angle: f64 },
 }
 
-/// Repeats every body `count` times (the original included).
+/// Repeats every body `count` times (the original included), or, when
+/// `features` is set, replays those features' tool volumes at each step.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PatternFeature {
     pub kind: PatternKind,
     pub count: u32,
     #[serde(default)]
     pub op: CopyOp,
+    /// Solid features whose tools are copied instead of whole bodies;
+    /// empty copies every body.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub features: Vec<FeatureId>,
 }
 
 /// A drilled hole at every standalone point of a sketch.
@@ -343,6 +353,31 @@ pub struct LoftFeature {
     pub op: BodyOp,
 }
 
+/// How a boolean feature combines its target bodies with its tool bodies.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BooleanOp {
+    /// One body from all targets and tools.
+    Union,
+    /// Each target minus every tool.
+    Subtract,
+    /// Each target intersected with every tool.
+    Intersect,
+}
+
+/// Combines existing bodies. Bodies are named by the feature that created
+/// them (`Body::source`), so the reference follows the body through later
+/// edits of its defining features.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BooleanFeature {
+    pub op: BooleanOp,
+    pub targets: Vec<FeatureId>,
+    pub tools: Vec<FeatureId>,
+    /// Leave the tool bodies in place instead of consuming them.
+    #[serde(default)]
+    pub keep_tools: bool,
+}
+
 /// A named value later features can use in expressions as `#name`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct VariableFeature {
@@ -363,6 +398,7 @@ pub enum FeatureKind {
     Hole(HoleFeature),
     Sweep(SweepFeature),
     Loft(LoftFeature),
+    Boolean(BooleanFeature),
 }
 
 impl FeatureKind {
@@ -381,6 +417,11 @@ impl FeatureKind {
             FeatureKind::Hole(_) => "Hole",
             FeatureKind::Sweep(_) => "Sweep",
             FeatureKind::Loft(_) => "Loft",
+            FeatureKind::Boolean(b) => match b.op {
+                BooleanOp::Union => "Union",
+                BooleanOp::Subtract => "Subtract",
+                BooleanOp::Intersect => "Intersect",
+            },
         }
     }
 
@@ -406,7 +447,7 @@ impl FeatureKind {
                 PatternKind::Circular { .. } => vec!["angle".into(), "count".into()],
             },
             FeatureKind::Variable(_) => vec![],
-            FeatureKind::Sweep(_) | FeatureKind::Loft(_) => vec![],
+            FeatureKind::Sweep(_) | FeatureKind::Loft(_) | FeatureKind::Boolean(_) => vec![],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
                 "depth".into(),
@@ -542,7 +583,8 @@ impl FeatureKind {
             FeatureKind::Blend(_)
             | FeatureKind::Mirror(_)
             | FeatureKind::Pattern(_)
-            | FeatureKind::Variable(_) => None,
+            | FeatureKind::Variable(_)
+            | FeatureKind::Boolean(_) => None,
         }
     }
 }

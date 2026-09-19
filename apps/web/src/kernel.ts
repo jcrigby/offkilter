@@ -68,12 +68,14 @@ export type FeatureKind =
   | { type: "extrude"; sketch: number; profiles: ProfileSelection; depth: number; direction: ExtrudeDirection; end: ExtrudeEnd; op: BodyOp }
   | { type: "revolve"; sketch: number; profiles: ProfileSelection; axis: RevolveAxis; angle: number; op: BodyOp }
   | { type: "blend"; kind: BlendKind; edges: EdgeRef[]; size: number }
-  | { type: "mirror"; plane: PlaneRef; op: CopyOp }
-  | { type: "pattern"; kind: PatternKind; count: number; op: CopyOp }
+  | { type: "mirror"; plane: PlaneRef; op: CopyOp; features?: number[] }
+  | { type: "pattern"; kind: PatternKind; count: number; op: CopyOp; features?: number[] }
   | { type: "variable"; name: string; expression: string }
   | { type: "hole"; sketch: number; diameter: number; depth: number; through_all: boolean; direction: ExtrudeDirection; counterbore: Counterbore | null }
   | { type: "sweep"; sketch: number; profiles: ProfileSelection; path: number; op: BodyOp }
-  | { type: "loft"; sketch: number; sketch_b: number; op: BodyOp };
+  | { type: "loft"; sketch: number; sketch_b: number; op: BodyOp }
+  | { type: "boolean"; op: BooleanOp; targets: number[]; tools: number[]; keep_tools: boolean };
+export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 
 export type FeatureSummary = {
@@ -86,6 +88,8 @@ export type FeatureSummary = {
   bindings: Record<string, string>;
   /** Evaluated value of a variable feature. */
   value: number | null;
+  /** Bodies a boolean feature can pick from, as [source feature, name]. */
+  candidates?: [number, string][];
 };
 export type FaceInfo = { origin: FaceRef; surface: "plane" | "cylinder"; normal: Vec3 };
 export type BodySummary = {
@@ -192,10 +196,10 @@ export type Op =
   | { type: "set_revolve"; id: number; axis?: RevolveAxis | null; angle?: number | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
   | { type: "add_blend"; kind: BlendKind; edges: EdgeRef[]; size: number; name: string | null }
   | { type: "set_blend"; id: number; edges?: EdgeRef[] | null; size?: number | null }
-  | { type: "add_mirror"; plane: PlaneRef; op?: CopyOp; name: string | null }
-  | { type: "set_mirror"; id: number; plane?: PlaneRef | null; op?: CopyOp | null }
-  | { type: "add_pattern"; kind: PatternKind; count: number; op?: CopyOp; name: string | null }
-  | { type: "set_pattern"; id: number; kind?: PatternKind | null; count?: number | null; op?: CopyOp | null }
+  | { type: "add_mirror"; plane: PlaneRef; op?: CopyOp; features?: number[]; name: string | null }
+  | { type: "set_mirror"; id: number; plane?: PlaneRef | null; op?: CopyOp | null; features?: number[] | null }
+  | { type: "add_pattern"; kind: PatternKind; count: number; op?: CopyOp; features?: number[]; name: string | null }
+  | { type: "set_pattern"; id: number; kind?: PatternKind | null; count?: number | null; op?: CopyOp | null; features?: number[] | null }
   | { type: "add_variable"; name: string; expression: string }
   | { type: "set_variable"; id: number; name?: string | null; expression?: string | null }
   | { type: "set_binding"; id: number; field: string; expression: string | null }
@@ -205,6 +209,8 @@ export type Op =
   | { type: "set_sweep"; id: number; path?: number | null; profiles?: ProfileSelection | null; op?: BodyOp | null }
   | { type: "add_loft"; sketch: number; sketch_b: number; op?: BodyOp; name: string | null }
   | { type: "set_loft"; id: number; sketch_b?: number | null; op?: BodyOp | null }
+  | { type: "add_boolean"; op: BooleanOp; targets: number[]; tools: number[]; keep_tools?: boolean; name: string | null }
+  | { type: "set_boolean"; id: number; op?: BooleanOp | null; targets?: number[] | null; tools?: number[] | null; keep_tools?: boolean | null }
   | { type: "set_settings"; facet_angle: number }
   | { type: "replace_document"; json: string }
   /** Inverse ops (undo) carry saved state; the client never builds these itself. */

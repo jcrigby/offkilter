@@ -55,6 +55,9 @@ struct FeatureSummary<'a> {
     error: Option<&'a str>,
     bindings: &'a std::collections::BTreeMap<String, String>,
     value: Option<f64>,
+    /// Bodies available to a boolean feature, as (source feature, name).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    candidates: Option<&'a [(ok_model::FeatureId, String)]>,
 }
 
 #[derive(Serialize)]
@@ -288,6 +291,12 @@ impl Doc {
                             .iter()
                             .find(|s| s.id == f.id)
                             .and_then(|s| s.value),
+                        candidates: self
+                            .last
+                            .statuses
+                            .iter()
+                            .find(|s| s.id == f.id)
+                            .and_then(|s| s.candidates.as_deref()),
                     })
                     .collect()
             })
