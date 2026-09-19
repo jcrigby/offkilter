@@ -74,6 +74,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Conflict-free concurrent editing: per-client id ranges make ops commute; structural hashes detect and repair any divergence
 - [x] Per-user undo in shared documents (inverse ops instead of document replacement)
 - [x] Accounts (argon2id passwords, cookie sessions) and per-document sharing
+- [x] Server hardening: sign-in rate limiting per address, request and WebSocket size limits, security headers, `--secure-cookies`
 - [ ] Teams, roles (read-only collaborators), invitations by link
 
 ## Engineering

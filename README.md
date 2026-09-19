@@ -86,6 +86,7 @@ also kept in the browser's local storage.
 ```sh
 cd apps/web && npm run build && cd ../..
 cargo run -p ok-server -- --static apps/web/dist --data ./data --port 8080
+# add --secure-cookies when serving over HTTPS (directly or behind a TLS proxy)
 ```
 
 Open http://localhost:8080, click **Docs**, create a document, and share

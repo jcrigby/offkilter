@@ -9,20 +9,62 @@ use crate::auth::{clear_cookie, session_cookie, AuthError, CurrentUser, User, Us
 use crate::live::{ClientMessage, DocHub, ServerMessage};
 use crate::store::{DocMeta, DocStore};
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
-use axum::extract::{FromRef, Path, State};
-use axum::http::{header, StatusCode};
+use axum::extract::{ConnectInfo, DefaultBodyLimit, FromRef, Path, State};
+use axum::http::{header, HeaderValue, StatusCode};
 use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use futures_util::{SinkExt, StreamExt};
 use serde::Deserialize;
+use std::collections::HashMap;
+use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 use tower_http::services::{ServeDir, ServeFile};
+
+/// Largest request body and WebSocket message accepted: a document as JSON.
+const MAX_BODY_BYTES: usize = 64 * 1024 * 1024;
+
+/// Sign-in attempts allowed per client address in each window.
+const AUTH_ATTEMPTS_PER_WINDOW: u32 = 10;
+const AUTH_WINDOW: Duration = Duration::from_secs(60);
+
+/// A fixed-window counter per client address for the sign-in endpoints,
+/// so passwords cannot be guessed at line rate.
+#[derive(Clone, Default)]
+pub struct RateLimiter {
+    windows: Arc<Mutex<HashMap<String, (Instant, u32)>>>,
+}
+
+impl RateLimiter {
+    /// Records an attempt from `key` and says whether it is within the limit.
+    pub fn allow(&self, key: &str) -> bool {
+        let mut w = self.windows.lock().unwrap();
+        let now = Instant::now();
+        if w.len() > 10_000 {
+            w.retain(|_, (start, _)| now.duration_since(*start) < AUTH_WINDOW);
+        }
+        let entry = w.entry(key.to_string()).or_insert((now, 0));
+        if now.duration_since(entry.0) >= AUTH_WINDOW {
+            *entry = (now, 0);
+        }
+        entry.1 += 1;
+        entry.1 <= AUTH_ATTEMPTS_PER_WINDOW
+    }
+}
 
 #[derive(Clone)]
 pub struct AppState {
     hub: DocHub,
     users: UserStore,
+    limiter: RateLimiter,
+}
+
+impl FromRef<AppState> for RateLimiter {
+    fn from_ref(s: &AppState) -> RateLimiter {
+        s.limiter.clone()
+    }
 }
 
 impl FromRef<AppState> for DocHub {
@@ -41,6 +83,7 @@ pub fn router(store: DocStore, users: UserStore, static_dir: Option<PathBuf>) ->
     let state = AppState {
         hub: DocHub::new(store),
         users,
+        limiter: RateLimiter::default(),
     };
     let api = Router::new()
         .route("/auth/register", post(register))
@@ -57,6 +100,7 @@ pub fn router(store: DocStore, users: UserStore, static_dir: Option<PathBuf>) ->
         .route("/docs/{id}/versions/{vid}", get(get_version))
         .route("/docs/{id}/versions/{vid}/restore", post(restore_version))
         .route("/health", get(|| async { "ok" }))
+        .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
         .with_state(state);
     let mut app = Router::new().nest("/api", api);
     if let Some(dir) = static_dir {
@@ -64,6 +108,46 @@ pub fn router(store: DocStore, users: UserStore, static_dir: Option<PathBuf>) ->
         app = app.fallback_service(ServeDir::new(dir).not_found_service(ServeFile::new(index)));
     }
     app.layer(tower_http::cors::CorsLayer::permissive())
+        .layer(axum::middleware::from_fn(security_headers))
+}
+
+/// Response headers that stop content sniffing, framing by other sites and
+/// referrer leaks. The app is a same-origin bundle, so nothing here is
+/// restrictive for it.
+async fn security_headers(
+    req: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    let mut res = next.run(req).await;
+    let h = res.headers_mut();
+    h.insert(
+        "x-content-type-options",
+        HeaderValue::from_static("nosniff"),
+    );
+    h.insert("x-frame-options", HeaderValue::from_static("DENY"));
+    h.insert("referrer-policy", HeaderValue::from_static("same-origin"));
+    res
+}
+
+/// The client's address when the server was started with connection info,
+/// as a rate-limiting key; "local" otherwise (tests).
+struct ClientKey(String);
+
+impl<S: Send + Sync> axum::extract::FromRequestParts<S> for ClientKey {
+    type Rejection = std::convert::Infallible;
+
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        _state: &S,
+    ) -> Result<Self, Self::Rejection> {
+        Ok(ClientKey(
+            parts
+                .extensions
+                .get::<ConnectInfo<SocketAddr>>()
+                .map(|a| a.0.ip().to_string())
+                .unwrap_or_else(|| "local".into()),
+        ))
+    }
 }
 
 // ---------------------------------------------------------------- accounts
@@ -94,12 +178,37 @@ fn signed_in(result: Result<(User, String), AuthError>) -> axum::response::Respo
     }
 }
 
-async fn register(State(users): State<UserStore>, Json(c): Json<Credentials>) -> impl IntoResponse {
-    signed_in(users.register(&c.name, &c.password))
+async fn register(
+    State(users): State<UserStore>,
+    State(limiter): State<RateLimiter>,
+    ClientKey(key): ClientKey,
+    Json(c): Json<Credentials>,
+) -> axum::response::Response {
+    if !limiter.allow(&key) {
+        return too_many_attempts();
+    }
+    signed_in(users.register(&c.name, &c.password)).into_response()
 }
 
-async fn login(State(users): State<UserStore>, Json(c): Json<Credentials>) -> impl IntoResponse {
-    signed_in(users.login(&c.name, &c.password))
+async fn login(
+    State(users): State<UserStore>,
+    State(limiter): State<RateLimiter>,
+    ClientKey(key): ClientKey,
+    Json(c): Json<Credentials>,
+) -> axum::response::Response {
+    if !limiter.allow(&key) {
+        return too_many_attempts();
+    }
+    signed_in(users.login(&c.name, &c.password)).into_response()
+}
+
+fn too_many_attempts() -> axum::response::Response {
+    (
+        StatusCode::TOO_MANY_REQUESTS,
+        [(header::RETRY_AFTER, AUTH_WINDOW.as_secs().to_string())],
+        "too many sign-in attempts; try again in a minute",
+    )
+        .into_response()
 }
 
 async fn logout(State(users): State<UserStore>, req: axum::extract::Request) -> impl IntoResponse {
@@ -368,6 +477,8 @@ async fn ws_upgrade(
     }
     match hub.get(&id) {
         Some(doc) => ws
+            .max_message_size(MAX_BODY_BYTES)
+            .max_frame_size(MAX_BODY_BYTES)
             .on_upgrade(move |socket| handle_socket(socket, hub, doc, user))
             .into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
@@ -525,6 +636,33 @@ mod tests {
     fn cookie_of(headers: &axum::http::HeaderMap) -> String {
         let set = headers.get("set-cookie").unwrap().to_str().unwrap();
         set.split(';').next().unwrap().to_string()
+    }
+
+    #[tokio::test]
+    async fn sign_in_attempts_are_rate_limited_and_responses_carry_security_headers() {
+        let app = router(temp_store(), temp_users(), None);
+        let (status, headers, _) = call(&app, "GET", "/api/health", None, None).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(headers.get("x-content-type-options").unwrap(), "nosniff");
+        assert_eq!(headers.get("x-frame-options").unwrap(), "DENY");
+        let creds = r#"{"name":"nobody","password":"wrong-password"}"#;
+        let mut statuses = Vec::new();
+        for _ in 0..AUTH_ATTEMPTS_PER_WINDOW + 2 {
+            let (status, headers, _) =
+                call(&app, "POST", "/api/auth/login", Some(creds), None).await;
+            if status == StatusCode::TOO_MANY_REQUESTS {
+                assert!(headers.get("retry-after").is_some());
+            }
+            statuses.push(status);
+        }
+        let limited = statuses
+            .iter()
+            .filter(|s| **s == StatusCode::TOO_MANY_REQUESTS)
+            .count();
+        assert_eq!(limited, 2, "{statuses:?}");
+        assert!(statuses[..AUTH_ATTEMPTS_PER_WINDOW as usize]
+            .iter()
+            .all(|s| *s == StatusCode::UNAUTHORIZED));
     }
 
     #[tokio::test]

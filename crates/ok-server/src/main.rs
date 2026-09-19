@@ -33,8 +33,10 @@ async fn main() {
                     .parse()
                     .expect("bad port")
             }
+            "--secure-cookies" => auth::set_secure_cookies(true),
             "-h" | "--help" => {
-                println!("ok-server [--data DIR] [--static DIR] [--port N]");
+                println!("ok-server [--data DIR] [--static DIR] [--port N] [--secure-cookies]");
+                println!("  --secure-cookies  mark session cookies Secure (serve over HTTPS)");
                 return;
             }
             other => {
@@ -52,5 +54,10 @@ async fn main() {
         "offkilter server listening on http://{addr} (data in {})",
         data.display()
     );
-    axum::serve(listener, app).await.expect("serve");
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .expect("serve");
 }

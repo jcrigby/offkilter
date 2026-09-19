@@ -246,13 +246,29 @@ impl UserStore {
     }
 }
 
+static SECURE_COOKIES: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Marks session cookies `Secure` (sent over HTTPS only). Set this when the
+/// server is reached through TLS, directly or behind a terminating proxy.
+pub fn set_secure_cookies(secure: bool) {
+    SECURE_COOKIES.store(secure, std::sync::atomic::Ordering::Relaxed);
+}
+
+fn cookie_flags() -> &'static str {
+    if SECURE_COOKIES.load(std::sync::atomic::Ordering::Relaxed) {
+        "; Path=/; HttpOnly; SameSite=Lax; Secure"
+    } else {
+        "; Path=/; HttpOnly; SameSite=Lax"
+    }
+}
+
 /// Cookie value for a session token.
 pub fn session_cookie(tok: &str) -> String {
-    format!("{COOKIE}={tok}; Path=/; HttpOnly; SameSite=Lax; Max-Age={SESSION_SECS}")
+    format!("{COOKIE}={tok}{}; Max-Age={SESSION_SECS}", cookie_flags())
 }
 
 pub fn clear_cookie() -> String {
-    format!("{COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0")
+    format!("{COOKIE}={}; Max-Age=0", cookie_flags())
 }
 
 /// The session token in a request's cookies, if any.
