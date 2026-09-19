@@ -95,6 +95,9 @@ pub struct SketchResult {
 pub struct FeatureStatus {
     pub id: FeatureId,
     pub error: Option<String>,
+    /// Evaluated value of a variable feature.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value: Option<f64>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -102,6 +105,8 @@ pub struct RegenResult {
     pub bodies: Vec<Body>,
     pub sketches: BTreeMap<FeatureId, SketchResult>,
     pub statuses: Vec<FeatureStatus>,
+    /// Variable values defined so far.
+    pub variables: BTreeMap<String, f64>,
     /// Running count used to name bodies "Part N".
     next_part: usize,
 }
@@ -195,6 +200,10 @@ fn feature_hash(prev: u64, f: &crate::Feature) -> u64 {
     prev.hash(&mut h);
     f.id.hash(&mut h);
     f.suppressed.hash(&mut h);
+    for (k, v) in &f.bindings {
+        k.hash(&mut h);
+        v.hash(&mut h);
+    }
     // The kind (including solved sketch geometry) as JSON; cheap for the
     // sizes involved and avoids a second hashing scheme for every type.
     serde_json::to_string(&f.kind)
@@ -215,9 +224,22 @@ impl PartStudio {
         let mut cache_valid = true;
         for (index, id) in ids.into_iter().enumerate() {
             let pos = self.position(id).expect("feature present");
-            // Solve sketches first so the hash covers solved geometry, which
-            // makes a second regeneration with no edits a full cache hit.
+            // Evaluate expression bindings into their fields, then solve
+            // sketches, so the hash covers the effective definition and a
+            // second regeneration with no edits is a full cache hit.
+            let mut binding_error: Option<String> = None;
             if !self.features[pos].suppressed {
+                let bindings = self.features[pos].bindings.clone();
+                for (field, expression) in &bindings {
+                    match crate::expr::evaluate(expression, &result.variables) {
+                        Ok(v) => {
+                            if let Err(e) = self.features[pos].kind.set_field(field, v) {
+                                binding_error = Some(e);
+                            }
+                        }
+                        Err(e) => binding_error = Some(format!("{field}: {e}")),
+                    }
+                }
                 if let FeatureKind::Sketch(sf) = &mut self.features[pos].kind {
                     sf.sketch.solve();
                 }
@@ -234,7 +256,48 @@ impl PartStudio {
                 self.cache.entries.truncate(index);
             }
             if self.features[pos].suppressed {
-                result.statuses.push(FeatureStatus { id, error: None });
+                result.statuses.push(FeatureStatus {
+                    id,
+                    error: None,
+                    value: None,
+                });
+                self.cache.entries.push((chain, result.clone()));
+                continue;
+            }
+            if let Some(e) = binding_error {
+                result.statuses.push(FeatureStatus {
+                    id,
+                    error: Some(e),
+                    value: None,
+                });
+                self.cache.entries.push((chain, result.clone()));
+                continue;
+            }
+            if let FeatureKind::Variable(v) = &self.features[pos].kind {
+                let status = match crate::expr::evaluate(&v.expression, &result.variables) {
+                    Ok(value)
+                        if v.name.chars().all(|c| c.is_alphanumeric() || c == '_')
+                            && !v.name.is_empty() =>
+                    {
+                        result.variables.insert(v.name.clone(), value);
+                        FeatureStatus {
+                            id,
+                            error: None,
+                            value: Some(value),
+                        }
+                    }
+                    Ok(_) => FeatureStatus {
+                        id,
+                        error: Some(format!("'{}' is not a valid variable name", v.name)),
+                        value: None,
+                    },
+                    Err(e) => FeatureStatus {
+                        id,
+                        error: Some(e),
+                        value: None,
+                    },
+                };
+                result.statuses.push(status);
                 self.cache.entries.push((chain, result.clone()));
                 continue;
             }
@@ -243,7 +306,11 @@ impl PartStudio {
                     let plane = match result.resolve_plane(&sf.plane) {
                         Ok(p) => p,
                         Err(e) => {
-                            result.statuses.push(FeatureStatus { id, error: Some(e) });
+                            result.statuses.push(FeatureStatus {
+                                id,
+                                error: Some(e),
+                                value: None,
+                            });
                             self.cache.entries.push((chain, result.clone()));
                             continue;
                         }
@@ -296,6 +363,7 @@ impl PartStudio {
                         Err(e) => Some(e),
                     }
                 }
+                FeatureKind::Variable(_) => unreachable!("handled above"),
                 FeatureKind::Pattern(pf) => {
                     let pf = pf.clone();
                     if pf.count < 2 {
@@ -316,7 +384,11 @@ impl PartStudio {
                     }
                 }
             };
-            result.statuses.push(FeatureStatus { id, error });
+            result.statuses.push(FeatureStatus {
+                id,
+                error,
+                value: None,
+            });
             self.cache.entries.push((chain, result.clone()));
         }
         self.cache.entries.truncate(self.features.len());
@@ -1464,6 +1536,130 @@ mod tests {
         assert_eq!(r.bodies.len(), 4);
         let total: f64 = r.bodies.iter().map(|b| b.solid.volume()).sum();
         assert!((total - 96.0).abs() < 1e-6, "total {total}");
+    }
+
+    #[test]
+    fn variables_drive_dimensions_through_bindings() {
+        let mut ps = PartStudio::new("t");
+        ps.apply(Op::AddVariable {
+            name: "width".into(),
+            expression: "40".into(),
+        })
+        .unwrap();
+        let h = ps
+            .apply(Op::AddVariable {
+                name: "height".into(),
+                expression: "#width / 4".into(),
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let s = ps
+            .apply(Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let r = ps
+            .apply(Op::Sketch {
+                id: s,
+                op: SketchOp::AddRectangle {
+                    a: Vec2::ZERO,
+                    b: Vec2::new(10.0, 10.0),
+                },
+            })
+            .unwrap();
+        let bottom = r.entities[0];
+        let (bl, _) = match &ps.feature(s).unwrap().kind {
+            FeatureKind::Sketch(sf) => sf.sketch.line(bottom).unwrap(),
+            _ => unreachable!(),
+        };
+        ps.apply(Op::Sketch {
+            id: s,
+            op: SketchOp::AddConstraint {
+                constraint: ok_sketch::Constraint::Fixed { point: bl },
+            },
+        })
+        .unwrap();
+        let len = ps
+            .apply(Op::Sketch {
+                id: s,
+                op: SketchOp::AddConstraint {
+                    constraint: ok_sketch::Constraint::Length {
+                        line: bottom,
+                        value: 10.0,
+                    },
+                },
+            })
+            .unwrap()
+            .constraint
+            .unwrap();
+        ps.apply(Op::SetBinding {
+            id: s,
+            field: format!("constraint.{}", len.0),
+            expression: Some("#width".into()),
+        })
+        .unwrap();
+        let e = ps
+            .apply(Op::AddExtrude {
+                sketch: s,
+                depth: 1.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(Op::SetBinding {
+            id: e,
+            field: "depth".into(),
+            expression: Some("#height".into()),
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.statuses[1].value, Some(10.0));
+        assert!(
+            (r.bodies[0].solid.volume() - 40.0 * 10.0 * 10.0).abs() < 1e-6,
+            "vol {}",
+            r.bodies[0].solid.volume()
+        );
+        // Change the variable: everything follows.
+        ps.apply(Op::SetVariable {
+            id: h,
+            name: None,
+            expression: Some("#width / 2".into()),
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!((r.bodies[0].solid.volume() - 40.0 * 10.0 * 20.0).abs() < 1e-6);
+        // A bad expression is a feature error, not a crash.
+        ps.apply(Op::SetBinding {
+            id: e,
+            field: "depth".into(),
+            expression: Some("#nope * 2".into()),
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert_eq!(r.errors().count(), 1);
+        assert!(r.errors().next().unwrap().1.contains("nope"));
+        // Binding an unknown field is rejected up front.
+        assert!(ps
+            .apply(Op::SetBinding {
+                id: e,
+                field: "radius".into(),
+                expression: Some("1".into())
+            })
+            .is_err());
     }
 
     #[test]

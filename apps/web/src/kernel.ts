@@ -58,9 +58,20 @@ export type FeatureKind =
   | { type: "revolve"; sketch: number; profiles: ProfileSelection; axis: RevolveAxis; angle: number; op: BodyOp }
   | { type: "blend"; kind: BlendKind; edges: EdgeRef[]; size: number }
   | { type: "mirror"; plane: PlaneRef; op: CopyOp }
-  | { type: "pattern"; kind: PatternKind; count: number; op: CopyOp };
+  | { type: "pattern"; kind: PatternKind; count: number; op: CopyOp }
+  | { type: "variable"; name: string; expression: string };
 
-export type FeatureSummary = { id: number; name: string; suppressed: boolean; kind: FeatureKind; error: string | null };
+export type FeatureSummary = {
+  id: number;
+  name: string;
+  suppressed: boolean;
+  kind: FeatureKind;
+  error: string | null;
+  /** Expressions bound to numeric fields, by field name. */
+  bindings: Record<string, string>;
+  /** Evaluated value of a variable feature. */
+  value: number | null;
+};
 export type FaceInfo = { origin: FaceRef; surface: "plane" | "cylinder"; normal: Vec3 };
 export type BodySummary = {
   name: string;
@@ -84,7 +95,7 @@ export type SketchCurve = { entity: number; kind: string; points: Vec3[] };
 export type PlaneFrame = { origin: Vec3; x_axis: Vec3; y_axis: Vec3; normal: Vec3 };
 export type Loop = { points: Vec2[] };
 export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
-export type Summary = { name: string; features: FeatureSummary[]; bodies: BodySummary[]; sketches: Record<string, SketchResult> };
+export type Summary = { name: string; features: FeatureSummary[]; bodies: BodySummary[]; sketches: Record<string, SketchResult>; variables: Record<string, number> };
 
 export type SketchOp =
   | { type: "add_point"; pos: Vec2 }
@@ -110,6 +121,9 @@ export type Op =
   | { type: "set_mirror"; id: number; plane?: PlaneRef | null; op?: CopyOp | null }
   | { type: "add_pattern"; kind: PatternKind; count: number; op?: CopyOp; name: string | null }
   | { type: "set_pattern"; id: number; kind?: PatternKind | null; count?: number | null; op?: CopyOp | null }
+  | { type: "add_variable"; name: string; expression: string }
+  | { type: "set_variable"; id: number; name?: string | null; expression?: string | null }
+  | { type: "set_binding"; id: number; field: string; expression: string | null }
   | { type: "set_sketch_plane"; id: number; plane: PlaneRef }
   | { type: "rename_feature"; id: number; name: string }
   | { type: "set_suppressed"; id: number; suppressed: boolean }

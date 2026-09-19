@@ -55,6 +55,20 @@ touches, subtracts it from them, or intersects with them. A cut that
 splits a body yields separate bodies (one per shell). Boolean failures are
 reported as feature errors and leave the existing bodies untouched.
 
+### Variables and expressions
+
+A `Variable` feature defines `#name = expression`, evaluated in feature
+order into a table the later features see. Any feature can carry
+`bindings`: a map from a numeric field name (`depth`, `size`, `angle`,
+`spacing`, `count`, `plane.offset`, `constraint.<id>`) to an expression.
+At regeneration the bindings are evaluated and written into the fields
+before the feature runs (and before it is hashed for the cache), so the
+document always stores the last evaluated numbers as well as the
+expressions. The expression language (`expr.rs`) has arithmetic, `^`,
+parentheses, `#name` or bare-name references, `pi`, and trigonometric /
+rounding / min-max functions with angles in degrees. A failing expression
+is a feature error.
+
 ### Face references
 
 A `FaceRef` names a face by the feature that created it and that

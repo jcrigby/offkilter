@@ -1,7 +1,7 @@
 use crate::{
     BlendFeature, BlendKind, BodyOp, CopyOp, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature,
     FeatureId, FeatureKind, MirrorFeature, ModelError, PartStudio, PatternFeature, PatternKind,
-    PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature, SketchFeature,
+    PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature, SketchFeature, VariableFeature,
 };
 use ok_math::Vec2;
 use ok_sketch::{Constraint, ConstraintId, EntityId, Sketch};
@@ -150,6 +150,23 @@ pub enum Op {
         count: Option<u32>,
         #[serde(default)]
         op: Option<CopyOp>,
+    },
+    AddVariable {
+        name: String,
+        expression: String,
+    },
+    SetVariable {
+        id: FeatureId,
+        #[serde(default)]
+        name: Option<String>,
+        #[serde(default)]
+        expression: Option<String>,
+    },
+    /// Binds an expression to a numeric field, or clears it with `None`.
+    SetBinding {
+        id: FeatureId,
+        field: String,
+        expression: Option<String>,
     },
     SetSketchPlane {
         id: FeatureId,
@@ -378,6 +395,52 @@ impl PartStudio {
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "pattern")),
             },
+            Op::AddVariable { name, expression } => {
+                let label = format!("#{name}");
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Variable(VariableFeature { name, expression }),
+                    Some(label),
+                ));
+            }
+            Op::SetVariable {
+                id,
+                name,
+                expression,
+            } => {
+                let f = self.feature_mut(id)?;
+                match &mut f.kind {
+                    FeatureKind::Variable(v) => {
+                        if let Some(n) = name {
+                            v.name = n.clone();
+                            f.name = format!("#{n}");
+                        }
+                        if let Some(e) = expression {
+                            v.expression = e;
+                        }
+                    }
+                    _ => return Err(ModelError::WrongFeatureKind(id, "variable")),
+                }
+            }
+            Op::SetBinding {
+                id,
+                field,
+                expression,
+            } => {
+                let f = self.feature_mut(id)?;
+                if !f.kind.bindable_fields().contains(&field) {
+                    return Err(ModelError::Invalid(format!(
+                        "field '{field}' cannot be bound"
+                    )));
+                }
+                match expression {
+                    Some(e) => {
+                        f.bindings.insert(field, e);
+                    }
+                    None => {
+                        f.bindings.remove(&field);
+                    }
+                }
+            }
             Op::SetSketchPlane { id, plane } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Sketch(s) => s.plane = plane,
                 _ => return Err(ModelError::WrongFeatureKind(id, "sketch")),

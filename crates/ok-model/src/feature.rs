@@ -259,6 +259,13 @@ pub struct PatternFeature {
     pub op: CopyOp,
 }
 
+/// A named value later features can use in expressions as `#name`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VariableFeature {
+    pub name: String,
+    pub expression: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FeatureKind {
@@ -268,6 +275,7 @@ pub enum FeatureKind {
     Blend(BlendFeature),
     Mirror(MirrorFeature),
     Pattern(PatternFeature),
+    Variable(VariableFeature),
 }
 
 impl FeatureKind {
@@ -282,6 +290,89 @@ impl FeatureKind {
             },
             FeatureKind::Mirror(_) => "Mirror",
             FeatureKind::Pattern(_) => "Pattern",
+            FeatureKind::Variable(_) => "Variable",
+        }
+    }
+
+    /// Numeric fields that accept expression bindings, by name.
+    pub fn bindable_fields(&self) -> Vec<String> {
+        match self {
+            FeatureKind::Sketch(s) => {
+                let mut v = vec!["plane.offset".to_string()];
+                v.extend(
+                    s.sketch
+                        .constraints()
+                        .filter(|(_, c)| c.value().is_some())
+                        .map(|(id, _)| format!("constraint.{}", id.0)),
+                );
+                v
+            }
+            FeatureKind::Extrude(_) => vec!["depth".into()],
+            FeatureKind::Revolve(_) => vec!["angle".into()],
+            FeatureKind::Blend(_) => vec!["size".into()],
+            FeatureKind::Mirror(_) => vec!["plane.offset".into()],
+            FeatureKind::Pattern(p) => match p.kind {
+                PatternKind::Linear { .. } => vec!["spacing".into(), "count".into()],
+                PatternKind::Circular { .. } => vec!["angle".into(), "count".into()],
+            },
+            FeatureKind::Variable(_) => vec![],
+        }
+    }
+
+    /// Writes an evaluated binding into the named numeric field.
+    pub fn set_field(&mut self, field: &str, value: f64) -> Result<(), String> {
+        match (self, field) {
+            (FeatureKind::Sketch(s), "plane.offset") => {
+                s.plane = s.plane.with_offset(value);
+                Ok(())
+            }
+            (FeatureKind::Sketch(s), f) if f.starts_with("constraint.") => {
+                let id: u32 = f["constraint.".len()..]
+                    .parse()
+                    .map_err(|_| format!("bad field {f}"))?;
+                if s.sketch
+                    .set_constraint_value(ok_sketch::ConstraintId(id), value)
+                {
+                    Ok(())
+                } else {
+                    Err(format!("constraint {id} has no value"))
+                }
+            }
+            (FeatureKind::Extrude(e), "depth") => {
+                e.depth = value;
+                Ok(())
+            }
+            (FeatureKind::Revolve(r), "angle") => {
+                r.angle = value;
+                Ok(())
+            }
+            (FeatureKind::Blend(b), "size") => {
+                b.size = value;
+                Ok(())
+            }
+            (FeatureKind::Mirror(m), "plane.offset") => {
+                m.plane = m.plane.with_offset(value);
+                Ok(())
+            }
+            (FeatureKind::Pattern(p), "count") => {
+                p.count = value.round().max(0.0) as u32;
+                Ok(())
+            }
+            (FeatureKind::Pattern(p), "spacing") => match &mut p.kind {
+                PatternKind::Linear { spacing, .. } => {
+                    *spacing = value;
+                    Ok(())
+                }
+                _ => Err("spacing applies to linear patterns".into()),
+            },
+            (FeatureKind::Pattern(p), "angle") => match &mut p.kind {
+                PatternKind::Circular { angle, .. } => {
+                    *angle = value;
+                    Ok(())
+                }
+                _ => Err("angle applies to circular patterns".into()),
+            },
+            (_, f) => Err(format!("no bindable field '{f}'")),
         }
     }
 
@@ -291,7 +382,10 @@ impl FeatureKind {
             FeatureKind::Sketch(_) => None,
             FeatureKind::Extrude(e) => Some(e.sketch),
             FeatureKind::Revolve(r) => Some(r.sketch),
-            FeatureKind::Blend(_) | FeatureKind::Mirror(_) | FeatureKind::Pattern(_) => None,
+            FeatureKind::Blend(_)
+            | FeatureKind::Mirror(_)
+            | FeatureKind::Pattern(_)
+            | FeatureKind::Variable(_) => None,
         }
     }
 }
@@ -303,4 +397,8 @@ pub struct Feature {
     #[serde(default)]
     pub suppressed: bool,
     pub kind: FeatureKind,
+    /// Expressions bound to numeric fields (see `FeatureKind::bindable_fields`),
+    /// evaluated at regeneration and written into the fields.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub bindings: std::collections::BTreeMap<String, String>,
 }

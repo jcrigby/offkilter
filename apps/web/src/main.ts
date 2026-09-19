@@ -351,7 +351,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝" };
+      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#" };
       icon.textContent = icons[f.kind.type] ?? "•";
       const name = document.createElement("span");
       name.className = "name";
@@ -410,6 +410,7 @@ class App implements SketchHost {
     else if (f.kind.type === "revolve") this.renderRevolveDetail(f, body);
     else if (f.kind.type === "blend") this.renderBlendDetail(f, body);
     else if (f.kind.type === "mirror") this.renderMirrorDetail(f, body);
+    else if (f.kind.type === "variable") this.renderVariableDetail(f, body);
     else this.renderPatternDetail(f, body);
 
     const row = document.createElement("div");
@@ -503,7 +504,7 @@ class App implements SketchHost {
       );
     }
     body.appendChild(
-      field("Offset", numberInput(plane.offset, (v) => this.apply({ type: "set_sketch_plane", id: f.id, plane: { ...plane, offset: v } })),
+      field("Offset", this.exprInput(f, "plane.offset", plane.offset, (v) => this.apply({ type: "set_sketch_plane", id: f.id, plane: { ...plane, offset: v } })),
     ));
 
     if (result) {
@@ -536,7 +537,7 @@ class App implements SketchHost {
       k.innerHTML = `${c.type.replace(/_/g, " ")}<br><span class="refs">${describeRefs(c, kind.sketch)}</span>`;
       li.appendChild(k);
       if ("value" in c) {
-        li.appendChild(numberInput(c.value, (v) => this.apply({ type: "sketch", id: f.id, op: { type: "set_constraint_value", id: c.id, value: v } })));
+        li.appendChild(this.exprInput(f, `constraint.${c.id}`, c.value, (v) => this.apply({ type: "sketch", id: f.id, op: { type: "set_constraint_value", id: c.id, value: v } })));
       } else {
         li.appendChild(document.createElement("span"));
       }
@@ -645,6 +646,89 @@ class App implements SketchHost {
     return field("Sketch", s);
   }
 
+  /**
+   * A numeric field that also accepts an expression. A plain number sets the
+   * value through `onNumber` and clears any binding; anything else becomes a
+   * binding on `field`, evaluated at regeneration.
+   */
+  exprInput(f: FeatureSummary, field: string, value: number, onNumber: (v: number) => void): HTMLElement {
+    const bound = f.bindings[field];
+    const wrap = document.createElement("span");
+    wrap.style.display = "flex";
+    wrap.style.alignItems = "center";
+    const i = document.createElement("input");
+    i.type = "text";
+    i.spellcheck = false;
+    i.value = bound ?? String(Number(value.toFixed(6)));
+    if (bound) i.classList.add("bound");
+    if (bound && f.error?.startsWith(field + ":")) i.classList.add("bad");
+    const commit = () => {
+      const text = i.value.trim();
+      if (text === "" ) return;
+      const n = Number(text);
+      if (Number.isFinite(n)) {
+        if (bound) this.kernel.apply({ type: "set_binding", id: f.id, field, expression: null });
+        if (n !== value || bound) onNumber(n);
+        else this.regenerate();
+      } else if (text !== bound) {
+        this.apply({ type: "set_binding", id: f.id, field, expression: text });
+      }
+    };
+    i.onchange = commit;
+    // Enter blurs, and the native change event then commits exactly once.
+    i.onkeydown = (e) => {
+      if (e.key === "Enter") i.blur();
+    };
+    i.title = "A number, or an expression such as #width / 2";
+    wrap.appendChild(i);
+    if (bound) {
+      const v = document.createElement("span");
+      v.className = "expr-value";
+      v.textContent = `= ${Number(value.toFixed(4))}`;
+      wrap.appendChild(v);
+    }
+    return wrap;
+  }
+
+  renderVariableDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "variable") return;
+    const k = f.kind;
+    const name = document.createElement("input");
+    name.value = k.name;
+    name.spellcheck = false;
+    name.onchange = () => {
+      const n = name.value.trim().replace(/^#/, "");
+      if (n && n !== k.name) this.apply({ type: "set_variable", id: f.id, name: n });
+    };
+    body.appendChild(field("Name", name));
+    const expr = document.createElement("input");
+    expr.value = k.expression;
+    expr.spellcheck = false;
+    expr.classList.add("bound");
+    expr.onchange = () => {
+      if (expr.value !== k.expression) this.apply({ type: "set_variable", id: f.id, expression: expr.value });
+    };
+    expr.onkeydown = (e) => {
+      if (e.key === "Enter") expr.blur();
+    };
+    body.appendChild(field("Expression", expr));
+    const p = document.createElement("p");
+    p.className = "note";
+    p.textContent = f.value === null ? "Not evaluated." : `#${k.name} = ${Number(f.value.toFixed(6))}`;
+    body.appendChild(p);
+    const vars = Object.entries(this.summary.variables);
+    if (vars.length > 0) {
+      const list = document.createElement("p");
+      list.className = "note";
+      list.textContent = "Variables so far: " + vars.map(([n, v]) => `#${n} = ${Number(v.toFixed(4))}`).join(", ");
+      body.appendChild(list);
+    }
+    const help = document.createElement("p");
+    help.className = "note";
+    help.textContent = "Expressions accept + - * / ^, parentheses, #names, pi, and sin cos tan asin acos atan sqrt abs floor ceil round min max (angles in degrees). Type an expression into any dimension field to bind it.";
+    body.appendChild(help);
+  }
+
   /** Plane chooser shared by sketches and mirrors. */
   planeFields(body: HTMLElement, plane: PlaneRef, onChange: (p: PlaneRef) => void): void {
     const planeValue = plane.type === "standard" ? plane.base : "face";
@@ -669,10 +753,17 @@ class App implements SketchHost {
     body.appendChild(field("Offset", numberInput(plane.offset, (v) => onChange({ ...plane, offset: v }))));
   }
 
+  /** Same as `planeFields` but with an expression-capable offset. */
+  planeFieldsFor(f: FeatureSummary, body: HTMLElement, plane: PlaneRef, onChange: (p: PlaneRef) => void): void {
+    this.planeFields(body, plane, onChange);
+    const last = body.lastElementChild as HTMLElement;
+    last.replaceWith(field("Offset", this.exprInput(f, "plane.offset", plane.offset, (v) => onChange({ ...plane, offset: v }))));
+  }
+
   renderMirrorDetail(f: FeatureSummary, body: HTMLElement): void {
     if (f.kind.type !== "mirror") return;
     const k = f.kind;
-    this.planeFields(body, k.plane, (plane) => this.apply({ type: "set_mirror", id: f.id, plane }));
+    this.planeFieldsFor(f, body, k.plane, (plane) => this.apply({ type: "set_mirror", id: f.id, plane }));
     body.appendChild(field("Copies", select(["add", "new"], k.op, (v) => this.apply({ type: "set_mirror", id: f.id, op: v as "add" | "new" }))));
     const note = document.createElement("p");
     note.className = "note";
@@ -692,12 +783,12 @@ class App implements SketchHost {
     body.appendChild(field("Axis", select(["x", "y", "z"], k.kind.axis, (v) => setKind({ ...k.kind, axis: v as Axis }))));
     if (k.kind.type === "linear") {
       const kind = k.kind;
-      body.appendChild(field("Spacing", numberInput(kind.spacing, (v) => setKind({ ...kind, spacing: v }))));
+      body.appendChild(field("Spacing", this.exprInput(f, "spacing", kind.spacing, (v) => setKind({ ...kind, spacing: v }))));
     } else {
       const kind = k.kind;
-      body.appendChild(field("Total angle (°)", numberInput(kind.angle, (v) => setKind({ ...kind, angle: v }))));
+      body.appendChild(field("Total angle (°)", this.exprInput(f, "angle", kind.angle, (v) => setKind({ ...kind, angle: v }))));
     }
-    body.appendChild(field("Count", numberInput(k.count, (v) => this.apply({ type: "set_pattern", id: f.id, count: Math.max(2, Math.round(v)) }))));
+    body.appendChild(field("Count", this.exprInput(f, "count", k.count, (v) => this.apply({ type: "set_pattern", id: f.id, count: Math.max(2, Math.round(v)) }))));
     body.appendChild(field("Copies", select(["add", "new"], k.op, (v) => this.apply({ type: "set_pattern", id: f.id, op: v as "add" | "new" }))));
     const note = document.createElement("p");
     note.className = "note";
@@ -708,7 +799,7 @@ class App implements SketchHost {
   renderBlendDetail(f: FeatureSummary, body: HTMLElement): void {
     if (f.kind.type !== "blend") return;
     const k = f.kind;
-    body.appendChild(field(k.kind === "fillet" ? "Radius" : "Distance", numberInput(k.size, (v) => this.apply({ type: "set_blend", id: f.id, size: v }))));
+    body.appendChild(field(k.kind === "fillet" ? "Radius" : "Distance", this.exprInput(f, "size", k.size, (v) => this.apply({ type: "set_blend", id: f.id, size: v }))));
     const picking = this.edgePicking === f.id;
     const row = document.createElement("div");
     row.className = "row";
@@ -755,7 +846,7 @@ class App implements SketchHost {
         this.apply({ type: "set_revolve", id: f.id, axis });
       })),
     );
-    body.appendChild(field("Angle (°)", numberInput(k.angle, (v) => this.apply({ type: "set_revolve", id: f.id, angle: v }))));
+    body.appendChild(field("Angle (°)", this.exprInput(f, "angle", k.angle, (v) => this.apply({ type: "set_revolve", id: f.id, angle: v }))));
     body.appendChild(this.regionField(k.sketch, k.profiles, (profiles) => this.apply({ type: "set_revolve", id: f.id, profiles })));
     body.appendChild(field("Result", select(["new", "add", "remove", "intersect"], k.op, (v) => this.apply({ type: "set_revolve", id: f.id, op: v as typeof k.op }))));
     const note = document.createElement("p");
@@ -784,7 +875,7 @@ class App implements SketchHost {
       })),
     );
     if (k.end.type === "blind") {
-      body.appendChild(field("Depth", numberInput(k.depth, (v) => this.apply({ type: "set_extrude", id: f.id, depth: v }))));
+      body.appendChild(field("Depth", this.exprInput(f, "depth", k.depth, (v) => this.apply({ type: "set_extrude", id: f.id, depth: v }))));
     }
     if (k.end.type === "up_to_face") {
       const end: ExtrudeEnd = k.end;
@@ -863,7 +954,7 @@ function numberInput(value: number, onCommit: (v: number) => void): HTMLInputEle
   };
   i.onchange = commit;
   i.onkeydown = (e) => {
-    if (e.key === "Enter") commit();
+    if (e.key === "Enter") i.blur();
   };
   return i;
 }
@@ -1001,6 +1092,13 @@ async function main(): Promise<void> {
     }
   };
   $("#btn-add-fillet").onclick = () => addBlend("fillet");
+  $("#btn-add-variable").onclick = () => {
+    const name = (prompt("Variable name (letters, digits, underscore)", "width") ?? "").trim().replace(/^#/, "");
+    if (!/^\w+$/.test(name)) return;
+    app.sketcher.exit();
+    app.apply({ type: "add_variable", name, expression: "10" });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
   $("#btn-add-mirror").onclick = () => {
     app.sketcher.exit();
     app.apply({ type: "add_mirror", plane: { type: "standard", base: "right", offset: 0 }, op: "add", name: null });

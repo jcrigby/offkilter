@@ -5,6 +5,7 @@
 //! bodies. Every edit goes through [`Op`], which keeps the door open for an
 //! operation log (undo/redo, branching, real-time collaboration) later.
 
+pub mod expr;
 mod feature;
 mod ops;
 mod regen;
@@ -13,7 +14,7 @@ pub use feature::{
     canonical_frame, Axis, BlendFeature, BlendKind, BodyOp, CopyOp, EdgeRef, ExtrudeDirection,
     ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind, MirrorFeature,
     PatternFeature, PatternKind, PlaneRef, ProfileSelection, RevolveAxis, RevolveFeature,
-    SketchFeature, StandardPlane,
+    SketchFeature, StandardPlane, VariableFeature,
 };
 pub use ops::{Op, OpResult, SketchOp};
 pub use regen::{Body, FeatureStatus, RegenResult, SketchCurve, SketchResult};
@@ -115,6 +116,7 @@ impl PartStudio {
             name,
             suppressed: false,
             kind,
+            bindings: Default::default(),
         });
         id
     }

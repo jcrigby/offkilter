@@ -40,7 +40,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Ordered feature list with suppression, reorder, delete
 - [x] JSON document format and browser persistence
 - [x] Undo/redo (document snapshots in the client; op-log based undo later)
-- [ ] Variables and expressions in dimensions (`width / 2`)
+- [x] Variables and expressions in dimensions (`#width / 2`) via per-field bindings
 - [x] Face selection in the viewport with picking
 - [x] Edge selection (edges are named by their two faces)
 - [ ] Body selection; rollback bar in the feature list

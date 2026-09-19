@@ -22,6 +22,7 @@ struct Summary<'a> {
     name: &'a str,
     features: Vec<FeatureSummary<'a>>,
     bodies: Vec<BodySummary<'a>>,
+    variables: &'a std::collections::BTreeMap<String, f64>,
     sketches: &'a std::collections::BTreeMap<ok_model::FeatureId, ok_model::SketchResult>,
 }
 
@@ -32,6 +33,8 @@ struct FeatureSummary<'a> {
     suppressed: bool,
     kind: &'a ok_model::FeatureKind,
     error: Option<&'a str>,
+    bindings: &'a std::collections::BTreeMap<String, String>,
+    value: Option<f64>,
 }
 
 #[derive(Serialize)]
@@ -115,6 +118,13 @@ impl Studio {
                     .iter()
                     .find(|s| s.id == f.id)
                     .and_then(|s| s.error.as_deref()),
+                bindings: &f.bindings,
+                value: self
+                    .last
+                    .statuses
+                    .iter()
+                    .find(|s| s.id == f.id)
+                    .and_then(|s| s.value),
             })
             .collect();
         let bodies = self
@@ -149,6 +159,7 @@ impl Studio {
             features,
             bodies,
             sketches: &self.last.sketches,
+            variables: &self.last.variables,
         })
         .unwrap()
     }
