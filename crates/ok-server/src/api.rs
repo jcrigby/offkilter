@@ -127,6 +127,8 @@ pub fn router(
         .route("/docs/{id}/check", get(check_doc))
         .route("/docs/{id}/export/stl", get(export_stl))
         .route("/docs/{id}/export/step", get(export_step))
+        .route("/docs/{id}/ops", post(apply_ops))
+        .route("/docs/{id}/report", get(report))
         .route(
             "/docs/{id}/thumbnail",
             get(get_thumbnail).put(put_thumbnail),
@@ -729,39 +731,7 @@ fn stl_of(json: &str, tab: Option<u32>) -> Result<Vec<u8>, String> {
             .map(|b| b.mesh.clone())
             .collect()
     };
-    let count: usize = meshes.iter().map(|m| m.triangle_count()).sum();
-    let mut out = Vec::with_capacity(84 + count * 50);
-    let mut header = format!("offkilter tab {}", id.0).into_bytes();
-    header.resize(80, 0);
-    out.extend_from_slice(&header);
-    out.extend_from_slice(&(count as u32).to_le_bytes());
-    for m in &meshes {
-        for tri in m.indices.chunks_exact(3) {
-            let p = |i: u32| {
-                let k = i as usize * 3;
-                [m.positions[k], m.positions[k + 1], m.positions[k + 2]]
-            };
-            let (a, b, c) = (p(tri[0]), p(tri[1]), p(tri[2]));
-            let u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-            let v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
-            let n = [
-                u[1] * v[2] - u[2] * v[1],
-                u[2] * v[0] - u[0] * v[2],
-                u[0] * v[1] - u[1] * v[0],
-            ];
-            let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
-            let n = if len > 0.0 {
-                [n[0] / len, n[1] / len, n[2] / len]
-            } else {
-                [0.0, 0.0, 0.0]
-            };
-            for f in n.iter().chain(a.iter()).chain(b.iter()).chain(c.iter()) {
-                out.extend_from_slice(&f.to_le_bytes());
-            }
-            out.extend_from_slice(&[0, 0]);
-        }
-    }
-    Ok(out)
+    Ok(ok_mesh::to_stl(&meshes, &format!("offkilter tab {}", id.0)))
 }
 
 async fn export_stl(
@@ -814,6 +784,67 @@ async fn put_doc(
             StatusCode::NO_CONTENT.into_response()
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+struct OpsBody {
+    ops: Vec<serde_json::Value>,
+}
+
+/// Applies document ops (the same JSON the client sends over its
+/// WebSocket) through the live document, so scripts and agents edit what
+/// people have open. Stops at the first failing op; the response carries
+/// each applied op's result and the error, if any.
+async fn apply_ops(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    Json(body): Json<OpsBody>,
+) -> impl IntoResponse {
+    if let Err(code) = editable(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(live) = hub.get(&id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let outcome = live.apply_many(body.ops);
+    hub.release(&id);
+    Json(outcome).into_response()
+}
+
+/// A readable report of a tab (features, bodies with face references,
+/// sketches with solver state, instances and mates): what an agent reads
+/// before deciding its next op. `tab` defaults to the first tab.
+async fn report(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    axum::extract::Query(q): axum::extract::Query<ExportQuery>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(json) = current_json(&hub, &id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let built = tokio::task::spawn_blocking(move || -> Result<ok_model::TabReport, String> {
+        let mut doc = ok_model::Document::from_json(&json).map_err(|e| e.to_string())?;
+        let tab = match q.tab {
+            Some(t) => ok_model::TabId(t),
+            None => doc
+                .tabs
+                .first()
+                .map(|t| t.id)
+                .ok_or("document has no tabs")?,
+        };
+        doc.describe(tab)
+    })
+    .await;
+    match built {
+        Ok(Ok(report)) => Json(report).into_response(),
+        Ok(Err(e)) => (StatusCode::BAD_REQUEST, e).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
@@ -1793,6 +1824,65 @@ mod tests {
         )
         .await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn scripts_apply_ops_and_read_a_report() {
+        let users = temp_users();
+        let app = router(temp_store(), users.clone(), temp_teams(), None);
+        let doc = ok_model::Document::new("scripted").to_json();
+        let body = serde_json::json!({ "name": "scripted", "json": doc }).to_string();
+        let (_, _, text) = call(&app, "POST", "/api/docs", Some(&body), None).await;
+        let id = serde_json::from_str::<serde_json::Value>(&text).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let ops = serde_json::json!({ "ops": [
+            { "type": "studio", "tab": 1, "op": { "type": "add_sketch", "plane": { "type": "standard", "base": "top", "offset": 0.0 }, "name": "Base" } },
+            { "type": "studio", "tab": 1, "op": { "type": "sketch", "id": 1, "op": { "type": "add_rectangle", "a": { "x": 0, "y": 0 }, "b": { "x": 30, "y": 20 } } } },
+            { "type": "studio", "tab": 1, "op": { "type": "add_extrude", "sketch": 1, "depth": 5, "name": "Plate" } },
+            { "type": "studio", "tab": 1, "op": { "type": "delete_feature", "id": 99 } },
+            { "type": "studio", "tab": 1, "op": { "type": "add_variable", "name": "never", "expression": "1" } }
+        ] })
+        .to_string();
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/ops"),
+            Some(&ops),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let outcome: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(outcome["results"].as_array().unwrap().len(), 3);
+        assert_eq!(outcome["results"][2]["studio"]["feature"], 2);
+        assert!(outcome["error"]
+            .as_str()
+            .unwrap()
+            .starts_with("op 3 failed"));
+        let (status, _, text) = call(
+            &app,
+            "GET",
+            &format!("/api/docs/{id}/report?tab=1"),
+            None,
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let report: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(report["ok"], true);
+        assert_eq!(report["features"].as_array().unwrap().len(), 2);
+        assert!((report["bodies"][0]["volume"].as_f64().unwrap() - 3000.0).abs() < 1e-9);
+        assert_eq!(report["bodies"][0]["faces"].as_array().unwrap().len(), 6);
+        assert_eq!(report["sketches"][0]["regions"], 1);
+        // The stored document has the three applied ops.
+        let (_, _, json) = call(&app, "GET", &format!("/api/docs/{id}"), None, None).await;
+        let stored = ok_model::Document::from_json(&json).unwrap();
+        assert_eq!(
+            stored.studio(ok_model::TabId(1)).unwrap().features().len(),
+            2
+        );
     }
 
     #[tokio::test]

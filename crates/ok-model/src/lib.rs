@@ -6,6 +6,7 @@
 //! operation log (undo/redo, branching, real-time collaboration) later.
 
 mod assembly;
+mod describe;
 mod document;
 pub mod expr;
 mod feature;
@@ -18,6 +19,10 @@ mod regen;
 pub use assembly::{
     connector_frame, describe_anchor, mate_transform, Anchor, Assembly, AssemblyResult, Connector,
     Instance, InstanceId, Interference, Mate, MateId, MateKind, Placement, TabId,
+};
+pub use describe::{
+    assembly_op, sketch_op, studio_op, BodyReport, CylinderReport, FaceReport, FeatureReport,
+    InstanceReport, MateReport, SketchReport, TabReport,
 };
 pub use document::{AssemblyOp, DocOp, DocOpResult, Document, DrawingDimension, Tab, TabKind};
 pub use feature::{

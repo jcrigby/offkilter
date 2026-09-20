@@ -88,6 +88,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Import: DXF lines, circles, arcs and polylines (with bulges) into a sketch, endpoints tied by coincident constraints
 - [ ] Import: STEP via a B-rep reader
 - [x] Documents list with previews, a name filter and sort order
+- [x] Language-model access: `ok-mcp` (MCP over stdio) with apply / report / export tools against a running server or a local file; `POST /api/docs/:id/ops` and `GET /api/docs/:id/report` for scripts
 
 ## Platform
 

@@ -1,0 +1,1069 @@
+//! `ok-mcp`: a Model Context Protocol server (JSON-RPC over stdio) that
+//! lets a language model drive offkilter documents.
+//!
+//! Two backends:
+//!
+//! - `--server http://localhost:8080` edits documents on a running
+//!   `ok-server`, so every op shows up live in the browser and the model
+//!   and a person can work on one document together. `--cookie` passes a
+//!   session cookie (`ok_session=...`) or `--login name:password` signs in.
+//! - `--file part.okpart` works on a local document file with the kernel
+//!   embedded; no server needed.
+//!
+//! Tools: `offkilter_reference` (the op catalogue), `list_documents`,
+//! `create_document`, `open_document`, `report`, `apply`, `export`,
+//! `document_url`. See docs/MCP.md.
+
+use serde_json::{json, Value};
+use std::io::{BufRead, Write};
+
+const REFERENCE: &str = include_str!("../../../docs/OPS.md");
+const PROTOCOL: &str = "2024-11-05";
+
+fn main() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let backend = match Backend::from_args(&args) {
+        Ok(b) => b,
+        Err(e) => {
+            eprintln!("ok-mcp: {e}");
+            eprintln!("usage: ok-mcp --server URL [--cookie ok_session=TOKEN | --login NAME:PASSWORD] [--doc ID]");
+            eprintln!("       ok-mcp --file PATH.okpart");
+            std::process::exit(2);
+        }
+    };
+    let mut server = Server::new(backend);
+    let stdin = std::io::stdin();
+    let mut out = std::io::stdout();
+    for line in stdin.lock().lines() {
+        let Ok(line) = line else { break };
+        if line.trim().is_empty() {
+            continue;
+        }
+        if let Some(response) = server.handle_line(&line) {
+            let _ = writeln!(out, "{response}");
+            let _ = out.flush();
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Backends
+
+enum Backend {
+    Server {
+        agent: ureq::Agent,
+        base: String,
+        cookie: Option<String>,
+    },
+    Local {
+        path: std::path::PathBuf,
+        doc: ok_model::Document,
+    },
+}
+
+impl Backend {
+    fn from_args(args: &[String]) -> Result<(Backend, Option<String>), String> {
+        let mut server = None;
+        let mut file = None;
+        let mut cookie = None;
+        let mut login = None;
+        let mut doc = None;
+        let mut i = 0;
+        while i < args.len() {
+            let next = |i: usize| -> Result<String, String> {
+                args.get(i + 1)
+                    .cloned()
+                    .ok_or_else(|| format!("{} needs a value", args[i]))
+            };
+            match args[i].as_str() {
+                "--server" => server = Some(next(i)?),
+                "--file" => file = Some(next(i)?),
+                "--cookie" => cookie = Some(next(i)?),
+                "--login" => login = Some(next(i)?),
+                "--doc" => doc = Some(next(i)?),
+                other => return Err(format!("unknown argument {other}")),
+            }
+            i += 2;
+        }
+        match (server, file) {
+            (Some(base), None) => {
+                let agent: ureq::Agent = ureq::Agent::config_builder()
+                    .http_status_as_error(false)
+                    .build()
+                    .into();
+                let base = base.trim_end_matches('/').to_string();
+                let mut backend = Backend::Server {
+                    agent,
+                    base,
+                    cookie,
+                };
+                if let Some(login) = login {
+                    let (name, password) =
+                        login.split_once(':').ok_or("--login takes NAME:PASSWORD")?;
+                    backend.sign_in(name, password)?;
+                }
+                Ok((backend, doc))
+            }
+            (None, Some(path)) => {
+                let path = std::path::PathBuf::from(path);
+                let doc = if path.exists() {
+                    let text = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+                    ok_model::Document::from_json(&text).map_err(|e| e.to_string())?
+                } else {
+                    let name = path
+                        .file_stem()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("document")
+                        .to_string();
+                    ok_model::Document::new(name)
+                };
+                Ok((Backend::Local { path, doc }, None))
+            }
+            (None, None) => Err("give --server URL or --file PATH".into()),
+            (Some(_), Some(_)) => Err("give either --server or --file, not both".into()),
+        }
+    }
+
+    fn request(
+        &self,
+        method: &str,
+        path: &str,
+        body: Option<Value>,
+    ) -> Result<(u16, String), String> {
+        let Backend::Server {
+            agent,
+            base,
+            cookie,
+        } = self
+        else {
+            return Err("not connected to a server".into());
+        };
+        let url = format!("{base}/api{path}");
+        let mut response = match (method, body) {
+            ("GET", _) => {
+                let mut req = agent.get(&url);
+                if let Some(c) = cookie {
+                    req = req.header("cookie", c);
+                }
+                req.call()
+            }
+            ("POST", body) => {
+                let mut req = agent.post(&url).header("content-type", "application/json");
+                if let Some(c) = cookie {
+                    req = req.header("cookie", c);
+                }
+                req.send(body.unwrap_or(json!({})).to_string().as_bytes())
+            }
+            _ => return Err(format!("unsupported method {method}")),
+        }
+        .map_err(|e| format!("{method} {url}: {e}"))?;
+        let status = response.status().as_u16();
+        let text = response
+            .body_mut()
+            .read_to_string()
+            .map_err(|e| e.to_string())?;
+        Ok((status, text))
+    }
+
+    fn request_bytes(&self, path: &str) -> Result<(u16, Vec<u8>), String> {
+        let Backend::Server {
+            agent,
+            base,
+            cookie,
+        } = self
+        else {
+            return Err("not connected to a server".into());
+        };
+        let url = format!("{base}/api{path}");
+        let mut req = agent.get(&url);
+        if let Some(c) = cookie {
+            req = req.header("cookie", c);
+        }
+        let mut response = req.call().map_err(|e| format!("GET {url}: {e}"))?;
+        let status = response.status().as_u16();
+        let bytes = response
+            .body_mut()
+            .read_to_vec()
+            .map_err(|e| e.to_string())?;
+        Ok((status, bytes))
+    }
+
+    fn sign_in(&mut self, name: &str, password: &str) -> Result<(), String> {
+        let Backend::Server {
+            agent,
+            base,
+            cookie,
+        } = self
+        else {
+            return Ok(());
+        };
+        let url = format!("{base}/api/login");
+        let body = json!({ "name": name, "password": password }).to_string();
+        let response = agent
+            .post(&url)
+            .header("content-type", "application/json")
+            .send(body.as_bytes())
+            .map_err(|e| format!("login: {e}"))?;
+        if response.status().as_u16() >= 300 {
+            return Err(format!("login failed with status {}", response.status()));
+        }
+        let set = response
+            .headers()
+            .get("set-cookie")
+            .and_then(|v| v.to_str().ok())
+            .ok_or("login gave no session cookie")?;
+        let session = set.split(';').next().unwrap_or("").trim().to_string();
+        *cookie = Some(session);
+        Ok(())
+    }
+
+    fn expect_ok(status: u16, text: String) -> Result<String, String> {
+        if (200..300).contains(&status) {
+            Ok(text)
+        } else {
+            Err(format!("server said {status}: {text}"))
+        }
+    }
+
+    fn save_local(&self) -> Result<(), String> {
+        if let Backend::Local { path, doc } = self {
+            std::fs::write(path, doc.to_json()).map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    }
+
+    // ---- operations shared by the tools
+
+    fn list(&self) -> Result<Value, String> {
+        match self {
+            Backend::Server { .. } => {
+                let (s, t) = self.request("GET", "/docs", None)?;
+                serde_json::from_str(&Self::expect_ok(s, t)?).map_err(|e| e.to_string())
+            }
+            Backend::Local { path, doc } => Ok(json!([{
+                "id": path.display().to_string(),
+                "name": doc.name,
+                "tabs": tabs_of(doc),
+            }])),
+        }
+    }
+
+    fn create(&mut self, name: &str) -> Result<(String, Value), String> {
+        match self {
+            Backend::Server { .. } => {
+                let json = ok_model::Document::new(name).to_json();
+                let (s, t) =
+                    self.request("POST", "/docs", Some(json!({ "name": name, "json": json })))?;
+                let meta: Value =
+                    serde_json::from_str(&Self::expect_ok(s, t)?).map_err(|e| e.to_string())?;
+                let id = meta["id"].as_str().unwrap_or("").to_string();
+                Ok((id, meta))
+            }
+            Backend::Local { path, doc } => {
+                *doc = ok_model::Document::new(name);
+                let file = path.with_file_name(format!("{}.okpart", safe_name(name)));
+                *path = file.clone();
+                self.save_local()?;
+                Ok((
+                    file.display().to_string(),
+                    json!({ "path": file.display().to_string() }),
+                ))
+            }
+        }
+    }
+
+    fn document(&self, id: &str) -> Result<ok_model::Document, String> {
+        match self {
+            Backend::Server { .. } => {
+                let (s, t) = self.request("GET", &format!("/docs/{id}"), None)?;
+                ok_model::Document::from_json(&Self::expect_ok(s, t)?).map_err(|e| e.to_string())
+            }
+            Backend::Local { doc, .. } => Ok(doc.clone()),
+        }
+    }
+
+    /// The tab's report, built by the kernel from the current document
+    /// (the server's own `/report` gives the same to other scripts).
+    fn report(&self, id: &str, tab: Option<u32>) -> Result<ok_model::TabReport, String> {
+        let mut doc = self.document(id)?;
+        let tab = pick_tab(&doc, tab)?;
+        doc.describe(tab)
+    }
+
+    fn apply(&mut self, id: &str, ops: Vec<Value>) -> Result<Value, String> {
+        match self {
+            Backend::Server { .. } => {
+                let (s, t) = self.request(
+                    "POST",
+                    &format!("/docs/{id}/ops"),
+                    Some(json!({ "ops": ops })),
+                )?;
+                serde_json::from_str(&Self::expect_ok(s, t)?).map_err(|e| e.to_string())
+            }
+            Backend::Local { doc, .. } => {
+                let mut results = Vec::new();
+                let mut error = None;
+                for (i, op) in ops.into_iter().enumerate() {
+                    match doc.apply_json_with_base(&op.to_string(), None) {
+                        Ok(r) => results.push(serde_json::to_value(r).unwrap_or_default()),
+                        Err(e) => {
+                            error = Some(format!("op {i} failed: {e}"));
+                            break;
+                        }
+                    }
+                }
+                self.save_local()?;
+                let mut out = json!({ "results": results });
+                if let Some(e) = error {
+                    out["error"] = Value::String(e);
+                }
+                Ok(out)
+            }
+        }
+    }
+
+    fn export(&self, id: &str, tab: Option<u32>, format: &str) -> Result<Vec<u8>, String> {
+        match self {
+            Backend::Server { .. } => {
+                let query = tab.map(|t| format!("?tab={t}")).unwrap_or_default();
+                let (s, bytes) =
+                    self.request_bytes(&format!("/docs/{id}/export/{format}{query}"))?;
+                if (200..300).contains(&s) {
+                    Ok(bytes)
+                } else {
+                    Err(format!(
+                        "server said {s}: {}",
+                        String::from_utf8_lossy(&bytes)
+                    ))
+                }
+            }
+            Backend::Local { doc, .. } => {
+                let mut doc = doc.clone();
+                let tab = pick_tab(&doc, tab)?;
+                let kind = doc.tab(tab).map(|t| t.kind_name()).ok_or("no such tab")?;
+                let bodies = if kind == "assembly" {
+                    doc.regenerate_assembly(tab)
+                        .map_err(|e| e.to_string())?
+                        .bodies
+                } else {
+                    doc.regenerate_studio(tab, None)
+                        .map_err(|e| e.to_string())?
+                        .bodies
+                };
+                match format {
+                    "stl" => {
+                        let meshes: Vec<ok_mesh::TriMesh> =
+                            bodies.iter().map(|b| b.mesh.clone()).collect();
+                        Ok(ok_mesh::to_stl(
+                            &meshes,
+                            &format!("offkilter tab {}", tab.0),
+                        ))
+                    }
+                    "step" => {
+                        let solids: Vec<(&str, &ok_brep::Solid)> =
+                            bodies.iter().map(|b| (b.name.as_str(), &b.solid)).collect();
+                        Ok(ok_step::write_step(&solids, &doc.name).into_bytes())
+                    }
+                    other => Err(format!("unknown format {other}; use stl or step")),
+                }
+            }
+        }
+    }
+
+    fn url(&self, id: &str) -> Option<String> {
+        match self {
+            Backend::Server { base, .. } => Some(format!("{base}/?doc={id}")),
+            Backend::Local { .. } => None,
+        }
+    }
+}
+
+fn tabs_of(doc: &ok_model::Document) -> Value {
+    Value::Array(
+        doc.tabs
+            .iter()
+            .map(|t| json!({ "id": t.id.0, "name": t.name(), "kind": t.kind_name() }))
+            .collect(),
+    )
+}
+
+fn pick_tab(doc: &ok_model::Document, tab: Option<u32>) -> Result<ok_model::TabId, String> {
+    match tab {
+        Some(t) => {
+            let id = ok_model::TabId(t);
+            doc.tab(id).map(|_| id).ok_or_else(|| format!("no tab {t}"))
+        }
+        None => doc
+            .tabs
+            .first()
+            .map(|t| t.id)
+            .ok_or_else(|| "document has no tabs".into()),
+    }
+}
+
+fn safe_name(name: &str) -> String {
+    let s: String = name
+        .chars()
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' || c == '_' {
+                c
+            } else {
+                '-'
+            }
+        })
+        .collect();
+    if s.is_empty() {
+        "document".into()
+    } else {
+        s
+    }
+}
+
+// ---------------------------------------------------------------------------
+// The MCP server
+
+struct Server {
+    backend: Backend,
+    /// The document tools act on when a call names none.
+    current: Option<String>,
+}
+
+const DOC_OPS: &[&str] = &[
+    "add_part_studio",
+    "add_assembly",
+    "rename_tab",
+    "delete_tab",
+    "insert_tab",
+    "rename_document",
+    "set_drawing_dimensions",
+    "studio",
+    "assembly",
+    "replace_document",
+];
+const ASSEMBLY_OPS: &[&str] = &[
+    "add_instance",
+    "remove_instance",
+    "set_instance",
+    "add_mate",
+    "set_mate",
+    "remove_mate",
+    "restore",
+];
+
+impl Server {
+    fn new((backend, current): (Backend, Option<String>)) -> Server {
+        let current = current.or_else(|| match &backend {
+            Backend::Local { path, .. } => Some(path.display().to_string()),
+            Backend::Server { .. } => None,
+        });
+        Server { backend, current }
+    }
+
+    /// Handles one JSON-RPC line; notifications get no response.
+    fn handle_line(&mut self, line: &str) -> Option<String> {
+        let request: Value = match serde_json::from_str(line) {
+            Ok(v) => v,
+            Err(e) => {
+                return Some(
+                    json!({ "jsonrpc": "2.0", "id": null, "error": { "code": -32700, "message": format!("parse error: {e}") } })
+                        .to_string(),
+                )
+            }
+        };
+        let id = request.get("id").cloned();
+        let method = request.get("method").and_then(|m| m.as_str()).unwrap_or("");
+        let params = request.get("params").cloned().unwrap_or(json!({}));
+        let result = self.dispatch(method, &params);
+        let id = id?; // a notification
+        let response = match result {
+            Ok(v) => json!({ "jsonrpc": "2.0", "id": id, "result": v }),
+            Err((code, message)) => {
+                json!({ "jsonrpc": "2.0", "id": id, "error": { "code": code, "message": message } })
+            }
+        };
+        Some(response.to_string())
+    }
+
+    fn dispatch(&mut self, method: &str, params: &Value) -> Result<Value, (i64, String)> {
+        match method {
+            "initialize" => Ok(json!({
+                "protocolVersion": PROTOCOL,
+                "capabilities": { "tools": {}, "resources": {} },
+                "serverInfo": { "name": "offkilter", "version": env!("CARGO_PKG_VERSION") },
+                "instructions": "Parametric CAD. Call offkilter_reference first to learn the op format, then create_document, apply ops in small batches, and read the report between steps; faces are named by the references the report lists."
+            })),
+            "ping" => Ok(json!({})),
+            "notifications/initialized" | "notifications/cancelled" => Ok(Value::Null),
+            "tools/list" => Ok(json!({ "tools": tool_list() })),
+            "tools/call" => {
+                let name = params.get("name").and_then(|n| n.as_str()).unwrap_or("");
+                let args = params.get("arguments").cloned().unwrap_or(json!({}));
+                Ok(match self.call_tool(name, &args) {
+                    Ok(text) => json!({ "content": [{ "type": "text", "text": text }] }),
+                    Err(e) => {
+                        json!({ "content": [{ "type": "text", "text": e }], "isError": true })
+                    }
+                })
+            }
+            "resources/list" => Ok(json!({ "resources": [{
+                "uri": "offkilter://reference/ops",
+                "name": "offkilter op reference",
+                "mimeType": "text/markdown",
+                "description": "How to write document ops: envelopes, feature and sketch ops, references."
+            }] })),
+            "resources/read" => {
+                let uri = params.get("uri").and_then(|u| u.as_str()).unwrap_or("");
+                if uri == "offkilter://reference/ops" {
+                    Ok(
+                        json!({ "contents": [{ "uri": uri, "mimeType": "text/markdown", "text": REFERENCE }] }),
+                    )
+                } else {
+                    Err((-32602, format!("unknown resource {uri}")))
+                }
+            }
+            "prompts/list" => Ok(json!({ "prompts": [] })),
+            other => Err((-32601, format!("method not found: {other}"))),
+        }
+    }
+
+    fn doc_id(&self, args: &Value) -> Result<String, String> {
+        args.get("doc")
+            .and_then(|d| d.as_str())
+            .map(str::to_string)
+            .or_else(|| self.current.clone())
+            .ok_or_else(|| {
+                "no document: call create_document or open_document first, or pass doc".into()
+            })
+    }
+
+    fn call_tool(&mut self, name: &str, args: &Value) -> Result<String, String> {
+        let tab = args.get("tab").and_then(|t| t.as_u64()).map(|t| t as u32);
+        match name {
+            "offkilter_reference" => Ok(REFERENCE.to_string()),
+            "list_documents" => {
+                let list = self.backend.list()?;
+                Ok(serde_json::to_string_pretty(&list).unwrap_or_default())
+            }
+            "create_document" => {
+                let name = args
+                    .get("name")
+                    .and_then(|n| n.as_str())
+                    .unwrap_or("Untitled");
+                let (id, meta) = self.backend.create(name)?;
+                self.current = Some(id.clone());
+                let mut out = json!({ "doc": id, "tabs": [{ "id": 1, "name": "Part Studio 1", "kind": "part_studio" }], "meta": meta });
+                if let Some(url) = self.backend.url(&id) {
+                    out["url"] = Value::String(url);
+                }
+                Ok(serde_json::to_string_pretty(&out).unwrap_or_default())
+            }
+            "open_document" => {
+                let id = args
+                    .get("doc")
+                    .and_then(|d| d.as_str())
+                    .ok_or("open_document needs doc")?
+                    .to_string();
+                let doc = self.backend.document(&id)?;
+                self.current = Some(id.clone());
+                let mut out = json!({ "doc": id, "name": doc.name, "tabs": tabs_of(&doc) });
+                if let Some(url) = self.backend.url(&id) {
+                    out["url"] = Value::String(url);
+                }
+                Ok(serde_json::to_string_pretty(&out).unwrap_or_default())
+            }
+            "report" => {
+                let id = self.doc_id(args)?;
+                let report = self.backend.report(&id, tab)?;
+                let detail = args
+                    .get("detail")
+                    .and_then(|d| d.as_str())
+                    .unwrap_or("summary");
+                if detail == "full" {
+                    serde_json::to_string_pretty(&report).map_err(|e| e.to_string())
+                } else {
+                    Ok(summarize(&report))
+                }
+            }
+            "apply" => {
+                let id = self.doc_id(args)?;
+                let ops = args
+                    .get("ops")
+                    .and_then(|o| o.as_array())
+                    .cloned()
+                    .ok_or("apply needs ops: an array of ops")?;
+                let doc = self.backend.document(&id)?;
+                let default_tab = pick_tab(&doc, tab)?;
+                let wrapped: Vec<Value> = ops
+                    .into_iter()
+                    .map(|op| wrap_op(op, default_tab, &doc))
+                    .collect();
+                let outcome = self.backend.apply(&id, wrapped)?;
+                let mut text = String::new();
+                let results = outcome
+                    .get("results")
+                    .and_then(|r| r.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                for (i, r) in results.iter().enumerate() {
+                    let mut made = Vec::new();
+                    if let Some(f) = r.pointer("/studio/feature").and_then(|v| v.as_u64()) {
+                        made.push(format!("feature {f}"));
+                    }
+                    if let Some(e) = r.pointer("/studio/entities").and_then(|v| v.as_array()) {
+                        if !e.is_empty() {
+                            made.push(format!(
+                                "entities {}",
+                                e.iter()
+                                    .map(|x| x.to_string())
+                                    .collect::<Vec<_>>()
+                                    .join(",")
+                            ));
+                        }
+                    }
+                    if let Some(c) = r.pointer("/studio/constraint").and_then(|v| v.as_u64()) {
+                        made.push(format!("constraint {c}"));
+                    }
+                    if made.is_empty() {
+                        if let Some(t) = r.get("tab").and_then(|v| v.as_u64()) {
+                            made.push(format!("tab {t}"));
+                        }
+                    }
+                    if let Some(x) = r.get("instance").and_then(|v| v.as_u64()) {
+                        made.push(format!("instance {x}"));
+                    }
+                    if let Some(m) = r.get("mate").and_then(|v| v.as_u64()) {
+                        made.push(format!("mate {m}"));
+                    }
+                    text.push_str(&format!(
+                        "op {i}: ok{}\n",
+                        if made.is_empty() {
+                            String::new()
+                        } else {
+                            format!(" ({})", made.join(", "))
+                        }
+                    ));
+                }
+                if let Some(e) = outcome.get("error").and_then(|e| e.as_str()) {
+                    text.push_str(&format!("ERROR: {e}\n"));
+                }
+                // What the document looks like now, so mistakes show at once.
+                match self.backend.report(&id, Some(default_tab.0)) {
+                    Ok(report) => {
+                        text.push('\n');
+                        text.push_str(&summarize(&report));
+                    }
+                    Err(e) => text.push_str(&format!("\nreport failed: {e}\n")),
+                }
+                Ok(text)
+            }
+            "export" => {
+                let id = self.doc_id(args)?;
+                let format = args
+                    .get("format")
+                    .and_then(|f| f.as_str())
+                    .unwrap_or("stl")
+                    .to_lowercase();
+                let path = args
+                    .get("path")
+                    .and_then(|p| p.as_str())
+                    .map(str::to_string)
+                    .unwrap_or_else(|| format!("offkilter-export.{format}"));
+                let bytes = self.backend.export(&id, tab, &format)?;
+                std::fs::write(&path, &bytes)
+                    .map_err(|e| format!("could not write {path}: {e}"))?;
+                Ok(format!(
+                    "wrote {} bytes of {} to {path}",
+                    bytes.len(),
+                    format.to_uppercase()
+                ))
+            }
+            "document_url" => {
+                let id = self.doc_id(args)?;
+                self.backend
+                    .url(&id)
+                    .ok_or_else(|| "no server: the document is a local file".into())
+            }
+            other => Err(format!("unknown tool {other}")),
+        }
+    }
+}
+
+/// Puts the envelope on an op that lacks one: studio ops and sketch ops
+/// go to the tab given (or the first part studio), assembly ops to the
+/// tab given (or the first assembly).
+fn wrap_op(op: Value, default_tab: ok_model::TabId, doc: &ok_model::Document) -> Value {
+    let kind = op.get("type").and_then(|t| t.as_str()).unwrap_or("");
+    if DOC_OPS.contains(&kind) {
+        return op;
+    }
+    if ASSEMBLY_OPS.contains(&kind) {
+        let tab = if doc.tab(default_tab).map(|t| t.kind_name()) == Some("assembly") {
+            default_tab
+        } else {
+            doc.tabs
+                .iter()
+                .find(|t| t.kind_name() == "assembly")
+                .map(|t| t.id)
+                .unwrap_or(default_tab)
+        };
+        return json!({ "type": "assembly", "tab": tab.0, "op": op });
+    }
+    let tab = if doc.tab(default_tab).map(|t| t.kind_name()) == Some("part_studio") {
+        default_tab
+    } else {
+        doc.tabs
+            .iter()
+            .find(|t| t.kind_name() == "part_studio")
+            .map(|t| t.id)
+            .unwrap_or(default_tab)
+    };
+    json!({ "type": "studio", "tab": tab.0, "op": op })
+}
+
+fn v3(v: &ok_math::Vec3) -> String {
+    format!("({:.3}, {:.3}, {:.3})", v.x, v.y, v.z)
+}
+
+/// A compact, readable account of a report: features and errors, sketch
+/// state, bodies with their faces and cylinders.
+fn summarize(r: &ok_model::TabReport) -> String {
+    let mut s = String::new();
+    s.push_str(&format!(
+        "Tab {} \"{}\" ({}): {}\n",
+        r.tab.0,
+        r.name,
+        r.kind,
+        if r.ok { "ok" } else { "ERRORS" }
+    ));
+    for e in &r.errors {
+        s.push_str(&format!("  error: {e}\n"));
+    }
+    if !r.features.is_empty() {
+        s.push_str("Features:\n");
+        for f in &r.features {
+            s.push_str(&format!(
+                "  {} {} [{}]{}{}{}\n",
+                f.id.0,
+                f.name,
+                f.kind,
+                if f.suppressed { " suppressed" } else { "" },
+                f.value.map(|v| format!(" = {v}")).unwrap_or_default(),
+                f.error
+                    .as_ref()
+                    .map(|e| format!(" ERROR: {e}"))
+                    .unwrap_or_default()
+            ));
+        }
+    }
+    for sk in &r.sketches {
+        let entities = sk.entities.as_array().map(|a| a.len()).unwrap_or(0);
+        let constraints = sk.constraints.as_array().map(|a| a.len()).unwrap_or(0);
+        s.push_str(&format!(
+            "Sketch {} \"{}\": {} entities, {} constraints, {:?}, dof {}, {} closed region{}\n",
+            sk.feature.0,
+            sk.name,
+            entities,
+            constraints,
+            sk.solve.status,
+            sk.solve.dof,
+            sk.regions,
+            if sk.regions == 1 { "" } else { "s" }
+        ));
+        if let Some(list) = sk.entities.as_array() {
+            for e in list.iter().take(60) {
+                let id = e.get("id").and_then(|v| v.as_u64()).unwrap_or(0);
+                let kind = e.get("type").and_then(|v| v.as_str()).unwrap_or("?");
+                let detail = match kind {
+                    "point" => e
+                        .get("pos")
+                        .map(|p| format!(" at ({}, {})", p["x"], p["y"]))
+                        .unwrap_or_default(),
+                    "line" => format!(" points {} -> {}", e["start"], e["end"]),
+                    "circle" => format!(" centre point {} r {}", e["center"], e["radius"]),
+                    "arc" => format!(
+                        " centre {} from {} to {}",
+                        e["center"], e["start"], e["end"]
+                    ),
+                    _ => String::new(),
+                };
+                s.push_str(&format!("    entity {id} {kind}{detail}\n"));
+            }
+            if list.len() > 60 {
+                s.push_str(&format!("    … {} more (detail: full)\n", list.len() - 60));
+            }
+        }
+    }
+    if !r.variables.is_empty() {
+        s.push_str(&format!(
+            "Variables: {}\n",
+            r.variables
+                .iter()
+                .map(|(k, v)| format!("#{k} = {v}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
+    }
+    for b in &r.bodies {
+        s.push_str(&format!(
+            "Body {} \"{}\" (from feature {}): volume {:.3} mm³, area {:.3} mm², bounds {}{}\n",
+            b.index,
+            b.name,
+            b.source.0,
+            b.volume,
+            b.area,
+            b.bounds
+                .map(|(lo, hi)| format!("{} to {}", v3(&lo), v3(&hi)))
+                .unwrap_or_else(|| "none".into()),
+            b.material
+                .as_ref()
+                .map(|m| format!(", material {}", m.name))
+                .unwrap_or_default()
+        ));
+        for f in &b.faces {
+            s.push_str(&format!(
+                "  face ref {{feature: {}, local: {}, part: {}}} {} normal {} centre {} area {:.3}{}\n",
+                f.reference.feature.0,
+                f.reference.local,
+                f.reference.part.unwrap_or(0),
+                f.surface,
+                v3(&f.normal),
+                v3(&f.centroid),
+                f.area,
+                f.facets.map(|n| format!(" ({n} facets)")).unwrap_or_default()
+            ));
+        }
+        for c in &b.cylinders {
+            s.push_str(&format!(
+                "  cylinder {} r {:.3} axis {} through {} ref {{feature: {}, local: {}, part: {}}}\n",
+                if c.hole { "hole" } else { "boss" },
+                c.radius,
+                v3(&c.axis),
+                v3(&c.origin),
+                c.reference.feature.0,
+                c.reference.local,
+                c.reference.part.unwrap_or(0)
+            ));
+        }
+    }
+    for i in &r.instances {
+        s.push_str(&format!(
+            "Instance {} \"{}\" of tab {} body {}{}{}\n",
+            i.id.0,
+            i.name,
+            i.studio.0,
+            i.body,
+            if i.fixed { " (fixed)" } else { "" },
+            i.error
+                .as_ref()
+                .map(|e| format!(" ERROR: {e}"))
+                .unwrap_or_default()
+        ));
+    }
+    for m in &r.mates {
+        s.push_str(&format!(
+            "Mate {} \"{}\" {:?}{}\n",
+            m.id.0,
+            m.name,
+            m.kind,
+            m.error
+                .as_ref()
+                .map(|e| format!(" ERROR: {e}"))
+                .unwrap_or_default()
+        ));
+    }
+    s
+}
+
+fn tool_list() -> Value {
+    let doc_prop = json!({ "type": "string", "description": "Document id (server) or path (local); defaults to the current document." });
+    let tab_prop =
+        json!({ "type": "integer", "description": "Tab id; defaults to the first tab." });
+    json!([
+        {
+            "name": "offkilter_reference",
+            "description": "The op reference: how to write sketch, feature and assembly ops, the envelopes, and how faces and edges are referenced. Read it before building anything.",
+            "inputSchema": { "type": "object", "properties": {} }
+        },
+        {
+            "name": "list_documents",
+            "description": "Lists the documents on the server (or the local file).",
+            "inputSchema": { "type": "object", "properties": {} }
+        },
+        {
+            "name": "create_document",
+            "description": "Creates a new document with one part studio (tab 1) and makes it current. Returns its id and, on a server, the browser URL.",
+            "inputSchema": { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] }
+        },
+        {
+            "name": "open_document",
+            "description": "Makes an existing document current and lists its tabs.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop }, "required": ["doc"] }
+        },
+        {
+            "name": "report",
+            "description": "Regenerates a tab and reports it: features with ids and errors, sketches with solver state and entity ids, bodies with volume, bounds and every face's reference (for sketches on faces, holes, fillets, shells). detail 'full' returns the raw JSON with all sketch entities and constraints.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "detail": { "type": "string", "enum": ["summary", "full"] } } }
+        },
+        {
+            "name": "apply",
+            "description": "Applies ops in order (see offkilter_reference). Bare studio, sketch and assembly ops are wrapped for the tab. Stops at the first failing op, keeps the earlier ones, and returns each op's result (new feature and entity ids) followed by the tab's report.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "ops": { "type": "array", "items": { "type": "object" } } }, "required": ["ops"] }
+        },
+        {
+            "name": "export",
+            "description": "Writes a tab's bodies as STL or STEP to a file path.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step"] }, "path": { "type": "string" } }, "required": ["format", "path"] }
+        },
+        {
+            "name": "document_url",
+            "description": "The browser URL of the document on the server, where a person sees every applied op live.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop } }
+        }
+    ])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn local_server(dir: &std::path::Path) -> Server {
+        let path = dir.join("part.okpart");
+        let (backend, current) =
+            Backend::from_args(&["--file".into(), path.display().to_string()]).unwrap();
+        Server::new((backend, current))
+    }
+
+    fn call(server: &mut Server, id: u64, method: &str, params: Value) -> Value {
+        let line =
+            json!({ "jsonrpc": "2.0", "id": id, "method": method, "params": params }).to_string();
+        serde_json::from_str(&server.handle_line(&line).unwrap()).unwrap()
+    }
+
+    fn tool_text(server: &mut Server, name: &str, args: Value) -> (bool, String) {
+        let r = call(
+            server,
+            1,
+            "tools/call",
+            json!({ "name": name, "arguments": args }),
+        );
+        let err = r["result"]["isError"].as_bool().unwrap_or(false);
+        (
+            err,
+            r["result"]["content"][0]["text"]
+                .as_str()
+                .unwrap()
+                .to_string(),
+        )
+    }
+
+    #[test]
+    fn a_model_builds_a_part_through_the_tools() {
+        let dir = std::env::temp_dir().join(format!("ok-mcp-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut server = local_server(&dir);
+        let init = call(
+            &mut server,
+            1,
+            "initialize",
+            json!({ "protocolVersion": PROTOCOL, "capabilities": {}, "clientInfo": { "name": "test", "version": "0" } }),
+        );
+        assert_eq!(init["result"]["protocolVersion"], PROTOCOL);
+        assert!(server
+            .handle_line(
+                &json!({ "jsonrpc": "2.0", "method": "notifications/initialized" }).to_string()
+            )
+            .is_none());
+        let tools = call(&mut server, 2, "tools/list", json!({}));
+        let names: Vec<&str> = tools["result"]["tools"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|t| t["name"].as_str().unwrap())
+            .collect();
+        assert!(names.contains(&"apply") && names.contains(&"report") && names.contains(&"export"));
+        let (err, reference) = tool_text(&mut server, "offkilter_reference", json!({}));
+        assert!(!err && reference.contains("add_extrude"));
+        let (err, created) =
+            tool_text(&mut server, "create_document", json!({ "name": "Bracket" }));
+        assert!(!err, "{created}");
+        assert!(created.contains("Bracket.okpart"));
+        // Bare ops are wrapped for the first tab; results name what they made.
+        let (err, applied) = tool_text(
+            &mut server,
+            "apply",
+            json!({ "ops": [
+            { "type": "add_sketch", "plane": { "type": "standard", "base": "top", "offset": 0 }, "name": "Base" },
+            { "type": "sketch", "id": 1, "op": { "type": "add_rectangle", "a": { "x": 0, "y": 0 }, "b": { "x": 40, "y": 20 } } },
+            { "type": "add_extrude", "sketch": 1, "depth": 5, "name": "Plate" }
+        ] }),
+        );
+        assert!(!err, "{applied}");
+        assert!(applied.contains("op 0: ok (feature 1)"), "{applied}");
+        assert!(applied.contains("op 2: ok (feature 2)"), "{applied}");
+        assert!(applied.contains("volume 4000.000"), "{applied}");
+        assert!(
+            applied.contains("face ref {feature: 2, local: 1, part: 0}"),
+            "{applied}"
+        );
+        // A hole on the top face, through all: the report shows the cylinder.
+        let (err, applied) = tool_text(
+            &mut server,
+            "apply",
+            json!({ "ops": [
+            { "type": "add_sketch", "plane": { "type": "face", "face": { "feature": 2, "local": 1, "part": 0 }, "offset": 0 }, "name": "Centres" },
+            { "type": "sketch", "id": 3, "op": { "type": "add_point", "pos": { "x": 20, "y": 10 } } },
+            { "type": "add_hole", "sketch": 3, "diameter": 6, "through_all": true, "name": "Hole" }
+        ] }),
+        );
+        assert!(!err, "{applied}");
+        assert!(applied.contains("cylinder hole r 3.000"), "{applied}");
+        // A bad op stops the batch and says which one; the earlier ones stay.
+        let (err, applied) = tool_text(
+            &mut server,
+            "apply",
+            json!({ "ops": [
+            { "type": "add_variable", "name": "w", "expression": "40" },
+            { "type": "delete_feature", "id": 99 }
+        ] }),
+        );
+        assert!(!err, "{applied}");
+        assert!(applied.contains("ERROR: op 1 failed"), "{applied}");
+        assert!(applied.contains("#w = 40"), "{applied}");
+        let (err, report) = tool_text(&mut server, "report", json!({ "detail": "full" }));
+        assert!(!err);
+        let full: Value = serde_json::from_str(&report).unwrap();
+        assert_eq!(full["features"].as_array().unwrap().len(), 5);
+        let stl = dir.join("out.stl");
+        let (err, exported) = tool_text(
+            &mut server,
+            "export",
+            json!({ "format": "stl", "path": stl.display().to_string() }),
+        );
+        assert!(!err && exported.starts_with("wrote "), "{exported}");
+        assert!(std::fs::metadata(&stl).unwrap().len() > 84);
+        let step = dir.join("out.step");
+        let (err, _) = tool_text(
+            &mut server,
+            "export",
+            json!({ "format": "step", "path": step.display().to_string() }),
+        );
+        assert!(!err);
+        assert!(std::fs::read_to_string(&step)
+            .unwrap()
+            .contains("MANIFOLD_SOLID_BREP"));
+        // The file on disk carries everything.
+        let text = std::fs::read_to_string(dir.join("Bracket.okpart")).unwrap();
+        assert_eq!(
+            ok_model::Document::from_json(&text)
+                .unwrap()
+                .studio(ok_model::TabId(1))
+                .unwrap()
+                .features()
+                .len(),
+            5
+        );
+        let unknown = call(&mut server, 9, "no/such", json!({}));
+        assert_eq!(unknown["error"]["code"], -32601);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+}

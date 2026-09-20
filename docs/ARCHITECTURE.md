@@ -663,6 +663,24 @@ edit and leaves everyone else's in place; the inverses of the inverses
 form the redo stack. An inverse that no longer applies (someone deleted
 the feature meanwhile) is skipped with a status message.
 
+## Scripts and agents (`ok-mcp`)
+
+`ok_model::Document::describe` builds a `TabReport`: features with ids,
+kinds, errors and parameters; bodies with volume, bounds, centroid and
+one entry per face reference (`{feature, local, part}`, with the facets
+of a curved surface folded into one line) plus cylinders with axis,
+radius and hole-or-boss; sketches with solver status, degrees of freedom,
+region count, entities and constraints; instances and mates for
+assemblies. The server serves it at `GET /api/docs/:id/report` and
+applies op batches at `POST /api/docs/:id/ops` through the live document
+(`LiveDoc::apply_many`), so scripted edits reach open browsers like any
+other. `crates/ok-mcp` is a Model Context Protocol server over stdio
+(hand-written JSON-RPC: `initialize`, `tools/list`, `tools/call`,
+`resources/read`) whose tools wrap those two endpoints, or the kernel
+directly on a local file; its `apply` tool wraps bare ops in their tab
+envelope and follows every batch with the report, and its reference
+resource is docs/OPS.md.
+
 ## Performance
 
 `scripts/bench.sh` prints regeneration timings (release build) for the demo

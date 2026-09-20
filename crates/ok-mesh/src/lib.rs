@@ -94,3 +94,40 @@ impl TriMesh {
             .sum()
     }
 }
+
+/// Binary STL of the meshes, with an 80-byte header made from `label`.
+pub fn to_stl(meshes: &[TriMesh], label: &str) -> Vec<u8> {
+    let count: usize = meshes.iter().map(|m| m.triangle_count()).sum();
+    let mut out = Vec::with_capacity(84 + count * 50);
+    let mut header = label.as_bytes().to_vec();
+    header.resize(80, 0);
+    out.extend_from_slice(&header);
+    out.extend_from_slice(&(count as u32).to_le_bytes());
+    for m in meshes {
+        for tri in m.indices.chunks_exact(3) {
+            let p = |i: u32| {
+                let k = i as usize * 3;
+                [m.positions[k], m.positions[k + 1], m.positions[k + 2]]
+            };
+            let (a, b, c) = (p(tri[0]), p(tri[1]), p(tri[2]));
+            let u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+            let v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+            let n = [
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0],
+            ];
+            let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+            let n = if len > 0.0 {
+                [n[0] / len, n[1] / len, n[2] / len]
+            } else {
+                [0.0, 0.0, 0.0]
+            };
+            for f in n.iter().chain(a.iter()).chain(b.iter()).chain(c.iter()) {
+                out.extend_from_slice(&f.to_le_bytes());
+            }
+            out.extend_from_slice(&[0, 0]);
+        }
+    }
+    out
+}

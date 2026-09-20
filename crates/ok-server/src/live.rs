@@ -64,6 +64,15 @@ pub enum ServerMessage {
     },
 }
 
+/// What `LiveDoc::apply_many` did: one result per applied op, and the
+/// failure that stopped it, if any.
+#[derive(Debug, Serialize)]
+pub struct ApplyOutcome {
+    pub results: Vec<ok_model::DocOpResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
 pub struct LiveDoc {
     pub id: String,
     state: Mutex<LiveState>,
@@ -165,6 +174,48 @@ impl LiveDoc {
             hash,
         });
         Ok(seq)
+    }
+
+    /// Applies ops in order through the live document, as a script or an
+    /// agent would, stopping at the first that fails (the ones before it
+    /// stay applied). Every applied op reaches the connected clients like
+    /// any other edit. Returns each op's result and the error, if any.
+    pub fn apply_many(&self, ops: Vec<serde_json::Value>) -> ApplyOutcome {
+        let mut st = self.state.lock().unwrap();
+        let mut results = Vec::with_capacity(ops.len());
+        let mut messages = Vec::with_capacity(ops.len());
+        let mut error = None;
+        for (i, op) in ops.into_iter().enumerate() {
+            match st.doc.apply_json_with_base(&op.to_string(), None) {
+                Ok(r) => {
+                    st.seq += 1;
+                    let hash = format!("{:016x}", st.doc.structural_hash());
+                    messages.push(ServerMessage::Op {
+                        op,
+                        seq: st.seq,
+                        from: 0,
+                        id: 0,
+                        base: None,
+                        hash,
+                    });
+                    results.push(r);
+                }
+                Err(e) => {
+                    error = Some(format!("op {i} failed: {e}"));
+                    break;
+                }
+            }
+        }
+        let json = st.doc.to_json();
+        let name = st.doc.name.clone();
+        drop(st);
+        if !messages.is_empty() {
+            let _ = self.store.write(&self.id, &json, Some(&name));
+        }
+        for m in messages {
+            let _ = self.tx.send(m);
+        }
+        ApplyOutcome { results, error }
     }
 
     /// Replaces the live document (e.g. restoring a version) and tells
