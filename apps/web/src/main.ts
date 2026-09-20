@@ -18,7 +18,78 @@ const $ = <T extends HTMLElement>(sel: string): T => {
 
 const STORAGE_KEY = "offkilter.partstudio";
 
+/** One end of a measurement: a point (corner), a planar face, or a cylindrical face. */
+export type MeasurePick =
+  | { kind: "point"; point: Vec3 }
+  | { kind: "plane"; point: Vec3; normal: Vec3; /** Which face was hit, so two clicks on one face measure between the points instead. */ face?: { body: number; face: number } }
+  | { kind: "cylinder"; point: Vec3; origin: Vec3; axis: Vec3; radius: number };
+
+/**
+ * The measurement between two picks: point to point gives the distance and
+ * its components; a point and a plane the distance to the plane; two planes
+ * their angle, and their separation when parallel; a cylinder counts as its
+ * axis (distance from a point or a parallel plane to the axis, less the
+ * radius, is the clearance to the surface).
+ */
+export function measureBetween(a: MeasurePick, b: MeasurePick): { label: string; text: string } {
+  const dot = (p: Vec3, q: Vec3) => p.x * q.x + p.y * q.y + p.z * q.z;
+  const sub = (p: Vec3, q: Vec3): Vec3 => ({ x: p.x - q.x, y: p.y - q.y, z: p.z - q.z });
+  const len = (p: Vec3) => Math.hypot(p.x, p.y, p.z);
+  const mm = (v: number) => `${v.toFixed(3)} mm`;
+  const deg = (v: number) => `${((v * 180) / Math.PI).toFixed(2)}°`;
+  const toAxis = (p: Vec3, c: { origin: Vec3; axis: Vec3 }) => {
+    const d = sub(p, c.origin);
+    const t = dot(d, c.axis);
+    return len({ x: d.x - c.axis.x * t, y: d.y - c.axis.y * t, z: d.z - c.axis.z * t });
+  };
+  if (a.kind === "point" && b.kind === "point") {
+    const d = sub(b.point, a.point);
+    const at = (p: Vec3) => `(${p.x.toFixed(3)}, ${p.y.toFixed(3)}, ${p.z.toFixed(3)})`;
+    return { label: mm(len(d)), text: `Distance ${mm(len(d))} · dx ${d.x.toFixed(3)} · dy ${d.y.toFixed(3)} · dz ${d.z.toFixed(3)} · from ${at(a.point)} to ${at(b.point)}` };
+  }
+  if (a.kind === "plane" && b.kind === "plane") {
+    const cos = Math.min(1, Math.abs(dot(a.normal, b.normal)));
+    const angle = Math.acos(cos);
+    if (cos > 0.999999) {
+      const gap = Math.abs(dot(sub(b.point, a.point), a.normal));
+      return { label: mm(gap), text: `Parallel faces ${mm(gap)} apart` };
+    }
+    return { label: deg(angle), text: `Faces at ${deg(angle)} (${deg(Math.PI - angle)} inside); picked points ${mm(len(sub(b.point, a.point)))} apart` };
+  }
+  const [plane, other] = a.kind === "plane" ? [a, b] : b.kind === "plane" ? [b, a] : [null, null];
+  if (plane && other && other.kind === "point") {
+    const gap = Math.abs(dot(sub(other.point, plane.point), plane.normal));
+    return { label: mm(gap), text: `Point ${mm(gap)} from the face's plane` };
+  }
+  if (plane && other && other.kind === "cylinder") {
+    const along = Math.abs(dot(plane.normal, other.axis));
+    if (along < 1e-6) {
+      const gap = Math.abs(dot(sub(other.origin, plane.point), plane.normal));
+      return { label: mm(gap), text: `Cylinder axis ${mm(gap)} from the face's plane (surface ${mm(Math.abs(gap - other.radius))} away)` };
+    }
+    return { label: deg(Math.acos(Math.min(1, along))), text: `Cylinder axis at ${deg(Math.acos(Math.min(1, along)))} to the face's normal` };
+  }
+  const [cyl, rest] = a.kind === "cylinder" ? [a, b] : b.kind === "cylinder" ? [b, a] : [null, null];
+  if (cyl && rest && rest.kind === "point") {
+    const r = toAxis(rest.point, cyl);
+    return { label: mm(r), text: `Point ${mm(r)} from the cylinder axis (${mm(Math.abs(r - cyl.radius))} from its surface)` };
+  }
+  if (cyl && rest && rest.kind === "cylinder") {
+    const along = Math.abs(dot(cyl.axis, rest.axis));
+    if (along > 0.999999) {
+      const gap = toAxis(rest.origin, cyl);
+      return { label: mm(gap), text: `Parallel cylinder axes ${mm(gap)} apart` };
+    }
+    return { label: deg(Math.acos(Math.min(1, along))), text: `Cylinder axes at ${deg(Math.acos(Math.min(1, along)))}` };
+  }
+  const d = len(sub(b.point, a.point));
+  return { label: mm(d), text: `Picked points ${mm(d)} apart` };
+}
+
 class App implements SketchHost {
+  /** The measurement between two picks (see `measureBetween`), for scripts and tests. */
+  measureBetween = measureBetween;
+
   kernel: Kernel;
   summary!: Summary;
   selected: number | null = null;
@@ -431,8 +502,8 @@ class App implements SketchHost {
 
   // ------------------------------------------------------------ measure
 
-  /** Measure mode: the first picked point, or null while waiting for it. */
-  measure: { a: { point: Vec3; body: number; face: number } | null } | null = null;
+  /** Measure mode: the first pick, or null while waiting for it. */
+  measure: { a: MeasurePick | null } | null = null;
 
   beginMeasure(): void {
     if (this.sketcher.active) this.sketcher.exit();
@@ -455,32 +526,62 @@ class App implements SketchHost {
       },
       cancel: () => this.endMeasure(),
     };
-    this.setStatus("Measure: click a point on a body (corners snap), then a second point. Esc stops.");
+    this.setStatus("Measure: click corners, faces or edges (an edge reports its length; two faces their angle or separation; a cylinder its diameter). Esc stops.");
   }
 
   private measureClick(e: PointerEvent): void {
     if (!this.measure) return;
-    const hit = this.viewer.pickPoint(e);
-    if (!hit) return;
     const fmt = (p: Vec3): string => `(${p.x.toFixed(3)}, ${p.y.toFixed(3)}, ${p.z.toFixed(3)})`;
+    // An edge click (away from a corner) reports the edge's length on its own.
+    const edge = this.viewer.edgeAt(e);
+    const hit = this.viewer.pickPoint(e);
+    if (edge && !(hit && hit.snapped)) {
+      const length = this.viewer.edgeLength(edge);
+      if (length !== null) {
+        this.viewer.setMeasure(hit ? { a: hit.point, b: null, text: `${length.toFixed(3)} mm` } : null);
+        this.setStatus(`Edge length ${length.toFixed(3)} mm (${this.describeEdge(this.edgeRefOf(edge) ?? { a: { feature: 0, local: 0 }, b: { feature: 0, local: 0 } })}). Click a point, face or edge; Esc stops.`);
+        this.measure.a = null;
+        return;
+      }
+    }
+    if (!hit) return;
+    const pick = this.measurePickOf(hit);
     if (!this.measure.a) {
-      this.measure.a = hit;
-      this.viewer.setMeasure({ a: hit.point, b: null, text: fmt(hit.point) });
+      this.measure.a = pick;
+      this.viewer.setMeasure({ a: hit.point, b: null, text: pick.kind === "cylinder" ? `Ø${(2 * pick.radius).toFixed(3)} mm` : fmt(hit.point) });
       const body = this.summary.bodies[hit.body];
-      const face = body?.faces[hit.face];
-      const what = face ? `${face.surface} face of ${body!.name}` : "point";
-      this.setStatus(`Measure: ${what} at ${fmt(hit.point)}${hit.snapped ? " (corner)" : ""}. Click the second point.`);
+      const what = pick.kind === "point" ? "corner" : pick.kind === "cylinder" ? `cylinder Ø${(2 * pick.radius).toFixed(3)} mm of ${body?.name}` : `${pick.kind} face of ${body?.name}`;
+      this.setStatus(`Measure: ${what} at ${fmt(hit.point)}. Click a second point, face or edge.`);
       return;
     }
-    const a = this.measure.a.point;
-    const b = hit.point;
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const dz = b.z - a.z;
-    const dist = Math.hypot(dx, dy, dz);
-    this.viewer.setMeasure({ a, b, text: `${dist.toFixed(3)} mm` });
-    this.setStatus(`Distance ${dist.toFixed(3)} mm · dx ${dx.toFixed(3)} · dy ${dy.toFixed(3)} · dz ${dz.toFixed(3)} · from ${fmt(a)} to ${fmt(b)}. Click to measure again, Esc stops.`);
+    // Two clicks on the same face measure between the clicked points.
+    let [first, second]: [MeasurePick, MeasurePick] = [this.measure.a, pick];
+    if (first.kind === "plane" && second.kind === "plane" && first.face && second.face && first.face.body === second.face.body && first.face.face === second.face.face) {
+      first = { kind: "point", point: first.point };
+      second = { kind: "point", point: second.point };
+    }
+    const result = measureBetween(first, second);
+    this.viewer.setMeasure({ a: this.measure.a.point, b: pick.point, text: result.label });
+    this.setStatus(`${result.text}. Click to measure again, Esc stops.`);
     this.measure.a = null;
+  }
+
+  /** What a measure click hit: a corner, a planar face (with its plane), or a cylinder (with its axis). */
+  private measurePickOf(hit: { point: Vec3; body: number; face: number; snapped: boolean }): MeasurePick {
+    const body = this.summary.bodies[hit.body];
+    const face = body?.faces[hit.face];
+    if (hit.snapped || !face) return { kind: "point", point: hit.point };
+    if (face.surface === "cylinder") {
+      const dot = (a: Vec3, b: Vec3) => a.x * b.x + a.y * b.y + a.z * b.z;
+      const cyl = (body?.cylinders ?? []).find((c) => {
+        const d = { x: hit.point.x - c.origin.x, y: hit.point.y - c.origin.y, z: hit.point.z - c.origin.z };
+        const t = dot(d, c.axis);
+        const radial = Math.hypot(d.x - c.axis.x * t, d.y - c.axis.y * t, d.z - c.axis.z * t);
+        return Math.abs(radial - c.radius) < 1e-3 * Math.max(1, c.radius);
+      });
+      if (cyl) return { kind: "cylinder", point: hit.point, origin: cyl.origin, axis: cyl.axis, radius: cyl.radius };
+    }
+    return { kind: "plane", point: hit.point, normal: face.normal, face: { body: hit.body, face: hit.face } };
   }
 
   endMeasure(): void {

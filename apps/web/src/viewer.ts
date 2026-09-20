@@ -584,6 +584,27 @@ export class Viewer {
     return { body, segment, faces: [ef[2 * segment]!, ef[2 * segment + 1]!] };
   }
 
+  /** Length of the whole edge a picked segment belongs to: every segment of the body between the same two surfaces. */
+  edgeLength(pick: EdgePick): number | null {
+    const m = this.meshData[pick.body];
+    if (!m) return null;
+    const sf = (f: number) => m.faceSurfaces[f] ?? -1;
+    const [a, b] = [sf(pick.faces[0]), sf(pick.faces[1])];
+    let total = 0;
+    for (let s = 0; s < m.edgeFaces.length / 2; s++) {
+      const [x, y] = [sf(m.edgeFaces[2 * s]!), sf(m.edgeFaces[2 * s + 1]!)];
+      if (!((x === a && y === b) || (x === b && y === a))) continue;
+      const k = 6 * s;
+      total += Math.hypot(m.edges[k + 3]! - m.edges[k]!, m.edges[k + 4]! - m.edges[k + 1]!, m.edges[k + 5]! - m.edges[k + 2]!);
+    }
+    return total;
+  }
+
+  /** The edge under the pointer, if any (within a few pixels). */
+  edgeAt(e: PointerEvent): EdgePick | null {
+    return this.pickEdgeAt(e);
+  }
+
   /** Highlights edges: all display segments of the given body between the given face pairs. */
   setSelectedEdges(picks: { body: number; faces: [number, number] }[]): void {
     this.showEdges(this.edgeHighlight, picks, FACE_SELECTED);

@@ -488,6 +488,28 @@ test("assembly tab: edge and corner mate connectors", async ({ page }) => {
   expect(Math.min(Math.abs(b[0].y), Math.abs(b[1].y))).toBeLessThan(1e-5);
 });
 
+test("measurements between faces, cylinders and points", async ({ page }) => {
+  await openDemo(page);
+  const results = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const m = app.measureBetween;
+    const z = { x: 0, y: 0, z: 1 };
+    return {
+      parallel: m({ kind: "plane", point: { x: 0, y: 0, z: 0 }, normal: z }, { kind: "plane", point: { x: 5, y: 5, z: 8 }, normal: { x: 0, y: 0, z: -1 } }),
+      angled: m({ kind: "plane", point: { x: 0, y: 0, z: 0 }, normal: z }, { kind: "plane", point: { x: 0, y: 0, z: 0 }, normal: { x: 0, y: 1, z: 0 } }),
+      pointToPlane: m({ kind: "point", point: { x: 1, y: 2, z: 11 } }, { kind: "plane", point: { x: 0, y: 0, z: 8 }, normal: z }),
+      cylinder: m({ kind: "cylinder", point: { x: 36, y: 20, z: 8 }, origin: { x: 30, y: 20, z: 0 }, axis: z, radius: 6 }, { kind: "point", point: { x: 30, y: 30, z: 4 } }),
+      axisToPlane: m({ kind: "cylinder", point: { x: 36, y: 20, z: 8 }, origin: { x: 30, y: 20, z: 0 }, axis: z, radius: 6 }, { kind: "plane", point: { x: 0, y: 0, z: 0 }, normal: { x: 1, y: 0, z: 0 } }),
+    };
+  });
+  expect(results.parallel.label).toBe("8.000 mm");
+  expect(results.angled.label).toBe("90.00°");
+  expect(results.pointToPlane.label).toBe("3.000 mm");
+  expect(results.cylinder.label).toBe("10.000 mm");
+  expect(results.cylinder.text).toContain("4.000 mm from its surface");
+  expect(results.axisToPlane.label).toBe("30.000 mm");
+});
+
 test("standard views, measure, section and part rename", async ({ page }) => {
   await openDemo(page);
   // The shortcuts dialog opens with ? and from the toolbar.
