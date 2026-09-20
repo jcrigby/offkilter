@@ -50,6 +50,23 @@ impl Placement {
             t: self.position,
         }
     }
+
+    /// The placement whose transform is `xf`: the Euler angles (x, then
+    /// y, then z) of its rotation and its translation. At the gimbal lock
+    /// (y = ±90°) the x angle is taken as zero.
+    pub fn from_transform(xf: &Transform) -> Placement {
+        let m = xf.m;
+        let ry = (-m[2][0]).clamp(-1.0, 1.0).asin();
+        let (rx, rz) = if ry.cos().abs() > 1e-9 {
+            (m[2][1].atan2(m[2][2]), m[1][0].atan2(m[0][0]))
+        } else {
+            (0.0, (-m[0][1]).atan2(m[1][1]))
+        };
+        Placement {
+            position: xf.t,
+            rotation: Vec3::new(rx.to_degrees(), ry.to_degrees(), rz.to_degrees()),
+        }
+    }
 }
 
 /// `a` after `b`: the transform applying `b` first, then `a`.
@@ -358,22 +375,49 @@ fn face_frame(solid: &Solid, face: &FaceRef) -> Option<Plane> {
         .map(|i| &solid.faces[i])
         .collect();
     let first = *faces.first()?;
-    // Centroid over every facet sharing the surface, so a cylinder's
-    // connector sits at the middle of the whole face.
-    let same_surface: Vec<&ok_brep::Face> = solid
-        .faces
-        .iter()
-        .filter(|f| f.surface == first.surface)
-        .collect();
+    // A curved face is every facet sharing its surface, so a cylinder's
+    // connector sits at the middle of the whole face; a planar face is
+    // the piece the reference names. The centroid is area-weighted over
+    // the facets, so it does not move when a later feature splits one
+    // (and matches the centroid the report gives for the face).
+    let curved = !matches!(
+        solid.surfaces.get(first.surface),
+        Some(Surface::Plane { .. })
+    );
+    let set: Vec<&ok_brep::Face> = if curved {
+        solid
+            .faces
+            .iter()
+            .filter(|f| f.surface == first.surface)
+            .collect()
+    } else {
+        faces.clone()
+    };
     let mut sum = Vec3::ZERO;
+    let mut total = 0.0;
+    let mut vertex_sum = Vec3::ZERO;
     let mut n = 0usize;
-    for f in &same_surface {
-        for &v in &f.loops[0] {
-            sum += solid.vertices[v as usize];
-            n += 1;
+    for f in &set {
+        let pts: Vec<Vec3> = f.loops[0]
+            .iter()
+            .map(|&v| solid.vertices[v as usize])
+            .collect();
+        let mut cross = Vec3::ZERO;
+        for i in 0..pts.len() {
+            cross += pts[i].cross(pts[(i + 1) % pts.len()]);
         }
+        let area = cross.length() / 2.0;
+        let mean = pts.iter().fold(Vec3::ZERO, |a, &p| a + p) / pts.len().max(1) as f64;
+        sum += mean * area;
+        total += area;
+        vertex_sum += mean * pts.len() as f64;
+        n += pts.len();
     }
-    let centroid = sum / n.max(1) as f64;
+    let centroid = if total > 0.0 {
+        sum / total
+    } else {
+        vertex_sum / n.max(1) as f64
+    };
     match solid.surfaces.get(first.surface) {
         Some(Surface::Cylinder { origin, axis, .. }) => {
             let on_axis = *origin + *axis * (centroid - *origin).dot(*axis);
@@ -856,6 +900,41 @@ impl AssemblyResult {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn placement_round_trips_through_its_transform() {
+        use super::*;
+        for (rx, ry, rz) in [(30.0, -50.0, 120.0), (180.0, 0.0, 0.0), (0.0, 0.0, -90.0)] {
+            let p = Placement {
+                position: Vec3::new(1.0, -2.0, 3.5),
+                rotation: Vec3::new(rx, ry, rz),
+            };
+            let back = Placement::from_transform(&p.to_transform());
+            assert!(back.position.distance(p.position) < 1e-12);
+            let d = back.rotation - p.rotation;
+            assert!(
+                d.length() < 1e-9 || d.length() > 350.0,
+                "{p:?} came back as {back:?}"
+            );
+        }
+        // At the gimbal lock the angles differ but the transform is the same.
+        let p = Placement {
+            position: Vec3::ZERO,
+            rotation: Vec3::new(20.0, 90.0, 45.0),
+        };
+        let a = p.to_transform();
+        let b = Placement::from_transform(&a).to_transform();
+        for i in 0..3 {
+            for j in 0..3 {
+                assert!(
+                    (a.m[i][j] - b.m[i][j]).abs() < 1e-9,
+                    "{:?} vs {:?}",
+                    a.m,
+                    b.m
+                );
+            }
+        }
+    }
+
     use super::*;
     use ok_math::Vec2;
     use ok_sketch::{ProfileOptions, Sketch};

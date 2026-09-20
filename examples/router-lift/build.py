@@ -690,6 +690,185 @@ def instances():
     return out
 
 
+# ---------------------------------------------------------------------
+# Mates: the carriage rides its pillow blocks on the shafts.
+#
+# Everything bolted to the carriage moves with it. One slider mate
+# between a block's bore and its shaft carries the travel; fastened
+# mates through bolt holes, the router bore and the nut pocket hang the
+# rest off it. The mate parameters are derived from the placements in
+# instances(), which stay on the instances as the initial guess, so the
+# resolved assembly must land exactly where the fixed one did.
+# ---------------------------------------------------------------------
+MOVING = {
+    "carriage",
+    "T8 nut",
+    "router",
+    "left lower block",
+    "left upper block",
+    "right lower block",
+    "right upper block",
+}
+
+# (kind, placed instance, moving instance, radius on each, name). The
+# cylinders are matched by radius and by being coaxial once placed.
+MATES = [
+    ("slider", "left shaft", "left upper block", SHAFT_D / 2, SHAFT_D / 2, "carriage travel"),
+    ("fastened", "left upper block", "carriage", BLK_BOLT / 2, (BLK_BOLT + 0.5) / 2, "carriage on left upper block"),
+    ("fastened", "carriage", "left lower block", (BLK_BOLT + 0.5) / 2, BLK_BOLT / 2, "left lower block"),
+    ("fastened", "carriage", "right upper block", (BLK_BOLT + 0.5) / 2, BLK_BOLT / 2, "right upper block"),
+    ("fastened", "carriage", "right lower block", (BLK_BOLT + 0.5) / 2, BLK_BOLT / 2, "right lower block"),
+    ("fastened", "carriage", "router", ROUTER_D / 2 + ROUTER_CLR, ROUTER_D / 2, "router in clamp"),
+    ("fastened", "carriage", "T8 nut", NUT_BODY_D / 2 + 0.3, NUT_BODY_D / 2, "nut in pocket"),
+]
+
+
+def _v(d):
+    return (d["x"], d["y"], d["z"])
+
+
+def _add(a, b):
+    return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
+
+
+def _sub(a, b):
+    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+
+def _scale(a, k):
+    return (a[0] * k, a[1] * k, a[2] * k)
+
+
+def _dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def _cross(a, b):
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+
+
+def _norm(a):
+    return _scale(a, 1.0 / math.sqrt(_dot(a, a)))
+
+
+def _rotation(rx, ry, rz):
+    """The matrix of a placement's rotation: x, then y, then z (degrees)."""
+    a, b, c = (math.radians(t) for t in (rx, ry, rz))
+    ca, sa, cb, sb, cc, sc = math.cos(a), math.sin(a), math.cos(b), math.sin(b), math.cos(c), math.sin(c)
+    return (
+        (cc * cb, cc * sb * sa - sc * ca, cc * sb * ca + sc * sa),
+        (sc * cb, sc * sb * sa + cc * ca, sc * sb * ca - cc * sa),
+        (-sb, cb * sa, cb * ca),
+    )
+
+
+def _apply(m, p):
+    return tuple(_dot(row, p) for row in m)
+
+
+def _connector_frame(cyl, face):
+    """The connector frame of a cylindrical face, as the kernel builds it:
+    origin at the face's middle projected onto the axis, z along the axis,
+    x and y canonical for that axis (Plane::from_origin_normal)."""
+    o, z = _v(cyl["origin"]), _norm(_v(cyl["axis"]))
+    c = _v(face["centroid"])
+    origin = _add(o, _scale(z, _dot(_sub(c, o), z)))
+    hint = (1.0, 0.0, 0.0) if abs(z[0]) < 0.9 else (0.0, 1.0, 0.0)
+    y = _norm(_cross(z, hint))
+    x = _cross(y, z)
+    return origin, x, y, z
+
+
+def _placed_frame(frame, placement):
+    (x, y, z), (rx, ry, rz) = placement
+    m = _rotation(rx, ry, rz)
+    o, fx, fy, fz = frame
+    return _add(_apply(m, o), (x, y, z)), _apply(m, fx), _apply(m, fy), _apply(m, fz)
+
+
+def _mate_parameters(target, moving):
+    """offset, angle and flip that put `moving` (a world frame) where the
+    mate rule puts it from `target`: z opposed unless flip, x turned by
+    angle about z, origin `offset` along the target's normal."""
+    ot, xt, _, zt = target
+    om, xm, _, zm = moving
+    flip = _dot(zt, zm) > 0.0
+    z = zt if flip else _scale(zt, -1.0)
+    offset = _dot(_sub(om, ot), zt)
+    angle = math.degrees(math.atan2(_dot(_cross(xt, xm), z), _dot(xt, xm)))
+    return offset, angle, flip
+
+
+def _coaxial(a_report, a_placement, b_report, b_placement, ra, rb):
+    """The first pair of cylinders of radius ra on a and rb on b whose axes
+    coincide once both are placed, with their placed connector frames."""
+    faces = lambda rep: {json.dumps(f["reference"], sort_keys=True): f for f in rep["bodies"][0]["faces"]}
+    fa, fb = faces(a_report), faces(b_report)
+    for ca in a_report["bodies"][0]["cylinders"]:
+        if abs(ca["radius"] - ra) > 1e-6:
+            continue
+        ta = _placed_frame(_connector_frame(ca, fa[json.dumps(ca["reference"], sort_keys=True)]), a_placement)
+        for cb in b_report["bodies"][0]["cylinders"]:
+            if abs(cb["radius"] - rb) > 1e-6:
+                continue
+            tb = _placed_frame(_connector_frame(cb, fb[json.dumps(cb["reference"], sort_keys=True)]), b_placement)
+            parallel = math.sqrt(_dot(_cross(ta[3], tb[3]), _cross(ta[3], tb[3]))) < 1e-9
+            d = _sub(tb[0], ta[0])
+            off_axis = _sub(d, _scale(ta[3], _dot(d, ta[3])))
+            if parallel and math.sqrt(_dot(off_axis, off_axis)) < 1e-6:
+                return ca, cb, ta, tb
+    raise RuntimeError(f"no coaxial cylinders of radii {ra} and {rb}")
+
+
+def mates(mcp, asm, tabs, placements, reports):
+    """Adds MATES to the assembly and returns the id of the travel slider."""
+    asm_report = json.loads(mcp.call("report", {"tab": asm, "detail": "full"}))
+    ids = {i["name"]: i["id"] for i in asm_report["instances"]}
+    studio = {i["name"]: i["studio"] for i in asm_report["instances"]}
+    title = {tab: t for t, tab in tabs.items()}
+    ops = []
+    for kind, a, b, ra, rb, name in MATES:
+        ca, cb, ta, tb = _coaxial(reports[title[studio[a]]], placements[a], reports[title[studio[b]]], placements[b], ra, rb)
+        offset, angle, flip = _mate_parameters(ta, tb)
+        ops.append(
+            {
+                "type": "add_mate",
+                "kind": kind,
+                "a": {"instance": ids[a], "face": ca["reference"]},
+                "b": {"instance": ids[b], "face": cb["reference"]},
+                "offset": offset,
+                "angle": angle,
+                "flip": flip,
+                "name": name,
+            }
+        )
+    text = mcp.call("apply", {"ops": ops, "tab": asm})
+    if "ERROR:" in text:
+        raise RuntimeError(text.split("ERROR:", 1)[1].splitlines()[0])
+    # Every instance must have resolved to the placement it was drawn at.
+    asm_report = json.loads(mcp.call("report", {"tab": asm, "detail": "full"}))
+    for m in asm_report["mates"]:
+        if m.get("error"):
+            raise RuntimeError(f"mate {m['name']}: {m['error']}")
+    worst, moved = 0.0, []
+    for i in asm_report["instances"]:
+        if i.get("error"):
+            raise RuntimeError(f"instance {i['name']}: {i['error']}")
+        (x, y, z), (rx, ry, rz) = placements[i["name"]]
+        got = i["placed"]
+        d = _sub(_v(got["position"]), (x, y, z))
+        want, have = _rotation(rx, ry, rz), _rotation(*_v(got["rotation"]))
+        err = max(math.sqrt(_dot(d, d)), max(abs(want[r][c] - have[r][c]) for r in range(3) for c in range(3)))
+        worst = max(worst, err)
+        if err > 1e-6:
+            moved.append(f"{i['name']}: at {_v(got['position'])} rotated {_v(got['rotation'])}, drawn at {(x, y, z)} rotated {(rx, ry, rz)}")
+    if moved:
+        raise RuntimeError("mates moved instances from their placements:\n  " + "\n  ".join(moved))
+    slider = next(m["id"] for m in asm_report["mates"] if m["name"] == "carriage travel")
+    print(f"mates         tab {asm:>2}: {len(ops)} mates, {len(MOVING)} moving instances resolved to their placements (worst {worst:.1e} mm)")
+    return slider, ops[0]["offset"]
+
+
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "out")
     os.makedirs(out, exist_ok=True)
@@ -700,7 +879,7 @@ def main():
     # The file backend names the file after the document.
     mcp.call("create_document", {"name": "router_lift"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Router lift"}]})
-    tabs = {}
+    tabs, reports = {}, {}
     for i, (title, stem, build) in enumerate(PARTS):
         if i == 0:
             mcp.call("apply", {"ops": [{"type": "rename_tab", "tab": 1, "name": title}]})
@@ -714,7 +893,8 @@ def main():
         tabs[title] = tab
         part = Part(mcp, tab, title)
         build(part)
-        bodies = part.bodies()
+        reports[title] = part.report()
+        bodies = [(b.get("name"), b.get("volume")) for b in reports[title].get("bodies", [])]
         print(f"{title:<13} tab {tab:>2}: " + ", ".join(f"{v:.0f} mm3" for _, v in bodies))
         part.screenshot(os.path.join(out, f"{stem}.png"))
         if title in PRINTED:
@@ -722,15 +902,16 @@ def main():
     # The assembly.
     text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": "Lift assembly"}]})
     asm = int(re.search(r"tab (\d+)", text).group(1))
-    ops = []
+    ops, placements = [], {}
     for tab_title, name, (x, y, z), (rx, ry, rz) in instances():
+        placements[name] = ((x, y, z), (rx, ry, rz))
         ops.append(
             {
                 "type": "add_instance",
                 "studio": tabs[tab_title],
                 "body": 0,
                 "name": name,
-                "fixed": True,
+                "fixed": name not in MOVING,
                 "placement": {"position": {"x": x, "y": y, "z": z}, "rotation": {"x": rx, "y": ry, "z": rz}},
             }
         )
@@ -738,10 +919,19 @@ def main():
     if "ERROR:" in text:
         raise RuntimeError(text.split("ERROR:", 1)[1].splitlines()[0])
     print(f"assembly      tab {asm:>2}: {len(ops)} instances")
+    slider, mid = mates(mcp, asm, tabs, placements, reports)
     for view, name in (("iso", "assembly_iso"), ("-1,-0.4,0.35", "assembly_front")):
         mcp.call("screenshot", {"tab": asm, "view": view, "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
     # Cut at the bit axis, keeping the far half so the cut faces face the camera.
     mcp.call("screenshot", {"tab": asm, "view": "iso", "section": "x:0:flip", "width": 1200, "height": 900, "path": os.path.join(out, "assembly_section.png")})
+    # The carriage at the top of its travel: the slider's offset is the
+    # one number that moves it and everything bolted to it.
+    for offset, name in ((mid + TRAVEL / 2, "assembly_raised"), (mid, None)):
+        text = mcp.call("apply", {"ops": [{"type": "set_mate", "id": slider, "offset": offset}], "tab": asm})
+        if "ERROR:" in text:
+            raise RuntimeError(text.split("ERROR:", 1)[1].splitlines()[0])
+        if name:
+            mcp.call("screenshot", {"tab": asm, "view": "iso", "section": "x:0:flip", "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
     mcp.close()
     print(f"wrote {path}")
 

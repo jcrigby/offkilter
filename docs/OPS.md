@@ -151,6 +151,20 @@ Wrapped as `{ "type": "assembly", "tab": <assembly tab id>, "op": ... }`:
 `"anchor": {type: "edge", other: FaceRef}` or `{type: "vertex", others: [FaceRef, FaceRef]}`.
 Instances of a studio's bodies are placed by their mates from fixed instances.
 
+A connector is a frame on its face: on a planar face the origin is the face's
+centroid and z its normal; on a cylindrical face the origin is the middle of the
+face projected onto the axis and z the axis (the report's `cylinders` give the
+axis and a reference, its `faces` the centroid). x and y are canonical for z:
+with `hint` = X unless |z.x| ≥ 0.9, then Y, `y = z × hint` normalised and
+`x = y × z`. A mate puts the moving side's frame on the placed side's: z axes
+opposed (aligned with `flip`), the moving x turned by `angle` degrees about z
+from the placed x, and the origin `offset` along the placed side's z. To
+reproduce a known pose, place both instances there first (their `placement`
+stays as the initial guess), take both frames in world coordinates, and read
+`flip` from the sign of the z dot product, `offset` from the origin difference
+along z and `angle` from the x axes. The assembly report gives every resolved
+instance's pose as `placed: {position, rotation}` (the same shape as a placement).
+
 ## Example: a plate with a boss, a hole and rounded corners
 
 ```json
