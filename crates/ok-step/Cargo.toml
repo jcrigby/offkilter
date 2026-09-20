@@ -1,0 +1,13 @@
+[package]
+name = "ok-step"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "STEP (ISO 10303-21) export of offkilter solids"
+
+[dependencies]
+ok-math = { workspace = true }
+ok-brep = { workspace = true }
+
+[dev-dependencies]
+ok-sketch = { workspace = true }

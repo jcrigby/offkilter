@@ -126,6 +126,7 @@ pub fn router(
         .route("/docs/{id}/merge", post(merge_doc))
         .route("/docs/{id}/check", get(check_doc))
         .route("/docs/{id}/export/stl", get(export_stl))
+        .route("/docs/{id}/export/step", get(export_step))
         .route("/health", get(|| async { "ok" }))
         .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
         .with_state(state);
@@ -632,6 +633,72 @@ struct ExportQuery {
 }
 
 /// Binary STL of every body of a tab, regenerated on the server.
+/// The bodies of a tab, regenerated: (name, solid) pairs.
+fn solids_of(json: &str, tab: Option<u32>) -> Result<Vec<(String, ok_brep::Solid)>, String> {
+    let mut doc = ok_model::Document::from_json(json).map_err(|e| e.to_string())?;
+    let id = match tab {
+        Some(t) => ok_model::TabId(t),
+        None => doc
+            .tabs
+            .first()
+            .map(|t| t.id)
+            .ok_or("document has no tabs")?,
+    };
+    let kind = doc.tab(id).map(|t| t.kind_name()).ok_or("no such tab")?;
+    let bodies = if kind == "assembly" {
+        doc.regenerate_assembly(id)
+            .map_err(|e| e.to_string())?
+            .bodies
+    } else {
+        doc.regenerate_studio(id, None)
+            .map_err(|e| e.to_string())?
+            .bodies
+    };
+    Ok(bodies.into_iter().map(|b| (b.name, b.solid)).collect())
+}
+
+/// A tab as a STEP file.
+fn step_of(json: &str, tab: Option<u32>) -> Result<String, String> {
+    let name = ok_model::Document::from_json(json)
+        .map(|d| d.name)
+        .unwrap_or_default();
+    let solids = solids_of(json, tab)?;
+    let refs: Vec<(&str, &ok_brep::Solid)> = solids
+        .iter()
+        .map(|(n, s)| (n.as_str(), s))
+        .collect::<Vec<_>>();
+    Ok(ok_step::write_step(&refs, &name))
+}
+
+async fn export_step(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    axum::extract::Query(q): axum::extract::Query<ExportQuery>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(json) = current_json(&hub, &id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    match tokio::task::spawn_blocking(move || step_of(&json, q.tab)).await {
+        Ok(Ok(text)) => (
+            [
+                (header::CONTENT_TYPE, "application/step".to_string()),
+                (
+                    header::CONTENT_DISPOSITION,
+                    format!("attachment; filename=\"{id}.step\""),
+                ),
+            ],
+            text,
+        )
+            .into_response(),
+        Ok(Err(e)) => (StatusCode::BAD_REQUEST, e).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
 fn stl_of(json: &str, tab: Option<u32>) -> Result<Vec<u8>, String> {
     let mut doc = ok_model::Document::from_json(json).map_err(|e| e.to_string())?;
     let id = match tab {
@@ -1441,6 +1508,14 @@ mod tests {
         let (status, _, _) =
             call_bytes(&app, &format!("/api/docs/{id}/export/stl?tab=9"), None).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
+        let (status, headers, bytes) =
+            call_bytes(&app, &format!("/api/docs/{id}/export/step?tab=1"), None).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(headers[header::CONTENT_TYPE], "application/step");
+        let step = String::from_utf8(bytes).unwrap();
+        assert!(step.starts_with("ISO-10303-21;"));
+        assert!(step.contains("MANIFOLD_SOLID_BREP('Part 1',#"));
+        assert_eq!(step.matches("=ADVANCED_FACE(").count(), 6);
     }
 
     /// Sends a GET, returning status, headers and raw bytes.

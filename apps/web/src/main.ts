@@ -961,6 +961,11 @@ class App implements SketchHost {
   // ------------------------------------------------------------ export
 
   /** All bodies as one binary STL file. */
+  /** The current tab's bodies as STEP text (a faceted B-rep, bodies named). */
+  toStep(): string {
+    return this.kernel.exportStep();
+  }
+
   toStl(): Blob {
     return toStl(this.kernel.bodyMeshes());
   }
@@ -3130,6 +3135,7 @@ async function main(): Promise<void> {
     exportSelect.value = "";
     if (what === "png") app.viewer.snapshot().then((blob) => app.download(blob, "png"), (e) => app.setStatus(`error: ${(e as Error).message}`));
     else if (what === "stl") app.download(app.toStl(), "stl");
+    else if (what === "step") app.download(new Blob([app.toStep()], { type: "application/step" }), "step");
     else if (what === "3mf") app.download(app.to3mf(), "3mf");
     else if (what === "svg-drawing") app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
     else if (what === "dxf-drawing") app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);

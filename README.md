@@ -34,7 +34,7 @@ works today, all in the browser:
   plus an interference check between instances and a display-only
   animation of any spinning or sliding mate.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
-  document only reverts your own edit), `.okpart` JSON documents, STL and OBJ import, STL, 3MF and DXF export, PNG snapshots, drawing
+  document only reverts your own edit), `.okpart` JSON documents, STL and OBJ import, STL, 3MF, STEP (faceted B-rep) and DXF export, PNG snapshots, drawing
   sheets (SVG/DXF, A4 to A2 or Letter, chosen views with a live preview)
   with hidden-line removal, overall dimensions, diameter callouts for
   holes and bosses, dimensions you place
@@ -49,7 +49,8 @@ works today, all in the browser:
   invitation link.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
-resolution, 5° by default) and STEP. See
+resolution, 5° by default, and STEP files carry those facets as planar
+faces) and STEP import. See
 [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout
@@ -108,7 +109,8 @@ open to everyone on the server. Passwords are stored as argon2id hashes in
 before exposing it beyond a trusted network. Scripts can validate and
 export without a browser: `GET /api/docs/<id>/check` regenerates every
 tab and lists bodies and errors as JSON, and
-`GET /api/docs/<id>/export/stl?tab=<n>` returns a tab's bodies as STL.
+`GET /api/docs/<id>/export/stl?tab=<n>` returns a tab's bodies as STL
+(`export/step` as STEP).
 During development run `npm run dev` in `apps/web`; it proxies `/api` to
 the server on port 8080. The Docs dialog also saves and restores named
 versions of a document and compares any of them with the document as it

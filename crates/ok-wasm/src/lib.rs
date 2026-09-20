@@ -251,6 +251,17 @@ impl Doc {
         })
     }
 
+    /// The current tab's bodies as a STEP (AP214) file: a faceted B-rep of
+    /// planar faces per body, named as in the parts list.
+    pub fn export_step(&self) -> String {
+        let solids: Vec<(&str, &ok_brep::Solid)> = self
+            .bodies
+            .iter()
+            .map(|b| (b.name.as_str(), &b.solid))
+            .collect();
+        ok_step::write_step(&solids, &self.inner.name)
+    }
+
     pub fn to_json(&self) -> String {
         self.inner.to_json()
     }

@@ -981,6 +981,11 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   const bom: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toBom());
   expect(bom.split("\n")[0]).toBe("part,material,mass_g,volume_mm3,surface_mm2,size_mm,faces");
   expect(bom.trim().split("\n").length).toBe(2);
+  // STEP export: one manifold B-rep per body, planar faces, named.
+  const step: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toStep());
+  expect(step.startsWith("ISO-10303-21;")).toBe(true);
+  expect(step).toContain("MANIFOLD_SOLID_BREP('Part 1',#");
+  expect(step.trim().endsWith("END-ISO-10303-21;")).toBe(true);
   const dxf: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingDxf());
   expect((dxf.match(/\r\nHIDDEN\r\n/g) ?? []).length).toBeGreaterThan(0);
   expect((dxf.match(/\r\nDIMENSIONS\r\n/g) ?? []).length).toBeGreaterThan(3);

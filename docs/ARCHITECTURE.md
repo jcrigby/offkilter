@@ -371,6 +371,19 @@ new face planes, so `move_faces` translates planar faces along their
 normals and `draft_faces` tilts them about the line where each meets a
 neutral plane; the faces around them re-solve their corners as above.
 
+### STEP export (`ok-step`)
+
+`ok_step::write_step` turns solids into an ISO 10303-21 file (AP214
+schema): per body one `MANIFOLD_SOLID_BREP` over a `CLOSED_SHELL` of
+`ADVANCED_FACE`s, each on a `PLANE` with its loops as `EDGE_LOOP`s of
+`ORIENTED_EDGE`s over shared `EDGE_CURVE`s (`LINE`s between
+`VERTEX_POINT`s, one per undirected edge, so the shell is watertight by
+construction), plus the product boilerplate readers expect and
+millimetre units. Facets on cylinders and other curved surfaces go out
+as planar faces, so the file is exact for the faceted geometry and reads
+as a solid elsewhere. The wasm `export_step` and the server's
+`/export/step` both use it.
+
 ### Drawing views (`drawing.rs`)
 
 `project_view` projects solids orthographically along a view direction

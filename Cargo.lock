@@ -559,9 +559,11 @@ dependencies = [
  "axum",
  "futures-util",
  "http-body-util",
+ "ok-brep",
  "ok-math",
  "ok-mesh",
  "ok-model",
+ "ok-step",
  "rand 0.8.8",
  "serde",
  "serde_json",
@@ -582,6 +584,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ok-step"
+version = "0.1.0"
+dependencies = [
+ "ok-brep",
+ "ok-math",
+ "ok-sketch",
+]
+
+[[package]]
 name = "ok-wasm"
 version = "0.1.0"
 dependencies = [
@@ -590,6 +601,7 @@ dependencies = [
  "ok-mesh",
  "ok-model",
  "ok-sketch",
+ "ok-step",
  "serde",
  "serde_json",
  "wasm-bindgen",

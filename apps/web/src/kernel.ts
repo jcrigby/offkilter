@@ -327,6 +327,11 @@ export class Kernel {
     return kernelVersion();
   }
 
+  /** The current tab's bodies as a STEP (AP214) file: planar faces, bodies named. */
+  exportStep(): string {
+    return this.studio.export_step();
+  }
+
   toJson(): string {
     return this.studio.to_json();
   }
