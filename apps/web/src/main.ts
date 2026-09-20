@@ -1,5 +1,6 @@
 import { Kernel } from "./kernel";
 import { to3mf, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingView } from "./export";
+import { parseStl } from "./stl";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
@@ -1255,7 +1256,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀", boolean: "∪", shell: "◱", move_face: "⇥", draft: "◿" };
+      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀", boolean: "∪", shell: "◱", move_face: "⇥", draft: "◿", mesh: "▲" };
       icon.textContent = icons[f.kind.type] ?? "•";
       const name = document.createElement("span");
       name.className = "name";
@@ -1413,6 +1414,7 @@ class App implements SketchHost {
     else if (f.kind.type === "shell") this.renderShellDetail(f, body);
     else if (f.kind.type === "move_face") this.renderMoveFaceDetail(f, body);
     else if (f.kind.type === "draft") this.renderDraftDetail(f, body);
+    else if (f.kind.type === "mesh") this.renderMeshDetail(f, body);
     else this.renderPatternDetail(f, body);
 
     const row = document.createElement("div");
@@ -1880,6 +1882,14 @@ class App implements SketchHost {
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Moves each face along its normal (negative pushes into the body); the faces around it stretch to follow.";
+    body.appendChild(note);
+  }
+
+  renderMeshDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "mesh") return;
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = `Imported mesh: ${f.kind.vertices.length} vertices, ${f.kind.triangles.length} triangles. Coplanar triangles are merged into faces, so later features can reference them like any body.`;
     body.appendChild(note);
   }
 
@@ -2693,6 +2703,25 @@ async function main(): Promise<void> {
       app.setStatus(`could not open file: ${(e as Error).message}`);
     }
     fileInput.value = "";
+  };
+  const stlInput = $("#stl-input") as HTMLInputElement;
+  $("#btn-import").onclick = () => {
+    if (app.summary.kind !== "part_studio") {
+      app.setStatus("Switch to a part studio tab to import a mesh.");
+      return;
+    }
+    stlInput.click();
+  };
+  stlInput.onchange = async () => {
+    const file = stlInput.files?.[0];
+    stlInput.value = "";
+    if (!file) return;
+    try {
+      const mesh = parseStl(await file.arrayBuffer());
+      app.apply({ type: "add_mesh", vertices: mesh.vertices, triangles: mesh.triangles, name: file.name.replace(/\.stl$/i, "") || null });
+    } catch (e) {
+      app.setStatus(`could not import ${file.name}: ${(e as Error).message}`);
+    }
   };
   ($("#studio-name") as HTMLInputElement).onchange = (e) => {
     app.applyDoc({ type: "rename_document", name: (e.target as HTMLInputElement).value });

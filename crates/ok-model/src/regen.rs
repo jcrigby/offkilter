@@ -1,7 +1,7 @@
 use crate::{
     canonical_frame, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, EdgeRef,
-    ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId, FeatureKind, PartStudio, PatternKind,
-    PlaneRef, ProfileSelection, RevolveAxis, ShellFeature,
+    ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureId, FeatureKind, MeshFeature, PartStudio,
+    PatternKind, PlaneRef, ProfileSelection, RevolveAxis, ShellFeature,
 };
 use ok_brep::{boolean, BoolOp, Solid, Transform};
 use ok_math::{Plane, Vec2, Vec3};
@@ -514,6 +514,13 @@ impl PartStudio {
                             "draft",
                             |solid, faces| ok_brep::draft_faces(solid, faces, &neutral, df.angle),
                         ),
+                        Err(e) => Some(e),
+                    }
+                }
+                FeatureKind::Mesh(mf) => {
+                    let mf = mf.clone();
+                    match Self::mesh_solid(&mf, id) {
+                        Ok(solid) => Self::apply_tool(&mut result, id, solid, BodyOp::New),
                         Err(e) => Some(e),
                     }
                 }
@@ -1310,6 +1317,57 @@ impl PartStudio {
         // replay this feature; it names the original features instead.
         result.tools.remove(&id);
         None
+    }
+
+    /// A solid from an imported triangle mesh: every triangle becomes a
+    /// planar polygon and the closure check of `from_polygons` decides
+    /// whether the mesh bounds a volume. Degenerate triangles are skipped.
+    fn mesh_solid(mf: &MeshFeature, id: FeatureId) -> Result<Solid, String> {
+        let mut polys = Vec::with_capacity(mf.triangles.len());
+        let mut surfaces = Vec::with_capacity(mf.triangles.len());
+        for (i, t) in mf.triangles.iter().enumerate() {
+            let pts: Vec<Vec3> = t
+                .iter()
+                .map(|&k| mf.vertices.get(k as usize).copied())
+                .collect::<Option<_>>()
+                .ok_or("mesh triangle refers to a missing vertex")?;
+            let Some(normal) = (pts[1] - pts[0]).cross(pts[2] - pts[0]).normalized() else {
+                continue;
+            };
+            let Some(x_axis) = (pts[1] - pts[0]).normalized() else {
+                continue;
+            };
+            let plane = Plane {
+                origin: pts[0],
+                x_axis,
+                y_axis: normal.cross(x_axis),
+                normal,
+            };
+            surfaces.push(ok_brep::Surface::Plane {
+                normal,
+                offset: normal.dot(pts[0]),
+            });
+            polys.push(ok_brep::Polygon {
+                plane,
+                loops: vec![pts],
+                surface: surfaces.len() - 1,
+                origin: ok_brep::FaceOrigin {
+                    feature: id.0,
+                    local: i as u32,
+                },
+            });
+        }
+        if polys.len() < 4 {
+            return Err("a mesh body needs at least four triangles".into());
+        }
+        let mut solid = Solid::from_polygons(polys, surfaces)
+            .map_err(|e| format!("mesh does not close a volume: {e}"))?;
+        // Triangulated flat regions become one face each.
+        solid.merge_coplanar_faces();
+        if solid.volume() <= 0.0 {
+            return Err("mesh is inside out (triangles wind clockwise seen from outside)".into());
+        }
+        Ok(solid)
     }
 
     fn apply_tool(

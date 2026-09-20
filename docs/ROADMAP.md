@@ -68,6 +68,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Automatic overall dimensions (width, height, depth) on drawing sheets
 - [x] Section views on drawings (hatched cut faces, lettered cutting-plane trace; follows the viewport section plane)
 - [ ] Driven dimensions placed by the user and detail views on drawings; STEP once faces are exact
+- [x] Import: STL meshes (binary or ASCII) as bodies; coplanar triangles merge into faces
 - [ ] Import: STEP via a B-rep reader
 
 ## Platform

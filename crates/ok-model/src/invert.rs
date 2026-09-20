@@ -47,6 +47,7 @@ impl PartStudio {
             | Op::AddShell { .. }
             | Op::AddMoveFace { .. }
             | Op::AddDraft { .. }
+            | Op::AddMesh { .. }
             | Op::InsertFeature { .. } => result
                 .feature
                 .map(|id| vec![Op::DeleteFeature { id }])

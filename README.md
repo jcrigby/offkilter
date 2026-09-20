@@ -33,7 +33,7 @@ works today, all in the browser:
   plus an interference check between instances and a display-only
   animation of any spinning or sliding mate.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
-  document only reverts your own edit), `.okpart` JSON documents, STL, 3MF and DXF export, drawing
+  document only reverts your own edit), `.okpart` JSON documents, STL import, STL, 3MF and DXF export, drawing
   sheets (SVG/DXF) with hidden-line removal, overall dimensions and a
   hatched section view, mass properties.
 

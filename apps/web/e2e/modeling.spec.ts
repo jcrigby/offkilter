@@ -734,6 +734,41 @@ test("spline sketch tool draws a smooth curve that bounds a region", async ({ pa
   expect(surfaces).toBe(4);
 });
 
+test("import a binary STL box as a body", async ({ page }) => {
+  page.on("dialog", (d) => d.accept());
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  // A 10 x 20 x 5 box as twelve binary STL facets with repeated corners.
+  const v = [[0, 0, 0], [10, 0, 0], [10, 20, 0], [0, 20, 0], [0, 0, 5], [10, 0, 5], [10, 20, 5], [0, 20, 5]];
+  const quads = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]];
+  const tris = quads.flatMap((q) => [[q[0]!, q[1]!, q[2]!], [q[0]!, q[2]!, q[3]!]]);
+  const buf = Buffer.alloc(84 + tris.length * 50);
+  buf.write("offkilter test box", 0, "latin1");
+  buf.writeUInt32LE(tris.length, 80);
+  let at = 84;
+  for (const t of tris) {
+    at += 12;
+    for (const i of t) {
+      for (const c of v[i]!) {
+        buf.writeFloatLE(c, at);
+        at += 4;
+      }
+    }
+    at += 2;
+  }
+  await page.locator("#stl-input").setInputFiles({ name: "box.stl", mimeType: "model/stl", buffer: buf });
+  await page.waitForTimeout(400);
+  expect(await status(page)).toContain("1 body");
+  expect(await volume(page)).toBeCloseTo(1000, 3);
+  expect(await featureNames(page)).toContain("box");
+  const faces = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies[0].faces.length as number);
+  expect(faces).toBe(6);
+  await page.click("#feature-list li");
+  await expect(page.locator("#detail-body")).toContainText("8 vertices, 12 triangles");
+});
+
 test("drawing views remove hidden lines and export as SVG and DXF", async ({ page }) => {
   await openDemo(page);
   const counts = await page.evaluate(() => {

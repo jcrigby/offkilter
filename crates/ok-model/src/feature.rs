@@ -1,4 +1,4 @@
-use ok_math::Plane;
+use ok_math::{Plane, Vec3};
 use ok_sketch::{EntityId, Sketch};
 use serde::{Deserialize, Serialize};
 
@@ -372,6 +372,16 @@ pub struct ShellFeature {
     pub faces: Vec<FaceRef>,
 }
 
+/// A body imported as a triangle mesh (an STL file, say). The triangles
+/// must close a volume; coplanar neighbours are merged into one face
+/// when the solid is built, so a boxy mesh becomes a boxy body.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MeshFeature {
+    pub vertices: Vec<Vec3>,
+    /// Vertex indices, counter-clockwise seen from outside.
+    pub triangles: Vec<[u32; 3]>,
+}
+
 /// Moves planar faces along their normals (a direct edit: push or pull).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MoveFaceFeature {
@@ -439,6 +449,7 @@ pub enum FeatureKind {
     Shell(ShellFeature),
     MoveFace(MoveFaceFeature),
     Draft(DraftFeature),
+    Mesh(MeshFeature),
 }
 
 impl FeatureKind {
@@ -465,6 +476,7 @@ impl FeatureKind {
             FeatureKind::Shell(_) => "Shell",
             FeatureKind::MoveFace(_) => "Move face",
             FeatureKind::Draft(_) => "Draft",
+            FeatureKind::Mesh(_) => "Mesh",
         }
     }
 
@@ -490,7 +502,10 @@ impl FeatureKind {
                 PatternKind::Circular { .. } => vec!["angle".into(), "count".into()],
             },
             FeatureKind::Variable(_) => vec![],
-            FeatureKind::Sweep(_) | FeatureKind::Loft(_) | FeatureKind::Boolean(_) => vec![],
+            FeatureKind::Sweep(_)
+            | FeatureKind::Loft(_)
+            | FeatureKind::Boolean(_)
+            | FeatureKind::Mesh(_) => vec![],
             FeatureKind::Shell(_) => vec!["thickness".into()],
             FeatureKind::MoveFace(_) => vec!["distance".into()],
             FeatureKind::Draft(_) => vec!["angle".into(), "plane.offset".into()],
@@ -653,7 +668,8 @@ impl FeatureKind {
             | FeatureKind::Boolean(_)
             | FeatureKind::Shell(_)
             | FeatureKind::MoveFace(_)
-            | FeatureKind::Draft(_) => None,
+            | FeatureKind::Draft(_)
+            | FeatureKind::Mesh(_) => None,
         }
     }
 }

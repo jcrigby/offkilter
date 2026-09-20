@@ -941,3 +941,96 @@ fn mirror_of_chosen_bodies_only() {
     });
     assert_eq!(p.regen().bodies.len(), 4);
 }
+
+/// The twelve triangles of an axis-aligned box, wound outward.
+fn box_mesh(w: f64, d: f64, h: f64) -> (Vec<Vec3>, Vec<[u32; 3]>) {
+    let v = vec![
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(w, 0.0, 0.0),
+        Vec3::new(w, d, 0.0),
+        Vec3::new(0.0, d, 0.0),
+        Vec3::new(0.0, 0.0, h),
+        Vec3::new(w, 0.0, h),
+        Vec3::new(w, d, h),
+        Vec3::new(0.0, d, h),
+    ];
+    let quads: [[u32; 4]; 6] = [
+        [0, 3, 2, 1], // bottom
+        [4, 5, 6, 7], // top
+        [0, 1, 5, 4], // front
+        [1, 2, 6, 5], // right
+        [2, 3, 7, 6], // back
+        [3, 0, 4, 7], // left
+    ];
+    let t = quads
+        .iter()
+        .flat_map(|q| [[q[0], q[1], q[2]], [q[0], q[2], q[3]]])
+        .collect();
+    (v, t)
+}
+
+#[test]
+fn imported_mesh_becomes_a_body_with_merged_faces() {
+    let mut p = Part::new();
+    let (vertices, triangles) = box_mesh(10.0, 20.0, 5.0);
+    let mesh = p.op(Op::AddMesh {
+        vertices,
+        triangles,
+        name: Some("Imported".into()),
+    });
+    assert!((p.volume() - 1000.0).abs() < 1e-9);
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 1);
+    // Coplanar triangles merge: a box is six faces again.
+    assert_eq!(r.bodies[0].solid.faces.len(), 6);
+    assert!(r.bodies[0]
+        .solid
+        .faces
+        .iter()
+        .all(|f| f.origin.feature == mesh.0));
+
+    // The body is ordinary: a hole through it, then a fillet reference by faces.
+    let top = p.face(|n, _, _| (n.z - 1.0).abs() < 1e-9);
+    let s = p.sketch_on(top);
+    p.circle(s, (5.0, 10.0), 2.0);
+    p.op(Op::AddExtrude {
+        sketch: s,
+        profiles: ProfileSelection::All,
+        depth: 5.0,
+        direction: ExtrudeDirection::Reverse,
+        end: ExtrudeEnd::Blind,
+        op: BodyOp::Remove,
+        name: None,
+    });
+    assert!((p.volume() - (1000.0 - PI * 4.0 * 5.0)).abs() < 0.5);
+}
+
+#[test]
+fn open_and_inside_out_meshes_are_reported() {
+    let mut p = Part::new();
+    let (vertices, mut triangles) = box_mesh(10.0, 10.0, 10.0);
+    triangles.pop();
+    p.op(Op::AddMesh {
+        vertices: vertices.clone(),
+        triangles: triangles.clone(),
+        name: None,
+    });
+    let r = p.ps.regenerate();
+    assert!(
+        r.errors().any(|(_, e)| e.contains("does not close")),
+        "{:?}",
+        r.errors().collect::<Vec<_>>()
+    );
+    assert!(r.bodies.is_empty());
+
+    let mut p = Part::new();
+    let (vertices, triangles) = box_mesh(10.0, 10.0, 10.0);
+    let flipped: Vec<[u32; 3]> = triangles.iter().map(|t| [t[0], t[2], t[1]]).collect();
+    p.op(Op::AddMesh {
+        vertices,
+        triangles: flipped,
+        name: None,
+    });
+    let r = p.ps.regenerate();
+    assert!(r.errors().any(|(_, e)| e.contains("inside out")));
+}

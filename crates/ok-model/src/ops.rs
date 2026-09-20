@@ -1,12 +1,12 @@
 use crate::{
     BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, DraftFeature,
     EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId,
-    FeatureKind, HoleFeature, LoftFeature, MirrorFeature, ModelError, MoveFaceFeature, PartStudio,
-    PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection, ProjectionSource,
-    RevolveAxis, RevolveFeature, ShellFeature, SketchFeature, SweepFeature, VariableFeature,
-    PROJECTION_BLOCK,
+    FeatureKind, HoleFeature, LoftFeature, MeshFeature, MirrorFeature, ModelError, MoveFaceFeature,
+    PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection,
+    ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature, SketchFeature, SweepFeature,
+    VariableFeature, PROJECTION_BLOCK,
 };
-use ok_math::Vec2;
+use ok_math::{Vec2, Vec3};
 use ok_sketch::{Constraint, ConstraintId, Entity, EntityId};
 use serde::{Deserialize, Serialize};
 
@@ -380,6 +380,12 @@ pub enum Op {
         faces: Vec<FaceRef>,
         neutral: PlaneRef,
         angle: f64,
+        name: Option<String>,
+    },
+    /// A body from a closed triangle mesh (imported STL).
+    AddMesh {
+        vertices: Vec<Vec3>,
+        triangles: Vec<[u32; 3]>,
         name: Option<String>,
     },
     SetDraft {
@@ -961,6 +967,26 @@ impl PartStudio {
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "move face")),
             },
+            Op::AddMesh {
+                vertices,
+                triangles,
+                name,
+            } => {
+                for t in &triangles {
+                    if t.iter().any(|&i| i as usize >= vertices.len()) {
+                        return Err(ModelError::Invalid(
+                            "mesh triangle refers to a missing vertex".into(),
+                        ));
+                    }
+                }
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Mesh(MeshFeature {
+                        vertices,
+                        triangles,
+                    }),
+                    name,
+                ));
+            }
             Op::AddDraft {
                 faces,
                 neutral,

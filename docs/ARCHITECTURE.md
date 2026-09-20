@@ -381,6 +381,17 @@ across the view where the plane shows edge-on. The plane is the
 viewport's section plane when one is shown, else a cut through the middle
 of the model parallel to the front view.
 
+### Mesh import (`FeatureKind::Mesh`)
+
+An imported STL becomes a `Mesh` feature holding welded vertices and
+triangle indices (the client welds corners closer than a millionth of
+the mesh size and drops degenerate triangles). Regeneration turns every
+triangle into a planar polygon and lets `Solid::from_polygons` decide
+whether the mesh closes a volume; an open mesh or one wound inside out
+is reported on the feature. Coplanar neighbours are merged
+(`merge_coplanar_faces`), so a boxy mesh has boxy faces that later
+features can reference by origin like any other body.
+
 ### Booleans (`boolean.rs`)
 
 Booleans work face by face. For a face `F` of `A` with plane `P`, take two

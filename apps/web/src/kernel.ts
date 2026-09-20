@@ -79,7 +79,8 @@ export type FeatureKind =
   | { type: "boolean"; op: BooleanOp; targets: number[]; tools: number[]; keep_tools: boolean }
   | { type: "shell"; thickness: number; faces: FaceRef[] }
   | { type: "move_face"; faces: FaceRef[]; distance: number }
-  | { type: "draft"; faces: FaceRef[]; neutral: PlaneRef; angle: number };
+  | { type: "draft"; faces: FaceRef[]; neutral: PlaneRef; angle: number }
+  | { type: "mesh"; vertices: Vec3[]; triangles: [number, number, number][] };
 export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 
@@ -233,6 +234,7 @@ export type Op =
   | { type: "set_move_face"; id: number; faces?: FaceRef[] | null; distance?: number | null }
   | { type: "add_draft"; faces?: FaceRef[]; neutral: PlaneRef; angle: number; name: string | null }
   | { type: "set_draft"; id: number; faces?: FaceRef[] | null; neutral?: PlaneRef | null; angle?: number | null }
+  | { type: "add_mesh"; vertices: Vec3[]; triangles: [number, number, number][]; name: string | null }
   | { type: "set_settings"; facet_angle: number }
   | { type: "replace_document"; json: string }
   /** Inverse ops (undo) carry saved state; the client never builds these itself. */
