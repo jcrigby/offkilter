@@ -28,6 +28,7 @@ mod transform;
 pub use blend::{blend_edges, BlendKind};
 pub use boolean::{boolean, BoolOp};
 pub use drawing::{project_view, section_view, split, split_tagged, SectionLines, View, ViewLines};
+pub mod exact;
 pub use extrude::extrude;
 pub use loft::loft;
 pub use revolve::revolve;
