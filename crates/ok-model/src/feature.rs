@@ -448,6 +448,10 @@ pub struct HoleFeature {
     /// Optional counterbore: a wider, shallower cylinder from the plane.
     #[serde(default)]
     pub counterbore: Option<Counterbore>,
+    /// Optional countersink: a cone from `diameter` at the plane
+    /// narrowing to the hole at its included `angle`.
+    #[serde(default)]
+    pub countersink: Option<Countersink>,
 }
 
 fn reverse() -> ExtrudeDirection {
@@ -458,6 +462,19 @@ fn reverse() -> ExtrudeDirection {
 pub struct Counterbore {
     pub diameter: f64,
     pub depth: f64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Countersink {
+    /// Diameter at the surface.
+    pub diameter: f64,
+    /// Included angle of the cone in degrees (90 for most screws).
+    #[serde(default = "ninety")]
+    pub angle: f64,
+}
+
+fn ninety() -> f64 {
+    90.0
 }
 
 /// Sweeps a profile region along the open chain of curves in another sketch.
@@ -790,6 +807,24 @@ impl FeatureKind {
                 });
                 cb.depth = value;
                 h.counterbore = Some(cb);
+                Ok(())
+            }
+            (FeatureKind::Hole(h), "csink_diameter") => {
+                let mut cs = h.countersink.unwrap_or(Countersink {
+                    diameter: value,
+                    angle: 90.0,
+                });
+                cs.diameter = value;
+                h.countersink = Some(cs);
+                Ok(())
+            }
+            (FeatureKind::Hole(h), "csink_angle") => {
+                let mut cs = h.countersink.unwrap_or(Countersink {
+                    diameter: h.diameter * 2.0,
+                    angle: value,
+                });
+                cs.angle = value;
+                h.countersink = Some(cs);
                 Ok(())
             }
             (_, f) => Err(format!("no bindable field '{f}'")),

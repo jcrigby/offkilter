@@ -168,7 +168,10 @@ class Part:
     def cut(self, s, depth, direction="normal", name=None, through_all=False):
         return self.extrude(s, depth, direction, "all", "remove", name, through_all)
 
-    def hole(self, s, diameter, depth=0.0, direction="reverse", counterbore=None, name=None):
+    def hole(self, s, diameter, depth=0.0, direction="reverse", counterbore=None, countersink=None, name=None):
+        """Drills every point of the sketch; `counterbore` is
+        {diameter, depth} and `countersink` {diameter, angle} (the
+        diameter at the sketch plane and the included angle in degrees)."""
         return self.feature(
             {
                 "type": "add_hole",
@@ -178,6 +181,7 @@ class Part:
                 "through_all": depth <= 0.0,
                 "direction": direction,
                 "counterbore": counterbore,
+                "countersink": countersink,
                 "name": name,
             }
         )
@@ -229,6 +233,7 @@ EAR_W = 2 * (SLOT_W / 2 + WALL + CLAMP_BOLT_D)  # 29.3
 OPEN_D = DISC_D - 2 * RABBET_W  # 74
 
 POST_W, POST_H, SOCKET_D, SLOT_LEN, CONE_H, CONE_D = 40.0, 75.0, 10.3, 4.0, 6.0, 16.0
+CONE_ANGLE = 2 * math.degrees(math.atan((CONE_D - SOCKET_D) / 2 / CONE_H))  # included, 50.8
 CHUCK_W, CHUCK_DP, CHUCK_H, PIN_D = 36.0, 30.0, 25.0, 6.35
 
 
@@ -352,20 +357,21 @@ def post(p, slot):
     s = p.sketch("top", 0.0, "block")
     p.rect(s, (-POST_W / 2, -POST_W / 2), (POST_W / 2, POST_W / 2))
     p.extrude(s, POST_H, name="block")
-    # Straight socket: 17 tall under the cone (16 below the cone's base).
+    # Straight socket: 17 tall under the cone (16 below the cone's base),
+    # with a conical entry from the socket diameter up to cone_d at the
+    # top face. On the round post that is the hole's countersink; the
+    # slotted post hulls two of them 4 mm apart, which is two revolved
+    # cones plus the section swept between them.
     s = p.sketch("top", POST_H, "socket")
     if slot:
         p.slot(s, (-SLOT_LEN / 2, 0.0), (SLOT_LEN / 2, 0.0), SOCKET_D)
         p.cut(s, CONE_H + 16, direction="reverse", name="socket")
+        cone = [(SOCKET_D / 2, POST_H - CONE_H), (CONE_D / 2, POST_H + 0.01)]
+        for x in (-SLOT_LEN / 2, SLOT_LEN / 2):
+            cone_cut(p, "right", x, cone, "cone entry")
     else:
         p.point(s, (0.0, 0.0))
-        p.hole(s, SOCKET_D, depth=CONE_H + 16, name="socket")
-    # Conical entry: a frustum from the socket diameter up to cone_d at
-    # the top face; the slotted post hulls two of them 4 mm apart, which
-    # is the two cones plus the section swept between them.
-    cone = [(SOCKET_D / 2, POST_H - CONE_H), (CONE_D / 2, POST_H + 0.01)]
-    for x in ((-SLOT_LEN / 2, SLOT_LEN / 2) if slot else (0.0,)):
-        cone_cut(p, "right", x, cone, "cone entry")
+        p.hole(s, SOCKET_D, depth=CONE_H + 16, countersink={"diameter": CONE_D, "angle": CONE_ANGLE}, name="socket")
     if slot:
         s = p.sketch("right", -SLOT_LEN / 2, "cone sweep")
         p.polygon(
@@ -404,12 +410,12 @@ def chuck(p):
     s = p.sketch("right", -CHUCK_W / 2 - 1, "clamp bolt")
     p.point(s, (CHUCK_DP / 2 - 8, CHUCK_H / 2))
     p.hole(s, 4.3, direction="normal", name="M4 clamp bolt")
-    s = p.sketch("top", CHUCK_H, "screws")
+    # The screws' countersinks open on the bottom face (the SCAD's cone is
+    # d 9 at z = -1 to d 4.5 at z = 3), so the holes are drilled up from it.
+    s = p.sketch("top", 0.0, "screws")
     for x in (-12.0, 12.0):
         p.point(s, (x, 0.0))
-    p.hole(s, 4.5, name="screw holes")
-    for x in (-12.0, 12.0):
-        cone_cut(p, "right", x, [(4.5, -1.0), (2.25, 3.0)], "countersink")
+    p.hole(s, 4.5, direction="normal", countersink={"diameter": 7.875, "angle": 2 * math.degrees(math.atan(2.25 / 4.0))}, name="countersunk screws")
 
 
 

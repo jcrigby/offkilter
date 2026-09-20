@@ -83,7 +83,7 @@ A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable
   non-construction lines and arcs are chained into one open polyline.
 - `Loft { sketch, sketch_b, op }`: joins the largest region of each sketch.
 
-- `Hole { sketch, diameter, depth, through_all, direction, counterbore }`:
+- `Hole { sketch, diameter, depth, through_all, direction, counterbore, countersink }`:
   drills at every standalone point of the sketch.
 
 Solid features share one path: select regions (or points for holes),

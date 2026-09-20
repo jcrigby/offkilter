@@ -134,6 +134,7 @@ impl Part {
             through_all: true,
             direction: ExtrudeDirection::Reverse,
             counterbore,
+            countersink: None,
             name: None,
         });
     }
@@ -762,6 +763,7 @@ fn feature_pattern_and_mirror_replay_tools() {
         through_all: true,
         direction: ExtrudeDirection::Normal,
         counterbore: None,
+        countersink: None,
         name: None,
     });
     let with_hole = p.volume();

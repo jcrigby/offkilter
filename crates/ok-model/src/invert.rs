@@ -165,6 +165,7 @@ impl PartStudio {
                 through_all,
                 direction,
                 counterbore,
+                countersink,
             } => match before.kind() {
                 Some(FeatureKind::Hole(h)) => vec![Op::SetHole {
                     id,
@@ -173,6 +174,7 @@ impl PartStudio {
                     through_all: through_all.map(|_| h.through_all),
                     direction: direction.map(|_| h.direction),
                     counterbore: counterbore.map(|_| h.counterbore),
+                    countersink: countersink.map(|_| h.countersink),
                 }],
                 _ => Vec::new(),
             },

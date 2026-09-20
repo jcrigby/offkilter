@@ -1,10 +1,10 @@
 use crate::{
-    BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, DraftFeature,
-    EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId,
-    FeatureKind, HoleFeature, LoftFeature, Material, MeshFeature, MirrorFeature, ModelError,
-    MoveFaceFeature, PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection,
-    Projection, ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature, SketchFeature,
-    SplitFeature, SweepFeature, VariableFeature, PROJECTION_BLOCK,
+    BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, Countersink,
+    DraftFeature, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature,
+    FeatureId, FeatureKind, HoleFeature, LoftFeature, Material, MeshFeature, MirrorFeature,
+    ModelError, MoveFaceFeature, PartStudio, PatternFeature, PatternKind, PlaneRef,
+    ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature,
+    SketchFeature, SplitFeature, SweepFeature, VariableFeature, PROJECTION_BLOCK,
 };
 use ok_math::{Vec2, Vec3};
 use ok_sketch::{Constraint, ConstraintId, Entity, EntityId};
@@ -288,6 +288,8 @@ pub enum Op {
         direction: ExtrudeDirection,
         #[serde(default)]
         counterbore: Option<Counterbore>,
+        #[serde(default)]
+        countersink: Option<Countersink>,
         name: Option<String>,
     },
     SetHole {
@@ -303,6 +305,8 @@ pub enum Op {
         /// `Some(None)` clears the counterbore; `None` leaves it as is.
         #[serde(default, with = "double_option")]
         counterbore: Option<Option<Counterbore>>,
+        #[serde(default, with = "double_option")]
+        countersink: Option<Option<Countersink>>,
     },
     AddSweep {
         sketch: FeatureId,
@@ -796,6 +800,7 @@ impl PartStudio {
                 through_all,
                 direction,
                 counterbore,
+                countersink,
                 name,
             } => {
                 match &self.feature(sketch)?.kind {
@@ -810,6 +815,7 @@ impl PartStudio {
                         through_all,
                         direction,
                         counterbore,
+                        countersink,
                     }),
                     name,
                 ));
@@ -821,6 +827,7 @@ impl PartStudio {
                 through_all,
                 direction,
                 counterbore,
+                countersink,
             } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Hole(h) => {
                     if let Some(v) = diameter {
@@ -837,6 +844,9 @@ impl PartStudio {
                     }
                     if let Some(v) = counterbore {
                         h.counterbore = v;
+                    }
+                    if let Some(v) = countersink {
+                        h.countersink = v;
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "hole")),

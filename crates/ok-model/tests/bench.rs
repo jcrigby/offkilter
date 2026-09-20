@@ -120,6 +120,7 @@ fn cover() -> PartStudio {
         through_all: true,
         direction: ExtrudeDirection::Reverse,
         counterbore: None,
+        countersink: None,
         name: None,
     })
     .unwrap();
