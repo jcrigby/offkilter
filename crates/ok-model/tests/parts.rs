@@ -1100,3 +1100,46 @@ fn split_by_a_plane_makes_two_parts_and_follows_the_offset() {
     assert!(r.errors().any(|(_, e)| e.contains("misses")));
     assert_eq!(r.bodies.len(), 1);
 }
+
+#[test]
+fn sketch_on_an_angled_plane_extrudes_a_tilted_block() {
+    use ok_model::Axis;
+    let mut p = Part::new();
+    // The Top plane turned 30° about X: its normal tilts from +Z towards -Y.
+    let s = p.sketch(PlaneRef::Rotated {
+        base: StandardPlane::Top,
+        axis: Axis::X,
+        angle: 30.0,
+        offset: 0.0,
+    });
+    p.rect(s, (0.0, 0.0), (10.0, 10.0));
+    p.op(Op::AddExtrude {
+        sketch: s,
+        profiles: ProfileSelection::All,
+        depth: 4.0,
+        direction: ExtrudeDirection::Normal,
+        end: ExtrudeEnd::Blind,
+        op: BodyOp::New,
+        name: None,
+    });
+    let r = p.regen();
+    let v = p.volume();
+    assert!(
+        (v - 400.0).abs() < 1e-3,
+        "volume {v}, bodies {}",
+        r.bodies.len()
+    );
+    let top = r.bodies[0]
+        .solid
+        .faces
+        .iter()
+        .find(|f| f.origin.local == 1)
+        .unwrap();
+    let n = top.plane.normal;
+    let expect = Vec3::new(0.0, -(30f64.to_radians().sin()), 30f64.to_radians().cos());
+    assert!(n.distance(expect) < 1e-6, "{n:?}");
+    // The angle is bindable through the sketch's plane.angle field.
+    let f = p.ps.feature(s).unwrap();
+    assert!(f.kind.bindable_fields().iter().any(|x| x == "plane.angle"));
+    assert_eq!(f.kind.field("plane.angle"), Some(30.0));
+}

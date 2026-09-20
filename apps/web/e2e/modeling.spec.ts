@@ -585,8 +585,12 @@ test("export bodies as STL and 3MF and a sketch as DXF", async ({ page }) => {
     const stl = app.toStl();
     const mf = app.to3mf();
     const head = new Uint8Array(await mf.slice(0, 2).arrayBuffer());
-    return { stl: stl.size, mf: mf.size, sig: String.fromCharCode(...head), dxfWithoutSketch: app.toDxf() };
+    const png = await app.viewer.snapshot();
+    const pngHead = new Uint8Array(await png.slice(1, 4).arrayBuffer());
+    return { stl: stl.size, mf: mf.size, sig: String.fromCharCode(...head), dxfWithoutSketch: app.toDxf(), png: png.size, pngSig: String.fromCharCode(...pngHead) };
   });
+  expect(sizes.png).toBeGreaterThan(1000);
+  expect(sizes.pngSig).toBe("PNG");
   expect(sizes.stl).toBe(84 + 50 * (await page.evaluate(() => (window as any).offkilter.summary.bodies.reduce((n: number, b: any) => n + b.triangles, 0))));
   expect(sizes.mf).toBeGreaterThan(1000);
   expect(sizes.sig).toBe("PK");
@@ -777,6 +781,35 @@ test("spline sketch tool draws a smooth curve that bounds a region", async ({ pa
   // The spline wall is one smooth surface: bottom, top, spline, line.
   const surfaces = await page.evaluate(() => new Set((window as any).offkilter.kernel.studio.body_face_surfaces(0)).size);
   expect(surfaces).toBe(4);
+});
+
+test("sketch on an angled plane", async ({ page }) => {
+  page.on("dialog", (d) => d.accept());
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "rotated", base: "top", axis: "x", angle: 30, offset: 0 }, name: "Tilted" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    app.apply({ type: "sketch", id: s, op: { type: "add_rectangle", a: { x: 0, y: 0 }, b: { x: 10, y: 10 } } });
+    app.apply({ type: "add_extrude", sketch: s, depth: 4, name: "Wedge" });
+    app.select(s);
+  });
+  expect(await status(page)).toContain("1 body");
+  // The extrusion's top face normal is tilted 30° from +Z towards -Y.
+  const normal = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies[0].faces.find((f: any) => f.origin.local === 1).normal);
+  expect(normal.z).toBeCloseTo(Math.cos(Math.PI / 6), 5);
+  expect(normal.y).toBeCloseTo(-Math.sin(Math.PI / 6), 5);
+  // The sketch panel shows the angled plane's fields; changing the angle re-tilts the body.
+  await expect(page.locator("#detail-body")).toContainText("About axis");
+  const angle = page.locator("#detail-body .field").filter({ hasText: "Angle °" }).locator("input");
+  await angle.fill("45");
+  await angle.press("Enter");
+  await page.waitForTimeout(300);
+  const n2 = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies[0].faces.find((f: any) => f.origin.local === 1).normal);
+  expect(n2.z).toBeCloseTo(Math.cos(Math.PI / 4), 5);
 });
 
 test("split a body by a plane into two parts", async ({ page }) => {

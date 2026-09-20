@@ -1555,35 +1555,7 @@ class App implements SketchHost {
     }
 
     const plane = kind.plane;
-    const planeValue = plane.type === "standard" ? plane.base : "face";
-    body.appendChild(
-      field("Plane", select(["top", "front", "right", "face"], planeValue, (v) => {
-        if (v === "face") {
-          this.beginFacePick((face) => this.apply({ type: "set_sketch_plane", id: f.id, plane: { type: "face", face, offset: plane.offset } }));
-        } else {
-          this.apply({ type: "set_sketch_plane", id: f.id, plane: { type: "standard", base: v as StandardPlane, offset: plane.offset } });
-        }
-      })),
-    );
-    if (plane.type === "face") {
-      const row = document.createElement("div");
-      row.className = "field";
-      const l = document.createElement("label");
-      l.textContent = "Face";
-      const v = document.createElement("span");
-      v.className = "note";
-      v.textContent = this.describeFace(plane.face);
-      row.append(l, v);
-      body.appendChild(row);
-      body.appendChild(
-        field("", button("Pick another face", () =>
-          this.beginFacePick((face) => this.apply({ type: "set_sketch_plane", id: f.id, plane: { type: "face", face, offset: plane.offset } })),
-        )),
-      );
-    }
-    body.appendChild(
-      field("Offset", this.exprInput(f, "plane.offset", plane.offset, (v) => this.apply({ type: "set_sketch_plane", id: f.id, plane: { ...plane, offset: v } })),
-    ));
+    this.planeFieldsFor(f, body, plane, (p) => this.apply({ type: "set_sketch_plane", id: f.id, plane: p }));
 
     if (result) {
       const s = result.solve;
@@ -1900,13 +1872,19 @@ class App implements SketchHost {
 
   /** Plane chooser shared by sketches and mirrors. */
   planeFields(body: HTMLElement, plane: PlaneRef, onChange: (p: PlaneRef) => void): void {
-    const planeValue = plane.type === "standard" ? plane.base : "face";
+    const planeValue = plane.type === "standard" ? plane.base : plane.type === "rotated" ? "angled" : "face";
     body.appendChild(
-      field("Plane", select(["top", "front", "right", "face"], planeValue, (v) => {
+      field("Plane", select(["top", "front", "right", "angled", "face"], planeValue, (v) => {
         if (v === "face") this.beginFacePick((face) => onChange({ type: "face", face, offset: plane.offset }));
+        else if (v === "angled") onChange({ type: "rotated", base: plane.type === "standard" ? plane.base : "top", axis: "x", angle: 30, offset: plane.offset });
         else onChange({ type: "standard", base: v as StandardPlane, offset: plane.offset });
       })),
     );
+    if (plane.type === "rotated") {
+      body.appendChild(field("Base plane", select(["top", "front", "right"], plane.base, (v) => onChange({ ...plane, base: v as StandardPlane }))));
+      body.appendChild(field("About axis", select(["x", "y", "z"], plane.axis, (v) => onChange({ ...plane, axis: v as Axis }))));
+      body.appendChild(field("Angle °", numberInput(plane.angle, (v) => onChange({ ...plane, angle: v }))));
+    }
     if (plane.type === "face") {
       const row = document.createElement("div");
       row.className = "field";
@@ -1927,6 +1905,12 @@ class App implements SketchHost {
     this.planeFields(body, plane, onChange);
     const last = body.lastElementChild as HTMLElement;
     last.replaceWith(field("Offset", this.exprInput(f, "plane.offset", plane.offset, (v) => onChange({ ...plane, offset: v }))));
+    if (plane.type === "rotated" && f.kind.type === "sketch") {
+      // The angle takes expressions on sketches (the kernel exposes plane.angle there).
+      const fields = [...body.querySelectorAll(".field")] as HTMLElement[];
+      const angleRow = fields.find((el) => el.querySelector("label")?.textContent === "Angle °");
+      angleRow?.replaceWith(field("Angle °", this.exprInput(f, "plane.angle", plane.angle, (v) => onChange({ ...plane, angle: v }))));
+    }
   }
 
   renderShellDetail(f: FeatureSummary, body: HTMLElement): void {
@@ -2808,7 +2792,8 @@ async function main(): Promise<void> {
   exportSelect.onchange = () => {
     const what = exportSelect.value;
     exportSelect.value = "";
-    if (what === "stl") app.download(app.toStl(), "stl");
+    if (what === "png") app.viewer.snapshot().then((blob) => app.download(blob, "png"), (e) => app.setStatus(`error: ${(e as Error).message}`));
+    else if (what === "stl") app.download(app.toStl(), "stl");
     else if (what === "3mf") app.download(app.to3mf(), "3mf");
     else if (what === "svg-drawing") app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
     else if (what === "dxf-drawing") app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);

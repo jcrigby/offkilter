@@ -663,6 +663,14 @@ export class Viewer {
   }
 
   /** Frames the camera on everything currently shown. */
+  /** The current view as a PNG (rendered fresh, so the buffer is not stale). */
+  snapshot(): Promise<Blob> {
+    this.renderer.render(this.scene, this.camera);
+    return new Promise((resolve, reject) => {
+      this.renderer.domElement.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("could not capture the view"))), "image/png");
+    });
+  }
+
   fitAll(): void {
     const box = new THREE.Box3();
     box.expandByObject(this.bodies);

@@ -10,7 +10,11 @@ export type Vec3 = { x: number; y: number; z: number };
 export type StandardPlane = "top" | "front" | "right";
 /** A face of a body, by the feature that made it and its local face index. */
 export type FaceRef = { feature: number; local: number };
-export type PlaneRef = { type: "standard"; base: StandardPlane; offset: number } | { type: "face"; face: FaceRef; offset: number };
+export type PlaneRef =
+  | { type: "standard"; base: StandardPlane; offset: number }
+  | { type: "face"; face: FaceRef; offset: number }
+  /** A standard plane turned `angle` degrees about a world axis through the origin, then offset. */
+  | { type: "rotated"; base: StandardPlane; axis: Axis; angle: number; offset: number };
 export type ExtrudeEnd = { type: "blind" } | { type: "through_all" } | { type: "up_to_face"; face: FaceRef };
 export type ExtrudeDirection = "normal" | "reverse" | "symmetric";
 export type BodyOp = "new" | "add" | "remove" | "intersect";

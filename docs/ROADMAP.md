@@ -19,6 +19,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Splines (interpolating Catmull–Rom through sketch points; sampled into one smooth wall)
 - [ ] Point-on-spline and tangent constraints for splines
 - [x] Sketch on planar faces of bodies (face references)
+- [x] Angled planes: a standard plane turned about a world axis (angle bindable), usable wherever a plane is chosen
 - [x] Project / use edges and face outlines from bodies in sketches (fixed entities that follow the model)
 - [x] Construction geometry, mirror
 - [x] Sketch patterns: linear copies held by distance constraints, circular copies by a rotated-point constraint about a construction centre

@@ -7,7 +7,7 @@ part studio, and a web client, all under the MIT license.
 **Status: usable for simple parts, early for everything else.** What
 works today, all in the browser:
 
-- Sketching: lines, rectangles, circles, arcs and splines drawn on standard planes
+- Sketching: lines, rectangles, circles, arcs and splines drawn on standard or angled planes
   or on faces of bodies, with a constraint solver (18 constraint types,
   degrees-of-freedom reporting), inferred coincident / horizontal /
   vertical constraints while drawing, point dragging, construction

@@ -142,7 +142,10 @@ boolean fragments keep the origin of the face they came from, so the
 reference survives later cuts and unions as long as some part of the
 original face remains. A sketch `PlaneRef::Face` resolves to that face's
 plane at regeneration time (through `canonical_frame`, which derives a
-stable sketch frame from the plane alone), and `ExtrudeEnd::UpToFace`
+stable sketch frame from the plane alone); `PlaneRef::Rotated` is a
+standard plane turned about a world axis through the origin by an angle
+(bindable on sketches as `plane.angle`) and then offset, the angled datum
+for tilted features; and `ExtrudeEnd::UpToFace`
 extrudes to that face's plane. `ExtrudeEnd::ThroughAll` extends past the
 bounding boxes of all existing bodies. A reference whose face no longer
 exists is a feature error.

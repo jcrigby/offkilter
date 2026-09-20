@@ -57,6 +57,15 @@ pub enum PlaneRef {
         #[serde(default)]
         offset: f64,
     },
+    /// A standard plane turned `angle` degrees about a world axis through
+    /// the origin, then offset along its new normal: an angled datum.
+    Rotated {
+        base: StandardPlane,
+        axis: Axis,
+        angle: f64,
+        #[serde(default)]
+        offset: f64,
+    },
 }
 
 impl PlaneRef {
@@ -66,7 +75,9 @@ impl PlaneRef {
 
     pub fn offset(&self) -> f64 {
         match self {
-            PlaneRef::Standard { offset, .. } | PlaneRef::Face { offset, .. } => *offset,
+            PlaneRef::Standard { offset, .. }
+            | PlaneRef::Face { offset, .. }
+            | PlaneRef::Rotated { offset, .. } => *offset,
         }
     }
 
@@ -74,8 +85,53 @@ impl PlaneRef {
         match self {
             PlaneRef::Standard { base, .. } => PlaneRef::Standard { base, offset },
             PlaneRef::Face { face, .. } => PlaneRef::Face { face, offset },
+            PlaneRef::Rotated {
+                base, axis, angle, ..
+            } => PlaneRef::Rotated {
+                base,
+                axis,
+                angle,
+                offset,
+            },
         }
     }
+
+    /// The angle of a rotated plane, if it is one.
+    pub fn angle(&self) -> Option<f64> {
+        match self {
+            PlaneRef::Rotated { angle, .. } => Some(*angle),
+            _ => None,
+        }
+    }
+
+    /// A rotated plane with a new angle; other kinds are returned unchanged.
+    pub fn with_angle(self, new_angle: f64) -> Self {
+        match self {
+            PlaneRef::Rotated {
+                base, axis, offset, ..
+            } => PlaneRef::Rotated {
+                base,
+                axis,
+                angle: new_angle,
+                offset,
+            },
+            other => other,
+        }
+    }
+}
+
+/// The plane of a rotated reference: the standard plane turned about the
+/// world axis, then offset along its normal.
+pub fn rotated_plane(base: StandardPlane, axis: Axis, angle: f64, offset: f64) -> Plane {
+    let p = base.plane();
+    let t = ok_brep::Transform::rotation(ok_math::Vec3::ZERO, axis.vector(), angle.to_radians());
+    Plane {
+        origin: t.apply_point(p.origin),
+        x_axis: t.apply_vector(p.x_axis),
+        y_axis: t.apply_vector(p.y_axis),
+        normal: t.apply_vector(p.normal),
+    }
+    .offset(offset)
 }
 
 /// A canonical sketch frame on a face plane: origin at the projection of
@@ -498,6 +554,9 @@ impl FeatureKind {
         match self {
             FeatureKind::Sketch(s) => {
                 let mut v = vec!["plane.offset".to_string()];
+                if s.plane.angle().is_some() {
+                    v.push("plane.angle".to_string());
+                }
                 v.extend(
                     s.sketch
                         .constraints()
@@ -537,6 +596,7 @@ impl FeatureKind {
     pub fn field(&self, field: &str) -> Option<f64> {
         match (self, field) {
             (FeatureKind::Sketch(s), "plane.offset") => Some(s.plane.offset()),
+            (FeatureKind::Sketch(s), "plane.angle") => s.plane.angle(),
             (FeatureKind::Sketch(s), f) if f.starts_with("constraint.") => {
                 let id: u32 = f["constraint.".len()..].parse().ok()?;
                 s.sketch
@@ -573,6 +633,10 @@ impl FeatureKind {
         match (self, field) {
             (FeatureKind::Sketch(s), "plane.offset") => {
                 s.plane = s.plane.with_offset(value);
+                Ok(())
+            }
+            (FeatureKind::Sketch(s), "plane.angle") if s.plane.angle().is_some() => {
+                s.plane = s.plane.with_angle(value);
                 Ok(())
             }
             (FeatureKind::Sketch(s), f) if f.starts_with("constraint.") => {

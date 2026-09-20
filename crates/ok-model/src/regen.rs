@@ -1569,6 +1569,12 @@ impl RegenResult {
                 let p = self.find_planar_face(face)?;
                 Ok(canonical_frame(&p).offset(*offset))
             }
+            PlaneRef::Rotated {
+                base,
+                axis,
+                angle,
+                offset,
+            } => Ok(crate::rotated_plane(*base, *axis, *angle, *offset)),
         }
     }
 
