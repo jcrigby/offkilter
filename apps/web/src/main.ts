@@ -1269,7 +1269,7 @@ class App implements SketchHost {
       dot.title = f.error ?? (this.sketchWarn(f) ? "sketch is under-constrained" : "ok");
       const icon = document.createElement("span");
       icon.className = "icon";
-      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀", boolean: "∪", shell: "◱", move_face: "⇥", draft: "◿", mesh: "▲" };
+      const icons: Record<string, string> = { sketch: "✎", extrude: "⬒", revolve: "◑", blend: "◜", mirror: "⇔", pattern: "⁝⁝", variable: "#", hole: "◎", sweep: "↝", loft: "⋀", boolean: "∪", shell: "◱", move_face: "⇥", draft: "◿", mesh: "▲", split: "⫽" };
       icon.textContent = icons[f.kind.type] ?? "•";
       const name = document.createElement("span");
       name.className = "name";
@@ -1317,6 +1317,7 @@ class App implements SketchHost {
     ($("#btn-add-fillet") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-chamfer") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-mirror") as HTMLButtonElement).disabled = !hasBody;
+    ($("#btn-add-split") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-boolean") as HTMLButtonElement).disabled = this.summary.bodies.length < 2;
     ($("#btn-add-shell") as HTMLButtonElement).disabled = !hasBody;
     ($("#btn-add-move-face") as HTMLButtonElement).disabled = !hasBody;
@@ -1428,6 +1429,7 @@ class App implements SketchHost {
     else if (f.kind.type === "move_face") this.renderMoveFaceDetail(f, body);
     else if (f.kind.type === "draft") this.renderDraftDetail(f, body);
     else if (f.kind.type === "mesh") this.renderMeshDetail(f, body);
+    else if (f.kind.type === "split") this.renderSplitDetail(f, body);
     else this.renderPatternDetail(f, body);
 
     const row = document.createElement("div");
@@ -1900,6 +1902,36 @@ class App implements SketchHost {
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Moves each face along its normal (negative pushes into the body); the faces around it stretch to follow.";
+    body.appendChild(note);
+  }
+
+  renderSplitDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "split") return;
+    const k = f.kind;
+    this.planeFieldsFor(f, body, k.plane, (plane) => this.apply({ type: "set_split", id: f.id, plane }));
+    const chosen = k.bodies ?? [];
+    const candidates = f.candidates ?? [];
+    if (candidates.length > 1) {
+      const ul = document.createElement("ul");
+      ul.className = "body-pick";
+      for (const [src, name] of candidates) {
+        const li = document.createElement("li");
+        const on = chosen.length === 0 || chosen.includes(src);
+        const cb = checkbox(on, (v) => {
+          const all = candidates.map(([s]) => s);
+          const next = v ? [...new Set([...(chosen.length === 0 ? all : chosen), src])] : (chosen.length === 0 ? all : chosen).filter((s) => s !== src);
+          this.apply({ type: "set_split", id: f.id, bodies: next.length === all.length ? [] : next });
+        });
+        const text = document.createElement("span");
+        text.textContent = name;
+        li.append(cb, text);
+        ul.appendChild(li);
+      }
+      body.appendChild(field("Bodies", ul));
+    }
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = "Each body the plane crosses becomes two: the part against the plane's normal keeps the body's name, the other becomes a new part.";
     body.appendChild(note);
   }
 
@@ -2818,6 +2850,14 @@ async function main(): Promise<void> {
   $("#btn-add-mirror").onclick = () => {
     app.sketcher.exit();
     app.apply({ type: "add_mirror", plane: { type: "standard", base: "right", offset: 0 }, op: "add", name: app.autoName("Mirror") });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-split").onclick = () => {
+    app.sketcher.exit();
+    // Default: a right plane through the middle of the bodies.
+    const b = app.viewer.bodyBounds();
+    const offset = b ? (b.min.x + b.max.x) / 2 : 0;
+    app.apply({ type: "add_split", plane: { type: "standard", base: "right", offset }, name: app.autoName("Split") });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   $("#btn-add-boolean").onclick = () => {

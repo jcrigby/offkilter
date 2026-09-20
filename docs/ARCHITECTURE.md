@@ -394,6 +394,16 @@ and the sheet size (A4, A3, A2, Letter) before downloading; the Export
 menu also writes a bill of materials as CSV (bodies of a part studio, or
 instances with their source tab in an assembly).
 
+### Split (`FeatureKind::Split`)
+
+`ok_brep::split` cuts a solid by a plane with two booleans against a box
+covering the plane's normal side (difference and intersection), so it
+inherits the boolean's handling of coincident faces; the cut faces are
+tagged with the split feature. The feature splits every body the plane
+crosses (or the chosen ones): the part against the normal keeps the
+body's slot and name, the other is appended as a new part, and a plane
+that misses every body is reported.
+
 ### Mesh import (`FeatureKind::Mesh`)
 
 An imported STL becomes a `Mesh` feature holding welded vertices and

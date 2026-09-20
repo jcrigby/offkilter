@@ -372,6 +372,17 @@ pub struct ShellFeature {
     pub faces: Vec<FaceRef>,
 }
 
+/// Splits bodies by a plane into two bodies each: the part against the
+/// plane's normal keeps the body's name, the other becomes a new part.
+/// With `bodies` empty every body the plane crosses is split.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SplitFeature {
+    pub plane: PlaneRef,
+    /// Bodies (by creating feature) to split; empty splits every body.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub bodies: Vec<FeatureId>,
+}
+
 /// A body imported as a triangle mesh (an STL file, say). The triangles
 /// must close a volume; coplanar neighbours are merged into one face
 /// when the solid is built, so a boxy mesh becomes a boxy body.
@@ -450,6 +461,7 @@ pub enum FeatureKind {
     MoveFace(MoveFaceFeature),
     Draft(DraftFeature),
     Mesh(MeshFeature),
+    Split(SplitFeature),
 }
 
 impl FeatureKind {
@@ -477,6 +489,7 @@ impl FeatureKind {
             FeatureKind::MoveFace(_) => "Move face",
             FeatureKind::Draft(_) => "Draft",
             FeatureKind::Mesh(_) => "Mesh",
+            FeatureKind::Split(_) => "Split",
         }
     }
 
@@ -506,6 +519,7 @@ impl FeatureKind {
             | FeatureKind::Loft(_)
             | FeatureKind::Boolean(_)
             | FeatureKind::Mesh(_) => vec![],
+            FeatureKind::Split(_) => vec!["plane.offset".into()],
             FeatureKind::Shell(_) => vec!["thickness".into()],
             FeatureKind::MoveFace(_) => vec!["distance".into()],
             FeatureKind::Draft(_) => vec!["angle".into(), "plane.offset".into()],
@@ -537,6 +551,7 @@ impl FeatureKind {
             (FeatureKind::Draft(d), "angle") => Some(d.angle),
             (FeatureKind::Draft(d), "plane.offset") => Some(d.neutral.offset()),
             (FeatureKind::Mirror(m), "plane.offset") => Some(m.plane.offset()),
+            (FeatureKind::Split(sp), "plane.offset") => Some(sp.plane.offset()),
             (FeatureKind::Pattern(p), "count") => Some(p.count as f64),
             (FeatureKind::Pattern(p), "spacing") => match &p.kind {
                 PatternKind::Linear { spacing, .. } => Some(*spacing),
@@ -601,6 +616,10 @@ impl FeatureKind {
                 Ok(())
             }
             (FeatureKind::Mirror(m), "plane.offset") => {
+                m.plane = m.plane.with_offset(value);
+                Ok(())
+            }
+            (FeatureKind::Split(m), "plane.offset") => {
                 m.plane = m.plane.with_offset(value);
                 Ok(())
             }
@@ -669,7 +688,8 @@ impl FeatureKind {
             | FeatureKind::Shell(_)
             | FeatureKind::MoveFace(_)
             | FeatureKind::Draft(_)
-            | FeatureKind::Mesh(_) => None,
+            | FeatureKind::Mesh(_)
+            | FeatureKind::Split(_) => None,
         }
     }
 }

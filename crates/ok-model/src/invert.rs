@@ -48,6 +48,7 @@ impl PartStudio {
             | Op::AddMoveFace { .. }
             | Op::AddDraft { .. }
             | Op::AddMesh { .. }
+            | Op::AddSplit { .. }
             | Op::InsertFeature { .. } => result
                 .feature
                 .map(|id| vec![Op::DeleteFeature { id }])
@@ -116,6 +117,14 @@ impl PartStudio {
                     op: op.map(|_| m.op),
                     features: features.map(|_| m.features.clone()),
                     bodies: bodies.map(|_| m.bodies.clone()),
+                }],
+                _ => Vec::new(),
+            },
+            Op::SetSplit { id, plane, bodies } => match before.kind() {
+                Some(FeatureKind::Split(sp)) => vec![Op::SetSplit {
+                    id,
+                    plane: plane.map(|_| sp.plane),
+                    bodies: bodies.map(|_| sp.bodies.clone()),
                 }],
                 _ => Vec::new(),
             },

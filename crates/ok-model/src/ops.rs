@@ -3,8 +3,8 @@ use crate::{
     EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId,
     FeatureKind, HoleFeature, LoftFeature, MeshFeature, MirrorFeature, ModelError, MoveFaceFeature,
     PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection,
-    ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature, SketchFeature, SweepFeature,
-    VariableFeature, PROJECTION_BLOCK,
+    ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature, SketchFeature, SplitFeature,
+    SweepFeature, VariableFeature, PROJECTION_BLOCK,
 };
 use ok_math::{Vec2, Vec3};
 use ok_sketch::{Constraint, ConstraintId, Entity, EntityId};
@@ -387,6 +387,20 @@ pub enum Op {
         neutral: PlaneRef,
         angle: f64,
         name: Option<String>,
+    },
+    /// Split bodies by a plane into two bodies each.
+    AddSplit {
+        plane: PlaneRef,
+        #[serde(default)]
+        bodies: Vec<FeatureId>,
+        name: Option<String>,
+    },
+    SetSplit {
+        id: FeatureId,
+        #[serde(default)]
+        plane: Option<PlaneRef>,
+        #[serde(default)]
+        bodies: Option<Vec<FeatureId>>,
     },
     /// A body from a closed triangle mesh (imported STL).
     AddMesh {
@@ -972,6 +986,26 @@ impl PartStudio {
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "move face")),
+            },
+            Op::AddSplit {
+                plane,
+                bodies,
+                name,
+            } => {
+                out.feature = Some(
+                    self.push_feature(FeatureKind::Split(SplitFeature { plane, bodies }), name),
+                );
+            }
+            Op::SetSplit { id, plane, bodies } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Split(sp) => {
+                    if let Some(p) = plane {
+                        sp.plane = p;
+                    }
+                    if let Some(b) = bodies {
+                        sp.bodies = b;
+                    }
+                }
+                _ => return Err(ModelError::Invalid("not a split feature".into())),
             },
             Op::AddMesh {
                 vertices,

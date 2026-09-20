@@ -13,6 +13,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Arc tool (centre, start, end) and construction geometry
 - [x] Regular polygon and slot tools (constrained to stay regular / tangent)
 - [x] Trim, offset, mirror within a sketch (symmetric constraints on mirrored points)
+- [x] Sketch fillet: round the corner between two lines with a tangent, dimensioned arc
 - [x] Dimension labels in the viewport with click-to-edit (values or expressions)
 - [x] Sparse Jacobian: analytic rows for the common constraints, local differences for the rest; rank from the normal matrix
 - [x] Splines (interpolating Catmull–Rom through sketch points; sampled into one smooth wall)
@@ -42,6 +43,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Draft (tilt planar faces about a neutral plane) and Move face (push / pull planar faces): direct edits that re-solve the surrounding corners
 - [x] Mirror and linear / circular patterns of bodies
 - [x] Boolean feature between existing bodies (union / subtract / intersect, tools optionally kept)
+- [x] Split bodies by a plane into two parts (the plane offset is bindable)
 - [x] Patterns and mirrors of features (the named features' tool volumes are replayed with their own add / remove operation)
 - [x] Mirror / pattern selected bodies only (tick bodies in the panel)
 - [ ] Patterns of faces

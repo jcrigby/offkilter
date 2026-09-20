@@ -766,6 +766,22 @@ test("spline sketch tool draws a smooth curve that bounds a region", async ({ pa
   expect(surfaces).toBe(4);
 });
 
+test("split a body by a plane into two parts", async ({ page }) => {
+  await openDemo(page);
+  const before = await volume(page);
+  await page.click("#btn-add-split");
+  await page.waitForTimeout(300);
+  expect(await status(page)).toContain("2 bodies");
+  expect(await volume(page)).toBeCloseTo(before, 3);
+  await expect(page.locator("#detail-title")).toContainText("Split");
+  await expect(page.locator("#part-list li")).toHaveCount(2);
+  // Undo removes the split again.
+  await page.click("#viewport");
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(300);
+  expect(await status(page)).toContain("1 body");
+});
+
 test("import a binary STL box as a body", async ({ page }) => {
   page.on("dialog", (d) => d.accept());
   await page.goto("/");

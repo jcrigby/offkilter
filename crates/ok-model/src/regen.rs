@@ -517,6 +517,20 @@ impl PartStudio {
                         Err(e) => Some(e),
                     }
                 }
+                FeatureKind::Split(sp) => {
+                    let sp = sp.clone();
+                    candidates = Some(
+                        result
+                            .bodies
+                            .iter()
+                            .map(|b| (b.source, b.name.clone()))
+                            .collect(),
+                    );
+                    match result.resolve_plane(&sp.plane) {
+                        Ok(plane) => Self::regen_split(&mut result, id, &plane, &sp.bodies),
+                        Err(e) => Some(e),
+                    }
+                }
                 FeatureKind::Mesh(mf) => {
                     let mf = mf.clone();
                     match Self::mesh_solid(&mf, id) {
@@ -1316,6 +1330,45 @@ impl PartStudio {
         // The copies are not one tool volume, so a later pattern cannot
         // replay this feature; it names the original features instead.
         result.tools.remove(&id);
+        None
+    }
+
+    /// Splits every chosen body (all when `bodies` is empty) that the plane
+    /// crosses: the part against the normal keeps the body's slot and name,
+    /// the part on the normal side is appended as a new part.
+    fn regen_split(
+        result: &mut RegenResult,
+        id: FeatureId,
+        plane: &Plane,
+        bodies: &[FeatureId],
+    ) -> Option<String> {
+        let chosen: Vec<usize> = (0..result.bodies.len())
+            .filter(|&i| bodies.is_empty() || bodies.contains(&result.bodies[i].source))
+            .collect();
+        if chosen.is_empty() {
+            return Some("no bodies to split".into());
+        }
+        let mut split_any = false;
+        let mut new_parts = Vec::new();
+        for i in chosen {
+            match ok_brep::split_tagged(&result.bodies[i].solid, plane, id.0) {
+                Ok(Some((below, above))) => {
+                    let name = result.bodies[i].name.clone();
+                    let source = result.bodies[i].source;
+                    result.bodies[i] = Body::new(name, source, below);
+                    new_parts.push(above);
+                    split_any = true;
+                }
+                Ok(None) => {}
+                Err(e) => return Some(format!("split failed: {e}")),
+            }
+        }
+        for solid in new_parts {
+            result.push_body(id, solid);
+        }
+        if !split_any {
+            return Some("the plane misses every chosen body".into());
+        }
         None
     }
 

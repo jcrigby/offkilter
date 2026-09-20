@@ -1034,3 +1034,69 @@ fn open_and_inside_out_meshes_are_reported() {
     let r = p.ps.regenerate();
     assert!(r.errors().any(|(_, e)| e.contains("inside out")));
 }
+
+#[test]
+fn split_by_a_plane_makes_two_parts_and_follows_the_offset() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::Standard {
+        base: StandardPlane::Top,
+        offset: 0.0,
+    });
+    p.rect(s, (0.0, 0.0), (20.0, 10.0));
+    p.op(Op::AddExtrude {
+        sketch: s,
+        profiles: ProfileSelection::All,
+        depth: 5.0,
+        direction: ExtrudeDirection::Normal,
+        end: ExtrudeEnd::Blind,
+        op: BodyOp::New,
+        name: Some("Block".into()),
+    });
+    // Split at x = 6 (the Right plane, normal +X, offset 6).
+    let split = p.op(Op::AddSplit {
+        plane: PlaneRef::Standard {
+            base: StandardPlane::Right,
+            offset: 6.0,
+        },
+        bodies: Vec::new(),
+        name: Some("Split".into()),
+    });
+    let r = p.regen();
+    assert_eq!(r.bodies.len(), 2);
+    let mut vols: Vec<f64> = r.bodies.iter().map(|b| b.solid.volume()).collect();
+    vols.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    assert!(
+        (vols[0] - 300.0).abs() < 1e-9 && (vols[1] - 700.0).abs() < 1e-9,
+        "{vols:?}"
+    );
+    // The first body keeps its name; the new part is the split's.
+    assert_eq!(r.bodies[0].name, "Part 1");
+    assert_eq!(r.bodies[1].source, split);
+    // Moving the plane moves the cut; a plane past the block is reported.
+    p.op(Op::SetSplit {
+        id: split,
+        plane: Some(PlaneRef::Standard {
+            base: StandardPlane::Right,
+            offset: 15.0,
+        }),
+        bodies: None,
+    });
+    let r = p.regen();
+    let mut vols: Vec<f64> = r.bodies.iter().map(|b| b.solid.volume()).collect();
+    vols.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    assert!(
+        (vols[0] - 250.0).abs() < 1e-9 && (vols[1] - 750.0).abs() < 1e-9,
+        "{vols:?}"
+    );
+    p.op(Op::SetSplit {
+        id: split,
+        plane: Some(PlaneRef::Standard {
+            base: StandardPlane::Right,
+            offset: 40.0,
+        }),
+        bodies: None,
+    });
+    let r = p.ps.regenerate();
+    assert!(r.errors().any(|(_, e)| e.contains("misses")));
+    assert_eq!(r.bodies.len(), 1);
+}

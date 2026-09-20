@@ -70,8 +70,31 @@ pub fn section_view(solids: &[&Solid], view: View, plane: &Plane) -> SectionLine
 /// the solid minus a box covering the normal side. The solid itself when
 /// the plane misses it or the boolean fails.
 fn cut_solid(solid: &Solid, plane: &Plane) -> Solid {
+    match split(solid, plane) {
+        Ok(Some((below, _))) => below,
+        // Entirely on the removed side: keep it drawn whole rather than
+        // vanish (a section through empty air is a user slip).
+        _ => solid.clone(),
+    }
+}
+
+/// Splits `solid` by `plane` into the part against the plane's normal
+/// and the part on its normal side, each a closed solid whose new faces
+/// are tagged with `feature`. `None` when the plane misses the solid
+/// (nothing to split). The cut is a boolean against a box covering one
+/// side, so it inherits the boolean's handling of coincident faces.
+pub fn split(solid: &Solid, plane: &Plane) -> Result<Option<(Solid, Solid)>, crate::BrepError> {
+    split_tagged(solid, plane, u32::MAX)
+}
+
+/// `split` with the faces created by the cut tagged as `feature`.
+pub fn split_tagged(
+    solid: &Solid,
+    plane: &Plane,
+    feature: u32,
+) -> Result<Option<(Solid, Solid)>, crate::BrepError> {
     let Some((lo, hi)) = solid.bounds() else {
-        return solid.clone();
+        return Ok(None);
     };
     let extent = (hi - lo).length().max(1.0);
     let centre = (lo + hi) * 0.5;
@@ -82,38 +105,28 @@ fn cut_solid(solid: &Solid, plane: &Plane) -> Solid {
         min_d = min_d.min(d);
         max_d = max_d.max(d);
     }
-    if max_d <= 1e-9 {
-        return solid.clone();
-    }
-    if min_d >= -1e-9 {
-        // Entirely on the removed side: nothing left; keep it drawn whole
-        // rather than vanish (a section through empty air is a user slip).
-        return solid.clone();
+    let eps = 1e-9 * extent;
+    if max_d <= eps || min_d >= -eps {
+        return Ok(None);
     }
     // A box on the normal side, big enough to cover the solid; its base
     // sits in the cut plane and is centred under the solid.
-    let base = Plane {
-        origin: plane.origin,
-        ..*plane
-    };
-    let c2 = base.to_plane(centre);
+    let c2 = plane.to_plane(centre);
     let half = extent * 4.0;
     let mut sk = ok_sketch::Sketch::new();
     sk.add_rectangle(
         Vec2::new(c2.x - half, c2.y - half),
         Vec2::new(c2.x + half, c2.y + half),
     );
-    let Some(profile) = sk
+    let profile = sk
         .profiles(&ok_sketch::ProfileOptions::default())
         .into_iter()
         .next()
-    else {
-        return solid.clone();
-    };
-    let Ok(cutter) = crate::extrude(&profile, &base, 0.0, half, u32::MAX) else {
-        return solid.clone();
-    };
-    crate::boolean(solid, &cutter, crate::BoolOp::Difference).unwrap_or_else(|_| solid.clone())
+        .ok_or_else(|| crate::BrepError::Degenerate("split box".into()))?;
+    let cutter = crate::extrude(&profile, plane, 0.0, half, feature)?;
+    let below = crate::boolean(solid, &cutter, crate::BoolOp::Difference)?;
+    let above = crate::boolean(solid, &cutter, crate::BoolOp::Intersection)?;
+    Ok(Some((below, above)))
 }
 
 /// Frame of a view: the viewer looks along `dir`; `up` is the screen's up.
@@ -434,6 +447,25 @@ mod tests {
             .sum::<f64>()
             .abs()
             / 2.0
+    }
+
+    #[test]
+    fn split_divides_a_block_into_two_closed_halves() {
+        let b = block(20.0, 10.0, 5.0);
+        let plane = Plane::from_origin_normal(Vec3::new(6.0, 0.0, 0.0), Vec3::X).unwrap();
+        let (below, above) = split_tagged(&b, &plane, 9).unwrap().unwrap();
+        below.validate().unwrap();
+        above.validate().unwrap();
+        assert!((below.volume() - 300.0).abs() < 1e-9, "{}", below.volume());
+        assert!((above.volume() - 700.0).abs() < 1e-9, "{}", above.volume());
+        // The cut faces carry the split feature's tag; the rest keep theirs.
+        let cut = |s: &Solid| s.faces.iter().filter(|f| f.origin.feature == 9).count();
+        assert_eq!(cut(&below), 1);
+        assert_eq!(cut(&above), 1);
+        assert_eq!(below.faces.len(), 6);
+        // A plane past the block splits nothing.
+        let miss = Plane::from_origin_normal(Vec3::new(30.0, 0.0, 0.0), Vec3::X).unwrap();
+        assert!(split(&b, &miss).unwrap().is_none());
     }
 
     #[test]
