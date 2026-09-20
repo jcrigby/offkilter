@@ -36,6 +36,7 @@ export type Constraint =
   | { type: "perpendicular"; a: number; b: number }
   | { type: "angle"; a: number; b: number; value: number }
   | { type: "point_on_line"; point: number; line: number }
+  | { type: "point_on_spline"; point: number; spline: number }
   | { type: "point_on_circle"; point: number; entity: number }
   | { type: "midpoint"; point: number; line: number }
   | { type: "tangent"; line: number; entity: number }

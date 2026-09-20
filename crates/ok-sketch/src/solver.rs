@@ -20,6 +20,8 @@ const RESIDUAL_TOL: f64 = 1e-10;
 const STEP_TOL: f64 = 1e-14;
 #[cfg(test)]
 const RANK_TOL: f64 = 1e-8;
+/// Pieces per spline span when a point-on-spline residual samples the curve.
+const SPLINE_SOLVE_PIECES: usize = 16;
 /// A normal-matrix pivot below this fraction of its original diagonal
 /// entry counts as zero (singular values of J below about 1e-6 of the
 /// column norm).
@@ -307,6 +309,36 @@ impl<'a> Eval<'a> {
                 r(d.map(|d| d.x));
                 r(d.map(|d| d.y));
             }
+            PointOnSpline { point, spline } => {
+                // Distance from the point to the nearest piece of the spline,
+                // sampled at a fixed density so the residual does not depend on
+                // display settings.
+                r((|| {
+                    let p = self.point(*point)?;
+                    let ctrl: Vec<Vec2> = match self.sketch.entity(*spline)? {
+                        Entity::Spline { points } => points
+                            .iter()
+                            .map(|id| self.point(*id))
+                            .collect::<Option<_>>()?,
+                        _ => return None,
+                    };
+                    let poly = crate::spline::spline_polyline(&ctrl, SPLINE_SOLVE_PIECES);
+                    let mut best = f64::MAX;
+                    for w in poly.windows(2) {
+                        let (a, b) = (w[0], w[1]);
+                        let d = b - a;
+                        let len2 = d.length_squared();
+                        let t = if len2 > 0.0 {
+                            ((p - a).dot(d) / len2).clamp(0.0, 1.0)
+                        } else {
+                            0.0
+                        };
+                        let q = a + d * t;
+                        best = best.min(p.distance(q));
+                    }
+                    Some(best)
+                })());
+            }
             Symmetric { a, b, line } => {
                 // The midpoint lies on the line and a-b is perpendicular to it.
                 let v = (|| {
@@ -507,6 +539,7 @@ impl Eval<'_> {
             Radius { entity, .. } | Diameter { entity, .. } => vec![*entity],
             PointOnLine { point, line } | Midpoint { point, line } => vec![*point, *line],
             PointOnCircle { point, entity } => vec![*point, *entity],
+            PointOnSpline { point, spline } => vec![*point, *spline],
             Symmetric { a, b, line } => vec![*a, *b, *line],
             Rotated { a, b, center, .. } => vec![*a, *b, *center],
             Tangent { line, entity } => vec![*line, *entity],
@@ -1070,6 +1103,30 @@ mod tests {
         let sparse = jacobian(&solved, &map, &x);
         let (jtj, _) = sparse.normal_equations(&residuals(&solved, &map, &x));
         assert_eq!(rank_from_normal(jtj, n), rank(&sparse.to_dense(), m, n));
+    }
+
+    #[test]
+    fn point_on_spline_pulls_a_point_onto_the_curve() {
+        let mut s = Sketch::new();
+        let (spline, ids) = s
+            .add_spline(&[
+                Vec2::new(0.0, 0.0),
+                Vec2::new(5.0, 4.0),
+                Vec2::new(10.0, 0.0),
+            ])
+            .unwrap();
+        for id in &ids {
+            s.add_constraint(Constraint::Fixed { point: *id });
+        }
+        let p = s.add_point(Vec2::new(5.0, 7.0));
+        s.add_constraint(Constraint::PointOnSpline { point: p, spline });
+        let r = s.solve();
+        assert!(r.max_residual < 1e-6, "{r:?}");
+        // The point moved onto the curve: the hump passes through (5, 4).
+        let q = s.point(p).unwrap();
+        assert!(q.distance(Vec2::new(5.0, 4.0)) < 0.05, "{q:?}");
+        // One equation on two free coordinates: one degree of freedom left.
+        assert_eq!(r.dof, 1);
     }
 
     #[test]

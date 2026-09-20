@@ -839,6 +839,9 @@ export class Sketcher implements PointerHandler {
     } else if (sorted("point", "round")) {
       const [point, entity] = sorted("point", "round")!;
       out.push({ label: "On circle", build: () => ({ type: "point_on_circle", point, entity }) });
+    } else if (sorted("point", "spline")) {
+      const [point, spline] = sorted("point", "spline")!;
+      out.push({ label: "On spline", build: () => ({ type: "point_on_spline", point, spline }) });
     } else if (sorted("line", "round")) {
       const [line, entity] = sorted("line", "round")!;
       out.push({ label: "Tangent", build: () => ({ type: "tangent", line, entity }) });

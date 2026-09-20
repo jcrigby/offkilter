@@ -1,5 +1,6 @@
-// STL reader: binary or ASCII, welding shared vertices so the kernel sees
-// a connected mesh (STL repeats every corner per triangle).
+// Mesh readers: STL (binary or ASCII) and Wavefront OBJ, welding shared
+// vertices so the kernel sees a connected mesh (STL repeats every corner
+// per triangle).
 
 import type { Vec3 } from "./kernel";
 
@@ -66,4 +67,31 @@ function weld(corners: Vec3[]): Mesh {
   }
   if (triangles.length === 0) throw new Error("the STL has no triangles");
   return { vertices, triangles };
+}
+
+/** Parses a Wavefront OBJ: `v` lines and `f` faces (polygons are fanned into triangles; texture and normal indices are ignored). */
+export function parseObj(text: string): Mesh {
+  const verts: Vec3[] = [];
+  const corners: Vec3[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line.startsWith("v ")) {
+      const [x, y, z] = line.slice(2).trim().split(/\s+/).map(Number);
+      verts.push({ x: x ?? 0, y: y ?? 0, z: z ?? 0 });
+    } else if (line.startsWith("f ")) {
+      const idx = line.slice(2).trim().split(/\s+/).map((tok) => {
+        const i = Number(tok.split("/")[0]);
+        return i < 0 ? verts.length + i : i - 1;
+      });
+      for (let k = 1; k + 1 < idx.length; k++) {
+        for (const i of [idx[0]!, idx[k]!, idx[k + 1]!]) {
+          const v = verts[i];
+          if (!v) throw new Error("OBJ face refers to a missing vertex");
+          corners.push(v);
+        }
+      }
+    }
+  }
+  if (corners.length === 0) throw new Error("the OBJ has no faces");
+  return weld(corners);
 }

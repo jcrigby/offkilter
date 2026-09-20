@@ -8,7 +8,7 @@ part studio, and a web client, all under the MIT license.
 works today, all in the browser:
 
 - Sketching: lines, rectangles, circles, arcs and splines drawn on standard or angled planes
-  or on faces of bodies, with a constraint solver (18 constraint types,
+  or on faces of bodies, with a constraint solver (20 constraint types,
   degrees-of-freedom reporting), inferred coincident / horizontal /
   vertical constraints while drawing, point dragging, construction
   geometry, trim, offset, fillet and mirror (with symmetric constraints),
@@ -34,7 +34,7 @@ works today, all in the browser:
   plus an interference check between instances and a display-only
   animation of any spinning or sliding mate.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
-  document only reverts your own edit), `.okpart` JSON documents, STL import, STL, 3MF and DXF export, drawing
+  document only reverts your own edit), `.okpart` JSON documents, STL and OBJ import, STL, 3MF and DXF export, PNG snapshots, drawing
   sheets (SVG/DXF, A4 to A2 or Letter, chosen views with a live preview)
   with hidden-line removal, overall dimensions and a hatched section
   view, bills of materials as CSV, mass properties with per-part

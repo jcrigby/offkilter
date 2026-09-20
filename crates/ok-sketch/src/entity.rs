@@ -140,6 +140,11 @@ pub enum Constraint {
         point: EntityId,
         entity: EntityId,
     },
+    /// Point lies on a spline (its sampled curve).
+    PointOnSpline {
+        point: EntityId,
+        spline: EntityId,
+    },
     /// Point is the midpoint of a line.
     Midpoint {
         point: EntityId,
@@ -184,6 +189,7 @@ impl Constraint {
             Radius { entity, .. } | Diameter { entity, .. } => vec![*entity],
             PointOnLine { point, line } | Midpoint { point, line } => vec![*point, *line],
             PointOnCircle { point, entity } => vec![*point, *entity],
+            PointOnSpline { point, spline } => vec![*point, *spline],
             Tangent { line, entity } => vec![*line, *entity],
             Symmetric { a, b, line } => vec![*a, *b, *line],
             Rotated { a, b, center, .. } => vec![*a, *b, *center],
@@ -245,6 +251,7 @@ impl Constraint {
             Angle { .. } => "angle",
             PointOnLine { .. } => "point_on_line",
             PointOnCircle { .. } => "point_on_circle",
+            PointOnSpline { .. } => "point_on_spline",
             Midpoint { .. } => "midpoint",
             Tangent { .. } => "tangent",
             Symmetric { .. } => "symmetric",

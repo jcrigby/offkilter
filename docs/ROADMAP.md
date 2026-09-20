@@ -17,7 +17,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Dimension labels in the viewport with click-to-edit (values or expressions)
 - [x] Sparse Jacobian: analytic rows for the common constraints, local differences for the rest; rank from the normal matrix
 - [x] Splines (interpolating Catmull–Rom through sketch points; sampled into one smooth wall)
-- [ ] Point-on-spline and tangent constraints for splines
+- [x] Point-on-spline constraint
+- [ ] Tangent constraints for splines
 - [x] Sketch on planar faces of bodies (face references)
 - [x] Angled planes: a standard plane turned about a world axis (angle bindable), usable wherever a plane is chosen
 - [x] Project / use edges and face outlines from bodies in sketches (fixed entities that follow the model)
@@ -74,7 +75,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Section views on drawings (hatched cut faces, lettered cutting-plane trace; follows the viewport section plane)
 - [x] Drawing dialog: choose the views and sheet size with a live preview; bill of materials export (CSV) for part studios and assemblies
 - [ ] Driven dimensions placed by the user and detail views on drawings; STEP once faces are exact
-- [x] Import: STL meshes (binary or ASCII) as bodies; coplanar triangles merge into faces
+- [x] Import: STL (binary or ASCII) and OBJ meshes as bodies; coplanar triangles merge into faces
 - [ ] Import: STEP via a B-rep reader
 
 ## Platform

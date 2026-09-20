@@ -210,9 +210,10 @@ and patterns copy them.
 
 Constraints (`entity.rs`): coincident, fixed, horizontal, vertical,
 distance, horizontal/vertical distance, length, radius, diameter, equal,
-parallel, perpendicular, angle, point-on-line, point-on-circle, midpoint,
-tangent, symmetric. Angles are stored in degrees, lengths in model units
-(mm).
+parallel, perpendicular, angle, point-on-line, point-on-circle,
+point-on-spline (distance to the nearest piece of the curve sampled at a
+fixed density), midpoint, tangent, symmetric, rotated. Angles are stored
+in degrees, lengths in model units (mm).
 
 ### Editing (`edit.rs`)
 
@@ -418,7 +419,7 @@ that misses every body is reported.
 
 ### Mesh import (`FeatureKind::Mesh`)
 
-An imported STL becomes a `Mesh` feature holding welded vertices and
+An imported STL or OBJ becomes a `Mesh` feature holding welded vertices and
 triangle indices (the client welds corners closer than a millionth of
 the mesh size and drops degenerate triangles). Regeneration turns every
 triangle into a planar polygon and lets `Solid::from_polygons` decide

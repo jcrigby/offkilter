@@ -1,6 +1,6 @@
 import { Kernel } from "./kernel";
 import { to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingView, type SheetSize } from "./export";
-import { parseStl } from "./stl";
+import { parseObj, parseStl } from "./stl";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
@@ -1659,7 +1659,7 @@ class App implements SketchHost {
     const wrap = document.createElement("div");
     const types = [
       "coincident", "fixed", "horizontal", "vertical", "distance", "horizontal_distance", "vertical_distance", "length",
-      "radius", "diameter", "equal", "parallel", "perpendicular", "angle", "point_on_line", "point_on_circle", "midpoint", "tangent",
+      "radius", "diameter", "equal", "parallel", "perpendicular", "angle", "point_on_line", "point_on_circle", "point_on_spline", "midpoint", "tangent",
     ];
     const type = select(types, "length", () => render());
     wrap.appendChild(field("Add", type));
@@ -2362,6 +2362,7 @@ function constraintRefFields(t: string): string[] {
     case "radius": case "diameter": return ["entity"];
     case "point_on_line": case "midpoint": return ["point", "line"];
     case "point_on_circle": return ["point", "entity"];
+    case "point_on_spline": return ["point", "spline"];
     case "tangent": return ["line", "entity"];
     case "symmetric": return ["a", "b", "line"];
     case "rotated": return ["a", "b", "center"];
@@ -2841,8 +2842,8 @@ async function main(): Promise<void> {
     stlInput.value = "";
     if (!file) return;
     try {
-      const mesh = parseStl(await file.arrayBuffer());
-      app.apply({ type: "add_mesh", vertices: mesh.vertices, triangles: mesh.triangles, name: file.name.replace(/\.stl$/i, "") || null });
+      const mesh = /\.obj$/i.test(file.name) ? parseObj(await file.text()) : parseStl(await file.arrayBuffer());
+      app.apply({ type: "add_mesh", vertices: mesh.vertices, triangles: mesh.triangles, name: file.name.replace(/\.(stl|obj)$/i, "") || null });
     } catch (e) {
       app.setStatus(`could not import ${file.name}: ${(e as Error).message}`);
     }

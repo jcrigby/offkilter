@@ -861,6 +861,12 @@ test("import a binary STL box as a body", async ({ page }) => {
   expect(faces).toBe(6);
   await page.click("#feature-list li");
   await expect(page.locator("#detail-body")).toContainText("8 vertices, 12 triangles");
+  // The same box as an OBJ with quad faces adds a second body.
+  const obj = ["v 0 0 0", "v 10 0 0", "v 10 20 0", "v 0 20 0", "v 0 0 5", "v 10 0 5", "v 10 20 5", "v 0 20 5", ...quads.map((q) => `f ${q.map((i) => i + 1).join(" ")}`)].join("\n");
+  await page.locator("#stl-input").setInputFiles({ name: "box.obj", mimeType: "model/obj", buffer: Buffer.from(obj) });
+  await page.waitForTimeout(400);
+  expect(await status(page)).toContain("2 bodies");
+  expect(await volume(page)).toBeCloseTo(2000, 3);
 });
 
 test("drawing views remove hidden lines and export as SVG and DXF", async ({ page }) => {
