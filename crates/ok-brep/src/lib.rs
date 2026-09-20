@@ -267,7 +267,21 @@ impl Solid {
         surfaces: Vec<Surface>,
         tol: f64,
     ) -> Result<Solid, BrepError> {
-        Self::assemble(polys, surfaces, tol, None)
+        Self::assemble(polys, surfaces, tol, None, None)
+    }
+
+    /// `from_polygons_with_tolerance` for polygons that are known to be
+    /// consistent outside `region` (a box): only edges reaching into the
+    /// region are checked for T-junctions. The booleans use it with the
+    /// overlap of the two operands' boxes, since fragments outside it are
+    /// whole faces of a valid input.
+    pub fn from_polygons_within(
+        polys: Vec<Polygon>,
+        surfaces: Vec<Surface>,
+        tol: f64,
+        region: (Vec3, Vec3),
+    ) -> Result<Solid, BrepError> {
+        Self::assemble(polys, surfaces, tol, None, Some(region))
     }
 
     /// `from_polygons_with_tolerance` that also closes small holes in the
@@ -280,7 +294,7 @@ impl Solid {
         tol: f64,
         max_gap: f64,
     ) -> Result<Solid, BrepError> {
-        Self::assemble(polys, surfaces, tol, Some(max_gap))
+        Self::assemble(polys, surfaces, tol, Some(max_gap), None)
     }
 
     fn assemble(
@@ -288,6 +302,7 @@ impl Solid {
         surfaces: Vec<Surface>,
         tol: f64,
         max_gap: Option<f64>,
+        region: Option<(Vec3, Vec3)>,
     ) -> Result<Solid, BrepError> {
         let mut merger = VertexMerger::new(tol);
         let mut faces = Vec::new();
@@ -326,7 +341,7 @@ impl Solid {
         // open vertex, and merging vertices can create a new T-junction,
         // so alternate until stable (two rounds in practice).
         for _ in 0..4 {
-            solid.repair_t_junctions(tol);
+            solid.repair_t_junctions(tol, region);
             let mut changed = solid.collapse_short_edges(tol * 10.0);
             changed |= solid.stitch_open_vertices(tol * 10.0);
             if !changed {
@@ -335,7 +350,7 @@ impl Solid {
         }
         if let Some(max_gap) = max_gap {
             if solid.close_small_gaps(max_gap) {
-                solid.repair_t_junctions(tol);
+                solid.repair_t_junctions(tol, region);
             }
         }
         solid.split_nonplanar_faces(tol);
@@ -717,9 +732,13 @@ impl Solid {
     }
 
     /// Inserts any vertex lying strictly inside an edge into that edge.
-    fn repair_t_junctions(&mut self, tol: f64) {
+    /// With `region`, only edges whose box reaches into it (grown by the
+    /// tolerance) are examined.
+    fn repair_t_junctions(&mut self, tol: f64, region: Option<(Vec3, Vec3)>) {
         let grid = PointGrid::new(&self.vertices, tol);
         let verts = self.vertices.clone();
+        let region =
+            region.map(|(lo, hi)| (lo - Vec3::new(tol, tol, tol), hi + Vec3::new(tol, tol, tol)));
         for f in &mut self.faces {
             for l in &mut f.loops {
                 let mut out: Vec<u32> = Vec::with_capacity(l.len());
@@ -729,6 +748,17 @@ impl Solid {
                     let b = l[(i + 1) % n];
                     out.push(a);
                     let (pa, pb) = (verts[a as usize], verts[b as usize]);
+                    if let Some((lo, hi)) = region {
+                        let outside = pa.x.max(pb.x) < lo.x
+                            || pa.x.min(pb.x) > hi.x
+                            || pa.y.max(pb.y) < lo.y
+                            || pa.y.min(pb.y) > hi.y
+                            || pa.z.max(pb.z) < lo.z
+                            || pa.z.min(pb.z) > hi.z;
+                        if outside {
+                            continue;
+                        }
+                    }
                     let d = pb - pa;
                     let len2 = d.length_squared();
                     if len2 == 0.0 {

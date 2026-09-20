@@ -243,12 +243,44 @@ fn fragments_to_polygons(
             .map(|(_, w)| *w)
             .unwrap_or_else(|| f.plane.to_world(q))
     };
+    // The overlay drops collinear corners, so a fragment edge that runs
+    // along the face's original boundary may have lost the vertices the
+    // neighbouring faces still share there; put the face's own vertices
+    // back on any edge they lie on.
+    let restore = |l: Vec<ok_math::Vec3>| -> Vec<ok_math::Vec3> {
+        let mut out: Vec<ok_math::Vec3> = Vec::with_capacity(l.len());
+        let n = l.len();
+        for i in 0..n {
+            let (a, b) = (l[i], l[(i + 1) % n]);
+            out.push(a);
+            let d = b - a;
+            let len2 = d.length_squared();
+            if len2 == 0.0 {
+                continue;
+            }
+            let mut on_edge: Vec<(f64, ok_math::Vec3)> = Vec::new();
+            for &(_, w) in &own {
+                let t = (w - a).dot(d) / len2;
+                if t <= 0.0 || t >= 1.0 {
+                    continue;
+                }
+                if (w - (a + d * t)).length() <= tol && w.distance(a) > tol && w.distance(b) > tol {
+                    on_edge.push((t, w));
+                }
+            }
+            on_edge.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap());
+            out.extend(on_edge.into_iter().map(|(_, w)| w));
+        }
+        out
+    };
     shapes
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|shape| {
-            let mut loops: Vec<Vec<ok_math::Vec3>> =
-                shape.iter().map(|c| c.iter().map(lift).collect()).collect();
+            let mut loops: Vec<Vec<ok_math::Vec3>> = shape
+                .iter()
+                .map(|c| restore(c.iter().map(lift).collect()))
+                .collect();
             let plane = if flip {
                 for l in &mut loops {
                     l.reverse();
@@ -429,7 +461,13 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
     }
     let mut surfaces = a.surfaces.clone();
     surfaces.extend_from_slice(&b.surfaces);
-    let mut solid = Solid::from_polygons_with_tolerance(polys, surfaces, tol)?;
+    // Fragments outside the overlap of the two boxes are whole faces of a
+    // valid input, so only edges reaching into it can have T-junctions.
+    let overlap = (
+        Vec3::new(ab.0.x.max(bb.0.x), ab.0.y.max(bb.0.y), ab.0.z.max(bb.0.z)),
+        Vec3::new(ab.1.x.min(bb.1.x), ab.1.y.min(bb.1.y), ab.1.z.min(bb.1.z)),
+    );
+    let mut solid = Solid::from_polygons_within(polys, surfaces, tol, overlap)?;
     solid.merge_coplanar_faces();
     solid.compact_surfaces();
     solid.validate()?;
