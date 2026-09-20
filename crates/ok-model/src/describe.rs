@@ -121,9 +121,15 @@ fn face_reports(body: &Body) -> (Vec<FaceReport>, Vec<CylinderReport>) {
     let parts = solid.face_parts();
     let mut faces: Vec<FaceReport> = Vec::new();
     let mut cylinders: Vec<CylinderReport> = Vec::new();
-    // One report per (origin, part), so a cylinder's facets collapse into one line.
-    let mut seen: std::collections::HashMap<(u32, u32, u32), usize> =
-        std::collections::HashMap::new();
+    // One report per (origin, part), and one per curved surface: the facets
+    // of a cylinder have their own origins, but any one of them names the
+    // whole cylinder in an op, so they collapse into one line.
+    #[derive(PartialEq, Eq, Hash)]
+    enum Key {
+        Flat(u32, u32, u32),
+        Curved(usize),
+    }
+    let mut seen: std::collections::HashMap<Key, usize> = std::collections::HashMap::new();
     for (i, f) in solid.faces.iter().enumerate() {
         let pts: Vec<Vec3> = f.loops[0]
             .iter()
@@ -136,11 +142,15 @@ fn face_reports(body: &Body) -> (Vec<FaceReport>, Vec<CylinderReport>) {
             local: f.origin.local,
             part: Some(parts[i]),
         };
-        let key = (f.origin.feature, f.origin.local, parts[i]);
         let surface = match solid.surfaces.get(f.surface) {
             Some(ok_brep::Surface::Cylinder { .. }) => "cylinder",
             Some(ok_brep::Surface::Plane { .. }) => "plane",
             _ => "curved",
+        };
+        let key = if surface == "plane" {
+            Key::Flat(f.origin.feature, f.origin.local, parts[i])
+        } else {
+            Key::Curved(f.surface)
         };
         if let Some(ok_brep::Surface::Cylinder {
             origin,
@@ -148,7 +158,7 @@ fn face_reports(body: &Body) -> (Vec<FaceReport>, Vec<CylinderReport>) {
             radius,
         }) = solid.surfaces.get(f.surface).copied()
         {
-            if !cylinders.iter().any(|c| c.reference == reference) {
+            if !seen.contains_key(&key) {
                 let d = centroid - origin;
                 let radial = d - axis * d.dot(axis);
                 cylinders.push(CylinderReport {
