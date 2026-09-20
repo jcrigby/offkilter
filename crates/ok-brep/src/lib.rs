@@ -612,7 +612,7 @@ impl Solid {
     /// move a vertex by several times the merge tolerance, which can leave
     /// a face non-planar by that much; later booleans section such a face
     /// by its plane and would get points off its true edges.
-    fn split_nonplanar_faces(&mut self, tol: f64) {
+    pub(crate) fn split_nonplanar_faces(&mut self, tol: f64) {
         let mut out: Vec<Face> = Vec::with_capacity(self.faces.len());
         for f in std::mem::take(&mut self.faces) {
             let pts: Vec<Vec3> = f.loops[0]
@@ -665,8 +665,11 @@ impl Solid {
                 out.push(f);
                 continue;
             }
+            let pts2: Vec<[f64; 2]> = flat.chunks(2).map(|c| [c[0], c[1]]).collect();
+            let mut tris: Vec<[usize; 3]> = tris.chunks(3).map(|t| [t[0], t[1], t[2]]).collect();
+            delaunay_flips(&mut tris, &pts2);
             let mut any = false;
-            for t in tris.chunks(3) {
+            for t in &tris {
                 let (a, b, c) = (ids[t[0]], ids[t[1]], ids[t[2]]);
                 let (pa, pb, pc) = (
                     self.vertices[a as usize],
@@ -883,7 +886,7 @@ impl Solid {
     /// `c` where the path doubles back along itself (`c` on segment `a-b` or
     /// `a` on segment `b-c`). These arise when a clipped fragment carries a
     /// hairline sliver whose vertices merged with the main boundary.
-    fn remove_spikes(&mut self, tol: f64) {
+    pub(crate) fn remove_spikes(&mut self, tol: f64) {
         let verts = &self.vertices;
         let on_segment = |p: Vec3, a: Vec3, b: Vec3| -> bool {
             let d = b - a;
@@ -928,7 +931,7 @@ impl Solid {
         }
     }
 
-    fn remove_degenerate_faces(&mut self) {
+    pub(crate) fn remove_degenerate_faces(&mut self) {
         let verts = &self.vertices;
         self.faces.retain(|f| {
             let l = &f.loops[0];
@@ -1457,6 +1460,102 @@ impl VertexMerger {
         self.points.push(p);
         self.cells.entry(k).or_default().push(id);
         id
+    }
+}
+
+/// Lawson flips on a triangulation of a polygon (index triples into
+/// `pts`): every interior edge whose two triangles form a convex quad is
+/// flipped while the opposite vertex lies inside the other's circumcircle,
+/// until none does. Earcut leaves slivers made of three consecutive
+/// vertices along a nearly straight boundary, whose planes are nowhere
+/// near the surface and which a later boolean removes as spikes, tearing
+/// the mesh; the Delaunay triangulation fans such vertices to a far one
+/// instead.
+fn delaunay_flips(tris: &mut [[usize; 3]], pts: &[[f64; 2]]) {
+    let orient = |a: usize, b: usize, c: usize| -> f64 {
+        let (p, q, r) = (pts[a], pts[b], pts[c]);
+        (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+    };
+    // Counter-clockwise everywhere first.
+    for t in tris.iter_mut() {
+        if orient(t[0], t[1], t[2]) < 0.0 {
+            t.swap(1, 2);
+        }
+    }
+    let in_circle = |a: usize, b: usize, c: usize, d: usize| -> bool {
+        let (pa, pb, pc, pd) = (pts[a], pts[b], pts[c], pts[d]);
+        let (ax, ay) = (pa[0] - pd[0], pa[1] - pd[1]);
+        let (bx, by) = (pb[0] - pd[0], pb[1] - pd[1]);
+        let (cx, cy) = (pc[0] - pd[0], pc[1] - pd[1]);
+        let det = (ax * ax + ay * ay) * (bx * cy - cx * by)
+            - (bx * bx + by * by) * (ax * cy - cx * ay)
+            + (cx * cx + cy * cy) * (ax * by - bx * ay);
+        det > 0.0
+    };
+    for _ in 0..64 {
+        let mut edges: HashMap<(usize, usize), Vec<usize>> = HashMap::default();
+        for (ti, t) in tris.iter().enumerate() {
+            for k in 0..3 {
+                let (a, b) = (t[k], t[(k + 1) % 3]);
+                edges.entry((a.min(b), a.max(b))).or_default().push(ti);
+            }
+        }
+        let mut flipped = false;
+        let mut done: Vec<bool> = vec![false; tris.len()];
+        for (&(a, b), owners) in &edges {
+            let [t1, t2] = owners[..] else {
+                continue;
+            };
+            if done[t1] || done[t2] {
+                continue;
+            }
+            let p = tris[t1]
+                .iter()
+                .copied()
+                .find(|&v| v != a && v != b)
+                .unwrap();
+            let q = tris[t2]
+                .iter()
+                .copied()
+                .find(|&v| v != a && v != b)
+                .unwrap();
+            // With p on the left of a -> b (so a, b, p and b, a, q wind
+            // counter-clockwise), the new diagonal p-q must cross a-b: a
+            // and b on opposite sides of it, q not on p's side of a-b
+            // (one of them may lie on it, a sliver of no area).
+            let (a, b) =
+                if orient(a, b, p) > 0.0 || (orient(a, b, p) == 0.0 && orient(a, b, q) < 0.0) {
+                    (a, b)
+                } else {
+                    (b, a)
+                };
+            let (op, oq) = (orient(a, b, p), orient(a, b, q));
+            if oq > 0.0 || (op == 0.0 && oq == 0.0) {
+                continue;
+            }
+            if orient(p, q, a) * orient(p, q, b) >= 0.0 {
+                continue;
+            }
+            // A sliver (its apex within a billionth of its base) always
+            // goes; otherwise the Delaunay test decides.
+            let sliver = |a: usize, b: usize, p: usize| {
+                let (pa, pb, pp) = (pts[a], pts[b], pts[p]);
+                let base = ((pb[0] - pa[0]).powi(2) + (pb[1] - pa[1]).powi(2)).sqrt();
+                let side = ((pp[0] - pa[0]).powi(2) + (pp[1] - pa[1]).powi(2)).sqrt();
+                orient(a, b, p).abs() <= 1e-9 * base * side
+            };
+            if !sliver(a, b, p) && !sliver(a, b, q) && !in_circle(a, b, p, q) {
+                continue;
+            }
+            tris[t1] = [a, q, p];
+            tris[t2] = [q, b, p];
+            done[t1] = true;
+            done[t2] = true;
+            flipped = true;
+        }
+        if !flipped {
+            break;
+        }
     }
 }
 

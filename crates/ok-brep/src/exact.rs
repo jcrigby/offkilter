@@ -7,8 +7,8 @@
 //! Nothing here changes the solid: callers ask for exact positions and
 //! curve samples where they need them (STEP export, refitting).
 
-use crate::{edge_key, EdgeKey, Solid, Surface};
-use ok_math::Vec3;
+use crate::{edge_key, BrepError, EdgeKey, Solid, Surface};
+use ok_math::{Plane, Vec3};
 use std::collections::HashMap;
 
 /// The exact curve along an edge between two surfaces.
@@ -196,21 +196,404 @@ fn plane_cylinder(normal: Vec3, offset: f64, cyl: &Surface) -> Curve {
     }
 }
 
+/// A constraint a vertex's exact position satisfies: one of its
+/// surfaces, or the ruling of a cylinder it was made on (the line two of
+/// its facets on that cylinder meet along).
+enum Constraint<'a> {
+    On(&'a Surface),
+    Line { point: Vec3, dir: Vec3 },
+}
+
+impl Constraint<'_> {
+    fn project(&self, p: Vec3) -> Vec3 {
+        match *self {
+            Constraint::On(s) => project(s, p),
+            Constraint::Line { point, dir } => point + dir * (p - point).dot(dir),
+        }
+    }
+}
+
 /// The exact position of a vertex: the point on all of its analytic
 /// surfaces (a vertex touching a non-analytic surface keeps its place).
+/// A vertex on a ruling of a cylinder (where two of its facets on the
+/// cylinder meet) stays on that ruling, so that vertices keep their order
+/// along a curve and two facet corners that are one exact point meet.
 pub fn vertex_position(solid: &Solid, vertex_faces: &[Vec<usize>], v: u32) -> Vec3 {
     let p = solid.vertices[v as usize];
-    let mut surfaces: Vec<usize> = vertex_faces[v as usize]
-        .iter()
-        .map(|&f| solid.faces[f].surface)
-        .collect();
+    let faces = &vertex_faces[v as usize];
+    let mut surfaces: Vec<usize> = faces.iter().map(|&f| solid.faces[f].surface).collect();
     surfaces.sort_unstable();
     surfaces.dedup();
     if surfaces.iter().any(|&s| !is_analytic(&solid.surfaces[s])) {
         return p;
     }
-    let refs: Vec<&Surface> = surfaces.iter().map(|&s| &solid.surfaces[s]).collect();
-    project_all(&refs, p)
+    let mut constraints: Vec<Constraint> = surfaces
+        .iter()
+        .map(|&s| Constraint::On(&solid.surfaces[s]))
+        .collect();
+    for &s in &surfaces {
+        let Surface::Cylinder { axis, .. } = solid.surfaces[s] else {
+            continue;
+        };
+        // The pair of facets on this cylinder meeting at the widest angle;
+        // their planes meet along a ruling when it is parallel to the axis.
+        let planes: Vec<&ok_math::Plane> = faces
+            .iter()
+            .filter(|&&f| solid.faces[f].surface == s)
+            .map(|&f| &solid.faces[f].plane)
+            .collect();
+        let mut best: Option<(f64, &ok_math::Plane, &ok_math::Plane)> = None;
+        for (i, a) in planes.iter().enumerate() {
+            for b in &planes[i + 1..] {
+                let sin = a.normal.cross(b.normal).length();
+                if best.is_none_or(|(s, _, _)| sin > s) {
+                    best = Some((sin, a, b));
+                }
+            }
+        }
+        let Some((sin, a, b)) = best else {
+            continue;
+        };
+        if sin < 1e-6 {
+            continue;
+        }
+        let dir = a.normal.cross(b.normal) * (1.0 / sin);
+        if dir.dot(axis).abs() < 1.0 - 1e-9 {
+            continue;
+        }
+        // The point of the line nearest `p`: p + x·na + y·nb on both planes.
+        let (oa, ob) = (a.normal.dot(a.origin), b.normal.dot(b.origin));
+        let c = a.normal.dot(b.normal);
+        let (ra, rb) = (oa - a.normal.dot(p), ob - b.normal.dot(p));
+        let det = 1.0 - c * c;
+        let (x, y) = ((ra - c * rb) / det, (rb - c * ra) / det);
+        let point = p + a.normal * x + b.normal * y;
+        constraints.push(Constraint::Line { point, dir });
+    }
+    let scale = p.length().max(1.0);
+    let lines: Vec<(Vec3, Vec3)> = constraints
+        .iter()
+        .filter_map(|c| match *c {
+            Constraint::Line { point, dir } => Some((point, dir)),
+            Constraint::On(_) => None,
+        })
+        .collect();
+    let mut q = p;
+    match lines[..] {
+        // On one ruling: where it meets the other surfaces, solved
+        // directly (alternating projection creeps along a line that meets
+        // a surface at a shallow angle).
+        [(point, dir)] => {
+            let mut hits: Vec<Vec3> = Vec::new();
+            for &s in &surfaces {
+                let mut ts: Vec<f64> = Vec::new();
+                match solid.surfaces[s] {
+                    Surface::Plane { normal, offset } => {
+                        let cos = normal.dot(dir);
+                        if cos.abs() > 1e-9 {
+                            ts.push((offset - normal.dot(point)) / cos);
+                        }
+                    }
+                    Surface::Cylinder {
+                        origin,
+                        axis,
+                        radius,
+                    } => {
+                        let w = point - origin;
+                        let w = w - axis * w.dot(axis);
+                        let d = dir - axis * dir.dot(axis);
+                        let (a, b, c) = (d.dot(d), 2.0 * w.dot(d), w.dot(w) - radius * radius);
+                        if a > 1e-18 {
+                            let disc = b * b - 4.0 * a * c;
+                            if disc >= 0.0 {
+                                let r = disc.sqrt();
+                                ts.push((-b - r) / (2.0 * a));
+                                ts.push((-b + r) / (2.0 * a));
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+                if let Some(t) = ts.into_iter().min_by(|x, y| x.abs().total_cmp(&y.abs())) {
+                    hits.push(point + dir * t);
+                }
+            }
+            if let Some(h) = hits
+                .iter()
+                .min_by(|x, y| x.distance(p).total_cmp(&y.distance(p)))
+            {
+                q = *h;
+            }
+        }
+        // On rulings of two cylinders: the one point both pass through,
+        // if they do meet; otherwise the rulings are not to be trusted.
+        [(p1, d1), (p2, d2)] => {
+            let n = d1.cross(d2);
+            let n2 = n.dot(n);
+            if n2 > 1e-18 {
+                let w = p2 - p1;
+                let t1 = w.cross(d2).dot(n) / n2;
+                let t2 = w.cross(d1).dot(n) / n2;
+                let (a, b) = (p1 + d1 * t1, p2 + d2 * t2);
+                if a.distance(b) <= 1e-7 * scale {
+                    q = (a + b) * 0.5;
+                } else {
+                    constraints.retain(|c| matches!(c, Constraint::On(_)));
+                }
+            } else {
+                constraints.retain(|c| matches!(c, Constraint::On(_)));
+            }
+        }
+        _ => {}
+    }
+    for _ in 0..200 {
+        let before = q;
+        for c in &constraints {
+            q = c.project(q);
+        }
+        if q.distance(before) <= 1e-13 * scale {
+            break;
+        }
+    }
+    q
+}
+
+/// Moves every vertex onto its exact surfaces and splits the facets that
+/// bend by that into planar triangles, so the solid is a tessellation of
+/// its exact trimmed faces whatever the resolution of the tools that
+/// made it: a boolean's intersection vertices lie where facet planes
+/// met, and this puts them on the curves the surfaces meet on. Returns
+/// `None` when nothing moves, and an error when the moved mesh does not
+/// close or its volume changes by more than a chord's worth (the caller
+/// keeps the solid as it was).
+pub fn refit(solid: &Solid) -> Result<Option<Solid>, BrepError> {
+    refit_within(solid, None)
+}
+
+/// [`refit`] for the vertices inside `region` (a box) alone, when the
+/// rest are known to be exact already: a boolean changes nothing outside
+/// the overlap of its operands' boxes.
+pub fn refit_within(
+    solid: &Solid,
+    region: Option<(Vec3, Vec3)>,
+) -> Result<Option<Solid>, BrepError> {
+    if !solid
+        .surfaces
+        .iter()
+        .any(|s| matches!(s, Surface::Cylinder { .. }))
+    {
+        // Vertices of planar facets already sit where their planes meet.
+        return Ok(None);
+    }
+    let Some((lo, hi)) = solid.bounds() else {
+        return Ok(None);
+    };
+    let diag = (hi - lo).length();
+    let tol = crate::merge_tolerance(diag);
+    // A vertex that would move further than this sits where the facets
+    // met but the surfaces do not (tangencies, near-misses): left alone.
+    let limit = 0.02 * diag;
+    let vf = vertex_faces(solid);
+    let mut moves: Vec<(usize, Vec3)> = Vec::new();
+    let inside = |p: Vec3| match region {
+        Some((lo, hi)) => {
+            p.x >= lo.x && p.x <= hi.x && p.y >= lo.y && p.y <= hi.y && p.z >= lo.z && p.z <= hi.z
+        }
+        None => true,
+    };
+    for v in 0..solid.vertices.len() {
+        if vf[v].is_empty() || !inside(solid.vertices[v]) {
+            continue;
+        }
+        // A vertex of planar facets alone sits where their planes meet.
+        if !vf[v].iter().any(|&f| {
+            matches!(
+                solid.surfaces[solid.faces[f].surface],
+                Surface::Cylinder { .. }
+            )
+        }) {
+            continue;
+        }
+        let p = vertex_position(solid, &vf, v as u32);
+        let d = p.distance(solid.vertices[v]);
+        if d > 1e-9 * diag.max(1.0) && d <= limit {
+            moves.push((v, p));
+        }
+    }
+    if moves.is_empty() {
+        return Ok(None);
+    }
+    let mut out = solid.clone();
+    let mut moved = vec![false; solid.vertices.len()];
+    for &(v, p) in &moves {
+        out.vertices[v] = p;
+        moved[v] = true;
+    }
+    // Two vertices of a run closer together than their moves can change
+    // places along the curve, folding the run back on itself; a vertex
+    // that only the run's two surfaces hold is then put onto its
+    // neighbour, and the assembly below welds the pair.
+    let counts: Vec<usize> = vf
+        .iter()
+        .map(|faces| {
+            let mut s: Vec<usize> = faces.iter().map(|&f| solid.faces[f].surface).collect();
+            s.sort_unstable();
+            s.dedup();
+            s.len()
+        })
+        .collect();
+    for run in edge_runs(solid) {
+        if !matches!(solid.surfaces[run.surfaces.0], Surface::Cylinder { .. })
+            && !matches!(solid.surfaces[run.surfaces.1], Surface::Cylinder { .. })
+        {
+            continue;
+        }
+        let vs = &run.vertices;
+        for _ in 0..vs.len() {
+            let mut folded = None;
+            for i in 1..vs.len().saturating_sub(1) {
+                let (a, b, c) = (vs[i - 1] as usize, vs[i] as usize, vs[i + 1] as usize);
+                let (pa, pb, pc) = (out.vertices[a], out.vertices[b], out.vertices[c]);
+                if (pb - pa).dot(pc - pb) < 0.0 && pb.distance(pa) > 0.0 && pc.distance(pb) > 0.0 {
+                    folded = Some((a, b, c));
+                    break;
+                }
+            }
+            let Some((a, b, c)) = folded else {
+                break;
+            };
+            let (victim, target) = if counts[b] == 2 {
+                (
+                    b,
+                    if out.vertices[b].distance(out.vertices[a])
+                        <= out.vertices[b].distance(out.vertices[c])
+                    {
+                        a
+                    } else {
+                        c
+                    },
+                )
+            } else if counts[a] == 2 {
+                (a, b)
+            } else if counts[c] == 2 {
+                (c, b)
+            } else {
+                break;
+            };
+            out.vertices[victim] = out.vertices[target];
+            moved[victim] = true;
+        }
+    }
+
+    // Vertices that now coincide (two facet corners that are one exact
+    // point, or a merged pair above) become one.
+    let cell = 4.0 * tol;
+    let key = |p: Vec3| {
+        (
+            (p.x / cell).floor() as i64,
+            (p.y / cell).floor() as i64,
+            (p.z / cell).floor() as i64,
+        )
+    };
+    let mut cells: HashMap<(i64, i64, i64), Vec<u32>> = HashMap::new();
+    for (v, p) in out.vertices.iter().enumerate() {
+        if !vf[v].is_empty() {
+            cells.entry(key(*p)).or_default().push(v as u32);
+        }
+    }
+    let mut canon: Vec<u32> = (0..out.vertices.len() as u32).collect();
+    for v in 0..out.vertices.len() {
+        if !moved[v] {
+            continue;
+        }
+        let p = out.vertices[v];
+        let k = key(p);
+        let mut best: Option<u32> = None;
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                for dz in -1..=1 {
+                    let Some(ids) = cells.get(&(k.0 + dx, k.1 + dy, k.2 + dz)) else {
+                        continue;
+                    };
+                    for &u in ids {
+                        if (u as usize) < v
+                            && out.vertices[u as usize].distance(p) <= tol
+                            && best.is_none_or(|b| u < b)
+                        {
+                            best = Some(u);
+                        }
+                    }
+                }
+            }
+        }
+        if let Some(u) = best {
+            canon[v] = canon[u as usize];
+        }
+    }
+    let merged = canon.iter().enumerate().any(|(v, &c)| c as usize != v);
+    if merged {
+        for f in &mut out.faces {
+            for l in &mut f.loops {
+                for v in l.iter_mut() {
+                    *v = canon[*v as usize];
+                }
+                l.dedup();
+                while l.len() > 1 && l.first() == l.last() {
+                    l.pop();
+                }
+            }
+            f.loops.retain(|l| l.len() >= 3);
+        }
+        out.faces.retain(|f| !f.loops.is_empty());
+    }
+    // Faces with moved vertices get their plane fitted again: a planar
+    // face keeps its surface's plane, a facet the plane its loop now
+    // spans (bent ones are split into triangles below).
+    for f in &mut out.faces {
+        if !f.loops.iter().flatten().any(|&v| moved[v as usize]) {
+            continue;
+        }
+        let pts: Vec<Vec3> = f.loops[0]
+            .iter()
+            .map(|&v| out.vertices[v as usize])
+            .collect();
+        let centroid = pts.iter().fold(Vec3::ZERO, |a, &p| a + p) * (1.0 / pts.len() as f64);
+        let (normal, origin) = match out.surfaces[f.surface] {
+            Surface::Plane { normal, offset } => {
+                let n = if normal.dot(f.plane.normal) < 0.0 {
+                    -normal
+                } else {
+                    normal
+                };
+                let off = if n == normal { offset } else { -offset };
+                (n, centroid - n * (n.dot(centroid) - off))
+            }
+            _ => {
+                let Some(n) = crate::revolve::newell_normal(&pts).normalized() else {
+                    continue;
+                };
+                if n.dot(f.plane.normal) <= 0.0 {
+                    return Err(BrepError::Degenerate("refit turned a facet over".into()));
+                }
+                (n, centroid)
+            }
+        };
+        let x_axis = (f.plane.x_axis - normal * f.plane.x_axis.dot(normal))
+            .normalized()
+            .unwrap_or_else(|| perpendicular(normal));
+        f.plane = Plane {
+            origin,
+            x_axis,
+            y_axis: normal.cross(x_axis),
+            normal,
+        };
+    }
+    out.split_nonplanar_faces(tol);
+    out.remove_spikes(tol);
+    out.remove_degenerate_faces();
+    out.validate()?;
+    out.remove_unused_vertices();
+    Ok(Some(out))
 }
 
 /// The faces around every vertex.
@@ -245,30 +628,23 @@ pub fn edge_runs(solid: &Solid) -> Vec<Run> {
     // Directed by the lower-surface face's traversal so a run is oriented
     // consistently, as `blend_edges` orients its segments.
     let mut segments: Vec<(u32, u32, (usize, usize))> = Vec::new();
-    for (key, faces) in solid.edge_faces() {
-        if faces.len() != 2 {
+    // Every undirected edge with the faces using it and the direction
+    // each traverses it in.
+    type Use = (usize, (u32, u32));
+    let mut uses: HashMap<EdgeKey, Vec<Use>> = HashMap::new();
+    for (a, b, f) in solid.directed_edges() {
+        uses.entry(edge_key(a, b)).or_default().push((f, (a, b)));
+    }
+    for faces in uses.values() {
+        let [(fa, da), (fb, db)] = faces[..] else {
             continue;
-        }
-        let (mut ia, mut ib) = (faces[0], faces[1]);
-        if solid.faces[ia].surface > solid.faces[ib].surface {
-            std::mem::swap(&mut ia, &mut ib);
-        }
-        let (sa, sb) = (solid.faces[ia].surface, solid.faces[ib].surface);
+        };
+        let (sa, sb) = (solid.faces[fa].surface, solid.faces[fb].surface);
         if sa == sb {
             continue;
         }
-        let mut dir = None;
-        for l in &solid.faces[ia].loops {
-            for i in 0..l.len() {
-                let (a, b) = (l[i], l[(i + 1) % l.len()]);
-                if edge_key(a, b) == key {
-                    dir = Some((a, b));
-                }
-            }
-        }
-        if let Some((a, b)) = dir {
-            segments.push((a, b, (sa, sb)));
-        }
+        let (a, b) = if sa < sb { da } else { db };
+        segments.push((a, b, (sa.min(sb), sa.max(sb))));
     }
     segments.sort_unstable();
     let mut used = vec![false; segments.len()];
@@ -301,19 +677,23 @@ pub fn edge_runs(solid: &Solid) -> Vec<Run> {
         }
         let closed = segments[*chain.last().unwrap()].1 == segments[start].0;
         if !closed {
+            let mut before: Vec<usize> = Vec::new();
             loop {
-                let first = segments[chain[0]].0;
+                let first = segments[*before.last().unwrap_or(&chain[0])].0;
                 let prev = by_end
                     .get(&(first, pair))
                     .and_then(|v| v.iter().copied().find(|&j| !used[j]));
                 match prev {
                     Some(j) => {
                         used[j] = true;
-                        chain.insert(0, j);
+                        before.push(j);
                     }
                     None => break,
                 }
             }
+            before.reverse();
+            before.extend(chain);
+            chain = before;
         }
         let mut vertices: Vec<u32> = chain.iter().map(|&i| segments[i].0).collect();
         vertices.push(segments[*chain.last().unwrap()].1);
@@ -548,6 +928,34 @@ mod tests {
         .unwrap()
     }
 
+    /// Every vertex lies on each of its analytic surfaces and every face
+    /// is planar to a small multiple of the merge tolerance.
+    fn assert_refitted(solid: &Solid) {
+        let vf = vertex_faces(solid);
+        for (v, faces) in vf.iter().enumerate() {
+            let p = solid.vertices[v];
+            for &f in faces {
+                let s = &solid.surfaces[solid.faces[f].surface];
+                if is_analytic(s) {
+                    assert!(
+                        p.distance(project(s, p)) < 1e-6,
+                        "vertex {v} off its surface"
+                    );
+                }
+            }
+        }
+        for f in &solid.faces {
+            for &v in f.loops.iter().flatten() {
+                let off = f
+                    .plane
+                    .normal
+                    .dot(solid.vertices[v as usize] - f.plane.origin);
+                assert!(off.abs() < 1e-6, "face bent by {off}");
+            }
+        }
+        solid.validate().unwrap();
+    }
+
     fn cut_by_tilted_plane(body: &Solid, angle_deg: f64, z: f64) -> (Solid, Vec3) {
         let a = angle_deg.to_radians();
         let normal = Vec3::new(0.0, -a.sin(), a.cos());
@@ -622,11 +1030,73 @@ mod tests {
             matches!(edge_curve(&cut.surfaces[bottom], &cut.surfaces[cyl]), Curve::Circle { radius, .. } if (radius - 10.0).abs() < 1e-9)
         );
         assert_eq!(rulings(&cut, cyl).len(), 72);
+        // Every vertex sits on its surfaces and every facet is planar.
+        assert_refitted(&cut);
         // The cylinder's region is one loop around: rim, then the bottom.
         let regions = surface_regions(&cut);
         let loops = &regions[&cyl];
         assert_eq!(loops.len(), 2, "top rim and bottom rim");
         assert!(loops.iter().all(|l| l.len() == 72));
+    }
+
+    #[test]
+    fn refit_survives_oblique_drills_unions_and_repeated_cuts() {
+        let body = cylinder(10.0, 30.0, 1);
+        // A drill tilted 35° from the wall's normal, off the axis.
+        let a = 35f64.to_radians();
+        let dir = Vec3::new(a.cos(), 0.0, a.sin());
+        let plane = Plane::from_origin_normal(Vec3::new(0.0, 3.0, 12.0), dir).unwrap();
+        let mut s = Sketch::new();
+        s.add_circle(Vec2::ZERO, 3.5);
+        let drill = extrude(
+            &s.profiles(&ProfileOptions::default()).remove(0),
+            &plane,
+            -25.0,
+            25.0,
+            2,
+        )
+        .unwrap();
+        let cut = boolean(&body, &drill, BoolOp::Difference).unwrap();
+        assert_refitted(&cut);
+        // A boss unioned across it, then a second drill through both.
+        let mut s = Sketch::new();
+        s.add_circle(Vec2::new(0.0, 20.0), 6.0);
+        let yz = Plane {
+            origin: Vec3::ZERO,
+            x_axis: Vec3::Y,
+            y_axis: Vec3::Z,
+            normal: Vec3::X,
+        };
+        let boss = extrude(
+            &s.profiles(&ProfileOptions::default()).remove(0),
+            &yz,
+            0.0,
+            18.0,
+            3,
+        )
+        .unwrap();
+        let joined = boolean(&cut, &boss, BoolOp::Union).unwrap();
+        assert_refitted(&joined);
+        let mut s = Sketch::new();
+        s.add_circle(Vec2::new(0.0, 20.0), 2.0);
+        let through = extrude(
+            &s.profiles(&ProfileOptions::default()).remove(0),
+            &yz,
+            -30.0,
+            30.0,
+            4,
+        )
+        .unwrap();
+        let bored = boolean(&joined, &through, BoolOp::Difference).unwrap();
+        assert_refitted(&bored);
+        // The bore runs through the main cylinder (20 long at y = 0) and
+        // on through the boss to x = 18: about 28 of radius 2.
+        let exact_bore = std::f64::consts::PI * 4.0 * 28.0;
+        let removed = joined.volume() - bored.volume();
+        assert!(
+            (removed - exact_bore).abs() < 0.02 * exact_bore,
+            "bore removed {removed}, expected about {exact_bore}"
+        );
     }
 
     #[test]
@@ -651,6 +1121,7 @@ mod tests {
         )
         .unwrap();
         let cut = boolean(&body, &drill, BoolOp::Difference).unwrap();
+        assert_refitted(&cut);
         let cyls: Vec<usize> = cut
             .surfaces
             .iter()
@@ -682,6 +1153,8 @@ mod tests {
                 let p = vertex_position(&cut, &vf, v);
                 assert!(p.distance(project(wall, p)) < 1e-9);
                 assert!(p.distance(project(hole, p)) < 1e-9);
+                // The boolean refitted its result: the vertex is already there.
+                assert!(cut.vertices[v as usize].distance(p) < 1e-9);
             }
             // Sampling at a finer set of the wall's rulings adds points on both surfaces.
             let fine: Vec<f64> = (0..360)

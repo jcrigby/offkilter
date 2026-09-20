@@ -384,6 +384,28 @@ on it by slightly more than the merge tolerance (a sliver triangle or two
 near-coincident corner vertices). Anything that still fails validation is
 an error, never a displayed body.
 
+### Exact curves (`exact.rs`)
+
+The surface tags make curved faces exact without a second representation
+(`docs/EXACT.md` is the plan and record). Where both faces at an edge are
+analytic, the edge's exact curve follows from the pair (`edge_curve`:
+plane ∩ plane a line, plane ∩ cylinder a circle, ellipse or line pair,
+cylinder ∩ cylinder a quartic), a vertex's exact position is the point on
+all of its surfaces (`vertex_position`, alternating projection; a vertex
+where two facets of one cylinder meet along a ruling is held to that
+ruling, solved directly against the other surfaces), an edge run
+(`edge_runs`, the chain of facet edges between one pair of surfaces) is a
+piece of the pair's curve and can be resampled anywhere on it
+(`run_points`, at a cylinder's rulings), and a cylinder's region is its
+facets grouped by seams with loops of runs (`surface_regions`). The STEP
+writer uses all of these. `refit` moves every vertex of a solid to its
+exact position, welds vertices that then coincide, puts a run vertex that
+would change places with a neighbour onto it, and splits the facets that
+bend into planar triangles (Delaunay-flipped in `split_nonplanar_faces`
+so slivers along a nearly straight boundary become long triangles fanned
+to a far vertex). Every boolean ends with it, on the region the operation
+touched, and keeps its own result if the refit fails to close.
+
 ### Shell (`shell.rs`)
 
 `shell` hollows a solid by subtracting an offset polyhedron: every kept
@@ -607,9 +629,14 @@ found this with a nudge equal to the tolerance).
 After assembly, planar faces in the same plane that share an edge are
 merged into one face (`merge_coplanar_faces`), keeping the surface and
 origin of the largest member, so flush unions produce single faces.
+Last, the result is refitted to its exact surfaces (`exact::refit_within`
+over the overlap of the operands' boxes; see "Exact curves" below), so a
+vertex the sectioning put where two facet planes met sits on the curve
+the surfaces meet on.
 
-Known limits: results are polyhedral (arcs are 5° facets), and the merge
-scope is "every body whose bounding box touches the tool".
+Known limits: results are polyhedral (arcs are 5° facets, with their
+vertices on the exact surfaces after the refit), and the merge scope is
+"every body whose bounding box touches the tool".
 
 ## Meshes (`ok-mesh`)
 

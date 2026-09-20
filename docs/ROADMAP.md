@@ -31,7 +31,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Boundary representation: shared-vertex planar faces with analytic surface tags (plane, cylinder) and face origins
 - [x] Booleans (union / subtract / intersect) on polyhedral solids, with exact coplanar handling
 - [x] Adjustable facet resolution per document (0.5° to 30° per facet) flowing through profiles, revolves, holes and blends
-- [ ] Exact curved faces (cylinder, later general surfaces) instead of facets, with curve/surface intersection. This is a multi-month kernel program: ellipse and quartic intersection curves, trimmed parametric faces, and tangent/coincident degeneracies; the surface tags on faces are the seed for it.
+- [~] Exact curved faces (cylinder, later general surfaces) instead of facets, with curve/surface intersection. Under way on the `exact-surfaces` branch (`docs/EXACT.md`): exact curves are recovered from the surface tags, STEP goes out with exact cylinders, and every boolean refits its result so vertices lie on the exact curves; trimmed parametric faces for general surfaces are still ahead.
 - [x] Merge coplanar faces of the same body after a boolean
 - [x] Extrude up-to-face / through-all
 - [x] Revolve (about a sketch axis or sketch line, full or partial)

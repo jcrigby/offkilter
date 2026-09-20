@@ -891,6 +891,15 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
     solid.merge_coplanar_faces();
     solid.compact_surfaces();
     solid.validate()?;
+    // New vertices lie where facet planes met; put them on the curves the
+    // surfaces meet on, keeping the result as it is if that cannot close.
+    let grown = (
+        overlap.0 - Vec3::new(3.0 * tol, 3.0 * tol, 3.0 * tol),
+        overlap.1 + Vec3::new(3.0 * tol, 3.0 * tol, 3.0 * tol),
+    );
+    if let Ok(Some(refitted)) = crate::exact::refit_within(&solid, Some(grown)) {
+        solid = refitted;
+    }
     Ok(solid)
 }
 
