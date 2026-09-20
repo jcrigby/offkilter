@@ -31,7 +31,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Boundary representation: shared-vertex planar faces with analytic surface tags (plane, cylinder) and face origins
 - [x] Booleans (union / subtract / intersect) on polyhedral solids, with exact coplanar handling
 - [x] Adjustable facet resolution per document (0.5° to 30° per facet) flowing through profiles, revolves, holes and blends
-- [ ] Exact curved faces (cylinder, later general surfaces) instead of facets, with curve/surface intersection. This is a multi-month kernel program: ellipse and quartic intersection curves, trimmed parametric faces, and tangent/coincident degeneracies; the surface tags on faces are the seed for it.
+- [~] Exact curved faces (cylinder, later general surfaces) instead of facets, with curve/surface intersection. Under way on the `exact-surfaces` branch (`docs/EXACT.md`): exact curves are recovered from the surface tags, STEP goes out with exact cylinders, and every boolean refits its result so vertices lie on the exact curves; trimmed parametric faces for general surfaces are still ahead.
 - [x] Merge coplanar faces of the same body after a boolean
 - [x] Extrude up-to-face / through-all
 - [x] Revolve (about a sketch axis or sketch line, full or partial)
@@ -75,7 +75,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Mate connectors on edges and vertices
 - [x] Mate animation (display-only sweep of a revolute, cylindrical or slider mate)
 - [x] STL and 3MF export of bodies (3MF keeps part names); DXF export of a sketch
-- [x] Drawings: front / top / right / isometric views with exact hidden-line removal for the faceted geometry, laid out third-angle on an A4 sheet (SVG) or as DXF lines
+- [x] Drawings: front / top / right / isometric views with exact hidden-line removal for the faceted geometry, laid out third-angle on an A4 sheet (SVG) or as DXF lines; on the `exact-surfaces` branch circle and ellipse edges are drawn as arcs (SVG arcs, DXF `ARC`/`ELLIPSE`)
 - [x] Automatic overall dimensions (width, height, depth) on drawing sheets
 - [x] Section views on drawings (hatched cut faces, lettered cutting-plane trace; follows the viewport section plane)
 - [x] Drawing dialog: choose the views and sheet size with a live preview; bill of materials export (CSV) for part studios and assemblies
@@ -83,8 +83,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Dimensions placed by the user on drawings (two corners of a view in the sheet preview; aligned, on the side away from the view); they are document state
 - [x] Diameter callouts for holes and bosses seen end-on in the standard views, counted when several share a size
 - [x] Parts list and item balloons on assembly sheets (and multi-body part studios)
-- [x] STEP export (AP214): each body a manifold B-rep of planar faces with line edges, named; curved surfaces go out as their facets
-- [ ] STEP with exact cylindrical and other analytic faces, once the kernel has them
+- [x] STEP export (AP214): each body a manifold B-rep, named; planar faces with line edges, and on the `exact-surfaces` branch cylindrical faces as `CYLINDRICAL_SURFACE`s bounded by circles, ellipses and B-splines with vertices at their exact positions
+- [x] STEP with exact cylindrical, conical, toroidal and spherical faces, written and read back, on the `exact-surfaces` branch (see `docs/EXACT.md`)
 - [x] Import: STL (binary or ASCII) and OBJ meshes as bodies; coplanar triangles merge into faces
 - [x] Import: DXF lines, circles, arcs and polylines (with bulges) into a sketch, endpoints tied by coincident constraints
 - [x] Import: STEP via a B-rep reader (`ok-step::read_step`): solids of a Part 21 file walked from `MANIFOLD_SOLID_BREP` down to points, edges on lines, circles and B-splines sampled once and shared, faces on planes and cylinders triangulated in their own parameters (cylinders in facet-wide strips), lengths scaled to millimetres; other surfaces are refused by name. Imported as mesh bodies from the client's Import button, the `ok-mcp` `import` tool (which also reads STL and OBJ) and `parse_step` in the wasm API

@@ -1,7 +1,7 @@
 // File exporters: STL and 3MF for bodies, DXF for sketches. All are
 // written by hand so the client carries no extra dependencies.
 
-import type { BodyMesh, BodySummary, SketchData, Vec2, ViewLines } from "./kernel";
+import type { BodyMesh, BodySummary, SketchData, Vec2, ViewArc, ViewLines } from "./kernel";
 
 /** All bodies as one binary STL file. */
 export function toStl(meshes: BodyMesh[]): Blob {
@@ -157,9 +157,9 @@ export function zip(entries: [string, string][]): Uint8Array<ArrayBuffer> {
   return out;
 }
 
-/** DXF (R12 subset) header and layer table; `layers` are [name, colour, linetype]. */
-function dxfHead(layers: [string, number, string][]): string[] {
-  const lines: string[] = ["0", "SECTION", "2", "HEADER", "9", "$INSUNITS", "70", "4", "0", "ENDSEC", "0", "SECTION", "2", "TABLES", "0", "TABLE", "2", "LAYER", "70", String(layers.length)];
+/** DXF header and layer table; `layers` are [name, colour, linetype]. R12 (the default) has LINE, CIRCLE, ARC and POINT; `version` "AC1015" (R2000) adds ELLIPSE. */
+function dxfHead(layers: [string, number, string][], version?: string): string[] {
+  const lines: string[] = ["0", "SECTION", "2", "HEADER", ...(version ? ["9", "$ACADVER", "1", version] : []), "9", "$INSUNITS", "70", "4", "0", "ENDSEC", "0", "SECTION", "2", "TABLES", "0", "TABLE", "2", "LAYER", "70", String(layers.length)];
   for (const [name, colour, linetype] of layers) lines.push("0", "LAYER", "2", name, "70", "0", "62", String(colour), "6", linetype);
   lines.push("0", "ENDTAB", "0", "ENDSEC", "0", "SECTION", "2", "ENTITIES");
   return lines;
@@ -302,7 +302,12 @@ export function detailView(source: DrawingView, centre: Vec2, radius: number, sc
       const c = clipToCircle(a, b, centre, radius);
       return c ? [[{ x: (c[0].x - centre.x) * scale, y: (c[0].y - centre.y) * scale }, { x: (c[1].x - centre.x) * scale, y: (c[1].y - centre.y) * scale }] as [Vec2, Vec2]] : [];
     });
-  return { name: "detail", lines: { visible: clip(source.lines.visible), hidden: clip(source.lines.hidden) }, detail: { on: source.name, centre, radius, label, scale } };
+  const chords = (arcs?: ViewArc[]) => (arcs ?? []).flatMap((a) => arcChords(a));
+  return {
+    name: "detail",
+    lines: { visible: clip([...source.lines.visible, ...chords(source.lines.visible_arcs)]), hidden: clip([...source.lines.hidden, ...chords(source.lines.hidden_arcs)]) },
+    detail: { on: source.name, centre, radius, label, scale },
+  };
 }
 
 /**
@@ -359,7 +364,8 @@ export type UserDimension = { view: string; a: Vec2; b: Vec2; offset: number };
 /** The nearest line endpoint of a view to `p`, within `tol`, or null. */
 export function snapDrawingPoint(view: DrawingView, p: Vec2, tol: number): Vec2 | null {
   let best: Vec2 | null = null, bestD = tol;
-  for (const [a, b] of [...view.lines.visible, ...view.lines.hidden]) {
+  const ends: [Vec2, Vec2][] = [...(view.lines.visible_arcs ?? []), ...(view.lines.hidden_arcs ?? [])].map((a) => [arcPoint(a, a.start), arcPoint(a, a.end)]);
+  for (const [a, b] of [...view.lines.visible, ...view.lines.hidden, ...ends]) {
     for (const q of [a, b]) {
       const d = Math.hypot(q.x - p.x, q.y - p.y);
       if (d < bestD) { bestD = d; best = { x: q.x, y: q.y }; }
@@ -378,13 +384,60 @@ export function dimensionOffsetFor(view: DrawingView, a: Vec2, b: Vec2): number 
   return (mid.x * n.x + mid.y * n.y >= 0 ? 1 : -1) * DIM_OFFSET;
 }
 
+/** The point of an arc at parameter `t`. */
+export function arcPoint(a: ViewArc, t: number): Vec2 {
+  const minor = { x: -a.major.y * a.ratio, y: a.major.x * a.ratio };
+  return { x: a.center.x + a.major.x * Math.cos(t) + minor.x * Math.sin(t), y: a.center.y + a.major.y * Math.cos(t) + minor.y * Math.sin(t) };
+}
+
+/** An arc as chords at most `step` radians apart, for clipping and extents. */
+export function arcChords(a: ViewArc, step = Math.PI / 36): [Vec2, Vec2][] {
+  const n = Math.max(1, Math.ceil((a.end - a.start) / step));
+  const out: [Vec2, Vec2][] = [];
+  let prev = arcPoint(a, a.start);
+  for (let i = 1; i <= n; i++) {
+    const p = arcPoint(a, a.start + ((a.end - a.start) * i) / n);
+    out.push([prev, p]);
+    prev = p;
+  }
+  return out;
+}
+
+const FULL_TURN = 2 * Math.PI - 1e-9;
+
+/** An arc as an SVG path in sheet coordinates (`X`, `Y` map view to sheet, `Y` turning y down), whole ellipses as two halves. */
+function arcPath(a: ViewArc, dx: number, dy: number, scale: number, X: (x: number) => string, Y: (y: number) => string): string {
+  const rx = Math.hypot(a.major.x, a.major.y) * scale, ry = rx * a.ratio;
+  const rot = ((-Math.atan2(a.major.y, a.major.x) * 180) / Math.PI).toFixed(3);
+  const at = (t: number) => { const p = arcPoint(a, t); return `${X(p.x + dx)} ${Y(p.y + dy)}`; };
+  // Counter-clockwise in the view is drawn with sweep 0 once y turns down.
+  const A = (t: number, large: number) => `A${rx.toFixed(3)} ${ry.toFixed(3)} ${rot} ${large} 0 ${at(t)}`;
+  if (a.end - a.start >= FULL_TURN) return `M${at(0)}${A(Math.PI, 0)}${A(2 * Math.PI, 0)}`;
+  return `M${at(a.start)}${A(a.end, a.end - a.start > Math.PI ? 1 : 0)}`;
+}
+
+/** An arc as DXF entities at 1:1: a CIRCLE or ARC when circular, else an ELLIPSE. */
+function arcDxf(a: ViewArc, layer: string, dx: number, dy: number): string[] {
+  const r = Math.hypot(a.major.x, a.major.y);
+  const full = a.end - a.start >= FULL_TURN;
+  const cx = a.center.x + dx, cy = a.center.y + dy;
+  if (Math.abs(a.ratio - 1) < 1e-9) {
+    if (full) return ["0", "CIRCLE", "8", layer, "10", fmt(cx), "20", fmt(cy), "30", "0", "40", fmt(r)];
+    const base = Math.atan2(a.major.y, a.major.x);
+    const deg = (t: number) => fmt((((base + t) * 180) / Math.PI + 360) % 360);
+    return ["0", "ARC", "8", layer, "10", fmt(cx), "20", fmt(cy), "30", "0", "40", fmt(r), "50", deg(a.start), "51", deg(a.end)];
+  }
+  return ["0", "ELLIPSE", "8", layer, "10", fmt(cx), "20", fmt(cy), "30", "0", "11", fmt(a.major.x), "21", fmt(a.major.y), "31", "0", "40", fmt(a.ratio), "41", full ? "0" : fmt(a.start), "42", full ? fmt(2 * Math.PI) : fmt(a.end)];
+}
+
 function boundsOf(v: ViewLines, detail?: DetailMarker): Bounds {
   if (detail) {
     const r = detail.radius * detail.scale;
     return { minx: -r, miny: -r, maxx: r, maxy: r };
   }
   let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
-  for (const [a, b] of [...v.visible, ...v.hidden]) {
+  const arcs = [...(v.visible_arcs ?? []), ...(v.hidden_arcs ?? [])].flatMap((a) => arcChords(a));
+  for (const [a, b] of [...v.visible, ...v.hidden, ...arcs]) {
     for (const p of [a, b]) {
       minx = Math.min(minx, p.x); miny = Math.min(miny, p.y);
       maxx = Math.max(maxx, p.x); maxy = Math.max(maxy, p.y);
@@ -571,11 +624,12 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
   for (const p of placed) {
     out.push(`<g id="view-${escapeXml(p.name)}">`);
     const seg = (a: { x: number; y: number }, b: { x: number; y: number }) => `M${X(a.x + p.dx)} ${Y(a.y + p.dy)}L${X(b.x + p.dx)} ${Y(b.y + p.dy)}`;
-    if (p.lines.hidden.length > 0) {
-      out.push(`<path class="hidden" fill="none" stroke="black" stroke-width="0.25" stroke-dasharray="2 1" d="${p.lines.hidden.map(([a, b]) => seg(a, b)).join("")}"/>`);
+    const arcs = (list?: ViewArc[]) => (list ?? []).map((a) => arcPath(a, p.dx, p.dy, scale, X, Y)).join("");
+    if (p.lines.hidden.length > 0 || p.lines.hidden_arcs?.length) {
+      out.push(`<path class="hidden" fill="none" stroke="black" stroke-width="0.25" stroke-dasharray="2 1" d="${p.lines.hidden.map(([a, b]) => seg(a, b)).join("")}${arcs(p.lines.hidden_arcs)}"/>`);
     }
-    if (p.lines.visible.length > 0) {
-      out.push(`<path class="visible" fill="none" stroke="black" stroke-width="0.5" stroke-linecap="round" d="${p.lines.visible.map(([a, b]) => seg(a, b)).join("")}"/>`);
+    if (p.lines.visible.length > 0 || p.lines.visible_arcs?.length) {
+      out.push(`<path class="visible" fill="none" stroke="black" stroke-width="0.5" stroke-linecap="round" d="${p.lines.visible.map(([a, b]) => seg(a, b)).join("")}${arcs(p.lines.visible_arcs)}"/>`);
     }
     if (p.cut && p.cut.length > 0) {
       const lines = hatch(p.cut, 3 / scale);
@@ -683,10 +737,10 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
   return out.join("\n") + "\n";
 }
 
-/** The same layout as a DXF at 1:1 in millimetres, hidden lines on their own layer. */
+/** The same layout as a DXF (R2000, for its ellipses) at 1:1 in millimetres, hidden lines on their own layer. */
 export function toDrawingDxf(views: DrawingView[], user: UserDimension[] = [], parts: PartsRow[] = []): string {
   const { placed, dims, min, max } = layout(views, 15, user);
-  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"], ["SECTION", 1, "CONTINUOUS"], ["DETAIL", 5, "CONTINUOUS"], ["BALLOONS", 6, "CONTINUOUS"], ["TABLE", 7, "CONTINUOUS"]]);
+  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"], ["SECTION", 1, "CONTINUOUS"], ["DETAIL", 5, "CONTINUOUS"], ["BALLOONS", 6, "CONTINUOUS"], ["TABLE", 7, "CONTINUOUS"]], "AC1015");
   for (const p of placed) {
     for (const b of p.balloons ?? []) {
       const g = balloonGeometry(b, p, 1);
@@ -736,6 +790,8 @@ export function toDrawingDxf(views: DrawingView[], user: UserDimension[] = [], p
     };
     add("VISIBLE", p.lines.visible);
     add("HIDDEN", p.lines.hidden);
+    for (const a of p.lines.visible_arcs ?? []) lines.push(...arcDxf(a, "VISIBLE", p.dx, p.dy));
+    for (const a of p.lines.hidden_arcs ?? []) lines.push(...arcDxf(a, "HIDDEN", p.dx, p.dy));
     if (p.cut && p.cut.length > 0) add("SECTION", hatch(p.cut, 3));
     if (p.name === "section") {
       const x = (p.b.minx + p.b.maxx) / 2 + p.dx, y = p.b.miny + p.dy - 6;

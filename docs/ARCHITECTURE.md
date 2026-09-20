@@ -194,7 +194,10 @@ normals of each face's facets on both sides, so a rim whose dihedral
 angle changes along it (a cylinder cut obliquely) gets a section that
 fits everywhere; the sections, all cut into the same number of facets,
 are joined by quads into one polyhedron, its blend facets sharing one
-ruled surface. Those sections do not run back along the faces to the
+surface: a torus when the chain is a circle about an axis and both
+faces turn about it (`rim_axis`: the rim of a boss or a turned part),
+its tube the fillet's arc swept about the axis, else a ruled surface.
+Those sections do not run back along the faces to the
 edge, as a prism's does: from the tangent points they leave each face
 perpendicularly and close a tenth of the size outside the wedge, so the
 cutter meets the body only along the tangent lines, squarely, where a
@@ -212,7 +215,7 @@ per connected group, built from polygons rather than by union: the edge
 prisms cut back to the cell planes, the cell's three face quads, and a
 spherical patch (rings shrinking from the fillet arcs, which it shares
 vertex for vertex with the prisms, towards the middle direction) tagged
-as a revolved surface so it shades smoothly. Chamfers, corners with any
+as a sphere so it shades smoothly and goes out exactly. Chamfers, corners with any
 other number of blended edges and non-planar faces keep the union of
 cutters: three chamfers meeting at a corner leave their three planes
 meeting at a point, which is what other CAD systems draw, and a corner
@@ -351,9 +354,10 @@ by direction only (no curvature tie-break).
 
 A `Solid` is a closed set of planar polygonal faces (loops of shared
 vertex indices; outer loop counter-clockwise about the outward normal,
-holes clockwise). Every face references an analytic `Surface`: either its
-plane or, for facets produced from a sketch arc or circle, the cylinder
-they approximate. This is a polyhedral B-rep with surface tags: facets on
+holes clockwise). Every face references an analytic `Surface`: its plane
+or, for facets produced from a sketch arc or circle, the cylinder they
+approximate; a revolve tags the cone, torus or sphere its oblique lines
+and arcs sweep, and the rolling-ball corner patch its sphere. This is a polyhedral B-rep with surface tags: facets on
 one cylinder shade smoothly, hide their internal edges, and can later be
 replaced by exact curved faces without changing the topology model. Each
 face also carries a `FaceOrigin` (feature id + local index) as the seed of
@@ -383,6 +387,31 @@ grazing intersection that leaves the faces around one corner disagreeing
 on it by slightly more than the merge tolerance (a sliver triangle or two
 near-coincident corner vertices). Anything that still fails validation is
 an error, never a displayed body.
+
+### Exact curves (`exact.rs`)
+
+The surface tags make curved faces exact without a second representation
+(`docs/EXACT.md` is the plan and record). Where both faces at an edge are
+analytic, the edge's exact curve follows from the pair (`edge_curve`:
+plane ∩ plane a line, plane ∩ cylinder a circle, ellipse or line pair,
+cylinder ∩ cylinder a quartic, plane ∩ sphere a circle, a plane across a
+cone's axis a circle; `run_curve` adds the circles a plane across a
+torus or two coaxial surfaces of revolution make, told apart by a point
+of the run), a vertex's exact position is the point on all of its
+surfaces (`vertex_position`, alternating projection; a vertex of a run
+where two facets of one cylinder or cone meet along a ruling is held to
+that ruling, solved directly against the other surfaces), an edge run
+(`edge_runs`, the chain of facet edges between one pair of surfaces) is a
+piece of the pair's curve and can be resampled anywhere on it
+(`run_points`, at a cylinder's rulings), and a cylinder's region is its
+facets grouped by seams with loops of runs (`surface_regions`). The STEP
+writer uses all of these. `refit` moves every vertex of a solid to its
+exact position, welds vertices that then coincide, puts a run vertex that
+would change places with a neighbour onto it, and splits the facets that
+bend into planar triangles (Delaunay-flipped in `split_nonplanar_faces`
+so slivers along a nearly straight boundary become long triangles fanned
+to a far vertex). Every boolean ends with it, on the region the operation
+touched, and keeps its own result if the refit fails to close.
 
 ### Shell (`shell.rs`)
 
@@ -428,16 +457,37 @@ into regions that extrude.
 
 ### STEP export (`ok-step`)
 
-`ok_step::write_step` turns solids into an ISO 10303-21 file (AP214
-schema): per body one `MANIFOLD_SOLID_BREP` over a `CLOSED_SHELL` of
-`ADVANCED_FACE`s, each on a `PLANE` with its loops as `EDGE_LOOP`s of
-`ORIENTED_EDGE`s over shared `EDGE_CURVE`s (`LINE`s between
-`VERTEX_POINT`s, one per undirected edge, so the shell is watertight by
-construction), plus the product boilerplate readers expect and
-millimetre units. Facets on cylinders and other curved surfaces go out
-as planar faces, so the file is exact for the faceted geometry and reads
-as a solid elsewhere. The wasm `export_step` and the server's
-`/export/step` both use it.
+`write_step` writes AP214 Part 21: the unit and context entities once,
+then per body a `MANIFOLD_SOLID_BREP` in a `CLOSED_SHELL` with an
+`ADVANCED_BREP_SHAPE_REPRESENTATION`, product and definition entities
+so readers see named parts. Every vertex is written at its exact position
+(`exact::vertex_position`: the point on all of its analytic surfaces).
+Planar faces go out as they are, but each loop's facet edges are grouped
+into runs (`exact::edge_runs`: chains of edges between one pair of
+surfaces) and a run on an exact curve is one `EDGE_CURVE`: a `LINE`
+between planes, a `CIRCLE` or `ELLIPSE` where a plane meets a cylinder
+(the curve turned so the run's direction is its parametric direction,
+the reference direction through the run's first vertex), or a degree-one
+`B_SPLINE_CURVE_WITH_KNOTS` through the run's points sampled at every
+degree of the first cylinder's rulings where two cylinders meet; a run
+between two exact surfaces on no such curve goes segment by segment
+through its exact vertices). Planar facets in one plane are merged
+first. The facets of a cylinder, cone, torus or sphere become one
+`ADVANCED_FACE` per connected region (`exact::surface_regions`,
+components by facet seams) on a `CYLINDRICAL_SURFACE`,
+`CONICAL_SURFACE` (placed at the apex), `TOROIDAL_SURFACE` or
+`SPHERICAL_SURFACE` (placed with its axis across the patch and the
+seam meridian at the patch's antipode, so its loops never wrap); a
+region whose loops sweep a full turn gets a seam along a meridian that
+both rims have a vertex on and no hole spans (a ruling, or a circle
+round a torus's tube through the facet vertices between), its outer
+bound then one rim round, the seam, the other rim round and the seam
+back (the rims' closed runs rotated to start at the seam; surfaces
+sharing a rim seam it at the same vertex, since a closed run starts
+once). A surface no seam can be placed on, and facets on revolved
+splines or ruled surfaces, stay facets with line edges. Entity numbers
+are sequential; reals carry a decimal point; strings escape apostrophes
+and non-ASCII.
 
 ### STEP import (`ok-step/src/read.rs`)
 
@@ -445,23 +495,36 @@ as a solid elsewhere. The wasm `export_step` and the server's
 comments, complex instances as lists of typed parts) into an entity map
 and walks every `MANIFOLD_SOLID_BREP`: shell → faces → bounds → edge
 loops → oriented edges → edge curves → vertex points. Each edge is
-sampled once (a line stays straight; a circle is sampled at 5° from its
-start vertex around its axis, the whole way round for a closed edge; a
-B-spline, rational or not, is evaluated by de Boor at sixteen points per
-span and reversed if the edge runs against the curve) so the two faces
-on an edge share the same mesh vertices and the result welds closed.
-A planar face is triangulated by earcut in its plane, outer bound first,
-with the loop's own winding deciding the normal when it disagrees with
-the flags. A cylindrical face is mapped to (angle × radius, height), the
-angle unwrapped along each loop so a loop around the seam stays
-continuous and holes shifted into the outer loop's turn; because a
-triangle spanning more than a facet cuts a chord through the surface
-(earcut fans from a seam corner would turn a wall into two cones), the
-parameter polygon is cut into facet-wide strips with the overlay
-library and each strip triangulated on its own, its vertices made from
-their parameters (they land within tolerance of the neighbours' rim
-samples, and any strip line crossing a shared edge is a T-junction the
-mesh assembly repairs). Other surfaces are refused by name. The length
+sampled once (a line stays straight; a circle or ellipse is sampled at
+5° from its start vertex around its axis, the whole way round for a
+closed edge; a B-spline, rational or not, is evaluated by de Boor at
+sixteen points per span, a degree-one one at its poles alone, and
+reversed if the edge runs against the curve) so the two faces on an
+edge share the same mesh vertices and the result welds closed. A planar
+face is triangulated by earcut in its plane, outer bound first, with
+the loop's own winding deciding the normal when it disagrees with the
+flags. A face on a surface of revolution (cylinder, cone, torus or
+sphere) is mapped to (angle about the axis, profile parameter: height,
+tube angle or latitude), each scaled to a length, the angle unwrapped
+along each loop so a loop around the seam stays continuous (a torus's
+tube angle likewise) and holes shifted into the outer loop's turn;
+because a triangle spanning more than a facet cuts a chord through the
+surface (earcut fans from a seam corner would turn a wall into two
+cones), the parameter polygon is cut into a grid of facet-wide columns
+and, where the profile curves, rows, and each cell triangulated on its
+own. That takes two passes: first every such face decides its grid and
+puts a mesh vertex where each grid line crosses an edge of the face (on
+the surface, at the interpolated other coordinate), into the edge's
+shared samples, so the face on the other side uses the same point; a
+sample within a hundredth of a cell of a grid line moves onto it
+instead, and samples closer than that to their neighbours are dropped,
+since a triangle thinner than the mesh importer's tolerance would be
+lost and open the mesh. Then each face clips its loops to every cell
+exactly at the grid lines (`ok_brep::clip2d`, the same clipper the
+boolean uses to close cut loops in a cell; a cell no loop crosses is
+kept or dropped by where its corner lies) and triangulates the pieces,
+reusing the loop vertices, so no new vertex ever lies on a shared edge.
+Other surfaces are refused by name. The length
 unit comes from the header's `LENGTH_UNIT` (`SI_UNIT` prefixes,
 `CONVERSION_BASED_UNIT` inch, foot, yard). The bodies come back as
 vertices and triangles for `add_mesh`, whose coplanar merge restores
@@ -482,8 +545,20 @@ crossings and testing each piece's midpoint (even-odd, outline counts as
 covered), and depth is compared linearly along the piece, splitting where
 the edge passes through the face's plane. Collinear overlaps are merged
 with visible lines winning, so the back edges of a box seen square on
-draw once. The client lays front, top, right and isometric views out in
-third angle and writes an SVG sheet or DXF lines.
+draw once. Edges on an exact circle or ellipse (`exact::edge_runs` and
+`edge_curve`) are not returned as their chords: the chords go through
+the same hidden-line work, and their visible and hidden pieces, measured
+as parameter intervals of the ellipse the curve projects to, are joined
+into arcs (`visible_arcs`, `hidden_arcs`; two runs projecting onto one
+ellipse, the rims of a hole seen along it, are one, and hidden arcs are
+cut back where visible ones cover them). A rim seen edge-on becomes a
+single line the same way. The client lays front, top, right and
+isometric views out in third angle and writes an SVG sheet (arcs as
+path arcs) or a DXF (R2000: `CIRCLE`, `ARC` and `ELLIPSE` entities
+beside the lines). The measure tool's edge length comes from
+`exact::run_length` through the wasm `edge_length`: along the circle or
+ellipse for a rim, so a Ø20 hole measures 62.832 rather than its 72
+chords.
 
 A section view (`section_view`) cuts each solid with a boolean
 difference against a box covering the removed side of the cutting plane,
@@ -586,9 +661,14 @@ found this with a nudge equal to the tolerance).
 After assembly, planar faces in the same plane that share an edge are
 merged into one face (`merge_coplanar_faces`), keeping the surface and
 origin of the largest member, so flush unions produce single faces.
+Last, the result is refitted to its exact surfaces (`exact::refit_within`
+over the overlap of the operands' boxes; see "Exact curves" below), so a
+vertex the sectioning put where two facet planes met sits on the curve
+the surfaces meet on.
 
-Known limits: results are polyhedral (arcs are 5° facets), and the merge
-scope is "every body whose bounding box touches the tool".
+Known limits: results are polyhedral (arcs are 5° facets, with their
+vertices on the exact surfaces after the refit), and the merge scope is
+"every body whose bounding box touches the tool".
 
 ## Meshes (`ok-mesh`)
 

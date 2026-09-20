@@ -5,18 +5,44 @@
 //! behind faces. Everything is exact for the faceted geometry we have:
 //! an edge is hidden wherever its projection lies inside (or on the
 //! outline of) the projection of a face that faces the viewer and is
-//! nearer than the edge there. Silhouette seams of curved surfaces (a facet facing the viewer
-//! next to one facing away) are drawn like edges, so faceted cylinders
-//! get their outline.
+//! nearer than the edge there. Silhouette seams of curved surfaces (a
+//! facet facing the viewer next to one facing away) are drawn like
+//! edges, so faceted cylinders get their outline. Edges on an exact
+//! circle or ellipse (a cylinder's rims) come back as arcs of the
+//! ellipse they project to rather than as their facet chords: the
+//! hidden-line work is done on the chords, and the visible and hidden
+//! pieces are then joined into arcs.
 
-use crate::Solid;
+use crate::exact::{self, Curve};
+use crate::{edge_key, EdgeKey, Solid};
 use ok_math::{Plane, Vec2, Vec3};
+use std::collections::HashMap;
+use std::f64::consts::{PI, TAU};
 
-/// Segments of a view in view coordinates (x right, y up, millimetres).
+/// A piece of an ellipse in view coordinates: a circle or ellipse edge
+/// seen obliquely. Its points are `center + major·cos t + minor·sin t`,
+/// where `minor` is `major` turned a quarter turn counter-clockwise and
+/// scaled by `ratio`, for `t` from `start` to `end` (radians; `end` is
+/// past `start` by at most a full turn, which is a whole ellipse).
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ViewArc {
+    pub center: Vec2,
+    pub major: Vec2,
+    pub ratio: f64,
+    pub start: f64,
+    pub end: f64,
+}
+
+/// Segments and arcs of a view in view coordinates (x right, y up,
+/// millimetres).
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ViewLines {
     pub visible: Vec<[Vec2; 2]>,
     pub hidden: Vec<[Vec2; 2]>,
+    #[serde(default)]
+    pub visible_arcs: Vec<ViewArc>,
+    #[serde(default)]
+    pub hidden_arcs: Vec<ViewArc>,
 }
 
 /// A section view: the lines of what is left after cutting, plus the
@@ -26,6 +52,10 @@ pub struct ViewLines {
 pub struct SectionLines {
     pub visible: Vec<[Vec2; 2]>,
     pub hidden: Vec<[Vec2; 2]>,
+    #[serde(default)]
+    pub visible_arcs: Vec<ViewArc>,
+    #[serde(default)]
+    pub hidden_arcs: Vec<ViewArc>,
     pub cut: Vec<Vec<Vec2>>,
 }
 
@@ -62,6 +92,8 @@ pub fn section_view(solids: &[&Solid], view: View, plane: &Plane) -> SectionLine
     SectionLines {
         visible: lines.visible,
         hidden: lines.hidden,
+        visible_arcs: lines.visible_arcs,
+        hidden_arcs: lines.hidden_arcs,
         cut,
     }
 }
@@ -156,6 +188,168 @@ struct Occluder {
     face: usize,
 }
 
+/// An ellipse in view coordinates: `center + a·cos t + b·sin t` with `a`
+/// the major and `b` the minor half-axis, `b` a quarter turn
+/// counter-clockwise from `a`, and `a` pointing into the right half-plane
+/// (so two projections of one ellipse compare equal). Seen edge-on, `b`
+/// is zero and the ellipse is the segment from `center - a` to
+/// `center + a`, its pieces measured along `a`.
+#[derive(Clone, Copy)]
+struct Ellipse2 {
+    center: Vec2,
+    a: Vec2,
+    b: Vec2,
+}
+
+impl Ellipse2 {
+    /// The projection of the 3D ellipse `center + u1·cos t + u2·sin t`
+    /// onto the view (`u1`, `u2` already projected); `None` when it is
+    /// seen end-on (a point).
+    fn new(center: Vec2, u1: Vec2, u2: Vec2, eps: f64) -> Option<Ellipse2> {
+        // Conjugate diameters to principal axes: the parameter shift that
+        // makes them perpendicular.
+        let t0 = 0.5 * (2.0 * u1.dot(u2)).atan2(u1.length_squared() - u2.length_squared());
+        let (mut a, mut b) = (u1 * t0.cos() + u2 * t0.sin(), u2 * t0.cos() - u1 * t0.sin());
+        if a.length() < b.length() {
+            (a, b) = (b, a);
+        }
+        if a.length() <= eps {
+            return None;
+        }
+        if a.x < 0.0 || (a.x == 0.0 && a.y < 0.0) {
+            a = -a;
+        }
+        if b.length() <= eps {
+            b = Vec2::ZERO;
+        } else if b.dot(a.perp()) < 0.0 {
+            b = -b;
+        }
+        Some(Ellipse2 { center, a, b })
+    }
+
+    fn edge_on(&self) -> bool {
+        self.b == Vec2::ZERO
+    }
+
+    /// The parameter of the point of the ellipse nearest `p` in the
+    /// axes' frame, in `(-π, π]`; along `a` in `[-1, 1]` when edge-on.
+    fn param(&self, p: Vec2) -> f64 {
+        let d = p - self.center;
+        if self.edge_on() {
+            return (d.dot(self.a) / self.a.length_squared()).clamp(-1.0, 1.0);
+        }
+        (d.dot(self.b) / self.b.length_squared()).atan2(d.dot(self.a) / self.a.length_squared())
+    }
+
+    fn same(&self, o: &Ellipse2, eps: f64) -> bool {
+        self.center.distance(o.center) <= eps
+            && self.a.distance(o.a) <= eps
+            && self.b.distance(o.b) <= eps
+    }
+}
+
+/// The ellipses the circle and ellipse edges of `solid` project to, and
+/// which edge lies on which (by index into the returned list).
+fn projected_ellipses(
+    solid: &Solid,
+    to2: &dyn Fn(Vec3) -> Vec2,
+    eps: f64,
+) -> (Vec<Ellipse2>, HashMap<EdgeKey, usize>) {
+    let mut ellipses: Vec<Ellipse2> = Vec::new();
+    let mut of_edge: HashMap<EdgeKey, usize> = HashMap::new();
+    let origin = to2(Vec3::ZERO);
+    let vec2 = |v: Vec3| to2(v) - origin;
+    let vf = exact::vertex_faces(solid);
+    for run in exact::edge_runs(solid) {
+        let curve = exact::run_curve(solid, &vf, &run);
+        let (center, u1, u2) = match curve {
+            Curve::Circle {
+                center,
+                axis,
+                radius,
+            } => {
+                let (x, y) = exact::cylinder_frame(axis);
+                (center, x * radius, y * radius)
+            }
+            Curve::Ellipse {
+                center,
+                axis,
+                major,
+                a,
+                b,
+            } => (center, major * a, axis.cross(major) * b),
+            _ => continue,
+        };
+        let Some(e) = Ellipse2::new(to2(center), vec2(u1), vec2(u2), eps) else {
+            continue;
+        };
+        let id = ellipses.len();
+        ellipses.push(e);
+        for w in run.vertices.windows(2) {
+            of_edge.insert(edge_key(w[0], w[1]), id);
+        }
+    }
+    (ellipses, of_edge)
+}
+
+/// Joins the parameter intervals `pieces` (each shorter than half a turn)
+/// of one ellipse into arcs: overlapping or touching ones merge, and a set
+/// covering the whole turn is one full arc from 0 to 2π.
+fn merge_arcs(pieces: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    let mut v: Vec<(f64, f64)> = pieces
+        .iter()
+        .map(|&(s, e)| {
+            let s0 = s.rem_euclid(TAU);
+            (s0, s0 + (e - s))
+        })
+        .collect();
+    let mut merged = merge_intervals(v.split_off(0), 1e-9);
+    // An interval running past 2π may continue into the first ones.
+    if merged.len() > 1 {
+        let last = merged[merged.len() - 1];
+        if last.1 >= TAU + merged[0].0 - 1e-9 {
+            let first = merged.remove(0);
+            let n = merged.len();
+            merged[n - 1].1 = last.1.max(first.1 + TAU);
+        }
+    }
+    if let [only] = merged[..] {
+        if only.1 - only.0 >= TAU - 1e-9 {
+            return vec![(0.0, TAU)];
+        }
+    }
+    merged
+}
+
+/// The parts of the arcs `from` (intervals of one ellipse) not covered by
+/// the arcs `by` of the same ellipse.
+fn subtract_arcs(from: &[(f64, f64)], by: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    let mut out = Vec::new();
+    for &(s, e) in from {
+        let mut covered: Vec<(f64, f64)> = Vec::new();
+        for &(bs, be) in by {
+            for k in [-TAU, 0.0, TAU] {
+                let (c0, c1) = ((bs + k).max(s), (be + k).min(e));
+                if c1 > c0 {
+                    covered.push((c0, c1));
+                }
+            }
+        }
+        let covered = merge_intervals(covered, 1e-9);
+        let mut cursor = s;
+        for (c0, c1) in covered {
+            if c0 > cursor + 1e-9 {
+                out.push((cursor, c0));
+            }
+            cursor = cursor.max(c1);
+        }
+        if cursor < e - 1e-9 {
+            out.push((cursor, e));
+        }
+    }
+    out
+}
+
 /// Projects `solids` into the view and removes hidden lines.
 pub fn project_view(solids: &[&Solid], view: View) -> ViewLines {
     let Some((u, v, d)) = view.basis() else {
@@ -204,7 +398,27 @@ pub fn project_view(solids: &[&Solid], view: View) -> ViewLines {
     }
 
     let mut out = ViewLines::default();
+    // Every ellipse any circle or ellipse edge projects to, with the
+    // pieces of it found visible and hidden (parameter intervals).
+    let mut ellipses: Vec<Ellipse2> = Vec::new();
+    let mut arc_visible: Vec<Vec<(f64, f64)>> = Vec::new();
+    let mut arc_hidden: Vec<Vec<(f64, f64)>> = Vec::new();
     for (si, s) in solids.iter().enumerate() {
+        let (own, of_edge) = projected_ellipses(s, &to2, eps);
+        // Ellipses two runs project onto alike (both rims of a through
+        // hole seen along it) are one.
+        let ids: Vec<usize> = own
+            .iter()
+            .map(|e| match ellipses.iter().position(|k| k.same(e, eps)) {
+                Some(id) => id,
+                None => {
+                    ellipses.push(*e);
+                    arc_visible.push(Vec::new());
+                    arc_hidden.push(Vec::new());
+                    ellipses.len() - 1
+                }
+            })
+            .collect();
         let mut edges: Vec<_> = s.edge_faces().into_iter().collect();
         edges.sort_by_key(|(k, _)| *k);
         for ((a, b), faces) in edges {
@@ -275,18 +489,72 @@ pub fn project_view(solids: &[&Solid], view: View) -> ViewLines {
             }
             let hidden = merge_intervals(hidden, 1e-9);
             let seg = |t0: f64, t1: f64| [qa + (qb - qa) * t0, qa + (qb - qa) * t1];
+            // A chord of an ellipse contributes the parameter interval
+            // between its ends (the short way round) instead of a segment.
+            let arc = of_edge.get(&edge_key(a, b)).map(|&k| ids[k]);
+            let piece = |t0: f64, t1: f64| -> Option<(usize, (f64, f64))> {
+                let id = arc?;
+                let e = &ellipses[id];
+                let (s0, s1) = (e.param(seg(t0, t1)[0]), e.param(seg(t0, t1)[1]));
+                let (lo, hi) = (s0.min(s1), s0.max(s1));
+                if e.edge_on() {
+                    return Some((id, (lo, hi)));
+                }
+                Some((
+                    id,
+                    if hi - lo > PI {
+                        (hi, lo + TAU)
+                    } else {
+                        (lo, hi)
+                    },
+                ))
+            };
             let mut cursor = 0.0;
             for &(h0, h1) in &hidden {
                 if h0 > cursor + 1e-9 {
-                    out.visible.push(seg(cursor, h0));
+                    match piece(cursor, h0) {
+                        Some((id, p)) => arc_visible[id].push(p),
+                        None => out.visible.push(seg(cursor, h0)),
+                    }
                 }
-                out.hidden.push(seg(h0, h1));
+                match piece(h0, h1) {
+                    Some((id, p)) => arc_hidden[id].push(p),
+                    None => out.hidden.push(seg(h0, h1)),
+                }
                 cursor = h1;
             }
             if cursor < 1.0 - 1e-9 {
-                out.visible.push(seg(cursor, 1.0));
+                match piece(cursor, 1.0) {
+                    Some((id, p)) => arc_visible[id].push(p),
+                    None => out.visible.push(seg(cursor, 1.0)),
+                }
             }
         }
+    }
+    for (id, e) in ellipses.iter().enumerate() {
+        if e.edge_on() {
+            // The chords of a rim seen edge-on join into one line, which
+            // then takes part in the collinear clean-up like any segment.
+            let along = |x: f64| e.center + e.a * x;
+            for (x0, x1) in merge_intervals(arc_visible[id].clone(), 1e-9) {
+                out.visible.push([along(x0), along(x1)]);
+            }
+            for (x0, x1) in merge_intervals(arc_hidden[id].clone(), 1e-9) {
+                out.hidden.push([along(x0), along(x1)]);
+            }
+            continue;
+        }
+        let visible = merge_arcs(&arc_visible[id]);
+        let hidden = subtract_arcs(&merge_arcs(&arc_hidden[id]), &visible);
+        let arc = |(start, end): (f64, f64)| ViewArc {
+            center: e.center,
+            major: e.a,
+            ratio: e.b.length() / e.a.length(),
+            start,
+            end,
+        };
+        out.visible_arcs.extend(visible.into_iter().map(arc));
+        out.hidden_arcs.extend(hidden.into_iter().map(arc));
     }
     // Edges that project onto one another (two edges of a box seen square
     // on, both hidden behind a nearer part) would be drawn twice, and a
@@ -440,6 +708,87 @@ mod tests {
         extrude(&p, &Plane::XY, 0.0, h, 1).unwrap()
     }
 
+    fn cylinder(r: f64, h: f64) -> Solid {
+        let mut s = Sketch::new();
+        s.add_circle(Vec2::ZERO, r);
+        let p = s.profiles(&ProfileOptions::default()).remove(0);
+        extrude(&p, &Plane::XY, 0.0, h, 1).unwrap()
+    }
+
+    fn view(dir: Vec3, up: Vec3) -> View {
+        View { dir, up }
+    }
+
+    #[test]
+    fn a_cylinder_seen_along_its_axis_is_one_circle() {
+        let c = cylinder(10.0, 5.0);
+        let lines = project_view(&[&c], view(-Vec3::Z, Vec3::Y));
+        assert!(lines.visible.is_empty(), "{:?}", lines.visible);
+        assert!(lines.hidden.is_empty());
+        // Both rims project onto the same circle: drawn once, whole.
+        assert_eq!(lines.visible_arcs.len(), 1, "{:?}", lines.visible_arcs);
+        assert!(lines.hidden_arcs.is_empty());
+        let a = &lines.visible_arcs[0];
+        assert!(a.center.distance(Vec2::ZERO) < 1e-9);
+        assert!((a.major.length() - 10.0).abs() < 1e-9);
+        assert!((a.ratio - 1.0).abs() < 1e-9);
+        assert!((a.end - a.start - TAU).abs() < 1e-9);
+    }
+
+    #[test]
+    fn a_cylinder_seen_from_the_side_has_no_arcs() {
+        let c = cylinder(10.0, 5.0);
+        let lines = project_view(&[&c], view(Vec3::Y, Vec3::Z));
+        assert!(lines.visible_arcs.is_empty() && lines.hidden_arcs.is_empty());
+        // Two silhouette rulings and the two rims seen edge-on, each one
+        // line rather than a row of chords.
+        assert_eq!(lines.visible.len(), 4, "{:?}", lines.visible);
+        let rims: Vec<_> = lines
+            .visible
+            .iter()
+            .filter(|s| (s[0].y - s[1].y).abs() < 1e-9)
+            .collect();
+        assert_eq!(rims.len(), 2);
+        for r in rims {
+            assert!((r[0].distance(r[1]) - 20.0).abs() < 1e-9, "{r:?}");
+        }
+    }
+
+    #[test]
+    fn a_cylinder_in_isometric_view_shows_its_rims_as_ellipses() {
+        let c = cylinder(10.0, 20.0);
+        let dir = Vec3::new(-1.0, -1.0, -1.0);
+        let lines = project_view(&[&c], view(dir, Vec3::Z));
+        // The top rim is a whole visible ellipse; the bottom rim is partly
+        // hidden behind the wall, so it is a visible arc and a hidden arc
+        // of the same ellipse that do not overlap.
+        let whole: Vec<_> = lines
+            .visible_arcs
+            .iter()
+            .filter(|a| (a.end - a.start - TAU).abs() < 1e-9)
+            .collect();
+        assert_eq!(whole.len(), 1, "{:?}", lines.visible_arcs);
+        assert_eq!(lines.hidden_arcs.len(), 1, "{:?}", lines.hidden_arcs);
+        let h = &lines.hidden_arcs[0];
+        let ratio = (1.0f64 / 3.0).sqrt();
+        assert!((h.ratio - ratio).abs() < 1e-6, "ratio {}", h.ratio);
+        let partial: Vec<_> = lines
+            .visible_arcs
+            .iter()
+            .filter(|a| a.center.distance(h.center) < 1e-9)
+            .collect();
+        assert_eq!(partial.len(), 1);
+        let v = partial[0];
+        let total = (v.end - v.start) + (h.end - h.start);
+        assert!((total - TAU).abs() < 1e-6, "visible {v:?} hidden {h:?}");
+        // The wall hides the far half of the bottom rim, to within the
+        // facet the silhouette falls in.
+        assert!((h.end - h.start - PI).abs() < 0.1, "{h:?}");
+        // No chord of a rim is left as a segment: the only segments are
+        // the two silhouette rulings.
+        assert_eq!(lines.visible.len(), 2, "{:?}", lines.visible);
+    }
+
     fn polygon_area(poly: &[Vec2]) -> f64 {
         let n = poly.len();
         (0..n)
@@ -574,11 +923,16 @@ mod tests {
         assert_eq!(xs.len(), 2, "hidden {:?}", front.hidden);
         assert!((xs[0] - 15.0).abs() < 1e-6 && (xs[1] - 25.0).abs() < 1e-6);
         assert!((total_length(&front.hidden) - 16.0).abs() < 1e-6);
-        // From above the rim is visible (one facet edge per segment) and
-        // nothing is hidden.
+        // From above the rim is one visible circle (both rims project
+        // onto it) beside the outline, and nothing is hidden.
         let top = project_view(&[&plate], TOP);
         assert!(top.hidden.is_empty(), "{:?}", top.hidden);
-        assert!(top.visible.len() > 4 + 30);
+        assert!(top.hidden_arcs.is_empty(), "{:?}", top.hidden_arcs);
+        assert_eq!(top.visible.len(), 4, "{:?}", top.visible);
+        assert_eq!(top.visible_arcs.len(), 1, "{:?}", top.visible_arcs);
+        let a = &top.visible_arcs[0];
+        assert!((a.major.length() - 5.0).abs() < 1e-9 && (a.ratio - 1.0).abs() < 1e-9);
+        assert!((a.end - a.start - TAU).abs() < 1e-9);
     }
 
     #[test]

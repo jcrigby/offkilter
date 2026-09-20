@@ -1,5 +1,5 @@
 import { Kernel, parseStep } from "./kernel";
-import { detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
+import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
@@ -536,7 +536,10 @@ class App implements SketchHost {
     const edge = this.viewer.edgeAt(e);
     const hit = this.viewer.pickPoint(e);
     if (edge && !(hit && hit.snapped)) {
-      const length = this.viewer.edgeLength(edge);
+      // Exact along the edge's curve from the kernel; the display
+      // segments' sum stands in for a body the kernel cannot see (an
+      // assembly instance).
+      const length = this.kernel.edgeLength(edge.body, edge.faces) ?? this.viewer.edgeLength(edge);
       if (length !== null) {
         this.viewer.setMeasure(hit ? { a: hit.point, b: null, text: `${length.toFixed(3)} mm` } : null);
         this.setStatus(`Edge length ${length.toFixed(3)} mm (${this.describeEdge(this.edgeRefOf(edge) ?? { a: { feature: 0, local: 0 }, b: { feature: 0, local: 0 } })}). Click a point, face or edge; Esc stops.`);
@@ -1276,7 +1279,8 @@ class App implements SketchHost {
     const size = Math.hypot(fb.max.x - fb.min.x, fb.max.y - fb.min.y, fb.max.z - fb.min.z);
     // A detail of a face that spans the whole view is no detail: cap the circle at a third of the view.
     let ext = 0;
-    for (const [a, b] of [...source.lines.visible, ...source.lines.hidden]) ext = Math.max(ext, Math.abs(a.x - centre.x), Math.abs(a.y - centre.y), Math.abs(b.x - centre.x), Math.abs(b.y - centre.y));
+    const arcs = [...(source.lines.visible_arcs ?? []), ...(source.lines.hidden_arcs ?? [])].flatMap((a) => arcChords(a));
+    for (const [a, b] of [...source.lines.visible, ...source.lines.hidden, ...arcs]) ext = Math.max(ext, Math.abs(a.x - centre.x), Math.abs(a.y - centre.y), Math.abs(b.x - centre.x), Math.abs(b.y - centre.y));
     const radius = Math.min(Math.max(size * 0.6, 2), Math.max(ext * 0.35, 2));
     return detailView(source, centre, radius, 2, "B");
   }

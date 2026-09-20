@@ -338,8 +338,7 @@ fn same_shape(a: &[Contour], b: &[Contour], tol: f64) -> bool {
     a.iter().all(|x| b.iter().any(|y| same_loop(x, y)))
 }
 
-/// A rectangle in plane coordinates, `[x0, y0, x1, y1]`.
-type Rect = [f64; 4];
+use crate::clip2d::{clip_and_close, Rect};
 
 /// The sections of `other` a hair above and below `plane`, as closed
 /// loops covering a rectangle around `region`, built from the faces near
@@ -478,226 +477,9 @@ fn close_in_rect(
     tol: f64,
     corner_inside: impl Fn() -> Option<bool>,
 ) -> Option<Vec<Contour>> {
-    let mut closed: Vec<Vec<Vec2>> = Vec::new();
-    let mut open: Vec<Vec<Vec2>> = Vec::new();
-    for l in local.loops {
-        clip_loop(&l, rect, &mut closed, &mut open);
-    }
-    for c in local.chains {
-        clip_polyline(&c, rect, &mut open);
-    }
-    let contour = |l: &Vec<Vec2>| -> Contour { l.iter().map(|p| [p.x, p.y]).collect() };
-    if open.is_empty() {
-        let mut out: Vec<Contour> = closed.iter().map(contour).collect();
-        if corner_inside()? {
-            out.push(vec![
-                [rect[0], rect[1]],
-                [rect[2], rect[1]],
-                [rect[2], rect[3]],
-                [rect[0], rect[3]],
-            ]);
-        }
-        return Some(out);
-    }
-    let (w, h) = (rect[2] - rect[0], rect[3] - rect[1]);
-    let perimeter = 2.0 * (w + h);
-    // Position along the boundary, counter-clockwise from the lower left.
-    let along = |p: Vec2| -> f64 {
-        let d = [
-            (p.y - rect[1]).abs(),
-            (p.x - rect[2]).abs(),
-            (p.y - rect[3]).abs(),
-            (p.x - rect[0]).abs(),
-        ];
-        let side = (0..4)
-            .min_by(|&i, &j| d[i].partial_cmp(&d[j]).unwrap())
-            .unwrap();
-        match side {
-            0 => p.x - rect[0],
-            1 => w + (p.y - rect[1]),
-            2 => w + h + (rect[2] - p.x),
-            _ => 2.0 * w + h + (rect[3] - p.y),
-        }
-    };
-    let corner_at = |s: f64| -> Vec2 {
-        if s < w {
-            Vec2::new(rect[0] + s, rect[1])
-        } else if s < w + h {
-            Vec2::new(rect[2], rect[1] + (s - w))
-        } else if s < 2.0 * w + h {
-            Vec2::new(rect[2] - (s - w - h), rect[3])
-        } else {
-            Vec2::new(rect[0], rect[3] - (s - 2.0 * w - h))
-        }
-    };
-    let corner_positions = [0.0, w, w + h, 2.0 * w + h];
-    // Every endpoint on the boundary, sorted; entries and exits must
-    // alternate for the material bands along the boundary to make sense.
-    let mut events: Vec<(f64, usize, bool)> = Vec::new(); // (position, piece, is_start)
-    for (i, piece) in open.iter().enumerate() {
-        events.push((along(piece[0]), i, true));
-        events.push((along(*piece.last().unwrap()), i, false));
-    }
-    events.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-    for pair in events.windows(2) {
-        if (pair[1].0 - pair[0].0).abs() <= tol || pair[0].2 == pair[1].2 {
-            return None;
-        }
-    }
-    if events.len() >= 2 && events[0].2 == events[events.len() - 1].2 {
-        return None;
-    }
-    let mut used = vec![false; open.len()];
-    let mut out: Vec<Contour> = closed.iter().map(contour).collect();
-    for first in 0..open.len() {
-        if used[first] {
-            continue;
-        }
-        let mut poly: Vec<Vec2> = Vec::new();
-        let mut current = first;
-        loop {
-            used[current] = true;
-            poly.extend(open[current].iter().copied());
-            let exit = along(*open[current].last().unwrap());
-            // The next event counter-clockwise from the exit is an entry.
-            let next = events
-                .iter()
-                .filter(|e| e.0 > exit)
-                .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
-                .or_else(|| events.iter().min_by(|a, b| a.0.partial_cmp(&b.0).unwrap()))?;
-            if !next.2 {
-                return None;
-            }
-            // Corners passed on the way.
-            let entry = next.0;
-            let passed: Vec<f64> = if entry > exit {
-                corner_positions
-                    .iter()
-                    .copied()
-                    .filter(|&c| c > exit && c < entry)
-                    .collect()
-            } else {
-                corner_positions
-                    .iter()
-                    .copied()
-                    .filter(|&c| c > exit)
-                    .chain(corner_positions.iter().copied().filter(|&c| c < entry))
-                    .collect()
-            };
-            for c in passed {
-                poly.push(corner_at(c.min(perimeter - 1e-12)));
-            }
-            current = next.1;
-            if current == first {
-                break;
-            }
-            if used[current] {
-                return None;
-            }
-        }
-        poly.dedup_by(|a, b| a.distance(*b) <= tol);
-        if poly.len() >= 3 {
-            out.push(contour(&poly));
-        }
-    }
-    Some(out)
-}
-
-fn inside_rect(p: Vec2, rect: Rect) -> bool {
-    p.x > rect[0] && p.x < rect[2] && p.y > rect[1] && p.y < rect[3]
-}
-
-/// The parameter interval of segment `a b` inside `rect` (Liang–Barsky).
-fn clip_segment(a: Vec2, b: Vec2, rect: Rect) -> Option<(f64, f64)> {
-    let d = b - a;
-    let (mut t0, mut t1) = (0.0f64, 1.0f64);
-    for (p, q) in [
-        (-d.x, a.x - rect[0]),
-        (d.x, rect[2] - a.x),
-        (-d.y, a.y - rect[1]),
-        (d.y, rect[3] - a.y),
-    ] {
-        if p == 0.0 {
-            if q < 0.0 {
-                return None;
-            }
-            continue;
-        }
-        let t = q / p;
-        if p < 0.0 {
-            t0 = t0.max(t);
-        } else {
-            t1 = t1.min(t);
-        }
-        if t0 > t1 {
-            return None;
-        }
-    }
-    Some((t0, t1))
-}
-
-/// Cuts an open polyline into the pieces inside `rect`; no vertex lies
-/// on the rectangle's edges (the caller made sure), so a piece's ends
-/// are either the polyline's own ends or points on the boundary.
-fn clip_polyline(points: &[Vec2], rect: Rect, out: &mut Vec<Vec<Vec2>>) {
-    let mut current: Option<Vec<Vec2>> = None;
-    if points.len() < 2 {
-        return;
-    }
-    for w in points.windows(2) {
-        let (a, b) = (w[0], w[1]);
-        let (a_in, b_in) = (inside_rect(a, rect), inside_rect(b, rect));
-        match (a_in, b_in) {
-            (true, true) => current.get_or_insert_with(|| vec![a]).push(b),
-            (true, false) => {
-                if let Some((_, t1)) = clip_segment(a, b, rect) {
-                    let mut piece = current.take().unwrap_or_else(|| vec![a]);
-                    piece.push(a + (b - a) * t1);
-                    out.push(piece);
-                } else if let Some(piece) = current.take() {
-                    out.push(piece);
-                }
-            }
-            (false, true) => {
-                if let Some(piece) = current.take() {
-                    out.push(piece);
-                }
-                let t0 = clip_segment(a, b, rect).map_or(0.0, |(t0, _)| t0);
-                current = Some(vec![a + (b - a) * t0, b]);
-            }
-            (false, false) => {
-                if let Some(piece) = current.take() {
-                    out.push(piece);
-                }
-                if let Some((t0, t1)) = clip_segment(a, b, rect) {
-                    if t1 > t0 {
-                        out.push(vec![a + (b - a) * t0, a + (b - a) * t1]);
-                    }
-                }
-            }
-        }
-    }
-    if let Some(piece) = current.take() {
-        out.push(piece);
-    }
-}
-
-/// Cuts a closed loop to `rect`: kept whole when it lies inside,
-/// otherwise in open pieces (none when it stays clear of the rectangle,
-/// enclosing it or not).
-fn clip_loop(l: &[Vec2], rect: Rect, closed: &mut Vec<Vec<Vec2>>, open: &mut Vec<Vec<Vec2>>) {
-    if l.iter().all(|p| inside_rect(*p, rect)) {
-        closed.push(l.to_vec());
-        return;
-    }
-    let Some(start) = l.iter().position(|p| !inside_rect(*p, rect)) else {
-        return;
-    };
-    let mut rotated: Vec<Vec2> = Vec::with_capacity(l.len() + 1);
-    rotated.extend(l[start..].iter().copied());
-    rotated.extend(l[..start].iter().copied());
-    rotated.push(l[start]);
-    clip_polyline(&rotated, rect, open);
+    let loops = to_contours(&local.loops);
+    let chains = to_contours(&local.chains);
+    clip_and_close(&loops, &chains, rect, tol, corner_inside)
 }
 
 /// Lifts the kept 2D fragments of `f` back to 3D. A fragment corner that
@@ -1109,6 +891,15 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
     solid.merge_coplanar_faces();
     solid.compact_surfaces();
     solid.validate()?;
+    // New vertices lie where facet planes met; put them on the curves the
+    // surfaces meet on, keeping the result as it is if that cannot close.
+    let grown = (
+        overlap.0 - Vec3::new(3.0 * tol, 3.0 * tol, 3.0 * tol),
+        overlap.1 + Vec3::new(3.0 * tol, 3.0 * tol, 3.0 * tol),
+    );
+    if let Ok(Some(refitted)) = crate::exact::refit_within(&solid, Some(grown)) {
+        solid = refitted;
+    }
     Ok(solid)
 }
 

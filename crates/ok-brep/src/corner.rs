@@ -453,9 +453,9 @@ fn sphere_patch(
             })
             .collect()
     };
-    surfaces.push(Surface::Revolved {
-        origin: centre,
-        axis: m,
+    surfaces.push(Surface::Sphere {
+        center: centre,
+        radius,
     });
     let surface = surfaces.len() - 1;
     let mut push_tri = |a: Vec3, bb: Vec3, c: Vec3| {

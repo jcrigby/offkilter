@@ -138,7 +138,9 @@ export type SolveResult = {
 export type SketchCurve = { entity: number; kind: string; construction: boolean; projected: boolean; points: Vec3[] };
 export type PlaneFrame = { origin: Vec3; x_axis: Vec3; y_axis: Vec3; normal: Vec3 };
 /** Segments of a drawing view in view millimetres (x right, y up). */
-export type ViewLines = { visible: [Vec2, Vec2][]; hidden: [Vec2, Vec2][] };
+/** A piece of an ellipse in view coordinates: `center + major·cos t + minor·sin t`, `minor` being `major` turned a quarter turn counter-clockwise and scaled by `ratio`, for `t` from `start` to `end` (radians, at most a full turn). */
+export type ViewArc = { center: Vec2; major: Vec2; ratio: number; start: number; end: number };
+export type ViewLines = { visible: [Vec2, Vec2][]; hidden: [Vec2, Vec2][]; /** Circle and ellipse edges seen obliquely, as arcs rather than chords. */ visible_arcs?: ViewArc[]; hidden_arcs?: ViewArc[] };
 /** A section view: what is left after the cut, plus the cut faces' outlines (closed polygons) for hatching. */
 export type SectionLines = ViewLines & { cut: Vec2[][] };
 export type Loop = { points: Vec2[] };
@@ -372,6 +374,12 @@ export class Kernel {
     const r = JSON.parse(this.studio.drawing_section(JSON.stringify({ dir: v(dir), up: v(up), origin: v(origin), normal: v(normal) }))) as SectionLines & { error?: string };
     if (r.error) throw new Error(r.error);
     return r;
+  }
+
+  /** The exact length of a body's edge between two of its faces (along its circle or ellipse where it lies on one), or null. */
+  edgeLength(body: number, faces: [number, number]): number | null {
+    const l = this.studio.edge_length(body, faces[0], faces[1]);
+    return l >= 0 ? l : null;
   }
 
   /** Orthographic projection of the current tab's bodies with hidden lines removed. */

@@ -317,7 +317,15 @@ pub fn blend_edges(
                     )
                 })
                 .collect();
-            chain_cutter(&segs, *closed, size, kind, segment_angle, feature)?
+            chain_cutter(
+                &segs,
+                *closed,
+                size,
+                kind,
+                segment_angle,
+                feature,
+                rim_axis(solid, &segs),
+            )?
         };
         for f in &mut prism.faces {
             f.origin.local += (k as u32) * 1000;
@@ -338,6 +346,52 @@ pub fn blend_edges(
     Ok(out)
 }
 
+/// The axis a closed chain of segments turns about when its edge is a
+/// circle and both faces along it are surfaces of revolution about the
+/// circle's axis (a rim of a turned part or a boss): the fillet along it
+/// is then a torus. `None` for any other chain.
+fn rim_axis(solid: &Solid, segs: &[(&EdgeSegment, (Vec3, Vec3))]) -> Option<(Vec3, Vec3)> {
+    let first = segs.first()?.0;
+    // The facet edge at the chain's start, by its end positions.
+    let vertex_at = |p: Vec3| {
+        solid
+            .vertices
+            .iter()
+            .position(|v| v.distance(p) <= 1e-9 * p.length().max(1.0))
+    };
+    let (a, b) = (vertex_at(first.p)? as u32, vertex_at(first.q)? as u32);
+    let faces = solid.edge_faces();
+    let fs = faces.get(&crate::edge_key(a, b))?;
+    let [fa, fb] = fs[..] else {
+        return None;
+    };
+    let (sa, sb) = (solid.faces[fa].surface, solid.faces[fb].surface);
+    let vf = crate::exact::vertex_faces(solid);
+    let run = crate::exact::edge_runs(solid)
+        .into_iter()
+        .find(|r| r.surfaces == (sa.min(sb), sa.max(sb)) && r.vertices.contains(&a))?;
+    let crate::exact::Curve::Circle { center, axis, .. } =
+        crate::exact::run_curve(solid, &vf, &run)
+    else {
+        return None;
+    };
+    // Both surfaces turn about the circle's axis.
+    let about = |s: &Surface| -> bool {
+        match *s {
+            Surface::Plane { normal, .. } => normal.cross(axis).length() < 1e-9,
+            Surface::Sphere { center: c, .. } => {
+                let d = c - center;
+                (d - axis * d.dot(axis)).length() < 1e-9
+            }
+            _ => crate::exact::axis_of(s).is_some_and(|(o, ax)| {
+                let d = o - center;
+                ax.cross(axis).length() < 1e-9 && (d - axis * d.dot(axis)).length() < 1e-9
+            }),
+        }
+    };
+    (about(&solid.surfaces[sa]) && about(&solid.surfaces[sb])).then_some((center, axis))
+}
+
 /// The cutter for a chain of edge segments: at every vertex of the chain
 /// the blend's cross-section is built in the plane perpendicular to the
 /// local tangent (the bisector of the two segments there) from the
@@ -352,6 +406,7 @@ fn chain_cutter(
     kind: BlendKind,
     segment_angle: f64,
     feature: u32,
+    rim_axis: Option<(Vec3, Vec3)>,
 ) -> Result<Solid, BrepError> {
     let m = segs.len();
     let tangent = |i: usize| (segs[i].0.q - segs[i].0.p).normalized().unwrap();
@@ -403,9 +458,13 @@ fn chain_cutter(
         .map(|f| arc_facets(f.4, segment_angle))
         .max()
         .unwrap_or(2);
+    // A fillet along a circular rim about an axis sweeps its arc's
+    // centre round the axis: a torus, when every section's centre lies
+    // at one distance from the axis and one height along it.
+    let mut centres: Vec<Vec3> = Vec::with_capacity(count);
     for &(v, t, ia, ib, _) in &frames {
         let y = t.cross(ia);
-        let (pts, arc) = chain_section(ia, ib, y, size, kind, facets)?;
+        let (pts, arc, centre) = chain_section(ia, ib, y, size, kind, facets)?;
         if let Some(c) = &curves {
             if c.len() != arc.len() {
                 return Err(BrepError::Degenerate(
@@ -415,14 +474,38 @@ fn chain_cutter(
         } else {
             curves = Some(arc);
         }
+        if let Some(c) = centre {
+            centres.push(v + ia * c.x + y * c.y);
+        }
         sections.push(pts.iter().map(|p| v + ia * p.x + y * p.y).collect());
     }
     let curves = curves.unwrap();
     let n = curves.len();
     let mut polys: Vec<Polygon> = Vec::new();
     let mut surfaces: Vec<Surface> = Vec::new();
+    let torus = rim_axis.and_then(|(origin, axis)| {
+        if centres.len() != count {
+            return None;
+        }
+        let along = |c: Vec3| (c - origin).dot(axis);
+        let radial = |c: Vec3| {
+            let d = c - origin;
+            (d - axis * d.dot(axis)).length()
+        };
+        let (h, major) = (along(centres[0]), radial(centres[0]));
+        let tol = 1e-6 * size.max(1.0);
+        let same = centres
+            .iter()
+            .all(|&c| (along(c) - h).abs() <= tol && (radial(c) - major).abs() <= tol);
+        (same && major > tol).then(|| Surface::Torus {
+            origin: origin + axis * h,
+            axis,
+            major,
+            minor: size,
+        })
+    });
     let ruled = {
-        surfaces.push(Surface::Ruled);
+        surfaces.push(torus.unwrap_or(Surface::Ruled));
         surfaces.len() - 1
     };
     let spans = if closed { count } else { count - 1 };
@@ -506,6 +589,10 @@ fn chain_cutter(
 /// cutter meets the faces only along the tangent lines, squarely, rather
 /// than with walls lying almost in the facets (which the facets' changing
 /// tilt along a curved rim would leave nearly but not quite coplanar).
+/// A blend's cross-section along a chain: its points, which segments lie
+/// on the arc, and the arc's centre (fillets only).
+type ChainSection = (Vec<Vec2>, Vec<bool>, Option<Vec2>);
+
 fn chain_section(
     ia: Vec3,
     ib: Vec3,
@@ -513,7 +600,7 @@ fn chain_section(
     size: f64,
     kind: BlendKind,
     facets: usize,
-) -> Result<(Vec<Vec2>, Vec<bool>), BrepError> {
+) -> Result<ChainSection, BrepError> {
     let ib2 = Vec2::new(ib.dot(ia), ib.dot(y));
     let phi = ib2.y.atan2(ib2.x).abs();
     if !(1f64.to_radians()..=179f64.to_radians()).contains(&phi) {
@@ -523,6 +610,7 @@ fn chain_section(
     }
     let mut pts: Vec<Vec2> = Vec::new();
     let mut arc: Vec<bool> = Vec::new();
+    let mut arc_center = None;
     let (ta, tb) = match kind {
         BlendKind::Chamfer => {
             let (ta, tb) = (Vec2::new(size, 0.0), ib2 * size);
@@ -535,6 +623,7 @@ fn chain_section(
             let (ta, tb) = (Vec2::new(t, 0.0), ib2 * t);
             let bisector = (Vec2::X + ib2).normalized().unwrap();
             let center = bisector * (size / (phi / 2.0).sin());
+            arc_center = Some(center);
             let a0 = (ta - center).angle();
             let a1 = (tb - center).angle();
             let mut sweep = a1 - a0;
@@ -595,7 +684,7 @@ fn chain_section(
             *flag = old[(2 * n - 2 - k) % n];
         }
     }
-    Ok((pts, arc))
+    Ok((pts, arc, arc_center))
 }
 
 /// A plane through a polygon's points with its Newell normal.
@@ -791,18 +880,18 @@ mod tests {
             .iter()
             .filter(|s| matches!(s, Surface::Cylinder { .. }))
             .count();
-        let revolved = f
+        let spheres = f
             .surfaces
             .iter()
-            .filter(|s| matches!(s, Surface::Revolved { .. }))
+            .filter(|s| matches!(s, Surface::Sphere { .. }))
             .count();
-        assert_eq!((cylinders, revolved), (3, 1));
+        assert_eq!((cylinders, spheres), (3, 1));
         // Every patch vertex lies on the ball about the centre 2 mm inside the corner.
         let centre = Vec3::new(10.0 - r, 10.0 - r, 10.0 - r);
         let patch = f
             .surfaces
             .iter()
-            .position(|s| matches!(s, Surface::Revolved { .. }))
+            .position(|s| matches!(s, Surface::Sphere { .. }))
             .unwrap();
         for face in f.faces.iter().filter(|face| face.surface == patch) {
             for &v in &face.loops[0] {
@@ -832,12 +921,12 @@ mod tests {
             "vol {} expected {expected}",
             f.volume()
         );
-        let revolved = f
+        let spheres = f
             .surfaces
             .iter()
-            .filter(|s| matches!(s, Surface::Revolved { .. }))
+            .filter(|s| matches!(s, Surface::Sphere { .. }))
             .count();
-        assert_eq!(revolved, 8);
+        assert_eq!(spheres, 8);
         // Nothing sticks out past the rounded shape: every vertex is within
         // the rounded box (the inner box grown by r).
         for v in &f.vertices {
@@ -993,6 +1082,35 @@ mod tests {
             .find(|f| f.plane.normal.approx_eq(Vec3::Z))
             .unwrap();
         assert_eq!(top.loops.len(), 1);
+        // The blend is a torus: its arc's centre, r inside the wall and r
+        // below the top, swept round the axis; every blend vertex lies on it.
+        let torus = out
+            .surfaces
+            .iter()
+            .position(|s| matches!(s, Surface::Torus { .. }))
+            .expect("a torus");
+        let Surface::Torus {
+            origin,
+            axis,
+            major,
+            minor,
+        } = out.surfaces[torus]
+        else {
+            unreachable!()
+        };
+        assert!(
+            origin.distance(Vec3::new(0.0, 0.0, h - r)) < 1e-9,
+            "{origin:?}"
+        );
+        assert!(axis.approx_eq(Vec3::Z) || axis.approx_eq(-Vec3::Z));
+        assert!((major - (big_r - r)).abs() < 1e-9 && (minor - r).abs() < 1e-9);
+        for f in out.faces.iter().filter(|f| f.surface == torus) {
+            for &v in &f.loops[0] {
+                let p = out.vertices[v as usize];
+                let off = p.distance(crate::exact::project(&out.surfaces[torus], p));
+                assert!(off < 1e-6, "blend vertex {off} off the torus");
+            }
+        }
     }
 
     #[test]
