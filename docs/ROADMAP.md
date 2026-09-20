@@ -64,7 +64,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Face selection in the viewport with picking
 - [x] Edge selection (edges are named by their two faces)
 - [x] Rollback bar in the feature list
-- [x] Part hide/show and rename from the parts list; standard views (top/front/right/iso); measure tool (point to point, corner snap); section view (axis-aligned clipping)
+- [x] Part hide/show and rename from the parts list; standard views (top/front/right/iso); measure tool (corners, faces, edges and cylinders: distances, angles, lengths, diameters); section view (axis-aligned clipping)
+- [x] Constraint glyphs in the viewport while editing a sketch (click to remove with the select tool)
 - [x] Multiple part studios per document; assemblies with fastened / revolute / slider / cylindrical mates resolved as chains from fixed instances
 - [x] Interference check between placed instances (boolean intersection, on demand)
 - [x] Numeric mate solver: closed loops and redundant mates solved over the free degrees of freedom of revolute, slider and cylindrical mates
@@ -86,6 +87,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Import: STL (binary or ASCII) and OBJ meshes as bodies; coplanar triangles merge into faces
 - [x] Import: DXF lines, circles, arcs and polylines (with bulges) into a sketch, endpoints tied by coincident constraints
 - [ ] Import: STEP via a B-rep reader
+- [x] Documents list with previews, a name filter and sort order
 
 ## Platform
 

@@ -12,7 +12,8 @@ works today, all in the browser:
   degrees-of-freedom reporting), inferred coincident / horizontal /
   vertical constraints while drawing, point dragging, construction
   geometry, trim, offset, fillet and mirror (with symmetric constraints),
-  dimension labels you click to edit, and a Use tool that
+  dimension labels you click to edit, constraint glyphs you click to
+  remove, and a Use tool that
   projects body edges and face outlines into the sketch as geometry that
   follows the model.
 - Solids: extrude (blind, through all, up to face), revolve, sweep along a
@@ -42,13 +43,14 @@ works today, all in the browser:
   between corners in the preview, a hatched section view, a detail
   view of the selected face and a parts list with item balloons for
   assemblies, bills of materials as CSV, mass properties with per-part
-  materials.
+  materials, and a measure tool for corners, faces, edges and cylinders.
 
 - Cloud: a small document server with real-time multi-user editing;
   concurrent edits converge without conflicts, documents keep named
   versions, and optional accounts own documents and share them with
   other accounts as editors or read-only viewers, by name, by team or by
-  invitation link.
+  invitation link; documents can be branched and merged back, and the
+  list shows a preview of each.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
 resolution, 5° by default, and STEP files carry those facets as planar
