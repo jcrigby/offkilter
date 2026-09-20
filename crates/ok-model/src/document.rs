@@ -23,6 +23,22 @@ pub enum TabKind {
 pub struct Tab {
     pub id: TabId,
     pub kind: TabKind,
+    /// Dimensions placed on this tab's drawing sheet.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub drawing: Vec<DrawingDimension>,
+}
+
+/// A dimension the user placed on a drawing: between two points of the
+/// named view (front, top, right, iso, section, detail), in that view's
+/// coordinates (mm), with the dimension line `offset` mm to the left of
+/// the span (negative: right). The value is the distance between the
+/// points, measured when the sheet is drawn.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DrawingDimension {
+    pub view: String,
+    pub a: ok_math::Vec2,
+    pub b: ok_math::Vec2,
+    pub offset: f64,
 }
 
 impl Tab {
@@ -72,6 +88,11 @@ pub enum DocOp {
     },
     RenameDocument {
         name: String,
+    },
+    /// Replaces the dimensions placed on a tab's drawing sheet.
+    SetDrawingDimensions {
+        tab: TabId,
+        dims: Vec<DrawingDimension>,
     },
     /// An edit to a part studio tab.
     Studio {
@@ -222,7 +243,11 @@ impl Document {
 
     fn push_tab(&mut self, kind: TabKind) -> TabId {
         let id = TabId(self.alloc());
-        self.tabs.push(Tab { id, kind });
+        self.tabs.push(Tab {
+            id,
+            kind,
+            drawing: Vec::new(),
+        });
         id
     }
 
@@ -348,6 +373,13 @@ impl Document {
                 self.tabs.insert(index, tab);
             }
             DocOp::RenameDocument { name } => self.name = name,
+            DocOp::SetDrawingDimensions { tab, dims } => {
+                let t = self
+                    .tab_mut(tab)
+                    .ok_or_else(|| ModelError::Invalid(format!("no tab {}", tab.0)))?;
+                t.drawing = dims;
+                out.tab = Some(tab);
+            }
             DocOp::Studio { tab, op } => {
                 let r = self.studio_mut(tab)?.apply_with_inverse(op, base)?;
                 out.tab = Some(tab);
@@ -590,6 +622,9 @@ impl Document {
                 })
             }
             DocOp::RenameDocument { .. } => Some(Before::Name(self.name.clone())),
+            DocOp::SetDrawingDimensions { tab, .. } => {
+                self.tab(*tab).map(|t| Before::Drawing(t.drawing.clone()))
+            }
             DocOp::ReplaceDocument { .. } => Some(Before::Json(self.to_json())),
             DocOp::Assembly { tab, op } => self.assembly(*tab).ok().map(|a| match op {
                 AssemblyOp::SetInstance { id, .. } => a
@@ -621,6 +656,9 @@ impl Document {
             }
             (DocOp::RenameDocument { .. }, Some(Before::Name(name))) => {
                 vec![DocOp::RenameDocument { name }]
+            }
+            (DocOp::SetDrawingDimensions { tab, .. }, Some(Before::Drawing(dims))) => {
+                vec![DocOp::SetDrawingDimensions { tab, dims }]
             }
             (DocOp::ReplaceDocument { .. }, Some(Before::Json(json))) => {
                 vec![DocOp::ReplaceDocument { json }]
@@ -708,6 +746,7 @@ impl Document {
         h.write_u32(self.tabs.len() as u32);
         for t in &self.tabs {
             h.write_u32(t.id.0);
+            h.write_u32(t.drawing.len() as u32);
             match &t.kind {
                 TabKind::PartStudio(p) => {
                     h.write_u8(0);
@@ -835,6 +874,7 @@ impl Document {
 enum Before {
     None,
     Name(String),
+    Drawing(Vec<DrawingDimension>),
     Tab(usize, serde_json::Value),
     Json(String),
     Instance(Instance),
@@ -1218,6 +1258,48 @@ mod tests {
                         fixed: false,
                         placement: Placement::default()
                     }
+                },
+                None
+            )
+            .is_err());
+    }
+
+    #[test]
+    fn drawing_dimensions_live_on_the_tab_and_undo() {
+        let mut doc = Document::new("doc");
+        let tab = doc.tabs[0].id;
+        let dim = DrawingDimension {
+            view: "front".into(),
+            a: ok_math::Vec2::new(0.0, 0.0),
+            b: ok_math::Vec2::new(30.0, 40.0),
+            offset: -10.0,
+        };
+        let r = doc
+            .apply_with_inverse(
+                DocOp::SetDrawingDimensions {
+                    tab,
+                    dims: vec![dim.clone()],
+                },
+                None,
+            )
+            .unwrap();
+        assert_eq!(doc.tab(tab).unwrap().drawing, vec![dim.clone()]);
+        // Round trip through JSON keeps it; a tab without any omits the key.
+        let json = doc.to_json();
+        assert!(json.contains("\"drawing\""));
+        let back = Document::from_json(&json).unwrap();
+        assert_eq!(back.tab(tab).unwrap().drawing, vec![dim]);
+        assert_eq!(r.inverse.len(), 1);
+        for op in r.inverse {
+            doc.apply_with_base(op, None).unwrap();
+        }
+        assert!(doc.tab(tab).unwrap().drawing.is_empty());
+        assert!(!doc.to_json().contains("\"drawing\""));
+        assert!(doc
+            .apply_with_base(
+                DocOp::SetDrawingDimensions {
+                    tab: TabId(99),
+                    dims: vec![]
                 },
                 None
             )

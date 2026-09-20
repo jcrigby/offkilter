@@ -403,9 +403,12 @@ and the sheet size (A4, A3, A2, Letter) before downloading. Dimensions
 can be placed on the preview: `drawingFrame` reports where each view
 sits on the sheet, a click is mapped back into view coordinates and
 snapped to the nearest line endpoint, and two picks on one view become
-a `UserDimension` (aligned, its text along the span, the dimension line
-on the side away from the view's middle) that both the SVG and the DXF
-draw beside the automatic overall dimensions. The Export
+a `DrawingDimension` (aligned, its text along the span, the dimension
+line on the side away from the view's middle) that both the SVG and the
+DXF draw beside the automatic overall dimensions. Placed dimensions are
+document state: each `Tab` carries its `drawing` list, replaced through
+`DocOp::SetDrawingDimensions` (one undo step, relayed to collaborators
+like any edit) and reported per tab in the summary. The Export
 menu also writes a bill of materials as CSV (bodies of a part studio, or
 instances with their source tab in an assembly).
 

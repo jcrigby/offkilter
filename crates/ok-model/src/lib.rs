@@ -19,7 +19,7 @@ pub use assembly::{
     connector_frame, describe_anchor, mate_transform, Anchor, Assembly, AssemblyResult, Connector,
     Instance, InstanceId, Interference, Mate, MateId, MateKind, Placement, TabId,
 };
-pub use document::{AssemblyOp, DocOp, DocOpResult, Document, Tab, TabKind};
+pub use document::{AssemblyOp, DocOp, DocOpResult, Document, DrawingDimension, Tab, TabKind};
 pub use feature::{
     canonical_frame, rotated_plane, Axis, BlendFeature, BlendKind, BodyOp, BooleanFeature,
     BooleanOp, CopyOp, Counterbore, DraftFeature, EdgeRef, ExtrudeDirection, ExtrudeEnd,

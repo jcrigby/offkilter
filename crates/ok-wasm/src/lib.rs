@@ -26,6 +26,7 @@ struct TabSummary<'a> {
     id: TabId,
     name: &'a str,
     kind: &'static str,
+    drawing: &'a [ok_model::DrawingDimension],
 }
 
 /// Regeneration summary handed to the client. Mesh buffers are fetched
@@ -319,6 +320,7 @@ impl Doc {
                     id: t.id,
                     name: t.name(),
                     kind: t.kind_name(),
+                    drawing: &t.drawing,
                 })
                 .collect(),
             tab,

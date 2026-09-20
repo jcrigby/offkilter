@@ -140,7 +140,9 @@ export type Loop = { points: Vec2[] };
 export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
 export type Settings = { facet_angle: number };
 export type TabKind = "part_studio" | "assembly";
-export type TabSummary = { id: number; name: string; kind: TabKind };
+/** A dimension placed on a drawing of a tab: two points of a named view (view coordinates, mm) and the side its line sits on. */
+export type DrawingDimension = { view: string; a: Vec2; b: Vec2; offset: number };
+export type TabSummary = { id: number; name: string; kind: TabKind; drawing: DrawingDimension[] };
 
 // ---- assemblies
 export type Placement = { position: Vec3; rotation: Vec3 };
@@ -284,6 +286,7 @@ export type DocOp =
   | { type: "delete_tab"; tab: number }
   | { type: "insert_tab"; index: number; tab: unknown }
   | { type: "rename_document"; name: string }
+  | { type: "set_drawing_dimensions"; tab: number; dims: DrawingDimension[] }
   | { type: "studio"; tab: number; op: Op }
   | { type: "assembly"; tab: number; op: AssemblyOp }
   | { type: "replace_document"; json: string };

@@ -1055,24 +1055,35 @@ class App implements SketchHost {
     return { name: "section", lines, cut: lines.cut, trace: { ...trace, label: "A", towards: sign } };
   }
 
-  /** Which views the drawing sheet shows (all by default), its sheet size, and the dimensions placed on it. */
-  drawingOptions: { views: Set<string>; sheet: SheetSize; dims: UserDimension[] } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4", dims: [] };
+  /** Which views the drawing sheet shows (all by default) and its sheet size. */
+  drawingOptions: { views: Set<string>; sheet: SheetSize } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4" };
+
+  /** The dimensions placed on this tab's drawing; they live in the document. */
+  drawingDimensions(): UserDimension[] {
+    return this.summary.tabs.find((t) => t.id === this.summary.tab)?.drawing ?? [];
+  }
 
   /** Where the chosen views sit on the sheet, for picking points in the preview. */
   drawingFrame(): DrawingFrame {
-    return drawingFrame(this.chosenDrawingViews(), this.drawingOptions.sheet, this.drawingOptions.dims);
+    return drawingFrame(this.chosenDrawingViews(), this.drawingOptions.sheet, this.drawingDimensions());
   }
 
   /**
    * Places a dimension between two points of a view (view coordinates); the
-   * dimension line goes on the side away from the view's middle. Returns
-   * the measured value.
+   * dimension line goes on the side away from the view's middle. One undo
+   * step. Returns the measured value.
    */
   addDrawingDimension(view: string, a: Vec2, b: Vec2): number {
     const v = this.chosenDrawingViews().find((x) => x.name === view);
     if (!v) throw new Error(`no view ${view} on the sheet`);
-    this.drawingOptions.dims.push({ view, a, b, offset: dimensionOffsetFor(v, a, b) });
+    const dims = [...this.drawingDimensions(), { view, a, b, offset: dimensionOffsetFor(v, a, b) }];
+    this.applyDoc({ type: "set_drawing_dimensions", tab: this.summary.tab, dims });
     return Math.hypot(b.x - a.x, b.y - a.y);
+  }
+
+  /** Removes every placed dimension of this tab's drawing (one undo step). */
+  clearDrawingDimensions(): void {
+    if (this.drawingDimensions().length > 0) this.applyDoc({ type: "set_drawing_dimensions", tab: this.summary.tab, dims: [] });
   }
 
   /** The chosen drawing views only. */
@@ -1082,12 +1093,12 @@ class App implements SketchHost {
 
   /** A drawing sheet of the current bodies as SVG. */
   toDrawingSvg(): string {
-    return toDrawingSvg(this.chosenDrawingViews(), this.summary.name, this.drawingOptions.sheet, this.drawingOptions.dims);
+    return toDrawingSvg(this.chosenDrawingViews(), this.summary.name, this.drawingOptions.sheet, this.drawingDimensions());
   }
 
   /** The drawing views as DXF lines at 1:1. */
   toDrawingDxf(): string {
-    return toDrawingDxf(this.chosenDrawingViews(), this.drawingOptions.dims);
+    return toDrawingDxf(this.chosenDrawingViews(), this.drawingDimensions());
   }
 
   /** A bill of materials of the current tab as CSV. */
@@ -2994,9 +3005,9 @@ async function main(): Promise<void> {
   const renderDrawingPreview = () => {
     const views = ["front", "top", "right", "iso", "section", "detail"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
     ($("#dv-detail-note") as HTMLElement).hidden = !!app.selectedFace;
-    app.drawingOptions = { ...app.drawingOptions, views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize };
+    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize };
     $("#drawing-preview").innerHTML = app.toDrawingSvg();
-    ($("#dv-clear-dims") as HTMLButtonElement).disabled = app.drawingOptions.dims.length === 0;
+    ($("#dv-clear-dims") as HTMLButtonElement).disabled = app.drawingDimensions().length === 0;
   };
   // Placing dimensions: two clicks on line endpoints of one view in the preview.
   let dimensionMode = false;
@@ -3015,7 +3026,7 @@ async function main(): Promise<void> {
   };
   $("#dv-dimension").onclick = () => setDimensionMode(!dimensionMode);
   $("#dv-clear-dims").onclick = () => {
-    app.drawingOptions.dims = [];
+    app.clearDrawingDimensions();
     renderDrawingPreview();
   };
   $("#drawing-preview").onclick = (e) => {

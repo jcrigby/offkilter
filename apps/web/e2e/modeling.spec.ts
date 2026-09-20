@@ -944,7 +944,7 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
     click(lo);
     const marked = !!svg.querySelector("circle.pick");
     click(hi);
-    return { marked, expected: Math.hypot(hi.x - lo.x, hi.y - lo.y), dims: app.drawingOptions.dims.length };
+    return { marked, expected: Math.hypot(hi.x - lo.x, hi.y - lo.y), dims: app.drawingDimensions().length };
   });
   expect(placed.marked).toBe(true);
   expect(placed.dims).toBe(1);
@@ -953,8 +953,20 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   await expect(page.locator("#drawing-preview svg g.dimension.user text")).toHaveText(placed.expected.toFixed(2).replace(/\.?0+$/, ""));
   const dxfWithDim: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingDxf());
   expect(dxfWithDim).toContain(placed.expected.toFixed(2).replace(/\.?0+$/, ""));
+  // The dimension is part of the document: it survives a reload of the JSON and undo removes it.
+  const reloaded = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const json = app.kernel.toJson();
+    return JSON.parse(json).tabs[0].drawing.length;
+  });
+  expect(reloaded).toBe(1);
   await page.click("#dv-clear-dims");
   await expect(page.locator("#drawing-preview svg g.dimension.user")).toHaveCount(0);
+  await page.click("#drawing-close");
+  await page.click("#viewport");
+  await page.keyboard.press("Control+z");
+  await page.selectOption("#export", "drawing");
+  await expect(page.locator("#drawing-preview svg g.dimension.user")).toHaveCount(1);
   await page.click("#drawing-close");
   const svg2: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingSvg());
   expect(svg2).not.toContain('id="view-iso"');
