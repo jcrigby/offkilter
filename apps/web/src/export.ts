@@ -304,7 +304,34 @@ type Dimension = {
   /** Where the dimension line runs: a signed offset perpendicular to the span. */
   offset: number;
   value: number;
+  /** Placed by the user rather than the automatic overall dimensions. */
+  user?: boolean;
 };
+
+/** A dimension the user placed between two points of one view (view coordinates, model millimetres). */
+export type UserDimension = { view: string; a: Vec2; b: Vec2; offset: number };
+
+/** The nearest line endpoint of a view to `p`, within `tol`, or null. */
+export function snapDrawingPoint(view: DrawingView, p: Vec2, tol: number): Vec2 | null {
+  let best: Vec2 | null = null, bestD = tol;
+  for (const [a, b] of [...view.lines.visible, ...view.lines.hidden]) {
+    for (const q of [a, b]) {
+      const d = Math.hypot(q.x - p.x, q.y - p.y);
+      if (d < bestD) { bestD = d; best = { x: q.x, y: q.y }; }
+    }
+  }
+  return best;
+}
+
+/** The side of a view a dimension between `a` and `b` should sit on: away from the view's middle. */
+export function dimensionOffsetFor(view: DrawingView, a: Vec2, b: Vec2): number {
+  const bd = boundsOf(view.lines, view.detail);
+  const c = { x: (bd.minx + bd.maxx) / 2, y: (bd.miny + bd.maxy) / 2 };
+  const u = { x: b.x - a.x, y: b.y - a.y };
+  const n = { x: -u.y, y: u.x };
+  const mid = { x: (a.x + b.x) / 2 - c.x, y: (a.y + b.y) / 2 - c.y };
+  return (mid.x * n.x + mid.y * n.y >= 0 ? 1 : -1) * DIM_OFFSET;
+}
 
 function boundsOf(v: ViewLines, detail?: DetailMarker): Bounds {
   if (detail) {
@@ -332,7 +359,7 @@ const DIM_OVERSHOOT = 2;
  * view (depth). Views are positioned by name; unknown names are stacked
  * to the right.
  */
-function layout(views: DrawingView[], gap = 15): { placed: Placed[]; dims: Dimension[]; min: { x: number; y: number }; max: { x: number; y: number } } {
+function layout(views: DrawingView[], gap = 15, user: UserDimension[] = []): { placed: Placed[]; dims: Dimension[]; min: { x: number; y: number }; max: { x: number; y: number } } {
   const by = (name: string) => views.find((v) => v.name === name);
   const placed: Placed[] = [];
   const front = by("front");
@@ -370,6 +397,11 @@ function layout(views: DrawingView[], gap = 15): { placed: Placed[]; dims: Dimen
     if (p.name === "top" && span(p).h > 0) {
       dims.push({ a: { x: p.b.minx + p.dx, y: p.b.miny + p.dy }, b: { x: p.b.minx + p.dx, y: p.b.maxy + p.dy }, offset: DIM_OFFSET, value: span(p).h });
     }
+  }
+  for (const d of user) {
+    const p = placed.find((q) => q.name === d.view);
+    if (!p) continue;
+    dims.push({ a: { x: d.a.x + p.dx, y: d.a.y + p.dy }, b: { x: d.b.x + p.dx, y: d.b.y + p.dy }, offset: d.offset, value: Math.hypot(d.b.x - d.a.x, d.b.y - d.a.y), user: true });
   }
   let min = { x: Infinity, y: Infinity }, max = { x: -Infinity, y: -Infinity };
   for (const p of placed) {
@@ -432,7 +464,12 @@ function dimensionGeometry(d: Dimension): { lines: [{ x: number; y: number }, { 
     [at(d.b, 0, d.offset), at(d.b, -head, d.offset + half), at(d.b, -head, d.offset - half)],
   ];
   const mid = at(d.a, len / 2, d.offset + (d.offset < 0 ? -1.2 : 1.2));
-  const angle = Math.abs(u.x) >= Math.abs(u.y) ? 0 : 90;
+  // Text reads along the span, never upside down; axis-aligned spans snap to 0 / 90.
+  let angle = (Math.atan2(u.y, u.x) * 180) / Math.PI;
+  if (angle > 90) angle -= 180;
+  if (angle <= -90) angle += 180;
+  if (Math.abs(angle) < 0.5) angle = 0;
+  if (Math.abs(Math.abs(angle) - 90) < 0.5) angle = 90;
   return { lines, arrows, text: { x: mid.x, y: mid.y, angle } };
 }
 
@@ -451,9 +488,12 @@ function scaleLabel(s: number): string {
 export const SHEETS = { A4: { w: 297, h: 210 }, A3: { w: 420, h: 297 }, A2: { w: 594, h: 420 }, Letter: { w: 279.4, h: 215.9 } } as const;
 export type SheetSize = keyof typeof SHEETS;
 
-export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSize = "A4"): string {
+/** Where the views land on a sheet: sheet = (ox + x * scale, oy - y * scale) for layout coordinates. */
+export type DrawingFrame = { scale: number; ox: number; oy: number; views: { name: string; dx: number; dy: number }[] };
+
+function sheetFrame(views: DrawingView[], size: SheetSize, user: UserDimension[]) {
   const sheet = { ...SHEETS[size], margin: 10, block: 24 };
-  const { placed, dims, min, max } = layout(views);
+  const { placed, dims, min, max } = layout(views, 15, user);
   const availW = sheet.w - 2 * sheet.margin;
   const availH = sheet.h - 2 * sheet.margin - sheet.block;
   const extentW = Math.max(max.x - min.x, 1e-9), extentH = Math.max(max.y - min.y, 1e-9);
@@ -462,6 +502,17 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
   // Centre the drawing in the free area; SVG y points down.
   const ox = sheet.margin + (availW - extentW * scale) / 2 - min.x * scale;
   const oy = sheet.margin + (availH - extentH * scale) / 2 + max.y * scale;
+  return { sheet, placed, dims, scale, ox, oy };
+}
+
+/** The sheet placement `toDrawingSvg` uses, for mapping sheet points back to views. */
+export function drawingFrame(views: DrawingView[], size: SheetSize = "A4", user: UserDimension[] = []): DrawingFrame {
+  const f = sheetFrame(views, size, user);
+  return { scale: f.scale, ox: f.ox, oy: f.oy, views: f.placed.map((p) => ({ name: p.name, dx: p.dx, dy: p.dy })) };
+}
+
+export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSize = "A4", user: UserDimension[] = []): string {
+  const { sheet, placed, dims, scale, ox, oy } = sheetFrame(views, size, user);
   const X = (x: number) => (ox + x * scale).toFixed(3);
   const Y = (y: number) => (oy - y * scale).toFixed(3);
   const out: string[] = [];
@@ -510,14 +561,14 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
     for (const e of [t.a, t.b]) out.push(`<text x="${X(e.x + t.labelOffset.x)}" y="${Y(e.y + t.labelOffset.y)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="black" text-anchor="middle" dominant-baseline="middle">${t.label}</text>`);
     out.push(`</g>`);
   }
-  // Overall dimensions.
+  // Overall dimensions, and the user's.
   for (const d of dims) {
     const g = dimensionGeometry(d);
-    out.push(`<g class="dimension">`);
+    out.push(`<g class="dimension${d.user ? " user" : ""}">`);
     out.push(`<path fill="none" stroke="black" stroke-width="0.18" d="${g.lines.map(([a, b]) => `M${X(a.x)} ${Y(a.y)}L${X(b.x)} ${Y(b.y)}`).join("")}"/>`);
     for (const tri of g.arrows) out.push(`<polygon fill="black" points="${tri.map((p) => `${X(p.x)},${Y(p.y)}`).join(" ")}"/>`);
     const tx = X(g.text.x), ty = Y(g.text.y);
-    out.push(`<text x="${tx}" y="${ty}" font-family="Helvetica, Arial, sans-serif" font-size="3" fill="black" text-anchor="middle" dominant-baseline="middle"${g.text.angle ? ` transform="rotate(-90 ${tx} ${ty})"` : ""}>${dimText(d.value)}</text>`);
+    out.push(`<text x="${tx}" y="${ty}" font-family="Helvetica, Arial, sans-serif" font-size="3" fill="black" text-anchor="middle" dominant-baseline="middle"${g.text.angle ? ` transform="rotate(${-g.text.angle} ${tx} ${ty})"` : ""}>${dimText(d.value)}</text>`);
     out.push(`</g>`);
   }
   // Title block along the bottom edge.
@@ -534,8 +585,8 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
 }
 
 /** The same layout as a DXF at 1:1 in millimetres, hidden lines on their own layer. */
-export function toDrawingDxf(views: DrawingView[]): string {
-  const { placed, dims } = layout(views);
+export function toDrawingDxf(views: DrawingView[], user: UserDimension[] = []): string {
+  const { placed, dims } = layout(views, 15, user);
   const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"], ["SECTION", 1, "CONTINUOUS"], ["DETAIL", 5, "CONTINUOUS"]]);
   for (const t of traces(placed)) {
     lines.push("0", "LINE", "8", "SECTION", "10", fmt(t.a.x), "20", fmt(t.a.y), "30", "0", "11", fmt(t.b.x), "21", fmt(t.b.y), "31", "0");

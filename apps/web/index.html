@@ -156,6 +156,11 @@
         <label>Sheet <select id="dv-sheet"><option>A4</option><option>A3</option><option>A2</option><option>Letter</option></select></label>
       </div>
       <p class="note">The section follows the viewport's section plane when one is shown; otherwise it cuts through the middle, parallel to the front view.</p>
+      <div class="row">
+        <button id="dv-dimension" title="Measure between two corners of a view">Add dimension</button>
+        <button id="dv-clear-dims" disabled>Clear dimensions</button>
+        <span id="dv-dim-note" class="note"></span>
+      </div>
       <div id="drawing-preview" class="drawing-preview"></div>
       <div class="row">
         <button id="drawing-svg" class="primary">Download SVG</button>

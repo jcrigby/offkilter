@@ -36,9 +36,10 @@ works today, all in the browser:
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
   document only reverts your own edit), `.okpart` JSON documents, STL and OBJ import, STL, 3MF and DXF export, PNG snapshots, drawing
   sheets (SVG/DXF, A4 to A2 or Letter, chosen views with a live preview)
-  with hidden-line removal, overall dimensions, a hatched section
-  view and a detail view of the selected face, bills of materials as CSV, mass properties with per-part
-  materials.
+  with hidden-line removal, overall dimensions, dimensions you place
+  between corners in the preview, a hatched section view and a detail
+  view of the selected face, bills of materials as CSV, mass properties
+  with per-part materials.
 
 - Cloud: a small document server with real-time multi-user editing;
   concurrent edits converge without conflicts, documents keep named
@@ -47,7 +48,7 @@ works today, all in the browser:
   invitation link.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable
-resolution, 5° by default), user-placed drawing dimensions, STEP, and teams. See
+resolution, 5° by default) and STEP. See
 [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Layout

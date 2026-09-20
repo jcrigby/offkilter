@@ -925,6 +925,36 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   await expect(page.locator("#drawing-preview svg")).toHaveAttribute("width", "420mm");
   await expect(page.locator('#drawing-preview svg g[id="view-iso"]')).toHaveCount(0);
   await expect(page.locator('#drawing-preview svg g[id="view-front"]')).toHaveCount(1);
+  // Placing a dimension: two clicks on corners of the right view measure their span.
+  await page.click("#dv-dimension");
+  const placed = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const frame = app.drawingFrame();
+    const f = frame.views.find((v: any) => v.name === "right");
+    const view = app.chosenDrawingViews().find((v: any) => v.name === "right");
+    const pts = view.lines.visible.flat();
+    const lo = pts.reduce((m: any, p: any) => (p.y < m.y - 1e-9 || (Math.abs(p.y - m.y) < 1e-9 && p.x < m.x) ? p : m), pts[0]);
+    const hi = pts.reduce((m: any, p: any) => (p.y < m.y - 1e-9 || (Math.abs(p.y - m.y) < 1e-9 && p.x > m.x) ? p : m), pts[0]);
+    const svg = document.querySelector("#drawing-preview svg") as SVGSVGElement;
+    const click = (p: any) => {
+      const sheet = new DOMPoint(frame.ox + (p.x + f.dx) * frame.scale, frame.oy - (p.y + f.dy) * frame.scale);
+      const c = sheet.matrixTransform(svg.getScreenCTM()!);
+      svg.dispatchEvent(new MouseEvent("click", { clientX: c.x, clientY: c.y, bubbles: true }));
+    };
+    click(lo);
+    const marked = !!svg.querySelector("circle.pick");
+    click(hi);
+    return { marked, expected: Math.hypot(hi.x - lo.x, hi.y - lo.y), dims: app.drawingOptions.dims.length };
+  });
+  expect(placed.marked).toBe(true);
+  expect(placed.dims).toBe(1);
+  expect(placed.expected).toBeGreaterThan(1);
+  await expect(page.locator("#drawing-preview svg g.dimension.user")).toHaveCount(1);
+  await expect(page.locator("#drawing-preview svg g.dimension.user text")).toHaveText(placed.expected.toFixed(2).replace(/\.?0+$/, ""));
+  const dxfWithDim: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingDxf());
+  expect(dxfWithDim).toContain(placed.expected.toFixed(2).replace(/\.?0+$/, ""));
+  await page.click("#dv-clear-dims");
+  await expect(page.locator("#drawing-preview svg g.dimension.user")).toHaveCount(0);
   await page.click("#drawing-close");
   const svg2: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingSvg());
   expect(svg2).not.toContain('id="view-iso"');

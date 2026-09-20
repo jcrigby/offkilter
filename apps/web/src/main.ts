@@ -1,7 +1,7 @@
 import { Kernel } from "./kernel";
-import { detailView, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingView, type SheetSize } from "./export";
+import { detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingFrame, type DrawingView, type SheetSize, type UserDimension } from "./export";
 import { parseObj, parseStl } from "./stl";
-import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -1055,8 +1055,25 @@ class App implements SketchHost {
     return { name: "section", lines, cut: lines.cut, trace: { ...trace, label: "A", towards: sign } };
   }
 
-  /** Which views the drawing sheet shows (all by default) and its sheet size. */
-  drawingOptions: { views: Set<string>; sheet: SheetSize } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4" };
+  /** Which views the drawing sheet shows (all by default), its sheet size, and the dimensions placed on it. */
+  drawingOptions: { views: Set<string>; sheet: SheetSize; dims: UserDimension[] } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4", dims: [] };
+
+  /** Where the chosen views sit on the sheet, for picking points in the preview. */
+  drawingFrame(): DrawingFrame {
+    return drawingFrame(this.chosenDrawingViews(), this.drawingOptions.sheet, this.drawingOptions.dims);
+  }
+
+  /**
+   * Places a dimension between two points of a view (view coordinates); the
+   * dimension line goes on the side away from the view's middle. Returns
+   * the measured value.
+   */
+  addDrawingDimension(view: string, a: Vec2, b: Vec2): number {
+    const v = this.chosenDrawingViews().find((x) => x.name === view);
+    if (!v) throw new Error(`no view ${view} on the sheet`);
+    this.drawingOptions.dims.push({ view, a, b, offset: dimensionOffsetFor(v, a, b) });
+    return Math.hypot(b.x - a.x, b.y - a.y);
+  }
 
   /** The chosen drawing views only. */
   chosenDrawingViews(): DrawingView[] {
@@ -1065,12 +1082,12 @@ class App implements SketchHost {
 
   /** A drawing sheet of the current bodies as SVG. */
   toDrawingSvg(): string {
-    return toDrawingSvg(this.chosenDrawingViews(), this.summary.name, this.drawingOptions.sheet);
+    return toDrawingSvg(this.chosenDrawingViews(), this.summary.name, this.drawingOptions.sheet, this.drawingOptions.dims);
   }
 
   /** The drawing views as DXF lines at 1:1. */
   toDrawingDxf(): string {
-    return toDrawingDxf(this.chosenDrawingViews());
+    return toDrawingDxf(this.chosenDrawingViews(), this.drawingOptions.dims);
   }
 
   /** A bill of materials of the current tab as CSV. */
@@ -2977,18 +2994,82 @@ async function main(): Promise<void> {
   const renderDrawingPreview = () => {
     const views = ["front", "top", "right", "iso", "section", "detail"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
     ($("#dv-detail-note") as HTMLElement).hidden = !!app.selectedFace;
-    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize };
+    app.drawingOptions = { ...app.drawingOptions, views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize };
     $("#drawing-preview").innerHTML = app.toDrawingSvg();
+    ($("#dv-clear-dims") as HTMLButtonElement).disabled = app.drawingOptions.dims.length === 0;
+  };
+  // Placing dimensions: two clicks on line endpoints of one view in the preview.
+  let dimensionMode = false;
+  let dimensionPick: { view: string; p: Vec2 } | null = null;
+  const setDimensionMode = (on: boolean) => {
+    dimensionMode = on;
+    dimensionPick = null;
+    $("#dv-dimension").classList.toggle("active", on);
+    $("#dv-dim-note").textContent = on ? "Click two line endpoints of one view." : "";
+    $("#drawing-preview").classList.toggle("picking", on);
   };
   const openDrawingDialog = () => {
+    setDimensionMode(false);
     renderDrawingPreview();
     drawingDialog.showModal();
+  };
+  $("#dv-dimension").onclick = () => setDimensionMode(!dimensionMode);
+  $("#dv-clear-dims").onclick = () => {
+    app.drawingOptions.dims = [];
+    renderDrawingPreview();
+  };
+  $("#drawing-preview").onclick = (e) => {
+    if (!dimensionMode) return;
+    const svg = $("#drawing-preview").querySelector("svg") as SVGSVGElement | null;
+    const ctm = svg?.getScreenCTM();
+    if (!svg || !ctm) return;
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+    const frame = app.drawingFrame();
+    const views = app.chosenDrawingViews();
+    // The clicked point in each view's own coordinates; snap to the nearest endpoint within 3 sheet mm.
+    let best: { view: string; p: Vec2; d: number } | null = null;
+    for (const f of frame.views) {
+      const v = views.find((x) => x.name === f.name);
+      if (!v) continue;
+      const local = { x: (pt.x - frame.ox) / frame.scale - f.dx, y: (frame.oy - pt.y) / frame.scale - f.dy };
+      const snap = snapDrawingPoint(v, local, 3 / frame.scale);
+      if (!snap) continue;
+      const d = Math.hypot(snap.x - local.x, snap.y - local.y);
+      if (!best || d < best.d) best = { view: f.name, p: snap, d };
+    }
+    if (!best) {
+      $("#dv-dim-note").textContent = "No line endpoint there; click closer to a corner.";
+      return;
+    }
+    if (!dimensionPick || dimensionPick.view !== best.view) {
+      dimensionPick = { view: best.view, p: best.p };
+      const f = frame.views.find((x) => x.name === best!.view)!;
+      const mark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      mark.setAttribute("class", "pick");
+      mark.setAttribute("cx", String(frame.ox + (best.p.x + f.dx) * frame.scale));
+      mark.setAttribute("cy", String(frame.oy - (best.p.y + f.dy) * frame.scale));
+      mark.setAttribute("r", "1.5");
+      mark.setAttribute("fill", "none");
+      mark.setAttribute("stroke", "#e33");
+      mark.setAttribute("stroke-width", "0.4");
+      svg.appendChild(mark);
+      $("#dv-dim-note").textContent = `First point on the ${best.view} view; now click the second.`;
+      return;
+    }
+    if (Math.hypot(best.p.x - dimensionPick.p.x, best.p.y - dimensionPick.p.y) < 1e-9) return;
+    const value = app.addDrawingDimension(best.view, dimensionPick.p, best.p);
+    dimensionPick = null;
+    renderDrawingPreview();
+    $("#dv-dim-note").textContent = `Dimension ${value.toFixed(2).replace(/\.?0+$/, "")} mm placed on the ${best.view} view. Click two more points, or Add dimension again to stop.`;
   };
   for (const n of ["front", "top", "right", "iso", "section", "detail"]) ($(`#dv-${n}`) as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-sheet") as HTMLSelectElement).onchange = renderDrawingPreview;
   $("#drawing-svg").onclick = () => app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
   $("#drawing-dxf").onclick = () => app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
-  $("#drawing-close").onclick = () => drawingDialog.close();
+  $("#drawing-close").onclick = () => {
+    setDimensionMode(false);
+    drawingDialog.close();
+  };
   const exportSelect = $("#export") as HTMLSelectElement;
   exportSelect.onchange = () => {
     const what = exportSelect.value;

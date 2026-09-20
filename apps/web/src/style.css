@@ -146,5 +146,7 @@ dialog.wide { min-width: 720px; max-width: 92vw; }
 .drawing-options label { display: inline-flex; align-items: center; gap: 4px; }
 .drawing-preview { background: white; border: 1px solid var(--border); margin: 8px 0; min-height: 200px; }
 .drawing-preview svg { width: 100%; height: auto; display: block; }
+.drawing-preview.picking { cursor: crosshair; }
+.drawing-preview.picking svg g.dimension.user { stroke: #36c; }
 
 .part-list li .pmaterial { flex-basis: 100%; margin-left: 22px; font-size: 11px; max-width: 200px; background: var(--bg); color: var(--text-dim); border: 1px solid var(--border); border-radius: 3px; }

@@ -399,7 +399,13 @@ takes the standard view that faces the selected face best, clips its
 lines to a circle around the face and enlarges them 2:1, drawing the
 lettered marker circle on the source view. The Drawing dialog in the client
 renders the same SVG inline as a preview and lets the user pick the views
-and the sheet size (A4, A3, A2, Letter) before downloading; the Export
+and the sheet size (A4, A3, A2, Letter) before downloading. Dimensions
+can be placed on the preview: `drawingFrame` reports where each view
+sits on the sheet, a click is mapped back into view coordinates and
+snapped to the nearest line endpoint, and two picks on one view become
+a `UserDimension` (aligned, its text along the span, the dimension line
+on the side away from the view's middle) that both the SVG and the DXF
+draw beside the automatic overall dimensions. The Export
 menu also writes a bill of materials as CSV (bodies of a part studio, or
 instances with their source tab in an assembly).
 
