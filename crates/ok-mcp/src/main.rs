@@ -418,6 +418,42 @@ impl Backend {
     }
 }
 
+type Neighbours = std::collections::HashMap<(u32, u32, u32), [u32; ok_model::NEAR]>;
+
+/// Adds `near` to every face reference in an op that lacks it, from the
+/// report's references (matched by feature, local and piece number).
+fn attach_neighbours(value: &mut Value, neighbours: &Neighbours) {
+    match value {
+        Value::Object(map) => {
+            let is_ref = map.get("feature").is_some_and(|f| f.is_u64())
+                && map.get("local").is_some_and(|l| l.is_u64())
+                && map
+                    .keys()
+                    .all(|k| matches!(k.as_str(), "feature" | "local" | "part" | "near"));
+            if is_ref && !map.contains_key("near") {
+                let feature = map["feature"].as_u64().unwrap() as u32;
+                let local = map["local"].as_u64().unwrap() as u32;
+                let part = map.get("part").and_then(|p| p.as_u64()).unwrap_or(0) as u32;
+                if let Some(near) = neighbours.get(&(feature, local, part)) {
+                    if !ok_model::no_near(near) {
+                        map.insert("near".into(), json!(near));
+                    }
+                }
+                return;
+            }
+            for v in map.values_mut() {
+                attach_neighbours(v, neighbours);
+            }
+        }
+        Value::Array(items) => {
+            for v in items {
+                attach_neighbours(v, neighbours);
+            }
+        }
+        _ => {}
+    }
+}
+
 fn view_name(view: ok_render::View) -> String {
     match view {
         ok_render::View::Top => "top".into(),
@@ -735,11 +771,32 @@ impl Server {
                     .and_then(|o| o.as_array())
                     .cloned()
                     .ok_or("apply needs ops: an array of ops")?;
-                let doc = self.backend.document(&id)?;
+                let mut doc = self.backend.document(&id)?;
                 let default_tab = pick_tab(&doc, tab)?;
+                // Face references a model writes from the summary name a
+                // piece by number; the report knows each piece's
+                // neighbours, which let the reference follow the piece
+                // through later edits, so they are attached here.
+                let neighbours: Neighbours = doc
+                    .describe(default_tab)
+                    .map(|r| {
+                        r.bodies
+                            .iter()
+                            .flat_map(|b| b.faces.iter())
+                            .map(|f| {
+                                let r = f.reference;
+                                ((r.feature.0, r.local, r.part.unwrap_or(0)), r.near)
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
                 let wrapped: Vec<Value> = ops
                     .into_iter()
-                    .map(|op| wrap_op(op, default_tab, &doc))
+                    .map(|op| {
+                        let mut op = wrap_op(op, default_tab, &doc);
+                        attach_neighbours(&mut op, &neighbours);
+                        op
+                    })
                     .collect();
                 let outcome = self.backend.apply(&id, wrapped)?;
                 let mut text = String::new();
@@ -1307,6 +1364,26 @@ mod tests {
         assert!(std::fs::read_to_string(&step)
             .unwrap()
             .contains("MANIFOLD_SOLID_BREP"));
+        // The sketch on the plate's top face was written with a bare
+        // reference; the document stores it with the piece's neighbours.
+        let stored = ok_model::Document::from_json(
+            &std::fs::read_to_string(dir.join("Bracket.okpart")).unwrap(),
+        )
+        .unwrap();
+        let on_face = stored
+            .studio(ok_model::TabId(1))
+            .unwrap()
+            .features()
+            .iter()
+            .find_map(|f| match &f.kind {
+                ok_model::FeatureKind::Sketch(sf) => match &sf.plane {
+                    ok_model::PlaneRef::Face { face, .. } => Some(*face),
+                    _ => None,
+                },
+                _ => None,
+            })
+            .expect("a sketch on a face");
+        assert!(on_face.has_near(), "neighbours attached: {on_face:?}");
         // The exported STEP imports back as a mesh body of its own.
         let (err, imported) = tool_text(
             &mut server,
