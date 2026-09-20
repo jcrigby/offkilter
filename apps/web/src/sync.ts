@@ -12,7 +12,8 @@ export type UserInfo = { id: string; name: string };
 export type Invite = { token: string; role: "editor" | "viewer"; created: number };
 export type Team = { id: string; name: string; owner: UserInfo; members: UserInfo[]; created: number };
 export type TeamShare = { id: string; name: string; role: "editor" | "viewer" };
-export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[]; viewers?: UserInfo[]; invites?: Invite[]; teams?: TeamShare[] };
+export type BranchOrigin = { doc: string; doc_name: string; version?: string; version_name?: string };
+export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[]; viewers?: UserInfo[]; invites?: Invite[]; teams?: TeamShare[]; parent?: BranchOrigin };
 export type VersionMeta = { id: string; name: string; created: number };
 
 type ServerMessage =
@@ -198,6 +199,13 @@ export class Sync {
     const r = await fetch(`${Sync.apiBase()}/docs/${id}/versions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
     if (!r.ok) throw new Error(`server said ${r.status}`);
     return (await r.json()) as VersionMeta;
+  }
+
+  /** Copies a document (or one of its saved versions) into a new document of the caller's. */
+  static async branchDoc(id: string, name?: string, version?: string): Promise<DocMeta> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/branch`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, version }) });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as DocMeta;
   }
 
   /** The document JSON saved as a version. */

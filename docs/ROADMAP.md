@@ -18,7 +18,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Sparse Jacobian: analytic rows for the common constraints, local differences for the rest; rank from the normal matrix
 - [x] Splines (interpolating Catmull–Rom through sketch points; sampled into one smooth wall)
 - [x] Point-on-spline constraint
-- [ ] Tangent constraints for splines
+- [x] Tangent constraint between a line and a spline end (the line follows the end chord)
 - [x] Sketch on planar faces of bodies (face references)
 - [x] Angled planes: a standard plane turned about a world axis (angle bindable), usable wherever a plane is chosen
 - [x] Project / use edges and face outlines from bodies in sketches (fixed entities that follow the model)
@@ -85,7 +85,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Server-side regeneration: `/check` reports bodies and errors per tab, `/export/stl` returns a tab as STL, for scripts and CI
 - [x] Named versions of a document (save / restore on the server)
 - [x] Diffs: compare a saved version with the document now (features added / changed / removed per tab)
-- [ ] Branches and merges over the op log
+- [x] Branches: copy a document, as it is or at a saved version, into a new document that remembers its origin
+- [ ] Merges over the op log
 - [x] Real-time multi-user editing (ops relayed in server order)
 - [x] Conflict-free concurrent editing: per-client id ranges make ops commute; structural hashes detect and repair any divergence
 - [x] Per-user undo in shared documents (inverse ops instead of document replacement)

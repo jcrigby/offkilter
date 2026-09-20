@@ -2555,12 +2555,12 @@ async function main(): Promise<void> {
       const shared = d.collaborators ?? [];
       const viewers = d.viewers ?? [];
       const teamShares = d.teams ?? [];
-      owner.textContent = d.owner
+      owner.textContent = (d.parent ? `branch of ${d.parent.doc_name}${d.parent.version_name ? ` at ${d.parent.version_name}` : ""} · ` : "") + (d.owner
         ? (mine ? "yours" : `by ${d.owner.name}`) +
           (shared.length ? ` · shared with ${shared.map((c) => c.name).join(", ")}` : "") +
           (viewers.length ? ` · read-only: ${viewers.map((c) => c.name).join(", ")}` : "") +
           (teamShares.length ? ` · teams: ${teamShares.map((t) => `${t.name}${t.role === "viewer" ? " (read-only)" : ""}`).join(", ")}` : "")
-        : "open to all";
+        : "open to all");
       const when = document.createElement("span");
       when.className = "dwhen";
       when.textContent = new Date(d.updated * 1000).toLocaleString();
@@ -2655,6 +2655,20 @@ async function main(): Promise<void> {
           li.appendChild(un);
         }
       }
+      const branch = button("Branch", async () => {
+        const bname = prompt(`Name for the new document branched from "${d.name}"`, `${d.name} (branch)`);
+        if (!bname) return;
+        try {
+          const meta = await Sync.branchDoc(d.id, bname);
+          dialog.close();
+          openDoc(meta.id);
+        } catch (e) {
+          note.textContent = `Could not branch: ${(e as Error).message}`;
+        }
+      });
+      branch.className = "dshare";
+      branch.title = "Copy this document into a new one of your own, as it is now";
+      li.appendChild(branch);
       if (!d.owner || mine) {
         li.appendChild(button("×", async () => {
           if (confirm(`Delete "${d.name}" from the server?`)) {
@@ -2807,6 +2821,19 @@ async function main(): Promise<void> {
       const when = document.createElement("span");
       when.className = "dwhen";
       when.textContent = new Date(v.created * 1000).toLocaleString();
+      const branchV = button("Branch", async () => {
+        const bname = prompt(`Name for the new document branched from version "${v.name}"`, `${app.summary.name} (${v.name})`);
+        if (!bname) return;
+        try {
+          const meta = await Sync.branchDoc(id, bname, v.id);
+          dialog.close();
+          openDoc(meta.id);
+        } catch (e) {
+          showDiff(v, [`Could not branch: ${(e as Error).message}`]);
+        }
+      });
+      branchV.className = "dshare";
+      branchV.title = "Copy this version into a new document of your own";
       const compare = button("Compare", async () => {
         try {
           showDiff(v, compareWithVersion(await Sync.getVersion(id, v.id)));
@@ -2816,7 +2843,7 @@ async function main(): Promise<void> {
       });
       compare.className = "dshare";
       compare.title = "What changed since this version";
-      li.append(name, when, compare);
+      li.append(name, when, branchV, compare);
       list.appendChild(li);
     }
   };

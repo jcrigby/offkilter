@@ -122,6 +122,7 @@ pub fn router(
         .route("/docs/{id}/versions", get(list_versions).post(save_version))
         .route("/docs/{id}/versions/{vid}", get(get_version))
         .route("/docs/{id}/versions/{vid}/restore", post(restore_version))
+        .route("/docs/{id}/branch", post(branch_doc))
         .route("/docs/{id}/check", get(check_doc))
         .route("/docs/{id}/export/stl", get(export_stl))
         .route("/health", get(|| async { "ok" }))
@@ -349,6 +350,67 @@ async fn get_doc(
     match hub.store().read(&id) {
         Some(json) => ([(header::CONTENT_TYPE, "application/json")], json).into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+struct BranchDoc {
+    #[serde(default)]
+    name: Option<String>,
+    /// A saved version to branch from; the current state when absent.
+    #[serde(default)]
+    version: Option<String>,
+}
+
+/// Copies a document (as it is now, or as a saved version) into a new
+/// document owned by the requester, remembering where it came from.
+/// Anyone who can read the source may branch it.
+async fn branch_doc(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    Json(body): Json<BranchDoc>,
+) -> impl IntoResponse {
+    let source = match accessible(&hub, &id, user.as_ref()) {
+        Ok(m) => m,
+        Err(code) => return code.into_response(),
+    };
+    let store = hub.store();
+    let (json, version_name) = match &body.version {
+        Some(v) => match store.read_version(&id, v) {
+            Some(json) => {
+                let name = store
+                    .list_versions(&id)
+                    .ok()
+                    .and_then(|l| l.into_iter().find(|m| &m.id == v))
+                    .map(|m| m.name);
+                (json, name)
+            }
+            None => return (StatusCode::NOT_FOUND, "no such version").into_response(),
+        },
+        None => match current_json(&hub, &id) {
+            Some(json) => (json, None),
+            None => return StatusCode::NOT_FOUND.into_response(),
+        },
+    };
+    let name = body.name.clone().unwrap_or_else(|| match &version_name {
+        Some(v) => format!("{} ({v})", source.name),
+        None => format!("{} (branch)", source.name),
+    });
+    let owner = user.as_ref().map(crate::auth::UserInfo::from);
+    let meta = match store.create(&name, &json, owner) {
+        Ok(m) => m,
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    };
+    let origin = crate::store::BranchOrigin {
+        doc: source.id.clone(),
+        doc_name: source.name.clone(),
+        version: body.version.clone(),
+        version_name,
+    };
+    match store.set_parent(&meta.id, origin) {
+        Ok(meta) => (StatusCode::CREATED, Json(meta)).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
 
@@ -1338,6 +1400,105 @@ mod tests {
         let headers = res.headers().clone();
         let bytes = res.into_body().collect().await.unwrap().to_bytes().to_vec();
         (status, headers, bytes)
+    }
+
+    #[tokio::test]
+    async fn branching_copies_a_document_or_one_of_its_versions() {
+        let users = temp_users();
+        let app = router(temp_store(), users.clone(), temp_teams(), None);
+        let (_, tok) = users.register("bea", "beas-password").unwrap();
+        let bea = format!("ok_session={tok}");
+        let doc = ok_model::Document::new("origin").to_json();
+        let body = serde_json::json!({ "name": "origin", "json": doc }).to_string();
+        let (_, _, text) = call(&app, "POST", "/api/docs", Some(&body), Some(&bea)).await;
+        let id = serde_json::from_str::<serde_json::Value>(&text).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        // Save a version, then change the document (rename it through a PUT).
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/versions"),
+            Some(r#"{"name":"v1"}"#),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::CREATED, "{text}");
+        let vid = serde_json::from_str::<serde_json::Value>(&text).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let mut changed = ok_model::Document::new("origin");
+        changed.name = "changed".into();
+        let (status, _, _) = call(
+            &app,
+            "PUT",
+            &format!("/api/docs/{id}"),
+            Some(&changed.to_json()),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
+        // Branch from the version: the copy holds the old state and names its origin.
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/branch"),
+            Some(&format!(r#"{{"version":"{vid}"}}"#)),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::CREATED, "{text}");
+        let meta: DocMeta = serde_json::from_str(&text).unwrap();
+        assert_eq!(meta.name, "changed (v1)");
+        let parent = meta.parent.unwrap();
+        assert_eq!(parent.doc, id);
+        assert_eq!(parent.version_name.as_deref(), Some("v1"));
+        let (_, _, json) = call(
+            &app,
+            "GET",
+            &format!("/api/docs/{}", meta.id),
+            None,
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(ok_model::Document::from_json(&json).unwrap().name, "origin");
+        // Branch from the current state, with a name.
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/branch"),
+            Some(r#"{"name":"experiment"}"#),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::CREATED, "{text}");
+        let meta: DocMeta = serde_json::from_str(&text).unwrap();
+        assert_eq!(meta.name, "experiment");
+        let (_, _, json) = call(
+            &app,
+            "GET",
+            &format!("/api/docs/{}", meta.id),
+            None,
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(
+            ok_model::Document::from_json(&json).unwrap().name,
+            "changed"
+        );
+        // Strangers cannot branch a private document.
+        let (_, tok2) = users.register("cal", "cals-password").unwrap();
+        let (status, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/branch"),
+            Some("{}"),
+            Some(&format!("ok_session={tok2}")),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]

@@ -212,8 +212,10 @@ Constraints (`entity.rs`): coincident, fixed, horizontal, vertical,
 distance, horizontal/vertical distance, length, radius, diameter, equal,
 parallel, perpendicular, angle, point-on-line, point-on-circle,
 point-on-spline (distance to the nearest piece of the curve sampled at a
-fixed density), midpoint, tangent, symmetric, rotated. Angles are stored
-in degrees, lengths in model units (mm).
+fixed density), midpoint, tangent (to a circle or arc, or to a spline at
+the end nearest the line, where the line follows the end chord),
+symmetric, rotated. Angles are stored in degrees, lengths in model units
+(mm).
 
 ### Editing (`edit.rs`)
 
@@ -507,7 +509,9 @@ relays edits between clients:
   CI can validate and export documents without a browser.
 - REST: `GET/POST /api/docs`, `GET/PUT/DELETE /api/docs/:id`,
   `POST/DELETE /api/docs/:id/share`, versions under `/api/docs/:id/versions`
-  (list, save, fetch one, restore). Comparing a version with the current
+  (list, save, fetch one, restore); `POST /api/docs/:id/branch` copies
+  the document, as it is or at a saved version, into a new document
+  owned by the caller whose metadata names the origin. Comparing a version with the current
   document happens in the client: both JSON documents are loaded into
   their own wasm `Doc`, every tab is regenerated in each, and features
   are matched by id (added, removed, or changed when their name, kind,

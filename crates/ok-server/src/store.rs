@@ -32,6 +32,20 @@ pub struct DocMeta {
     /// Teams the owner shared the document with, each in a role.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub teams: Vec<crate::teams::TeamShare>,
+    /// Where a branched document came from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent: Option<BranchOrigin>,
+}
+
+/// The document (and version, when one was chosen) a branch was made from.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BranchOrigin {
+    pub doc: String,
+    pub doc_name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version_name: Option<String>,
 }
 
 /// An invitation link to a document.
@@ -194,6 +208,7 @@ impl DocStore {
             viewers: Vec::new(),
             invites: Vec::new(),
             teams: Vec::new(),
+            parent: None,
         };
         std::fs::write(self.doc_path(&id), json)?;
         std::fs::write(self.meta_path(&id), serde_json::to_string_pretty(&meta)?)?;
@@ -267,6 +282,14 @@ impl DocStore {
     fn meta_or_not_found(&self, id: &str) -> std::io::Result<DocMeta> {
         self.meta(id)
             .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "no such document"))
+    }
+
+    /// Records where a branched document came from.
+    pub fn set_parent(&self, id: &str, parent: BranchOrigin) -> std::io::Result<DocMeta> {
+        let mut meta = self.meta_or_not_found(id)?;
+        meta.parent = Some(parent);
+        self.write_meta(&meta)?;
+        Ok(meta)
     }
 
     /// Shares with a team in `role`, replacing any earlier role.

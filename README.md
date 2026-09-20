@@ -110,7 +110,8 @@ tab and lists bodies and errors as JSON, and
 During development run `npm run dev` in `apps/web`; it proxies `/api` to
 the server on port 8080. The Docs dialog also saves and restores named
 versions of a document and compares any of them with the document as it
-is now (features added, changed or removed, per tab). Press `?` for the
+is now (features added, changed or removed, per tab), and branches a
+document or a version into a new document of your own. Press `?` for the
 keyboard shortcuts.
 
 Or with Docker: `docker build -t offkilter . && docker run -p 8080:8080 -v offkilter-data:/data offkilter`.

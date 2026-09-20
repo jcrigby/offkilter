@@ -372,6 +372,28 @@ impl<'a> Eval<'a> {
             Tangent { line, entity } => {
                 r((|| {
                     let (s, e) = self.line_points(*line)?;
+                    if let Some(Entity::Spline { points }) = self.sketch.entity(*entity) {
+                        // Tangent to a spline at one of its ends: the line runs
+                        // along the spline's end tangent (the chord to the
+                        // neighbouring point). The end is the one nearest the
+                        // line's endpoints.
+                        if points.len() < 2 {
+                            return None;
+                        }
+                        let (p0, p1) = (self.point(points[0])?, self.point(points[1])?);
+                        let n = points.len();
+                        let (q0, q1) = (self.point(points[n - 1])?, self.point(points[n - 2])?);
+                        let near_start = s.distance(p0).min(e.distance(p0));
+                        let near_end = s.distance(q0).min(e.distance(q0));
+                        let t = if near_start <= near_end {
+                            p1 - p0
+                        } else {
+                            q0 - q1
+                        };
+                        let d = e - s;
+                        let denom = (d.length() * t.length()).max(tol::LINEAR);
+                        return Some(d.cross(t) / denom);
+                    }
                     let (c, rad) = self.circular(*entity)?;
                     let d = e - s;
                     let len = d.length().max(tol::LINEAR);
@@ -1103,6 +1125,40 @@ mod tests {
         let sparse = jacobian(&solved, &map, &x);
         let (jtj, _) = sparse.normal_equations(&residuals(&solved, &map, &x));
         assert_eq!(rank_from_normal(jtj, n), rank(&sparse.to_dense(), m, n));
+    }
+
+    #[test]
+    fn line_tangent_to_a_spline_end_turns_along_it() {
+        let mut s = Sketch::new();
+        let (spline, ids) = s
+            .add_spline(&[
+                Vec2::new(0.0, 0.0),
+                Vec2::new(5.0, 4.0),
+                Vec2::new(10.0, 0.0),
+            ])
+            .unwrap();
+        for id in &ids {
+            s.add_constraint(Constraint::Fixed { point: *id });
+        }
+        // A line leaving the spline's last point, drawn at the wrong angle.
+        let (line, a, _) = s.add_line(Vec2::new(10.0, 0.0), Vec2::new(14.0, 3.0));
+        s.add_constraint(Constraint::Coincident { a, b: ids[2] });
+        s.add_constraint(Constraint::Tangent {
+            line,
+            entity: spline,
+        });
+        let r = s.solve();
+        assert!(r.max_residual < 1e-7, "{r:?}");
+        // The end tangent is the chord (5,4) -> (10,0): direction (5, -4).
+        let (ls, le) = s.line(line).unwrap();
+        let d = s.point(le).unwrap() - s.point(ls).unwrap();
+        let t = Vec2::new(5.0, -4.0);
+        assert!(
+            (d.cross(t) / (d.length() * t.length())).abs() < 1e-6,
+            "{d:?}"
+        );
+        // Position along the tangent and length stay free: two degrees.
+        assert_eq!(r.dof, 1);
     }
 
     #[test]

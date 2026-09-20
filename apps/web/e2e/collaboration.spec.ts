@@ -99,6 +99,14 @@ test("two clients edit one document live", async ({ browser }) => {
   await expect(a.locator("#versions-diff")).toContainText("2 changes");
   await expect(a.locator("#versions-diff li.added")).toHaveText(/#after added/);
   await expect(a.locator("#versions-diff li.changed")).toHaveText(/#ub2 changed \(was #ub\)/);
+  // Branching from the version opens a new document holding the old state.
+  const before = new URL(a.url()).searchParams.get("doc");
+  await a.locator("#versions-list").getByRole("button", { name: "Branch" }).click();
+  await a.waitForFunction((prev) => new URL(location.href).searchParams.get("doc") !== prev, before);
+  await expect.poll(async () => featureNames(a), { timeout: 10_000 }).not.toContain("#after");
+  expect(await featureNames(a)).toContain("#ub");
+  await a.click("#btn-docs");
+  await expect(a.locator("#docs-list")).toContainText("branch of");
   await a.click("#docs-close");
 });
 
