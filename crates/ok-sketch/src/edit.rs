@@ -186,6 +186,22 @@ enum CutBy {
     Curve(EntityId),
 }
 
+/// Where two lines meet, for fillets and chamfers.
+struct Corner {
+    /// The endpoint of each line at the corner.
+    ca: EntityId,
+    cb: EntityId,
+    /// The other endpoints.
+    far_a: EntityId,
+    far_b: EntityId,
+    /// The corner's position and the unit directions away from it.
+    pos: Vec2,
+    da: Vec2,
+    db: Vec2,
+    /// Half the angle between the lines.
+    half: f64,
+}
+
 impl Sketch {
     /// Removes the piece of curve `id` that contains the point nearest
     /// `at`, bounded by its intersections with other entities. A curve with
@@ -577,6 +593,98 @@ impl Sketch {
         Ok(out)
     }
 
+    /// The corner where lines `a` and `b` meet: the endpoint of each at
+    /// it (coincident, or at the same position), the far endpoints, the
+    /// corner position and the unit directions away from it along each
+    /// line, which must meet at an angle.
+    fn corner_of(&self, a: EntityId, b: EntityId, what: &str) -> Result<Corner, SketchError> {
+        let (a0, a1) = self.line(a)?;
+        let (b0, b1) = self.line(b)?;
+        let (ca, cb) = [(a0, b0), (a0, b1), (a1, b0), (a1, b1)]
+            .into_iter()
+            .find(|&(pa, pb)| {
+                pa == pb
+                    || self.constraints().any(|(_, c)| {
+                        matches!(c, Constraint::Coincident { a: x, b: y }
+                            if (*x == pa && *y == pb) || (*x == pb && *y == pa))
+                    })
+                    || self
+                        .point(pa)
+                        .ok()
+                        .zip(self.point(pb).ok())
+                        .is_some_and(|(p, q)| p.distance(q) <= TOL)
+            })
+            .ok_or_else(|| {
+                SketchError::Invalid(format!("{what} needs two lines meeting at a corner"))
+            })?;
+        let far_a = if ca == a0 { a1 } else { a0 };
+        let far_b = if cb == b0 { b1 } else { b0 };
+        let pos = self.point(ca)?;
+        let da = (self.point(far_a)? - pos)
+            .normalized()
+            .ok_or(SketchError::WrongKind(a, "line with length"))?;
+        let db = (self.point(far_b)? - pos)
+            .normalized()
+            .ok_or(SketchError::WrongKind(b, "line with length"))?;
+        let cos = da.dot(db).clamp(-1.0, 1.0);
+        let half = cos.acos() / 2.0;
+        if half <= 1e-6 || half >= std::f64::consts::FRAC_PI_2 - 1e-6 {
+            return Err(SketchError::Invalid(format!(
+                "{what} needs lines that meet at an angle"
+            )));
+        }
+        Ok(Corner {
+            ca,
+            cb,
+            far_a,
+            far_b,
+            pos,
+            da,
+            db,
+            half,
+        })
+    }
+
+    /// Splits a shared corner so each line keeps its own endpoint, moved
+    /// to `ta` and `tb`: when one point entity serves both lines, `b` gets
+    /// a fresh one; a coincident constraint between them is dropped.
+    /// Returns the two endpoints (a's, b's).
+    fn split_corner(
+        &mut self,
+        b: EntityId,
+        ca: EntityId,
+        cb: EntityId,
+        ta: Vec2,
+        tb: Vec2,
+    ) -> Result<(EntityId, EntityId), SketchError> {
+        let cb = if ca == cb {
+            let fresh = self.add_point(tb);
+            let (s, e) = self.line(b)?;
+            let new_line = Entity::Line {
+                start: if s == cb { fresh } else { s },
+                end: if e == cb { fresh } else { e },
+            };
+            self.entities.insert(b, new_line);
+            fresh
+        } else {
+            cb
+        };
+        let coincident: Vec<ConstraintId> = self
+            .constraints()
+            .filter(|(_, c)| {
+                matches!(c, Constraint::Coincident { a: x, b: y }
+                    if (*x == ca && *y == cb) || (*x == cb && *y == ca))
+            })
+            .map(|(id, _)| id)
+            .collect();
+        for id in coincident {
+            self.remove_constraint(id);
+        }
+        self.set_point(ca, ta);
+        self.set_point(cb, tb);
+        Ok((ca, cb))
+    }
+
     /// Rounds the corner where two lines meet: both lines are shortened
     /// to the tangent points and a tangent arc of `radius` joins them,
     /// held by coincident, tangent and radius constraints. The lines must
@@ -593,93 +701,39 @@ impl Sketch {
                 "fillet radius must be positive".into(),
             ));
         }
-        let (a0, a1) = self.line(a)?;
-        let (b0, b1) = self.line(b)?;
-        // The corner: the pair of endpoints (one per line) that coincide.
-        let corner = [(a0, b0), (a0, b1), (a1, b0), (a1, b1)]
-            .into_iter()
-            .find(|&(pa, pb)| {
-                pa == pb
-                    || self.constraints().any(|(_, c)| {
-                        matches!(c, Constraint::Coincident { a: x, b: y }
-                            if (*x == pa && *y == pb) || (*x == pb && *y == pa))
-                    })
-                    || self
-                        .point(pa)
-                        .ok()
-                        .zip(self.point(pb).ok())
-                        .is_some_and(|(p, q)| p.distance(q) <= TOL)
-            })
-            .ok_or(SketchError::Invalid(
-                "fillet needs two lines meeting at a corner".into(),
-            ))?;
-        let (ca, cb) = corner;
-        let far_a = if ca == a0 { a1 } else { a0 };
-        let far_b = if cb == b0 { b1 } else { b0 };
-        let corner_pos = self.point(ca)?;
-        let da = (self.point(far_a)? - corner_pos)
-            .normalized()
-            .ok_or(SketchError::WrongKind(a, "line with length"))?;
-        let db = (self.point(far_b)? - corner_pos)
-            .normalized()
-            .ok_or(SketchError::WrongKind(b, "line with length"))?;
-        let cos = da.dot(db).clamp(-1.0, 1.0);
-        let half = cos.acos() / 2.0;
-        if half <= 1e-6 || half >= std::f64::consts::FRAC_PI_2 - 1e-6 {
-            return Err(SketchError::Invalid(
-                "fillet needs lines that meet at an angle".into(),
-            ));
-        }
+        let corner = self.corner_of(a, b, "fillet")?;
+        let Corner {
+            ca,
+            cb,
+            far_a,
+            far_b,
+            pos,
+            da,
+            db,
+            half,
+        } = corner;
         // Tangent points sit `r / tan(θ/2)` from the corner along each line;
         // the centre lies on the bisector `r / sin(θ/2)` away.
         let t = radius / half.tan();
-        let len_a = self.point(far_a)?.distance(corner_pos);
-        let len_b = self.point(far_b)?.distance(corner_pos);
+        let len_a = self.point(far_a)?.distance(pos);
+        let len_b = self.point(far_b)?.distance(pos);
         if t >= len_a - TOL || t >= len_b - TOL {
             return Err(SketchError::Invalid(
                 "fillet radius is too large for these lines".into(),
             ));
         }
-        let ta = corner_pos + da * t;
-        let tb = corner_pos + db * t;
+        let ta = pos + da * t;
+        let tb = pos + db * t;
         let bisector = (da + db)
             .normalized()
             .ok_or(SketchError::Invalid("fillet lines are collinear".into()))?;
-        let centre = corner_pos + bisector * (radius / half.sin());
-        // Split the shared corner: each line keeps its own endpoint, moved
-        // to its tangent point; the arc ties them together again.
-        let pa = if ca == cb {
-            // One point entity used by both lines: give line b a fresh one.
-            let fresh = self.add_point(tb);
-            let (s, e) = self.line(b)?;
-            let new_line = Entity::Line {
-                start: if s == cb { fresh } else { s },
-                end: if e == cb { fresh } else { e },
-            };
-            self.entities.insert(b, new_line);
-            (ca, fresh)
-        } else {
-            (ca, cb)
-        };
-        let (ca, cb) = pa;
-        let coincident: Vec<ConstraintId> = self
-            .constraints()
-            .filter(|(_, c)| {
-                matches!(c, Constraint::Coincident { a: x, b: y }
-                    if (*x == ca && *y == cb) || (*x == cb && *y == ca))
-            })
-            .map(|(id, _)| id)
-            .collect();
-        for id in coincident {
-            self.remove_constraint(id);
-        }
-        self.set_point(ca, ta);
-        self.set_point(cb, tb);
+        let centre = pos + bisector * (radius / half.sin());
+        let (ca, cb) = self.split_corner(b, ca, cb, ta, tb)?;
         // Arc from a's tangent point to b's, counter-clockwise about the
         // centre: swap the ends when that would be the long way round.
         let ccw = (ta - centre).cross(tb - centre) > 0.0;
         let (start_pos, end_pos) = if ccw { (ta, tb) } else { (tb, ta) };
-        let (arc, c, start, end) = self.add_arc(centre, start_pos, end_pos);
+        let (arc, _c, start, end) = self.add_arc(centre, start_pos, end_pos);
         let (start_on, end_on) = if ccw { (ca, cb) } else { (cb, ca) };
         self.add_constraint(Constraint::Coincident {
             a: start,
@@ -698,8 +752,53 @@ impl Sketch {
             entity: arc,
             value: radius,
         });
-        let _ = c;
         Ok(arc)
+    }
+
+    /// Cuts the corner where two lines meet: both are shortened by
+    /// `distance` from the corner and a line joins the cut ends, held by
+    /// coincident constraints and its length. The lines must share an
+    /// endpoint (coincident, or at the same position). Returns the new
+    /// line.
+    pub fn chamfer(
+        &mut self,
+        a: EntityId,
+        b: EntityId,
+        distance: f64,
+    ) -> Result<EntityId, SketchError> {
+        if distance <= 0.0 || !distance.is_finite() {
+            return Err(SketchError::Invalid(
+                "chamfer distance must be positive".into(),
+            ));
+        }
+        let Corner {
+            ca,
+            cb,
+            far_a,
+            far_b,
+            pos,
+            da,
+            db,
+            ..
+        } = self.corner_of(a, b, "chamfer")?;
+        let len_a = self.point(far_a)?.distance(pos);
+        let len_b = self.point(far_b)?.distance(pos);
+        if distance >= len_a - TOL || distance >= len_b - TOL {
+            return Err(SketchError::Invalid(
+                "chamfer distance is too large for these lines".into(),
+            ));
+        }
+        let ta = pos + da * distance;
+        let tb = pos + db * distance;
+        let (ca, cb) = self.split_corner(b, ca, cb, ta, tb)?;
+        let (line, start, end) = self.add_line(ta, tb);
+        self.add_constraint(Constraint::Coincident { a: start, b: ca });
+        self.add_constraint(Constraint::Coincident { a: end, b: cb });
+        self.add_constraint(Constraint::Length {
+            line,
+            value: ta.distance(tb),
+        });
+        Ok(line)
     }
 
     /// Mirrors entities across the line `axis`, adding a `Symmetric`
@@ -976,6 +1075,51 @@ mod tests {
         let l = t.add_rectangle(Vec2::ZERO, Vec2::new(4.0, 4.0));
         assert!(t.fillet(l[0], l[1], 5.0).is_err());
         assert!(t.fillet(l[0], l[2], 1.0).is_err());
+    }
+
+    #[test]
+    fn chamfer_cuts_a_rectangle_corner_and_stays_solved() {
+        let mut s = Sketch::new();
+        let lines = s.add_rectangle(Vec2::ZERO, Vec2::new(10.0, 6.0));
+        let cut = s.chamfer(lines[0], lines[1], 2.0).unwrap();
+        let r = s.solve();
+        assert!(r.max_residual < 1e-7, "{r:?}");
+        let (start, end) = s.line(cut).unwrap();
+        let mut ends = [s.point(start).unwrap(), s.point(end).unwrap()];
+        ends.sort_by(|p, q| p.x.partial_cmp(&q.x).unwrap());
+        assert!(ends[0].distance(Vec2::new(8.0, 0.0)) < 1e-6, "{ends:?}");
+        assert!(ends[1].distance(Vec2::new(10.0, 2.0)) < 1e-6, "{ends:?}");
+        // The shortened lines end where the chamfer starts.
+        let (_, a_end) = s.line(lines[0]).unwrap();
+        let (b_start, _) = s.line(lines[1]).unwrap();
+        assert!(s.point(a_end).unwrap().distance(Vec2::new(8.0, 0.0)) < 1e-6);
+        assert!(s.point(b_start).unwrap().distance(Vec2::new(10.0, 2.0)) < 1e-6);
+        // One region: the rectangle less the cut triangle.
+        let p = s.profiles(&ProfileOptions::default());
+        assert_eq!(p.len(), 1);
+        assert!((p[0].area() - 58.0).abs() < 1e-6, "{}", p[0].area());
+        // Its length is the dimension that drives it.
+        let lid = s
+            .constraints()
+            .find(|(_, c)| matches!(c, Constraint::Length { line, .. } if *line == cut))
+            .map(|(id, _)| id)
+            .unwrap();
+        s.set_constraint_value(lid, 3.0 * 2.0f64.sqrt());
+        let r = s.solve();
+        assert!(r.max_residual < 1e-7, "{r:?}");
+        let (ps, pe) = (s.point(start).unwrap(), s.point(end).unwrap());
+        assert!(
+            (ps.distance(pe) - 3.0 * 2.0f64.sqrt()).abs() < 1e-6,
+            "chamfer {}",
+            ps.distance(pe)
+        );
+        assert_eq!(s.profiles(&ProfileOptions::default()).len(), 1);
+        // Too long a chamfer or lines that do not meet are refused.
+        let mut t = Sketch::new();
+        let l = t.add_rectangle(Vec2::ZERO, Vec2::new(4.0, 4.0));
+        assert!(t.chamfer(l[0], l[1], 4.0).is_err());
+        assert!(t.chamfer(l[0], l[2], 1.0).is_err());
+        assert!(t.chamfer(l[0], l[1], 0.0).is_err());
     }
 
     #[test]

@@ -125,7 +125,7 @@ return the new entity ids in `studio.entities`:
 
 Editing: `remove_entity {id}`, `move_point {id, pos}`, `set_construction {id, construction}`,
 `trim {entity, at}`, `offset {entities, distance}`, `mirror {entities, axis: <line id>}`,
-`fillet {a, b, radius}` (two lines meeting at a point), `pattern_linear {entities, count, step}`,
+`fillet {a, b, radius}` and `chamfer {a, b, distance}` (two lines meeting at a point), `pattern_linear {entities, count, step}`,
 `pattern_circular {entities, count, center, angle}`, `project {source: {type: "face", face} | {type: "edge", edge}}`
 (body geometry into the sketch).
 

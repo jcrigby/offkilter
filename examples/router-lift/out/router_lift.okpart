@@ -9024,15 +9024,15 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 5.0,
-                      "y": 38.0
+                      "x": 3.0,
+                      "y": 40.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 3.0,
+                      "x": 0.0,
                       "y": 40.0
                     }
                   },
@@ -9046,7 +9046,7 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 3.0,
+                      "x": 0.0,
                       "y": 40.0
                     }
                   },
@@ -9055,7 +9055,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": 40.0
+                      "y": 0.0
                     }
                   },
                   {
@@ -9068,16 +9068,16 @@
                     "id": 12,
                     "type": "point",
                     "pos": {
-                      "x": 0.0,
-                      "y": 40.0
+                      "x": 5.0,
+                      "y": 38.0
                     }
                   },
                   {
                     "id": 13,
                     "type": "point",
                     "pos": {
-                      "x": 0.0,
-                      "y": 0.0
+                      "x": 3.0,
+                      "y": 40.0
                     }
                   },
                   {
@@ -9087,9 +9087,28 @@
                     "end": 13
                   }
                 ],
-                "constraints": [],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 12,
+                    "b": 4
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 13,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "length",
+                    "line": 14,
+                    "value": 2.8284271247461903
+                  }
+                ],
                 "next_entity": 15,
-                "next_constraint": 0
+                "next_constraint": 3
               }
             }
           },

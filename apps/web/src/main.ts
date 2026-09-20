@@ -1941,6 +1941,9 @@ class App implements SketchHost {
           const fb = button("Fillet…", () => this.sketcher.filletSelection());
           fb.title = "Round the corner where the two selected lines meet with a tangent arc (I)";
           row.appendChild(fb);
+          const cb = button("Chamfer…", () => this.sketcher.chamferSelection());
+          cb.title = "Cut the corner where the two selected lines meet with a straight line (K)";
+          row.appendChild(cb);
         }
         const m = button(this.sketcher.awaitingMirrorAxis ? "Click a line…" : "Mirror…", () => this.sketcher.beginMirror());
         m.title = "Mirror the selection across a line you click next (M)";
@@ -3718,6 +3721,7 @@ async function main(): Promise<void> {
       if (e.key === "Enter") app.sketcher.finish();
       if (e.key.toLowerCase() === "o") app.sketcher.offsetSelection();
       if (e.key.toLowerCase() === "i") app.sketcher.filletSelection();
+      if (e.key.toLowerCase() === "k") app.sketcher.chamferSelection();
       if (e.key.toLowerCase() === "m") app.sketcher.beginMirror();
       if (e.key.toLowerCase() === "y") app.sketcher.patternSelection();
       if (e.key.toLowerCase() === "q") app.sketcher.toggleConstruction();

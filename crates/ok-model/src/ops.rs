@@ -91,6 +91,13 @@ pub enum SketchOp {
         b: EntityId,
         radius: f64,
     },
+    /// Cut the corner where two lines meet with a line `distance` back
+    /// along each.
+    Chamfer {
+        a: EntityId,
+        b: EntityId,
+        distance: f64,
+    },
     /// Mirror entities across a line with symmetric constraints.
     Mirror {
         entities: Vec<EntityId>,
@@ -1292,6 +1299,9 @@ impl PartStudio {
                         }
                         SketchOp::Fillet { a, b, radius } => {
                             out.entities.push(sk.fillet(a, b, radius)?);
+                        }
+                        SketchOp::Chamfer { a, b, distance } => {
+                            out.entities.push(sk.chamfer(a, b, distance)?);
                         }
                         SketchOp::PatternLinear {
                             entities,
