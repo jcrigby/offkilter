@@ -152,6 +152,7 @@ impl Part {
             through_all: depth <= 0.0,
             direction,
             counterbore,
+            countersink: None,
             name: Some(name.into()),
         });
     }

@@ -50,9 +50,11 @@ order they came up. They are the roadmap this example feeds.
   in `crates/ok-model/examples/router_lift.rs` (which is kept as it
   arrived). Every difference the mesh comparison reported was a number
   in the transcription, not the kernel.
-- A cone-bottomed socket, a countersink and a chamfered dowel are all
-  revolved profiles here. A `countersink` option on the hole feature and
-  a chamfer on a revolved profile would say the same in one op.
+- A cone-bottomed socket, a countersink and a chamfered dowel were all
+  revolved profiles at first. The hole feature now takes a `countersink`
+  (`{diameter, angle}`), which the chuck's screws and the round post's
+  socket entry use; the chamfered dowel is still a revolved profile,
+  where a chamfer on the profile would say it in one op.
 - The slotted post's socket is a hull of two cones in OpenSCAD; here it
   is two revolved cones and the section extruded between them. A slot
   with a conical entry has no single feature.

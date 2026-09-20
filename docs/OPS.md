@@ -84,7 +84,7 @@ Feature ops (each returns the new feature's id; `name` may be null):
 | `add_sketch` | `plane: PlaneRef, name` |
 | `add_extrude` | `sketch, depth, direction?, end?, profiles?, op?, name` |
 | `add_revolve` | `sketch, axis: {type: "x_axis"|"y_axis"} or {type: "line", line}, angle? (360), profiles?, op?, name` |
-| `add_hole` | `sketch` (its points are the hole centres), `diameter, depth?, through_all?, direction?, counterbore?: {diameter, depth}, name` |
+| `add_hole` | `sketch` (its points are the hole centres), `diameter, depth?, through_all?, direction?, counterbore?: {diameter, depth}, countersink?: {diameter, angle?} (90° by default), name` |
 | `add_blend` | `kind: "fillet"|"chamfer", edges: EdgeRef[], size, name` |
 | `add_shell` | `thickness, faces?: FaceRef[]` (faces to leave open), `name` |
 | `add_sweep` | `sketch` (profile), `path` (a sketch holding the path), `profiles?, op?, name` |

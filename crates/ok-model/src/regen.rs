@@ -963,6 +963,58 @@ impl PartStudio {
             Ok(r) => r,
             Err(e) => return Some(e),
         };
+        // A countersink: a cone from its diameter at the plane narrowing
+        // to the hole at its included angle, revolved about the hole's
+        // axis, one each way for a symmetric hole.
+        let countersink = |c: Vec2, cs: crate::Countersink, sign: f64| -> Result<Solid, String> {
+            if cs.diameter <= hf.diameter {
+                return Err("countersink diameter must exceed the hole diameter".into());
+            }
+            if !(cs.angle > 1.0 && cs.angle < 179.0) {
+                return Err("countersink angle must be between 1 and 179 degrees".into());
+            }
+            let half = (cs.angle / 2.0).to_radians();
+            let depth = (cs.diameter - hf.diameter) / 2.0 / half.tan();
+            let centre = plane.to_world(c);
+            let radial = ok_brep::exact::perpendicular(n);
+            let along = n * sign;
+            let section = Plane {
+                origin: centre,
+                x_axis: radial,
+                y_axis: along,
+                normal: radial.cross(along),
+            };
+            let mut sk = ok_sketch::Sketch::new();
+            let pts = [
+                Vec2::new(0.0, 0.0),
+                Vec2::new(cs.diameter / 2.0, 0.0),
+                Vec2::new(hf.diameter / 2.0, depth),
+                Vec2::new(0.0, depth),
+            ];
+            let mut ids = Vec::new();
+            for i in 0..pts.len() {
+                let (_, a, b) = sk.add_line(pts[i], pts[(i + 1) % pts.len()]);
+                ids.push((a, b));
+            }
+            for i in 0..ids.len() {
+                let next = ids[(i + 1) % ids.len()].0;
+                sk.add_constraint(ok_sketch::Constraint::Coincident {
+                    a: ids[i].1,
+                    b: next,
+                });
+            }
+            let profile = sk.profiles(opts).remove(0);
+            ok_brep::revolve(
+                &profile,
+                &section,
+                Vec2::ZERO,
+                Vec2::Y,
+                std::f64::consts::TAU,
+                opts.arc_segment_angle,
+                id.0,
+            )
+            .map_err(|e| e.to_string())
+        };
         let mut parts: Vec<Result<Solid, ok_brep::BrepError>> = Vec::new();
         for &c in &centers {
             parts.push(cylinder(c, hf.diameter, start, end));
@@ -973,6 +1025,19 @@ impl PartStudio {
                 match range(cb.depth, false) {
                     Ok((s, e)) => parts.push(cylinder(c, cb.diameter, s, e)),
                     Err(e) => return Some(format!("counterbore: {e}")),
+                }
+            }
+            if let Some(cs) = hf.countersink {
+                let signs: &[f64] = match hf.direction {
+                    ExtrudeDirection::Normal => &[1.0],
+                    ExtrudeDirection::Reverse => &[-1.0],
+                    ExtrudeDirection::Symmetric => &[1.0, -1.0],
+                };
+                for &sign in signs {
+                    match countersink(c, cs, sign) {
+                        Ok(cone) => parts.push(Ok(cone)),
+                        Err(e) => return Some(format!("countersink: {e}")),
+                    }
                 }
             }
         }
@@ -2645,6 +2710,7 @@ mod tests {
                 through_all: true,
                 direction: ExtrudeDirection::Reverse,
                 counterbore: None,
+                countersink: None,
                 name: None,
             })
             .unwrap()
@@ -2674,6 +2740,7 @@ mod tests {
                 diameter: 8.0,
                 depth: 2.0,
             })),
+            countersink: None,
         })
         .unwrap();
         let r = ps.regenerate();
@@ -2689,6 +2756,58 @@ mod tests {
             "vol {vol} expected {expected}"
         );
         assert_eq!(ps.feature(h).unwrap().name, "Hole 1");
+        // Through again, the counterbore swapped for a 90° countersink 8 mm
+        // across: a 2 mm deep frustum from radius 4 to radius 2 at the top
+        // of each hole, minus the hole already through it.
+        ps.apply(Op::SetHole {
+            id: h,
+            diameter: None,
+            depth: None,
+            through_all: Some(true),
+            direction: None,
+            counterbore: Some(None),
+            countersink: Some(Some(crate::Countersink {
+                diameter: 8.0,
+                angle: 90.0,
+            })),
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let frustum = pi * 2.0 / 3.0 * (16.0 + 8.0 + 4.0) - pi * 4.0 * 2.0;
+        let expected = 8000.0 - 2.0 * (pi * 4.0 * 10.0 + frustum);
+        let vol = r.bodies[0].solid.volume();
+        assert!(
+            ((vol - expected) / expected).abs() < 3e-3,
+            "vol {vol} expected {expected}"
+        );
+        let solid = &r.bodies[0].solid;
+        let cones = solid
+            .surfaces
+            .iter()
+            .filter(|s| matches!(s, ok_brep::Surface::Cone { .. }))
+            .count();
+        assert_eq!(cones, 2, "one cone per countersink");
+        // A countersink no wider than the hole is an error, not a silent no-op.
+        ps.apply(Op::SetHole {
+            id: h,
+            diameter: None,
+            depth: None,
+            through_all: None,
+            direction: None,
+            counterbore: None,
+            countersink: Some(Some(crate::Countersink {
+                diameter: 4.0,
+                angle: 90.0,
+            })),
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(r.errors().next().is_some());
     }
 
     #[test]
@@ -3599,6 +3718,7 @@ mod tests {
                 through_all: true,
                 direction: ExtrudeDirection::Reverse,
                 counterbore: None,
+                countersink: None,
                 name: None,
             },
         );

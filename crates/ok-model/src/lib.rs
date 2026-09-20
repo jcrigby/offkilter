@@ -27,7 +27,7 @@ pub use describe::{
 pub use document::{AssemblyOp, DocOp, DocOpResult, Document, DrawingDimension, Tab, TabKind};
 pub use feature::{
     canonical_frame, near_of, no_near, origin_hash, rotated_plane, Axis, BlendFeature, BlendKind,
-    BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, DraftFeature, EdgeRef,
+    BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, Countersink, DraftFeature, EdgeRef,
     ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind,
     HoleFeature, LoftFeature, MeshFeature, MirrorFeature, MoveFaceFeature, PatternFeature,
     PatternKind, PlaneRef, ProfileSelection, Projection, ProjectionSource, RevolveAxis,

@@ -2221,6 +2221,16 @@ class App implements SketchHost {
       body.appendChild(field("C'bore ⌀", this.exprInput(f, "cbore_diameter", cb.diameter, (v) => this.apply({ type: "set_hole", id: f.id, counterbore: { ...cb, diameter: v } }))));
       body.appendChild(field("C'bore depth", this.exprInput(f, "cbore_depth", cb.depth, (v) => this.apply({ type: "set_hole", id: f.id, counterbore: { ...cb, depth: v } }))));
     }
+    body.appendChild(
+      field("Countersink", select(["none", "yes"], k.countersink ? "yes" : "none", (v) =>
+        this.apply({ type: "set_hole", id: f.id, countersink: v === "yes" ? { diameter: k.diameter * 2, angle: 90 } : null }),
+      )),
+    );
+    if (k.countersink) {
+      const cs = k.countersink;
+      body.appendChild(field("C'sink ⌀", this.exprInput(f, "csink_diameter", cs.diameter, (v) => this.apply({ type: "set_hole", id: f.id, countersink: { ...cs, diameter: v } }))));
+      body.appendChild(field("C'sink angle", this.exprInput(f, "csink_angle", cs.angle, (v) => this.apply({ type: "set_hole", id: f.id, countersink: { ...cs, angle: v } }))));
+    }
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Drills at every standalone point of the sketch (points not used by lines, arcs or circles). “Reverse” drills into the face the sketch sits on.";

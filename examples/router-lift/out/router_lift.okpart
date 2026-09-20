@@ -448,7 +448,8 @@
               "counterbore": {
                 "diameter": 22.6,
                 "depth": 3.8
-              }
+              },
+              "countersink": null
             }
           },
           {
@@ -514,7 +515,8 @@
               "depth": 12.0,
               "through_all": false,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -612,7 +614,8 @@
               "depth": 18.0,
               "through_all": false,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -710,7 +713,8 @@
               "depth": 18.0,
               "through_all": false,
               "direction": "normal",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -1894,7 +1898,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "normal",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -2841,7 +2846,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -3000,7 +3006,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -3050,7 +3057,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -3209,7 +3217,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -3259,7 +3268,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -3418,7 +3428,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -3468,7 +3479,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -3627,7 +3639,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -3677,7 +3690,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -3903,136 +3917,15 @@
               "depth": 22.0,
               "through_all": false,
               "direction": "reverse",
-              "counterbore": null
-            }
-          },
-          {
-            "id": 5,
-            "name": "cone entry",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 0.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 69.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 5.15,
-                      "y": 69.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 5.15,
-                      "y": 69.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 8.0,
-                      "y": 75.01
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 8.0,
-                      "y": 75.01
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 75.01
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 75.01
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 69.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
+              "counterbore": null,
+              "countersink": {
+                "diameter": 16.0,
+                "angle": 50.81543621789694
               }
             }
           },
           {
-            "id": 6,
-            "name": "cone entry",
-            "suppressed": false,
-            "kind": {
-              "type": "revolve",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "axis": {
-                "type": "y_axis"
-              },
-              "angle": 360.0,
-              "op": "remove"
-            }
-          },
-          {
-            "id": 7,
+            "id": 5,
             "name": "screws",
             "suppressed": false,
             "kind": {
@@ -4068,17 +3961,165 @@
             }
           },
           {
-            "id": 8,
+            "id": 6,
             "name": "screw holes",
             "suppressed": false,
             "kind": {
               "type": "hole",
-              "sketch": 7,
+              "sketch": 5,
               "diameter": 4.5,
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 7,
+            "name": "screw cone",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 13.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -1.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 2.25,
+                      "y": -1.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 2.25,
+                      "y": -1.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 2.25,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 2.25,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 4.5,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 4.5,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -1.0
+                    }
+                  },
+                  {
+                    "id": 14,
+                    "type": "line",
+                    "start": 12,
+                    "end": 13
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 15,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "screw cone",
+            "suppressed": false,
+            "kind": {
+              "type": "revolve",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "axis": {
+                "type": "y_axis"
+              },
+              "angle": 360.0,
+              "op": "remove"
             }
           },
           {
@@ -4090,7 +4131,7 @@
               "plane": {
                 "type": "standard",
                 "base": "front",
-                "offset": 13.0
+                "offset": -13.0
               },
               "sketch": {
                 "entities": [
@@ -4227,156 +4268,9 @@
               "angle": 360.0,
               "op": "remove"
             }
-          },
-          {
-            "id": 11,
-            "name": "screw cone",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "front",
-                "offset": -13.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 2.25,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 2.25,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 2.25,
-                      "y": 0.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 2.25,
-                      "y": 0.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 4.5,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 4.5,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  },
-                  {
-                    "id": 12,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 13,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 14,
-                    "type": "line",
-                    "start": 12,
-                    "end": 13
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 15,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 12,
-            "name": "screw cone",
-            "suppressed": false,
-            "kind": {
-              "type": "revolve",
-              "sketch": 11,
-              "profiles": {
-                "type": "all"
-              },
-              "axis": {
-                "type": "y_axis"
-              },
-              "angle": 360.0,
-              "op": "remove"
-            }
           }
         ],
-        "next_id": 13,
+        "next_id": 11,
         "settings": {
           "facet_angle": 5.0
         }
@@ -5181,7 +5075,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -5701,7 +5596,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -5914,7 +5810,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "normal",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -5926,7 +5823,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 25.0
+                "offset": 0.0
               },
               "sketch": {
                 "entities": [
@@ -5955,7 +5852,7 @@
           },
           {
             "id": 10,
-            "name": "screw holes",
+            "name": "countersunk screws",
             "suppressed": false,
             "kind": {
               "type": "hole",
@@ -5963,262 +5860,16 @@
               "diameter": 4.5,
               "depth": 0.0,
               "through_all": true,
-              "direction": "reverse",
-              "counterbore": null
-            }
-          },
-          {
-            "id": 11,
-            "name": "countersink",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -12.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 4.5,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 4.5,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 2.25,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 2.25,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": {
+                "diameter": 7.875,
+                "angle": 58.71550708558255
               }
-            }
-          },
-          {
-            "id": 12,
-            "name": "countersink",
-            "suppressed": false,
-            "kind": {
-              "type": "revolve",
-              "sketch": 11,
-              "profiles": {
-                "type": "all"
-              },
-              "axis": {
-                "type": "y_axis"
-              },
-              "angle": 360.0,
-              "op": "remove"
-            }
-          },
-          {
-            "id": 13,
-            "name": "countersink",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 12.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 4.5,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 4.5,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 2.25,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 2.25,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 3.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": -1.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 14,
-            "name": "countersink",
-            "suppressed": false,
-            "kind": {
-              "type": "revolve",
-              "sketch": 13,
-              "profiles": {
-                "type": "all"
-              },
-              "axis": {
-                "type": "y_axis"
-              },
-              "angle": 360.0,
-              "op": "remove"
             }
           }
         ],
-        "next_id": 15,
+        "next_id": 11,
         "settings": {
           "facet_angle": 5.0
         }
@@ -6443,7 +6094,8 @@
               "counterbore": {
                 "diameter": 90.4,
                 "depth": 5.0
-              }
+              },
+              "countersink": null
             }
           },
           {
@@ -6485,7 +6137,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -6527,7 +6180,8 @@
               "depth": 7.0,
               "through_all": false,
               "direction": "normal",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -6756,7 +6410,8 @@
               "counterbore": {
                 "diameter": 22.0,
                 "depth": 7.0
-              }
+              },
+              "countersink": null
             }
           }
         ],
@@ -7006,7 +6661,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "normal",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -7239,7 +6895,8 @@
               "depth": 20.0,
               "through_all": false,
               "direction": "normal",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -7289,7 +6946,8 @@
               "depth": 29.0,
               "through_all": false,
               "direction": "normal",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -8205,7 +7863,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -8431,7 +8090,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -8497,7 +8157,8 @@
               "depth": 15.0,
               "through_all": false,
               "direction": "normal",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],
@@ -8894,7 +8555,8 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           },
           {
@@ -9115,7 +8777,8 @@
               "depth": 15.0,
               "through_all": false,
               "direction": "normal",
-              "counterbore": null
+              "counterbore": null,
+              "countersink": null
             }
           }
         ],

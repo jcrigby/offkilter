@@ -35,7 +35,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Merge coplanar faces of the same body after a boolean
 - [x] Extrude up-to-face / through-all
 - [x] Revolve (about a sketch axis or sketch line, full or partial)
-- [x] Hole feature (through / blind, optional counterbore) at sketch points
+- [x] Hole feature (through / blind, optional counterbore or countersink) at sketch points
 - [x] Sweep (profile along a sketched polyline / arc path) and loft (between two sketch regions)
 - [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
 - [x] Fillets and chamfers on curved edges (a rim is one chain, blended with one mitred sweep)
