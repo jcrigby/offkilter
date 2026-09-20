@@ -322,10 +322,26 @@ impl Backend {
         }
     }
 
-    fn export(&self, id: &str, tab: Option<u32>, format: &str) -> Result<Vec<u8>, String> {
+    fn export(
+        &self,
+        id: &str,
+        tab: Option<u32>,
+        format: &str,
+        view: ok_render::View,
+        hidden: bool,
+    ) -> Result<Vec<u8>, String> {
         match self {
             Backend::Server { .. } => {
-                let query = tab.map(|t| format!("?tab={t}")).unwrap_or_default();
+                let mut query: Vec<String> = tab.map(|t| format!("tab={t}")).into_iter().collect();
+                if format == "dxf" {
+                    query.push(format!("view={}", view_name(view)));
+                    query.push(format!("hidden={hidden}"));
+                }
+                let query = if query.is_empty() {
+                    String::new()
+                } else {
+                    format!("?{}", query.join("&"))
+                };
                 let (s, bytes) =
                     self.request_bytes(&format!("/docs/{id}/export/{format}{query}"))?;
                 if (200..300).contains(&s) {
@@ -340,6 +356,10 @@ impl Backend {
             Backend::Local { doc, .. } => {
                 let mut doc = doc.clone();
                 let tab = pick_tab(&doc, tab)?;
+                if format == "dxf" {
+                    return ok_render::view_dxf(&mut doc, tab, view, hidden)
+                        .map(String::into_bytes);
+                }
                 let kind = doc.tab(tab).map(|t| t.kind_name()).ok_or("no such tab")?;
                 let bodies = if kind == "assembly" {
                     doc.regenerate_assembly(tab)
@@ -364,7 +384,7 @@ impl Backend {
                             bodies.iter().map(|b| (b.name.as_str(), &b.solid)).collect();
                         Ok(ok_step::write_step(&solids, &doc.name).into_bytes())
                     }
-                    other => Err(format!("unknown format {other}; use stl or step")),
+                    other => Err(format!("unknown format {other}; use stl, step or dxf")),
                 }
             }
         }
@@ -949,13 +969,25 @@ impl Server {
                     .and_then(|p| p.as_str())
                     .map(str::to_string)
                     .unwrap_or_else(|| format!("offkilter-export.{format}"));
-                let bytes = self.backend.export(&id, tab, &format)?;
+                let view = ok_render::View::parse(
+                    args.get("view").and_then(|v| v.as_str()).unwrap_or("top"),
+                )?;
+                let hidden = args
+                    .get("hidden")
+                    .and_then(|h| h.as_bool())
+                    .unwrap_or(false);
+                let bytes = self.backend.export(&id, tab, &format, view, hidden)?;
                 std::fs::write(&path, &bytes)
                     .map_err(|e| format!("could not write {path}: {e}"))?;
                 Ok(format!(
-                    "wrote {} bytes of {} to {path}",
+                    "wrote {} bytes of {} to {path}{}",
                     bytes.len(),
-                    format.to_uppercase()
+                    format.to_uppercase(),
+                    if format == "dxf" {
+                        format!(" (view {}, 1:1 mm)", view_name(view))
+                    } else {
+                        String::new()
+                    }
                 ))
             }
             "document_url" => {
@@ -1205,8 +1237,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "export",
-            "description": "Writes a tab's bodies as STL or STEP to a file path.",
-            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step"] }, "path": { "type": "string" } }, "required": ["format", "path"] }
+            "description": "Writes a tab's bodies as STL or STEP to a file path, or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut; `hidden: true` adds hidden lines dashed on their own layer.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" } }, "required": ["format", "path"] }
         },
         {
             "name": "document_url",
@@ -1367,6 +1399,23 @@ mod tests {
         assert!(std::fs::read_to_string(&step)
             .unwrap()
             .contains("MANIFOLD_SOLID_BREP"));
+        // The plate from above as a DXF: four edges and the hole's circle.
+        let dxf = dir.join("plan.dxf");
+        let (err, text) = tool_text(
+            &mut server,
+            "export",
+            json!({ "format": "dxf", "view": "top", "path": dxf.display().to_string() }),
+        );
+        assert!(!err && text.contains("view top"), "{text}");
+        let plan = std::fs::read_to_string(&dxf).unwrap();
+        assert_eq!(plan.matches("\nLINE\n").count(), 4, "{plan}");
+        assert_eq!(plan.matches("\nCIRCLE\n").count(), 1, "{plan}");
+        let (err, text) = tool_text(
+            &mut server,
+            "export",
+            json!({ "format": "dxf", "view": "behind", "path": dxf.display().to_string() }),
+        );
+        assert!(err && text.contains("unknown view"), "{text}");
         // The sketch on the plate's top face was written with a bare
         // reference; the document stores it with the piece's neighbours.
         let stored = ok_model::Document::from_json(

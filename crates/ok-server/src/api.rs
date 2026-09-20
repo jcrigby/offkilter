@@ -127,6 +127,7 @@ pub fn router(
         .route("/docs/{id}/check", get(check_doc))
         .route("/docs/{id}/export/stl", get(export_stl))
         .route("/docs/{id}/export/step", get(export_step))
+        .route("/docs/{id}/export/dxf", get(export_dxf))
         .route("/docs/{id}/ops", post(apply_ops))
         .route("/docs/{id}/report", get(report))
         .route("/docs/{id}/screenshot", get(screenshot))
@@ -696,6 +697,69 @@ async fn export_step(
                 (
                     header::CONTENT_DISPOSITION,
                     format!("attachment; filename=\"{id}.step\""),
+                ),
+            ],
+            text,
+        )
+            .into_response(),
+        Ok(Err(e)) => (StatusCode::BAD_REQUEST, e).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+#[derive(serde::Deserialize)]
+struct DxfQuery {
+    /// Tab id; the first tab when absent.
+    tab: Option<u32>,
+    /// `top` (default), `front`, `right`, `iso` or an `x,y,z` eye direction.
+    view: Option<String>,
+    /// Also write hidden lines (dashed, layer HIDDEN).
+    hidden: Option<bool>,
+}
+
+/// A DXF of a tab's bodies seen from a view, at 1:1.
+fn dxf_of(
+    json: &str,
+    tab: Option<u32>,
+    view: ok_render::View,
+    hidden: bool,
+) -> Result<String, String> {
+    let mut doc = ok_model::Document::from_json(json).map_err(|e| e.to_string())?;
+    let id = match tab {
+        Some(t) => ok_model::TabId(t),
+        None => doc
+            .tabs
+            .first()
+            .map(|t| t.id)
+            .ok_or("document has no tabs")?,
+    };
+    ok_render::view_dxf(&mut doc, id, view, hidden)
+}
+
+async fn export_dxf(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    axum::extract::Query(q): axum::extract::Query<DxfQuery>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(json) = current_json(&hub, &id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let view = match ok_render::View::parse(q.view.as_deref().unwrap_or("top")) {
+        Ok(v) => v,
+        Err(e) => return (StatusCode::BAD_REQUEST, e).into_response(),
+    };
+    let hidden = q.hidden.unwrap_or(false);
+    match tokio::task::spawn_blocking(move || dxf_of(&json, q.tab, view, hidden)).await {
+        Ok(Ok(text)) => (
+            [
+                (header::CONTENT_TYPE, "application/dxf".to_string()),
+                (
+                    header::CONTENT_DISPOSITION,
+                    format!("attachment; filename=\"{id}.dxf\""),
                 ),
             ],
             text,
@@ -1666,6 +1730,25 @@ mod tests {
         assert_eq!(bytes.len(), 84 + 50 * count);
         let (status, _, _) =
             call_bytes(&app, &format!("/api/docs/{id}/export/stl?tab=9"), None).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        // The block seen from above as a DXF: its four edges at 1:1.
+        let (status, headers, bytes) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/export/dxf?tab=1&view=top"),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(headers[header::CONTENT_TYPE], "application/dxf");
+        let dxf = String::from_utf8(bytes).unwrap();
+        assert_eq!(dxf.matches("\nLINE\n").count(), 4, "{dxf}");
+        assert!(dxf.contains("\n10\n10\n20\n20\n"), "{dxf}");
+        let (status, _, _) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/export/dxf?view=behind"),
+            None,
+        )
+        .await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
         // A rendered view of the tab, without a browser.
         let (status, headers, bytes) = call_bytes(

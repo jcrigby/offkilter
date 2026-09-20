@@ -208,8 +208,12 @@ class Part:
             args["section"] = section
         self.mcp.call("screenshot", args)
 
-    def export(self, path, fmt="stl"):
-        self.mcp.call("export", {"tab": self.tab, "format": fmt, "path": path})
+    def export(self, path, fmt="stl", view=None, hidden=False):
+        args = {"tab": self.tab, "format": fmt, "path": path}
+        if view:
+            args["view"] = view
+            args["hidden"] = hidden
+        self.mcp.call("export", args)
 
 
 # ---------------------------------------------------------------------
@@ -869,6 +873,38 @@ def mates(mcp, asm, tabs, placements, reports):
     return slider, ops[0]["offset"]
 
 
+def dxf_lines(path):
+    """The LINE entities of a DXF as ((x1, y1), (x2, y2)) pairs."""
+    toks = [t.strip() for t in open(path).read().splitlines()]
+    out, i = [], 0
+    while i + 1 < len(toks):
+        if toks[i] == "0" and toks[i + 1] == "LINE":
+            vals, j = {}, i + 2
+            while j + 1 < len(toks) and toks[j] != "0":
+                vals[toks[j]] = toks[j + 1]
+                j += 2
+            out.append(((float(vals["10"]), float(vals["20"])), (float(vals["11"]), float(vals["21"]))))
+            i = j
+        else:
+            i += 1
+    return out
+
+
+def check_template(exported, reference):
+    """Every line of the shop's arm template must be a line of the
+    exported plan view (either way round)."""
+    got = dxf_lines(exported)
+    same = lambda p, q: abs(p[0] - q[0]) < 1e-6 and abs(p[1] - q[1]) < 1e-6
+    missing = [
+        (a, b)
+        for a, b in dxf_lines(reference)
+        if not any((same(a, c) and same(b, d)) or (same(a, d) and same(b, c)) for c, d in got)
+    ]
+    if missing:
+        raise RuntimeError(f"arm template lines missing from the exported plan: {missing}")
+    return len(got)
+
+
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "out")
     os.makedirs(out, exist_ok=True)
@@ -899,6 +935,12 @@ def main():
         part.screenshot(os.path.join(out, f"{stem}.png"))
         if title in PRINTED:
             part.export(os.path.join(out, f"{stem}.stl"))
+        if title == "Arm":
+            # The plan view at 1:1 is the template the instructions say to
+            # print full size; the reference DXF's lines must all be in it.
+            part.export(os.path.join(out, "arm_template.dxf"), "dxf", view="top")
+            n = check_template(os.path.join(out, "arm_template.dxf"), os.path.join(HERE, "reference", "arm_template.dxf"))
+            print(f"{'':<13} arm_template.dxf: {n} lines, the reference template's 6 among them")
     # The assembly.
     text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": "Lift assembly"}]})
     asm = int(re.search(r"tab (\d+)", text).group(1))

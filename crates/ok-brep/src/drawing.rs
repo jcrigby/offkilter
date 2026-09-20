@@ -45,6 +45,182 @@ pub struct ViewLines {
     pub hidden_arcs: Vec<ViewArc>,
 }
 
+/// A view as a DXF (R2000: LINE, CIRCLE, ARC and ELLIPSE) at 1:1 in view
+/// coordinates, millimetres: visible edges on layer VISIBLE and, when
+/// `hidden`, hidden ones dashed on layer HIDDEN. A template to print or a
+/// profile to cut.
+pub fn view_dxf(lines: &ViewLines, hidden: bool) -> String {
+    let mut out: Vec<String> = Vec::new();
+    let mut put = |items: &[&str]| out.extend(items.iter().map(|s| s.to_string()));
+    put(&[
+        "0",
+        "SECTION",
+        "2",
+        "HEADER",
+        "9",
+        "$ACADVER",
+        "1",
+        "AC1015",
+        "9",
+        "$INSUNITS",
+        "70",
+        "4",
+        "0",
+        "ENDSEC",
+        "0",
+        "SECTION",
+        "2",
+        "TABLES",
+        "0",
+        "TABLE",
+        "2",
+        "LAYER",
+        "70",
+        "2",
+        "0",
+        "LAYER",
+        "2",
+        "VISIBLE",
+        "70",
+        "0",
+        "62",
+        "7",
+        "6",
+        "CONTINUOUS",
+        "0",
+        "LAYER",
+        "2",
+        "HIDDEN",
+        "70",
+        "0",
+        "62",
+        "8",
+        "6",
+        "DASHED",
+        "0",
+        "ENDTAB",
+        "0",
+        "ENDSEC",
+        "0",
+        "SECTION",
+        "2",
+        "ENTITIES",
+    ]);
+    type Layer<'a> = (&'a str, &'a [[Vec2; 2]], &'a [ViewArc]);
+    let layers: &[Layer] = if hidden {
+        &[
+            ("VISIBLE", &lines.visible, &lines.visible_arcs),
+            ("HIDDEN", &lines.hidden, &lines.hidden_arcs),
+        ]
+    } else {
+        &[("VISIBLE", &lines.visible, &lines.visible_arcs)]
+    };
+    for (layer, segments, arcs) in layers {
+        for [a, b] in segments.iter() {
+            put(&[
+                "0",
+                "LINE",
+                "8",
+                layer,
+                "10",
+                &dxf_num(a.x),
+                "20",
+                &dxf_num(a.y),
+                "30",
+                "0",
+                "11",
+                &dxf_num(b.x),
+                "21",
+                &dxf_num(b.y),
+                "31",
+                "0",
+            ]);
+        }
+        for arc in arcs.iter() {
+            let r = arc.major.length();
+            let full = arc.end - arc.start >= TAU - 1e-9;
+            let (cx, cy) = (dxf_num(arc.center.x), dxf_num(arc.center.y));
+            if (arc.ratio - 1.0).abs() < 1e-9 {
+                if full {
+                    put(&[
+                        "0",
+                        "CIRCLE",
+                        "8",
+                        layer,
+                        "10",
+                        &cx,
+                        "20",
+                        &cy,
+                        "30",
+                        "0",
+                        "40",
+                        &dxf_num(r),
+                    ]);
+                } else {
+                    let base = arc.major.y.atan2(arc.major.x);
+                    let deg = |t: f64| dxf_num(((base + t).to_degrees() % 360.0 + 360.0) % 360.0);
+                    put(&[
+                        "0",
+                        "ARC",
+                        "8",
+                        layer,
+                        "10",
+                        &cx,
+                        "20",
+                        &cy,
+                        "30",
+                        "0",
+                        "40",
+                        &dxf_num(r),
+                        "50",
+                        &deg(arc.start),
+                        "51",
+                        &deg(arc.end),
+                    ]);
+                }
+            } else {
+                put(&[
+                    "0",
+                    "ELLIPSE",
+                    "8",
+                    layer,
+                    "10",
+                    &cx,
+                    "20",
+                    &cy,
+                    "30",
+                    "0",
+                    "11",
+                    &dxf_num(arc.major.x),
+                    "21",
+                    &dxf_num(arc.major.y),
+                    "31",
+                    "0",
+                    "40",
+                    &dxf_num(arc.ratio),
+                    "41",
+                    &dxf_num(if full { 0.0 } else { arc.start }),
+                    "42",
+                    &dxf_num(if full { TAU } else { arc.end }),
+                ]);
+            }
+        }
+    }
+    put(&["0", "ENDSEC", "0", "EOF"]);
+    out.join("\n") + "\n"
+}
+
+/// A DXF number: six decimals, trailing zeros dropped, `-0` avoided.
+fn dxf_num(v: f64) -> String {
+    let s = format!("{:.6}", if v.abs() < 5e-7 { 0.0 } else { v });
+    let s = s.trim_end_matches('0').trim_end_matches('.');
+    if s.is_empty() {
+        "0".into()
+    } else {
+        s.into()
+    }
+}
+
 /// A section view: the lines of what is left after cutting, plus the
 /// outlines of the cut faces (each a closed polygon in view coordinates)
 /// for hatching.
@@ -700,6 +876,61 @@ mod tests {
     use crate::{boolean, extrude, BoolOp};
     use ok_math::Plane;
     use ok_sketch::{ProfileOptions, Sketch};
+
+    #[test]
+    fn view_dxf_writes_lines_circles_arcs_and_ellipses() {
+        let lines = ViewLines {
+            visible: vec![[Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.5)]],
+            hidden: vec![[Vec2::new(0.0, 0.0), Vec2::new(0.0, 5.0)]],
+            visible_arcs: vec![
+                ViewArc {
+                    center: Vec2::new(5.0, 5.0),
+                    major: Vec2::new(2.0, 0.0),
+                    ratio: 1.0,
+                    start: 0.0,
+                    end: TAU,
+                },
+                ViewArc {
+                    center: Vec2::new(5.0, 5.0),
+                    major: Vec2::new(0.0, 3.0),
+                    ratio: 1.0,
+                    start: 0.0,
+                    end: PI / 2.0,
+                },
+                ViewArc {
+                    center: Vec2::ZERO,
+                    major: Vec2::new(4.0, 0.0),
+                    ratio: 0.5,
+                    start: 0.0,
+                    end: TAU,
+                },
+            ],
+            hidden_arcs: vec![],
+        };
+        let dxf = view_dxf(&lines, false);
+        let entities: Vec<&str> = dxf
+            .split('\n')
+            .collect::<Vec<_>>()
+            .windows(2)
+            .filter(|w| w[0] == "0")
+            .map(|w| w[1])
+            .filter(|e| matches!(*e, "LINE" | "CIRCLE" | "ARC" | "ELLIPSE"))
+            .collect();
+        assert_eq!(entities, ["LINE", "CIRCLE", "ARC", "ELLIPSE"]);
+        assert!(dxf.contains("\n10\n0\n20\n0\n30\n0\n11\n10\n21\n0.5\n31\n0\n"));
+        // The quarter arc starts along +y: 90° to 180°.
+        assert!(dxf.contains("\n50\n90\n51\n180\n"), "{dxf}");
+        assert!(dxf.contains("$ACADVER\n1\nAC1015"));
+        assert!(
+            !dxf.contains("HIDDEN\n10"),
+            "no hidden entities unless asked"
+        );
+        let with_hidden = view_dxf(&lines, true);
+        assert!(with_hidden.contains("LINE\n8\nHIDDEN\n"));
+        assert_eq!(dxf_num(-0.0000001), "0");
+        assert_eq!(dxf_num(12.5), "12.5");
+        assert_eq!(dxf_num(-3.0), "-3");
+    }
 
     fn block(w: f64, d: f64, h: f64) -> Solid {
         let mut s = Sketch::new();
