@@ -103,7 +103,10 @@ in are yours, listed only for you and the accounts you share them with
 signed-in account join, in the Docs dialog). Documents created without signing in stay
 open to everyone on the server. Passwords are stored as argon2id hashes in
 `data/users.json`; sessions are cookies. Put the server behind HTTPS
-before exposing it beyond a trusted network.
+before exposing it beyond a trusted network. Scripts can validate and
+export without a browser: `GET /api/docs/<id>/check` regenerates every
+tab and lists bodies and errors as JSON, and
+`GET /api/docs/<id>/export/stl?tab=<n>` returns a tab's bodies as STL.
 During development run `npm run dev` in `apps/web`; it proxies `/api` to
 the server on port 8080. The Docs dialog also saves and restores named
 versions of a document and compares any of them with the document as it

@@ -16,7 +16,7 @@ use axum::response::IntoResponse;
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use futures_util::{SinkExt, StreamExt};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -122,6 +122,8 @@ pub fn router(
         .route("/docs/{id}/versions", get(list_versions).post(save_version))
         .route("/docs/{id}/versions/{vid}", get(get_version))
         .route("/docs/{id}/versions/{vid}/restore", post(restore_version))
+        .route("/docs/{id}/check", get(check_doc))
+        .route("/docs/{id}/export/stl", get(export_stl))
         .route("/health", get(|| async { "ok" }))
         .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
         .with_state(state);
@@ -347,6 +349,255 @@ async fn get_doc(
     match hub.store().read(&id) {
         Some(json) => ([(header::CONTENT_TYPE, "application/json")], json).into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
+/// The document as it is right now: the live copy when one is open,
+/// else the stored one.
+fn current_json(hub: &DocHub, id: &str) -> Option<String> {
+    match hub.get(id) {
+        Some(doc) => match doc.snapshot() {
+            ServerMessage::Snapshot { doc, .. } => Some(doc),
+            _ => None,
+        },
+        None => hub.store().read(id),
+    }
+}
+
+#[derive(Serialize)]
+struct CheckBody {
+    name: String,
+    source: u32,
+    volume: f64,
+    area: f64,
+    faces: usize,
+    bounds: Option<(ok_math::Vec3, ok_math::Vec3)>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    material: Option<ok_model::Material>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mass_g: Option<f64>,
+}
+
+#[derive(Serialize)]
+struct CheckTab {
+    id: u32,
+    name: String,
+    kind: &'static str,
+    bodies: Vec<CheckBody>,
+    /// Feature (or instance / mate) errors as "name: message".
+    errors: Vec<String>,
+}
+
+#[derive(Serialize)]
+struct CheckReport {
+    name: String,
+    ok: bool,
+    tabs: Vec<CheckTab>,
+}
+
+/// Regenerates every tab of a document on the server and reports its
+/// bodies and errors: a headless validation for scripts and CI.
+fn check_document(json: &str) -> Result<CheckReport, String> {
+    let mut doc = ok_model::Document::from_json(json).map_err(|e| e.to_string())?;
+    let ids: Vec<(ok_model::TabId, String, &'static str)> = doc
+        .tabs
+        .iter()
+        .map(|t| {
+            let name = match &t.kind {
+                ok_model::TabKind::PartStudio(p) => p.name.clone(),
+                ok_model::TabKind::Assembly(a) => a.name.clone(),
+            };
+            (t.id, name, t.kind_name())
+        })
+        .collect();
+    let mut tabs = Vec::new();
+    let body_of = |b: &ok_model::Body| CheckBody {
+        name: b.name.clone(),
+        source: b.source.0,
+        volume: b.solid.volume(),
+        area: b.solid.surface_area(),
+        faces: b.solid.faces.len(),
+        bounds: b.solid.bounds(),
+        material: b.material.clone(),
+        mass_g: b.material.as_ref().map(|m| m.mass_g(b.solid.volume())),
+    };
+    for (id, name, kind) in ids {
+        let (bodies, errors) = if kind == "assembly" {
+            match doc.regenerate_assembly(id) {
+                Ok(r) => {
+                    let mut errors: Vec<String> = r
+                        .instance_errors
+                        .iter()
+                        .map(|(i, e)| format!("instance {}: {e}", i.0))
+                        .collect();
+                    errors.extend(
+                        r.mate_errors
+                            .iter()
+                            .map(|(m, e)| format!("mate {}: {e}", m.0)),
+                    );
+                    (r.bodies.iter().map(body_of).collect(), errors)
+                }
+                Err(e) => (Vec::new(), vec![e.to_string()]),
+            }
+        } else {
+            match doc.regenerate_studio(id, None) {
+                Ok(r) => {
+                    let names: std::collections::BTreeMap<u32, String> = doc
+                        .tab(id)
+                        .and_then(|t| match &t.kind {
+                            ok_model::TabKind::PartStudio(p) => Some(
+                                p.features()
+                                    .iter()
+                                    .map(|f| (f.id.0, f.name.clone()))
+                                    .collect(),
+                            ),
+                            _ => None,
+                        })
+                        .unwrap_or_default();
+                    let errors = r
+                        .errors()
+                        .map(|(f, e)| {
+                            format!(
+                                "{}: {e}",
+                                names
+                                    .get(&f.0)
+                                    .cloned()
+                                    .unwrap_or_else(|| format!("feature {}", f.0))
+                            )
+                        })
+                        .collect();
+                    (r.bodies.iter().map(body_of).collect(), errors)
+                }
+                Err(e) => (Vec::new(), vec![e.to_string()]),
+            }
+        };
+        tabs.push(CheckTab {
+            id: id.0,
+            name,
+            kind,
+            bodies,
+            errors,
+        });
+    }
+    Ok(CheckReport {
+        name: doc.name.clone(),
+        ok: tabs.iter().all(|t| t.errors.is_empty()),
+        tabs,
+    })
+}
+
+async fn check_doc(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(json) = current_json(&hub, &id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    match tokio::task::spawn_blocking(move || check_document(&json)).await {
+        Ok(Ok(report)) => Json(report).into_response(),
+        Ok(Err(e)) => (StatusCode::BAD_REQUEST, e).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+struct ExportQuery {
+    /// Tab id; the first tab when absent.
+    tab: Option<u32>,
+}
+
+/// Binary STL of every body of a tab, regenerated on the server.
+fn stl_of(json: &str, tab: Option<u32>) -> Result<Vec<u8>, String> {
+    let mut doc = ok_model::Document::from_json(json).map_err(|e| e.to_string())?;
+    let id = match tab {
+        Some(t) => ok_model::TabId(t),
+        None => doc
+            .tabs
+            .first()
+            .map(|t| t.id)
+            .ok_or("document has no tabs")?,
+    };
+    let kind = doc.tab(id).map(|t| t.kind_name()).ok_or("no such tab")?;
+    let meshes: Vec<ok_mesh::TriMesh> = if kind == "assembly" {
+        doc.regenerate_assembly(id)
+            .map_err(|e| e.to_string())?
+            .bodies
+            .iter()
+            .map(|b| b.mesh.clone())
+            .collect()
+    } else {
+        doc.regenerate_studio(id, None)
+            .map_err(|e| e.to_string())?
+            .bodies
+            .iter()
+            .map(|b| b.mesh.clone())
+            .collect()
+    };
+    let count: usize = meshes.iter().map(|m| m.triangle_count()).sum();
+    let mut out = Vec::with_capacity(84 + count * 50);
+    let mut header = format!("offkilter tab {}", id.0).into_bytes();
+    header.resize(80, 0);
+    out.extend_from_slice(&header);
+    out.extend_from_slice(&(count as u32).to_le_bytes());
+    for m in &meshes {
+        for tri in m.indices.chunks_exact(3) {
+            let p = |i: u32| {
+                let k = i as usize * 3;
+                [m.positions[k], m.positions[k + 1], m.positions[k + 2]]
+            };
+            let (a, b, c) = (p(tri[0]), p(tri[1]), p(tri[2]));
+            let u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+            let v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+            let n = [
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0],
+            ];
+            let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+            let n = if len > 0.0 {
+                [n[0] / len, n[1] / len, n[2] / len]
+            } else {
+                [0.0, 0.0, 0.0]
+            };
+            for f in n.iter().chain(a.iter()).chain(b.iter()).chain(c.iter()) {
+                out.extend_from_slice(&f.to_le_bytes());
+            }
+            out.extend_from_slice(&[0, 0]);
+        }
+    }
+    Ok(out)
+}
+
+async fn export_stl(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    axum::extract::Query(q): axum::extract::Query<ExportQuery>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(json) = current_json(&hub, &id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    match tokio::task::spawn_blocking(move || stl_of(&json, q.tab)).await {
+        Ok(Ok(bytes)) => (
+            [
+                (header::CONTENT_TYPE, "model/stl".to_string()),
+                (
+                    header::CONTENT_DISPOSITION,
+                    format!("attachment; filename=\"{id}.stl\""),
+                ),
+            ],
+            bytes,
+        )
+            .into_response(),
+        Ok(Err(e)) => (StatusCode::BAD_REQUEST, e).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
 
@@ -1009,6 +1260,84 @@ mod tests {
         )
         .await;
         assert_eq!(status, StatusCode::NO_CONTENT);
+    }
+
+    #[tokio::test]
+    async fn check_and_stl_export_regenerate_on_the_server() {
+        let app = router(temp_store(), temp_users(), temp_teams(), None);
+        // A 10 x 20 x 5 block built through ops, as a document JSON.
+        let mut ps = ok_model::PartStudio::new("block");
+        let sketch = ps
+            .apply(ok_model::Op::AddSketch {
+                plane: ok_model::PlaneRef::standard(ok_model::StandardPlane::Top),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        ps.apply(ok_model::Op::Sketch {
+            id: sketch,
+            op: ok_model::SketchOp::AddRectangle {
+                a: ok_math::Vec2::ZERO,
+                b: ok_math::Vec2::new(10.0, 20.0),
+            },
+        })
+        .unwrap();
+        ps.apply(ok_model::Op::AddExtrude {
+            sketch,
+            profiles: ok_model::ProfileSelection::All,
+            depth: 5.0,
+            direction: ok_model::ExtrudeDirection::Normal,
+            end: ok_model::ExtrudeEnd::Blind,
+            op: ok_model::BodyOp::New,
+            name: Some("Block".into()),
+        })
+        .unwrap();
+        let mut doc = ok_model::Document::new("headless");
+        // A new document already holds one empty part studio tab: fill it.
+        doc.tabs[0].kind = ok_model::TabKind::PartStudio(ps);
+        let body = serde_json::json!({ "name": "headless", "json": doc.to_json() }).to_string();
+        let (status, _, text) = call(&app, "POST", "/api/docs", Some(&body), None).await;
+        assert_eq!(status, StatusCode::CREATED, "{text}");
+        let id = serde_json::from_str::<serde_json::Value>(&text).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let (status, _, text) =
+            call(&app, "GET", &format!("/api/docs/{id}/check"), None, None).await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let report: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(report["ok"], true, "{text}");
+        assert_eq!(report["tabs"][0]["bodies"][0]["name"], "Part 1", "{text}");
+        assert!((report["tabs"][0]["bodies"][0]["volume"].as_f64().unwrap() - 1000.0).abs() < 1e-9);
+        let (status, headers, bytes) =
+            call_bytes(&app, &format!("/api/docs/{id}/export/stl?tab=1"), None).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(headers[header::CONTENT_TYPE], "model/stl");
+        let count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
+        assert_eq!(count, 12);
+        assert_eq!(bytes.len(), 84 + 50 * count);
+        let (status, _, _) =
+            call_bytes(&app, &format!("/api/docs/{id}/export/stl?tab=9"), None).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    /// Sends a GET, returning status, headers and raw bytes.
+    async fn call_bytes(
+        app: &Router,
+        path: &str,
+        cookie: Option<&str>,
+    ) -> (StatusCode, axum::http::HeaderMap, Vec<u8>) {
+        let mut req = Request::builder().method("GET").uri(path);
+        if let Some(c) = cookie {
+            req = req.header("cookie", c);
+        }
+        let req = req.body(Body::empty()).unwrap();
+        let res = app.clone().oneshot(req).await.unwrap();
+        let status = res.status();
+        let headers = res.headers().clone();
+        let bytes = res.into_body().collect().await.unwrap().to_bytes().to_vec();
+        (status, headers, bytes)
     }
 
     #[tokio::test]

@@ -498,6 +498,13 @@ re-renders from the regen summary after every op.
 documents as `.okpart` JSON files with a small metadata file each, and
 relays edits between clients:
 
+- Headless: `GET /api/docs/:id/check` regenerates every tab on the
+  server (the live copy when one is open) and reports each tab's bodies
+  (name, volume, area, faces, bounds, material and mass) and feature,
+  instance or mate errors, with an overall `ok`; `GET
+  /api/docs/:id/export/stl?tab=N` returns the tab's bodies as binary
+  STL. Both run the kernel natively on a blocking thread, so scripts and
+  CI can validate and export documents without a browser.
 - REST: `GET/POST /api/docs`, `GET/PUT/DELETE /api/docs/:id`,
   `POST/DELETE /api/docs/:id/share`, versions under `/api/docs/:id/versions`
   (list, save, fetch one, restore). Comparing a version with the current

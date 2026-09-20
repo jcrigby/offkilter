@@ -7,6 +7,8 @@ description = "Document server for offkilter: storage, static web app, real-time
 
 [dependencies]
 ok-model = { workspace = true }
+ok-math = { workspace = true }
+ok-mesh = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 axum = { version = "0.8", features = ["ws"] }

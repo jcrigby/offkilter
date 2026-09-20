@@ -82,7 +82,7 @@ top are concrete and self-contained; items lower down are directions.
 ## Platform
 
 - [x] Document server (`ok-server`): storage, static app, REST
-- [ ] Server-side regeneration / validation beyond op checking
+- [x] Server-side regeneration: `/check` reports bodies and errors per tab, `/export/stl` returns a tab as STL, for scripts and CI
 - [x] Named versions of a document (save / restore on the server)
 - [x] Diffs: compare a saved version with the document now (features added / changed / removed per tab)
 - [ ] Branches and merges over the op log
