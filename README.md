@@ -135,6 +135,43 @@ reported and left alone. Press `?` for the keyboard shortcuts.
 
 Or with Docker: `docker build -t offkilter . && docker run -p 8080:8080 -v offkilter-data:/data offkilter`.
 
+## Driving it from your phone
+
+A model can build and edit documents through `ok-mcp` (see
+`docs/MCP.md`), and Claude Code's Remote Control lets the Claude mobile
+app drive a Claude Code session running on a machine of yours. Put the
+two together and you can ask for a part from the sofa and watch it
+appear in the browser. Nothing is exposed to the internet: the phone
+reaches the session through Anthropic's relay, and the model reaches the
+document server on localhost.
+
+On a machine that stays on (the repository checked out, `tmux` and
+Claude Code installed, signed in with a claude.ai account):
+
+```sh
+cargo build --release -p ok-server -p ok-mcp
+cd apps/web && npm install && npm run build && cd ../..
+tmux new -d -s offkilter './target/release/ok-server --static apps/web/dist --data ./data --port 8080'
+tmux new -d -s claude 'claude remote-control'
+```
+
+The repository's `.mcp.json` registers `ok-mcp` for any Claude Code
+session started in it, pointed at the server on port 8080 (set
+`OFFKILTER_URL` to point it elsewhere). Claude Code asks once whether to
+trust the project's MCP servers; say yes. Then open the session from the
+Claude app and ask for something: the model reads the op reference,
+applies ops through the server, and can hand back a `screenshot` so you
+see the result in the chat. To watch live instead, open the document's
+URL in the phone's browser over your LAN or a tailnet (`tailscale serve
+8080` gives it an HTTPS name; add `--secure-cookies` to the server then).
+
+If the server has accounts, add `"--login", "NAME:PASSWORD"` to the args
+in `.mcp.json` (or register it with `claude mcp add` instead) so the
+model edits as you; documents created signed out are open to everyone
+on the server. The session goes offline seconds after the process ends,
+which is what the `tmux` sessions are for; `claude remote-control
+--continue` picks a stopped one back up.
+
 ## Using the kernel from Rust
 
 ```rust
