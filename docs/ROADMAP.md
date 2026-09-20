@@ -89,6 +89,8 @@ top are concrete and self-contained; items lower down are directions.
 - [ ] Import: STEP via a B-rep reader
 - [x] Documents list with previews, a name filter and sort order
 - [x] Language-model access: `ok-mcp` (MCP over stdio) with apply / report / export tools against a running server or a local file; `POST /api/docs/:id/ops` and `GET /api/docs/:id/report` for scripts
+- [ ] Screenshot tool for models: a PNG of a tab from a chosen view (standard or isometric, optional section) returned by `ok-mcp` and `GET /api/docs/:id/screenshot`, rendered headlessly on the server (a software rasteriser over the tessellation) so a model can check what it built without a browser; the client's viewport snapshot could feed the same endpoint when a person has the document open
+- [ ] Incremental boolean assembly: reuse the faces a boolean does not touch instead of re-welding the whole result, so hole-heavy parts regenerate in tens of milliseconds
 
 ## Platform
 
