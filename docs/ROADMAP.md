@@ -78,6 +78,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Detail views on drawings: the selected face's neighbourhood enlarged 2:1 from the view that faces it, with a lettered marker circle
 - [x] Dimensions placed by the user on drawings (two corners of a view in the sheet preview; aligned, on the side away from the view); they are document state
 - [x] Diameter callouts for holes and bosses seen end-on in the standard views, counted when several share a size
+- [x] Parts list and item balloons on assembly sheets (and multi-body part studios)
 - [x] STEP export (AP214): each body a manifold B-rep of planar faces with line edges, named; curved surfaces go out as their facets
 - [ ] STEP with exact cylindrical and other analytic faces, once the kernel has them
 - [x] Import: STL (binary or ASCII) and OBJ meshes as bodies; coplanar triangles merge into faces

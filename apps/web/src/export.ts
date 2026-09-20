@@ -230,9 +230,30 @@ export type SectionTrace = { on: string; horizontal: boolean; at: number; label:
 export type DetailMarker = { on: string; centre: Vec2; radius: number; label: string; scale: number };
 /** A diameter callout: a circle seen end-on in the view (a hole or boss), how many alike there are, and the text. */
 export type Callout = { centre: Vec2; radius: number; count: number; hole: boolean; /** Leader direction in degrees from the +x axis; concentric callouts fan out. */ angle: number };
-export type DrawingView = { name: string; lines: ViewLines; /** Closed outlines of cut faces (section views), hatched on the sheet. */ cut?: Vec2[][]; trace?: SectionTrace; /** For a detail view: where it was taken from. */ detail?: DetailMarker; /** Diameter callouts of cylinders seen end-on. */ callouts?: Callout[] };
+export type DrawingView = { name: string; lines: ViewLines; /** Closed outlines of cut faces (section views), hatched on the sheet. */ cut?: Vec2[][]; trace?: SectionTrace; /** For a detail view: where it was taken from. */ detail?: DetailMarker; /** Diameter callouts of cylinders seen end-on. */ callouts?: Callout[]; /** Item balloons of the parts list. */ balloons?: Balloon[] };
 
-/** Text of a callout: "Ø12", or "4× Ø6" for repeated sizes. */
+/** A row of the parts list on a sheet. */
+export type PartsRow = { item: number; name: string; qty: number; material: string; /** Index into the summary's bodies of the item's first body, for its balloon. */ body?: number };
+/** A balloon: the item number of a part, anchored at a point of the view (view coordinates). */
+export type Balloon = { item: number; at: Vec2 };
+
+const TABLE_COLS: { title: string; w: number }[] = [{ title: "ITEM", w: 12 }, { title: "PART", w: 60 }, { title: "QTY", w: 12 }, { title: "MATERIAL", w: 36 }];
+const TABLE_ROW = 6;
+const BALLOON_R = 3.5;
+
+/** Balloon geometry in layout coordinates: circle centre outside the view along the ray from its middle through the anchor. */
+function balloonGeometry(b: Balloon, p: { dx: number; dy: number; b: Bounds }, scale: number): { anchor: Vec2; centre: Vec2; r: number } {
+  const anchor = { x: b.at.x + p.dx, y: b.at.y + p.dy };
+  const c = { x: (p.b.minx + p.b.maxx) / 2 + p.dx, y: (p.b.miny + p.dy + p.b.maxy + p.dy) / 2 };
+  let dx = anchor.x - c.x, dy = anchor.y - c.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 1e-9) { dx = Math.SQRT1_2; dy = Math.SQRT1_2; } else { dx /= len; dy /= len; }
+  const hw = (p.b.maxx - p.b.minx) / 2, hh = (p.b.maxy - p.b.miny) / 2;
+  const reach = Math.min(Math.abs(dx) > 1e-9 ? hw / Math.abs(dx) : Infinity, Math.abs(dy) > 1e-9 ? hh / Math.abs(dy) : Infinity);
+  const r = BALLOON_R / scale;
+  const d = Math.max(reach, len) + 8 / scale + r;
+  return { anchor, centre: { x: c.x + dx * d, y: c.y + dy * d }, r };
+}
 export function calloutText(c: Callout): string {
   const d = dimText(2 * c.radius);
   return c.count > 1 ? `${c.count}× Ø${d}` : `Ø${d}`;
@@ -515,28 +536,32 @@ export type SheetSize = keyof typeof SHEETS;
 /** Where the views land on a sheet: sheet = (ox + x * scale, oy - y * scale) for layout coordinates. */
 export type DrawingFrame = { scale: number; ox: number; oy: number; views: { name: string; dx: number; dy: number }[] };
 
-function sheetFrame(views: DrawingView[], size: SheetSize, user: UserDimension[]) {
+function sheetFrame(views: DrawingView[], size: SheetSize, user: UserDimension[], parts: PartsRow[] = []) {
   const sheet = { ...SHEETS[size], margin: 10, block: 24 };
   const { placed, dims, min, max } = layout(views, 15, user);
   const availW = sheet.w - 2 * sheet.margin;
-  const availH = sheet.h - 2 * sheet.margin - sheet.block;
+  // The parts list sits above the title block at the right; views fit above it.
+  const tableH = parts.length > 0 ? (parts.length + 1) * TABLE_ROW : 0;
+  const availH = sheet.h - 2 * sheet.margin - sheet.block - tableH;
   const extentW = Math.max(max.x - min.x, 1e-9), extentH = Math.max(max.y - min.y, 1e-9);
   const fit = Math.min(availW / extentW, availH / extentH);
   const scale = STANDARD_SCALES.find((s) => s <= fit) ?? STANDARD_SCALES[STANDARD_SCALES.length - 1]!;
   // Centre the drawing in the free area; SVG y points down.
   const ox = sheet.margin + (availW - extentW * scale) / 2 - min.x * scale;
   const oy = sheet.margin + (availH - extentH * scale) / 2 + max.y * scale;
-  return { sheet, placed, dims, scale, ox, oy };
+  const tableW = TABLE_COLS.reduce((a, c) => a + c.w, 0);
+  const table = parts.length > 0 ? { x: sheet.w - sheet.margin - tableW, y: sheet.h - sheet.margin - sheet.block - tableH, w: tableW, h: tableH } : null;
+  return { sheet, placed, dims, scale, ox, oy, table };
 }
 
 /** The sheet placement `toDrawingSvg` uses, for mapping sheet points back to views. */
-export function drawingFrame(views: DrawingView[], size: SheetSize = "A4", user: UserDimension[] = []): DrawingFrame {
-  const f = sheetFrame(views, size, user);
+export function drawingFrame(views: DrawingView[], size: SheetSize = "A4", user: UserDimension[] = [], parts: PartsRow[] = []): DrawingFrame {
+  const f = sheetFrame(views, size, user, parts);
   return { scale: f.scale, ox: f.ox, oy: f.oy, views: f.placed.map((p) => ({ name: p.name, dx: p.dx, dy: p.dy })) };
 }
 
-export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSize = "A4", user: UserDimension[] = []): string {
-  const { sheet, placed, dims, scale, ox, oy } = sheetFrame(views, size, user);
+export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSize = "A4", user: UserDimension[] = [], parts: PartsRow[] = []): string {
+  const { sheet, placed, dims, scale, ox, oy, table } = sheetFrame(views, size, user, parts);
   const X = (x: number) => (ox + x * scale).toFixed(3);
   const Y = (y: number) => (oy - y * scale).toFixed(3);
   const out: string[] = [];
@@ -610,6 +635,41 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
       out.push(`</g>`);
     }
   }
+  // Balloons: item numbers of the parts list, pointing at each part.
+  for (const p of placed) {
+    for (const b of p.balloons ?? []) {
+      const g = balloonGeometry(b, p, scale);
+      const ux = g.anchor.x - g.centre.x, uy = g.anchor.y - g.centre.y, len = Math.hypot(ux, uy) || 1;
+      const rim = { x: g.centre.x + (ux / len) * g.r, y: g.centre.y + (uy / len) * g.r };
+      out.push(`<g class="balloon">`);
+      out.push(`<line x1="${X(rim.x)}" y1="${Y(rim.y)}" x2="${X(g.anchor.x)}" y2="${Y(g.anchor.y)}" stroke="black" stroke-width="0.18"/>`);
+      out.push(`<circle cx="${X(g.anchor.x)}" cy="${Y(g.anchor.y)}" r="0.6" fill="black"/>`);
+      out.push(`<circle cx="${X(g.centre.x)}" cy="${Y(g.centre.y)}" r="${BALLOON_R}" fill="white" stroke="black" stroke-width="0.35"/>`);
+      out.push(`<text x="${X(g.centre.x)}" y="${Y(g.centre.y)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="black" text-anchor="middle" dominant-baseline="middle">${b.item}</text>`);
+      out.push(`</g>`);
+    }
+  }
+  // Parts list above the title block: header row on top, items below it.
+  if (table) {
+    out.push(`<g class="parts-table">`);
+    out.push(`<rect x="${table.x}" y="${table.y}" width="${table.w}" height="${table.h}" fill="white" stroke="black" stroke-width="0.5"/>`);
+    let cx = table.x;
+    for (const col of TABLE_COLS.slice(0, -1)) {
+      cx += col.w;
+      out.push(`<line x1="${cx}" y1="${table.y}" x2="${cx}" y2="${table.y + table.h}" stroke="black" stroke-width="0.25"/>`);
+    }
+    const rows: string[][] = [TABLE_COLS.map((c) => c.title), ...parts.map((r) => [String(r.item), r.name, String(r.qty), r.material])];
+    rows.forEach((cells, ri) => {
+      const y = table.y + ri * TABLE_ROW;
+      if (ri > 0) out.push(`<line x1="${table.x}" y1="${y}" x2="${table.x + table.w}" y2="${y}" stroke="black" stroke-width="0.25"/>`);
+      let x = table.x;
+      cells.forEach((text, ci) => {
+        out.push(`<text x="${x + 2}" y="${y + TABLE_ROW / 2}" font-family="Helvetica, Arial, sans-serif" font-size="3" fill="black" dominant-baseline="middle"${ri === 0 ? ' font-weight="bold"' : ""}>${escapeXml(text)}</text>`);
+        x += TABLE_COLS[ci]!.w;
+      });
+    });
+    out.push(`</g>`);
+  }
   // Title block along the bottom edge.
   const by = sheet.h - sheet.margin - sheet.block;
   out.push(`<rect x="${sheet.margin}" y="${by}" width="${sheet.w - 2 * sheet.margin}" height="${sheet.block}" fill="none" stroke="black" stroke-width="0.5"/>`);
@@ -624,9 +684,37 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
 }
 
 /** The same layout as a DXF at 1:1 in millimetres, hidden lines on their own layer. */
-export function toDrawingDxf(views: DrawingView[], user: UserDimension[] = []): string {
-  const { placed, dims } = layout(views, 15, user);
-  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"], ["SECTION", 1, "CONTINUOUS"], ["DETAIL", 5, "CONTINUOUS"]]);
+export function toDrawingDxf(views: DrawingView[], user: UserDimension[] = [], parts: PartsRow[] = []): string {
+  const { placed, dims, min, max } = layout(views, 15, user);
+  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"], ["SECTION", 1, "CONTINUOUS"], ["DETAIL", 5, "CONTINUOUS"], ["BALLOONS", 6, "CONTINUOUS"], ["TABLE", 7, "CONTINUOUS"]]);
+  for (const p of placed) {
+    for (const b of p.balloons ?? []) {
+      const g = balloonGeometry(b, p, 1);
+      lines.push("0", "LINE", "8", "BALLOONS", "10", fmt(g.centre.x), "20", fmt(g.centre.y), "30", "0", "11", fmt(g.anchor.x), "21", fmt(g.anchor.y), "31", "0");
+      lines.push("0", "CIRCLE", "8", "BALLOONS", "10", fmt(g.centre.x), "20", fmt(g.centre.y), "30", "0", "40", fmt(g.r));
+      lines.push("0", "TEXT", "8", "BALLOONS", "10", fmt(g.centre.x), "20", fmt(g.centre.y), "30", "0", "40", "3.5", "72", "1", "73", "2", "11", fmt(g.centre.x), "21", fmt(g.centre.y), "31", "0", "1", String(b.item));
+    }
+  }
+  if (parts.length > 0) {
+    // The parts list below the views at 1:1, header on top.
+    const w = TABLE_COLS.reduce((a, c) => a + c.w, 0);
+    const x0 = max.x - w, top = min.y - 15;
+    const rows: string[][] = [TABLE_COLS.map((c) => c.title), ...parts.map((r) => [String(r.item), r.name, String(r.qty), r.material])];
+    const h = rows.length * TABLE_ROW;
+    const rect: [Vec2, Vec2][] = [[{ x: x0, y: top }, { x: x0 + w, y: top }], [{ x: x0 + w, y: top }, { x: x0 + w, y: top - h }], [{ x: x0 + w, y: top - h }, { x: x0, y: top - h }], [{ x: x0, y: top - h }, { x: x0, y: top }]];
+    let cx = x0;
+    for (const col of TABLE_COLS.slice(0, -1)) { cx += col.w; rect.push([{ x: cx, y: top }, { x: cx, y: top - h }]); }
+    rows.forEach((cells, ri) => {
+      const y = top - ri * TABLE_ROW;
+      if (ri > 0) rect.push([{ x: x0, y }, { x: x0 + w, y }]);
+      let x = x0;
+      cells.forEach((text, ci) => {
+        lines.push("0", "TEXT", "8", "TABLE", "10", fmt(x + 2), "20", fmt(y - TABLE_ROW / 2 - 1), "30", "0", "40", "3", "1", text);
+        x += TABLE_COLS[ci]!.w;
+      });
+    });
+    for (const [a, b] of rect) lines.push("0", "LINE", "8", "TABLE", "10", fmt(a.x), "20", fmt(a.y), "30", "0", "11", fmt(b.x), "21", fmt(b.y), "31", "0");
+  }
   for (const t of traces(placed)) {
     lines.push("0", "LINE", "8", "SECTION", "10", fmt(t.a.x), "20", fmt(t.a.y), "30", "0", "11", fmt(t.b.x), "21", fmt(t.b.y), "31", "0");
     for (const e of [t.a, t.b]) lines.push("0", "TEXT", "8", "SECTION", "10", fmt(e.x + t.labelOffset.x), "20", fmt(e.y + t.labelOffset.y), "30", "0", "40", "3.5", "72", "1", "11", fmt(e.x + t.labelOffset.x), "21", fmt(e.y + t.labelOffset.y), "31", "0", "1", t.label);

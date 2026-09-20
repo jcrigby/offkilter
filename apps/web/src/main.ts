@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import { detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Callout, type DrawingFrame, type DrawingView, type SheetSize, type UserDimension } from "./export";
+import { detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
 import { parseObj, parseStl } from "./stl";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
@@ -986,11 +986,12 @@ class App implements SketchHost {
   drawingViews(): DrawingView[] {
     const z = { x: 0, y: 0, z: 1 };
     const standard = (name: string, dir: Vec3, up: Vec3): DrawingView => ({ name, lines: this.kernel.drawingView(dir, up), callouts: this.drawingCallouts(dir, up) });
+    const isoDir = { x: -0.6, y: 0.7, z: -0.5 };
     const views: DrawingView[] = [
       standard("front", { x: 0, y: 1, z: 0 }, z),
       standard("top", { x: 0, y: 0, z: -1 }, { x: 0, y: 1, z: 0 }),
       standard("right", { x: -1, y: 0, z: 0 }, z),
-      { name: "iso", lines: this.kernel.drawingView({ x: -0.6, y: 0.7, z: -0.5 }, z) },
+      { name: "iso", lines: this.kernel.drawingView(isoDir, z), balloons: this.drawingBalloons(isoDir, z) },
     ];
     const section = this.drawingSectionView();
     if (section) views.push(section);
@@ -1000,15 +1001,64 @@ class App implements SketchHost {
   }
 
   /**
+   * The parts list of the sheet: one row per distinct part of an assembly
+   * (instances of the same studio body are one item, counted), or per body
+   * of a part studio with more than one. A single body has no list.
+   */
+  drawingParts(): PartsRow[] {
+    const rows: PartsRow[] = [];
+    if (this.summary.kind === "assembly") {
+      const seen = new Map<string, PartsRow>();
+      for (const inst of this.summary.instances) {
+        const index = inst.body_indices[0] ?? -1;
+        const body = this.summary.bodies[index];
+        if (!body) continue;
+        const key = `${inst.studio}:${inst.body}`;
+        const row = seen.get(key);
+        if (row) row.qty += 1;
+        else {
+          // Placed bodies are named "Part <n>" after their instance; the list names the part.
+          const r = { item: rows.length + 1, name: body.name.replace(/\s*<\d+>$/, ""), qty: 1, material: body.material?.name ?? "", body: index };
+          seen.set(key, r);
+          rows.push(r);
+        }
+      }
+    } else if (this.summary.bodies.length > 1) {
+      this.summary.bodies.forEach((b, i) => rows.push({ item: i + 1, name: b.name, qty: 1, material: b.material?.name ?? "", body: i }));
+    }
+    return rows;
+  }
+
+  /** Balloons for a view: each parts-list item anchored at the centroid of its first body, projected into the view. */
+  drawingBalloons(dir: Vec3, up: Vec3): Balloon[] {
+    const { u, v } = this.viewFrame(dir, up);
+    const dot = (a: Vec3, b: Vec3) => a.x * b.x + a.y * b.y + a.z * b.z;
+    const out: Balloon[] = [];
+    for (const row of this.drawingParts()) {
+      const c = row.body !== undefined ? this.summary.bodies[row.body]?.centroid : null;
+      if (c) out.push({ item: row.item, at: { x: dot(c, u), y: dot(c, v) } });
+    }
+    return out;
+  }
+
+  /** The screen basis of a view as the kernel projects it: u = dir × up, v = u × dir, with dir normalised. */
+  viewFrame(dir: Vec3, up: Vec3): { u: Vec3; v: Vec3 } {
+    const cross = (a: Vec3, b: Vec3): Vec3 => ({ x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x });
+    const norm = (a: Vec3): Vec3 => { const l = Math.hypot(a.x, a.y, a.z) || 1; return { x: a.x / l, y: a.y / l, z: a.z / l }; };
+    const d = norm(dir);
+    const u = norm(cross(d, up));
+    return { u, v: cross(u, d) };
+  }
+
+  /**
    * Diameter callouts for a view: every cylinder of the tab's bodies whose
    * axis runs along the view direction is seen end-on as a circle. Alike
    * sizes are counted on one callout ("4× Ø6"); concentric circles (a
    * counterbore) each get their own.
    */
   drawingCallouts(dir: Vec3, up: Vec3): Callout[] {
-    const cross = (a: Vec3, b: Vec3): Vec3 => ({ x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x });
     const dot = (a: Vec3, b: Vec3) => a.x * b.x + a.y * b.y + a.z * b.z;
-    const u = cross(dir, up), v = cross(u, dir);
+    const { u, v } = this.viewFrame(dir, up);
     const circles: { centre: Vec2; radius: number; hole: boolean }[] = [];
     for (const body of this.summary.bodies) {
       for (const c of body.cylinders ?? []) {
@@ -1103,8 +1153,8 @@ class App implements SketchHost {
     return { name: "section", lines, cut: lines.cut, trace: { ...trace, label: "A", towards: sign } };
   }
 
-  /** Which views the drawing sheet shows (all by default) and its sheet size. */
-  drawingOptions: { views: Set<string>; sheet: SheetSize } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4" };
+  /** Which views the drawing sheet shows (all by default), its sheet size, and whether the parts list and balloons are drawn. */
+  drawingOptions: { views: Set<string>; sheet: SheetSize; parts: boolean } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4", parts: true };
 
   /** The dimensions placed on this tab's drawing; they live in the document. */
   drawingDimensions(): UserDimension[] {
@@ -1113,7 +1163,7 @@ class App implements SketchHost {
 
   /** Where the chosen views sit on the sheet, for picking points in the preview. */
   drawingFrame(): DrawingFrame {
-    return drawingFrame(this.chosenDrawingViews(), this.drawingOptions.sheet, this.drawingDimensions());
+    return drawingFrame(this.chosenDrawingViews(), this.drawingOptions.sheet, this.drawingDimensions(), this.chosenDrawingParts());
   }
 
   /**
@@ -1136,17 +1186,24 @@ class App implements SketchHost {
 
   /** The chosen drawing views only. */
   chosenDrawingViews(): DrawingView[] {
-    return this.drawingViews().filter((v) => this.drawingOptions.views.has(v.name));
+    return this.drawingViews()
+      .filter((v) => this.drawingOptions.views.has(v.name))
+      .map((v) => (this.drawingOptions.parts ? v : { ...v, balloons: [] }));
+  }
+
+  /** The parts list for the sheet, or none when it is switched off. */
+  chosenDrawingParts(): PartsRow[] {
+    return this.drawingOptions.parts ? this.drawingParts() : [];
   }
 
   /** A drawing sheet of the current bodies as SVG. */
   toDrawingSvg(): string {
-    return toDrawingSvg(this.chosenDrawingViews(), this.summary.name, this.drawingOptions.sheet, this.drawingDimensions());
+    return toDrawingSvg(this.chosenDrawingViews(), this.summary.name, this.drawingOptions.sheet, this.drawingDimensions(), this.chosenDrawingParts());
   }
 
   /** The drawing views as DXF lines at 1:1. */
   toDrawingDxf(): string {
-    return toDrawingDxf(this.chosenDrawingViews(), this.drawingDimensions());
+    return toDrawingDxf(this.chosenDrawingViews(), this.drawingDimensions(), this.chosenDrawingParts());
   }
 
   /** A bill of materials of the current tab as CSV. */
@@ -3053,7 +3110,7 @@ async function main(): Promise<void> {
   const renderDrawingPreview = () => {
     const views = ["front", "top", "right", "iso", "section", "detail"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
     ($("#dv-detail-note") as HTMLElement).hidden = !!app.selectedFace;
-    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize };
+    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked };
     $("#drawing-preview").innerHTML = app.toDrawingSvg();
     ($("#dv-clear-dims") as HTMLButtonElement).disabled = app.drawingDimensions().length === 0;
   };
@@ -3123,6 +3180,7 @@ async function main(): Promise<void> {
   };
   for (const n of ["front", "top", "right", "iso", "section", "detail"]) ($(`#dv-${n}`) as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-sheet") as HTMLSelectElement).onchange = renderDrawingPreview;
+  ($("#dv-parts") as HTMLInputElement).onchange = renderDrawingPreview;
   $("#drawing-svg").onclick = () => app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
   $("#drawing-dxf").onclick = () => app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
   $("#drawing-close").onclick = () => {

@@ -422,7 +422,11 @@ DXF draw beside the automatic overall dimensions. The body summary also
 lists each body's cylindrical surfaces (axis, radius, extent, hole or
 boss); a standard view whose direction runs along such an axis sees it
 end-on and gets a diameter callout with a leader ("Ø12", or "4× Ø6" when
-several of one size are visible). Placed dimensions are
+several of one size are visible). An assembly sheet (or a part studio
+with several bodies) carries a parts list above the title block, one
+item per distinct part with its quantity and material, and item
+balloons on the isometric view anchored at each part's centroid; the
+views fit in the room above the list. Placed dimensions are
 document state: each `Tab` carries its `drawing` list, replaced through
 `DocOp::SetDrawingDimensions` (one undo step, relayed to collaborators
 like any edit) and reported per tab in the summary. The Export

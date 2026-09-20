@@ -1066,6 +1066,15 @@ test("assembly explode slider and dragging a free instance", async ({ page }) =>
     app.applyDoc({ type: "assembly", tab: app.tab, op: { type: "set_instance", id: b, placement: { position: { x: 30, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 } } } });
   });
   await page.waitForTimeout(200);
+  // The assembly's drawing sheet lists its parts (one item, quantity 2) with a balloon on the iso view.
+  const sheet: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingSvg());
+  expect(sheet).toContain('class="parts-table"');
+  expect(sheet).toContain(">Part 1<");
+  expect(sheet).toMatch(/>2<\/text>/);
+  expect((sheet.match(/class="balloon"/g) ?? []).length).toBe(1);
+  const sheetDxf: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingDxf());
+  expect(sheetDxf).toContain("\r\nBALLOONS\r\n");
+  expect(sheetDxf).toContain("\r\nTABLE\r\n");
   // Explode: bodies slide apart in the viewer only; the document is unchanged.
   await page.locator("#explode").fill("100");
   await page.locator("#explode").dispatchEvent("input");
