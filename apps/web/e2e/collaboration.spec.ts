@@ -109,6 +109,17 @@ test("two clients edit one document live", async ({ browser }) => {
   expect(await featureNames(a)).toContain("#ub");
   await a.click("#btn-docs");
   await expect(a.locator("#docs-list")).toContainText("branch of");
+  // The filter narrows the list by name; clearing it brings everything back.
+  const shown = await a.locator("#docs-list li .dname").count();
+  expect(shown).toBeGreaterThanOrEqual(2);
+  await a.fill("#docs-filter", "width"); // the branch was named through the prompt, which the test answers "width"
+  await expect(a.locator("#docs-list li .dname")).toHaveCount(1);
+  await a.fill("#docs-filter", "nothing-like-this");
+  await expect(a.locator("#docs-list")).toContainText("No document names contain");
+  await a.fill("#docs-filter", "");
+  await expect(a.locator("#docs-list li .dname")).toHaveCount(shown);
+  await a.selectOption("#docs-sort", "name");
+  await expect(a.locator("#docs-list li .dname")).toHaveCount(shown);
   await a.click("#docs-close");
   // Work on the branch, then merge it into the origin: the origin (still
   // open in B) gains the branch's feature live and keeps its own.

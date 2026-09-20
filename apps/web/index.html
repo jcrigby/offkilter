@@ -127,6 +127,10 @@
     <dialog id="docs-dialog">
       <h3>Documents</h3>
       <p class="note" id="docs-note"></p>
+      <div class="row">
+        <input id="docs-filter" type="search" placeholder="Filter by name…" />
+        <label>Sort <select id="docs-sort"><option value="updated">last edited</option><option value="name">name</option><option value="created">created</option></select></label>
+      </div>
       <ul id="docs-list" class="docs-list"></ul>
       <div class="row">
         <button id="docs-create" class="primary">New document</button>

@@ -2879,6 +2879,17 @@ async function main(): Promise<void> {
       note.textContent = `Could not list documents: ${(e as Error).message}`;
       return;
     }
+    // The filter box narrows by name; the sort order is the user's choice.
+    const filter = ($("#docs-filter") as HTMLInputElement).value.trim().toLowerCase();
+    const sort = ($("#docs-sort") as HTMLSelectElement).value;
+    const total = docs.length;
+    if (filter) docs = docs.filter((d) => d.name.toLowerCase().includes(filter) || (d.parent?.doc_name ?? "").toLowerCase().includes(filter));
+    docs.sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "created" ? b.created - a.created : b.updated - a.updated));
+    if (filter && docs.length === 0 && total > 0) {
+      const li = document.createElement("li");
+      li.textContent = `No document names contain "${filter}".`;
+      list.appendChild(li);
+    }
     let myTeams: Team[] = [];
     if (user) {
       try {
@@ -3276,6 +3287,8 @@ async function main(): Promise<void> {
       // A missing preview is not worth a message.
     }
   };
+  ($("#docs-filter") as HTMLInputElement).oninput = () => void renderDocs();
+  ($("#docs-sort") as HTMLSelectElement).onchange = () => void renderDocs();
   $("#btn-docs").onclick = async () => {
     await updateThumbnail();
     await renderDocs();
