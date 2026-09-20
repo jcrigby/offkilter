@@ -663,6 +663,27 @@ export class Viewer {
   }
 
   /** Frames the camera on everything currently shown. */
+  /** World bounds and centroid of one face's triangles, for detail views. */
+  faceBounds(body: number, face: number): { min: Vec3; max: Vec3; centre: Vec3 } | null {
+    const data = this.meshData[body];
+    if (!data) return null;
+    let min = { x: Infinity, y: Infinity, z: Infinity }, max = { x: -Infinity, y: -Infinity, z: -Infinity };
+    let sum = { x: 0, y: 0, z: 0 }, count = 0;
+    for (let t = 0; t < data.faceIds.length; t++) {
+      if (data.faceIds[t] !== face) continue;
+      for (let k = 0; k < 3; k++) {
+        const vi = data.indices[3 * t + k]!;
+        const p = { x: data.positions[3 * vi]!, y: data.positions[3 * vi + 1]!, z: data.positions[3 * vi + 2]! };
+        min = { x: Math.min(min.x, p.x), y: Math.min(min.y, p.y), z: Math.min(min.z, p.z) };
+        max = { x: Math.max(max.x, p.x), y: Math.max(max.y, p.y), z: Math.max(max.z, p.z) };
+        sum = { x: sum.x + p.x, y: sum.y + p.y, z: sum.z + p.z };
+        count++;
+      }
+    }
+    if (count === 0) return null;
+    return { min, max, centre: { x: sum.x / count, y: sum.y / count, z: sum.z / count } };
+  }
+
   /** The current view as a PNG (rendered fresh, so the buffer is not stale). */
   snapshot(): Promise<Blob> {
     this.renderer.render(this.scene, this.camera);

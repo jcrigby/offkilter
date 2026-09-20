@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import { to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingView, type SheetSize } from "./export";
+import { detailView, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingView, type SheetSize } from "./export";
 import { parseObj, parseStl } from "./stl";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
@@ -988,7 +988,45 @@ class App implements SketchHost {
     ];
     const section = this.drawingSectionView();
     if (section) views.push(section);
+    const detail = this.drawingDetailView(views);
+    if (detail) views.push(detail);
     return views;
+  }
+
+  /**
+   * DETAIL B: the neighbourhood of the selected face, enlarged 2:1, taken
+   * from whichever standard view faces it best. Nothing without a selected face.
+   */
+  drawingDetailView(views: DrawingView[]): DrawingView | null {
+    if (!this.selectedFace || this.summary.kind === "assembly") return null;
+    const pick = this.findFace(this.selectedFace);
+    if (!pick) return null;
+    const info = this.summary.bodies[pick.body]?.faces[pick.face];
+    const fb = this.viewer.faceBounds(pick.body, pick.face);
+    if (!info || !fb) return null;
+    // View frames as the kernel projects them: u = dir × up, v = u × dir.
+    const frames: Record<string, { dir: Vec3; up: Vec3 }> = { front: { dir: { x: 0, y: 1, z: 0 }, up: { x: 0, y: 0, z: 1 } }, top: { dir: { x: 0, y: 0, z: -1 }, up: { x: 0, y: 1, z: 0 } }, right: { dir: { x: -1, y: 0, z: 0 }, up: { x: 0, y: 0, z: 1 } } };
+    const cross = (a: Vec3, b: Vec3): Vec3 => ({ x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x });
+    const dot = (a: Vec3, b: Vec3) => a.x * b.x + a.y * b.y + a.z * b.z;
+    // The view whose direction opposes the face normal most sees the face head on.
+    let best: { name: string; score: number } | null = null;
+    for (const [name, f] of Object.entries(frames)) {
+      if (!views.some((v) => v.name === name)) continue;
+      const score = -dot(f.dir, info.normal);
+      if (!best || score > best.score) best = { name, score };
+    }
+    if (!best) return null;
+    const source = views.find((v) => v.name === best!.name)!;
+    const f = frames[best.name]!;
+    const u = cross(f.dir, f.up);
+    const v = cross(u, f.dir);
+    const centre = { x: dot(fb.centre, u), y: dot(fb.centre, v) };
+    const size = Math.hypot(fb.max.x - fb.min.x, fb.max.y - fb.min.y, fb.max.z - fb.min.z);
+    // A detail of a face that spans the whole view is no detail: cap the circle at a third of the view.
+    let ext = 0;
+    for (const [a, b] of [...source.lines.visible, ...source.lines.hidden]) ext = Math.max(ext, Math.abs(a.x - centre.x), Math.abs(a.y - centre.y), Math.abs(b.x - centre.x), Math.abs(b.y - centre.y));
+    const radius = Math.min(Math.max(size * 0.6, 2), Math.max(ext * 0.35, 2));
+    return detailView(source, centre, radius, 2, "B");
   }
 
   /**
@@ -1018,7 +1056,7 @@ class App implements SketchHost {
   }
 
   /** Which views the drawing sheet shows (all by default) and its sheet size. */
-  drawingOptions: { views: Set<string>; sheet: SheetSize } = { views: new Set(["front", "top", "right", "iso", "section"]), sheet: "A4" };
+  drawingOptions: { views: Set<string>; sheet: SheetSize } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4" };
 
   /** The chosen drawing views only. */
   chosenDrawingViews(): DrawingView[] {
@@ -2883,7 +2921,8 @@ async function main(): Promise<void> {
   app.undo(); // no-op that initialises the button states
   const drawingDialog = $("#drawing-dialog") as HTMLDialogElement;
   const renderDrawingPreview = () => {
-    const views = ["front", "top", "right", "iso", "section"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
+    const views = ["front", "top", "right", "iso", "section", "detail"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
+    ($("#dv-detail-note") as HTMLElement).hidden = !!app.selectedFace;
     app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize };
     $("#drawing-preview").innerHTML = app.toDrawingSvg();
   };
@@ -2891,7 +2930,7 @@ async function main(): Promise<void> {
     renderDrawingPreview();
     drawingDialog.showModal();
   };
-  for (const n of ["front", "top", "right", "iso", "section"]) ($(`#dv-${n}`) as HTMLInputElement).onchange = renderDrawingPreview;
+  for (const n of ["front", "top", "right", "iso", "section", "detail"]) ($(`#dv-${n}`) as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-sheet") as HTMLSelectElement).onchange = renderDrawingPreview;
   $("#drawing-svg").onclick = () => app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
   $("#drawing-dxf").onclick = () => app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);

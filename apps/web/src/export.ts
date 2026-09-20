@@ -226,7 +226,39 @@ export function toDxf(sketch: SketchData): string {
 /** A named view with its lines, as the kernel projects it. */
 /** Where a section's cutting plane shows edge-on in another view, as a line across that view at `at` (view millimetres). */
 export type SectionTrace = { on: string; horizontal: boolean; at: number; label: string; /** +1 when the removed side is towards larger coordinates, -1 otherwise. */ towards: number };
-export type DrawingView = { name: string; lines: ViewLines; /** Closed outlines of cut faces (section views), hatched on the sheet. */ cut?: Vec2[][]; trace?: SectionTrace };
+/** A detail view's marker: the circle on the source view it enlarges. */
+export type DetailMarker = { on: string; centre: Vec2; radius: number; label: string; scale: number };
+export type DrawingView = { name: string; lines: ViewLines; /** Closed outlines of cut faces (section views), hatched on the sheet. */ cut?: Vec2[][]; trace?: SectionTrace; /** For a detail view: where it was taken from. */ detail?: DetailMarker };
+
+/** The part of a segment inside a circle, or null when it misses. */
+function clipToCircle(a: Vec2, b: Vec2, c: Vec2, r: number): [Vec2, Vec2] | null {
+  const d = { x: b.x - a.x, y: b.y - a.y };
+  const f = { x: a.x - c.x, y: a.y - c.y };
+  const qa = d.x * d.x + d.y * d.y;
+  if (qa === 0) return null;
+  const qb = 2 * (f.x * d.x + f.y * d.y);
+  const qc = f.x * f.x + f.y * f.y - r * r;
+  const disc = qb * qb - 4 * qa * qc;
+  if (disc < 0) return null;
+  const s = Math.sqrt(disc);
+  const t0 = Math.max(0, (-qb - s) / (2 * qa)), t1 = Math.min(1, (-qb + s) / (2 * qa));
+  if (t1 <= t0) return null;
+  return [{ x: a.x + d.x * t0, y: a.y + d.y * t0 }, { x: a.x + d.x * t1, y: a.y + d.y * t1 }];
+}
+
+/**
+ * A detail view: the lines of `source` inside a circle, enlarged `scale`
+ * times about the circle's centre (so the enlarged view is centred on the
+ * origin), plus the marker to draw on the source.
+ */
+export function detailView(source: DrawingView, centre: Vec2, radius: number, scale: number, label: string): DrawingView {
+  const clip = (segs: [Vec2, Vec2][]) =>
+    segs.flatMap(([a, b]) => {
+      const c = clipToCircle(a, b, centre, radius);
+      return c ? [[{ x: (c[0].x - centre.x) * scale, y: (c[0].y - centre.y) * scale }, { x: (c[1].x - centre.x) * scale, y: (c[1].y - centre.y) * scale }] as [Vec2, Vec2]] : [];
+    });
+  return { name: "detail", lines: { visible: clip(source.lines.visible), hidden: clip(source.lines.hidden) }, detail: { on: source.name, centre, radius, label, scale } };
+}
 
 /**
  * Hatch lines at 45° with the given spacing clipped to the polygons by the
@@ -274,7 +306,11 @@ type Dimension = {
   value: number;
 };
 
-function boundsOf(v: ViewLines): Bounds {
+function boundsOf(v: ViewLines, detail?: DetailMarker): Bounds {
+  if (detail) {
+    const r = detail.radius * detail.scale;
+    return { minx: -r, miny: -r, maxx: r, maxy: r };
+  }
   let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
   for (const [a, b] of [...v.visible, ...v.hidden]) {
     for (const p of [a, b]) {
@@ -317,7 +353,7 @@ function layout(views: DrawingView[], gap = 15): { placed: Placed[]; dims: Dimen
   let cursorX = Math.max(fb.maxx, ...placed.map((p) => p.b.maxx + p.dx)) + gap;
   for (const v of views) {
     if (["front", "top", "right"].includes(v.name)) continue;
-    const vb = boundsOf(v.lines);
+    const vb = boundsOf(v.lines, v.detail);
     const dy = v.name === "iso" && top ? fb.maxy + gap + dimGap - vb.miny : -vb.miny;
     placed.push({ ...v, dx: cursorX - vb.minx, dy, b: vb });
     cursorX += vb.maxx - vb.minx + gap;
@@ -449,6 +485,22 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
       const label = p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION";
       out.push(`<text class="caption" x="${X((p.b.minx + p.b.maxx) / 2 + p.dx)}" y="${Y(p.b.miny + p.dy - 6)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="black" text-anchor="middle">${label}</text>`);
     }
+    if (p.detail) {
+      const r = p.detail.radius * p.detail.scale;
+      out.push(`<circle class="detail-border" cx="${X(p.dx)}" cy="${Y(p.dy)}" r="${(r * scale).toFixed(3)}" fill="none" stroke="black" stroke-width="0.25" stroke-dasharray="4 1.5"/>`);
+      out.push(`<text class="caption" x="${X(p.dx)}" y="${Y(p.dy - r - 6)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="black" text-anchor="middle">DETAIL ${p.detail.label} (${p.detail.scale}:1)</text>`);
+    }
+    out.push(`</g>`);
+  }
+  // Detail markers: a circle on the source view, lettered.
+  for (const p of placed) {
+    const m = p.detail;
+    const on = m && placed.find((q) => q.name === m.on);
+    if (!m || !on) continue;
+    const cx = m.centre.x + on.dx, cy = m.centre.y + on.dy;
+    out.push(`<g class="detail-marker">`);
+    out.push(`<circle cx="${X(cx)}" cy="${Y(cy)}" r="${(m.radius * scale).toFixed(3)}" fill="none" stroke="black" stroke-width="0.35" stroke-dasharray="3 1.5"/>`);
+    out.push(`<text x="${X(cx + m.radius * 0.8)}" y="${Y(cy + m.radius * 0.8 + 2)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="black">${m.label}</text>`);
     out.push(`</g>`);
   }
   // Cutting-plane traces: a chain line across the view the plane cuts edge-on, lettered at both ends.
@@ -484,7 +536,7 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
 /** The same layout as a DXF at 1:1 in millimetres, hidden lines on their own layer. */
 export function toDrawingDxf(views: DrawingView[]): string {
   const { placed, dims } = layout(views);
-  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"], ["SECTION", 1, "CONTINUOUS"]]);
+  const lines = dxfHead([["VISIBLE", 7, "CONTINUOUS"], ["HIDDEN", 8, "DASHED"], ["DIMENSIONS", 3, "CONTINUOUS"], ["SECTION", 1, "CONTINUOUS"], ["DETAIL", 5, "CONTINUOUS"]]);
   for (const t of traces(placed)) {
     lines.push("0", "LINE", "8", "SECTION", "10", fmt(t.a.x), "20", fmt(t.a.y), "30", "0", "11", fmt(t.b.x), "21", fmt(t.b.y), "31", "0");
     for (const e of [t.a, t.b]) lines.push("0", "TEXT", "8", "SECTION", "10", fmt(e.x + t.labelOffset.x), "20", fmt(e.y + t.labelOffset.y), "30", "0", "40", "3.5", "72", "1", "11", fmt(e.x + t.labelOffset.x), "21", fmt(e.y + t.labelOffset.y), "31", "0", "1", t.label);
@@ -510,6 +562,17 @@ export function toDrawingDxf(views: DrawingView[]): string {
     if (p.name === "section") {
       const x = (p.b.minx + p.b.maxx) / 2 + p.dx, y = p.b.miny + p.dy - 6;
       lines.push("0", "TEXT", "8", "SECTION", "10", fmt(x), "20", fmt(y), "30", "0", "40", "3.5", "72", "1", "11", fmt(x), "21", fmt(y), "31", "0", "1", p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION");
+    }
+    if (p.detail) {
+      const r = p.detail.radius * p.detail.scale;
+      lines.push("0", "CIRCLE", "8", "DETAIL", "10", fmt(p.dx), "20", fmt(p.dy), "30", "0", "40", fmt(r));
+      lines.push("0", "TEXT", "8", "DETAIL", "10", fmt(p.dx), "20", fmt(p.dy - r - 6), "30", "0", "40", "3.5", "72", "1", "11", fmt(p.dx), "21", fmt(p.dy - r - 6), "31", "0", "1", `DETAIL ${p.detail.label} (${p.detail.scale}:1)`);
+      const on = placed.find((q) => q.name === p.detail!.on);
+      if (on) {
+        const cx = p.detail.centre.x + on.dx, cy = p.detail.centre.y + on.dy;
+        lines.push("0", "CIRCLE", "8", "DETAIL", "10", fmt(cx), "20", fmt(cy), "30", "0", "40", fmt(p.detail.radius));
+        lines.push("0", "TEXT", "8", "DETAIL", "10", fmt(cx + p.detail.radius * 0.8), "20", fmt(cy + p.detail.radius * 0.8 + 2), "30", "0", "40", "3.5", "1", p.detail.label);
+      }
     }
   }
   lines.push("0", "ENDSEC", "0", "EOF");

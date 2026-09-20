@@ -392,7 +392,10 @@ outlines of the faces lying in the cut plane. The client hatches those at
 "SECTION A-A" and draws the cutting-plane trace, lettered at both ends,
 across the view where the plane shows edge-on. The plane is the
 viewport's section plane when one is shown, else a cut through the middle
-of the model parallel to the front view. The Drawing dialog in the client
+of the model parallel to the front view. A detail view (client side)
+takes the standard view that faces the selected face best, clips its
+lines to a circle around the face and enlarges them 2:1, drawing the
+lettered marker circle on the source view. The Drawing dialog in the client
 renders the same SVG inline as a preview and lets the user pick the views
 and the sheet size (A4, A3, A2, Letter) before downloading; the Export
 menu also writes a bill of materials as CSV (bodies of a part studio, or

@@ -901,6 +901,21 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   expect(svg).toContain('class="hatch"');
   expect(svg).toContain("SECTION A-A");
   expect(svg).toContain('class="trace"');
+  // With a face selected, a DETAIL B view enlarges its neighbourhood 2:1 and marks the source view.
+  const detail = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.selectedFace = app.summary.bodies[0].faces.find((f: any) => f.surface === "plane" && f.normal.z > 0.9).origin;
+    const v = app.drawingViews().find((x: any) => x.name === "detail");
+    const svg: string = app.toDrawingSvg();
+    return { present: !!v, on: v?.detail?.on, scale: v?.detail?.scale, lines: v?.lines.visible.length, hasCaption: svg.includes("DETAIL B (2:1)"), hasMarker: svg.includes('class="detail-marker"') };
+  });
+  expect(detail.present).toBe(true);
+  expect(detail.on).toBe("top");
+  expect(detail.scale).toBe(2);
+  expect(detail.lines).toBeGreaterThan(0);
+  expect(detail.hasCaption).toBe(true);
+  expect(detail.hasMarker).toBe(true);
+  await page.evaluate(() => { (window as any).offkilter.selectedFace = null; });
   // The drawing dialog previews the sheet and its options change what is drawn.
   await page.selectOption("#export", "drawing");
   await expect(page.locator("#drawing-dialog")).toBeVisible();
