@@ -519,6 +519,7 @@ dependencies = [
  "ok-mesh",
  "ok-sketch",
  "serde",
+ "serde_json",
  "thiserror 1.0.69",
 ]
 

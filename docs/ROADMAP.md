@@ -37,6 +37,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
 - [x] Fillets and chamfers on curved edges (a rim is one chain, blended with one mitred sweep)
 - [ ] Proper corner patches where blends meet; variable-dihedral chains
+- [ ] Booleans on bodies whose lumps touch along a face when a tool coincides with that face at the nudge scale (fuzz seeds 59 at 1e-4 and 383 mixed)
 - [x] Shell (uniform wall, chosen faces open; an offset polyhedron subtracted in one boolean; cavities whose offset changes the topology are reported, not guessed)
 - [x] Draft (tilt planar faces about a neutral plane) and Move face (push / pull planar faces): direct edits that re-solve the surrounding corners
 - [x] Mirror and linear / circular patterns of bodies

@@ -558,7 +558,13 @@ Three layers guard the kernel. Unit tests in each crate check numbers
 intersections and check closure and volume bounds: one on an integer grid
 so coplanar and touching cases are common, one in general position with
 rotated tools and tiny nudges (`OK_FUZZ_EPS` picks the nudge sizes, `OK_FUZZ_SEED` replays one seed) so
-nearly coincident geometry is common. `crates/ok-model/tests/parts.rs`
+nearly coincident geometry is common; `OK_FUZZ_DUMP=<dir>` writes the
+operands of a failing step as JSON and the ignored `replay_dumped_case`
+test in `boolean.rs` reruns them). The long general-position run passes at
+every nudge size from 1e-8 to 1e-3 except two known cases (seed 59 at
+1e-4, seed 383 in the mixed run) where a body whose lumps touch along a
+face meets a tool coincident with that face at the nudge scale and the
+union leaves an open sliver edge. `crates/ok-model/tests/parts.rs`
 is a corpus of realistic parts built through ops, each regenerated
 without errors, validated closed and checked against hand-calculated
 volumes. Booleans merge their fragments at the same tolerance the

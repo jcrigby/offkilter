@@ -69,6 +69,7 @@ fn run(seeds: std::ops::RangeInclusive<u64>) {
             match boolean(&body, &tool, op) {
                 Ok(r) => {
                     if let Err(e) = r.validate() {
+                        dump_case(seed, step, &body, &tool);
                         failures.push(format!(
                             "seed {seed} step {step} {name}: invalid result: {e}"
                         ));
@@ -95,6 +96,7 @@ fn run(seeds: std::ops::RangeInclusive<u64>) {
                     }
                 }
                 Err(e) => {
+                    dump_case(seed, step, &body, &tool);
                     failures.push(format!("seed {seed} step {step} {name}: {e}"));
                     break;
                 }
@@ -194,6 +196,23 @@ fn random_general_solid(rng: &mut Rng, id: u32) -> Solid {
     out
 }
 
+/// With `OK_FUZZ_DUMP=<dir>`, writes the operands of a failing step as
+/// JSON (`seed-<n>-step-<k>-body.json` / `-tool.json`) for debugging.
+fn dump_case(seed: u64, step: u32, body: &Solid, tool: &Solid) {
+    let Ok(dir) = std::env::var("OK_FUZZ_DUMP") else {
+        return;
+    };
+    let stem = format!("{dir}/seed-{seed}-step-{step}");
+    let _ = std::fs::write(
+        format!("{stem}-body.json"),
+        serde_json::to_string(body).unwrap(),
+    );
+    let _ = std::fs::write(
+        format!("{stem}-tool.json"),
+        serde_json::to_string(tool).unwrap(),
+    );
+}
+
 fn run_general(seeds: std::ops::RangeInclusive<u64>) {
     let mut failures = Vec::new();
     let mut ops = 0;
@@ -212,6 +231,7 @@ fn run_general(seeds: std::ops::RangeInclusive<u64>) {
             match boolean(&body, &tool, op) {
                 Ok(r) => {
                     if let Err(e) = r.validate() {
+                        dump_case(seed, step, &body, &tool);
                         failures.push(format!(
                             "seed {seed} step {step} {name}: invalid result: {e}"
                         ));
@@ -233,6 +253,7 @@ fn run_general(seeds: std::ops::RangeInclusive<u64>) {
                     body = if r.is_empty() { tool } else { r };
                 }
                 Err(e) => {
+                    dump_case(seed, step, &body, &tool);
                     failures.push(format!("seed {seed} step {step} {name}: {e}"));
                     break;
                 }

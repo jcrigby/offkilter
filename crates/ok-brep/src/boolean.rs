@@ -399,6 +399,63 @@ mod tests {
         extrude(&p, plane, start, end, id).unwrap()
     }
 
+    /// Replays a case the fuzz dumped (`OK_FUZZ_DUMP`):
+    /// `OK_BREP_CASE=<dir>/seed-59-step-3 OK_BREP_OP=union cargo test -p ok-brep --lib replay_dumped_case -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn replay_dumped_case() {
+        let Ok(stem) = std::env::var("OK_BREP_CASE") else {
+            return;
+        };
+        let load = |what: &str| -> Solid {
+            serde_json::from_str(&std::fs::read_to_string(format!("{stem}-{what}.json")).unwrap())
+                .unwrap()
+        };
+        let (a, b) = (load("body"), load("tool"));
+        let op = match std::env::var("OK_BREP_OP").as_deref() {
+            Ok("difference") => BoolOp::Difference,
+            Ok("intersection") => BoolOp::Intersection,
+            _ => BoolOp::Union,
+        };
+        eprintln!("a: {} faces, valid {:?}", a.faces.len(), a.validate());
+        eprintln!("b: {} faces, valid {:?}", b.faces.len(), b.validate());
+        let r = boolean(&a, &b, op).unwrap();
+        eprintln!("result: {} faces, volume {}", r.faces.len(), r.volume());
+        r.validate().unwrap();
+    }
+
+    /// A box whose bottom sits a hair above another box's bottom and whose
+    /// side pokes out of it leaves a sliver strip of the first box's side
+    /// face; every boolean must still close, whatever the gap size.
+    #[test]
+    fn slivers_of_every_size_stay_closed() {
+        let a = rect(&Plane::XY, Vec2::ZERO, Vec2::new(3.0, 3.0), 0.0, 3.0, 1);
+        for gap in [1e-2, 1e-3, 1e-4, 3e-5, 1.5e-5, 1e-5, 5e-6, 1e-6, 1e-7] {
+            let b = rect(
+                &Plane::XY,
+                Vec2::new(2.0, 1.0),
+                Vec2::new(4.0, 2.0),
+                gap,
+                1.0,
+                2,
+            );
+            for (op, expect) in [
+                (BoolOp::Union, 27.0 + (1.0 - gap)),
+                (BoolOp::Difference, 27.0 - (1.0 - gap)),
+                (BoolOp::Intersection, 1.0 - gap),
+            ] {
+                let r = boolean(&a, &b, op).unwrap_or_else(|e| panic!("gap {gap} {op:?}: {e}"));
+                r.validate()
+                    .unwrap_or_else(|e| panic!("gap {gap} {op:?}: {e}"));
+                let v = r.volume();
+                assert!(
+                    (v - expect).abs() < 1e-3,
+                    "gap {gap} {op:?}: volume {v} vs {expect}"
+                );
+            }
+        }
+    }
+
     fn cylinder(plane: &Plane, c: Vec2, r: f64, start: f64, end: f64, id: u32) -> Solid {
         let mut s = Sketch::new();
         s.add_circle(c, r);
