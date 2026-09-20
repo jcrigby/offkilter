@@ -44,7 +44,18 @@ test("sketch mode: draw, infer constraints, extrude", async ({ page }) => {
   const constraints = await page.$$eval("#detail-body .constraint-list .kind", (els) => els.map((e) => (e.childNodes[0]?.textContent ?? "").trim()));
   expect(constraints.filter((c) => c === "coincident").length).toBeGreaterThanOrEqual(5);
   expect(constraints.filter((c) => c === "horizontal").length).toBeGreaterThanOrEqual(3);
+  // While editing, every constraint shows as a glyph in the viewport; clicking one removes it.
+  const glyphs = page.locator("#viewport .label.glyph");
+  expect(await glyphs.count()).toBeGreaterThanOrEqual(constraints.length);
+  await page.keyboard.press("s");
+  const horizontal = page.locator("#viewport .label.glyph", { hasText: /^H$/ }).first();
+  await expect(horizontal).toBeVisible();
+  await horizontal.click();
+  await page.waitForTimeout(200);
+  const after = await page.$$eval("#detail-body .constraint-list .kind", (els) => els.map((e) => (e.childNodes[0]?.textContent ?? "").trim()));
+  expect(after.filter((c) => c === "horizontal").length).toBe(constraints.filter((c) => c === "horizontal").length - 1);
   await page.getByRole("button", { name: "Done" }).click();
+  await expect(page.locator("#viewport .label.glyph")).toHaveCount(0);
   await page.click("#btn-add-extrude");
   await page.waitForTimeout(300);
   expect(await status(page)).toContain("1 body");

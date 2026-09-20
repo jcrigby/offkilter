@@ -4,7 +4,7 @@ import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
-import type { EdgePick, FacePick } from "./viewer";
+import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
 import type { SketchHost, Tool } from "./sketcher";
 import { Sync } from "./sync";
@@ -1407,6 +1407,7 @@ class App implements SketchHost {
   selectionChanged(): void {
     this.viewer.setSketches(this.summary.sketches, this.selected, this.sketcher.selection);
     this.renderDetail();
+    this.updateDimensionLabels();
   }
 
   regenerate(): void {
@@ -1489,7 +1490,66 @@ class App implements SketchHost {
       return a && b ? [a, b] : null;
     };
     const mid = (a: { x: number; y: number }, b: { x: number; y: number }) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-    const labels = [];
+    const labels: Label[] = [];
+    // Where an entity's glyph sits: a point itself, a line's midpoint, a circle's or arc's rim.
+    const entityAnchor = (id: number): { x: number; y: number } | null => {
+      const e = sketch.entities.find((e) => e.id === id);
+      if (!e) return null;
+      if (e.type === "point") return e.pos;
+      if (e.type === "line") {
+        const a = pos(e.start), b = pos(e.end);
+        return a && b ? mid(a, b) : null;
+      }
+      if (e.type === "circle") {
+        const c = pos(e.center);
+        return c ? { x: c.x - e.radius * Math.SQRT1_2, y: c.y + e.radius * Math.SQRT1_2 } : null;
+      }
+      if (e.type === "arc") {
+        const c = pos(e.center), s = pos(e.start), t = pos(e.end);
+        if (!c || !s || !t) return null;
+        const r = Math.hypot(s.x - c.x, s.y - c.y);
+        let a0 = Math.atan2(s.y - c.y, s.x - c.x), a1 = Math.atan2(t.y - c.y, t.x - c.x);
+        if (a1 < a0) a1 += 2 * Math.PI;
+        const am = (a0 + a1) / 2;
+        return { x: c.x + r * Math.cos(am), y: c.y + r * Math.sin(am) };
+      }
+      const pts = e.points.map(pos).filter((p): p is Vec2 => !!p);
+      return pts[Math.floor(pts.length / 2)] ?? null;
+    };
+    // Glyphs for the other constraints, while the sketch is being edited: with
+    // the select tool, click one to remove it (drawing tools click through them).
+    if (this.sketcher.active && this.sketcher.sketchId === f.id) {
+      const clickable = this.sketcher.tool === "select";
+      const glyphs: Record<string, string> = { coincident: "●", fixed: "⚓", horizontal: "H", vertical: "V", equal: "=", parallel: "∥", perpendicular: "⟂", point_on_line: "⊕", point_on_spline: "⊕", point_on_circle: "⊕", midpoint: "⋈", tangent: "⌒", symmetric: "⇔", rotated: "↻" };
+      const stacks = new Map<string, number>();
+      for (const c of sketch.constraints) {
+        if ("value" in c && c.type !== "rotated") continue;
+        const anchors: { x: number; y: number }[] = [];
+        switch (c.type) {
+          case "coincident": { const a = pos(c.a) ?? pos(c.b); if (a) anchors.push(a); break; }
+          case "fixed": { const a = pos(c.point); if (a) anchors.push(a); break; }
+          case "horizontal": case "vertical": { const a = entityAnchor(c.line); if (a) anchors.push(a); break; }
+          case "equal": case "parallel": case "perpendicular": for (const id of [c.a, c.b]) { const a = entityAnchor(id); if (a) anchors.push(a); } break;
+          case "point_on_line": case "point_on_spline": case "point_on_circle": case "midpoint": { const a = pos(c.point); if (a) anchors.push(a); break; }
+          case "tangent": { const a = entityAnchor(c.line); if (a) anchors.push(a); break; }
+          case "symmetric": { const a = entityAnchor(c.line); if (a) anchors.push(a); break; }
+          case "rotated": { const a = pos(c.b); if (a) anchors.push(a); break; }
+          default: break;
+        }
+        for (const anchor of anchors) {
+          const key = `${anchor.x.toFixed(4)},${anchor.y.toFixed(4)}`;
+          const n = stacks.get(key) ?? 0;
+          stacks.set(key, n + 1);
+          labels.push({
+            position: lift(anchor),
+            text: glyphs[c.type] ?? c.type[0]!.toUpperCase(),
+            className: `glyph stack-${Math.min(n, 3)}`,
+            title: clickable ? `${c.type.replace(/_/g, " ")} (click to remove)` : c.type.replace(/_/g, " "),
+            onClick: clickable ? () => this.apply({ type: "sketch", id: f.id, op: { type: "remove_constraint", id: c.id } }) : undefined,
+          });
+        }
+      }
+    }
     for (const c of sketch.constraints) {
       if (!("value" in c)) continue;
       let anchor: { x: number; y: number } | null = null;
