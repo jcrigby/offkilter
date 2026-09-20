@@ -6,9 +6,7 @@
 //! subtracted; concave edges have it added. The arc is tagged as a cylinder
 //! about the edge, so fillets shade smoothly and are one selectable face.
 
-#[cfg(test)]
-use crate::Surface;
-use crate::{boolean, extrude, BoolOp, BrepError, Solid};
+use crate::{boolean, extrude, BoolOp, BrepError, FaceOrigin, Polygon, Solid, Surface};
 use ok_math::{Plane, Vec2, Vec3};
 use ok_sketch::{Loop, Profile, SegmentCurve};
 
@@ -34,6 +32,25 @@ fn cross_section(
     size: f64,
     kind: BlendKind,
     segment_angle: f64,
+) -> Result<Loop, BrepError> {
+    cross_section_with(seg, x, y, size, kind, segment_angle, None)
+}
+
+/// The number of facets a fillet arc between faces `phi` apart gets.
+fn arc_facets(phi: f64, segment_angle: f64) -> usize {
+    (((std::f64::consts::PI - phi) / segment_angle).ceil() as usize).max(2)
+}
+
+/// `cross_section` with the fillet arc cut into `facets` pieces when
+/// given (sections lofted along a chain need one count).
+fn cross_section_with(
+    seg: &EdgeSegment,
+    x: Vec3,
+    y: Vec3,
+    size: f64,
+    kind: BlendKind,
+    segment_angle: f64,
+    facets: Option<usize>,
 ) -> Result<Loop, BrepError> {
     let ib = Vec2::new(seg.inward_b.dot(x), seg.inward_b.dot(y));
     let phi = ib.y.atan2(ib.x).abs(); // angle between the faces' inward directions
@@ -66,7 +83,8 @@ fn cross_section(
             while sweep <= -std::f64::consts::PI {
                 sweep += std::f64::consts::TAU;
             }
-            let n = ((sweep.abs() / segment_angle).ceil() as usize).max(2);
+            let n =
+                facets.unwrap_or_else(|| ((sweep.abs() / segment_angle).ceil() as usize).max(2));
             for i in 0..n {
                 let ang = a0 + sweep * i as f64 / n as f64;
                 points.push(center + Vec2::from_angle(ang) * size);
@@ -286,15 +304,20 @@ pub fn blend_edges(
         let mut prism = if chain.len() == 1 {
             extrude(&profile, &frame, 0.0, first.q.distance(first.p), feature)?
         } else {
-            let mut path: Vec<Vec3> = chain.iter().map(|&i| segments[i].geom.p).collect();
-            if !closed {
-                path.push(segments[*chain.last().unwrap()].geom.q);
-            }
-            if *closed {
-                crate::sweep_closed(&profile, &frame, &path, feature)?
-            } else {
-                crate::sweep(&profile, &frame, &path, feature)?
-            }
+            // Along a chain the dihedral angle can change (the rim of a
+            // cylinder cut obliquely), so the section is rebuilt at every
+            // vertex from the faces there and the sections lofted.
+            let segs: Vec<(&EdgeSegment, (Vec3, Vec3))> = chain
+                .iter()
+                .map(|&i| {
+                    let (fa, fb) = segments[i].faces;
+                    (
+                        &segments[i].geom,
+                        (solid.faces[fa].plane.normal, solid.faces[fb].plane.normal),
+                    )
+                })
+                .collect();
+            chain_cutter(&segs, *closed, size, kind, segment_angle, feature)?
         };
         for f in &mut prism.faces {
             f.origin.local += (k as u32) * 1000;
@@ -315,6 +338,279 @@ pub fn blend_edges(
     Ok(out)
 }
 
+/// The cutter for a chain of edge segments: at every vertex of the chain
+/// the blend's cross-section is built in the plane perpendicular to the
+/// local tangent (the bisector of the two segments there) from the
+/// average normals of each face's facets on both sides, so a rim whose
+/// dihedral angle varies gets a section that fits everywhere; the
+/// sections, all with the same number of points, are joined by quads.
+/// The arc's facets share one ruled surface so the blend shades smoothly.
+fn chain_cutter(
+    segs: &[(&EdgeSegment, (Vec3, Vec3))],
+    closed: bool,
+    size: f64,
+    kind: BlendKind,
+    segment_angle: f64,
+    feature: u32,
+) -> Result<Solid, BrepError> {
+    let m = segs.len();
+    let tangent = |i: usize| (segs[i].0.q - segs[i].0.p).normalized().unwrap();
+    // The vertices: p of every segment, plus the last q of an open chain.
+    let count = if closed { m } else { m + 1 };
+    // Sections need one facet count: the most any vertex would take.
+    let phi_at = |ia: Vec3, ib: Vec3| ib.dot(ia).clamp(-1.0, 1.0).acos();
+    let mut sections: Vec<Vec<Vec3>> = Vec::with_capacity(count);
+    let mut curves: Option<Vec<bool>> = None;
+    // First pass: frames; second: sections with a shared facet count.
+    let mut frames: Vec<(Vec3, Vec3, Vec3, Vec3, f64)> = Vec::with_capacity(count); // (v, t, ia, ib, phi)
+    for k in 0..count {
+        let (before, after) = if closed {
+            (Some((k + m - 1) % m), Some(k))
+        } else {
+            ((k > 0).then(|| k - 1), (k < m).then_some(k))
+        };
+        let mut t = Vec3::ZERO;
+        let (mut na, mut nb) = (Vec3::ZERO, Vec3::ZERO);
+        for i in [before, after].into_iter().flatten() {
+            t += tangent(i);
+            na += segs[i].1 .0;
+            nb += segs[i].1 .1;
+        }
+        let t = t
+            .normalized()
+            .ok_or_else(|| BrepError::Degenerate("blend chain doubles back on itself".into()))?;
+        let na = na
+            .normalized()
+            .unwrap_or(segs[after.or(before).unwrap()].1 .0);
+        let nb = nb
+            .normalized()
+            .unwrap_or(segs[after.or(before).unwrap()].1 .1);
+        let ia = na
+            .cross(t)
+            .normalized()
+            .ok_or_else(|| BrepError::Degenerate("blend face runs along its edge".into()))?;
+        let ib = (-(nb.cross(t)))
+            .normalized()
+            .ok_or_else(|| BrepError::Degenerate("blend face runs along its edge".into()))?;
+        let v = match after {
+            Some(i) => segs[i].0.p,
+            None => segs[before.unwrap()].0.q,
+        };
+        frames.push((v, t, ia, ib, phi_at(ia, ib)));
+    }
+    let facets = frames
+        .iter()
+        .map(|f| arc_facets(f.4, segment_angle))
+        .max()
+        .unwrap_or(2);
+    for &(v, t, ia, ib, _) in &frames {
+        let y = t.cross(ia);
+        let (pts, arc) = chain_section(ia, ib, y, size, kind, facets)?;
+        if let Some(c) = &curves {
+            if c.len() != arc.len() {
+                return Err(BrepError::Degenerate(
+                    "blend sections along the chain differ".into(),
+                ));
+            }
+        } else {
+            curves = Some(arc);
+        }
+        sections.push(pts.iter().map(|p| v + ia * p.x + y * p.y).collect());
+    }
+    let curves = curves.unwrap();
+    let n = curves.len();
+    let mut polys: Vec<Polygon> = Vec::new();
+    let mut surfaces: Vec<Surface> = Vec::new();
+    let ruled = {
+        surfaces.push(Surface::Ruled);
+        surfaces.len() - 1
+    };
+    let spans = if closed { count } else { count - 1 };
+    for k in 0..spans {
+        let (s0, s1) = (&sections[k], &sections[(k + 1) % count]);
+        for j in 0..n {
+            // Outward for counter-clockwise sections along the chain.
+            let quad = vec![s0[j], s0[(j + 1) % n], s1[(j + 1) % n], s1[j]];
+            // The blend's own quads share a surface.
+            let on_arc = curves[j];
+            let surface = if on_arc {
+                ruled
+            } else {
+                let normal = (quad[1] - quad[0]).cross(quad[3] - quad[0]);
+                let Some(normal) = normal.normalized() else {
+                    continue;
+                };
+                surfaces.push(Surface::Plane {
+                    normal,
+                    offset: normal.dot(quad[0]),
+                });
+                surfaces.len() - 1
+            };
+            let Some(plane) = polygon_plane(&quad) else {
+                continue;
+            };
+            polys.push(Polygon {
+                plane,
+                loops: vec![quad],
+                surface,
+                origin: FaceOrigin {
+                    feature,
+                    local: j as u32,
+                },
+            });
+        }
+    }
+    if !closed {
+        for (which, section) in [(0usize, &sections[0]), (1, &sections[count - 1])] {
+            let mut pts = section.clone();
+            if which == 0 {
+                pts.reverse();
+            }
+            let Some(plane) = polygon_plane(&pts) else {
+                continue;
+            };
+            surfaces.push(Surface::Plane {
+                normal: plane.normal,
+                offset: plane.normal.dot(plane.origin),
+            });
+            polys.push(Polygon {
+                plane,
+                loops: vec![pts],
+                surface: surfaces.len() - 1,
+                origin: FaceOrigin {
+                    feature,
+                    local: n as u32 + which as u32,
+                },
+            });
+        }
+    }
+    let mut cutter = Solid::from_polygons(polys, surfaces)?;
+    if cutter.volume() < 0.0 {
+        cutter = cutter.flipped();
+        for f in &mut cutter.faces {
+            if let Some(Surface::Plane { normal, offset }) = cutter.surfaces.get_mut(f.surface) {
+                *normal = f.plane.normal;
+                *offset = f.plane.normal.dot(f.plane.origin);
+            }
+        }
+    }
+    Ok(cutter)
+}
+
+/// The section of a chain cutter in the frame at a chain vertex (x along
+/// face A's inward direction), as points and, per edge from each point to
+/// the next, whether it is part of the blend surface. The blend runs from
+/// the tangent point on face A to the one on face B (the fillet arc, or
+/// the chamfer's line); from there the section leaves each face
+/// perpendicularly and closes a little way outside the wedge, so the
+/// cutter meets the faces only along the tangent lines, squarely, rather
+/// than with walls lying almost in the facets (which the facets' changing
+/// tilt along a curved rim would leave nearly but not quite coplanar).
+fn chain_section(
+    ia: Vec3,
+    ib: Vec3,
+    y: Vec3,
+    size: f64,
+    kind: BlendKind,
+    facets: usize,
+) -> Result<(Vec<Vec2>, Vec<bool>), BrepError> {
+    let ib2 = Vec2::new(ib.dot(ia), ib.dot(y));
+    let phi = ib2.y.atan2(ib2.x).abs();
+    if !(1f64.to_radians()..=179f64.to_radians()).contains(&phi) {
+        return Err(BrepError::Degenerate(
+            "edge faces are nearly parallel".into(),
+        ));
+    }
+    let mut pts: Vec<Vec2> = Vec::new();
+    let mut arc: Vec<bool> = Vec::new();
+    let (ta, tb) = match kind {
+        BlendKind::Chamfer => {
+            let (ta, tb) = (Vec2::new(size, 0.0), ib2 * size);
+            pts.push(ta);
+            arc.push(true);
+            (ta, tb)
+        }
+        BlendKind::Fillet => {
+            let t = size / (phi / 2.0).tan();
+            let (ta, tb) = (Vec2::new(t, 0.0), ib2 * t);
+            let bisector = (Vec2::X + ib2).normalized().unwrap();
+            let center = bisector * (size / (phi / 2.0).sin());
+            let a0 = (ta - center).angle();
+            let a1 = (tb - center).angle();
+            let mut sweep = a1 - a0;
+            while sweep > std::f64::consts::PI {
+                sweep -= std::f64::consts::TAU;
+            }
+            while sweep <= -std::f64::consts::PI {
+                sweep += std::f64::consts::TAU;
+            }
+            for i in 0..facets {
+                let ang = a0 + sweep * i as f64 / facets as f64;
+                pts.push(center + Vec2::from_angle(ang) * size);
+                arc.push(true);
+            }
+            (ta, tb)
+        }
+    };
+    pts.push(tb);
+    // Away from the wedge: perpendicular to each leg, on the side opposite
+    // the other leg.
+    let ea = Vec2::new(0.0, -ib2.y.signum());
+    let eb = {
+        let n = Vec2::new(-ib2.y, ib2.x);
+        if n.x < 0.0 {
+            n
+        } else {
+            -n
+        }
+    };
+    let h = 0.1 * size;
+    let (oa, ob) = (ta + ea * h, tb + eb * h);
+    // Where the offset legs meet: oa + s·X = ob + u·ib2.
+    let det = -ib2.y;
+    let s = if det.abs() < 1e-12 {
+        0.0
+    } else {
+        ((ob.x - oa.x) * (-ib2.y) - (ob.y - oa.y) * (-ib2.x)) / det
+    };
+    let corner_out = oa + Vec2::X * s;
+    for p in [ob, corner_out, oa] {
+        pts.push(p);
+        arc.push(false);
+    }
+    arc.push(false); // oa back to ta
+                     // Counter-clockwise about the frame's normal, whichever side face B
+                     // lies on, so the cutter's sides and caps agree on which way is out.
+    let n = pts.len();
+    let area: f64 = (0..n)
+        .map(|i| {
+            let (a, b) = (pts[i], pts[(i + 1) % n]);
+            a.x * b.y - b.x * a.y
+        })
+        .sum();
+    if area < 0.0 {
+        pts.reverse();
+        let old = arc.clone();
+        for (k, flag) in arc.iter_mut().enumerate() {
+            *flag = old[(2 * n - 2 - k) % n];
+        }
+    }
+    Ok((pts, arc))
+}
+
+/// A plane through a polygon's points with its Newell normal.
+fn polygon_plane(pts: &[Vec3]) -> Option<Plane> {
+    let normal = crate::revolve::newell_normal(pts).normalized()?;
+    let x = (pts[1] - pts[0]).normalized()?;
+    let x = (x - normal * x.dot(normal)).normalized()?;
+    Some(Plane {
+        origin: pts[0],
+        x_axis: x,
+        y_axis: normal.cross(x),
+        normal,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -322,6 +618,100 @@ mod tests {
     use std::f64::consts::PI;
 
     const SEG: f64 = 5.0 * PI / 180.0;
+
+    /// A cylinder cut by an inclined plane, its rim filleted: the section
+    /// must follow the changing dihedral angle around the rim, so every
+    /// point of the blend stays within the fillet radius of both faces.
+    #[test]
+    fn fillet_follows_a_rim_whose_dihedral_angle_varies() {
+        let mut s = Sketch::new();
+        s.add_circle(Vec2::ZERO, 10.0);
+        let cylinder = extrude(
+            &s.profiles(&ProfileOptions::default()).remove(0),
+            &Plane::XY,
+            0.0,
+            30.0,
+            1,
+        )
+        .unwrap();
+        // The cutting plane through (0, 0, 20), tilted 30° about X.
+        let normal = Vec3::new(0.0, -(30f64.to_radians().sin()), 30f64.to_radians().cos());
+        let plane = Plane::from_origin_normal(Vec3::new(0.0, 0.0, 20.0), normal).unwrap();
+        let mut b = Sketch::new();
+        b.add_rectangle(Vec2::new(-40.0, -40.0), Vec2::new(40.0, 40.0));
+        let wedge = extrude(
+            &b.profiles(&ProfileOptions::default()).remove(0),
+            &plane,
+            0.0,
+            40.0,
+            2,
+        )
+        .unwrap();
+        let cut = boolean(&cylinder, &wedge, BoolOp::Difference).unwrap();
+        let top = cut
+            .faces
+            .iter()
+            .position(|f| f.plane.normal.approx_eq(normal))
+            .expect("the cut face");
+        let pairs: Vec<(usize, usize)> = cut
+            .edge_faces()
+            .into_iter()
+            .filter_map(|(_, faces)| (faces.len() == 2).then(|| (faces[0], faces[1])))
+            .filter(|&(a, b)| (a == top) != (b == top))
+            .filter(|&(a, b)| {
+                let other = if a == top { b } else { a };
+                matches!(
+                    cut.surfaces[cut.faces[other].surface],
+                    Surface::Cylinder { .. }
+                )
+            })
+            .collect();
+        assert!(pairs.len() > 60, "{} rim edges", pairs.len());
+        let r = 3.0;
+        let f = blend_edges(&cut, &pairs, r, BlendKind::Fillet, SEG, 7).unwrap();
+        f.validate().unwrap();
+        assert!(f.volume() < cut.volume());
+        let blend: Vec<&crate::Face> = f.faces.iter().filter(|f| f.origin.feature == 7).collect();
+        assert!(!blend.is_empty());
+        // The dihedral angle runs from 60° at y = +10 (the plane rises
+        // there) to 120° at y = -10, so the fillet's tangent line on the
+        // wall sits r / tan(30°) · sin 60° ≈ 4.5 below the cut plane on
+        // the steep side and r / tan(60°) · sin 120° ≈ 1.5 on the other.
+        let (mut steep, mut shallow) = (0.0f64, 0.0f64);
+        for face in &blend {
+            for &v in face.loops.iter().flatten() {
+                let p = f.vertices[v as usize];
+                let below = -normal.dot(p - plane.origin);
+                let radial = (p.x * p.x + p.y * p.y).sqrt();
+                assert!(below >= -1e-6, "blend point {p:?} is above the cut plane");
+                assert!(
+                    radial <= 10.0 + 1e-6,
+                    "blend point {p:?} is outside the wall"
+                );
+                if p.y > 8.0 {
+                    steep = steep.max(below);
+                }
+                if p.y < -8.0 {
+                    shallow = shallow.max(below);
+                }
+            }
+        }
+        assert!(
+            (steep - 4.5).abs() < 0.2,
+            "steep side reaches {steep} below the plane"
+        );
+        assert!(
+            (shallow - 1.5).abs() < 0.2,
+            "shallow side reaches {shallow} below the plane"
+        );
+        // The blend's arc is one smooth surface around the whole rim.
+        let smooth: std::collections::BTreeSet<usize> = blend
+            .iter()
+            .map(|f| f.surface)
+            .filter(|&s| matches!(f.surfaces[s], Surface::Ruled))
+            .collect();
+        assert_eq!(smooth.len(), 1, "ruled surfaces {smooth:?}");
+    }
 
     fn block(w: f64, d: f64, h: f64) -> Solid {
         let mut s = Sketch::new();

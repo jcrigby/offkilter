@@ -183,16 +183,26 @@ faces, so a straight edge split by a T-junction is still one edge and one
 picked facet of a cylinder's rim stands for the whole rim (the client
 highlights by surface the same way). `Blend` features (fillet or chamfer)
 chain the segments head to tail within each surface pair and build one
-cutter per chain: a single segment gets a prism, a chain gets the first
-segment's cross-section swept along the chain with mitred joints
-(`sweep`, or `sweep_closed` for a rim). The cross-section is the corner
-between the two faces: a triangle for a chamfer, or the corner minus the
-tangent arc for a fillet (tagged as a cylinder about a straight edge so it
-shades smoothly and selects as one face). Convex edges have the cutter
-subtracted, concave edges have it added. This is "blend by boolean": it
-is exact where the dihedral angle is constant along the chain (any edge
-between planar faces, rims on planar faces) and an approximation where it
-varies. Where three convex fillets of one feature meet at a vertex
+cutter per chain: a single segment gets a prism whose cross-section is
+the corner between the two faces (a triangle for a chamfer, or the
+corner minus the tangent arc for a fillet, tagged as a cylinder about
+the edge so it shades smoothly and selects as one face). A chain of
+several segments (a rim) gets `chain_cutter`: at every vertex of the
+chain the section is rebuilt in the plane perpendicular to the local
+tangent (the bisector of the two segments there) from the average
+normals of each face's facets on both sides, so a rim whose dihedral
+angle changes along it (a cylinder cut obliquely) gets a section that
+fits everywhere; the sections, all cut into the same number of facets,
+are joined by quads into one polyhedron, its blend facets sharing one
+ruled surface. Those sections do not run back along the faces to the
+edge, as a prism's does: from the tangent points they leave each face
+perpendicularly and close a tenth of the size outside the wedge, so the
+cutter meets the body only along the tangent lines, squarely, where a
+wall lying almost but not quite in the tilting facets of a curved face
+would leave the boolean slivers to resolve. Convex edges have the
+cutter subtracted, concave edges have it added. This is "blend by
+boolean": exact between planar facets, and along a curved rim exact to
+the facets' own approximation. Where three convex fillets of one feature meet at a vertex
 between three planar faces, the corner is the rolling ball exactly
 (`corner.rs`): the ball centre `c` lies `r` inside all three faces, each
 fillet's axis passes through it, and the ball is tangent to the three
@@ -202,9 +212,12 @@ per connected group, built from polygons rather than by union: the edge
 prisms cut back to the cell planes, the cell's three face quads, and a
 spherical patch (rings shrinking from the fillet arcs, which it shares
 vertex for vertex with the prisms, towards the middle direction) tagged
-as a revolved surface so it shades smoothly. Chamfers, rims, corners
-with any other number of blended edges and non-planar faces keep the
-union of cutters, which gives a plausible faceted corner.
+as a revolved surface so it shades smoothly. Chamfers, corners with any
+other number of blended edges and non-planar faces keep the union of
+cutters: three chamfers meeting at a corner leave their three planes
+meeting at a point, which is what other CAD systems draw, and a corner
+with four or more fillets, where no one ball is tangent to every face,
+gets a plausible faceted corner.
 
 While a blend feature is collecting edges, the client asks for a
 "rollback" regeneration (`regenerate_to`), which returns the cached state

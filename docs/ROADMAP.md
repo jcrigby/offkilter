@@ -40,7 +40,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
 - [x] Fillets and chamfers on curved edges (a rim is one chain, blended with one mitred sweep)
 - [x] Spherical corner patches where three fillets meet on planar faces (exact rolling ball, one cutter polyhedron per group of corners)
-- [ ] Corner patches for chamfers and for corners with other edge counts; variable-dihedral chains
+- [x] Variable-dihedral chains: a blend along a chain (a rim) rebuilds its cross-section at every vertex from the faces there and lofts the sections into one cutter, so a fillet around an obliquely cut cylinder fits all the way round; the cutter leaves the faces squarely at the tangent lines instead of with walls lying almost in the facets
+- [~] Corner patches for chamfers: three chamfers meeting at a corner already leave the three chamfer planes meeting at a point, as other CAD systems do, through the plain union of their cutters; corners where four or more fillets meet, where no single ball is tangent to every face, keep the union of cutters and are not planned
 - [x] Booleans stay closed when a vertex sits a hair off its face plane or a face is nearly coplanar with the tool (the two former fuzz failures are regression cases)
 - [x] Faces left non-planar by stitching are split into planar triangles at assembly, so every sectioned face is planar within tolerance
 - [x] Shell (uniform wall, chosen faces open; an offset polyhedron subtracted in one boolean; cavities whose offset changes the topology are reported, not guessed)
