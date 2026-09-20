@@ -10,7 +10,7 @@
 //! sketches stay close to their starting geometry because the damping term
 //! penalises movement, which matches what users expect when dragging.
 
-use crate::{Constraint, Entity, EntityId, Sketch};
+use crate::{Constraint, ConstraintId, Entity, EntityId, Sketch};
 use ok_math::{tol, Vec2};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
@@ -66,6 +66,10 @@ struct ParamMap {
     fixed: BTreeMap<EntityId, Vec2>,
     /// Radii of projected circles (not in the parameter vector).
     fixed_radii: BTreeMap<EntityId, f64>,
+    /// For each tangent constraint whose line has an endpoint on the
+    /// circle at the start of the solve: which endpoint (0 start, 1 end).
+    /// Decided once so the residual form cannot flip mid-solve.
+    tangent_at_end: BTreeMap<ConstraintId, usize>,
     len: usize,
 }
 
@@ -83,8 +87,33 @@ impl ParamMap {
             radii: BTreeMap::new(),
             fixed: BTreeMap::new(),
             fixed_radii: BTreeMap::new(),
+            tangent_at_end: BTreeMap::new(),
             len: 0,
         };
+        // Tangent lines that start or end on their circle (a slot's line
+        // meeting its arc, a fillet) use the perpendicular form for the
+        // whole solve: the distance form has no gradient there, and a
+        // form chosen per iteration would flip while a coincident
+        // endpoint converges onto the arc.
+        for (id, c) in sketch.constraints() {
+            if let Constraint::Tangent { line, entity } = c {
+                let ends = sketch.line(*line).ok();
+                let circle = sketch.circular_geometry(*entity);
+                if let (Some((s, e)), Some((centre, rad))) = (ends, circle) {
+                    let near = 1e-4 * rad.max(1.0);
+                    let on = |p: EntityId| {
+                        sketch
+                            .point(p)
+                            .is_ok_and(|q| (q.distance(centre) - rad).abs() <= near)
+                    };
+                    if on(s) {
+                        m.tangent_at_end.insert(id, 0);
+                    } else if on(e) {
+                        m.tangent_at_end.insert(id, 1);
+                    }
+                }
+            }
+        }
         for (id, e) in sketch.entities() {
             match e {
                 Entity::Point { pos } => {
@@ -197,7 +226,7 @@ impl<'a> Eval<'a> {
         }
     }
 
-    fn push_constraint(&self, c: &Constraint, out: &mut Vec<f64>) {
+    fn push_constraint(&self, id: ConstraintId, c: &Constraint, out: &mut Vec<f64>) {
         use Constraint::*;
         // Any constraint referencing missing/mistyped geometry contributes a
         // zero residual: it is silently inert rather than failing the solve.
@@ -314,16 +343,13 @@ impl<'a> Eval<'a> {
                     let (c, rad) = self.circular(*entity)?;
                     let d = e - s;
                     let len = d.length().max(tol::LINEAR);
-                    // When an endpoint sits on the circle (a slot's line
-                    // meeting its arc) the distance form is at a maximum
-                    // there and has no gradient; the radius must then be
-                    // perpendicular to the line instead.
-                    let near = 1e-6 * rad.max(1.0);
-                    let at_end = [s, e]
-                        .into_iter()
-                        .find(|p| (p.distance(c) - rad).abs() <= near);
-                    Some(match at_end {
-                        Some(p) => (p - c).dot(d) / len,
+                    // With an endpoint on the circle (decided once in
+                    // `ParamMap::build`) the radius there must be
+                    // perpendicular to the line; otherwise the line's
+                    // distance from the centre equals the radius.
+                    Some(match self.map.tangent_at_end.get(&id) {
+                        Some(0) => (s - c).dot(d) / len,
+                        Some(_) => (e - c).dot(d) / len,
                         None => ((c - s).cross(d) / len).abs() - rad,
                     })
                 })());
@@ -333,8 +359,8 @@ impl<'a> Eval<'a> {
 
     fn residuals(&self) -> Vec<f64> {
         let mut out = Vec::new();
-        for (_, c) in self.sketch.constraints() {
-            self.push_constraint(c, &mut out);
+        for (id, c) in self.sketch.constraints() {
+            self.push_constraint(id, c, &mut out);
         }
         // Implicit arc constraint: start and end are equidistant from centre.
         for (_, e) in self.sketch.entities() {
@@ -638,7 +664,12 @@ impl Eval<'_> {
     }
 
     /// Rows of one constraint by central differences over its own slots.
-    fn numeric_rows(&self, c: &Constraint, count: usize) -> Vec<Vec<(usize, f64)>> {
+    fn numeric_rows(
+        &self,
+        id: ConstraintId,
+        c: &Constraint,
+        count: usize,
+    ) -> Vec<Vec<(usize, f64)>> {
         let mut rows = vec![Vec::new(); count];
         let mut xp = self.x.to_vec();
         for col in self.constraint_slots(c) {
@@ -651,14 +682,14 @@ impl Eval<'_> {
                 map: self.map,
                 x: &xp,
             }
-            .push_constraint(c, &mut rp);
+            .push_constraint(id, c, &mut rp);
             xp[col] = self.x[col] - h;
             Eval {
                 sketch: self.sketch,
                 map: self.map,
                 x: &xp,
             }
-            .push_constraint(c, &mut rm);
+            .push_constraint(id, c, &mut rm);
             xp[col] = self.x[col];
             for (k, row) in rows.iter_mut().enumerate() {
                 let v = (rp[k] - rm[k]) / (2.0 * h);
@@ -673,15 +704,15 @@ impl Eval<'_> {
     /// The sparse Jacobian, rows in the order of `residuals`.
     fn jacobian(&self) -> SparseJacobian {
         let mut rows = Vec::new();
-        for (_, c) in self.sketch.constraints() {
+        for (id, c) in self.sketch.constraints() {
             let count = {
                 let mut r = Vec::new();
-                self.push_constraint(c, &mut r);
+                self.push_constraint(id, c, &mut r);
                 r.len()
             };
             match self.analytic_rows(c) {
                 Some(a) if a.len() == count => rows.extend(a),
-                _ => rows.extend(self.numeric_rows(c, count)),
+                _ => rows.extend(self.numeric_rows(id, c, count)),
             }
         }
         for (_, e) in self.sketch.entities() {

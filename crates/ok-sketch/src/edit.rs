@@ -12,7 +12,7 @@
 //! - `mirror` copies entities across a line with `Symmetric` constraints
 //!   on every point pair, so the copy follows the original.
 
-use crate::{Constraint, Entity, EntityId, Sketch, SketchError};
+use crate::{Constraint, ConstraintId, Entity, EntityId, Sketch, SketchError};
 use ok_math::Vec2;
 use std::collections::HashMap;
 use std::f64::consts::TAU;
@@ -577,6 +577,131 @@ impl Sketch {
         Ok(out)
     }
 
+    /// Rounds the corner where two lines meet: both lines are shortened
+    /// to the tangent points and a tangent arc of `radius` joins them,
+    /// held by coincident, tangent and radius constraints. The lines must
+    /// share an endpoint (coincident, or at the same position). Returns
+    /// the arc.
+    pub fn fillet(
+        &mut self,
+        a: EntityId,
+        b: EntityId,
+        radius: f64,
+    ) -> Result<EntityId, SketchError> {
+        if radius <= 0.0 || !radius.is_finite() {
+            return Err(SketchError::Invalid(
+                "fillet radius must be positive".into(),
+            ));
+        }
+        let (a0, a1) = self.line(a)?;
+        let (b0, b1) = self.line(b)?;
+        // The corner: the pair of endpoints (one per line) that coincide.
+        let corner = [(a0, b0), (a0, b1), (a1, b0), (a1, b1)]
+            .into_iter()
+            .find(|&(pa, pb)| {
+                pa == pb
+                    || self.constraints().any(|(_, c)| {
+                        matches!(c, Constraint::Coincident { a: x, b: y }
+                            if (*x == pa && *y == pb) || (*x == pb && *y == pa))
+                    })
+                    || self
+                        .point(pa)
+                        .ok()
+                        .zip(self.point(pb).ok())
+                        .is_some_and(|(p, q)| p.distance(q) <= TOL)
+            })
+            .ok_or(SketchError::Invalid(
+                "fillet needs two lines meeting at a corner".into(),
+            ))?;
+        let (ca, cb) = corner;
+        let far_a = if ca == a0 { a1 } else { a0 };
+        let far_b = if cb == b0 { b1 } else { b0 };
+        let corner_pos = self.point(ca)?;
+        let da = (self.point(far_a)? - corner_pos)
+            .normalized()
+            .ok_or(SketchError::WrongKind(a, "line with length"))?;
+        let db = (self.point(far_b)? - corner_pos)
+            .normalized()
+            .ok_or(SketchError::WrongKind(b, "line with length"))?;
+        let cos = da.dot(db).clamp(-1.0, 1.0);
+        let half = cos.acos() / 2.0;
+        if half <= 1e-6 || half >= std::f64::consts::FRAC_PI_2 - 1e-6 {
+            return Err(SketchError::Invalid(
+                "fillet needs lines that meet at an angle".into(),
+            ));
+        }
+        // Tangent points sit `r / tan(θ/2)` from the corner along each line;
+        // the centre lies on the bisector `r / sin(θ/2)` away.
+        let t = radius / half.tan();
+        let len_a = self.point(far_a)?.distance(corner_pos);
+        let len_b = self.point(far_b)?.distance(corner_pos);
+        if t >= len_a - TOL || t >= len_b - TOL {
+            return Err(SketchError::Invalid(
+                "fillet radius is too large for these lines".into(),
+            ));
+        }
+        let ta = corner_pos + da * t;
+        let tb = corner_pos + db * t;
+        let bisector = (da + db)
+            .normalized()
+            .ok_or(SketchError::Invalid("fillet lines are collinear".into()))?;
+        let centre = corner_pos + bisector * (radius / half.sin());
+        // Split the shared corner: each line keeps its own endpoint, moved
+        // to its tangent point; the arc ties them together again.
+        let pa = if ca == cb {
+            // One point entity used by both lines: give line b a fresh one.
+            let fresh = self.add_point(tb);
+            let (s, e) = self.line(b)?;
+            let new_line = Entity::Line {
+                start: if s == cb { fresh } else { s },
+                end: if e == cb { fresh } else { e },
+            };
+            self.entities.insert(b, new_line);
+            (ca, fresh)
+        } else {
+            (ca, cb)
+        };
+        let (ca, cb) = pa;
+        let coincident: Vec<ConstraintId> = self
+            .constraints()
+            .filter(|(_, c)| {
+                matches!(c, Constraint::Coincident { a: x, b: y }
+                    if (*x == ca && *y == cb) || (*x == cb && *y == ca))
+            })
+            .map(|(id, _)| id)
+            .collect();
+        for id in coincident {
+            self.remove_constraint(id);
+        }
+        self.set_point(ca, ta);
+        self.set_point(cb, tb);
+        // Arc from a's tangent point to b's, counter-clockwise about the
+        // centre: swap the ends when that would be the long way round.
+        let ccw = (ta - centre).cross(tb - centre) > 0.0;
+        let (start_pos, end_pos) = if ccw { (ta, tb) } else { (tb, ta) };
+        let (arc, c, start, end) = self.add_arc(centre, start_pos, end_pos);
+        let (start_on, end_on) = if ccw { (ca, cb) } else { (cb, ca) };
+        self.add_constraint(Constraint::Coincident {
+            a: start,
+            b: start_on,
+        });
+        self.add_constraint(Constraint::Coincident { a: end, b: end_on });
+        self.add_constraint(Constraint::Tangent {
+            line: a,
+            entity: arc,
+        });
+        self.add_constraint(Constraint::Tangent {
+            line: b,
+            entity: arc,
+        });
+        self.add_constraint(Constraint::Radius {
+            entity: arc,
+            value: radius,
+        });
+        let _ = c;
+        Ok(arc)
+    }
+
     /// Mirrors entities across the line `axis`, adding a `Symmetric`
     /// constraint for every point pair (and `Equal` for circle radii).
     /// Returns the new entities (curves and standalone points).
@@ -804,6 +929,53 @@ mod tests {
     fn line_ends(s: &Sketch, id: EntityId) -> (Vec2, Vec2) {
         let (a, b) = s.line(id).unwrap();
         (s.point(a).unwrap(), s.point(b).unwrap())
+    }
+
+    #[test]
+    fn fillet_rounds_a_rectangle_corner_and_stays_solved() {
+        let mut s = Sketch::new();
+        let lines = s.add_rectangle(Vec2::ZERO, Vec2::new(10.0, 6.0));
+        // Bottom (0,0)->(10,0) and right (10,0)->(10,6) meet at (10,0).
+        let arc = s.fillet(lines[0], lines[1], 2.0).unwrap();
+        let r = s.solve();
+        assert!(r.max_residual < 1e-7, "{r:?}");
+        let (start, end) = match s.entity(arc) {
+            Some(Entity::Arc { start, end, .. }) => (*start, *end),
+            _ => panic!("no arc"),
+        };
+        let (ps, pe) = (s.point(start).unwrap(), s.point(end).unwrap());
+        // Tangent points 2 mm from the corner along each line.
+        let mut ends = [ps, pe];
+        ends.sort_by(|p, q| p.x.partial_cmp(&q.x).unwrap());
+        assert!(ends[0].distance(Vec2::new(8.0, 0.0)) < 1e-6, "{ends:?}");
+        assert!(ends[1].distance(Vec2::new(10.0, 2.0)) < 1e-6, "{ends:?}");
+        // One region whose area is the rectangle minus the corner's
+        // rounded-off piece, (4 - π) r² / 4... i.e. r² (1 - π/4).
+        let p = s.profiles(&ProfileOptions::default());
+        assert_eq!(p.len(), 1);
+        let expect = 60.0 - 4.0 * (1.0 - std::f64::consts::PI / 4.0);
+        assert!((p[0].area() - expect).abs() < 0.02, "{}", p[0].area());
+        // The radius dimension drives the fillet: change it and re-solve.
+        let rid = s
+            .constraints()
+            .find(|(_, c)| matches!(c, Constraint::Radius { .. }))
+            .map(|(id, _)| id)
+            .unwrap();
+        s.set_constraint_value(rid, 3.0);
+        let r = s.solve();
+        assert!(r.max_residual < 1e-7, "{r:?}");
+        let ps = s.point(start).unwrap();
+        let pe = s.point(end).unwrap();
+        assert!(
+            ((ps.distance(pe) / 2.0f64.sqrt()) - 3.0).abs() < 1e-6,
+            "chord {}",
+            ps.distance(pe)
+        );
+        // Too large a radius or lines that do not meet are refused.
+        let mut t = Sketch::new();
+        let l = t.add_rectangle(Vec2::ZERO, Vec2::new(4.0, 4.0));
+        assert!(t.fillet(l[0], l[1], 5.0).is_err());
+        assert!(t.fillet(l[0], l[2], 1.0).is_err());
     }
 
     #[test]

@@ -80,7 +80,7 @@ cd apps/web && npm install && npm run dev
 
 Open http://localhost:5173. The app loads an example plate on first run.
 Select a feature to edit it; press `f` to fit the view. In sketch mode:
-`L` line, `R` rectangle, `C` circle, `A` arc, `B` spline, `S` select, `Q` construction,
+`L` line, `R` rectangle, `C` circle, `A` arc, `B` spline, `I` fillet, `S` select, `Q` construction,
 `Esc` finishes; right-drag orbits. Click a face to select it, then
 "+ Sketch" sketches on it. Documents are saved as `.okpart` JSON files and
 also kept in the browser's local storage.

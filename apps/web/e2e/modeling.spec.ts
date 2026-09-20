@@ -228,7 +228,7 @@ test("use tool projects a face outline into a sketch", async ({ page }) => {
 });
 
 test("sketch trim, offset and mirror", async ({ page }) => {
-  page.on("dialog", (d) => d.accept(d.type() === "prompt" ? "-1" : d.defaultValue()));
+  page.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.message().startsWith("Fillet") ? "1.5" : "-1") : d.defaultValue()));
   await page.goto("/");
   await ready(page);
   await page.click("#btn-new");
@@ -287,6 +287,32 @@ test("sketch trim, offset and mirror", async ({ page }) => {
   await page.keyboard.press("Control+z");
   await page.waitForTimeout(300);
   expect(await regions()).toBe(3);
+  // Fillet: select the rectangle's bottom and right lines (they meet at a
+  // corner) and round it with the panel button; an arc appears and the
+  // sketch still solves.
+  await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const id = app.sketcher.sketchId;
+    const sk = app.summary.features.find((f: any) => f.id === id).kind.sketch;
+    const pos = (pid: number) => sk.entities.find((e: any) => e.id === pid).pos;
+    const lines = sk.entities.filter((e: any) => e.type === "line");
+    const bottom = lines.find((l: any) => pos(l.start).y === 0 && pos(l.end).y === 0 && pos(l.start).x >= 0 && pos(l.end).x >= 0);
+    const right = lines.find((l: any) => pos(l.start).x === 10 && pos(l.end).x === 10);
+    app.sketcher.selection = new Set([bottom.id, right.id]);
+    app.selectionChanged();
+  });
+  const arcsBefore = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.features.find((f: any) => f.id === (window as any).offkilter.sketcher.sketchId).kind.sketch.entities.filter((e: any) => e.type === "arc").length as number);
+  await page.getByRole("button", { name: "Fillet…" }).click();
+  await page.waitForTimeout(200);
+  const after = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const id = app.sketcher.sketchId;
+    const sk = app.summary.features.find((f: any) => f.id === id).kind.sketch;
+    return { arcs: sk.entities.filter((e: any) => e.type === "arc").length, tangents: sk.constraints.filter((c: any) => c.type === "tangent").length, status: app.summary.sketches[String(id)].solve.status };
+  });
+  expect(after.arcs).toBe(arcsBefore + 1);
+  expect(after.tangents).toBeGreaterThanOrEqual(2);
+  expect(after.status).not.toBe("inconsistent");
 });
 
 test("assembly tab: insert two instances and mate them face to face", async ({ page }) => {

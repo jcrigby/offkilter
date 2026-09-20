@@ -85,6 +85,12 @@ pub enum SketchOp {
         entities: Vec<EntityId>,
         distance: f64,
     },
+    /// Round the corner where two lines meet with a tangent arc.
+    Fillet {
+        a: EntityId,
+        b: EntityId,
+        radius: f64,
+    },
     /// Mirror entities across a line with symmetric constraints.
     Mirror {
         entities: Vec<EntityId>,
@@ -1233,6 +1239,9 @@ impl PartStudio {
                         }
                         SketchOp::Mirror { entities, axis } => {
                             out.entities.extend(sk.mirror(&entities, axis)?);
+                        }
+                        SketchOp::Fillet { a, b, radius } => {
+                            out.entities.push(sk.fillet(a, b, radius)?);
                         }
                         SketchOp::PatternLinear {
                             entities,

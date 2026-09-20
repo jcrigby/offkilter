@@ -78,7 +78,7 @@ export class Sketcher implements PointerHandler {
     this.host.viewer.setSketchMouse(true);
     const plane = this.plane();
     if (plane) this.host.viewer.lookAtPlane(plane);
-    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · B spline · P polygon · N slot · T trim · O offset · M mirror · Y pattern · U use · S select · Q construction · right-drag orbits · Esc finishes");
+    this.host.setStatus("Sketch mode · L line · R rectangle · C circle · A arc · B spline · P polygon · N slot · T trim · O offset · I fillet · M mirror · Y pattern · U use · S select · Q construction · right-drag orbits · Esc finishes");
   }
 
   exit(): void {
@@ -122,6 +122,49 @@ export class Sketcher implements PointerHandler {
     this.host.snapshot();
     try {
       const r = this.sketchOp({ type: "offset", entities, distance });
+      this.selection = new Set(r.entities);
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.host.regenerate();
+  }
+
+  /** The two selected lines that share a corner, if the selection is exactly that. */
+  filletCandidates(): [number, number] | null {
+    const lines = [...this.selection].filter((id) => this.entity(id)?.type === "line");
+    if (lines.length !== 2 || this.selection.size !== 2) return null;
+    const ends = (id: number): number[] => {
+      const e = this.entity(id);
+      return e && e.type === "line" ? [e.start, e.end] : [];
+    };
+    const [a, b] = lines as [number, number];
+    const pos = (id: number) => {
+      const e = this.entity(id);
+      return e && e.type === "point" ? e.pos : null;
+    };
+    for (const pa of ends(a)) {
+      for (const pb of ends(b)) {
+        const p = pos(pa), q = pos(pb);
+        if (p && q && Math.hypot(p.x - q.x, p.y - q.y) < 1e-6) return [a, b];
+      }
+    }
+    return null;
+  }
+
+  /** Fillet the corner between the two selected lines (I): a prompt takes the radius. */
+  filletSelection(): void {
+    const pair = this.filletCandidates();
+    if (!pair) {
+      this.host.setStatus("Select two lines that meet at a corner to fillet it.");
+      return;
+    }
+    const text = prompt("Fillet radius", "1");
+    if (text === null) return;
+    const radius = Number(text);
+    if (!Number.isFinite(radius) || radius <= 0) return;
+    this.host.snapshot();
+    try {
+      const r = this.sketchOp({ type: "fillet", a: pair[0], b: pair[1], radius });
       this.selection = new Set(r.entities);
     } catch (err) {
       this.host.setStatus(`error: ${(err as Error).message}`);

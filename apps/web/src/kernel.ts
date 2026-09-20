@@ -199,6 +199,7 @@ export type SketchOp =
   | { type: "trim"; entity: number; at: Vec2 }
   | { type: "offset"; entities: number[]; distance: number }
   | { type: "mirror"; entities: number[]; axis: number }
+  | { type: "fillet"; a: number; b: number; radius: number }
   | { type: "pattern_linear"; entities: number[]; count: number; step: Vec2 }
   | { type: "pattern_circular"; entities: number[]; count: number; center: Vec2; angle: number }
   | { type: "project"; source: ProjectionSource }

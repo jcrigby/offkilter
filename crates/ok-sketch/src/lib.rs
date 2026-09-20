@@ -270,6 +270,18 @@ impl Sketch {
         Ok((id, ids))
     }
 
+    /// Centre and radius of a circle or arc at the current geometry.
+    pub fn circular_geometry(&self, id: EntityId) -> Option<(Vec2, f64)> {
+        match self.entity(id)? {
+            Entity::Circle { center, radius } => Some((self.point(*center).ok()?, *radius)),
+            Entity::Arc { center, start, .. } => {
+                let c = self.point(*center).ok()?;
+                Some((c, self.point(*start).ok()?.distance(c)))
+            }
+            _ => None,
+        }
+    }
+
     /// The positions of a spline's points in order.
     pub fn spline_points(&self, id: EntityId) -> Result<Vec<Vec2>, SketchError> {
         match self.entity(id) {

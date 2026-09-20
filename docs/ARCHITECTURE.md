@@ -190,7 +190,12 @@ their originals or keep them as new bodies.
 Entities: `Point`, `Line`, `Circle`, `Arc`, `Spline`. Curves reference
 point entities for their defining positions, so constraints only ever act
 on points and radii. Arcs carry an implicit "start and end equidistant
-from centre" equation. A spline is a Catmull–Rom curve through its points
+from centre" equation. A tangent constraint whose line starts or ends on
+its circle (a slot's line, a fillet) uses the perpendicular form, radius
+⟂ line at that endpoint, for the whole solve: the distance form has no
+gradient there, and the choice is made once from the initial geometry so
+it cannot flip while a coincident endpoint converges onto the arc. A
+spline is a Catmull–Rom curve through its points
 (`spline.rs`): each span is a cubic Hermite segment whose end tangents are
 half the chord between the neighbouring points, so it interpolates every
 point and moving one only reshapes the spans beside it. Region extraction
@@ -221,7 +226,11 @@ gaps with an arc about the original corner, keeps arcs concentric by
 reusing their centre point, and adds parallel constraints for lines.
 `mirror` reflects entities across a line and adds a `Symmetric`
 constraint per point pair (and `Equal` for circle radii), so the copy
-follows the original under the solver.
+follows the original under the solver. `fillet` rounds the corner where
+two lines meet: each line keeps its own endpoint, moved to the tangent
+point `r / tan(θ/2)` from the corner, and a tangent arc about the centre
+on the bisector joins them, held by coincident, tangent and radius
+constraints so the radius dimension drives it afterwards.
 
 ### Solver (`solver.rs`)
 
