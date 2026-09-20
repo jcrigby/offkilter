@@ -41,9 +41,12 @@ bodies and an error on that instance). It carries a `Placement`
 through `Connector`s, each a face reference on an instance's body (for a
 sub-assembly instance, the first of its bodies that has the face) plus an
 `Anchor` saying where on that face the connector sits. On the face
-itself the frame has its origin at the face centroid (on the axis for a
-cylindrical face, with z along the axis), z along the normal, x and y
-canonical for that normal. On an edge (the face plus the other face
+itself the frame has its origin at the face's area-weighted centroid
+(over every facet of the surface for a curved face, projected onto the
+axis for a cylindrical one, with z along the axis; over the referenced
+piece for a planar face), z along the normal, x and y canonical for that
+normal (`Plane::from_origin_normal`). The report gives the same
+centroids, and each instance's resolved pose as `placed`. On an edge (the face plus the other face
 across the edge) the origin is the middle of the edge and z runs along
 it, with x along the face normal; a circular rim takes the centre and
 axis of its cylinder instead. On a vertex (the face plus two more faces

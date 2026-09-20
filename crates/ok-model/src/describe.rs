@@ -103,6 +103,10 @@ pub struct InstanceReport {
     pub studio: TabId,
     pub body: usize,
     pub fixed: bool,
+    /// Where the assembly put the instance (its placement, or where its
+    /// mates moved it), when it resolved.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub placed: Option<crate::assembly::Placement>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 }
@@ -262,6 +266,10 @@ impl Document {
                             studio: i.studio,
                             body: i.body,
                             fixed: i.fixed,
+                            placed: r
+                                .transforms
+                                .get(&i.id)
+                                .map(crate::assembly::Placement::from_transform),
                             error: r.instance_errors.get(&i.id).cloned(),
                         })
                         .collect();

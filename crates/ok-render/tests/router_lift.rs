@@ -78,6 +78,38 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
                 "{name}: {} placed bodies",
                 r.bodies.len()
             );
+            assert!(r.instance_errors.is_empty(), "{:?}", r.instance_errors);
+            assert!(r.mate_errors.is_empty(), "{:?}", r.mate_errors);
+            // The carriage and what is bolted to it hang off one slider
+            // mate; the build script drew them at their placements and
+            // derived the mates from those, so the mates must resolve to
+            // exactly the same poses.
+            let asm = doc.assembly(*id).unwrap();
+            assert!(asm.mates.len() >= 7, "{} mates", asm.mates.len());
+            let moving = asm.instances.iter().filter(|i| !i.fixed).count();
+            assert!(moving >= 7, "{moving} mated instances");
+            for inst in &asm.instances {
+                let want = inst.placement.to_transform();
+                let got = r.transforms[&inst.id];
+                assert!(
+                    got.t.distance(want.t) < 1e-6,
+                    "{}: at {:?}, drawn at {:?}",
+                    inst.name,
+                    got.t,
+                    want.t
+                );
+                for i in 0..3 {
+                    for j in 0..3 {
+                        assert!(
+                            (got.m[i][j] - want.m[i][j]).abs() < 1e-6,
+                            "{}: rotation {:?} vs {:?}",
+                            inst.name,
+                            got.m,
+                            want.m
+                        );
+                    }
+                }
+            }
             continue;
         }
         let r = doc.regenerate_studio(*id, None).unwrap();

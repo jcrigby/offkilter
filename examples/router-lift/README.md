@@ -7,13 +7,14 @@ drives the `ok-mcp` server exactly as a language model would.
 
 - `build.py`: the build. Speaks JSON-RPC to `ok-mcp --file` over stdio,
   makes one part studio per part (sketches, extrudes, holes, revolves,
-  slots) and an assembly of 32 placed instances, reads each part back
-  through `report`, pictures it through `screenshot` and exports the
-  printed parts through `export`.
+  slots) and an assembly of 32 instances, 25 fixed and 7 hung off one
+  slider mate (the carriage on its shafts), reads each part back through
+  `report`, pictures it through `screenshot` and exports the printed
+  parts through `export`.
 - `out/router_lift.okpart`: the document the script writes; open it in
   the web app (Docs, Open file) or point `ok-mcp --file` at it.
 - `out/*.png`: the script's screenshots (the assembly, a section along
-  the leadscrew, every part).
+  the leadscrew at mid travel and with the carriage raised, every part).
 - `reference/`: the OpenSCAD sources (rev C), the reference STLs they
   produced for the printed parts, and the arm template DXF.
 - `build-instructions.md`: the shop instructions the project came with.
@@ -25,7 +26,8 @@ cargo test -p ok-render --test router_lift     # what CI runs
 ```
 
 The test regenerates every tab of the committed document, requires every
-part to be a closed solid and the assembly to place every instance, and
+part to be a closed solid, the assembly to place every instance and its
+mates to resolve to exactly the poses the parts were drawn at, and
 compares each printed part with its reference mesh: volume within half a
 percent and extents within 0.2 mm. On the branch this landed on, the
 printed parts match to 0.02 percent or better; what remains is the
@@ -69,7 +71,20 @@ order they came up. They are the roadmap this example feeds.
   default isometric eye shows that half's outside; `x:0:flip` keeps the
   half whose cut faces face the camera. Worth a hint in the tool's
   description, since the first try looked like missing parts.
-- The instances are placed by fixed placements copied from the SCAD
-  rather than by mates, so moving the carriage along its travel means
-  editing numbers; mates between the carriage's block faces and the
-  shafts would make it a slider.
+- The instances were first placed by fixed placements copied from the
+  SCAD, so moving the carriage along its travel meant editing numbers.
+  Now one slider mate between a pillow block's bore and its shaft
+  carries the travel, and fastened mates through bolt holes, the router
+  bore and the nut pocket hang the carriage, the other blocks, the
+  router and the nut off it: `set_mate {offset}` on the slider raises
+  the lot (`out/assembly_raised.png`). The script derives each mate's
+  offset, angle and flip from the placements it already knew, which
+  needed two things the tool did not give: the rule for a connector's
+  frame (now in `docs/OPS.md`) and where the assembly actually put each
+  instance (now `placed` on every instance in the report).
+- The first run had the carriage 0.59 mm off along the bolts: a cylinder
+  connector's origin was the average of its facets' vertices, which the
+  carriage's nut traps had shifted by cutting some facets, while the
+  report's centroid is area-weighted. The kernel now uses the same
+  area-weighted centroid, so a connector no longer moves when a later
+  feature splits a facet and the report says where it is.

@@ -1128,12 +1128,15 @@ fn summarize(r: &ok_model::TabReport) -> String {
     }
     for i in &r.instances {
         s.push_str(&format!(
-            "Instance {} \"{}\" of tab {} body {}{}{}\n",
+            "Instance {} \"{}\" of tab {} body {}{}{}{}\n",
             i.id.0,
             i.name,
             i.studio.0,
             i.body,
             if i.fixed { " (fixed)" } else { "" },
+            i.placed
+                .map(|p| format!(" at {} rotated {}", v3(&p.position), v3(&p.rotation)))
+                .unwrap_or_default(),
             i.error
                 .as_ref()
                 .map(|e| format!(" ERROR: {e}"))
@@ -1192,7 +1195,7 @@ fn tool_list() -> Value {
         },
         {
             "name": "screenshot",
-            "description": "A PNG of the tab's bodies from a standard view (top, front, right, iso) or an x,y,z eye direction, rendered without a browser; optionally sectioned by an axis-aligned plane (section 'z:10' keeps z >= 10, 'z:10:flip' the other side, cut faces hatched). Look at it after building something to check it is what was meant. width and height default to 640x480; path also writes the file.",
+            "description": "A PNG of the tab's bodies from a standard view (top, front, right, iso) or an x,y,z eye direction, rendered without a browser; optionally sectioned by an axis-aligned plane (section 'z:10' keeps z >= 10, 'z:10:flip' the other side, cut faces hatched; the iso eye looks from +x,+y,+z, so a section at x:0 shows the kept half's outside and 'x:0:flip' its cut faces). Look at it after building something to check it is what was meant. width and height default to 640x480; path also writes the file.",
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "view": { "type": "string" }, "section": { "type": "string" }, "width": { "type": "integer" }, "height": { "type": "integer" }, "path": { "type": "string" } } }
         },
         {

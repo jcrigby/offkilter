@@ -9421,7 +9421,7 @@
             "name": "carriage",
             "studio": 1,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": 0.0,
@@ -9440,7 +9440,7 @@
             "name": "T8 nut",
             "studio": 20,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": 0.0,
@@ -9478,7 +9478,7 @@
             "name": "router",
             "studio": 23,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": 0.0,
@@ -9611,7 +9611,7 @@
             "name": "left lower block",
             "studio": 21,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": -50.5,
@@ -9630,7 +9630,7 @@
             "name": "left upper block",
             "studio": 21,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": -50.5,
@@ -9706,7 +9706,7 @@
             "name": "right lower block",
             "studio": 21,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": 50.5,
@@ -9725,7 +9725,7 @@
             "name": "right upper block",
             "studio": 21,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": 50.5,
@@ -9797,9 +9797,318 @@
             }
           }
         ],
-        "mates": []
+        "mates": [
+          {
+            "id": 59,
+            "name": "carriage travel",
+            "kind": "slider",
+            "a": {
+              "instance": 32,
+              "face": {
+                "feature": 2,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1159760287,
+                  1468198494,
+                  2870100803,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 50,
+              "face": {
+                "feature": 4,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  322007710,
+                  3472011262,
+                  3646210877,
+                  4020363139,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 27.499999999999915,
+            "angle": 180.0,
+            "flip": true
+          },
+          {
+            "id": 60,
+            "name": "carriage on left upper block",
+            "kind": "fastened",
+            "a": {
+              "instance": 50,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  573667395,
+                  1659127064,
+                  3422794399,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 39,
+              "face": {
+                "feature": 10,
+                "local": 2,
+                "part": 6,
+                "near": [
+                  774544575,
+                  1170667870,
+                  3109442627,
+                  4186122008,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": -98.75970149253726,
+            "angle": 180.0,
+            "flip": false
+          },
+          {
+            "id": 61,
+            "name": "left lower block",
+            "kind": "fastened",
+            "a": {
+              "instance": 39,
+              "face": {
+                "feature": 10,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  774544575,
+                  1170667870,
+                  3109442627,
+                  3187446616,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 49,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 2,
+                "near": [
+                  573667395,
+                  1659127064,
+                  3422794399,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": -98.75970149253727,
+            "angle": 180.0,
+            "flip": false
+          },
+          {
+            "id": 62,
+            "name": "right upper block",
+            "kind": "fastened",
+            "a": {
+              "instance": 39,
+              "face": {
+                "feature": 10,
+                "local": 2,
+                "part": 2,
+                "near": [
+                  774544575,
+                  1170667870,
+                  3109442627,
+                  4186122008,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 55,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  573667395,
+                  1659127064,
+                  3422794399,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 16.240298507462725,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 63,
+            "name": "right lower block",
+            "kind": "fastened",
+            "a": {
+              "instance": 39,
+              "face": {
+                "feature": 10,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  774544575,
+                  1170667870,
+                  3109442627,
+                  3187446616,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 54,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  573667395,
+                  1659127064,
+                  3422794399,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 16.240298507462704,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 64,
+            "name": "router in clamp",
+            "kind": "fastened",
+            "a": {
+              "instance": 39,
+              "face": {
+                "feature": 2,
+                "local": 10,
+                "part": 0,
+                "near": [
+                  168648540,
+                  1013877695,
+                  1159760287,
+                  1570415525,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 42,
+              "face": {
+                "feature": 2,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1159760287,
+                  1468198494,
+                  2870100803,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 19.999999999999854,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 65,
+            "name": "nut in pocket",
+            "kind": "fastened",
+            "a": {
+              "instance": 39,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  573667395,
+                  1013877695,
+                  3041767615,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 40,
+              "face": {
+                "feature": 2,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1468198494,
+                  2027755391,
+                  2870100803,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 42.400000000000006,
+            "angle": 0.0,
+            "flip": true
+          }
+        ]
       }
     }
   ],
-  "next_id": 59
+  "next_id": 66
 }
