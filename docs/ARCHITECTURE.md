@@ -428,16 +428,28 @@ into regions that extrude.
 
 ### STEP export (`ok-step`)
 
-`ok_step::write_step` turns solids into an ISO 10303-21 file (AP214
-schema): per body one `MANIFOLD_SOLID_BREP` over a `CLOSED_SHELL` of
-`ADVANCED_FACE`s, each on a `PLANE` with its loops as `EDGE_LOOP`s of
-`ORIENTED_EDGE`s over shared `EDGE_CURVE`s (`LINE`s between
-`VERTEX_POINT`s, one per undirected edge, so the shell is watertight by
-construction), plus the product boilerplate readers expect and
-millimetre units. Facets on cylinders and other curved surfaces go out
-as planar faces, so the file is exact for the faceted geometry and reads
-as a solid elsewhere. The wasm `export_step` and the server's
-`/export/step` both use it.
+`write_step` writes AP214 Part 21: the unit and context entities once,
+then per body a `MANIFOLD_SOLID_BREP` in a `CLOSED_SHELL` with an
+`ADVANCED_BREP_SHAPE_REPRESENTATION`, product and definition entities
+so readers see named parts. Every vertex is written at its exact position
+(`exact::vertex_position`: the point on all of its analytic surfaces).
+Planar faces go out as they are, but each loop's facet edges are grouped
+into runs (`exact::edge_runs`: chains of edges between one pair of
+surfaces) and a run on an exact curve is one `EDGE_CURVE`: a `LINE`
+between planes, a `CIRCLE` or `ELLIPSE` where a plane meets a cylinder
+(the curve turned so the run's direction is its parametric direction,
+the reference direction through the run's first vertex), or a degree-one
+`B_SPLINE_CURVE_WITH_KNOTS` through the run's points sampled at every
+degree of the first cylinder's rulings where two cylinders meet. A
+cylinder's facets become one `ADVANCED_FACE` per connected region
+(`exact::surface_regions`, components by facet seams) on a
+`CYLINDRICAL_SURFACE`; a region whose loops sweep a full turn gets a seam
+along a ruling that both rims have a vertex on and no hole spans, its
+outer bound then one rim round, the seam, the other rim round and the
+seam back (the rims' closed runs rotated to start at the seam). A
+cylinder no seam can be placed on, and facets on revolved or ruled
+surfaces, stay facets with line edges. Entity numbers are sequential;
+reals carry a decimal point; strings escape apostrophes and non-ASCII.
 
 ### STEP import (`ok-step/src/read.rs`)
 
@@ -445,23 +457,32 @@ as a solid elsewhere. The wasm `export_step` and the server's
 comments, complex instances as lists of typed parts) into an entity map
 and walks every `MANIFOLD_SOLID_BREP`: shell → faces → bounds → edge
 loops → oriented edges → edge curves → vertex points. Each edge is
-sampled once (a line stays straight; a circle is sampled at 5° from its
-start vertex around its axis, the whole way round for a closed edge; a
-B-spline, rational or not, is evaluated by de Boor at sixteen points per
-span and reversed if the edge runs against the curve) so the two faces
-on an edge share the same mesh vertices and the result welds closed.
-A planar face is triangulated by earcut in its plane, outer bound first,
-with the loop's own winding deciding the normal when it disagrees with
-the flags. A cylindrical face is mapped to (angle × radius, height), the
+sampled once (a line stays straight; a circle or ellipse is sampled at
+5° from its start vertex around its axis, the whole way round for a
+closed edge; a B-spline, rational or not, is evaluated by de Boor at
+sixteen points per span, a degree-one one at its poles alone, and
+reversed if the edge runs against the curve) so the two faces on an
+edge share the same mesh vertices and the result welds closed. A planar
+face is triangulated by earcut in its plane, outer bound first, with
+the loop's own winding deciding the normal when it disagrees with the
+flags. A cylindrical face is mapped to (angle × radius, height), the
 angle unwrapped along each loop so a loop around the seam stays
 continuous and holes shifted into the outer loop's turn; because a
 triangle spanning more than a facet cuts a chord through the surface
 (earcut fans from a seam corner would turn a wall into two cones), the
-parameter polygon is cut into facet-wide strips with the overlay
-library and each strip triangulated on its own, its vertices made from
-their parameters (they land within tolerance of the neighbours' rim
-samples, and any strip line crossing a shared edge is a T-junction the
-mesh assembly repairs). Other surfaces are refused by name. The length
+parameter polygon is cut into facet-wide strips and each strip
+triangulated on its own. That takes two passes: first every cylindrical
+face decides its strips and puts a mesh vertex where each strip column
+crosses an edge of the face (on the cylinder, at the interpolated
+height), into the edge's shared samples, so the face on the other side
+uses the same point; a sample within a hundredth of a strip of a column
+moves onto it instead, and samples closer than that to their neighbours
+are dropped, since a triangle thinner than the mesh importer's
+tolerance would be lost and open the mesh. Then each face clips its
+loops to every strip exactly at the columns (`ok_brep::clip2d`, the
+same clipper the boolean uses to close cut loops in a cell) and
+triangulates the pieces, reusing the loop vertices, so no new vertex
+ever lies on a shared edge. Other surfaces are refused by name. The length
 unit comes from the header's `LENGTH_UNIT` (`SI_UNIT` prefixes,
 `CONVERSION_BASED_UNIT` inch, foot, yard). The bodies come back as
 vertices and triangles for `add_mesh`, whose coplanar merge restores

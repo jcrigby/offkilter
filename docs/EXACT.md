@@ -35,11 +35,13 @@ a boolean, so results no longer depend on the resolution of the tools.
 1. [x] `ok_brep::exact`: curve classification from surface pairs, exact
    vertex positions, edge runs, surface regions, sampling of a run at a
    cylinder's rulings. Read-only over a solid.
-2. [ ] STEP export with exact faces: one `ADVANCED_FACE` per cylindrical
+2. [x] STEP export with exact faces: one `ADVANCED_FACE` per cylindrical
    region on a `CYLINDRICAL_SURFACE`, bounds made of runs written as
    `CIRCLE`, `ELLIPSE`, `LINE` or a fine polyline B-spline for quartics,
    vertices at their exact positions, a seam added where a region closes
-   round the axis. Round-tripped through the reader.
+   round the axis. Round-tripped through the reader, which now shares
+   each cylindrical face's strip columns with the edges on it so the
+   faces on both sides of an edge use the same points.
 3. [ ] Refit after booleans: rebuild the facets of every cylindrical
    surface a boolean touched from its exact runs at the document's
    facet angle, and update the neighbouring planar faces' loops to the

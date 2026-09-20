@@ -83,8 +83,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Dimensions placed by the user on drawings (two corners of a view in the sheet preview; aligned, on the side away from the view); they are document state
 - [x] Diameter callouts for holes and bosses seen end-on in the standard views, counted when several share a size
 - [x] Parts list and item balloons on assembly sheets (and multi-body part studios)
-- [x] STEP export (AP214): each body a manifold B-rep of planar faces with line edges, named; curved surfaces go out as their facets
-- [ ] STEP with exact cylindrical and other analytic faces, once the kernel has them
+- [x] STEP export (AP214): each body a manifold B-rep, named; planar faces with line edges, and on the `exact-surfaces` branch cylindrical faces as `CYLINDRICAL_SURFACE`s bounded by circles, ellipses and B-splines with vertices at their exact positions
+- [~] STEP with exact cylindrical faces: done on the `exact-surfaces` branch (see `docs/EXACT.md`); other analytic faces (cones, tori) follow the kernel
 - [x] Import: STL (binary or ASCII) and OBJ meshes as bodies; coplanar triangles merge into faces
 - [x] Import: DXF lines, circles, arcs and polylines (with bulges) into a sketch, endpoints tied by coincident constraints
 - [x] Import: STEP via a B-rep reader (`ok-step::read_step`): solids of a Part 21 file walked from `MANIFOLD_SOLID_BREP` down to points, edges on lines, circles and B-splines sampled once and shared, faces on planes and cylinders triangulated in their own parameters (cylinders in facet-wide strips), lengths scaled to millimetres; other surfaces are refused by name. Imported as mesh bodies from the client's Import button, the `ok-mcp` `import` tool (which also reads STL and OBJ) and `parse_step` in the wasm API

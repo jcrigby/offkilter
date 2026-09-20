@@ -8,15 +8,14 @@
 //! edge so the faces on both sides share the same points and the mesh
 //! welds closed. Faces on planes are triangulated in the plane; faces on
 //! cylinders in their (angle, height) parameters, with the angle
-//! unwrapped along each loop. Other surfaces are refused by name rather
-//! than tessellated wrongly. Lengths are scaled to millimetres from the
-//! file's length unit.
+//! unwrapped along each loop, in facet-wide strips whose columns are
+//! shared with the edges first so both sides of an edge agree. Other
+//! surfaces are refused by name rather than tessellated wrongly. Lengths
+//! are scaled to millimetres from the file's length unit.
 
-use i_overlay::core::fill_rule::FillRule;
-use i_overlay::core::overlay_rule::OverlayRule;
-use i_overlay::float::single::SingleFloatOverlay;
+use ok_brep::clip2d::{clip_and_close, Contour, Rect};
 use ok_math::Vec3;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// One solid of a STEP file as a mesh, in millimetres.
 #[derive(Debug, Clone, PartialEq)]
@@ -437,6 +436,35 @@ struct Reader<'a> {
     /// Sampled interior points of every edge, from its start vertex to
     /// its end vertex, as mesh vertices.
     edge_samples: HashMap<usize, Vec<u32>>,
+    /// For every cylindrical face, the strips it is cut into: the first
+    /// column's angle, the number of strips and their angular width (in
+    /// the face's unwrapped frame, mirrored when the face turns inward).
+    columns: HashMap<usize, Columns>,
+    /// Vertices that stay where they are: edge ends and the column
+    /// crossings cylindrical faces put on their edges.
+    fixed: HashSet<u32>,
+}
+
+#[derive(Clone, Copy)]
+struct Columns {
+    umin: f64,
+    strips: usize,
+    width: f64,
+    outward: bool,
+}
+
+/// A face bound: whether it is the outer one, its orientation flag, and
+/// its edges with their orientation flags.
+type Bound = (bool, bool, Vec<(usize, bool)>);
+
+/// A cylindrical surface's geometry: centre, axis, reference direction
+/// and radius, in millimetres.
+struct CylinderGeom {
+    centre: Vec3,
+    axis: Vec3,
+    x: Vec3,
+    y: Vec3,
+    radius: f64,
 }
 
 impl Reader<'_> {
@@ -456,6 +484,7 @@ impl Reader<'_> {
         let v = self.vertices.len() as u32;
         self.vertices.push(p);
         self.vertex_of.insert(id, v);
+        self.fixed.insert(v);
         Ok(v)
     }
 
@@ -550,6 +579,49 @@ impl Reader<'_> {
             }
             return Ok(out);
         }
+        if kinds.contains(&"ELLIPSE") {
+            let args = self.file.part(curve, "ELLIPSE").unwrap();
+            let (centre, axis, major) = self.file.placement(
+                args.get(1)
+                    .and_then(Val::reference)
+                    .ok_or("ELLIPSE without a placement")?,
+            )?;
+            let centre = centre * self.scale;
+            let ra = args
+                .get(2)
+                .and_then(Val::num)
+                .ok_or("ELLIPSE without semi-axes")?
+                * self.scale;
+            let rb = args
+                .get(3)
+                .and_then(Val::num)
+                .ok_or("ELLIPSE without semi-axes")?
+                * self.scale;
+            let minor = axis.cross(major);
+            let param =
+                |p: Vec3| ((p - centre).dot(minor) / rb).atan2((p - centre).dot(major) / ra);
+            let (a0, a1) = (param(a), param(b));
+            let mut sweep = if same_sense {
+                (a1 - a0).rem_euclid(std::f64::consts::TAU)
+            } else {
+                -((a0 - a1).rem_euclid(std::f64::consts::TAU))
+            };
+            if sweep.abs() < 1e-9 || start == end {
+                sweep = if same_sense {
+                    std::f64::consts::TAU
+                } else {
+                    -std::f64::consts::TAU
+                };
+            }
+            let n = ((sweep.abs() / STEP_ANGLE).ceil() as usize).max(1);
+            let mut out = Vec::with_capacity(n);
+            for i in 1..n {
+                let t = a0 + sweep * i as f64 / n as f64;
+                let p = centre + major * (ra * t.cos()) + minor * (rb * t.sin());
+                out.push(self.push(p));
+            }
+            return Ok(out);
+        }
         if kinds.iter().any(|k| k.starts_with("B_SPLINE_CURVE")) {
             let pts = self.bspline_points(curve)?;
             // The edge runs the whole curve; the samples start at the
@@ -616,8 +688,20 @@ impl Reader<'_> {
         }
         let (t0, t1) = (knot_vector[degree], knot_vector[n]);
         let spans = knots.len().max(2) - 1;
+        // A degree-1 curve is a polyline: its poles are its samples, and
+        // points between them would be collinear, which the triangulation
+        // must not see (a sliver triangle on both sides of a shared edge
+        // makes it look non-manifold).
+        let mut out = Vec::new();
+        if degree == 1 {
+            for k in knots.iter().filter_map(|k| k.num()) {
+                if k >= t0 && k <= t1 {
+                    out.push(de_boor(&control, &weights, &knot_vector, degree, k));
+                }
+            }
+            return Ok(out);
+        }
         let samples = spans * 16;
-        let mut out = Vec::with_capacity(samples + 1);
         for i in 0..=samples {
             let t = t0 + (t1 - t0) * i as f64 / samples as f64;
             out.push(de_boor(&control, &weights, &knot_vector, degree, t));
@@ -625,16 +709,16 @@ impl Reader<'_> {
         Ok(out)
     }
 
-    /// The loops of a face as mesh vertices, oriented as the bounds say,
-    /// outer loop first.
-    fn face_loops(&mut self, face: usize) -> Result<Vec<Vec<u32>>, String> {
+    /// The bounds of a face: whether each is the outer one, its
+    /// orientation flag, and its edges with their orientation flags.
+    fn face_bounds(&self, face: usize) -> Result<Vec<Bound>, String> {
         let args = self
             .file
             .part(face, "ADVANCED_FACE")
             .or_else(|| self.file.part(face, "FACE_SURFACE"))
             .ok_or_else(|| format!("#{face} is not an ADVANCED_FACE"))?
             .to_vec();
-        let mut loops: Vec<(bool, Vec<u32>)> = Vec::new();
+        let mut out = Vec::new();
         for bound in args.get(1).map(Val::list).unwrap_or(&[]) {
             let Some(bid) = bound.reference() else {
                 continue;
@@ -651,7 +735,7 @@ impl Reader<'_> {
                 .part(loop_id, "EDGE_LOOP")
                 .ok_or_else(|| format!("#{loop_id} is not an EDGE_LOOP"))?
                 .to_vec();
-            let mut poly: Vec<u32> = Vec::new();
+            let mut edges = Vec::new();
             for oe in largs.get(1).map(Val::list).unwrap_or(&[]) {
                 let Some(oid) = oe.reference() else { continue };
                 let oargs = self
@@ -664,6 +748,21 @@ impl Reader<'_> {
                     .and_then(Val::reference)
                     .ok_or("oriented edge without an edge")?;
                 let forward = oargs.get(4).and_then(Val::flag).unwrap_or(true);
+                edges.push((edge, forward));
+            }
+            out.push((kind == "FACE_OUTER_BOUND", orientation, edges));
+        }
+        Ok(out)
+    }
+
+    /// The loops of a face as mesh vertices, oriented as the bounds say,
+    /// outer loop first.
+    fn face_loops(&mut self, face: usize) -> Result<Vec<Vec<u32>>, String> {
+        let bounds = self.face_bounds(face)?;
+        let mut loops: Vec<(bool, Vec<u32>)> = Vec::new();
+        for (outer, orientation, edges) in bounds {
+            let mut poly: Vec<u32> = Vec::new();
+            for (edge, forward) in edges {
                 let mut pts = self.edge(edge)?;
                 if !forward {
                     pts.reverse();
@@ -677,7 +776,7 @@ impl Reader<'_> {
             }
             poly.dedup();
             if poly.len() >= 3 {
-                loops.push((kind == "FACE_OUTER_BOUND", poly));
+                loops.push((outer, poly));
             }
         }
         if loops.is_empty() {
@@ -700,6 +799,221 @@ impl Reader<'_> {
             loops.swap(0, best);
         }
         Ok(loops.into_iter().map(|l| l.1).collect())
+    }
+
+    /// The cylinder a face lies on, if it is one.
+    fn cylinder_of(&self, face: usize) -> Result<Option<CylinderGeom>, String> {
+        let args = self
+            .file
+            .part(face, "ADVANCED_FACE")
+            .or_else(|| self.file.part(face, "FACE_SURFACE"))
+            .ok_or_else(|| format!("#{face} is not an ADVANCED_FACE"))?;
+        let surface = args
+            .get(2)
+            .and_then(Val::reference)
+            .ok_or("face without a surface")?;
+        let Some(cargs) = self.file.part(surface, "CYLINDRICAL_SURFACE") else {
+            return Ok(None);
+        };
+        let (centre, axis, x) = self.file.placement(
+            cargs
+                .get(1)
+                .and_then(Val::reference)
+                .ok_or("CYLINDRICAL_SURFACE without a placement")?,
+        )?;
+        let radius = cargs
+            .get(2)
+            .and_then(Val::num)
+            .ok_or("CYLINDRICAL_SURFACE without a radius")?
+            * self.scale;
+        Ok(Some(CylinderGeom {
+            centre: centre * self.scale,
+            axis,
+            x,
+            y: axis.cross(x),
+            radius,
+        }))
+    }
+
+    /// The loops of a cylindrical face in its (angle × radius, height)
+    /// parameters, the angle unwrapped along each loop so a loop around
+    /// the seam stays continuous and holes shifted into the outer loop's
+    /// turn.
+    fn cylinder_uvs(&self, loops: &[Vec<u32>], geom: &CylinderGeom) -> Vec<Vec<[f64; 2]>> {
+        let param = |p: Vec3| {
+            let d = p - geom.centre;
+            (d.dot(geom.y).atan2(d.dot(geom.x)), d.dot(geom.axis))
+        };
+        let mut uvs: Vec<Vec<[f64; 2]>> = Vec::new();
+        for l in loops {
+            let mut prev = 0.0;
+            let mut uv = Vec::with_capacity(l.len());
+            for (k, &v) in l.iter().enumerate() {
+                let (mut t, h) = param(self.vertices[v as usize]);
+                if k > 0 {
+                    while t - prev > std::f64::consts::PI {
+                        t -= std::f64::consts::TAU;
+                    }
+                    while prev - t > std::f64::consts::PI {
+                        t += std::f64::consts::TAU;
+                    }
+                }
+                prev = t;
+                uv.push([t * geom.radius, h]);
+            }
+            uvs.push(uv);
+        }
+        let outer_mid = {
+            let (lo, hi) = uvs[0].iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
+                (lo.min(p[0]), hi.max(p[0]))
+            });
+            (lo + hi) / 2.0
+        };
+        for uv in uvs.iter_mut().skip(1) {
+            let mid = uv.iter().map(|p| p[0]).sum::<f64>() / uv.len() as f64;
+            let shift = ((outer_mid - mid) / (std::f64::consts::TAU * geom.radius)).round()
+                * std::f64::consts::TAU
+                * geom.radius;
+            for p in uv.iter_mut() {
+                p[0] += shift;
+            }
+        }
+        uvs
+    }
+
+    /// First pass over a cylindrical face: decides the strips it will be
+    /// cut into and inserts the strips' columns into every edge of the
+    /// face, so the faces on the other side of those edges use the same
+    /// points and the mesh welds closed. A column crossing an edge
+    /// between two samples is placed on the cylinder at the interpolated
+    /// height, which both faces then share.
+    fn prepare_cylinder(&mut self, face: usize) -> Result<(), String> {
+        let Some(geom) = self.cylinder_of(face)? else {
+            return Ok(());
+        };
+        let loops = self.face_loops(face)?;
+        let uvs = self.cylinder_uvs(&loops, &geom);
+        let (umin, umax) = uvs[0].iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
+            (lo.min(p[0]), hi.max(p[0]))
+        });
+        let width = geom.radius * STEP_ANGLE;
+        let raw = (umax - umin) / width;
+        let strips = if (raw - raw.round()).abs() < 1e-6 {
+            raw.round()
+        } else {
+            raw.ceil()
+        }
+        .max(1.0) as usize;
+        let width = (umax - umin) / strips as f64;
+        let outward = signed_area(&uvs[0]) > 0.0;
+        self.columns.insert(
+            face,
+            Columns {
+                umin,
+                strips,
+                width,
+                outward,
+            },
+        );
+        // Column angles about the cylinder, modulo a turn.
+        let columns: Vec<f64> = (0..=strips)
+            .map(|k| ((umin + width * k as f64) / geom.radius).rem_euclid(std::f64::consts::TAU))
+            .collect();
+        // Samples closer than this along an edge would make triangles
+        // too thin to keep (the mesh importer drops those and the mesh
+        // no longer closes), so nearby samples move onto a column or
+        // go.
+        let delta = 1e-2 * width;
+        let angle_of = |p: Vec3| {
+            let d = p - geom.centre;
+            (d.dot(geom.y).atan2(d.dot(geom.x)), d.dot(geom.axis))
+        };
+        let on_column = |c: f64, h: f64| {
+            geom.centre + (geom.x * c.cos() + geom.y * c.sin()) * geom.radius + geom.axis * h
+        };
+        let mut seen: Vec<usize> = Vec::new();
+        for (_, _, edges) in self.face_bounds(face)? {
+            for (edge, _) in edges {
+                if seen.contains(&edge) {
+                    continue;
+                }
+                seen.push(edge);
+                let pts = self.edge(edge)?;
+                // A sample within `delta` of a column moves onto it and
+                // stays there, so no crossing lands right next to it.
+                for &v in &pts {
+                    if self.fixed.contains(&v) {
+                        continue;
+                    }
+                    let (t, h) = angle_of(self.vertices[v as usize]);
+                    let near = columns.iter().copied().find(|&c| {
+                        let d = (t - c).rem_euclid(std::f64::consts::TAU);
+                        d.min(std::f64::consts::TAU - d) * geom.radius < delta
+                    });
+                    if let Some(c) = near {
+                        self.vertices[v as usize] = on_column(c, h);
+                        self.fixed.insert(v);
+                    }
+                }
+                // Movable samples within `delta` of the last kept sample
+                // or of the next fixed one go.
+                let mut kept: Vec<u32> = vec![pts[0]];
+                for (i, &v) in pts.iter().enumerate().skip(1) {
+                    if !self.fixed.contains(&v) {
+                        let p = self.vertices[v as usize];
+                        let prev = self.vertices[*kept.last().unwrap() as usize];
+                        let next_fixed = pts[i + 1..]
+                            .iter()
+                            .find(|w| self.fixed.contains(w))
+                            .map(|&w| self.vertices[w as usize]);
+                        if (p - prev).length() < delta
+                            || next_fixed.is_some_and(|q| (p - q).length() < delta)
+                        {
+                            continue;
+                        }
+                    }
+                    kept.push(v);
+                }
+                let mut enriched: Vec<u32> = Vec::with_capacity(kept.len());
+                for w in kept.windows(2) {
+                    let (a, b) = (self.vertices[w[0] as usize], self.vertices[w[1] as usize]);
+                    enriched.push(w[0]);
+                    let (ta, ha) = angle_of(a);
+                    let (mut tb, hb) = angle_of(b);
+                    while tb - ta > std::f64::consts::PI {
+                        tb -= std::f64::consts::TAU;
+                    }
+                    while ta - tb > std::f64::consts::PI {
+                        tb += std::f64::consts::TAU;
+                    }
+                    if (tb - ta).abs() < 1e-12 {
+                        continue;
+                    }
+                    let (lo, hi) = (ta.min(tb), ta.max(tb));
+                    let mut crossings: Vec<(f64, Vec3)> = Vec::new();
+                    for &c in &columns {
+                        for k in -1..=1 {
+                            let cc = c + k as f64 * std::f64::consts::TAU;
+                            if cc <= lo + 1e-9 || cc >= hi - 1e-9 {
+                                continue;
+                            }
+                            let f = (cc - ta) / (tb - ta);
+                            crossings.push((f, on_column(cc, ha + (hb - ha) * f)));
+                        }
+                    }
+                    crossings.sort_by(|p, q| p.0.partial_cmp(&q.0).unwrap());
+                    for (_, p) in crossings {
+                        let v = self.push(p);
+                        self.fixed.insert(v);
+                        enriched.push(v);
+                    }
+                }
+                // Interior samples only: drop the two end vertices.
+                let interior: Vec<u32> = enriched[1..].to_vec();
+                self.edge_samples.insert(edge, interior);
+            }
+        }
+        Ok(())
     }
 
     /// Triangulates a face into `out`.
@@ -750,115 +1064,104 @@ impl Reader<'_> {
             return Ok(());
         }
         if kinds.contains(&"CYLINDRICAL_SURFACE") {
-            let cargs = self.file.part(surface, "CYLINDRICAL_SURFACE").unwrap();
-            let (centre, axis, x) = self.file.placement(
-                cargs
-                    .get(1)
-                    .and_then(Val::reference)
-                    .ok_or("CYLINDRICAL_SURFACE without a placement")?,
-            )?;
-            let centre = centre * self.scale;
-            let radius = cargs
-                .get(2)
-                .and_then(Val::num)
-                .ok_or("CYLINDRICAL_SURFACE without a radius")?
-                * self.scale;
-            let y = axis.cross(x);
-            // (angle, height) parameters, the angle unwrapped along each
-            // loop so a loop around the seam stays continuous.
-            let param = |p: Vec3| {
-                let d = p - centre;
-                (d.dot(y).atan2(d.dot(x)), d.dot(axis))
-            };
-            let mut uvs: Vec<Vec<[f64; 2]>> = Vec::new();
-            for l in &loops {
-                let mut prev = 0.0;
-                let mut uv = Vec::with_capacity(l.len());
-                for (k, &v) in l.iter().enumerate() {
-                    let (mut t, h) = param(self.vertices[v as usize]);
-                    if k > 0 {
-                        while t - prev > std::f64::consts::PI {
-                            t -= std::f64::consts::TAU;
-                        }
-                        while prev - t > std::f64::consts::PI {
-                            t += std::f64::consts::TAU;
-                        }
-                    }
-                    prev = t;
-                    uv.push([t * radius, h]);
-                }
-                uvs.push(uv);
-            }
-            // Holes sit within the outer loop's angle range.
-            let outer_mid = {
-                let (lo, hi) = uvs[0].iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
-                    (lo.min(p[0]), hi.max(p[0]))
-                });
-                (lo + hi) / 2.0
-            };
-            for uv in uvs.iter_mut().skip(1) {
-                let mid = uv.iter().map(|p| p[0]).sum::<f64>() / uv.len() as f64;
-                let shift = ((outer_mid - mid) / (std::f64::consts::TAU * radius)).round()
-                    * std::f64::consts::TAU
-                    * radius;
+            let geom = self.cylinder_of(face)?.expect("a cylinder");
+            let cols = *self
+                .columns
+                .get(&face)
+                .ok_or("cylindrical face was not prepared")?;
+            let mut uvs = self.cylinder_uvs(&loops, &geom);
+            // Loop points the first pass put on a column sit on it exactly,
+            // give or take float noise.
+            let near = 1e-7 * cols.width;
+            for uv in uvs.iter_mut() {
                 for p in uv.iter_mut() {
-                    p[0] += shift;
+                    let k = ((p[0] - cols.umin) / cols.width).round();
+                    let on = cols.umin + cols.width * k;
+                    if (p[0] - on).abs() < near {
+                        p[0] = on;
+                    }
                 }
             }
             // Outward normals go with counter-clockwise (angle, height)
             // loops; the loop's winding decides, like the plane above.
-            let area: f64 = signed_area(&uvs[0]);
-            let outward = area > 0.0;
             let _ = same_sense;
-            if !outward {
+            let sign = if cols.outward { 1.0 } else { -1.0 };
+            if !cols.outward {
                 for uv in uvs.iter_mut() {
                     for p in uv.iter_mut() {
                         p[0] = -p[0];
                     }
                 }
             }
+            // The clipper wants material on the left: counter-clockwise
+            // outer loop, clockwise holes.
+            if signed_area(&uvs[0]) < 0.0 {
+                for uv in uvs.iter_mut() {
+                    uv.reverse();
+                }
+            }
             // A triangle must not span more than a facet's angle, or it
             // cuts a chord through the surface (a fan from a seam corner
             // would turn the wall into cones), so the polygon is cut into
-            // strips one facet wide and each strip triangulated on its own.
-            // Strip vertices are made from their parameters; those on the
-            // face's own edges land within tolerance of the neighbours'.
-            let sign = if outward { 1.0 } else { -1.0 };
+            // the strips decided in the first pass and each strip
+            // triangulated on its own. Every column crosses the loops at
+            // vertices the first pass put there, which are reused.
+            let (centre, axis, x, y, radius) =
+                (geom.centre, geom.axis, geom.x, geom.y, geom.radius);
             let to_3d = |p: [f64; 2]| {
                 let t = sign * p[0] / radius;
                 centre + (x * t.cos() + y * t.sin()) * radius + axis * p[1]
             };
-            let (umin, umax) = uvs[0].iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
-                (lo.min(p[0]), hi.max(p[0]))
-            });
-            let width = radius * STEP_ANGLE;
-            let strips = (((umax - umin) / width).ceil() as usize).max(1);
-            let width = (umax - umin) / strips as f64;
-            let mut made: HashMap<(i64, i64), u32> = HashMap::new();
             let quantum = 1e-9 * radius.max(1.0);
-            for k in 0..strips {
+            let key = |p: [f64; 2]| {
+                (
+                    (p[0] / quantum).round() as i64,
+                    (p[1] / quantum).round() as i64,
+                )
+            };
+            let mut made: HashMap<(i64, i64), u32> = HashMap::new();
+            for (l, uv) in loops.iter().zip(&uvs) {
+                for (&v, p) in l.iter().zip(uv) {
+                    made.entry(key(*p)).or_insert(v);
+                }
+            }
+            let umin = if cols.outward {
+                cols.umin
+            } else {
+                -(cols.umin + cols.width * cols.strips as f64)
+            };
+            let (vlo, vhi) = uvs
+                .iter()
+                .flatten()
+                .fold((f64::MAX, f64::MIN), |(lo, hi), p| {
+                    (lo.min(p[1]), hi.max(p[1]))
+                });
+            for k in 0..cols.strips {
+                // Clip lines exactly on the columns: the loop vertices there
+                // (put or snapped there by the first pass) come out in both
+                // neighbouring strips as the same points.
                 let (u0, u1) = (
-                    umin + width * k as f64 - quantum,
-                    umin + width * (k + 1) as f64 + quantum,
+                    umin + cols.width * k as f64,
+                    umin + cols.width * (k + 1) as f64,
                 );
-                let (vlo, vhi) = uvs
-                    .iter()
-                    .flatten()
-                    .fold((f64::MAX, f64::MIN), |(lo, hi), p| {
-                        (lo.min(p[1]), hi.max(p[1]))
-                    });
-                let strip = vec![vec![
-                    [u0, vlo - 1.0],
-                    [u1, vlo - 1.0],
-                    [u1, vhi + 1.0],
-                    [u0, vhi + 1.0],
-                ]];
-                let pieces = uvs.clone().overlay_as::<i64>(
-                    &strip,
-                    OverlayRule::Intersect,
-                    FillRule::NonZero,
-                );
-                for piece in pieces {
+                let rect: Rect = [u0, vlo - 1.0, u1, vhi + 1.0];
+                // The strip reaches past the loops, so its corners are
+                // never in material.
+                let pieces = clip_and_close(&uvs, &[], rect, quantum, || Some(false))
+                    .ok_or_else(|| format!("face #{face}: its loops do not close in a strip"))?;
+                // Holes (clockwise) go with the outer contour that holds them.
+                let (outers, holes): (Vec<Contour>, Vec<Contour>) = pieces
+                    .into_iter()
+                    .filter(|c| c.len() >= 3)
+                    .partition(|c| signed_area(c) > 0.0);
+                let mut groups: Vec<Vec<Contour>> = outers.into_iter().map(|o| vec![o]).collect();
+                for h in holes {
+                    let Some(g) = groups.iter_mut().find(|g| point_in_contour(h[0], &g[0])) else {
+                        continue;
+                    };
+                    g.push(h);
+                }
+                for piece in groups {
                     let mut flat: Vec<f64> = Vec::new();
                     let mut holes: Vec<usize> = Vec::new();
                     let mut index: Vec<u32> = Vec::new();
@@ -868,25 +1171,19 @@ impl Reader<'_> {
                         }
                         for p in l {
                             flat.extend(p);
-                            let key = (
-                                (p[0] / quantum).round() as i64,
-                                (p[1] / quantum).round() as i64,
-                            );
-                            let v = match made.get(&key) {
+                            let v = match made.get(&key(*p)) {
                                 Some(&v) => v,
                                 None => {
                                     let v = self.push(to_3d(*p));
-                                    made.insert(key, v);
+                                    made.insert(key(*p), v);
                                     v
                                 }
                             };
                             index.push(v);
                         }
                     }
-                    for t in earcutr::earcut(&flat, &holes, 2)
-                        .unwrap_or_default()
-                        .chunks_exact(3)
-                    {
+                    let tris = earcutr::earcut(&flat, &holes, 2).unwrap_or_default();
+                    for t in tris.chunks_exact(3) {
                         out.push([index[t[0]], index[t[1]], index[t[2]]]);
                     }
                 }
@@ -919,6 +1216,22 @@ fn triangulate(loops: &[Vec<u32>], uvs: &[Vec<[f64; 2]>], out: &mut Vec<[u32; 3]
     for t in tris.chunks_exact(3) {
         out.push([index[t[0]], index[t[1]], index[t[2]]]);
     }
+}
+
+/// Even-odd point-in-polygon test.
+fn point_in_contour(p: [f64; 2], c: &[[f64; 2]]) -> bool {
+    let n = c.len();
+    let mut inside = false;
+    for i in 0..n {
+        let (a, b) = (c[i], c[(i + 1) % n]);
+        if (a[1] > p[1]) != (b[1] > p[1]) {
+            let x = a[0] + (p[1] - a[1]) / (b[1] - a[1]) * (b[0] - a[0]);
+            if p[0] < x {
+                inside = !inside;
+            }
+        }
+    }
+    inside
 }
 
 fn signed_area(uv: &[[f64; 2]]) -> f64 {
@@ -1015,12 +1328,24 @@ pub fn read_step(text: &str) -> Result<Vec<StepBody>, String> {
             vertices: Vec::new(),
             vertex_of: HashMap::new(),
             edge_samples: HashMap::new(),
+            columns: HashMap::new(),
+            fixed: HashSet::new(),
         };
+        let face_ids: Vec<usize> = sargs
+            .get(1)
+            .map(Val::list)
+            .unwrap_or(&[])
+            .iter()
+            .filter_map(Val::reference)
+            .collect();
+        // Cylindrical faces first decide their strips and share the
+        // columns with their edges; then every face is triangulated.
+        for &fid in &face_ids {
+            reader.prepare_cylinder(fid)?;
+        }
         let mut triangles = Vec::new();
-        for f in sargs.get(1).map(Val::list).unwrap_or(&[]) {
-            if let Some(fid) = f.reference() {
-                reader.face(fid, &mut triangles)?;
-            }
+        for &fid in &face_ids {
+            reader.face(fid, &mut triangles)?;
         }
         bodies.push(StepBody {
             name,
@@ -1174,6 +1499,8 @@ END-ISO-10303-21;
             vertices: Vec::new(),
             vertex_of: HashMap::new(),
             edge_samples: HashMap::new(),
+            columns: HashMap::new(),
+            fixed: HashSet::new(),
         };
         let pts = reader.bspline_points(4).unwrap();
         assert_eq!(pts.len(), 17);

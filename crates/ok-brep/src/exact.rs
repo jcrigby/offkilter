@@ -379,7 +379,9 @@ pub fn run_points(
         for &r in rulings {
             for k in -1..=1 {
                 let rho = r + k as f64 * std::f64::consts::TAU;
-                if rho <= lo + 1e-9 || rho >= hi - 1e-9 {
+                // A ruling right next to a vertex adds nothing but a
+                // near-duplicate point.
+                if rho <= lo + 1e-4 || rho >= hi - 1e-4 {
                     continue;
                 }
                 let frac = (rho - t0) / (t1 - t0);
@@ -686,7 +688,10 @@ mod tests {
                 .map(|k| (k as f64).to_radians() - std::f64::consts::PI)
                 .collect();
             let pts = run_points(&cut, &vf, run, Some((cyls[0], &fine)));
-            assert!(pts.len() > run.vertices.len() * 2, "{} points", pts.len());
+            // The loop spans about 47 degrees of the wall either way,
+            // so it crosses well over sixty fine rulings that are not
+            // facet edges.
+            assert!(pts.len() > run.vertices.len() + 60, "{} points", pts.len());
             for p in &pts {
                 assert!(p.distance(project(wall, *p)) < 1e-9);
                 assert!(p.distance(project(hole, *p)) < 1e-6, "{p:?}");
