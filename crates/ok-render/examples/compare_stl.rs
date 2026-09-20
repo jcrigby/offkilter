@@ -39,10 +39,25 @@ fn solid_of(m: &ok_mesh::ReadMesh) -> Solid {
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    let (part, stl, png) = (&args[1], &args[2], args.get(3));
+    // compare_stl part.okpart reference.stl [out.png] [--tab NAME]
+    let mut args: Vec<String> = std::env::args().skip(1).collect();
+    let tab_name = args.iter().position(|a| a == "--tab").map(|i| {
+        let name = args[i + 1].clone();
+        args.drain(i..=i + 1);
+        name
+    });
+    let (part, stl, png) = (&args[0], &args[1], args.get(2));
     let mut doc = ok_model::Document::from_json(&std::fs::read_to_string(part).unwrap()).unwrap();
-    let tab = doc.tabs[0].id;
+    let tab = match tab_name {
+        Some(name) => {
+            doc.tabs
+                .iter()
+                .find(|t| t.name() == name)
+                .unwrap_or_else(|| panic!("no tab {name}"))
+                .id
+        }
+        None => doc.tabs[0].id,
+    };
     let result = doc.regenerate_studio(tab, None).unwrap();
     let kernel = &result.bodies[0].solid;
     let mesh = ok_mesh::from_stl(&std::fs::read(stl).unwrap()).unwrap();
