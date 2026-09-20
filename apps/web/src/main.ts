@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import { to3mf, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingView } from "./export";
+import { to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingView, type SheetSize } from "./export";
 import { parseStl } from "./stl";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
@@ -1017,14 +1017,27 @@ class App implements SketchHost {
     return { name: "section", lines, cut: lines.cut, trace: { ...trace, label: "A", towards: sign } };
   }
 
+  /** Which views the drawing sheet shows (all by default) and its sheet size. */
+  drawingOptions: { views: Set<string>; sheet: SheetSize } = { views: new Set(["front", "top", "right", "iso", "section"]), sheet: "A4" };
+
+  /** The chosen drawing views only. */
+  chosenDrawingViews(): DrawingView[] {
+    return this.drawingViews().filter((v) => this.drawingOptions.views.has(v.name));
+  }
+
   /** A drawing sheet of the current bodies as SVG. */
   toDrawingSvg(): string {
-    return toDrawingSvg(this.drawingViews(), this.summary.name);
+    return toDrawingSvg(this.chosenDrawingViews(), this.summary.name, this.drawingOptions.sheet);
   }
 
   /** The drawing views as DXF lines at 1:1. */
   toDrawingDxf(): string {
-    return toDrawingDxf(this.drawingViews());
+    return toDrawingDxf(this.chosenDrawingViews());
+  }
+
+  /** A bill of materials of the current tab as CSV. */
+  toBom(): string {
+    return toBom(this.summary);
   }
 
   /** Triggers a browser download of `blob` named after the document. */
@@ -2667,6 +2680,21 @@ async function main(): Promise<void> {
     if (app.section) app.setSection({ ...app.section, flip: !app.section.flip });
   };
   app.undo(); // no-op that initialises the button states
+  const drawingDialog = $("#drawing-dialog") as HTMLDialogElement;
+  const renderDrawingPreview = () => {
+    const views = ["front", "top", "right", "iso", "section"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
+    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize };
+    $("#drawing-preview").innerHTML = app.toDrawingSvg();
+  };
+  const openDrawingDialog = () => {
+    renderDrawingPreview();
+    drawingDialog.showModal();
+  };
+  for (const n of ["front", "top", "right", "iso", "section"]) ($(`#dv-${n}`) as HTMLInputElement).onchange = renderDrawingPreview;
+  ($("#dv-sheet") as HTMLSelectElement).onchange = renderDrawingPreview;
+  $("#drawing-svg").onclick = () => app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
+  $("#drawing-dxf").onclick = () => app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
+  $("#drawing-close").onclick = () => drawingDialog.close();
   const exportSelect = $("#export") as HTMLSelectElement;
   exportSelect.onchange = () => {
     const what = exportSelect.value;
@@ -2675,6 +2703,8 @@ async function main(): Promise<void> {
     else if (what === "3mf") app.download(app.to3mf(), "3mf");
     else if (what === "svg-drawing") app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
     else if (what === "dxf-drawing") app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
+    else if (what === "bom") app.download(new Blob([app.toBom()], { type: "text/csv" }), "csv", `${app.summary.name}-bom`);
+    else if (what === "drawing") openDrawingDialog();
     else if (what === "dxf") {
       const dxf = app.toDxf();
       if (dxf === null) {

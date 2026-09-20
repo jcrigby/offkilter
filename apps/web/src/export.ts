@@ -411,8 +411,12 @@ function scaleLabel(s: number): string {
  * third-angle layout at the largest standard scale that fits, hidden
  * lines dashed, and a title block.
  */
-export function toDrawingSvg(views: DrawingView[], title: string): string {
-  const sheet = { w: 297, h: 210, margin: 10, block: 24 };
+/** Sheet sizes in millimetres, landscape. */
+export const SHEETS = { A4: { w: 297, h: 210 }, A3: { w: 420, h: 297 }, A2: { w: 594, h: 420 }, Letter: { w: 279.4, h: 215.9 } } as const;
+export type SheetSize = keyof typeof SHEETS;
+
+export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSize = "A4"): string {
+  const sheet = { ...SHEETS[size], margin: 10, block: 24 };
   const { placed, dims, min, max } = layout(views);
   const availW = sheet.w - 2 * sheet.margin;
   const availH = sheet.h - 2 * sheet.margin - sheet.block;
@@ -470,7 +474,7 @@ export function toDrawingSvg(views: DrawingView[], title: string): string {
   out.push(`<line x1="${sheet.w / 2}" y1="${by}" x2="${sheet.w / 2}" y2="${sheet.h - sheet.margin}" stroke="black" stroke-width="0.35"/>`);
   const t = (x: number, y: number, text: string, size = 4) => out.push(`<text x="${x}" y="${y}" font-family="Helvetica, Arial, sans-serif" font-size="${size}" fill="black">${escapeXml(text)}</text>`);
   t(sheet.margin + 4, by + 9, title, 6);
-  t(sheet.margin + 4, by + 18, `Views: ${placed.map((p) => p.name).join(", ")} · third angle · mm`, 3.5);
+  t(sheet.margin + 4, by + 18, `Views: ${placed.map((p) => p.name).join(", ")} · third angle · mm · ${size}`, 3.5);
   t(sheet.w / 2 + 4, by + 9, `Scale ${scaleLabel(scale)}`);
   t(sheet.w / 2 + 4, by + 18, `${new Date().toISOString().slice(0, 10)} · offkilter`, 3.5);
   out.push(`</svg>`);
@@ -510,4 +514,34 @@ export function toDrawingDxf(views: DrawingView[]): string {
   }
   lines.push("0", "ENDSEC", "0", "EOF");
   return lines.join("\r\n") + "\r\n";
+}
+
+/** A bill of materials for the current tab as CSV: one row per body (part studio) or per instance (assembly). */
+export function toBom(summary: { kind: string; name: string; bodies: BodySummary[]; instances: { name: string; studio: number; body: number; body_indices: number[] }[]; tabs: { id: number; name: string }[] }): string {
+  const esc = (v: string | number) => {
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const rows: (string | number)[][] = [];
+  if (summary.kind === "assembly") {
+    rows.push(["instance", "source", "body", "volume_mm3", "surface_mm2", "size_mm"]);
+    for (const inst of summary.instances) {
+      const tab = summary.tabs.find((t) => t.id === inst.studio)?.name ?? `tab ${inst.studio}`;
+      for (const i of inst.body_indices) {
+        const b = summary.bodies[i];
+        if (b) rows.push([inst.name, tab, b.name, b.volume.toFixed(3), b.area.toFixed(3), sizeOf(b)]);
+      }
+      if (inst.body_indices.length === 0) rows.push([inst.name, tab, "", "", "", ""]);
+    }
+  } else {
+    rows.push(["part", "volume_mm3", "surface_mm2", "size_mm", "faces"]);
+    for (const b of summary.bodies) rows.push([b.name, b.volume.toFixed(3), b.area.toFixed(3), sizeOf(b), b.face_count]);
+  }
+  return rows.map((r) => r.map(esc).join(",")).join("\n") + "\n";
+}
+
+function sizeOf(b: BodySummary): string {
+  if (!b.bounds) return "";
+  const [lo, hi] = b.bounds;
+  return [hi.x - lo.x, hi.y - lo.y, hi.z - lo.z].map((v) => v.toFixed(2)).join(" x ");
 }

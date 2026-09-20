@@ -59,6 +59,8 @@
           <option value="dxf">DXF (selected sketch)</option>
           <option value="svg-drawing">Drawing sheet (SVG)</option>
           <option value="dxf-drawing">Drawing views (DXF)</option>
+          <option value="drawing">Drawing… (preview and options)</option>
+          <option value="bom">Bill of materials (CSV)</option>
         </select>
         <button id="btn-import" title="Import an STL mesh as a body">Import STL</button>
         <input id="file-input" type="file" accept=".okpart,.json" hidden />
@@ -132,6 +134,24 @@
         <ul id="versions-list" class="docs-list"></ul>
         <ul id="versions-diff" class="docs-list diff" hidden></ul>
         <div class="row"><button id="versions-save">Save version</button></div>
+      </div>
+    </dialog>
+    <dialog id="drawing-dialog" class="wide">
+      <h3>Drawing sheet</h3>
+      <div class="row drawing-options">
+        <label><input type="checkbox" id="dv-front" checked /> Front</label>
+        <label><input type="checkbox" id="dv-top" checked /> Top</label>
+        <label><input type="checkbox" id="dv-right" checked /> Right</label>
+        <label><input type="checkbox" id="dv-iso" checked /> Isometric</label>
+        <label><input type="checkbox" id="dv-section" checked /> Section A-A</label>
+        <label>Sheet <select id="dv-sheet"><option>A4</option><option>A3</option><option>A2</option><option>Letter</option></select></label>
+      </div>
+      <p class="note">The section follows the viewport's section plane when one is shown; otherwise it cuts through the middle, parallel to the front view.</p>
+      <div id="drawing-preview" class="drawing-preview"></div>
+      <div class="row">
+        <button id="drawing-svg" class="primary">Download SVG</button>
+        <button id="drawing-dxf">Download DXF</button>
+        <button id="drawing-close">Close</button>
       </div>
     </dialog>
     <dialog id="help-dialog">

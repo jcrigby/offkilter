@@ -34,8 +34,9 @@ works today, all in the browser:
   animation of any spinning or sliding mate.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
   document only reverts your own edit), `.okpart` JSON documents, STL import, STL, 3MF and DXF export, drawing
-  sheets (SVG/DXF) with hidden-line removal, overall dimensions and a
-  hatched section view, mass properties.
+  sheets (SVG/DXF, A4 to A2 or Letter, chosen views with a live preview)
+  with hidden-line removal, overall dimensions and a hatched section
+  view, bills of materials as CSV, mass properties.
 
 - Cloud: a small document server with real-time multi-user editing;
   concurrent edits converge without conflicts, documents keep named

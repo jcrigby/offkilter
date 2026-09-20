@@ -323,6 +323,12 @@ test("assembly tab: insert two instances and mate them face to face", async ({ p
     app.applyDoc({ type: "assembly", tab: app.tab, op: { type: "add_mate", kind: "fastened", a: { instance: a, face: { feature: e, local: 1 } }, b: { instance: b, face: { feature: e, local: 0 } }, offset: 0, angle: 0, flip: false, name: null } });
   }, extrude);
   await expect(page.locator("#mate-list li")).toHaveCount(1);
+  // The assembly's bill of materials lists both instances with their source tab.
+  const bom: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toBom());
+  expect(bom.split("\n")[0]).toBe("instance,source,body,volume_mm3,surface_mm2,size_mm");
+  expect(bom.trim().split("\n").length).toBe(3);
+  expect(bom).toContain("Part Studio 1");
+  expect(bom).toContain("500.000");
   const top = () => page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies[1].bounds[0].z as number);
   expect(await top()).toBeCloseTo(5, 6);
   // Editing the mate offset through the panel moves the instance.
@@ -801,6 +807,23 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   expect(svg).toContain('class="hatch"');
   expect(svg).toContain("SECTION A-A");
   expect(svg).toContain('class="trace"');
+  // The drawing dialog previews the sheet and its options change what is drawn.
+  await page.selectOption("#export", "drawing");
+  await expect(page.locator("#drawing-dialog")).toBeVisible();
+  await expect(page.locator("#drawing-preview svg")).toHaveCount(1);
+  await page.uncheck("#dv-iso");
+  await page.selectOption("#dv-sheet", "A3");
+  await expect(page.locator("#drawing-preview svg")).toHaveAttribute("width", "420mm");
+  await expect(page.locator('#drawing-preview svg g[id="view-iso"]')).toHaveCount(0);
+  await expect(page.locator('#drawing-preview svg g[id="view-front"]')).toHaveCount(1);
+  await page.click("#drawing-close");
+  const svg2: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingSvg());
+  expect(svg2).not.toContain('id="view-iso"');
+  expect(svg2).toContain("A3");
+  // Bill of materials for the part studio: one row per body.
+  const bom: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toBom());
+  expect(bom.split("\n")[0]).toBe("part,volume_mm3,surface_mm2,size_mm,faces");
+  expect(bom.trim().split("\n").length).toBe(2);
   const dxf: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingDxf());
   expect((dxf.match(/\r\nHIDDEN\r\n/g) ?? []).length).toBeGreaterThan(0);
   expect((dxf.match(/\r\nDIMENSIONS\r\n/g) ?? []).length).toBeGreaterThan(3);
