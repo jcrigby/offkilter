@@ -41,7 +41,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Fillets and chamfers on curved edges (a rim is one chain, blended with one mitred sweep)
 - [ ] Proper corner patches where blends meet; variable-dihedral chains
 - [x] Booleans stay closed when a vertex sits a hair off its face plane or a face is nearly coplanar with the tool (the two former fuzz failures are regression cases)
-- [ ] Faces left non-planar by the full stitch threshold (one fuzz sequence at a 1e-4 nudge); keep faces planar within tolerance after stitching
+- [x] Faces left non-planar by stitching are split into planar triangles at assembly, so every sectioned face is planar within tolerance
 - [x] Shell (uniform wall, chosen faces open; an offset polyhedron subtracted in one boolean; cavities whose offset changes the topology are reported, not guessed)
 - [x] Draft (tilt planar faces about a neutral plane) and Move face (push / pull planar faces): direct edits that re-solve the surrounding corners
 - [x] Mirror and linear / circular patterns of bodies

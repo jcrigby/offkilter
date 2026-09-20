@@ -337,6 +337,7 @@ impl Solid {
                 solid.repair_t_junctions(tol);
             }
         }
+        solid.split_nonplanar_faces(tol);
         solid.remove_spikes(tol);
         solid.remove_degenerate_faces();
         solid.compact_surfaces();
@@ -524,6 +525,103 @@ impl Solid {
         }
         self.faces.retain(|f| !f.loops.is_empty());
         true
+    }
+
+    /// Splits any face whose vertices stray from its plane by more than
+    /// `tol` into triangles, each exactly planar, keeping the surface tag
+    /// and origin. Stitching open vertices and collapsing short edges may
+    /// move a vertex by several times the merge tolerance, which can leave
+    /// a face non-planar by that much; later booleans section such a face
+    /// by its plane and would get points off its true edges.
+    fn split_nonplanar_faces(&mut self, tol: f64) {
+        let mut out: Vec<Face> = Vec::with_capacity(self.faces.len());
+        for f in std::mem::take(&mut self.faces) {
+            let pts: Vec<Vec3> = f.loops[0]
+                .iter()
+                .map(|&v| self.vertices[v as usize])
+                .collect();
+            let Some(n) = revolve::newell_normal(&pts).normalized() else {
+                out.push(f);
+                continue;
+            };
+            let centroid = pts.iter().fold(Vec3::ZERO, |a, &p| a + p) * (1.0 / pts.len() as f64);
+            let off = f
+                .loops
+                .iter()
+                .flatten()
+                .map(|&v| n.dot(self.vertices[v as usize] - centroid).abs())
+                .fold(0.0, f64::max);
+            if off <= tol {
+                out.push(f);
+                continue;
+            }
+            // Triangulate in the best-fit plane; every triangle is planar.
+            let x = (f.plane.x_axis - n * f.plane.x_axis.dot(n))
+                .normalized()
+                .unwrap_or_else(|| {
+                    let seed = if n.x.abs() < 0.9 { Vec3::X } else { Vec3::Y };
+                    n.cross(seed).normalized().unwrap_or(Vec3::X)
+                });
+            let frame = ok_math::Plane {
+                origin: centroid,
+                x_axis: x,
+                y_axis: n.cross(x),
+                normal: n,
+            };
+            let mut flat: Vec<f64> = Vec::new();
+            let mut holes: Vec<usize> = Vec::new();
+            let mut ids: Vec<u32> = Vec::new();
+            for (li, l) in f.loops.iter().enumerate() {
+                if li > 0 {
+                    holes.push(flat.len() / 2);
+                }
+                for &v in l {
+                    let q = frame.to_plane(self.vertices[v as usize]);
+                    flat.extend([q.x, q.y]);
+                    ids.push(v);
+                }
+            }
+            let tris = earcutr::earcut(&flat, &holes, 2).unwrap_or_default();
+            if tris.len() < 3 {
+                out.push(f);
+                continue;
+            }
+            let mut any = false;
+            for t in tris.chunks(3) {
+                let (a, b, c) = (ids[t[0]], ids[t[1]], ids[t[2]]);
+                let (pa, pb, pc) = (
+                    self.vertices[a as usize],
+                    self.vertices[b as usize],
+                    self.vertices[c as usize],
+                );
+                let Some(tn) = (pb - pa).cross(pc - pa).normalized() else {
+                    continue;
+                };
+                // Earcut winds with the frame; keep the outward sense of the face.
+                let (loop_, tn) = if tn.dot(n) >= 0.0 {
+                    (vec![a, b, c], tn)
+                } else {
+                    (vec![a, c, b], -tn)
+                };
+                let tx = (pb - pa).normalized().unwrap_or(x);
+                out.push(Face {
+                    plane: ok_math::Plane {
+                        origin: pa,
+                        x_axis: tx,
+                        y_axis: tn.cross(tx),
+                        normal: tn,
+                    },
+                    loops: vec![loop_],
+                    surface: f.surface,
+                    origin: f.origin,
+                });
+                any = true;
+            }
+            if !any {
+                out.push(f);
+            }
+        }
+        self.faces = out;
     }
 
     /// Inserts any vertex lying strictly inside an edge into that edge.
@@ -1053,5 +1151,121 @@ impl VertexMerger {
         self.points.push(p);
         self.cells.entry(k).or_default().push(id);
         id
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_face_bent_by_more_than_tolerance_is_split_into_planar_triangles() {
+        // A unit box whose top far corner is raised by 5e-3: the top is
+        // non-planar by well over the merge tolerance.
+        let lift = 5e-3;
+        let p = |x: f64, y: f64, z: f64| Vec3::new(x, y, z);
+        let quad = |pts: [Vec3; 4], normal: Vec3, local: u32| {
+            let x = (pts[1] - pts[0]).normalized().unwrap();
+            Polygon {
+                plane: ok_math::Plane {
+                    origin: pts[0],
+                    x_axis: x,
+                    y_axis: normal.cross(x),
+                    normal,
+                },
+                loops: vec![pts.to_vec()],
+                surface: local as usize,
+                origin: FaceOrigin { feature: 1, local },
+            }
+        };
+        let (nx, ny, nz) = (p(1.0, 0.0, 0.0), p(0.0, 1.0, 0.0), p(0.0, 0.0, 1.0));
+        let polys = vec![
+            quad(
+                [
+                    p(0.0, 0.0, 0.0),
+                    p(0.0, 1.0, 0.0),
+                    p(1.0, 1.0, 0.0),
+                    p(1.0, 0.0, 0.0),
+                ],
+                -nz,
+                0,
+            ),
+            quad(
+                [
+                    p(0.0, 0.0, 1.0),
+                    p(1.0, 0.0, 1.0),
+                    p(1.0, 1.0, 1.0 + lift),
+                    p(0.0, 1.0, 1.0),
+                ],
+                nz,
+                1,
+            ),
+            quad(
+                [
+                    p(0.0, 0.0, 0.0),
+                    p(1.0, 0.0, 0.0),
+                    p(1.0, 0.0, 1.0),
+                    p(0.0, 0.0, 1.0),
+                ],
+                -ny,
+                2,
+            ),
+            quad(
+                [
+                    p(1.0, 0.0, 0.0),
+                    p(1.0, 1.0, 0.0),
+                    p(1.0, 1.0, 1.0 + lift),
+                    p(1.0, 0.0, 1.0),
+                ],
+                nx,
+                3,
+            ),
+            quad(
+                [
+                    p(1.0, 1.0, 0.0),
+                    p(0.0, 1.0, 0.0),
+                    p(0.0, 1.0, 1.0),
+                    p(1.0, 1.0, 1.0 + lift),
+                ],
+                ny,
+                4,
+            ),
+            quad(
+                [
+                    p(0.0, 1.0, 0.0),
+                    p(0.0, 0.0, 0.0),
+                    p(0.0, 0.0, 1.0),
+                    p(0.0, 1.0, 1.0),
+                ],
+                -nx,
+                5,
+            ),
+        ];
+        let surfaces: Vec<Surface> = polys
+            .iter()
+            .map(|q| Surface::Plane {
+                normal: q.plane.normal,
+                offset: q.plane.normal.dot(q.plane.origin),
+            })
+            .collect();
+        let s = Solid::from_polygons(polys, surfaces).unwrap();
+        s.validate().unwrap();
+        // The bent top became two triangles; the five flat quads stay (the
+        // raised corner keeps the x = 1 and y = 1 sides planar).
+        assert_eq!(s.faces.len(), 8);
+        assert_eq!(s.faces.iter().filter(|f| f.origin.local == 1).count(), 2);
+        let tol = merge_tolerance(3f64.sqrt());
+        for f in &s.faces {
+            for &v in &f.loops[0] {
+                let d = f
+                    .plane
+                    .normal
+                    .dot(s.vertices[v as usize] - f.plane.origin)
+                    .abs();
+                assert!(d <= tol, "face still bent by {d}");
+            }
+        }
+        let v = s.volume();
+        assert!(v > 1.0 && v < 1.0 + lift, "volume {v}");
     }
 }
