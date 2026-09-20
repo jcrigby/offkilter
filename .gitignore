@@ -7,3 +7,6 @@
 /data
 /apps/web/test-results
 /apps/web/playwright-report
+examples/router-lift/out/*.stl
+examples/router-lift/out/section_*.png
+examples/router-lift/out/assembly_section_flip.png
