@@ -664,7 +664,10 @@ collapsing short edges may move a vertex by up to ten times the merge
 tolerance, which can leave a face non-planar by that much; assembly then
 splits such a face into triangles (same surface tag and origin, so it
 still shades and selects as one face) so every face a boolean sections
-is planar within tolerance. `crates/ok-model/tests/parts.rs`
+is planar within tolerance. A third ignored run, `random_blends_stay_closed`,
+fillets and chamfers random edges of bodies built by a few booleans and
+requires every result that is not an error to be closed (`OK_FUZZ_BLENDS`
+sets the seed count). `crates/ok-model/tests/parts.rs`
 is a corpus of realistic parts built through ops, each regenerated
 without errors, validated closed and checked against hand-calculated
 volumes. Booleans merge their fragments at the same tolerance the

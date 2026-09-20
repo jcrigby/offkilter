@@ -290,3 +290,87 @@ fn general_position_seed() {
         .unwrap_or(1);
     run_general(seed..=seed);
 }
+
+// ---------------------------------------------------------------------------
+// Blends on fuzzed bodies: random fillets and chamfers on the edges of a
+// body built by a few booleans. An error is acceptable (it is reported on
+// the feature); an open result is not.
+
+/// `cargo test -p ok-brep --test fuzz random_blends -- --ignored --nocapture`
+#[test]
+#[ignore]
+fn random_blends_stay_closed() {
+    use ok_brep::{blend_edges, BlendKind};
+    let mut ops = 0;
+    let mut errors = Vec::new();
+    let mut open = Vec::new();
+    let seeds: u64 = std::env::var("OK_FUZZ_BLENDS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(150);
+    for seed in 1..=seeds {
+        let mut rng = Rng(seed.wrapping_mul(0x9E3779B97F4A7C15));
+        let mut body = random_solid(&mut rng, 1);
+        for step in 0..3u32 {
+            let tool = random_solid(&mut rng, 2 + step);
+            let op = if rng.chance(0.5) {
+                BoolOp::Union
+            } else {
+                BoolOp::Difference
+            };
+            if let Ok(r) = boolean(&body, &tool, op) {
+                if !r.is_empty() {
+                    body = r;
+                }
+            }
+        }
+        // Pick a few edges between different surfaces.
+        let mut pairs: Vec<(usize, usize)> = body
+            .edge_faces()
+            .into_iter()
+            .filter_map(|(_, faces)| (faces.len() == 2).then(|| (faces[0], faces[1])))
+            .filter(|&(a, b)| body.faces[a].surface != body.faces[b].surface)
+            .collect();
+        pairs.sort();
+        pairs.dedup();
+        if pairs.is_empty() {
+            continue;
+        }
+        let count = 1 + (rng.next() % 3) as usize;
+        let chosen: Vec<(usize, usize)> = (0..count)
+            .map(|_| pairs[(rng.next() % pairs.len() as u64) as usize])
+            .collect();
+        let size = [0.1, 0.25, 0.4, 0.9][(rng.next() % 4) as usize];
+        let kind = if rng.chance(0.5) {
+            BlendKind::Fillet
+        } else {
+            BlendKind::Chamfer
+        };
+        ops += 1;
+        match blend_edges(&body, &chosen, size, kind, 15.0, 9) {
+            Ok(r) => {
+                if let Err(e) = r.validate() {
+                    open.push(format!("seed {seed} {kind:?} {size}: {e}"));
+                } else if r.volume() > body.volume() * 1.5 || r.volume() < body.volume() * 0.5 {
+                    open.push(format!(
+                        "seed {seed} {kind:?} {size}: volume {} from {}",
+                        r.volume(),
+                        body.volume()
+                    ));
+                }
+            }
+            Err(e) => errors.push(format!(
+                "seed {seed} {kind:?} {size} on {} edges: {e}",
+                chosen.len()
+            )),
+        }
+    }
+    eprintln!("{ops} blends: {} errors, {} open", errors.len(), open.len());
+    for e in errors.iter().take(20) {
+        eprintln!("  error: {e}");
+    }
+    for e in &open {
+        eprintln!("  open: {e}");
+    }
+    assert!(open.is_empty(), "{} open results", open.len());
+}
