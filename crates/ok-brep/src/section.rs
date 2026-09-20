@@ -79,7 +79,7 @@ pub fn section_with_bboxes(
         let dmin = n.x * xl + n.y * yl + n.z * zl - d0;
         dmin <= eps && dmax >= -eps
     };
-    let dist: Vec<f64> = solid
+    let mut dist: Vec<f64> = solid
         .vertices
         .iter()
         .map(|v| {
@@ -91,6 +91,47 @@ pub fn section_with_bboxes(
             }
         })
         .collect();
+    // A face parallel to the section plane is skipped below (it has no
+    // crossing line), so its vertices must agree on which side they are:
+    // when any of them sits on the plane, they all do. Otherwise one
+    // vertex a rounding error past the snap band would leave the
+    // neighbouring faces producing crossings through this face that
+    // nothing closes. Repeated until stable, as snapping one face's
+    // vertex can bring another parallel face onto the plane. Vertices
+    // moved this way are remembered so the bounding-box prefilter below
+    // (which sees the unsnapped coordinates) does not drop their faces.
+    let parallel: Vec<usize> = solid
+        .faces
+        .iter()
+        .enumerate()
+        .filter(|(_, f)| n.cross(f.plane.normal).length() <= 1e-9)
+        .map(|(i, _)| i)
+        .collect();
+    let mut pulled: Vec<u32> = Vec::new();
+    loop {
+        let mut changed = false;
+        for &fi in &parallel {
+            let verts = || solid.faces[fi].loops.iter().flatten().copied();
+            let any_on = verts().any(|v| dist[v as usize] == 0.0);
+            let any_off = verts().any(|v| dist[v as usize] != 0.0);
+            if any_on && any_off {
+                for v in verts() {
+                    if dist[v as usize] != 0.0 {
+                        dist[v as usize] = 0.0;
+                        pulled.push(v);
+                    }
+                }
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    let dist = dist;
+    let touches_pulled = |f: &crate::Face| -> bool {
+        !pulled.is_empty() && f.loops.iter().flatten().any(|v| pulled.contains(v))
+    };
     let above = |v: u32| -> bool {
         let d = dist[v as usize];
         if zero_is_above {
@@ -139,7 +180,7 @@ pub fn section_with_bboxes(
     let mut segment_count = 0usize;
     for (fi, f) in solid.faces.iter().enumerate() {
         if let Some(bb) = bboxes.get(fi) {
-            if !straddles(bb) {
+            if !straddles(bb) && !touches_pulled(f) {
                 continue;
             }
         }

@@ -423,6 +423,12 @@ chain segments by edge identity, so section loops close exactly for a
 valid solid. Section vertices within tolerance of the face boundary are
 snapped onto it before clipping, and the clipper runs with a 64-bit grid,
 so shared boundaries come out coincident rather than as hairline slivers.
+Solid vertices within tolerance of the section plane are snapped onto it
+first; a face parallel to the plane is skipped (it has no crossing line),
+so when any of its vertices sits on the plane all of them are pulled onto
+it, otherwise a vertex a rounding error past the snap band leaves the
+neighbouring faces producing crossings that nothing closes (the fuzz
+found this with a nudge equal to the tolerance).
 
 After assembly, planar faces in the same plane that share an edge are
 merged into one face (`merge_coplanar_faces`), keeping the surface and
