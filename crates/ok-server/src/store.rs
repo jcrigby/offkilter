@@ -163,6 +163,25 @@ impl DocStore {
         self.root.join("docs").join(format!("{id}.meta.json"))
     }
 
+    /// The state a branch was made from, kept for three-way merges.
+    fn base_path(&self, id: &str) -> PathBuf {
+        self.root.join("docs").join(format!("{id}.base.okpart"))
+    }
+
+    /// Records a branch's origin and the state it started from.
+    pub fn set_branch_base(&self, id: &str, json: &str) -> std::io::Result<()> {
+        self.meta_or_not_found(id)?;
+        std::fs::write(self.base_path(id), json)
+    }
+
+    /// The state a branch started from, if it is a branch.
+    pub fn read_base(&self, id: &str) -> Option<String> {
+        if !Self::valid_id(id) {
+            return None;
+        }
+        std::fs::read_to_string(self.base_path(id)).ok()
+    }
+
     fn valid_id(id: &str) -> bool {
         !id.is_empty() && id.chars().all(|c| c.is_ascii_hexdigit())
     }
@@ -343,8 +362,18 @@ impl DocStore {
     }
 
     /// Reserves and returns the next client id-range prefix for a document.
+    /// A branch takes prefixes from the document it was branched from (or
+    /// that one's origin, and so on), so ids stay distinct across a branch
+    /// family and merges never see two features with one id.
     pub fn take_prefix(&self, id: &str) -> std::io::Result<u32> {
-        let Some(mut meta) = self.meta(id) else {
+        let mut root = id.to_string();
+        for _ in 0..16 {
+            match self.meta(&root).and_then(|m| m.parent) {
+                Some(p) if self.meta(&p.doc).is_some() => root = p.doc,
+                _ => break,
+            }
+        }
+        let Some(mut meta) = self.meta(&root) else {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
                 "no such document",
@@ -352,7 +381,7 @@ impl DocStore {
         };
         let prefix = meta.next_prefix;
         meta.next_prefix = (prefix.wrapping_add(1) & 0xfff).max(1);
-        std::fs::write(self.meta_path(id), serde_json::to_string_pretty(&meta)?)?;
+        std::fs::write(self.meta_path(&root), serde_json::to_string_pretty(&meta)?)?;
         Ok(prefix)
     }
 
@@ -422,6 +451,7 @@ impl DocStore {
         }
         std::fs::remove_file(self.doc_path(id))?;
         std::fs::remove_file(self.meta_path(id))?;
+        let _ = std::fs::remove_file(self.base_path(id));
         let _ = std::fs::remove_dir_all(self.versions_dir(id));
         Ok(())
     }

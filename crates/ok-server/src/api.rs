@@ -123,6 +123,7 @@ pub fn router(
         .route("/docs/{id}/versions/{vid}", get(get_version))
         .route("/docs/{id}/versions/{vid}/restore", post(restore_version))
         .route("/docs/{id}/branch", post(branch_doc))
+        .route("/docs/{id}/merge", post(merge_doc))
         .route("/docs/{id}/check", get(check_doc))
         .route("/docs/{id}/export/stl", get(export_stl))
         .route("/health", get(|| async { "ok" }))
@@ -408,10 +409,68 @@ async fn branch_doc(
         version: body.version.clone(),
         version_name,
     };
+    if let Err(e) = store.set_branch_base(&meta.id, &json) {
+        return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response();
+    }
     match store.set_parent(&meta.id, origin) {
         Ok(meta) => (StatusCode::CREATED, Json(meta)).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
+}
+
+#[derive(Deserialize)]
+struct MergeDoc {
+    /// The document whose changes come in: a branch of this one, or the
+    /// document this one was branched from.
+    from: String,
+    /// Plan the merge and report it without changing anything.
+    #[serde(default)]
+    dry_run: bool,
+}
+
+/// Three-way merge between a branch and its origin, in either direction.
+/// The requester must be able to edit the target and read the source. The
+/// response lists the changes made and the conflicts left alone.
+async fn merge_doc(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    Json(body): Json<MergeDoc>,
+) -> impl IntoResponse {
+    let target = match editable(&hub, &id, user.as_ref()) {
+        Ok(m) => m,
+        Err(code) => return code.into_response(),
+    };
+    let source = match accessible(&hub, &body.from, user.as_ref()) {
+        Ok(m) => m,
+        Err(code) => return code.into_response(),
+    };
+    let store = hub.store();
+    let base = if source.parent.as_ref().is_some_and(|p| p.doc == target.id) {
+        store.read_base(&source.id)
+    } else if target.parent.as_ref().is_some_and(|p| p.doc == source.id) {
+        store.read_base(&target.id)
+    } else {
+        return (
+            StatusCode::BAD_REQUEST,
+            "the documents are not a branch and its origin",
+        )
+            .into_response();
+    };
+    let Some(base) = base.and_then(|j| ok_model::Document::from_json(&j).ok()) else {
+        return (StatusCode::CONFLICT, "the branch point is no longer known").into_response();
+    };
+    let Some(theirs) =
+        current_json(&hub, &source.id).and_then(|j| ok_model::Document::from_json(&j).ok())
+    else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let Some(live) = hub.get(&id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let merge = live.merge_from(&base, &theirs, !body.dry_run);
+    hub.release(&id);
+    Json(merge).into_response()
 }
 
 /// The document as it is right now: the live copy when one is open,
@@ -1400,6 +1459,158 @@ mod tests {
         let headers = res.headers().clone();
         let bytes = res.into_body().collect().await.unwrap().to_bytes().to_vec();
         (status, headers, bytes)
+    }
+
+    #[tokio::test]
+    async fn merging_moves_changes_between_a_branch_and_its_origin() {
+        use ok_model::{DocOp, Document, FeatureId, Op, TabId};
+        let users = temp_users();
+        let app = router(temp_store(), users.clone(), temp_teams(), None);
+        let (_, tok) = users.register("bea", "beas-password").unwrap();
+        let bea = format!("ok_session={tok}");
+        let mut origin = Document::new("origin");
+        let tab = origin.tabs[0].id;
+        let add_var = |d: &mut Document, name: &str, id: Option<u32>| {
+            d.apply_with_base(
+                DocOp::Studio {
+                    tab,
+                    op: Op::AddVariable {
+                        name: name.into(),
+                        expression: "1".into(),
+                    },
+                },
+                id,
+            )
+            .unwrap();
+        };
+        add_var(&mut origin, "a", None);
+        let body = serde_json::json!({ "name": "origin", "json": origin.to_json() }).to_string();
+        let (_, _, text) = call(&app, "POST", "/api/docs", Some(&body), Some(&bea)).await;
+        let id = serde_json::from_str::<serde_json::Value>(&text).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/branch"),
+            Some(r#"{"name":"experiment"}"#),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::CREATED, "{text}");
+        let branch: DocMeta = serde_json::from_str(&text).unwrap();
+        // Both sides add a variable, with ids from different client ranges
+        // (a branch takes its prefixes from its origin).
+        let mut ours = origin.clone();
+        add_var(&mut ours, "c", Some(1 << 20));
+        let (status, _, _) = call(
+            &app,
+            "PUT",
+            &format!("/api/docs/{id}"),
+            Some(&ours.to_json()),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
+        let mut theirs = origin.clone();
+        add_var(&mut theirs, "b", Some(2 << 20));
+        let (status, _, _) = call(
+            &app,
+            "PUT",
+            &format!("/api/docs/{}", branch.id),
+            Some(&theirs.to_json()),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
+        // Merging the branch into the origin brings #b over, keeping #c.
+        let names = |json: &str| -> Vec<String> {
+            Document::from_json(json)
+                .unwrap()
+                .studio(TabId(1))
+                .unwrap()
+                .features()
+                .iter()
+                .map(|f| f.name.clone())
+                .collect()
+        };
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/merge"),
+            Some(&format!(r#"{{"from":"{}","dry_run":true}}"#, branch.id)),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let plan: ok_model::Merge = serde_json::from_str(&text).unwrap();
+        assert_eq!((plan.changes, plan.conflicts.len()), (1, 0), "{plan:?}");
+        let (_, _, json) = call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&bea)).await;
+        assert_eq!(names(&json), ["#a", "#c"], "a dry run changes nothing");
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/merge"),
+            Some(&format!(r#"{{"from":"{}"}}"#, branch.id)),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let done: ok_model::Merge = serde_json::from_str(&text).unwrap();
+        assert_eq!((done.changes, done.conflicts.len()), (1, 0), "{done:?}");
+        let (_, _, json) = call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&bea)).await;
+        assert_eq!(
+            names(&json),
+            ["#a", "#b", "#c"],
+            "#b sits where it did there"
+        );
+        assert!(Document::from_json(&json)
+            .unwrap()
+            .studio(TabId(1))
+            .unwrap()
+            .feature(FeatureId(2 << 20))
+            .is_ok());
+        // Pulling the origin into the branch brings #c the other way.
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{}/merge", branch.id),
+            Some(&format!(r#"{{"from":"{id}"}}"#)),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let pulled: ok_model::Merge = serde_json::from_str(&text).unwrap();
+        assert_eq!(
+            (pulled.changes, pulled.conflicts.len()),
+            (1, 0),
+            "{pulled:?}"
+        );
+        let (_, _, json) = call(
+            &app,
+            "GET",
+            &format!("/api/docs/{}", branch.id),
+            None,
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(names(&json), ["#a", "#b", "#c"]);
+        // Unrelated documents cannot be merged.
+        let (_, _, text) = call(&app, "POST", "/api/docs", Some(&body), Some(&bea)).await;
+        let other = serde_json::from_str::<serde_json::Value>(&text).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let (status, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/merge"),
+            Some(&format!(r#"{{"from":"{other}"}}"#)),
+            Some(&bea),
+        )
+        .await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
     }
 
     #[tokio::test]

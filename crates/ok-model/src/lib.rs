@@ -10,6 +10,7 @@ mod document;
 pub mod expr;
 mod feature;
 mod invert;
+mod merge;
 mod ops;
 mod project;
 mod regen;
@@ -27,6 +28,7 @@ pub use feature::{
     ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature,
     SketchFeature, SplitFeature, StandardPlane, SweepFeature, VariableFeature, PROJECTION_BLOCK,
 };
+pub use merge::Merge;
 pub use ops::{Op, OpResult, SketchOp};
 pub use regen::{Body, FeatureStatus, RegenResult, SketchCurve, SketchResult};
 

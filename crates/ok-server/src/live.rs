@@ -196,6 +196,47 @@ impl LiveDoc {
         Ok(())
     }
 
+    /// Merges `theirs`' changes since `base` into the live document (see
+    /// `Document::merge_from`), or only plans them when `apply` is false.
+    /// Applied ops go to every client like any other edit; ops the document
+    /// refuses are reported as conflicts.
+    pub fn merge_from(&self, base: &Document, theirs: &Document, apply: bool) -> ok_model::Merge {
+        let mut st = self.state.lock().unwrap();
+        let mut merge = st.doc.merge_from(base, theirs);
+        if !apply {
+            return merge;
+        }
+        let mut sent = Vec::new();
+        for op in std::mem::take(&mut merge.ops) {
+            let value = serde_json::to_value(&op).unwrap_or_default();
+            match st.doc.apply_with_base(op, None) {
+                Ok(_) => {
+                    st.seq += 1;
+                    let hash = format!("{:016x}", st.doc.structural_hash());
+                    sent.push(ServerMessage::Op {
+                        op: value,
+                        seq: st.seq,
+                        from: 0,
+                        id: 0,
+                        base: None,
+                        hash,
+                    });
+                }
+                Err(e) => merge.conflicts.push(format!("refused: {e}")),
+            }
+        }
+        let json = st.doc.to_json();
+        let name = st.doc.name.clone();
+        drop(st);
+        if !sent.is_empty() {
+            let _ = self.store.write(&self.id, &json, Some(&name));
+        }
+        for msg in sent {
+            let _ = self.tx.send(msg);
+        }
+        merge
+    }
+
     pub fn snapshot(&self) -> ServerMessage {
         let st = self.state.lock().unwrap();
         ServerMessage::Snapshot {

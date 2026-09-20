@@ -108,6 +108,22 @@ test("two clients edit one document live", async ({ browser }) => {
   await a.click("#btn-docs");
   await expect(a.locator("#docs-list")).toContainText("branch of");
   await a.click("#docs-close");
+  // Work on the branch, then merge it into the origin: the origin (still
+  // open in B) gains the branch's feature live and keeps its own.
+  await addVar(a, "onbranch");
+  await a.click("#btn-docs");
+  await a.getByRole("button", { name: "Merge into origin" }).click();
+  await expect(a.locator("#docs-note")).toContainText("Merged 1 change");
+  await a.click("#docs-close");
+  await expect.poll(async () => featureNames(b), { timeout: 10_000 }).toContain("#onbranch");
+  expect(await featureNames(b)).toContain("#after");
+  // Pulling the origin brings #after (and the rename) into the branch.
+  await a.click("#btn-docs");
+  await a.getByRole("button", { name: "Pull origin" }).click();
+  await expect(a.locator("#docs-note")).toContainText("Merged 2 changes");
+  await a.click("#docs-close");
+  await expect.poll(async () => featureNames(a), { timeout: 10_000 }).toContain("#after");
+  expect(await featureNames(a)).toContain("#ub2");
 });
 
 test("accounts own documents and share them", async ({ browser }) => {

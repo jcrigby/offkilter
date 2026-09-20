@@ -86,7 +86,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Named versions of a document (save / restore on the server)
 - [x] Diffs: compare a saved version with the document now (features added / changed / removed per tab)
 - [x] Branches: copy a document, as it is or at a saved version, into a new document that remembers its origin
-- [ ] Merges over the op log
+- [x] Merges between a branch and its origin, both ways: three-way at the feature / instance / mate level against the branch point; changes on both sides of one item are reported and left alone
 - [x] Real-time multi-user editing (ops relayed in server order)
 - [x] Conflict-free concurrent editing: per-client id ranges make ops commute; structural hashes detect and repair any divergence
 - [x] Per-user undo in shared documents (inverse ops instead of document replacement)

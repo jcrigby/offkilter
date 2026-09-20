@@ -2669,6 +2669,33 @@ async function main(): Promise<void> {
       branch.className = "dshare";
       branch.title = "Copy this document into a new one of your own, as it is now";
       li.appendChild(branch);
+      if (d.parent) {
+        // Merges between a branch and its origin: plan first, then confirm.
+        const merge = (target: string, from: string, what: string) => async () => {
+          try {
+            const plan = await Sync.mergeDoc(target, from, true);
+            const summary = `${plan.changes} change${plan.changes === 1 ? "" : "s"}` + (plan.conflicts.length ? `, ${plan.conflicts.length} left alone:\n${plan.conflicts.join("\n")}` : "");
+            if (plan.changes === 0) {
+              note.textContent = `Nothing to merge ${what}: ${summary}.`;
+              return;
+            }
+            if (!confirm(`Merge ${what}? ${summary}`)) return;
+            const done = await Sync.mergeDoc(target, from);
+            const message = `Merged ${done.changes} change${done.changes === 1 ? "" : "s"} ${what}` + (done.conflicts.length ? `; left alone: ${done.conflicts.join("; ")}` : ".");
+            await renderDocs();
+            note.textContent = message;
+          } catch (e) {
+            note.textContent = `Could not merge: ${(e as Error).message}`;
+          }
+        };
+        const up = button("Merge into origin", merge(d.parent.doc, d.id, `from "${d.name}" into "${d.parent.doc_name}"`));
+        up.className = "dshare";
+        up.title = `Apply this branch's changes to ${d.parent.doc_name}`;
+        const down = button("Pull origin", merge(d.id, d.parent.doc, `from "${d.parent.doc_name}" into "${d.name}"`));
+        down.className = "dshare";
+        down.title = `Bring ${d.parent.doc_name}'s later changes into this branch`;
+        li.append(up, down);
+      }
       if (!d.owner || mine) {
         li.appendChild(button("×", async () => {
           if (confirm(`Delete "${d.name}" from the server?`)) {

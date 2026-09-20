@@ -511,7 +511,18 @@ relays edits between clients:
   `POST/DELETE /api/docs/:id/share`, versions under `/api/docs/:id/versions`
   (list, save, fetch one, restore); `POST /api/docs/:id/branch` copies
   the document, as it is or at a saved version, into a new document
-  owned by the caller whose metadata names the origin. Comparing a version with the current
+  owned by the caller whose metadata names the origin; the state it
+  started from is kept beside it as the merge base. `POST
+  /api/docs/:id/merge {from}` is a three-way merge between a branch and
+  its origin in either direction (`ok_model::Document::merge_from`):
+  features are matched by id per part studio, instances and mates by id
+  per assembly, tabs by id, plus the document, tab, part and material
+  names. An item changed only on the far side comes over as ordinary ops
+  (insert / delete / restore) applied through the live document, so open
+  clients see the merge like any other edit; an item changed on both
+  sides is a conflict, reported and left as it is. Branches take their
+  client id-range prefixes from their root origin so ids never collide
+  across a branch family. Comparing a version with the current
   document happens in the client: both JSON documents are loaded into
   their own wasm `Doc`, every tab is regenerated in each, and features
   are matched by id (added, removed, or changed when their name, kind,

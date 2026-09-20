@@ -13,6 +13,8 @@ export type Invite = { token: string; role: "editor" | "viewer"; created: number
 export type Team = { id: string; name: string; owner: UserInfo; members: UserInfo[]; created: number };
 export type TeamShare = { id: string; name: string; role: "editor" | "viewer" };
 export type BranchOrigin = { doc: string; doc_name: string; version?: string; version_name?: string };
+/** What a merge did (or would do): ops applied, and the changes it left alone. */
+export type Merge = { ops: unknown[]; conflicts: string[]; changes: number };
 export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[]; viewers?: UserInfo[]; invites?: Invite[]; teams?: TeamShare[]; parent?: BranchOrigin };
 export type VersionMeta = { id: string; name: string; created: number };
 
@@ -206,6 +208,17 @@ export class Sync {
     const r = await fetch(`${Sync.apiBase()}/docs/${id}/branch`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, version }) });
     if (!r.ok) throw await Sync.failure(r);
     return (await r.json()) as DocMeta;
+  }
+
+  /**
+   * Three-way merge between a branch and its origin, in either direction:
+   * the changes made in `from` since the branch point are applied to `id`.
+   * A dry run only reports what would happen.
+   */
+  static async mergeDoc(id: string, from: string, dryRun = false): Promise<Merge> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/merge`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ from, dry_run: dryRun }) });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as Merge;
   }
 
   /** The document JSON saved as a version. */
