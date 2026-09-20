@@ -700,6 +700,7 @@ impl Solid {
                 let Some(tn) = (pb - pa).cross(pc - pa).normalized() else {
                     continue;
                 };
+
                 // Earcut winds with the frame; keep the outward sense of the face.
                 let (loop_, tn) = if tn.dot(n) >= 0.0 {
                     (vec![a, b, c], tn)

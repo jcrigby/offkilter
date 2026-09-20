@@ -396,8 +396,68 @@ pub fn vertex_position(solid: &Solid, vertex_faces: &[Vec<usize>], v: u32) -> Ve
     if surfaces.iter().any(|&s| !is_analytic(&solid.surfaces[s])) {
         return p;
     }
+    // A plane across the axis of a surface of revolution meets it on a
+    // circle whose radius follows from the profile: solved directly, so
+    // a fillet's torus touching a face tangentially still puts the vertex
+    // exactly on both (alternating projection creeps at a tangency).
+    if let [s0, s1] = surfaces[..] {
+        let pair = match (&solid.surfaces[s0], &solid.surfaces[s1]) {
+            (Surface::Plane { normal, offset }, other)
+            | (other, Surface::Plane { normal, offset }) => Some((*normal, *offset, other)),
+            _ => None,
+        };
+        if let Some((normal, offset, other)) = pair {
+            if let Some((origin, axis)) = axis_of(other).or(match *other {
+                Surface::Sphere { center, .. } => Some((center, normal)),
+                _ => None,
+            }) {
+                if normal.cross(axis).length() < 1e-9 {
+                    // Height of the plane along the axis from the surface's origin.
+                    let h = (offset - normal.dot(origin)) / normal.dot(axis);
+                    let d = p - origin;
+                    let radial = (d - axis * d.dot(axis))
+                        .normalized()
+                        .unwrap_or_else(|| perpendicular(axis));
+                    let r_now = (d - axis * d.dot(axis)).length();
+                    let radius = match *other {
+                        Surface::Cylinder { radius, .. } => Some(radius),
+                        Surface::Cone { half_angle, .. } => {
+                            (h >= 0.0).then(|| h * half_angle.tan())
+                        }
+                        Surface::Torus { major, minor, .. } => {
+                            let half = (minor * minor - h * h).max(0.0).sqrt();
+                            Some(
+                                if (r_now - (major + half)).abs() <= (r_now - (major - half)).abs()
+                                {
+                                    major + half
+                                } else {
+                                    major - half
+                                },
+                            )
+                        }
+                        Surface::Sphere { radius, .. } => {
+                            Some((radius * radius - h * h).max(0.0).sqrt())
+                        }
+                        _ => None,
+                    };
+                    if let Some(radius) = radius {
+                        return origin + axis * h + radial * radius;
+                    }
+                }
+            }
+        }
+    }
+    // Planes last: where a curved surface touches a plane tangentially
+    // the alternating projection creeps, and the vertex should at least
+    // sit exactly on the plane (its facets there stay coplanar).
     let mut constraints: Vec<Constraint> = surfaces
         .iter()
+        .filter(|&&s| !matches!(solid.surfaces[s], Surface::Plane { .. }))
+        .chain(
+            surfaces
+                .iter()
+                .filter(|&&s| matches!(solid.surfaces[s], Surface::Plane { .. })),
+        )
         .map(|&s| Constraint::On(&solid.surfaces[s]))
         .collect();
     // Only a vertex of a run (on two surfaces) is held to a ruling: one
@@ -727,9 +787,20 @@ pub fn refit_within(
     }
     // Faces with moved vertices get their plane fitted again: a planar
     // face keeps its surface's plane, a facet the plane its loop now
-    // spans (bent ones are split into triangles below).
+    // spans (bent ones are split into triangles below). Every face on a
+    // planar surface whose corners lie on it takes that plane's frame,
+    // so slivers split off it earlier (their own normals off by the
+    // noise of a thin triangle) merge back with it as coplanar.
     for f in &mut out.faces {
-        if !f.loops.iter().flatten().any(|&v| moved[v as usize]) {
+        let on_plane = match out.surfaces[f.surface] {
+            Surface::Plane { normal, offset } => f
+                .loops
+                .iter()
+                .flatten()
+                .all(|&v| (normal.dot(out.vertices[v as usize]) - offset).abs() <= tol),
+            _ => false,
+        };
+        if !on_plane && !f.loops.iter().flatten().any(|&v| moved[v as usize]) {
             continue;
         }
         let pts: Vec<Vec3> = f.loops[0]

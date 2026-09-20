@@ -194,7 +194,10 @@ normals of each face's facets on both sides, so a rim whose dihedral
 angle changes along it (a cylinder cut obliquely) gets a section that
 fits everywhere; the sections, all cut into the same number of facets,
 are joined by quads into one polyhedron, its blend facets sharing one
-ruled surface. Those sections do not run back along the faces to the
+surface: a torus when the chain is a circle about an axis and both
+faces turn about it (`rim_axis`: the rim of a boss or a turned part),
+its tube the fillet's arc swept about the axis, else a ruled surface.
+Those sections do not run back along the faces to the
 edge, as a prism's does: from the tangent points they leave each face
 perpendicularly and close a tenth of the size outside the wedge, so the
 cutter meets the body only along the tangent lines, squarely, where a
@@ -212,7 +215,7 @@ per connected group, built from polygons rather than by union: the edge
 prisms cut back to the cell planes, the cell's three face quads, and a
 spherical patch (rings shrinking from the fillet arcs, which it shares
 vertex for vertex with the prisms, towards the middle direction) tagged
-as a revolved surface so it shades smoothly. Chamfers, corners with any
+as a sphere so it shades smoothly and goes out exactly. Chamfers, corners with any
 other number of blended edges and non-planar faces keep the union of
 cutters: three chamfers meeting at a corner leave their three planes
 meeting at a point, which is what other CAD systems draw, and a corner

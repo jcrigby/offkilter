@@ -265,3 +265,40 @@ fn a_filleted_corner_goes_out_as_a_sphere_patch() {
     let (v0, v1) = (filleted.volume(), back.volume());
     assert!(((v1 - v0) / v0).abs() < 0.01, "volume {v1} vs {v0}");
 }
+
+#[test]
+fn a_filleted_rim_goes_out_as_a_torus() {
+    let body = cylinder(10.0, 5.0, 1);
+    let top = body
+        .faces
+        .iter()
+        .position(|f| f.plane.normal.approx_eq(Vec3::Z))
+        .unwrap();
+    let pairs: Vec<(usize, usize)> = body
+        .edge_faces()
+        .into_iter()
+        .filter(|(_, fs)| fs.len() == 2 && fs.contains(&top))
+        .map(|(_, fs)| (fs[0], fs[1]))
+        .collect();
+    let filleted = ok_brep::blend_edges(
+        &body,
+        &pairs,
+        2.0,
+        ok_brep::BlendKind::Fillet,
+        5f64.to_radians(),
+        2,
+    )
+    .unwrap();
+    let text = write_step(&[("Rim", &filleted)], "exact");
+    if let Ok(dir) = std::env::var("OK_STEP_DUMP") {
+        std::fs::write(format!("{dir}/rim.step"), &text).unwrap();
+    }
+    assert_eq!(count(&text, "TOROIDAL_SURFACE"), 1);
+    assert_eq!(count(&text, "CYLINDRICAL_SURFACE"), 1);
+    assert_eq!(count(&text, "ADVANCED_FACE"), 4);
+    let bodies = read_step(&text).unwrap();
+    let back = solid_of(&bodies[0]);
+    back.validate().unwrap();
+    let (v0, v1) = (filleted.volume(), back.volume());
+    assert!(((v1 - v0) / v0).abs() < 0.01, "volume {v1} vs {v0}");
+}

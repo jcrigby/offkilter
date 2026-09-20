@@ -81,7 +81,11 @@ a boolean, so results no longer depend on the resolution of the tools.
    makes surfaces sharing a rim seam it at one vertex; the reader
    tessellates all four surfaces of revolution on a grid of facet-wide
    columns and, where the profile curves, rows, sharing every grid
-   crossing with the edges. Still facets: fillets along circular edges
-   (chain blends carry `Surface::Ruled`), which could be tori.
+   crossing with the edges. A fillet along a circular rim about an axis
+   whose two faces turn about that axis (a boss, a turned part) is a
+   torus too; a vertex on a plane across the axis of any surface of
+   revolution is solved in closed form, since a fillet's torus touches
+   its faces tangentially and alternating projection creeps there.
+   Other chain blends still carry `Surface::Ruled`.
 6. [ ] Beyond: general surfaces (sweeps, lofts) as B-spline surfaces,
    which needs a real parametric trimming kernel.
