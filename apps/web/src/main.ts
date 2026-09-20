@@ -1545,7 +1545,11 @@ class App implements SketchHost {
             text: glyphs[c.type] ?? c.type[0]!.toUpperCase(),
             className: `glyph stack-${Math.min(n, 3)}`,
             title: clickable ? `${c.type.replace(/_/g, " ")} (click to remove)` : c.type.replace(/_/g, " "),
-            onClick: clickable ? () => this.apply({ type: "sketch", id: f.id, op: { type: "remove_constraint", id: c.id } }) : undefined,
+            onClick: clickable
+              ? () => {
+                  if (confirm(`Remove the ${c.type.replace(/_/g, " ")} constraint?`)) this.apply({ type: "sketch", id: f.id, op: { type: "remove_constraint", id: c.id } });
+                }
+              : undefined,
           });
         }
       }
