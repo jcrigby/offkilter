@@ -53,7 +53,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Mirror / pattern selected bodies only (tick bodies in the panel)
 - [~] Patterns of faces: covered by feature patterns here (every face comes from a feature whose tool volume is replayed); a face-only pattern would need face-bounded volumes, which the polyhedral kernel does not keep
 - [x] Persistent naming: face origins survive booleans, and pieces of a face split by later features are numbered by position so references name the piece they mean
-- [ ] Naming that follows a piece when an edit reorders pieces (topology-aware rather than by position)
+- [x] Naming that follows a piece when an edit reorders pieces: a face reference records hashes of the origins of the neighbouring pieces when it is made (from the summary or the report), and lookups pick the piece whose neighbours match best, falling back to the piece number; a healed split resolves to the one piece left
 
 ## Document and client
 

@@ -119,6 +119,7 @@ pub struct MateReport {
 fn face_reports(body: &Body) -> (Vec<FaceReport>, Vec<CylinderReport>) {
     let solid = &body.solid;
     let parts = solid.face_parts();
+    let near = crate::regen::piece_near(solid, &parts);
     let mut faces: Vec<FaceReport> = Vec::new();
     let mut cylinders: Vec<CylinderReport> = Vec::new();
     // One report per (origin, part), and one per curved surface: the facets
@@ -141,6 +142,7 @@ fn face_reports(body: &Body) -> (Vec<FaceReport>, Vec<CylinderReport>) {
             feature: FeatureId(f.origin.feature),
             local: f.origin.local,
             part: Some(parts[i]),
+            near: near[i],
         };
         let surface = match solid.surfaces.get(f.surface) {
             Some(ok_brep::Surface::Cylinder { .. }) => "cylinder",
@@ -432,6 +434,7 @@ mod tests {
             .unwrap();
         assert_eq!(top.reference.feature, FeatureId(2));
         assert_eq!(top.reference.part, Some(0));
+        assert!(top.reference.has_near(), "neighbours recorded");
         assert!((top.area - 200.0).abs() < 1e-9);
         assert_eq!(report.sketches.len(), 1);
         assert_eq!(report.sketches[0].regions, 1);

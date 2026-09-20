@@ -61,8 +61,12 @@ assembly op's result has `instance` or `mate`.
   `{ "type": "face", "face": FaceRef, "offset": 0 }` (a planar face of a body), or
   `{ "type": "rotated", "base": "top", "axis": "x" | "y" | "z", "angle": 30, "offset": 0 }`.
   Top is the XY plane (normal +Z), Front is XZ (normal −Y), Right is YZ (normal +X).
-- `FaceRef`: `{ "feature": 2, "local": 1, "part": 0 }`, copied from a report. `local`
-  0 and 1 of an extrude are its start and end caps; the sides follow.
+- `FaceRef`: `{ "feature": 2, "local": 1, "part": 0, "near": [...] }`, copied from a
+  report. `local` 0 and 1 of an extrude are its start and end caps; the sides follow.
+  `part` numbers the pieces when a later feature splits a face, and `near` (hashes of
+  the neighbouring pieces' origins, filled in by the report) lets the reference find
+  its piece again if an edit reorders them; both may be left out when writing a
+  reference by hand, meaning the first piece.
 - `EdgeRef`: `{ "a": FaceRef, "b": FaceRef }`, the edge where two faces meet. One facet
   of a cylinder names the whole cylinder, so `{a: top, b: cylinder}` is the whole rim.
 - `ExtrudeDirection`: `"normal"`, `"reverse"`, `"symmetric"`.

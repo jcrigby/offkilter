@@ -652,11 +652,13 @@ mod tests {
                         feature: extrude,
                         local: 0,
                         part: None,
+                        near: Default::default(),
                     },
                     b: FaceRef {
                         feature: extrude,
                         local: 2,
                         part: None,
+                        near: Default::default(),
                     },
                 }],
                 size: 1.0,
@@ -689,6 +691,7 @@ mod tests {
                     feature: extrude,
                     local: 1,
                     part: None,
+                    near: Default::default(),
                 }]),
             },
         );
@@ -697,6 +700,7 @@ mod tests {
             feature: extrude,
             local: 1,
             part: None,
+            near: Default::default(),
         };
         let r = ps
             .apply(Op::AddMoveFace {
@@ -852,6 +856,7 @@ mod tests {
             feature: extrude,
             local: 1,
             part: None,
+            near: Default::default(),
         };
         let s2 = ps
             .apply(Op::AddSketch {

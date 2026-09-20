@@ -161,6 +161,10 @@ struct FaceRefOut {
     feature: u32,
     local: u32,
     part: u32,
+    /// Neighbour hashes, so a reference copied from here follows its
+    /// piece when pieces reorder (see `ok_model::FaceRef::near`).
+    #[serde(skip_serializing_if = "ok_model::no_near")]
+    near: [u32; ok_model::NEAR],
 }
 
 #[derive(Serialize)]
@@ -204,24 +208,29 @@ fn body_summary(b: &Body) -> BodySummary<'_> {
         vertices: b.mesh.vertex_count(),
         triangles: b.mesh.triangle_count(),
         face_count: b.solid.faces.len(),
-        faces: b
-            .solid
-            .faces
-            .iter()
-            .zip(b.solid.face_parts())
-            .map(|(f, part)| FaceInfo {
-                origin: FaceRefOut {
-                    feature: f.origin.feature,
-                    local: f.origin.local,
-                    part,
-                },
-                surface: match b.solid.surfaces.get(f.surface) {
-                    Some(ok_brep::Surface::Cylinder { .. }) => "cylinder",
-                    _ => "plane",
-                },
-                normal: f.plane.normal,
-            })
-            .collect(),
+        faces: {
+            let parts = b.solid.face_parts();
+            let near = ok_model::piece_near(&b.solid, &parts);
+            b.solid
+                .faces
+                .iter()
+                .zip(parts)
+                .zip(near)
+                .map(|((f, part), near)| FaceInfo {
+                    origin: FaceRefOut {
+                        feature: f.origin.feature,
+                        local: f.origin.local,
+                        part,
+                        near,
+                    },
+                    surface: match b.solid.surfaces.get(f.surface) {
+                        Some(ok_brep::Surface::Cylinder { .. }) => "cylinder",
+                        _ => "plane",
+                    },
+                    normal: f.plane.normal,
+                })
+                .collect()
+        },
         cylinders: cylinders_of(&b.solid),
         bounds: b.solid.bounds(),
         volume: b.solid.volume(),

@@ -160,8 +160,20 @@ piece number as `part` (the client copies it from the summary when a
 face is picked), and every lookup, including edge references, honours
 it; a reference without one, as in older documents, means the first
 piece. The numbering is deterministic for a given shape but can change
-when an edit moves pieces past each other, which is the usual limit of
-naming by position.
+when an edit moves pieces past each other (a pocket added to one piece
+shifts its centroid), which is the usual limit of naming by position.
+So a reference also carries `near`: up to eight hashes (the smallest,
+sorted) of the origins of the pieces across the piece's edges, filled
+in by `piece_near` wherever references are handed out (the wasm
+summary the client picks from, the report a script reads). Every lookup
+goes through `faces_of_ref`: with `near` present and several pieces of
+the origin, the piece whose neighbours contain the most of the recorded
+hashes wins, ties go to the piece number, and a single piece left after
+a split heals is taken as the one meant; without `near` (older documents,
+hand-written ops) the piece number decides as before. Hashes keep the
+reference `Copy` and small; a neighbour list is a sample of the
+topology, not a proof, and a reference whose neighbours all changed
+falls back to position like before.
 
 ### Edge references and blends
 

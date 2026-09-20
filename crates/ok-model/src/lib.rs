@@ -26,16 +26,20 @@ pub use describe::{
 };
 pub use document::{AssemblyOp, DocOp, DocOpResult, Document, DrawingDimension, Tab, TabKind};
 pub use feature::{
-    canonical_frame, rotated_plane, Axis, BlendFeature, BlendKind, BodyOp, BooleanFeature,
-    BooleanOp, CopyOp, Counterbore, DraftFeature, EdgeRef, ExtrudeDirection, ExtrudeEnd,
-    ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind, HoleFeature, LoftFeature,
-    MeshFeature, MirrorFeature, MoveFaceFeature, PatternFeature, PatternKind, PlaneRef,
-    ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature,
-    SketchFeature, SplitFeature, StandardPlane, SweepFeature, VariableFeature, PROJECTION_BLOCK,
+    canonical_frame, near_of, no_near, origin_hash, rotated_plane, Axis, BlendFeature, BlendKind,
+    BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, DraftFeature, EdgeRef,
+    ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind,
+    HoleFeature, LoftFeature, MeshFeature, MirrorFeature, MoveFaceFeature, PatternFeature,
+    PatternKind, PlaneRef, ProfileSelection, Projection, ProjectionSource, RevolveAxis,
+    RevolveFeature, ShellFeature, SketchFeature, SplitFeature, StandardPlane, SweepFeature,
+    VariableFeature, NEAR, PROJECTION_BLOCK,
 };
 pub use merge::Merge;
 pub use ops::{Op, OpResult, SketchOp};
-pub use regen::{Body, FeatureStatus, RegenResult, SketchCurve, SketchResult};
+pub use regen::{
+    faces_of_ref, piece_near, piece_neighbours, Body, FeatureStatus, RegenResult, SketchCurve,
+    SketchResult,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -346,6 +350,7 @@ impl PartStudio {
                     feature: e1,
                     local: 1,
                     part: None,
+                    near: Default::default(),
                 },
                 offset: 0.0,
             })),

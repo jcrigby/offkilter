@@ -40,9 +40,59 @@ pub struct FaceRef {
     /// means piece 0.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub part: Option<u32>,
+    /// Hashes of the origins of the faces next to the piece when the
+    /// reference was made (up to `NEAR`, the smallest, sorted), so the
+    /// piece is found again by its neighbours when an edit reorders the
+    /// pieces by position; all zero when unknown, and then `part` decides.
+    #[serde(default, skip_serializing_if = "no_near")]
+    pub near: [u32; NEAR],
+}
+
+/// How many neighbour hashes a reference keeps.
+pub const NEAR: usize = 8;
+
+pub fn no_near(near: &[u32; NEAR]) -> bool {
+    near.iter().all(|h| *h == 0)
+}
+
+/// A hash of a face origin for the neighbour lists of references; never
+/// zero, which marks an empty slot.
+pub fn origin_hash(feature: u32, local: u32) -> u32 {
+    let h = feature.wrapping_mul(0x9E37_79B1) ^ local.wrapping_mul(0x85EB_CA77).rotate_left(13);
+    let h = h ^ (h >> 15);
+    if h == 0 {
+        1
+    } else {
+        h
+    }
+}
+
+/// The neighbour list a reference keeps for the given origin hashes: the
+/// `NEAR` smallest distinct ones, sorted, zero-padded.
+pub fn near_of(hashes: impl IntoIterator<Item = u32>) -> [u32; NEAR] {
+    let mut v: Vec<u32> = hashes.into_iter().filter(|h| *h != 0).collect();
+    v.sort_unstable();
+    v.dedup();
+    v.truncate(NEAR);
+    let mut out = [0; NEAR];
+    out[..v.len()].copy_from_slice(&v);
+    out
 }
 
 impl FaceRef {
+    pub fn new(feature: FeatureId, local: u32) -> FaceRef {
+        FaceRef {
+            feature,
+            local,
+            part: None,
+            near: [0; NEAR],
+        }
+    }
+
+    pub fn has_near(&self) -> bool {
+        !no_near(&self.near)
+    }
+
     pub fn matches(&self, origin: &ok_brep::FaceOrigin) -> bool {
         origin.feature == self.feature.0 && origin.local == self.local
     }

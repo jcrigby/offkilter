@@ -28,6 +28,95 @@ pub struct Body {
     pub material: Option<crate::Material>,
 }
 
+/// The neighbour hashes a reference to each face's piece records (see
+/// `FaceRef::near`): a sample of `piece_neighbours`.
+pub fn piece_near(solid: &Solid, parts: &[u32]) -> Vec<[u32; crate::NEAR]> {
+    piece_neighbours(solid, parts)
+        .into_iter()
+        .map(crate::near_of)
+        .collect()
+}
+
+/// The origin hashes of the faces across every face's piece's edges that
+/// have another origin, sorted, for every face.
+pub fn piece_neighbours(solid: &Solid, parts: &[u32]) -> Vec<Vec<u32>> {
+    let mut sets: BTreeMap<(u32, u32, u32), Vec<u32>> = BTreeMap::new();
+    let key = |i: usize| {
+        let o = solid.faces[i].origin;
+        (o.feature, o.local, parts[i])
+    };
+    for (_, faces) in solid.edge_faces() {
+        for (k, &i) in faces.iter().enumerate() {
+            for &j in &faces[k + 1..] {
+                let (oi, oj) = (solid.faces[i].origin, solid.faces[j].origin);
+                if oi == oj {
+                    continue;
+                }
+                sets.entry(key(i))
+                    .or_default()
+                    .push(crate::origin_hash(oj.feature, oj.local));
+                sets.entry(key(j))
+                    .or_default()
+                    .push(crate::origin_hash(oi.feature, oi.local));
+            }
+        }
+    }
+    for v in sets.values_mut() {
+        v.sort_unstable();
+        v.dedup();
+    }
+    (0..solid.faces.len())
+        .map(|i| sets.get(&key(i)).cloned().unwrap_or_default())
+        .collect()
+}
+
+/// The faces a reference means: those of its origin in the piece it
+/// names. The piece is found by the neighbours recorded in the reference
+/// when it has them and one piece matches them best (so it follows the
+/// piece when an edit reorders the pieces by position, and finds the one
+/// piece left when the split heals); otherwise by the piece number.
+pub fn faces_of_ref(solid: &Solid, r: &FaceRef) -> Vec<usize> {
+    let parts = solid.face_parts();
+    let matching: Vec<usize> = (0..solid.faces.len())
+        .filter(|&i| r.matches(&solid.faces[i].origin))
+        .collect();
+    let mut pieces: Vec<u32> = matching.iter().map(|&i| parts[i]).collect();
+    pieces.sort_unstable();
+    pieces.dedup();
+    let positional = r.part.unwrap_or(0);
+    let want = if !r.has_near() {
+        positional
+    } else if pieces.len() <= 1 {
+        pieces.first().copied().unwrap_or(positional)
+    } else {
+        // Scored against every neighbour a piece has now, since the
+        // reference kept a sample of the neighbours it had when made.
+        let near = piece_neighbours(solid, &parts);
+        let score = |piece: u32| -> usize {
+            let i = matching
+                .iter()
+                .copied()
+                .find(|&i| parts[i] == piece)
+                .unwrap();
+            r.near
+                .iter()
+                .filter(|h| **h != 0 && near[i].binary_search(h).is_ok())
+                .count()
+        };
+        let scored: Vec<(u32, usize)> = pieces.iter().map(|&p| (p, score(p))).collect();
+        let best = scored.iter().map(|s| s.1).max().unwrap_or(0);
+        let tied: Vec<u32> = scored.iter().filter(|s| s.1 == best).map(|s| s.0).collect();
+        if tied.len() == 1 {
+            tied[0]
+        } else if tied.contains(&positional) {
+            positional
+        } else {
+            tied[0]
+        }
+    };
+    matching.into_iter().filter(|&i| parts[i] == want).collect()
+}
+
 impl Body {
     pub(crate) fn new(name: String, source: FeatureId, solid: Solid) -> Body {
         let (mesh, triangle_faces) = ok_brep::tessellate_with_faces(&solid);
@@ -45,13 +134,9 @@ impl Body {
 
     /// The first face created by `face_ref`, if this body still has it.
     pub fn find_face(&self, face_ref: &FaceRef) -> Option<&ok_brep::Face> {
-        let parts = self.solid.face_parts();
-        self.solid
-            .faces
-            .iter()
-            .enumerate()
-            .find(|(i, f)| face_ref.matches_part(&f.origin, parts[*i]))
-            .map(|(_, f)| f)
+        faces_of_ref(&self.solid, face_ref)
+            .first()
+            .map(|&i| &self.solid.faces[i])
     }
 
     /// Indices of every face reachable from the referenced faces across
@@ -59,12 +144,9 @@ impl Body {
     /// cylinder names the whole cylinder, while two coplanar pieces left
     /// by a slot stay apart).
     pub fn faces_on_surfaces_of(&self, refs: &[FaceRef]) -> Vec<usize> {
-        let parts = self.solid.face_parts();
-        let seeds: Vec<usize> = (0..self.solid.faces.len())
-            .filter(|&i| {
-                refs.iter()
-                    .any(|r| r.matches_part(&self.solid.faces[i].origin, parts[i]))
-            })
+        let seeds: Vec<usize> = refs
+            .iter()
+            .flat_map(|r| faces_of_ref(&self.solid, r))
             .collect();
         self.connected_on_surfaces(&seeds)
     }
@@ -98,18 +180,14 @@ impl Body {
     /// Face index pairs for every edge between the two referenced faces.
     pub fn find_edge(&self, edge: &EdgeRef) -> Vec<(usize, usize)> {
         let mut out = Vec::new();
-        let parts = self.solid.face_parts();
+        let fa_set = faces_of_ref(&self.solid, &edge.a);
+        let fb_set = faces_of_ref(&self.solid, &edge.b);
         for (_, faces) in self.solid.edge_faces() {
             if faces.len() != 2 {
                 continue;
             }
-            let (fa, fb) = (
-                &self.solid.faces[faces[0]].origin,
-                &self.solid.faces[faces[1]].origin,
-            );
-            let (pa, pb) = (parts[faces[0]], parts[faces[1]]);
-            if (edge.a.matches_part(fa, pa) && edge.b.matches_part(fb, pb))
-                || (edge.a.matches_part(fb, pb) && edge.b.matches_part(fa, pa))
+            if (fa_set.contains(&faces[0]) && fb_set.contains(&faces[1]))
+                || (fa_set.contains(&faces[1]) && fb_set.contains(&faces[0]))
             {
                 let pair = (faces[0], faces[1]);
                 if !out.contains(&pair) {
@@ -1175,12 +1253,11 @@ impl PartStudio {
         for i in 0..result.bodies.len() {
             let body = &result.bodies[i];
             // Open every face on the surfaces the referenced faces lie on.
-            let surfaces: Vec<usize> = body
-                .solid
+            let surfaces: Vec<usize> = sf
                 .faces
                 .iter()
-                .filter(|f| sf.faces.iter().any(|r| r.matches(&f.origin)))
-                .map(|f| f.surface)
+                .flat_map(|r| faces_of_ref(&body.solid, r))
+                .map(|i| body.solid.faces[i].surface)
                 .collect();
             if !sf.faces.is_empty() && surfaces.is_empty() {
                 continue;
@@ -1941,6 +2018,7 @@ mod tests {
             feature: e,
             local: 1,
             part: None,
+            near: Default::default(),
         };
         let s2 = ps
             .apply(Op::AddSketch {
@@ -2009,6 +2087,7 @@ mod tests {
             feature: e2,
             local: 1,
             part: None,
+            near: Default::default(),
         };
         let s3 = ps
             .apply(Op::AddSketch {
@@ -2214,11 +2293,13 @@ mod tests {
             feature: e,
             local: 1,
             part: None,
+            near: Default::default(),
         };
         let front = crate::FaceRef {
             feature: e,
             local: 2,
             part: None,
+            near: Default::default(),
         };
         let f = ps
             .apply(Op::AddBlend {
@@ -2533,6 +2614,7 @@ mod tests {
                         feature: e,
                         local: 1,
                         part: None,
+                        near: Default::default(),
                     },
                     offset: 0.0,
                 },
@@ -2798,6 +2880,7 @@ mod tests {
             feature: e1,
             local: 1,
             part: None,
+            near: Default::default(),
         };
         let s2 = ps
             .apply(Op::AddSketch {
@@ -2967,11 +3050,13 @@ mod tests {
             feature: e1,
             local: 2,
             part: None,
+            near: Default::default(),
         };
         let cap = FaceRef {
             feature: e1,
             local: 1,
             part: None,
+            near: Default::default(),
         };
         ps.apply(Op::Sketch {
             id: s2,
@@ -3085,11 +3170,13 @@ mod tests {
                     feature: e1,
                     local: 1,
                     part: None,
+                    near: Default::default(),
                 },
                 b: FaceRef {
                     feature: e1,
                     local: 2,
                     part: None,
+                    near: Default::default(),
                 },
             }],
             size: 2.0,
@@ -3288,6 +3375,7 @@ mod tests {
                         feature: e,
                         local: 1,
                         part: None,
+                        near: Default::default(),
                     },
                     offset: 0.0,
                 },
@@ -3383,5 +3471,206 @@ mod tests {
         let r = ps.regenerate();
         assert_eq!(r.errors().count(), 1);
         assert!(r.bodies.is_empty());
+    }
+    /// A reference made with neighbour hashes finds its piece by
+    /// topology after an edit elsewhere reorders the pieces by position.
+    #[test]
+    fn a_reference_follows_its_piece_when_pieces_reorder() {
+        use crate::SketchOp;
+        use crate::{Op, PlaneRef, StandardPlane};
+        let mut ps = PartStudio::new("plate");
+        let feature = |ps: &mut PartStudio, op: Op| ps.apply(op).unwrap().feature.unwrap();
+        let sketch =
+            |ps: &mut PartStudio, plane: PlaneRef| feature(ps, Op::AddSketch { plane, name: None });
+        let rect = |ps: &mut PartStudio, id: FeatureId, a: (f64, f64), b: (f64, f64)| {
+            ps.apply(Op::Sketch {
+                id,
+                op: SketchOp::AddRectangle {
+                    a: Vec2::new(a.0, a.1),
+                    b: Vec2::new(b.0, b.1),
+                },
+            })
+            .unwrap();
+        };
+        let cut = |ps: &mut PartStudio, sketch: FeatureId, depth: f64| {
+            feature(
+                ps,
+                Op::AddExtrude {
+                    sketch,
+                    depth,
+                    direction: ExtrudeDirection::Reverse,
+                    end: ExtrudeEnd::Blind,
+                    profiles: ProfileSelection::All,
+                    op: BodyOp::Remove,
+                    name: None,
+                },
+            )
+        };
+        let base = sketch(&mut ps, PlaneRef::standard(StandardPlane::Top));
+        rect(&mut ps, base, (0.0, 0.0), (100.0, 100.0));
+        let plate = feature(
+            &mut ps,
+            Op::AddExtrude {
+                sketch: base,
+                depth: 10.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            },
+        );
+        let top_plane = PlaneRef::Standard {
+            base: StandardPlane::Top,
+            offset: 10.0,
+        };
+        // A shallow slot across the plate splits the top face into a lower
+        // piece (y < 48) and an upper one (y > 52) of one body.
+        let slot = sketch(&mut ps, top_plane);
+        rect(&mut ps, slot, (-1.0, 48.0), (101.0, 52.0));
+        cut(&mut ps, slot, 5.0);
+        // Two notches in the lower piece's front edge, only one active at
+        // a time: pieces are ordered by the mean of their outline corners,
+        // so the left notch puts the lower piece first and the right notch
+        // the upper piece.
+        let left = sketch(&mut ps, top_plane);
+        rect(&mut ps, left, (10.0, -1.0), (40.0, 40.0));
+        let left_cut = cut(&mut ps, left, 3.0);
+        let right = sketch(&mut ps, top_plane);
+        rect(&mut ps, right, (60.0, -1.0), (90.0, 40.0));
+        let right_cut = cut(&mut ps, right, 3.0);
+        ps.apply(Op::SetSuppressed {
+            id: right_cut,
+            suppressed: true,
+        })
+        .unwrap();
+        let upper_piece = |ps: &mut PartStudio| -> (u32, FaceRef) {
+            let r = ps.regenerate();
+            let body = &r.bodies[0];
+            let parts = body.solid.face_parts();
+            let near = piece_near(&body.solid, &parts);
+            let (i, _) = body
+                .solid
+                .faces
+                .iter()
+                .enumerate()
+                .find(|(_, f)| {
+                    f.origin.feature == plate.0
+                        && f.origin.local == 1
+                        && f.loops[0]
+                            .iter()
+                            .all(|&v| body.solid.vertices[v as usize].y > 50.0)
+                })
+                .unwrap();
+            (
+                parts[i],
+                FaceRef {
+                    feature: plate,
+                    local: 1,
+                    part: Some(parts[i]),
+                    near: near[i],
+                },
+            )
+        };
+        let (part, upper) = upper_piece(&mut ps);
+        assert_eq!(part, 1, "the upper piece is second by position at first");
+        assert!(upper.has_near());
+        // A hole in the upper piece, referenced with the neighbours.
+        let centres = sketch(
+            &mut ps,
+            PlaneRef::Face {
+                face: upper,
+                offset: 0.0,
+            },
+        );
+        ps.apply(Op::Sketch {
+            id: centres,
+            op: SketchOp::AddPoint {
+                pos: Vec2::new(50.0, 75.0),
+            },
+        })
+        .unwrap();
+        let hole = feature(
+            &mut ps,
+            Op::AddHole {
+                sketch: centres,
+                diameter: 6.0,
+                depth: 0.0,
+                through_all: true,
+                direction: ExtrudeDirection::Reverse,
+                counterbore: None,
+                name: None,
+            },
+        );
+        let hole_y = |ps: &mut PartStudio| -> f64 {
+            let r = ps.regenerate();
+            let errors: Vec<_> = r.errors().collect();
+            assert!(errors.is_empty(), "{errors:?}");
+            let body = &r.bodies[0];
+            let mut sum = 0.0;
+            let mut n = 0.0;
+            for f in body
+                .solid
+                .faces
+                .iter()
+                .filter(|f| f.origin.feature == hole.0)
+            {
+                for &v in &f.loops[0] {
+                    sum += body.solid.vertices[v as usize].y;
+                    n += 1.0;
+                }
+            }
+            assert!(n > 0.0, "the hole has faces");
+            sum / n
+        };
+        assert!((hole_y(&mut ps) - 75.0).abs() < 1.0);
+        // Swap the notches: the pieces trade positions.
+        ps.apply(Op::SetSuppressed {
+            id: left_cut,
+            suppressed: true,
+        })
+        .unwrap();
+        ps.apply(Op::SetSuppressed {
+            id: right_cut,
+            suppressed: false,
+        })
+        .unwrap();
+        let (part, upper_now) = upper_piece(&mut ps);
+        assert_eq!(part, 0, "the upper piece is first by position now");
+        // By position alone the old reference would name the lower piece.
+        let r = ps.regenerate();
+        let positional = FaceRef {
+            feature: plate,
+            local: 1,
+            part: Some(1),
+            near: Default::default(),
+        };
+        let found = r.bodies[0].find_face(&positional).unwrap();
+        assert!(found.loops[0]
+            .iter()
+            .all(|&v| r.bodies[0].solid.vertices[v as usize].y < 50.0));
+        // With its neighbours, it still names the upper piece, so the
+        // hole stays where it was drilled.
+        let found = r.bodies[0].find_face(&upper).unwrap();
+        assert!(found.loops[0]
+            .iter()
+            .all(|&v| r.bodies[0].solid.vertices[v as usize].y > 50.0));
+        // The hole's facets are neighbours now too, so a fresh reference
+        // samples different hashes; the old one still scores highest.
+        assert!(upper_now.has_near());
+        assert!((hole_y(&mut ps) - 75.0).abs() < 1.0);
+        // If the slot is suppressed the split heals: the reference finds
+        // the one piece left, where a bare piece number 1 would fail.
+        ps.apply(Op::SetSuppressed {
+            id: slot_cut_of(&ps),
+            suppressed: true,
+        })
+        .unwrap();
+        assert!((hole_y(&mut ps) - 75.0).abs() < 1.0);
+    }
+
+    /// The slot cut of the test above: the third feature after the plate.
+    fn slot_cut_of(ps: &PartStudio) -> FeatureId {
+        ps.features()[3].id
     }
 }

@@ -119,11 +119,9 @@ fn source_segments(result: &RegenResult, plane: &Plane, source: &ProjectionSourc
     for body in &result.bodies {
         let solid = &body.solid;
         let surfaces_of = |face: &crate::FaceRef| -> Vec<usize> {
-            let mut v: Vec<usize> = solid
-                .faces
-                .iter()
-                .filter(|f| face.matches(&f.origin))
-                .map(|f| f.surface)
+            let mut v: Vec<usize> = crate::regen::faces_of_ref(solid, face)
+                .into_iter()
+                .map(|i| solid.faces[i].surface)
                 .collect();
             v.sort_unstable();
             v.dedup();

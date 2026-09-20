@@ -10,7 +10,8 @@ export type Vec3 = { x: number; y: number; z: number };
 export type StandardPlane = "top" | "front" | "right";
 /** A face of a body, by the feature that made it and its local face index. */
 /** A face by its originating feature and local index, plus which piece when later features split that face (numbered by position). */
-export type FaceRef = { feature: number; local: number; part?: number };
+/** A face by the feature and local index that made it, the piece number among faces sharing that origin, and hashes of the neighbouring pieces' origins (copied from the summary so the reference follows its piece when pieces reorder). */
+export type FaceRef = { feature: number; local: number; part?: number; near?: number[] };
 export type PlaneRef =
   | { type: "standard"; base: StandardPlane; offset: number }
   | { type: "face"; face: FaceRef; offset: number }

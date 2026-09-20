@@ -172,6 +172,7 @@ impl Part {
                         feature: FeatureId(f.origin.feature),
                         local: f.origin.local,
                         part: None,
+                        near: Default::default(),
                     };
                 }
             }
@@ -204,6 +205,7 @@ fn l_bracket_with_holes_fillet_and_chamfer() {
         feature: base,
         local: 1,
         part: None,
+        near: Default::default(),
     };
     let s2 = p.sketch_on(top);
     p.rect(s2, (0.0, 34.0), (60.0, 40.0));
@@ -312,6 +314,7 @@ fn pocketed_box_with_rounded_corners_and_counterbored_holes() {
             feature: body,
             local,
             part: None,
+            near: Default::default(),
         })
         .collect();
     let edges: Vec<EdgeRef> = (0..4)
@@ -329,6 +332,7 @@ fn pocketed_box_with_rounded_corners_and_counterbored_holes() {
         feature: body,
         local: 1,
         part: None,
+        near: Default::default(),
     };
     let s2 = p.sketch_on(top);
     p.rect(s2, (5.0, 5.0), (75.0, 45.0));
@@ -490,6 +494,7 @@ fn grazing_cuts_tangent_bosses_and_coincident_cylinders() {
         feature: block,
         local: 1,
         part: None,
+        near: Default::default(),
     });
     p.rect(s5, (0.0, 0.0), (20.0, 20.0));
     p.extrude_dir(
@@ -597,6 +602,7 @@ fn linear_pattern_of_a_ribbed_plate_then_fillet_after_pattern() {
         feature: plate,
         local: 1,
         part: None,
+        near: Default::default(),
     });
     p.rect(s2, (4.0, 0.0), (6.0, 30.0));
     p.extrude(s2, 10.0, BodyOp::Add);
@@ -874,6 +880,7 @@ fn move_face_and_draft_on_a_block() {
         feature: block,
         local: 1,
         part: None,
+        near: Default::default(),
     };
     let mv = p.op(Op::AddMoveFace {
         faces: vec![top],
@@ -895,6 +902,7 @@ fn move_face_and_draft_on_a_block() {
             feature: block,
             local,
             part: None,
+            near: Default::default(),
         })
         .collect();
     p.op(Op::AddDraft {
@@ -1179,6 +1187,7 @@ fn split_faces_are_named_by_piece() {
         feature: block,
         local: 1,
         part: Some(part),
+        near: Default::default(),
     };
     let mv = p.op(Op::AddMoveFace {
         faces: vec![piece(1)],
@@ -1207,6 +1216,7 @@ fn split_faces_are_named_by_piece() {
             feature: block,
             local: 1,
             part: None,
+            near: Default::default(),
         }]),
         distance: Some(2.0),
     });

@@ -629,11 +629,11 @@ impl Document {
             DocOp::Assembly { tab, op } => self.assembly(*tab).ok().map(|a| match op {
                 AssemblyOp::SetInstance { id, .. } => a
                     .instance(*id)
-                    .map(|i| Before::Instance(i.clone()))
+                    .map(|i| Before::Instance(Box::new(i.clone())))
                     .unwrap_or(Before::None),
                 AssemblyOp::SetMate { id, .. } => a
                     .mate(*id)
-                    .map(|m| Before::Mate(m.clone()))
+                    .map(|m| Before::Mate(Box::new(m.clone())))
                     .unwrap_or(Before::None),
                 _ => Before::Assembly(a.instances.clone(), a.mates.clone()),
             }),
@@ -877,8 +877,8 @@ enum Before {
     Drawing(Vec<DrawingDimension>),
     Tab(usize, serde_json::Value),
     Json(String),
-    Instance(Instance),
-    Mate(Mate),
+    Instance(Box<Instance>),
+    Mate(Box<Mate>),
     Assembly(Vec<Instance>, Vec<Mate>),
 }
 
@@ -1052,6 +1052,7 @@ mod tests {
                             feature: e,
                             local: 1,
                             part: None,
+                            near: Default::default(),
                         },
                         anchor: crate::Anchor::Face,
                     },
@@ -1061,6 +1062,7 @@ mod tests {
                             feature: e,
                             local: 0,
                             part: None,
+                            near: Default::default(),
                         },
                         anchor: crate::Anchor::Face,
                     },
@@ -1186,6 +1188,7 @@ mod tests {
                             feature: e,
                             local: 1,
                             part: None,
+                            near: Default::default(),
                         },
                         anchor: crate::Anchor::Face,
                     },
@@ -1195,6 +1198,7 @@ mod tests {
                             feature: e,
                             local: 0,
                             part: None,
+                            near: Default::default(),
                         },
                         anchor: crate::Anchor::Face,
                     },

@@ -232,11 +232,9 @@ pub fn connector_frame(solid: &Solid, face: &FaceRef, anchor: &Anchor) -> Option
 
 /// Every facet of the surfaces that the referenced face lies on.
 fn surface_facets<'a>(solid: &'a Solid, face: &FaceRef) -> Vec<&'a ok_brep::Face> {
-    let surfaces: Vec<usize> = solid
-        .faces
-        .iter()
-        .filter(|f| face.matches(&f.origin))
-        .map(|f| f.surface)
+    let surfaces: Vec<usize> = crate::regen::faces_of_ref(solid, face)
+        .into_iter()
+        .map(|i| solid.faces[i].surface)
         .collect();
     solid
         .faces
@@ -355,10 +353,9 @@ fn vertex_frame(solid: &Solid, face: &FaceRef, others: &[FaceRef; 2]) -> Option<
 }
 
 fn face_frame(solid: &Solid, face: &FaceRef) -> Option<Plane> {
-    let faces: Vec<&ok_brep::Face> = solid
-        .faces
-        .iter()
-        .filter(|f| face.matches(&f.origin))
+    let faces: Vec<&ok_brep::Face> = crate::regen::faces_of_ref(solid, face)
+        .into_iter()
+        .map(|i| &solid.faces[i])
         .collect();
     let first = *faces.first()?;
     // Centroid over every facet sharing the surface, so a cylinder's
@@ -906,11 +903,13 @@ mod tests {
             feature: FeatureId(1),
             local: 1,
             part: None,
+            near: Default::default(),
         };
         let bottom = FaceRef {
             feature: FeatureId(1),
             local: 0,
             part: None,
+            near: Default::default(),
         };
         asm.mates.push(Mate {
             id: MateId(3),
@@ -1000,11 +999,13 @@ mod tests {
             feature: FeatureId(1),
             local: 1,
             part: None,
+            near: Default::default(),
         };
         let bottom = FaceRef {
             feature: FeatureId(1),
             local: 0,
             part: None,
+            near: Default::default(),
         };
         let mate = |id: u32, a: u32, b: u32| Mate {
             id: MateId(id),
@@ -1069,6 +1070,7 @@ mod tests {
             feature: FeatureId(1),
             local,
             part: None,
+            near: Default::default(),
         };
         let mut asm = Assembly::new("loop");
         asm.instances.extend([mk(1, true), mk(2, false)]);
@@ -1150,6 +1152,7 @@ mod tests {
             feature: FeatureId(1),
             local,
             part: None,
+            near: Default::default(),
         }
     }
 
@@ -1298,6 +1301,7 @@ mod tests {
                 feature: FeatureId(1),
                 local: 2,
                 part: None,
+                near: Default::default(),
             },
             &Anchor::Face,
         )

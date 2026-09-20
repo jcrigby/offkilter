@@ -58,6 +58,7 @@ fn cover() -> PartStudio {
         feature: plate,
         local: 1,
         part: None,
+        near: Default::default(),
     };
     let bosses = ps
         .apply(Op::AddSketch {
@@ -128,6 +129,7 @@ fn cover() -> PartStudio {
             feature: plate,
             local: 0,
             part: None,
+            near: Default::default(),
         }],
         name: None,
     })
