@@ -2731,6 +2731,12 @@ async function main(): Promise<void> {
     await renderVersions();
     for (const d of docs) {
       const li = document.createElement("li");
+      const thumb = document.createElement("img");
+      thumb.className = "dthumb";
+      thumb.alt = "";
+      thumb.src = `${Sync.thumbnailUrl(d.id)}?t=${d.updated}`;
+      thumb.onerror = () => thumb.remove();
+      li.appendChild(thumb);
       const name = document.createElement("span");
       name.className = "dname";
       name.textContent = d.name;
@@ -3095,7 +3101,18 @@ async function main(): Promise<void> {
       history.replaceState(null, "", url.toString());
     }
   };
+  /** Sends a snapshot of the viewport as the open document's preview (best effort). */
+  const updateThumbnail = async () => {
+    const id = app.sync.docId;
+    if (!id || app.readOnly) return;
+    try {
+      await Sync.putThumbnail(id, await app.viewer.snapshot({ width: 240, height: 160 }));
+    } catch {
+      // A missing preview is not worth a message.
+    }
+  };
   $("#btn-docs").onclick = async () => {
+    await updateThumbnail();
     await renderDocs();
     dialog.showModal();
   };

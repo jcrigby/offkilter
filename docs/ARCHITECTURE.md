@@ -560,6 +560,9 @@ relays edits between clients:
   STL. Both run the kernel natively on a blocking thread, so scripts and
   CI can validate and export documents without a browser.
 - REST: `GET/POST /api/docs`, `GET/PUT/DELETE /api/docs/:id`,
+  `GET/PUT /api/docs/:id/thumbnail` (a PNG preview, at most 512 KB, that
+  the client captures from the viewport when the Docs dialog opens and
+  the list shows beside each document),
   `POST/DELETE /api/docs/:id/share`, versions under `/api/docs/:id/versions`
   (list, save, fetch one, restore); `POST /api/docs/:id/branch` copies
   the document, as it is or at a saved version, into a new document

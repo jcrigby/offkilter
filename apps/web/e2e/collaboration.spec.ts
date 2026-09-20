@@ -85,6 +85,8 @@ test("two clients edit one document live", async ({ browser }) => {
   // Save a version, change more, then compare: the new feature and the
   // renamed one show up; nothing else.
   await a.click("#btn-docs");
+  // Opening the dialog stored a preview of the viewport; the list shows it.
+  await expect(a.locator("#docs-list img.dthumb").first()).toBeVisible();
   await a.click("#versions-save");
   await expect(a.locator("#versions-list li")).toHaveCount(1);
   await a.click("#docs-close");

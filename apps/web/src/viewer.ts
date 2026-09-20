@@ -685,10 +685,23 @@ export class Viewer {
   }
 
   /** The current view as a PNG (rendered fresh, so the buffer is not stale). */
-  snapshot(): Promise<Blob> {
+  /** A PNG of the current view, at the canvas size or scaled to fit `size` (cover, centred). */
+  snapshot(size?: { width: number; height: number }): Promise<Blob> {
     this.renderer.render(this.scene, this.camera);
+    const source = this.renderer.domElement;
+    let canvas: HTMLCanvasElement = source;
+    if (size) {
+      canvas = document.createElement("canvas");
+      canvas.width = size.width;
+      canvas.height = size.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return Promise.reject(new Error("could not scale the view"));
+      const scale = Math.max(size.width / source.width, size.height / source.height);
+      const w = source.width * scale, h = source.height * scale;
+      ctx.drawImage(source, (size.width - w) / 2, (size.height - h) / 2, w, h);
+    }
     return new Promise((resolve, reject) => {
-      this.renderer.domElement.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("could not capture the view"))), "image/png");
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("could not capture the view"))), "image/png");
     });
   }
 

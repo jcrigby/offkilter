@@ -127,6 +127,10 @@ pub fn router(
         .route("/docs/{id}/check", get(check_doc))
         .route("/docs/{id}/export/stl", get(export_stl))
         .route("/docs/{id}/export/step", get(export_step))
+        .route(
+            "/docs/{id}/thumbnail",
+            get(get_thumbnail).put(put_thumbnail),
+        )
         .route("/health", get(|| async { "ok" }))
         .layer(DefaultBodyLimit::max(MAX_BODY_BYTES))
         .with_state(state);
@@ -811,6 +815,53 @@ async fn put_doc(
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => StatusCode::NOT_FOUND.into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+/// Largest preview image accepted (PNG snapshots of the viewport).
+const MAX_THUMBNAIL_BYTES: usize = 512 * 1024;
+
+/// Stores a PNG preview of the document, shown in the documents list.
+async fn put_thumbnail(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    body: axum::body::Bytes,
+) -> impl IntoResponse {
+    if let Err(code) = editable(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    if body.len() > MAX_THUMBNAIL_BYTES {
+        return (StatusCode::PAYLOAD_TOO_LARGE, "thumbnail too large").into_response();
+    }
+    if !body.starts_with(b"\x89PNG\r\n\x1a\n") {
+        return (StatusCode::BAD_REQUEST, "not a PNG").into_response();
+    }
+    match hub.store().write_thumbnail(&id, &body) {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => StatusCode::NOT_FOUND.into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn get_thumbnail(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    match hub.store().read_thumbnail(&id) {
+        Some(png) => (
+            [
+                (header::CONTENT_TYPE, "image/png".to_string()),
+                (header::CACHE_CONTROL, "no-cache".to_string()),
+            ],
+            png,
+        )
+            .into_response(),
+        None => StatusCode::NOT_FOUND.into_response(),
     }
 }
 
@@ -1508,6 +1559,33 @@ mod tests {
         let (status, _, _) =
             call_bytes(&app, &format!("/api/docs/{id}/export/stl?tab=9"), None).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
+        // A PNG preview can be stored and read back; anything else is refused.
+        let png = b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR".to_vec();
+        let (status, _, _) = call_bytes(&app, &format!("/api/docs/{id}/thumbnail"), None).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        let (status, _, _) = call_raw(
+            &app,
+            "PUT",
+            &format!("/api/docs/{id}/thumbnail"),
+            b"not an image".to_vec(),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        let (status, _, _) = call_raw(
+            &app,
+            "PUT",
+            &format!("/api/docs/{id}/thumbnail"),
+            png.clone(),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
+        let (status, headers, bytes) =
+            call_bytes(&app, &format!("/api/docs/{id}/thumbnail"), None).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(headers[header::CONTENT_TYPE], "image/png");
+        assert_eq!(bytes, png);
         let (status, headers, bytes) =
             call_bytes(&app, &format!("/api/docs/{id}/export/step?tab=1"), None).await;
         assert_eq!(status, StatusCode::OK);
@@ -1516,6 +1594,35 @@ mod tests {
         assert!(step.starts_with("ISO-10303-21;"));
         assert!(step.contains("MANIFOLD_SOLID_BREP('Part 1',#"));
         assert_eq!(step.matches("=ADVANCED_FACE(").count(), 6);
+    }
+
+    /// Sends raw bytes with a method, returning status, headers and body bytes.
+    async fn call_raw(
+        app: &Router,
+        method: &str,
+        path: &str,
+        body: Vec<u8>,
+        cookie: Option<&str>,
+    ) -> (StatusCode, axum::http::HeaderMap, Vec<u8>) {
+        let mut req = Request::builder()
+            .method(method)
+            .uri(path)
+            .header("content-type", "application/octet-stream");
+        if let Some(c) = cookie {
+            req = req.header("cookie", c);
+        }
+        let res = app
+            .clone()
+            .oneshot(req.body(Body::from(body)).unwrap())
+            .await
+            .unwrap();
+        let status = res.status();
+        let headers = res.headers().clone();
+        let bytes = axum::body::to_bytes(res.into_body(), usize::MAX)
+            .await
+            .unwrap()
+            .to_vec();
+        (status, headers, bytes)
     }
 
     /// Sends a GET, returning status, headers and raw bytes.

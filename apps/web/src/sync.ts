@@ -221,6 +221,16 @@ export class Sync {
     return (await r.json()) as Merge;
   }
 
+  /** Stores a PNG preview of a document for the documents list. */
+  static async putThumbnail(id: string, png: Blob): Promise<void> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/thumbnail`, { method: "PUT", headers: { "content-type": "image/png" }, body: png });
+    if (!r.ok) throw await Sync.failure(r);
+  }
+
+  static thumbnailUrl(id: string): string {
+    return `${Sync.apiBase()}/docs/${id}/thumbnail`;
+  }
+
   /** The document JSON saved as a version. */
   static async getVersion(id: string, vid: string): Promise<string> {
     const r = await fetch(`${Sync.apiBase()}/docs/${id}/versions/${vid}`);

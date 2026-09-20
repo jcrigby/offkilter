@@ -37,6 +37,7 @@ dialog h3 { margin: 0 0 8px; }
 .docs-list { list-style: none; padding: 0; margin: 8px 0; max-height: 300px; overflow-y: auto; }
 .docs-list li { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-bottom: 1px dashed var(--border); }
 .docs-list li .dname { flex: 1; cursor: pointer; }
+.docs-list li .dthumb { width: 60px; height: 40px; object-fit: cover; border: 1px solid var(--border); border-radius: 3px; background: #000; }
 .docs-list li .dname:hover { color: var(--accent); }
 .docs-list li .dwhen { color: var(--text-dim); font-size: 11px; }
 button { background: var(--bg-elev); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font: inherit; cursor: pointer; }

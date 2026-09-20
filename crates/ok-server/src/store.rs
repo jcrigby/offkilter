@@ -163,6 +163,23 @@ impl DocStore {
         self.root.join("docs").join(format!("{id}.meta.json"))
     }
 
+    fn thumbnail_path(&self, id: &str) -> PathBuf {
+        self.root.join("docs").join(format!("{id}.png"))
+    }
+
+    /// Stores a PNG preview of the document for the documents list.
+    pub fn write_thumbnail(&self, id: &str, png: &[u8]) -> std::io::Result<()> {
+        self.meta_or_not_found(id)?;
+        std::fs::write(self.thumbnail_path(id), png)
+    }
+
+    pub fn read_thumbnail(&self, id: &str) -> Option<Vec<u8>> {
+        if !Self::valid_id(id) {
+            return None;
+        }
+        std::fs::read(self.thumbnail_path(id)).ok()
+    }
+
     /// The state a branch was made from, kept for three-way merges.
     fn base_path(&self, id: &str) -> PathBuf {
         self.root.join("docs").join(format!("{id}.base.okpart"))
@@ -452,6 +469,7 @@ impl DocStore {
         std::fs::remove_file(self.doc_path(id))?;
         std::fs::remove_file(self.meta_path(id))?;
         let _ = std::fs::remove_file(self.base_path(id));
+        let _ = std::fs::remove_file(self.thumbnail_path(id));
         let _ = std::fs::remove_dir_all(self.versions_dir(id));
         Ok(())
     }
