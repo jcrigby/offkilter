@@ -436,20 +436,24 @@ struct Reader<'a> {
     /// Sampled interior points of every edge, from its start vertex to
     /// its end vertex, as mesh vertices.
     edge_samples: HashMap<usize, Vec<u32>>,
-    /// For every cylindrical face, the strips it is cut into: the first
-    /// column's angle, the number of strips and their angular width (in
-    /// the face's unwrapped frame, mirrored when the face turns inward).
-    columns: HashMap<usize, Columns>,
+    /// For every face on a surface of revolution, the grid it is cut
+    /// into: columns in the angle about the axis and rows along the
+    /// profile (in the face's unwrapped frame, mirrored when the face
+    /// turns inward).
+    columns: HashMap<usize, Grid>,
     /// Vertices that stay where they are: edge ends and the column
     /// crossings cylindrical faces put on their edges.
     fixed: HashSet<u32>,
 }
 
 #[derive(Clone, Copy)]
-struct Columns {
+struct Grid {
     umin: f64,
     strips: usize,
     width: f64,
+    vmin: f64,
+    rows: usize,
+    height: f64,
     outward: bool,
 }
 
@@ -457,14 +461,104 @@ struct Columns {
 /// its edges with their orientation flags.
 type Bound = (bool, bool, Vec<(usize, bool)>);
 
-/// A cylindrical surface's geometry: centre, axis, reference direction
-/// and radius, in millimetres.
-struct CylinderGeom {
+/// A surface of revolution: its placement (centre on the axis, axis,
+/// reference direction and the third axis) and profile, in millimetres.
+/// Points are parametrised by the angle about the axis from `x` and a
+/// profile parameter: height along the axis for a cylinder or cone, the
+/// tube angle for a torus, the latitude for a sphere.
+struct RevolvedGeom {
     centre: Vec3,
     axis: Vec3,
     x: Vec3,
     y: Vec3,
-    radius: f64,
+    kind: Profile,
+}
+
+enum Profile {
+    Cylinder {
+        radius: f64,
+    },
+    /// Radius at the placement's origin, growing along the axis.
+    Cone {
+        radius: f64,
+        half_angle: f64,
+    },
+    Torus {
+        major: f64,
+        minor: f64,
+    },
+    Sphere {
+        radius: f64,
+    },
+}
+
+impl RevolvedGeom {
+    fn radial(&self, t: f64) -> Vec3 {
+        self.x * t.cos() + self.y * t.sin()
+    }
+
+    /// Length of a radian of angle at the surface's widest, so the angle
+    /// coordinate is a length (facet-wide columns then have a width).
+    fn u_scale(&self) -> f64 {
+        match self.kind {
+            Profile::Cylinder { radius } | Profile::Sphere { radius } => radius,
+            // The widest the loops reach is not known here; the reference
+            // radius plus the run of the half angle over a typical height
+            // is near enough to keep columns fine.
+            Profile::Cone { radius, half_angle } => radius.max(1.0) * (1.0 + half_angle.tan()),
+            Profile::Torus { major, minor } => major + minor,
+        }
+    }
+
+    /// Length of a radian of the profile parameter (one for heights).
+    fn v_scale(&self) -> f64 {
+        match self.kind {
+            Profile::Torus { minor, .. } => minor,
+            Profile::Sphere { radius } => radius,
+            _ => 1.0,
+        }
+    }
+
+    /// Whether the profile curves, so rows are needed as well as columns.
+    fn curved_profile(&self) -> bool {
+        matches!(self.kind, Profile::Torus { .. } | Profile::Sphere { .. })
+    }
+
+    /// The (angle, profile parameter) of a point on or near the surface.
+    fn param(&self, p: Vec3) -> (f64, f64) {
+        let d = p - self.centre;
+        let h = d.dot(self.axis);
+        let t = d.dot(self.y).atan2(d.dot(self.x));
+        match self.kind {
+            Profile::Cylinder { .. } | Profile::Cone { .. } => (t, h),
+            Profile::Torus { major, .. } => {
+                let r = (d - self.axis * h).length() - major;
+                (t, h.atan2(r))
+            }
+            Profile::Sphere { .. } => {
+                let r = (d - self.axis * h).length();
+                (t, h.atan2(r))
+            }
+        }
+    }
+
+    /// The point at an angle and profile parameter.
+    fn point(&self, t: f64, v: f64) -> Vec3 {
+        match self.kind {
+            Profile::Cylinder { radius } => self.centre + self.radial(t) * radius + self.axis * v,
+            Profile::Cone { radius, half_angle } => {
+                self.centre + self.radial(t) * (radius + v * half_angle.tan()) + self.axis * v
+            }
+            Profile::Torus { major, minor } => {
+                self.centre
+                    + self.radial(t) * (major + minor * v.cos())
+                    + self.axis * (minor * v.sin())
+            }
+            Profile::Sphere { radius } => {
+                self.centre + (self.radial(t) * v.cos() + self.axis * v.sin()) * radius
+            }
+        }
+    }
 }
 
 impl Reader<'_> {
@@ -801,8 +895,8 @@ impl Reader<'_> {
         Ok(loops.into_iter().map(|l| l.1).collect())
     }
 
-    /// The cylinder a face lies on, if it is one.
-    fn cylinder_of(&self, face: usize) -> Result<Option<CylinderGeom>, String> {
+    /// The surface of revolution a face lies on, if it is one.
+    fn revolved_of(&self, face: usize) -> Result<Option<RevolvedGeom>, String> {
         let args = self
             .file
             .part(face, "ADVANCED_FACE")
@@ -812,124 +906,189 @@ impl Reader<'_> {
             .get(2)
             .and_then(Val::reference)
             .ok_or("face without a surface")?;
-        let Some(cargs) = self.file.part(surface, "CYLINDRICAL_SURFACE") else {
+        let kinds = [
+            "CYLINDRICAL_SURFACE",
+            "CONICAL_SURFACE",
+            "TOROIDAL_SURFACE",
+            "SPHERICAL_SURFACE",
+        ];
+        let Some((kind, sargs)) = kinds
+            .iter()
+            .find_map(|k| self.file.part(surface, k).map(|a| (*k, a)))
+        else {
             return Ok(None);
         };
         let (centre, axis, x) = self.file.placement(
-            cargs
+            sargs
                 .get(1)
                 .and_then(Val::reference)
-                .ok_or("CYLINDRICAL_SURFACE without a placement")?,
+                .ok_or_else(|| format!("{kind} without a placement"))?,
         )?;
-        let radius = cargs
-            .get(2)
-            .and_then(Val::num)
-            .ok_or("CYLINDRICAL_SURFACE without a radius")?
-            * self.scale;
-        Ok(Some(CylinderGeom {
+        let number = |i: usize| -> Result<f64, String> {
+            sargs
+                .get(i)
+                .and_then(Val::num)
+                .ok_or_else(|| format!("{kind} without its measures"))
+        };
+        let profile = match kind {
+            "CYLINDRICAL_SURFACE" => Profile::Cylinder {
+                radius: number(2)? * self.scale,
+            },
+            "CONICAL_SURFACE" => Profile::Cone {
+                radius: number(2)? * self.scale,
+                half_angle: number(3)?,
+            },
+            "TOROIDAL_SURFACE" => Profile::Torus {
+                major: number(2)? * self.scale,
+                minor: number(3)? * self.scale,
+            },
+            _ => Profile::Sphere {
+                radius: number(2)? * self.scale,
+            },
+        };
+        Ok(Some(RevolvedGeom {
             centre: centre * self.scale,
             axis,
             x,
             y: axis.cross(x),
-            radius,
+            kind: profile,
         }))
     }
 
-    /// The loops of a cylindrical face in its (angle × radius, height)
-    /// parameters, the angle unwrapped along each loop so a loop around
-    /// the seam stays continuous and holes shifted into the outer loop's
-    /// turn.
-    fn cylinder_uvs(&self, loops: &[Vec<u32>], geom: &CylinderGeom) -> Vec<Vec<[f64; 2]>> {
-        let param = |p: Vec3| {
-            let d = p - geom.centre;
-            (d.dot(geom.y).atan2(d.dot(geom.x)), d.dot(geom.axis))
+    /// The loops of a face on a surface of revolution in its (angle ×
+    /// scale, profile parameter × scale) coordinates, the angle unwrapped
+    /// along each loop so a loop around the seam stays continuous (and the
+    /// tube angle of a torus likewise) and holes shifted into the outer
+    /// loop's turn.
+    fn revolved_uvs(&self, loops: &[Vec<u32>], geom: &RevolvedGeom) -> Vec<Vec<[f64; 2]>> {
+        let (us, vs) = (geom.u_scale(), geom.v_scale());
+        let periodic_v = matches!(geom.kind, Profile::Torus { .. });
+        let unwrap = |t: f64, prev: f64| {
+            let mut t = t;
+            while t - prev > std::f64::consts::PI {
+                t -= std::f64::consts::TAU;
+            }
+            while prev - t > std::f64::consts::PI {
+                t += std::f64::consts::TAU;
+            }
+            t
         };
         let mut uvs: Vec<Vec<[f64; 2]>> = Vec::new();
         for l in loops {
-            let mut prev = 0.0;
+            let (mut pu, mut pv) = (0.0, 0.0);
             let mut uv = Vec::with_capacity(l.len());
             for (k, &v) in l.iter().enumerate() {
-                let (mut t, h) = param(self.vertices[v as usize]);
+                let (mut t, mut h) = geom.param(self.vertices[v as usize]);
                 if k > 0 {
-                    while t - prev > std::f64::consts::PI {
-                        t -= std::f64::consts::TAU;
-                    }
-                    while prev - t > std::f64::consts::PI {
-                        t += std::f64::consts::TAU;
+                    t = unwrap(t, pu);
+                    if periodic_v {
+                        h = unwrap(h, pv);
                     }
                 }
-                prev = t;
-                uv.push([t * geom.radius, h]);
+                (pu, pv) = (t, h);
+                uv.push([t * us, h * vs]);
             }
             uvs.push(uv);
         }
-        let outer_mid = {
-            let (lo, hi) = uvs[0].iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
-                (lo.min(p[0]), hi.max(p[0]))
-            });
-            (lo + hi) / 2.0
-        };
-        for uv in uvs.iter_mut().skip(1) {
-            let mid = uv.iter().map(|p| p[0]).sum::<f64>() / uv.len() as f64;
-            let shift = ((outer_mid - mid) / (std::f64::consts::TAU * geom.radius)).round()
-                * std::f64::consts::TAU
-                * geom.radius;
-            for p in uv.iter_mut() {
-                p[0] += shift;
+        let shift_into = |uvs: &mut Vec<Vec<[f64; 2]>>, c: usize, period: f64| {
+            let outer_mid = {
+                let (lo, hi) = uvs[0].iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
+                    (lo.min(p[c]), hi.max(p[c]))
+                });
+                (lo + hi) / 2.0
+            };
+            for uv in uvs.iter_mut().skip(1) {
+                let mid = uv.iter().map(|p| p[c]).sum::<f64>() / uv.len() as f64;
+                let shift = ((outer_mid - mid) / period).round() * period;
+                for p in uv.iter_mut() {
+                    p[c] += shift;
+                }
             }
+        };
+        shift_into(&mut uvs, 0, std::f64::consts::TAU * us);
+        if periodic_v {
+            shift_into(&mut uvs, 1, std::f64::consts::TAU * vs);
         }
         uvs
     }
 
-    /// First pass over a cylindrical face: decides the strips it will be
-    /// cut into and inserts the strips' columns into every edge of the
-    /// face, so the faces on the other side of those edges use the same
-    /// points and the mesh welds closed. A column crossing an edge
-    /// between two samples is placed on the cylinder at the interpolated
-    /// height, which both faces then share.
-    fn prepare_cylinder(&mut self, face: usize) -> Result<(), String> {
-        let Some(geom) = self.cylinder_of(face)? else {
+    /// First pass over a face on a surface of revolution: decides the grid
+    /// it will be cut into (facet-wide columns in the angle about the
+    /// axis, and rows along the profile where it curves) and inserts the
+    /// grid lines' crossings into every edge of the face, so the faces on
+    /// the other side of those edges use the same points and the mesh
+    /// welds closed. A crossing between two samples is placed on the
+    /// surface at the interpolated other coordinate, which both faces
+    /// then share.
+    fn prepare_revolved(&mut self, face: usize) -> Result<(), String> {
+        let Some(geom) = self.revolved_of(face)? else {
             return Ok(());
         };
         let loops = self.face_loops(face)?;
-        let uvs = self.cylinder_uvs(&loops, &geom);
-        let (umin, umax) = uvs[0].iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
-            (lo.min(p[0]), hi.max(p[0]))
-        });
-        let width = geom.radius * STEP_ANGLE;
-        let raw = (umax - umin) / width;
-        let strips = if (raw - raw.round()).abs() < 1e-6 {
-            raw.round()
+        let uvs = self.revolved_uvs(&loops, &geom);
+        let (us, vs) = (geom.u_scale(), geom.v_scale());
+        let range = |c: usize| {
+            uvs[0].iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
+                (lo.min(p[c]), hi.max(p[c]))
+            })
+        };
+        let cells = |lo: f64, hi: f64, step: f64| -> (usize, f64) {
+            let raw = (hi - lo) / step;
+            let n = if (raw - raw.round()).abs() < 1e-6 {
+                raw.round()
+            } else {
+                raw.ceil()
+            }
+            .max(1.0) as usize;
+            (n, (hi - lo) / n as f64)
+        };
+        let (umin, umax) = range(0);
+        let (strips, width) = cells(umin, umax, us * STEP_ANGLE);
+        let (vmin, vmax) = range(1);
+        let (rows, height) = if geom.curved_profile() {
+            cells(vmin, vmax, vs * STEP_ANGLE)
         } else {
-            raw.ceil()
-        }
-        .max(1.0) as usize;
-        let width = (umax - umin) / strips as f64;
+            (1, vmax - vmin)
+        };
         let outward = signed_area(&uvs[0]) > 0.0;
         self.columns.insert(
             face,
-            Columns {
+            Grid {
                 umin,
                 strips,
                 width,
+                vmin,
+                rows,
+                height,
                 outward,
             },
         );
-        // Column angles about the cylinder, modulo a turn.
+        // Grid lines: column angles modulo a turn, and row parameters.
         let columns: Vec<f64> = (0..=strips)
-            .map(|k| ((umin + width * k as f64) / geom.radius).rem_euclid(std::f64::consts::TAU))
+            .map(|k| ((umin + width * k as f64) / us).rem_euclid(std::f64::consts::TAU))
             .collect();
+        let rows_at: Vec<f64> = if geom.curved_profile() {
+            (0..=rows)
+                .map(|j| (vmin + height * j as f64) / vs)
+                .collect()
+        } else {
+            Vec::new()
+        };
+        let periodic_v = matches!(geom.kind, Profile::Torus { .. });
         // Samples closer than this along an edge would make triangles
         // too thin to keep (the mesh importer drops those and the mesh
-        // no longer closes), so nearby samples move onto a column or
+        // no longer closes), so nearby samples move onto a grid line or
         // go.
-        let delta = 1e-2 * width;
-        let angle_of = |p: Vec3| {
-            let d = p - geom.centre;
-            (d.dot(geom.y).atan2(d.dot(geom.x)), d.dot(geom.axis))
-        };
-        let on_column = |c: f64, h: f64| {
-            geom.centre + (geom.x * c.cos() + geom.y * c.sin()) * geom.radius + geom.axis * h
+        let delta = 1e-2 * width.min(if rows_at.is_empty() { width } else { height });
+        let unwrap = |t: f64, prev: f64| {
+            let mut t = t;
+            while t - prev > std::f64::consts::PI {
+                t -= std::f64::consts::TAU;
+            }
+            while prev - t > std::f64::consts::PI {
+                t += std::f64::consts::TAU;
+            }
+            t
         };
         let mut seen: Vec<usize> = Vec::new();
         for (_, _, edges) in self.face_bounds(face)? {
@@ -939,19 +1098,29 @@ impl Reader<'_> {
                 }
                 seen.push(edge);
                 let pts = self.edge(edge)?;
-                // A sample within `delta` of a column moves onto it and
+                // A sample within `delta` of a grid line moves onto it and
                 // stays there, so no crossing lands right next to it.
                 for &v in &pts {
                     if self.fixed.contains(&v) {
                         continue;
                     }
-                    let (t, h) = angle_of(self.vertices[v as usize]);
-                    let near = columns.iter().copied().find(|&c| {
+                    let (t, h) = geom.param(self.vertices[v as usize]);
+                    let near_col = columns.iter().copied().find(|&c| {
                         let d = (t - c).rem_euclid(std::f64::consts::TAU);
-                        d.min(std::f64::consts::TAU - d) * geom.radius < delta
+                        d.min(std::f64::consts::TAU - d) * us < delta
                     });
-                    if let Some(c) = near {
-                        self.vertices[v as usize] = on_column(c, h);
+                    let near_row = rows_at.iter().copied().find(|&r| {
+                        let d = if periodic_v {
+                            let d = (h - r).rem_euclid(std::f64::consts::TAU);
+                            d.min(std::f64::consts::TAU - d)
+                        } else {
+                            (h - r).abs()
+                        };
+                        d * vs < delta
+                    });
+                    if near_col.is_some() || near_row.is_some() {
+                        let (t, h) = (near_col.unwrap_or(t), near_row.unwrap_or(h));
+                        self.vertices[v as usize] = geom.point(t, h);
                         self.fixed.insert(v);
                     }
                 }
@@ -978,30 +1147,43 @@ impl Reader<'_> {
                 for w in kept.windows(2) {
                     let (a, b) = (self.vertices[w[0] as usize], self.vertices[w[1] as usize]);
                     enriched.push(w[0]);
-                    let (ta, ha) = angle_of(a);
-                    let (mut tb, hb) = angle_of(b);
-                    while tb - ta > std::f64::consts::PI {
-                        tb -= std::f64::consts::TAU;
-                    }
-                    while ta - tb > std::f64::consts::PI {
-                        tb += std::f64::consts::TAU;
-                    }
-                    if (tb - ta).abs() < 1e-12 {
-                        continue;
-                    }
-                    let (lo, hi) = (ta.min(tb), ta.max(tb));
+                    let (ta, ha) = geom.param(a);
+                    let (tb, hb) = geom.param(b);
+                    let tb = unwrap(tb, ta);
+                    let hb = if periodic_v { unwrap(hb, ha) } else { hb };
                     let mut crossings: Vec<(f64, Vec3)> = Vec::new();
-                    for &c in &columns {
-                        for k in -1..=1 {
-                            let cc = c + k as f64 * std::f64::consts::TAU;
-                            if cc <= lo + 1e-9 || cc >= hi - 1e-9 {
-                                continue;
+                    if (tb - ta).abs() >= 1e-12 {
+                        let (lo, hi) = (ta.min(tb), ta.max(tb));
+                        for &c in &columns {
+                            for k in -1..=1 {
+                                let cc = c + k as f64 * std::f64::consts::TAU;
+                                if cc <= lo + 1e-9 || cc >= hi - 1e-9 {
+                                    continue;
+                                }
+                                let f = (cc - ta) / (tb - ta);
+                                crossings.push((f, geom.point(cc, ha + (hb - ha) * f)));
                             }
-                            let f = (cc - ta) / (tb - ta);
-                            crossings.push((f, on_column(cc, ha + (hb - ha) * f)));
+                        }
+                    }
+                    if (hb - ha).abs() >= 1e-12 {
+                        let (lo, hi) = (ha.min(hb), ha.max(hb));
+                        for &r in &rows_at {
+                            for k in -1..=1 {
+                                let rr = r + k as f64 * std::f64::consts::TAU;
+                                if !periodic_v && k != 0 {
+                                    continue;
+                                }
+                                if rr <= lo + 1e-9 || rr >= hi - 1e-9 {
+                                    continue;
+                                }
+                                let f = (rr - ha) / (hb - ha);
+                                crossings.push((f, geom.point(ta + (tb - ta) * f, rr)));
+                            }
                         }
                     }
                     crossings.sort_by(|p, q| p.0.partial_cmp(&q.0).unwrap());
+                    // A column and a row crossing at one point are one.
+                    crossings.dedup_by(|p, q| (p.0 - q.0).abs() < 1e-9);
                     for (_, p) in crossings {
                         let v = self.push(p);
                         self.fixed.insert(v);
@@ -1063,30 +1245,38 @@ impl Reader<'_> {
             triangulate(&loops, &uvs, out);
             return Ok(());
         }
-        if kinds.contains(&"CYLINDRICAL_SURFACE") {
-            let geom = self.cylinder_of(face)?.expect("a cylinder");
-            let cols = *self
+        if let Some(geom) = self.revolved_of(face)? {
+            let grid = *self
                 .columns
                 .get(&face)
-                .ok_or("cylindrical face was not prepared")?;
-            let mut uvs = self.cylinder_uvs(&loops, &geom);
-            // Loop points the first pass put on a column sit on it exactly,
-            // give or take float noise.
-            let near = 1e-7 * cols.width;
+                .ok_or("face on a surface of revolution was not prepared")?;
+            let (us, vs) = (geom.u_scale(), geom.v_scale());
+            let mut uvs = self.revolved_uvs(&loops, &geom);
+            // Loop points the first pass put on a grid line sit on it
+            // exactly, give or take float noise.
+            let snap = |p: &mut [f64; 2], c: usize, min: f64, step: f64, n: usize| {
+                if n == 0 {
+                    return;
+                }
+                let k = ((p[c] - min) / step).round();
+                let on = min + step * k;
+                if (p[c] - on).abs() < 1e-7 * step {
+                    p[c] = on;
+                }
+            };
             for uv in uvs.iter_mut() {
                 for p in uv.iter_mut() {
-                    let k = ((p[0] - cols.umin) / cols.width).round();
-                    let on = cols.umin + cols.width * k;
-                    if (p[0] - on).abs() < near {
-                        p[0] = on;
+                    snap(p, 0, grid.umin, grid.width, grid.strips);
+                    if geom.curved_profile() {
+                        snap(p, 1, grid.vmin, grid.height, grid.rows);
                     }
                 }
             }
-            // Outward normals go with counter-clockwise (angle, height)
+            // Outward normals go with counter-clockwise (angle, profile)
             // loops; the loop's winding decides, like the plane above.
             let _ = same_sense;
-            let sign = if cols.outward { 1.0 } else { -1.0 };
-            if !cols.outward {
+            let sign = if grid.outward { 1.0 } else { -1.0 };
+            if !grid.outward {
                 for uv in uvs.iter_mut() {
                     for p in uv.iter_mut() {
                         p[0] = -p[0];
@@ -1100,19 +1290,14 @@ impl Reader<'_> {
                     uv.reverse();
                 }
             }
-            // A triangle must not span more than a facet's angle, or it
-            // cuts a chord through the surface (a fan from a seam corner
-            // would turn the wall into cones), so the polygon is cut into
-            // the strips decided in the first pass and each strip
-            // triangulated on its own. Every column crosses the loops at
-            // vertices the first pass put there, which are reused.
-            let (centre, axis, x, y, radius) =
-                (geom.centre, geom.axis, geom.x, geom.y, geom.radius);
-            let to_3d = |p: [f64; 2]| {
-                let t = sign * p[0] / radius;
-                centre + (x * t.cos() + y * t.sin()) * radius + axis * p[1]
-            };
-            let quantum = 1e-9 * radius.max(1.0);
+            // A triangle must not span more than a facet in either
+            // direction, or it cuts a chord through the surface, so the
+            // polygon is cut into the grid's cells decided in the first
+            // pass and each cell triangulated on its own. Every grid line
+            // crosses the loops at vertices the first pass put there,
+            // which are reused.
+            let to_3d = |p: [f64; 2]| geom.point(sign * p[0] / us, p[1] / vs);
+            let quantum = 1e-9 * us.max(1.0);
             let key = |p: [f64; 2]| {
                 (
                     (p[0] / quantum).round() as i64,
@@ -1125,10 +1310,10 @@ impl Reader<'_> {
                     made.entry(key(*p)).or_insert(v);
                 }
             }
-            let umin = if cols.outward {
-                cols.umin
+            let umin = if grid.outward {
+                grid.umin
             } else {
-                -(cols.umin + cols.width * cols.strips as f64)
+                -(grid.umin + grid.width * grid.strips as f64)
             };
             let (vlo, vhi) = uvs
                 .iter()
@@ -1136,62 +1321,80 @@ impl Reader<'_> {
                 .fold((f64::MAX, f64::MIN), |(lo, hi), p| {
                     (lo.min(p[1]), hi.max(p[1]))
                 });
-            for k in 0..cols.strips {
-                // Clip lines exactly on the columns: the loop vertices there
-                // (put or snapped there by the first pass) come out in both
-                // neighbouring strips as the same points.
+            let rows: Vec<(f64, f64)> = if geom.curved_profile() {
+                (0..grid.rows)
+                    .map(|j| {
+                        (
+                            grid.vmin + grid.height * j as f64,
+                            grid.vmin + grid.height * (j + 1) as f64,
+                        )
+                    })
+                    .collect()
+            } else {
+                vec![(vlo - 1.0, vhi + 1.0)]
+            };
+            // Whether a point of the parameter plane is in material.
+            let inside =
+                |p: [f64; 2]| uvs.iter().filter(|c| point_in_contour(p, c)).count() % 2 == 1;
+            for k in 0..grid.strips {
                 let (u0, u1) = (
-                    umin + cols.width * k as f64,
-                    umin + cols.width * (k + 1) as f64,
+                    umin + grid.width * k as f64,
+                    umin + grid.width * (k + 1) as f64,
                 );
-                let rect: Rect = [u0, vlo - 1.0, u1, vhi + 1.0];
-                // The strip reaches past the loops, so its corners are
-                // never in material.
-                let pieces = clip_and_close(&uvs, &[], rect, quantum, || Some(false))
-                    .ok_or_else(|| format!("face #{face}: its loops do not close in a strip"))?;
-                // Holes (clockwise) go with the outer contour that holds them.
-                let (outers, holes): (Vec<Contour>, Vec<Contour>) = pieces
-                    .into_iter()
-                    .filter(|c| c.len() >= 3)
-                    .partition(|c| signed_area(c) > 0.0);
-                let mut groups: Vec<Vec<Contour>> = outers.into_iter().map(|o| vec![o]).collect();
-                for h in holes {
-                    let Some(g) = groups.iter_mut().find(|g| point_in_contour(h[0], &g[0])) else {
-                        continue;
-                    };
-                    g.push(h);
-                }
-                for piece in groups {
-                    let mut flat: Vec<f64> = Vec::new();
-                    let mut holes: Vec<usize> = Vec::new();
-                    let mut index: Vec<u32> = Vec::new();
-                    for (li, l) in piece.iter().enumerate() {
-                        if li > 0 {
-                            holes.push(flat.len() / 2);
-                        }
-                        for p in l {
-                            flat.extend(p);
-                            let v = match made.get(&key(*p)) {
-                                Some(&v) => v,
-                                None => {
-                                    let v = self.push(to_3d(*p));
-                                    made.insert(key(*p), v);
-                                    v
-                                }
-                            };
-                            index.push(v);
-                        }
+                for &(v0, v1) in &rows {
+                    // Clip lines exactly on the grid: the loop vertices
+                    // there (put or snapped there by the first pass) come
+                    // out in the neighbouring cells as the same points.
+                    let rect: Rect = [u0, v0, u1, v1];
+                    let corner = [u0 + 1e-6 * grid.width, v0 + 1e-6 * (v1 - v0)];
+                    let pieces = clip_and_close(&uvs, &[], rect, quantum, || Some(inside(corner)))
+                        .ok_or_else(|| format!("face #{face}: its loops do not close in a cell"))?;
+                    // Holes (clockwise) go with the outer contour that holds them.
+                    let (outers, holes): (Vec<Contour>, Vec<Contour>) = pieces
+                        .into_iter()
+                        .filter(|c| c.len() >= 3)
+                        .partition(|c| signed_area(c) > 0.0);
+                    let mut groups: Vec<Vec<Contour>> =
+                        outers.into_iter().map(|o| vec![o]).collect();
+                    for h in holes {
+                        let Some(g) = groups.iter_mut().find(|g| point_in_contour(h[0], &g[0]))
+                        else {
+                            continue;
+                        };
+                        g.push(h);
                     }
-                    let tris = earcutr::earcut(&flat, &holes, 2).unwrap_or_default();
-                    for t in tris.chunks_exact(3) {
-                        out.push([index[t[0]], index[t[1]], index[t[2]]]);
+                    for piece in groups {
+                        let mut flat: Vec<f64> = Vec::new();
+                        let mut holes: Vec<usize> = Vec::new();
+                        let mut index: Vec<u32> = Vec::new();
+                        for (li, l) in piece.iter().enumerate() {
+                            if li > 0 {
+                                holes.push(flat.len() / 2);
+                            }
+                            for p in l {
+                                flat.extend(p);
+                                let v = match made.get(&key(*p)) {
+                                    Some(&v) => v,
+                                    None => {
+                                        let v = self.push(to_3d(*p));
+                                        made.insert(key(*p), v);
+                                        v
+                                    }
+                                };
+                                index.push(v);
+                            }
+                        }
+                        let tris = earcutr::earcut(&flat, &holes, 2).unwrap_or_default();
+                        for t in tris.chunks_exact(3) {
+                            out.push([index[t[0]], index[t[1]], index[t[2]]]);
+                        }
                     }
                 }
             }
             return Ok(());
         }
         Err(format!(
-            "face #{face} lies on a {}, which this reader cannot tessellate yet (planes and cylinders only)",
+            "face #{face} lies on a {}, which this reader cannot tessellate yet (planes, cylinders, cones, tori and spheres only)",
             kinds.last().copied().unwrap_or("unknown surface")
         ))
     }
@@ -1341,7 +1544,7 @@ pub fn read_step(text: &str) -> Result<Vec<StepBody>, String> {
         // Cylindrical faces first decide their strips and share the
         // columns with their edges; then every face is triangulated.
         for &fid in &face_ids {
-            reader.prepare_cylinder(fid)?;
+            reader.prepare_revolved(fid)?;
         }
         let mut triangles = Vec::new();
         for &fid in &face_ids {

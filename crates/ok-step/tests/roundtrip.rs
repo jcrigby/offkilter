@@ -164,3 +164,104 @@ fn a_cut_and_drilled_cylinder_goes_out_with_exact_curves() {
     let (v0, v1) = (original.volume(), back.volume());
     assert!(((v1 - v0) / v0).abs() < 0.01, "volume {v1} vs {v0}");
 }
+
+/// A profile revolved about y: a flat bottom out to radius 10, an
+/// oblique wall (a cone) up to radius 6 at height 8, a quarter-round
+/// (a torus) to the axis side, and a flat top.
+fn turned_part() -> Solid {
+    let mut s = Sketch::new();
+    let (_, p0, p1) = s.add_line(Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0));
+    let (_, p2, p3) = s.add_line(Vec2::new(10.0, 0.0), Vec2::new(6.0, 8.0));
+    let (_, _, p4, p5) = s.add_arc(
+        Vec2::new(2.0, 8.0),
+        Vec2::new(6.0, 8.0),
+        Vec2::new(2.0, 12.0),
+    );
+    let (_, p6, p7) = s.add_line(Vec2::new(2.0, 12.0), Vec2::new(0.0, 12.0));
+    let (_, p8, p9) = s.add_line(Vec2::new(0.0, 12.0), Vec2::new(0.0, 0.0));
+    for (a, b) in [(p1, p2), (p3, p4), (p5, p6), (p7, p8), (p9, p0)] {
+        s.add_constraint(ok_sketch::Constraint::Coincident { a, b });
+    }
+    let profile = s.profiles(&ProfileOptions::default()).remove(0);
+    ok_brep::revolve(
+        &profile,
+        &Plane::XY,
+        Vec2::ZERO,
+        Vec2::Y,
+        std::f64::consts::TAU,
+        5f64.to_radians(),
+        1,
+    )
+    .unwrap()
+}
+
+#[test]
+fn a_turned_part_goes_out_with_a_cone_and_a_torus() {
+    let part = turned_part();
+    let text = write_step(&[("Turned", &part)], "exact");
+    assert_eq!(count(&text, "CONICAL_SURFACE"), 1);
+    assert_eq!(count(&text, "TOROIDAL_SURFACE"), 1);
+    assert_eq!(count(&text, "PLANE"), 2, "the flats");
+    assert_eq!(count(&text, "ADVANCED_FACE"), 4);
+    // Three rims plus the torus's meridian seam; the cone's seam is a line.
+    assert_eq!(count(&text, "CIRCLE"), 4);
+    assert_eq!(count(&text, "LINE"), 1);
+    if let Ok(dir) = std::env::var("OK_STEP_DUMP") {
+        std::fs::write(format!("{dir}/turned.step"), &text).unwrap();
+    }
+    let bodies = read_step(&text).unwrap();
+    let back = solid_of(&bodies[0]);
+    back.validate().unwrap();
+    let (v0, v1) = (part.volume(), back.volume());
+    assert!(((v1 - v0) / v0).abs() < 0.01, "volume {v1} vs {v0}");
+}
+
+#[test]
+fn a_filleted_corner_goes_out_as_a_sphere_patch() {
+    let mut s = Sketch::new();
+    s.add_rectangle(Vec2::ZERO, Vec2::new(20.0, 20.0));
+    let block = extrude(
+        &s.profiles(&ProfileOptions::default()).remove(0),
+        &Plane::XY,
+        0.0,
+        20.0,
+        1,
+    )
+    .unwrap();
+    // Fillet the three edges meeting at the far top corner.
+    let corner = Vec3::new(20.0, 20.0, 20.0);
+    let pairs: Vec<(usize, usize)> = block
+        .edge_faces()
+        .into_iter()
+        .filter(|((a, b), fs)| {
+            fs.len() == 2 && {
+                let (pa, pb) = (block.vertices[*a as usize], block.vertices[*b as usize]);
+                pa.distance(corner) < 1e-9 || pb.distance(corner) < 1e-9
+            }
+        })
+        .map(|(_, fs)| (fs[0], fs[1]))
+        .collect();
+    assert_eq!(pairs.len(), 3);
+    let filleted = ok_brep::blend_edges(
+        &block,
+        &pairs,
+        3.0,
+        ok_brep::BlendKind::Fillet,
+        5f64.to_radians(),
+        2,
+    )
+    .unwrap();
+    let text = write_step(&[("Corner", &filleted)], "exact");
+    assert_eq!(count(&text, "SPHERICAL_SURFACE"), 1);
+    assert_eq!(count(&text, "CYLINDRICAL_SURFACE"), 3);
+    // The patch is bounded by its three circular arcs alone: no seam.
+    assert_eq!(count(&text, "ADVANCED_FACE"), 6 + 3 + 1);
+    if let Ok(dir) = std::env::var("OK_STEP_DUMP") {
+        std::fs::write(format!("{dir}/corner.step"), &text).unwrap();
+    }
+    let bodies = read_step(&text).unwrap();
+    let back = solid_of(&bodies[0]);
+    back.validate().unwrap();
+    let (v0, v1) = (filleted.volume(), back.volume());
+    assert!(((v1 - v0) / v0).abs() < 0.01, "volume {v1} vs {v0}");
+}

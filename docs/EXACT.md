@@ -67,16 +67,21 @@ a boolean, so results no longer depend on the resolution of the tools.
    DXF (now R2000) as `CIRCLE`, `ARC` and `ELLIPSE` entities, and the
    measure tool reports an edge's length along its curve
    (`exact::run_length`). Quartics stay polylines.
-5. [~] Revolved surfaces as exact cones, tori and spheres. Done: the
-   surface tags (`Surface::Cone`, `Torus`, `Sphere`) from a revolve's
-   oblique lines and arcs and from the rolling-ball corner patch, their
+5. [x] Revolved surfaces as exact cones, tori and spheres: the surface
+   tags (`Surface::Cone`, `Torus`, `Sphere`) from a revolve's oblique
+   lines and arcs and from the rolling-ball corner patch, their
    projections, the circles where a plane across the axis or a coaxial
    surface of revolution meets them (`exact::run_curve`, which takes a
    point of the run to tell which of a pair's circles it is on), cone
    rulings held like cylinder rulings, refit of booleans on such bodies,
-   and so arcs in drawings and exact rim lengths for turned parts. To
-   do: the STEP writer and reader for `CONICAL_SURFACE`,
-   `TOROIDAL_SURFACE` and `SPHERICAL_SURFACE` faces, and fillets along
-   circular edges as tori (chain blends still carry `Surface::Ruled`).
+   arcs in drawings and exact rim lengths for turned parts. The STEP
+   writer puts each region on a `CONICAL_SURFACE` (placed at the apex),
+   `TOROIDAL_SURFACE` or `SPHERICAL_SURFACE` (placed across the patch so
+   its loops never wrap), seams a torus along a meridian circle, and
+   makes surfaces sharing a rim seam it at one vertex; the reader
+   tessellates all four surfaces of revolution on a grid of facet-wide
+   columns and, where the profile curves, rows, sharing every grid
+   crossing with the edges. Still facets: fillets along circular edges
+   (chain blends carry `Surface::Ruled`), which could be tori.
 6. [ ] Beyond: general surfaces (sweeps, lofts) as B-spline surfaces,
    which needs a real parametric trimming kernel.

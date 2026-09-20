@@ -466,16 +466,25 @@ between planes, a `CIRCLE` or `ELLIPSE` where a plane meets a cylinder
 (the curve turned so the run's direction is its parametric direction,
 the reference direction through the run's first vertex), or a degree-one
 `B_SPLINE_CURVE_WITH_KNOTS` through the run's points sampled at every
-degree of the first cylinder's rulings where two cylinders meet. A
-cylinder's facets become one `ADVANCED_FACE` per connected region
-(`exact::surface_regions`, components by facet seams) on a
-`CYLINDRICAL_SURFACE`; a region whose loops sweep a full turn gets a seam
-along a ruling that both rims have a vertex on and no hole spans, its
-outer bound then one rim round, the seam, the other rim round and the
-seam back (the rims' closed runs rotated to start at the seam). A
-cylinder no seam can be placed on, and facets on revolved or ruled
-surfaces, stay facets with line edges. Entity numbers are sequential;
-reals carry a decimal point; strings escape apostrophes and non-ASCII.
+degree of the first cylinder's rulings where two cylinders meet; a run
+between two exact surfaces on no such curve goes segment by segment
+through its exact vertices). Planar facets in one plane are merged
+first. The facets of a cylinder, cone, torus or sphere become one
+`ADVANCED_FACE` per connected region (`exact::surface_regions`,
+components by facet seams) on a `CYLINDRICAL_SURFACE`,
+`CONICAL_SURFACE` (placed at the apex), `TOROIDAL_SURFACE` or
+`SPHERICAL_SURFACE` (placed with its axis across the patch and the
+seam meridian at the patch's antipode, so its loops never wrap); a
+region whose loops sweep a full turn gets a seam along a meridian that
+both rims have a vertex on and no hole spans (a ruling, or a circle
+round a torus's tube through the facet vertices between), its outer
+bound then one rim round, the seam, the other rim round and the seam
+back (the rims' closed runs rotated to start at the seam; surfaces
+sharing a rim seam it at the same vertex, since a closed run starts
+once). A surface no seam can be placed on, and facets on revolved
+splines or ruled surfaces, stay facets with line edges. Entity numbers
+are sequential; reals carry a decimal point; strings escape apostrophes
+and non-ASCII.
 
 ### STEP import (`ok-step/src/read.rs`)
 
@@ -491,24 +500,28 @@ reversed if the edge runs against the curve) so the two faces on an
 edge share the same mesh vertices and the result welds closed. A planar
 face is triangulated by earcut in its plane, outer bound first, with
 the loop's own winding deciding the normal when it disagrees with the
-flags. A cylindrical face is mapped to (angle × radius, height), the
-angle unwrapped along each loop so a loop around the seam stays
-continuous and holes shifted into the outer loop's turn; because a
-triangle spanning more than a facet cuts a chord through the surface
-(earcut fans from a seam corner would turn a wall into two cones), the
-parameter polygon is cut into facet-wide strips and each strip
-triangulated on its own. That takes two passes: first every cylindrical
-face decides its strips and puts a mesh vertex where each strip column
-crosses an edge of the face (on the cylinder, at the interpolated
-height), into the edge's shared samples, so the face on the other side
-uses the same point; a sample within a hundredth of a strip of a column
-moves onto it instead, and samples closer than that to their neighbours
-are dropped, since a triangle thinner than the mesh importer's
-tolerance would be lost and open the mesh. Then each face clips its
-loops to every strip exactly at the columns (`ok_brep::clip2d`, the
-same clipper the boolean uses to close cut loops in a cell) and
-triangulates the pieces, reusing the loop vertices, so no new vertex
-ever lies on a shared edge. Other surfaces are refused by name. The length
+flags. A face on a surface of revolution (cylinder, cone, torus or
+sphere) is mapped to (angle about the axis, profile parameter: height,
+tube angle or latitude), each scaled to a length, the angle unwrapped
+along each loop so a loop around the seam stays continuous (a torus's
+tube angle likewise) and holes shifted into the outer loop's turn;
+because a triangle spanning more than a facet cuts a chord through the
+surface (earcut fans from a seam corner would turn a wall into two
+cones), the parameter polygon is cut into a grid of facet-wide columns
+and, where the profile curves, rows, and each cell triangulated on its
+own. That takes two passes: first every such face decides its grid and
+puts a mesh vertex where each grid line crosses an edge of the face (on
+the surface, at the interpolated other coordinate), into the edge's
+shared samples, so the face on the other side uses the same point; a
+sample within a hundredth of a cell of a grid line moves onto it
+instead, and samples closer than that to their neighbours are dropped,
+since a triangle thinner than the mesh importer's tolerance would be
+lost and open the mesh. Then each face clips its loops to every cell
+exactly at the grid lines (`ok_brep::clip2d`, the same clipper the
+boolean uses to close cut loops in a cell; a cell no loop crosses is
+kept or dropped by where its corner lies) and triangulates the pieces,
+reusing the loop vertices, so no new vertex ever lies on a shared edge.
+Other surfaces are refused by name. The length
 unit comes from the header's `LENGTH_UNIT` (`SI_UNIT` prefixes,
 `CONVERSION_BASED_UNIT` inch, foot, yard). The bodies come back as
 vertices and triangles for `add_mesh`, whose coplanar merge restores

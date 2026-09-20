@@ -1,20 +1,21 @@
 //! STEP (ISO 10303-21, AP214) export of solids.
 //!
 //! A solid goes out as a `MANIFOLD_SOLID_BREP`. Planar faces lie on
-//! `PLANE`s with `LINE` edges; the facets of a cylinder go out as one
-//! `ADVANCED_FACE` per connected region on a `CYLINDRICAL_SURFACE`, its
-//! bounds the exact curves recovered from the surface pairs
-//! (`ok_brep::exact`): circles, ellipses, lines, and fine polyline
-//! B-splines where two cylinders meet, with a seam along a ruling where a
-//! region closes round the axis and every vertex at its exact position.
-//! Facets on other surfaces (revolved, ruled) stay facets. Bodies keep
-//! their names; units are millimetres.
+//! `PLANE`s with `LINE` edges; the facets of a cylinder, cone, torus or
+//! sphere go out as one `ADVANCED_FACE` per connected region on a
+//! `CYLINDRICAL_SURFACE`, `CONICAL_SURFACE`, `TOROIDAL_SURFACE` or
+//! `SPHERICAL_SURFACE`, its bounds the exact curves recovered from the
+//! surface pairs (`ok_brep::exact`): circles, ellipses, lines, and fine
+//! polyline B-splines where two cylinders meet, with a seam along a
+//! meridian where a region closes round the axis and every vertex at its
+//! exact position. Facets on other surfaces (revolved splines, ruled)
+//! stay facets. Bodies keep their names; units are millimetres.
 //!
 //! Pure text generation: no I/O, builds for wasm32.
 
 use ok_brep::{exact, Solid, Surface};
 use ok_math::Vec3;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
 /// Writes `solids` (name, solid) as one STEP file, as a string.
@@ -123,15 +124,23 @@ impl Writer {
 
     /// One `MANIFOLD_SOLID_BREP` for `solid`; returns its entity number.
     ///
-    /// Faces on planes and cylinders go out exactly: every vertex at its
-    /// position on all of its surfaces, every run of facet edges between
-    /// two surfaces as one edge on the pair's curve (a line, circle,
-    /// ellipse, or a fine polyline B-spline for two cylinders), and each
-    /// connected region of a cylinder as one face on a
-    /// `CYLINDRICAL_SURFACE`, with a seam along a ruling where the region
-    /// closes round the axis. Facets on other surfaces (revolved, ruled)
-    /// and cylinders the seam cannot be placed on stay facets.
+    /// Faces on planes, cylinders, cones, tori and spheres go out
+    /// exactly: every vertex at its position on all of its surfaces,
+    /// every run of facet edges between two surfaces as one edge on the
+    /// pair's curve (a line, circle, ellipse, or a fine polyline B-spline
+    /// for two cylinders), and each connected region of a curved surface
+    /// as one face on its surface entity, with a seam along a meridian
+    /// where the region closes round the axis. Facets on other surfaces
+    /// (revolved splines, ruled) and surfaces the seam cannot be placed
+    /// on stay facets.
     fn brep(&mut self, name: &str, solid: &Solid) -> usize {
+        // Planar facets in one plane (a revolve's flats) are one face.
+        let merged = {
+            let mut m = solid.clone();
+            m.merge_coplanar_faces();
+            m
+        };
+        let solid = &merged;
         let vf = exact::vertex_faces(solid);
         let positions: Vec<Vec3> = (0..solid.vertices.len() as u32)
             .map(|v| exact::vertex_position(solid, &vf, v))
@@ -140,20 +149,37 @@ impl Writer {
         let regions = exact::surface_regions(solid);
         let edge_faces: HashMap<(u32, u32), Vec<usize>> = solid.edge_faces().into_iter().collect();
 
-        // Cylinders written exactly: those whose regions can be bounded.
-        let mut exact_cylinders: HashMap<usize, Vec<Region>> = HashMap::new();
+        // Curved surfaces written exactly: those whose regions can be
+        // bounded, each with the frame its surface entity is placed in.
+        let mut exact_curved: HashMap<usize, (Frame, Vec<Region>)> = HashMap::new();
+        // A closed run can start at one vertex only, so two surfaces
+        // sharing a rim must seam it at the same vertex: later surfaces
+        // prefer the seam vertices earlier ones chose.
+        let mut preferred: HashSet<u32> = HashSet::new();
         for (surface, s) in solid.surfaces.iter().enumerate() {
-            if !matches!(s, Surface::Cylinder { .. }) {
+            if !exact::is_curved(s) {
                 continue;
             }
-            if let Some(regs) = cylinder_regions(solid, surface, &regions, &edge_faces, &positions)
-            {
-                exact_cylinders.insert(surface, regs);
+            if let Some(found) = revolved_regions(
+                solid,
+                surface,
+                &regions,
+                &edge_faces,
+                &positions,
+                &preferred,
+            ) {
+                for region in &found.1 {
+                    if let Some((top, bottom)) = region.seam {
+                        preferred.insert(top);
+                        preferred.insert(bottom);
+                    }
+                }
+                exact_curved.insert(surface, found);
             }
         }
         // A closed run used by a seam must start at the seam vertex, so the
         // seamed loop chains: rotate such runs to begin there.
-        for regs in exact_cylinders.values() {
+        for (_, regs) in exact_curved.values() {
             for region in regs {
                 let Some((top, bottom)) = region.seam else {
                     continue;
@@ -176,14 +202,13 @@ impl Writer {
         }
         let exact_surface = |sf: usize| match solid.surfaces[sf] {
             Surface::Plane { .. } => true,
-            Surface::Cylinder { .. } => exact_cylinders.contains_key(&sf),
-            _ => false,
+            _ => exact_curved.contains_key(&sf),
         };
         let curve_of: Vec<exact::Curve> = runs
             .iter()
             .map(|r| {
                 if exact_surface(r.surfaces.0) && exact_surface(r.surfaces.1) {
-                    exact::edge_curve(&solid.surfaces[r.surfaces.0], &solid.surfaces[r.surfaces.1])
+                    exact::run_curve(solid, &vf, r)
                 } else {
                     exact::Curve::Polyline
                 }
@@ -214,10 +239,8 @@ impl Writer {
         let mut faces: Vec<usize> = Vec::new();
         // Planar faces, and facets of surfaces not written exactly.
         for f in &solid.faces {
-            if let Surface::Cylinder { .. } = solid.surfaces[f.surface] {
-                if exact_cylinders.contains_key(&f.surface) {
-                    continue;
-                }
+            if exact_curved.contains_key(&f.surface) {
+                continue;
             }
             let mut bounds = Vec::with_capacity(f.loops.len());
             for (li, l) in f.loops.iter().enumerate() {
@@ -239,29 +262,39 @@ impl Writer {
                 refs(&bounds)
             )));
         }
-        // Exact cylinders: one face per connected region.
-        let mut cylinders: Vec<(&usize, &Vec<Region>)> = exact_cylinders.iter().collect();
-        cylinders.sort_by_key(|(s, _)| **s);
-        for (&surface, regs) in cylinders {
-            let Surface::Cylinder {
-                origin,
-                axis,
-                radius,
-            } = solid.surfaces[surface]
-            else {
-                continue;
+        // Exact curved surfaces: one face per connected region.
+        let mut curved: Vec<(&usize, &(Frame, Vec<Region>))> = exact_curved.iter().collect();
+        curved.sort_by_key(|(s, _)| **s);
+        for (&surface, (frame, regs)) in curved {
+            let placement = self.placement(frame.origin, frame.axis, frame.refdir);
+            let entity = match solid.surfaces[surface] {
+                Surface::Cylinder { radius, .. } => {
+                    format!("CYLINDRICAL_SURFACE('',#{placement},{})", num(radius))
+                }
+                // Placed at the apex, where the radius is nought.
+                Surface::Cone { half_angle, .. } => {
+                    format!("CONICAL_SURFACE('',#{placement},0.0,{})", num(half_angle))
+                }
+                Surface::Torus { major, minor, .. } => {
+                    format!(
+                        "TOROIDAL_SURFACE('',#{placement},{},{})",
+                        num(major),
+                        num(minor)
+                    )
+                }
+                Surface::Sphere { radius, .. } => {
+                    format!("SPHERICAL_SURFACE('',#{placement},{})", num(radius))
+                }
+                _ => continue,
             };
-            let (x, _) = exact::cylinder_frame(axis);
-            let placement = self.placement(origin, axis, x);
-            let cyl = self.entity(&format!(
-                "CYLINDRICAL_SURFACE('',#{placement},{})",
-                num(radius)
-            ));
+            let surf = self.entity(&entity);
             for region in regs {
                 let mut bounds = Vec::new();
                 for (li, l) in region.loops.iter().enumerate() {
                     let oriented = match &region.seam {
-                        Some(seam) if li == 0 => ctx.seamed_loop(self, l, &region.loops[1], seam),
+                        Some(seam) if li == 0 => {
+                            ctx.seamed_loop(self, l, &region.loops[1], seam, surface)
+                        }
                         // The second wrapping loop is part of the seamed outer loop.
                         Some(_) if li == 1 => continue,
                         _ => ctx.loop_edges(self, l),
@@ -276,9 +309,10 @@ impl Writer {
                         }
                     )));
                 }
-                faces.push(
-                    self.entity(&format!("ADVANCED_FACE('',({}),#{cyl},.T.)", refs(&bounds))),
-                );
+                faces.push(self.entity(&format!(
+                    "ADVANCED_FACE('',({}),#{surf},.T.)",
+                    refs(&bounds)
+                )));
             }
         }
         let shell = self.entity(&format!("CLOSED_SHELL('',({}))", refs(&faces)));
@@ -286,29 +320,69 @@ impl Writer {
     }
 }
 
-/// A connected region of a cylindrical surface, ready to write: its
-/// loops (vertices with the neighbouring surface across each edge), and,
-/// when the region closes round the axis, the seam joining loops 0 and 1
-/// along one ruling (the two vertices, top on loop 0 and bottom on loop 1).
+/// A connected region of a curved surface, ready to write: its loops
+/// (vertices with the neighbouring surface across each edge), and, when
+/// the region closes round the axis, the seam joining loops 0 and 1
+/// along one meridian (the two vertices, top on loop 0 and bottom on
+/// loop 1).
 struct Region {
     loops: Vec<Vec<u32>>,
     seam: Option<(u32, u32)>,
 }
 
-/// Groups a cylinder's boundary loops into connected regions and finds a
-/// seam for each region that wraps round the axis; `None` when the
-/// cylinder cannot be written exactly (a region wraps but no ruling is
-/// clear of its holes, or more than two of its loops wrap).
-fn cylinder_regions(
+/// The placement of a surface entity: its axis (the surface's own for a
+/// surface of revolution; for a sphere one across the patch, with the
+/// seam meridian on the far side) and reference direction.
+struct Frame {
+    origin: Vec3,
+    axis: Vec3,
+    refdir: Vec3,
+}
+
+/// Groups a curved surface's boundary loops into connected regions and
+/// finds a seam for each region that wraps round the axis; `None` when
+/// the surface cannot be written exactly (a region wraps but no meridian
+/// is clear of its holes, or it wraps with other than two loops).
+fn revolved_regions(
     solid: &Solid,
     surface: usize,
     regions: &HashMap<usize, Vec<exact::RegionLoop>>,
     edge_faces: &HashMap<(u32, u32), Vec<usize>>,
     positions: &[Vec3],
-) -> Option<Vec<Region>> {
-    let Surface::Cylinder { origin, axis, .. } = solid.surfaces[surface] else {
+    preferred: &HashSet<u32>,
+) -> Option<(Frame, Vec<Region>)> {
+    let loops = regions.get(&surface)?;
+    if loops.is_empty() {
         return None;
+    }
+    let frame = match solid.surfaces[surface] {
+        Surface::Sphere { center, .. } => {
+            // Across the patch: the loops then never sweep round the axis,
+            // and the seam meridian (through the reference direction)
+            // passes the patch's antipode.
+            let mut m = Vec3::ZERO;
+            for l in loops {
+                for &(v, _) in l {
+                    m += positions[v as usize] - center;
+                }
+            }
+            let m = m.normalized().unwrap_or(Vec3::Z);
+            Frame {
+                origin: center,
+                axis: exact::perpendicular(m),
+                refdir: -m,
+            }
+        }
+        ref s => {
+            let (origin, axis) = exact::axis_of(s)?;
+            Frame {
+                origin,
+                axis,
+                refdir: exact::cylinder_frame(axis).0,
+            }
+        }
     };
+    let (origin, axis) = (frame.origin, frame.axis);
     let loops = regions.get(&surface)?;
     if loops.is_empty() {
         return None;
@@ -382,7 +456,23 @@ fn cylinder_regions(
             0 => {
                 let mut loops: Vec<&exact::RegionLoop> = holes;
                 // The outer loop is the one with the largest extent.
-                loops.sort_by_key(|l| std::cmp::Reverse(l.len()));
+                let extent = |l: &exact::RegionLoop| -> f64 {
+                    let pts = l.iter().map(|e| positions[e.0 as usize]);
+                    let (lo, hi) = pts.fold(
+                        (
+                            Vec3::new(f64::MAX, f64::MAX, f64::MAX),
+                            Vec3::new(f64::MIN, f64::MIN, f64::MIN),
+                        ),
+                        |(lo, hi), p| {
+                            (
+                                Vec3::new(lo.x.min(p.x), lo.y.min(p.y), lo.z.min(p.z)),
+                                Vec3::new(hi.x.max(p.x), hi.y.max(p.y), hi.z.max(p.z)),
+                            )
+                        },
+                    );
+                    (hi - lo).length()
+                };
+                loops.sort_by(|a, b| extent(b).total_cmp(&extent(a)));
                 out.push(Region {
                     loops: loops
                         .iter()
@@ -397,7 +487,16 @@ fn cylinder_regions(
                 let angle = |v: u32| exact::cylinder_angle(origin, axis, positions[v as usize]);
                 let (first, second) = (wrapping[0], wrapping[1]);
                 let mut seam: Option<(u32, u32)> = None;
-                'candidates: for &(v, _) in first {
+                // Candidates chosen before, on either rim, come first.
+                let mut candidates: Vec<u32> = first.iter().map(|e| e.0).collect();
+                candidates.sort_by_key(|&v| {
+                    let t = angle(v);
+                    let partner_preferred = second
+                        .iter()
+                        .any(|(w, _)| preferred.contains(w) && (angle(*w) - t).abs() < 1e-9);
+                    !(preferred.contains(&v) || partner_preferred)
+                });
+                'candidates: for v in candidates {
                     let t = angle(v);
                     let Some(&(w, _)) = second.iter().find(|(w, _)| (angle(*w) - t).abs() < 1e-9)
                     else {
@@ -447,7 +546,7 @@ fn cylinder_regions(
             _ => return None,
         }
     }
-    Some(out)
+    Some((frame, out))
 }
 
 /// The edge entities of one solid, made on demand.
@@ -637,6 +736,7 @@ impl Edges<'_> {
         a: &[u32],
         b: &[u32],
         seam: &(u32, u32),
+        surface: usize,
     ) -> Vec<usize> {
         let rotate = |l: &[u32], v: u32| -> Vec<u32> {
             let k = l.iter().position(|&x| x == v).unwrap_or(0);
@@ -646,17 +746,78 @@ impl Edges<'_> {
         };
         let (top, bottom) = *seam;
         let mut out = self.loop_edges(w, &rotate(a, top));
-        let (edge, forward) = self.seam_edge(w, top, bottom);
+        let (edge, forward) = self.seam_edge(w, top, bottom, surface);
         out.push(self.oriented(w, edge, forward));
         out.extend(self.loop_edges(w, &rotate(b, bottom)));
-        let (edge, forward) = self.seam_edge(w, bottom, top);
+        let (edge, forward) = self.seam_edge(w, bottom, top, surface);
         out.push(self.oriented(w, edge, forward));
         out
     }
 
-    /// The seam line from `a` to `b`, made once.
-    fn seam_edge(&mut self, w: &mut Writer, a: u32, b: u32) -> (usize, bool) {
-        self.segment(w, a, b)
+    /// The seam from `a` to `b`, made once: a ruling of a cylinder or
+    /// cone, the meridian arc of a torus through the facet vertices
+    /// between the two.
+    fn seam_edge(&mut self, w: &mut Writer, a: u32, b: u32, surface: usize) -> (usize, bool) {
+        let Surface::Torus {
+            origin,
+            axis,
+            major,
+            minor,
+        } = self.solid.surfaces[surface]
+        else {
+            return self.segment(w, a, b);
+        };
+        let key = ok_brep::edge_key(a, b);
+        if let Some(&id) = self.segment_edges.get(&key) {
+            return (id, a == key.0);
+        }
+        let (pa, pb) = (
+            self.positions[key.0 as usize],
+            self.positions[key.1 as usize],
+        );
+        // The tube circle at the seam's angle about the axis.
+        let d = pa - origin;
+        let radial = (d - axis * d.dot(axis))
+            .normalized()
+            .unwrap_or_else(|| exact::perpendicular(axis));
+        let center = origin + radial * major;
+        // A vertex of the region on the same meridian between the two
+        // tells which way round the tube the seam runs; failing one, the
+        // shorter way.
+        let angle = |p: Vec3| exact::cylinder_angle(origin, axis, p);
+        let t = angle(pa);
+        let witness = self
+            .solid
+            .faces
+            .iter()
+            .filter(|f| f.surface == surface)
+            .flat_map(|f| f.loops.iter().flatten().copied())
+            .find(|&v| {
+                v != key.0 && v != key.1 && {
+                    let p = self.positions[v as usize];
+                    (angle(p) - t).abs() < 1e-9 && p.distance(pa) > 1e-9 && p.distance(pb) > 1e-9
+                }
+            })
+            .map(|v| self.positions[v as usize])
+            .unwrap_or_else(|| {
+                center
+                    + ((pa - center) + (pb - center))
+                        .normalized()
+                        .unwrap_or(radial)
+                        * minor
+            });
+        let normal = radial.cross(axis);
+        let ccw = normal.dot((pa - center).cross(witness - center)) > 0.0;
+        let normal = if ccw { normal } else { -normal };
+        let refdir = (pa - center)
+            .normalized()
+            .unwrap_or_else(|| exact::perpendicular(normal));
+        let placement = w.placement(center, normal, refdir);
+        let circle = w.entity(&format!("CIRCLE('',#{placement},{})", num(minor)));
+        let (va, vb) = (self.vertex(w, key.0), self.vertex(w, key.1));
+        let id = w.entity(&format!("EDGE_CURVE('',#{va},#{vb},#{circle},.T.)"));
+        self.segment_edges.insert(key, id);
+        (id, a == key.0)
     }
 }
 
