@@ -168,35 +168,6 @@ enum Keep {
     Below,
 }
 
-pub static TIMES: [std::sync::atomic::AtomicU64; 3] = [
-    std::sync::atomic::AtomicU64::new(0),
-    std::sync::atomic::AtomicU64::new(0),
-    std::sync::atomic::AtomicU64::new(0),
-];
-pub static COUNTS: [std::sync::atomic::AtomicU64; 2] = [
-    std::sync::atomic::AtomicU64::new(0),
-    std::sync::atomic::AtomicU64::new(0),
-];
-struct OverlayTimer(std::time::Instant);
-impl Drop for OverlayTimer {
-    fn drop(&mut self) {
-        TIMES[2].fetch_add(
-            self.0.elapsed().as_nanos() as u64,
-            std::sync::atomic::Ordering::Relaxed,
-        );
-    }
-}
-pub fn report_times() {
-    eprintln!(
-        "classify: sections {:.1} ms over {} faces, near+snap {:.1} ms, overlay {:.1} ms over {} faces",
-        TIMES[0].load(std::sync::atomic::Ordering::Relaxed) as f64 / 1e6,
-        COUNTS[0].load(std::sync::atomic::Ordering::Relaxed),
-        TIMES[1].load(std::sync::atomic::Ordering::Relaxed) as f64 / 1e6,
-        TIMES[2].load(std::sync::atomic::Ordering::Relaxed) as f64 / 1e6,
-        COUNTS[1].load(std::sync::atomic::Ordering::Relaxed)
-    );
-}
-
 fn classify_face(
     solid: &Solid,
     f: &Face,
@@ -220,14 +191,8 @@ fn classify_face(
             Keep::Inside | Keep::Below => vec![],
         });
     }
-    let t0 = std::time::Instant::now();
     let (above, below): (Section, Section) =
         sections_above_below(other, other_boxes, &f.plane, tol)?;
-    TIMES[0].fetch_add(
-        t0.elapsed().as_nanos() as u64,
-        std::sync::atomic::Ordering::Relaxed,
-    );
-    COUNTS[0].fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     if above.is_empty() && below.is_empty() {
         return Ok(match keep {
             Keep::NotAbove | Keep::NotAboveNorBelow | Keep::NotBelow => vec![region],
@@ -237,18 +202,10 @@ fn classify_face(
     // Loops of the section that stay clear of this face cannot enclose or
     // cut it, so they are left out of the overlay (a large part sectioned
     // by one of its facets otherwise drags every hole into every overlay).
-    let t1 = std::time::Instant::now();
     let mut above = near_region(to_contours(&above.loops), &region, tol);
     let mut below = near_region(to_contours(&below.loops), &region, tol);
     snap_to_region(&mut above, &region, tol);
     snap_to_region(&mut below, &region, tol);
-    TIMES[1].fetch_add(
-        t1.elapsed().as_nanos() as u64,
-        std::sync::atomic::Ordering::Relaxed,
-    );
-    let t2 = std::time::Instant::now();
-    let _guard = OverlayTimer(t2);
-    COUNTS[1].fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     Ok(match keep {
         Keep::NotAbove => overlay(&region, &above, OverlayRule::Difference),
         Keep::NotBelow => overlay(&region, &below, OverlayRule::Difference),

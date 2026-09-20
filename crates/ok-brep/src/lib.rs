@@ -26,7 +26,7 @@ mod tessellate;
 mod transform;
 
 pub use blend::{blend_edges, BlendKind};
-pub use boolean::{boolean, report_times, BoolOp};
+pub use boolean::{boolean, BoolOp};
 pub use drawing::{project_view, section_view, split, split_tagged, SectionLines, View, ViewLines};
 pub use extrude::extrude;
 pub use loft::loft;

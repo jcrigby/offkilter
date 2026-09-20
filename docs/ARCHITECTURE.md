@@ -667,19 +667,29 @@ the feature meanwhile) is skipped with a status message.
 
 `scripts/bench.sh` prints regeneration timings (release build) for the demo
 plate and a 4000-face cover (bosses, 24 holes, a shell), cold and with only
-the last feature edited: about 11 ms and 0.9 s cold at the time of
-writing. Booleans are the cost that scales: every face of one solid is
-classified against a cross-section of the other, so the section skips
-faces whose bounding box lies on one side of the plane (boxes are
-computed once per boolean) and the overlay leaves out section loops
-clear of the face. Assembling the result was dominated by T-junction
+the last feature edited: about 9 ms and 0.76 s cold at the time of
+writing (from 29 ms and 1.5 s before the profiling pass). Booleans are
+the cost that scales: every face of one solid is classified against a
+cross-section of the other. The other solid's faces sit in a
+bounding-volume tree built once per boolean, so a section visits only
+the subtrees the plane cuts, the sections just above and just below a
+face share that work, vertex distances are computed on demand rather
+than for every vertex per section, loops are chained without rescanning
+the segment map, the overlay leaves out section loops clear of the
+face, and the kernel's integer-keyed maps use a fast multiply-rotate
+hasher. What remains is inherent to computing whole sections: a plane
+through a dense solid cuts many faces. Assembling the result was
+dominated by T-junction
 repair, which asks for the vertices near every edge; its point grid is a
 dense array of cells sized to the model (about 1/32 of the extent, never
 below 64 tolerances), so a query is index arithmetic along the edge
 rather than hashing, and consecutive samples skip the cells the previous
 one gathered. A finer grid is slower, not faster: the cost is cells
-visited, not candidates tested. The wasm build runs `wasm-opt -O3` when
-binaryen is available (the web app's dev dependencies provide it).
+visited, not candidates tested. A boolean also limits the repair to
+edges reaching into the overlap of the operands' boxes, which is sound
+because fragments restore their face's own collinear vertices. The wasm
+build runs `wasm-opt -O3` when binaryen is available (the web app's dev
+dependencies provide it).
 
 ## Testing
 
