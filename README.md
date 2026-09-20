@@ -17,7 +17,8 @@ works today, all in the browser:
   follows the model.
 - Solids: extrude (blind, through all, up to face), revolve, sweep along a
   sketched path, loft between two sketches, holes with counterbores, fillet and
-  chamfer on straight and curved edges, shell, move face, draft, split by a
+  chamfer on straight and curved edges (three fillets meeting at a corner
+  get the exact rolling-ball patch), shell, move face, draft, split by a
   plane, mirror and linear / circular patterns, with
   boolean new / add / remove / intersect on a polyhedral
   boundary-representation kernel that tags curved faces with their

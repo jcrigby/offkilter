@@ -13,6 +13,7 @@
 
 mod blend;
 mod boolean;
+mod corner;
 mod drawing;
 mod extrude;
 mod loft;

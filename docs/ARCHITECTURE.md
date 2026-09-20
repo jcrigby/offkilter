@@ -171,10 +171,20 @@ tangent arc for a fillet (tagged as a cylinder about a straight edge so it
 shades smoothly and selects as one face). Convex edges have the cutter
 subtracted, concave edges have it added. This is "blend by boolean": it
 is exact where the dihedral angle is constant along the chain (any edge
-between planar faces, rims on planar faces), an approximation where it
-varies, and where blends meet at a corner the union of cutters gives a
-plausible faceted corner rather than the exact patch a surface-based
-kernel would make.
+between planar faces, rims on planar faces) and an approximation where it
+varies. Where three convex fillets of one feature meet at a vertex
+between three planar faces, the corner is the rolling ball exactly
+(`corner.rs`): the ball centre `c` lies `r` inside all three faces, each
+fillet's axis passes through it, and the ball is tangent to the three
+cylinders along the circles in the planes through `c` perpendicular to
+the edges. Those edges and corners become one closed cutter polyhedron
+per connected group, built from polygons rather than by union: the edge
+prisms cut back to the cell planes, the cell's three face quads, and a
+spherical patch (rings shrinking from the fillet arcs, which it shares
+vertex for vertex with the prisms, towards the middle direction) tagged
+as a revolved surface so it shades smoothly. Chamfers, rims, corners
+with any other number of blended edges and non-planar faces keep the
+union of cutters, which gives a plausible faceted corner.
 
 While a blend feature is collecting edges, the client asks for a
 "rollback" regeneration (`regenerate_to`), which returns the cached state

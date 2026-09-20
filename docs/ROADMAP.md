@@ -39,7 +39,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Sweep (profile along a sketched polyline / arc path) and loft (between two sketch regions)
 - [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
 - [x] Fillets and chamfers on curved edges (a rim is one chain, blended with one mitred sweep)
-- [ ] Proper corner patches where blends meet; variable-dihedral chains
+- [x] Spherical corner patches where three fillets meet on planar faces (exact rolling ball, one cutter polyhedron per group of corners)
+- [ ] Corner patches for chamfers and for corners with other edge counts; variable-dihedral chains
 - [x] Booleans stay closed when a vertex sits a hair off its face plane or a face is nearly coplanar with the tool (the two former fuzz failures are regression cases)
 - [x] Faces left non-planar by stitching are split into planar triangles at assembly, so every sectioned face is planar within tolerance
 - [x] Shell (uniform wall, chosen faces open; an offset polyhedron subtracted in one boolean; cavities whose offset changes the topology are reported, not guessed)

@@ -118,6 +118,7 @@ pub fn blend_edges(
         b: u32,
         geom: EdgeSegment,
         surfaces: (usize, usize),
+        faces: (usize, usize),
     }
     let mut segments: Vec<Seg> = Vec::new();
     for (key, faces) in solid.edge_faces() {
@@ -163,14 +164,65 @@ pub fn blend_edges(
                 convex,
             },
             surfaces: (fa.surface, fb.surface),
+            faces: (ia, ib),
         });
     }
     if segments.is_empty() {
         return Err(BrepError::Degenerate("no matching edges to blend".into()));
     }
 
-    // Chain segments head to tail within one surface pair and convexity.
+    // Where three convex fillets on planar faces meet at a vertex, the
+    // corner gets a spherical patch; those edges and corners become one
+    // cutter each group (see `corner.rs`) and leave the chains below.
     let mut used = vec![false; segments.len()];
+    let mut cutters = Solid::default();
+    if kind == BlendKind::Fillet {
+        let mut candidates: Vec<(usize, crate::corner::FilletEdge)> = Vec::new();
+        for (i, seg) in segments.iter().enumerate() {
+            let planar =
+                |s: usize| matches!(solid.surfaces.get(s), Some(crate::Surface::Plane { .. }));
+            if !seg.geom.convex || !planar(seg.surfaces.0) || !planar(seg.surfaces.1) {
+                continue;
+            }
+            let g = &seg.geom;
+            let e = (g.q - g.p).normalized().unwrap();
+            let x = g.inward_a;
+            let y = e.cross(x);
+            let Ok(section) = cross_section(g, x, y, size, kind, segment_angle) else {
+                continue;
+            };
+            let (fa, fb) = seg.faces;
+            candidates.push((
+                i,
+                crate::corner::FilletEdge {
+                    a: seg.a,
+                    b: seg.b,
+                    faces: (fa, fb),
+                    frame: Plane {
+                        origin: g.p,
+                        x_axis: x,
+                        y_axis: y,
+                        normal: e,
+                    },
+                    section,
+                },
+            ));
+        }
+        let edges: Vec<crate::corner::FilletEdge> =
+            candidates.iter().map(|(_, e)| e.clone()).collect();
+        let (patched, taken) =
+            crate::corner::patched_cutters(solid, &edges, size, segment_angle, feature);
+        for (k, &(i, _)) in candidates.iter().enumerate() {
+            if taken[k] {
+                used[i] = true;
+            }
+        }
+        for cutter in patched {
+            cutters = boolean(&cutters, &cutter, BoolOp::Union)?;
+        }
+    }
+
+    // Chain segments head to tail within one surface pair and convexity.
     let mut chains: Vec<(Vec<usize>, bool)> = Vec::new();
     let same_kind = |i: usize, j: usize| {
         segments[i].surfaces == segments[j].surfaces
@@ -214,7 +266,6 @@ pub fn blend_edges(
         chains.push((chain, closed));
     }
 
-    let mut cutters = Solid::default();
     let mut fillers = Solid::default();
     for (k, (chain, closed)) in chains.iter().enumerate() {
         let first = &segments[chain[0]].geom;
@@ -323,6 +374,90 @@ mod tests {
             .filter(|s| matches!(s, crate::Surface::Cylinder { .. }))
             .count();
         assert_eq!(cylinders, 1);
+    }
+
+    #[test]
+    fn three_fillets_meeting_at_a_corner_get_a_spherical_patch() {
+        let b = block(10.0, 10.0, 10.0);
+        let r = 2.0;
+        let mut pairs = edges_between(&b, Vec3::Z, Vec3::X);
+        pairs.extend(edges_between(&b, Vec3::Z, Vec3::Y));
+        pairs.extend(edges_between(&b, Vec3::X, Vec3::Y));
+        let f = blend_edges(&b, &pairs, r, BlendKind::Fillet, SEG, 5).unwrap();
+        f.validate().unwrap();
+        // Along each edge the fillet removes (1 - pi/4) r^2 per unit length
+        // outside the corner cell; in the cell (a cube of side r) only the
+        // ball's eighth stays.
+        let removed = r * r * r * (1.0 - PI / 6.0) + (1.0 - PI / 4.0) * r * r * 3.0 * (10.0 - r);
+        let expected = 1000.0 - removed;
+        assert!(
+            ((f.volume() - expected) / expected).abs() < 3e-3,
+            "vol {} expected {expected}",
+            f.volume()
+        );
+        // The patch is one smooth surface of its own besides the three cylinders.
+        let cylinders = f
+            .surfaces
+            .iter()
+            .filter(|s| matches!(s, Surface::Cylinder { .. }))
+            .count();
+        let revolved = f
+            .surfaces
+            .iter()
+            .filter(|s| matches!(s, Surface::Revolved { .. }))
+            .count();
+        assert_eq!((cylinders, revolved), (3, 1));
+        // Every patch vertex lies on the ball about the centre 2 mm inside the corner.
+        let centre = Vec3::new(10.0 - r, 10.0 - r, 10.0 - r);
+        let patch = f
+            .surfaces
+            .iter()
+            .position(|s| matches!(s, Surface::Revolved { .. }))
+            .unwrap();
+        for face in f.faces.iter().filter(|face| face.surface == patch) {
+            for &v in &face.loops[0] {
+                let d = f.vertices[v as usize].distance(centre);
+                assert!((d - r).abs() < 1e-6, "patch vertex {d} from the centre");
+            }
+        }
+    }
+
+    #[test]
+    fn filleting_every_edge_of_a_block_rounds_all_eight_corners() {
+        let b = block(10.0, 10.0, 10.0);
+        let r = 2.0;
+        let pairs: Vec<(usize, usize)> = b
+            .edge_faces()
+            .into_values()
+            .filter(|f| f.len() == 2)
+            .map(|f| (f[0], f[1]))
+            .collect();
+        let f = blend_edges(&b, &pairs, r, BlendKind::Fillet, SEG, 5).unwrap();
+        f.validate().unwrap();
+        let s = 10.0 - 2.0 * r;
+        let expected =
+            s * s * s + 2.0 * r * 3.0 * s * s + PI * r * r * 3.0 * s + 4.0 / 3.0 * PI * r * r * r;
+        assert!(
+            ((f.volume() - expected) / expected).abs() < 3e-3,
+            "vol {} expected {expected}",
+            f.volume()
+        );
+        let revolved = f
+            .surfaces
+            .iter()
+            .filter(|s| matches!(s, Surface::Revolved { .. }))
+            .count();
+        assert_eq!(revolved, 8);
+        // Nothing sticks out past the rounded shape: every vertex is within
+        // the rounded box (the inner box grown by r).
+        for v in &f.vertices {
+            let inside = |x: f64| x.clamp(r, 10.0 - r);
+            let nearest = Vec3::new(inside(v.x), inside(v.y), inside(v.z));
+            assert!(
+                v.distance(nearest) <= r + 1e-6,
+                "vertex {v:?} outside the rounded block"
+            );
+        }
     }
 
     #[test]
