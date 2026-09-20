@@ -67,7 +67,16 @@ a boolean, so results no longer depend on the resolution of the tools.
    DXF (now R2000) as `CIRCLE`, `ARC` and `ELLIPSE` entities, and the
    measure tool reports an edge's length along its curve
    (`exact::run_length`). Quartics stay polylines.
-5. [ ] Revolved surfaces as exact cones and tori (profile line and arc
-   about the axis), including fillets along circular edges.
+5. [~] Revolved surfaces as exact cones, tori and spheres. Done: the
+   surface tags (`Surface::Cone`, `Torus`, `Sphere`) from a revolve's
+   oblique lines and arcs and from the rolling-ball corner patch, their
+   projections, the circles where a plane across the axis or a coaxial
+   surface of revolution meets them (`exact::run_curve`, which takes a
+   point of the run to tell which of a pair's circles it is on), cone
+   rulings held like cylinder rulings, refit of booleans on such bodies,
+   and so arcs in drawings and exact rim lengths for turned parts. To
+   do: the STEP writer and reader for `CONICAL_SURFACE`,
+   `TOROIDAL_SURFACE` and `SPHERICAL_SURFACE` faces, and fillets along
+   circular edges as tori (chain blends still carry `Surface::Ruled`).
 6. [ ] Beyond: general surfaces (sweeps, lofts) as B-spline surfaces,
    which needs a real parametric trimming kernel.

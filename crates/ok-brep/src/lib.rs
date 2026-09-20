@@ -66,8 +66,29 @@ pub enum Surface {
         axis: Vec3,
         radius: f64,
     },
+    /// A cone about the line through `apex` along unit `axis`: the point
+    /// `t` along the axis from the apex (`t ≥ 0`) carries a circle of
+    /// radius `t·tan(half_angle)`.
+    Cone {
+        apex: Vec3,
+        axis: Vec3,
+        half_angle: f64,
+    },
+    /// A torus: the circle of radius `minor` at distance `major` from the
+    /// line through `origin` along unit `axis`, swept about it.
+    Torus {
+        origin: Vec3,
+        axis: Vec3,
+        major: f64,
+        minor: f64,
+    },
+    Sphere {
+        center: Vec3,
+        radius: f64,
+    },
     /// A surface of revolution about the line through `origin` along unit
-    /// `axis`; facets sharing it are shaded with averaged normals.
+    /// `axis` without a simpler form (a revolved spline); facets sharing
+    /// it are shaded with averaged normals.
     Revolved {
         origin: Vec3,
         axis: Vec3,

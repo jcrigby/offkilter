@@ -791,18 +791,18 @@ mod tests {
             .iter()
             .filter(|s| matches!(s, Surface::Cylinder { .. }))
             .count();
-        let revolved = f
+        let spheres = f
             .surfaces
             .iter()
-            .filter(|s| matches!(s, Surface::Revolved { .. }))
+            .filter(|s| matches!(s, Surface::Sphere { .. }))
             .count();
-        assert_eq!((cylinders, revolved), (3, 1));
+        assert_eq!((cylinders, spheres), (3, 1));
         // Every patch vertex lies on the ball about the centre 2 mm inside the corner.
         let centre = Vec3::new(10.0 - r, 10.0 - r, 10.0 - r);
         let patch = f
             .surfaces
             .iter()
-            .position(|s| matches!(s, Surface::Revolved { .. }))
+            .position(|s| matches!(s, Surface::Sphere { .. }))
             .unwrap();
         for face in f.faces.iter().filter(|face| face.surface == patch) {
             for &v in &face.loops[0] {
@@ -832,12 +832,12 @@ mod tests {
             "vol {} expected {expected}",
             f.volume()
         );
-        let revolved = f
+        let spheres = f
             .surfaces
             .iter()
-            .filter(|s| matches!(s, Surface::Revolved { .. }))
+            .filter(|s| matches!(s, Surface::Sphere { .. }))
             .count();
-        assert_eq!(revolved, 8);
+        assert_eq!(spheres, 8);
         // Nothing sticks out past the rounded shape: every vertex is within
         // the rounded box (the inner box grown by r).
         for v in &f.vertices {

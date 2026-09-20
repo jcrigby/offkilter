@@ -351,9 +351,10 @@ by direction only (no curvature tie-break).
 
 A `Solid` is a closed set of planar polygonal faces (loops of shared
 vertex indices; outer loop counter-clockwise about the outward normal,
-holes clockwise). Every face references an analytic `Surface`: either its
-plane or, for facets produced from a sketch arc or circle, the cylinder
-they approximate. This is a polyhedral B-rep with surface tags: facets on
+holes clockwise). Every face references an analytic `Surface`: its plane
+or, for facets produced from a sketch arc or circle, the cylinder they
+approximate; a revolve tags the cone, torus or sphere its oblique lines
+and arcs sweep, and the rolling-ball corner patch its sphere. This is a polyhedral B-rep with surface tags: facets on
 one cylinder shade smoothly, hide their internal edges, and can later be
 replaced by exact curved faces without changing the topology model. Each
 face also carries a `FaceOrigin` (feature id + local index) as the seed of
@@ -390,10 +391,13 @@ The surface tags make curved faces exact without a second representation
 (`docs/EXACT.md` is the plan and record). Where both faces at an edge are
 analytic, the edge's exact curve follows from the pair (`edge_curve`:
 plane ∩ plane a line, plane ∩ cylinder a circle, ellipse or line pair,
-cylinder ∩ cylinder a quartic), a vertex's exact position is the point on
-all of its surfaces (`vertex_position`, alternating projection; a vertex
-where two facets of one cylinder meet along a ruling is held to that
-ruling, solved directly against the other surfaces), an edge run
+cylinder ∩ cylinder a quartic, plane ∩ sphere a circle, a plane across a
+cone's axis a circle; `run_curve` adds the circles a plane across a
+torus or two coaxial surfaces of revolution make, told apart by a point
+of the run), a vertex's exact position is the point on all of its
+surfaces (`vertex_position`, alternating projection; a vertex of a run
+where two facets of one cylinder or cone meet along a ruling is held to
+that ruling, solved directly against the other surfaces), an edge run
 (`edge_runs`, the chain of facet edges between one pair of surfaces) is a
 piece of the pair's curve and can be resampled anywhere on it
 (`run_points`, at a cylinder's rulings), and a cylinder's region is its

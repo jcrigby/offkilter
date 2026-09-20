@@ -140,6 +140,30 @@ impl Solid {
                     axis: xf.apply_vector(axis),
                     radius,
                 },
+                Surface::Cone {
+                    apex,
+                    axis,
+                    half_angle,
+                } => Surface::Cone {
+                    apex: xf.apply_point(apex),
+                    axis: xf.apply_vector(axis),
+                    half_angle,
+                },
+                Surface::Torus {
+                    origin,
+                    axis,
+                    major,
+                    minor,
+                } => Surface::Torus {
+                    origin: xf.apply_point(origin),
+                    axis: xf.apply_vector(axis),
+                    major,
+                    minor,
+                },
+                Surface::Sphere { center, radius } => Surface::Sphere {
+                    center: xf.apply_point(center),
+                    radius,
+                },
                 Surface::Ruled => Surface::Ruled,
                 Surface::Revolved { origin, axis } => Surface::Revolved {
                     origin: xf.apply_point(origin),

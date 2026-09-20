@@ -42,12 +42,42 @@ pub enum Curve {
 
 /// Whether a surface has an exact form to project onto.
 pub fn is_analytic(s: &Surface) -> bool {
-    matches!(s, Surface::Plane { .. } | Surface::Cylinder { .. })
+    matches!(
+        s,
+        Surface::Plane { .. }
+            | Surface::Cylinder { .. }
+            | Surface::Cone { .. }
+            | Surface::Torus { .. }
+            | Surface::Sphere { .. }
+    )
 }
 
-/// The nearest point of the surface to `p` (planes and cylinders; other
-/// surfaces return `p`).
+/// Whether a surface is analytic and curved (its facets are chords).
+pub fn is_curved(s: &Surface) -> bool {
+    is_analytic(s) && !matches!(s, Surface::Plane { .. })
+}
+
+/// The axis a surface of revolution turns about, if it is one.
+pub fn axis_of(s: &Surface) -> Option<(Vec3, Vec3)> {
+    match *s {
+        Surface::Cylinder { origin, axis, .. } | Surface::Torus { origin, axis, .. } => {
+            Some((origin, axis))
+        }
+        Surface::Cone { apex, axis, .. } => Some((apex, axis)),
+        _ => None,
+    }
+}
+
+/// The nearest point of the surface to `p` (planes, cylinders, cones,
+/// tori and spheres; other surfaces return `p`).
 pub fn project(s: &Surface, p: Vec3) -> Vec3 {
+    // Unit direction from the axis line to `p`, any when `p` is on it.
+    let radial_dir = |origin: Vec3, axis: Vec3| {
+        let d = p - origin;
+        (d - axis * d.dot(axis))
+            .normalized()
+            .unwrap_or_else(|| perpendicular(axis))
+    };
     match *s {
         Surface::Plane { normal, offset } => p - normal * (normal.dot(p) - offset),
         Surface::Cylinder {
@@ -55,12 +85,38 @@ pub fn project(s: &Surface, p: Vec3) -> Vec3 {
             axis,
             radius,
         } => {
-            let d = p - origin;
-            let along = origin + axis * d.dot(axis);
-            match (p - along).normalized() {
-                Some(radial) => along + radial * radius,
-                None => along + perpendicular(axis) * radius,
-            }
+            let along = origin + axis * (p - origin).dot(axis);
+            along + radial_dir(origin, axis) * radius
+        }
+        Surface::Cone {
+            apex,
+            axis,
+            half_angle,
+        } => {
+            // In the half-plane through the axis and `p`, the generator is
+            // the ray from the apex at `half_angle` to the axis.
+            let d = p - apex;
+            let h = d.dot(axis);
+            let r = (d - axis * h).length();
+            let (cos, sin) = (half_angle.cos(), half_angle.sin());
+            let t = (h * cos + r * sin).max(0.0);
+            apex + axis * (t * cos) + radial_dir(apex, axis) * (t * sin)
+        }
+        Surface::Torus {
+            origin,
+            axis,
+            major,
+            minor,
+        } => {
+            let tube = origin + radial_dir(origin, axis) * major;
+            let out = (p - tube)
+                .normalized()
+                .unwrap_or_else(|| radial_dir(origin, axis));
+            tube + out * minor
+        }
+        Surface::Sphere { center, radius } => {
+            let out = (p - center).normalized().unwrap_or(Vec3::Z);
+            center + out * radius
         }
         _ => p,
     }
@@ -143,7 +199,120 @@ pub fn edge_curve(a: &Surface, b: &Surface) -> Curve {
                 Curve::Quartic
             }
         }
+        (Surface::Plane { normal, offset }, Surface::Sphere { center, radius })
+        | (Surface::Sphere { center, radius }, Surface::Plane { normal, offset }) => {
+            let d = normal.dot(*center) - offset;
+            if d.abs() >= radius - 1e-9 {
+                return Curve::Polyline;
+            }
+            Curve::Circle {
+                center: *center - *normal * d,
+                axis: *normal,
+                radius: (radius * radius - d * d).sqrt(),
+            }
+        }
+        (
+            Surface::Plane { normal, offset },
+            Surface::Cone {
+                apex,
+                axis,
+                half_angle,
+            },
+        )
+        | (
+            Surface::Cone {
+                apex,
+                axis,
+                half_angle,
+            },
+            Surface::Plane { normal, offset },
+        ) => {
+            if normal.cross(*axis).length() > 1e-9 {
+                return Curve::Polyline;
+            }
+            let t = (offset - normal.dot(*apex)) / normal.dot(*axis);
+            if t < 0.0 {
+                return Curve::Polyline;
+            }
+            Curve::Circle {
+                center: *apex + *axis * t,
+                axis: *normal,
+                radius: t * half_angle.tan(),
+            }
+        }
         _ => Curve::Polyline,
+    }
+}
+
+/// The exact curve of a run: [`edge_curve`] of its surfaces, and where
+/// that needs a point of the run to tell which of the pair's circles it
+/// is on (a plane across a torus, two coaxial surfaces of revolution, two
+/// spheres), the circle through the run's first vertex.
+pub fn run_curve(solid: &Solid, vertex_faces: &[Vec<usize>], run: &Run) -> Curve {
+    let (a, b) = (
+        &solid.surfaces[run.surfaces.0],
+        &solid.surfaces[run.surfaces.1],
+    );
+    let curve = edge_curve(a, b);
+    if curve != Curve::Polyline {
+        return curve;
+    }
+    let witness = vertex_position(solid, vertex_faces, run.vertices[0]);
+    let circle_about = |origin: Vec3, axis: Vec3| {
+        let center = origin + axis * (witness - origin).dot(axis);
+        Curve::Circle {
+            center,
+            axis,
+            radius: witness.distance(center),
+        }
+    };
+    match (a, b) {
+        // A plane across a surface of revolution.
+        (Surface::Plane { normal, offset }, other) | (other, Surface::Plane { normal, offset }) => {
+            let Some((origin, axis)) = axis_of(other) else {
+                return Curve::Polyline;
+            };
+            if normal.cross(axis).length() > 1e-9 {
+                return Curve::Polyline;
+            }
+            let t = (offset - normal.dot(origin)) / normal.dot(axis);
+            let center = origin + axis * t;
+            let _ = origin;
+            Curve::Circle {
+                center,
+                axis: *normal,
+                radius: witness.distance(center),
+            }
+        }
+        (Surface::Sphere { center: c1, .. }, Surface::Sphere { center: c2, .. }) => {
+            match (*c2 - *c1).normalized() {
+                Some(axis) => circle_about(*c1, axis),
+                None => Curve::Polyline,
+            }
+        }
+        (Surface::Sphere { center, .. }, other) | (other, Surface::Sphere { center, .. }) => {
+            let Some((origin, axis)) = axis_of(other) else {
+                return Curve::Polyline;
+            };
+            // Coaxial when the sphere's centre lies on the axis.
+            let d = *center - origin;
+            if (d - axis * d.dot(axis)).length() > 1e-9 {
+                return Curve::Polyline;
+            }
+            circle_about(origin, axis)
+        }
+        (a, b) => match (axis_of(a), axis_of(b)) {
+            (Some((o1, a1)), Some((o2, a2))) => {
+                let d = o2 - o1;
+                let coaxial = a1.cross(a2).length() < 1e-9 && (d - a1 * d.dot(a1)).length() < 1e-9;
+                if coaxial {
+                    circle_about(o1, a1)
+                } else {
+                    Curve::Polyline
+                }
+            }
+            _ => Curve::Polyline,
+        },
     }
 }
 
@@ -231,9 +400,17 @@ pub fn vertex_position(solid: &Solid, vertex_faces: &[Vec<usize>], v: u32) -> Ve
         .iter()
         .map(|&s| Constraint::On(&solid.surfaces[s]))
         .collect();
+    // Only a vertex of a run (on two surfaces) is held to a ruling: one
+    // on three or more is where they all meet, wherever its facets were.
+    let on_run = surfaces.len() == 2;
     for &s in &surfaces {
-        let Surface::Cylinder { axis, .. } = solid.surfaces[s] else {
-            continue;
+        if !on_run {
+            break;
+        }
+        let (axis, apex) = match solid.surfaces[s] {
+            Surface::Cylinder { axis, .. } => (axis, None),
+            Surface::Cone { apex, axis, .. } => (axis, Some(apex)),
+            _ => continue,
         };
         // The pair of facets on this cylinder meeting at the widest angle;
         // their planes meet along a ruling when it is parallel to the axis.
@@ -258,9 +435,6 @@ pub fn vertex_position(solid: &Solid, vertex_faces: &[Vec<usize>], v: u32) -> Ve
             continue;
         }
         let dir = a.normal.cross(b.normal) * (1.0 / sin);
-        if dir.dot(axis).abs() < 1.0 - 1e-9 {
-            continue;
-        }
         // The point of the line nearest `p`: p + x·na + y·nb on both planes.
         let (oa, ob) = (a.normal.dot(a.origin), b.normal.dot(b.origin));
         let c = a.normal.dot(b.normal);
@@ -268,6 +442,17 @@ pub fn vertex_position(solid: &Solid, vertex_faces: &[Vec<usize>], v: u32) -> Ve
         let det = 1.0 - c * c;
         let (x, y) = ((ra - c * rb) / det, (rb - c * ra) / det);
         let point = p + a.normal * x + b.normal * y;
+        // A cylinder's ruling runs along the axis; a cone's through the apex.
+        let ruling = match apex {
+            None => dir.dot(axis).abs() >= 1.0 - 1e-9,
+            Some(apex) => {
+                let d = apex - point;
+                (d - dir * d.dot(dir)).length() <= 1e-7 * p.length().max(1.0)
+            }
+        };
+        if !ruling {
+            continue;
+        }
         constraints.push(Constraint::Line { point, dir });
     }
     let scale = p.length().max(1.0);
@@ -377,11 +562,7 @@ pub fn refit_within(
     solid: &Solid,
     region: Option<(Vec3, Vec3)>,
 ) -> Result<Option<Solid>, BrepError> {
-    if !solid
-        .surfaces
-        .iter()
-        .any(|s| matches!(s, Surface::Cylinder { .. }))
-    {
+    if !solid.surfaces.iter().any(is_curved) {
         // Vertices of planar facets already sit where their planes meet.
         return Ok(None);
     }
@@ -406,12 +587,10 @@ pub fn refit_within(
             continue;
         }
         // A vertex of planar facets alone sits where their planes meet.
-        if !vf[v].iter().any(|&f| {
-            matches!(
-                solid.surfaces[solid.faces[f].surface],
-                Surface::Cylinder { .. }
-            )
-        }) {
+        if !vf[v]
+            .iter()
+            .any(|&f| is_curved(&solid.surfaces[solid.faces[f].surface]))
+        {
             continue;
         }
         let p = vertex_position(solid, &vf, v as u32);
@@ -443,8 +622,8 @@ pub fn refit_within(
         })
         .collect();
     for run in edge_runs(solid) {
-        if !matches!(solid.surfaces[run.surfaces.0], Surface::Cylinder { .. })
-            && !matches!(solid.surfaces[run.surfaces.1], Surface::Cylinder { .. })
+        if !is_curved(&solid.surfaces[run.surfaces.0])
+            && !is_curved(&solid.surfaces[run.surfaces.1])
         {
             continue;
         }
@@ -1125,6 +1304,164 @@ mod tests {
         let loops = &regions[&cyl];
         assert_eq!(loops.len(), 2, "top rim and bottom rim");
         assert!(loops.iter().all(|l| l.len() == 72));
+    }
+
+    /// A profile revolved about the sketch's y axis: a flat bottom from
+    /// the axis out to radius 10, a wall rising obliquely to radius 6 at
+    /// height 8 (a cone), a quarter-round of radius 4 up to the axis
+    /// side (a torus), and a flat top back to the axis.
+    fn turned_part() -> Solid {
+        let mut s = Sketch::new();
+        let (_, p0, p1) = s.add_line(Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0));
+        let (_, p2, p3) = s.add_line(Vec2::new(10.0, 0.0), Vec2::new(6.0, 8.0));
+        let (_, _, p4, p5) = s.add_arc(
+            Vec2::new(2.0, 8.0),
+            Vec2::new(6.0, 8.0),
+            Vec2::new(2.0, 12.0),
+        );
+        let (_, p6, p7) = s.add_line(Vec2::new(2.0, 12.0), Vec2::new(0.0, 12.0));
+        let (_, p8, p9) = s.add_line(Vec2::new(0.0, 12.0), Vec2::new(0.0, 0.0));
+        for (a, b) in [(p1, p2), (p3, p4), (p5, p6), (p7, p8), (p9, p0)] {
+            s.add_constraint(ok_sketch::Constraint::Coincident { a, b });
+        }
+        let profile = s.profiles(&ProfileOptions::default()).remove(0);
+        crate::revolve(
+            &profile,
+            &Plane::XY,
+            Vec2::ZERO,
+            Vec2::Y,
+            std::f64::consts::TAU,
+            5f64.to_radians(),
+            1,
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn a_revolved_profile_gets_exact_cone_and_torus_surfaces() {
+        let part = turned_part();
+        let cone = part
+            .surfaces
+            .iter()
+            .find(|s| matches!(s, Surface::Cone { .. }))
+            .expect("a cone");
+        let Surface::Cone {
+            apex,
+            axis,
+            half_angle,
+        } = *cone
+        else {
+            unreachable!()
+        };
+        // The wall's line reaches the axis at y = 20, opening downwards
+        // (the radius grows towards the bottom).
+        assert!(apex.distance(Vec3::new(0.0, 20.0, 0.0)) < 1e-9, "{apex:?}");
+        assert!(axis.approx_eq(-Vec3::Y));
+        assert!((half_angle - (4.0f64).atan2(8.0)).abs() < 1e-12);
+        let torus = part
+            .surfaces
+            .iter()
+            .find(|s| matches!(s, Surface::Torus { .. }))
+            .expect("a torus");
+        let Surface::Torus {
+            origin,
+            major,
+            minor,
+            ..
+        } = *torus
+        else {
+            unreachable!()
+        };
+        assert!(origin.distance(Vec3::new(0.0, 8.0, 0.0)) < 1e-9);
+        assert!((major - 2.0).abs() < 1e-9 && (minor - 4.0).abs() < 1e-9);
+        // Every vertex lies on each of its surfaces already, and runs
+        // between the flats and the curved surfaces are circles.
+        assert_refitted(&part);
+        let vf = vertex_faces(&part);
+        let circles = edge_runs(&part)
+            .iter()
+            .filter(|r| matches!(run_curve(&part, &vf, r), Curve::Circle { .. }))
+            .count();
+        // bottom/cone (r 10), cone/torus (r 6), torus/top (r 2).
+        assert_eq!(circles, 3);
+        // The cone's rim at the bottom is a circle of radius 10 in the plane.
+        let bottom = part
+            .faces
+            .iter()
+            .find(|f| f.plane.normal.approx_eq(-Vec3::Y))
+            .unwrap()
+            .surface;
+        let cone_id = part
+            .surfaces
+            .iter()
+            .position(|s| matches!(s, Surface::Cone { .. }))
+            .unwrap();
+        match edge_curve(&part.surfaces[bottom], &part.surfaces[cone_id]) {
+            Curve::Circle { center, radius, .. } => {
+                assert!(center.distance(Vec3::ZERO) < 1e-9 && (radius - 10.0).abs() < 1e-9);
+            }
+            other => panic!("{other:?}"),
+        }
+    }
+
+    #[test]
+    fn projections_land_on_cones_tori_and_spheres() {
+        let cone = Surface::Cone {
+            apex: Vec3::ZERO,
+            axis: Vec3::Z,
+            half_angle: 30f64.to_radians(),
+        };
+        let p = project(&cone, Vec3::new(3.0, 0.0, 5.0));
+        let r = (p.x * p.x + p.y * p.y).sqrt();
+        assert!((r - p.z * 30f64.to_radians().tan()).abs() < 1e-12, "{p:?}");
+        // The nearest point of the generator: the foot of the perpendicular.
+        let d = Vec3::new(30f64.to_radians().sin(), 0.0, 30f64.to_radians().cos());
+        let foot = d * Vec3::new(3.0, 0.0, 5.0).dot(d);
+        assert!(p.distance(foot) < 1e-12);
+        let torus = Surface::Torus {
+            origin: Vec3::ZERO,
+            axis: Vec3::Z,
+            major: 5.0,
+            minor: 1.0,
+        };
+        let p = project(&torus, Vec3::new(7.0, 0.0, 2.0));
+        let tube = Vec3::new(5.0, 0.0, 0.0);
+        assert!((p.distance(tube) - 1.0).abs() < 1e-12);
+        assert!((p - tube)
+            .normalized()
+            .unwrap()
+            .approx_eq(Vec3::new(2.0, 0.0, 2.0).normalized().unwrap()));
+        let sphere = Surface::Sphere {
+            center: Vec3::new(1.0, 1.0, 1.0),
+            radius: 2.0,
+        };
+        let p = project(&sphere, Vec3::new(1.0, 1.0, 9.0));
+        assert!(p.approx_eq(Vec3::new(1.0, 1.0, 3.0)));
+    }
+
+    #[test]
+    fn a_cut_through_a_turned_part_refits_onto_its_cone_and_torus() {
+        let part = turned_part();
+        // A slot across the top, down through the torus and cone.
+        let mut s = Sketch::new();
+        s.add_rectangle(Vec2::new(-20.0, -1.5), Vec2::new(20.0, 1.5));
+        let xz = Plane {
+            origin: Vec3::ZERO,
+            x_axis: Vec3::X,
+            y_axis: Vec3::Z,
+            normal: -Vec3::Y,
+        };
+        let slot = extrude(
+            &s.profiles(&ProfileOptions::default()).remove(0),
+            &xz,
+            -13.0,
+            -5.0,
+            2,
+        )
+        .unwrap();
+        let cut = boolean(&part, &slot, BoolOp::Difference).unwrap();
+        assert_refitted(&cut);
+        assert!(cut.volume() < part.volume());
     }
 
     #[test]

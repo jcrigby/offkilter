@@ -259,11 +259,9 @@ fn projected_ellipses(
     let mut of_edge: HashMap<EdgeKey, usize> = HashMap::new();
     let origin = to2(Vec3::ZERO);
     let vec2 = |v: Vec3| to2(v) - origin;
+    let vf = exact::vertex_faces(solid);
     for run in exact::edge_runs(solid) {
-        let curve = exact::edge_curve(
-            &solid.surfaces[run.surfaces.0],
-            &solid.surfaces[run.surfaces.1],
-        );
+        let curve = exact::run_curve(solid, &vf, &run);
         let (center, u1, u2) = match curve {
             Curve::Circle {
                 center,

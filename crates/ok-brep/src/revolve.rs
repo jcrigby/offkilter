@@ -179,6 +179,8 @@ pub fn revolve(
                 }
                 _ => None,
             };
+            // Height along the axis of a profile point.
+            let along = |p: Vec2| (p - axis_point).dot(axis_dir);
             let surface = match ring.curves[i] {
                 SegmentCurve::Line => {
                     surfaces.push(match line_kind {
@@ -188,10 +190,23 @@ pub fn revolve(
                             radius: side(a).abs(),
                         },
                         // Planar: the normal is fixed up from the first facet below.
-                        _ => Surface::Revolved {
+                        Some(_) => Surface::Revolved {
                             origin: origin3,
                             axis: axis3,
                         },
+                        // Oblique: a cone with its apex where the line
+                        // meets the axis, opening the way the radius grows.
+                        None => {
+                            let (ha, ra) = (along(a), side(a).abs());
+                            let (hb, rb) = (along(b), side(b).abs());
+                            let apex_h = ha - ra * (hb - ha) / (rb - ra);
+                            let opens_up = (rb - ra) * (hb - ha) > 0.0;
+                            Surface::Cone {
+                                apex: origin3 + axis3 * apex_h,
+                                axis: if opens_up { axis3 } else { -axis3 },
+                                half_angle: (rb - ra).abs().atan2((hb - ha).abs()),
+                            }
+                        }
                     });
                     shared = None;
                     surfaces.len() - 1
@@ -203,9 +218,19 @@ pub fn revolve(
                     match reuse {
                         Some((_, _, id)) => id,
                         None => {
-                            surfaces.push(Surface::Revolved {
-                                origin: origin3,
-                                axis: axis3,
+                            let major = side(center).abs();
+                            surfaces.push(if major <= 1e-9 {
+                                Surface::Sphere {
+                                    center: origin3 + axis3 * along(center),
+                                    radius,
+                                }
+                            } else {
+                                Surface::Torus {
+                                    origin: origin3 + axis3 * along(center),
+                                    axis: axis3,
+                                    major,
+                                    minor: radius,
+                                }
                             });
                             let id = surfaces.len() - 1;
                             shared = Some((center, radius, id));
@@ -390,12 +415,12 @@ mod tests {
             "vol {}",
             solid.volume()
         );
-        let revolved = solid
+        let spheres = solid
             .surfaces
             .iter()
-            .filter(|s| matches!(s, Surface::Revolved { .. }))
+            .filter(|s| matches!(s, Surface::Sphere { .. }))
             .count();
-        assert_eq!(revolved, 1, "one shared surface for the arc");
+        assert_eq!(spheres, 1, "one shared sphere for the arc");
     }
 
     #[test]
