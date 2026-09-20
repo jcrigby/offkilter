@@ -872,6 +872,8 @@ dependencies = [
 name = "ok-step"
 version = "0.1.0"
 dependencies = [
+ "earcutr",
+ "i_overlay",
  "ok-brep",
  "ok-math",
  "ok-sketch",

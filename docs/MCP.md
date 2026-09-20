@@ -57,6 +57,7 @@ server configuration:
 | `apply {ops, doc?, tab?}` | Applies ops in order. Bare studio, sketch and assembly ops are wrapped for the tab. Stops at the first failure (earlier ops stay), returns the ids each op made, then the tab's report so mistakes show at once. |
 | `report {doc?, tab?, detail?}` | Features with ids, kinds and errors; sketches with solver status, degrees of freedom, closed regions and entity ids; bodies with volume, bounds and every face's reference (`{feature, local, part}`), plus cylinders (holes and bosses) with their axes. `detail: "full"` returns the raw JSON. |
 | `screenshot {view?, section?, width?, height?, path?, doc?, tab?}` | A PNG of the tab's bodies, rendered without a browser: `view` is `top`, `front`, `right`, `iso` (default) or an `x,y,z` eye direction; `section` is `axis:offset[:flip]` (`z:10` keeps z ≥ 10, cut faces hatched); 640×480 unless sized; `path` also writes the file. Returned as MCP image content, so a model that can see images checks its work. |
+| `import {path, name?, doc?, tab?}` | Adds the bodies of an STL, OBJ or STEP file as mesh bodies (STEP faceted: planes and cylinders, millimetres). |
 | `export {format, path, doc?, tab?}` | Writes STL or STEP. |
 | `document_url {doc?}` | Where to look. |
 

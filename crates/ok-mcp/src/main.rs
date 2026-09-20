@@ -12,7 +12,7 @@
 //!
 //! Tools: `offkilter_reference` (the op catalogue), `list_documents`,
 //! `create_document`, `open_document`, `report`, `apply`, `screenshot`,
-//! `export`, `document_url`. See docs/MCP.md.
+//! `import`, `export`, `document_url`. See docs/MCP.md.
 
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};
@@ -800,6 +800,86 @@ impl Server {
                 }
                 Ok(text)
             }
+            "import" => {
+                let id = self.doc_id(args)?;
+                let path = args
+                    .get("path")
+                    .and_then(|p| p.as_str())
+                    .ok_or("import needs path: an STL, OBJ or STEP file")?;
+                let bytes =
+                    std::fs::read(path).map_err(|e| format!("could not read {path}: {e}"))?;
+                let stem = std::path::Path::new(path)
+                    .file_stem()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_else(|| "Import".into());
+                let ext = std::path::Path::new(path)
+                    .extension()
+                    .map(|e| e.to_string_lossy().to_lowercase())
+                    .unwrap_or_default();
+                let name = args
+                    .get("name")
+                    .and_then(|n| n.as_str())
+                    .map(str::to_string);
+                // (name, vertices, triangles) per body.
+                let bodies: Vec<(String, Vec<ok_math::Vec3>, Vec<[u32; 3]>)> = match ext.as_str() {
+                    "stl" => {
+                        let m = ok_mesh::from_stl(&bytes)?;
+                        vec![(name.clone().unwrap_or(stem), m.vertices, m.triangles)]
+                    }
+                    "obj" => {
+                        let m = ok_mesh::from_obj(&String::from_utf8_lossy(&bytes))?;
+                        vec![(name.clone().unwrap_or(stem), m.vertices, m.triangles)]
+                    }
+                    "step" | "stp" => ok_step::read_step(&String::from_utf8_lossy(&bytes))?
+                        .into_iter()
+                        .map(|b| (b.name, b.vertices, b.triangles))
+                        .collect(),
+                    other => {
+                        return Err(format!(
+                            "unknown file type .{other}; use .stl, .obj, .step or .stp"
+                        ))
+                    }
+                };
+                let doc = self.backend.document(&id)?;
+                let tab_id = pick_tab(&doc, tab)?;
+                let ops: Vec<Value> = bodies
+                    .iter()
+                    .map(|(n, v, t)| {
+                        json!({ "type": "studio", "tab": tab_id.0, "op": {
+                            "type": "add_mesh",
+                            "vertices": v.iter().map(|p| json!({ "x": p.x, "y": p.y, "z": p.z })).collect::<Vec<_>>(),
+                            "triangles": t,
+                            "name": n,
+                        } })
+                    })
+                    .collect();
+                let outcome = self.backend.apply(&id, ops)?;
+                let mut text = format!(
+                    "imported {} bod{} from {path}: {}",
+                    bodies.len(),
+                    if bodies.len() == 1 { "y" } else { "ies" },
+                    bodies
+                        .iter()
+                        .map(|(n, v, t)| format!(
+                            "{n} ({} vertices, {} triangles)",
+                            v.len(),
+                            t.len()
+                        ))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
+                if let Some(e) = outcome.get("error").and_then(|e| e.as_str()) {
+                    text.push_str(&format!("\nERROR: {e}"));
+                }
+                match self.backend.report(&id, Some(tab_id.0)) {
+                    Ok(r) => {
+                        text.push('\n');
+                        text.push_str(&summarize(&r));
+                    }
+                    Err(e) => text.push_str(&format!("\nreport failed: {e}\n")),
+                }
+                Ok(text)
+            }
             "export" => {
                 let id = self.doc_id(args)?;
                 let format = args
@@ -1059,6 +1139,11 @@ fn tool_list() -> Value {
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "view": { "type": "string" }, "section": { "type": "string" }, "width": { "type": "integer" }, "height": { "type": "integer" }, "path": { "type": "string" } } }
         },
         {
+            "name": "import",
+            "description": "Imports an STL, OBJ or STEP (.step/.stp) file from a path as mesh bodies of the tab: STEP solids come in faceted (planes and cylinders; other surfaces are refused by name), scaled to millimetres. Returns the tab's report.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "path": { "type": "string" }, "name": { "type": "string", "description": "Body name (STL and OBJ; STEP bodies keep their own names)." } }, "required": ["path"] }
+        },
+        {
             "name": "export",
             "description": "Writes a tab's bodies as STL or STEP to a file path.",
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step"] }, "path": { "type": "string" } }, "required": ["format", "path"] }
@@ -1222,6 +1307,19 @@ mod tests {
         assert!(std::fs::read_to_string(&step)
             .unwrap()
             .contains("MANIFOLD_SOLID_BREP"));
+        // The exported STEP imports back as a mesh body of its own.
+        let (err, imported) = tool_text(
+            &mut server,
+            "import",
+            json!({ "path": step.display().to_string() }),
+        );
+        assert!(
+            !err && imported.starts_with("imported 1 body"),
+            "{imported}"
+        );
+        assert!(imported.contains("Part 1 ("), "{imported}");
+        let (err, text) = tool_text(&mut server, "import", json!({ "path": "/nonexistent.stl" }));
+        assert!(err && text.contains("could not read"), "{text}");
         // The file on disk carries everything.
         let text = std::fs::read_to_string(dir.join("Bracket.okpart")).unwrap();
         assert_eq!(
@@ -1231,7 +1329,8 @@ mod tests {
                 .unwrap()
                 .features()
                 .len(),
-            5
+            6,
+            "five features and the imported mesh"
         );
         let unknown = call(&mut server, 9, "no/such", json!({}));
         assert_eq!(unknown["error"]["code"], -32601);

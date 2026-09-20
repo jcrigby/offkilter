@@ -1,4 +1,4 @@
-import { Kernel } from "./kernel";
+import { Kernel, parseStep } from "./kernel";
 import { detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
@@ -3492,6 +3492,12 @@ async function main(): Promise<void> {
     stlInput.value = "";
     if (!file) return;
     try {
+      if (/\.(step|stp)$/i.test(file.name)) {
+        const bodies = parseStep(await file.text());
+        for (const b of bodies) app.apply({ type: "add_mesh", vertices: b.vertices, triangles: b.triangles, name: b.name });
+        app.setStatus(`Imported ${bodies.length} ${bodies.length === 1 ? "body" : "bodies"} from ${file.name} (faceted).`);
+        return;
+      }
       const mesh = /\.obj$/i.test(file.name) ? parseObj(await file.text()) : parseStl(await file.arrayBuffer());
       app.apply({ type: "add_mesh", vertices: mesh.vertices, triangles: mesh.triangles, name: file.name.replace(/\.(stl|obj)$/i, "") || null });
     } catch (e) {

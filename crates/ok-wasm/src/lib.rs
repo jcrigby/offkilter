@@ -621,6 +621,24 @@ impl Default for Doc {
 }
 
 /// Kernel version, for the client's about box.
+/// Reads a STEP file into mesh bodies for `add_mesh`: JSON
+/// `[{name, vertices: [{x,y,z}], triangles: [[a,b,c]]}]`, in millimetres.
+#[wasm_bindgen]
+pub fn parse_step(text: &str) -> Result<String, JsError> {
+    let bodies = ok_step::read_step(text).map_err(|e| JsError::new(&e))?;
+    let out: Vec<serde_json::Value> = bodies
+        .into_iter()
+        .map(|b| {
+            serde_json::json!({
+                "name": b.name,
+                "vertices": b.vertices,
+                "triangles": b.triangles,
+            })
+        })
+        .collect();
+    Ok(serde_json::to_string(&out).unwrap_or_default())
+}
+
 #[wasm_bindgen]
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()

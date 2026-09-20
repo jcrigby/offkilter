@@ -3,7 +3,7 @@
 // `Op` on a part studio tab, an `AssemblyOp` on an assembly tab, or a
 // tab-level change.
 
-import init, { Doc, version as kernelVersion } from "./wasm/ok_wasm.js";
+import init, { Doc, parse_step, version as kernelVersion } from "./wasm/ok_wasm.js";
 
 export type Vec2 = { x: number; y: number };
 export type Vec3 = { x: number; y: number; z: number };
@@ -415,4 +415,9 @@ export class Kernel {
   dispose(): void {
     this.studio.free();
   }
+}
+
+/** Reads a STEP file (text) into mesh bodies for `add_mesh`; planes and cylinders come in faceted, other surfaces are refused by name. */
+export function parseStep(text: string): { name: string; vertices: Vec3[]; triangles: [number, number, number][] }[] {
+  return JSON.parse(parse_step(text));
 }

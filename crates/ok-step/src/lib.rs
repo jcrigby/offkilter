@@ -14,6 +14,10 @@ use std::collections::HashMap;
 use std::fmt::Write;
 
 /// Writes `solids` (name, solid) as one STEP file, as a string.
+mod read;
+
+pub use read::{read_step, StepBody};
+
 pub fn write_step(solids: &[(&str, &Solid)], document: &str) -> String {
     let mut w = Writer::default();
     // Units and context, shared by every representation.

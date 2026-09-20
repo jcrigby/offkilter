@@ -86,7 +86,7 @@ top are concrete and self-contained; items lower down are directions.
 - [ ] STEP with exact cylindrical and other analytic faces, once the kernel has them
 - [x] Import: STL (binary or ASCII) and OBJ meshes as bodies; coplanar triangles merge into faces
 - [x] Import: DXF lines, circles, arcs and polylines (with bulges) into a sketch, endpoints tied by coincident constraints
-- [ ] Import: STEP via a B-rep reader
+- [x] Import: STEP via a B-rep reader (`ok-step::read_step`): solids of a Part 21 file walked from `MANIFOLD_SOLID_BREP` down to points, edges on lines, circles and B-splines sampled once and shared, faces on planes and cylinders triangulated in their own parameters (cylinders in facet-wide strips), lengths scaled to millimetres; other surfaces are refused by name. Imported as mesh bodies from the client's Import button, the `ok-mcp` `import` tool (which also reads STL and OBJ) and `parse_step` in the wasm API
 - [x] Documents list with previews, a name filter and sort order
 - [x] Language-model access: `ok-mcp` (MCP over stdio) with apply / report / export tools against a running server or a local file; `POST /api/docs/:id/ops` and `GET /api/docs/:id/report` for scripts
 - [x] Screenshot tool for models: `ok-render` rasterises a tab's tessellation headlessly (orthographic standard views or any direction, optional section with hatched caps, edges and silhouettes, axis triad); served at `GET /api/docs/:id/screenshot` and returned as image content by the `ok-mcp` `screenshot` tool

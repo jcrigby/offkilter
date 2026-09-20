@@ -426,6 +426,37 @@ as planar faces, so the file is exact for the faceted geometry and reads
 as a solid elsewhere. The wasm `export_step` and the server's
 `/export/step` both use it.
 
+### STEP import (`ok-step/src/read.rs`)
+
+`read_step` parses a Part 21 file (strings with doubled quotes,
+comments, complex instances as lists of typed parts) into an entity map
+and walks every `MANIFOLD_SOLID_BREP`: shell → faces → bounds → edge
+loops → oriented edges → edge curves → vertex points. Each edge is
+sampled once (a line stays straight; a circle is sampled at 5° from its
+start vertex around its axis, the whole way round for a closed edge; a
+B-spline, rational or not, is evaluated by de Boor at sixteen points per
+span and reversed if the edge runs against the curve) so the two faces
+on an edge share the same mesh vertices and the result welds closed.
+A planar face is triangulated by earcut in its plane, outer bound first,
+with the loop's own winding deciding the normal when it disagrees with
+the flags. A cylindrical face is mapped to (angle × radius, height), the
+angle unwrapped along each loop so a loop around the seam stays
+continuous and holes shifted into the outer loop's turn; because a
+triangle spanning more than a facet cuts a chord through the surface
+(earcut fans from a seam corner would turn a wall into two cones), the
+parameter polygon is cut into facet-wide strips with the overlay
+library and each strip triangulated on its own, its vertices made from
+their parameters (they land within tolerance of the neighbours' rim
+samples, and any strip line crossing a shared edge is a T-junction the
+mesh assembly repairs). Other surfaces are refused by name. The length
+unit comes from the header's `LENGTH_UNIT` (`SI_UNIT` prefixes,
+`CONVERSION_BASED_UNIT` inch, foot, yard). The bodies come back as
+vertices and triangles for `add_mesh`, whose coplanar merge restores
+the planar faces with their hole loops; the wasm build exposes
+`parse_step`, the client's Import button accepts `.step`/`.stp`, and
+`ok-mcp`'s `import` tool reads STL and OBJ (`ok_mesh::from_stl`,
+`from_obj`) as well.
+
 ### Drawing views (`drawing.rs`)
 
 `project_view` projects solids orthographically along a view direction
