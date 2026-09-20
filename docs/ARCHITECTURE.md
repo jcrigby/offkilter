@@ -630,10 +630,23 @@ rotated tools and tiny nudges (`OK_FUZZ_EPS` picks the nudge sizes, `OK_FUZZ_SEE
 nearly coincident geometry is common; `OK_FUZZ_DUMP=<dir>` writes the
 operands of a failing step as JSON and the ignored `replay_dumped_case`
 test in `boolean.rs` reruns them). The long general-position run passes at
-every nudge size from 1e-8 to 1e-3 except two known cases (seed 59 at
-1e-4, seed 383 in the mixed run) where a body whose lumps touch along a
-face meets a tool coincident with that face at the nudge scale and the
-union leaves an open sliver edge. `crates/ok-model/tests/parts.rs`
+every nudge size from 1e-8 to 1e-3 except one case (seed 59 at 1e-4):
+there an earlier step's stitching of open vertices, which may move a
+vertex by up to ten times the merge tolerance, left a face non-planar by
+exactly that much, and a later tool crossing that face at an angle gets
+two intersection points a little more than the stitch threshold apart.
+Geometry at the tolerance scale is undefined for a kernel like this one;
+the fix would be to keep faces planar within tolerance after stitching.
+Operands that once failed are kept
+under `crates/ok-brep/tests/cases` and replayed by `tests/cases.rs`: a
+vertex a hair off its face's plane (within the planarity the solid
+allows) used to be lifted onto the plane when the face's fragments were
+rebuilt while its other faces kept it in place, so the fragments
+disagreed by more than the merge tolerance; and a face nearly coplanar
+with a face of the other solid used to get only the vertices inside that
+face's box snapped onto its plane, leaving it tilted by a hair and its
+sections empty. Fragments now keep their own vertices' positions, and a
+nearly coplanar face is snapped whole. `crates/ok-model/tests/parts.rs`
 is a corpus of realistic parts built through ops, each regenerated
 without errors, validated closed and checked against hand-calculated
 volumes. Booleans merge their fragments at the same tolerance the

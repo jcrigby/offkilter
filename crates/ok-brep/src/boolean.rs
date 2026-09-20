@@ -212,24 +212,43 @@ fn classify_face(
     })
 }
 
+/// Lifts the kept 2D fragments of `f` back to 3D. A fragment corner that
+/// is one of the face's own vertices takes that vertex's exact position
+/// rather than its projection onto the plane: a vertex may sit a hair off
+/// the plane (within the planarity the solid allows), and the other faces
+/// at that vertex keep it where it is, so lifting it onto the plane would
+/// leave the fragments of neighbouring faces disagreeing by more than the
+/// merge tolerance.
 fn fragments_to_polygons(
+    solid: &Solid,
     f: &Face,
     shapes: Vec<Vec<Contour>>,
     flip: bool,
     surface_offset: usize,
+    tol: f64,
 ) -> Vec<Polygon> {
+    let own: Vec<(Vec2, ok_math::Vec3)> = f
+        .loops
+        .iter()
+        .flatten()
+        .map(|&v| {
+            let p = solid.vertices[v as usize];
+            (f.plane.to_plane(p), p)
+        })
+        .collect();
+    let lift = |p: &[f64; 2]| {
+        let q = Vec2::new(p[0], p[1]);
+        own.iter()
+            .find(|(o, _)| o.distance(q) <= tol)
+            .map(|(_, w)| *w)
+            .unwrap_or_else(|| f.plane.to_world(q))
+    };
     shapes
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|shape| {
-            let mut loops: Vec<Vec<ok_math::Vec3>> = shape
-                .iter()
-                .map(|c| {
-                    c.iter()
-                        .map(|p| f.plane.to_world(Vec2::new(p[0], p[1])))
-                        .collect()
-                })
-                .collect();
+            let mut loops: Vec<Vec<ok_math::Vec3>> =
+                shape.iter().map(|c| c.iter().map(lift).collect()).collect();
             let plane = if flip {
                 for l in &mut loops {
                     l.reverse();
@@ -314,6 +333,32 @@ fn snap_to(s: &mut Solid, other: &Solid, tol: f64) {
     if !moved.iter().any(|m| *m) {
         return;
     }
+    // A face of `s` that is nearly coplanar with a face of `other` may have
+    // had only some of its vertices snapped (the plane snap is limited to
+    // the other face's box); the rest would leave it tilted by a hair and
+    // no longer planar. Put every vertex of such a face onto that plane.
+    let planes: Vec<ok_math::Plane> = other.faces.iter().map(|f| f.plane).collect();
+    for fi in 0..s.faces.len() {
+        let verts: Vec<u32> = s.faces[fi].loops.iter().flatten().copied().collect();
+        if !verts.iter().any(|&v| moved[v as usize]) {
+            continue;
+        }
+        let on = |plane: &ok_math::Plane, p: Vec3| plane.normal.dot(p - plane.origin).abs() <= tol;
+        let Some(plane) = planes.iter().find(|pl| {
+            pl.normal.dot(s.faces[fi].plane.normal).abs() > 0.999
+                && verts.iter().all(|&v| on(pl, s.vertices[v as usize]))
+        }) else {
+            continue;
+        };
+        for &v in &verts {
+            let p = s.vertices[v as usize];
+            let d = plane.normal.dot(p - plane.origin);
+            if d != 0.0 {
+                s.vertices[v as usize] = p - plane.normal * d;
+                moved[v as usize] = true;
+            }
+        }
+    }
     for f in &mut s.faces {
         if !f.loops[0].iter().any(|&v| moved[v as usize]) {
             continue;
@@ -369,11 +414,18 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
     let mut polys: Vec<Polygon> = Vec::new();
     for f in &a.faces {
         let shapes = classify_face(a, f, b, &boxes_b, bb, keep_a, tol)?;
-        polys.extend(fragments_to_polygons(f, shapes, false, 0));
+        polys.extend(fragments_to_polygons(a, f, shapes, false, 0, tol));
     }
     for f in &b.faces {
         let shapes = classify_face(b, f, a, &boxes_a, ab, keep_b, tol)?;
-        polys.extend(fragments_to_polygons(f, shapes, flip_b, a.surfaces.len()));
+        polys.extend(fragments_to_polygons(
+            b,
+            f,
+            shapes,
+            flip_b,
+            a.surfaces.len(),
+            tol,
+        ));
     }
     let mut surfaces = a.surfaces.clone();
     surfaces.extend_from_slice(&b.surfaces);

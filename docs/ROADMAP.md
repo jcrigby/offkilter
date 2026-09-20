@@ -40,7 +40,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
 - [x] Fillets and chamfers on curved edges (a rim is one chain, blended with one mitred sweep)
 - [ ] Proper corner patches where blends meet; variable-dihedral chains
-- [ ] Booleans on bodies whose lumps touch along a face when a tool coincides with that face at the nudge scale (fuzz seeds 59 at 1e-4 and 383 mixed)
+- [x] Booleans stay closed when a vertex sits a hair off its face plane or a face is nearly coplanar with the tool (the two former fuzz failures are regression cases)
+- [ ] Faces left non-planar by the full stitch threshold (one fuzz sequence at a 1e-4 nudge); keep faces planar within tolerance after stitching
 - [x] Shell (uniform wall, chosen faces open; an offset polyhedron subtracted in one boolean; cavities whose offset changes the topology are reported, not guessed)
 - [x] Draft (tilt planar faces about a neutral plane) and Move face (push / pull planar faces): direct edits that re-solve the surrounding corners
 - [x] Mirror and linear / circular patterns of bodies
@@ -49,7 +50,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Part materials (name + density) with mass in the parts list and bill of materials; standard metric hole presets
 - [x] Patterns and mirrors of features (the named features' tool volumes are replayed with their own add / remove operation)
 - [x] Mirror / pattern selected bodies only (tick bodies in the panel)
-- [ ] Patterns of faces
+- [~] Patterns of faces: covered by feature patterns here (every face comes from a feature whose tool volume is replayed); a face-only pattern would need face-bounded volumes, which the polyhedral kernel does not keep
 - [~] Persistent naming: face origins survive booleans; needs disambiguation for split faces and edge/vertex references
 
 ## Document and client
