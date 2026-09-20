@@ -1252,7 +1252,7 @@ mod tests {
         s.validate().unwrap();
         // The bent top became two triangles; the five flat quads stay (the
         // raised corner keeps the x = 1 and y = 1 sides planar).
-        assert_eq!(s.faces.len(), 8);
+        assert_eq!(s.faces.len(), 7);
         assert_eq!(s.faces.iter().filter(|f| f.origin.local == 1).count(), 2);
         let tol = merge_tolerance(3f64.sqrt());
         for f in &s.faces {
