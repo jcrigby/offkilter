@@ -7,7 +7,7 @@ import type { EdgePick, FacePick } from "./viewer";
 import { Sketcher } from "./sketcher";
 import type { SketchHost, Tool } from "./sketcher";
 import { Sync } from "./sync";
-import type { DocMeta, UserInfo, VersionMeta } from "./sync";
+import type { DocMeta, Team, UserInfo, VersionMeta } from "./sync";
 
 const $ = <T extends HTMLElement>(sel: string): T => {
   const el = document.querySelector<T>(sel);
@@ -2487,6 +2487,15 @@ async function main(): Promise<void> {
       note.textContent = `Could not list documents: ${(e as Error).message}`;
       return;
     }
+    let myTeams: Team[] = [];
+    if (user) {
+      try {
+        myTeams = await Sync.listTeams();
+      } catch {
+        myTeams = [];
+      }
+    }
+    renderTeams(myTeams);
     if (docs.length === 0) {
       const li = document.createElement("li");
       li.textContent = "No documents yet.";
@@ -2507,8 +2516,12 @@ async function main(): Promise<void> {
       const mine = !!user && d.owner?.id === user.id;
       const shared = d.collaborators ?? [];
       const viewers = d.viewers ?? [];
+      const teamShares = d.teams ?? [];
       owner.textContent = d.owner
-        ? (mine ? "yours" : `by ${d.owner.name}`) + (shared.length ? ` · shared with ${shared.map((c) => c.name).join(", ")}` : "") + (viewers.length ? ` · read-only: ${viewers.map((c) => c.name).join(", ")}` : "")
+        ? (mine ? "yours" : `by ${d.owner.name}`) +
+          (shared.length ? ` · shared with ${shared.map((c) => c.name).join(", ")}` : "") +
+          (viewers.length ? ` · read-only: ${viewers.map((c) => c.name).join(", ")}` : "") +
+          (teamShares.length ? ` · teams: ${teamShares.map((t) => `${t.name}${t.role === "viewer" ? " (read-only)" : ""}`).join(", ")}` : "")
         : "open to all";
       const when = document.createElement("span");
       when.className = "dwhen";
@@ -2563,6 +2576,28 @@ async function main(): Promise<void> {
           un.title = url;
           li.appendChild(un);
         }
+        if (myTeams.length > 0) {
+          const st = button("Share with team…", async () => {
+            const answer = prompt(`Share "${d.name}" with which team? (${myTeams.map((t) => t.name).join(", ")}) Add " viewer" for read-only access.`, myTeams[0]!.name);
+            if (!answer) return;
+            const parts = answer.trim().split(/\s+/);
+            const role = parts.length > 1 && parts[parts.length - 1]!.toLowerCase() === "viewer" ? "viewer" : "editor";
+            const tname = (role === "viewer" ? parts.slice(0, -1).join(" ") : answer.trim()).toLowerCase();
+            const team = myTeams.find((t) => t.name.toLowerCase() === tname);
+            if (!team) {
+              note.textContent = `No team called "${tname}".`;
+              return;
+            }
+            try {
+              await Sync.shareDocWithTeam(d.id, team.id, role);
+              await renderDocs();
+            } catch (e) {
+              note.textContent = `Could not share: ${(e as Error).message}`;
+            }
+          });
+          st.className = "dshare";
+          li.appendChild(st);
+        }
         for (const c of [...shared, ...viewers]) {
           const un = button(`− ${c.name}`, async () => {
             await Sync.unshareDoc(d.id, c.id);
@@ -2570,6 +2605,15 @@ async function main(): Promise<void> {
           });
           un.className = "dshare";
           un.title = `Stop sharing with ${c.name}`;
+          li.appendChild(un);
+        }
+        for (const t of teamShares) {
+          const un = button(`− team ${t.name}`, async () => {
+            await Sync.unshareTeam(d.id, t.id);
+            await renderDocs();
+          });
+          un.className = "dshare";
+          un.title = `Stop sharing with the team ${t.name}`;
           li.appendChild(un);
         }
       }
@@ -2589,6 +2633,69 @@ async function main(): Promise<void> {
       list.appendChild(li);
     }
   };
+  /** The Teams section of the Docs dialog: the signed-in account's teams with their members. */
+  const renderTeams = (teams: Team[]) => {
+    const box = $("#teams");
+    const list = $("#teams-list");
+    list.innerHTML = "";
+    box.hidden = !user;
+    if (!user) return;
+    if (teams.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No teams yet.";
+      list.appendChild(li);
+    }
+    for (const t of teams) {
+      const li = document.createElement("li");
+      const name = document.createElement("span");
+      name.className = "dname";
+      name.textContent = t.name;
+      const mineTeam = t.owner.id === user!.id;
+      const who = document.createElement("span");
+      who.className = "downer";
+      who.textContent = (mineTeam ? "yours" : `by ${t.owner.name}`) + (t.members.length ? ` · ${t.members.map((m) => m.name).join(", ")}` : " · no members yet");
+      li.append(name, who);
+      if (mineTeam) {
+        const add = button("+ member…", async () => {
+          const n = prompt(`Add which account to "${t.name}"?`);
+          if (!n) return;
+          try {
+            await Sync.addTeamMember(t.id, n.trim());
+            await renderDocs();
+          } catch (e) {
+            $("#docs-note").textContent = `Could not add: ${(e as Error).message}`;
+          }
+        });
+        add.className = "dshare";
+        li.appendChild(add);
+        for (const m of t.members) {
+          const un = button(`− ${m.name}`, async () => {
+            await Sync.removeTeamMember(t.id, m.id);
+            await renderDocs();
+          });
+          un.className = "dshare";
+          li.appendChild(un);
+        }
+        li.appendChild(button("×", async () => {
+          if (!confirm(`Delete the team "${t.name}"? Documents shared with it stay with their owners.`)) return;
+          await Sync.deleteTeam(t.id);
+          await renderDocs();
+        }, "danger"));
+      }
+      list.appendChild(li);
+    }
+  };
+  $("#teams-create").onclick = async () => {
+    const n = prompt("Team name");
+    if (!n) return;
+    try {
+      await Sync.createTeam(n.trim());
+      await renderDocs();
+    } catch (e) {
+      $("#docs-note").textContent = `Could not create the team: ${(e as Error).message}`;
+    }
+  };
+
   /** Lists the features that differ between a saved version and the document now, per tab. */
   const compareWithVersion = (versionJson: string): string[] => {
     const then = Kernel.fromJson(versionJson);

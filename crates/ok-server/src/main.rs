@@ -10,6 +10,7 @@ mod api;
 mod auth;
 mod live;
 mod store;
+mod teams;
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -47,7 +48,8 @@ async fn main() {
     }
     let store = store::DocStore::open(&data).expect("open data directory");
     let users = auth::UserStore::open(&data).expect("open data directory");
-    let app = api::router(store, users, static_dir);
+    let teams = teams::TeamStore::open(&data).expect("open data directory");
+    let app = api::router(store, users, teams, static_dir);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(addr).await.expect("bind");
     println!(

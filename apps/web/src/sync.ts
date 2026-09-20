@@ -10,7 +10,9 @@ import type { DocOp } from "./kernel";
 
 export type UserInfo = { id: string; name: string };
 export type Invite = { token: string; role: "editor" | "viewer"; created: number };
-export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[]; viewers?: UserInfo[]; invites?: Invite[] };
+export type Team = { id: string; name: string; owner: UserInfo; members: UserInfo[]; created: number };
+export type TeamShare = { id: string; name: string; role: "editor" | "viewer" };
+export type DocMeta = { id: string; name: string; created: number; updated: number; owner?: UserInfo; collaborators?: UserInfo[]; viewers?: UserInfo[]; invites?: Invite[]; teams?: TeamShare[] };
 export type VersionMeta = { id: string; name: string; created: number };
 
 type ServerMessage =
@@ -120,6 +122,47 @@ export class Sync {
     url.searchParams.set("doc", id);
     url.searchParams.set("invite", token);
     return url.toString();
+  }
+
+  static async listTeams(): Promise<Team[]> {
+    const r = await fetch(`${Sync.apiBase()}/teams`);
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as Team[];
+  }
+
+  static async createTeam(name: string): Promise<Team> {
+    const r = await fetch(`${Sync.apiBase()}/teams`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as Team;
+  }
+
+  static async deleteTeam(id: string): Promise<void> {
+    const r = await fetch(`${Sync.apiBase()}/teams/${id}`, { method: "DELETE" });
+    if (!r.ok) throw await Sync.failure(r);
+  }
+
+  static async addTeamMember(id: string, name: string): Promise<Team> {
+    const r = await fetch(`${Sync.apiBase()}/teams/${id}/members`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as Team;
+  }
+
+  static async removeTeamMember(id: string, userId: string): Promise<Team> {
+    const r = await fetch(`${Sync.apiBase()}/teams/${id}/members/${userId}`, { method: "DELETE" });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as Team;
+  }
+
+  static async shareDocWithTeam(id: string, team: string, role: "editor" | "viewer" = "editor"): Promise<DocMeta> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/share-team`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ team, role }) });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as DocMeta;
+  }
+
+  static async unshareTeam(id: string, team: string): Promise<DocMeta> {
+    const r = await fetch(`${Sync.apiBase()}/docs/${id}/share-team/${team}`, { method: "DELETE" });
+    if (!r.ok) throw await Sync.failure(r);
+    return (await r.json()) as DocMeta;
   }
 
   static async unshareDoc(id: string, userId: string): Promise<DocMeta> {

@@ -27,6 +27,10 @@ pub struct User {
     /// argon2id PHC string; never sent to clients (they get `UserInfo`).
     pub password_hash: String,
     pub created: u64,
+    /// Ids of the teams the user belongs to; filled in per request by the
+    /// `CurrentUser` extractor, never stored.
+    #[serde(skip)]
+    pub teams: Vec<String>,
 }
 
 /// What clients see of a user.
@@ -154,6 +158,7 @@ impl UserStore {
             name: name.to_string(),
             password_hash: hash,
             created: now(),
+            teams: Vec::new(),
         };
         users.push(user.clone());
         self.save_users(&users)?;
@@ -291,13 +296,20 @@ pub struct CurrentUser(pub Option<User>);
 impl<S> FromRequestParts<S> for CurrentUser
 where
     UserStore: axum::extract::FromRef<S>,
+    crate::teams::TeamStore: axum::extract::FromRef<S>,
     S: Send + Sync,
 {
     type Rejection = std::convert::Infallible;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let users = UserStore::from_ref(state);
-        let user = token_from_parts(parts).and_then(|t| users.session_user(&t));
+        let teams = crate::teams::TeamStore::from_ref(state);
+        let user = token_from_parts(parts)
+            .and_then(|t| users.session_user(&t))
+            .map(|mut u| {
+                u.teams = teams.ids_for(&u.id);
+                u
+            });
         Ok(CurrentUser(user))
     }
 }

@@ -43,7 +43,7 @@ works today, all in the browser:
 - Cloud: a small document server with real-time multi-user editing;
   concurrent edits converge without conflicts, documents keep named
   versions, and optional accounts own documents and share them with
-  other accounts as editors or read-only viewers, by name or by
+  other accounts as editors or read-only viewers, by name, by team or by
   invitation link.
 
 Not yet: exact curved surfaces (curved faces are facets at an adjustable

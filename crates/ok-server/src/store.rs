@@ -29,6 +29,9 @@ pub struct DocMeta {
     /// joins in that role. Only the owner ever sees these.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub invites: Vec<Invite>,
+    /// Teams the owner shared the document with, each in a role.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub teams: Vec<crate::teams::TeamShare>,
 }
 
 /// An invitation link to a document.
@@ -56,6 +59,7 @@ impl DocMeta {
                 u.id == o.id
                     || self.collaborators.iter().any(|c| c.id == u.id)
                     || self.viewers.iter().any(|c| c.id == u.id)
+                    || self.teams.iter().any(|t| u.teams.contains(&t.id))
             }),
         }
     }
@@ -65,8 +69,14 @@ impl DocMeta {
     pub fn can_edit(&self, user: Option<&User>) -> bool {
         match &self.owner {
             None => true,
-            Some(o) => user
-                .is_some_and(|u| u.id == o.id || self.collaborators.iter().any(|c| c.id == u.id)),
+            Some(o) => user.is_some_and(|u| {
+                u.id == o.id
+                    || self.collaborators.iter().any(|c| c.id == u.id)
+                    || self
+                        .teams
+                        .iter()
+                        .any(|t| t.role == ShareRole::Editor && u.teams.contains(&t.id))
+            }),
         }
     }
 
@@ -183,6 +193,7 @@ impl DocStore {
             collaborators: Vec::new(),
             viewers: Vec::new(),
             invites: Vec::new(),
+            teams: Vec::new(),
         };
         std::fs::write(self.doc_path(&id), json)?;
         std::fs::write(self.meta_path(&id), serde_json::to_string_pretty(&meta)?)?;
@@ -256,6 +267,22 @@ impl DocStore {
     fn meta_or_not_found(&self, id: &str) -> std::io::Result<DocMeta> {
         self.meta(id)
             .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "no such document"))
+    }
+
+    /// Shares with a team in `role`, replacing any earlier role.
+    pub fn share_team(&self, id: &str, team: crate::teams::TeamShare) -> std::io::Result<DocMeta> {
+        let mut meta = self.meta_or_not_found(id)?;
+        meta.teams.retain(|t| t.id != team.id);
+        meta.teams.push(team);
+        self.write_meta(&meta)?;
+        Ok(meta)
+    }
+
+    pub fn unshare_team(&self, id: &str, team_id: &str) -> std::io::Result<DocMeta> {
+        let mut meta = self.meta_or_not_found(id)?;
+        meta.teams.retain(|t| t.id != team_id);
+        self.write_meta(&meta)?;
+        Ok(meta)
     }
 
     /// Creates an invitation link for a document.

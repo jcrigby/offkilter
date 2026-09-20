@@ -8,6 +8,7 @@
 use crate::auth::{clear_cookie, session_cookie, AuthError, CurrentUser, User, UserStore};
 use crate::live::{ClientMessage, DocHub, ServerMessage};
 use crate::store::{DocMeta, DocStore, ShareRole};
+use crate::teams::{TeamError, TeamShare, TeamStore};
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{ConnectInfo, DefaultBodyLimit, FromRef, Path, State};
 use axum::http::{header, HeaderValue, StatusCode};
@@ -58,7 +59,14 @@ impl RateLimiter {
 pub struct AppState {
     hub: DocHub,
     users: UserStore,
+    teams: TeamStore,
     limiter: RateLimiter,
+}
+
+impl FromRef<AppState> for TeamStore {
+    fn from_ref(s: &AppState) -> TeamStore {
+        s.teams.clone()
+    }
 }
 
 impl FromRef<AppState> for RateLimiter {
@@ -79,10 +87,16 @@ impl FromRef<AppState> for UserStore {
     }
 }
 
-pub fn router(store: DocStore, users: UserStore, static_dir: Option<PathBuf>) -> Router {
+pub fn router(
+    store: DocStore,
+    users: UserStore,
+    teams: TeamStore,
+    static_dir: Option<PathBuf>,
+) -> Router {
     let state = AppState {
         hub: DocHub::new(store),
         users,
+        teams,
         limiter: RateLimiter::default(),
     };
     let api = Router::new()
@@ -98,6 +112,12 @@ pub fn router(store: DocStore, users: UserStore, static_dir: Option<PathBuf>) ->
         .route("/docs/{id}/invites", post(create_invite))
         .route("/docs/{id}/invites/{token}", delete(revoke_invite))
         .route("/docs/{id}/invites/{token}/accept", post(accept_invite))
+        .route("/docs/{id}/share-team", post(share_team))
+        .route("/docs/{id}/share-team/{team}", delete(unshare_team))
+        .route("/teams", get(list_teams).post(create_team))
+        .route("/teams/{id}", delete(delete_team))
+        .route("/teams/{id}/members", post(add_team_member))
+        .route("/teams/{id}/members/{user}", delete(remove_team_member))
         .route("/docs/{id}/ws", get(ws_upgrade))
         .route("/docs/{id}/versions", get(list_versions).post(save_version))
         .route("/docs/{id}/versions/{vid}", get(get_version))
@@ -414,6 +434,147 @@ async fn unshare_doc(
     }
 }
 
+fn team_error(e: TeamError) -> axum::response::Response {
+    let code = match e {
+        TeamError::BadName => StatusCode::BAD_REQUEST,
+        TeamError::NotFound => StatusCode::NOT_FOUND,
+        TeamError::NotOwner => StatusCode::FORBIDDEN,
+        TeamError::Io(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    };
+    (code, e.to_string()).into_response()
+}
+
+async fn list_teams(
+    State(teams): State<TeamStore>,
+    CurrentUser(user): CurrentUser,
+) -> impl IntoResponse {
+    match user {
+        Some(u) => Json(teams.for_user(&u.id)).into_response(),
+        None => (StatusCode::UNAUTHORIZED, "sign in to use teams").into_response(),
+    }
+}
+
+#[derive(Deserialize)]
+struct CreateTeam {
+    name: String,
+}
+
+async fn create_team(
+    State(teams): State<TeamStore>,
+    CurrentUser(user): CurrentUser,
+    Json(body): Json<CreateTeam>,
+) -> impl IntoResponse {
+    let Some(user) = user else {
+        return (StatusCode::UNAUTHORIZED, "sign in to create a team").into_response();
+    };
+    match teams.create(&body.name, &user) {
+        Ok(t) => (StatusCode::CREATED, Json(t)).into_response(),
+        Err(e) => team_error(e),
+    }
+}
+
+async fn delete_team(
+    State(teams): State<TeamStore>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    let Some(user) = user else {
+        return StatusCode::UNAUTHORIZED.into_response();
+    };
+    match teams.delete(&id, &user) {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(e) => team_error(e),
+    }
+}
+
+#[derive(Deserialize)]
+struct AddMember {
+    name: String,
+}
+
+async fn add_team_member(
+    State(state): State<AppState>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    Json(body): Json<AddMember>,
+) -> impl IntoResponse {
+    let Some(user) = user else {
+        return StatusCode::UNAUTHORIZED.into_response();
+    };
+    let Some(member) = state.users.user_by_name(&body.name) else {
+        return (StatusCode::NOT_FOUND, "no such user").into_response();
+    };
+    match state
+        .teams
+        .add_member(&id, &user, crate::auth::UserInfo::from(&member))
+    {
+        Ok(t) => Json(t).into_response(),
+        Err(e) => team_error(e),
+    }
+}
+
+async fn remove_team_member(
+    State(teams): State<TeamStore>,
+    CurrentUser(user): CurrentUser,
+    Path((id, member)): Path<(String, String)>,
+) -> impl IntoResponse {
+    let Some(user) = user else {
+        return StatusCode::UNAUTHORIZED.into_response();
+    };
+    match teams.remove_member(&id, &user, &member) {
+        Ok(t) => Json(t).into_response(),
+        Err(e) => team_error(e),
+    }
+}
+
+#[derive(Deserialize)]
+struct ShareTeam {
+    team: String,
+    #[serde(default)]
+    role: Option<ShareRole>,
+}
+
+/// Shares a document with a team the owner belongs to.
+async fn share_team(
+    State(state): State<AppState>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    Json(body): Json<ShareTeam>,
+) -> impl IntoResponse {
+    if let Err(code) = manageable(&state.hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(team) = state.teams.team(&body.team) else {
+        return (StatusCode::NOT_FOUND, "no such team").into_response();
+    };
+    if !user.as_ref().is_some_and(|u| team.has_member(&u.id)) {
+        return (StatusCode::FORBIDDEN, "you are not in that team").into_response();
+    }
+    let share = TeamShare {
+        id: team.id,
+        name: team.name,
+        role: body.role.unwrap_or(ShareRole::Editor),
+    };
+    match state.hub.store().share_team(&id, share) {
+        Ok(meta) => Json(meta).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn unshare_team(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path((id, team)): Path<(String, String)>,
+) -> impl IntoResponse {
+    if let Err(code) = manageable(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    match hub.store().unshare_team(&id, &team) {
+        Ok(meta) => Json(meta).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
 #[derive(Deserialize)]
 struct CreateInvite {
     #[serde(default)]
@@ -687,6 +848,15 @@ mod tests {
         DocStore::open(&dir).unwrap()
     }
 
+    fn temp_teams() -> TeamStore {
+        let dir = std::env::temp_dir().join(format!(
+            "ok-server-teams-{}-{}",
+            std::process::id(),
+            rand::random::<u64>()
+        ));
+        TeamStore::open(&dir).unwrap()
+    }
+
     fn temp_users() -> UserStore {
         let dir = std::env::temp_dir().join(format!(
             "ok-server-users-{}-{}",
@@ -732,7 +902,7 @@ mod tests {
 
     #[tokio::test]
     async fn sign_in_attempts_are_rate_limited_and_responses_carry_security_headers() {
-        let app = router(temp_store(), temp_users(), None);
+        let app = router(temp_store(), temp_users(), temp_teams(), None);
         let (status, headers, _) = call(&app, "GET", "/api/health", None, None).await;
         assert_eq!(status, StatusCode::OK);
         assert_eq!(headers.get("x-content-type-options").unwrap(), "nosniff");
@@ -760,7 +930,7 @@ mod tests {
     #[tokio::test]
     async fn viewers_can_read_but_not_write() {
         let users = temp_users();
-        let app = router(temp_store(), users.clone(), None);
+        let app = router(temp_store(), users.clone(), temp_teams(), None);
         let (_, owner_tok) = users.register("olive", "olives-password").unwrap();
         let (_, viewer_tok) = users.register("vic", "vics-password").unwrap();
         let (owner, viewer) = (
@@ -842,9 +1012,148 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn teams_share_documents_with_every_member() {
+        let users = temp_users();
+        let teams = temp_teams();
+        let app = router(temp_store(), users.clone(), teams.clone(), None);
+        let (_, owner_tok) = users.register("olive", "olives-password").unwrap();
+        let (_, mate_tok) = users.register("mia", "mias-password").unwrap();
+        let (owner, mate) = (
+            format!("ok_session={owner_tok}"),
+            format!("ok_session={mate_tok}"),
+        );
+        // Olive makes a team and adds Mia; Mia cannot add anyone.
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            "/api/teams",
+            Some(r#"{"name":"Design"}"#),
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::CREATED, "{text}");
+        let team: crate::teams::Team = serde_json::from_str(&text).unwrap();
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/teams/{}/members", team.id),
+            Some(r#"{"name":"mia"}"#),
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let (status, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/teams/{}/members", team.id),
+            Some(r#"{"name":"olive"}"#),
+            Some(&mate),
+        )
+        .await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        let (_, _, text) = call(&app, "GET", "/api/teams", None, Some(&mate)).await;
+        assert!(text.contains("Design"));
+        // A document shared with the team read-only: Mia can read, not write.
+        let (_, _, text) = call(
+            &app,
+            "POST",
+            "/api/docs",
+            Some(r#"{"name":"plans"}"#),
+            Some(&owner),
+        )
+        .await;
+        let id = serde_json::from_str::<serde_json::Value>(&text).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let (status, _, _) = call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&mate)).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        let (status, _, text) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/share-team"),
+            Some(&format!(r#"{{"team":"{}","role":"viewer"}}"#, team.id)),
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK, "{text}");
+        let (status, _, doc) =
+            call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&mate)).await;
+        assert_eq!(status, StatusCode::OK);
+        let (status, _, _) = call(
+            &app,
+            "PUT",
+            &format!("/api/docs/{id}"),
+            Some(&doc),
+            Some(&mate),
+        )
+        .await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        // As editors the team can write; leaving the team ends access.
+        let (status, _, _) = call(
+            &app,
+            "POST",
+            &format!("/api/docs/{id}/share-team"),
+            Some(&format!(r#"{{"team":"{}","role":"editor"}}"#, team.id)),
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        let (status, _, _) = call(
+            &app,
+            "PUT",
+            &format!("/api/docs/{id}"),
+            Some(&doc),
+            Some(&mate),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
+        let mia_id = users.user_by_name("mia").unwrap().id;
+        let (status, _, _) = call(
+            &app,
+            "DELETE",
+            &format!("/api/teams/{}/members/{mia_id}", team.id),
+            None,
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        let (status, _, _) = call(&app, "GET", &format!("/api/docs/{id}"), None, Some(&mate)).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        // Unsharing the team and deleting it are the owner's alone.
+        let (status, _, _) = call(
+            &app,
+            "DELETE",
+            &format!("/api/docs/{id}/share-team/{}", team.id),
+            None,
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        let (status, _, _) = call(
+            &app,
+            "DELETE",
+            &format!("/api/teams/{}", team.id),
+            None,
+            Some(&mate),
+        )
+        .await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        let (status, _, _) = call(
+            &app,
+            "DELETE",
+            &format!("/api/teams/{}", team.id),
+            None,
+            Some(&owner),
+        )
+        .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
+    }
+
+    #[tokio::test]
     async fn invitation_links_join_accounts_in_the_invited_role() {
         let users = temp_users();
-        let app = router(temp_store(), users.clone(), None);
+        let app = router(temp_store(), users.clone(), temp_teams(), None);
         let (_, owner_tok) = users.register("olive", "olives-password").unwrap();
         let (_, guest_tok) = users.register("gus", "guss-password").unwrap();
         let (owner, guest) = (
@@ -968,7 +1277,7 @@ mod tests {
 
     #[tokio::test]
     async fn accounts_own_and_share_documents() {
-        let app = router(temp_store(), temp_users(), None);
+        let app = router(temp_store(), temp_users(), temp_teams(), None);
         // Anonymous: no session.
         let (st, _, _) = call(&app, "GET", "/api/auth/me", None, None).await;
         assert_eq!(st, StatusCode::UNAUTHORIZED);
@@ -1118,7 +1427,7 @@ mod tests {
 
     #[tokio::test]
     async fn create_list_get_put_delete() {
-        let app = router(temp_store(), temp_users(), None);
+        let app = router(temp_store(), temp_users(), temp_teams(), None);
         let res = app
             .clone()
             .oneshot(
@@ -1298,7 +1607,7 @@ mod tests {
                 Some(crate::auth::UserInfo::from(&owner)),
             )
             .unwrap();
-        let app = router(store, users, None);
+        let app = router(store, users, temp_teams(), None);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
@@ -1334,7 +1643,7 @@ mod tests {
         let meta = store
             .create("shared", &ok_model::Document::new("shared").to_json(), None)
             .unwrap();
-        let app = router(store, temp_users(), None);
+        let app = router(store, temp_users(), temp_teams(), None);
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });

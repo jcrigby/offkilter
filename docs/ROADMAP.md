@@ -92,7 +92,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Server hardening: sign-in rate limiting per address, request and WebSocket size limits, security headers, `--secure-cookies`
 - [x] Read-only collaborators: share as viewer; the server refuses their edits and the client shows a read-only badge
 - [x] Invitations by link (editor or viewer role, withdrawable)
-- [ ] Teams (share with a group at once)
+- [x] Teams: named groups of accounts; documents shared with a team as editors or viewers
 
 ## Engineering
 

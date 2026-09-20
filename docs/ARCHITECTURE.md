@@ -519,8 +519,14 @@ relays edits between clients:
   until the owner withdraws the link (`DELETE .../invites/:token`),
   which keeps the accounts that already joined. Tokens are stripped from
   metadata served to anyone but the owner, so a viewer cannot use an
-  editor link it was never given. The WebSocket applies the same access
-  check and shows a signed-in client under its account name.
+  editor link it was never given. Teams (`teams.rs`, `teams.json`) are
+  named groups of accounts: the creator owns one and adds or removes
+  members (`/api/teams`, `/api/teams/:id/members`), and an owner shares a
+  document with a team they belong to in a role (`POST
+  /api/docs/:id/share-team`). The `CurrentUser` extractor fills in the
+  signed-in user's team ids on every request, so the access checks are
+  the same functions as for direct shares. The WebSocket applies the same
+  access check and shows a signed-in client under its account name.
 - WebSocket `/api/docs/:id/ws`: a client sends `hello`, then `op`
   messages carrying `ok_model::Op` JSON. The server applies each op to
   its own copy of the document (rejecting invalid ones with an `error`

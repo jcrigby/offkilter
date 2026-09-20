@@ -212,3 +212,58 @@ test("accounts own documents and share them", async ({ browser }) => {
   await expect(b.locator("#btn-account")).toHaveText("Sign in");
   await expect(a.locator("#presence")).toContainText("1 online", { timeout: 10_000 });
 });
+
+test("teams share documents with every member", async ({ browser }) => {
+  test.slow();
+  let up = false;
+  try {
+    up = (await fetch(`${SERVER}/api/health`)).ok;
+  } catch {
+    up = false;
+  }
+  test.skip(!up, `no document server at ${SERVER}`);
+  const stamp = Date.now().toString(36);
+  const ann = `ann${stamp}`, ben = `ben${stamp}`;
+  const a = await (await browser.newContext()).newPage();
+  const b = await (await browser.newContext()).newPage();
+  for (const p of [a, b]) {
+    p.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.message().startsWith("Team name") ? "Crew" : d.message().startsWith("Add which") ? ben : d.message().startsWith("Share") ? "Crew viewer" : "Team part") : d.defaultValue()));
+  }
+  const register = async (p: typeof a, name: string) => {
+    await p.goto(`${SERVER}/`);
+    await ready(p);
+    await p.click("#btn-account");
+    await p.fill("#account-name", name);
+    await p.fill("#account-password", `${name} long password`);
+    await p.click("#account-register");
+    await expect(p.locator("#btn-account")).toHaveText(name);
+  };
+  await register(a, ann);
+  await register(b, ben);
+  // Ann uploads a document (private to her) and makes a team with Ben in it.
+  await a.click("#btn-new");
+  await a.click("#btn-docs");
+  await a.click("#docs-upload");
+  await a.waitForFunction(() => new URL(location.href).searchParams.get("doc") !== null);
+  await a.click("#btn-docs");
+  await expect(a.locator("#teams")).toBeVisible();
+  await a.click("#teams-create");
+  await expect(a.locator("#teams-list")).toContainText("Crew");
+  await a.getByRole("button", { name: "+ member…" }).click();
+  await expect(a.locator("#teams-list")).toContainText(ben);
+  // Ben sees the team but not the document until it is shared with the team.
+  await b.click("#btn-docs");
+  await expect(b.locator("#teams-list")).toContainText("Crew");
+  await expect(b.locator("#docs-list")).not.toContainText(`by ${ann}`);
+  await b.click("#docs-close");
+  await a.getByRole("button", { name: "Share with team…" }).first().click();
+  await expect(a.locator("#docs-list")).toContainText("teams: Crew (read-only)");
+  await b.click("#btn-docs");
+  await expect(b.locator("#docs-list")).toContainText(`by ${ann}`);
+  await b.click("#docs-close");
+  // Removing Ben from the team takes the document away again.
+  await a.getByRole("button", { name: `− ${ben}` }).click();
+  await expect(a.locator("#teams-list")).toContainText("no members yet");
+  await b.click("#btn-docs");
+  await expect(b.locator("#docs-list")).not.toContainText(`by ${ann}`);
+});
