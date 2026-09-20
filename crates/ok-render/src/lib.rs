@@ -283,6 +283,36 @@ pub fn render(items: &[Item], options: &Options) -> Result<Image, String> {
 }
 
 /// Regenerates a tab and renders its bodies to a PNG.
+/// The tab's bodies seen from `view` as a DXF at 1:1 (millimetres, view
+/// coordinates: right and up on the page), hidden lines dashed when asked.
+pub fn view_dxf(
+    doc: &mut Document,
+    tab: TabId,
+    view: View,
+    hidden: bool,
+) -> Result<String, String> {
+    let kind = doc.tab(tab).map(|t| t.kind_name()).ok_or("no such tab")?;
+    let bodies = if kind == "assembly" {
+        doc.regenerate_assembly(tab)
+            .map_err(|e| e.to_string())?
+            .bodies
+    } else {
+        doc.regenerate_studio(tab, None)
+            .map_err(|e| e.to_string())?
+            .bodies
+    };
+    let solids: Vec<&ok_brep::Solid> = bodies.iter().map(|b| &b.solid).collect();
+    let (eye, up) = view.frame();
+    let lines = ok_brep::project_view(
+        &solids,
+        ok_brep::View {
+            dir: eye * -1.0,
+            up,
+        },
+    );
+    Ok(ok_brep::view_dxf(&lines, hidden))
+}
+
 pub fn screenshot(doc: &mut Document, tab: TabId, options: &Options) -> Result<Vec<u8>, String> {
     let kind = doc.tab(tab).map(|t| t.kind_name()).ok_or("no such tab")?;
     let bodies = if kind == "assembly" {

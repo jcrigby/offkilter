@@ -142,3 +142,61 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
     }
     assert_eq!(checked, PRINTED.len());
 }
+
+/// The LINE entities of a DXF as endpoint pairs.
+fn dxf_lines(text: &str) -> Vec<[Vec3; 2]> {
+    let toks: Vec<&str> = text.lines().map(str::trim).collect();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i + 1 < toks.len() {
+        if toks[i] == "0" && toks[i + 1] == "LINE" {
+            let mut vals = std::collections::HashMap::new();
+            let mut j = i + 2;
+            while j + 1 < toks.len() && toks[j] != "0" {
+                if let Ok(v) = toks[j + 1].parse::<f64>() {
+                    vals.insert(toks[j], v);
+                }
+                j += 2;
+            }
+            out.push([
+                Vec3::new(vals["10"], vals["20"], 0.0),
+                Vec3::new(vals["11"], vals["21"], 0.0),
+            ]);
+            i = j;
+        } else {
+            i += 1;
+        }
+    }
+    out
+}
+
+/// The shop instructions say to print the arm template full size: the
+/// plan view of the arm, exported as DXF, holds every line of the
+/// template the project shipped with.
+#[test]
+fn the_arm_plan_view_is_the_shop_template() {
+    let dir = example_dir();
+    let json = std::fs::read_to_string(dir.join("out/router_lift.okpart")).unwrap();
+    let mut doc = ok_model::Document::from_json(&json).unwrap();
+    let arm = doc.tabs.iter().find(|t| t.name() == "Arm").unwrap().id;
+    let dxf = ok_render::view_dxf(&mut doc, arm, ok_render::View::Top, false).unwrap();
+    let got = dxf_lines(&dxf);
+    let reference =
+        dxf_lines(&std::fs::read_to_string(dir.join("reference/arm_template.dxf")).unwrap());
+    assert_eq!(reference.len(), 6);
+    for [a, b] in &reference {
+        assert!(
+            got.iter()
+                .any(|[c, d]| (a.distance(*c) < 1e-6 && b.distance(*d) < 1e-6)
+                    || (a.distance(*d) < 1e-6 && b.distance(*c) < 1e-6)),
+            "template line {a:?} to {b:?} is not in the plan view"
+        );
+    }
+    // The dowel holes and screw pilots are in the underside: nothing
+    // round is visible from above, and they show dashed when hidden
+    // lines are asked for.
+    assert_eq!(dxf.matches("\nCIRCLE\n").count(), 0, "{dxf}");
+    let with_hidden = ok_render::view_dxf(&mut doc, arm, ok_render::View::Top, true).unwrap();
+    let hidden_circles = with_hidden.matches("CIRCLE\n8\nHIDDEN\n").count();
+    assert!(hidden_circles >= 4, "{hidden_circles} hidden circles");
+}

@@ -82,6 +82,12 @@ order they came up. They are the roadmap this example feeds.
   needed two things the tool did not give: the rule for a connector's
   frame (now in `docs/OPS.md`) and where the assembly actually put each
   instance (now `placed` on every instance in the report).
+- The instructions say to print `arm_template.dxf` full size and cut the
+  arm to it, and drawings are the client's: there was no way to ask the
+  tool for one. `export {format: "dxf", view: "top"}` now writes a view's
+  edges at 1:1; the build exports the arm's plan
+  (`out/arm_template.dxf`) and checks that the template's six lines are
+  in it, as does the regression test.
 - The first run had the carriage 0.59 mm off along the bolts: a cylinder
   connector's origin was the average of its facets' vertices, which the
   carriage's nut traps had shifted by cutting some facets, while the
