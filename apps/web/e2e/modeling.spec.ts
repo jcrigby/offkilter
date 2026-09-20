@@ -239,7 +239,7 @@ test("use tool projects a face outline into a sketch", async ({ page }) => {
 });
 
 test("sketch trim, offset and mirror", async ({ page }) => {
-  page.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.message().startsWith("Fillet") ? "1.5" : "-1") : d.defaultValue()));
+  page.on("dialog", (d) => d.accept(d.type() === "prompt" ? (d.message().startsWith("Fillet") ? "1.5" : d.message().startsWith("Chamfer") ? "1" : "-1") : d.defaultValue()));
   await page.goto("/");
   await ready(page);
   await page.click("#btn-new");
@@ -324,6 +324,31 @@ test("sketch trim, offset and mirror", async ({ page }) => {
   expect(after.arcs).toBe(arcsBefore + 1);
   expect(after.tangents).toBeGreaterThanOrEqual(2);
   expect(after.status).not.toBe("inconsistent");
+  // Chamfer: the left and top lines meet at the top-left corner; cutting
+  // it adds a line held by its length.
+  const linesBefore = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const id = app.sketcher.sketchId;
+    const sk = app.summary.features.find((f: any) => f.id === id).kind.sketch;
+    const pos = (pid: number) => sk.entities.find((e: any) => e.id === pid).pos;
+    const lines = sk.entities.filter((e: any) => e.type === "line");
+    const left = lines.find((l: any) => pos(l.start).x === 0 && pos(l.end).x === 0);
+    const topLine = lines.find((l: any) => pos(l.start).y === 6 && pos(l.end).y === 6 && Math.min(pos(l.start).x, pos(l.end).x) >= 0 && Math.max(pos(l.start).x, pos(l.end).x) <= 10);
+    app.sketcher.selection = new Set([left.id, topLine.id]);
+    app.selectionChanged();
+    return lines.length as number;
+  });
+  await page.getByRole("button", { name: "Chamfer…" }).click();
+  await page.waitForTimeout(200);
+  const cut = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const id = app.sketcher.sketchId;
+    const sk = app.summary.features.find((f: any) => f.id === id).kind.sketch;
+    return { lines: sk.entities.filter((e: any) => e.type === "line").length, lengths: sk.constraints.filter((c: any) => c.type === "length").length, status: app.summary.sketches[String(id)].solve.status };
+  });
+  expect(cut.lines).toBe(linesBefore + 1);
+  expect(cut.lengths).toBeGreaterThanOrEqual(1);
+  expect(cut.status).not.toBe("inconsistent");
 });
 
 test("assembly tab: insert two instances and mate them face to face", async ({ page }) => {

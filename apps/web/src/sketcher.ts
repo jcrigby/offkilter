@@ -172,6 +172,27 @@ export class Sketcher implements PointerHandler {
     this.host.regenerate();
   }
 
+  /** Chamfer the corner between the two selected lines (K): a prompt takes the distance back along each. */
+  chamferSelection(): void {
+    const pair = this.filletCandidates();
+    if (!pair) {
+      this.host.setStatus("Select two lines that meet at a corner to chamfer it.");
+      return;
+    }
+    const text = prompt("Chamfer distance", "1");
+    if (text === null) return;
+    const distance = Number(text);
+    if (!Number.isFinite(distance) || distance <= 0) return;
+    this.host.snapshot();
+    try {
+      const r = this.sketchOp({ type: "chamfer", a: pair[0], b: pair[1], distance });
+      this.selection = new Set(r.entities);
+    } catch (err) {
+      this.host.setStatus(`error: ${(err as Error).message}`);
+    }
+    this.host.regenerate();
+  }
+
   /** Pattern the selection (Y): a prompt takes "linear COUNT,DX,DY" or "circular COUNT,CX,CY,ANGLE". */
   patternSelection(): void {
     const entities = [...this.selection];

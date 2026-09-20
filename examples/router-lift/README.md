@@ -55,8 +55,8 @@ order they came up. They are the roadmap this example feeds.
 - A cone-bottomed socket, a countersink and a chamfered dowel were all
   revolved profiles at first. The hole feature now takes a `countersink`
   (`{diameter, angle}`), which the chuck's screws and the round post's
-  socket entry use; the chamfered dowel is still a revolved profile,
-  where a chamfer on the profile would say it in one op.
+  socket entry use, and the sketch has a `chamfer` op (a line across a
+  corner, next to its `fillet`), which the dowel's profile uses.
 - The slotted post's socket is a hull of two cones in OpenSCAD; here it
   is two revolved cones and the section extruded between them. A slot
   with a conical entry has no single feature.

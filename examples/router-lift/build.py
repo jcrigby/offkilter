@@ -94,7 +94,7 @@ class Part:
         if "ERROR:" in text:
             failed = text.split("ERROR:", 1)[1].splitlines()[0].strip()
             raise RuntimeError(f"{self.name}: {failed}")
-        ids = []
+        ids, self.entities = [], []
         for line in text.splitlines():
             m = re.match(r"op \d+: ok(?: \((.*)\))?", line)
             if not m:
@@ -102,6 +102,8 @@ class Part:
             made = m.group(1) or ""
             f = re.search(r"feature (\d+)", made)
             ids.append(int(f.group(1)) if f else None)
+            e = re.search(r"entities ([\d,]+)", made)
+            self.entities.append([int(x) for x in e.group(1).split(",")] if e else [])
         return ids
 
     def feature(self, op):
@@ -131,11 +133,13 @@ class Part:
         self.draw(s, {"type": "add_point", "pos": v2(*p)})
 
     def polygon(self, s, pts):
+        """Lines around `pts`; returns their entity ids."""
         ops = []
         for i, a in enumerate(pts):
             b = pts[(i + 1) % len(pts)]
             ops.append({"type": "sketch", "id": s, "op": {"type": "add_line", "a": v2(*a), "b": v2(*b)}})
         self.apply(*ops)
+        return [e[0] for e in self.entities]
 
     def hexagon(self, s, c, circumradius):
         """A hexagon with a vertex along the sketch's y axis (an OpenSCAD
@@ -610,9 +614,11 @@ def router_body(p):
 
 
 def reg_pin(p):
-    """A 10 mm dowel, 40 long, one end chamfered: a revolved profile."""
+    """A 10 mm dowel, 40 long, one end chamfered 2 mm: a revolved
+    profile, the chamfer a sketch op on the profile's corner."""
     s = p.sketch("front", 0.0, "profile")
-    p.polygon(s, [(0.0, 0.0), (5.0, 0.0), (5.0, 38.0), (3.0, 40.0), (0.0, 40.0)])
+    side, end = p.polygon(s, [(0.0, 0.0), (5.0, 0.0), (5.0, 40.0), (0.0, 40.0)])[1:3]
+    p.draw(s, {"type": "chamfer", "a": side, "b": end, "distance": 2.0})
     p.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "new", "name": "dowel"})
 
 
