@@ -54,7 +54,8 @@ works today, all in the browser:
 - Agents: `ok-mcp` is a Model Context Protocol server that lets a
   language model build and edit documents through the same ops the
   client uses, live in your browser or on a local file, with a report
-  of features, faces and errors after every step; see
+  of features, faces and errors after every step and a rendered
+  screenshot of any view (sectioned if wanted) to check its work; see
   [docs/MCP.md](docs/MCP.md) and the op reference in
   [docs/OPS.md](docs/OPS.md).
 

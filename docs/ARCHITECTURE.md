@@ -681,6 +681,28 @@ directly on a local file; its `apply` tool wraps bare ops in their tab
 envelope and follows every batch with the report, and its reference
 resource is docs/OPS.md.
 
+### Headless renders (`ok-render`)
+
+`ok_render::screenshot(doc, tab, options)` regenerates a tab and
+rasterises its bodies to a PNG without a GPU or browser: an orthographic
+camera fitted to the bodies' bounds (the client's `top`, `front`,
+`right` and `iso` directions, or any eye vector), a depth buffer over the
+display tessellation with Lambert shading from a light over the viewer's
+shoulder, the `display_edges` drawn on top with a small depth bias, an
+outline pass that darkens pixels where the nearest body changes or the
+depth jumps (so cylinder rims and overlaps read without an edge
+between facets), and an axis triad. A section (`axis:offset[:flip]`,
+the client's clip) is applied by splitting each solid with
+`ok_brep::split` and drawing the kept half, so the cut faces come back
+as real faces and are painted with diagonal hatching rather than showing
+a hollow interior; the camera still fits the uncut bounds so the picture
+does not jump as the plane moves. The PNG encoder is forty lines over
+`miniz_oxide` (8-bit RGB, filter 0), with a matching decoder for tests.
+The server serves it at `GET /api/docs/:id/screenshot` and `ok-mcp`
+returns it as MCP image content from its `screenshot` tool (a base64
+encoder is inlined rather than pulled in). The crate is not part of the
+wasm build; the browser has its own renderer.
+
 ## Performance
 
 `scripts/bench.sh` prints regeneration timings (release build) for the demo

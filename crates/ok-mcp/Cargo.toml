@@ -13,6 +13,7 @@ path = "src/main.rs"
 ok-model = { workspace = true }
 ok-mesh = { workspace = true }
 ok-step = { workspace = true }
+ok-render = { workspace = true }
 ok-brep = { workspace = true }
 ok-math = { workspace = true }
 serde = { workspace = true }

@@ -22,7 +22,10 @@ and instance with the id or reference that names it.
 4. Keep going: holes, fillets, patterns, more sketches on faces. Check
    `errors` in the report after each step; a failing op names its index
    and leaves the earlier ops applied.
-5. Export STL or STEP, or open the document in the browser (the server
+5. Look at it: `GET /api/docs/<id>/screenshot?view=iso` (or the MCP
+   `screenshot` tool) renders the tab to a PNG; `view=top|front|right|iso`
+   or `x,y,z`, `section=z:10` cuts it open.
+6. Export STL or STEP, or open the document in the browser (the server
    relays every op live to whoever has it open).
 
 ## Op envelopes

@@ -129,6 +129,7 @@ pub fn router(
         .route("/docs/{id}/export/step", get(export_step))
         .route("/docs/{id}/ops", post(apply_ops))
         .route("/docs/{id}/report", get(report))
+        .route("/docs/{id}/screenshot", get(screenshot))
         .route(
             "/docs/{id}/thumbnail",
             get(get_thumbnail).put(put_thumbnail),
@@ -847,6 +848,82 @@ async fn report(
         Ok(Err(e)) => (StatusCode::BAD_REQUEST, e).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
+}
+
+#[derive(Deserialize)]
+struct ScreenshotQuery {
+    /// Tab id; the first tab when absent.
+    tab: Option<u32>,
+    /// `top`, `front`, `right`, `iso` (default) or an `x,y,z` eye direction.
+    view: Option<String>,
+    /// `axis:offset[:flip]`, the client's section view (e.g. `z:10`).
+    section: Option<String>,
+    width: Option<usize>,
+    height: Option<usize>,
+    /// Draw display edges and silhouettes (default true).
+    edges: Option<bool>,
+}
+
+/// A PNG of a tab from a chosen view, rendered on the server without a
+/// browser, so scripts and models can look at what they built.
+async fn screenshot(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    axum::extract::Query(q): axum::extract::Query<ScreenshotQuery>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(json) = current_json(&hub, &id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let options = match screenshot_options(&q) {
+        Ok(o) => o,
+        Err(e) => return (StatusCode::BAD_REQUEST, e).into_response(),
+    };
+    let rendered = tokio::task::spawn_blocking(move || -> Result<Vec<u8>, String> {
+        let mut doc = ok_model::Document::from_json(&json).map_err(|e| e.to_string())?;
+        let tab = match q.tab {
+            Some(t) => ok_model::TabId(t),
+            None => doc
+                .tabs
+                .first()
+                .map(|t| t.id)
+                .ok_or("document has no tabs")?,
+        };
+        ok_render::screenshot(&mut doc, tab, &options)
+    })
+    .await;
+    match rendered {
+        Ok(Ok(png)) => (
+            [
+                (header::CONTENT_TYPE, "image/png".to_string()),
+                (header::CACHE_CONTROL, "no-cache".to_string()),
+            ],
+            png,
+        )
+            .into_response(),
+        Ok(Err(e)) => (StatusCode::BAD_REQUEST, e).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+fn screenshot_options(q: &ScreenshotQuery) -> Result<ok_render::Options, String> {
+    let defaults = ok_render::Options::default();
+    Ok(ok_render::Options {
+        width: q.width.unwrap_or(defaults.width),
+        height: q.height.unwrap_or(defaults.height),
+        view: ok_render::View::parse(q.view.as_deref().unwrap_or(""))?,
+        section: q
+            .section
+            .as_deref()
+            .filter(|s| !s.is_empty())
+            .map(ok_render::Section::parse)
+            .transpose()?,
+        edges: q.edges.unwrap_or(true),
+        ..defaults
+    })
 }
 
 /// Largest preview image accepted (PNG snapshots of the viewport).
@@ -1589,6 +1666,28 @@ mod tests {
         assert_eq!(bytes.len(), 84 + 50 * count);
         let (status, _, _) =
             call_bytes(&app, &format!("/api/docs/{id}/export/stl?tab=9"), None).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        // A rendered view of the tab, without a browser.
+        let (status, headers, bytes) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/screenshot?tab=1&view=front&width=160&height=120&section=z:5"),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(headers[header::CONTENT_TYPE], "image/png");
+        let image = ok_render::from_png(&bytes).unwrap();
+        assert_eq!((image.width, image.height), (160, 120));
+        let (status, _, bytes) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/screenshot?view=behind"),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert!(String::from_utf8_lossy(&bytes).contains("unknown view"));
+        let (status, _, _) =
+            call_bytes(&app, &format!("/api/docs/{id}/screenshot?width=5000"), None).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
         // A PNG preview can be stored and read back; anything else is refused.
         let png = b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR".to_vec();

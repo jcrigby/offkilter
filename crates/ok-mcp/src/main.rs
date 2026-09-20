@@ -11,8 +11,8 @@
 //!   embedded; no server needed.
 //!
 //! Tools: `offkilter_reference` (the op catalogue), `list_documents`,
-//! `create_document`, `open_document`, `report`, `apply`, `export`,
-//! `document_url`. See docs/MCP.md.
+//! `create_document`, `open_document`, `report`, `apply`, `screenshot`,
+//! `export`, `document_url`. See docs/MCP.md.
 
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};
@@ -370,11 +370,108 @@ impl Backend {
         }
     }
 
+    /// A PNG of the tab, rendered by the server or by the embedded kernel.
+    fn screenshot(
+        &self,
+        id: &str,
+        tab: Option<u32>,
+        options: &ok_render::Options,
+    ) -> Result<Vec<u8>, String> {
+        match self {
+            Backend::Server { .. } => {
+                let mut query = vec![
+                    format!("width={}", options.width),
+                    format!("height={}", options.height),
+                    format!("edges={}", options.edges),
+                ];
+                if let Some(t) = tab {
+                    query.push(format!("tab={t}"));
+                }
+                query.push(format!("view={}", view_name(options.view)));
+                if let Some(s) = &options.section {
+                    query.push(format!("section={}", section_name(s)));
+                }
+                let (s, bytes) =
+                    self.request_bytes(&format!("/docs/{id}/screenshot?{}", query.join("&")))?;
+                if (200..300).contains(&s) {
+                    Ok(bytes)
+                } else {
+                    Err(format!(
+                        "server said {s}: {}",
+                        String::from_utf8_lossy(&bytes)
+                    ))
+                }
+            }
+            Backend::Local { doc, .. } => {
+                let mut doc = doc.clone();
+                let tab = pick_tab(&doc, tab)?;
+                ok_render::screenshot(&mut doc, tab, options)
+            }
+        }
+    }
+
     fn url(&self, id: &str) -> Option<String> {
         match self {
             Backend::Server { base, .. } => Some(format!("{base}/?doc={id}")),
             Backend::Local { .. } => None,
         }
+    }
+}
+
+fn view_name(view: ok_render::View) -> String {
+    match view {
+        ok_render::View::Top => "top".into(),
+        ok_render::View::Front => "front".into(),
+        ok_render::View::Right => "right".into(),
+        ok_render::View::Iso => "iso".into(),
+        ok_render::View::Direction(d) => format!("{},{},{}", d.x, d.y, d.z),
+    }
+}
+
+fn section_name(s: &ok_render::Section) -> String {
+    let axis = if s.axis.x != 0.0 {
+        "x"
+    } else if s.axis.y != 0.0 {
+        "y"
+    } else {
+        "z"
+    };
+    format!("{axis}:{}{}", s.offset, if s.flip { ":flip" } else { "" })
+}
+
+/// Standard base64 (RFC 4648) with padding, for image content.
+fn base64(bytes: &[u8]) -> String {
+    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let n = (chunk[0] as u32) << 16
+            | (chunk.get(1).copied().unwrap_or(0) as u32) << 8
+            | chunk.get(2).copied().unwrap_or(0) as u32;
+        out.push(TABLE[(n >> 18) as usize & 63] as char);
+        out.push(TABLE[(n >> 12) as usize & 63] as char);
+        out.push(if chunk.len() > 1 {
+            TABLE[(n >> 6) as usize & 63] as char
+        } else {
+            '='
+        });
+        out.push(if chunk.len() > 2 {
+            TABLE[n as usize & 63] as char
+        } else {
+            '='
+        });
+    }
+    out
+}
+
+/// What a tool call produced: text, or an image with a caption.
+enum ToolOut {
+    Text(String),
+    Image { png: Vec<u8>, caption: String },
+}
+
+impl From<String> for ToolOut {
+    fn from(text: String) -> Self {
+        ToolOut::Text(text)
     }
 }
 
@@ -499,7 +596,13 @@ impl Server {
                 let name = params.get("name").and_then(|n| n.as_str()).unwrap_or("");
                 let args = params.get("arguments").cloned().unwrap_or(json!({}));
                 Ok(match self.call_tool(name, &args) {
-                    Ok(text) => json!({ "content": [{ "type": "text", "text": text }] }),
+                    Ok(ToolOut::Text(text)) => {
+                        json!({ "content": [{ "type": "text", "text": text }] })
+                    }
+                    Ok(ToolOut::Image { png, caption }) => json!({ "content": [
+                        { "type": "image", "data": base64(&png), "mimeType": "image/png" },
+                        { "type": "text", "text": caption }
+                    ] }),
                     Err(e) => {
                         json!({ "content": [{ "type": "text", "text": e }], "isError": true })
                     }
@@ -536,9 +639,50 @@ impl Server {
             })
     }
 
-    fn call_tool(&mut self, name: &str, args: &Value) -> Result<String, String> {
+    fn call_tool(&mut self, name: &str, args: &Value) -> Result<ToolOut, String> {
+        self.call_tool_inner(name, args)
+    }
+
+    fn call_tool_inner(&mut self, name: &str, args: &Value) -> Result<ToolOut, String> {
         let tab = args.get("tab").and_then(|t| t.as_u64()).map(|t| t as u32);
-        match name {
+        if name == "screenshot" {
+            let id = self.doc_id(args)?;
+            let text = |key: &str| args.get(key).and_then(|v| v.as_str()).unwrap_or("");
+            let size = |key: &str, default: usize| {
+                args.get(key)
+                    .and_then(|v| v.as_u64())
+                    .map(|v| v as usize)
+                    .unwrap_or(default)
+            };
+            let options = ok_render::Options {
+                width: size("width", 640),
+                height: size("height", 480),
+                view: ok_render::View::parse(text("view"))?,
+                section: match text("section") {
+                    "" => None,
+                    s => Some(ok_render::Section::parse(s)?),
+                },
+                ..ok_render::Options::default()
+            };
+            let png = self.backend.screenshot(&id, tab, &options)?;
+            let mut caption = format!(
+                "{} view of the tab, {}x{}{}",
+                view_name(options.view),
+                options.width,
+                options.height,
+                options
+                    .section
+                    .as_ref()
+                    .map(|s| format!(", sectioned at {}", section_name(s)))
+                    .unwrap_or_default()
+            );
+            if let Some(path) = args.get("path").and_then(|p| p.as_str()) {
+                std::fs::write(path, &png).map_err(|e| format!("could not write {path}: {e}"))?;
+                caption.push_str(&format!("; written to {path}"));
+            }
+            return Ok(ToolOut::Image { png, caption });
+        }
+        Ok(ToolOut::Text(match name {
             "offkilter_reference" => Ok(REFERENCE.to_string()),
             "list_documents" => {
                 let list = self.backend.list()?;
@@ -684,7 +828,7 @@ impl Server {
                     .ok_or_else(|| "no server: the document is a local file".into())
             }
             other => Err(format!("unknown tool {other}")),
-        }
+        }?))
     }
 }
 
@@ -910,6 +1054,11 @@ fn tool_list() -> Value {
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "ops": { "type": "array", "items": { "type": "object" } } }, "required": ["ops"] }
         },
         {
+            "name": "screenshot",
+            "description": "A PNG of the tab's bodies from a standard view (top, front, right, iso) or an x,y,z eye direction, rendered without a browser; optionally sectioned by an axis-aligned plane (section 'z:10' keeps z >= 10, 'z:10:flip' the other side, cut faces hatched). Look at it after building something to check it is what was meant. width and height default to 640x480; path also writes the file.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "view": { "type": "string" }, "section": { "type": "string" }, "width": { "type": "integer" }, "height": { "type": "integer" }, "path": { "type": "string" } } }
+        },
+        {
             "name": "export",
             "description": "Writes a tab's bodies as STL or STEP to a file path.",
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step"] }, "path": { "type": "string" } }, "required": ["format", "path"] }
@@ -1041,6 +1190,28 @@ mod tests {
         );
         assert!(!err && exported.starts_with("wrote "), "{exported}");
         assert!(std::fs::metadata(&stl).unwrap().len() > 84);
+        let shot = dir.join("shot.png");
+        let r = call(
+            &mut server,
+            7,
+            "tools/call",
+            json!({ "name": "screenshot", "arguments": { "view": "iso", "section": "z:2", "width": 96, "height": 64, "path": shot.display().to_string() } }),
+        );
+        let content = r["result"]["content"].as_array().unwrap();
+        assert_eq!(content[0]["type"], "image");
+        assert_eq!(content[0]["mimeType"], "image/png");
+        assert!(
+            content[1]["text"].as_str().unwrap().contains("iso view"),
+            "{}",
+            r
+        );
+        let png = std::fs::read(&shot).unwrap();
+        let image = ok_render::from_png(&png).unwrap();
+        assert_eq!((image.width, image.height), (96, 64));
+        assert_eq!(base64(&png[..4]), "iVBORw==");
+        assert_eq!(base64(&png), content[0]["data"].as_str().unwrap());
+        let (err, text) = tool_text(&mut server, "screenshot", json!({ "view": "sideways" }));
+        assert!(err && text.contains("unknown view"), "{text}");
         let step = dir.join("out.step");
         let (err, _) = tool_text(
             &mut server,

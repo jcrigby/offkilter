@@ -56,11 +56,13 @@ server configuration:
 | `open_document {doc}` / `list_documents` | Work on an existing document. |
 | `apply {ops, doc?, tab?}` | Applies ops in order. Bare studio, sketch and assembly ops are wrapped for the tab. Stops at the first failure (earlier ops stay), returns the ids each op made, then the tab's report so mistakes show at once. |
 | `report {doc?, tab?, detail?}` | Features with ids, kinds and errors; sketches with solver status, degrees of freedom, closed regions and entity ids; bodies with volume, bounds and every face's reference (`{feature, local, part}`), plus cylinders (holes and bosses) with their axes. `detail: "full"` returns the raw JSON. |
+| `screenshot {view?, section?, width?, height?, path?, doc?, tab?}` | A PNG of the tab's bodies, rendered without a browser: `view` is `top`, `front`, `right`, `iso` (default) or an `x,y,z` eye direction; `section` is `axis:offset[:flip]` (`z:10` keeps z ≥ 10, cut faces hatched); 640×480 unless sized; `path` also writes the file. Returned as MCP image content, so a model that can see images checks its work. |
 | `export {format, path, doc?, tab?}` | Writes STL or STEP. |
 | `document_url {doc?}` | Where to look. |
 
 The same functions are plain HTTP for scripts that are not models:
-`POST /api/docs/:id/ops {ops: [...]}` and `GET /api/docs/:id/report?tab=N`.
+`POST /api/docs/:id/ops {ops: [...]}`, `GET /api/docs/:id/report?tab=N` and
+`GET /api/docs/:id/screenshot?tab=N&view=iso&section=z:10&width=800&height=600`.
 
 ## How a session goes
 
@@ -78,8 +80,10 @@ a feature, or finish the last ten yards yourself; the model's next
 ## Limits
 
 Ops are the whole surface, so anything the web client can do, a model
-can do. What a model cannot do is see the screen: it reasons from the
-report (volumes, bounds, face normals and centroids, sketch solver
-state), which is usually enough to notice a hole that landed in the
-wrong place. Screenshots of the browser, when the client offers them,
-fill that gap.
+can do. Sight comes from `screenshot`: a server-side render of the
+tessellation from a standard view, or sectioned to look inside. A model
+that cannot take images still reasons from the report (volumes, bounds,
+face normals and centroids, sketch solver state), which is usually
+enough to notice a hole that landed in the wrong place. The render is
+flat-shaded facets, not the browser's shaded viewport, and it does not
+show sketches, dimensions or mate frames.

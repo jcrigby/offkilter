@@ -11,6 +11,7 @@ ok-brep = { workspace = true }
 ok-step = { workspace = true }
 ok-math = { workspace = true }
 ok-mesh = { workspace = true }
+ok-render = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 axum = { version = "0.8", features = ["ws"] }
