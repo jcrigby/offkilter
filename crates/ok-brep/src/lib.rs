@@ -735,17 +735,38 @@ impl Solid {
                         continue;
                     }
                     let mut on_edge: Vec<(f64, u32)> = Vec::new();
+                    let tol2 = tol * tol;
+                    let (lo, hi) = (
+                        Vec3::new(
+                            pa.x.min(pb.x) - tol,
+                            pa.y.min(pb.y) - tol,
+                            pa.z.min(pb.z) - tol,
+                        ),
+                        Vec3::new(
+                            pa.x.max(pb.x) + tol,
+                            pa.y.max(pb.y) + tol,
+                            pa.z.max(pb.z) + tol,
+                        ),
+                    );
                     for c in grid.candidates_near_segment(pa, pb) {
                         if c == a || c == b {
                             continue;
                         }
                         let pc = verts[c as usize];
+                        if pc.x < lo.x
+                            || pc.x > hi.x
+                            || pc.y < lo.y
+                            || pc.y > hi.y
+                            || pc.z < lo.z
+                            || pc.z > hi.z
+                        {
+                            continue;
+                        }
                         let t = (pc - pa).dot(d) / len2;
                         if t <= 0.0 || t >= 1.0 {
                             continue;
                         }
-                        let dist = (pc - (pa + d * t)).length();
-                        if dist <= tol {
+                        if (pc - (pa + d * t)).length_squared() <= tol2 {
                             on_edge.push((t, c));
                         }
                     }
@@ -1135,37 +1156,63 @@ pub(crate) fn bounds_overlap(a: (Vec3, Vec3), b: (Vec3, Vec3), tol: f64) -> bool
         && b.0.z <= a.1.z + tol
 }
 
-/// Uniform grid over points for tolerance queries.
+/// Vertices bucketed into a dense grid of cells, for finding the points
+/// near a segment without testing every vertex.
 struct PointGrid {
     cell: f64,
-    cells: HashMap<(i64, i64, i64), Vec<u32>>,
+    lo: Vec3,
+    dims: [i64; 3],
+    /// Vertex indices per cell, laid out x-major.
+    cells: Vec<Vec<u32>>,
+    all: usize,
 }
 
 impl PointGrid {
     /// Cells are sized to the model (about 1/32 of its extent, never
     /// below 64 tolerances) so a query along an edge touches a bounded
-    /// number of cells however long the edge is.
+    /// number of cells however long the edge is; the grid is dense, so a
+    /// cell lookup is index arithmetic.
     fn new(points: &[Vec3], tol: f64) -> Self {
-        let extent = bounds_of(points.iter().copied())
-            .map(|(lo, hi)| (hi - lo).length())
-            .unwrap_or(1.0);
+        let (lo, hi) = bounds_of(points.iter().copied()).unwrap_or((Vec3::ZERO, Vec3::ZERO));
+        let extent = (hi - lo).length();
         let cell = (tol * 64.0).max(extent / 32.0).max(1e-3);
+        let dim = |a: f64, b: f64| (((b - a) / cell).floor() as i64 + 1).max(1);
+        let dims = [dim(lo.x, hi.x), dim(lo.y, hi.y), dim(lo.z, hi.z)];
         let mut g = PointGrid {
             cell,
-            cells: HashMap::new(),
+            lo,
+            dims,
+            cells: vec![Vec::new(); (dims[0] * dims[1] * dims[2]) as usize],
+            all: points.len(),
         };
         for (i, p) in points.iter().enumerate() {
-            g.cells.entry(g.key(*p)).or_default().push(i as u32);
+            let k = g.key(*p);
+            if let Some(slot) = g.index(k) {
+                g.cells[slot].push(i as u32);
+            }
         }
         g
     }
 
     fn key(&self, p: Vec3) -> (i64, i64, i64) {
         (
-            (p.x / self.cell).floor() as i64,
-            (p.y / self.cell).floor() as i64,
-            (p.z / self.cell).floor() as i64,
+            ((p.x - self.lo.x) / self.cell).floor() as i64,
+            ((p.y - self.lo.y) / self.cell).floor() as i64,
+            ((p.z - self.lo.z) / self.cell).floor() as i64,
         )
+    }
+
+    fn index(&self, k: (i64, i64, i64)) -> Option<usize> {
+        if k.0 < 0
+            || k.1 < 0
+            || k.2 < 0
+            || k.0 >= self.dims[0]
+            || k.1 >= self.dims[1]
+            || k.2 >= self.dims[2]
+        {
+            return None;
+        }
+        Some(((k.0 * self.dims[1] + k.1) * self.dims[2] + k.2) as usize)
     }
 
     /// Points in the cells the segment passes through, with a one-cell
@@ -1173,26 +1220,37 @@ impl PointGrid {
     /// included (and some further away, which callers filter).
     fn candidates_near_segment(&self, a: Vec3, b: Vec3) -> Vec<u32> {
         if self.cells.len() <= 8 {
-            return self.cells.values().flatten().copied().collect();
+            return (0..self.all as u32).collect();
         }
         let steps = ((b - a).length() / self.cell).ceil().max(1.0) as usize;
-        let mut seen: std::collections::HashSet<(i64, i64, i64)> = std::collections::HashSet::new();
         let mut out = Vec::new();
+        let mut last: Option<(i64, i64, i64)> = None;
         for i in 0..=steps {
             let p = a + (b - a) * (i as f64 / steps as f64);
             let k = self.key(p);
+            if last == Some(k) {
+                continue;
+            }
             for dx in -1..=1 {
                 for dy in -1..=1 {
                     for dz in -1..=1 {
                         let key = (k.0 + dx, k.1 + dy, k.2 + dz);
-                        if seen.insert(key) {
-                            if let Some(v) = self.cells.get(&key) {
-                                out.extend_from_slice(v);
+                        // Cells already gathered from the previous sample are skipped.
+                        if let Some(l) = last {
+                            if (key.0 - l.0).abs() <= 1
+                                && (key.1 - l.1).abs() <= 1
+                                && (key.2 - l.2).abs() <= 1
+                            {
+                                continue;
                             }
+                        }
+                        if let Some(slot) = self.index(key) {
+                            out.extend_from_slice(&self.cells[slot]);
                         }
                     }
                 }
             }
+            last = Some(k);
         }
         out
     }

@@ -667,14 +667,19 @@ the feature meanwhile) is skipped with a status message.
 
 `scripts/bench.sh` prints regeneration timings (release build) for the demo
 plate and a 4000-face cover (bosses, 24 holes, a shell), cold and with only
-the last feature edited. Booleans are the cost that scales: every face of
-one solid is classified against a cross-section of the other, so the
-section skips faces whose bounding box lies on one side of the plane
-(boxes are computed once per boolean), the overlay leaves out section
-loops clear of the face, and the assembly's T-junction grid is sized to
-the model so long edges touch a bounded number of cells. The wasm build
-runs `wasm-opt -O3` when binaryen is available (the web app's dev
-dependencies provide it).
+the last feature edited: about 11 ms and 0.9 s cold at the time of
+writing. Booleans are the cost that scales: every face of one solid is
+classified against a cross-section of the other, so the section skips
+faces whose bounding box lies on one side of the plane (boxes are
+computed once per boolean) and the overlay leaves out section loops
+clear of the face. Assembling the result was dominated by T-junction
+repair, which asks for the vertices near every edge; its point grid is a
+dense array of cells sized to the model (about 1/32 of the extent, never
+below 64 tolerances), so a query is index arithmetic along the edge
+rather than hashing, and consecutive samples skip the cells the previous
+one gathered. A finer grid is slower, not faster: the cost is cells
+visited, not candidates tested. The wasm build runs `wasm-opt -O3` when
+binaryen is available (the web app's dev dependencies provide it).
 
 ## Testing
 
