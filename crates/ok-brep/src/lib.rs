@@ -210,6 +210,56 @@ impl Solid {
         mesh.signed_volume()
     }
 
+    /// Whether `p` is inside the solid, by the winding number: the solid
+    /// angle every face subtends at `p`, summed over the fans of its loops
+    /// (signed, so holes and non-convex loops come out right), is 4π for a
+    /// point inside a closed shell and 0 outside; a point in a cavity gets
+    /// 0 from the cavity's inverted shell cancelling the outer one. Points
+    /// on the surface are undefined.
+    pub fn contains(&self, p: Vec3) -> bool {
+        let mut total = 0.0;
+        for f in &self.faces {
+            for l in &f.loops {
+                let a = self.vertices[l[0] as usize] - p;
+                for i in 1..l.len() - 1 {
+                    let b = self.vertices[l[i] as usize] - p;
+                    let c = self.vertices[l[i + 1] as usize] - p;
+                    total += solid_angle(a, b, c);
+                }
+            }
+        }
+        total > 2.0 * std::f64::consts::PI
+    }
+
+    /// Drops vertices no face uses, renumbering the rest.
+    pub fn remove_unused_vertices(&mut self) {
+        let mut used = vec![false; self.vertices.len()];
+        for f in &self.faces {
+            for &v in f.loops.iter().flatten() {
+                used[v as usize] = true;
+            }
+        }
+        if used.iter().all(|u| *u) {
+            return;
+        }
+        let mut map = vec![u32::MAX; self.vertices.len()];
+        let mut kept = Vec::with_capacity(self.vertices.len());
+        for (i, &u) in used.iter().enumerate() {
+            if u {
+                map[i] = kept.len() as u32;
+                kept.push(self.vertices[i]);
+            }
+        }
+        self.vertices = kept;
+        for f in &mut self.faces {
+            for l in &mut f.loops {
+                for v in l.iter_mut() {
+                    *v = map[*v as usize];
+                }
+            }
+        }
+    }
+
     /// Total surface area.
     pub fn surface_area(&self) -> f64 {
         let mesh = tessellate(self);
@@ -308,36 +358,46 @@ impl Solid {
         let mut merger = VertexMerger::new(tol);
         let mut faces = Vec::new();
         for p in polys {
-            let mut loops = Vec::new();
-            for l in &p.loops {
-                let mut ids: Vec<u32> = Vec::with_capacity(l.len());
-                for &v in l {
-                    let id = merger.insert(v);
-                    if ids.last() != Some(&id) {
-                        ids.push(id);
-                    }
-                }
-                while ids.len() > 1 && ids.first() == ids.last() {
-                    ids.pop();
-                }
-                if ids.len() >= 3 {
-                    loops.push(ids);
-                }
-            }
-            if !loops.is_empty() {
-                faces.push(Face {
-                    plane: p.plane,
-                    loops,
-                    surface: p.surface,
-                    origin: p.origin,
-                });
-            }
+            faces.extend(merger.weld(&p));
         }
-        let mut solid = Solid {
+        let solid = Solid {
             vertices: merger.points,
             faces,
             surfaces,
         };
+        Self::finish(solid, tol, max_gap, region)
+    }
+
+    /// Builds a solid from faces that already share a vertex array (the
+    /// faces a boolean left untouched) plus polygons welded into it by
+    /// `merger` (the fragments it made), then repairs and validates as
+    /// [`from_polygons_within`](Self::from_polygons_within) does. Vertices
+    /// nothing uses are dropped.
+    pub(crate) fn assemble_incremental(
+        merger: VertexMerger,
+        faces: Vec<Face>,
+        surfaces: Vec<Surface>,
+        tol: f64,
+        region: (Vec3, Vec3),
+    ) -> Result<Solid, BrepError> {
+        let solid = Solid {
+            vertices: merger.points,
+            faces,
+            surfaces,
+        };
+        let mut solid = Self::finish(solid, tol, None, Some(region))?;
+        solid.remove_unused_vertices();
+        Ok(solid)
+    }
+
+    /// The repair passes every assembled solid goes through, then
+    /// validation.
+    fn finish(
+        mut solid: Solid,
+        tol: f64,
+        max_gap: Option<f64>,
+        region: Option<(Vec3, Vec3)>,
+    ) -> Result<Solid, BrepError> {
         // Splitting an edge at a T-junction can expose a short edge or an
         // open vertex, and merging vertices can create a new T-junction,
         // so alternate until stable (two rounds in practice).
@@ -1139,6 +1199,9 @@ impl Solid {
                 }
             }
         }
+        if (0..n).all(|i| find(&mut parent, i) == find(&mut parent, 0)) {
+            return vec![self.clone()];
+        }
         let mut groups: HashMap<usize, Vec<Polygon>> = HashMap::default();
         let polys = self.polygons();
         for (i, p) in polys.into_iter().enumerate() {
@@ -1155,6 +1218,15 @@ impl Solid {
         });
         out
     }
+}
+
+/// Signed solid angle of the triangle `a b c` seen from the origin
+/// (Van Oosterom and Strackee).
+fn solid_angle(a: Vec3, b: Vec3, c: Vec3) -> f64 {
+    let (la, lb, lc) = (a.length(), b.length(), c.length());
+    let num = a.dot(b.cross(c));
+    let den = la * lb * lc + a.dot(b) * lc + b.dot(c) * la + c.dot(a) * lb;
+    2.0 * num.atan2(den)
 }
 
 pub(crate) fn flip_plane(p: &Plane) -> Plane {
@@ -1288,10 +1360,10 @@ impl PointGrid {
 }
 
 /// Merges points within a tolerance, keeping the first representative.
-struct VertexMerger {
+pub(crate) struct VertexMerger {
     tol: f64,
     cell: f64,
-    points: Vec<Vec3>,
+    pub(crate) points: Vec<Vec3>,
     cells: HashMap<(i64, i64, i64), Vec<u32>>,
 }
 
@@ -1303,6 +1375,57 @@ impl VertexMerger {
             points: Vec::new(),
             cells: HashMap::default(),
         }
+    }
+
+    /// A merger over an existing vertex array in which only the `seeds`
+    /// can be matched: new points near any other vertex stay distinct,
+    /// which is right when those vertices are known to be far from
+    /// anything being welded.
+    pub(crate) fn seeded(points: Vec<Vec3>, seeds: impl Iterator<Item = u32>, tol: f64) -> Self {
+        let mut m = Self {
+            tol,
+            cell: tol * 4.0,
+            points,
+            cells: HashMap::default(),
+        };
+        for id in seeds {
+            let k = m.key(m.points[id as usize]);
+            let ids = m.cells.entry(k).or_default();
+            if !ids.contains(&id) {
+                ids.push(id);
+            }
+        }
+        m
+    }
+
+    /// Welds a polygon's corners into the vertex array and returns it as a
+    /// face, or nothing when every loop collapses below three corners.
+    pub(crate) fn weld(&mut self, p: &Polygon) -> Option<Face> {
+        let mut loops = Vec::new();
+        for l in &p.loops {
+            let mut ids: Vec<u32> = Vec::with_capacity(l.len());
+            for &v in l {
+                let id = self.insert(v);
+                if ids.last() != Some(&id) {
+                    ids.push(id);
+                }
+            }
+            while ids.len() > 1 && ids.first() == ids.last() {
+                ids.pop();
+            }
+            if ids.len() >= 3 {
+                loops.push(ids);
+            }
+        }
+        if loops.is_empty() {
+            return None;
+        }
+        Some(Face {
+            plane: p.plane,
+            loops,
+            surface: p.surface,
+            origin: p.origin,
+        })
     }
 
     fn key(&self, p: Vec3) -> (i64, i64, i64) {

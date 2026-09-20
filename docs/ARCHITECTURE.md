@@ -706,9 +706,10 @@ wasm build; the browser has its own renderer.
 ## Performance
 
 `scripts/bench.sh` prints regeneration timings (release build) for the demo
-plate and a 4000-face cover (bosses, 24 holes, a shell), cold and with only
-the last feature edited: about 9 ms and 0.76 s cold at the time of
-writing (from 29 ms and 1.5 s before the profiling pass). Booleans are
+plate, the same plate with bosses and 24 holes (2000 faces), and that
+part shelled (a 4000-face cover), cold and with only the last feature
+edited: about 9 ms, 70 ms and 250 ms cold at the time of writing (from
+29 ms, 145 ms and 1.5 s before the two profiling passes). Booleans are
 the cost that scales: every face of one solid is classified against a
 cross-section of the other. The other solid's faces sit in a
 bounding-volume tree built once per boolean, so a section visits only
@@ -717,9 +718,47 @@ face share that work, vertex distances are computed on demand rather
 than for every vertex per section, loops are chained without rescanning
 the segment map, the overlay leaves out section loops clear of the
 face, and the kernel's integer-keyed maps use a fast multiply-rotate
-hasher. What remains is inherent to computing whole sections: a plane
-through a dense solid cuts many faces. Assembling the result was
-dominated by T-junction
+hasher.
+
+The second pass made the boolean incremental, so its cost follows the
+faces the operation touches rather than the size of the operands:
+
+- Faces whose box stays clear of the other solid's box pass into the
+  result with their vertex ids; only the fragments of touched faces are
+  welded, against a merger seeded with the touched faces' vertices (and
+  any vertex near the other solid's box), and vertices nothing uses are
+  dropped at the end. Two solids with no face box near the other are
+  apart or nested, decided by a winding-number test, and skip the
+  boolean entirely (a hole pattern's drills union in microseconds).
+- The classification sections the other solid *locally*: only the faces
+  whose box reaches a rectangle drawn around the face (5% margin) are
+  cut, the loops of a large face that stay clear of that box are skipped
+  (a closed loop crosses the plane an even number of times, so parity
+  holds), crossing segments outside the box along the crossing line are
+  left out in pairs, and the resulting open chains are closed along the
+  rectangle's boundary: material lies to the left of a chain, so from
+  where a chain exits, the boundary is followed counter-clockwise to the
+  next entry. A rectangle no chain touches is filled or left empty by a
+  ray probe from its corner along the face normal, with the same
+  vertex-pulling rules the section uses: a face through the corner
+  decides by its orientation, and a face within a few tolerances of the
+  plane is too close to call against the section's infinitesimal hair,
+  in which case (as for any other ambiguity: a chain vertex on the
+  rectangle's edge, endpoints that do not alternate) the whole solid is
+  sectioned as before. A full or empty rectangle, or loops the overlay
+  leaves the face whole under, return the face itself rather than a
+  re-welded copy; when the sections above and below coincide the inside
+  rule intersects once, since a second intersection against identical
+  edges can leave grid-unit slivers.
+- The snapping of nearly coincident geometry looks up vertices through
+  the point grid and faces through the bounding-volume tree instead of
+  scanning, and the 2D snap of section loops onto a face outline buckets
+  the outline's edges on a grid (a plate face with 24 holes has two
+  thousand edges). The offset polyhedron of a shell orders the faces
+  around a corner from a vertex-to-faces table rather than by scanning
+  every face per corner.
+
+Assembling the result was dominated by T-junction
 repair, which asks for the vertices near every edge; its point grid is a
 dense array of cells sized to the model (about 1/32 of the extent, never
 below 64 tolerances), so a query is index arithmetic along the edge

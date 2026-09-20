@@ -17,9 +17,10 @@
 //! into a new solid by merging vertices, and the result is validated to be
 //! closed; a non-closed result is reported as an error rather than shown.
 
-use crate::section::{sections_above_below, FaceIndex, Section};
+use crate::section::{local_sections_above_below, sections_above_below, FaceIndex, LocalSection};
 use crate::{
     bounds_of, bounds_overlap, flip_plane, merge_tolerance, BrepError, Face, Polygon, Solid,
+    VertexMerger,
 };
 use i_overlay::core::fill_rule::FillRule;
 use i_overlay::core::overlay_rule::OverlayRule;
@@ -100,10 +101,11 @@ fn overlay(subject: &[Contour], clip: &[Contour], rule: OverlayRule) -> Vec<Vec<
 
 /// Moves clip vertices that lie within `tol` of a subject vertex or edge
 /// exactly onto it, so shared boundaries are seen as identical by the
-/// clipper instead of producing hairline slivers.
+/// clipper instead of producing hairline slivers. The region's edges are
+/// bucketed on a grid so a large outline (a plate face with many holes)
+/// costs each clip point only the edges near it.
 fn snap_to_region(clip: &mut [Contour], region: &[Contour], tol: f64) {
     let tol2 = tol * tol;
-    // Only points within the region's box (grown by the tolerance) can snap.
     let mut b = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
     for p in region.iter().flatten() {
         b = [
@@ -113,36 +115,75 @@ fn snap_to_region(clip: &mut [Contour], region: &[Contour], tol: f64) {
             b[3].max(p[1]),
         ];
     }
+    if b[0] > b[2] {
+        return;
+    }
+    let edges: Vec<([f64; 2], [f64; 2])> = region
+        .iter()
+        .flat_map(|r| {
+            let n = r.len();
+            (0..n).map(move |i| (r[i], r[(i + 1) % n]))
+        })
+        .collect();
+    // About one edge per cell, with cells at least four tolerances wide
+    // so a point's own cell and its neighbours hold every edge within a
+    // tolerance of it (a facet gets a handful of cells, a plate face with
+    // holes a few thousand).
+    let extent = (b[2] - b[0]).max(b[3] - b[1]).max(tol);
+    let across = (edges.len() as f64).sqrt().ceil().clamp(1.0, 256.0);
+    let cell = (extent / across).max(4.0 * tol);
+    let dims = [
+        ((b[2] - b[0]) / cell).floor() as i64 + 1,
+        ((b[3] - b[1]) / cell).floor() as i64 + 1,
+    ];
+    let key = |x: f64, y: f64| {
+        (
+            (((x - b[0]) / cell).floor() as i64).clamp(0, dims[0] - 1),
+            (((y - b[1]) / cell).floor() as i64).clamp(0, dims[1] - 1),
+        )
+    };
+    let mut cells: Vec<Vec<usize>> = vec![Vec::new(); (dims[0] * dims[1]) as usize];
+    for (ei, (a, c)) in edges.iter().enumerate() {
+        let (x0, y0) = key(a[0].min(c[0]), a[1].min(c[1]));
+        let (x1, y1) = key(a[0].max(c[0]), a[1].max(c[1]));
+        for x in x0..=x1 {
+            for y in y0..=y1 {
+                cells[(x * dims[1] + y) as usize].push(ei);
+            }
+        }
+    }
+    // Only points within the region's box (grown by the tolerance) can snap.
     for c in clip.iter_mut() {
         for p in c.iter_mut() {
             if p[0] < b[0] - tol || p[0] > b[2] + tol || p[1] < b[1] - tol || p[1] > b[3] + tol {
                 continue;
             }
+            let (kx, ky) = key(p[0], p[1]);
             let mut best: Option<(f64, [f64; 2])> = None;
-            for r in region {
-                let n = r.len();
-                for i in 0..n {
-                    let a = r[i];
-                    let b = r[(i + 1) % n];
-                    let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
-                    let len2 = dx * dx + dy * dy;
-                    let t = if len2 > 0.0 {
-                        ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2
-                    } else {
-                        0.0
-                    };
-                    let t = t.clamp(0.0, 1.0);
-                    let q = [a[0] + dx * t, a[1] + dy * t];
-                    let d2 = (p[0] - q[0]).powi(2) + (p[1] - q[1]).powi(2);
-                    // Prefer vertices over edge interiors when both are in range.
-                    let dv = (p[0] - a[0]).powi(2) + (p[1] - a[1]).powi(2);
-                    let (d2, q) = if dv <= tol2 {
-                        (dv - tol2 * 2.0, a)
-                    } else {
-                        (d2, q)
-                    };
-                    if d2 <= tol2 && best.is_none_or(|(bd, _)| d2 < bd) {
-                        best = Some((d2, q));
+            for x in (kx - 1).max(0)..=(kx + 1).min(dims[0] - 1) {
+                for y in (ky - 1).max(0)..=(ky + 1).min(dims[1] - 1) {
+                    for &ei in &cells[(x * dims[1] + y) as usize] {
+                        let (a, b2) = edges[ei];
+                        let (dx, dy) = (b2[0] - a[0], b2[1] - a[1]);
+                        let len2 = dx * dx + dy * dy;
+                        let t = if len2 > 0.0 {
+                            ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2
+                        } else {
+                            0.0
+                        };
+                        let t = t.clamp(0.0, 1.0);
+                        let q = [a[0] + dx * t, a[1] + dy * t];
+                        let d2 = (p[0] - q[0]).powi(2) + (p[1] - q[1]).powi(2);
+                        // Prefer vertices over edge interiors when both are in range.
+                        let dv = (p[0] - a[0]).powi(2) + (p[1] - a[1]).powi(2);
+                        let (d2, q) = if dv <= tol2 {
+                            (dv - tol2 * 2.0, a)
+                        } else {
+                            (d2, q)
+                        };
+                        if d2 <= tol2 && best.is_none_or(|(bd, _)| d2 < bd) {
+                            best = Some((d2, q));
+                        }
                     }
                 }
             }
@@ -154,7 +195,7 @@ fn snap_to_region(clip: &mut [Contour], region: &[Contour], tol: f64) {
 }
 
 /// What to keep of a face of `subject_solid` given the other solid.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum Keep {
     /// Keep the part outside the other solid, plus coplanar same-normal (A side of union).
     NotAbove,
@@ -168,6 +209,35 @@ enum Keep {
     Below,
 }
 
+/// What a face contributes to the result.
+enum Kept {
+    /// The face unchanged.
+    Whole,
+    Nothing,
+    /// Fragments of the face, as 2D shapes in its plane.
+    Fragments(Vec<Vec<Contour>>),
+}
+
+impl Kept {
+    /// The verdict for a face uniformly inside or outside the other
+    /// solid a hair above and a hair below its plane, per the table at
+    /// the top of the file.
+    fn uniform(keep: Keep, above: bool, below: bool) -> Kept {
+        let kept = match keep {
+            Keep::NotAbove => !above,
+            Keep::NotBelow => !below,
+            Keep::Below => below,
+            Keep::Inside => above && below,
+            Keep::NotAboveNorBelow => !above && !below,
+        };
+        if kept {
+            Kept::Whole
+        } else {
+            Kept::Nothing
+        }
+    }
+}
+
 fn classify_face(
     solid: &Solid,
     f: &Face,
@@ -176,8 +246,7 @@ fn classify_face(
     other_bounds: (ok_math::Vec3, ok_math::Vec3),
     keep: Keep,
     tol: f64,
-) -> Result<Vec<Vec<Contour>>, BrepError> {
-    let region = face_region(solid, f);
+) -> Result<Kept, BrepError> {
     let fb = bounds_of(
         f.loops
             .iter()
@@ -186,27 +255,38 @@ fn classify_face(
     )
     .unwrap();
     if !bounds_overlap(fb, other_bounds, tol) {
-        return Ok(match keep {
-            Keep::NotAbove | Keep::NotAboveNorBelow | Keep::NotBelow => vec![region],
-            Keep::Inside | Keep::Below => vec![],
-        });
+        return Ok(Kept::uniform(keep, false, false));
     }
-    let (above, below): (Section, Section) =
-        sections_above_below(other, other_boxes, &f.plane, tol)?;
+    let region = face_region(solid, f);
+    // The section of the other solid in this face's plane, cut only from
+    // the faces near this face and closed along a rectangle around it;
+    // the whole solid is sectioned only when that is too close to call.
+    let local = local_section_loops(other, other_boxes, &f.plane, &region, tol);
+    let (above, below) = match local {
+        Some(Local::Uniform { above, below }) => {
+            return Ok(Kept::uniform(keep, above, below));
+        }
+        Some(Local::Loops(above, below)) => (above, below),
+        None => {
+            let (above, below) = sections_above_below(other, other_boxes, &f.plane, tol)?;
+            (to_contours(&above.loops), to_contours(&below.loops))
+        }
+    };
     if above.is_empty() && below.is_empty() {
-        return Ok(match keep {
-            Keep::NotAbove | Keep::NotAboveNorBelow | Keep::NotBelow => vec![region],
-            Keep::Inside | Keep::Below => vec![],
-        });
+        return Ok(Kept::uniform(keep, false, false));
     }
     // Loops of the section that stay clear of this face cannot enclose or
     // cut it, so they are left out of the overlay (a large part sectioned
     // by one of its facets otherwise drags every hole into every overlay).
-    let mut above = near_region(to_contours(&above.loops), &region, tol);
-    let mut below = near_region(to_contours(&below.loops), &region, tol);
+    let mut above = near_region(above, &region, tol);
+    let mut below = near_region(below, &region, tol);
+    if above.is_empty() && below.is_empty() {
+        // Every loop stays clear of the face, so none encloses it either.
+        return Ok(Kept::uniform(keep, false, false));
+    }
     snap_to_region(&mut above, &region, tol);
     snap_to_region(&mut below, &region, tol);
-    Ok(match keep {
+    let shapes = match keep {
         Keep::NotAbove => overlay(&region, &above, OverlayRule::Difference),
         Keep::NotBelow => overlay(&region, &below, OverlayRule::Difference),
         Keep::Below => overlay(&region, &below, OverlayRule::Intersect),
@@ -215,6 +295,10 @@ fn classify_face(
             both.extend(below);
             overlay(&region, &both, OverlayRule::Difference)
         }
+        // With no coplanar faces the two sections are the same loops, and
+        // one intersection is exact where a second against identical
+        // edges can leave grid-unit slivers.
+        Keep::Inside if above == below => overlay(&region, &above, OverlayRule::Intersect),
         Keep::Inside => {
             let mut out = Vec::new();
             for shape in overlay(&region, &above, OverlayRule::Intersect) {
@@ -222,7 +306,398 @@ fn classify_face(
             }
             out
         }
-    })
+    };
+    // A face the loops leave whole passes through as it is.
+    if let [shape] = &shapes[..] {
+        if same_shape(shape, &region, tol) {
+            return Ok(Kept::Whole);
+        }
+    }
+    if shapes.iter().all(|s| s.is_empty()) {
+        return Ok(Kept::Nothing);
+    }
+    Ok(Kept::Fragments(shapes))
+}
+
+/// Whether two polygons-with-holes are the same loops, allowing the
+/// overlay to have restarted a loop at another corner.
+fn same_shape(a: &[Contour], b: &[Contour], tol: f64) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+    let tol2 = tol * tol * 1e-6;
+    let same_loop = |x: &Contour, y: &Contour| -> bool {
+        if x.len() != y.len() || x.is_empty() {
+            return false;
+        }
+        let n = x.len();
+        let close =
+            |p: &[f64; 2], q: &[f64; 2]| (p[0] - q[0]).powi(2) + (p[1] - q[1]).powi(2) <= tol2;
+        (0..n).any(|shift| (0..n).all(|i| close(&x[(i + shift) % n], &y[i])))
+    };
+    a.iter().all(|x| b.iter().any(|y| same_loop(x, y)))
+}
+
+/// A rectangle in plane coordinates, `[x0, y0, x1, y1]`.
+type Rect = [f64; 4];
+
+/// The sections of `other` a hair above and below `plane`, as closed
+/// loops covering a rectangle around `region`, built from the faces near
+/// that rectangle alone. Chains that leave the rectangle are closed along
+/// its boundary (material lies to the left of a chain, so from where a
+/// chain exits, the boundary is followed counter-clockwise to the next
+/// entry); a rectangle no chain touches is filled or left empty by a
+/// point test at its corner. `None` when the local picture is ambiguous
+/// (a chain vertex on the rectangle's edge, endpoints that do not
+/// alternate), in which case the caller sections the whole solid.
+/// The local picture of the other solid around a face.
+enum Local {
+    /// No face of the other solid comes near the plane around the face:
+    /// the face is wholly inside or outside it, a hair above and below.
+    Uniform { above: bool, below: bool },
+    /// The section loops a hair above and below, closed within the
+    /// rectangle around the face.
+    Loops(Vec<Contour>, Vec<Contour>),
+}
+
+fn local_section_loops(
+    other: &Solid,
+    index: &FaceIndex,
+    plane: &ok_math::Plane,
+    region: &[Contour],
+    tol: f64,
+) -> Option<Local> {
+    let mut b = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+    for p in region.iter().flatten() {
+        b = [
+            b[0].min(p[0]),
+            b[1].min(p[1]),
+            b[2].max(p[0]),
+            b[3].max(p[1]),
+        ];
+    }
+    let diag = ((b[2] - b[0]).powi(2) + (b[3] - b[1]).powi(2)).sqrt();
+    let mut margin = (0.05 * diag).max(20.0 * tol);
+    let clearance = 4.0 * tol;
+    for _ in 0..4 {
+        let rect: Rect = [b[0] - margin, b[1] - margin, b[2] + margin, b[3] + margin];
+        let corners = [
+            Vec2::new(rect[0], rect[1]),
+            Vec2::new(rect[2], rect[1]),
+            Vec2::new(rect[2], rect[3]),
+            Vec2::new(rect[0], rect[3]),
+        ];
+        let within = bounds_of(corners.iter().map(|c| plane.to_world(*c)))?;
+        let (above, below) = local_sections_above_below(other, index, plane, tol, within).ok()?;
+        let near_edge = |p: &Vec2| {
+            (p.x - rect[0]).abs() <= clearance
+                || (p.x - rect[2]).abs() <= clearance
+                || (p.y - rect[1]).abs() <= clearance
+                || (p.y - rect[3]).abs() <= clearance
+        };
+        let crowded = [&above, &below].iter().any(|s| {
+            s.loops
+                .iter()
+                .chain(s.chains.iter())
+                .flatten()
+                .any(near_edge)
+        });
+        if crowded {
+            margin = margin * 1.37 + 7.0 * tol;
+            continue;
+        }
+        // Whether the rectangle's corner is inside the other solid a hair
+        // above (or below) the plane, from the faces a ray along the
+        // normal meets: a face through the corner decides by its
+        // orientation (it is coplanar, pulled onto the plane like the
+        // section does); one within a few tolerances is too close to call
+        // against the section's infinitesimal hair, so the whole solid is
+        // sectioned instead; otherwise parity.
+        let n = plane.normal;
+        let corner_inside = |hair_above: bool| -> Option<bool> {
+            let d = if hair_above { n } else { -n };
+            let p = plane.to_world(corners[0]);
+            let hits = index.hits_along(other, p, d, tol)?;
+            let at_corner: Vec<usize> = hits
+                .iter()
+                .filter(|h| h.0.abs() <= tol)
+                .map(|h| h.1)
+                .collect();
+            if let [fi] = at_corner[..] {
+                let fnormal = other.faces[fi].plane.normal;
+                if fnormal.cross(n).length() > 1e-6 {
+                    return None;
+                }
+                return Some(fnormal.dot(d) < 0.0);
+            }
+            if !at_corner.is_empty() || hits.iter().any(|h| h.0 > tol && h.0 <= 4.0 * tol) {
+                return None;
+            }
+            Some(hits.iter().filter(|h| h.0 > 4.0 * tol).count() % 2 == 1)
+        };
+        if above.loops.is_empty()
+            && above.chains.is_empty()
+            && below.loops.is_empty()
+            && below.chains.is_empty()
+        {
+            // Nothing of the other solid crosses the plane within the
+            // rectangle: one probe settles both sides, unless a face lies
+            // in the plane at the corner (then the sides differ).
+            let above = corner_inside(true)?;
+            let below = corner_inside(false)?;
+            return Some(Local::Uniform { above, below });
+        }
+        let above = close_in_rect(above, rect, tol, || corner_inside(true))?;
+        let below = close_in_rect(below, rect, tol, || corner_inside(false))?;
+        // Chains that were clipped away entirely leave the rectangle
+        // full or empty: the face is uniformly inside or outside.
+        let full = |loops: &Vec<Contour>| {
+            loops.len() == 1 && loops[0].len() == 4 && loops[0][0] == [rect[0], rect[1]]
+        };
+        let verdict = |loops: &Vec<Contour>| -> Option<bool> {
+            if loops.is_empty() {
+                Some(false)
+            } else if full(loops) {
+                Some(true)
+            } else {
+                None
+            }
+        };
+        if let (Some(a), Some(b)) = (verdict(&above), verdict(&below)) {
+            return Some(Local::Uniform { above: a, below: b });
+        }
+        return Some(Local::Loops(above, below));
+    }
+    None
+}
+
+/// Closes a local section within `rect` (see `local_section_loops`).
+fn close_in_rect(
+    local: LocalSection,
+    rect: Rect,
+    tol: f64,
+    corner_inside: impl Fn() -> Option<bool>,
+) -> Option<Vec<Contour>> {
+    let mut closed: Vec<Vec<Vec2>> = Vec::new();
+    let mut open: Vec<Vec<Vec2>> = Vec::new();
+    for l in local.loops {
+        clip_loop(&l, rect, &mut closed, &mut open);
+    }
+    for c in local.chains {
+        clip_polyline(&c, rect, &mut open);
+    }
+    let contour = |l: &Vec<Vec2>| -> Contour { l.iter().map(|p| [p.x, p.y]).collect() };
+    if open.is_empty() {
+        let mut out: Vec<Contour> = closed.iter().map(contour).collect();
+        if corner_inside()? {
+            out.push(vec![
+                [rect[0], rect[1]],
+                [rect[2], rect[1]],
+                [rect[2], rect[3]],
+                [rect[0], rect[3]],
+            ]);
+        }
+        return Some(out);
+    }
+    let (w, h) = (rect[2] - rect[0], rect[3] - rect[1]);
+    let perimeter = 2.0 * (w + h);
+    // Position along the boundary, counter-clockwise from the lower left.
+    let along = |p: Vec2| -> f64 {
+        let d = [
+            (p.y - rect[1]).abs(),
+            (p.x - rect[2]).abs(),
+            (p.y - rect[3]).abs(),
+            (p.x - rect[0]).abs(),
+        ];
+        let side = (0..4)
+            .min_by(|&i, &j| d[i].partial_cmp(&d[j]).unwrap())
+            .unwrap();
+        match side {
+            0 => p.x - rect[0],
+            1 => w + (p.y - rect[1]),
+            2 => w + h + (rect[2] - p.x),
+            _ => 2.0 * w + h + (rect[3] - p.y),
+        }
+    };
+    let corner_at = |s: f64| -> Vec2 {
+        if s < w {
+            Vec2::new(rect[0] + s, rect[1])
+        } else if s < w + h {
+            Vec2::new(rect[2], rect[1] + (s - w))
+        } else if s < 2.0 * w + h {
+            Vec2::new(rect[2] - (s - w - h), rect[3])
+        } else {
+            Vec2::new(rect[0], rect[3] - (s - 2.0 * w - h))
+        }
+    };
+    let corner_positions = [0.0, w, w + h, 2.0 * w + h];
+    // Every endpoint on the boundary, sorted; entries and exits must
+    // alternate for the material bands along the boundary to make sense.
+    let mut events: Vec<(f64, usize, bool)> = Vec::new(); // (position, piece, is_start)
+    for (i, piece) in open.iter().enumerate() {
+        events.push((along(piece[0]), i, true));
+        events.push((along(*piece.last().unwrap()), i, false));
+    }
+    events.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    for pair in events.windows(2) {
+        if (pair[1].0 - pair[0].0).abs() <= tol || pair[0].2 == pair[1].2 {
+            return None;
+        }
+    }
+    if events.len() >= 2 && events[0].2 == events[events.len() - 1].2 {
+        return None;
+    }
+    let mut used = vec![false; open.len()];
+    let mut out: Vec<Contour> = closed.iter().map(contour).collect();
+    for first in 0..open.len() {
+        if used[first] {
+            continue;
+        }
+        let mut poly: Vec<Vec2> = Vec::new();
+        let mut current = first;
+        loop {
+            used[current] = true;
+            poly.extend(open[current].iter().copied());
+            let exit = along(*open[current].last().unwrap());
+            // The next event counter-clockwise from the exit is an entry.
+            let next = events
+                .iter()
+                .filter(|e| e.0 > exit)
+                .min_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
+                .or_else(|| events.iter().min_by(|a, b| a.0.partial_cmp(&b.0).unwrap()))?;
+            if !next.2 {
+                return None;
+            }
+            // Corners passed on the way.
+            let entry = next.0;
+            let passed: Vec<f64> = if entry > exit {
+                corner_positions
+                    .iter()
+                    .copied()
+                    .filter(|&c| c > exit && c < entry)
+                    .collect()
+            } else {
+                corner_positions
+                    .iter()
+                    .copied()
+                    .filter(|&c| c > exit)
+                    .chain(corner_positions.iter().copied().filter(|&c| c < entry))
+                    .collect()
+            };
+            for c in passed {
+                poly.push(corner_at(c.min(perimeter - 1e-12)));
+            }
+            current = next.1;
+            if current == first {
+                break;
+            }
+            if used[current] {
+                return None;
+            }
+        }
+        poly.dedup_by(|a, b| a.distance(*b) <= tol);
+        if poly.len() >= 3 {
+            out.push(contour(&poly));
+        }
+    }
+    Some(out)
+}
+
+fn inside_rect(p: Vec2, rect: Rect) -> bool {
+    p.x > rect[0] && p.x < rect[2] && p.y > rect[1] && p.y < rect[3]
+}
+
+/// The parameter interval of segment `a b` inside `rect` (Liang–Barsky).
+fn clip_segment(a: Vec2, b: Vec2, rect: Rect) -> Option<(f64, f64)> {
+    let d = b - a;
+    let (mut t0, mut t1) = (0.0f64, 1.0f64);
+    for (p, q) in [
+        (-d.x, a.x - rect[0]),
+        (d.x, rect[2] - a.x),
+        (-d.y, a.y - rect[1]),
+        (d.y, rect[3] - a.y),
+    ] {
+        if p == 0.0 {
+            if q < 0.0 {
+                return None;
+            }
+            continue;
+        }
+        let t = q / p;
+        if p < 0.0 {
+            t0 = t0.max(t);
+        } else {
+            t1 = t1.min(t);
+        }
+        if t0 > t1 {
+            return None;
+        }
+    }
+    Some((t0, t1))
+}
+
+/// Cuts an open polyline into the pieces inside `rect`; no vertex lies
+/// on the rectangle's edges (the caller made sure), so a piece's ends
+/// are either the polyline's own ends or points on the boundary.
+fn clip_polyline(points: &[Vec2], rect: Rect, out: &mut Vec<Vec<Vec2>>) {
+    let mut current: Option<Vec<Vec2>> = None;
+    if points.len() < 2 {
+        return;
+    }
+    for w in points.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let (a_in, b_in) = (inside_rect(a, rect), inside_rect(b, rect));
+        match (a_in, b_in) {
+            (true, true) => current.get_or_insert_with(|| vec![a]).push(b),
+            (true, false) => {
+                if let Some((_, t1)) = clip_segment(a, b, rect) {
+                    let mut piece = current.take().unwrap_or_else(|| vec![a]);
+                    piece.push(a + (b - a) * t1);
+                    out.push(piece);
+                } else if let Some(piece) = current.take() {
+                    out.push(piece);
+                }
+            }
+            (false, true) => {
+                if let Some(piece) = current.take() {
+                    out.push(piece);
+                }
+                let t0 = clip_segment(a, b, rect).map_or(0.0, |(t0, _)| t0);
+                current = Some(vec![a + (b - a) * t0, b]);
+            }
+            (false, false) => {
+                if let Some(piece) = current.take() {
+                    out.push(piece);
+                }
+                if let Some((t0, t1)) = clip_segment(a, b, rect) {
+                    if t1 > t0 {
+                        out.push(vec![a + (b - a) * t0, a + (b - a) * t1]);
+                    }
+                }
+            }
+        }
+    }
+    if let Some(piece) = current.take() {
+        out.push(piece);
+    }
+}
+
+/// Cuts a closed loop to `rect`: kept whole when it lies inside,
+/// otherwise in open pieces (none when it stays clear of the rectangle,
+/// enclosing it or not).
+fn clip_loop(l: &[Vec2], rect: Rect, closed: &mut Vec<Vec<Vec2>>, open: &mut Vec<Vec<Vec2>>) {
+    if l.iter().all(|p| inside_rect(*p, rect)) {
+        closed.push(l.to_vec());
+        return;
+    }
+    let Some(start) = l.iter().position(|p| !inside_rect(*p, rect)) else {
+        return;
+    };
+    let mut rotated: Vec<Vec2> = Vec::with_capacity(l.len() + 1);
+    rotated.extend(l[start..].iter().copied());
+    rotated.extend(l[..start].iter().copied());
+    rotated.push(l[start]);
+    clip_polyline(&rotated, rect, open);
 }
 
 /// Lifts the kept 2D fragments of `f` back to 3D. A fragment corner that
@@ -318,49 +793,47 @@ fn fragments_to_polygons(
 /// plane of `other` exactly onto it, so that nearly coincident geometry
 /// becomes exactly coincident, which the classification handles exactly.
 /// Faces whose vertices moved get their plane recomputed.
-fn snap_to(s: &mut Solid, other: &Solid, tol: f64) {
-    if s.is_empty() || other.is_empty() {
-        return;
+fn snap_to(original: &Solid, other: &Solid, index: &FaceIndex, tol: f64) -> Option<Solid> {
+    if original.is_empty() || other.is_empty() {
+        return None;
     }
-    // Face bounding boxes of `other`, expanded by tol, to limit plane snaps
-    // to vertices that are actually near the face rather than its plane.
-    let face_boxes: Vec<(Vec3, Vec3)> = other
-        .faces
-        .iter()
-        .map(|f| {
-            let (lo, hi) = bounds_of(
-                f.loops
-                    .iter()
-                    .flatten()
-                    .map(|&v| other.vertices[v as usize]),
-            )
-            .unwrap_or((Vec3::ZERO, Vec3::ZERO));
-            (lo - Vec3::new(tol, tol, tol), hi + Vec3::new(tol, tol, tol))
-        })
-        .collect();
-    let inside = |p: Vec3, b: &(Vec3, Vec3)| {
-        p.x >= b.0.x && p.x <= b.1.x && p.y >= b.0.y && p.y <= b.1.y && p.z >= b.0.z && p.z <= b.1.z
+    // Only vertices within the other solid's box can be near any of it.
+    let (olo, ohi) = other.bounds()?;
+    let near = |p: Vec3| {
+        p.x >= olo.x - tol
+            && p.x <= ohi.x + tol
+            && p.y >= olo.y - tol
+            && p.y <= ohi.y + tol
+            && p.z >= olo.z - tol
+            && p.z <= ohi.z + tol
     };
-    let mut moved = vec![false; s.vertices.len()];
-    for (vi, v) in s.vertices.iter_mut().enumerate() {
+    let candidates: Vec<usize> = (0..original.vertices.len())
+        .filter(|&vi| near(original.vertices[vi]))
+        .collect();
+    if candidates.is_empty() {
+        return None;
+    }
+    let grid = crate::PointGrid::new(&other.vertices, tol);
+    let mut moves: Vec<(usize, Vec3)> = Vec::new();
+    for &vi in &candidates {
+        let v = original.vertices[vi];
         // Vertex-to-vertex snap wins outright.
-        if let Some(q) = other
-            .vertices
-            .iter()
-            .find(|q| q.distance(*v) <= tol && q.distance(*v) > 0.0)
+        if let Some(q) = grid
+            .candidates_near_segment(v, v)
+            .into_iter()
+            .map(|i| other.vertices[i as usize])
+            .find(|q| q.distance(v) <= tol && q.distance(v) > 0.0)
         {
-            *v = *q;
-            moved[vi] = true;
+            moves.push((vi, q));
             continue;
         }
         // Then onto up to three nearby face planes, one after another, so a
-        // vertex near a corner of `other` lands on the corner.
-        let mut p = *v;
+        // vertex near a corner of `other` lands on the corner. The box test
+        // limits plane snaps to vertices near the face, not just its plane.
+        let mut p = v;
         let mut hits = 0;
-        for (f, b) in other.faces.iter().zip(&face_boxes) {
-            if !inside(p, b) {
-                continue;
-            }
+        for fi in index.faces_near_point(v, tol) {
+            let f = &other.faces[fi];
             let d = f.plane.normal.dot(p - f.plane.origin);
             if d != 0.0 && d.abs() <= tol {
                 p -= f.plane.normal * d;
@@ -371,28 +844,38 @@ fn snap_to(s: &mut Solid, other: &Solid, tol: f64) {
             }
         }
         if hits > 0 {
-            *v = p;
-            moved[vi] = true;
+            moves.push((vi, p));
         }
     }
-    if !moved.iter().any(|m| *m) {
-        return;
+    if moves.is_empty() {
+        return None;
+    }
+    let mut snapped = original.clone();
+    let s = &mut snapped;
+    let mut moved = vec![false; s.vertices.len()];
+    for &(vi, p) in &moves {
+        s.vertices[vi] = p;
+        moved[vi] = true;
     }
     // A face of `s` that is nearly coplanar with a face of `other` may have
     // had only some of its vertices snapped (the plane snap is limited to
     // the other face's box); the rest would leave it tilted by a hair and
     // no longer planar. Put every vertex of such a face onto that plane.
-    let planes: Vec<ok_math::Plane> = other.faces.iter().map(|f| f.plane).collect();
     for fi in 0..s.faces.len() {
         let verts: Vec<u32> = s.faces[fi].loops.iter().flatten().copied().collect();
-        if !verts.iter().any(|&v| moved[v as usize]) {
+        let Some(&anchor) = verts.iter().find(|&&v| moved[v as usize]) else {
             continue;
-        }
+        };
         let on = |plane: &ok_math::Plane, p: Vec3| plane.normal.dot(p - plane.origin).abs() <= tol;
-        let Some(plane) = planes.iter().find(|pl| {
-            pl.normal.dot(s.faces[fi].plane.normal).abs() > 0.999
-                && verts.iter().all(|&v| on(pl, s.vertices[v as usize]))
-        }) else {
+        let plane = index
+            .faces_near_point(s.vertices[anchor as usize], tol)
+            .into_iter()
+            .map(|g| other.faces[g].plane)
+            .find(|pl| {
+                pl.normal.dot(s.faces[fi].plane.normal).abs() > 0.999
+                    && verts.iter().all(|&v| on(pl, s.vertices[v as usize]))
+            });
+        let Some(plane) = plane else {
             continue;
         };
         for &v in &verts {
@@ -421,6 +904,26 @@ fn snap_to(s: &mut Solid, other: &Solid, tol: f64) {
             normal: n,
         };
     }
+    Some(snapped)
+}
+
+fn face_bounds(solid: &Solid, f: &Face) -> (Vec3, Vec3) {
+    bounds_of(
+        f.loops
+            .iter()
+            .flatten()
+            .map(|&v| solid.vertices[v as usize]),
+    )
+    .unwrap_or((Vec3::ZERO, Vec3::ZERO))
+}
+
+/// Whether a face kept whole by `keep` when nothing of the other solid
+/// comes near it (it is outside that solid).
+fn keeps_outside(keep: Keep) -> bool {
+    matches!(
+        keep,
+        Keep::NotAbove | Keep::NotAboveNorBelow | Keep::NotBelow
+    )
 }
 
 pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
@@ -442,12 +945,47 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
         });
     }
 
+    // Faces whose box reaches the other solid's box are the only ones the
+    // operation can change; the rest pass through with their vertices.
+    let touched = |s: &Solid, other_bounds: (Vec3, Vec3)| -> Vec<bool> {
+        s.faces
+            .iter()
+            .map(|f| bounds_overlap(face_bounds(s, f), other_bounds, tol))
+            .collect()
+    };
+    let (touched_a, touched_b) = (touched(a, bb), touched(b, ab));
+    if !touched_a.iter().any(|t| *t) || !touched_b.iter().any(|t| *t) {
+        // No face of one solid comes near the other's box, so no two faces
+        // can meet: the two are apart, or one sits wholly inside the other
+        // (or in one of its cavities).
+        let b_in_a = a.contains(b.vertices[0]);
+        let a_in_b = !b_in_a && b.contains(a.vertices[0]);
+        return Ok(match op {
+            BoolOp::Union if b_in_a => a.clone(),
+            BoolOp::Union if a_in_b => b.clone(),
+            BoolOp::Union => a.merged(b),
+            BoolOp::Difference if b_in_a => a.merged(&b.flipped()),
+            BoolOp::Difference if a_in_b => Solid::default(),
+            BoolOp::Difference => a.clone(),
+            BoolOp::Intersection if b_in_a => b.clone(),
+            BoolOp::Intersection if a_in_b => a.clone(),
+            BoolOp::Intersection => Solid::default(),
+        });
+    }
+
     // Nearly coincident geometry is made exactly coincident first (within
     // the tolerance the classification already treats as "on").
-    let (mut a_snapped, mut b_snapped) = (a.clone(), b.clone());
-    snap_to(&mut b_snapped, a, tol);
-    snap_to(&mut a_snapped, &b_snapped, tol);
-    let (a, b) = (&a_snapped, &b_snapped);
+    let boxes_a0 = FaceIndex::new(a);
+    let b_snapped = snap_to(b, a, &boxes_a0, tol);
+    let b = b_snapped.as_ref().unwrap_or(b);
+    let boxes_b = FaceIndex::new(b);
+    let a_snapped = snap_to(a, b, &boxes_b, tol);
+    let a = a_snapped.as_ref().unwrap_or(a);
+    let boxes_a = if a_snapped.is_some() {
+        FaceIndex::new(a)
+    } else {
+        boxes_a0
+    };
 
     let (keep_a, keep_b, flip_b) = match op {
         BoolOp::Union => (Keep::NotAbove, Keep::NotAboveNorBelow, false),
@@ -455,22 +993,109 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
         BoolOp::Intersection => (Keep::Below, Keep::Inside, false),
     };
 
-    let (boxes_a, boxes_b) = (FaceIndex::new(a), FaceIndex::new(b));
-    let mut polys: Vec<Polygon> = Vec::new();
-    for f in &a.faces {
-        let shapes = classify_face(a, f, b, &boxes_b, bb, keep_a, tol)?;
-        polys.extend(fragments_to_polygons(a, f, shapes, false, 0, tol));
+    // The result starts from both vertex arrays. Fragments are welded
+    // against the vertices of the touched faces (and any vertex near the
+    // other solid's box, in case a new corner lands within tolerance of
+    // one); untouched faces keep their vertex ids, so nothing far from the
+    // operation is rebuilt.
+    let voff = a.vertices.len() as u32;
+    let soff = a.surfaces.len();
+    let mut vertices = a.vertices.clone();
+    vertices.extend_from_slice(&b.vertices);
+    let mut seed = vec![false; vertices.len()];
+    let grown = (
+        bb.0 - Vec3::new(3.0 * tol, 3.0 * tol, 3.0 * tol),
+        bb.1 + Vec3::new(3.0 * tol, 3.0 * tol, 3.0 * tol),
+    );
+    for (v, p) in a.vertices.iter().enumerate() {
+        if p.x >= grown.0.x
+            && p.x <= grown.1.x
+            && p.y >= grown.0.y
+            && p.y <= grown.1.y
+            && p.z >= grown.0.z
+            && p.z <= grown.1.z
+        {
+            seed[v] = true;
+        }
     }
-    for f in &b.faces {
-        let shapes = classify_face(b, f, a, &boxes_a, ab, keep_b, tol)?;
-        polys.extend(fragments_to_polygons(
-            b,
-            f,
-            shapes,
-            flip_b,
-            a.surfaces.len(),
-            tol,
-        ));
+    for (f, t) in a.faces.iter().zip(&touched_a) {
+        if *t {
+            for &v in f.loops.iter().flatten() {
+                seed[v as usize] = true;
+            }
+        }
+    }
+    for s in seed.iter_mut().skip(voff as usize) {
+        *s = true;
+    }
+    let mut merger = VertexMerger::seeded(
+        vertices,
+        seed.iter()
+            .enumerate()
+            .filter(|(_, s)| **s)
+            .map(|(v, _)| v as u32),
+        tol,
+    );
+
+    let mut faces: Vec<Face> = Vec::with_capacity(a.faces.len() + b.faces.len());
+    for (f, t) in a.faces.iter().zip(&touched_a) {
+        if !*t {
+            if keeps_outside(keep_a) {
+                faces.push(f.clone());
+            }
+            continue;
+        }
+        let kept = classify_face(a, f, b, &boxes_b, bb, keep_a, tol)?;
+        match kept {
+            Kept::Whole => faces.push(f.clone()),
+            Kept::Nothing => {}
+            Kept::Fragments(shapes) => {
+                for poly in fragments_to_polygons(a, f, shapes, false, 0, tol) {
+                    faces.extend(merger.weld(&poly));
+                }
+            }
+        }
+    }
+    // A face of `b` kept whole, renumbered into the result (and turned
+    // over for a difference).
+    let whole_b = |f: &Face| -> Face {
+        let mut loops: Vec<Vec<u32>> = f
+            .loops
+            .iter()
+            .map(|l| l.iter().map(|v| v + voff).collect())
+            .collect();
+        let plane = if flip_b {
+            for l in &mut loops {
+                l.reverse();
+            }
+            flip_plane(&f.plane)
+        } else {
+            f.plane
+        };
+        Face {
+            plane,
+            loops,
+            surface: f.surface + soff,
+            origin: f.origin,
+        }
+    };
+    for (f, t) in b.faces.iter().zip(&touched_b) {
+        if !*t {
+            if keeps_outside(keep_b) {
+                faces.push(whole_b(f));
+            }
+            continue;
+        }
+        let kept = classify_face(b, f, a, &boxes_a, ab, keep_b, tol)?;
+        match kept {
+            Kept::Whole => faces.push(whole_b(f)),
+            Kept::Nothing => {}
+            Kept::Fragments(shapes) => {
+                for poly in fragments_to_polygons(b, f, shapes, flip_b, soff, tol) {
+                    faces.extend(merger.weld(&poly));
+                }
+            }
+        }
     }
     let mut surfaces = a.surfaces.clone();
     surfaces.extend_from_slice(&b.surfaces);
@@ -480,7 +1105,7 @@ pub fn boolean(a: &Solid, b: &Solid, op: BoolOp) -> Result<Solid, BrepError> {
         Vec3::new(ab.0.x.max(bb.0.x), ab.0.y.max(bb.0.y), ab.0.z.max(bb.0.z)),
         Vec3::new(ab.1.x.min(bb.1.x), ab.1.y.min(bb.1.y), ab.1.z.min(bb.1.z)),
     );
-    let mut solid = Solid::from_polygons_within(polys, surfaces, tol, overlap)?;
+    let mut solid = Solid::assemble_incremental(merger, faces, surfaces, tol, overlap)?;
     solid.merge_coplanar_faces();
     solid.compact_surfaces();
     solid.validate()?;
@@ -794,6 +1419,107 @@ mod tests {
         let hollow = boolean(&big, &small, BoolOp::Difference).unwrap();
         assert_vol(&hollow, 992.0, 1e-9);
         assert_eq!(hollow.shells().len(), 2);
+    }
+
+    #[test]
+    fn apart_and_nested_solids_take_the_fast_path() {
+        // Boxes whose overall boxes overlap but whose faces stay apart:
+        // the hole drills of a pattern, unioned into one tool.
+        let a = rect(&Plane::XY, Vec2::ZERO, Vec2::new(1.0, 1.0), 0.0, 1.0, 1);
+        let far = rect(
+            &Plane::XY,
+            Vec2::new(5.0, 5.0),
+            Vec2::new(6.0, 6.0),
+            0.0,
+            1.0,
+            2,
+        );
+        let tool = boolean(&a, &far, BoolOp::Union).unwrap();
+        let c = rect(
+            &Plane::XY,
+            Vec2::new(5.0, 0.0),
+            Vec2::new(6.0, 1.0),
+            0.0,
+            1.0,
+            3,
+        );
+        let tool = boolean(&tool, &c, BoolOp::Union).unwrap();
+        assert_vol(&tool, 3.0, 1e-9);
+        assert_eq!(tool.faces.len(), 18);
+        assert!(boolean(&tool, &c, BoolOp::Intersection).unwrap().volume() > 0.0);
+        // A box wholly inside another, no faces near: union swallows it,
+        // difference leaves a void, intersection is the inner box.
+        let big = rect(&Plane::XY, Vec2::ZERO, Vec2::new(10.0, 10.0), 0.0, 10.0, 1);
+        let inner = rect(
+            &Plane::XY,
+            Vec2::new(4.0, 4.0),
+            Vec2::new(6.0, 6.0),
+            4.0,
+            6.0,
+            2,
+        );
+        assert!(big.contains(Vec3::new(5.0, 5.0, 5.0)));
+        assert!(!big.contains(Vec3::new(11.0, 5.0, 5.0)));
+        assert_eq!(boolean(&big, &inner, BoolOp::Union).unwrap().faces.len(), 6);
+        assert_eq!(boolean(&inner, &big, BoolOp::Union).unwrap().faces.len(), 6);
+        let hollow = boolean(&big, &inner, BoolOp::Difference).unwrap();
+        assert_vol(&hollow, 992.0, 1e-9);
+        assert_eq!(hollow.shells().len(), 2);
+        assert!(
+            !hollow.contains(Vec3::new(5.0, 5.0, 5.0)),
+            "the void is outside"
+        );
+        assert!(hollow.contains(Vec3::new(1.0, 1.0, 1.0)));
+        assert!(boolean(&inner, &big, BoolOp::Difference)
+            .unwrap()
+            .is_empty());
+        assert_vol(
+            &boolean(&big, &inner, BoolOp::Intersection).unwrap(),
+            8.0,
+            1e-9,
+        );
+        assert_vol(
+            &boolean(&inner, &big, BoolOp::Intersection).unwrap(),
+            8.0,
+            1e-9,
+        );
+        // A box in the void of the hollow one is apart from its material.
+        let speck = rect(
+            &Plane::XY,
+            Vec2::new(4.5, 4.5),
+            Vec2::new(5.5, 5.5),
+            4.5,
+            5.5,
+            3,
+        );
+        let u = boolean(&hollow, &speck, BoolOp::Union).unwrap();
+        assert_vol(&u, 993.0, 1e-9);
+        assert_eq!(u.shells().len(), 3);
+    }
+
+    #[test]
+    fn untouched_faces_keep_their_vertices_and_the_rest_is_welded() {
+        // A drill through one end of a long bar: the far end's faces and
+        // vertices come through unchanged, and the result is compact.
+        let bar = rect(&Plane::XY, Vec2::ZERO, Vec2::new(100.0, 10.0), 0.0, 5.0, 1);
+        let drill = cylinder(&Plane::XY, Vec2::new(90.0, 5.0), 2.0, -1.0, 6.0, 2);
+        let cut = boolean(&bar, &drill, BoolOp::Difference).unwrap();
+        assert_vol(&cut, 5000.0 - PI * 4.0 * 5.0, 2e-3);
+        let far_end = cut
+            .faces
+            .iter()
+            .find(|f| f.plane.normal.x < -0.99)
+            .expect("x = 0 end face");
+        assert_eq!(far_end.loops[0].len(), 4);
+        let used: std::collections::BTreeSet<u32> = cut
+            .faces
+            .iter()
+            .flat_map(|f| f.loops.iter().flatten().copied())
+            .collect();
+        assert_eq!(used.len(), cut.vertices.len(), "no unused vertices");
+        // Two rims of the drill (top and bottom of the hole) plus the bar's
+        // eight corners.
+        assert_eq!(cut.vertices.len(), 8 + 2 * (drill.vertices.len() / 2));
     }
 
     #[test]

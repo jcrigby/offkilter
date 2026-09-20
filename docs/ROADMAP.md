@@ -90,7 +90,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Documents list with previews, a name filter and sort order
 - [x] Language-model access: `ok-mcp` (MCP over stdio) with apply / report / export tools against a running server or a local file; `POST /api/docs/:id/ops` and `GET /api/docs/:id/report` for scripts
 - [x] Screenshot tool for models: `ok-render` rasterises a tab's tessellation headlessly (orthographic standard views or any direction, optional section with hatched caps, edges and silhouettes, axis triad); served at `GET /api/docs/:id/screenshot` and returned as image content by the `ok-mcp` `screenshot` tool
-- [ ] Incremental boolean assembly: reuse the faces a boolean does not touch instead of re-welding the whole result, so hole-heavy parts regenerate in tens of milliseconds
+- [x] Incremental boolean assembly: faces whose box stays clear of the other solid pass through with their vertex ids, only fragments are welded, the classification sections the other solid locally around each face (chains closed along a rectangle, a ray probe for uniform faces) instead of cutting the whole solid per face, and solids that share no face box skip the boolean (apart, or one inside the other); a 24-hole plate with bosses regenerates in about 70 ms and the shelled cover in about 250 ms, from 145 and 760 ms
 
 ## Platform
 
@@ -117,5 +117,5 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Realistic-parts corpus (`crates/ok-model/tests/parts.rs`): brackets, revolved flanges, pockets with counterbores, bosses on oblique faces, pulleys, grazing cuts, sweeps and lofts, patterns then fillets
 - [x] Randomised property tests for the solver and region extraction (`crates/ok-sketch/tests/property.rs`)
 - [x] Regeneration cache: unchanged feature prefixes are reused, so editing late features is cheap
-- [x] Benchmarks for regeneration time on realistic parts (`scripts/bench.sh`); the boolean's T-junction grid and section prefilters came out of the first run (a 4000-face cover shells in 0.65 s, from 3.9 s)
+- [x] Benchmarks for regeneration time on realistic parts (`scripts/bench.sh`); the boolean's T-junction grid and section prefilters came out of the first run (a 4000-face cover shells in 0.65 s, from 3.9 s), the incremental boolean out of the second (0.25 s)
 - [x] `wasm-opt` in the release pipeline (from the binaryen npm package when present)

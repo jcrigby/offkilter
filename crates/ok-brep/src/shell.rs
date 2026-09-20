@@ -244,6 +244,15 @@ fn reshape(
         (p.normal, p.normal.dot(p.origin))
     };
     let edge_faces = solid.edge_faces();
+    // Faces around every vertex, for the ring of faces at a corner.
+    let mut vertex_faces: Vec<Vec<usize>> = vec![Vec::new(); solid.vertices.len()];
+    for (i, f) in solid.faces.iter().enumerate() {
+        for &v in f.loops.iter().flatten() {
+            if vertex_faces[v as usize].last() != Some(&i) {
+                vertex_faces[v as usize].push(i);
+            }
+        }
+    }
     let across = |a: u32, b: u32, me: usize| -> Option<usize> {
         edge_faces
             .get(&crate::edge_key(a, b))
@@ -269,7 +278,7 @@ fn reshape(
                 let this_across = across(a, b, i);
                 if let (Some(p), Some(q)) = (prev_across, this_across) {
                     if p != q {
-                        if let Some(mut ring) = fan_order(solid, a, &edge_faces) {
+                        if let Some(mut ring) = fan_order(solid, a, &edge_faces, &vertex_faces) {
                             // Rotate to start at this face: ring = [F, Q, X.., P].
                             if let Some(at) = ring.iter().position(|&r| r == i) {
                                 ring.rotate_left(at);
@@ -422,10 +431,11 @@ fn fan_order(
     solid: &Solid,
     v: u32,
     edge_faces: &crate::fasthash::HashMap<crate::EdgeKey, Vec<usize>>,
+    vertex_faces: &[Vec<usize>],
 ) -> Option<Vec<usize>> {
     let mut next_of: Vec<(usize, u32)> = Vec::new();
-    for (i, f) in solid.faces.iter().enumerate() {
-        for l in &f.loops {
+    for &i in &vertex_faces[v as usize] {
+        for l in &solid.faces[i].loops {
             if let Some(k) = l.iter().position(|&x| x == v) {
                 next_of.push((i, l[(k + 1) % l.len()]));
             }

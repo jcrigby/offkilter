@@ -148,6 +148,20 @@ fn regeneration_timings() {
     });
     println!("demo plate: cold {cold:.1} ms, cached {warm:.2} ms");
 
+    // The plate, bosses and holes without the shell: the hole-heavy case.
+    let mut holed = cover();
+    let shell = holed.features().last().unwrap().id;
+    holed.apply(Op::DeleteFeature { id: shell }).unwrap();
+    let r = holed.regenerate();
+    let errors: Vec<_> = r.errors().collect();
+    assert!(errors.is_empty(), "{errors:?}");
+    let faces: usize = r.bodies.iter().map(|b| b.solid.faces.len()).sum();
+    let cold = median_ms(|| {
+        holed.clear_cache();
+        holed.regenerate();
+    });
+    println!("plate with 24 holes ({faces} faces): cold {cold:.1} ms");
+
     let mut cover = cover();
     let r = cover.regenerate();
     let errors: Vec<_> = r.errors().collect();
