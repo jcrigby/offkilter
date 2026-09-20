@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "offkilter": {
+      "command": "./target/release/ok-mcp",
+      "args": ["--server", "${OFFKILTER_URL:-http://localhost:8080}"]
+    }
+  }
+}

@@ -34,7 +34,13 @@ or export from the model side.
 
 ## Registering it
 
-Claude Code, from the repository (or anywhere, with an absolute path):
+The repository's `.mcp.json` registers `ok-mcp` for Claude Code sessions
+started in it: the release binary, against the server at
+`OFFKILTER_URL` or `http://localhost:8080`. Build it first with
+`cargo build --release -p ok-mcp`. The README's "Driving it from your
+phone" section puts that together with Remote Control.
+
+Claude Code elsewhere (or anywhere, with an absolute path):
 
 ```sh
 claude mcp add offkilter -- /path/to/offkilter/target/release/ok-mcp --server http://localhost:8080
