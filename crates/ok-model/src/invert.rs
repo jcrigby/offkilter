@@ -651,10 +651,12 @@ mod tests {
                     a: FaceRef {
                         feature: extrude,
                         local: 0,
+                        part: None,
                     },
                     b: FaceRef {
                         feature: extrude,
                         local: 2,
+                        part: None,
                     },
                 }],
                 size: 1.0,
@@ -686,6 +688,7 @@ mod tests {
                 faces: Some(vec![crate::FaceRef {
                     feature: extrude,
                     local: 1,
+                    part: None,
                 }]),
             },
         );
@@ -693,6 +696,7 @@ mod tests {
         let face = crate::FaceRef {
             feature: extrude,
             local: 1,
+            part: None,
         };
         let r = ps
             .apply(Op::AddMoveFace {
@@ -847,6 +851,7 @@ mod tests {
         let top = FaceRef {
             feature: extrude,
             local: 1,
+            part: None,
         };
         let s2 = ps
             .apply(Op::AddSketch {

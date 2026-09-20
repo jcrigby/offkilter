@@ -340,6 +340,7 @@ impl PartStudio {
                 face: FaceRef {
                     feature: e1,
                     local: 1,
+                    part: None,
                 },
                 offset: 0.0,
             })),

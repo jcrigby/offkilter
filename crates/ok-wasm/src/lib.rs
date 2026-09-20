@@ -149,9 +149,18 @@ fn cylinders_of(solid: &ok_brep::Solid) -> Vec<CylinderInfo> {
 
 #[derive(Serialize)]
 struct FaceInfo {
-    origin: ok_brep::FaceOrigin,
+    origin: FaceRefOut,
     surface: &'static str,
     normal: ok_math::Vec3,
+}
+
+/// A face reference as the client stores it: the origin plus the piece
+/// number among faces sharing that origin (see `Solid::face_parts`).
+#[derive(Serialize)]
+struct FaceRefOut {
+    feature: u32,
+    local: u32,
+    part: u32,
 }
 
 #[derive(Serialize)]
@@ -199,8 +208,13 @@ fn body_summary(b: &Body) -> BodySummary<'_> {
             .solid
             .faces
             .iter()
-            .map(|f| FaceInfo {
-                origin: f.origin,
+            .zip(b.solid.face_parts())
+            .map(|(f, part)| FaceInfo {
+                origin: FaceRefOut {
+                    feature: f.origin.feature,
+                    local: f.origin.local,
+                    part,
+                },
                 surface: match b.solid.surfaces.get(f.surface) {
                     Some(ok_brep::Surface::Cylinder { .. }) => "cylinder",
                     _ => "plane",

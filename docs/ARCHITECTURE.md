@@ -150,10 +150,18 @@ extrudes to that face's plane. `ExtrudeEnd::ThroughAll` extends past the
 bounding boxes of all existing bodies. A reference whose face no longer
 exists is a feature error.
 
-This is a first, deliberately simple form of persistent naming. Faces
-split into several fragments resolve to the first one found, and there is
-no disambiguation when a feature's face is later divided by another
-operation.
+This is a deliberately simple form of persistent naming. When a later
+operation divides an originating face into several pieces (a slot across
+a top face leaves two with one origin), `Solid::face_parts` numbers the
+pieces: faces of one origin that share an edge are one piece (so the
+facets of a cylinder stay one), the pieces are ordered by their
+area-weighted centroids and numbered from 0. A `FaceRef` carries the
+piece number as `part` (the client copies it from the summary when a
+face is picked), and every lookup, including edge references, honours
+it; a reference without one, as in older documents, means the first
+piece. The numbering is deterministic for a given shape but can change
+when an edit moves pieces past each other, which is the usual limit of
+naming by position.
 
 ### Edge references and blends
 

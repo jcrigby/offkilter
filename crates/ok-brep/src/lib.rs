@@ -625,6 +625,97 @@ impl Solid {
         self.faces = out;
     }
 
+    /// Piece numbers for faces that share an origin: later features can
+    /// split an originating face into several (a slot across a top face
+    /// leaves two). Faces with one origin are grouped by edge connectivity
+    /// (so the facets of one cylinder are one piece), the groups are
+    /// ordered by their area-weighted centroids (x, then y, then z) and
+    /// numbered from 0; a face with an origin of its own is piece 0.
+    /// Deterministic for a given shape.
+    pub fn face_parts(&self) -> Vec<u32> {
+        let mut parts = vec![0u32; self.faces.len()];
+        let mut by_origin: HashMap<FaceOrigin, Vec<usize>> = HashMap::new();
+        for (i, f) in self.faces.iter().enumerate() {
+            by_origin.entry(f.origin).or_default().push(i);
+        }
+        let diag = self
+            .bounds()
+            .map(|(lo, hi)| (hi - lo).length())
+            .unwrap_or(1.0)
+            .max(1e-9);
+        let tol = diag * 1e-6;
+        let n = self.faces.len();
+        let mut parent: Vec<usize> = (0..n).collect();
+        fn find(parent: &mut [usize], mut i: usize) -> usize {
+            while parent[i] != i {
+                parent[i] = parent[parent[i]];
+                i = parent[i];
+            }
+            i
+        }
+        // Faces of one origin that share an edge are one piece.
+        for (_, faces) in self.edge_faces() {
+            for w in faces.windows(2) {
+                if self.faces[w[0]].origin == self.faces[w[1]].origin {
+                    let (a, b) = (find(&mut parent, w[0]), find(&mut parent, w[1]));
+                    parent[a] = b;
+                }
+            }
+        }
+        for faces in by_origin.values() {
+            if faces.len() < 2 {
+                continue;
+            }
+            let mut groups: Vec<(usize, Vec3, f64, Vec<usize>)> = Vec::new();
+            for &i in faces {
+                let root = find(&mut parent, i);
+                let f = &self.faces[i];
+                let pts: Vec<Vec3> = f.loops[0]
+                    .iter()
+                    .map(|&v| self.vertices[v as usize])
+                    .collect();
+                let area = revolve::newell_normal(&pts).length() / 2.0;
+                let c =
+                    pts.iter().fold(Vec3::ZERO, |a, &p| a + p) * (1.0 / pts.len().max(1) as f64);
+                match groups.iter_mut().find(|g| g.0 == root) {
+                    Some(g) => {
+                        g.1 += c * area;
+                        g.2 += area;
+                        g.3.push(i);
+                    }
+                    None => groups.push((root, c * area, area, vec![i])),
+                }
+            }
+            if groups.len() < 2 {
+                continue;
+            }
+            let key = |g: &(usize, Vec3, f64, Vec<usize>)| {
+                if g.2 > 0.0 {
+                    g.1 * (1.0 / g.2)
+                } else {
+                    g.1
+                }
+            };
+            groups.sort_by(|a, b| {
+                let (ka, kb) = (key(a), key(b));
+                let cmp = |x: f64, y: f64| {
+                    if (x - y).abs() <= tol {
+                        std::cmp::Ordering::Equal
+                    } else {
+                        x.partial_cmp(&y).unwrap_or(std::cmp::Ordering::Equal)
+                    }
+                };
+                cmp(ka.x, kb.x).then(cmp(ka.y, kb.y)).then(cmp(ka.z, kb.z))
+            });
+            for (k, g) in groups.iter().enumerate() {
+                for &i in &g.3 {
+                    parts[i] = k as u32;
+                }
+            }
+        }
+        parts
+    }
+
     /// Inserts any vertex lying strictly inside an edge into that edge.
     fn repair_t_junctions(&mut self, tol: f64) {
         let grid = PointGrid::new(&self.vertices, tol);
@@ -1158,6 +1249,47 @@ impl VertexMerger {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn faces_split_by_a_cut_are_numbered_by_position() {
+        use ok_sketch::{ProfileOptions, Sketch};
+        let block = |x0: f64, x1: f64, y0: f64, y1: f64, z0: f64, z1: f64, id: u32| {
+            let mut s = Sketch::new();
+            s.add_rectangle(ok_math::Vec2::new(x0, y0), ok_math::Vec2::new(x1, y1));
+            let p = s.profiles(&ProfileOptions::default()).remove(0);
+            extrude(&p, &ok_math::Plane::XY, z0, z1, id).unwrap()
+        };
+        let body = block(0.0, 30.0, 0.0, 10.0, 0.0, 5.0, 1);
+        assert!(body.face_parts().iter().all(|&p| p == 0));
+        // A slot across the block at x = 10..12 splits the top and both long sides.
+        let slot = block(10.0, 12.0, -1.0, 11.0, 2.0, 6.0, 2);
+        let cut = boolean(&body, &slot, BoolOp::Difference).unwrap();
+        let parts = cut.face_parts();
+        let top: Vec<(u32, f64)> = cut
+            .faces
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| {
+                f.origin
+                    == FaceOrigin {
+                        feature: 1,
+                        local: 1,
+                    }
+            })
+            .map(|(i, f)| {
+                let x = f.loops[0]
+                    .iter()
+                    .map(|&v| cut.vertices[v as usize].x)
+                    .sum::<f64>()
+                    / f.loops[0].len() as f64;
+                (parts[i], x)
+            })
+            .collect();
+        assert_eq!(top.len(), 2, "{top:?}");
+        let left = top.iter().find(|(p, _)| *p == 0).unwrap();
+        let right = top.iter().find(|(p, _)| *p == 1).unwrap();
+        assert!(left.1 < 10.0 && right.1 > 12.0, "{top:?}");
+    }
 
     #[test]
     fn a_face_bent_by_more_than_tolerance_is_split_into_planar_triangles() {

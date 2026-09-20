@@ -1051,6 +1051,7 @@ mod tests {
                         face: FaceRef {
                             feature: e,
                             local: 1,
+                            part: None,
                         },
                         anchor: crate::Anchor::Face,
                     },
@@ -1059,6 +1060,7 @@ mod tests {
                         face: FaceRef {
                             feature: e,
                             local: 0,
+                            part: None,
                         },
                         anchor: crate::Anchor::Face,
                     },
@@ -1183,6 +1185,7 @@ mod tests {
                         face: FaceRef {
                             feature: e,
                             local: 1,
+                            part: None,
                         },
                         anchor: crate::Anchor::Face,
                     },
@@ -1191,6 +1194,7 @@ mod tests {
                         face: FaceRef {
                             feature: e,
                             local: 0,
+                            part: None,
                         },
                         anchor: crate::Anchor::Face,
                     },

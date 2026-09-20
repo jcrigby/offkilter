@@ -77,7 +77,7 @@ class App implements SketchHost {
       for (let s = 0; s < body.faces.length; s++) {
         for (let t = s + 1; t < body.faces.length; t++) {
           const o1 = body.faces[s]!.origin, o2 = body.faces[t]!.origin;
-          const same = (x: FaceRef, y: FaceRef) => x.feature === y.feature && x.local === y.local;
+          const same = (x: FaceRef, y: FaceRef) => x.feature === y.feature && x.local === y.local && (x.part === undefined || y.part === undefined || x.part === y.part);
           if ((same(o1, ref.a) && same(o2, ref.b)) || (same(o1, ref.b) && same(o2, ref.a))) return { body: b, faces: [s, t] };
         }
       }
@@ -183,7 +183,7 @@ class App implements SketchHost {
       const faces = this.summary.bodies[b]!.faces;
       for (let f = 0; f < faces.length; f++) {
         const o = faces[f]!.origin;
-        if (o.feature === ref.feature && o.local === ref.local) return { body: b, face: f };
+        if (o.feature === ref.feature && o.local === ref.local && (ref.part === undefined || o.part === undefined || o.part === ref.part)) return { body: b, face: f };
       }
     }
     return null;

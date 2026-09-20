@@ -57,6 +57,7 @@ fn cover() -> PartStudio {
     let top = FaceRef {
         feature: plate,
         local: 1,
+        part: None,
     };
     let bosses = ps
         .apply(Op::AddSketch {
@@ -126,6 +127,7 @@ fn cover() -> PartStudio {
         faces: vec![FaceRef {
             feature: plate,
             local: 0,
+            part: None,
         }],
         name: None,
     })

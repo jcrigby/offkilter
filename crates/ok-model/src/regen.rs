@@ -45,34 +45,60 @@ impl Body {
 
     /// The first face created by `face_ref`, if this body still has it.
     pub fn find_face(&self, face_ref: &FaceRef) -> Option<&ok_brep::Face> {
-        self.solid
-            .faces
-            .iter()
-            .find(|f| face_ref.matches(&f.origin))
-    }
-
-    /// Indices of every face on the surfaces the referenced faces lie on
-    /// (so one facet of a cylinder names the whole cylinder).
-    pub fn faces_on_surfaces_of(&self, refs: &[FaceRef]) -> Vec<usize> {
-        let surfaces: Vec<usize> = self
-            .solid
-            .faces
-            .iter()
-            .filter(|f| refs.iter().any(|r| r.matches(&f.origin)))
-            .map(|f| f.surface)
-            .collect();
+        let parts = self.solid.face_parts();
         self.solid
             .faces
             .iter()
             .enumerate()
-            .filter(|(_, f)| surfaces.contains(&f.surface))
-            .map(|(i, _)| i)
+            .find(|(i, f)| face_ref.matches_part(&f.origin, parts[*i]))
+            .map(|(_, f)| f)
+    }
+
+    /// Indices of every face reachable from the referenced faces across
+    /// shared edges without leaving their surface (so one facet of a
+    /// cylinder names the whole cylinder, while two coplanar pieces left
+    /// by a slot stay apart).
+    pub fn faces_on_surfaces_of(&self, refs: &[FaceRef]) -> Vec<usize> {
+        let parts = self.solid.face_parts();
+        let seeds: Vec<usize> = (0..self.solid.faces.len())
+            .filter(|&i| {
+                refs.iter()
+                    .any(|r| r.matches_part(&self.solid.faces[i].origin, parts[i]))
+            })
+            .collect();
+        self.connected_on_surfaces(&seeds)
+    }
+
+    /// Faces connected to `seeds` through shared edges between faces of one
+    /// surface.
+    fn connected_on_surfaces(&self, seeds: &[usize]) -> Vec<usize> {
+        let n = self.solid.faces.len();
+        let mut parent: Vec<usize> = (0..n).collect();
+        fn find(parent: &mut [usize], mut i: usize) -> usize {
+            while parent[i] != i {
+                parent[i] = parent[parent[i]];
+                i = parent[i];
+            }
+            i
+        }
+        for (_, faces) in self.solid.edge_faces() {
+            for w in faces.windows(2) {
+                if self.solid.faces[w[0]].surface == self.solid.faces[w[1]].surface {
+                    let (a, b) = (find(&mut parent, w[0]), find(&mut parent, w[1]));
+                    parent[a] = b;
+                }
+            }
+        }
+        let roots: Vec<usize> = seeds.iter().map(|&i| find(&mut parent, i)).collect();
+        (0..n)
+            .filter(|&i| roots.contains(&find(&mut parent, i)))
             .collect()
     }
 
     /// Face index pairs for every edge between the two referenced faces.
     pub fn find_edge(&self, edge: &EdgeRef) -> Vec<(usize, usize)> {
         let mut out = Vec::new();
+        let parts = self.solid.face_parts();
         for (_, faces) in self.solid.edge_faces() {
             if faces.len() != 2 {
                 continue;
@@ -81,8 +107,9 @@ impl Body {
                 &self.solid.faces[faces[0]].origin,
                 &self.solid.faces[faces[1]].origin,
             );
-            if (edge.a.matches(fa) && edge.b.matches(fb))
-                || (edge.a.matches(fb) && edge.b.matches(fa))
+            let (pa, pb) = (parts[faces[0]], parts[faces[1]]);
+            if (edge.a.matches_part(fa, pa) && edge.b.matches_part(fb, pb))
+                || (edge.a.matches_part(fb, pb) && edge.b.matches_part(fa, pa))
             {
                 let pair = (faces[0], faces[1]);
                 if !out.contains(&pair) {
@@ -94,19 +121,13 @@ impl Body {
     }
 
     /// Face index pairs for every edge between the surfaces of the two
-    /// referenced faces, so one picked segment of a faceted rim names the
-    /// whole rim.
+    /// referenced faces (each grown across its surface as
+    /// `faces_on_surfaces_of` does), so one picked segment of a faceted rim
+    /// names the whole rim.
     pub fn find_edge_on_surfaces(&self, edge: &EdgeRef) -> Vec<(usize, usize)> {
-        let surfaces_of = |r: &FaceRef| -> Vec<usize> {
-            self.solid
-                .faces
-                .iter()
-                .filter(|f| r.matches(&f.origin))
-                .map(|f| f.surface)
-                .collect()
-        };
-        let (sa, sb) = (surfaces_of(&edge.a), surfaces_of(&edge.b));
-        if sa.is_empty() || sb.is_empty() {
+        let fa = self.faces_on_surfaces_of(&[edge.a]);
+        let fb = self.faces_on_surfaces_of(&[edge.b]);
+        if fa.is_empty() || fb.is_empty() {
             return Vec::new();
         }
         let mut out = Vec::new();
@@ -121,7 +142,9 @@ impl Body {
             if s0 == s1 {
                 continue;
             }
-            if (sa.contains(&s0) && sb.contains(&s1)) || (sa.contains(&s1) && sb.contains(&s0)) {
+            if (fa.contains(&faces[0]) && fb.contains(&faces[1]))
+                || (fa.contains(&faces[1]) && fb.contains(&faces[0]))
+            {
                 let pair = (faces[0], faces[1]);
                 if !out.contains(&pair) {
                     out.push(pair);
@@ -1917,6 +1940,7 @@ mod tests {
         let top = crate::FaceRef {
             feature: e,
             local: 1,
+            part: None,
         };
         let s2 = ps
             .apply(Op::AddSketch {
@@ -1984,6 +2008,7 @@ mod tests {
         let boss_top = crate::FaceRef {
             feature: e2,
             local: 1,
+            part: None,
         };
         let s3 = ps
             .apply(Op::AddSketch {
@@ -2188,10 +2213,12 @@ mod tests {
         let top = crate::FaceRef {
             feature: e,
             local: 1,
+            part: None,
         };
         let front = crate::FaceRef {
             feature: e,
             local: 2,
+            part: None,
         };
         let f = ps
             .apply(Op::AddBlend {
@@ -2505,6 +2532,7 @@ mod tests {
                     face: crate::FaceRef {
                         feature: e,
                         local: 1,
+                        part: None,
                     },
                     offset: 0.0,
                 },
@@ -2769,6 +2797,7 @@ mod tests {
         let top = FaceRef {
             feature: e1,
             local: 1,
+            part: None,
         };
         let s2 = ps
             .apply(Op::AddSketch {
@@ -2937,10 +2966,12 @@ mod tests {
         let wall = FaceRef {
             feature: e1,
             local: 2,
+            part: None,
         };
         let cap = FaceRef {
             feature: e1,
             local: 1,
+            part: None,
         };
         ps.apply(Op::Sketch {
             id: s2,
@@ -3053,10 +3084,12 @@ mod tests {
                 a: FaceRef {
                     feature: e1,
                     local: 1,
+                    part: None,
                 },
                 b: FaceRef {
                     feature: e1,
                     local: 2,
+                    part: None,
                 },
             }],
             size: 2.0,
@@ -3254,6 +3287,7 @@ mod tests {
                     face: crate::FaceRef {
                         feature: e,
                         local: 1,
+                        part: None,
                     },
                     offset: 0.0,
                 },

@@ -34,11 +34,22 @@ impl StandardPlane {
 pub struct FaceRef {
     pub feature: FeatureId,
     pub local: u32,
+    /// Which piece, when later features split the originating face into
+    /// several (a slot across a top face leaves two with one origin):
+    /// pieces are numbered by position (see `Solid::face_parts`). Absent
+    /// means piece 0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub part: Option<u32>,
 }
 
 impl FaceRef {
     pub fn matches(&self, origin: &ok_brep::FaceOrigin) -> bool {
         origin.feature == self.feature.0 && origin.local == self.local
+    }
+
+    /// `matches`, also requiring the face's piece number (piece 0 when none is named).
+    pub fn matches_part(&self, origin: &ok_brep::FaceOrigin, part: u32) -> bool {
+        self.matches(origin) && self.part.unwrap_or(0) == part
     }
 }
 

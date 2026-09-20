@@ -905,10 +905,12 @@ mod tests {
         let top = FaceRef {
             feature: FeatureId(1),
             local: 1,
+            part: None,
         };
         let bottom = FaceRef {
             feature: FeatureId(1),
             local: 0,
+            part: None,
         };
         asm.mates.push(Mate {
             id: MateId(3),
@@ -997,10 +999,12 @@ mod tests {
         let top = FaceRef {
             feature: FeatureId(1),
             local: 1,
+            part: None,
         };
         let bottom = FaceRef {
             feature: FeatureId(1),
             local: 0,
+            part: None,
         };
         let mate = |id: u32, a: u32, b: u32| Mate {
             id: MateId(id),
@@ -1064,6 +1068,7 @@ mod tests {
         let face = |local: u32| FaceRef {
             feature: FeatureId(1),
             local,
+            part: None,
         };
         let mut asm = Assembly::new("loop");
         asm.instances.extend([mk(1, true), mk(2, false)]);
@@ -1144,6 +1149,7 @@ mod tests {
         FaceRef {
             feature: FeatureId(1),
             local,
+            part: None,
         }
     }
 
@@ -1291,6 +1297,7 @@ mod tests {
             &FaceRef {
                 feature: FeatureId(1),
                 local: 2,
+                part: None,
             },
             &Anchor::Face,
         )

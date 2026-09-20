@@ -171,6 +171,7 @@ impl Part {
                     return FaceRef {
                         feature: FeatureId(f.origin.feature),
                         local: f.origin.local,
+                        part: None,
                     };
                 }
             }
@@ -202,6 +203,7 @@ fn l_bracket_with_holes_fillet_and_chamfer() {
     let top = FaceRef {
         feature: base,
         local: 1,
+        part: None,
     };
     let s2 = p.sketch_on(top);
     p.rect(s2, (0.0, 34.0), (60.0, 40.0));
@@ -309,6 +311,7 @@ fn pocketed_box_with_rounded_corners_and_counterbored_holes() {
         .map(|local| FaceRef {
             feature: body,
             local,
+            part: None,
         })
         .collect();
     let edges: Vec<EdgeRef> = (0..4)
@@ -325,6 +328,7 @@ fn pocketed_box_with_rounded_corners_and_counterbored_holes() {
     let top = FaceRef {
         feature: body,
         local: 1,
+        part: None,
     };
     let s2 = p.sketch_on(top);
     p.rect(s2, (5.0, 5.0), (75.0, 45.0));
@@ -485,6 +489,7 @@ fn grazing_cuts_tangent_bosses_and_coincident_cylinders() {
     let s5 = p.sketch_on(FaceRef {
         feature: block,
         local: 1,
+        part: None,
     });
     p.rect(s5, (0.0, 0.0), (20.0, 20.0));
     p.extrude_dir(
@@ -591,6 +596,7 @@ fn linear_pattern_of_a_ribbed_plate_then_fillet_after_pattern() {
     let s2 = p.sketch_on(FaceRef {
         feature: plate,
         local: 1,
+        part: None,
     });
     p.rect(s2, (4.0, 0.0), (6.0, 30.0));
     p.extrude(s2, 10.0, BodyOp::Add);
@@ -867,6 +873,7 @@ fn move_face_and_draft_on_a_block() {
     let top = FaceRef {
         feature: block,
         local: 1,
+        part: None,
     };
     let mv = p.op(Op::AddMoveFace {
         faces: vec![top],
@@ -887,6 +894,7 @@ fn move_face_and_draft_on_a_block() {
         .map(|local| FaceRef {
             feature: block,
             local,
+            part: None,
         })
         .collect();
     p.op(Op::AddDraft {
@@ -1142,4 +1150,69 @@ fn sketch_on_an_angled_plane_extrudes_a_tilted_block() {
     let f = p.ps.feature(s).unwrap();
     assert!(f.kind.bindable_fields().iter().any(|x| x == "plane.angle"));
     assert_eq!(f.kind.field("plane.angle"), Some(30.0));
+}
+
+/// A slot across a block splits its top face in two; references name the
+/// piece they mean, numbered by position, so a later move face acts on
+/// that piece alone.
+#[test]
+fn split_faces_are_named_by_piece() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Top));
+    p.rect(s, (0.0, 0.0), (30.0, 10.0));
+    let block = p.extrude(s, 5.0, BodyOp::New);
+    let top = p.face(|n, _, _| (n.z - 1.0).abs() < 1e-9);
+    assert_eq!(top.part, None);
+    let s2 = p.sketch_on(top);
+    p.rect(s2, (10.0, -1.0), (12.0, 11.0));
+    p.extrude_dir(
+        s2,
+        3.0,
+        ExtrudeDirection::Reverse,
+        ExtrudeEnd::Blind,
+        BodyOp::Remove,
+    );
+    let base = p.volume();
+    assert!(close(base, 1500.0 - 2.0 * 10.0 * 3.0, 1e-9));
+    // Piece 0 is the left part (x < 10, 100 mm²), piece 1 the right (180 mm²).
+    let piece = |part: u32| FaceRef {
+        feature: block,
+        local: 1,
+        part: Some(part),
+    };
+    let mv = p.op(Op::AddMoveFace {
+        faces: vec![piece(1)],
+        distance: 2.0,
+        name: None,
+    });
+    assert!(
+        close(p.volume(), base + 2.0 * 180.0, 1e-6),
+        "{}",
+        p.volume()
+    );
+    p.op(Op::SetMoveFace {
+        id: mv,
+        faces: Some(vec![piece(0)]),
+        distance: Some(2.0),
+    });
+    assert!(
+        close(p.volume(), base + 2.0 * 100.0, 1e-6),
+        "{}",
+        p.volume()
+    );
+    // Without a piece number, piece 0 is meant.
+    p.op(Op::SetMoveFace {
+        id: mv,
+        faces: Some(vec![FaceRef {
+            feature: block,
+            local: 1,
+            part: None,
+        }]),
+        distance: Some(2.0),
+    });
+    assert!(
+        close(p.volume(), base + 2.0 * 100.0, 1e-6),
+        "{}",
+        p.volume()
+    );
 }
