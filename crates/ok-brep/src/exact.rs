@@ -596,6 +596,94 @@ pub fn refit_within(
     Ok(Some(out))
 }
 
+/// The exact length of a run: along its curve where the pair of surfaces
+/// has one (a circle or ellipse by its arc, a line by its ends), else
+/// through the exact positions of its vertices (a quartic finely).
+pub fn run_length(solid: &Solid, vertex_faces: &[Vec<usize>], run: &Run) -> f64 {
+    let exact: Vec<Vec3> = run
+        .vertices
+        .iter()
+        .map(|&v| vertex_position(solid, vertex_faces, v))
+        .collect();
+    let chords = |pts: &[Vec3]| pts.windows(2).map(|w| w[0].distance(w[1])).sum::<f64>();
+    match edge_curve(
+        &solid.surfaces[run.surfaces.0],
+        &solid.surfaces[run.surfaces.1],
+    ) {
+        Curve::Line { .. } => {
+            if run.closed {
+                chords(&exact)
+            } else {
+                exact[0].distance(exact[exact.len() - 1])
+            }
+        }
+        Curve::Circle {
+            center,
+            axis,
+            radius,
+        } => {
+            // Each chord's angle about the axis, the short way round.
+            exact
+                .windows(2)
+                .map(|w| {
+                    let (a, b) = (
+                        cylinder_angle(center, axis, w[0]),
+                        cylinder_angle(center, axis, w[1]),
+                    );
+                    let d = (b - a).rem_euclid(std::f64::consts::TAU);
+                    d.min(std::f64::consts::TAU - d) * radius
+                })
+                .sum()
+        }
+        Curve::Ellipse {
+            center,
+            axis,
+            major,
+            a,
+            b,
+        } => {
+            let minor = axis.cross(major);
+            let param = |p: Vec3| {
+                let d = p - center;
+                (d.dot(minor) / b).atan2(d.dot(major) / a)
+            };
+            // Arc length by fine sampling between consecutive vertices.
+            exact
+                .windows(2)
+                .map(|w| {
+                    let (t0, t1) = (param(w[0]), param(w[1]));
+                    let mut d = (t1 - t0).rem_euclid(std::f64::consts::TAU);
+                    if d > std::f64::consts::PI {
+                        d -= std::f64::consts::TAU;
+                    }
+                    let n = 64;
+                    (0..n)
+                        .map(|k| {
+                            let s0 = t0 + d * k as f64 / n as f64;
+                            let s1 = t0 + d * (k + 1) as f64 / n as f64;
+                            let at =
+                                |s: f64| center + major * (a * s.cos()) + minor * (b * s.sin());
+                            at(s0).distance(at(s1))
+                        })
+                        .sum::<f64>()
+                })
+                .sum()
+        }
+        Curve::Quartic => {
+            let cyl = if matches!(solid.surfaces[run.surfaces.0], Surface::Cylinder { .. }) {
+                run.surfaces.0
+            } else {
+                run.surfaces.1
+            };
+            let fine: Vec<f64> = (0..3600)
+                .map(|k| (k as f64 * 0.1).to_radians() - std::f64::consts::PI)
+                .collect();
+            chords(&run_points(solid, vertex_faces, run, Some((cyl, &fine))))
+        }
+        Curve::Polyline => chords(&exact),
+    }
+}
+
 /// The faces around every vertex.
 pub fn vertex_faces(solid: &Solid) -> Vec<Vec<usize>> {
     let mut out = vec![Vec::new(); solid.vertices.len()];
@@ -1037,6 +1125,73 @@ mod tests {
         let loops = &regions[&cyl];
         assert_eq!(loops.len(), 2, "top rim and bottom rim");
         assert!(loops.iter().all(|l| l.len() == 72));
+    }
+
+    #[test]
+    fn run_lengths_are_exact_arc_lengths() {
+        let (cut, normal) = cut_by_tilted_plane(&cylinder(10.0, 30.0, 1), 30.0, 20.0);
+        let vf = vertex_faces(&cut);
+        let cyl = cut
+            .surfaces
+            .iter()
+            .position(|s| matches!(s, Surface::Cylinder { .. }))
+            .unwrap();
+        let top = cut
+            .faces
+            .iter()
+            .find(|f| f.plane.normal.approx_eq(normal))
+            .unwrap()
+            .surface;
+        let bottom = cut
+            .faces
+            .iter()
+            .find(|f| f.plane.normal.approx_eq(-Vec3::Z))
+            .unwrap()
+            .surface;
+        let runs = edge_runs(&cut);
+        let of = |s: usize| {
+            runs.iter()
+                .find(|r| r.surfaces == (cyl.min(s), cyl.max(s)))
+                .unwrap()
+        };
+        let circle = run_length(&cut, &vf, of(bottom));
+        assert!(
+            (circle - 2.0 * std::f64::consts::PI * 10.0).abs() < 1e-9,
+            "bottom rim {circle}"
+        );
+        // The rim: semi-axes 10 / cos 30° and 10; Ramanujan's second
+        // approximation of the perimeter is good to far better than 1e-6
+        // here.
+        let (a, b) = (10.0 / 30f64.to_radians().cos(), 10.0);
+        let h = ((a - b) / (a + b)).powi(2);
+        let ramanujan =
+            std::f64::consts::PI * (a + b) * (1.0 + 3.0 * h / (10.0 + (4.0 - 3.0 * h).sqrt()));
+        let ellipse = run_length(&cut, &vf, of(top));
+        assert!(
+            (ellipse - ramanujan).abs() < 1e-4,
+            "rim {ellipse} vs {ramanujan}"
+        );
+        // A seam of the wall between two planar facets is not a run; the
+        // wall's straight runs are none here, but a box edge is its length.
+        let mut s = Sketch::new();
+        s.add_rectangle(Vec2::ZERO, Vec2::new(4.0, 3.0));
+        let b = extrude(
+            &s.profiles(&ProfileOptions::default()).remove(0),
+            &Plane::XY,
+            0.0,
+            5.0,
+            1,
+        )
+        .unwrap();
+        let vf = vertex_faces(&b);
+        let lengths: Vec<f64> = edge_runs(&b)
+            .iter()
+            .map(|r| run_length(&b, &vf, r))
+            .collect();
+        assert_eq!(lengths.len(), 12);
+        assert!(lengths
+            .iter()
+            .all(|l| [3.0, 4.0, 5.0].iter().any(|e| (l - e).abs() < 1e-9)));
     }
 
     #[test]

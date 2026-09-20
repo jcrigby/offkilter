@@ -575,6 +575,27 @@ impl Doc {
 
     /// Surface index of every face, so the client can treat all facets of
     /// one curved surface as one face (edge highlighting, picking).
+    /// The exact length of the edge of body `i` between faces `a` and
+    /// `b`: every run of the body between the two faces' surfaces, each
+    /// measured along its exact curve (a circle or ellipse by its arc).
+    /// Negative when the body or faces do not exist.
+    pub fn edge_length(&self, i: usize, a: usize, b: usize) -> f64 {
+        let Some(body) = self.bodies.get(i) else {
+            return -1.0;
+        };
+        let solid = &body.solid;
+        let (Some(fa), Some(fb)) = (solid.faces.get(a), solid.faces.get(b)) else {
+            return -1.0;
+        };
+        let pair = (fa.surface.min(fb.surface), fa.surface.max(fb.surface));
+        let vf = ok_brep::exact::vertex_faces(solid);
+        ok_brep::exact::edge_runs(solid)
+            .iter()
+            .filter(|r| r.surfaces == pair)
+            .map(|r| ok_brep::exact::run_length(solid, &vf, r))
+            .sum()
+    }
+
     pub fn body_face_surfaces(&self, i: usize) -> Vec<u32> {
         self.bodies
             .get(i)

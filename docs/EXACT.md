@@ -58,8 +58,15 @@ a boolean, so results no longer depend on the resolution of the tools.
    touched cylinders from their exact runs at the document's resolution.
    Anything that fails to close afterwards leaves the boolean's own
    result in place.
-4. [ ] Exact curves in drawings and measurements (silhouettes and
-   ellipses as curves, not polylines) and DXF arcs.
+4. [x] Exact curves in drawings and measurements: a drawing view keeps
+   its hidden-line work on the facet chords but returns every circle or
+   ellipse edge as arcs of the ellipse it projects to (`ViewLines`
+   `visible_arcs` and `hidden_arcs`, joined from the chords' visible and
+   hidden pieces; the two rims of a hole seen along it are one circle,
+   a rim seen edge-on one line). The sheet draws them as SVG arcs, the
+   DXF (now R2000) as `CIRCLE`, `ARC` and `ELLIPSE` entities, and the
+   measure tool reports an edge's length along its curve
+   (`exact::run_length`). Quartics stay polylines.
 5. [ ] Revolved surfaces as exact cones and tori (profile line and arc
    about the axis), including fillets along circular edges.
 6. [ ] Beyond: general surfaces (sweeps, lofts) as B-spline surfaces,

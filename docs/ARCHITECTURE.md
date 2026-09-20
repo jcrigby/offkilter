@@ -525,8 +525,20 @@ crossings and testing each piece's midpoint (even-odd, outline counts as
 covered), and depth is compared linearly along the piece, splitting where
 the edge passes through the face's plane. Collinear overlaps are merged
 with visible lines winning, so the back edges of a box seen square on
-draw once. The client lays front, top, right and isometric views out in
-third angle and writes an SVG sheet or DXF lines.
+draw once. Edges on an exact circle or ellipse (`exact::edge_runs` and
+`edge_curve`) are not returned as their chords: the chords go through
+the same hidden-line work, and their visible and hidden pieces, measured
+as parameter intervals of the ellipse the curve projects to, are joined
+into arcs (`visible_arcs`, `hidden_arcs`; two runs projecting onto one
+ellipse, the rims of a hole seen along it, are one, and hidden arcs are
+cut back where visible ones cover them). A rim seen edge-on becomes a
+single line the same way. The client lays front, top, right and
+isometric views out in third angle and writes an SVG sheet (arcs as
+path arcs) or a DXF (R2000: `CIRCLE`, `ARC` and `ELLIPSE` entities
+beside the lines). The measure tool's edge length comes from
+`exact::run_length` through the wasm `edge_length`: along the circle or
+ellipse for a rim, so a Ø20 hole measures 62.832 rather than its 72
+chords.
 
 A section view (`section_view`) cuts each solid with a boolean
 difference against a box covering the removed side of the cutting plane,

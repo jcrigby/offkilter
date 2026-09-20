@@ -75,7 +75,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Mate connectors on edges and vertices
 - [x] Mate animation (display-only sweep of a revolute, cylindrical or slider mate)
 - [x] STL and 3MF export of bodies (3MF keeps part names); DXF export of a sketch
-- [x] Drawings: front / top / right / isometric views with exact hidden-line removal for the faceted geometry, laid out third-angle on an A4 sheet (SVG) or as DXF lines
+- [x] Drawings: front / top / right / isometric views with exact hidden-line removal for the faceted geometry, laid out third-angle on an A4 sheet (SVG) or as DXF lines; on the `exact-surfaces` branch circle and ellipse edges are drawn as arcs (SVG arcs, DXF `ARC`/`ELLIPSE`)
 - [x] Automatic overall dimensions (width, height, depth) on drawing sheets
 - [x] Section views on drawings (hatched cut faces, lettered cutting-plane trace; follows the viewport section plane)
 - [x] Drawing dialog: choose the views and sheet size with a live preview; bill of materials export (CSV) for part studios and assemblies
