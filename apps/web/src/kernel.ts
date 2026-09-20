@@ -104,6 +104,8 @@ export type FeatureSummary = {
   candidates?: [number, string][];
 };
 export type FaceInfo = { origin: FaceRef; surface: "plane" | "cylinder"; normal: Vec3 };
+/** A cylindrical surface of a body: axis line, radius, extent along the axis, and whether it is a hole or a boss. */
+export type CylinderInfo = { surface: number; origin: Vec3; axis: Vec3; radius: number; t0: number; t1: number; hole: boolean };
 /** A part material: name and density in g/cm³. */
 export type Material = { name: string; density: number };
 export type BodySummary = {
@@ -113,6 +115,7 @@ export type BodySummary = {
   triangles: number;
   face_count: number;
   faces: FaceInfo[];
+  cylinders: CylinderInfo[];
   bounds: [Vec3, Vec3] | null;
   volume: number;
   area: number;

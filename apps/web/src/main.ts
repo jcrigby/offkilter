@@ -1,5 +1,5 @@
 import { Kernel } from "./kernel";
-import { detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type DrawingFrame, type DrawingView, type SheetSize, type UserDimension } from "./export";
+import { detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Callout, type DrawingFrame, type DrawingView, type SheetSize, type UserDimension } from "./export";
 import { parseObj, parseStl } from "./stl";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
@@ -980,10 +980,11 @@ class App implements SketchHost {
   /** Front, top, right and isometric views of the current bodies with hidden lines removed. */
   drawingViews(): DrawingView[] {
     const z = { x: 0, y: 0, z: 1 };
+    const standard = (name: string, dir: Vec3, up: Vec3): DrawingView => ({ name, lines: this.kernel.drawingView(dir, up), callouts: this.drawingCallouts(dir, up) });
     const views: DrawingView[] = [
-      { name: "front", lines: this.kernel.drawingView({ x: 0, y: 1, z: 0 }, z) },
-      { name: "top", lines: this.kernel.drawingView({ x: 0, y: 0, z: -1 }, { x: 0, y: 1, z: 0 }) },
-      { name: "right", lines: this.kernel.drawingView({ x: -1, y: 0, z: 0 }, z) },
+      standard("front", { x: 0, y: 1, z: 0 }, z),
+      standard("top", { x: 0, y: 0, z: -1 }, { x: 0, y: 1, z: 0 }),
+      standard("right", { x: -1, y: 0, z: 0 }, z),
       { name: "iso", lines: this.kernel.drawingView({ x: -0.6, y: 0.7, z: -0.5 }, z) },
     ];
     const section = this.drawingSectionView();
@@ -991,6 +992,48 @@ class App implements SketchHost {
     const detail = this.drawingDetailView(views);
     if (detail) views.push(detail);
     return views;
+  }
+
+  /**
+   * Diameter callouts for a view: every cylinder of the tab's bodies whose
+   * axis runs along the view direction is seen end-on as a circle. Alike
+   * sizes are counted on one callout ("4× Ø6"); concentric circles (a
+   * counterbore) each get their own.
+   */
+  drawingCallouts(dir: Vec3, up: Vec3): Callout[] {
+    const cross = (a: Vec3, b: Vec3): Vec3 => ({ x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x });
+    const dot = (a: Vec3, b: Vec3) => a.x * b.x + a.y * b.y + a.z * b.z;
+    const u = cross(dir, up), v = cross(u, dir);
+    const circles: { centre: Vec2; radius: number; hole: boolean }[] = [];
+    for (const body of this.summary.bodies) {
+      for (const c of body.cylinders ?? []) {
+        if (Math.abs(dot(c.axis, dir)) < 0.999) continue;
+        const centre = { x: dot(c.origin, u), y: dot(c.origin, v) };
+        if (circles.some((o) => Math.abs(o.radius - c.radius) < 1e-6 && Math.hypot(o.centre.x - centre.x, o.centre.y - centre.y) < 1e-6)) continue;
+        circles.push({ centre, radius: c.radius, hole: c.hole });
+      }
+    }
+    // One callout per size; it sits on the lowest-leftmost circle of that size.
+    const out: Callout[] = [];
+    for (const c of circles) {
+      const same = out.find((o) => Math.abs(o.radius - c.radius) < 1e-6 && o.hole === c.hole);
+      if (same) {
+        same.count += 1;
+        if (c.centre.y < same.centre.y - 1e-9 || (Math.abs(c.centre.y - same.centre.y) < 1e-9 && c.centre.x < same.centre.x)) same.centre = c.centre;
+      } else {
+        out.push({ centre: c.centre, radius: c.radius, count: 1, hole: c.hole, angle: 45 });
+      }
+    }
+    // Callouts whose leaders would cross (concentric or close circles) fan
+    // out: up-right, up-left, down-right, down-left, by size.
+    out.sort((a, b) => a.radius - b.radius);
+    const angles = [45, 135, -45, -135];
+    for (let i = 0; i < out.length; i++) {
+      const c = out[i]!;
+      const near = out.slice(0, i).filter((o) => Math.hypot(o.centre.x - c.centre.x, o.centre.y - c.centre.y) < o.radius + c.radius + 12);
+      c.angle = angles[near.length % angles.length]!;
+    }
+    return out;
   }
 
   /**

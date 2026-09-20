@@ -228,7 +228,31 @@ export function toDxf(sketch: SketchData): string {
 export type SectionTrace = { on: string; horizontal: boolean; at: number; label: string; /** +1 when the removed side is towards larger coordinates, -1 otherwise. */ towards: number };
 /** A detail view's marker: the circle on the source view it enlarges. */
 export type DetailMarker = { on: string; centre: Vec2; radius: number; label: string; scale: number };
-export type DrawingView = { name: string; lines: ViewLines; /** Closed outlines of cut faces (section views), hatched on the sheet. */ cut?: Vec2[][]; trace?: SectionTrace; /** For a detail view: where it was taken from. */ detail?: DetailMarker };
+/** A diameter callout: a circle seen end-on in the view (a hole or boss), how many alike there are, and the text. */
+export type Callout = { centre: Vec2; radius: number; count: number; hole: boolean; /** Leader direction in degrees from the +x axis; concentric callouts fan out. */ angle: number };
+export type DrawingView = { name: string; lines: ViewLines; /** Closed outlines of cut faces (section views), hatched on the sheet. */ cut?: Vec2[][]; trace?: SectionTrace; /** For a detail view: where it was taken from. */ detail?: DetailMarker; /** Diameter callouts of cylinders seen end-on. */ callouts?: Callout[] };
+
+/** Text of a callout: "Ø12", or "4× Ø6" for repeated sizes. */
+export function calloutText(c: Callout): string {
+  const d = dimText(2 * c.radius);
+  return c.count > 1 ? `${c.count}× Ø${d}` : `Ø${d}`;
+}
+
+/**
+ * Leader geometry of a callout in layout coordinates: from the circle's
+ * rim outward along the callout's angle, then a short horizontal shoulder
+ * away from the circle; the text starts (or, on the left, ends) at the
+ * shoulder's end.
+ */
+function calloutGeometry(c: Callout, dx: number, dy: number): { lines: [Vec2, Vec2][]; text: Vec2; left: boolean } {
+  const a = (c.angle * Math.PI) / 180;
+  const ux = Math.cos(a), uy = Math.sin(a);
+  const left = ux < 0;
+  const rim = { x: c.centre.x + dx + c.radius * ux, y: c.centre.y + dy + c.radius * uy };
+  const elbow = { x: rim.x + 5 * ux, y: rim.y + 5 * uy };
+  const end = { x: elbow.x + (left ? -4 : 4), y: elbow.y };
+  return { lines: [[rim, elbow], [elbow, end]], text: { x: end.x + (left ? -0.8 : 0.8), y: end.y }, left };
+}
 
 /** The part of a segment inside a circle, or null when it misses. */
 function clipToCircle(a: Vec2, b: Vec2, c: Vec2, r: number): [Vec2, Vec2] | null {
@@ -571,6 +595,21 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
     out.push(`<text x="${tx}" y="${ty}" font-family="Helvetica, Arial, sans-serif" font-size="3" fill="black" text-anchor="middle" dominant-baseline="middle"${g.text.angle ? ` transform="rotate(${-g.text.angle} ${tx} ${ty})"` : ""}>${dimText(d.value)}</text>`);
     out.push(`</g>`);
   }
+  // Diameter callouts of holes and bosses seen end-on.
+  for (const p of placed) {
+    for (const c of p.callouts ?? []) {
+      const g = calloutGeometry(c, p.dx, p.dy);
+      out.push(`<g class="callout">`);
+      out.push(`<path fill="none" stroke="black" stroke-width="0.18" d="${g.lines.map(([a, b]) => `M${X(a.x)} ${Y(a.y)}L${X(b.x)} ${Y(b.y)}`).join("")}"/>`);
+      const [rim, elbow] = g.lines[0]!;
+      const ux = elbow.x - rim.x, uy = elbow.y - rim.y, len = Math.hypot(ux, uy) || 1;
+      const tip = { x: rim.x, y: rim.y }, back = { x: rim.x + (ux / len) * 2.5, y: rim.y + (uy / len) * 2.5 };
+      const nx = -uy / len * 0.8, ny = ux / len * 0.8;
+      out.push(`<polygon fill="black" points="${X(tip.x)},${Y(tip.y)} ${X(back.x + nx)},${Y(back.y + ny)} ${X(back.x - nx)},${Y(back.y - ny)}"/>`);
+      out.push(`<text x="${X(g.text.x)}" y="${Y(g.text.y)}" font-family="Helvetica, Arial, sans-serif" font-size="3" fill="black" dominant-baseline="middle"${g.left ? ' text-anchor="end"' : ""}>${escapeXml(calloutText(c))}</text>`);
+      out.push(`</g>`);
+    }
+  }
   // Title block along the bottom edge.
   const by = sheet.h - sheet.margin - sheet.block;
   out.push(`<rect x="${sheet.margin}" y="${by}" width="${sheet.w - 2 * sheet.margin}" height="${sheet.block}" fill="none" stroke="black" stroke-width="0.5"/>`);
@@ -613,6 +652,11 @@ export function toDrawingDxf(views: DrawingView[], user: UserDimension[] = []): 
     if (p.name === "section") {
       const x = (p.b.minx + p.b.maxx) / 2 + p.dx, y = p.b.miny + p.dy - 6;
       lines.push("0", "TEXT", "8", "SECTION", "10", fmt(x), "20", fmt(y), "30", "0", "40", "3.5", "72", "1", "11", fmt(x), "21", fmt(y), "31", "0", "1", p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION");
+    }
+    for (const c of p.callouts ?? []) {
+      const g = calloutGeometry(c, p.dx, p.dy);
+      for (const [a, b] of g.lines) lines.push("0", "LINE", "8", "DIMENSIONS", "10", fmt(a.x), "20", fmt(a.y), "30", "0", "11", fmt(b.x), "21", fmt(b.y), "31", "0");
+      lines.push("0", "TEXT", "8", "DIMENSIONS", "10", fmt(g.text.x), "20", fmt(g.text.y - 1.5), "30", "0", "40", "3", "72", g.left ? "2" : "0", "11", fmt(g.text.x), "21", fmt(g.text.y - 1.5), "31", "0", "1", calloutText(c));
     }
     if (p.detail) {
       const r = p.detail.radius * p.detail.scale;

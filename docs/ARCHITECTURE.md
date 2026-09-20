@@ -405,7 +405,11 @@ sits on the sheet, a click is mapped back into view coordinates and
 snapped to the nearest line endpoint, and two picks on one view become
 a `DrawingDimension` (aligned, its text along the span, the dimension
 line on the side away from the view's middle) that both the SVG and the
-DXF draw beside the automatic overall dimensions. Placed dimensions are
+DXF draw beside the automatic overall dimensions. The body summary also
+lists each body's cylindrical surfaces (axis, radius, extent, hole or
+boss); a standard view whose direction runs along such an axis sees it
+end-on and gets a diameter callout with a leader ("Ø12", or "4× Ø6" when
+several of one size are visible). Placed dimensions are
 document state: each `Tab` carries its `drawing` list, replaced through
 `DocOp::SetDrawingDimensions` (one undo step, relayed to collaborators
 like any edit) and reported per tab in the summary. The Export

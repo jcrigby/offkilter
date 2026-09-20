@@ -76,7 +76,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Section views on drawings (hatched cut faces, lettered cutting-plane trace; follows the viewport section plane)
 - [x] Drawing dialog: choose the views and sheet size with a live preview; bill of materials export (CSV) for part studios and assemblies
 - [x] Detail views on drawings: the selected face's neighbourhood enlarged 2:1 from the view that faces it, with a lettered marker circle
-- [x] Dimensions placed by the user on drawings (two corners of a view in the sheet preview; aligned, on the side away from the view)
+- [x] Dimensions placed by the user on drawings (two corners of a view in the sheet preview; aligned, on the side away from the view); they are document state
+- [x] Diameter callouts for holes and bosses seen end-on in the standard views, counted when several share a size
 - [ ] STEP export once faces are exact
 - [x] Import: STL (binary or ASCII) and OBJ meshes as bodies; coplanar triangles merge into faces
 - [ ] Import: STEP via a B-rep reader

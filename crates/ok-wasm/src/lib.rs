@@ -69,6 +69,8 @@ struct BodySummary<'a> {
     triangles: usize,
     face_count: usize,
     faces: Vec<FaceInfo>,
+    /// The body's cylindrical surfaces (holes and bosses), one entry each.
+    cylinders: Vec<CylinderInfo>,
     bounds: Option<(ok_math::Vec3, ok_math::Vec3)>,
     volume: f64,
     area: f64,
@@ -79,6 +81,70 @@ struct BodySummary<'a> {
     /// Mass in grams from the material's density, when assigned.
     #[serde(skip_serializing_if = "Option::is_none")]
     mass: Option<f64>,
+}
+
+/// A cylindrical surface of a body: its axis line, radius, extent along
+/// the axis, and whether it bounds a hole (facets face the axis) or a boss.
+#[derive(Serialize)]
+struct CylinderInfo {
+    surface: usize,
+    origin: ok_math::Vec3,
+    axis: ok_math::Vec3,
+    radius: f64,
+    t0: f64,
+    t1: f64,
+    hole: bool,
+}
+
+fn cylinders_of(solid: &ok_brep::Solid) -> Vec<CylinderInfo> {
+    let mut out: Vec<CylinderInfo> = Vec::new();
+    for f in &solid.faces {
+        let Some(ok_brep::Surface::Cylinder {
+            origin,
+            axis,
+            radius,
+        }) = solid.surfaces.get(f.surface).copied()
+        else {
+            continue;
+        };
+        let pts = f
+            .loops
+            .iter()
+            .flatten()
+            .map(|&v| solid.vertices[v as usize]);
+        let (mut t0, mut t1) = (f64::MAX, f64::MIN);
+        let mut centroid = ok_math::Vec3::ZERO;
+        let mut n = 0.0;
+        for p in pts {
+            let t = (p - origin).dot(axis);
+            t0 = t0.min(t);
+            t1 = t1.max(t);
+            centroid += p;
+            n += 1.0;
+        }
+        if n == 0.0 {
+            continue;
+        }
+        let d = centroid * (1.0 / n) - origin;
+        let radial = d - axis * d.dot(axis);
+        let hole = f.plane.normal.dot(radial) < 0.0;
+        match out.iter_mut().find(|c| c.surface == f.surface) {
+            Some(c) => {
+                c.t0 = c.t0.min(t0);
+                c.t1 = c.t1.max(t1);
+            }
+            None => out.push(CylinderInfo {
+                surface: f.surface,
+                origin,
+                axis,
+                radius,
+                t0,
+                t1,
+                hole,
+            }),
+        }
+    }
+    out
 }
 
 #[derive(Serialize)]
@@ -142,6 +208,7 @@ fn body_summary(b: &Body) -> BodySummary<'_> {
                 normal: f.plane.normal,
             })
             .collect(),
+        cylinders: cylinders_of(&b.solid),
         bounds: b.solid.bounds(),
         volume: b.solid.volume(),
         area: b.solid.surface_area(),

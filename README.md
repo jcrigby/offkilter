@@ -36,7 +36,8 @@ works today, all in the browser:
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
   document only reverts your own edit), `.okpart` JSON documents, STL and OBJ import, STL, 3MF and DXF export, PNG snapshots, drawing
   sheets (SVG/DXF, A4 to A2 or Letter, chosen views with a live preview)
-  with hidden-line removal, overall dimensions, dimensions you place
+  with hidden-line removal, overall dimensions, diameter callouts for
+  holes and bosses, dimensions you place
   between corners in the preview, a hatched section view and a detail
   view of the selected face, bills of materials as CSV, mass properties
   with per-part materials.

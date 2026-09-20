@@ -889,6 +889,12 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   expect((svg.match(/class="dimension"/g) ?? []).length).toBe(3);
   expect(svg).toMatch(/>60<\/text>/);
   expect(svg).toMatch(/>40<\/text>/);
+  // The Ø12 hole and the boss are seen end-on in the top view and get diameter callouts.
+  expect(svg).toContain('class="callout"');
+  expect(svg).toContain(">Ø12<");
+  const callouts = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.drawingViews().find((v: any) => v.name === "top").callouts);
+  expect(callouts.some((c: any) => c.hole && Math.abs(c.radius - 6) < 1e-9)).toBe(true);
+  expect(callouts.some((c: any) => !c.hole)).toBe(true);
   // A section A-A through the middle of the plate: hatched cut faces and a trace on the top view.
   const section = await page.evaluate(() => {
     const v = (window as unknown as { offkilter: any }).offkilter.drawingViews().find((x: any) => x.name === "section");
