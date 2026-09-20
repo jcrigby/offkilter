@@ -83,6 +83,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] STEP export (AP214): each body a manifold B-rep of planar faces with line edges, named; curved surfaces go out as their facets
 - [ ] STEP with exact cylindrical and other analytic faces, once the kernel has them
 - [x] Import: STL (binary or ASCII) and OBJ meshes as bodies; coplanar triangles merge into faces
+- [x] Import: DXF lines, circles, arcs and polylines (with bulges) into a sketch, endpoints tied by coincident constraints
 - [ ] Import: STEP via a B-rep reader
 
 ## Platform

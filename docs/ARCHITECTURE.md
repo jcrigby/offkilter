@@ -381,6 +381,18 @@ new face planes, so `move_faces` translates planar faces along their
 normals and `draft_faces` tilts them about the line where each meets a
 neutral plane; the faces around them re-solve their corners as above.
 
+### DXF import (`apps/web/src/dxf.ts`)
+
+`parseDxf` reads the ENTITIES section of an ASCII DXF: LINE, CIRCLE, ARC
+(counter-clockwise from the start to the end angle, as the kernel's arcs
+are) and LWPOLYLINE / POLYLINE with bulges (a bulge is tan(θ/4) of the
+segment's included angle; positive turns counter-clockwise, so a negative
+bulge becomes an arc from the next vertex back to this one). The client
+adds the geometry to the active sketch as one undo step through
+`applyRaw`, tying endpoints that land on each other, or on an existing
+sketch point, with coincident constraints so imported outlines close
+into regions that extrude.
+
 ### STEP export (`ok-step`)
 
 `ok_step::write_step` turns solids into an ISO 10303-21 file (AP214

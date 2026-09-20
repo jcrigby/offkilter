@@ -35,7 +35,7 @@ works today, all in the browser:
   plus an interference check between instances and a display-only
   animation of any spinning or sliding mate.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
-  document only reverts your own edit), `.okpart` JSON documents, STL and OBJ import, STL, 3MF, STEP (faceted B-rep) and DXF export, PNG snapshots, drawing
+  document only reverts your own edit), `.okpart` JSON documents, STL and OBJ import, DXF import into sketches, STL, 3MF, STEP (faceted B-rep) and DXF export, PNG snapshots, drawing
   sheets (SVG/DXF, A4 to A2 or Letter, chosen views with a live preview)
   with hidden-line removal, overall dimensions, diameter callouts for
   holes and bosses, dimensions you place

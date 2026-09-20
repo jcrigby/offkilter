@@ -869,6 +869,40 @@ test("import a binary STL box as a body", async ({ page }) => {
   expect(await volume(page)).toBeCloseTo(2000, 3);
 });
 
+test("import a DXF outline into a sketch and extrude it", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  // A 40 x 20 outline: three LINEs, a closed LWPOLYLINE tab with a bulge, and a circle hole.
+  const dxf = ["0", "SECTION", "2", "ENTITIES",
+    "0", "LINE", "10", "0", "20", "0", "11", "40", "21", "0",
+    "0", "LINE", "10", "40", "20", "0", "11", "40", "21", "20",
+    "0", "LINE", "10", "40", "20", "20", "11", "0", "21", "20",
+    "0", "LINE", "10", "0", "20", "20", "11", "0", "21", "0",
+    "0", "CIRCLE", "10", "20", "20", "10", "40", "4",
+    "0", "LWPOLYLINE", "90", "3", "70", "1", "10", "50", "20", "0", "10", "60", "20", "0", "42", "1", "10", "60", "20", "10",
+    "0", "ENDSEC", "0", "EOF"].join("\n");
+  const result = await page.evaluate((text) => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    app.apply({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Sketch 1" });
+    const s = app.summary.features[app.summary.features.length - 1].id;
+    const added = app.importDxf(text, s);
+    const sk = app.summary.features.find((f: any) => f.id === s).kind.sketch;
+    const regions = app.summary.sketches[String(s)].profiles.length;
+    app.apply({ type: "add_extrude", sketch: s, depth: 5, name: "Plate", profiles: { type: "largest" } });
+    return { added, lines: sk.entities.filter((e: any) => e.type === "line").length, arcs: sk.entities.filter((e: any) => e.type === "arc").length, circles: sk.entities.filter((e: any) => e.type === "circle").length, coincident: sk.constraints.filter((c: any) => c.type === "coincident").length, regions, volume: app.summary.bodies[0]?.volume };
+  }, dxf);
+  expect([result.lines, result.arcs, result.circles]).toEqual([6, 1, 1]);
+  expect(result.added).toBe(8);
+  // Four outline corners plus three polyline joints are tied together.
+  expect(result.coincident).toBe(7);
+  expect(result.regions).toBeGreaterThanOrEqual(2);
+  // The 40 x 20 plate minus the Ø8 hole, 5 deep.
+  expect(result.volume).toBeCloseTo((800 - Math.PI * 16) * 5, -1);
+});
+
 test("drawing views remove hidden lines and export as SVG and DXF", async ({ page }) => {
   await openDemo(page);
   const counts = await page.evaluate(() => {

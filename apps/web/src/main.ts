@@ -1,6 +1,7 @@
 import { Kernel } from "./kernel";
 import { detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
 import { parseObj, parseStl } from "./stl";
+import { parseDxf } from "./dxf";
 import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick } from "./viewer";
@@ -821,6 +822,58 @@ class App implements SketchHost {
     this.updateHistoryButtons();
     this.regenerate();
     this.viewer.fitAll();
+  }
+
+  /**
+   * Adds the geometry of a DXF file to a sketch as one undo step: lines,
+   * circles and arcs, with endpoints that land on each other (or on an
+   * existing sketch point) tied by coincident constraints so outlines
+   * close into regions. Returns how many entities were added.
+   */
+  importDxf(text: string, sketchId: number): number {
+    const geometry = parseDxf(text);
+    const points: { id: number; pos: Vec2 }[] = [];
+    const sketch = this.feature(sketchId);
+    if (sketch?.kind.type === "sketch") {
+      for (const e of sketch.kind.sketch.entities) if (e.type === "point") points.push({ id: e.id, pos: e.pos });
+    }
+    let scale = 1;
+    for (const [a, b] of geometry.lines) scale = Math.max(scale, Math.abs(a.x), Math.abs(a.y), Math.abs(b.x), Math.abs(b.y));
+    for (const c of geometry.circles) scale = Math.max(scale, Math.abs(c.center.x) + c.radius, Math.abs(c.center.y) + c.radius);
+    const tol = 1e-6 * scale;
+    let added = 0;
+    this.snapshot();
+    try {
+      const tie = (id: number, pos: Vec2) => {
+        const existing = points.find((p) => Math.hypot(p.pos.x - pos.x, p.pos.y - pos.y) < tol);
+        if (existing) this.applyRaw({ type: "sketch", id: sketchId, op: { type: "add_constraint", constraint: { type: "coincident", a: id, b: existing.id } } });
+        else points.push({ id, pos });
+      };
+      for (const [a, b] of geometry.lines) {
+        if (Math.hypot(b.x - a.x, b.y - a.y) < tol) continue;
+        const r = this.applyRaw({ type: "sketch", id: sketchId, op: { type: "add_line", a, b } });
+        const [, start, end] = r.entities as [number, number, number];
+        tie(start, a);
+        tie(end, b);
+        added += 1;
+      }
+      for (const c of geometry.circles) {
+        if (c.radius <= tol) continue;
+        this.applyRaw({ type: "sketch", id: sketchId, op: { type: "add_circle", center: c.center, radius: c.radius } });
+        added += 1;
+      }
+      for (const arc of geometry.arcs) {
+        const r = this.applyRaw({ type: "sketch", id: sketchId, op: { type: "add_arc", center: arc.center, start: arc.start, end: arc.end } });
+        const [, , start, end] = r.entities as [number, number, number, number];
+        tie(start, arc.start);
+        tie(end, arc.end);
+        added += 1;
+      }
+    } catch (e) {
+      this.setStatus(`DXF import stopped: ${(e as Error).message}`);
+    }
+    this.regenerate();
+    return added;
   }
 
   /** Applies a part-studio op to the active tab as one undo step. */
@@ -1682,6 +1735,9 @@ class App implements SketchHost {
         b.title = `${label} (${key})`;
         tools.appendChild(b);
       }
+      const importDxf = button("Import DXF…", () => ($("#dxf-input") as HTMLInputElement).click());
+      importDxf.title = "Add the lines, circles and arcs of a DXF file to this sketch";
+      tools.appendChild(importDxf);
       tools.appendChild(button("Done", () => { this.sketcher.exit(); this.renderDetail(); }, "primary"));
     }
     body.appendChild(tools);
@@ -3243,6 +3299,18 @@ async function main(): Promise<void> {
     try {
       const mesh = /\.obj$/i.test(file.name) ? parseObj(await file.text()) : parseStl(await file.arrayBuffer());
       app.apply({ type: "add_mesh", vertices: mesh.vertices, triangles: mesh.triangles, name: file.name.replace(/\.(stl|obj)$/i, "") || null });
+    } catch (e) {
+      app.setStatus(`could not import ${file.name}: ${(e as Error).message}`);
+    }
+  };
+  const dxfInput = $("#dxf-input") as HTMLInputElement;
+  dxfInput.onchange = async () => {
+    const file = dxfInput.files?.[0];
+    dxfInput.value = "";
+    if (!file || !app.sketcher.active || app.sketcher.sketchId === null) return;
+    try {
+      const n = app.importDxf(await file.text(), app.sketcher.sketchId);
+      app.setStatus(`Imported ${n} entities from ${file.name}.`);
     } catch (e) {
       app.setStatus(`could not import ${file.name}: ${(e as Error).message}`);
     }
