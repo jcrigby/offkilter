@@ -351,7 +351,7 @@ test("assembly tab: insert two instances and mate them face to face", async ({ p
   await expect(page.locator("#mate-list li")).toHaveCount(1);
   // The assembly's bill of materials lists both instances with their source tab.
   const bom: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toBom());
-  expect(bom.split("\n")[0]).toBe("instance,source,body,volume_mm3,surface_mm2,size_mm");
+  expect(bom.split("\n")[0]).toBe("instance,source,body,material,mass_g,volume_mm3,surface_mm2,size_mm");
   expect(bom.trim().split("\n").length).toBe(3);
   expect(bom).toContain("Part Studio 1");
   expect(bom).toContain("500.000");
@@ -563,6 +563,19 @@ test("standard views, measure, section and part rename", async ({ page }) => {
   await page.keyboard.press("Control+z");
   await page.waitForTimeout(200);
   expect(await page.textContent("#part-list li .pname")).toBe(original);
+  // A material gives the part a mass: volume × density.
+  const vol = await volume(page);
+  await page.selectOption("#part-list li .pmaterial", "Aluminium");
+  await page.waitForTimeout(200);
+  const stats = (await page.textContent("#part-list li .pstats")) ?? "";
+  const grams = vol * 2.7 / 1000;
+  expect(stats).toContain(grams >= 1000 ? `${(grams / 1000).toFixed(3)} kg` : `${grams.toFixed(1)} g`);
+  const bom: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toBom());
+  expect(bom.split("\n")[0]).toBe("part,material,mass_g,volume_mm3,surface_mm2,size_mm,faces");
+  expect(bom).toContain("Aluminium");
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(200);
+  expect((await page.textContent("#part-list li .pstats")) ?? "").not.toContain(" g");
 });
 
 test("export bodies as STL and 3MF and a sketch as DXF", async ({ page }) => {
@@ -864,7 +877,7 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   expect(svg2).toContain("A3");
   // Bill of materials for the part studio: one row per body.
   const bom: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toBom());
-  expect(bom.split("\n")[0]).toBe("part,volume_mm3,surface_mm2,size_mm,faces");
+  expect(bom.split("\n")[0]).toBe("part,material,mass_g,volume_mm3,surface_mm2,size_mm,faces");
   expect(bom.trim().split("\n").length).toBe(2);
   const dxf: string = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.toDrawingDxf());
   expect((dxf.match(/\r\nHIDDEN\r\n/g) ?? []).length).toBeGreaterThan(0);

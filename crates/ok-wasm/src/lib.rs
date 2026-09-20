@@ -72,6 +72,12 @@ struct BodySummary<'a> {
     volume: f64,
     area: f64,
     centroid: Option<ok_math::Vec3>,
+    /// The part's material, when assigned.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    material: Option<&'a ok_model::Material>,
+    /// Mass in grams from the material's density, when assigned.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mass: Option<f64>,
 }
 
 #[derive(Serialize)]
@@ -139,6 +145,8 @@ fn body_summary(b: &Body) -> BodySummary<'_> {
         volume: b.solid.volume(),
         area: b.solid.surface_area(),
         centroid: b.solid.centroid(),
+        material: b.material.as_ref(),
+        mass: b.material.as_ref().map(|m| m.mass_g(b.solid.volume())),
     }
 }
 

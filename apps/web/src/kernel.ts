@@ -99,6 +99,8 @@ export type FeatureSummary = {
   candidates?: [number, string][];
 };
 export type FaceInfo = { origin: FaceRef; surface: "plane" | "cylinder"; normal: Vec3 };
+/** A part material: name and density in g/cm³. */
+export type Material = { name: string; density: number };
 export type BodySummary = {
   name: string;
   source: number;
@@ -110,6 +112,10 @@ export type BodySummary = {
   volume: number;
   area: number;
   centroid: Vec3 | null;
+  /** Assigned material, if any. */
+  material?: Material;
+  /** Mass in grams from the material's density, if one is assigned. */
+  mass?: number;
 };
 export type SolveResult = {
   status: "fully_constrained" | "under_constrained" | "inconsistent";
@@ -250,7 +256,8 @@ export type Op =
   | { type: "move_feature"; id: number; index: number }
   | { type: "sketch"; id: number; op: SketchOp }
   | { type: "rename_studio"; name: string }
-  | { type: "rename_part"; source: number; name: string | null };
+  | { type: "rename_part"; source: number; name: string | null }
+  | { type: "set_part_material"; source: number; material: Material | null };
 
 /** Ops that undo an applied op come back with its result (see `inverse`). */
 export type OpResult = { feature: number | null; entities: number[]; constraint: number | null; inverse?: Op[] };

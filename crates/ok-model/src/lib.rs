@@ -70,9 +70,28 @@ pub struct PartStudio {
     /// User names for parts, by the feature that created the body.
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub part_names: std::collections::BTreeMap<FeatureId, String>,
+    /// Materials assigned to parts, by the feature that created the body.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub part_materials: std::collections::BTreeMap<FeatureId, Material>,
     /// Per-feature regeneration cache; never persisted.
     #[serde(skip)]
     cache: regen::RegenCache,
+}
+
+/// A part's material: a name and a density in g/cm³, from which a body's
+/// mass follows (volume is in mm³, so mass in grams is volume × density
+/// / 1000).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Material {
+    pub name: String,
+    pub density: f64,
+}
+
+impl Material {
+    /// Mass in grams of a body of `volume_mm3`.
+    pub fn mass_g(&self, volume_mm3: f64) -> f64 {
+        volume_mm3 * self.density / 1000.0
+    }
 }
 
 /// Document-wide regeneration settings.
@@ -112,6 +131,7 @@ impl PartStudio {
             next_id: 1,
             settings: Settings::default(),
             part_names: Default::default(),
+            part_materials: Default::default(),
             cache: Default::default(),
         }
     }

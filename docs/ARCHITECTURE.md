@@ -394,6 +394,15 @@ and the sheet size (A4, A3, A2, Letter) before downloading; the Export
 menu also writes a bill of materials as CSV (bodies of a part studio, or
 instances with their source tab in an assembly).
 
+### Part names and materials
+
+A studio keeps `part_names` and `part_materials` keyed by the feature
+that created each body, applied after regeneration so they survive
+edits and undo per user (`Op::RenamePart`, `Op::SetPartMaterial`, each
+with an inverse). A material is a name and a density in g/cm³; the wasm
+summary reports the mass (volume × density / 1000) of every body that
+has one, which the parts list and the bill of materials show.
+
 ### Split (`FeatureKind::Split`)
 
 `ok_brep::split` cuts a solid by a plane with two booleans against a box

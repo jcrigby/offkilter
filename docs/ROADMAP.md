@@ -44,6 +44,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Mirror and linear / circular patterns of bodies
 - [x] Boolean feature between existing bodies (union / subtract / intersect, tools optionally kept)
 - [x] Split bodies by a plane into two parts (the plane offset is bindable)
+- [x] Part materials (name + density) with mass in the parts list and bill of materials; standard metric hole presets
 - [x] Patterns and mirrors of features (the named features' tool volumes are replayed with their own add / remove operation)
 - [x] Mirror / pattern selected bodies only (tick bodies in the panel)
 - [ ] Patterns of faces

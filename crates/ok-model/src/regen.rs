@@ -23,6 +23,9 @@ pub struct Body {
     pub triangle_faces: Vec<u32>,
     /// Display edges of `solid` (between distinct surfaces).
     pub edges: Vec<ok_brep::DisplayEdge>,
+    /// The part's material, when one is assigned.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub material: Option<crate::Material>,
 }
 
 impl Body {
@@ -36,6 +39,7 @@ impl Body {
             mesh,
             triangle_faces,
             edges,
+            material: None,
         }
     }
 
@@ -622,6 +626,7 @@ impl PartStudio {
             if let Some(n) = self.part_names.get(&b.source) {
                 b.name = n.clone();
             }
+            b.material = self.part_materials.get(&b.source).cloned();
         }
     }
 

@@ -1,10 +1,10 @@
 use crate::{
     BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, DraftFeature,
     EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId,
-    FeatureKind, HoleFeature, LoftFeature, MeshFeature, MirrorFeature, ModelError, MoveFaceFeature,
-    PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection, Projection,
-    ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature, SketchFeature, SplitFeature,
-    SweepFeature, VariableFeature, PROJECTION_BLOCK,
+    FeatureKind, HoleFeature, LoftFeature, Material, MeshFeature, MirrorFeature, ModelError,
+    MoveFaceFeature, PartStudio, PatternFeature, PatternKind, PlaneRef, ProfileSelection,
+    Projection, ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature, SketchFeature,
+    SplitFeature, SweepFeature, VariableFeature, PROJECTION_BLOCK,
 };
 use ok_math::{Vec2, Vec3};
 use ok_sketch::{Constraint, ConstraintId, Entity, EntityId};
@@ -462,6 +462,12 @@ pub enum Op {
     RenamePart {
         source: FeatureId,
         name: Option<String>,
+    },
+    /// Assigns (or with `None` clears) the material of the part created by
+    /// `source`; the mass in the summary follows from its density.
+    SetPartMaterial {
+        source: FeatureId,
+        material: Option<Material>,
     },
 }
 
@@ -1318,6 +1324,19 @@ impl PartStudio {
                 }
             },
             Op::RenameStudio { name } => self.name = name,
+            Op::SetPartMaterial { source, material } => match material {
+                Some(m) if m.density > 0.0 && m.density.is_finite() => {
+                    self.part_materials.insert(source, m);
+                }
+                Some(_) => {
+                    return Err(ModelError::Invalid(
+                        "material density must be positive".into(),
+                    ))
+                }
+                None => {
+                    self.part_materials.remove(&source);
+                }
+            },
             Op::RenamePart { source, name } => match name.map(|n| n.trim().to_string()) {
                 Some(n) if !n.is_empty() => {
                     self.part_names.insert(source, n);

@@ -65,8 +65,8 @@ button.active { background: rgba(78, 161, 255, 0.25); border-color: var(--accent
 .feature-list li:hover .roll { visibility: visible; }
 .parts-title { border-top: 1px solid var(--border); margin-top: 4px; }
 .part-list { list-style: none; margin: 0; padding: 0 12px 8px; font-size: 12px; }
-.part-list li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; color: var(--text-dim); }
-.part-list li .pname { color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.part-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; padding: 2px 0; color: var(--text-dim); }
+.part-list li .pname { color: var(--text); flex: 1; min-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .part-list li .pstats { white-space: nowrap; }
 .part-list li .eye { padding: 0 4px; border: none; background: none; color: var(--accent); font-size: 11px; line-height: 1; }
 .part-list li .eye.off { color: var(--text-dim); }
@@ -146,3 +146,5 @@ dialog.wide { min-width: 720px; max-width: 92vw; }
 .drawing-options label { display: inline-flex; align-items: center; gap: 4px; }
 .drawing-preview { background: white; border: 1px solid var(--border); margin: 8px 0; min-height: 200px; }
 .drawing-preview svg { width: 100%; height: auto; display: block; }
+
+.part-list li .pmaterial { flex-basis: 100%; margin-left: 22px; font-size: 11px; max-width: 200px; background: var(--bg); color: var(--text-dim); border: 1px solid var(--border); border-radius: 3px; }

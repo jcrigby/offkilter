@@ -308,6 +308,10 @@ impl PartStudio {
                 Before::PartName(name) => vec![Op::RenamePart { source, name }],
                 _ => Vec::new(),
             },
+            Op::SetPartMaterial { source, .. } => match before {
+                Before::PartMaterial(material) => vec![Op::SetPartMaterial { source, material }],
+                _ => Vec::new(),
+            },
             Op::ReplaceDocument { .. } => match before {
                 Before::Document(json) => vec![Op::ReplaceDocument { json }],
                 _ => Vec::new(),
@@ -336,6 +340,7 @@ enum Before {
     Settings(crate::Settings),
     Name(String),
     PartName(Option<String>),
+    PartMaterial(Option<crate::Material>),
     Document(String),
 }
 
@@ -378,6 +383,9 @@ impl Before {
             Op::SetSettings { .. } => Before::Settings(ps.settings),
             Op::RenameStudio { .. } => Before::Name(ps.name.clone()),
             Op::RenamePart { source, .. } => Before::PartName(ps.part_names.get(source).cloned()),
+            Op::SetPartMaterial { source, .. } => {
+                Before::PartMaterial(ps.part_materials.get(source).cloned())
+            }
             Op::ReplaceDocument { .. } => Before::Document(ps.to_json()),
             _ => Before::None,
         }
@@ -550,6 +558,31 @@ mod tests {
             Op::RenamePart {
                 source: extrude,
                 name: Some("Plate".into()),
+            },
+        );
+        round_trip(
+            &mut ps,
+            Op::SetPartMaterial {
+                source: extrude,
+                material: Some(crate::Material {
+                    name: "Steel".into(),
+                    density: 7.85,
+                }),
+            },
+        );
+        ps.apply(Op::SetPartMaterial {
+            source: extrude,
+            material: Some(crate::Material {
+                name: "Aluminium".into(),
+                density: 2.7,
+            }),
+        })
+        .unwrap();
+        round_trip(
+            &mut ps,
+            Op::SetPartMaterial {
+                source: extrude,
+                material: None,
             },
         );
         round_trip(

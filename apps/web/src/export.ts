@@ -518,24 +518,26 @@ export function toDrawingDxf(views: DrawingView[]): string {
 
 /** A bill of materials for the current tab as CSV: one row per body (part studio) or per instance (assembly). */
 export function toBom(summary: { kind: string; name: string; bodies: BodySummary[]; instances: { name: string; studio: number; body: number; body_indices: number[] }[]; tabs: { id: number; name: string }[] }): string {
+  const material = (b: BodySummary) => b.material?.name ?? "";
+  const mass = (b: BodySummary) => (b.mass !== undefined ? b.mass.toFixed(2) : "");
   const esc = (v: string | number) => {
     const s = String(v);
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const rows: (string | number)[][] = [];
   if (summary.kind === "assembly") {
-    rows.push(["instance", "source", "body", "volume_mm3", "surface_mm2", "size_mm"]);
+    rows.push(["instance", "source", "body", "material", "mass_g", "volume_mm3", "surface_mm2", "size_mm"]);
     for (const inst of summary.instances) {
       const tab = summary.tabs.find((t) => t.id === inst.studio)?.name ?? `tab ${inst.studio}`;
       for (const i of inst.body_indices) {
         const b = summary.bodies[i];
-        if (b) rows.push([inst.name, tab, b.name, b.volume.toFixed(3), b.area.toFixed(3), sizeOf(b)]);
+        if (b) rows.push([inst.name, tab, b.name, material(b), mass(b), b.volume.toFixed(3), b.area.toFixed(3), sizeOf(b)]);
       }
-      if (inst.body_indices.length === 0) rows.push([inst.name, tab, "", "", "", ""]);
+      if (inst.body_indices.length === 0) rows.push([inst.name, tab, "", "", "", "", "", ""]);
     }
   } else {
-    rows.push(["part", "volume_mm3", "surface_mm2", "size_mm", "faces"]);
-    for (const b of summary.bodies) rows.push([b.name, b.volume.toFixed(3), b.area.toFixed(3), sizeOf(b), b.face_count]);
+    rows.push(["part", "material", "mass_g", "volume_mm3", "surface_mm2", "size_mm", "faces"]);
+    for (const b of summary.bodies) rows.push([b.name, material(b), mass(b), b.volume.toFixed(3), b.area.toFixed(3), sizeOf(b), b.face_count]);
   }
   return rows.map((r) => r.map(esc).join(",")).join("\n") + "\n";
 }

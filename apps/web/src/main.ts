@@ -1351,9 +1351,49 @@ class App implements SketchHost {
       const stats = document.createElement("span");
       stats.className = "pstats";
       const c = b.centroid;
-      stats.textContent = `${b.volume.toFixed(1)} mm³ · ${b.area.toFixed(1)} mm²`;
-      stats.title = c ? `centre of mass (${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)}) · ${b.face_count} faces` : "";
+      const mass = b.mass !== undefined ? ` · ${b.mass >= 1000 ? `${(b.mass / 1000).toFixed(3)} kg` : `${b.mass.toFixed(1)} g`}` : "";
+      stats.textContent = `${b.volume.toFixed(1)} mm³ · ${b.area.toFixed(1)} mm²${mass}`;
+      stats.title = (c ? `centre of mass (${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)}) · ${b.face_count} faces` : "") + (b.material ? ` · ${b.material.name} ${b.material.density} g/cm³` : "");
       li.append(eye, name, stats);
+      if (this.summary.kind !== "assembly") {
+        const mat = document.createElement("select");
+        mat.className = "pmaterial";
+        mat.title = "Material (sets the density, so the part gets a mass)";
+        const current = b.material ? MATERIALS.find((m) => m.name === b.material!.name && m.density === b.material!.density) : undefined;
+        const options: [string, string][] = [["", "no material"], ...MATERIALS.map((m) => [m.name, `${m.name} (${m.density})`] as [string, string]), ["custom", "custom…"]];
+        if (b.material && !current) options.splice(1, 0, [b.material.name, `${b.material.name} (${b.material.density})`]);
+        for (const [value, label] of options) {
+          const o = document.createElement("option");
+          o.value = value;
+          o.textContent = label;
+          mat.appendChild(o);
+        }
+        mat.value = b.material ? b.material.name : "";
+        mat.onchange = () => {
+          const v = mat.value;
+          if (v === "") this.apply({ type: "set_part_material", source: b.source, material: null });
+          else if (v === "custom") {
+            const answer = prompt("Material name and density in g/cm³, e.g. \"Oak 0.75\"", b.material ? `${b.material.name} ${b.material.density}` : "");
+            if (!answer) {
+              this.renderParts(target);
+              return;
+            }
+            const parts = answer.trim().split(/\s+/);
+            const density = Number(parts[parts.length - 1]);
+            const mname = parts.slice(0, -1).join(" ") || "Custom";
+            if (!Number.isFinite(density) || density <= 0) {
+              this.setStatus("A material needs a positive density in g/cm³.");
+              this.renderParts(target);
+              return;
+            }
+            this.apply({ type: "set_part_material", source: b.source, material: { name: mname, density } });
+          } else {
+            const m = MATERIALS.find((x) => x.name === v) ?? (b.material && b.material.name === v ? b.material : undefined);
+            if (m) this.apply({ type: "set_part_material", source: b.source, material: m });
+          }
+        };
+        li.appendChild(mat);
+      }
       ul.appendChild(li);
     });
     if (this.summary.bodies.length === 0) {
@@ -1785,6 +1825,12 @@ class App implements SketchHost {
     if (f.kind.type !== "hole") return;
     const k = f.kind;
     body.appendChild(this.sketchField(k.sketch));
+    const preset = select(["custom", ...HOLE_PRESETS.map((p) => p.label)], HOLE_PRESETS.find((p) => p.diameter === k.diameter && (p.counterbore ? k.counterbore?.diameter === p.counterbore.diameter && k.counterbore?.depth === p.counterbore.depth : !k.counterbore))?.label ?? "custom", (v) => {
+      const p = HOLE_PRESETS.find((x) => x.label === v);
+      if (p) this.apply({ type: "set_hole", id: f.id, diameter: p.diameter, counterbore: p.counterbore ?? null });
+    });
+    preset.title = "ISO metric clearance holes, tapping drills and socket head cap screw counterbores";
+    body.appendChild(field("Standard", preset));
     body.appendChild(field("Diameter", this.exprInput(f, "diameter", k.diameter, (v) => this.apply({ type: "set_hole", id: f.id, diameter: v }))));
     body.appendChild(
       field("Depth", select(["through_all", "blind"], k.through_all ? "through_all" : "blind", (v) =>
@@ -2221,6 +2267,32 @@ class App implements SketchHost {
 }
 
 // ---------------------------------------------------------------- helpers
+
+/** Common materials with densities in g/cm³. */
+const MATERIALS: { name: string; density: number }[] = [
+  { name: "Steel", density: 7.85 },
+  { name: "Stainless steel", density: 8.0 },
+  { name: "Aluminium", density: 2.7 },
+  { name: "Brass", density: 8.5 },
+  { name: "Copper", density: 8.96 },
+  { name: "Titanium", density: 4.43 },
+  { name: "ABS", density: 1.04 },
+  { name: "PLA", density: 1.24 },
+  { name: "Nylon", density: 1.15 },
+  { name: "Acrylic", density: 1.18 },
+  { name: "Plywood", density: 0.6 },
+];
+
+/** Standard hole sizes (ISO metric): clearance, tapping drill, and counterbored clearance for socket head cap screws. */
+const HOLE_PRESETS: { label: string; diameter: number; counterbore?: { diameter: number; depth: number } }[] = [
+  ...[3, 4, 5, 6, 8, 10, 12].map((m) => ({ label: `M${m} clearance`, diameter: { 3: 3.4, 4: 4.5, 5: 5.5, 6: 6.6, 8: 9, 10: 11, 12: 13.5 }[m]! })),
+  ...[3, 4, 5, 6, 8, 10, 12].map((m) => ({ label: `M${m} tap drill`, diameter: { 3: 2.5, 4: 3.3, 5: 4.2, 6: 5, 8: 6.8, 10: 8.5, 12: 10.2 }[m]! })),
+  ...[3, 4, 5, 6, 8, 10, 12].map((m) => ({
+    label: `M${m} socket head c'bore`,
+    diameter: { 3: 3.4, 4: 4.5, 5: 5.5, 6: 6.6, 8: 9, 10: 11, 12: 13.5 }[m]!,
+    counterbore: { diameter: { 3: 6.5, 4: 8, 5: 10, 6: 11, 8: 15, 10: 18, 12: 20 }[m]!, depth: { 3: 3.4, 4: 4.4, 5: 5.4, 6: 6.5, 8: 8.6, 10: 10.6, 12: 12.7 }[m]! },
+  })),
+];
 
 function button(label: string, onClick: () => void, cls = ""): HTMLButtonElement {
   const b = document.createElement("button");
