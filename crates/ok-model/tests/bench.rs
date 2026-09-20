@@ -138,6 +138,14 @@ fn cover() -> PartStudio {
 #[test]
 #[ignore]
 fn regeneration_timings() {
+    struct Report;
+    impl Drop for Report {
+        fn drop(&mut self) {
+            ok_brep::report_times();
+        }
+    }
+    let _report = Report;
+
     let mut demo = PartStudio::demo();
     let cold = median_ms(|| {
         demo.clear_cache();

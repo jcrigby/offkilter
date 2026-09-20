@@ -10,9 +10,9 @@
 //! Vertices within `eps` of the plane are snapped onto it first, so that
 //! faces built to be coplanar are treated as exactly coplanar.
 
+use crate::fasthash::HashMap;
 use crate::{edge_key, BrepError, EdgeKey, Solid};
 use ok_math::{Plane, Vec2, Vec3};
-use std::collections::HashMap;
 
 pub struct Section {
     /// Loops in plane coordinates; CCW encloses material.
@@ -36,104 +36,275 @@ pub fn section(
     zero_is_above: bool,
     eps: f64,
 ) -> Result<Section, BrepError> {
-    let bboxes = face_bboxes(solid);
-    section_with_bboxes(solid, &bboxes, plane, zero_is_above, eps)
+    let index = FaceIndex::new(solid);
+    section_with_index(solid, &index, plane, zero_is_above, eps)
 }
 
-/// Bounding box of every face, for repeated sections of one solid.
-pub fn face_bboxes(solid: &Solid) -> Vec<(Vec3, Vec3)> {
-    solid
-        .faces
-        .iter()
-        .map(|f| {
-            crate::bounds_of(
-                f.loops
-                    .iter()
-                    .flatten()
-                    .map(|&v| solid.vertices[v as usize]),
-            )
-            .unwrap_or((Vec3::ZERO, Vec3::ZERO))
-        })
-        .collect()
+/// The faces of a solid in a bounding-volume tree, for repeated sections
+/// of one solid: a plane query visits only the subtrees it cuts.
+pub struct FaceIndex {
+    boxes: Vec<(Vec3, Vec3)>,
+    nodes: Vec<Node>,
+    /// Face indices, grouped so each leaf owns a contiguous range.
+    order: Vec<usize>,
+    /// Faces around every vertex, for faces pulled onto a plane.
+    vertex_faces: Vec<Vec<usize>>,
 }
 
-/// `section` with the faces' bounding boxes precomputed (`face_bboxes`):
-/// faces whose box lies entirely on one side of the plane are skipped
-/// without visiting their edges.
-pub fn section_with_bboxes(
+struct Node {
+    lo: Vec3,
+    hi: Vec3,
+    /// Range into `order` (leaf) or the two children (inner).
+    range: (usize, usize),
+    children: Option<(usize, usize)>,
+}
+
+const LEAF: usize = 8;
+
+impl FaceIndex {
+    pub fn new(solid: &Solid) -> FaceIndex {
+        let boxes: Vec<(Vec3, Vec3)> = solid
+            .faces
+            .iter()
+            .map(|f| {
+                crate::bounds_of(
+                    f.loops
+                        .iter()
+                        .flatten()
+                        .map(|&v| solid.vertices[v as usize]),
+                )
+                .unwrap_or((Vec3::ZERO, Vec3::ZERO))
+            })
+            .collect();
+        let mut vertex_faces = vec![Vec::new(); solid.vertices.len()];
+        for (fi, f) in solid.faces.iter().enumerate() {
+            for &v in f.loops.iter().flatten() {
+                vertex_faces[v as usize].push(fi);
+            }
+        }
+        let mut order: Vec<usize> = (0..boxes.len()).collect();
+        let mut nodes = Vec::new();
+        if !order.is_empty() {
+            build(&boxes, &mut order, 0, boxes.len(), &mut nodes);
+        }
+        FaceIndex {
+            boxes,
+            nodes,
+            order,
+            vertex_faces,
+        }
+    }
+
+    /// Faces whose box reaches within `eps` of the plane, in index order.
+    fn straddling(&self, n: Vec3, d0: f64, eps: f64) -> Vec<usize> {
+        let mut out = Vec::new();
+        if self.nodes.is_empty() {
+            return out;
+        }
+        let straddles = |lo: Vec3, hi: Vec3| -> bool {
+            let pick = |c: f64, l: f64, h: f64| if c >= 0.0 { (h, l) } else { (l, h) };
+            let (xh, xl) = pick(n.x, lo.x, hi.x);
+            let (yh, yl) = pick(n.y, lo.y, hi.y);
+            let (zh, zl) = pick(n.z, lo.z, hi.z);
+            let dmax = n.x * xh + n.y * yh + n.z * zh - d0;
+            let dmin = n.x * xl + n.y * yl + n.z * zl - d0;
+            dmin <= eps && dmax >= -eps
+        };
+        let mut stack = vec![0usize];
+        while let Some(ni) = stack.pop() {
+            let node = &self.nodes[ni];
+            if !straddles(node.lo, node.hi) {
+                continue;
+            }
+            match node.children {
+                Some((l, r)) => {
+                    stack.push(r);
+                    stack.push(l);
+                }
+                None => {
+                    for &fi in &self.order[node.range.0..node.range.1] {
+                        let (lo, hi) = self.boxes[fi];
+                        if straddles(lo, hi) {
+                            out.push(fi);
+                        }
+                    }
+                }
+            }
+        }
+        out.sort_unstable();
+        out
+    }
+}
+
+/// Builds the subtree over `order[start..end]` by splitting the longest
+/// axis of the boxes' centroids at the median; returns the node index.
+fn build(
+    boxes: &[(Vec3, Vec3)],
+    order: &mut [usize],
+    start: usize,
+    end: usize,
+    nodes: &mut Vec<Node>,
+) -> usize {
+    let (mut lo, mut hi) = (
+        Vec3::new(f64::MAX, f64::MAX, f64::MAX),
+        Vec3::new(f64::MIN, f64::MIN, f64::MIN),
+    );
+    for &fi in &order[start..end] {
+        let (l, h) = boxes[fi];
+        lo = Vec3::new(lo.x.min(l.x), lo.y.min(l.y), lo.z.min(l.z));
+        hi = Vec3::new(hi.x.max(h.x), hi.y.max(h.y), hi.z.max(h.z));
+    }
+    let index = nodes.len();
+    nodes.push(Node {
+        lo,
+        hi,
+        range: (start, end),
+        children: None,
+    });
+    if end - start <= LEAF {
+        return index;
+    }
+    let extent = hi - lo;
+    let axis = if extent.x >= extent.y && extent.x >= extent.z {
+        0
+    } else if extent.y >= extent.z {
+        1
+    } else {
+        2
+    };
+    let centre = |fi: usize| {
+        let (l, h) = boxes[fi];
+        match axis {
+            0 => l.x + h.x,
+            1 => l.y + h.y,
+            _ => l.z + h.z,
+        }
+    };
+    let mid = start + (end - start) / 2;
+    order[start..end].select_nth_unstable_by(mid - start, |&a, &b| {
+        centre(a)
+            .partial_cmp(&centre(b))
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let left = build(boxes, order, start, mid, nodes);
+    let right = build(boxes, order, mid, end, nodes);
+    nodes[index].children = Some((left, right));
+    index
+}
+
+/// `section` with the faces indexed (`FaceIndex::new`): faces whose box
+/// lies entirely on one side of the plane are never visited.
+#[cfg(test)]
+pub fn section_with_index(
     solid: &Solid,
-    bboxes: &[(Vec3, Vec3)],
+    index: &FaceIndex,
     plane: &Plane,
     zero_is_above: bool,
     eps: f64,
 ) -> Result<Section, BrepError> {
+    let prepared = prepare(solid, index, plane, eps);
+    section_prepared(solid, plane, &prepared, zero_is_above)
+}
+
+/// The sections a hair above and a hair below the plane (as `section`
+/// with `zero_is_above` false and true), sharing the candidate faces and
+/// their distances between them.
+pub fn sections_above_below(
+    solid: &Solid,
+    index: &FaceIndex,
+    plane: &Plane,
+    eps: f64,
+) -> Result<(Section, Section), BrepError> {
+    let prepared = prepare(solid, index, plane, eps);
+    Ok((
+        section_prepared(solid, plane, &prepared, false)?,
+        section_prepared(solid, plane, &prepared, true)?,
+    ))
+}
+
+/// The faces a plane may cut, and the vertices pulled onto the plane so
+/// parallel faces agree; every other vertex's distance is computed from
+/// its position when asked (cheaper than caching it per call).
+struct Prepared {
+    faces: Vec<usize>,
+    pulled: HashMap<u32, ()>,
+    n: Vec3,
+    d0: f64,
+    eps: f64,
+}
+
+impl Prepared {
+    #[inline]
+    fn dist(&self, solid: &Solid, v: u32) -> f64 {
+        if !self.pulled.is_empty() && self.pulled.contains_key(&v) {
+            return 0.0;
+        }
+        let d = self.n.dot(solid.vertices[v as usize]) - self.d0;
+        if d.abs() <= self.eps {
+            0.0
+        } else {
+            d
+        }
+    }
+}
+
+fn prepare(solid: &Solid, index: &FaceIndex, plane: &Plane, eps: f64) -> Prepared {
     let n = plane.normal;
     let d0 = n.dot(plane.origin);
-    // Extreme signed distances of a box's corners along the normal.
-    let straddles = |(lo, hi): &(Vec3, Vec3)| -> bool {
-        let pick = |c: f64, l: f64, h: f64| if c >= 0.0 { (h, l) } else { (l, h) };
-        let (xh, xl) = pick(n.x, lo.x, hi.x);
-        let (yh, yl) = pick(n.y, lo.y, hi.y);
-        let (zh, zl) = pick(n.z, lo.z, hi.z);
-        let dmax = n.x * xh + n.y * yh + n.z * zh - d0;
-        let dmin = n.x * xl + n.y * yl + n.z * zl - d0;
-        dmin <= eps && dmax >= -eps
+    let mut prepared = Prepared {
+        faces: index.straddling(n, d0, eps),
+        pulled: HashMap::default(),
+        n,
+        d0,
+        eps,
     };
-    let mut dist: Vec<f64> = solid
-        .vertices
-        .iter()
-        .map(|v| {
-            let d = n.dot(*v) - d0;
-            if d.abs() <= eps {
-                0.0
-            } else {
-                d
-            }
-        })
-        .collect();
     // A face parallel to the section plane is skipped below (it has no
     // crossing line), so its vertices must agree on which side they are:
     // when any of them sits on the plane, they all do. Otherwise one
     // vertex a rounding error past the snap band would leave the
     // neighbouring faces producing crossings through this face that
-    // nothing closes. Repeated until stable, as snapping one face's
-    // vertex can bring another parallel face onto the plane. Vertices
-    // moved this way are remembered so the bounding-box prefilter below
-    // (which sees the unsnapped coordinates) does not drop their faces.
-    let parallel: Vec<usize> = solid
-        .faces
-        .iter()
-        .enumerate()
-        .filter(|(_, f)| n.cross(f.plane.normal).length() <= 1e-9)
-        .map(|(i, _)| i)
-        .collect();
-    let mut pulled: Vec<u32> = Vec::new();
-    loop {
-        let mut changed = false;
-        for &fi in &parallel {
-            let verts = || solid.faces[fi].loops.iter().flatten().copied();
-            let any_on = verts().any(|v| dist[v as usize] == 0.0);
-            let any_off = verts().any(|v| dist[v as usize] != 0.0);
-            if any_on && any_off {
-                for v in verts() {
-                    if dist[v as usize] != 0.0 {
-                        dist[v as usize] = 0.0;
-                        pulled.push(v);
+    // nothing closes. Pulling a vertex brings every face around it into
+    // play, so those join the candidates; repeated until stable.
+    let mut checked = 0;
+    while checked < prepared.faces.len() {
+        let fi = prepared.faces[checked];
+        checked += 1;
+        let f = &solid.faces[fi];
+        if n.cross(f.plane.normal).length() > 1e-9 {
+            continue;
+        }
+        let verts = || f.loops.iter().flatten().copied();
+        let any_on = verts().any(|v| prepared.dist(solid, v) == 0.0);
+        let any_off = verts().any(|v| prepared.dist(solid, v) != 0.0);
+        if any_on && any_off {
+            for v in verts() {
+                if prepared.dist(solid, v) != 0.0 {
+                    prepared.pulled.insert(v, ());
+                    for &g in &index.vertex_faces[v as usize] {
+                        if !prepared.faces.contains(&g) {
+                            prepared.faces.push(g);
+                        }
                     }
                 }
-                changed = true;
             }
-        }
-        if !changed {
-            break;
+            // A pulled vertex can change the verdict of parallel faces
+            // already checked; look at them again.
+            checked = 0;
         }
     }
-    let dist = dist;
-    let touches_pulled = |f: &crate::Face| -> bool {
-        !pulled.is_empty() && f.loops.iter().flatten().any(|v| pulled.contains(v))
-    };
+    prepared
+}
+
+fn section_prepared(
+    solid: &Solid,
+    plane: &Plane,
+    prepared: &Prepared,
+    zero_is_above: bool,
+) -> Result<Section, BrepError> {
+    let n = plane.normal;
+    let dist = |v: u32| prepared.dist(solid, v);
     let above = |v: u32| -> bool {
-        let d = dist[v as usize];
+        let d = dist(v);
         if zero_is_above {
             d >= 0.0
         } else {
@@ -146,15 +317,15 @@ pub fn section_with_bboxes(
     // a vertex contributes a zero-length (skipped) segment and chains pass
     // through the vertex consistently.
     let mut crossings: Vec<Crossing> = Vec::new();
-    let mut by_edge: HashMap<EdgeKey, usize> = HashMap::new();
-    let mut by_vertex: HashMap<u32, usize> = HashMap::new();
+    let mut by_edge: HashMap<EdgeKey, usize> = HashMap::default();
+    let mut by_vertex: HashMap<u32, usize> = HashMap::default();
     let mut crossing_of = |a: u32, b: u32| -> Option<(usize, Vec3)> {
         if above(a) == above(b) {
             return None;
         }
         let key = edge_key(a, b);
         let (lo, hi) = key;
-        let (dl, dh) = (dist[lo as usize], dist[hi as usize]);
+        let (dl, dh) = (dist(lo), dist(hi));
         let t = dl / (dl - dh);
         let id = if t <= 0.0 || t >= 1.0 {
             let v = if t <= 0.0 { lo } else { hi };
@@ -176,14 +347,11 @@ pub fn section_with_bboxes(
     };
 
     // Directed segments between crossing nodes: start -> ends.
-    let mut next: HashMap<usize, Vec<usize>> = HashMap::new();
+    let mut next: HashMap<usize, Vec<usize>> = HashMap::default();
+    let mut starts: Vec<usize> = Vec::new();
     let mut segment_count = 0usize;
-    for (fi, f) in solid.faces.iter().enumerate() {
-        if let Some(bb) = bboxes.get(fi) {
-            if !straddles(bb) && !touches_pulled(f) {
-                continue;
-            }
-        }
+    for &fi in &prepared.faces {
+        let f = &solid.faces[fi];
         let Some(dir) = n.cross(f.plane.normal).normalized() else {
             continue; // parallel to the section plane
         };
@@ -211,7 +379,11 @@ pub fn section_with_bboxes(
             if s == e {
                 continue;
             }
-            next.entry(s).or_default().push(e);
+            let list = next.entry(s).or_default();
+            if list.is_empty() {
+                starts.push(s);
+            }
+            list.push(e);
             segment_count += 1;
         }
     }
@@ -222,8 +394,19 @@ pub fn section_with_bboxes(
     // segments from any node always returns to it.
     let mut loops = Vec::new();
     let mut remaining = segment_count;
+    let mut start_at = 0;
     while remaining > 0 {
-        let Some((&start, _)) = next.iter().find(|(_, v)| !v.is_empty()) else {
+        // The next node that still has an outgoing segment.
+        let start = loop {
+            let Some(&s) = starts.get(start_at) else {
+                break None;
+            };
+            if next.get(&s).is_some_and(|v| !v.is_empty()) {
+                break Some(s);
+            }
+            start_at += 1;
+        };
+        let Some(start) = start else {
             break;
         };
         let mut poly = Vec::new();

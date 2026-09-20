@@ -421,7 +421,7 @@ fn face_area(solid: &Solid, f: &Face) -> f64 {
 fn fan_order(
     solid: &Solid,
     v: u32,
-    edge_faces: &std::collections::HashMap<crate::EdgeKey, Vec<usize>>,
+    edge_faces: &crate::fasthash::HashMap<crate::EdgeKey, Vec<usize>>,
 ) -> Option<Vec<usize>> {
     let mut next_of: Vec<(usize, u32)> = Vec::new();
     for (i, f) in solid.faces.iter().enumerate() {

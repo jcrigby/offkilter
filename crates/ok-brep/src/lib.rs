@@ -16,6 +16,7 @@ mod boolean;
 mod corner;
 mod drawing;
 mod extrude;
+mod fasthash;
 mod loft;
 mod revolve;
 mod section;
@@ -25,7 +26,7 @@ mod tessellate;
 mod transform;
 
 pub use blend::{blend_edges, BlendKind};
-pub use boolean::{boolean, BoolOp};
+pub use boolean::{boolean, report_times, BoolOp};
 pub use drawing::{project_view, section_view, split, split_tagged, SectionLines, View, ViewLines};
 pub use extrude::extrude;
 pub use loft::loft;
@@ -35,9 +36,9 @@ pub use sweep::{sweep, sweep_closed};
 pub use tessellate::{display_edges, tessellate, tessellate_with_faces, DisplayEdge};
 pub use transform::Transform;
 
+use crate::fasthash::HashMap;
 use ok_math::{Plane, Vec3};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(Debug, thiserror::Error)]
 pub enum BrepError {
@@ -151,7 +152,7 @@ impl Solid {
 
     /// Map from undirected edge to the faces using it.
     pub fn edge_faces(&self) -> HashMap<EdgeKey, Vec<usize>> {
-        let mut m: HashMap<EdgeKey, Vec<usize>> = HashMap::new();
+        let mut m: HashMap<EdgeKey, Vec<usize>> = HashMap::default();
         for (a, b, f) in self.directed_edges() {
             m.entry(edge_key(a, b)).or_default().push(f);
         }
@@ -162,7 +163,7 @@ impl Solid {
     /// even number of times with balanced orientation. Normally that is
     /// exactly twice; lumps that touch along an edge share it four times.
     pub fn validate(&self) -> Result<(), BrepError> {
-        let mut dir: HashMap<EdgeKey, (i32, usize)> = HashMap::new();
+        let mut dir: HashMap<EdgeKey, (i32, usize)> = HashMap::default();
         for (a, b, _) in self.directed_edges() {
             if a == b {
                 return Err(BrepError::NonManifold(format!(
@@ -365,12 +366,12 @@ impl Solid {
     /// fan triangles from the ring's centroid. Returns whether any were added.
     fn close_small_gaps(&mut self, max_gap: f64) -> bool {
         // Directed edges the faces still owe: the reverse of each unmatched one.
-        let mut sum: HashMap<EdgeKey, (i32, usize)> = HashMap::new();
+        let mut sum: HashMap<EdgeKey, (i32, usize)> = HashMap::default();
         for (a, b, f) in self.directed_edges() {
             let e = sum.entry(edge_key(a, b)).or_insert((0, f));
             e.0 += if a < b { 1 } else { -1 };
         }
-        let mut owed: HashMap<u32, Vec<(u32, usize)>> = HashMap::new();
+        let mut owed: HashMap<u32, Vec<(u32, usize)>> = HashMap::default();
         for ((a, b), (s, f)) in &sum {
             match s.signum() {
                 1 => owed.entry(*b).or_default().push((*a, *f)), // a->b present once more: owe b->a
@@ -469,7 +470,7 @@ impl Solid {
     /// each other: two faces that should share a corner but disagree on it
     /// by slightly more than the merge tolerance.
     fn stitch_open_vertices(&mut self, thr: f64) -> bool {
-        let mut dir: HashMap<EdgeKey, (i32, usize)> = HashMap::new();
+        let mut dir: HashMap<EdgeKey, (i32, usize)> = HashMap::default();
         for (a, b, _) in self.directed_edges() {
             let e = dir.entry(edge_key(a, b)).or_insert((0, 0));
             e.0 += if a < b { 1 } else { -1 };
@@ -649,7 +650,7 @@ impl Solid {
     /// Deterministic for a given shape.
     pub fn face_parts(&self) -> Vec<u32> {
         let mut parts = vec![0u32; self.faces.len()];
-        let mut by_origin: HashMap<FaceOrigin, Vec<usize>> = HashMap::new();
+        let mut by_origin: HashMap<FaceOrigin, Vec<usize>> = HashMap::default();
         for (i, f) in self.faces.iter().enumerate() {
             by_origin.entry(f.origin).or_default().push(i);
         }
@@ -928,7 +929,7 @@ impl Solid {
                 }
             }
         }
-        let mut groups: HashMap<usize, Vec<usize>> = HashMap::new();
+        let mut groups: HashMap<usize, Vec<usize>> = HashMap::default();
         for i in 0..n {
             let r = find(&mut parent, i);
             groups.entry(r).or_default().push(i);
@@ -947,7 +948,7 @@ impl Solid {
             }
             // Directed edges of all member loops; internal shared edges
             // appear in both directions and cancel out.
-            let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
+            let mut directed: HashMap<(u32, u32), u32> = HashMap::default();
             for &fi in &group {
                 for l in &self.faces[fi].loops {
                     for i in 0..l.len() {
@@ -956,7 +957,7 @@ impl Solid {
                     }
                 }
             }
-            let mut boundary: HashMap<u32, Vec<u32>> = HashMap::new();
+            let mut boundary: HashMap<u32, Vec<u32>> = HashMap::default();
             for (&(a, b), &count) in &directed {
                 let reverse = directed.get(&(b, a)).copied().unwrap_or(0);
                 if count > reverse {
@@ -1049,7 +1050,7 @@ impl Solid {
 
     /// Drops unreferenced surfaces and renumbers.
     pub fn compact_surfaces(&mut self) {
-        let mut map: HashMap<usize, usize> = HashMap::new();
+        let mut map: HashMap<usize, usize> = HashMap::default();
         let mut surfaces = Vec::new();
         for f in &mut self.faces {
             let s = f.surface;
@@ -1138,7 +1139,7 @@ impl Solid {
                 }
             }
         }
-        let mut groups: HashMap<usize, Vec<Polygon>> = HashMap::new();
+        let mut groups: HashMap<usize, Vec<Polygon>> = HashMap::default();
         let polys = self.polygons();
         for (i, p) in polys.into_iter().enumerate() {
             groups.entry(find(&mut parent, i)).or_default().push(p);
@@ -1300,7 +1301,7 @@ impl VertexMerger {
             tol,
             cell: tol * 4.0,
             points: Vec::new(),
-            cells: HashMap::new(),
+            cells: HashMap::default(),
         }
     }
 
