@@ -85,7 +85,8 @@ pub struct Params {
 }
 
 /// A line or an arc of an outline.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub enum Seg {
     Line {
         a: Vec2,
@@ -151,7 +152,7 @@ impl Seg {
 }
 
 /// One piece of the puzzle.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Piece {
     pub col: u32,
     pub row: u32,
@@ -162,7 +163,7 @@ pub struct Piece {
 }
 
 /// The built puzzle.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Jigsaw {
     pub pieces: Vec<Piece>,
     pub width: f64,
@@ -171,6 +172,9 @@ pub struct Jigsaw {
     pub tab_heads: Vec<(Vec2, bool)>,
     /// Every interior node's position, in corner order.
     pub nodes: Vec<Vec2>,
+    /// What the pin router (or the geometry) cannot do with the design,
+    /// one rule per entry; empty when the puzzle can be cut.
+    pub problems: Vec<String>,
 }
 
 /// Number of interior edges (tabs) of a grid.
@@ -242,6 +246,18 @@ const MARGIN: f64 = 0.15;
 /// geometry) cannot do with the design: every violated rule, one per
 /// line, so a design can be fixed in one go.
 pub fn build(p: &Params) -> Result<Jigsaw, String> {
+    let jig = plan(p)?;
+    if jig.problems.is_empty() {
+        Ok(jig)
+    } else {
+        Err(jig.problems.join("\n"))
+    }
+}
+
+/// Builds every piece outline whether or not the design can be cut,
+/// listing the violated rules in `problems`, so a plan can be drawn and
+/// fixed. Only a grid that cannot be laid out at all is an error.
+pub fn plan(p: &Params) -> Result<Jigsaw, String> {
     let mut problems: Vec<String> = Vec::new();
     if p.cols < 1 || p.rows < 1 || p.cols > 64 || p.rows > 64 {
         return Err("a puzzle needs 1 to 64 columns and rows".into());
@@ -486,9 +502,6 @@ pub fn build(p: &Params) -> Result<Jigsaw, String> {
             v_edges.push(edge(node(i, j), node(i, j + 1), tab, -1.0));
         }
     }
-    if !problems.is_empty() {
-        return Err(problems.join("\n"));
-    }
     // Pieces: bottom, right, top (reversed), left (reversed), then the gap.
     let mut pieces = Vec::new();
     for j in 0..rows {
@@ -539,9 +552,6 @@ pub fn build(p: &Params) -> Result<Jigsaw, String> {
             });
         }
     }
-    if !problems.is_empty() {
-        return Err(problems.join("\n"));
-    }
     let nodes = (1..rows)
         .flat_map(|j| (1..cols).map(move |i| (i, j)))
         .map(|(i, j)| node(i, j))
@@ -552,6 +562,7 @@ pub fn build(p: &Params) -> Result<Jigsaw, String> {
         height: rows as f64 * p.pitch,
         tab_heads,
         nodes,
+        problems,
     })
 }
 
@@ -631,7 +642,11 @@ fn offset_loop(segs: &[Seg], inset: &[f64]) -> Vec<Seg> {
             } => {
                 // Turning left, the inside is towards the centre.
                 let r = if ccw { radius - d } else { radius + d };
-                let k = r / radius;
+                let k = if radius.abs() > 1e-12 {
+                    r / radius
+                } else {
+                    1.0
+                };
                 Seg::Arc {
                     center,
                     radius: r,
@@ -816,6 +831,10 @@ mod tests {
         let mut p = params(2, 2, 6.0);
         p.tabs[0].size = 0.6;
         assert!(build(&p).is_err());
+        // The plan still draws a refused design, with the rules alongside.
+        let j = plan(&p).unwrap();
+        assert_eq!(j.pieces.len(), 4);
+        assert!(!j.problems.is_empty());
         // Two sockets of one piece shifted into each other at its corner.
         let mut p = params(2, 2, 0.0);
         p.tabs = vec![

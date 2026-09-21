@@ -17,7 +17,10 @@ cargo test -p ok-render --test puzzle_top     # what CI runs
   tab's size and position and one corner, and exports.
 - `out/puzzle_top.okpart`: the document. Open it in the web app: the
   Puzzle panel has the grid, sizes, gap, bit, lock angle, grain, web
-  height, corner jitter and a Reseed button.
+  height, corner jitter and a Reseed button, and a plan of the puzzle
+  in which a click on a tab's head flips it, a shift-click selects it
+  for its own size, neck and position, and a corner drags. A design the
+  rules refuse still draws, with the rules listed under it.
 - `out/templates.dxf`: every piece outline at 1:1, the routing
   templates. Each outline is lines and tangent arcs, so it is what the
   pin follows.

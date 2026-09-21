@@ -389,6 +389,19 @@ test("puzzle feature: a grid of interlocking pieces and an alignment web", async
   await page.keyboard.press("Control+z");
   await page.waitForTimeout(300);
   expect(await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies.length)).toBe(7);
+  // The plan: 3 x 2 pieces drawn, 7 tab heads; clicking one flips it,
+  // shift-clicking selects it for its own numbers.
+  await expect(page.locator(".puzzle-svg .piece")).toHaveCount(6);
+  await expect(page.locator(".puzzle-svg .tab")).toHaveCount(7);
+  const tabsBefore = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.features[0].kind.tabs.map((t: any) => t.out) as boolean[]);
+  await page.locator(".puzzle-svg .tab").nth(2).click();
+  await page.waitForTimeout(300);
+  const tabsAfter = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.features[0].kind.tabs.map((t: any) => t.out) as boolean[]);
+  expect(tabsAfter[2]).toBe(!tabsBefore[2]);
+  expect(tabsAfter.filter((t, i) => t !== tabsBefore[i]).length).toBe(1);
+  await page.locator(".puzzle-svg .tab").nth(2).click({ modifiers: ["Shift"] });
+  await expect(page.locator("#detail-body")).toContainText("Tab 3 of 7");
+  expect(await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies.length)).toBe(7);
 });
 
 test("assembly tab: insert two instances and mate them face to face", async ({ page }) => {

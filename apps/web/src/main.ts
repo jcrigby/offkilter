@@ -93,6 +93,8 @@ class App implements SketchHost {
   kernel: Kernel;
   summary!: Summary;
   selected: number | null = null;
+  /** The puzzle tab whose numbers the panel shows (an interior edge index). */
+  puzzleTab: number | null = null;
   sketcher = new Sketcher(this);
   sync = new Sync(
     {
@@ -2258,11 +2260,135 @@ class App implements SketchHost {
     const reseed = button("Reseed", () => set({ seed: Math.floor(Math.random() * 100000) }));
     reseed.title = "New random tab directions and corner positions (undo brings the old ones back)";
     body.appendChild(field(`Seed ${k.seed}`, reseed));
+    // The selected tab's own numbers.
+    if (this.puzzleTab !== null && this.puzzleTab < k.tabs.length) {
+      const edge = this.puzzleTab;
+      const t = k.tabs[edge]!;
+      const setTab = (patch: Partial<Extract<Op, { type: "set_puzzle_tab" }>>) => this.apply({ type: "set_puzzle_tab", id: f.id, edge, ...patch });
+      const head = document.createElement("h4");
+      head.textContent = `Tab ${edge + 1} of ${k.tabs.length}`;
+      body.appendChild(head);
+      body.appendChild(field("Direction", select(["out", "in"], t.out ? "out" : "in", (v) => setTab({ out: v === "out" }))));
+      body.appendChild(field("Size ×", numberInput(t.size, (v) => setTab({ size: v }))));
+      body.appendChild(field("Neck ×", numberInput(t.width, (v) => setTab({ width: v }))));
+      body.appendChild(field("Position", numberInput(t.shift, (v) => setTab({ shift: v }))));
+    }
+    body.appendChild(this.puzzlePlanSvg(f));
     const outs = k.tabs.filter((t) => t.out).length;
     const note = document.createElement("p");
     note.className = "note";
-    note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only; the web is a body of that height filling it, for lining the pieces up on the substrate.`;
+    note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Click a tab's head to flip it, select it to size it; drag a corner. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only; the web is a body of that height filling it, for lining the pieces up on the substrate.`;
     body.appendChild(note);
+  }
+
+  /** The puzzle drawn flat: pieces by colour, tab heads to click, corners to drag, and the broken rules underneath. */
+  puzzlePlanSvg(f: FeatureSummary): HTMLElement {
+    const wrap = document.createElement("div");
+    wrap.className = "puzzle-plan";
+    if (f.kind.type !== "puzzle") return wrap;
+    const k = f.kind;
+    const plan = this.kernel.puzzlePlan(this.summary.tab, f.id);
+    if (!plan) {
+      wrap.textContent = f.error ?? "No plan.";
+      return wrap;
+    }
+    const ns = "http://www.w3.org/2000/svg";
+    const m = k.pitch * 0.15;
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", `${-m} ${-m} ${plan.width + 2 * m} ${plan.height + 2 * m}`);
+    svg.setAttribute("class", "puzzle-svg");
+    const g = document.createElementNS(ns, "g");
+    g.setAttribute("transform", `translate(0 ${plan.height}) scale(1 -1)`);
+    svg.appendChild(g);
+    const pt = (p: Vec2) => `${p.x.toFixed(3)} ${p.y.toFixed(3)}`;
+    for (const piece of plan.pieces) {
+      if (piece.outline.length === 0) continue;
+      let d = `M ${pt(piece.outline[0]!.type === "line" ? piece.outline[0]!.a : piece.outline[0]!.start)}`;
+      for (const s of piece.outline) {
+        if (s.type === "line") d += ` L ${pt(s.b)}`;
+        else {
+          const a0 = Math.atan2(s.start.y - s.center.y, s.start.x - s.center.x);
+          const a1 = Math.atan2(s.end.y - s.center.y, s.end.x - s.center.x);
+          let sweep = a1 - a0;
+          if (s.ccw && sweep <= 0) sweep += 2 * Math.PI;
+          if (!s.ccw && sweep >= 0) sweep -= 2 * Math.PI;
+          d += ` A ${s.radius.toFixed(3)} ${s.radius.toFixed(3)} 0 ${Math.abs(sweep) > Math.PI ? 1 : 0} ${s.ccw ? 1 : 0} ${pt(s.end)}`;
+        }
+      }
+      const path = document.createElementNS(ns, "path");
+      path.setAttribute("d", d + " Z");
+      path.setAttribute("class", piece.light ? "piece light" : "piece dark");
+      path.appendChild(document.createElementNS(ns, "title")).textContent = `Piece ${piece.col + 1},${piece.row + 1} ${piece.light ? "light" : "dark"}`;
+      g.appendChild(path);
+    }
+    plan.tab_heads.forEach(([at, out], edge) => {
+      const c = document.createElementNS(ns, "circle");
+      c.setAttribute("cx", String(at.x));
+      c.setAttribute("cy", String(at.y));
+      c.setAttribute("r", String(k.pitch * 0.07));
+      c.setAttribute("class", `tab ${out ? "out" : "in"}${this.puzzleTab === edge ? " selected" : ""}`);
+      c.dataset.edge = String(edge);
+      c.appendChild(document.createElementNS(ns, "title")).textContent = `Tab ${edge + 1}: ${out ? "out" : "in"}. Click to flip, shift-click to select.`;
+      c.addEventListener("click", (e) => {
+        this.puzzleTab = edge;
+        if (e.shiftKey) this.renderDetail();
+        else this.apply({ type: "set_puzzle_tab", id: f.id, edge, out: !out });
+      });
+      g.appendChild(c);
+    });
+    const perRow = Math.max(1, k.cols - 1);
+    plan.nodes.forEach((at, node) => {
+      const c = document.createElementNS(ns, "circle");
+      c.setAttribute("cx", String(at.x));
+      c.setAttribute("cy", String(at.y));
+      c.setAttribute("r", String(k.pitch * 0.06));
+      c.setAttribute("class", "corner");
+      c.dataset.node = String(node);
+      c.appendChild(document.createElementNS(ns, "title")).textContent = `Corner ${node + 1}: drag to move`;
+      const grid = { x: ((node % perRow) + 1) * k.pitch, y: (Math.floor(node / perRow) + 1) * k.pitch };
+      let dragging = false;
+      const toLocal = (e: PointerEvent): Vec2 => {
+        const ctm = g.getScreenCTM();
+        if (!ctm) return at;
+        const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+        return { x: p.x, y: p.y };
+      };
+      c.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        c.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      });
+      c.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        const p = toLocal(e);
+        c.setAttribute("cx", String(p.x));
+        c.setAttribute("cy", String(p.y));
+      });
+      c.addEventListener("pointerup", (e) => {
+        if (!dragging) return;
+        dragging = false;
+        const p = toLocal(e);
+        this.apply({ type: "set_puzzle_corner", id: f.id, node, offset: { x: p.x - grid.x, y: p.y - grid.y } });
+      });
+      g.appendChild(c);
+    });
+    wrap.appendChild(svg);
+    if (plan.problems.length > 0) {
+      const ul = document.createElement("ul");
+      ul.className = "puzzle-problems";
+      for (const p of plan.problems.slice(0, 8)) {
+        const li = document.createElement("li");
+        li.textContent = p;
+        ul.appendChild(li);
+      }
+      if (plan.problems.length > 8) {
+        const li = document.createElement("li");
+        li.textContent = `… and ${plan.problems.length - 8} more`;
+        ul.appendChild(li);
+      }
+      wrap.appendChild(ul);
+    }
+    return wrap;
   }
 
   renderVariableDetail(f: FeatureSummary, body: HTMLElement): void {
