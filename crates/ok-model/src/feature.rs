@@ -604,12 +604,12 @@ pub struct PuzzleFeature {
     /// How far interior corners wander from the grid, mm.
     #[serde(default)]
     pub jitter: f64,
-    /// A strip between rows, mm, which the tabs across it reach over
-    /// (the socket opposite is the tab grown by the strip), so a tight
-    /// fit routes without the bit rounding the corners where pieces of
-    /// one colour meet. Zero for a full jigsaw.
+    /// What regenerates: the design, or one colour's pieces laid out for
+    /// cutting from its board, rows spread a bit diameter apart so the
+    /// corners of pieces that meet diagonally in the design stay clear
+    /// of the bit.
     #[serde(default)]
-    pub row_gap: f64,
+    pub show: PuzzleLayout,
     /// Depth of the pockets of a printable fixture body that holds every
     /// piece for the glue-up; zero for none.
     #[serde(default)]
@@ -622,6 +622,19 @@ pub struct PuzzleFeature {
 
 fn quarter_inch() -> f64 {
     6.35
+}
+
+/// Which layout of a puzzle regenerates.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum PuzzleLayout {
+    /// The assembled top: every piece, the web and the fixture.
+    #[default]
+    Design,
+    /// The light pieces on their board, rows spread a bit apart.
+    Light,
+    /// The dark pieces on their board, rows spread a bit apart.
+    Dark,
 }
 
 fn twenty() -> f64 {
@@ -647,7 +660,6 @@ impl PuzzleFeature {
             grain: self.grain,
             tabs: self.tabs.clone(),
             corners: self.corners.clone(),
-            row_gap: self.row_gap,
         }
     }
 }
@@ -748,7 +760,6 @@ impl FeatureKind {
                 "thickness".into(),
                 "gap".into(),
                 "bit".into(),
-                "row_gap".into(),
             ],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
@@ -797,7 +808,6 @@ impl FeatureKind {
             (FeatureKind::Puzzle(p), "thickness") => Some(p.thickness),
             (FeatureKind::Puzzle(p), "gap") => Some(p.gap),
             (FeatureKind::Puzzle(p), "bit") => Some(p.bit),
-            (FeatureKind::Puzzle(p), "row_gap") => Some(p.row_gap),
             _ => None,
         }
     }
@@ -892,10 +902,6 @@ impl FeatureKind {
             }
             (FeatureKind::Puzzle(p), "bit") => {
                 p.bit = value;
-                Ok(())
-            }
-            (FeatureKind::Puzzle(p), "row_gap") => {
-                p.row_gap = value;
                 Ok(())
             }
             (FeatureKind::Hole(h), "diameter") => {

@@ -4,8 +4,9 @@ server, two ways: an 8 x 6 puzzle of 38 mm pieces, maple and walnut by
 parity, each colour pin-routed from one board so the grain runs across
 the whole field. The first tab has a 1.5 mm gap for a contrasting resin
 fill and a 5 mm alignment web in the gaps; the second is cut tight,
-with a strip between rows as wide as the bit so the corners route
-clean, and a printable tray with a pocket per piece for the glue-up.
+with a printable tray with a pocket per piece for the glue-up, and its
+fabrication layouts, one per colour with the rows spread a bit apart so
+the corners route clean, exported as the routing templates.
 
     cargo build --release -p ok-mcp
     python3 examples/puzzle-top/build.py
@@ -92,8 +93,7 @@ def main():
     # The routing templates: every outline at 1:1, and the pieces as STL.
     print(mcp.call("export", {"tab": 1, "format": "dxf", "view": "top", "path": os.path.join(out, "templates.dxf")}))
     print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(out, "pieces.stl")}))
-    # The tight version: no gap within a row, a strip between rows one
-    # bit wide, no web, and a tray to print.
+    # The tight version: no gap at all, no web, and a tray to print.
     text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "Tight top"}]})
     tight = int(text.split("tab ", 1)[1].split(")")[0].split(",")[0])
     text = apply(
@@ -113,7 +113,6 @@ def main():
                 "web": 0.0,
                 "seed": SEED,
                 "jitter": 2.0,
-                "row_gap": BIT,
                 "fixture": 6.0,
                 "name": "Tight checkerboard",
             }
@@ -127,8 +126,19 @@ def main():
     print(f"tight top: {len(names)} bodies, last {names[-1]!r}")
     for view, name in (("iso", "tight_iso"), ("top", "tight_top")):
         mcp.call("screenshot", {"tab": tight, "view": view, "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
-    print(mcp.call("export", {"tab": tight, "format": "dxf", "view": "top", "path": os.path.join(out, "tight_templates.dxf")}))
     print(mcp.call("export", {"tab": tight, "format": "stl", "body": "Printing fixture", "path": os.path.join(out, "fixture.stl")}))
+    # The fabrication layouts: each colour's pieces on their own board,
+    # every row a bit diameter further along than the last, so the
+    # corners of pieces that meet diagonally in the design stay clear
+    # of the bit. Each is the routing template for that board.
+    tight_feature = int(text.split("feature ", 1)[1].split(")")[0].split(",")[0])
+    for show, wood in (("light", "maple"), ("dark", "walnut")):
+        apply(mcp, [{"type": "set_puzzle", "id": tight_feature, "show": show}], tab=tight)
+        report = json.loads(mcp.call("report", {"tab": tight, "detail": "full"}))
+        print(f"{wood} layout: {len(report['bodies'])} pieces")
+        mcp.call("screenshot", {"tab": tight, "view": "top", "width": 1200, "height": 900, "path": os.path.join(out, f"{wood}_layout.png")})
+        print(mcp.call("export", {"tab": tight, "format": "dxf", "view": "top", "path": os.path.join(out, f"{wood}_templates.dxf")}))
+    apply(mcp, [{"type": "set_puzzle", "id": tight_feature, "show": "design"}], tab=tight)
     mcp.close()
     print(f"wrote {path}")
 

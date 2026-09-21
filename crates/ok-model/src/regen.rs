@@ -912,9 +912,18 @@ impl PartStudio {
             Ok(j) => j,
             Err(e) => return Some(e),
         };
+        // A fabrication layout: one colour's pieces on their board, rows
+        // spread a bit apart; nothing else regenerates with it.
+        let layout: Vec<ok_sketch::jigsaw::Piece> = match pf.show {
+            crate::PuzzleLayout::Design => Vec::new(),
+            crate::PuzzleLayout::Light => ok_sketch::jigsaw::fabrication(&jig, true, pf.bit),
+            crate::PuzzleLayout::Dark => ok_sketch::jigsaw::fabrication(&jig, false, pf.bit),
+        };
+        let design = pf.show == crate::PuzzleLayout::Design;
+        let pieces: &[ok_sketch::jigsaw::Piece] = if design { &jig.pieces } else { &layout };
         let mut bodies: Vec<(String, Solid)> = Vec::new();
         let mut piece_area = 0.0;
-        for (k, piece) in jig.pieces.iter().enumerate() {
+        for (k, piece) in pieces.iter().enumerate() {
             let mut sk = ok_sketch::Sketch::new();
             ok_sketch::jigsaw::draw(&piece.outline, &mut sk);
             let mut profiles = sk.profiles(opts);
@@ -945,8 +954,8 @@ impl PartStudio {
                 solid,
             ));
         }
-        if pf.web > 0.0 && (pf.gap > 0.0 || pf.row_gap > 0.0) {
-            match Self::puzzle_web(&jig, pf.row_gap, piece_area, opts) {
+        if design && pf.web > 0.0 && pf.gap > 0.0 {
+            match Self::puzzle_web(&jig, piece_area, opts) {
                 Ok(profile) => match ok_brep::extrude(&profile, &plane, 0.0, pf.web, id.0) {
                     Ok(mut solid) => {
                         for f in &mut solid.faces {
@@ -959,7 +968,7 @@ impl PartStudio {
                 Err(e) => return Some(format!("alignment web: {e}")),
             }
         }
-        if pf.fixture > 0.0 {
+        if design && pf.fixture > 0.0 {
             match Self::puzzle_fixture(&jig, &plane, pf.fixture, opts) {
                 Ok(mut solid) => {
                     for f in &mut solid.faces {
@@ -1028,7 +1037,6 @@ impl PartStudio {
     /// region finder yields the pieces and one lattice.
     fn puzzle_web(
         jig: &ok_sketch::jigsaw::Jigsaw,
-        row_gap: f64,
         piece_area: f64,
         opts: &ProfileOptions,
     ) -> Result<Profile, String> {
@@ -1047,8 +1055,7 @@ impl PartStudio {
                 .unwrap_or(at)
         };
         let pitch_x = jig.width / cols as f64;
-        // Boundaries between rows: the middle of the strip when there is one.
-        let pitch_y = (jig.height - (rows as f64 - 1.0) * row_gap) / rows as f64;
+        let pitch_y = jig.height / rows as f64;
         let mut closings: Vec<(Vec2, Vec2)> = Vec::new();
         for i in 0..cols - 1 {
             let x = (i + 1) as f64 * pitch_x;
@@ -1062,7 +1069,7 @@ impl PartStudio {
             ));
         }
         for j in 0..rows - 1 {
-            let y = (j + 1) as f64 * (pitch_y + row_gap) - row_gap / 2.0;
+            let y = (j + 1) as f64 * pitch_y;
             closings.push((
                 corner_near(piece(0, j), Vec2::new(0.0, y)),
                 corner_near(piece(0, j + 1), Vec2::new(0.0, y)),
@@ -3030,8 +3037,8 @@ mod tests {
             web,
             seed: 3,
             jitter: 2.0,
-            row_gap: 0.0,
             fixture: 0.0,
+            show: crate::PuzzleLayout::Design,
             name: None,
         };
         let id = ps.apply(puzzle(0.0, 0.0)).unwrap().feature.unwrap();
@@ -3074,8 +3081,8 @@ mod tests {
             web: Some(4.0),
             seed: None,
             jitter: None,
-            row_gap: None,
             fixture: None,
+            show: None,
             tabs: None,
             corners: None,
         })
@@ -3112,8 +3119,8 @@ mod tests {
             web: None,
             seed: None,
             jitter: None,
-            row_gap: None,
             fixture: None,
+            show: None,
             tabs: None,
             corners: None,
         })
@@ -3152,8 +3159,8 @@ mod tests {
             ps.feature(id).unwrap().kind,
             before.feature(id).unwrap().kind
         );
-        // Tight fit in bands with a strip between rows, and a tray to
-        // print: the strips are the web, the tray has a pocket per row.
+        // A tight fit with a tray to print, then each colour's
+        // fabrication layout: its pieces alone, rows a bit apart.
         ps.apply(Op::SetPuzzle {
             id,
             cols: None,
@@ -3164,40 +3171,31 @@ mod tests {
             bit: Some(6.35),
             lock: None,
             grain: None,
-            web: Some(4.0),
+            web: Some(0.0),
             seed: None,
             jitter: None,
-            row_gap: Some(6.35),
             fixture: Some(5.0),
+            show: None,
             tabs: None,
             corners: None,
         })
         .unwrap();
         let start = std::time::Instant::now();
         let r = ps.regenerate();
-        eprintln!("3x2 bands with web and fixture: {:?}", start.elapsed());
+        eprintln!("3x2 tight with fixture: {:?}", start.elapsed());
         assert!(
             r.errors().next().is_none(),
             "{:?}",
             r.errors().collect::<Vec<_>>()
         );
-        assert_eq!(r.bodies.len(), 8);
-        assert_eq!(r.bodies[6].name, "Alignment web");
-        assert_eq!(r.bodies[7].name, "Printing fixture");
+        assert_eq!(r.bodies.len(), 7);
+        assert_eq!(r.bodies[6].name, "Printing fixture");
         let pieces: f64 = r.bodies[..6].iter().map(|b| b.solid.volume()).sum();
         assert!(
-            pieces < 6.0 * 16000.0 && pieces > 6.0 * 16000.0 * 0.85,
+            (pieces - 6.0 * 16000.0).abs() < 6.0 * 16000.0 * 2e-3,
             "{pieces}"
         );
-        // The strips, the moats round the tabs and nothing else: the web
-        // and the pieces together cover the board.
-        let web = r.bodies[6].solid.volume();
-        let board = 120.0 * (80.0 + 6.35);
-        assert!(
-            (pieces / 10.0 + web / 4.0 - board).abs() < board * 2e-3,
-            "{pieces} {web}"
-        );
-        let fixture = &r.bodies[7].solid;
+        let fixture = &r.bodies[6].solid;
         fixture.validate().unwrap();
         let (lo, hi) = fixture.bounds().unwrap();
         assert!(
@@ -3208,15 +3206,54 @@ mod tests {
             (lo.x + 6.0).abs() < 1e-9 && (hi.x - 126.0).abs() < 1e-9,
             "{lo:?} {hi:?}"
         );
-        // The tray is the slab less the pockets: the pieces grown by the
-        // clearance, so a little more than the pieces' own area.
-        let slab = 132.0 * (86.35 + 12.0) * 7.0;
+        let slab = 132.0 * 92.0 * 7.0;
         let pockets = (slab - fixture.volume()) / 5.0;
-        let area = pieces / 10.0;
-        assert!(
-            pockets > area && pockets < area * 1.05,
-            "{pockets} vs {area}"
-        );
+        assert!(pockets > 9600.0 && pockets < 9600.0 * 1.05, "{pockets}");
+        for (show, light) in [
+            (crate::PuzzleLayout::Light, true),
+            (crate::PuzzleLayout::Dark, false),
+        ] {
+            ps.apply(Op::SetPuzzle {
+                id,
+                cols: None,
+                rows: None,
+                pitch: None,
+                thickness: None,
+                gap: None,
+                bit: None,
+                lock: None,
+                grain: None,
+                web: None,
+                seed: None,
+                jitter: None,
+                fixture: None,
+                show: Some(show),
+                tabs: None,
+                corners: None,
+            })
+            .unwrap();
+            let r = ps.regenerate();
+            assert!(
+                r.errors().next().is_none(),
+                "{:?}",
+                r.errors().collect::<Vec<_>>()
+            );
+            assert_eq!(r.bodies.len(), 3, "{show:?}");
+            let colour = if light { "light" } else { "dark" };
+            assert!(
+                r.bodies.iter().all(|b| b.name.ends_with(colour)),
+                "{show:?}"
+            );
+            // The second row sits a bit higher than in the design.
+            let top_row = r.bodies.iter().find(|b| b.name.contains(",2 ")).unwrap();
+            let (lo, hi) = top_row.solid.bounds().unwrap();
+            assert!(
+                hi.y > 80.0 + 6.35 - 1e-6 && lo.y > 40.0 + 6.35 - 0.4 * 40.0,
+                "{lo:?} {hi:?}"
+            );
+            let volume: f64 = r.bodies.iter().map(|b| b.solid.volume()).sum();
+            assert!(volume > 3.0 * 16000.0 * 0.8 && volume < 3.0 * 16000.0 * 1.2);
+        }
     }
 
     #[test]

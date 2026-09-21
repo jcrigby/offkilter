@@ -31,8 +31,8 @@ pub use feature::{
     ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind, Grain,
     HoleFeature, LoftFeature, MeshFeature, MirrorFeature, MoveFaceFeature, PatternFeature,
     PatternKind, PlaneRef, ProfileSelection, Projection, ProjectionSource, PuzzleFeature,
-    PuzzleTab, RevolveAxis, RevolveFeature, ShellFeature, SketchFeature, SplitFeature,
-    StandardPlane, SweepFeature, VariableFeature, NEAR, PROJECTION_BLOCK,
+    PuzzleLayout, PuzzleTab, RevolveAxis, RevolveFeature, ShellFeature, SketchFeature,
+    SplitFeature, StandardPlane, SweepFeature, VariableFeature, NEAR, PROJECTION_BLOCK,
 };
 pub use merge::Merge;
 pub use ops::{Op, OpResult, SketchOp};

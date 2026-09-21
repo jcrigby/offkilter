@@ -78,10 +78,10 @@ fn the_puzzle_regenerates_into_pieces_and_a_web() {
     assert!(elapsed.as_secs() < 20, "{elapsed:?}");
 }
 
-/// The tight version: bands a bit apart, no web, a tray with a pocket
-/// per piece, and the notes empty because nothing gets rounded.
+/// The tight version: no gap, a tray with a pocket per piece, and a
+/// fabrication layout per colour with the rows spread a bit apart.
 #[test]
-fn the_tight_top_has_bands_and_a_printable_fixture() {
+fn the_tight_top_has_a_fixture_and_fabrication_layouts() {
     let dir = example_dir();
     let json = std::fs::read_to_string(dir.join("out/puzzle_top.okpart")).unwrap();
     let mut doc = ok_model::Document::from_json(&json).unwrap();
@@ -97,24 +97,24 @@ fn the_tight_top_has_bands_and_a_printable_fixture() {
     let errors: Vec<_> = r.errors().collect();
     assert!(errors.is_empty(), "{errors:?}");
     assert_eq!(r.bodies.len(), 8 * 6 + 1, "{} bodies", r.bodies.len());
-    let feature = match &doc.tabs.iter().find(|t| t.id == tab).unwrap().kind {
+    let (feature_id, feature) = match &doc.tabs.iter().find(|t| t.id == tab).unwrap().kind {
         ok_model::TabKind::PartStudio(ps) => match &ps.features()[0].kind {
-            ok_model::FeatureKind::Puzzle(p) => p.clone(),
+            ok_model::FeatureKind::Puzzle(p) => (ps.features()[0].id, p.clone()),
             other => panic!("{other:?}"),
         },
         _ => unreachable!(),
     };
-    assert!(feature.gap == 0.0 && feature.row_gap >= feature.bit);
+    assert!(feature.gap == 0.0 && feature.show == ok_model::PuzzleLayout::Design);
     let plan = ok_sketch::jigsaw::plan(&feature.params()).unwrap();
+    assert!(plan.problems.is_empty(), "{plan:?}");
     assert!(
-        plan.problems.is_empty() && plan.notes.is_empty(),
-        "{plan:?}"
+        plan.notes[0].contains("spread the rows"),
+        "{:?}",
+        plan.notes
     );
-    // The tabs reach across the strips, so the pieces cover a little
-    // less than the bands (each socket is its tab grown by the strip).
     let bands = 8.0 * 6.0 * feature.pitch * feature.pitch * feature.thickness;
     let v: f64 = r.bodies[..48].iter().map(|b| b.solid.volume()).sum();
-    assert!(v < bands && v > bands * 0.85, "{v} vs {bands}");
+    assert!((v - bands).abs() < bands * 2e-3, "{v} vs {bands}");
     let tray = &r.bodies[48];
     assert_eq!(tray.name, "Printing fixture");
     tray.solid.validate().unwrap();
@@ -125,4 +125,52 @@ fn the_tight_top_has_bands_and_a_printable_fixture() {
     );
     assert!(lo.x < 0.0 && hi.x > 8.0 * feature.pitch, "{lo:?} {hi:?}");
     eprintln!("8x6 tight top with fixture regenerated in {elapsed:?}");
+    // Each colour's board: 24 pieces, the top row a full five bits
+    // higher than in the design, every corner clear of the bit.
+    for (show, colour) in [
+        (ok_model::PuzzleLayout::Light, "light"),
+        (ok_model::PuzzleLayout::Dark, "dark"),
+    ] {
+        if let ok_model::TabKind::PartStudio(ps) =
+            &mut doc.tabs.iter_mut().find(|t| t.id == tab).unwrap().kind
+        {
+            ps.apply(ok_model::Op::SetPuzzle {
+                id: feature_id,
+                cols: None,
+                rows: None,
+                pitch: None,
+                thickness: None,
+                gap: None,
+                bit: None,
+                lock: None,
+                grain: None,
+                web: None,
+                seed: None,
+                jitter: None,
+                fixture: None,
+                show: Some(show),
+                tabs: None,
+                corners: None,
+            })
+            .unwrap();
+        }
+        let r = doc.regenerate_studio(tab, None).unwrap();
+        assert!(r.errors().next().is_none());
+        assert_eq!(r.bodies.len(), 24, "{colour}");
+        assert!(r.bodies.iter().all(|b| b.name.ends_with(colour)));
+        let top = r
+            .bodies
+            .iter()
+            .map(|b| b.solid.bounds().unwrap().1.y)
+            .fold(0.0, f64::max);
+        assert!(
+            top > 6.0 * feature.pitch + 5.0 * feature.bit - 1e-6,
+            "{top}"
+        );
+        let dxf = ok_render::view_dxf(&mut doc, tab, ok_render::View::Top, false).unwrap();
+        assert!(
+            dxf.matches("\nARC\n").count() > 24 * 6,
+            "{colour} templates"
+        );
+    }
 }
