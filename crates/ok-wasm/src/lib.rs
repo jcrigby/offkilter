@@ -522,6 +522,31 @@ impl Doc {
         self.bodies.len()
     }
 
+    /// The plan of a puzzle feature of a part studio tab: piece outlines
+    /// with the gap taken off, every tab's head centre and direction,
+    /// every movable corner, and the rules the design breaks; drawable
+    /// even when the feature is refused. JSON of `ok_sketch::jigsaw::Jigsaw`,
+    /// or `{"error": ...}`.
+    pub fn puzzle_plan(&self, tab: u32, feature: u32) -> String {
+        let error = |e: String| serde_json::json!({ "error": e }).to_string();
+        let studio = match self.inner.tab(TabId(tab)).map(|t| &t.kind) {
+            Some(TabKind::PartStudio(p)) => p,
+            _ => return error("not a part studio tab".into()),
+        };
+        let kind = studio
+            .features()
+            .iter()
+            .find(|f| f.id.0 == feature)
+            .map(|f| &f.kind);
+        match kind {
+            Some(ok_model::FeatureKind::Puzzle(p)) => match ok_sketch::jigsaw::plan(&p.params()) {
+                Ok(j) => serde_json::to_string(&j).unwrap_or_else(|e| error(e.to_string())),
+                Err(e) => error(e),
+            },
+            _ => error("not a puzzle feature".into()),
+        }
+    }
+
     /// Orthographic view of the current tab's bodies with hidden lines
     /// removed. `view_json` is `{"dir":[x,y,z],"up":[x,y,z]}` (the viewer
     /// looks along `dir`); the result is `{"visible":[[[x,y],[x,y]],..],

@@ -93,6 +93,10 @@ export type FeatureKind =
 /** One interlocking tab: `out` bulges towards the higher-index piece; `size` scales the tab, `width` the neck, `shift` places it along the edge (0..1). */
 export type PuzzleTab = { out: boolean; size: number; width: number; shift: number };
 export type Grain = "x" | "y";
+/** A line or an arc of a puzzle piece's outline (`ccw`: the arc runs counter-clockwise from `start` to `end`). */
+export type PuzzleSeg = { type: "line"; a: Vec2; b: Vec2 } | { type: "arc"; center: Vec2; radius: number; start: Vec2; end: Vec2; ccw: boolean };
+/** The plan of a puzzle: outlines (the gap taken off), each tab's head centre and direction in edge order, each movable corner in node order, and the rules the design breaks. */
+export type PuzzlePlan = { pieces: { col: number; row: number; light: boolean; outline: PuzzleSeg[] }[]; width: number; height: number; tab_heads: [Vec2, boolean][]; nodes: Vec2[]; problems: string[] };
 export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 /** A conical entry: its diameter at the face and its included angle in degrees (90 for metric flat heads). */
@@ -391,6 +395,12 @@ export class Kernel {
   edgeLength(body: number, faces: [number, number]): number | null {
     const l = this.studio.edge_length(body, faces[0], faces[1]);
     return l >= 0 ? l : null;
+  }
+
+  /** The plan of a puzzle feature of the current tab, drawable even when its rules fail; null if the feature is not a puzzle. */
+  puzzlePlan(tab: number, feature: number): PuzzlePlan | null {
+    const r = JSON.parse(this.studio.puzzle_plan(tab, feature)) as PuzzlePlan & { error?: string };
+    return r.error ? null : r;
   }
 
   /** Orthographic projection of the current tab's bodies with hidden lines removed. */
