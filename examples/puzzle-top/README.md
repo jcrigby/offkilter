@@ -75,6 +75,16 @@ taken off), naming every failure at once:
   move at most 30 % of it;
 - no piece's tabs or sockets run into each other.
 
+## For a later version
+
+- Veneer instead of solid stock: two consecutive leaves off one flitch
+  are near enough identical that, with one left natural and the other
+  dyed or toned, the grain runs across every colour boundary and the
+  top reads as one board with a pattern laid over it. The templates
+  are the same for both leaves, the colour split is by parity as now,
+  and the corner rule applies unchanged; the piece thickness becomes
+  the veneer's, on a substrate the fixture would then be sized for.
+
 ## What building it found
 
 - A 3 mm corner jitter on 38 mm pieces sent neighbouring sockets into
