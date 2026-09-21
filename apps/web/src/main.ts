@@ -2279,7 +2279,7 @@ class App implements SketchHost {
     const outs = k.tabs.filter((t) => t.out).length;
     const note = document.createElement("p");
     note.className = "note";
-    note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Click a tab's head to flip it, select it to size it; drag a corner. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only; a row gap makes bands with tabs along them, so a tight fit routes cleanly. The web is a body filling the gaps; the fixture is a tray to print with a pocket for every piece.`;
+    note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Click a tab's head to flip it, select it to size it; drag a corner. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only; a row gap puts a strip between rows that the tabs reach across, so a tight fit routes cleanly. The web is a body filling the gaps; the fixture is a tray to print with a pocket for every piece.`;
     body.appendChild(note);
   }
 
@@ -2323,8 +2323,7 @@ class App implements SketchHost {
       path.appendChild(document.createElementNS(ns, "title")).textContent = `Piece ${piece.col + 1},${piece.row + 1} ${piece.light ? "light" : "dark"}`;
       g.appendChild(path);
     }
-    plan.tab_heads.forEach(({ at, out, active }, edge) => {
-      if (!active) return;
+    plan.tab_heads.forEach(({ at, out }, edge) => {
       const c = document.createElementNS(ns, "circle");
       c.setAttribute("cx", String(at.x));
       c.setAttribute("cy", String(at.y));

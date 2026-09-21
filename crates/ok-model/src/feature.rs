@@ -604,9 +604,10 @@ pub struct PuzzleFeature {
     /// How far interior corners wander from the grid, mm.
     #[serde(default)]
     pub jitter: f64,
-    /// A strip between rows, mm: rows become bands with tabs only along
-    /// them, so a tight fit routes without the bit rounding the corners
-    /// where pieces of one colour meet. Zero for a full jigsaw.
+    /// A strip between rows, mm, which the tabs across it reach over
+    /// (the socket opposite is the tab grown by the strip), so a tight
+    /// fit routes without the bit rounding the corners where pieces of
+    /// one colour meet. Zero for a full jigsaw.
     #[serde(default)]
     pub row_gap: f64,
     /// Depth of the pockets of a printable fixture body that holds every

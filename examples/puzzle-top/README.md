@@ -56,10 +56,12 @@ colour's diagonal neighbour, in the same board: a tight fit gets a
 round hole about two bit diameters across at every interior node. The
 feature says so in a note under the plan. A gap of 0.7 bit diameters
 keeps the neighbour clear; so does a strip between rows (`row_gap`) at
-least one bit wide, which is what `Tight top` does. The rows then are
-bands with tabs only along them, and a strip narrower than the bit
-leaves every corner rounded by the difference, which the note also
-reports.
+least one bit wide, which is what `Tight top` does. The tabs on those
+edges keep their full shape and reach across the strip; the socket
+opposite is the tab grown by the strip width, so each tab sits in a
+moat of resin as wide as the strip and the rows still lock together. A
+strip narrower than the bit leaves every corner rounded by the
+difference, which the note also reports.
 
 The rules the feature checks, all on the outlines as cut (with the gap
 taken off), naming every failure at once:
@@ -96,6 +98,12 @@ taken off), naming every failure at once:
   every outline plus the short segments closing the gaps along the
   board's edges, from which the region finder yields the lattice. Fine
   for editing; a bigger puzzle would want the web built from strips.
+- The printing fixture is one boolean per piece against a growing
+  tray, and with tabs reaching across the strips the pockets no longer
+  merge into simple rows: the tight top with its fixture regenerates in
+  about four seconds in release (sixteen in a debug build), against
+  under a second without it. Turn `fixture` on when it is time to
+  print.
 - The pieces of one feature share its name and material in the parts
   list; the light and dark sets cannot yet be given maple and walnut
   separately. Materials per body, or a colour split into two features,
