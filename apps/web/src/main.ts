@@ -2,7 +2,7 @@ import { Kernel, parseStep } from "./kernel";
 import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
-import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -2255,7 +2255,9 @@ class App implements SketchHost {
     body.appendChild(field("Router bit ⌀", this.exprInput(f, "bit", k.bit, (v) => set({ bit: v }))));
     body.appendChild(field("Lock angle°", numberInput(k.lock, (v) => set({ lock: v }))));
     body.appendChild(field("Grain along", select(["x", "y"], k.grain, (v) => set({ grain: v as Grain }))));
-    body.appendChild(field("Row gap", this.exprInput(f, "row_gap", k.row_gap, (v) => set({ row_gap: v }))));
+    const show = select(["design", "light", "dark"], k.show, (v) => set({ show: v as PuzzleLayout }));
+    show.title = "The assembled design, or one colour's pieces laid out for its board with each row a bit diameter further along, so the bit rounds no corners";
+    body.appendChild(field("Show", show));
     body.appendChild(field("Web height", numberInput(k.web, (v) => set({ web: v }))));
     body.appendChild(field("Fixture depth", numberInput(k.fixture, (v) => set({ fixture: v }))));
     body.appendChild(field("Corner jitter", numberInput(k.jitter, (v) => set({ jitter: v }))));
@@ -2279,7 +2281,7 @@ class App implements SketchHost {
     const outs = k.tabs.filter((t) => t.out).length;
     const note = document.createElement("p");
     note.className = "note";
-    note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Click a tab's head to flip it, select it to size it; drag a corner. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only; a row gap puts a strip between rows that the tabs reach across, so a tight fit routes cleanly. The web is a body filling the gaps; the fixture is a tray to print with a pocket for every piece.`;
+    note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Click a tab's head to flip it, select it to size it; drag a corner. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only. Show a colour's layout to see its pieces as they sit on their board, rows spread a bit apart so the corners route clean; export that view as DXF for the templates. The web is a body filling the gaps; the fixture is a tray to print with a pocket for every piece.`;
     body.appendChild(note);
   }
 

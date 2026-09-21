@@ -82,13 +82,6 @@ pub struct Params {
     /// Offset of every interior node from its grid position, row by row
     /// (`j` in `1..rows`, `i` in `1..cols`, index `(j - 1) * (cols - 1) + (i - 1)`).
     pub corners: Vec<Vec2>,
-    /// A strip between rows, mm. Rows become bands a strip apart, so
-    /// pieces of one colour never meet at a corner and a tight fit
-    /// routes cleanly. The tabs on those edges keep their full shape and
-    /// reach across the strip; the socket opposite is the tab grown by
-    /// the strip width, so the tab sits in a moat as wide as the strip.
-    /// Zero for a full jigsaw.
-    pub row_gap: f64,
 }
 
 /// A line or an arc of an outline.
@@ -139,6 +132,25 @@ impl Seg {
                 start: end,
                 end: start,
                 ccw: !ccw,
+            },
+        }
+    }
+
+    fn translated(&self, d: Vec2) -> Seg {
+        match *self {
+            Seg::Line { a, b } => Seg::Line { a: a + d, b: b + d },
+            Seg::Arc {
+                center,
+                radius,
+                start,
+                end,
+                ccw,
+            } => Seg::Arc {
+                center: center + d,
+                radius,
+                start: start + d,
+                end: end + d,
+                ccw,
             },
         }
     }
@@ -292,9 +304,6 @@ pub fn plan(p: &Params) -> Result<Jigsaw, String> {
     if !(1.0..=45.0).contains(&p.lock) {
         return Err("lock angle must be between 1 and 45 degrees".into());
     }
-    if p.row_gap < 0.0 || !p.row_gap.is_finite() {
-        return Err("row gap must be zero or positive".into());
-    }
     if p.tabs.len() != edge_count(p.cols, p.rows) {
         return Err(format!(
             "{} tabs for {} interior edges",
@@ -310,13 +319,10 @@ pub fn plan(p: &Params) -> Result<Jigsaw, String> {
         ));
     }
     let (cols, rows) = (p.cols as usize, p.rows as usize);
-    let h = p.row_gap;
     let mut notes: Vec<String> = Vec::new();
-    // Rows are bands `pitch` tall, `h` apart. A node on boundary `j` (the
-    // top of row j - 1, the bottom of row j) sits at column i's x plus
-    // the corner offset; with a row gap it splits into two, one on each
-    // band, sharing the offset so the strip keeps its width.
-    let band_bottom = |j: usize| j as f64 * (p.pitch + h);
+    // A node on boundary `j` (the top of row j - 1, the bottom of row j)
+    // sits at column i's x plus the corner offset.
+    let band_bottom = |j: usize| j as f64 * p.pitch;
     let node_at = |i: usize, boundary: usize, y: f64| -> Vec2 {
         let base = Vec2::new(i as f64 * p.pitch, y);
         if i > 0 && i < cols && boundary > 0 && boundary < rows {
@@ -523,26 +529,17 @@ pub fn plan(p: &Params) -> Result<Jigsaw, String> {
             Seg::Line { a: p5, b },
         ]
     };
-    // Horizontal edges, one per boundary. An interior one carries a tab
-    // drawn on the line of the piece that owns it: the lower piece's top
-    // for a tab bulging up, the upper piece's bottom for one bulging
-    // down; with no row gap those lines coincide.
+    // Horizontal edges, one per boundary, tabs on the interior ones.
     for j in 0..=rows {
         for i in 0..cols {
             let tab =
                 (j > 0 && j < rows).then(|| ((j - 1) * cols + i, &p.tabs[(j - 1) * cols + i]));
-            let (a, b) = match tab {
-                Some((_, t)) if t.out => (top(i, j - 1), top(i + 1, j - 1)),
-                Some(_) => (bottom(i, j), bottom(i + 1, j)),
-                None if j == 0 => (bottom(i, 0), bottom(i + 1, 0)),
-                None => (top(i, rows - 1), top(i + 1, rows - 1)),
-            };
-            let (tab_in, socket_in) = if h > 0.0 {
-                (0.0, h)
+            let (a, b) = if j == rows {
+                (top(i, rows - 1), top(i + 1, rows - 1))
             } else {
-                (half_gap, half_gap)
+                (bottom(i, j), bottom(i + 1, j))
             };
-            h_edges.push(edge(a, b, tab, 1.0, tab_in, socket_in));
+            h_edges.push(edge(a, b, tab, 1.0, half_gap, half_gap));
         }
     }
     for i in 0..=cols {
@@ -558,60 +555,41 @@ pub fn plan(p: &Params) -> Result<Jigsaw, String> {
     }
     // What the bit does at the corners. Around a convex corner it sweeps
     // a quarter disc of radius one bit diameter on the far side, which on
-    // a checkerboard is the same colour's diagonal neighbour: a tight fit
-    // gets a round hole at every node unless a gap or a row strip keeps
-    // that neighbour clear.
-    if h > 0.0 {
-        if h < p.bit {
-            notes.push(format!(
-                "a {:.1} mm row gap under the bit's {:.2} mm leaves every piece corner rounded to {:.1} mm",
-                h,
-                p.bit,
-                p.bit - h
-            ));
-        }
-    } else {
-        let bite = p.bit - p.gap * 2f64.sqrt();
-        if bite > 0.05 && rows > 1 && cols > 1 {
-            notes.push(format!(
-                "cut from one board per colour, the bit rounds every interior corner back {:.1} mm ({:.1} mm holes at the nodes); a gap of {:.1} mm or a row gap of {:.2} mm avoids it",
-                bite,
-                2.0 * bite,
-                p.bit / 2f64.sqrt(),
-                p.bit
-            ));
-        }
+    // a checkerboard is the same colour's diagonal neighbour: cut from
+    // one board laid out as designed, a tight fit gets a round hole at
+    // every node. The fabrication layouts spread the rows a bit apart to
+    // keep that neighbour clear, so this is a note about cutting the
+    // design as it stands, not a rule.
+    let bite = p.bit - p.gap * 2f64.sqrt();
+    if bite > 0.05 && rows > 1 && cols > 1 {
+        notes.push(format!(
+            "laid out as designed, one board per colour, the bit rounds every interior corner back {:.1} mm ({:.1} mm holes at the nodes); the fabrication layouts spread the rows {:.2} mm apart to avoid it, or a gap of {:.1} mm would",
+            bite,
+            2.0 * bite,
+            p.bit,
+            p.bit / 2f64.sqrt()
+        ));
     }
     // Pieces: bottom, right, top (reversed), left (reversed), then the gap.
     let mut pieces = Vec::new();
     for j in 0..rows {
         for i in 0..cols {
-            // The board's own edges stay where they are. A shared edge
-            // moves in half the gap on both pieces; across a row gap the
-            // tab's piece keeps the curve and the socket's piece moves in
-            // by the strip.
+            // The board's own edges stay where they are; a shared edge
+            // moves in half the gap on both pieces.
             let mut outline: Vec<Seg> = Vec::new();
             let mut inset: Vec<f64> = Vec::new();
             let mut side = |segs: Vec<Seg>, d: f64| {
                 inset.extend(segs.iter().map(|_| d));
                 outline.extend(segs);
             };
-            let across = |boundary: usize, this_is_upper: bool| -> f64 {
+            let across = |boundary: usize| -> f64 {
                 if boundary == 0 || boundary == rows {
                     0.0
-                } else if h > 0.0 {
-                    // The upper piece has the socket of a tab bulging up.
-                    let out = p.tabs[(boundary - 1) * cols + i].out;
-                    if out == this_is_upper {
-                        h
-                    } else {
-                        0.0
-                    }
                 } else {
                     half_gap
                 }
             };
-            side(h_edges[j * cols + i].clone(), across(j, true));
+            side(h_edges[j * cols + i].clone(), across(j));
             side(
                 v_edges[(i + 1) * rows + j].clone(),
                 if i + 1 == cols { 0.0 } else { half_gap },
@@ -622,7 +600,7 @@ pub fn plan(p: &Params) -> Result<Jigsaw, String> {
                     .rev()
                     .map(|s| s.reversed())
                     .collect(),
-                across(j + 1, false),
+                across(j + 1),
             );
             side(
                 v_edges[i * rows + j]
@@ -654,17 +632,39 @@ pub fn plan(p: &Params) -> Result<Jigsaw, String> {
     }
     let nodes = (1..rows)
         .flat_map(|j| (1..cols).map(move |i| (i, j)))
-        .map(|(i, j)| node_at(i, j, band_bottom(j) - h / 2.0))
+        .map(|(i, j)| node_at(i, j, band_bottom(j)))
         .collect();
     Ok(Jigsaw {
         pieces,
         width: cols as f64 * p.pitch,
-        height: rows as f64 * p.pitch + (rows as f64 - 1.0) * h,
+        height: rows as f64 * p.pitch,
         tab_heads,
         nodes,
         problems,
         notes,
     })
+}
+
+/// The pieces of one colour laid out for cutting from one board: each
+/// where it is in the design, with every row moved `spread` further
+/// along than the last, so the corners of pieces that meet diagonally in
+/// the design sit `spread` apart on the board. With `spread` the bit's
+/// diameter the bit rounds nothing when it goes round a corner; the
+/// grain still runs on within a row and steps by `spread` between rows.
+pub fn fabrication(jig: &Jigsaw, light: bool, spread: f64) -> Vec<Piece> {
+    jig.pieces
+        .iter()
+        .filter(|p| p.light == light)
+        .map(|p| {
+            let d = Vec2::new(0.0, p.row as f64 * spread);
+            Piece {
+                col: p.col,
+                row: p.row,
+                light: p.light,
+                outline: p.outline.iter().map(|s| s.translated(d)).collect(),
+            }
+        })
+        .collect()
 }
 
 /// An outline moved `d` inward all round (negative grows it): the
@@ -829,7 +829,6 @@ mod tests {
             grain: Grain::X,
             tabs: seed_tabs(cols, rows, 7),
             corners: seed_corners(cols, rows, 0.0, 7),
-            row_gap: 0.0,
         }
     }
 
@@ -962,62 +961,49 @@ mod tests {
     }
 
     #[test]
-    fn a_row_gap_makes_bands_whose_tabs_cross_the_strip() {
-        let mut p = params(3, 2, 0.0);
-        p.row_gap = 8.0;
+    fn the_fabrication_layout_spreads_one_colours_rows_a_bit_apart() {
+        let p = params(3, 2, 0.0);
         let j = build(&p).unwrap();
-        assert!((j.height - (80.0 + 8.0)).abs() < 1e-9);
-        assert!(j.notes.is_empty(), "{:?}", j.notes);
-        assert_eq!(j.tab_heads.len(), edge_count(3, 2));
-        for piece in &j.pieces {
-            let n = piece.outline.len();
-            for k in 0..n {
-                assert!(
-                    piece.outline[k]
-                        .end()
-                        .distance(piece.outline[(k + 1) % n].start())
-                        < 1e-9,
-                    "piece {},{} breaks at {k}",
-                    piece.col,
-                    piece.row
-                );
-            }
-            assert!(area(&piece.outline) > 0.0);
-        }
-        // Across each strip the tab's piece keeps its whole tab and gains
-        // its area; the socket's piece is cut by the tab grown by the
-        // strip, its shoulders trimmed to corners, and loses more.
-        for i in 0..3 {
-            let (lower, upper) = (&j.pieces[i], &j.pieces[3 + i]);
-            let (owner, socket) = if p.tabs[i].out {
-                (lower, upper)
-            } else {
-                (upper, lower)
-            };
-            assert!(socket.outline.len() < owner.outline.len());
-            // (Most of the tab stands in the strip; the socket only takes
-            // the head, grown by the strip.)
-            assert!(
-                area(&owner.outline) > 1600.0 + 50.0,
-                "{}",
-                area(&owner.outline)
-            );
-            assert!(
-                area(&socket.outline) < 1600.0 - 100.0,
-                "{}",
-                area(&socket.outline)
-            );
-        }
-        // A strip narrower than the bit rounds the corners: a note, not a refusal.
-        p.row_gap = 4.0;
-        let j = build(&p).unwrap();
-        assert!(j.notes[0].contains("rounded to 2.3"), "{:?}", j.notes);
-        // A full jigsaw cut tight gets holes at the nodes: also a note.
-        p.row_gap = 0.0;
-        let j = build(&p).unwrap();
+        // The design cut as it stands would get holes at the nodes.
         assert!(j.notes[0].contains("holes at the nodes"), "{:?}", j.notes);
-        p.gap = 5.0;
-        assert!(plan(&p).unwrap().notes.is_empty());
+        assert!(plan(&Params {
+            gap: 5.0,
+            ..params(3, 2, 0.0)
+        })
+        .unwrap()
+        .notes
+        .is_empty());
+        let light = fabrication(&j, true, 6.35);
+        let dark = fabrication(&j, false, 6.35);
+        assert_eq!(light.len() + dark.len(), 6);
+        assert!(light.iter().all(|p| p.light) && dark.iter().all(|p| !p.light));
+        // Row 0 stays put, row 1 moves up one bit; the outlines are the
+        // design's, so the tabs and sockets are cut as designed.
+        let piece = |set: &[Piece], col: u32, row: u32| -> Piece {
+            set.iter()
+                .find(|p| p.col == col && p.row == row)
+                .unwrap()
+                .clone()
+        };
+        assert_eq!(piece(&light, 0, 0).outline, j.pieces[0].outline);
+        let moved = piece(&light, 1, 1);
+        for (a, b) in moved.outline.iter().zip(&j.pieces[4].outline) {
+            assert!(a.start().distance(b.start() + Vec2::new(0.0, 6.35)) < 1e-9);
+        }
+        let (a1, a2) = (area(&moved.outline), area(&j.pieces[4].outline));
+        assert!((a1 - a2).abs() < 1e-6 * a2, "{a1} vs {a2}");
+        // In the design the light pieces 1,1 and 2,2 meet at the node
+        // (40, 40); laid out, their corners are a bit apart.
+        let corner = |p: &Piece, at: Vec2| -> Vec2 {
+            p.outline
+                .iter()
+                .map(|s| s.start())
+                .min_by(|a, b| a.distance(at).total_cmp(&b.distance(at)))
+                .unwrap()
+        };
+        let a = corner(&piece(&light, 0, 0), Vec2::new(40.0, 40.0));
+        let b = corner(&piece(&light, 1, 1), Vec2::new(40.0, 46.35));
+        assert!((a.distance(b) - 6.35).abs() < 1e-9, "{a:?} {b:?}");
     }
 
     #[test]

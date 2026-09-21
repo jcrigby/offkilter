@@ -5,9 +5,11 @@ a checkerboard, each colour pin-routed from a single board so the grain
 runs across the whole field of that colour. Two tabs: `Top` has a
 1.5 mm gap between the pieces for a contrasting resin fill and a 5 mm
 alignment web in the gaps that lines the pieces up on the substrate
-during the glue-up; `Tight top` is cut with no gap at all, a strip one
-bit wide between the rows, and a printable tray (`out/fixture.stl`)
-with a pocket for every piece that does the lining up instead.
+during the glue-up; `Tight top` is cut with no gap at all and a
+printable tray (`out/fixture.stl`) with a pocket for every piece that
+does the lining up instead. Each colour of the tight top also has a
+fabrication layout, its pieces as they sit on their board, which is the
+routing template for that board.
 
 ```sh
 cargo build --release -p ok-mcp
@@ -24,9 +26,12 @@ cargo test -p ok-render --test puzzle_top     # what CI runs
   in which a click on a tab's head flips it, a shift-click selects it
   for its own size, neck and position, and a corner drags. A design the
   rules refuse still draws, with the rules listed under it.
-- `out/templates.dxf`, `out/tight_templates.dxf`: every piece outline
-  at 1:1, the routing templates. Each outline is lines and tangent
-  arcs, so it is what the pin follows.
+- `out/templates.dxf`: every piece outline of the resin top at 1:1.
+- `out/maple_templates.dxf`, `out/walnut_templates.dxf` (and the
+  `*_layout.png` pictures): the tight top's fabrication layouts, one
+  colour's pieces on their board with every row a bit diameter further
+  along than the last. Each outline is lines and tangent arcs, so it is
+  what the pin follows.
 - `out/fixture.stl`: the tray for the tight top, exported on its own
   with `export {body: "Printing fixture"}`.
 - `out/*.png`: the screenshots.
@@ -49,19 +54,19 @@ kerf comes out of its neighbour in that board, which is a waste piece,
 so the fit between a maple piece and a walnut one is as tight as the
 templates, not as tight as the kerf.
 
-That holds along the edges and fails at the corners. Going round a
-convex corner the bit sweeps a quarter disc of radius one bit diameter
-on the far side, and on a checkerboard the far side is the same
-colour's diagonal neighbour, in the same board: a tight fit gets a
-round hole about two bit diameters across at every interior node. The
-feature says so in a note under the plan. A gap of 0.7 bit diameters
-keeps the neighbour clear; so does a strip between rows (`row_gap`) at
-least one bit wide, which is what `Tight top` does. The tabs on those
-edges keep their full shape and reach across the strip; the socket
-opposite is the tab grown by the strip width, so each tab sits in a
-moat of resin as wide as the strip and the rows still lock together. A
-strip narrower than the bit leaves every corner rounded by the
-difference, which the note also reports.
+That holds along the edges and fails at the corners if the board is
+laid out exactly as the design. Going round a convex corner the bit
+sweeps a quarter disc of radius one bit diameter on the far side, and
+on a checkerboard the far side is the same colour's diagonal
+neighbour, in the same board: cut that way, a tight fit gets a round
+hole about two bit diameters across at every interior node. The design
+does not change for this; the board layout does. The fabrication
+layout for one colour (`show: "light"` or `"dark"`) keeps every piece
+where it is in the design but moves each row one bit diameter further
+along than the last, so those corners sit a bit apart on the board and
+the bit rounds nothing. The grain still runs on within a row and steps
+by a bit between rows. The feature says all this in a note under the
+plan, with the numbers for the current bit.
 
 The rules the feature checks, all on the outlines as cut (with the gap
 taken off), naming every failure at once:

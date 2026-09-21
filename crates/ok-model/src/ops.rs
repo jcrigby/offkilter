@@ -442,9 +442,9 @@ pub enum Op {
         #[serde(default)]
         jitter: f64,
         #[serde(default)]
-        row_gap: f64,
-        #[serde(default)]
         fixture: f64,
+        #[serde(default)]
+        show: crate::PuzzleLayout,
         name: Option<String>,
     },
     /// Changing the grid, seed or jitter reseeds every tab and corner
@@ -474,9 +474,9 @@ pub enum Op {
         #[serde(default)]
         jitter: Option<f64>,
         #[serde(default)]
-        row_gap: Option<f64>,
-        #[serde(default)]
         fixture: Option<f64>,
+        #[serde(default)]
+        show: Option<crate::PuzzleLayout>,
         #[serde(default)]
         tabs: Option<Vec<crate::PuzzleTab>>,
         #[serde(default)]
@@ -1447,8 +1447,8 @@ impl PartStudio {
                 web,
                 seed,
                 jitter,
-                row_gap,
                 fixture,
+                show,
                 name,
             } => {
                 let mut pf = crate::PuzzleFeature {
@@ -1464,8 +1464,8 @@ impl PartStudio {
                     web,
                     seed,
                     jitter,
-                    row_gap,
                     fixture,
+                    show,
                     tabs: Vec::new(),
                     corners: Vec::new(),
                 };
@@ -1485,8 +1485,8 @@ impl PartStudio {
                 web,
                 seed,
                 jitter,
-                row_gap,
                 fixture,
+                show,
                 tabs,
                 corners,
             } => match &mut self.feature_mut(id)?.kind {
@@ -1528,11 +1528,11 @@ impl PartStudio {
                     if let Some(v) = jitter {
                         p.jitter = v;
                     }
-                    if let Some(v) = row_gap {
-                        p.row_gap = v;
-                    }
                     if let Some(v) = fixture {
                         p.fixture = v;
+                    }
+                    if let Some(v) = show {
+                        p.show = v;
                     }
                     if regrid {
                         p.reseed();

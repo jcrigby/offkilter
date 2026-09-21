@@ -29,7 +29,7 @@
               "web": 5.0,
               "seed": 42,
               "jitter": 3.0,
-              "row_gap": 0.0,
+              "show": "design",
               "fixture": 0.0,
               "tabs": [
                 {
@@ -704,7 +704,7 @@
               "web": 0.0,
               "seed": 42,
               "jitter": 2.0,
-              "row_gap": 6.35,
+              "show": "design",
               "fixture": 6.0,
               "tabs": [
                 {
