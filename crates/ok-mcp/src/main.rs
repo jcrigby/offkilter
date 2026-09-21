@@ -329,6 +329,7 @@ impl Backend {
         format: &str,
         view: ok_render::View,
         hidden: bool,
+        body: Option<&str>,
     ) -> Result<Vec<u8>, String> {
         match self {
             Backend::Server { .. } => {
@@ -336,6 +337,9 @@ impl Backend {
                 if format == "dxf" {
                     query.push(format!("view={}", view_name(view)));
                     query.push(format!("hidden={hidden}"));
+                }
+                if let Some(b) = body {
+                    query.push(format!("body={}", urlencode(b)));
                 }
                 let query = if query.is_empty() {
                     String::new()
@@ -361,7 +365,7 @@ impl Backend {
                         .map(String::into_bytes);
                 }
                 let kind = doc.tab(tab).map(|t| t.kind_name()).ok_or("no such tab")?;
-                let bodies = if kind == "assembly" {
+                let mut bodies = if kind == "assembly" {
                     doc.regenerate_assembly(tab)
                         .map_err(|e| e.to_string())?
                         .bodies
@@ -370,6 +374,18 @@ impl Backend {
                         .map_err(|e| e.to_string())?
                         .bodies
                 };
+                if let Some(want) = body {
+                    let index: Option<usize> = want.parse().ok();
+                    bodies = bodies
+                        .into_iter()
+                        .enumerate()
+                        .filter(|(i, b)| b.name == want || index == Some(*i))
+                        .map(|(_, b)| b)
+                        .collect();
+                    if bodies.is_empty() {
+                        return Err(format!("no body {want:?} in the tab"));
+                    }
+                }
                 match format {
                     "stl" => {
                         let meshes: Vec<ok_mesh::TriMesh> =
@@ -472,6 +488,20 @@ fn attach_neighbours(value: &mut Value, neighbours: &Neighbours) {
         }
         _ => {}
     }
+}
+
+/// Percent-encodes a query value (names with spaces, say).
+fn urlencode(s: &str) -> String {
+    let mut out = String::new();
+    for b in s.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(b as char)
+            }
+            _ => out.push_str(&format!("%{b:02X}")),
+        }
+    }
+    out
 }
 
 fn view_name(view: ok_render::View) -> String {
@@ -976,7 +1006,14 @@ impl Server {
                     .get("hidden")
                     .and_then(|h| h.as_bool())
                     .unwrap_or(false);
-                let bytes = self.backend.export(&id, tab, &format, view, hidden)?;
+                let body = args.get("body").and_then(|b| match b {
+                    Value::String(s) => Some(s.clone()),
+                    Value::Number(n) => Some(n.to_string()),
+                    _ => None,
+                });
+                let bytes =
+                    self.backend
+                        .export(&id, tab, &format, view, hidden, body.as_deref())?;
                 std::fs::write(&path, &bytes)
                     .map_err(|e| format!("could not write {path}: {e}"))?;
                 Ok(format!(
@@ -1237,8 +1274,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "export",
-            "description": "Writes a tab's bodies as STL or STEP to a file path, or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut; `hidden: true` adds hidden lines dashed on their own layer.",
-            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" } }, "required": ["format", "path"] }
+            "description": "Writes a tab's bodies as STL or STEP to a file path, or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut; `hidden: true` adds hidden lines dashed on their own layer. `body` (a body's name or index from the report) writes that one body alone, for a part to print.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" } }, "required": ["format", "path"] }
         },
         {
             "name": "document_url",

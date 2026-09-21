@@ -13,3 +13,4 @@ examples/router-lift/out/assembly_section_flip.png
 examples/router-lift/out/*.step
 __pycache__/
 examples/puzzle-top/out/*.stl
+!examples/puzzle-top/out/fixture.stl

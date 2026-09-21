@@ -441,6 +441,10 @@ pub enum Op {
         seed: u64,
         #[serde(default)]
         jitter: f64,
+        #[serde(default)]
+        row_gap: f64,
+        #[serde(default)]
+        fixture: f64,
         name: Option<String>,
     },
     /// Changing the grid, seed or jitter reseeds every tab and corner
@@ -469,6 +473,10 @@ pub enum Op {
         seed: Option<u64>,
         #[serde(default)]
         jitter: Option<f64>,
+        #[serde(default)]
+        row_gap: Option<f64>,
+        #[serde(default)]
+        fixture: Option<f64>,
         #[serde(default)]
         tabs: Option<Vec<crate::PuzzleTab>>,
         #[serde(default)]
@@ -1439,6 +1447,8 @@ impl PartStudio {
                 web,
                 seed,
                 jitter,
+                row_gap,
+                fixture,
                 name,
             } => {
                 let mut pf = crate::PuzzleFeature {
@@ -1454,6 +1464,8 @@ impl PartStudio {
                     web,
                     seed,
                     jitter,
+                    row_gap,
+                    fixture,
                     tabs: Vec::new(),
                     corners: Vec::new(),
                 };
@@ -1473,6 +1485,8 @@ impl PartStudio {
                 web,
                 seed,
                 jitter,
+                row_gap,
+                fixture,
                 tabs,
                 corners,
             } => match &mut self.feature_mut(id)?.kind {
@@ -1513,6 +1527,12 @@ impl PartStudio {
                     }
                     if let Some(v) = jitter {
                         p.jitter = v;
+                    }
+                    if let Some(v) = row_gap {
+                        p.row_gap = v;
+                    }
+                    if let Some(v) = fixture {
+                        p.fixture = v;
                     }
                     if regrid {
                         p.reseed();

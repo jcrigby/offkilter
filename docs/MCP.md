@@ -64,7 +64,7 @@ server configuration:
 | `report {doc?, tab?, detail?}` | Features with ids, kinds and errors; sketches with solver status, degrees of freedom, closed regions and entity ids; bodies with volume, bounds and every face's reference (`{feature, local, part}`), plus cylinders (holes and bosses) with their axes. `detail: "full"` returns the raw JSON. |
 | `screenshot {view?, section?, width?, height?, path?, doc?, tab?}` | A PNG of the tab's bodies, rendered without a browser: `view` is `top`, `front`, `right`, `iso` (default) or an `x,y,z` eye direction; `section` is `axis:offset[:flip]` (`z:10` keeps z ≥ 10, cut faces hatched); 640×480 unless sized; `path` also writes the file. Returned as MCP image content, so a model that can see images checks its work. |
 | `import {path, name?, doc?, tab?}` | Adds the bodies of an STL, OBJ or STEP file as mesh bodies (STEP faceted: planes and cylinders, millimetres). |
-| `export {format, path, view?, hidden?, doc?, tab?}` | Writes STL or STEP of a tab's bodies, or (`format: "dxf"`) a DXF of their visible edges seen from `view` (`top` by default, the names `screenshot` takes) at 1:1 in millimetres, hidden lines dashed on their own layer with `hidden: true`: a template to print or a profile to cut. |
+| `export {format, path, view?, hidden?, body?, doc?, tab?}` | Writes STL or STEP of a tab's bodies (or of the one `body`, by name or index, for a part to print), or (`format: "dxf"`) a DXF of their visible edges seen from `view` (`top` by default, the names `screenshot` takes) at 1:1 in millimetres, hidden lines dashed on their own layer with `hidden: true`: a template to print or a profile to cut. |
 | `document_url {doc?}` | Where to look. |
 
 The same functions are plain HTTP for scripts that are not models:

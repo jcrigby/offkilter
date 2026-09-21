@@ -604,6 +604,15 @@ pub struct PuzzleFeature {
     /// How far interior corners wander from the grid, mm.
     #[serde(default)]
     pub jitter: f64,
+    /// A strip between rows, mm: rows become bands with tabs only along
+    /// them, so a tight fit routes without the bit rounding the corners
+    /// where pieces of one colour meet. Zero for a full jigsaw.
+    #[serde(default)]
+    pub row_gap: f64,
+    /// Depth of the pockets of a printable fixture body that holds every
+    /// piece for the glue-up; zero for none.
+    #[serde(default)]
+    pub fixture: f64,
     /// One per interior edge (see `ok_sketch::jigsaw` for the order).
     pub tabs: Vec<PuzzleTab>,
     /// One offset per interior node.
@@ -637,6 +646,7 @@ impl PuzzleFeature {
             grain: self.grain,
             tabs: self.tabs.clone(),
             corners: self.corners.clone(),
+            row_gap: self.row_gap,
         }
     }
 }
@@ -737,6 +747,7 @@ impl FeatureKind {
                 "thickness".into(),
                 "gap".into(),
                 "bit".into(),
+                "row_gap".into(),
             ],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
@@ -785,6 +796,7 @@ impl FeatureKind {
             (FeatureKind::Puzzle(p), "thickness") => Some(p.thickness),
             (FeatureKind::Puzzle(p), "gap") => Some(p.gap),
             (FeatureKind::Puzzle(p), "bit") => Some(p.bit),
+            (FeatureKind::Puzzle(p), "row_gap") => Some(p.row_gap),
             _ => None,
         }
     }
@@ -879,6 +891,10 @@ impl FeatureKind {
             }
             (FeatureKind::Puzzle(p), "bit") => {
                 p.bit = value;
+                Ok(())
+            }
+            (FeatureKind::Puzzle(p), "row_gap") => {
+                p.row_gap = value;
                 Ok(())
             }
             (FeatureKind::Hole(h), "diameter") => {
