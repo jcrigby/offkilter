@@ -36,6 +36,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Extrude up-to-face / through-all
 - [x] Revolve (about a sketch axis or sketch line, full or partial)
 - [x] Hole feature (through / blind, optional counterbore or countersink) at sketch points
+- [x] Puzzle feature: a jigsaw grid of pieces with interlocking tabs (lines and tangent arcs), per-tab direction, size, neck and position, movable corners, a gap for a resin fill, an alignment web in the gaps, and pin router design rules that name what the bit cannot cut
 - [x] Sweep (profile along a sketched polyline / arc path) and loft (between two sketch regions)
 - [x] Fillet and chamfer on straight edges (blend by boolean with a cutter prism per edge)
 - [x] Fillets and chamfers on curved edges (a rim is one chain, blended with one mitred sweep)

@@ -96,10 +96,19 @@ Feature ops (each returns the new feature's id; `name` may be null):
 | `add_draft` | `faces: FaceRef[], neutral: PlaneRef, angle, name` |
 | `add_split` | `plane: PlaneRef, bodies?, name` |
 | `add_mesh` | `vertices: Vec3[], triangles: [[i,j,k]...], name` |
+| `add_puzzle` | `plane: PlaneRef, cols, rows, pitch, thickness, gap? (0), bit? (6.35, the pin router bit), lock? (20°, how far tab necks lean in), grain?: "x"|"y", web? (0: height of the alignment web filling the gaps), seed?, jitter? (mm the interior corners wander), name`. A jigsaw puzzle: one body per piece, `Piece col,row light|dark` by checkerboard parity, plus `Alignment web` when `web` and `gap` are set. Every outline is lines and tangent arcs; the feature refuses (with every rule named) what the bit cannot cut: socket openings and concave radii under the bit, necks too thin (thinner still across the grain), tabs too near a corner or too tall, cells not convex. |
 | `add_variable` | `name, expression` (then `#name` works in any expression) |
 
 Every `add_*` has a `set_*` twin taking `id` plus the fields to change
 (`set_extrude {id, depth}`, `set_blend {id, size}`, `set_hole {id, diameter}`, …).
+A puzzle also takes `set_puzzle_tab {id, edge, out?, size?, width?, shift?}` for one
+tab (edges are numbered horizontal first, `(row - 1) * cols + col` for the edge
+above piece `col,row` counting from 0, then vertical, `h + (col - 1) * rows + row`
+for the edge right of it; `out` bulges towards the higher piece) and
+`set_puzzle_corner {id, node, offset: Vec2}` for one interior corner (row by
+row, `(row - 1) * (cols - 1) + (col - 1)`). Changing `cols`, `rows`, `seed` or
+`jitter` through `set_puzzle` reseeds every tab and corner unless `tabs` and
+`corners` are passed too.
 Other studio ops: `rename_feature {id, name}`, `set_suppressed {id, suppressed}`,
 `delete_feature {id}`, `move_feature {id, index}`, `set_binding {id, field, expression}`
 (bind an expression such as `"#width / 2"` to a numeric field: `"depth"`, `"size"`,

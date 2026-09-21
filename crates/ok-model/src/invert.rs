@@ -48,6 +48,7 @@ impl PartStudio {
             | Op::AddMoveFace { .. }
             | Op::AddDraft { .. }
             | Op::AddMesh { .. }
+            | Op::AddPuzzle { .. }
             | Op::AddSplit { .. }
             | Op::InsertFeature { .. } => result
                 .feature
@@ -176,6 +177,73 @@ impl PartStudio {
                     counterbore: counterbore.map(|_| h.counterbore),
                     countersink: countersink.map(|_| h.countersink),
                 }],
+                _ => Vec::new(),
+            },
+            Op::SetPuzzle {
+                id,
+                cols,
+                rows,
+                pitch,
+                thickness,
+                gap,
+                bit,
+                lock,
+                grain,
+                web,
+                seed,
+                jitter,
+                ..
+            } => match before.kind() {
+                // Any change may have reseeded the tabs and corners, so the
+                // inverse restores them whole.
+                Some(FeatureKind::Puzzle(p)) => vec![Op::SetPuzzle {
+                    id,
+                    cols: cols.map(|_| p.cols),
+                    rows: rows.map(|_| p.rows),
+                    pitch: pitch.map(|_| p.pitch),
+                    thickness: thickness.map(|_| p.thickness),
+                    gap: gap.map(|_| p.gap),
+                    bit: bit.map(|_| p.bit),
+                    lock: lock.map(|_| p.lock),
+                    grain: grain.map(|_| p.grain),
+                    web: web.map(|_| p.web),
+                    seed: seed.map(|_| p.seed),
+                    jitter: jitter.map(|_| p.jitter),
+                    tabs: Some(p.tabs.clone()),
+                    corners: Some(p.corners.clone()),
+                }],
+                _ => Vec::new(),
+            },
+            Op::SetPuzzleTab {
+                id,
+                edge,
+                out,
+                size,
+                width,
+                shift,
+            } => match before.kind() {
+                Some(FeatureKind::Puzzle(p)) => match p.tabs.get(edge) {
+                    Some(t) => vec![Op::SetPuzzleTab {
+                        id,
+                        edge,
+                        out: out.map(|_| t.out),
+                        size: size.map(|_| t.size),
+                        width: width.map(|_| t.width),
+                        shift: shift.map(|_| t.shift),
+                    }],
+                    None => Vec::new(),
+                },
+                _ => Vec::new(),
+            },
+            Op::SetPuzzleCorner { id, node, .. } => match before.kind() {
+                Some(FeatureKind::Puzzle(p)) => match p.corners.get(node) {
+                    Some(c) => vec![Op::SetPuzzleCorner {
+                        id,
+                        node,
+                        offset: *c,
+                    }],
+                    None => Vec::new(),
+                },
                 _ => Vec::new(),
             },
             Op::SetSweep {
@@ -365,6 +433,9 @@ impl Before {
             | Op::SetBinding { id, .. }
             | Op::SetField { id, .. }
             | Op::SetHole { id, .. }
+            | Op::SetPuzzle { id, .. }
+            | Op::SetPuzzleTab { id, .. }
+            | Op::SetPuzzleCorner { id, .. }
             | Op::SetSweep { id, .. }
             | Op::SetLoft { id, .. }
             | Op::SetBoolean { id, .. }

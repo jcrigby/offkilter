@@ -351,6 +351,46 @@ test("sketch trim, offset and mirror", async ({ page }) => {
   expect(cut.status).not.toBe("inconsistent");
 });
 
+test("puzzle feature: a grid of interlocking pieces and an alignment web", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  await page.click("#btn-add-puzzle");
+  await page.waitForTimeout(500);
+  // 6 x 4 pieces plus the web, every piece a closed body.
+  const first = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    return { bodies: app.summary.bodies.length, names: app.summary.bodies.map((b: any) => b.name), errors: app.summary.features.filter((f: any) => f.error).length };
+  });
+  expect(first.errors).toBe(0);
+  expect(first.bodies).toBe(25);
+  expect(first.names[0]).toBe("Piece 1,1 light");
+  expect(first.names[24]).toBe("Alignment web");
+  // The panel: a 3 x 2 grid through the fields, then a bit too big for
+  // the tabs, which the feature refuses with the rule that fails.
+  await expect(page.locator("#detail-body")).toContainText("Columns");
+  const cols = page.locator("#detail-body input").first();
+  await cols.fill("3");
+  await cols.press("Enter");
+  await page.waitForTimeout(300);
+  const rows = page.locator("#detail-body input").nth(1);
+  await rows.fill("2");
+  await rows.press("Enter");
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies.length)).toBe(7);
+  const bit = page.locator("#detail-body input").nth(5);
+  await bit.fill("14");
+  await bit.press("Enter");
+  await page.waitForTimeout(300);
+  await expect(page.locator("#detail-body")).toContainText("socket opening");
+  await page.click("#viewport");
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies.length)).toBe(7);
+});
+
 test("assembly tab: insert two instances and mate them face to face", async ({ page }) => {
   page.on("dialog", (d) => d.accept(d.defaultValue()));
   await page.goto("/");

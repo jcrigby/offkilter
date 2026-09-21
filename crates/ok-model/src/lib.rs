@@ -28,11 +28,11 @@ pub use document::{AssemblyOp, DocOp, DocOpResult, Document, DrawingDimension, T
 pub use feature::{
     canonical_frame, near_of, no_near, origin_hash, rotated_plane, Axis, BlendFeature, BlendKind,
     BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, Countersink, DraftFeature, EdgeRef,
-    ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind,
+    ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature, FeatureId, FeatureKind, Grain,
     HoleFeature, LoftFeature, MeshFeature, MirrorFeature, MoveFaceFeature, PatternFeature,
-    PatternKind, PlaneRef, ProfileSelection, Projection, ProjectionSource, RevolveAxis,
-    RevolveFeature, ShellFeature, SketchFeature, SplitFeature, StandardPlane, SweepFeature,
-    VariableFeature, NEAR, PROJECTION_BLOCK,
+    PatternKind, PlaneRef, ProfileSelection, Projection, ProjectionSource, PuzzleFeature,
+    PuzzleTab, RevolveAxis, RevolveFeature, ShellFeature, SketchFeature, SplitFeature,
+    StandardPlane, SweepFeature, VariableFeature, NEAR, PROJECTION_BLOCK,
 };
 pub use merge::Merge;
 pub use ops::{Op, OpResult, SketchOp};
