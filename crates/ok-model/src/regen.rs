@@ -3186,13 +3186,16 @@ mod tests {
         assert_eq!(r.bodies[7].name, "Printing fixture");
         let pieces: f64 = r.bodies[..6].iter().map(|b| b.solid.volume()).sum();
         assert!(
-            (pieces - 6.0 * 16000.0).abs() < 6.0 * 16000.0 * 2e-3,
+            pieces < 6.0 * 16000.0 && pieces > 6.0 * 16000.0 * 0.85,
             "{pieces}"
         );
+        // The strips, the moats round the tabs and nothing else: the web
+        // and the pieces together cover the board.
         let web = r.bodies[6].solid.volume();
+        let board = 120.0 * (80.0 + 6.35);
         assert!(
-            (web - 120.0 * 6.35 * 4.0).abs() < 120.0 * 6.35 * 4.0 * 2e-3,
-            "{web}"
+            (pieces / 10.0 + web / 4.0 - board).abs() < board * 2e-3,
+            "{pieces} {web}"
         );
         let fixture = &r.bodies[7].solid;
         fixture.validate().unwrap();
@@ -3205,12 +3208,14 @@ mod tests {
             (lo.x + 6.0).abs() < 1e-9 && (hi.x - 126.0).abs() < 1e-9,
             "{lo:?} {hi:?}"
         );
-        // The tray is the slab less two row pockets grown by the clearance.
+        // The tray is the slab less the pockets: the pieces grown by the
+        // clearance, so a little more than the pieces' own area.
         let slab = 132.0 * (86.35 + 12.0) * 7.0;
-        let pockets = fixture.volume();
+        let pockets = (slab - fixture.volume()) / 5.0;
+        let area = pieces / 10.0;
         assert!(
-            pockets < slab - 6.0 * 1600.0 * 5.0 && pockets > slab - 6.0 * 1600.0 * 5.0 * 1.1,
-            "{pockets} of {slab}"
+            pockets > area && pockets < area * 1.05,
+            "{pockets} vs {area}"
         );
     }
 

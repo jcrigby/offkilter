@@ -96,7 +96,7 @@ export type Grain = "x" | "y";
 /** A line or an arc of a puzzle piece's outline (`ccw`: the arc runs counter-clockwise from `start` to `end`). */
 export type PuzzleSeg = { type: "line"; a: Vec2; b: Vec2 } | { type: "arc"; center: Vec2; radius: number; start: Vec2; end: Vec2; ccw: boolean };
 /** The plan of a puzzle: outlines (the gap taken off), each tab's head centre and direction in edge order, each movable corner in node order, and the rules the design breaks. */
-export type PuzzlePlan = { pieces: { col: number; row: number; light: boolean; outline: PuzzleSeg[] }[]; width: number; height: number; tab_heads: { at: Vec2; out: boolean; active: boolean }[]; nodes: Vec2[]; problems: string[]; notes: string[] };
+export type PuzzlePlan = { pieces: { col: number; row: number; light: boolean; outline: PuzzleSeg[] }[]; width: number; height: number; tab_heads: { at: Vec2; out: boolean }[]; nodes: Vec2[]; problems: string[]; notes: string[] };
 export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 /** A conical entry: its diameter at the face and its included angle in degrees (90 for metric flat heads). */

@@ -110,19 +110,11 @@ fn the_tight_top_has_bands_and_a_printable_fixture() {
         plan.problems.is_empty() && plan.notes.is_empty(),
         "{plan:?}"
     );
-    // The pieces add up to the bands (the strips keep their width even
-    // where the corners wander, so the strips are exactly the rest).
+    // The tabs reach across the strips, so the pieces cover a little
+    // less than the bands (each socket is its tab grown by the strip).
     let bands = 8.0 * 6.0 * feature.pitch * feature.pitch * feature.thickness;
     let v: f64 = r.bodies[..48].iter().map(|b| b.solid.volume()).sum();
-    assert!((v - bands).abs() < bands * 2e-3, "{v} vs {bands}");
-    // No piece owns a tab on its top or bottom: every one's top and
-    // bottom edges are single lines.
-    for piece in &plan.pieces {
-        assert!(matches!(
-            piece.outline[0],
-            ok_sketch::jigsaw::Seg::Line { .. }
-        ));
-    }
+    assert!(v < bands && v > bands * 0.85, "{v} vs {bands}");
     let tray = &r.bodies[48];
     assert_eq!(tray.name, "Printing fixture");
     tray.solid.validate().unwrap();
