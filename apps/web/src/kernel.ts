@@ -89,14 +89,14 @@ export type FeatureKind =
   | { type: "draft"; faces: FaceRef[]; neutral: PlaneRef; angle: number }
   | { type: "mesh"; vertices: Vec3[]; triangles: [number, number, number][] }
   | { type: "split"; plane: PlaneRef; bodies?: number[] }
-  | { type: "puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap: number; bit: number; lock: number; grain: Grain; web: number; seed: number; jitter: number; tabs: PuzzleTab[]; corners: Vec2[] };
+  | { type: "puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap: number; bit: number; lock: number; grain: Grain; web: number; seed: number; jitter: number; row_gap: number; fixture: number; tabs: PuzzleTab[]; corners: Vec2[] };
 /** One interlocking tab: `out` bulges towards the higher-index piece; `size` scales the tab, `width` the neck, `shift` places it along the edge (0..1). */
 export type PuzzleTab = { out: boolean; size: number; width: number; shift: number };
 export type Grain = "x" | "y";
 /** A line or an arc of a puzzle piece's outline (`ccw`: the arc runs counter-clockwise from `start` to `end`). */
 export type PuzzleSeg = { type: "line"; a: Vec2; b: Vec2 } | { type: "arc"; center: Vec2; radius: number; start: Vec2; end: Vec2; ccw: boolean };
 /** The plan of a puzzle: outlines (the gap taken off), each tab's head centre and direction in edge order, each movable corner in node order, and the rules the design breaks. */
-export type PuzzlePlan = { pieces: { col: number; row: number; light: boolean; outline: PuzzleSeg[] }[]; width: number; height: number; tab_heads: [Vec2, boolean][]; nodes: Vec2[]; problems: string[] };
+export type PuzzlePlan = { pieces: { col: number; row: number; light: boolean; outline: PuzzleSeg[] }[]; width: number; height: number; tab_heads: { at: Vec2; out: boolean; active: boolean }[]; nodes: Vec2[]; problems: string[]; notes: string[] };
 export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 /** A conical entry: its diameter at the face and its included angle in degrees (90 for metric flat heads). */
@@ -254,8 +254,8 @@ export type Op =
   | { type: "set_variable"; id: number; name?: string | null; expression?: string | null }
   | { type: "set_binding"; id: number; field: string; expression: string | null }
   | { type: "add_hole"; sketch: number; diameter: number; depth?: number; through_all?: boolean; direction?: ExtrudeDirection; counterbore?: Counterbore | null; countersink?: Countersink | null; name: string | null }
-  | { type: "add_puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; name: string | null }
-  | { type: "set_puzzle"; id: number; cols?: number; rows?: number; pitch?: number; thickness?: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; tabs?: PuzzleTab[]; corners?: Vec2[] }
+  | { type: "add_puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; row_gap?: number; fixture?: number; name: string | null }
+  | { type: "set_puzzle"; id: number; cols?: number; rows?: number; pitch?: number; thickness?: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; row_gap?: number; fixture?: number; tabs?: PuzzleTab[]; corners?: Vec2[] }
   | { type: "set_puzzle_tab"; id: number; edge: number; out?: boolean; size?: number; width?: number; shift?: number }
   | { type: "set_puzzle_corner"; id: number; node: number; offset: Vec2 }
   | { type: "set_hole"; id: number; diameter?: number | null; depth?: number | null; through_all?: boolean | null; direction?: ExtrudeDirection | null; counterbore?: Counterbore | null; countersink?: Countersink | null }

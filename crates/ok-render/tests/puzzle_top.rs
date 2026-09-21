@@ -77,3 +77,60 @@ fn the_puzzle_regenerates_into_pieces_and_a_web() {
     eprintln!("8x6 puzzle with web regenerated in {elapsed:?}");
     assert!(elapsed.as_secs() < 20, "{elapsed:?}");
 }
+
+/// The tight version: bands a bit apart, no web, a tray with a pocket
+/// per piece, and the notes empty because nothing gets rounded.
+#[test]
+fn the_tight_top_has_bands_and_a_printable_fixture() {
+    let dir = example_dir();
+    let json = std::fs::read_to_string(dir.join("out/puzzle_top.okpart")).unwrap();
+    let mut doc = ok_model::Document::from_json(&json).unwrap();
+    let tab = doc
+        .tabs
+        .iter()
+        .find(|t| t.name() == "Tight top")
+        .unwrap()
+        .id;
+    let start = std::time::Instant::now();
+    let r = doc.regenerate_studio(tab, None).unwrap();
+    let elapsed = start.elapsed();
+    let errors: Vec<_> = r.errors().collect();
+    assert!(errors.is_empty(), "{errors:?}");
+    assert_eq!(r.bodies.len(), 8 * 6 + 1, "{} bodies", r.bodies.len());
+    let feature = match &doc.tabs.iter().find(|t| t.id == tab).unwrap().kind {
+        ok_model::TabKind::PartStudio(ps) => match &ps.features()[0].kind {
+            ok_model::FeatureKind::Puzzle(p) => p.clone(),
+            other => panic!("{other:?}"),
+        },
+        _ => unreachable!(),
+    };
+    assert!(feature.gap == 0.0 && feature.row_gap >= feature.bit);
+    let plan = ok_sketch::jigsaw::plan(&feature.params()).unwrap();
+    assert!(
+        plan.problems.is_empty() && plan.notes.is_empty(),
+        "{plan:?}"
+    );
+    // The pieces add up to the bands (the strips keep their width even
+    // where the corners wander, so the strips are exactly the rest).
+    let bands = 8.0 * 6.0 * feature.pitch * feature.pitch * feature.thickness;
+    let v: f64 = r.bodies[..48].iter().map(|b| b.solid.volume()).sum();
+    assert!((v - bands).abs() < bands * 2e-3, "{v} vs {bands}");
+    // No piece owns a tab on its top or bottom: every one's top and
+    // bottom edges are single lines.
+    for piece in &plan.pieces {
+        assert!(matches!(
+            piece.outline[0],
+            ok_sketch::jigsaw::Seg::Line { .. }
+        ));
+    }
+    let tray = &r.bodies[48];
+    assert_eq!(tray.name, "Printing fixture");
+    tray.solid.validate().unwrap();
+    let (lo, hi) = tray.solid.bounds().unwrap();
+    assert!(
+        lo.z < 0.0 && (hi.z - feature.fixture).abs() < 1e-9,
+        "{lo:?} {hi:?}"
+    );
+    assert!(lo.x < 0.0 && hi.x > 8.0 * feature.pitch, "{lo:?} {hi:?}");
+    eprintln!("8x6 tight top with fixture regenerated in {elapsed:?}");
+}

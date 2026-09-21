@@ -638,11 +638,25 @@ async fn check_doc(
 struct ExportQuery {
     /// Tab id; the first tab when absent.
     tab: Option<u32>,
+    /// One body alone, by name or index.
+    body: Option<String>,
+}
+
+/// Whether a body is wanted: all of them, or the one named or indexed.
+fn body_wanted(want: &Option<String>, index: usize, name: &str) -> bool {
+    match want {
+        None => true,
+        Some(w) => w == name || w.parse::<usize>().ok() == Some(index),
+    }
 }
 
 /// Binary STL of every body of a tab, regenerated on the server.
 /// The bodies of a tab, regenerated: (name, solid) pairs.
-fn solids_of(json: &str, tab: Option<u32>) -> Result<Vec<(String, ok_brep::Solid)>, String> {
+fn solids_of(
+    json: &str,
+    tab: Option<u32>,
+    body: &Option<String>,
+) -> Result<Vec<(String, ok_brep::Solid)>, String> {
     let mut doc = ok_model::Document::from_json(json).map_err(|e| e.to_string())?;
     let id = match tab {
         Some(t) => ok_model::TabId(t),
@@ -662,15 +676,24 @@ fn solids_of(json: &str, tab: Option<u32>) -> Result<Vec<(String, ok_brep::Solid
             .map_err(|e| e.to_string())?
             .bodies
     };
-    Ok(bodies.into_iter().map(|b| (b.name, b.solid)).collect())
+    let solids: Vec<(String, ok_brep::Solid)> = bodies
+        .into_iter()
+        .enumerate()
+        .filter(|(i, b)| body_wanted(body, *i, &b.name))
+        .map(|(_, b)| (b.name, b.solid))
+        .collect();
+    if solids.is_empty() {
+        return Err(format!("no body {body:?} in the tab"));
+    }
+    Ok(solids)
 }
 
 /// A tab as a STEP file.
-fn step_of(json: &str, tab: Option<u32>) -> Result<String, String> {
+fn step_of(json: &str, tab: Option<u32>, body: &Option<String>) -> Result<String, String> {
     let name = ok_model::Document::from_json(json)
         .map(|d| d.name)
         .unwrap_or_default();
-    let solids = solids_of(json, tab)?;
+    let solids = solids_of(json, tab, body)?;
     let refs: Vec<(&str, &ok_brep::Solid)> = solids
         .iter()
         .map(|(n, s)| (n.as_str(), s))
@@ -690,7 +713,7 @@ async fn export_step(
     let Some(json) = current_json(&hub, &id) else {
         return StatusCode::NOT_FOUND.into_response();
     };
-    match tokio::task::spawn_blocking(move || step_of(&json, q.tab)).await {
+    match tokio::task::spawn_blocking(move || step_of(&json, q.tab, &q.body)).await {
         Ok(Ok(text)) => (
             [
                 (header::CONTENT_TYPE, "application/step".to_string()),
@@ -770,7 +793,7 @@ async fn export_dxf(
     }
 }
 
-fn stl_of(json: &str, tab: Option<u32>) -> Result<Vec<u8>, String> {
+fn stl_of(json: &str, tab: Option<u32>, body: &Option<String>) -> Result<Vec<u8>, String> {
     let mut doc = ok_model::Document::from_json(json).map_err(|e| e.to_string())?;
     let id = match tab {
         Some(t) => ok_model::TabId(t),
@@ -781,21 +804,24 @@ fn stl_of(json: &str, tab: Option<u32>) -> Result<Vec<u8>, String> {
             .ok_or("document has no tabs")?,
     };
     let kind = doc.tab(id).map(|t| t.kind_name()).ok_or("no such tab")?;
-    let meshes: Vec<ok_mesh::TriMesh> = if kind == "assembly" {
+    let bodies = if kind == "assembly" {
         doc.regenerate_assembly(id)
             .map_err(|e| e.to_string())?
             .bodies
-            .iter()
-            .map(|b| b.mesh.clone())
-            .collect()
     } else {
         doc.regenerate_studio(id, None)
             .map_err(|e| e.to_string())?
             .bodies
-            .iter()
-            .map(|b| b.mesh.clone())
-            .collect()
     };
+    let meshes: Vec<ok_mesh::TriMesh> = bodies
+        .iter()
+        .enumerate()
+        .filter(|(i, b)| body_wanted(body, *i, &b.name))
+        .map(|(_, b)| b.mesh.clone())
+        .collect();
+    if meshes.is_empty() {
+        return Err(format!("no body {body:?} in the tab"));
+    }
     Ok(ok_mesh::to_stl(&meshes, &format!("offkilter tab {}", id.0)))
 }
 
@@ -811,7 +837,7 @@ async fn export_stl(
     let Some(json) = current_json(&hub, &id) else {
         return StatusCode::NOT_FOUND.into_response();
     };
-    match tokio::task::spawn_blocking(move || stl_of(&json, q.tab)).await {
+    match tokio::task::spawn_blocking(move || stl_of(&json, q.tab, &q.body)).await {
         Ok(Ok(bytes)) => (
             [
                 (header::CONTENT_TYPE, "model/stl".to_string()),
@@ -1730,6 +1756,29 @@ mod tests {
         assert_eq!(bytes.len(), 84 + 50 * count);
         let (status, _, _) =
             call_bytes(&app, &format!("/api/docs/{id}/export/stl?tab=9"), None).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        // One body alone, by index or name; a body that is not there is refused.
+        let (status, _, bytes) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/export/stl?tab=1&body=0"),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(u32::from_le_bytes(bytes[80..84].try_into().unwrap()), 12);
+        let (status, _, _) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/export/stl?tab=1&body=Part%201"),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        let (status, _, _) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/export/step?body=nothing"),
+            None,
+        )
+        .await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
         // The block seen from above as a DXF: its four edges at 1:1.
         let (status, headers, bytes) = call_bytes(

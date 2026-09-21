@@ -192,6 +192,8 @@ impl PartStudio {
                 web,
                 seed,
                 jitter,
+                row_gap,
+                fixture,
                 ..
             } => match before.kind() {
                 // Any change may have reseeded the tabs and corners, so the
@@ -209,6 +211,8 @@ impl PartStudio {
                     web: web.map(|_| p.web),
                     seed: seed.map(|_| p.seed),
                     jitter: jitter.map(|_| p.jitter),
+                    row_gap: row_gap.map(|_| p.row_gap),
+                    fixture: fixture.map(|_| p.fixture),
                     tabs: Some(p.tabs.clone()),
                     corners: Some(p.corners.clone()),
                 }],

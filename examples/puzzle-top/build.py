@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """A checkerboard jigsaw top for a puzzle box, built through the MCP
-server: an 8 x 6 puzzle of 38 mm pieces, maple and walnut by parity,
-each colour pin-routed from one board so the grain runs across the
-whole field, a 1.5 mm gap for a contrasting resin fill, and a 5 mm
-alignment web in the gaps to make the glue-up to the substrate easy.
+server, two ways: an 8 x 6 puzzle of 38 mm pieces, maple and walnut by
+parity, each colour pin-routed from one board so the grain runs across
+the whole field. The first tab has a 1.5 mm gap for a contrasting resin
+fill and a 5 mm alignment web in the gaps; the second is cut tight,
+with a strip between rows as wide as the bit so the corners route
+clean, and a printable tray with a pocket per piece for the glue-up.
 
     cargo build --release -p ok-mcp
     python3 examples/puzzle-top/build.py
@@ -90,6 +92,43 @@ def main():
     # The routing templates: every outline at 1:1, and the pieces as STL.
     print(mcp.call("export", {"tab": 1, "format": "dxf", "view": "top", "path": os.path.join(out, "templates.dxf")}))
     print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(out, "pieces.stl")}))
+    # The tight version: no gap within a row, a strip between rows one
+    # bit wide, no web, and a tray to print.
+    text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "Tight top"}]})
+    tight = int(text.split("tab ", 1)[1].split(")")[0].split(",")[0])
+    text = apply(
+        mcp,
+        [
+            {
+                "type": "add_puzzle",
+                "plane": {"type": "standard", "base": "top", "offset": 0},
+                "cols": COLS,
+                "rows": ROWS,
+                "pitch": PITCH,
+                "thickness": THICKNESS,
+                "gap": 0.0,
+                "bit": BIT,
+                "lock": LOCK,
+                "grain": "x",
+                "web": 0.0,
+                "seed": SEED,
+                "jitter": 2.0,
+                "row_gap": BIT,
+                "fixture": 6.0,
+                "name": "Tight checkerboard",
+            }
+        ],
+        tab=tight,
+    )
+    if "ERROR:" in text:
+        raise RuntimeError(text.split("ERROR:", 1)[1].splitlines()[0])
+    report = json.loads(mcp.call("report", {"tab": tight, "detail": "full"}))
+    names = [b["name"] for b in report["bodies"]]
+    print(f"tight top: {len(names)} bodies, last {names[-1]!r}")
+    for view, name in (("iso", "tight_iso"), ("top", "tight_top")):
+        mcp.call("screenshot", {"tab": tight, "view": view, "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
+    print(mcp.call("export", {"tab": tight, "format": "dxf", "view": "top", "path": os.path.join(out, "tight_templates.dxf")}))
+    print(mcp.call("export", {"tab": tight, "format": "stl", "body": "Printing fixture", "path": os.path.join(out, "fixture.stl")}))
     mcp.close()
     print(f"wrote {path}")
 

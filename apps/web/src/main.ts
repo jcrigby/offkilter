@@ -2255,7 +2255,9 @@ class App implements SketchHost {
     body.appendChild(field("Router bit ⌀", this.exprInput(f, "bit", k.bit, (v) => set({ bit: v }))));
     body.appendChild(field("Lock angle°", numberInput(k.lock, (v) => set({ lock: v }))));
     body.appendChild(field("Grain along", select(["x", "y"], k.grain, (v) => set({ grain: v as Grain }))));
+    body.appendChild(field("Row gap", this.exprInput(f, "row_gap", k.row_gap, (v) => set({ row_gap: v }))));
     body.appendChild(field("Web height", numberInput(k.web, (v) => set({ web: v }))));
+    body.appendChild(field("Fixture depth", numberInput(k.fixture, (v) => set({ fixture: v }))));
     body.appendChild(field("Corner jitter", numberInput(k.jitter, (v) => set({ jitter: v }))));
     const reseed = button("Reseed", () => set({ seed: Math.floor(Math.random() * 100000) }));
     reseed.title = "New random tab directions and corner positions (undo brings the old ones back)";
@@ -2277,7 +2279,7 @@ class App implements SketchHost {
     const outs = k.tabs.filter((t) => t.out).length;
     const note = document.createElement("p");
     note.className = "note";
-    note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Click a tab's head to flip it, select it to size it; drag a corner. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only; the web is a body of that height filling it, for lining the pieces up on the substrate.`;
+    note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Click a tab's head to flip it, select it to size it; drag a corner. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only; a row gap makes bands with tabs along them, so a tight fit routes cleanly. The web is a body filling the gaps; the fixture is a tray to print with a pocket for every piece.`;
     body.appendChild(note);
   }
 
@@ -2321,7 +2323,8 @@ class App implements SketchHost {
       path.appendChild(document.createElementNS(ns, "title")).textContent = `Piece ${piece.col + 1},${piece.row + 1} ${piece.light ? "light" : "dark"}`;
       g.appendChild(path);
     }
-    plan.tab_heads.forEach(([at, out], edge) => {
+    plan.tab_heads.forEach(({ at, out, active }, edge) => {
+      if (!active) return;
       const c = document.createElementNS(ns, "circle");
       c.setAttribute("cx", String(at.x));
       c.setAttribute("cy", String(at.y));
@@ -2373,6 +2376,12 @@ class App implements SketchHost {
       g.appendChild(c);
     });
     wrap.appendChild(svg);
+    for (const n of plan.notes) {
+      const p = document.createElement("p");
+      p.className = "note";
+      p.textContent = n;
+      wrap.appendChild(p);
+    }
     if (plan.problems.length > 0) {
       const ul = document.createElement("ul");
       ul.className = "puzzle-problems";

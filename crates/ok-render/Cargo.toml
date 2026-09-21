@@ -13,4 +13,5 @@ ok-model = { workspace = true }
 miniz_oxide = "0.9"
 
 [dev-dependencies]
+ok-sketch = { workspace = true }
 serde_json = { workspace = true }

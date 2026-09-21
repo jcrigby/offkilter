@@ -832,6 +832,7 @@ dependencies = [
  "ok-math",
  "ok-mesh",
  "ok-model",
+ "ok-sketch",
  "serde_json",
 ]
 

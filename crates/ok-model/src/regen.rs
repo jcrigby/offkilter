@@ -945,8 +945,8 @@ impl PartStudio {
                 solid,
             ));
         }
-        if pf.web > 0.0 && pf.gap > 0.0 {
-            match Self::puzzle_web(&jig, piece_area, opts) {
+        if pf.web > 0.0 && (pf.gap > 0.0 || pf.row_gap > 0.0) {
+            match Self::puzzle_web(&jig, pf.row_gap, piece_area, opts) {
                 Ok(profile) => match ok_brep::extrude(&profile, &plane, 0.0, pf.web, id.0) {
                     Ok(mut solid) => {
                         for f in &mut solid.faces {
@@ -959,6 +959,17 @@ impl PartStudio {
                 Err(e) => return Some(format!("alignment web: {e}")),
             }
         }
+        if pf.fixture > 0.0 {
+            match Self::puzzle_fixture(&jig, &plane, pf.fixture, opts) {
+                Ok(mut solid) => {
+                    for f in &mut solid.faces {
+                        f.origin.local += (jig.pieces.len() as u32 + 2) * PIECE_LOCALS;
+                    }
+                    bodies.push(("Printing fixture".into(), solid));
+                }
+                Err(e) => return Some(format!("printing fixture: {e}")),
+            }
+        }
         for (name, solid) in bodies {
             result.next_part += 1;
             result.bodies.push(Body::new(name, id, solid));
@@ -966,11 +977,58 @@ impl PartStudio {
         None
     }
 
+    /// A tray to print: a floor under the board with a wall round it,
+    /// and a pocket per piece (the piece grown by a clearance, `depth`
+    /// deep) so every piece drops into place for the glue-up. Pieces cut
+    /// tight share their pockets row by row.
+    fn puzzle_fixture(
+        jig: &ok_sketch::jigsaw::Jigsaw,
+        plane: &Plane,
+        depth: f64,
+        opts: &ProfileOptions,
+    ) -> Result<Solid, String> {
+        const CLEARANCE: f64 = 0.15;
+        const WALL: f64 = 6.0;
+        const FLOOR: f64 = 2.0;
+        let rect = |sk: &mut ok_sketch::Sketch, a: Vec2, b: Vec2| {
+            sk.add_line(a, Vec2::new(b.x, a.y));
+            sk.add_line(Vec2::new(b.x, a.y), b);
+            sk.add_line(b, Vec2::new(a.x, b.y));
+            sk.add_line(Vec2::new(a.x, b.y), a);
+        };
+        let mut sk = ok_sketch::Sketch::new();
+        rect(
+            &mut sk,
+            Vec2::new(-WALL, -WALL),
+            Vec2::new(jig.width + WALL, jig.height + WALL),
+        );
+        let slab = sk.profiles(opts).into_iter().next().ok_or("no tray")?;
+        let mut tray =
+            ok_brep::extrude(&slab, plane, -FLOOR, depth, 0).map_err(|e| e.to_string())?;
+        for piece in &jig.pieces {
+            let mut sk = ok_sketch::Sketch::new();
+            ok_sketch::jigsaw::draw(
+                &ok_sketch::jigsaw::offset(&piece.outline, -CLEARANCE),
+                &mut sk,
+            );
+            let pocket = sk.profiles(opts).into_iter().next().ok_or_else(|| {
+                format!("piece {},{} has no pocket", piece.col + 1, piece.row + 1)
+            })?;
+            let cutter =
+                ok_brep::extrude(&pocket, plane, 0.0, depth + 1.0, 0).map_err(|e| e.to_string())?;
+            tray = boolean(&tray, &cutter, BoolOp::Difference).map_err(|e| {
+                format!("pocket for piece {},{}: {e}", piece.col + 1, piece.row + 1)
+            })?;
+        }
+        Ok(tray)
+    }
+
     /// The region between the pieces: every outline plus the short
     /// segments closing the gaps along the board's edges, from which the
     /// region finder yields the pieces and one lattice.
     fn puzzle_web(
         jig: &ok_sketch::jigsaw::Jigsaw,
+        row_gap: f64,
         piece_area: f64,
         opts: &ProfileOptions,
     ) -> Result<Profile, String> {
@@ -989,7 +1047,8 @@ impl PartStudio {
                 .unwrap_or(at)
         };
         let pitch_x = jig.width / cols as f64;
-        let pitch_y = jig.height / rows as f64;
+        // Boundaries between rows: the middle of the strip when there is one.
+        let pitch_y = (jig.height - (rows as f64 - 1.0) * row_gap) / rows as f64;
         let mut closings: Vec<(Vec2, Vec2)> = Vec::new();
         for i in 0..cols - 1 {
             let x = (i + 1) as f64 * pitch_x;
@@ -1003,7 +1062,7 @@ impl PartStudio {
             ));
         }
         for j in 0..rows - 1 {
-            let y = (j + 1) as f64 * pitch_y;
+            let y = (j + 1) as f64 * (pitch_y + row_gap) - row_gap / 2.0;
             closings.push((
                 corner_near(piece(0, j), Vec2::new(0.0, y)),
                 corner_near(piece(0, j + 1), Vec2::new(0.0, y)),
@@ -2971,6 +3030,8 @@ mod tests {
             web,
             seed: 3,
             jitter: 2.0,
+            row_gap: 0.0,
+            fixture: 0.0,
             name: None,
         };
         let id = ps.apply(puzzle(0.0, 0.0)).unwrap().feature.unwrap();
@@ -3013,6 +3074,8 @@ mod tests {
             web: Some(4.0),
             seed: None,
             jitter: None,
+            row_gap: None,
+            fixture: None,
             tabs: None,
             corners: None,
         })
@@ -3049,6 +3112,8 @@ mod tests {
             web: None,
             seed: None,
             jitter: None,
+            row_gap: None,
+            fixture: None,
             tabs: None,
             corners: None,
         })
@@ -3086,6 +3151,66 @@ mod tests {
         assert_eq!(
             ps.feature(id).unwrap().kind,
             before.feature(id).unwrap().kind
+        );
+        // Tight fit in bands with a strip between rows, and a tray to
+        // print: the strips are the web, the tray has a pocket per row.
+        ps.apply(Op::SetPuzzle {
+            id,
+            cols: None,
+            rows: None,
+            pitch: None,
+            thickness: None,
+            gap: Some(0.0),
+            bit: Some(6.35),
+            lock: None,
+            grain: None,
+            web: Some(4.0),
+            seed: None,
+            jitter: None,
+            row_gap: Some(6.35),
+            fixture: Some(5.0),
+            tabs: None,
+            corners: None,
+        })
+        .unwrap();
+        let start = std::time::Instant::now();
+        let r = ps.regenerate();
+        eprintln!("3x2 bands with web and fixture: {:?}", start.elapsed());
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 8);
+        assert_eq!(r.bodies[6].name, "Alignment web");
+        assert_eq!(r.bodies[7].name, "Printing fixture");
+        let pieces: f64 = r.bodies[..6].iter().map(|b| b.solid.volume()).sum();
+        assert!(
+            (pieces - 6.0 * 16000.0).abs() < 6.0 * 16000.0 * 2e-3,
+            "{pieces}"
+        );
+        let web = r.bodies[6].solid.volume();
+        assert!(
+            (web - 120.0 * 6.35 * 4.0).abs() < 120.0 * 6.35 * 4.0 * 2e-3,
+            "{web}"
+        );
+        let fixture = &r.bodies[7].solid;
+        fixture.validate().unwrap();
+        let (lo, hi) = fixture.bounds().unwrap();
+        assert!(
+            (lo.z + 2.0).abs() < 1e-9 && (hi.z - 5.0).abs() < 1e-9,
+            "{lo:?} {hi:?}"
+        );
+        assert!(
+            (lo.x + 6.0).abs() < 1e-9 && (hi.x - 126.0).abs() < 1e-9,
+            "{lo:?} {hi:?}"
+        );
+        // The tray is the slab less two row pockets grown by the clearance.
+        let slab = 132.0 * (86.35 + 12.0) * 7.0;
+        let pockets = fixture.volume();
+        assert!(
+            pockets < slab - 6.0 * 1600.0 * 5.0 && pockets > slab - 6.0 * 1600.0 * 5.0 * 1.1,
+            "{pockets} of {slab}"
         );
     }
 
