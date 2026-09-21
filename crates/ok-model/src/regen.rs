@@ -643,6 +643,10 @@ impl PartStudio {
                         Err(e) => Some(e),
                     }
                 }
+                FeatureKind::Puzzle(pf) => {
+                    let pf = pf.clone();
+                    Self::regen_puzzle(&mut result, id, &pf, &opts)
+                }
                 FeatureKind::Boolean(bf) => {
                     let bf = bf.clone();
                     candidates = Some(
@@ -882,6 +886,147 @@ impl PartStudio {
             Err(e) => return Some(e),
         };
         Self::apply_tool(result, id, tool, rf.op)
+    }
+
+    /// One body per piece, named by column, row and colour, faces of
+    /// piece `k` carrying local indices from `k * PIECE_LOCALS`; then the
+    /// alignment web (the gaps, `web` high) as one more body.
+    fn regen_puzzle(
+        result: &mut RegenResult,
+        id: FeatureId,
+        pf: &crate::PuzzleFeature,
+        opts: &ProfileOptions,
+    ) -> Option<String> {
+        const PIECE_LOCALS: u32 = 1 << 12;
+        let plane = match result.resolve_plane(&pf.plane) {
+            Ok(p) => p,
+            Err(e) => return Some(e),
+        };
+        if pf.thickness <= 0.0 || !pf.thickness.is_finite() {
+            return Some("thickness must be positive".into());
+        }
+        if pf.web < 0.0 || !pf.web.is_finite() {
+            return Some("web height must be zero or positive".into());
+        }
+        let jig = match ok_sketch::jigsaw::build(&pf.params()) {
+            Ok(j) => j,
+            Err(e) => return Some(e),
+        };
+        let mut bodies: Vec<(String, Solid)> = Vec::new();
+        let mut piece_area = 0.0;
+        for (k, piece) in jig.pieces.iter().enumerate() {
+            let mut sk = ok_sketch::Sketch::new();
+            ok_sketch::jigsaw::draw(&piece.outline, &mut sk);
+            let mut profiles = sk.profiles(opts);
+            if profiles.len() != 1 {
+                return Some(format!(
+                    "piece {},{} does not close into one region ({} found)",
+                    piece.col + 1,
+                    piece.row + 1,
+                    profiles.len()
+                ));
+            }
+            let profile = profiles.remove(0);
+            piece_area += profile.area();
+            let mut solid = match ok_brep::extrude(&profile, &plane, 0.0, pf.thickness, id.0) {
+                Ok(s) => s,
+                Err(e) => return Some(format!("piece {},{}: {e}", piece.col + 1, piece.row + 1)),
+            };
+            for f in &mut solid.faces {
+                f.origin.local += (k as u32 + 1) * PIECE_LOCALS;
+            }
+            bodies.push((
+                format!(
+                    "Piece {},{} {}",
+                    piece.col + 1,
+                    piece.row + 1,
+                    if piece.light { "light" } else { "dark" }
+                ),
+                solid,
+            ));
+        }
+        if pf.web > 0.0 && pf.gap > 0.0 {
+            match Self::puzzle_web(&jig, piece_area, opts) {
+                Ok(profile) => match ok_brep::extrude(&profile, &plane, 0.0, pf.web, id.0) {
+                    Ok(mut solid) => {
+                        for f in &mut solid.faces {
+                            f.origin.local += (jig.pieces.len() as u32 + 1) * PIECE_LOCALS;
+                        }
+                        bodies.push(("Alignment web".into(), solid));
+                    }
+                    Err(e) => return Some(format!("alignment web: {e}")),
+                },
+                Err(e) => return Some(format!("alignment web: {e}")),
+            }
+        }
+        for (name, solid) in bodies {
+            result.next_part += 1;
+            result.bodies.push(Body::new(name, id, solid));
+        }
+        None
+    }
+
+    /// The region between the pieces: every outline plus the short
+    /// segments closing the gaps along the board's edges, from which the
+    /// region finder yields the pieces and one lattice.
+    fn puzzle_web(
+        jig: &ok_sketch::jigsaw::Jigsaw,
+        piece_area: f64,
+        opts: &ProfileOptions,
+    ) -> Result<Profile, String> {
+        let mut sk = ok_sketch::Sketch::new();
+        for piece in &jig.pieces {
+            ok_sketch::jigsaw::draw(&piece.outline, &mut sk);
+        }
+        let cols = jig.pieces.iter().map(|p| p.col).max().unwrap_or(0) as usize + 1;
+        let rows = jig.pieces.iter().map(|p| p.row).max().unwrap_or(0) as usize + 1;
+        let piece = |i: usize, j: usize| &jig.pieces[j * cols + i];
+        let corner_near = |p: &ok_sketch::jigsaw::Piece, at: Vec2| -> Vec2 {
+            p.outline
+                .iter()
+                .map(|s| s.start())
+                .min_by(|a, b| a.distance(at).total_cmp(&b.distance(at)))
+                .unwrap_or(at)
+        };
+        let pitch_x = jig.width / cols as f64;
+        let pitch_y = jig.height / rows as f64;
+        let mut closings: Vec<(Vec2, Vec2)> = Vec::new();
+        for i in 0..cols - 1 {
+            let x = (i + 1) as f64 * pitch_x;
+            closings.push((
+                corner_near(piece(i, 0), Vec2::new(x, 0.0)),
+                corner_near(piece(i + 1, 0), Vec2::new(x, 0.0)),
+            ));
+            closings.push((
+                corner_near(piece(i, rows - 1), Vec2::new(x, jig.height)),
+                corner_near(piece(i + 1, rows - 1), Vec2::new(x, jig.height)),
+            ));
+        }
+        for j in 0..rows - 1 {
+            let y = (j + 1) as f64 * pitch_y;
+            closings.push((
+                corner_near(piece(0, j), Vec2::new(0.0, y)),
+                corner_near(piece(0, j + 1), Vec2::new(0.0, y)),
+            ));
+            closings.push((
+                corner_near(piece(cols - 1, j), Vec2::new(jig.width, y)),
+                corner_near(piece(cols - 1, j + 1), Vec2::new(jig.width, y)),
+            ));
+        }
+        for (a, b) in &closings {
+            sk.add_line(*a, *b);
+        }
+        let expected = jig.width * jig.height - piece_area;
+        let profiles = sk.profiles(opts);
+        profiles
+            .into_iter()
+            .min_by(|a, b| {
+                (a.area() - expected)
+                    .abs()
+                    .total_cmp(&(b.area() - expected).abs())
+            })
+            .filter(|p| (p.area() - expected).abs() < 0.05 * expected.max(1.0))
+            .ok_or_else(|| "the gaps do not form one region".to_string())
     }
 
     fn regen_hole(
@@ -2808,6 +2953,140 @@ mod tests {
         .unwrap();
         let r = ps.regenerate();
         assert!(r.errors().next().is_some());
+    }
+
+    #[test]
+    fn puzzle_makes_a_body_per_piece_and_an_alignment_web() {
+        let mut ps = PartStudio::new("t");
+        let puzzle = |gap: f64, web: f64| Op::AddPuzzle {
+            plane: PlaneRef::standard(StandardPlane::Top),
+            cols: 3,
+            rows: 2,
+            pitch: 40.0,
+            thickness: 10.0,
+            gap,
+            bit: 6.35,
+            lock: 20.0,
+            grain: crate::Grain::X,
+            web,
+            seed: 3,
+            jitter: 2.0,
+            name: None,
+        };
+        let id = ps.apply(puzzle(0.0, 0.0)).unwrap().feature.unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 6);
+        assert_eq!(r.bodies[0].name, "Piece 1,1 light");
+        assert_eq!(r.bodies[1].name, "Piece 2,1 dark");
+        assert_eq!(r.bodies[3].name, "Piece 1,2 dark");
+        let total: f64 = r.bodies.iter().map(|b| b.solid.volume()).sum();
+        assert!(
+            (total - 6.0 * 1600.0 * 10.0).abs() < 6.0 * 1600.0 * 10.0 * 2e-3,
+            "{total}"
+        );
+        for b in &r.bodies {
+            b.solid.validate().unwrap();
+            // Every piece's faces carry their own local range.
+            let k = r.bodies.iter().position(|x| std::ptr::eq(x, b)).unwrap() as u32 + 1;
+            assert!(b
+                .solid
+                .faces
+                .iter()
+                .all(|f| f.origin.local / (1 << 12) == k));
+        }
+        // A gap and a web: the pieces shrink, the web fills the gaps.
+        ps.apply(Op::SetPuzzle {
+            id,
+            cols: None,
+            rows: None,
+            pitch: None,
+            thickness: None,
+            gap: Some(1.0),
+            bit: None,
+            lock: None,
+            grain: None,
+            web: Some(4.0),
+            seed: None,
+            jitter: None,
+            tabs: None,
+            corners: None,
+        })
+        .unwrap();
+        let start = std::time::Instant::now();
+        let r = ps.regenerate();
+        eprintln!("3x2 with web: {:?}", start.elapsed());
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 7);
+        assert_eq!(r.bodies[6].name, "Alignment web");
+        let pieces: f64 = r.bodies[..6].iter().map(|b| b.solid.volume()).sum();
+        let web = r.bodies[6].solid.volume();
+        assert!(pieces < 6.0 * 16000.0 - 1000.0, "{pieces}");
+        assert!(
+            (pieces / 10.0 + web / 4.0 - 6.0 * 1600.0).abs() < 6.0 * 1600.0 * 2e-3,
+            "{pieces} {web}"
+        );
+        r.bodies[6].solid.validate().unwrap();
+        // The pin router rules come back as the feature's error.
+        ps.apply(Op::SetPuzzle {
+            id,
+            cols: None,
+            rows: None,
+            pitch: None,
+            thickness: None,
+            gap: None,
+            bit: Some(14.0),
+            lock: None,
+            grain: None,
+            web: None,
+            seed: None,
+            jitter: None,
+            tabs: None,
+            corners: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        let err = r
+            .errors()
+            .next()
+            .map(|(_, e)| e.to_string())
+            .unwrap_or_default();
+        assert!(err.contains("socket opening"), "{err}");
+        // Toggling one tab flips it, and its inverse puts it back.
+        let before = ps.clone();
+        let op = Op::SetPuzzleTab {
+            id,
+            edge: 2,
+            out: Some(false),
+            size: Some(1.3),
+            width: None,
+            shift: None,
+        };
+        let inverse = ps.apply_with_inverse(op, None).unwrap().inverse;
+        let (t0, t1) = match (
+            &before.feature(id).unwrap().kind,
+            &ps.feature(id).unwrap().kind,
+        ) {
+            (FeatureKind::Puzzle(a), FeatureKind::Puzzle(b)) => (a.tabs[2], b.tabs[2]),
+            _ => unreachable!(),
+        };
+        assert_ne!(t0, t1);
+        assert!(!t1.out && (t1.size - 1.3).abs() < 1e-12);
+        for op in inverse {
+            ps.apply(op).unwrap();
+        }
+        assert_eq!(
+            ps.feature(id).unwrap().kind,
+            before.feature(id).unwrap().kind
+        );
     }
 
     #[test]

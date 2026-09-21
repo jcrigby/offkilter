@@ -2,7 +2,7 @@ import { Kernel, parseStep } from "./kernel";
 import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
-import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -1855,6 +1855,7 @@ class App implements SketchHost {
     else if (f.kind.type === "mirror") this.renderMirrorDetail(f, body);
     else if (f.kind.type === "variable") this.renderVariableDetail(f, body);
     else if (f.kind.type === "hole") this.renderHoleDetail(f, body);
+    else if (f.kind.type === "puzzle") this.renderPuzzleDetail(f, body);
     else if (f.kind.type === "sweep") this.renderSweepDetail(f, body);
     else if (f.kind.type === "loft") this.renderLoftDetail(f, body);
     else if (f.kind.type === "boolean") this.renderBooleanDetail(f, body);
@@ -2237,6 +2238,30 @@ class App implements SketchHost {
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Drills at every standalone point of the sketch (points not used by lines, arcs or circles). “Reverse” drills into the face the sketch sits on.";
+    body.appendChild(note);
+  }
+
+  renderPuzzleDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "puzzle") return;
+    const k = f.kind;
+    const set = (patch: Partial<Extract<Op, { type: "set_puzzle" }>>) => this.apply({ type: "set_puzzle", id: f.id, ...patch });
+    body.appendChild(field("Columns", numberInput(k.cols, (v) => set({ cols: Math.max(1, Math.round(v)) }))));
+    body.appendChild(field("Rows", numberInput(k.rows, (v) => set({ rows: Math.max(1, Math.round(v)) }))));
+    body.appendChild(field("Piece size", this.exprInput(f, "pitch", k.pitch, (v) => set({ pitch: v }))));
+    body.appendChild(field("Thickness", this.exprInput(f, "thickness", k.thickness, (v) => set({ thickness: v }))));
+    body.appendChild(field("Gap", this.exprInput(f, "gap", k.gap, (v) => set({ gap: v }))));
+    body.appendChild(field("Router bit ⌀", this.exprInput(f, "bit", k.bit, (v) => set({ bit: v }))));
+    body.appendChild(field("Lock angle°", numberInput(k.lock, (v) => set({ lock: v }))));
+    body.appendChild(field("Grain along", select(["x", "y"], k.grain, (v) => set({ grain: v as Grain }))));
+    body.appendChild(field("Web height", numberInput(k.web, (v) => set({ web: v }))));
+    body.appendChild(field("Corner jitter", numberInput(k.jitter, (v) => set({ jitter: v }))));
+    const reseed = button("Reseed", () => set({ seed: Math.floor(Math.random() * 100000) }));
+    reseed.title = "New random tab directions and corner positions (undo brings the old ones back)";
+    body.appendChild(field(`Seed ${k.seed}`, reseed));
+    const outs = k.tabs.filter((t) => t.out).length;
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only; the web is a body of that height filling it, for lining the pieces up on the substrate.`;
     body.appendChild(note);
   }
 
@@ -3642,6 +3667,26 @@ async function main(): Promise<void> {
     if (!f || f.kind.type !== "sketch") return;
     app.sketcher.exit();
     app.apply({ type: "add_hole", sketch: f.id, diameter: 6, through_all: true, direction: "reverse", name: app.autoName("Hole") });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-puzzle").onclick = () => {
+    app.sketcher.exit();
+    app.apply({
+      type: "add_puzzle",
+      plane: { type: "standard", base: "top", offset: 0 },
+      cols: 6,
+      rows: 4,
+      pitch: 40,
+      thickness: 12,
+      gap: 1,
+      bit: 6.35,
+      lock: 20,
+      grain: "x",
+      web: 5,
+      seed: Math.floor(Math.random() * 100000),
+      jitter: 0,
+      name: app.autoName("Puzzle"),
+    });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
   const otherSketch = (f: FeatureSummary) => app.summary.features.find((s) => s.kind.type === "sketch" && s.id !== f.id);

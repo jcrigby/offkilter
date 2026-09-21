@@ -8,6 +8,7 @@
 
 mod edit;
 mod entity;
+pub mod jigsaw;
 mod loops;
 mod solver;
 mod spline;

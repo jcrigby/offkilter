@@ -1,4 +1,5 @@
-use ok_math::{Plane, Vec3};
+use ok_math::{Plane, Vec2, Vec3};
+pub use ok_sketch::jigsaw::{Grain, Tab as PuzzleTab};
 use ok_sketch::{EntityId, Sketch};
 use serde::{Deserialize, Serialize};
 
@@ -571,6 +572,75 @@ pub struct BooleanFeature {
 }
 
 /// A named value later features can use in expressions as `#name`.
+/// A jigsaw puzzle: a grid of interlocking pieces on a plane, one body
+/// per piece (light and dark by checkerboard parity, meant to be cut
+/// from one board each), plus an alignment web filling the gaps. See
+/// `ok_sketch::jigsaw` for the geometry and the pin router rules.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct PuzzleFeature {
+    pub plane: PlaneRef,
+    pub cols: u32,
+    pub rows: u32,
+    /// Nominal piece size (grid spacing), mm.
+    pub pitch: f64,
+    pub thickness: f64,
+    /// Gap between pieces, mm: zero for a tight fit, wider for a resin fill.
+    #[serde(default)]
+    pub gap: f64,
+    /// Pin router bit diameter, mm.
+    #[serde(default = "quarter_inch")]
+    pub bit: f64,
+    /// How far the tab necks lean in under the head, degrees.
+    #[serde(default = "twenty")]
+    pub lock: f64,
+    #[serde(default)]
+    pub grain: Grain,
+    /// Height of the alignment web body in the gaps; zero for none.
+    #[serde(default)]
+    pub web: f64,
+    /// Seeds the tab directions and corner jitter.
+    #[serde(default)]
+    pub seed: u64,
+    /// How far interior corners wander from the grid, mm.
+    #[serde(default)]
+    pub jitter: f64,
+    /// One per interior edge (see `ok_sketch::jigsaw` for the order).
+    pub tabs: Vec<PuzzleTab>,
+    /// One offset per interior node.
+    pub corners: Vec<Vec2>,
+}
+
+fn quarter_inch() -> f64 {
+    6.35
+}
+
+fn twenty() -> f64 {
+    20.0
+}
+
+impl PuzzleFeature {
+    /// Fresh tabs and corners from the seed, for the current grid.
+    pub fn reseed(&mut self) {
+        self.tabs = ok_sketch::jigsaw::seed_tabs(self.cols, self.rows, self.seed);
+        self.corners =
+            ok_sketch::jigsaw::seed_corners(self.cols, self.rows, self.jitter, self.seed);
+    }
+
+    pub fn params(&self) -> ok_sketch::jigsaw::Params {
+        ok_sketch::jigsaw::Params {
+            cols: self.cols,
+            rows: self.rows,
+            pitch: self.pitch,
+            gap: self.gap,
+            bit: self.bit,
+            lock: self.lock,
+            grain: self.grain,
+            tabs: self.tabs.clone(),
+            corners: self.corners.clone(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct VariableFeature {
     pub name: String,
@@ -596,6 +666,7 @@ pub enum FeatureKind {
     Draft(DraftFeature),
     Mesh(MeshFeature),
     Split(SplitFeature),
+    Puzzle(PuzzleFeature),
 }
 
 impl FeatureKind {
@@ -623,6 +694,7 @@ impl FeatureKind {
             FeatureKind::MoveFace(_) => "Move face",
             FeatureKind::Draft(_) => "Draft",
             FeatureKind::Mesh(_) => "Mesh",
+            FeatureKind::Puzzle(_) => "Puzzle",
             FeatureKind::Split(_) => "Split",
         }
     }
@@ -660,6 +732,12 @@ impl FeatureKind {
             FeatureKind::Shell(_) => vec!["thickness".into()],
             FeatureKind::MoveFace(_) => vec!["distance".into()],
             FeatureKind::Draft(_) => vec!["angle".into(), "plane.offset".into()],
+            FeatureKind::Puzzle(_) => vec![
+                "pitch".into(),
+                "thickness".into(),
+                "gap".into(),
+                "bit".into(),
+            ],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
                 "depth".into(),
@@ -703,6 +781,10 @@ impl FeatureKind {
             (FeatureKind::Hole(h), "depth") => Some(h.depth),
             (FeatureKind::Hole(h), "cbore_diameter") => h.counterbore.map(|c| c.diameter),
             (FeatureKind::Hole(h), "cbore_depth") => h.counterbore.map(|c| c.depth),
+            (FeatureKind::Puzzle(p), "pitch") => Some(p.pitch),
+            (FeatureKind::Puzzle(p), "thickness") => Some(p.thickness),
+            (FeatureKind::Puzzle(p), "gap") => Some(p.gap),
+            (FeatureKind::Puzzle(p), "bit") => Some(p.bit),
             _ => None,
         }
     }
@@ -783,6 +865,22 @@ impl FeatureKind {
                 }
                 _ => Err("angle applies to circular patterns".into()),
             },
+            (FeatureKind::Puzzle(p), "pitch") => {
+                p.pitch = value;
+                Ok(())
+            }
+            (FeatureKind::Puzzle(p), "thickness") => {
+                p.thickness = value;
+                Ok(())
+            }
+            (FeatureKind::Puzzle(p), "gap") => {
+                p.gap = value;
+                Ok(())
+            }
+            (FeatureKind::Puzzle(p), "bit") => {
+                p.bit = value;
+                Ok(())
+            }
             (FeatureKind::Hole(h), "diameter") => {
                 h.diameter = value;
                 Ok(())
@@ -849,7 +947,8 @@ impl FeatureKind {
             | FeatureKind::MoveFace(_)
             | FeatureKind::Draft(_)
             | FeatureKind::Mesh(_)
-            | FeatureKind::Split(_) => None,
+            | FeatureKind::Split(_)
+            | FeatureKind::Puzzle(_) => None,
         }
     }
 }

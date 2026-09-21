@@ -419,6 +419,81 @@ pub enum Op {
         triangles: Vec<[u32; 3]>,
         name: Option<String>,
     },
+    /// A jigsaw puzzle on a plane: `cols` x `rows` pieces of `pitch`,
+    /// tabs and corners seeded from `seed` (see `ok_sketch::jigsaw`).
+    AddPuzzle {
+        plane: PlaneRef,
+        cols: u32,
+        rows: u32,
+        pitch: f64,
+        thickness: f64,
+        #[serde(default)]
+        gap: f64,
+        #[serde(default = "default_bit")]
+        bit: f64,
+        #[serde(default = "default_lock")]
+        lock: f64,
+        #[serde(default)]
+        grain: crate::Grain,
+        #[serde(default)]
+        web: f64,
+        #[serde(default)]
+        seed: u64,
+        #[serde(default)]
+        jitter: f64,
+        name: Option<String>,
+    },
+    /// Changing the grid, seed or jitter reseeds every tab and corner
+    /// unless `tabs` and `corners` are given.
+    SetPuzzle {
+        id: FeatureId,
+        #[serde(default)]
+        cols: Option<u32>,
+        #[serde(default)]
+        rows: Option<u32>,
+        #[serde(default)]
+        pitch: Option<f64>,
+        #[serde(default)]
+        thickness: Option<f64>,
+        #[serde(default)]
+        gap: Option<f64>,
+        #[serde(default)]
+        bit: Option<f64>,
+        #[serde(default)]
+        lock: Option<f64>,
+        #[serde(default)]
+        grain: Option<crate::Grain>,
+        #[serde(default)]
+        web: Option<f64>,
+        #[serde(default)]
+        seed: Option<u64>,
+        #[serde(default)]
+        jitter: Option<f64>,
+        #[serde(default)]
+        tabs: Option<Vec<crate::PuzzleTab>>,
+        #[serde(default)]
+        corners: Option<Vec<Vec2>>,
+    },
+    /// One tab of a puzzle, by interior edge index.
+    SetPuzzleTab {
+        id: FeatureId,
+        edge: usize,
+        #[serde(default)]
+        out: Option<bool>,
+        #[serde(default)]
+        size: Option<f64>,
+        #[serde(default)]
+        width: Option<f64>,
+        #[serde(default)]
+        shift: Option<f64>,
+    },
+    /// One interior corner of a puzzle, by node index: its offset from
+    /// the grid.
+    SetPuzzleCorner {
+        id: FeatureId,
+        node: usize,
+        offset: Vec2,
+    },
     SetDraft {
         id: FeatureId,
         #[serde(default)]
@@ -487,6 +562,14 @@ fn default_reverse() -> ExtrudeDirection {
 }
 
 /// Serde helper distinguishing "absent" from "explicitly null".
+fn default_bit() -> f64 {
+    6.35
+}
+
+fn default_lock() -> f64 {
+    20.0
+}
+
 mod double_option {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -1342,6 +1425,160 @@ impl PartStudio {
                         | SketchOp::Restore { .. } => unreachable!(),
                     }
                 }
+            },
+            Op::AddPuzzle {
+                plane,
+                cols,
+                rows,
+                pitch,
+                thickness,
+                gap,
+                bit,
+                lock,
+                grain,
+                web,
+                seed,
+                jitter,
+                name,
+            } => {
+                let mut pf = crate::PuzzleFeature {
+                    plane,
+                    cols,
+                    rows,
+                    pitch,
+                    thickness,
+                    gap,
+                    bit,
+                    lock,
+                    grain,
+                    web,
+                    seed,
+                    jitter,
+                    tabs: Vec::new(),
+                    corners: Vec::new(),
+                };
+                pf.reseed();
+                out.feature = Some(self.push_feature(FeatureKind::Puzzle(pf), name));
+            }
+            Op::SetPuzzle {
+                id,
+                cols,
+                rows,
+                pitch,
+                thickness,
+                gap,
+                bit,
+                lock,
+                grain,
+                web,
+                seed,
+                jitter,
+                tabs,
+                corners,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Puzzle(p) => {
+                    let regrid = cols.is_some_and(|c| c != p.cols)
+                        || rows.is_some_and(|r| r != p.rows)
+                        || seed.is_some_and(|s| s != p.seed)
+                        || jitter.is_some_and(|j| j != p.jitter);
+                    if let Some(v) = cols {
+                        p.cols = v;
+                    }
+                    if let Some(v) = rows {
+                        p.rows = v;
+                    }
+                    if let Some(v) = pitch {
+                        p.pitch = v;
+                    }
+                    if let Some(v) = thickness {
+                        p.thickness = v;
+                    }
+                    if let Some(v) = gap {
+                        p.gap = v;
+                    }
+                    if let Some(v) = bit {
+                        p.bit = v;
+                    }
+                    if let Some(v) = lock {
+                        p.lock = v;
+                    }
+                    if let Some(v) = grain {
+                        p.grain = v;
+                    }
+                    if let Some(v) = web {
+                        p.web = v;
+                    }
+                    if let Some(v) = seed {
+                        p.seed = v;
+                    }
+                    if let Some(v) = jitter {
+                        p.jitter = v;
+                    }
+                    if regrid {
+                        p.reseed();
+                    }
+                    if let Some(t) = tabs {
+                        if t.len() != ok_sketch::jigsaw::edge_count(p.cols, p.rows) {
+                            return Err(ModelError::Invalid(format!(
+                                "{} tabs for a {} x {} puzzle",
+                                t.len(),
+                                p.cols,
+                                p.rows
+                            )));
+                        }
+                        p.tabs = t;
+                    }
+                    if let Some(c) = corners {
+                        if c.len() != ok_sketch::jigsaw::node_count(p.cols, p.rows) {
+                            return Err(ModelError::Invalid(format!(
+                                "{} corners for a {} x {} puzzle",
+                                c.len(),
+                                p.cols,
+                                p.rows
+                            )));
+                        }
+                        p.corners = c;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "puzzle")),
+            },
+            Op::SetPuzzleTab {
+                id,
+                edge,
+                out: dir,
+                size,
+                width,
+                shift,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Puzzle(p) => {
+                    let n = p.tabs.len();
+                    let t = p.tabs.get_mut(edge).ok_or_else(|| {
+                        ModelError::Invalid(format!("tab {edge} of {n} does not exist"))
+                    })?;
+                    if let Some(v) = dir {
+                        t.out = v;
+                    }
+                    if let Some(v) = size {
+                        t.size = v;
+                    }
+                    if let Some(v) = width {
+                        t.width = v;
+                    }
+                    if let Some(v) = shift {
+                        t.shift = v;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "puzzle")),
+            },
+            Op::SetPuzzleCorner { id, node, offset } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Puzzle(p) => {
+                    let n = p.corners.len();
+                    let c = p.corners.get_mut(node).ok_or_else(|| {
+                        ModelError::Invalid(format!("corner {node} of {n} does not exist"))
+                    })?;
+                    *c = offset;
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "puzzle")),
             },
             Op::RenameStudio { name } => self.name = name,
             Op::SetPartMaterial { source, material } => match material {
