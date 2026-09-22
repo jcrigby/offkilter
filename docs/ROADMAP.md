@@ -122,3 +122,18 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Regeneration cache: unchanged feature prefixes are reused, so editing late features is cheap
 - [x] Benchmarks for regeneration time on realistic parts (`scripts/bench.sh`); the boolean's T-junction grid and section prefilters came out of the first run (a 4000-face cover shells in 0.65 s, from 3.9 s), the incremental boolean out of the second (0.25 s)
 - [x] `wasm-opt` in the release pipeline (from the binaryen npm package when present)
+
+## Next
+
+Follow-ups nobody has asked for yet, in no order; each came up while
+building something else. The reasoning behind the current choices is
+in `docs/DECISIONS.md`.
+
+- [ ] Puzzle fabrication layouts: a `spread` parameter instead of always one bit diameter between rows
+- [ ] Puzzle pieces: a material per colour, so the parts list and a future cut list name the species
+- [ ] `ok-sheet`: deflate PDF content streams (a 65 KB assembly sheet would be a fraction of that); the tests grep the streams, so they inflate first
+- [ ] `ok-sheet`: a 1:2.5 scale between 1:2 and 1:5, so a part like the carriage assembly does not drop to 1:5 on A4 for want of a few millimetres
+- [ ] Drawing dialog: a hidden-lines choice (auto, on, off) matching the `hidden` option the MCP tool and the server already take
+- [ ] `Dockerfile.dev`: build it once on a machine with a Docker daemon; the sandbox it was written in had only the client
+- [ ] Assembly sheets: an exploded iso view, driven by the client's explode slider, when the stacked view hides parts
+
