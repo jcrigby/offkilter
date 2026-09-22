@@ -18,8 +18,7 @@ drives the `ok-mcp` server exactly as a language model would.
 - `out/assembly.pdf`, `out/carriage.pdf`: shop drawing sheets from
   `export {format: "pdf"}`: third-angle views at a standard scale, the
   overall sizes, the carriage's holes called out, and on the assembly
-  sheet a balloon per part and the parts list (the assembly sheet is
-  not checked in; the script writes it).
+  sheet a balloon per part and the parts list.
 - `reference/`: the OpenSCAD sources (rev C), the reference STLs they
   produced for the printed parts, and the arm template DXF.
 - `build-instructions.md`: the shop instructions the project came with.

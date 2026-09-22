@@ -11,7 +11,6 @@ examples/router-lift/out/*.stl
 examples/router-lift/out/section_*.png
 examples/router-lift/out/assembly_section_flip.png
 examples/router-lift/out/*.step
-examples/router-lift/out/assembly.pdf
 __pycache__/
 examples/puzzle-top/out/*.stl
 !examples/puzzle-top/out/fixture.stl
