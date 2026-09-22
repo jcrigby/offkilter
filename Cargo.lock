@@ -796,6 +796,7 @@ dependencies = [
  "ok-mesh",
  "ok-model",
  "ok-render",
+ "ok-sheet",
  "ok-step",
  "serde",
  "serde_json",
@@ -832,6 +833,7 @@ dependencies = [
  "ok-math",
  "ok-mesh",
  "ok-model",
+ "ok-sheet",
  "ok-sketch",
  "serde_json",
 ]
@@ -849,6 +851,7 @@ dependencies = [
  "ok-mesh",
  "ok-model",
  "ok-render",
+ "ok-sheet",
  "ok-step",
  "rand 0.8.8",
  "serde",
@@ -858,6 +861,16 @@ dependencies = [
  "tokio-tungstenite 0.26.2",
  "tower",
  "tower-http",
+]
+
+[[package]]
+name = "ok-sheet"
+version = "0.1.0"
+dependencies = [
+ "ok-brep",
+ "ok-math",
+ "ok-model",
+ "ok-sketch",
 ]
 
 [[package]]
@@ -887,6 +900,7 @@ dependencies = [
  "ok-math",
  "ok-mesh",
  "ok-model",
+ "ok-sheet",
  "ok-sketch",
  "ok-step",
  "serde",

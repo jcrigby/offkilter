@@ -143,6 +143,58 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
     assert_eq!(checked, PRINTED.len());
 }
 
+/// The assembly's shop drawing: one balloon and one parts-list row per
+/// distinct part, the sheet at a standard scale, a valid PDF.
+#[test]
+fn the_assembly_sheet_lists_every_part_once() {
+    let dir = example_dir();
+    let json = std::fs::read_to_string(dir.join("out/router_lift.okpart")).unwrap();
+    let mut doc = ok_model::Document::from_json(&json).unwrap();
+    let tab = doc
+        .tabs
+        .iter()
+        .find(|t| t.kind_name() == "assembly")
+        .unwrap()
+        .id;
+    let asm = doc.assembly(tab).unwrap();
+    let mut distinct: Vec<(u32, usize)> =
+        asm.instances.iter().map(|i| (i.studio.0, i.body)).collect();
+    distinct.sort_unstable();
+    distinct.dedup();
+    let parts = ok_sheet::parts_of(&mut doc, tab).unwrap();
+    assert_eq!(parts.len(), 32);
+    let refs: Vec<ok_sheet::Part> = parts
+        .iter()
+        .map(|(name, material, key, solid)| ok_sheet::Part {
+            name: name.clone(),
+            material: material.clone(),
+            solid,
+            key: *key,
+        })
+        .collect();
+    let opts = ok_sheet::Options {
+        sheet: ok_sheet::SheetSize::A3,
+        ..ok_sheet::Options::default()
+    };
+    let sheet = ok_sheet::Sheet::layout(&refs, &opts).unwrap();
+    assert_eq!(sheet.part_rows(), distinct.len());
+    // 1:5 on A3: the views fit beside the 21-row parts list.
+    assert!((sheet.scale() - 0.2).abs() < 1e-9, "{}", sheet.scale());
+    let pdf = sheet.to_pdf();
+    assert!(
+        pdf.starts_with(b"%PDF-1.4") && pdf.len() > 20_000,
+        "{} bytes",
+        pdf.len()
+    );
+    let text = String::from_utf8_lossy(&pdf);
+    assert!(text.contains("(Carriage) Tj") && text.contains("(SC20UU) Tj"));
+    assert_eq!(text.matches("(ITEM) Tj").count(), 1);
+    // Every distinct part gets a balloon number.
+    for item in 1..=distinct.len() {
+        assert!(text.contains(&format!("({item}) Tj")), "balloon {item}");
+    }
+}
+
 /// The LINE entities of a DXF as endpoint pairs.
 fn dxf_lines(text: &str) -> Vec<[Vec3; 2]> {
     let toks: Vec<&str> = text.lines().map(str::trim).collect();

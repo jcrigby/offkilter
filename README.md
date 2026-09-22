@@ -123,7 +123,9 @@ before exposing it beyond a trusted network. Scripts can validate and
 export without a browser: `GET /api/docs/<id>/check` regenerates every
 tab and lists bodies and errors as JSON, and
 `GET /api/docs/<id>/export/stl?tab=<n>` returns a tab's bodies as STL
-(`export/step` as STEP).
+(`export/step` as STEP, `export/dxf?view=top` a view's edges as DXF,
+`export/pdf?views=front,top,right,iso&sheet=A4` a shop drawing sheet
+as PDF).
 During development run `npm run dev` in `apps/web`; it proxies `/api` to
 the server on port 8080. The Docs dialog also saves and restores named
 versions of a document and compares any of them with the document as it

@@ -972,6 +972,10 @@ def main():
         mcp.call("screenshot", {"tab": asm, "view": view, "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
     # Cut at the bit axis, keeping the far half so the cut faces face the camera.
     mcp.call("screenshot", {"tab": asm, "view": "iso", "section": "x:0:flip", "width": 1200, "height": 900, "path": os.path.join(out, "assembly_section.png")})
+    # Shop drawings: the assembly sheet with balloons and a parts list,
+    # and the carriage's own sheet with its holes called out.
+    print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "note": "rev C", "path": os.path.join(out, "assembly.pdf")}))
+    print(mcp.call("export", {"tab": tabs["Carriage"], "format": "pdf", "path": os.path.join(out, "carriage.pdf")}))
     # The carriage at the top of its travel: the slider's offset is the
     # one number that moves it and everything bolted to it.
     for offset, name in ((mid + TRAVEL / 2, "assembly_raised"), (mid, None)):

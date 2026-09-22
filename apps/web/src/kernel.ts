@@ -405,6 +405,11 @@ export class Kernel {
     return r.error ? null : r;
   }
 
+  /** A shop drawing sheet of a tab as a PDF, laid out by the kernel: standard views, dimensions, callouts, balloons and a parts list. */
+  drawingPdf(tab: number, opts: { views?: string[]; sheet?: string; parts?: boolean; title?: string; note?: string }): Uint8Array {
+    return this.studio.drawing_pdf(tab, JSON.stringify(opts));
+  }
+
   /** Orthographic projection of the current tab's bodies with hidden lines removed. */
   drawingView(dir: Vec3, up: Vec3): ViewLines {
     const r = JSON.parse(this.studio.drawing_view(JSON.stringify({ dir: [dir.x, dir.y, dir.z], up: [up.x, up.y, up.z] }))) as ViewLines & { error?: string };

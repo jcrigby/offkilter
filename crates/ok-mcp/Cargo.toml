@@ -11,6 +11,7 @@ path = "src/main.rs"
 
 [dependencies]
 ok-model = { workspace = true }
+ok-sheet = { workspace = true }
 ok-mesh = { workspace = true }
 ok-step = { workspace = true }
 ok-render = { workspace = true }

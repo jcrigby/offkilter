@@ -3612,6 +3612,15 @@ async function main(): Promise<void> {
   ($("#dv-parts") as HTMLInputElement).onchange = renderDrawingPreview;
   $("#drawing-svg").onclick = () => app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
   $("#drawing-dxf").onclick = () => app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
+  $("#drawing-pdf").onclick = () => {
+    const views = ["front", "top", "right", "iso"].filter((v) => app.drawingOptions.views.has(v));
+    try {
+      const pdf = app.kernel.drawingPdf(app.summary.tab, { views, sheet: app.drawingOptions.sheet, parts: app.drawingOptions.parts, title: `${app.summary.name} · ${app.summary.tab_name}` });
+      app.download(new Blob([pdf as BlobPart], { type: "application/pdf" }), "pdf", `${app.summary.name}-drawing`);
+    } catch (err) {
+      app.setStatus(`error: ${String(err)}`);
+    }
+  };
   $("#drawing-close").onclick = () => {
     setDimensionMode(false);
     drawingDialog.close();

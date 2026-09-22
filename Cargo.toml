@@ -8,6 +8,7 @@ members = [
     "crates/ok-model",
     "crates/ok-step",
     "crates/ok-render",
+    "crates/ok-sheet",
     "crates/ok-mcp",
     "crates/ok-wasm",
     "crates/ok-server",
@@ -27,6 +28,7 @@ ok-brep = { path = "crates/ok-brep" }
 ok-model = { path = "crates/ok-model" }
 ok-step = { path = "crates/ok-step" }
 ok-render = { path = "crates/ok-render" }
+ok-sheet = { path = "crates/ok-sheet" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"

@@ -322,6 +322,7 @@ impl Backend {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn export(
         &self,
         id: &str,
@@ -330,6 +331,7 @@ impl Backend {
         view: ok_render::View,
         hidden: bool,
         body: Option<&str>,
+        sheet: &ok_sheet::Options,
     ) -> Result<Vec<u8>, String> {
         match self {
             Backend::Server { .. } => {
@@ -337,6 +339,14 @@ impl Backend {
                 if format == "dxf" {
                     query.push(format!("view={}", view_name(view)));
                     query.push(format!("hidden={hidden}"));
+                }
+                if format == "pdf" {
+                    query.push(format!("views={}", urlencode(&sheet.views.join(","))));
+                    query.push(format!("sheet={}", sheet.sheet.name()));
+                    query.push(format!("parts={}", sheet.parts));
+                    if !sheet.note.is_empty() {
+                        query.push(format!("note={}", urlencode(&sheet.note)));
+                    }
                 }
                 if let Some(b) = body {
                     query.push(format!("body={}", urlencode(b)));
@@ -363,6 +373,9 @@ impl Backend {
                 if format == "dxf" {
                     return ok_render::view_dxf(&mut doc, tab, view, hidden)
                         .map(String::into_bytes);
+                }
+                if format == "pdf" {
+                    return ok_sheet::drawing_pdf(&mut doc, tab, sheet);
                 }
                 let kind = doc.tab(tab).map(|t| t.kind_name()).ok_or("no such tab")?;
                 let mut bodies = if kind == "assembly" {
@@ -400,7 +413,7 @@ impl Backend {
                             bodies.iter().map(|b| (b.name.as_str(), &b.solid)).collect();
                         Ok(ok_step::write_step(&solids, &doc.name).into_bytes())
                     }
-                    other => Err(format!("unknown format {other}; use stl, step or dxf")),
+                    other => Err(format!("unknown format {other}; use stl, step, dxf or pdf")),
                 }
             }
         }
@@ -1011,9 +1024,47 @@ impl Server {
                     Value::Number(n) => Some(n.to_string()),
                     _ => None,
                 });
-                let bytes =
-                    self.backend
-                        .export(&id, tab, &format, view, hidden, body.as_deref())?;
+                let mut sheet = ok_sheet::Options {
+                    sheet: ok_sheet::SheetSize::parse(
+                        args.get("sheet").and_then(|s| s.as_str()).unwrap_or(""),
+                    )?,
+                    parts: args.get("parts").and_then(|p| p.as_bool()).unwrap_or(true),
+                    note: args
+                        .get("note")
+                        .and_then(|n| n.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    ..ok_sheet::Options::default()
+                };
+                match args.get("views") {
+                    Some(Value::Array(list)) => {
+                        sheet.views = list
+                            .iter()
+                            .filter_map(|v| v.as_str())
+                            .map(|s| s.trim().to_lowercase())
+                            .collect();
+                    }
+                    Some(Value::String(s)) => {
+                        sheet.views = s
+                            .split(',')
+                            .map(|v| v.trim().to_lowercase())
+                            .filter(|v| !v.is_empty())
+                            .collect();
+                    }
+                    _ => {}
+                }
+                if sheet.views.is_empty() {
+                    return Err("views must name at least one of front, top, right, iso".into());
+                }
+                let bytes = self.backend.export(
+                    &id,
+                    tab,
+                    &format,
+                    view,
+                    hidden,
+                    body.as_deref(),
+                    &sheet,
+                )?;
                 std::fs::write(&path, &bytes)
                     .map_err(|e| format!("could not write {path}: {e}"))?;
                 Ok(format!(
@@ -1022,6 +1073,12 @@ impl Server {
                     format.to_uppercase(),
                     if format == "dxf" {
                         format!(" (view {}, 1:1 mm)", view_name(view))
+                    } else if format == "pdf" {
+                        format!(
+                            " ({} sheet, views {})",
+                            sheet.sheet.name(),
+                            sheet.views.join(", ")
+                        )
                     } else {
                         String::new()
                     }
@@ -1274,8 +1331,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "export",
-            "description": "Writes a tab's bodies as STL or STEP to a file path, or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut; `hidden: true` adds hidden lines dashed on their own layer. `body` (a body's name or index from the report) writes that one body alone, for a part to print.",
-            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" } }, "required": ["format", "path"] }
+            "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF: a shop drawing sheet with the `views` (front, top, right, iso by default) laid out third angle on `sheet` (A4 by default; A3, A2, Letter) at the largest standard scale that fits, hidden lines dashed, overall dimensions, diameter callouts for holes seen end-on, and for an assembly a balloon per part and a parts list (`parts: false` to leave them off), `note` on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf", "pdf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" }, "views": { "type": "array", "items": { "type": "string" } }, "sheet": { "type": "string" }, "parts": { "type": "boolean" }, "note": { "type": "string" } }, "required": ["format", "path"] }
         },
         {
             "name": "document_url",
@@ -1453,6 +1510,30 @@ mod tests {
             json!({ "format": "dxf", "view": "behind", "path": dxf.display().to_string() }),
         );
         assert!(err && text.contains("unknown view"), "{text}");
+        // A shop drawing sheet: the plate's sizes and its hole called out.
+        let pdf = dir.join("sheet.pdf");
+        let (err, text) = tool_text(
+            &mut server,
+            "export",
+            json!({ "format": "pdf", "views": ["front", "top"], "sheet": "Letter", "note": "checked", "path": pdf.display().to_string() }),
+        );
+        assert!(
+            !err && text.contains("Letter sheet, views front, top"),
+            "{text}"
+        );
+        let sheet = std::fs::read(&pdf).unwrap();
+        assert!(sheet.starts_with(b"%PDF-1.4"));
+        let sheet = String::from_utf8_lossy(&sheet);
+        assert!(
+            sheet.contains("\\330") && sheet.contains("(checked \\267 offkilter) Tj"),
+            "{sheet}"
+        );
+        let (err, text) = tool_text(
+            &mut server,
+            "export",
+            json!({ "format": "pdf", "sheet": "b5", "path": pdf.display().to_string() }),
+        );
+        assert!(err && text.contains("unknown sheet"), "{text}");
         // The sketch on the plate's top face was written with a bare
         // reference; the document stores it with the piece's neighbours.
         let stored = ok_model::Document::from_json(
