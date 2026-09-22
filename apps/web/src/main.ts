@@ -287,12 +287,15 @@ class App implements SketchHost {
     const inst = pick ? this.instanceAt(pick.body) : undefined;
     const ref = pick ? this.faceRefOf(pick) : null;
     if (!e || !pick || !inst || !ref) return null;
+    // On a sub-assembly, the connector names the member the face is on.
+    const member = inst.members[inst.body_indices.indexOf(pick.body)] ?? null;
+    const on = (c: Connector): Connector => (member === null ? c : { ...c, sub: member });
     const corner = this.viewer.pickVertex(e);
     if (corner && corner.body === pick.body) {
       const refs = corner.faces.map((f) => this.summary.bodies[corner.body]!.faces[f]!.origin);
       const distinct = refs.filter((r, i) => refs.findIndex((q) => q.feature === r.feature && q.local === r.local) === i);
       const others = distinct.filter((r) => r.feature !== ref.feature || r.local !== ref.local);
-      if (others.length >= 2) return { connector: { instance: inst.id, face: ref, anchor: { type: "vertex", others: [others[0]!, others[1]!] } }, pick };
+      if (others.length >= 2) return { connector: on({ instance: inst.id, face: ref, anchor: { type: "vertex", others: [others[0]!, others[1]!] } }), pick };
     }
     const edgeOrFace = this.viewer.pickEdgeOrFace(e);
     if (edgeOrFace && "edge" in edgeOrFace && edgeOrFace.edge.body === pick.body) {
@@ -300,14 +303,23 @@ class App implements SketchHost {
       if (edge) {
         const face = edge.a.feature === ref.feature && edge.a.local === ref.local ? edge.a : edge.b;
         const other = face === edge.a ? edge.b : edge.a;
-        return { connector: { instance: inst.id, face, anchor: { type: "edge", other } }, pick, edge: edgeOrFace.edge };
+        return { connector: on({ instance: inst.id, face, anchor: { type: "edge", other } }), pick, edge: edgeOrFace.edge };
       }
     }
-    return { connector: { instance: inst.id, face: ref }, pick };
+    return { connector: on({ instance: inst.id, face: ref }), pick };
+  }
+
+  /** The name of an instance inside a sub-assembly instance, from the placed body it shows as. */
+  memberName(inst: InstanceSummary, sub: number): string {
+    const k = inst.members.indexOf(sub);
+    const body = k >= 0 ? this.summary.bodies[inst.body_indices[k]!] : undefined;
+    // A placed body is named "<instance> / <n>" for a group: keep the instance part.
+    return body ? body.name.replace(/^.*? \/ /, "").replace(/ \/ \d+$/, "") : `member ${sub}`;
   }
 
   describeConnector(c: Connector): string {
-    const name = this.instance(c.instance)?.name ?? "?";
+    const inst = this.instance(c.instance);
+    const name = inst && c.sub !== undefined ? `${inst.name} › ${this.memberName(inst, c.sub)}` : (inst?.name ?? "?");
     const a = c.anchor ?? { type: "face" };
     if (a.type === "edge") return `${name} · edge ${c.face.local}/${a.other.local} of feature ${c.face.feature}`;
     if (a.type === "vertex") return `${name} · corner ${c.face.local}/${a.others[0].local}/${a.others[1].local} of feature ${c.face.feature}`;

@@ -135,6 +135,10 @@ pub enum Anchor {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Connector {
     pub instance: InstanceId,
+    /// On a sub-assembly instance, which of its instances holds the
+    /// face. Absent: the first body of the group that has it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sub: Option<InstanceId>,
     pub face: FaceRef,
     #[serde(default, skip_serializing_if = "is_face")]
     pub anchor: Anchor,
@@ -160,6 +164,7 @@ impl Connector {
     /// A connector on a face.
     pub fn face(instance: InstanceId, face: FaceRef) -> Connector {
         Connector {
+            sub: None,
             instance,
             face,
             anchor: Anchor::Face,
@@ -222,6 +227,10 @@ pub struct AssemblyResult {
     pub bodies: Vec<crate::Body>,
     /// The instance each entry of `bodies` belongs to.
     pub placed: Vec<InstanceId>,
+    /// For a body of a sub-assembly instance, the instance inside that
+    /// sub-assembly it came from; `None` for a body placed directly.
+    #[serde(default)]
+    pub members: Vec<Option<InstanceId>>,
     pub transforms: BTreeMap<InstanceId, Transform>,
     pub instance_errors: BTreeMap<InstanceId, String>,
     pub mate_errors: BTreeMap<MateId, String>,
@@ -230,6 +239,24 @@ pub struct AssemblyResult {
 /// Connector frame on the first body of a group that has the face.
 pub fn group_frame(group: &[Solid], face: &FaceRef, anchor: &Anchor) -> Option<Plane> {
     group.iter().find_map(|s| connector_frame(s, face, anchor))
+}
+
+/// A body of a sub-assembly group: the instance inside the sub-assembly
+/// it came from, and that instance's name.
+pub type Member = (InstanceId, String);
+
+/// `group_frame` narrowed to the bodies of one member instance of a
+/// sub-assembly group when the connector names one (`members` lists the
+/// member behind each body of the group).
+pub fn group_frame_of(group: &[Solid], members: Option<&[Member]>, c: &Connector) -> Option<Plane> {
+    match (c.sub, members) {
+        (Some(sub), Some(m)) => group
+            .iter()
+            .zip(m)
+            .filter(|(_, k)| k.0 == sub)
+            .find_map(|(s, _)| connector_frame(s, &c.face, &c.anchor)),
+        _ => group_frame(group, &c.face, &c.anchor),
+    }
 }
 
 /// Connector frame in body coordinates. On a face: origin at the face
@@ -495,6 +522,17 @@ impl Assembly {
     /// or every body of a sub-assembly, in source coordinates), resolving
     /// mates as chains from fixed instances and then numerically.
     pub fn resolve(&self, solids: &BTreeMap<InstanceId, Vec<Solid>>) -> AssemblyResult {
+        self.resolve_groups(solids, &BTreeMap::new())
+    }
+
+    /// `resolve` with, for each sub-assembly instance, the instance inside
+    /// the sub-assembly behind each of its solids, so a connector can name
+    /// the member its face is on.
+    pub fn resolve_groups(
+        &self,
+        solids: &BTreeMap<InstanceId, Vec<Solid>>,
+        members: &BTreeMap<InstanceId, Vec<Member>>,
+    ) -> AssemblyResult {
         let mut result = AssemblyResult::default();
         let mut placed: BTreeMap<InstanceId, Transform> = BTreeMap::new();
         for inst in &self.instances {
@@ -517,11 +555,15 @@ impl Assembly {
             let group = solids
                 .get(&c.instance)
                 .ok_or_else(|| "instance has no body".to_string())?;
-            group_frame(group, &c.face, &c.anchor).ok_or_else(|| {
+            group_frame_of(group, members.get(&c.instance).map(Vec::as_slice), c).ok_or_else(|| {
                 format!(
-                    "{} of feature {} not found on the instance",
+                    "{} of feature {} not found on the instance{}",
                     describe_anchor(c),
-                    c.face.feature.0
+                    c.face.feature.0,
+                    match c.sub {
+                        Some(sub) => format!(" (member {})", sub.0),
+                        None => String::new(),
+                    }
                 )
             })
         };
@@ -612,7 +654,7 @@ impl Assembly {
         }
         // Numeric refinement: closed loops and redundant mates are solved
         // over the free degrees of freedom, starting from the chain result.
-        let unsatisfied = self.refine(solids, &mut placed);
+        let unsatisfied = self.refine(solids, members, &mut placed);
         for (mate, residual) in unsatisfied {
             if residual > 1e-5 {
                 result.mate_errors.insert(
@@ -627,11 +669,13 @@ impl Assembly {
             let (Some(group), Some(xf)) = (solids.get(&inst.id), placed.get(&inst.id)) else {
                 continue;
             };
+            let group_members = members.get(&inst.id);
             for (k, solid) in group.iter().enumerate() {
-                let name = if group.len() == 1 {
-                    inst.name.clone()
-                } else {
-                    format!("{} / {}", inst.name, k + 1)
+                let member = group_members.and_then(|m| m.get(k));
+                let name = match member {
+                    Some((_, name)) => format!("{} / {}", inst.name, name),
+                    None if group.len() == 1 => inst.name.clone(),
+                    None => format!("{} / {}", inst.name, k + 1),
                 };
                 result.bodies.push(crate::Body::new(
                     name,
@@ -639,6 +683,7 @@ impl Assembly {
                     solid.transformed(xf),
                 ));
                 result.placed.push(inst.id);
+                result.members.push(member.map(|m| m.0));
             }
             result.transforms.insert(inst.id, *xf);
         }
@@ -690,6 +735,7 @@ impl Assembly {
     fn refine(
         &self,
         solids: &BTreeMap<InstanceId, Vec<Solid>>,
+        members: &BTreeMap<InstanceId, Vec<Member>>,
         placed: &mut BTreeMap<InstanceId, Transform>,
     ) -> Vec<(MateId, f64)> {
         let mates: Vec<&Mate> = self
@@ -704,7 +750,11 @@ impl Assembly {
             .iter()
             .flat_map(|m| [m.a, m.b])
             .filter_map(|c| {
-                let f = group_frame(solids.get(&c.instance)?, &c.face, &c.anchor)?;
+                let f = group_frame_of(
+                    solids.get(&c.instance)?,
+                    members.get(&c.instance).map(Vec::as_slice),
+                    &c,
+                )?;
                 Some((c, f))
             })
             .collect();
@@ -957,6 +1007,95 @@ mod tests {
     }
 
     #[test]
+    fn a_connector_on_a_sub_assembly_names_its_member() {
+        // A group of two identical blocks side by side (a sub-assembly of
+        // instances 10 and 11), and a third block mated onto the top of
+        // the member the connector names: it lands on that one, not on
+        // the first block that happens to have the face.
+        let solid = block(10.0, 10.0, 5.0, 1);
+        let right = solid.transformed(&Transform::translation(Vec3::new(20.0, 0.0, 0.0)));
+        let face = |local: u32| FaceRef {
+            feature: FeatureId(1),
+            local,
+            part: None,
+            near: Default::default(),
+        };
+        let mut asm = Assembly::new("asm");
+        asm.instances.push(Instance {
+            id: InstanceId(1),
+            name: "pair".into(),
+            studio: TabId(2),
+            body: 0,
+            fixed: true,
+            placement: Placement::default(),
+        });
+        asm.instances.push(Instance {
+            id: InstanceId(2),
+            name: "cap".into(),
+            studio: TabId(1),
+            body: 0,
+            fixed: false,
+            placement: Placement::default(),
+        });
+        asm.mates.push(Mate {
+            id: MateId(3),
+            name: "m".into(),
+            kind: MateKind::Fastened,
+            a: Connector {
+                sub: Some(InstanceId(11)),
+                instance: InstanceId(1),
+                face: face(1),
+                anchor: Anchor::Face,
+            },
+            b: Connector {
+                sub: None,
+                instance: InstanceId(2),
+                face: face(0),
+                anchor: Anchor::Face,
+            },
+            offset: 0.0,
+            angle: 0.0,
+            flip: false,
+        });
+        let solids: BTreeMap<InstanceId, Vec<Solid>> = [
+            (InstanceId(1), vec![solid.clone(), right]),
+            (InstanceId(2), vec![solid.clone()]),
+        ]
+        .into_iter()
+        .collect();
+        let members: BTreeMap<InstanceId, Vec<Member>> = [(
+            InstanceId(1),
+            vec![
+                (InstanceId(10), "left".to_string()),
+                (InstanceId(11), "right".to_string()),
+            ],
+        )]
+        .into_iter()
+        .collect();
+        let r = asm.resolve_groups(&solids, &members);
+        assert!(r.mate_errors.is_empty(), "{:?}", r.mate_errors);
+        assert_eq!(
+            r.members,
+            vec![Some(InstanceId(10)), Some(InstanceId(11)), None]
+        );
+        assert_eq!(r.bodies[1].name, "pair / right");
+        let (lo, hi) = r.bodies[2].solid.bounds().unwrap();
+        assert!(
+            (lo.x - 20.0).abs() < 1e-9 && (lo.z - 5.0).abs() < 1e-9,
+            "{lo:?} {hi:?}"
+        );
+        // Without the member, the first block with the face takes it.
+        asm.mates[0].a.sub = None;
+        let r = asm.resolve_groups(&solids, &members);
+        let (lo, _) = r.bodies[2].solid.bounds().unwrap();
+        assert!(lo.x.abs() < 1e-9, "{lo:?}");
+        // A member the group does not have is an error, not a guess.
+        asm.mates[0].a.sub = Some(InstanceId(12));
+        let r = asm.resolve_groups(&solids, &members);
+        assert!(r.mate_errors[&MateId(3)].contains("member 12"));
+    }
+
+    #[test]
     fn fastened_mate_stacks_a_block_on_another() {
         // Two 10x10x5 blocks; mate the top of A (local 1) to the bottom of
         // B (local 0): B sits on A, faces touching, normals opposed.
@@ -995,11 +1134,13 @@ mod tests {
             name: "m".into(),
             kind: MateKind::Fastened,
             a: Connector {
+                sub: None,
                 instance: InstanceId(1),
                 face: top,
                 anchor: Anchor::Face,
             },
             b: Connector {
+                sub: None,
                 instance: InstanceId(2),
                 face: bottom,
                 anchor: Anchor::Face,
@@ -1091,11 +1232,13 @@ mod tests {
             name: format!("m{id}"),
             kind: MateKind::Fastened,
             a: Connector {
+                sub: None,
                 instance: InstanceId(a),
                 face: top,
                 anchor: Anchor::Face,
             },
             b: Connector {
+                sub: None,
                 instance: InstanceId(b),
                 face: bottom,
                 anchor: Anchor::Face,
@@ -1158,11 +1301,13 @@ mod tests {
             name: "spin".into(),
             kind: MateKind::Cylindrical,
             a: Connector {
+                sub: None,
                 instance: InstanceId(1),
                 face: face(1),
                 anchor: Anchor::Face,
             },
             b: Connector {
+                sub: None,
                 instance: InstanceId(2),
                 face: face(0),
                 anchor: Anchor::Face,
@@ -1176,11 +1321,13 @@ mod tests {
             name: "side".into(),
             kind: MateKind::Slider,
             a: Connector {
+                sub: None,
                 instance: InstanceId(1),
                 face: face(3),
                 anchor: Anchor::Face,
             },
             b: Connector {
+                sub: None,
                 instance: InstanceId(2),
                 face: face(3),
                 anchor: Anchor::Face,
@@ -1208,11 +1355,13 @@ mod tests {
             name: "bad".into(),
             kind: MateKind::Fastened,
             a: Connector {
+                sub: None,
                 instance: InstanceId(1),
                 face: face(1),
                 anchor: Anchor::Face,
             },
             b: Connector {
+                sub: None,
                 instance: InstanceId(2),
                 face: face(1),
                 anchor: Anchor::Face,
@@ -1325,11 +1474,13 @@ mod tests {
             name: "hinge".into(),
             kind: MateKind::Revolute,
             a: Connector {
+                sub: None,
                 instance: InstanceId(1),
                 face: fref(1),
                 anchor: Anchor::Edge { other: fref(2) },
             },
             b: Connector {
+                sub: None,
                 instance: InstanceId(2),
                 face: fref(0),
                 anchor: Anchor::Edge { other: fref(2) },

@@ -173,6 +173,9 @@ struct InstanceSummary<'a> {
     instance: &'a ok_model::Instance,
     /// Indices into `bodies` of the instance's placed bodies (empty if unresolved).
     body_indices: Vec<usize>,
+    /// For a sub-assembly instance, the instance inside it behind each
+    /// entry of `body_indices` (`None` for a part's body).
+    members: Vec<Option<ok_model::InstanceId>>,
     transform: Option<ok_brep::Transform>,
     error: Option<&'a str>,
 }
@@ -197,8 +200,16 @@ fn world_frame(
         .bodies
         .iter()
         .zip(&result.placed)
-        .filter(|(_, id)| **id == c.instance)
-        .find_map(|(b, _)| ok_model::connector_frame(&b.solid, &c.face, &c.anchor))
+        .zip(
+            result
+                .members
+                .iter()
+                .map(Some)
+                .chain(std::iter::repeat(None)),
+        )
+        .filter(|((_, id), _)| **id == c.instance)
+        .filter(|(_, member)| c.sub.is_none() || member.copied().flatten() == c.sub)
+        .find_map(|((b, _), _)| ok_model::connector_frame(&b.solid, &c.face, &c.anchor))
 }
 
 fn body_summary(b: &Body) -> BodySummary<'_> {
@@ -353,6 +364,13 @@ impl Doc {
                             .enumerate()
                             .filter(|(_, p)| **p == i.id)
                             .map(|(k, _)| k)
+                            .collect(),
+                        members: asm_result
+                            .placed
+                            .iter()
+                            .enumerate()
+                            .filter(|(_, p)| **p == i.id)
+                            .map(|(k, _)| asm_result.members.get(k).copied().flatten())
                             .collect(),
                         transform: asm_result.transforms.get(&i.id).copied(),
                         error: asm_result.instance_errors.get(&i.id).map(|s| s.as_str()),
@@ -559,6 +577,7 @@ impl Doc {
             parts: Option<bool>,
             title: Option<String>,
             note: Option<String>,
+            hidden: Option<bool>,
         }
         let spec: Spec =
             serde_json::from_str(opts_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -572,6 +591,7 @@ impl Doc {
         if let Some(p) = spec.parts {
             opts.parts = p;
         }
+        opts.hidden = spec.hidden;
         opts.title = spec.title.unwrap_or_default();
         opts.note = spec.note.unwrap_or_default();
         ok_sheet::drawing_pdf(&mut self.inner, TabId(tab), &opts).map_err(|e| JsValue::from_str(&e))

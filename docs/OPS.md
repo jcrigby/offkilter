@@ -159,6 +159,11 @@ Wrapped as `{ "type": "assembly", "tab": <assembly tab id>, "op": ... }`:
 `set_mate {...}`, `remove_mate {id}`. A `Connector` is `{ "instance": <id>, "face": FaceRef }`, optionally with
 `"anchor": {type: "edge", other: FaceRef}` or `{type: "vertex", others: [FaceRef, FaceRef]}`.
 Instances of a studio's bodies are placed by their mates from fixed instances.
+`add_instance` with `studio` naming an assembly tab inserts that assembly as a
+sub-assembly: one rigid group of its placed bodies (`body` is ignored). A
+connector on a sub-assembly instance adds `"sub": <instance id inside the
+sub-assembly>` to say which of its parts holds the face (the sub-assembly's
+own report lists them); without it the first body that has the face is taken.
 
 A connector is a frame on its face: on a planar face the origin is the face's
 centroid and z its normal; on a cylindrical face the origin is the middle of the

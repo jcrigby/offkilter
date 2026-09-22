@@ -70,6 +70,9 @@ pub struct Options {
     pub note: String,
     /// Balloons and a parts list.
     pub parts: bool,
+    /// Hidden lines, dashed. Absent: on a sheet of one part, off on a
+    /// sheet of several (an assembly), where they only clutter.
+    pub hidden: Option<bool>,
 }
 
 impl Default for Options {
@@ -83,17 +86,33 @@ impl Default for Options {
             title: String::new(),
             note: String::new(),
             parts: true,
+            hidden: None,
         }
     }
 }
 
-/// A body on the sheet: its solid, what the parts list calls it, and a
-/// key that groups identical parts into one row with a quantity.
+/// An item on the sheet: its solids (one for a body, every placed body
+/// for a sub-assembly instance), what the parts list calls it, and a key
+/// that groups identical items into one row with a quantity.
 pub struct Part<'a> {
     pub name: String,
     pub material: String,
-    pub solid: &'a Solid,
+    pub solids: Vec<&'a Solid>,
     pub key: (u32, usize),
+}
+
+/// Volume-weighted centroid of several solids (a balloon's anchor).
+fn centroid_of(solids: &[&Solid]) -> Option<Vec3> {
+    let mut sum = Vec3::ZERO;
+    let mut total = 0.0;
+    for s in solids {
+        if let Some(c) = s.centroid() {
+            let v = s.volume().abs();
+            sum += c * v;
+            total += v;
+        }
+    }
+    (total > 0.0).then(|| sum * (1.0 / total))
 }
 
 /// The view directions the client uses: the viewer looks along `dir`.
@@ -344,15 +363,24 @@ pub struct Sheet {
     oy: f64,
     title: String,
     note: String,
+    hidden: bool,
 }
 
 impl Sheet {
     /// Lays the parts out for the options.
     pub fn layout(parts: &[Part], opts: &Options) -> Result<Sheet, String> {
-        let solids: Vec<&Solid> = parts.iter().map(|p| p.solid).collect();
+        let solids: Vec<&Solid> = parts
+            .iter()
+            .flat_map(|p| p.solids.iter().copied())
+            .collect();
         if solids.is_empty() {
             return Err("nothing to draw: the tab has no bodies".into());
         }
+        let mut keys: Vec<(u32, usize)> = parts.iter().map(|p| p.key).collect();
+        keys.sort_unstable();
+        keys.dedup();
+        let one_part = keys.len() <= 1;
+        let hidden = opts.hidden.unwrap_or(one_part);
         // Parts list rows: one per distinct part, in order of first appearance.
         let mut rows: Vec<Row> = Vec::new();
         if opts.parts && parts.len() > 1 {
@@ -381,7 +409,7 @@ impl Sheet {
             let lines = project_view(&solids, view);
             // Hole callouts belong on a part's own sheet: an assembly
             // view is a thicket of holes seen end-on.
-            let callouts = if name == "iso" || rows.len() > 1 {
+            let callouts = if name == "iso" || !one_part {
                 Vec::new()
             } else {
                 callouts(&solids, view)
@@ -390,9 +418,7 @@ impl Sheet {
                 let (u, v) = frame(view);
                 rows.iter()
                     .filter_map(|r| {
-                        parts[r.body]
-                            .solid
-                            .centroid()
+                        centroid_of(&parts[r.body].solids)
                             .map(|c| (r.item, Vec2::new(c.dot(u), c.dot(v))))
                     })
                     .collect()
@@ -587,6 +613,7 @@ impl Sheet {
             oy,
             title: opts.title.clone(),
             note: opts.note.clone(),
+            hidden,
         })
     }
 
@@ -633,7 +660,9 @@ impl Sheet {
                         .map(|[a, b]| seg(a, b)),
                 )
                 .collect();
-            page.lines(&hidden, 0.25, Some((2.0, 1.0)));
+            if self.hidden {
+                page.lines(&hidden, 0.25, Some((2.0, 1.0)));
+            }
             let visible: Vec<[(f64, f64); 2]> = p
                 .lines
                 .visible
@@ -975,8 +1004,13 @@ impl Sheet {
             by - 18.0,
             3.5,
             &format!(
-                "Views: {} · third angle · mm · {}",
+                "Views: {} · third angle{} · mm · {}",
                 names.join(", "),
+                if self.hidden {
+                    ""
+                } else {
+                    " · hidden lines omitted"
+                },
                 self.size.name()
             ),
             Anchor::Left,
@@ -1012,7 +1046,7 @@ impl Sheet {
 
 /// A body for a sheet: name, material, the key grouping identical parts,
 /// and the solid.
-pub type PartRecord = (String, String, (u32, usize), Solid);
+pub type PartRecord = (String, String, (u32, usize), Vec<Solid>);
 
 /// The parts of a tab for a sheet: a part studio's bodies, or an
 /// assembly's placed bodies grouped by the part they are instances of.
@@ -1021,25 +1055,37 @@ pub fn parts_of(doc: &mut Document, tab: TabId) -> Result<Vec<PartRecord>, Strin
     let kind = doc.tab(tab).map(|t| t.kind_name()).ok_or("no such tab")?;
     if kind == "assembly" {
         let r = doc.regenerate_assembly(tab).map_err(|e| e.to_string())?;
-        let asm = doc.assembly(tab).map_err(|e| e.to_string())?;
-        let keys: Vec<((u32, usize), String)> = r
-            .bodies
-            .iter()
-            .zip(&r.placed)
-            .filter_map(|(b, inst)| {
-                let i = asm.instances.iter().find(|i| i.id == *inst)?;
-                let material = b
-                    .material
-                    .as_ref()
-                    .map(|m| m.name.clone())
-                    .unwrap_or_default();
-                Some(((i.studio.0, i.body), material))
-            })
-            .collect();
-        let solids: Vec<Solid> = r.bodies.iter().map(|b| b.solid.clone()).collect();
-        let mut out = Vec::new();
-        for ((key, material), solid) in keys.into_iter().zip(solids) {
-            out.push((part_name(doc, key)?, material, key, solid));
+        let asm = doc.assembly(tab).map_err(|e| e.to_string())?.clone();
+        // One record per instance: a part's body, or every placed body of
+        // a sub-assembly instance, which the list carries as one item.
+        let mut out: Vec<PartRecord> = Vec::new();
+        let mut last: Option<ok_model::InstanceId> = None;
+        for (b, inst) in r.bodies.iter().zip(&r.placed) {
+            let Some(i) = asm.instances.iter().find(|i| i.id == *inst) else {
+                continue;
+            };
+            let material = b
+                .material
+                .as_ref()
+                .map(|m| m.name.clone())
+                .unwrap_or_default();
+            if last == Some(*inst) {
+                if let Some(rec) = out.last_mut() {
+                    rec.3.push(b.solid.clone());
+                    if rec.1 != material {
+                        rec.1.clear();
+                    }
+                }
+                continue;
+            }
+            last = Some(*inst);
+            let sub = doc.tab(i.studio).map(|t| t.kind_name()) == Some("assembly");
+            let key = if sub {
+                (i.studio.0, usize::MAX)
+            } else {
+                (i.studio.0, i.body)
+            };
+            out.push((part_name(doc, key)?, material, key, vec![b.solid.clone()]));
         }
         Ok(out)
     } else {
@@ -1057,16 +1103,17 @@ pub fn parts_of(doc: &mut Document, tab: TabId) -> Result<Vec<PartRecord>, Strin
                         .map(|m| m.name.clone())
                         .unwrap_or_default(),
                     (tab.0, k),
-                    b.solid.clone(),
+                    vec![b.solid.clone()],
                 )
             })
             .collect())
     }
 }
 
-/// What the parts list calls a body of a part studio: the studio's name,
-/// plus the body's own name when the studio holds several (an assembly
-/// names its placed bodies after the instances, which is not the part).
+/// What the parts list calls an item: a part studio's name, plus the
+/// body's own name when the studio holds several (an assembly names its
+/// placed bodies after the instances, which is not the part); a
+/// sub-assembly's name for a sub-assembly instance.
 fn part_name(doc: &mut Document, (studio, body): (u32, usize)) -> Result<String, String> {
     let tab = TabId(studio);
     let studio_name = doc
@@ -1101,10 +1148,10 @@ pub fn drawing_pdf(doc: &mut Document, tab: TabId, opts: &Options) -> Result<Vec
     }
     let refs: Vec<Part> = parts
         .iter()
-        .map(|(name, material, key, solid)| Part {
+        .map(|(name, material, key, solids)| Part {
             name: name.clone(),
             material: material.clone(),
-            solid,
+            solids: solids.iter().collect(),
             key: *key,
         })
         .collect();
@@ -1168,7 +1215,7 @@ mod tests {
         let parts = [Part {
             name: "Block".into(),
             material: String::new(),
-            solid: &solid,
+            solids: vec![&solid],
             key: (1, 0),
         }];
         let sheet = Sheet::layout(&parts, &Options::default()).unwrap();
@@ -1207,7 +1254,7 @@ mod tests {
         let parts = [Part {
             name: "Slab".into(),
             material: String::new(),
-            solid: &big,
+            solids: vec![&big],
             key: (1, 0),
         }];
         let sheet = Sheet::layout(
@@ -1248,19 +1295,19 @@ mod tests {
             Part {
                 name: "Plate".into(),
                 material: "Maple".into(),
-                solid: &plate,
+                solids: vec![&plate],
                 key: (2, 0),
             },
             Part {
                 name: "Peg".into(),
                 material: String::new(),
-                solid: &peg,
+                solids: vec![&peg],
                 key: (3, 0),
             },
             Part {
                 name: "Peg".into(),
                 material: String::new(),
-                solid: &peg2,
+                solids: vec![&peg2],
                 key: (3, 0),
             },
         ];
@@ -1307,6 +1354,158 @@ mod tests {
     }
 
     #[test]
+    fn a_sub_assembly_is_one_item_with_its_bodies_and_the_sheet_omits_hidden_lines() {
+        use ok_model::{
+            AssemblyOp, BodyOp, DocOp, Document, ExtrudeDirection, ExtrudeEnd, Op, Placement,
+            PlaneRef, ProfileSelection, SketchOp, StandardPlane, TabId,
+        };
+        // Block: a 10 x 10 x 5 part. Pair: two blocks 20 mm apart. Top:
+        // two pairs and a block.
+        let mut d = Document::new("t");
+        let block = d.first_studio().unwrap();
+        d.apply_with_base(
+            DocOp::RenameTab {
+                tab: block,
+                name: "Block".into(),
+            },
+            None,
+        )
+        .unwrap();
+        let apply = |d: &mut Document, tab: TabId, op: Op| {
+            d.apply_with_base(DocOp::Studio { tab, op }, None)
+                .unwrap()
+                .studio
+                .unwrap()
+                .feature
+        };
+        let s = apply(
+            &mut d,
+            block,
+            Op::AddSketch {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                name: None,
+            },
+        )
+        .unwrap();
+        apply(
+            &mut d,
+            block,
+            Op::Sketch {
+                id: s,
+                op: SketchOp::AddRectangle {
+                    a: Vec2::ZERO,
+                    b: Vec2::new(10.0, 10.0),
+                },
+            },
+        );
+        apply(
+            &mut d,
+            block,
+            Op::AddExtrude {
+                sketch: s,
+                depth: 5.0,
+                direction: ExtrudeDirection::Normal,
+                end: ExtrudeEnd::Blind,
+                profiles: ProfileSelection::All,
+                op: BodyOp::New,
+                name: None,
+            },
+        );
+        let add_assembly = |d: &mut Document, name: &str| {
+            d.apply_with_base(
+                DocOp::AddAssembly {
+                    name: Some(name.into()),
+                },
+                None,
+            )
+            .unwrap()
+            .tab
+            .unwrap()
+        };
+        let place = |d: &mut Document, asm: TabId, studio: TabId, x: f64, y: f64| {
+            d.apply_with_base(
+                DocOp::Assembly {
+                    tab: asm,
+                    op: AssemblyOp::AddInstance {
+                        studio,
+                        body: 0,
+                        name: None,
+                        fixed: true,
+                        placement: Placement {
+                            position: Vec3::new(x, y, 0.0),
+                            rotation: Vec3::ZERO,
+                        },
+                    },
+                },
+                None,
+            )
+            .unwrap();
+        };
+        let pair = add_assembly(&mut d, "Pair");
+        place(&mut d, pair, block, 0.0, 0.0);
+        place(&mut d, pair, block, 20.0, 0.0);
+        let top = add_assembly(&mut d, "Top");
+        place(&mut d, top, pair, 0.0, 0.0);
+        place(&mut d, top, pair, 0.0, 30.0);
+        place(&mut d, top, block, 40.0, 15.0);
+
+        let parts = parts_of(&mut d, top).unwrap();
+        assert_eq!(parts.len(), 3, "one record per instance");
+        assert_eq!(parts[0].0, "Pair");
+        assert_eq!(parts[0].3.len(), 2, "both blocks of the pair");
+        assert_eq!(parts[2].0, "Block");
+        assert_eq!(parts[2].3.len(), 1);
+        let refs: Vec<Part> = parts
+            .iter()
+            .map(|(name, material, key, solids)| Part {
+                name: name.clone(),
+                material: material.clone(),
+                solids: solids.iter().collect(),
+                key: *key,
+            })
+            .collect();
+        let sheet = Sheet::layout(&refs, &Options::default()).unwrap();
+        assert_eq!(sheet.part_rows(), 2);
+        assert_eq!(
+            (sheet.rows[0].name.as_str(), sheet.rows[0].qty),
+            ("Pair", 2)
+        );
+        assert_eq!(
+            (sheet.rows[1].name.as_str(), sheet.rows[1].qty),
+            ("Block", 1)
+        );
+        // The pair's balloon anchors between its two blocks.
+        let iso = sheet.placed.iter().find(|p| p.name == "iso").unwrap();
+        assert_eq!(iso.balloons.len(), 2);
+        let (u, _) = frame(standard_view("iso").unwrap());
+        let mid = Vec3::new(15.0, 5.0, 2.5).dot(u);
+        assert!(
+            (iso.balloons[0].1.x - mid).abs() < 1e-9,
+            "{:?}",
+            iso.balloons[0]
+        );
+        let text = String::from_utf8_lossy(&sheet.to_pdf()).to_string();
+        assert!(text.contains("(Pair) Tj") && text.contains("(Block) Tj"));
+        assert!(
+            !text.contains("[2 1] 0 d") && text.contains("hidden lines omitted"),
+            "an assembly sheet has no hidden lines"
+        );
+        let forced = Sheet::layout(
+            &refs,
+            &Options {
+                hidden: Some(true),
+                ..Options::default()
+            },
+        )
+        .unwrap();
+        assert!(String::from_utf8_lossy(&forced.to_pdf()).contains("[2 1] 0 d"));
+        // The pair's own sheet lists its blocks.
+        let parts = parts_of(&mut d, pair).unwrap();
+        assert_eq!(parts.len(), 2);
+        assert!(parts.iter().all(|p| p.0 == "Block" && p.3.len() == 1));
+    }
+
+    #[test]
     fn a_long_parts_list_pushes_the_views_up_instead_of_shrinking_them() {
         // Twenty distinct small parts on A3: the list is 126 mm tall,
         // half the free height, but the three views fit beside it and the
@@ -1325,7 +1524,7 @@ mod tests {
             .map(|(k, s)| Part {
                 name: format!("Part {k}"),
                 material: String::new(),
-                solid: s,
+                solids: vec![s],
                 key: (1, k),
             })
             .collect();

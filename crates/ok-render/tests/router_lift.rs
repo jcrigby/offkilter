@@ -68,26 +68,44 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
         .iter()
         .map(|t| (t.id, t.name().to_string(), t.kind_name().to_string()))
         .collect();
-    assert!(tabs.len() >= 26, "{} tabs", tabs.len());
+    assert!(tabs.len() >= 29, "{} tabs", tabs.len());
     let mut checked = 0;
+    let (mut mates, mut moving, mut assemblies) = (0, 0, 0);
     for (id, name, kind) in &tabs {
         if kind == "assembly" {
+            assemblies += 1;
             let r = doc.regenerate_assembly(*id).unwrap();
+            // The lift assembly places every body: its loose parts and
+            // the bodies of its three sub-assemblies.
+            let least = if name == "Lift assembly" { 32 } else { 6 };
             assert!(
-                r.bodies.len() >= 32,
+                r.bodies.len() >= least,
                 "{name}: {} placed bodies",
                 r.bodies.len()
             );
             assert!(r.instance_errors.is_empty(), "{:?}", r.instance_errors);
             assert!(r.mate_errors.is_empty(), "{:?}", r.mate_errors);
-            // The carriage and what is bolted to it hang off one slider
-            // mate; the build script drew them at their placements and
-            // derived the mates from those, so the mates must resolve to
-            // exactly the same poses.
+            // The carriage assembly hangs off one slider mate, the router
+            // off the carriage, the blocks and nut off the carriage inside
+            // its sub-assembly; the build script drew them all at their
+            // placements and derived the mates from those, so the mates
+            // must resolve to exactly the same poses.
             let asm = doc.assembly(*id).unwrap();
-            assert!(asm.mates.len() >= 7, "{} mates", asm.mates.len());
-            let moving = asm.instances.iter().filter(|i| !i.fixed).count();
-            assert!(moving >= 7, "{moving} mated instances");
+            mates += asm.mates.len();
+            moving += asm.instances.iter().filter(|i| !i.fixed).count();
+            if name == "Lift assembly" {
+                let slider = asm
+                    .mates
+                    .iter()
+                    .find(|m| m.name == "carriage travel")
+                    .unwrap();
+                assert!(
+                    slider.b.sub.is_some(),
+                    "the slider names the block inside the carriage assembly"
+                );
+                let subs = r.members.iter().filter(|m| m.is_some()).count();
+                assert_eq!(subs, 20, "bodies of sub-assembly instances");
+            }
             for inst in &asm.instances {
                 let want = inst.placement.to_transform();
                 let got = r.transforms[&inst.id];
@@ -141,6 +159,9 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
         checked += 1;
     }
     assert_eq!(checked, PRINTED.len());
+    assert_eq!(assemblies, 4, "the lift and its three sub-assemblies");
+    assert!(mates >= 7, "{mates} mates");
+    assert!(moving >= 7, "{moving} mated instances");
 }
 
 /// The assembly's shop drawing: one balloon and one parts-list row per
@@ -150,25 +171,29 @@ fn the_assembly_sheet_lists_every_part_once() {
     let dir = example_dir();
     let json = std::fs::read_to_string(dir.join("out/router_lift.okpart")).unwrap();
     let mut doc = ok_model::Document::from_json(&json).unwrap();
-    let tab = doc
-        .tabs
-        .iter()
-        .find(|t| t.kind_name() == "assembly")
-        .unwrap()
-        .id;
-    let asm = doc.assembly(tab).unwrap();
-    let mut distinct: Vec<(u32, usize)> =
-        asm.instances.iter().map(|i| (i.studio.0, i.body)).collect();
+    let tab_named = |doc: &ok_model::Document, name: &str| {
+        doc.tabs
+            .iter()
+            .find(|t| t.kind_name() == "assembly" && t.name() == name)
+            .unwrap()
+            .id
+    };
+    let tab = tab_named(&doc, "Lift assembly");
+    // Twelve loose parts and three sub-assembly instances, one record
+    // each; ten distinct items.
+    let parts = ok_sheet::parts_of(&mut doc, tab).unwrap();
+    assert_eq!(parts.len(), 15);
+    assert_eq!(parts.iter().map(|p| p.3.len()).sum::<usize>(), 32, "bodies");
+    let mut distinct: Vec<(u32, usize)> = parts.iter().map(|p| p.2).collect();
     distinct.sort_unstable();
     distinct.dedup();
-    let parts = ok_sheet::parts_of(&mut doc, tab).unwrap();
-    assert_eq!(parts.len(), 32);
+    assert_eq!(distinct.len(), 10);
     let refs: Vec<ok_sheet::Part> = parts
         .iter()
-        .map(|(name, material, key, solid)| ok_sheet::Part {
+        .map(|(name, material, key, solids)| ok_sheet::Part {
             name: name.clone(),
             material: material.clone(),
-            solid,
+            solids: solids.iter().collect(),
             key: *key,
         })
         .collect();
@@ -187,12 +212,40 @@ fn the_assembly_sheet_lists_every_part_once() {
         pdf.len()
     );
     let text = String::from_utf8_lossy(&pdf);
-    assert!(text.contains("(Carriage) Tj") && text.contains("(SC20UU) Tj"));
+    assert!(
+        text.contains("(Carriage assembly) Tj")
+            && text.contains("(Pin attachment) Tj")
+            && !text.contains("(SC20UU) Tj"),
+        "sub-assemblies are items, their parts are not"
+    );
     assert_eq!(text.matches("(ITEM) Tj").count(), 1);
-    // Every distinct part gets a balloon number.
+    assert!(
+        !text.contains("[2 1] 0 d"),
+        "no hidden lines on the assembly sheet"
+    );
+    // Every distinct item gets a balloon number.
     for item in 1..=distinct.len() {
         assert!(text.contains(&format!("({item}) Tj")), "balloon {item}");
     }
+    // The carriage assembly's own sheet lists the carriage, four blocks
+    // and the nut.
+    let tab = tab_named(&doc, "Carriage assembly");
+    let parts = ok_sheet::parts_of(&mut doc, tab).unwrap();
+    assert_eq!(parts.len(), 6);
+    let refs: Vec<ok_sheet::Part> = parts
+        .iter()
+        .map(|(name, material, key, solids)| ok_sheet::Part {
+            name: name.clone(),
+            material: material.clone(),
+            solids: solids.iter().collect(),
+            key: *key,
+        })
+        .collect();
+    let sheet = ok_sheet::Sheet::layout(&refs, &ok_sheet::Options::default()).unwrap();
+    assert_eq!(sheet.part_rows(), 3);
+    let text = String::from_utf8_lossy(&sheet.to_pdf()).to_string();
+    assert!(text.contains("(Carriage) Tj") && text.contains("(SC20UU) Tj"));
+    assert!(text.contains("(4) Tj"), "four blocks");
 }
 
 /// The LINE entities of a DXF as endpoint pairs.
