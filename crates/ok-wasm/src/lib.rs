@@ -547,6 +547,36 @@ impl Doc {
         }
     }
 
+    /// A shop drawing sheet of a tab as a PDF: `opts_json` is
+    /// `{"views":["front","top","right","iso"],"sheet":"A4","parts":true,
+    /// "title":"...","note":"..."}`, every field optional.
+    pub fn drawing_pdf(&mut self, tab: u32, opts_json: &str) -> Result<Vec<u8>, JsValue> {
+        #[derive(serde::Deserialize, Default)]
+        #[serde(default)]
+        struct Spec {
+            views: Option<Vec<String>>,
+            sheet: Option<String>,
+            parts: Option<bool>,
+            title: Option<String>,
+            note: Option<String>,
+        }
+        let spec: Spec =
+            serde_json::from_str(opts_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let mut opts = ok_sheet::Options::default();
+        if let Some(v) = spec.views {
+            opts.views = v;
+        }
+        if let Some(s) = spec.sheet {
+            opts.sheet = ok_sheet::SheetSize::parse(&s).map_err(|e| JsValue::from_str(&e))?;
+        }
+        if let Some(p) = spec.parts {
+            opts.parts = p;
+        }
+        opts.title = spec.title.unwrap_or_default();
+        opts.note = spec.note.unwrap_or_default();
+        ok_sheet::drawing_pdf(&mut self.inner, TabId(tab), &opts).map_err(|e| JsValue::from_str(&e))
+    }
+
     /// Orthographic view of the current tab's bodies with hidden lines
     /// removed. `view_json` is `{"dir":[x,y,z],"up":[x,y,z]}` (the viewer
     /// looks along `dir`); the result is `{"visible":[[[x,y],[x,y]],..],

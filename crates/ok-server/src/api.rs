@@ -128,6 +128,7 @@ pub fn router(
         .route("/docs/{id}/export/stl", get(export_stl))
         .route("/docs/{id}/export/step", get(export_step))
         .route("/docs/{id}/export/dxf", get(export_dxf))
+        .route("/docs/{id}/export/pdf", get(export_pdf))
         .route("/docs/{id}/ops", post(apply_ops))
         .route("/docs/{id}/report", get(report))
         .route("/docs/{id}/screenshot", get(screenshot))
@@ -723,6 +724,98 @@ async fn export_step(
                 ),
             ],
             text,
+        )
+            .into_response(),
+        Ok(Err(e)) => (StatusCode::BAD_REQUEST, e).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+#[derive(serde::Deserialize)]
+struct PdfQuery {
+    /// Tab id; the first tab when absent.
+    tab: Option<u32>,
+    /// Comma-separated view names (`front,top,right,iso` by default).
+    views: Option<String>,
+    /// `A4` (default), `A3`, `A2` or `Letter`.
+    sheet: Option<String>,
+    /// Balloons and a parts list (on by default).
+    parts: Option<bool>,
+    /// A second line for the title block (a date, an author).
+    note: Option<String>,
+}
+
+/// A shop drawing sheet of a tab as a PDF.
+fn pdf_of(json: &str, tab: Option<u32>, opts: &ok_sheet::Options) -> Result<Vec<u8>, String> {
+    let mut doc = ok_model::Document::from_json(json).map_err(|e| e.to_string())?;
+    let id = match tab {
+        Some(t) => ok_model::TabId(t),
+        None => doc
+            .tabs
+            .first()
+            .map(|t| t.id)
+            .ok_or("document has no tabs")?,
+    };
+    ok_sheet::drawing_pdf(&mut doc, id, opts)
+}
+
+/// The sheet options a query asks for.
+fn sheet_options(
+    views: Option<&str>,
+    sheet: Option<&str>,
+    parts: Option<bool>,
+    note: Option<&str>,
+) -> Result<ok_sheet::Options, String> {
+    let mut opts = ok_sheet::Options {
+        sheet: ok_sheet::SheetSize::parse(sheet.unwrap_or(""))?,
+        parts: parts.unwrap_or(true),
+        note: note.unwrap_or("").to_string(),
+        ..ok_sheet::Options::default()
+    };
+    if let Some(v) = views {
+        opts.views = v
+            .split(',')
+            .map(|s| s.trim().to_lowercase())
+            .filter(|s| !s.is_empty())
+            .collect();
+        if opts.views.is_empty() {
+            return Err("views must name at least one of front, top, right, iso".into());
+        }
+    }
+    Ok(opts)
+}
+
+async fn export_pdf(
+    State(hub): State<DocHub>,
+    CurrentUser(user): CurrentUser,
+    Path(id): Path<String>,
+    axum::extract::Query(q): axum::extract::Query<PdfQuery>,
+) -> impl IntoResponse {
+    if let Err(code) = accessible(&hub, &id, user.as_ref()) {
+        return code.into_response();
+    }
+    let Some(json) = current_json(&hub, &id) else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let opts = match sheet_options(
+        q.views.as_deref(),
+        q.sheet.as_deref(),
+        q.parts,
+        q.note.as_deref(),
+    ) {
+        Ok(o) => o,
+        Err(e) => return (StatusCode::BAD_REQUEST, e).into_response(),
+    };
+    match tokio::task::spawn_blocking(move || pdf_of(&json, q.tab, &opts)).await {
+        Ok(Ok(bytes)) => (
+            [
+                (header::CONTENT_TYPE, "application/pdf".to_string()),
+                (
+                    header::CONTENT_DISPOSITION,
+                    format!("attachment; filename=\"{id}.pdf\""),
+                ),
+            ],
+            bytes,
         )
             .into_response(),
         Ok(Err(e)) => (StatusCode::BAD_REQUEST, e).into_response(),
@@ -1798,6 +1891,29 @@ mod tests {
             None,
         )
         .await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        // A shop drawing sheet as PDF: three views, the block's sizes in it.
+        let (status, headers, bytes) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/export/pdf?tab=1&views=front,top,right&sheet=a3&note=rev%20A"),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(headers[header::CONTENT_TYPE], "application/pdf");
+        assert!(bytes.starts_with(b"%PDF-1.4"));
+        let pdf = String::from_utf8_lossy(&bytes);
+        assert!(
+            pdf.contains("(10) Tj") && pdf.contains("(20) Tj") && pdf.contains("(5) Tj"),
+            "sizes"
+        );
+        assert!(
+            pdf.contains("(rev A \\267 offkilter) Tj"),
+            "the note in the title block"
+        );
+        assert!(pdf.contains("/MediaBox [0 0 1190.551 841.89]"), "A3");
+        let (status, _, _) =
+            call_bytes(&app, &format!("/api/docs/{id}/export/pdf?sheet=b5"), None).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
         // A rendered view of the tab, without a browser.
         let (status, headers, bytes) = call_bytes(

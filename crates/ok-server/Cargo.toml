@@ -7,6 +7,7 @@ description = "Document server for offkilter: storage, static web app, real-time
 
 [dependencies]
 ok-model = { workspace = true }
+ok-sheet = { workspace = true }
 ok-brep = { workspace = true }
 ok-step = { workspace = true }
 ok-math = { workspace = true }
