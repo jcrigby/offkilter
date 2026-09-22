@@ -2,7 +2,9 @@
 
 Open source parametric CAD (Onshape-like). Rust kernel compiled to wasm,
 TypeScript web client. Read `docs/ARCHITECTURE.md` before changing the
-kernel and `docs/ROADMAP.md` to see what is planned.
+kernel, `docs/ROADMAP.md` to see what is planned and what is next, and
+`docs/DECISIONS.md` before changing something that looks odd: it records
+why, and which alternative lost. Add to it when you make such a choice.
 
 ## Commands
 
