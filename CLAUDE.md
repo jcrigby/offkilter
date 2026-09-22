@@ -36,6 +36,14 @@ cd apps/web && npm ci && npx playwright install --with-deps chromium && cd ../..
 cargo build --release -p ok-mcp        # the MCP server .mcp.json points at
 ```
 
+Or skip the installs: `Dockerfile.dev` builds an image with all of the
+above pinned, and its header comment has the `docker run` line that
+mounts the checkout, the cargo cache and `~/.claude`.
+
+`.claude/settings.json` (checked in) allows the build, test and git
+commands above without prompting and installs a Stop hook that refuses
+to end a turn while the checkout has uncommitted or unpushed work.
+
 Node 22 and Python 3 are assumed. The MCP server in `.mcp.json` talks to
 a document server at `$OFFKILTER_URL` (default `http://localhost:8080`);
 start one with `cargo run -p ok-server -- --static apps/web/dist --data

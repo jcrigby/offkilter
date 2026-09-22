@@ -1,0 +1,49 @@
+# The development toolchain, pinned to what CI and the maintainers use:
+# Rust (the version rust-toolchain.toml names, with the wasm target),
+# wasm-bindgen-cli, Node 22 with Playwright's Chromium, Python 3 and
+# Claude Code. The repository is mounted, not copied, so builds and
+# edits land on the host. Nothing here serves the app; see Dockerfile.
+#
+#   docker build -f Dockerfile.dev -t offkilter-dev .
+#   docker run -it --rm \
+#     -v "$PWD":/work \
+#     -v offkilter-cargo:/usr/local/cargo/registry \
+#     -v offkilter-target:/work/target \
+#     -v "$HOME/.claude":/root/.claude \
+#     -p 8080:8080 -p 5173:5173 \
+#     offkilter-dev
+#
+# Inside: `claude` (mounting ~/.claude carries the login), or any of
+# the commands in CLAUDE.md. The cargo and target volumes keep builds
+# warm between runs; drop them to start clean.
+
+ARG RUST_VERSION=1.94.1
+FROM rust:${RUST_VERSION}-bookworm
+
+ARG WASM_BINDGEN_VERSION=0.2.128
+ARG PLAYWRIGHT_VERSION=1.63.0
+ARG CLAUDE_CODE_VERSION=latest
+
+# Node 22, Python 3 and the tools the scripts expect.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl gnupg jq python3 \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN rustup component add rustfmt clippy \
+    && rustup target add wasm32-unknown-unknown \
+    && cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked
+
+# Playwright's Chromium at the version apps/web pins, outside the mounted
+# tree so `npm ci` on the host never has to fetch it again.
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers \
+    PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+RUN npx --yes "playwright@${PLAYWRIGHT_VERSION}" install --with-deps chromium \
+    && rm -rf /root/.npm/_npx
+ENV PW_CHROMIUM=/opt/pw-browsers/chromium
+
+RUN npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+
+WORKDIR /work
+CMD ["bash"]

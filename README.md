@@ -136,6 +136,9 @@ three-way merge feature by feature; anything changed on both sides is
 reported and left alone. Press `?` for the keyboard shortcuts.
 
 Or with Docker: `docker build -t offkilter . && docker run -p 8080:8080 -v offkilter-data:/data offkilter`.
+For development, `Dockerfile.dev` is the pinned toolchain (Rust, wasm-bindgen,
+Node, Playwright's Chromium, Claude Code) with the checkout mounted; its
+header has the run line.
 
 ## Driving it from your phone
 
