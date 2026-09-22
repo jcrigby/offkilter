@@ -24,3 +24,48 @@ kernel and `docs/ROADMAP.md` to see what is planned.
 - Solids are only ever built through `ok_brep::Solid::from_polygons`, which
   validates closure. Never construct a `Solid` by hand or skip validation.
 - `apps/web/src/wasm/` is generated and git-ignored; never edit it.
+
+## Setting up a fresh machine
+
+`rust-toolchain.toml` pins the compiler and the wasm target; rustup
+installs both on the first `cargo` command. Everything else:
+
+```sh
+cargo install wasm-bindgen-cli --version 0.2.128 --locked   # must match crates/ok-wasm/Cargo.toml
+cd apps/web && npm ci && npx playwright install --with-deps chromium && cd ../..
+cargo build --release -p ok-mcp        # the MCP server .mcp.json points at
+```
+
+Node 22 and Python 3 are assumed. The MCP server in `.mcp.json` talks to
+a document server at `$OFFKILTER_URL` (default `http://localhost:8080`);
+start one with `cargo run -p ok-server -- --static apps/web/dist --data
+./data --port 8080` after `npm run build`, or run `ok-mcp --file
+<doc.okpart>` to work on a file without a server. The example builds
+(`python3 examples/*/build.py`) drive the release `ok-mcp` binary.
+
+## How work lands
+
+- One increment per branch off `main`, one pull request per branch,
+  merged once the three CI jobs (Kernel, Web, End-to-end) are green.
+  Commit messages say what changed and why, not which model wrote them.
+- Before pushing, run the whole chain, not just the tests that changed:
+  `cargo fmt --all && cargo clippy --workspace --all-targets -- -D warnings`,
+  `cargo test --workspace`, `./scripts/build-wasm.sh`, then in `apps/web`
+  `npm run typecheck && npm run build`, and the browser suite against a
+  debug server (`cargo build -p ok-server`, start it as above on port
+  8080, `PW_CHROMIUM=<chromium> npx playwright test`).
+- Kernel, wasm or MCP changes that alter what the examples produce mean
+  regenerating them: `cargo build --release -p ok-mcp`, then
+  `python3 examples/router-lift/build.py` and
+  `python3 examples/puzzle-top/build.py`. Their outputs under `out/` are
+  committed and the tests in `crates/ok-render/tests/` read them, so a
+  stale document fails CI. Look at the regenerated screenshots and PDFs;
+  the tests check numbers, not whether a drawing reads well.
+- New kernel behaviour gets a numeric test in its crate and, when an
+  example exercises it, an assertion in that example's regression test.
+- When an `Op`, a summary shape or the MCP tool surface changes, update
+  `apps/web/src/kernel.ts`, `docs/OPS.md` and `docs/MCP.md` in the same
+  change, and tick or add the line in `docs/ROADMAP.md`.
+- Sub-assemblies: a connector on a sub-assembly instance names its member
+  (`sub`); the client sets it from the picked body and scripts read the
+  member ids from the sub-assembly's own report.
