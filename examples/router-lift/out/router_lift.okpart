@@ -9205,19 +9205,19 @@
       "id": 26,
       "kind": {
         "type": "assembly",
-        "name": "Lift assembly",
+        "name": "Carriage assembly",
         "instances": [
           {
             "id": 27,
-            "name": "baseplate",
-            "studio": 11,
+            "name": "carriage",
+            "studio": 1,
             "body": 0,
             "fixed": true,
             "placement": {
               "position": {
                 "x": 0.0,
                 "y": 0.0,
-                "z": -19.0
+                "z": 0.0
               },
               "rotation": {
                 "x": 0.0,
@@ -9228,53 +9228,53 @@
           },
           {
             "id": 28,
-            "name": "left rail",
-            "studio": 12,
+            "name": "left upper block",
+            "studio": 21,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
-                "x": -136.0,
+                "x": -50.5,
                 "y": 0.0,
-                "z": -19.0
+                "z": 77.5
               },
               "rotation": {
                 "x": 0.0,
                 "y": 0.0,
-                "z": 0.0
+                "z": 180.0
               }
             }
           },
           {
             "id": 29,
-            "name": "right rail",
-            "studio": 12,
+            "name": "left lower block",
+            "studio": 21,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
-                "x": 136.0,
+                "x": -50.5,
                 "y": 0.0,
-                "z": -19.0
+                "z": 22.5
               },
               "rotation": {
                 "x": 0.0,
                 "y": 0.0,
-                "z": 0.0
+                "z": 180.0
               }
             }
           },
           {
             "id": 30,
-            "name": "top",
-            "studio": 10,
+            "name": "right upper block",
+            "studio": 21,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
-                "x": 0.0,
+                "x": 50.5,
                 "y": 0.0,
-                "z": 191.0
+                "z": 77.5
               },
               "rotation": {
                 "x": 0.0,
@@ -9285,15 +9285,15 @@
           },
           {
             "id": 31,
-            "name": "ring",
-            "studio": 4,
+            "name": "right lower block",
+            "studio": 21,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
-                "x": 0.0,
+                "x": 50.5,
                 "y": 0.0,
-                "z": 220.0
+                "z": 22.5
               },
               "rotation": {
                 "x": 0.0,
@@ -9304,158 +9304,6 @@
           },
           {
             "id": 32,
-            "name": "left shaft",
-            "studio": 15,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -75.5,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 33,
-            "name": "right shaft",
-            "studio": 15,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 75.5,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 34,
-            "name": "leadscrew",
-            "studio": 16,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 53.5,
-                "z": -29.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 35,
-            "name": "lower bearing",
-            "studio": 17,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 53.5,
-                "z": -7.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 36,
-            "name": "upper bearing",
-            "studio": 17,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 53.5,
-                "z": 191.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 37,
-            "name": "upper collar",
-            "studio": 18,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 53.5,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 38,
-            "name": "lower collar",
-            "studio": 18,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 53.5,
-                "z": -28.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 39,
-            "name": "carriage",
-            "studio": 1,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 45.5
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 40,
             "name": "T8 nut",
             "studio": 20,
             "body": 0,
@@ -9464,352 +9312,10 @@
               "position": {
                 "x": 0.0,
                 "y": 53.5,
-                "z": 130.0
+                "z": 84.5
               },
               "rotation": {
                 "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 41,
-            "name": "coupling nut",
-            "studio": 19,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 53.5,
-                "z": 231.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 42,
-            "name": "router",
-            "studio": 23,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 52.5
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 43,
-            "name": "rear rail",
-            "studio": 14,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 229.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 44,
-            "name": "arm",
-            "studio": 13,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 229.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 45,
-            "name": "left post",
-            "studio": 7,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -60.0,
-                "y": 70.0,
-                "z": 229.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 46,
-            "name": "right post",
-            "studio": 8,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 60.0,
-                "y": 70.0,
-                "z": 229.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 47,
-            "name": "chuck",
-            "studio": 9,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 279.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 48,
-            "name": "guide pin",
-            "studio": 25,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 234.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 49,
-            "name": "left lower block",
-            "studio": 21,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": -50.5,
-                "y": 0.0,
-                "z": 68.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 180.0
-              }
-            }
-          },
-          {
-            "id": 50,
-            "name": "left upper block",
-            "studio": 21,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": -50.5,
-                "y": 0.0,
-                "z": 123.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 180.0
-              }
-            }
-          },
-          {
-            "id": 51,
-            "name": "left lower support",
-            "studio": 22,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -126.5,
-                "y": 0.0,
-                "z": 10.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 52,
-            "name": "left upper support",
-            "studio": 22,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -126.5,
-                "y": 0.0,
-                "z": 181.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 53,
-            "name": "left dowel",
-            "studio": 24,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -60.0,
-                "y": 70.0,
-                "z": 324.0
-              },
-              "rotation": {
-                "x": 180.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 54,
-            "name": "right lower block",
-            "studio": 21,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 50.5,
-                "y": 0.0,
-                "z": 68.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 55,
-            "name": "right upper block",
-            "studio": 21,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 50.5,
-                "y": 0.0,
-                "z": 123.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 56,
-            "name": "right lower support",
-            "studio": 22,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 126.5,
-                "y": 0.0,
-                "z": 10.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 180.0
-              }
-            }
-          },
-          {
-            "id": 57,
-            "name": "right upper support",
-            "studio": 22,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 126.5,
-                "y": 0.0,
-                "z": 181.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 180.0
-              }
-            }
-          },
-          {
-            "id": 58,
-            "name": "right dowel",
-            "studio": 24,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 60.0,
-                "y": 70.0,
-                "z": 324.0
-              },
-              "rotation": {
-                "x": 180.0,
                 "y": 0.0,
                 "z": 0.0
               }
@@ -9818,77 +9324,15 @@
         ],
         "mates": [
           {
-            "id": 59,
-            "name": "carriage travel",
-            "kind": "slider",
-            "a": {
-              "instance": 32,
-              "face": {
-                "feature": 2,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  1013877695,
-                  1159760287,
-                  1468198494,
-                  2870100803,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 50,
-              "face": {
-                "feature": 4,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  322007710,
-                  3472011262,
-                  3646210877,
-                  4020363139,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": 27.499999999999915,
-            "angle": 180.0,
-            "flip": true
-          },
-          {
-            "id": 60,
-            "name": "carriage on left upper block",
+            "id": 65,
+            "name": "left upper block",
             "kind": "fastened",
             "a": {
-              "instance": 50,
-              "face": {
-                "feature": 6,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  573667395,
-                  1659127064,
-                  3422794399,
-                  3735147870,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 39,
+              "instance": 27,
               "face": {
                 "feature": 10,
                 "local": 2,
-                "part": 6,
+                "part": 2,
                 "near": [
                   774544575,
                   1170667870,
@@ -9901,16 +9345,34 @@
                 ]
               }
             },
+            "b": {
+              "instance": 28,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 2,
+                "near": [
+                  573667395,
+                  1659127064,
+                  3422794399,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
             "offset": -98.75970149253726,
             "angle": 180.0,
             "flip": false
           },
           {
-            "id": 61,
+            "id": 66,
             "name": "left lower block",
             "kind": "fastened",
             "a": {
-              "instance": 39,
+              "instance": 27,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -9928,7 +9390,7 @@
               }
             },
             "b": {
-              "instance": 49,
+              "instance": 29,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -9950,11 +9412,11 @@
             "flip": false
           },
           {
-            "id": 62,
+            "id": 67,
             "name": "right upper block",
             "kind": "fastened",
             "a": {
-              "instance": 39,
+              "instance": 27,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -9972,7 +9434,7 @@
               }
             },
             "b": {
-              "instance": 55,
+              "instance": 30,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -9994,11 +9456,11 @@
             "flip": true
           },
           {
-            "id": 63,
+            "id": 68,
             "name": "right lower block",
             "kind": "fastened",
             "a": {
-              "instance": 39,
+              "instance": 27,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -10016,7 +9478,7 @@
               }
             },
             "b": {
-              "instance": 54,
+              "instance": 31,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -10038,55 +9500,11 @@
             "flip": true
           },
           {
-            "id": 64,
-            "name": "router in clamp",
-            "kind": "fastened",
-            "a": {
-              "instance": 39,
-              "face": {
-                "feature": 2,
-                "local": 10,
-                "part": 0,
-                "near": [
-                  168648540,
-                  1013877695,
-                  1159760287,
-                  1570415525,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 42,
-              "face": {
-                "feature": 2,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  1013877695,
-                  1159760287,
-                  1468198494,
-                  2870100803,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": 19.999999999999854,
-            "angle": 0.0,
-            "flip": true
-          },
-          {
-            "id": 65,
+            "id": 69,
             "name": "nut in pocket",
             "kind": "fastened",
             "a": {
-              "instance": 39,
+              "instance": 27,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -10104,7 +9522,7 @@
               }
             },
             "b": {
-              "instance": 40,
+              "instance": 32,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -10127,7 +9545,679 @@
           }
         ]
       }
+    },
+    {
+      "id": 33,
+      "kind": {
+        "type": "assembly",
+        "name": "Leadscrew assembly",
+        "instances": [
+          {
+            "id": 34,
+            "name": "leadscrew",
+            "studio": 16,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 35,
+            "name": "lower bearing",
+            "studio": 17,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 22.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 36,
+            "name": "upper bearing",
+            "studio": 17,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 220.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 37,
+            "name": "upper collar",
+            "studio": 18,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 29.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 38,
+            "name": "lower collar",
+            "studio": 18,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 1.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 39,
+            "name": "coupling nut",
+            "studio": 19,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 260.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    },
+    {
+      "id": 40,
+      "kind": {
+        "type": "assembly",
+        "name": "Pin attachment",
+        "instances": [
+          {
+            "id": 41,
+            "name": "rear rail",
+            "studio": 14,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 42,
+            "name": "arm",
+            "studio": 13,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 43,
+            "name": "left post",
+            "studio": 7,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -60.0,
+                "y": 70.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 44,
+            "name": "right post",
+            "studio": 8,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 60.0,
+                "y": 70.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 45,
+            "name": "chuck",
+            "studio": 9,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 50.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 46,
+            "name": "guide pin",
+            "studio": 25,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 5.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 47,
+            "name": "left dowel",
+            "studio": 24,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -60.0,
+                "y": 70.0,
+                "z": 95.0
+              },
+              "rotation": {
+                "x": 180.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 48,
+            "name": "right dowel",
+            "studio": 24,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 60.0,
+                "y": 70.0,
+                "z": 95.0
+              },
+              "rotation": {
+                "x": 180.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    },
+    {
+      "id": 49,
+      "kind": {
+        "type": "assembly",
+        "name": "Lift assembly",
+        "instances": [
+          {
+            "id": 50,
+            "name": "baseplate",
+            "studio": 11,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -19.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 51,
+            "name": "left rail",
+            "studio": 12,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -136.0,
+                "y": 0.0,
+                "z": -19.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 52,
+            "name": "right rail",
+            "studio": 12,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 136.0,
+                "y": 0.0,
+                "z": -19.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 53,
+            "name": "top",
+            "studio": 10,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 191.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 54,
+            "name": "ring",
+            "studio": 4,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 220.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 55,
+            "name": "left shaft",
+            "studio": 15,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -75.5,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 56,
+            "name": "right shaft",
+            "studio": 15,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 75.5,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 57,
+            "name": "Leadscrew assembly",
+            "studio": 33,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 53.5,
+                "z": -29.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 58,
+            "name": "Carriage assembly",
+            "studio": 26,
+            "body": 0,
+            "fixed": false,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 45.5
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 59,
+            "name": "router",
+            "studio": 23,
+            "body": 0,
+            "fixed": false,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 52.5
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 60,
+            "name": "Pin attachment",
+            "studio": 40,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 229.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 61,
+            "name": "left lower support",
+            "studio": 22,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -126.5,
+                "y": 0.0,
+                "z": 10.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 62,
+            "name": "left upper support",
+            "studio": 22,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -126.5,
+                "y": 0.0,
+                "z": 181.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 63,
+            "name": "right lower support",
+            "studio": 22,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 126.5,
+                "y": 0.0,
+                "z": 10.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 180.0
+              }
+            }
+          },
+          {
+            "id": 64,
+            "name": "right upper support",
+            "studio": 22,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 126.5,
+                "y": 0.0,
+                "z": 181.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 180.0
+              }
+            }
+          }
+        ],
+        "mates": [
+          {
+            "id": 70,
+            "name": "carriage travel",
+            "kind": "slider",
+            "a": {
+              "instance": 55,
+              "face": {
+                "feature": 2,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1159760287,
+                  1468198494,
+                  2870100803,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 58,
+              "sub": 28,
+              "face": {
+                "feature": 4,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  322007710,
+                  3472011262,
+                  3646210877,
+                  4020363139,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 27.499999999999915,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 71,
+            "name": "router in clamp",
+            "kind": "fastened",
+            "a": {
+              "instance": 58,
+              "sub": 27,
+              "face": {
+                "feature": 2,
+                "local": 10,
+                "part": 0,
+                "near": [
+                  168648540,
+                  1013877695,
+                  1159760287,
+                  1570415525,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 59,
+              "face": {
+                "feature": 2,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1159760287,
+                  1468198494,
+                  2870100803,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 19.999999999999854,
+            "angle": 0.0,
+            "flip": true
+          }
+        ]
+      }
     }
   ],
-  "next_id": 66
+  "next_id": 72
 }

@@ -71,7 +71,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Multiple part studios per document; assemblies with fastened / revolute / slider / cylindrical mates resolved as chains from fixed instances
 - [x] Interference check between placed instances (boolean intersection, on demand)
 - [x] Numeric mate solver: closed loops and redundant mates solved over the free degrees of freedom of revolute, slider and cylindrical mates
-- [x] Planar and ball mates; sub-assemblies (an assembly tab inserted as one rigid group, cycles refused); mate frames drawn in the viewer
+- [x] Planar and ball mates; sub-assemblies (an assembly tab inserted as one rigid group, cycles refused; a connector names the member its face is on); mate frames drawn in the viewer
 - [x] Explode view slider (display only) and dragging free instances in the viewport (one undo step per drag)
 - [x] Mate connectors on edges and vertices
 - [x] Mate animation (display-only sweep of a revolute, cylindrical or slider mate)
@@ -90,7 +90,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Import: DXF lines, circles, arcs and polylines (with bulges) into a sketch, endpoints tied by coincident constraints
 - [x] Import: STEP via a B-rep reader (`ok-step::read_step`): solids of a Part 21 file walked from `MANIFOLD_SOLID_BREP` down to points, edges on lines, circles and B-splines sampled once and shared, faces on planes and cylinders triangulated in their own parameters (cylinders in facet-wide strips), lengths scaled to millimetres; other surfaces are refused by name. Imported as mesh bodies from the client's Import button, the `ok-mcp` `import` tool (which also reads STL and OBJ) and `parse_step` in the wasm API
 - [x] Documents list with previews, a name filter and sort order
-- [x] Shop drawing sheets from the kernel (`ok-sheet`): third-angle views at a standard scale, overall dimensions, diameter callouts, balloons and a parts list, title block, written as vector PDF; from the MCP `export` tool, the server's `/export/pdf` and the drawing dialog
+- [x] Shop drawing sheets from the kernel (`ok-sheet`): third-angle views at a standard scale, overall dimensions, diameter callouts, balloons and a parts list (a sub-assembly instance one item, with its own sheet from its own tab; hidden lines off on multi-part sheets), title block, written as vector PDF; from the MCP `export` tool, the server's `/export/pdf` and the drawing dialog
 - [x] Language-model access: `ok-mcp` (MCP over stdio) with apply / report / screenshot / export (STL, STEP, DXF views, PDF sheets) tools against a running server or a local file; `POST /api/docs/:id/ops` and `GET /api/docs/:id/report` for scripts
 - [x] Screenshot tool for models: `ok-render` rasterises a tab's tessellation headlessly (orthographic standard views or any direction, optional section with hatched caps, edges and silhouettes, axis triad); served at `GET /api/docs/:id/screenshot` and returned as image content by the `ok-mcp` `screenshot` tool
 - [x] Incremental boolean assembly: faces whose box stays clear of the other solid pass through with their vertex ids, only fragments are welded, the classification sections the other solid locally around each face (chains closed along a rectangle, a ray probe for uniform faces) instead of cutting the whole solid per face, and solids that share no face box skip the boolean (apart, or one inside the other); a 24-hole plate with bosses regenerates in about 70 ms and the shelled cover in about 250 ms, from 145 and 760 ms

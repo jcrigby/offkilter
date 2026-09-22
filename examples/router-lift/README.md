@@ -7,18 +7,24 @@ drives the `ok-mcp` server exactly as a language model would.
 
 - `build.py`: the build. Speaks JSON-RPC to `ok-mcp --file` over stdio,
   makes one part studio per part (sketches, extrudes, holes, revolves,
-  slots) and an assembly of 32 instances, 25 fixed and 7 hung off one
-  slider mate (the carriage on its shafts), reads each part back through
-  `report`, pictures it through `screenshot` and exports the printed
-  parts through `export`.
+  slots), three sub-assemblies (the carriage with its blocks and nut,
+  the leadscrew with its bearings and collars, the pin attachment) and
+  the lift assembly placing them and the loose parts, 32 bodies in all,
+  with the carriage assembly and the router hung off one slider mate
+  (a block's bore on its shaft); reads each part back through `report`,
+  pictures it through `screenshot` and exports the printed parts
+  through `export`.
 - `out/router_lift.okpart`: the document the script writes; open it in
   the web app (Docs, Open file) or point `ok-mcp --file` at it.
 - `out/*.png`: the script's screenshots (the assembly, a section along
   the leadscrew at mid travel and with the carriage raised, every part).
-- `out/assembly.pdf`, `out/carriage.pdf`: shop drawing sheets from
-  `export {format: "pdf"}`: third-angle views at a standard scale, the
-  overall sizes, the carriage's holes called out, and on the assembly
-  sheet a balloon per part and the parts list.
+- `out/assembly.pdf`, `out/carriage_assembly.pdf`,
+  `out/leadscrew_assembly.pdf`, `out/pin_attachment.pdf`,
+  `out/carriage.pdf`: shop drawing sheets from `export {format: "pdf"}`:
+  third-angle views at a standard scale with the overall sizes; the
+  lift's sheet has a balloon per item and the parts list, where each
+  sub-assembly is one item with its own sheet listing its parts, and
+  the carriage's sheet has its holes called out.
 - `reference/`: the OpenSCAD sources (rev C), the reference STLs they
   produced for the printed parts, and the arm template DXF.
 - `build-instructions.md`: the shop instructions the project came with.

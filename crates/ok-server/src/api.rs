@@ -743,6 +743,8 @@ struct PdfQuery {
     parts: Option<bool>,
     /// A second line for the title block (a date, an author).
     note: Option<String>,
+    /// Hidden lines dashed; by default on for one part, off for several.
+    hidden: Option<bool>,
 }
 
 /// A shop drawing sheet of a tab as a PDF.
@@ -765,11 +767,13 @@ fn sheet_options(
     sheet: Option<&str>,
     parts: Option<bool>,
     note: Option<&str>,
+    hidden: Option<bool>,
 ) -> Result<ok_sheet::Options, String> {
     let mut opts = ok_sheet::Options {
         sheet: ok_sheet::SheetSize::parse(sheet.unwrap_or(""))?,
         parts: parts.unwrap_or(true),
         note: note.unwrap_or("").to_string(),
+        hidden,
         ..ok_sheet::Options::default()
     };
     if let Some(v) = views {
@@ -802,6 +806,7 @@ async fn export_pdf(
         q.sheet.as_deref(),
         q.parts,
         q.note.as_deref(),
+        q.hidden,
     ) {
         Ok(o) => o,
         Err(e) => return (StatusCode::BAD_REQUEST, e).into_response(),

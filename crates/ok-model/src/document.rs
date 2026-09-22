@@ -855,6 +855,7 @@ impl Document {
             }
         }
         let mut solids: BTreeMap<InstanceId, Vec<ok_brep::Solid>> = BTreeMap::new();
+        let mut members: BTreeMap<InstanceId, Vec<crate::assembly::Member>> = BTreeMap::new();
         for inst in &asm.instances {
             if let Some(b) = studios
                 .get(&inst.studio)
@@ -864,10 +865,18 @@ impl Document {
             } else if let Some(r) = subs.get(&inst.studio) {
                 if !r.bodies.is_empty() {
                     solids.insert(inst.id, r.bodies.iter().map(|b| b.solid.clone()).collect());
+                    members.insert(
+                        inst.id,
+                        r.placed
+                            .iter()
+                            .zip(&r.bodies)
+                            .map(|(id, b)| (*id, b.name.clone()))
+                            .collect(),
+                    );
                 }
             }
         }
-        Ok(asm.resolve(&solids))
+        Ok(asm.resolve_groups(&solids, &members))
     }
 }
 
@@ -1047,6 +1056,7 @@ mod tests {
                 op: AssemblyOp::AddMate {
                     kind: MateKind::Fastened,
                     a: Connector {
+                        sub: None,
                         instance: a,
                         face: FaceRef {
                             feature: e,
@@ -1057,6 +1067,7 @@ mod tests {
                         anchor: crate::Anchor::Face,
                     },
                     b: Connector {
+                        sub: None,
                         instance: b,
                         face: FaceRef {
                             feature: e,
@@ -1183,6 +1194,7 @@ mod tests {
                 op: AssemblyOp::AddMate {
                     kind: MateKind::Fastened,
                     a: Connector {
+                        sub: None,
                         instance: a,
                         face: FaceRef {
                             feature: e,
@@ -1193,6 +1205,7 @@ mod tests {
                         anchor: crate::Anchor::Face,
                     },
                     b: Connector {
+                        sub: None,
                         instance: b,
                         face: FaceRef {
                             feature: e,

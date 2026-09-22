@@ -40,7 +40,8 @@ move as one rigid group (an assembly that would contain itself gets no
 bodies and an error on that instance). It carries a `Placement`
 (position and Euler rotation) used when nothing mates it. A `Mate` joins two instances
 through `Connector`s, each a face reference on an instance's body (for a
-sub-assembly instance, the first of its bodies that has the face) plus an
+sub-assembly instance, on the member instance the connector's `sub` names,
+else the first of its bodies that has the face) plus an
 `Anchor` saying where on that face the connector sits. On the face
 itself the frame has its origin at the face's area-weighted centroid
 (over every facet of the surface for a curved face, projected onto the

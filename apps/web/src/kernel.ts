@@ -169,7 +169,8 @@ export type MateKind = "fastened" | "revolute" | "slider" | "cylindrical" | "pla
 /** A face of an instance's body, used as a mate connector. */
 /** Where a connector sits on its face: the face, the edge shared with `other`, or the corner shared with both `others`. */
 export type Anchor = { type: "face" } | { type: "edge"; other: FaceRef } | { type: "vertex"; others: [FaceRef, FaceRef] };
-export type Connector = { instance: number; face: FaceRef; anchor?: Anchor };
+/** `sub` names the instance inside a sub-assembly instance that holds the face. */
+export type Connector = { instance: number; sub?: number; face: FaceRef; anchor?: Anchor };
 export type Transform = { m: number[][]; t: Vec3 };
 export type InstanceSummary = {
   id: number;
@@ -180,6 +181,8 @@ export type InstanceSummary = {
   placement: Placement;
   /** Indices into `bodies` of the instance's placed bodies (empty if unresolved). */
   body_indices: number[];
+  /** For a sub-assembly instance, the instance inside it behind each entry of `body_indices` (null for a part's body). */
+  members: (number | null)[];
   transform: Transform | null;
   error: string | null;
 };

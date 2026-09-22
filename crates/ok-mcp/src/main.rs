@@ -1034,6 +1034,7 @@ impl Server {
                         .and_then(|n| n.as_str())
                         .unwrap_or("")
                         .to_string(),
+                    hidden: args.get("hidden").and_then(|h| h.as_bool()),
                     ..ok_sheet::Options::default()
                 };
                 match args.get("views") {
@@ -1331,7 +1332,7 @@ fn tool_list() -> Value {
         },
         {
             "name": "export",
-            "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF: a shop drawing sheet with the `views` (front, top, right, iso by default) laid out third angle on `sheet` (A4 by default; A3, A2, Letter) at the largest standard scale that fits, hidden lines dashed, overall dimensions, diameter callouts for holes seen end-on, and for an assembly a balloon per part and a parts list (`parts: false` to leave them off), `note` on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
+            "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF: a shop drawing sheet with the `views` (front, top, right, iso by default) laid out third angle on `sheet` (A4 by default; A3, A2, Letter) at the largest standard scale that fits, overall dimensions, and on a sheet of one part hidden lines dashed and diameter callouts for holes seen end-on; on an assembly a balloon per item and a parts list (`parts: false` to leave them off), where a sub-assembly instance is one item with its own sheet on its own tab; `hidden` forces hidden lines on or off; `note` goes on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf", "pdf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" }, "views": { "type": "array", "items": { "type": "string" } }, "sheet": { "type": "string" }, "parts": { "type": "boolean" }, "note": { "type": "string" } }, "required": ["format", "path"] }
         },
         {
