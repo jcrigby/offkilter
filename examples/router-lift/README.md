@@ -71,6 +71,7 @@ its nut trap). What it measures, at lift rev C and arm rev D:
 | Guide pin on the bit axis, level | 0.0000 mm |
 | Pin tip above the table, level | 6.0 mm (adjustable 1 to −24) |
 | Arm underside above the table at the nose | 76.0 mm |
+| Crank nut under the table surface | 1.0 mm, with 11 mm of ply above the bearing pocket |
 | Arm swept 0 to 80 degrees | clear of the table and the supports |
 | Tail meets the table | at 85 degrees (3740 mm³ into the top) |
 
@@ -84,14 +85,23 @@ And what it found that the SCAD did not:
 - **The guide pin runs 5 mm into the nose** as drawn (75 mm long, 45 mm
   out of the chuck, nose underside at 76 mm). A clearance hole over the
   bit axis, or less pin out, fixes it.
-- **Stock depth behind the bit is 45 mm, not 145.** The leadscrew's
-  coupling nut stands 31 mm proud of the table 45 to 62 mm behind the
-  bit. Without it the SK20 bases set the limit at 140 mm, 30 mm forward
-  of the pivot line.
+- **Stock depth behind the bit is 140 mm, not 145.** The SK20 bases
+  start 30 mm forward of the pivot line. (The leadscrew's coupling nut
+  stood 31 mm proud of the table 45 mm behind the bit in the SCAD; the
+  model recesses it, below.)
 - **The bit tip is 2 mm below the table at max rise** with the ghost
   router's guessed collet and bit lengths; measure the real router.
 - **The drawings' BOM says two guide pins; the model places one.** Every
   other modelled line matches.
+
+## Where the model departs from the SCAD
+
+- **The crank nut is recessed**, as commercial lifts do it: a 22 mm
+  pocket (the 608 bearing's Forstner bit) 20 mm deep in the top around
+  the leadscrew, the coupling nut cut to 19 mm so its top sits 1 mm
+  under the surface, the leadscrew cut to 257 so it ends there. That
+  leaves 11 mm of ply between the pocket and the upper bearing's, and
+  nothing stands on the table behind the bit until the pivot supports.
 
 For a closer look at any part, `compare_stl` booleans the kernel's part
 against the mesh both ways and lists the lumps of material each has that
