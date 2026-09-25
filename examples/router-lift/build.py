@@ -386,6 +386,12 @@ def chuck(p):
 # ---------------------------------------------------------------------
 TOP_W, TOP_D, TOP_T, TOP_Y_OFF = 400.0, 380.0, 38.0, 50.0
 LS_D, BRG_OD, BRG_T = 8.0, 22.0, 7.0
+# The crank nut recessed into the top, as commercial lifts do: a 22 mm
+# pocket (the bearing Forstner bit) 20 mm deep leaves 11 mm of ply above
+# the upper bearing pocket; the coupling nut is cut to 19 so its top sits
+# a millimetre under the surface. A departure from the SCAD, which has
+# the full nut 31 mm proud of the table.
+CRANK_RECESS_D, CRANK_RECESS_DEPTH, CRANK_NUT_L = 22.0, 20.0, 19.0
 PLY_T, RAIL_T, BASE_DP, BASE_Y0 = 19.0, 19.0, 145.0, -60.0
 SK_T, SK_H, SK_HOLE, SK_W, SK_HTOT = 20.0, 51.0, 42.0, 60.0, 70.0
 SHAFT_D, TRAVEL = 20.0, 45.0
@@ -417,7 +423,7 @@ def top(p):
     p.hole(s, OPEN_D, counterbore={"diameter": DISC_D + 0.4, "depth": RABBET_D}, name="opening + rabbet")
     s = p.sketch("top", TOP_T, "leadscrew")
     p.point(s, (0.0, LS_Y))
-    p.hole(s, LS_D + 4, name="leadscrew hole")
+    p.hole(s, LS_D + 4, counterbore={"diameter": CRANK_RECESS_D, "depth": CRANK_RECESS_DEPTH}, name="leadscrew hole + crank recess")
     s = p.sketch("top", 0.0, "bearing pocket")
     p.point(s, (0.0, LS_Y))
     p.hole(s, BRG_OD, depth=BRG_T, direction="normal", name="608 pocket")
@@ -494,7 +500,8 @@ def shaft(p):
 
 
 def leadscrew(p):
-    cylinder(p, LS_D, 286.0, "T8 leadscrew")
+    # From the lower collar under the baseplate to the crank nut's top.
+    cylinder(p, LS_D, TABLE - 1.0 - LS_Z0, "T8 leadscrew")
 
 
 def bearing_608(p):
@@ -509,7 +516,7 @@ def coupling_nut(p):
     s = p.sketch("top", 0.0, "hex")
     p.hexagon(s, (0.0, 0.0), 14.3 / math.cos(math.radians(30)) / 2)
     p.circle(s, (0.0, 0.0), (LS_D + 0.5) / 2)
-    p.extrude(s, 28.6, profiles="largest", name="coupling nut")
+    p.extrude(s, CRANK_NUT_L, profiles="largest", name="coupling nut")
 
 
 def t8_nut(p):
@@ -645,7 +652,7 @@ def instances():
         at("Collar", "lower collar", 0, LS_Y, -PLY_T - 9.0),
         at("Carriage", "carriage", 0, 0, Z_CAR),
         at("T8 nut", "T8 nut", 0, LS_Y, Z_CAR + CAR_H - NUT_FLANGE_T - 12.0),
-        at("Coupling nut", "coupling nut", 0, LS_Y, TABLE + 2),
+        at("Coupling nut", "coupling nut", 0, LS_Y, TABLE - 1.0 - CRANK_NUT_L),
         at("Router", "router", 0, 0, Z_CAR + CAR_H / 2 - CLAMP_H / 2 - 10),
         # The pin arm: SK20s base down with the bore along X (the studio's
         # base normal -X turned to -Z), blocks base up under the tail (the

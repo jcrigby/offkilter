@@ -4462,7 +4462,7 @@
           },
           {
             "id": 6,
-            "name": "leadscrew hole",
+            "name": "leadscrew hole + crank recess",
             "suppressed": false,
             "kind": {
               "type": "hole",
@@ -4471,7 +4471,10 @@
               "depth": 0.0,
               "through_all": true,
               "direction": "reverse",
-              "counterbore": null,
+              "counterbore": {
+                "diameter": 22.0,
+                "depth": 20.0
+              },
               "countersink": null
             }
           },
@@ -5805,7 +5808,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 286.0,
+              "depth": 257.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -6248,7 +6251,7 @@
               "profiles": {
                 "type": "largest"
               },
-              "depth": 28.6,
+              "depth": 19.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -8494,7 +8497,7 @@
               "position": {
                 "x": 0.0,
                 "y": 0.0,
-                "z": 260.0
+                "z": 238.0
               },
               "rotation": {
                 "x": 0.0,

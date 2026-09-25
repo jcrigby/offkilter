@@ -107,3 +107,14 @@ nose, and the crank nut stands in the stock envelope. The lift's SK20
 and SC20UU studios serve the pivot too, rotated into new poses, rather
 than duplicate parts.
 
+## 2026-09 · The model may depart from the SCAD when the shop asks
+
+The SCAD is the design of record and the checks report what it missed
+rather than fix it silently. When the maintainer decides a finding is a
+change to make, the model makes it and the example README lists it
+under "Where the model departs from the SCAD", so the two stay
+reconcilable. First case: the crank nut, 31 mm proud of the table in
+the SCAD and in the stock envelope, is recessed into the top the way
+commercial lifts do it, with the ply left above the bearing pocket
+checked (11 mm) rather than assumed.
+

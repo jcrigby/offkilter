@@ -265,6 +265,55 @@ fn the_lift_holds_its_clearances_over_the_travel() {
                 "bit tip at max rise",
                 format!("{:.1} mm above the table surface", bit_tip - table),
             );
+            // The crank nut sits in a recess in the top, its top under the
+            // surface, with ply left between the recess floor and the
+            // upper bearing pocket.
+            let nut_top = bounds(body(&r, "Leadscrew assembly / coupling nut")).1.z;
+            rep.must(
+                nut_top <= table - 0.5,
+                "crank nut recessed under the table surface",
+                format!("top {:.1} mm below the surface", table - nut_top),
+            );
+            let top = body(&r, "top");
+            let nut = body(&r, "Leadscrew assembly / coupling nut")
+                .centroid()
+                .unwrap();
+            // Horizontal faces of the top around the leadscrew axis, by the
+            // height of their own vertices (a plane's origin can be
+            // anywhere on the plane).
+            let level = |f: &ok_brep::Face| -> Option<f64> {
+                let vs: Vec<Vec3> = f.loops[0]
+                    .iter()
+                    .map(|&k| top.vertices[k as usize])
+                    .collect();
+                let near = vs
+                    .iter()
+                    .all(|v| ((v.x - nut.x).powi(2) + (v.y - nut.y).powi(2)).sqrt() < 12.0);
+                near.then(|| vs[0].z)
+            };
+            let floor = top
+                .faces
+                .iter()
+                .filter(|f| f.plane.normal.z > 0.999)
+                .filter_map(level)
+                .filter(|z| *z < table - 1.0)
+                .fold(f64::NEG_INFINITY, f64::max);
+            let pocket = top
+                .faces
+                .iter()
+                .filter(|f| f.plane.normal.z < -0.999)
+                .filter_map(level)
+                .filter(|z| *z > top_under + 1.0)
+                .fold(f64::NEG_INFINITY, f64::max);
+            rep.must(
+                floor - pocket >= 8.0,
+                "ply between the crank recess and the bearing pocket",
+                format!(
+                    "{:.1} mm (recess {:.0} deep)",
+                    floor - pocket,
+                    table - floor
+                ),
+            );
         }
         if label == "min" {
             let sk20_top = bounds(body(&r, "left lower support")).1.z;
