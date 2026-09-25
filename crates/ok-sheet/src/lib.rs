@@ -8,7 +8,7 @@
 //! The layout matches the web client's drawing dialog, so a sheet asked
 //! for from a script or a model looks like the one a person downloads.
 
-mod pdf;
+pub mod pdf;
 
 use ok_brep::{project_view, Solid, Surface, View, ViewArc, ViewLines};
 use ok_math::{Vec2, Vec3};

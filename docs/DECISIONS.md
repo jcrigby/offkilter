@@ -118,3 +118,23 @@ the SCAD and in the stock envelope, is recessed into the top the way
 commercial lifts do it, with the ply left above the bearing pocket
 checked (11 mm) rather than assumed.
 
+## 2026-09 · Measuring from a photograph is a printed sheet and four marks, not a ruler in the frame
+
+Some parts of a shop project exist before the model does: a router
+clamp, a bearing, an odd bracket. The first idea was to photograph them
+next to a ruler; it was rejected because a ruler gives one scale along
+one line and nothing about the camera's tilt. A printed sheet with four
+bullseye marks at known spacing gives a homography instead, so a phone
+photo taken roughly from above is squared up onto the sheet's
+millimetres, and the grid on the sheet is only for people. The marks are
+concentric rings rather than squares or QR codes because nested
+components are found with a threshold and a connected-components pass,
+which keeps `ok-photo` dependency-free apart from a JPEG decoder, and
+the origin mark carries one extra ring so the corners come back in a
+known order. The result is deliberately modest: top-face silhouettes,
+good to a fraction of a millimetre on flat things, with a stated
+parallax caveat. Its job is to give a first sketch and a picture to
+point at, so the next question is "what is the hole at (65, 55) with
+calipers", not "describe the part". The crate has no server route or
+client yet: the tool exists for the MCP session that was asking for
+measurements.
