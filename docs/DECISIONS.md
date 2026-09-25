@@ -184,5 +184,10 @@ code path. Two lessons from the synthetic tests are in the code: index
 ticks from their neighbours, not from a rough pitch that drifts a whole
 tick over a long rule, and cluster ticks by their ends rather than
 sliding a window over them, since a window over tied ends takes an
-arbitrary subset and the gaps look uneven.
-
+arbitrary subset and the gaps look uneven. A third came from the
+phone-photo test: a tilted picture is foreshortened one way, so the
+rule's pitch, read along the rule, is compared with the marks' scale
+along the rule's direction at that spot, not with an average of the x
+and y scales, which was 3 % out on a picture squashed 5 % one way.
+The rule does read in a phone picture that fills the frame with the
+sheet; the assumption that only a scan resolves the ticks was wrong.

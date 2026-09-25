@@ -71,10 +71,13 @@ the sheet can, and `reference` names it.
   the ticks, groups the ones whose bases share an edge, and fits their
   positions against their count, so a 150 mm rule gives the scale to
   about a tenth of a percent. An inch edge on the other side is told
-  apart by its pitch. This needs the ticks resolved, which a flatbed
-  scan does and a phone photo at arm's length usually does not (the
-  tool says "no rule read" rather than guess); for a phone photo use
-  the bars below.
+  apart by its pitch. The ticks have to be resolved: a phone picture
+  in which the sheet fills the frame does that (12 megapixels over a
+  Letter sheet is 0.07 mm per pixel, the same as a 300 dpi scan, and
+  the synthetic test of exactly that reads a 96 % print as 96 %); a
+  picture taken from across the room does not, and the tool says "no
+  rule read" rather than guess. A scan works too, without the sheet
+  (below).
 - **A forensic photo scale**, `reference: "bars 10"`. The ABFO No. 2
   photomacrographic scale is the standard: a rigid L, 105 mm a side,
   millimetre graduations accurate to 0.1 mm, and alternating 1 cm black
