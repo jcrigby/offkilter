@@ -8,18 +8,21 @@ drives the `ok-mcp` server exactly as a language model would.
 - `build.py`: the build. Speaks JSON-RPC to `ok-mcp --file` over stdio,
   makes one part studio per part (sketches, extrudes, holes, revolves,
   slots), three sub-assemblies (the carriage with its blocks and nut,
-  the leadscrew with its bearings and collars, the pin attachment) and
-  the lift assembly placing them and the loose parts, 32 bodies in all,
-  with the carriage assembly and the router hung off one slider mate
-  (a block's bore on its shaft); reads each part back through `report`,
-  pictures it through `screenshot` and exports the printed parts
-  through `export`.
+  the leadscrew with its bearings and collars, the arm with its chuck,
+  guide pin and dowels) and the lift assembly placing them and the
+  loose parts, 33 bodies in all, with the carriage assembly and the
+  router hung off one slider mate (a block's bore on its shaft) and the
+  arm assembly on a revolute about the piano hinge's knuckle; reads
+  each part back through `report`, pictures it through `screenshot`,
+  exports the printed parts through `export`, and checks the bill of
+  materials against the two shop drawings' BOM tables
+  (`reference/bom_*.csv`).
 - `out/router_lift.okpart`: the document the script writes; open it in
   the web app (Docs, Open file) or point `ok-mcp --file` at it.
 - `out/*.png`: the script's screenshots (the assembly, a section along
   the leadscrew at mid travel and with the carriage raised, every part).
 - `out/assembly.pdf`, `out/carriage_assembly.pdf`,
-  `out/leadscrew_assembly.pdf`, `out/pin_attachment.pdf`,
+  `out/leadscrew_assembly.pdf`, `out/arm_assembly.pdf`,
   `out/carriage.pdf`: shop drawing sheets from `export {format: "pdf"}`:
   third-angle views at a standard scale with the overall sizes; the
   lift's sheet has a balloon per item and the parts list, where each
@@ -32,7 +35,8 @@ drives the `ok-mcp` server exactly as a language model would.
 ```sh
 cargo build --release -p ok-mcp
 python3 examples/router-lift/build.py
-cargo test -p ok-render --test router_lift     # what CI runs
+cargo test -p ok-render --test router_lift --test router_lift_limits   # what CI runs
+cargo test -p ok-render --test router_lift_limits -- --nocapture       # with every number
 ```
 
 The test regenerates every tab of the committed document, requires every
@@ -42,6 +46,47 @@ compares each printed part with its reference mesh: volume within half a
 percent and extents within 0.2 mm. On the branch this landed on, the
 printed parts match to 0.02 percent or better; what remains is the
 facet count (the kernel's 5° facets against OpenSCAD's `$fn = 96`).
+
+## Mechanism at its limits
+
+`router_lift_limits.rs` is the definition of done from the design
+brief: the carriage swept to the ends of its travel and the arm on its
+hinge, with every clearance and alignment measured and every pair of
+placed bodies checked for interference at each position, plus the
+carriage's own features (the bore stays whole, every bolt hole reaches
+its nut trap). What it measures, at rev C:
+
+| Check | Result |
+|---|---|
+| Interference, carriage at min / mid / max, 528 pairs | none, apart from the hinge knuckle let into the rail's corner (1226 mm³, as the SCAD draws it) |
+| Carriage bottom to the lower SK20 at min | 3.00 mm |
+| Carriage top to the top's underside at max | 23.00 mm |
+| Leadscrew parallel to each shaft over the travel | 0.0000 mm |
+| Router through the 74 mm opening at max rise | 4.50 mm radial clearance |
+| Carriage volume against the SCAD mesh | +0.02 % |
+| Nut traps and the router bore | 5.7 mm of wall, bore one clean piece |
+| Block bolt holes reaching their traps | 16 of 16 |
+| Guide pin on the bit axis, level | 0.0000 mm |
+| Arm underside above the table at the nose | 75.0 mm |
+
+And what it found that the SCAD did not:
+
+- **The rev C hinge cannot swing.** The knuckle is on the rail's front
+  top corner and the arm lies over the rail, so lifting the nose turns
+  the tail down into the rail: 39 cm³ of overlap at 5°. The hinge line
+  belongs at the rail's back corner, or the arm should end at the hinge.
+  Rev D replaces the hinge with a shaft pivot.
+- **The guide pin runs 5 mm into the nose** as drawn (75 mm long, tip 5
+  mm above the table, nose underside at 75 mm). A clearance hole over
+  the bit axis, or the pin set lower, fixes it.
+- **The leadscrew's coupling nut stands 31 mm proud of the table**, 45
+  to 62 mm behind the bit, inside the space a template would use. The
+  registration posts stand there too (0 to 75 mm tall, 50 to 90 mm
+  behind the bit).
+- **The bit tip is 2 mm below the table at max rise** with the ghost
+  router's guessed collet and bit lengths; measure the real router.
+- **The drawings' BOM says two guide pins; the model places one.** Every
+  other modelled line matches.
 
 For a closer look at any part, `compare_stl` booleans the kernel's part
 against the mesh both ways and lists the lumps of material each has that

@@ -86,3 +86,21 @@ permission allowlist and the Stop hook that refuses to end a turn with
 uncommitted or unpushed work; `Dockerfile.dev` pins the toolchain. This
 file carries the reasoning. A raw transcript was not kept: it is mostly
 build output and CI waits.
+
+## 2026-09 · The router lift is verified at its limits, and the SCAD is not the last word
+
+A design brief asked for the lift and the pin arm to be checked as
+mechanisms: the carriage swept over its travel, the arm over its hinge,
+clearances and alignment measured, every pair of placed bodies checked
+for interference at each position. That lives in a test
+(`crates/ok-render/tests/router_lift_limits.rs`) rather than the build
+script, so the measurements run in CI and print with `--nocapture`.
+Overlaps the SCAD draws deliberately (a knuckle let into a corner, press
+fits) are listed with their reason and reported, not hidden; a genuine
+flaw is reported as a finding and left in the model, because the SCAD
+is the design of record and the point of the check is to show what it
+missed. The first run found three: the rev C hinge binds at 5 degrees,
+the guide pin runs into the nose, and the crank nut stands in the stock
+envelope. The brief's rev D arm (shaft pivot in SK20s) was not
+available; its checks are written against rev C and will move over.
+

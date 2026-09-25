@@ -1,0 +1,10 @@
+no,qty,part,spec
+1,1,Arm,"2x 3/4"" ply laminated, 250 x 290 x 38"
+2,1,Rear rail,"Ply, 250 x 60 x 75, glued up"
+3,1,Piano hinge,"1-1/2"" open, 250 mm"
+4,2,Registration post,"3D print, ABS/ASA, 40 x 40 x 75"
+5,2,Registration pin,"10 mm dowel pin, 40 mm, chamfered tip"
+6,1,Guide-pin chuck,"3D print, ABS/ASA; M4 x 45 + nut"
+7,2,Guide pin,"1/4"" drill rod, 75 mm"
+8,1,Lid stay or magnet,"Hardware-store lid stay, or magnet + post"
+9,1,Router table,"Existing + ring_align (1/4"" centre hole)"
