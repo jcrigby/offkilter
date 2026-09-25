@@ -89,8 +89,20 @@ And what it found that the SCAD did not:
   start 30 mm forward of the pivot line. (The leadscrew's coupling nut
   stood 31 mm proud of the table 45 mm behind the bit in the SCAD; the
   model recesses it, below.)
-- **The bit tip is 2 mm below the table at max rise** with the ghost
-  router's guessed collet and bit lengths; measure the real router.
+- **The router may not reach.** With the SCAD's 126 mm housing held
+  with 10 mm below the clamp, and a 16 mm collet nut and 30 mm of bit
+  assumed, the nut's top is 12 mm under the table at max rise, where the
+  instructions want it above for bit changes; the bit tip runs from 27
+  mm under the table to 18 mm over it. Sliding the router 12 mm higher
+  in the clamp fixes the first if the housing allows it. Three numbers
+  to measure on the real router, in `build.py`: the length of the
+  cylindrical housing the clamp can grip, the collet nut's length past
+  it, and the bit beyond the nut.
+- **The bit meets the guide pin at max rise** when the pin is down in
+  the alignment ring as drawn (380 mm³, both on the bit axis). Retract
+  the router for that check; for cutting, set the pin out so its tip
+  clears the bit's height, which the nose allows once it has a
+  clearance hole.
 - **The drawings' BOM says two guide pins; the model places one.** Every
   other modelled line matches.
 
