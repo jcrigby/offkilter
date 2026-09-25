@@ -1,0 +1,1220 @@
+//! Measuring from photographs. `sheet_pdf` prints a reference sheet: a
+//! light millimetre grid with four black bullseye fiducials in the
+//! corners (the origin's has an extra ring, so the sheet's orientation
+//! is known) and a 100 mm bar to check the print scale. `measure` takes
+//! a photograph of parts lying on that sheet, finds the fiducials,
+//! solves the homography that maps the picture onto the sheet's
+//! millimetres, rectifies the picture, and segments the dark shapes on
+//! the grid into parts with a bounding box, area, outline and any holes,
+//! all in millimetres from the origin fiducial. Good enough to rough out
+//! a part and to point at when asking for a real measurement: the
+//! silhouette is of the top face, and anything with height is shifted
+//! by parallax unless the camera looked straight down.
+//!
+//! Pure Rust: bytes in, numbers and a PNG out.
+
+use ok_render::{Image, Rgb};
+use ok_sheet::pdf::{Anchor, Page};
+pub use ok_sheet::SheetSize;
+use serde::Serialize;
+use std::f64::consts::PI;
+
+/// Fiducial centres sit this far in from the page edges.
+pub const INSET: f64 = 25.0;
+/// The bullseye: outer ring radius, its hole, the dot; the origin's
+/// extra ring outside it.
+const RING_R: f64 = 8.0;
+const RING_HOLE_R: f64 = 5.0;
+const DOT_R: f64 = 2.5;
+const ORIGIN_RING_R: f64 = 11.5;
+const ORIGIN_RING_HOLE_R: f64 = 10.0;
+/// Pixels per millimetre of the rectified picture.
+const SCALE: f64 = 4.0;
+/// The rectified picture reaches this far outside the fiducials.
+const BORDER: f64 = 15.0;
+
+/// Fiducial spacing on a page: the sheet frame's x and y extent.
+pub fn span(size: SheetSize) -> (f64, f64) {
+    let (w, h) = size.size();
+    (w - 2.0 * INSET, h - 2.0 * INSET)
+}
+
+/// The reference sheet as a PDF at true size.
+pub fn sheet_pdf(size: SheetSize) -> Vec<u8> {
+    let (w, h) = size.size();
+    let (lx, ly) = span(size);
+    let (x0, y0) = (INSET, INSET);
+    let mut page = Page::new(w, h);
+    // The grid, light so photographs threshold it away: 10 mm lines,
+    // heavier every 50.
+    let mut fine = Vec::new();
+    let mut coarse = Vec::new();
+    let mut x = 0.0;
+    while x <= lx + 1e-9 {
+        let seg = [(x0 + x, y0), (x0 + x, y0 + ly)];
+        if (x % 50.0).abs() < 1e-9 {
+            coarse.push(seg);
+        } else {
+            fine.push(seg);
+        }
+        x += 10.0;
+    }
+    let mut y = 0.0;
+    while y <= ly + 1e-9 {
+        let seg = [(x0, y0 + y), (x0 + lx, y0 + y)];
+        if (y % 50.0).abs() < 1e-9 {
+            coarse.push(seg);
+        } else {
+            fine.push(seg);
+        }
+        y += 10.0;
+    }
+    page.gray(0.78);
+    page.lines(&fine, 0.15, None);
+    page.gray(0.55);
+    page.lines(&coarse, 0.3, None);
+    // Millimetre labels every 50 along the bottom and the left.
+    page.gray(0.35);
+    let mut v = 50.0;
+    while v < lx - 10.0 {
+        page.text(
+            x0 + v,
+            y0 - 4.5,
+            2.5,
+            &format!("{v:.0}"),
+            Anchor::Middle,
+            0.0,
+            false,
+        );
+        v += 50.0;
+    }
+    let mut v = 50.0;
+    while v < ly - 10.0 {
+        page.text(
+            x0 - 3.0,
+            y0 + v - 0.9,
+            2.5,
+            &format!("{v:.0}"),
+            Anchor::Right,
+            0.0,
+            false,
+        );
+        v += 50.0;
+    }
+    // The fiducials: bullseyes, the origin's with an extra ring.
+    let corners = [(x0, y0), (x0 + lx, y0), (x0 + lx, y0 + ly), (x0, y0 + ly)];
+    for (k, (cx, cy)) in corners.into_iter().enumerate() {
+        if k == 0 {
+            page.gray(0.0);
+            page.dot(cx, cy, ORIGIN_RING_R);
+            page.gray(1.0);
+            page.dot(cx, cy, ORIGIN_RING_HOLE_R);
+        }
+        page.gray(0.0);
+        page.dot(cx, cy, RING_R);
+        page.gray(1.0);
+        page.dot(cx, cy, RING_HOLE_R);
+        page.gray(0.0);
+        page.dot(cx, cy, DOT_R);
+    }
+    // Title and the print-scale bar in the bottom margin.
+    page.gray(0.0);
+    // The bar sits under the text, its end ticks clear of the letters.
+    page.text(
+        x0 + 45.0,
+        10.5,
+        3.0,
+        &format!(
+            "offkilter measuring sheet · {} · print at 100 % · the bar below is 100 mm · origin at the double-ringed mark, x right, y up",
+            size.name()
+        ),
+        Anchor::Left,
+        0.0,
+        false,
+    );
+    page.lines(
+        &[
+            [(x0 + 45.0, 5.5), (x0 + 145.0, 5.5)],
+            [(x0 + 45.0, 4.0), (x0 + 45.0, 7.0)],
+            [(x0 + 145.0, 4.0), (x0 + 145.0, 7.0)],
+        ],
+        0.4,
+        None,
+    );
+    page.finish()
+}
+
+/// A part found on the sheet, in millimetres of the sheet frame.
+#[derive(Debug, Clone, Serialize)]
+pub struct Part {
+    /// x0, y0, x1, y1.
+    pub bbox: [f64; 4],
+    /// Of the dark silhouette, holes excluded.
+    pub area: f64,
+    pub centroid: [f64; 2],
+    /// Diameter of the circle with the silhouette's area (holes
+    /// filled): the part's size, if it is round.
+    pub diameter: f64,
+    /// 1 for a disc (holes or not), less for anything else.
+    pub circularity: f64,
+    /// The silhouette, simplified, counter-clockwise in the sheet frame.
+    pub outline: Vec<[f64; 2]>,
+    pub holes: Vec<Hole>,
+}
+
+/// A hole through a part, seen as paper showing through it.
+#[derive(Debug, Clone, Serialize)]
+pub struct Hole {
+    pub centre: [f64; 2],
+    /// Diameter of the circle with the hole's area.
+    pub diameter: f64,
+    /// 1 for a circle, less for anything else.
+    pub circularity: f64,
+    pub area: f64,
+}
+
+/// What `measure` found.
+#[derive(Debug, Clone, Serialize)]
+pub struct Measurement {
+    /// Fiducial centres in the photograph's pixels: origin, x, xy, y.
+    pub fiducials: [[f64; 2]; 4],
+    /// Millimetres per photograph pixel at the sheet's middle.
+    pub mm_per_pixel: f64,
+    /// Fit of the four fiducials to the homography, in photograph pixels.
+    pub residual: f64,
+    pub parts: Vec<Part>,
+    /// The rectified picture with the grid and the parts drawn on it,
+    /// as a PNG, `SCALE` pixels per millimetre; the sheet frame's origin
+    /// sits `BORDER` mm in from its bottom-left corner.
+    #[serde(skip)]
+    pub picture: Vec<u8>,
+    /// Pixels per millimetre and origin (x, y from the top-left) of the
+    /// rectified picture.
+    pub picture_scale: f64,
+    pub picture_origin: [f64; 2],
+}
+
+/// Decodes a PNG or JPEG into RGB.
+pub fn decode(bytes: &[u8]) -> Result<Image, String> {
+    if bytes.starts_with(&[0x89, b'P', b'N', b'G']) {
+        return ok_render::from_png(bytes);
+    }
+    if bytes.starts_with(&[0xFF, 0xD8]) {
+        let mut d = jpeg_decoder::Decoder::new(bytes);
+        let pixels = d.decode().map_err(|e| format!("JPEG: {e}"))?;
+        let info = d.info().ok_or("JPEG: no image info")?;
+        let (width, height) = (info.width as usize, info.height as usize);
+        let data = match info.pixel_format {
+            jpeg_decoder::PixelFormat::RGB24 => pixels,
+            jpeg_decoder::PixelFormat::L8 => pixels.iter().flat_map(|&g| [g, g, g]).collect(),
+            jpeg_decoder::PixelFormat::L16 => pixels
+                .chunks(2)
+                .flat_map(|c| {
+                    let g = c[0];
+                    [g, g, g]
+                })
+                .collect(),
+            jpeg_decoder::PixelFormat::CMYK32 => pixels
+                .chunks(4)
+                .flat_map(|c| {
+                    let k = c[3] as u32;
+                    let f = |v: u8| ((v as u32) * k / 255) as u8;
+                    [f(c[0]), f(c[1]), f(c[2])]
+                })
+                .collect(),
+        };
+        return Ok(Image {
+            width,
+            height,
+            data,
+        });
+    }
+    Err("not a PNG or a JPEG".into())
+}
+
+/// Measures a photograph of parts on the reference sheet.
+pub fn measure(bytes: &[u8], size: SheetSize) -> Result<Measurement, String> {
+    let photo = decode(bytes)?;
+    measure_image(&photo, size)
+}
+
+pub fn measure_image(photo: &Image, size: SheetSize) -> Result<Measurement, String> {
+    // Work at most 1800 px across for the fiducials.
+    let factor = (photo.width.max(photo.height) as f64 / 1800.0)
+        .ceil()
+        .max(1.0) as usize;
+    let small = shrink(photo, factor);
+    let gray = luma(&small);
+    let (w, h) = (small.width, small.height);
+    let threshold = otsu(&gray);
+    let dark: Vec<bool> = gray.iter().map(|&g| (g as u32) < threshold).collect();
+    let found = find_fiducials(&dark, w, h)?;
+    let f = factor as f64;
+    let fiducials = [
+        [found[0].0 * f, found[0].1 * f],
+        [found[1].0 * f, found[1].1 * f],
+        [found[2].0 * f, found[2].1 * f],
+        [found[3].0 * f, found[3].1 * f],
+    ];
+    let (lx, ly) = span(size);
+    let sheet = [[0.0, 0.0], [lx, 0.0], [lx, ly], [0.0, ly]];
+    let to_sheet = homography(&fiducials, &sheet)?;
+    let to_photo = invert(&to_sheet)?;
+    let residual = {
+        let mut sum = 0.0;
+        for k in 0..4 {
+            let p = apply(&to_photo, sheet[k]);
+            sum += (p[0] - fiducials[k][0]).powi(2) + (p[1] - fiducials[k][1]).powi(2);
+        }
+        (sum / 4.0).sqrt()
+    };
+    let mm_per_pixel = {
+        let c = [lx / 2.0, ly / 2.0];
+        let a = apply(&to_photo, c);
+        let b = apply(&to_photo, [c[0] + 1.0, c[1]]);
+        1.0 / ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2)).sqrt()
+    };
+    // Rectify: the sheet frame at SCALE px/mm, BORDER mm beyond the
+    // fiducials, y up on the sheet and down in the picture.
+    let pw = ((lx + 2.0 * BORDER) * SCALE).round() as usize;
+    let ph = ((ly + 2.0 * BORDER) * SCALE).round() as usize;
+    let mut picture = Image::new(pw, ph, Rgb(255, 255, 255));
+    let mut rect_gray = vec![255u8; pw * ph];
+    for j in 0..ph {
+        for i in 0..pw {
+            let x = -BORDER + i as f64 / SCALE;
+            let y = ly + BORDER - j as f64 / SCALE;
+            let p = apply(&to_photo, [x, y]);
+            if let Some(c) = sample(photo, p[0], p[1]) {
+                picture.set(i, j, c);
+                rect_gray[j * pw + i] =
+                    (0.299 * c.0 as f64 + 0.587 * c.1 as f64 + 0.114 * c.2 as f64) as u8;
+            }
+        }
+    }
+    let px = |x: f64| ((x + BORDER) * SCALE) as isize;
+    let py = |y: f64| ((ly + BORDER - y) * SCALE) as isize;
+    // Segment the dark shapes on the grid, keeping clear of the
+    // fiducials and the margins.
+    let t2 = otsu(&rect_gray);
+    let mut mask = vec![false; pw * ph];
+    let keep_out = (ORIGIN_RING_R + 3.0) * SCALE;
+    for j in 0..ph {
+        for i in 0..pw {
+            let x = -BORDER + i as f64 / SCALE;
+            let y = ly + BORDER - j as f64 / SCALE;
+            if x < 0.0 || y < 0.0 || x > lx || y > ly {
+                continue;
+            }
+            let near_fiducial = sheet
+                .iter()
+                .any(|s| ((x - s[0]).powi(2) + (y - s[1]).powi(2)).sqrt() * SCALE < keep_out);
+            if near_fiducial {
+                continue;
+            }
+            mask[j * pw + i] = (rect_gray[j * pw + i] as u32) < t2;
+        }
+    }
+    let mask = open(&mask, pw, ph, 2);
+    let comps = components(&mask, pw, ph);
+    let light: Vec<bool> = mask.iter().map(|m| !m).collect();
+    let light_comps = components(&light, pw, ph);
+    let min_area = (20.0 * SCALE * SCALE) as usize;
+    let mm = |i: usize, j: usize| -> [f64; 2] {
+        [-BORDER + i as f64 / SCALE, ly + BORDER - j as f64 / SCALE]
+    };
+    let mut parts = Vec::new();
+    for c in comps.iter().filter(|c| c.area >= min_area) {
+        let lo = mm(c.x0, c.y1 + 1);
+        let hi = mm(c.x1 + 1, c.y0);
+        let centroid = [-BORDER + c.cx / SCALE, ly + BORDER - c.cy / SCALE];
+        let outline: Vec<[f64; 2]> =
+            simplify(&trace(&c.labels_of(&mask, pw), pw, ph, c), 0.3 * SCALE)
+                .into_iter()
+                .map(|(i, j)| mm(i, j))
+                .collect();
+        let mut holes = Vec::new();
+        for l in &light_comps {
+            let inside = l.x0 > c.x0 && l.y0 > c.y0 && l.x1 < c.x1 && l.y1 < c.y1;
+            let touches_edge = l.x0 == 0 || l.y0 == 0 || l.x1 + 1 == pw || l.y1 + 1 == ph;
+            if !inside || touches_edge || l.area < (2.0 * SCALE * SCALE) as usize {
+                continue;
+            }
+            let area = l.area as f64 / (SCALE * SCALE);
+            let perimeter = l.perimeter as f64 / SCALE;
+            holes.push(Hole {
+                centre: [-BORDER + l.cx / SCALE, ly + BORDER - l.cy / SCALE],
+                diameter: 2.0 * (area / PI).sqrt(),
+                circularity: (4.0 * PI * area / (perimeter * perimeter)).min(1.0),
+                area,
+            });
+        }
+        // Roundness is of the silhouette with its holes filled: a washer
+        // is round. The component's own perimeter counts the holes' rims.
+        let area = c.area as f64 / (SCALE * SCALE);
+        let filled = area + holes.iter().map(|h| h.area).sum::<f64>();
+        let perimeter: f64 = (0..outline.len())
+            .map(|i| dist2(outline[i], outline[(i + 1) % outline.len()]).sqrt())
+            .sum();
+        parts.push(Part {
+            bbox: [lo[0], lo[1], hi[0], hi[1]],
+            area,
+            centroid,
+            diameter: 2.0 * (filled / PI).sqrt(),
+            circularity: (4.0 * PI * filled / (perimeter * perimeter)).min(1.0),
+            outline,
+            holes,
+        });
+    }
+    parts.sort_by(|a, b| b.area.total_cmp(&a.area));
+    // The overlay: the grid, the fiducials, each part's box and holes.
+    let mut x = 0.0;
+    while x <= lx + 1e-9 {
+        let major = (x % 50.0).abs() < 1e-9;
+        vline(
+            &mut picture,
+            px(x),
+            py(ly),
+            py(0.0),
+            if major {
+                Rgb(90, 140, 220)
+            } else {
+                Rgb(190, 210, 240)
+            },
+        );
+        x += 10.0;
+    }
+    let mut y = 0.0;
+    while y <= ly + 1e-9 {
+        let major = (y % 50.0).abs() < 1e-9;
+        hline(
+            &mut picture,
+            px(0.0),
+            px(lx),
+            py(y),
+            if major {
+                Rgb(90, 140, 220)
+            } else {
+                Rgb(190, 210, 240)
+            },
+        );
+        y += 10.0;
+    }
+    for s in &sheet {
+        cross(&mut picture, px(s[0]), py(s[1]), 8, Rgb(40, 90, 200));
+    }
+    for p in &parts {
+        let (x0, y0, x1, y1) = (px(p.bbox[0]), py(p.bbox[3]), px(p.bbox[2]), py(p.bbox[1]));
+        hline(&mut picture, x0, x1, y0, Rgb(220, 40, 40));
+        hline(&mut picture, x0, x1, y1, Rgb(220, 40, 40));
+        vline(&mut picture, x0, y0, y1, Rgb(220, 40, 40));
+        vline(&mut picture, x1, y0, y1, Rgb(220, 40, 40));
+        for h in &p.holes {
+            cross(
+                &mut picture,
+                px(h.centre[0]),
+                py(h.centre[1]),
+                5,
+                Rgb(30, 170, 60),
+            );
+        }
+    }
+    Ok(Measurement {
+        fiducials,
+        mm_per_pixel,
+        residual,
+        parts,
+        picture: ok_render::to_png(&picture),
+        picture_scale: SCALE,
+        picture_origin: [BORDER * SCALE, (ly + BORDER) * SCALE],
+    })
+}
+
+// ---- raster helpers ------------------------------------------------
+
+/// The printed sheet as a raster at `s` px/mm, y down, as a scanner
+/// would see it, with `rects` (x0, y0, x1, y1) and `discs` (cx, cy, r)
+/// lying on it in sheet millimetres and `holes` (cx, cy, r) drilled
+/// through whatever they land on. Tests in other crates photograph it.
+pub fn sheet_image(
+    size: SheetSize,
+    s: f64,
+    rects: &[[f64; 4]],
+    discs: &[[f64; 3]],
+    holes: &[[f64; 3]],
+) -> Image {
+    let (w, h) = size.size();
+    let (lx, ly) = span(size);
+    let (pw, ph) = ((w * s) as usize, (h * s) as usize);
+    let mut img = Image::new(pw, ph, Rgb(255, 255, 255));
+    let corners = [(0.0, 0.0), (lx, 0.0), (lx, ly), (0.0, ly)];
+    for j in 0..ph {
+        for i in 0..pw {
+            // Sheet frame: origin at the origin fiducial, y up.
+            let x = (i as f64 + 0.5) / s - INSET;
+            let y = h - (j as f64 + 0.5) / s - INSET;
+            let mut c = Rgb(255, 255, 255);
+            let on_sheet = (0.0..=lx).contains(&x) && (0.0..=ly).contains(&y);
+            let on_grid = on_sheet
+                && (((x / 10.0).round() * 10.0 - x).abs() < 0.12
+                    || ((y / 10.0).round() * 10.0 - y).abs() < 0.12);
+            if on_grid {
+                c = Rgb(200, 200, 200);
+            }
+            for (k, (fx, fy)) in corners.iter().enumerate() {
+                let r = ((x - fx).powi(2) + (y - fy).powi(2)).sqrt();
+                let black = r <= DOT_R
+                    || (RING_HOLE_R..=RING_R).contains(&r)
+                    || (k == 0 && (ORIGIN_RING_HOLE_R..=ORIGIN_RING_R).contains(&r));
+                let white = r < RING_HOLE_R && r > DOT_R
+                    || (k == 0 && r > RING_R && r < ORIGIN_RING_HOLE_R);
+                if black {
+                    c = Rgb(0, 0, 0);
+                } else if white {
+                    c = Rgb(255, 255, 255);
+                }
+            }
+            let on_part = rects
+                .iter()
+                .any(|r| (r[0]..=r[2]).contains(&x) && (r[1]..=r[3]).contains(&y))
+                || discs
+                    .iter()
+                    .any(|d| ((x - d[0]).powi(2) + (y - d[1]).powi(2)).sqrt() <= d[2]);
+            let in_hole = holes
+                .iter()
+                .any(|d| ((x - d[0]).powi(2) + (y - d[1]).powi(2)).sqrt() <= d[2]);
+            if on_part && !in_hole {
+                c = Rgb(40, 40, 40);
+            }
+            img.set(i, j, c);
+        }
+    }
+    img
+}
+
+/// The printed sheet (or any picture) photographed askew: its corners
+/// land on the given picture points, in order top-left, top-right,
+/// bottom-right, bottom-left, in a `pw` x `ph` picture. Tests in other
+/// crates use it with `sheet_image` to make a photograph.
+pub fn photograph(sheet: &Image, corners: [[f64; 2]; 4], pw: usize, ph: usize) -> Image {
+    let from = [
+        [0.0, 0.0],
+        [sheet.width as f64, 0.0],
+        [sheet.width as f64, sheet.height as f64],
+        [0.0, sheet.height as f64],
+    ];
+    let h = homography(&corners, &from).expect("four distinct corners");
+    let mut out = Image::new(pw, ph, Rgb(235, 232, 225));
+    for j in 0..ph {
+        for i in 0..pw {
+            let p = apply(&h, [i as f64 + 0.5, j as f64 + 0.5]);
+            if let Some(c) = sample(sheet, p[0], p[1]) {
+                out.set(i, j, c);
+            }
+        }
+    }
+    out
+}
+
+fn shrink(img: &Image, factor: usize) -> Image {
+    if factor <= 1 {
+        return img.clone();
+    }
+    let (w, h) = (img.width / factor, img.height / factor);
+    let mut out = Image::new(w, h, Rgb(0, 0, 0));
+    for j in 0..h {
+        for i in 0..w {
+            let (mut r, mut g, mut b) = (0u32, 0u32, 0u32);
+            for dj in 0..factor {
+                for di in 0..factor {
+                    let c = img.pixel(i * factor + di, j * factor + dj);
+                    r += c.0 as u32;
+                    g += c.1 as u32;
+                    b += c.2 as u32;
+                }
+            }
+            let n = (factor * factor) as u32;
+            out.set(i, j, Rgb((r / n) as u8, (g / n) as u8, (b / n) as u8));
+        }
+    }
+    out
+}
+
+fn luma(img: &Image) -> Vec<u8> {
+    img.data
+        .chunks(3)
+        .map(|c| (0.299 * c[0] as f64 + 0.587 * c[1] as f64 + 0.114 * c[2] as f64) as u8)
+        .collect()
+}
+
+/// Otsu's threshold: the grey level that best splits the histogram.
+fn otsu(gray: &[u8]) -> u32 {
+    let mut hist = [0u64; 256];
+    for &g in gray {
+        hist[g as usize] += 1;
+    }
+    let total = gray.len() as f64;
+    let sum: f64 = hist
+        .iter()
+        .enumerate()
+        .map(|(i, &n)| i as f64 * n as f64)
+        .sum();
+    let (mut sum_b, mut w_b, mut best, mut at) = (0.0, 0.0, 0.0, 128u32);
+    for (t, &n) in hist.iter().enumerate() {
+        w_b += n as f64;
+        if w_b == 0.0 {
+            continue;
+        }
+        let w_f = total - w_b;
+        if w_f == 0.0 {
+            break;
+        }
+        sum_b += t as f64 * n as f64;
+        let m_b = sum_b / w_b;
+        let m_f = (sum - sum_b) / w_f;
+        let between = w_b * w_f * (m_b - m_f).powi(2);
+        if between > best {
+            best = between;
+            at = t as u32 + 1;
+        }
+    }
+    at
+}
+
+/// Bilinear sample of a photograph at a fractional pixel position.
+fn sample(img: &Image, u: f64, v: f64) -> Option<Rgb> {
+    if u < 0.0 || v < 0.0 || u >= (img.width - 1) as f64 || v >= (img.height - 1) as f64 {
+        return None;
+    }
+    let (i, j) = (u.floor() as usize, v.floor() as usize);
+    let (fu, fv) = (u - i as f64, v - j as f64);
+    let ch = |c: Rgb, k: usize| match k {
+        0 => c.0 as f64,
+        1 => c.1 as f64,
+        _ => c.2 as f64,
+    };
+    let (a, b, c, d) = (
+        img.pixel(i, j),
+        img.pixel(i + 1, j),
+        img.pixel(i, j + 1),
+        img.pixel(i + 1, j + 1),
+    );
+    let mut out = [0u8; 3];
+    for (k, o) in out.iter_mut().enumerate() {
+        let top = ch(a, k) * (1.0 - fu) + ch(b, k) * fu;
+        let bottom = ch(c, k) * (1.0 - fu) + ch(d, k) * fu;
+        *o = (top * (1.0 - fv) + bottom * fv).round() as u8;
+    }
+    Some(Rgb(out[0], out[1], out[2]))
+}
+
+fn erode(mask: &[bool], w: usize, h: usize, r: usize) -> Vec<bool> {
+    let mut out = vec![false; w * h];
+    for j in 0..h {
+        for i in 0..w {
+            if !mask[j * w + i] {
+                continue;
+            }
+            let mut all = true;
+            'n: for dj in 0..=2 * r {
+                for di in 0..=2 * r {
+                    let (x, y) = (
+                        i as isize + di as isize - r as isize,
+                        j as isize + dj as isize - r as isize,
+                    );
+                    if x < 0
+                        || y < 0
+                        || x >= w as isize
+                        || y >= h as isize
+                        || !mask[y as usize * w + x as usize]
+                    {
+                        all = false;
+                        break 'n;
+                    }
+                }
+            }
+            out[j * w + i] = all;
+        }
+    }
+    out
+}
+
+fn dilate(mask: &[bool], w: usize, h: usize, r: usize) -> Vec<bool> {
+    let mut out = vec![false; w * h];
+    for j in 0..h {
+        for i in 0..w {
+            if !mask[j * w + i] {
+                continue;
+            }
+            for dj in 0..=2 * r {
+                for di in 0..=2 * r {
+                    let (x, y) = (
+                        i as isize + di as isize - r as isize,
+                        j as isize + dj as isize - r as isize,
+                    );
+                    if x >= 0 && y >= 0 && x < w as isize && y < h as isize {
+                        out[y as usize * w + x as usize] = true;
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Morphological opening: specks and lines thinner than `2r + 1` go.
+fn open(mask: &[bool], w: usize, h: usize, r: usize) -> Vec<bool> {
+    dilate(&erode(mask, w, h, r), w, h, r)
+}
+
+/// A connected component of a mask, 4-connected.
+#[derive(Debug, Clone)]
+struct Comp {
+    area: usize,
+    perimeter: usize,
+    x0: usize,
+    y0: usize,
+    x1: usize,
+    y1: usize,
+    cx: f64,
+    cy: f64,
+}
+
+impl Comp {
+    fn width(&self) -> usize {
+        self.x1 - self.x0 + 1
+    }
+    fn height(&self) -> usize {
+        self.y1 - self.y0 + 1
+    }
+    fn fill(&self) -> f64 {
+        self.area as f64 / (self.width() * self.height()) as f64
+    }
+    fn contains(&self, o: &Comp) -> bool {
+        o.x0 > self.x0 && o.y0 > self.y0 && o.x1 < self.x1 && o.y1 < self.y1
+    }
+    /// The mask of this component alone.
+    fn labels_of(&self, mask: &[bool], w: usize) -> Vec<bool> {
+        // Rebuilt by a flood from the bounding box: cheaper than keeping
+        // every component's pixels.
+        let h = mask.len() / w;
+        let mut out = vec![false; mask.len()];
+        let mut seen = vec![false; mask.len()];
+        let mut stack = Vec::new();
+        // Any pixel of the component: the centroid may fall in a hole,
+        // so scan the box for the first set pixel on the label's rows.
+        'find: for j in self.y0..=self.y1 {
+            for i in self.x0..=self.x1 {
+                if mask[j * w + i] {
+                    stack.push((i, j));
+                    break 'find;
+                }
+            }
+        }
+        while let Some((i, j)) = stack.pop() {
+            let k = j * w + i;
+            if seen[k] || !mask[k] {
+                continue;
+            }
+            seen[k] = true;
+            out[k] = true;
+            if i > 0 {
+                stack.push((i - 1, j));
+            }
+            if j > 0 {
+                stack.push((i, j - 1));
+            }
+            if i + 1 < w {
+                stack.push((i + 1, j));
+            }
+            if j + 1 < h {
+                stack.push((i, j + 1));
+            }
+        }
+        out
+    }
+}
+
+fn components(mask: &[bool], w: usize, h: usize) -> Vec<Comp> {
+    let mut label = vec![0u32; w * h];
+    let mut out = Vec::new();
+    let mut next = 1u32;
+    let mut stack = Vec::new();
+    for start in 0..w * h {
+        if !mask[start] || label[start] != 0 {
+            continue;
+        }
+        let mut c = Comp {
+            area: 0,
+            perimeter: 0,
+            x0: usize::MAX,
+            y0: usize::MAX,
+            x1: 0,
+            y1: 0,
+            cx: 0.0,
+            cy: 0.0,
+        };
+        stack.push(start);
+        label[start] = next;
+        while let Some(k) = stack.pop() {
+            let (i, j) = (k % w, k / w);
+            c.area += 1;
+            c.x0 = c.x0.min(i);
+            c.y0 = c.y0.min(j);
+            c.x1 = c.x1.max(i);
+            c.y1 = c.y1.max(j);
+            c.cx += i as f64;
+            c.cy += j as f64;
+            let mut edge = false;
+            let mut visit = |x: isize, y: isize| {
+                if x < 0 || y < 0 || x >= w as isize || y >= h as isize {
+                    edge = true;
+                    return;
+                }
+                let n = y as usize * w + x as usize;
+                if !mask[n] {
+                    edge = true;
+                } else if label[n] == 0 {
+                    label[n] = next;
+                    stack.push(n);
+                }
+            };
+            visit(i as isize - 1, j as isize);
+            visit(i as isize + 1, j as isize);
+            visit(i as isize, j as isize - 1);
+            visit(i as isize, j as isize + 1);
+            if edge {
+                c.perimeter += 1;
+            }
+        }
+        c.cx = c.cx / c.area as f64 + 0.5;
+        c.cy = c.cy / c.area as f64 + 0.5;
+        out.push(c);
+        next += 1;
+    }
+    out
+}
+
+/// The four fiducials' centres in pixels: origin, x, xy, y.
+fn find_fiducials(dark: &[bool], w: usize, h: usize) -> Result<[(f64, f64); 4], String> {
+    let comps = components(dark, w, h);
+    let is_ring = |c: &Comp| {
+        c.area >= 40 && {
+            let aspect = c.width() as f64 / c.height() as f64;
+            (0.6..=1.7).contains(&aspect) && (0.08..=0.8).contains(&c.fill())
+        }
+    };
+    let is_dot = |c: &Comp| c.area >= 4 && c.fill() > 0.55;
+    let concentric = |a: &Comp, b: &Comp| {
+        a.contains(b)
+            && ((a.cx - b.cx).powi(2) + (a.cy - b.cy).powi(2)).sqrt() < 0.2 * a.width() as f64
+    };
+    // Bullseyes: a ring with a dot at its centre; the origin's ring has
+    // a bullseye inside it instead.
+    let mut bullseyes: Vec<(usize, f64, f64)> = Vec::new(); // (ring index, dot cx, dot cy)
+    for (ai, a) in comps.iter().enumerate() {
+        if !is_ring(a) {
+            continue;
+        }
+        if let Some(d) = comps
+            .iter()
+            .filter(|b| is_dot(b) && concentric(a, b) && b.area * 2 < a.area)
+            .max_by_key(|b| b.area)
+        {
+            bullseyes.push((ai, d.cx, d.cy));
+        }
+    }
+    let mut origins: Vec<(usize, usize)> = Vec::new(); // (outer ring index, bullseye index)
+    for (ai, a) in comps.iter().enumerate() {
+        if !is_ring(a) {
+            continue;
+        }
+        for (bi, &(ring, _, _)) in bullseyes.iter().enumerate() {
+            if ring != ai && concentric(a, &comps[ring]) {
+                origins.push((ai, bi));
+            }
+        }
+    }
+    let origin = origins
+        .iter()
+        .max_by_key(|(ai, _)| comps[*ai].area)
+        .ok_or("no origin mark (the double-ringed bullseye) in the picture")?;
+    let origin_ring = &comps[origin.0];
+    let mut others: Vec<&(usize, f64, f64)> = bullseyes
+        .iter()
+        .enumerate()
+        .filter(|(bi, (ring, _, _))| *bi != origin.1 && !origin_ring.contains(&comps[*ring]))
+        .map(|(_, b)| b)
+        .collect();
+    others.sort_by(|a, b| comps[b.0].area.cmp(&comps[a.0].area));
+    if others.len() < 3 {
+        return Err(format!(
+            "found the origin mark and {} other bullseye(s); all four corner marks must be in the picture",
+            others.len()
+        ));
+    }
+    // Keep bullseyes of about the origin's bullseye's size (the same
+    // marks at the same distance), then the three largest.
+    let ref_area = comps[bullseyes[origin.1].0].area as f64;
+    let mut like: Vec<&(usize, f64, f64)> = others
+        .iter()
+        .copied()
+        .filter(|b| {
+            let r = comps[b.0].area as f64 / ref_area;
+            (0.3..=3.0).contains(&r)
+        })
+        .collect();
+    if like.len() < 3 {
+        like = others.clone();
+    }
+    like.truncate(3);
+    let o = (bullseyes[origin.1].1, bullseyes[origin.1].2);
+    let pts: Vec<(f64, f64)> = like.iter().map(|b| (b.1, b.2)).collect();
+    // Order the other three by angle from the origin, going the way the
+    // sheet's x axis leads to its y axis: in a picture (y down) the
+    // sheet's counter-clockwise reads as decreasing angle.
+    let cx = (o.0 + pts.iter().map(|p| p.0).sum::<f64>()) / 4.0;
+    let cy = (o.1 + pts.iter().map(|p| p.1).sum::<f64>()) / 4.0;
+    let angle = |p: (f64, f64)| (p.1 - cy).atan2(p.0 - cx);
+    let a0 = angle(o);
+    let mut ordered: Vec<((f64, f64), f64)> = pts
+        .iter()
+        .map(|&p| (p, (angle(p) - a0).rem_euclid(2.0 * PI)))
+        .collect();
+    ordered.sort_by(|a, b| b.1.total_cmp(&a.1));
+    Ok([o, ordered[0].0, ordered[1].0, ordered[2].0])
+}
+
+// ---- projective geometry -----------------------------------------------
+
+/// Row-major 3x3.
+type H = [f64; 9];
+
+/// The homography taking each `from` point to its `to` point (direct
+/// linear transform on four correspondences).
+pub fn homography(from: &[[f64; 2]; 4], to: &[[f64; 2]; 4]) -> Result<H, String> {
+    let mut a = [[0.0f64; 9]; 8];
+    for k in 0..4 {
+        let ([u, v], [x, y]) = (from[k], to[k]);
+        a[2 * k] = [u, v, 1.0, 0.0, 0.0, 0.0, -x * u, -x * v, x];
+        a[2 * k + 1] = [0.0, 0.0, 0.0, u, v, 1.0, -y * u, -y * v, y];
+    }
+    // Gaussian elimination with partial pivoting on the 8x9 system.
+    for col in 0..8 {
+        let pivot = (col..8)
+            .max_by(|&i, &j| a[i][col].abs().total_cmp(&a[j][col].abs()))
+            .unwrap();
+        if a[pivot][col].abs() < 1e-12 {
+            return Err("degenerate fiducial layout".into());
+        }
+        a.swap(col, pivot);
+        for row in 0..8 {
+            if row != col {
+                let f = a[row][col] / a[col][col];
+                let pivot_row = a[col];
+                for (x, p) in a[row].iter_mut().zip(pivot_row).skip(col) {
+                    *x -= f * p;
+                }
+            }
+        }
+    }
+    let mut h = [0.0; 9];
+    for (k, row) in a.iter().enumerate() {
+        h[k] = row[8] / row[k];
+    }
+    h[8] = 1.0;
+    Ok(h)
+}
+
+fn invert(h: &H) -> Result<H, String> {
+    let [a, b, c, d, e, f, g, hh, i] = *h;
+    let det = a * (e * i - f * hh) - b * (d * i - f * g) + c * (d * hh - e * g);
+    if det.abs() < 1e-15 {
+        return Err("singular homography".into());
+    }
+    let m = [
+        e * i - f * hh,
+        c * hh - b * i,
+        b * f - c * e,
+        f * g - d * i,
+        a * i - c * g,
+        c * d - a * f,
+        d * hh - e * g,
+        b * g - a * hh,
+        a * e - b * d,
+    ];
+    Ok(m.map(|v| v / det))
+}
+
+fn apply(h: &H, p: [f64; 2]) -> [f64; 2] {
+    let w = h[6] * p[0] + h[7] * p[1] + h[8];
+    [
+        (h[0] * p[0] + h[1] * p[1] + h[2]) / w,
+        (h[3] * p[0] + h[4] * p[1] + h[5]) / w,
+    ]
+}
+
+// ---- outlines ---------------------------------------------------------
+
+/// The boundary of a component as pixel positions, traced around it
+/// clockwise (Moore neighbourhood) from its top-left pixel, stopping
+/// when the start is re-entered the way it was first left.
+fn trace(mask: &[bool], w: usize, h: usize, c: &Comp) -> Vec<(usize, usize)> {
+    let at = |q: (isize, isize)| {
+        q.0 >= 0
+            && q.1 >= 0
+            && q.0 < w as isize
+            && q.1 < h as isize
+            && mask[q.1 as usize * w + q.0 as usize]
+    };
+    let mut start = None;
+    'find: for j in c.y0..=c.y1 {
+        for i in c.x0..=c.x1 {
+            if mask[j * w + i] {
+                start = Some((i as isize, j as isize));
+                break 'find;
+            }
+        }
+    }
+    let Some(start) = start else {
+        return Vec::new();
+    };
+    // Eight neighbours clockwise from the west.
+    const N: [(isize, isize); 8] = [
+        (-1, 0),
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+        (0, 1),
+        (-1, 1),
+    ];
+    let index_of = |d: (isize, isize)| N.iter().position(|n| *n == d).unwrap_or(0);
+    let mut out = vec![start];
+    let mut p = start;
+    let mut back = (start.0 - 1, start.1); // the background we came from
+    let mut first: Option<usize> = None;
+    let limit = 8 * (c.width() + c.height()) + 2 * c.area;
+    loop {
+        let bd = index_of((back.0 - p.0, back.1 - p.1));
+        let mut step = None;
+        for k in 0..8 {
+            let d = (bd + k) % 8;
+            let q = (p.0 + N[d].0, p.1 + N[d].1);
+            if at(q) {
+                step = Some((q, d, (bd + k + 7) % 8));
+                break;
+            }
+        }
+        let Some((q, d, before)) = step else { break }; // an isolated pixel
+        if p == start {
+            match first {
+                None => first = Some(d),
+                Some(f) if f == d => break,
+                _ => {}
+            }
+        }
+        back = (p.0 + N[before].0, p.1 + N[before].1);
+        p = q;
+        out.push(q);
+        if out.len() > limit {
+            break;
+        }
+    }
+    if out.len() > 1 && out[out.len() - 1] == start {
+        out.pop();
+    }
+    out.into_iter()
+        .map(|(x, y)| (x as usize, y as usize))
+        .collect()
+}
+
+/// Douglas–Peucker on a closed polyline, tolerance in pixels: the loop
+/// is split at the point farthest from its start into two open runs.
+fn simplify(points: &[(usize, usize)], tol: f64) -> Vec<(usize, usize)> {
+    let n = points.len();
+    if n < 4 {
+        return points.to_vec();
+    }
+    let mut pts: Vec<[f64; 2]> = points.iter().map(|&(x, y)| [x as f64, y as f64]).collect();
+    pts.push(pts[0]);
+    let far = (1..n)
+        .max_by(|&a, &b| dist2(pts[a], pts[0]).total_cmp(&dist2(pts[b], pts[0])))
+        .unwrap();
+    let mut keep = vec![false; n + 1];
+    keep[0] = true;
+    keep[far] = true;
+    keep[n] = true;
+    dp(&pts, 0, far, tol, &mut keep);
+    dp(&pts, far, n, tol, &mut keep);
+    points
+        .iter()
+        .zip(&keep[..n])
+        .filter(|(_, k)| **k)
+        .map(|(p, _)| *p)
+        .collect()
+}
+
+fn dist2(a: [f64; 2], b: [f64; 2]) -> f64 {
+    (a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2)
+}
+
+fn seg_dist(p: [f64; 2], a: [f64; 2], b: [f64; 2]) -> f64 {
+    let l2 = dist2(a, b);
+    if l2 < 1e-12 {
+        return dist2(p, a).sqrt();
+    }
+    let t = (((p[0] - a[0]) * (b[0] - a[0]) + (p[1] - a[1]) * (b[1] - a[1])) / l2).clamp(0.0, 1.0);
+    dist2(p, [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]).sqrt()
+}
+
+fn dp(pts: &[[f64; 2]], s: usize, e: usize, tol: f64, keep: &mut [bool]) {
+    if e <= s + 1 {
+        return;
+    }
+    let (mut worst, mut at) = (0.0, s);
+    for k in s + 1..e {
+        let d = seg_dist(pts[k], pts[s], pts[e]);
+        if d > worst {
+            worst = d;
+            at = k;
+        }
+    }
+    if worst > tol {
+        keep[at] = true;
+        dp(pts, s, at, tol, keep);
+        dp(pts, at, e, tol, keep);
+    }
+}
+
+// ---- overlay drawing ----------------------------------------------------
+
+fn put(img: &mut Image, x: isize, y: isize, c: Rgb) {
+    if x >= 0 && y >= 0 && (x as usize) < img.width && (y as usize) < img.height {
+        img.set(x as usize, y as usize, c);
+    }
+}
+
+fn hline(img: &mut Image, x0: isize, x1: isize, y: isize, c: Rgb) {
+    for x in x0.min(x1)..=x0.max(x1) {
+        put(img, x, y, c);
+    }
+}
+
+fn vline(img: &mut Image, x: isize, y0: isize, y1: isize, c: Rgb) {
+    for y in y0.min(y1)..=y0.max(y1) {
+        put(img, x, y, c);
+    }
+}
+
+fn cross(img: &mut Image, x: isize, y: isize, r: isize, c: Rgb) {
+    hline(img, x - r, x + r, y, c);
+    vline(img, x, y - r, y + r, c);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_sheet_is_a_pdf_with_four_marks_and_a_grid() {
+        let pdf = sheet_pdf(SheetSize::A4);
+        let text = String::from_utf8_lossy(&pdf);
+        assert!(text.starts_with("%PDF-1.4"));
+        assert!(text.contains("/MediaBox [0 0 841.89 595.276]"));
+        // Filled discs: origin ring, its hole, then three per bullseye.
+        assert_eq!(text.matches("c h f Q").count(), 2 + 4 * 3);
+        assert!(text.contains("(100) Tj") && text.contains("(150) Tj"));
+        assert!(text.contains("the bar below is 100 mm"));
+        let (lx, ly) = span(SheetSize::A4);
+        assert!((lx - 247.0).abs() < 1e-9 && (ly - 160.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn a_photograph_of_the_sheet_measures_what_lies_on_it() {
+        // A 40 x 25 rectangle at (60, 50) with a 6 mm hole in its middle,
+        // and a 30 mm disc at (150, 100).
+        let sheet = sheet_image(
+            SheetSize::A4,
+            6.0,
+            &[[60.0, 50.0, 100.0, 75.0]],
+            &[[150.0, 100.0, 15.0]],
+            &[[80.0, 62.5, 3.0]],
+        );
+        let photo = photograph(
+            &sheet,
+            [
+                [130.0, 95.0],
+                [1470.0, 150.0],
+                [1400.0, 1120.0],
+                [180.0, 1060.0],
+            ],
+            1600,
+            1200,
+        );
+        let m = measure_image(&photo, SheetSize::A4).unwrap();
+        assert!(m.residual < 1.5, "fiducial fit {} px", m.residual);
+        assert!((m.mm_per_pixel - 0.23).abs() < 0.03, "{}", m.mm_per_pixel);
+        // The origin mark is near the picture's bottom-left, x runs right.
+        assert!(
+            m.fiducials[0][0] < 300.0 && m.fiducials[0][1] > 900.0,
+            "{:?}",
+            m.fiducials
+        );
+        assert!(m.fiducials[1][0] > 1200.0, "{:?}", m.fiducials);
+        assert_eq!(
+            m.parts.len(),
+            2,
+            "{:?}",
+            m.parts.iter().map(|p| p.bbox).collect::<Vec<_>>()
+        );
+        // Largest first: the rectangle, then the disc.
+        let rect = &m.parts[0];
+        let disc = &m.parts[1];
+        for (got, want) in disc.bbox.iter().zip([135.0, 85.0, 165.0, 115.0]) {
+            assert!((got - want).abs() < 0.6, "disc box {:?}", disc.bbox);
+        }
+        assert!(
+            (disc.area - PI * 225.0).abs() / (PI * 225.0) < 0.03,
+            "disc area {}",
+            disc.area
+        );
+        assert!(disc.holes.is_empty());
+        for (got, want) in rect.bbox.iter().zip([60.0, 50.0, 100.0, 75.0]) {
+            assert!((got - want).abs() < 0.6, "rect box {:?}", rect.bbox);
+        }
+        assert!(
+            (rect.area - (1000.0 - PI * 9.0)).abs() / 1000.0 < 0.03,
+            "rect area {}",
+            rect.area
+        );
+        assert_eq!(rect.holes.len(), 1, "{:?}", rect.holes);
+        let hole = &rect.holes[0];
+        assert!((hole.diameter - 6.0).abs() < 0.4, "hole {hole:?}");
+        assert!(
+            (hole.centre[0] - 80.0).abs() < 0.5 && (hole.centre[1] - 62.5).abs() < 0.5,
+            "hole {hole:?}"
+        );
+        assert!(hole.circularity > 0.8, "hole {hole:?}");
+        assert!(rect.circularity < 0.85, "rect {}", rect.circularity);
+        assert!(disc.circularity > 0.85, "disc {}", disc.circularity);
+        assert!((disc.diameter - 30.0).abs() < 0.5, "disc {}", disc.diameter);
+        // The rectangle's outline simplifies to about its four corners.
+        assert!(
+            rect.outline.len() >= 4 && rect.outline.len() <= 12,
+            "{} outline points",
+            rect.outline.len()
+        );
+        let picture = ok_render::from_png(&m.picture).unwrap();
+        assert_eq!(picture.width, ((247.0 + 30.0) * SCALE) as usize);
+        assert_eq!(picture.height, ((160.0 + 30.0) * SCALE) as usize);
+    }
+
+    #[test]
+    fn a_picture_without_the_marks_is_refused() {
+        let blank = Image::new(400, 300, Rgb(255, 255, 255));
+        let err = measure_image(&blank, SheetSize::A4).unwrap_err();
+        assert!(err.contains("origin mark"), "{err}");
+    }
+}

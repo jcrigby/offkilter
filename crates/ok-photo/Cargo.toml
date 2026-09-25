@@ -1,0 +1,13 @@
+[package]
+name = "ok-photo"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Measuring from photographs: a printable reference sheet with fiducials and a millimetre grid, and the rectification, segmentation and measurement of parts photographed on it"
+
+[dependencies]
+ok-math = { workspace = true }
+ok-render = { workspace = true }
+ok-sheet = { workspace = true }
+serde = { workspace = true }
+jpeg-decoder = { version = "0.3", default-features = false }

@@ -78,6 +78,13 @@ impl Page {
         }
     }
 
+    /// The grey every later stroke and fill uses (0 black, 1 white)
+    /// until the next call; every drawing call saves and restores the
+    /// state around itself, so this is the state they inherit.
+    pub fn gray(&mut self, g: f64) {
+        self.ops.push_str(&format!("{} G {} g\n", num(g), num(g)));
+    }
+
     /// Straight segments as one path; `dash` is (on, off) in mm.
     pub fn lines(&mut self, segments: &[[(f64, f64); 2]], width: f64, dash: Option<(f64, f64)>) {
         if segments.is_empty() {

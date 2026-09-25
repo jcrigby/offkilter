@@ -781,8 +781,145 @@ impl Server {
             }
             return Ok(ToolOut::Image { png, caption });
         }
+        if name == "measure_photo" {
+            let path = args
+                .get("path")
+                .and_then(|p| p.as_str())
+                .ok_or("measure_photo needs path: the photograph")?;
+            let size = ok_photo::SheetSize::parse(
+                args.get("sheet").and_then(|s| s.as_str()).unwrap_or(""),
+            )?;
+            let bytes = std::fs::read(path).map_err(|e| format!("could not read {path}: {e}"))?;
+            let m = ok_photo::measure(&bytes, size)?;
+            let mut caption = format!(
+                "{} sheet: the four marks found ({:.2} mm per photo pixel, fit {:.1} px). Rectified at {} px/mm, the origin mark at pixel ({:.0}, {:.0}), x right, y up; the grid is 10 mm, heavier every 50.\n",
+                size.name(),
+                m.mm_per_pixel,
+                m.residual,
+                m.picture_scale,
+                m.picture_origin[0],
+                m.picture_origin[1]
+            );
+            if m.parts.is_empty() {
+                caption.push_str("Nothing dark enough to be a part lies on the grid.\n");
+            }
+            for (k, p) in m.parts.iter().enumerate() {
+                let [x0, y0, x1, y1] = p.bbox;
+                caption.push_str(&format!(
+                    "Part {}: {:.1} x {:.1} mm, from ({:.1}, {:.1}) to ({:.1}, {:.1}), area {:.0} mm2, centroid ({:.1}, {:.1}), outline of {} points",
+                    k + 1,
+                    x1 - x0,
+                    y1 - y0,
+                    x0,
+                    y0,
+                    x1,
+                    y1,
+                    p.area,
+                    p.centroid[0],
+                    p.centroid[1],
+                    p.outline.len()
+                ));
+                if p.circularity > 0.85 {
+                    caption.push_str(&format!("; round, {:.1} mm across", p.diameter));
+                }
+                for h in &p.holes {
+                    caption.push_str(&format!(
+                        "; hole {:.1} mm across at ({:.1}, {:.1}){}",
+                        h.diameter,
+                        h.centre[0],
+                        h.centre[1],
+                        if h.circularity > 0.85 { ", round" } else { "" }
+                    ));
+                }
+                caption.push('\n');
+            }
+            caption.push_str("These are top-face silhouettes; anything with height is shifted by parallax unless the camera looked straight down. For a size that matters, ask for a caliper reading and name the part and feature as this picture shows them.");
+            if let Some(out) = args.get("out").and_then(|p| p.as_str()) {
+                std::fs::write(out, &m.picture)
+                    .map_err(|e| format!("could not write {out}: {e}"))?;
+                caption.push_str(&format!("\nRectified picture written to {out}."));
+            }
+            if args
+                .get("sketch")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false)
+            {
+                let id = self.doc_id(args)?;
+                let doc = self.backend.document(&id)?;
+                let tab = pick_tab(&doc, tab)?;
+                let studio = |op: Value| json!({ "type": "studio", "tab": tab.0, "op": op });
+                let made = self.backend.apply(
+                    &id,
+                    vec![studio(json!({
+                        "type": "add_sketch",
+                        "plane": { "type": "standard", "base": "top", "offset": 0 },
+                        "name": "Photo outlines"
+                    }))],
+                )?;
+                let sketch = made
+                    .pointer("/results/0/studio/feature")
+                    .and_then(|v| v.as_u64())
+                    .ok_or("the sketch was not created")?;
+                let mut ops = Vec::new();
+                for p in &m.parts {
+                    if p.circularity > 0.85 {
+                        ops.push(studio(json!({ "type": "sketch", "id": sketch, "op": {
+                            "type": "add_circle",
+                            "center": { "x": p.centroid[0], "y": p.centroid[1] },
+                            "radius": p.diameter / 2.0
+                        }})));
+                    }
+                    let n = if p.circularity > 0.85 {
+                        0
+                    } else {
+                        p.outline.len()
+                    };
+                    for (i, a) in p.outline.iter().take(n).enumerate() {
+                        let b = p.outline[(i + 1) % n];
+                        ops.push(studio(json!({ "type": "sketch", "id": sketch, "op": {
+                            "type": "add_line",
+                            "a": { "x": a[0], "y": a[1] },
+                            "b": { "x": b[0], "y": b[1] }
+                        }})));
+                    }
+                    for h in &p.holes {
+                        ops.push(studio(json!({ "type": "sketch", "id": sketch, "op": {
+                            "type": "add_circle",
+                            "center": { "x": h.centre[0], "y": h.centre[1] },
+                            "radius": h.diameter / 2.0
+                        }})));
+                    }
+                }
+                let count = ops.len();
+                self.backend.apply(&id, ops)?;
+                caption.push_str(&format!(
+                    "\nSketch feature {sketch} on tab {} of the document holds the outlines: {count} lines and circles in sheet millimetres.",
+                    tab.0
+                ));
+            }
+            return Ok(ToolOut::Image {
+                png: m.picture,
+                caption,
+            });
+        }
         Ok(ToolOut::Text(match name {
             "offkilter_reference" => Ok(REFERENCE.to_string()),
+            "measuring_sheet" => {
+                let path = args
+                    .get("path")
+                    .and_then(|p| p.as_str())
+                    .ok_or("measuring_sheet needs path: where to write the PDF")?;
+                let size = ok_photo::SheetSize::parse(
+                    args.get("sheet").and_then(|s| s.as_str()).unwrap_or(""),
+                )?;
+                let pdf = ok_photo::sheet_pdf(size);
+                std::fs::write(path, &pdf).map_err(|e| format!("could not write {path}: {e}"))?;
+                let (lx, ly) = ok_photo::span(size);
+                Ok(format!(
+                    "wrote the {} measuring sheet to {path}: print at 100 % (the bar on it is 100 mm), lay parts on the grid, photograph it straight down with all four corner marks in the picture, then measure_photo. The marks are {lx:.0} x {ly:.0} mm apart; the double-ringed one is the origin.",
+                    size.name()
+                ))
+            }
             "list_documents" => {
                 let list = self.backend.list()?;
                 Ok(serde_json::to_string_pretty(&list).unwrap_or_default())
@@ -1331,6 +1468,16 @@ fn tool_list() -> Value {
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "path": { "type": "string" }, "name": { "type": "string", "description": "Body name (STL and OBJ; STEP bodies keep their own names)." } }, "required": ["path"] }
         },
         {
+            "name": "measuring_sheet",
+            "description": "Writes the printable measuring sheet as a PDF: a light 10 mm grid with four bullseye marks in the corners (the origin's double-ringed) and a 100 mm bar to check the print. Print it at 100 %, lay parts on it, photograph it straight down with all four marks in view, and measure_photo reads sizes off the picture.",
+            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "A4 (default), A3, A2 or Letter" } }, "required": ["path"] }
+        },
+        {
+            "name": "measure_photo",
+            "description": "Measures a photograph (JPEG or PNG) of parts lying on the printed measuring sheet: finds the four marks, squares the picture up onto the sheet's millimetres, and reports every dark shape on the grid as a part with its bounding box, area, centroid, outline and any holes (with their diameters), all in millimetres from the origin mark, x right, y up. Returns the squared-up picture with the grid and the parts drawn on it, so a feature can be named by where it sits; `out` also writes that picture. Good to a fraction of a millimetre on flat things photographed straight down; heights shift edges by parallax, so ask for a caliper reading for anything that matters and use the picture to say which. `sketch: true` adds a sketch on the current document's tab (doc, tab) with the outlines as lines and the holes as circles, ready to extrude.",
+            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "A4 (default), A3, A2 or Letter" }, "out": { "type": "string" }, "sketch": { "type": "boolean" }, "doc": doc_prop, "tab": tab_prop }, "required": ["path"] }
+        },
+        {
             "name": "export",
             "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF: a shop drawing sheet with the `views` (front, top, right, iso by default) laid out third angle on `sheet` (A4 by default; A3, A2, Letter) at the largest standard scale that fits, overall dimensions, and on a sheet of one part hidden lines dashed and diameter callouts for holes seen end-on; on an assembly a balloon per item and a parts list (`parts: false` to leave them off), where a sub-assembly instance is one item with its own sheet on its own tab; `hidden` forces hidden lines on or off; `note` goes on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf", "pdf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" }, "views": { "type": "array", "items": { "type": "string" } }, "sheet": { "type": "string" }, "parts": { "type": "boolean" }, "note": { "type": "string" } }, "required": ["format", "path"] }
@@ -1582,6 +1729,124 @@ mod tests {
         );
         let unknown = call(&mut server, 9, "no/such", json!({}));
         assert_eq!(unknown["error"]["code"], -32601);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_measuring_sheet_is_printed_and_a_photograph_of_it_read() {
+        let dir = std::env::temp_dir().join(format!("ok-mcp-photo-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut server = local_server(&dir);
+        let (err, created) = tool_text(&mut server, "create_document", json!({ "name": "Scan" }));
+        assert!(!err, "{created}");
+        let pdf = dir.join("sheet.pdf");
+        let (err, text) = tool_text(
+            &mut server,
+            "measuring_sheet",
+            json!({ "path": pdf.display().to_string(), "sheet": "Letter" }),
+        );
+        assert!(!err && text.contains("Letter measuring sheet"), "{text}");
+        assert!(text.contains("229 x 166 mm apart"), "{text}");
+        let sheet = String::from_utf8_lossy(&std::fs::read(&pdf).unwrap()).to_string();
+        assert!(sheet.starts_with("%PDF-1.4") && sheet.contains("the bar below is 100 mm"));
+        let (err, text) = tool_text(
+            &mut server,
+            "measuring_sheet",
+            json!({ "path": "/nonexistent/x.pdf", "sheet": "b5" }),
+        );
+        assert!(err && text.contains("unknown sheet"), "{text}");
+        // A scan of the sheet with a 50 x 30 plate (8 mm hole) and a 20 mm disc on it.
+        let scan = ok_photo::sheet_image(
+            ok_photo::SheetSize::Letter,
+            5.0,
+            &[[40.0, 40.0, 90.0, 70.0]],
+            &[[150.0, 100.0, 10.0]],
+            &[[65.0, 55.0, 4.0]],
+        );
+        let photo = dir.join("scan.png");
+        std::fs::write(&photo, ok_render::to_png(&scan)).unwrap();
+        let out = dir.join("measured.png");
+        let r = call(
+            &mut server,
+            3,
+            "tools/call",
+            json!({ "name": "measure_photo", "arguments": {
+                "path": photo.display().to_string(), "sheet": "Letter",
+                "out": out.display().to_string(), "sketch": true } }),
+        );
+        assert_eq!(r["result"]["isError"], Value::Null, "{r}");
+        let content = r["result"]["content"].as_array().unwrap();
+        assert_eq!(content[0]["type"], "image");
+        let caption = content[1]["text"].as_str().unwrap();
+        assert!(
+            caption.contains("Letter sheet: the four marks found"),
+            "{caption}"
+        );
+        assert!(
+            caption.contains("Part 1: 50.0 x 30.") && caption.contains("from (40.0, "),
+            "{caption}"
+        );
+        assert!(
+            caption.contains("hole 8.0 mm across at (65.0, 55.0), round"),
+            "{caption}"
+        );
+        assert!(
+            caption.contains("Part 2: 20.0 x ") && caption.contains("centroid (150.0, 100.0)"),
+            "{caption}"
+        );
+        assert!(caption.contains("; round, 20.0 mm across"), "{caption}");
+        assert!(caption.contains("Sketch feature 1 on tab 1"), "{caption}");
+        assert!(
+            caption.contains("Rectified picture written to"),
+            "{caption}"
+        );
+        let picture = ok_render::from_png(&std::fs::read(&out).unwrap()).unwrap();
+        let (lx, ly) = ok_photo::span(ok_photo::SheetSize::Letter);
+        assert_eq!(
+            (picture.width, picture.height),
+            (
+                ((lx + 30.0) * 4.0).round() as usize,
+                ((ly + 30.0) * 4.0).round() as usize
+            )
+        );
+        // The outlines became a sketch: the plate's four lines, its hole, and the disc.
+        let (err, report) = tool_text(&mut server, "report", json!({ "detail": "full" }));
+        assert!(!err, "{report}");
+        let full: Value = serde_json::from_str(&report).unwrap();
+        let sketch = &full["sketches"][0];
+        let kinds: Vec<&str> = sketch["entities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|e| e["type"].as_str())
+            .collect();
+        assert_eq!(
+            kinds.iter().filter(|k| **k == "line").count(),
+            4,
+            "{sketch}"
+        );
+        assert_eq!(
+            kinds.iter().filter(|k| **k == "circle").count(),
+            2,
+            "{sketch}"
+        );
+        assert_eq!(sketch["regions"], 3, "{sketch}");
+        let blank = dir.join("blank.png");
+        std::fs::write(
+            &blank,
+            ok_render::to_png(&ok_render::Image::new(
+                300,
+                200,
+                ok_render::Rgb(255, 255, 255),
+            )),
+        )
+        .unwrap();
+        let (err, text) = tool_text(
+            &mut server,
+            "measure_photo",
+            json!({ "path": blank.display().to_string() }),
+        );
+        assert!(err && text.contains("origin mark"), "{text}");
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
