@@ -7423,7 +7423,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 12.0
+                    "radius": 11.0
                   }
                 ],
                 "constraints": [],
@@ -7434,7 +7434,7 @@
           },
           {
             "id": 4,
-            "name": "collet",
+            "name": "collet nut",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -7442,7 +7442,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 14.0,
+              "depth": 16.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -7459,7 +7459,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 140.0
+                "offset": 142.0
               },
               "sketch": {
                 "entities": [
@@ -7494,7 +7494,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 12.0,
+              "depth": 30.0,
               "direction": "normal",
               "end": {
                 "type": "blind"

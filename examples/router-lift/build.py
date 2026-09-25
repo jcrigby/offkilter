@@ -232,6 +232,14 @@ class Part:
 # Dimensions (trim_router_lift.scad and pin_arm.scad, rev C defaults).
 # ---------------------------------------------------------------------
 ROUTER_D, ROUTER_CLR, CLAMP_H = 65.0, 0.3, 66.0
+# The router as a ghost, mounted bit up: the cylindrical housing the
+# clamp grips (the SCAD's clamp_h + 60), how much of it sits below the
+# clamp band, then the collet nut and the bit beyond it. The SCAD draws
+# only the housing; the nut and bit are assumptions until the real
+# router is measured, and the limits test reports what they imply.
+ROUTER_H, ROUTER_BELOW_CLAMP = CLAMP_H + 60.0, 10.0
+COLLET_D, COLLET_L = 22.0, 16.0  # measure yours
+BIT_OUT = 30.0  # tip beyond the collet nut, 1/4" straight bit: measure yours
 BLK_L, BLK_BX, BLK_BZ, BLK_GAP, BLK_W = 45.0, 40.0, 35.0, 10.0, 50.0
 BLK_BOLT = 5.0
 WALL = 8.0
@@ -567,14 +575,14 @@ def sk20(p):
 
 
 def router_body(p):
-    """The trim router motor, collet and a 1/4 inch bit, as a ghost."""
-    cylinder(p, ROUTER_D, CLAMP_H + 60, "motor")
-    s = p.sketch("top", CLAMP_H + 60, "collet")
-    p.circle(s, (0.0, 0.0), 12.0)
-    p.extrude(s, 14.0, op="add", name="collet")
-    s = p.sketch("top", CLAMP_H + 74, "bit")
+    """The trim router motor, collet nut and a 1/4 inch bit, as a ghost."""
+    cylinder(p, ROUTER_D, ROUTER_H, "motor")
+    s = p.sketch("top", ROUTER_H, "collet")
+    p.circle(s, (0.0, 0.0), COLLET_D / 2)
+    p.extrude(s, COLLET_L, op="add", name="collet nut")
+    s = p.sketch("top", ROUTER_H + COLLET_L, "bit")
     p.circle(s, (0.0, 0.0), PIN_D / 2)
-    p.extrude(s, 12.0, op="add", name="bit")
+    p.extrude(s, BIT_OUT, op="add", name="bit")
 
 
 def pivot_shaft(p):
@@ -653,7 +661,7 @@ def instances():
         at("Carriage", "carriage", 0, 0, Z_CAR),
         at("T8 nut", "T8 nut", 0, LS_Y, Z_CAR + CAR_H - NUT_FLANGE_T - 12.0),
         at("Coupling nut", "coupling nut", 0, LS_Y, TABLE - 1.0 - CRANK_NUT_L),
-        at("Router", "router", 0, 0, Z_CAR + CAR_H / 2 - CLAMP_H / 2 - 10),
+        at("Router", "router", 0, 0, Z_CAR + CAR_H / 2 - CLAMP_H / 2 - ROUTER_BELOW_CLAMP),
         # The pin arm: SK20s base down with the bore along X (the studio's
         # base normal -X turned to -Z), blocks base up under the tail (the
         # base normal turned to +Z), collars outside the blocks.

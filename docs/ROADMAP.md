@@ -137,5 +137,6 @@ in `docs/DECISIONS.md`.
 - [ ] `ok-sheet`: a 1:2.5 scale between 1:2 and 1:5, so a part like the carriage assembly does not drop to 1:5 on A4 for want of a few millimetres
 - [ ] Drawing dialog: a hidden-lines choice (auto, on, off) matching the `hidden` option the MCP tool and the server already take
 - [ ] `Dockerfile.dev`: build it once on a machine with a Docker daemon; the sandbox it was written in had only the client
+- [ ] Router lift: measure the Colt (clampable housing length, collet nut, bit reach) and put the numbers in `build.py`; the limits test then says whether the collet clears the table at max rise
 - [ ] Assembly sheets: an exploded iso view, driven by the client's explode slider, when the stacked view hides parts
 

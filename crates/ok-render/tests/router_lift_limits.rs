@@ -117,6 +117,11 @@ fn hits(r: &AssemblyResult, of: impl Fn(&str) -> bool) -> Vec<(String, String, f
 const KNOWN: &[(&str, &str, &str)] = &[
     ("arm", "guide pin", "the pin's top in the nose, as drawn"),
     (
+        "router",
+        "Arm assembly",
+        "the bit into the guide pin, which is drawn down in the alignment ring: retract the router for that check, set the pin higher for cutting",
+    ),
+    (
         "leveling bolt",
         "top",
         "the tail's stop against lifting the nose",
@@ -259,8 +264,32 @@ fn the_lift_holds_its_clearances_over_the_travel() {
                     37.0 - reach
                 ),
             );
+            // What the router reaches at max rise: the instructions change
+            // bits with the collet nut raised above the top, and the bit's
+            // working height follows from the nut's. The nut and bit are
+            // the ghost's assumptions until the real router is measured.
             let table = bounds(body(&r, "top")).1.z;
             let bit_tip = bounds(router).1.z;
+            let nut_top = router
+                .faces
+                .iter()
+                .filter(|f| f.plane.normal.z > 0.999)
+                .map(|f| {
+                    f.loops[0]
+                        .iter()
+                        .map(|&k| router.vertices[k as usize].z)
+                        .fold(f64::NEG_INFINITY, f64::max)
+                })
+                .filter(|z| *z < bit_tip - 1e-6)
+                .fold(f64::NEG_INFINITY, f64::max);
+            rep.note(
+                "collet nut top at max rise",
+                format!(
+                    "{:.1} mm above the table surface; bit changes need it above, which takes the router {:.0} mm higher in the clamp",
+                    nut_top - table,
+                    (table - nut_top).max(0.0)
+                ),
+            );
             rep.note(
                 "bit tip at max rise",
                 format!("{:.1} mm above the table surface", bit_tip - table),
@@ -322,6 +351,12 @@ fn the_lift_holds_its_clearances_over_the_travel() {
                 gap >= 3.0 - 1e-6,
                 "carriage bottom to the lower SK20 at min",
                 format!("{gap:.2} mm"),
+            );
+            let table = bounds(body(&r, "top")).1.z;
+            let bit_tip = bounds(body(&r, "router")).1.z;
+            rep.note(
+                "bit tip at min rise",
+                format!("{:.1} mm above the table surface", bit_tip - table),
             );
         }
         // Leadscrew parallel to both shafts: the angle between the axes,
