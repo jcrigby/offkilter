@@ -10,7 +10,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 1190.551 841.89] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
 endobj
 4 0 obj
-<< /Length 4420 >>
+<< /Length 4928 >>
 stream
 2.835 0 0 2.835 0 0 cm
 0.78 G 0.78 g
@@ -58,8 +58,12 @@ q 30 272 m 30 274.762 27.761 277 25 277 c 22.239 277 20 274.762 20 272 c 20 269.
 0 G 0 g
 q 27.5 272 m 27.5 273.381 26.381 274.5 25 274.5 c 23.619 274.5 22.5 273.381 22.5 272 c 22.5 270.619 23.619 269.5 25 269.5 c 26.381 269.5 27.5 270.619 27.5 272 c h f Q
 0 G 0 g
-q 1 0 0 1 70 7.5 cm BT /F1 3 Tf 0 -1.08 Td (offkilter measuring sheet \267 A3 \267 print at 100 % \267 this bar is 100 mm \267 origin at the double-ringed mark, x right, y up) Tj ET Q
-q 0.4 w 1 J 70 5 m 170 5 l 70 3.5 m 70 6.5 l 170 3.5 m 170 6.5 l S Q
+q 44.5 16 m 44.5 16.828 43.828 17.5 43 17.5 c 42.172 17.5 41.5 16.828 41.5 16 c 41.5 15.172 42.172 14.5 43 14.5 c 43.828 14.5 44.5 15.172 44.5 16 c h f Q
+q 49.5 16 m 49.5 16.828 48.828 17.5 48 17.5 c 47.172 17.5 46.5 16.828 46.5 16 c 46.5 15.172 47.172 14.5 48 14.5 c 48.828 14.5 49.5 15.172 49.5 16 c h f Q
+q 54.5 16 m 54.5 16.828 53.828 17.5 53 17.5 c 52.172 17.5 51.5 16.828 51.5 16 c 51.5 15.172 52.172 14.5 53 14.5 c 53.828 14.5 54.5 15.172 54.5 16 c h f Q
+0 G 0 g
+q 1 0 0 1 70 10.5 cm BT /F1 3 Tf 0 -1.08 Td (offkilter measuring sheet \267 A3 \267 print at 100 % \267 the bar below is 100 mm \267 origin at the double-ringed mark, x right, y up \267 the dots by it say which sheet) Tj ET Q
+q 0.4 w 1 J 70 5.5 m 170 5.5 l 70 4 m 70 7 l 170 4 m 170 7 l S Q
 
 endstream
 endobj
@@ -76,10 +80,10 @@ xref
 0000000068 00000 n 
 0000000125 00000 n 
 0000000269 00000 n 
-0000004741 00000 n 
-0000004838 00000 n 
+0000005249 00000 n 
+0000005346 00000 n 
 trailer
 << /Size 7 /Root 1 0 R >>
 startxref
-4940
+5448
 %%EOF

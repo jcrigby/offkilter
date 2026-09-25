@@ -22,6 +22,7 @@ pub enum SheetSize {
     A3,
     A2,
     Letter,
+    Tabloid,
 }
 
 impl SheetSize {
@@ -31,8 +32,9 @@ impl SheetSize {
             "a3" => Ok(SheetSize::A3),
             "a2" => Ok(SheetSize::A2),
             "letter" => Ok(SheetSize::Letter),
+            "tabloid" | "ledger" | "11x17" => Ok(SheetSize::Tabloid),
             other => Err(format!(
-                "unknown sheet size {other:?}: use A4, A3, A2 or Letter"
+                "unknown sheet size {other:?}: use A4, A3, A2, Letter or Tabloid"
             )),
         }
     }
@@ -43,6 +45,7 @@ impl SheetSize {
             SheetSize::A3 => (420.0, 297.0),
             SheetSize::A2 => (594.0, 420.0),
             SheetSize::Letter => (279.4, 215.9),
+            SheetSize::Tabloid => (431.8, 279.4),
         }
     }
 
@@ -52,6 +55,7 @@ impl SheetSize {
             SheetSize::A3 => "A3",
             SheetSize::A2 => "A2",
             SheetSize::Letter => "Letter",
+            SheetSize::Tabloid => "Tabloid",
         }
     }
 }

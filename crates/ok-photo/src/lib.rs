@@ -28,6 +28,13 @@ const RING_HOLE_R: f64 = 5.0;
 const DOT_R: f64 = 2.5;
 const ORIGIN_RING_R: f64 = 11.5;
 const ORIGIN_RING_HOLE_R: f64 = 10.0;
+/// The size code: a row of dots below the x axis by the origin mark,
+/// one per step in `SheetSize::code`, so a photograph says which sheet
+/// it is of.
+const CODE_DOT_R: f64 = 1.5;
+const CODE_X0: f64 = 18.0;
+const CODE_PITCH: f64 = 5.0;
+const CODE_Y: f64 = -9.0;
 /// Pixels per millimetre of the rectified picture.
 const SCALE: f64 = 4.0;
 /// The rectified picture reaches this far outside the fiducials.
@@ -37,6 +44,80 @@ const BORDER: f64 = 15.0;
 pub fn span(size: SheetSize) -> (f64, f64) {
     let (w, h) = size.size();
     (w - 2.0 * INSET, h - 2.0 * INSET)
+}
+
+/// The sizes in the order the code dots count them: one dot is A4.
+const CODED: [SheetSize; 5] = [
+    SheetSize::A4,
+    SheetSize::Letter,
+    SheetSize::A3,
+    SheetSize::A2,
+    SheetSize::Tabloid,
+];
+
+/// How many code dots the sheet of this size carries.
+pub fn code(size: SheetSize) -> usize {
+    CODED.iter().position(|&s| s == size).map_or(1, |i| i + 1)
+}
+
+/// The size a count of code dots names.
+pub fn size_of_code(dots: usize) -> Option<SheetSize> {
+    (dots >= 1).then(|| CODED.get(dots - 1).copied()).flatten()
+}
+
+/// A thing of known size on the sheet, for reading the print scale.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Reference {
+    /// A round object of this diameter in millimetres: a coin, a bearing.
+    Disc(f64),
+    /// A photo scale with alternating dark and light blocks of this
+    /// length in millimetres (a forensic ABFO No. 2 scale has 10 mm
+    /// bars), so dark blocks repeat every twice that.
+    Bars(f64),
+}
+
+impl Reference {
+    /// `"disc 24.26"`, `"bars 10"`, or a US coin by name.
+    pub fn parse(text: &str) -> Result<Reference, String> {
+        let t = text.trim().to_lowercase();
+        let coin = match t.as_str() {
+            "quarter" => Some(24.26),
+            "nickel" => Some(21.21),
+            "dime" => Some(17.91),
+            "penny" | "cent" => Some(19.05),
+            _ => None,
+        };
+        if let Some(d) = coin {
+            return Ok(Reference::Disc(d));
+        }
+        let mut words = t.split_whitespace();
+        let kind = words.next().unwrap_or("");
+        let value: f64 = words
+            .next()
+            .unwrap_or("")
+            .trim_end_matches("mm")
+            .parse()
+            .map_err(|_| {
+                format!("reference {text:?}: give a size, like \"disc 24.26\" or \"bars 10\"")
+            })?;
+        if value <= 0.0 {
+            return Err(format!("reference {text:?}: the size must be positive"));
+        }
+        match kind {
+            "disc" | "coin" | "round" => Ok(Reference::Disc(value)),
+            "bars" | "bar" | "scale" => Ok(Reference::Bars(value)),
+            _ => Err(format!(
+                "reference {text:?}: say \"disc <mm>\" for a round object, \"bars <mm>\" for a photo scale's alternating blocks, or a US coin by name"
+            )),
+        }
+    }
+
+    fn describe(&self) -> String {
+        match self {
+            Reference::Disc(d) => format!("a {d:.2} mm disc"),
+            Reference::Bars(b) => format!("a scale with {b:.0} mm bars"),
+        }
+    }
 }
 
 /// The reference sheet as a PDF at true size.
@@ -117,6 +198,15 @@ pub fn sheet_pdf(size: SheetSize) -> Vec<u8> {
         page.gray(0.0);
         page.dot(cx, cy, DOT_R);
     }
+    // The size code: dots below the axis by the origin mark.
+    page.gray(0.0);
+    for k in 0..code(size) {
+        page.dot(
+            x0 + CODE_X0 + k as f64 * CODE_PITCH,
+            y0 + CODE_Y,
+            CODE_DOT_R,
+        );
+    }
     // Title and the print-scale bar in the bottom margin.
     page.gray(0.0);
     // The bar sits under the text, its end ticks clear of the letters.
@@ -125,7 +215,7 @@ pub fn sheet_pdf(size: SheetSize) -> Vec<u8> {
         10.5,
         3.0,
         &format!(
-            "offkilter measuring sheet · {} · print at 100 % · the bar below is 100 mm · origin at the double-ringed mark, x right, y up",
+            "offkilter measuring sheet · {} · print at 100 % · the bar below is 100 mm · origin at the double-ringed mark, x right, y up · the dots by it say which sheet",
             size.name()
         ),
         Anchor::Left,
@@ -173,9 +263,35 @@ pub struct Hole {
     pub area: f64,
 }
 
+/// The print scale read from a reference of known size.
+#[derive(Debug, Clone, Serialize)]
+pub struct Calibration {
+    pub reference: String,
+    /// What the reference measured before the correction, in the
+    /// millimetres the sheet's marks implied.
+    pub measured: f64,
+    pub nominal: f64,
+    /// True millimetres per printed millimetre: 0.97 for a sheet
+    /// printed at 97 %.
+    pub factor: f64,
+    /// Where the reference lies on the sheet (true mm), for keeping
+    /// it out of the parts and drawing it.
+    pub bbox: [f64; 4],
+}
+
+fn sheet_name<S: serde::Serializer>(size: &SheetSize, s: S) -> Result<S::Ok, S::Error> {
+    s.serialize_str(size.name())
+}
+
 /// What `measure` found.
 #[derive(Debug, Clone, Serialize)]
 pub struct Measurement {
+    /// Which sheet the picture is of, and whether the picture said so
+    /// (the size code by the origin mark) or the caller did.
+    #[serde(serialize_with = "sheet_name")]
+    pub sheet: SheetSize,
+    pub sheet_read: bool,
+    pub calibration: Option<Calibration>,
     /// Fiducial centres in the photograph's pixels: origin, x, xy, y.
     pub fiducials: [[f64; 2]; 4],
     /// Millimetres per photograph pixel at the sheet's middle.
@@ -232,13 +348,24 @@ pub fn decode(bytes: &[u8]) -> Result<Image, String> {
     Err("not a PNG or a JPEG".into())
 }
 
-/// Measures a photograph of parts on the reference sheet.
-pub fn measure(bytes: &[u8], size: SheetSize) -> Result<Measurement, String> {
+/// Measures a photograph of parts on the reference sheet. `sheet` is
+/// the fallback when the picture's size code cannot be read;
+/// `reference` names a thing of known size on the sheet, from which
+/// the print scale is read and everything corrected.
+pub fn measure(
+    bytes: &[u8],
+    sheet: Option<SheetSize>,
+    reference: Option<&Reference>,
+) -> Result<Measurement, String> {
     let photo = decode(bytes)?;
-    measure_image(&photo, size)
+    measure_image(&photo, sheet, reference)
 }
 
-pub fn measure_image(photo: &Image, size: SheetSize) -> Result<Measurement, String> {
+pub fn measure_image(
+    photo: &Image,
+    sheet: Option<SheetSize>,
+    reference: Option<&Reference>,
+) -> Result<Measurement, String> {
     // Work at most 1800 px across for the fiducials.
     let factor = (photo.width.max(photo.height) as f64 / 1800.0)
         .ceil()
@@ -248,7 +375,7 @@ pub fn measure_image(photo: &Image, size: SheetSize) -> Result<Measurement, Stri
     let (w, h) = (small.width, small.height);
     let threshold = otsu(&gray);
     let dark: Vec<bool> = gray.iter().map(|&g| (g as u32) < threshold).collect();
-    let found = find_fiducials(&dark, w, h)?;
+    let (found, dots) = find_fiducials(&dark, w, h)?;
     let f = factor as f64;
     let fiducials = [
         [found[0].0 * f, found[0].1 * f],
@@ -256,9 +383,75 @@ pub fn measure_image(photo: &Image, size: SheetSize) -> Result<Measurement, Stri
         [found[2].0 * f, found[2].1 * f],
         [found[3].0 * f, found[3].1 * f],
     ];
+    let coded = size_of_code(dots);
+    let (size, sheet_read) = match (coded, sheet) {
+        (Some(c), _) => (c, true),
+        (None, Some(s)) => (s, false),
+        (None, None) => {
+            return Err(format!(
+                "no size code by the origin mark ({dots} dots found where 1 to {} name the sheet); say which sheet it is",
+                CODED.len()
+            ))
+        }
+    };
     let (lx, ly) = span(size);
+    let mut pass = rectify(photo, &fiducials, lx, ly, reference)?;
+    let mut calibration = None;
+    if let Some(r) = reference {
+        let (measured, nominal, _) = pass
+            .reference
+            .ok_or_else(|| format!("{} not found on the sheet", r.describe()))?;
+        let k = nominal / measured;
+        // Measure again in true millimetres: the marks are k times
+        // their nominal spacing apart.
+        pass = rectify(photo, &fiducials, lx * k, ly * k, reference)?;
+        let (_, _, bbox) = pass
+            .reference
+            .ok_or_else(|| format!("{} not found on the sheet", r.describe()))?;
+        calibration = Some(Calibration {
+            reference: r.describe(),
+            measured,
+            nominal,
+            factor: k,
+            bbox,
+        });
+    }
+    Ok(Measurement {
+        sheet: size,
+        sheet_read,
+        calibration,
+        fiducials,
+        mm_per_pixel: pass.mm_per_pixel,
+        residual: pass.residual,
+        parts: pass.parts,
+        picture: ok_render::to_png(&pass.picture),
+        picture_scale: SCALE,
+        picture_origin: [BORDER * SCALE, (pass.ly + BORDER) * SCALE],
+    })
+}
+
+/// One rectification of the photograph onto a sheet frame whose marks
+/// are `lx` x `ly` mm apart.
+struct Pass {
+    ly: f64,
+    mm_per_pixel: f64,
+    residual: f64,
+    parts: Vec<Part>,
+    /// The reference, when asked for and found: what it measured, its
+    /// nominal size, and its box.
+    reference: Option<(f64, f64, [f64; 4])>,
+    picture: Image,
+}
+
+fn rectify(
+    photo: &Image,
+    fiducials: &[[f64; 2]; 4],
+    lx: f64,
+    ly: f64,
+    reference: Option<&Reference>,
+) -> Result<Pass, String> {
     let sheet = [[0.0, 0.0], [lx, 0.0], [lx, ly], [0.0, ly]];
-    let to_sheet = homography(&fiducials, &sheet)?;
+    let to_sheet = homography(fiducials, &sheet)?;
     let to_photo = invert(&to_sheet)?;
     let residual = {
         let mut sum = 0.0;
@@ -367,6 +560,39 @@ pub fn measure_image(photo: &Image, size: SheetSize) -> Result<Measurement, Stri
         });
     }
     parts.sort_by(|a, b| b.area.total_cmp(&a.area));
+    // The reference, if asked for: found among the parts (a disc) or
+    // the smaller dark blocks (a scale's bars), then taken out of the
+    // parts along with whatever else lies within it.
+    let found = match reference {
+        None => None,
+        Some(Reference::Disc(d)) => parts
+            .iter()
+            .filter(|p| p.circularity > 0.85 && p.holes.is_empty())
+            .filter(|p| (p.diameter / d - 1.0).abs() < 0.25)
+            .min_by(|a, b| (a.diameter - d).abs().total_cmp(&(b.diameter - d).abs()))
+            .map(|p| (p.diameter, *d, p.bbox)),
+        Some(Reference::Bars(b)) => {
+            let blocks: Vec<[f64; 4]> = comps
+                .iter()
+                .filter(|c| c.area >= (3.0 * SCALE * SCALE) as usize && c.fill() > 0.6)
+                .map(|c| {
+                    let lo = mm(c.x0, c.y1 + 1);
+                    let hi = mm(c.x1 + 1, c.y0);
+                    [lo[0], lo[1], hi[0], hi[1]]
+                })
+                .collect();
+            bar_run(&blocks, 2.0 * b).map(|(pitch, bbox)| (pitch, 2.0 * b, bbox))
+        }
+    };
+    if let Some((_, _, bbox)) = found {
+        let margin = 3.0;
+        parts.retain(|p| {
+            !(p.centroid[0] > bbox[0] - margin
+                && p.centroid[0] < bbox[2] + margin
+                && p.centroid[1] > bbox[1] - margin
+                && p.centroid[1] < bbox[3] + margin)
+        });
+    }
     // The overlay: the grid, the fiducials, each part's box and holes.
     let mut x = 0.0;
     while x <= lx + 1e-9 {
@@ -403,6 +629,13 @@ pub fn measure_image(photo: &Image, size: SheetSize) -> Result<Measurement, Stri
     for s in &sheet {
         cross(&mut picture, px(s[0]), py(s[1]), 8, Rgb(40, 90, 200));
     }
+    if let Some((_, _, b)) = found {
+        let (x0, y0, x1, y1) = (px(b[0]) - 4, py(b[3]) - 4, px(b[2]) + 4, py(b[1]) + 4);
+        hline(&mut picture, x0, x1, y0, Rgb(240, 150, 30));
+        hline(&mut picture, x0, x1, y1, Rgb(240, 150, 30));
+        vline(&mut picture, x0, y0, y1, Rgb(240, 150, 30));
+        vline(&mut picture, x1, y0, y1, Rgb(240, 150, 30));
+    }
     for p in &parts {
         let (x0, y0, x1, y1) = (px(p.bbox[0]), py(p.bbox[3]), px(p.bbox[2]), py(p.bbox[1]));
         hline(&mut picture, x0, x1, y0, Rgb(220, 40, 40));
@@ -419,40 +652,129 @@ pub fn measure_image(photo: &Image, size: SheetSize) -> Result<Measurement, Stri
             );
         }
     }
-    Ok(Measurement {
-        fiducials,
+    Ok(Pass {
+        ly,
         mm_per_pixel,
         residual,
         parts,
-        picture: ok_render::to_png(&picture),
-        picture_scale: SCALE,
-        picture_origin: [BORDER * SCALE, (ly + BORDER) * SCALE],
+        reference: found,
+        picture,
     })
+}
+
+/// The longest straight, evenly spaced run of at least three alike
+/// blocks whose pitch is within a quarter of `pitch`: a photo scale's
+/// bars. Returns the measured pitch (end to end over the run) and the
+/// run's box.
+fn bar_run(blocks: &[[f64; 4]], pitch: f64) -> Option<(f64, [f64; 4])> {
+    let centre = |b: &[f64; 4]| [(b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0];
+    let area = |b: &[f64; 4]| (b[2] - b[0]) * (b[3] - b[1]);
+    let mut best: Option<(usize, f64, [f64; 4])> = None;
+    for (i, a) in blocks.iter().enumerate() {
+        for (j, b) in blocks.iter().enumerate() {
+            if i == j || !(0.7..=1.4).contains(&(area(a) / area(b))) {
+                continue;
+            }
+            let (ca, cb) = (centre(a), centre(b));
+            let step = [cb[0] - ca[0], cb[1] - ca[1]];
+            let len = dist2(ca, cb).sqrt();
+            if (len / pitch - 1.0).abs() > 0.25 {
+                continue;
+            }
+            // Walk on from b while a block of a's size sits at each step.
+            let mut run = vec![i, j];
+            let mut last = cb;
+            loop {
+                let want = [last[0] + step[0], last[1] + step[1]];
+                let next = blocks.iter().enumerate().find(|(k, c)| {
+                    !run.contains(k)
+                        && (0.7..=1.4).contains(&(area(a) / area(c)))
+                        && dist2(centre(c), want).sqrt() < 0.12 * pitch
+                });
+                match next {
+                    Some((k, c)) => {
+                        run.push(k);
+                        last = centre(c);
+                    }
+                    None => break,
+                }
+            }
+            if run.len() < 3 {
+                continue;
+            }
+            let measured = dist2(ca, last).sqrt() / (run.len() - 1) as f64;
+            let mut bbox = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+            for &k in &run {
+                bbox[0] = bbox[0].min(blocks[k][0]);
+                bbox[1] = bbox[1].min(blocks[k][1]);
+                bbox[2] = bbox[2].max(blocks[k][2]);
+                bbox[3] = bbox[3].max(blocks[k][3]);
+            }
+            if best.is_none_or(|(n, _, _)| run.len() > n) {
+                best = Some((run.len(), measured, bbox));
+            }
+        }
+    }
+    best.map(|(_, m, b)| (m, b))
 }
 
 // ---- raster helpers ------------------------------------------------
 
-/// The printed sheet as a raster at `s` px/mm, y down, as a scanner
-/// would see it, with `rects` (x0, y0, x1, y1) and `discs` (cx, cy, r)
-/// lying on it in sheet millimetres and `holes` (cx, cy, r) drilled
-/// through whatever they land on. Tests in other crates photograph it.
-pub fn sheet_image(
-    size: SheetSize,
-    s: f64,
-    rects: &[[f64; 4]],
-    discs: &[[f64; 3]],
-    holes: &[[f64; 3]],
-) -> Image {
+/// What lies on a synthetic sheet, in true millimetres of the sheet
+/// frame: `rects` (x0, y0, x1, y1), `discs` (cx, cy, r), and `holes`
+/// (cx, cy, r) drilled through whatever they land on. `print` is the
+/// scale the sheet was printed at (0.97 for a sheet that came out 3 %
+/// small), which shrinks the marks, the grid and the code but not the
+/// parts.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Scene {
+    pub rects: Vec<[f64; 4]>,
+    pub discs: Vec<[f64; 3]>,
+    pub holes: Vec<[f64; 3]>,
+    pub print: f64,
+}
+
+impl Default for Scene {
+    fn default() -> Scene {
+        Scene {
+            rects: Vec::new(),
+            discs: Vec::new(),
+            holes: Vec::new(),
+            print: 1.0,
+        }
+    }
+}
+
+impl Scene {
+    /// A photo scale's alternating bars: `n` dark blocks of `block` mm,
+    /// 3 mm tall, starting at (x, y) and repeating every two blocks.
+    pub fn bars(mut self, x: f64, y: f64, block: f64, n: usize) -> Scene {
+        for k in 0..n {
+            let x0 = x + 2.0 * block * k as f64;
+            self.rects.push([x0, y, x0 + block, y + 3.0]);
+        }
+        self
+    }
+}
+
+/// The printed sheet as a raster at `s` px per true mm, y down, as a
+/// scanner would see it, with the scene lying on it. Tests in other
+/// crates photograph it.
+pub fn sheet_image(size: SheetSize, s: f64, scene: &Scene) -> Image {
     let (w, h) = size.size();
     let (lx, ly) = span(size);
-    let (pw, ph) = ((w * s) as usize, (h * s) as usize);
+    let print = scene.print;
+    let (pw, ph) = ((w * print * s) as usize, (h * print * s) as usize);
     let mut img = Image::new(pw, ph, Rgb(255, 255, 255));
     let corners = [(0.0, 0.0), (lx, 0.0), (lx, ly), (0.0, ly)];
+    let dots = code(size);
     for j in 0..ph {
         for i in 0..pw {
-            // Sheet frame: origin at the origin fiducial, y up.
-            let x = (i as f64 + 0.5) / s - INSET;
-            let y = h - (j as f64 + 0.5) / s - INSET;
+            // Sheet frame: origin at the origin fiducial, y up. The
+            // sheet's own features are in printed mm, the parts in true.
+            let xt = (i as f64 + 0.5) / s - INSET * print;
+            let yt = h * print - (j as f64 + 0.5) / s - INSET * print;
+            let (x, y) = (xt / print, yt / print);
             let mut c = Rgb(255, 255, 255);
             let on_sheet = (0.0..=lx).contains(&x) && (0.0..=ly).contains(&y);
             let on_grid = on_sheet
@@ -474,15 +796,24 @@ pub fn sheet_image(
                     c = Rgb(255, 255, 255);
                 }
             }
-            let on_part = rects
+            for k in 0..dots {
+                let cx = CODE_X0 + k as f64 * CODE_PITCH;
+                if ((x - cx).powi(2) + (y - CODE_Y).powi(2)).sqrt() <= CODE_DOT_R {
+                    c = Rgb(0, 0, 0);
+                }
+            }
+            let on_part = scene
+                .rects
                 .iter()
-                .any(|r| (r[0]..=r[2]).contains(&x) && (r[1]..=r[3]).contains(&y))
-                || discs
+                .any(|r| (r[0]..=r[2]).contains(&xt) && (r[1]..=r[3]).contains(&yt))
+                || scene
+                    .discs
                     .iter()
-                    .any(|d| ((x - d[0]).powi(2) + (y - d[1]).powi(2)).sqrt() <= d[2]);
-            let in_hole = holes
+                    .any(|d| ((xt - d[0]).powi(2) + (yt - d[1]).powi(2)).sqrt() <= d[2]);
+            let in_hole = scene
+                .holes
                 .iter()
-                .any(|d| ((x - d[0]).powi(2) + (y - d[1]).powi(2)).sqrt() <= d[2]);
+                .any(|d| ((xt - d[0]).powi(2) + (yt - d[1]).powi(2)).sqrt() <= d[2]);
             if on_part && !in_hole {
                 c = Rgb(40, 40, 40);
             }
@@ -795,8 +1126,10 @@ fn components(mask: &[bool], w: usize, h: usize) -> Vec<Comp> {
     out
 }
 
-/// The four fiducials' centres in pixels: origin, x, xy, y.
-fn find_fiducials(dark: &[bool], w: usize, h: usize) -> Result<[(f64, f64); 4], String> {
+/// The four fiducials' centres in pixels (origin, x, xy, y) and the
+/// number of size-code dots by the origin.
+#[allow(clippy::type_complexity)]
+fn find_fiducials(dark: &[bool], w: usize, h: usize) -> Result<([(f64, f64); 4], usize), String> {
     let comps = components(dark, w, h);
     let is_ring = |c: &Comp| {
         c.area >= 40 && {
@@ -882,7 +1215,37 @@ fn find_fiducials(dark: &[bool], w: usize, h: usize) -> Result<[(f64, f64); 4], 
         .map(|&p| (p, (angle(p) - a0).rem_euclid(2.0 * PI)))
         .collect();
     ordered.sort_by(|a, b| b.1.total_cmp(&a.1));
-    Ok([o, ordered[0].0, ordered[1].0, ordered[2].0])
+    let corners = [o, ordered[0].0, ordered[1].0, ordered[2].0];
+    // The size code: small dots in a row below the x axis, just past
+    // the origin ring. Positions are taken in the origin's local frame
+    // (x towards the x mark, y towards the y mark, scaled by the
+    // origin ring), which perspective barely bends over 50 mm.
+    let s = origin_ring.width() as f64 / (2.0 * ORIGIN_RING_R);
+    let unit = |p: (f64, f64)| {
+        let d = ((p.0 - o.0).powi(2) + (p.1 - o.1).powi(2)).sqrt();
+        [(p.0 - o.0) / d, (p.1 - o.1) / d]
+    };
+    let (ex, ey) = (unit(corners[1]), unit(corners[3]));
+    let dot_area = PI * (CODE_DOT_R * s).powi(2);
+    let mut along: Vec<f64> = comps
+        .iter()
+        .filter(|c| c.fill() > 0.5 && (0.3..=3.0).contains(&(c.area as f64 / dot_area)))
+        .filter_map(|c| {
+            let (dx, dy) = (c.cx - o.0, c.cy - o.1);
+            let a = (dx * ex[0] + dy * ex[1]) / s;
+            let b = (dx * ey[0] + dy * ey[1]) / s;
+            let first = CODE_X0 - CODE_PITCH;
+            let last = CODE_X0 + CODED.len() as f64 * CODE_PITCH;
+            ((first..=last).contains(&a) && (CODE_Y - 4.0..=CODE_Y + 4.0).contains(&b)).then_some(a)
+        })
+        .collect();
+    along.sort_by(f64::total_cmp);
+    // Evenly spaced: every gap near the pitch, else it is not the code.
+    let even = along
+        .windows(2)
+        .all(|g| ((g[1] - g[0]) / CODE_PITCH - 1.0).abs() < 0.35);
+    let dots = if even { along.len() } else { 0 };
+    Ok((corners, dots))
 }
 
 // ---- projective geometry -----------------------------------------------
@@ -1123,8 +1486,16 @@ mod tests {
         let text = String::from_utf8_lossy(&pdf);
         assert!(text.starts_with("%PDF-1.4"));
         assert!(text.contains("/MediaBox [0 0 841.89 595.276]"));
-        // Filled discs: origin ring, its hole, then three per bullseye.
-        assert_eq!(text.matches("c h f Q").count(), 2 + 4 * 3);
+        // Filled discs: origin ring, its hole, three per bullseye, and
+        // the one code dot of A4.
+        assert_eq!(text.matches("c h f Q").count(), 2 + 4 * 3 + 1);
+        assert_eq!(code(SheetSize::A4), 1);
+        let letter = String::from_utf8_lossy(&sheet_pdf(SheetSize::Letter)).to_string();
+        assert_eq!(letter.matches("c h f Q").count(), 2 + 4 * 3 + 2);
+        assert_eq!(size_of_code(2), Some(SheetSize::Letter));
+        assert_eq!(size_of_code(5), Some(SheetSize::Tabloid));
+        assert_eq!(size_of_code(0), None);
+        assert_eq!(size_of_code(6), None);
         assert!(text.contains("(100) Tj") && text.contains("(150) Tj"));
         assert!(text.contains("the bar below is 100 mm"));
         let (lx, ly) = span(SheetSize::A4);
@@ -1138,9 +1509,12 @@ mod tests {
         let sheet = sheet_image(
             SheetSize::A4,
             6.0,
-            &[[60.0, 50.0, 100.0, 75.0]],
-            &[[150.0, 100.0, 15.0]],
-            &[[80.0, 62.5, 3.0]],
+            &Scene {
+                rects: vec![[60.0, 50.0, 100.0, 75.0]],
+                discs: vec![[150.0, 100.0, 15.0]],
+                holes: vec![[80.0, 62.5, 3.0]],
+                ..Scene::default()
+            },
         );
         let photo = photograph(
             &sheet,
@@ -1153,7 +1527,9 @@ mod tests {
             1600,
             1200,
         );
-        let m = measure_image(&photo, SheetSize::A4).unwrap();
+        let m = measure_image(&photo, None, None).unwrap();
+        assert!(m.sheet == SheetSize::A4 && m.sheet_read, "{:?}", m.sheet);
+        assert!(m.calibration.is_none());
         assert!(m.residual < 1.5, "fiducial fit {} px", m.residual);
         assert!((m.mm_per_pixel - 0.23).abs() < 0.03, "{}", m.mm_per_pixel);
         // The origin mark is near the picture's bottom-left, x runs right.
@@ -1212,9 +1588,85 @@ mod tests {
     }
 
     #[test]
+    fn a_short_print_is_read_from_its_dots_and_corrected_by_its_bars() {
+        // A Letter sheet printed at 96 %, with a 10 mm bar scale, a
+        // quarter and a 40 x 20 plate on it, photographed askew.
+        let scene = Scene {
+            rects: vec![[100.0, 30.0, 140.0, 50.0]],
+            discs: vec![[60.0, 100.0, 24.26 / 2.0]],
+            print: 0.96,
+            ..Scene::default()
+        }
+        .bars(120.0, 110.0, 10.0, 5);
+        let sheet = sheet_image(SheetSize::Letter, 6.0, &scene);
+        let photo = photograph(
+            &sheet,
+            [
+                [120.0, 110.0],
+                [1500.0, 160.0],
+                [1440.0, 1120.0],
+                [170.0, 1060.0],
+            ],
+            1600,
+            1200,
+        );
+        // Uncorrected, the sheet reads as Letter from its dots and
+        // everything comes out 1/0.96 too big.
+        let m = measure_image(&photo, Some(SheetSize::A4), None).unwrap();
+        assert!(
+            m.sheet == SheetSize::Letter && m.sheet_read,
+            "{:?}",
+            m.sheet
+        );
+        let plate = &m.parts[0];
+        assert!(
+            (plate.bbox[2] - plate.bbox[0] - 40.0 / 0.96).abs() < 0.7,
+            "{:?}",
+            plate.bbox
+        );
+        // With the bars named, the print scale is read and corrected.
+        let m = measure_image(&photo, None, Some(&Reference::Bars(10.0))).unwrap();
+        let cal = m.calibration.as_ref().expect("calibrated");
+        assert!((cal.factor - 0.96).abs() < 0.01, "{cal:?}");
+        assert!(
+            (cal.nominal - 20.0).abs() < 1e-9 && (cal.measured - 20.0 / 0.96).abs() < 0.3,
+            "{cal:?}"
+        );
+        assert_eq!(m.parts.len(), 2, "the bars are not parts: {:?}", m.parts);
+        let plate = &m.parts[0];
+        for (got, want) in plate.bbox.iter().zip([100.0, 30.0, 140.0, 50.0]) {
+            assert!((got - want).abs() < 0.6, "plate {:?}", plate.bbox);
+        }
+        let coin = &m.parts[1];
+        assert!(
+            coin.circularity > 0.85 && (coin.diameter - 24.26).abs() < 0.4,
+            "{coin:?}"
+        );
+        // The coin as the reference instead: the same answer, without the coin.
+        let m = measure_image(&photo, None, Some(&Reference::parse("quarter").unwrap())).unwrap();
+        let cal = m.calibration.as_ref().expect("calibrated");
+        assert!((cal.factor - 0.96).abs() < 0.015, "{cal:?}");
+        // The plate and the five bars, which are only parts this time.
+        assert_eq!(m.parts.len(), 6, "{:?}", m.parts);
+        assert!(
+            m.parts.iter().all(|p| p.circularity < 0.85),
+            "the coin stays out: {:?}",
+            m.parts
+        );
+        let err = measure_image(&photo, None, Some(&Reference::Disc(50.0))).unwrap_err();
+        assert!(err.contains("not found"), "{err}");
+        assert_eq!(
+            Reference::parse("bars 10mm").unwrap(),
+            Reference::Bars(10.0)
+        );
+        assert_eq!(Reference::parse("disc 22").unwrap(), Reference::Disc(22.0));
+        assert!(Reference::parse("ruler").is_err());
+    }
+
+    #[test]
     fn a_picture_without_the_marks_is_refused() {
         let blank = Image::new(400, 300, Rgb(255, 255, 255));
-        let err = measure_image(&blank, SheetSize::A4).unwrap_err();
+        let err = measure_image(&blank, Some(SheetSize::A4), None).unwrap_err();
         assert!(err.contains("origin mark"), "{err}");
     }
 }

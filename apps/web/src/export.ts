@@ -583,7 +583,7 @@ function scaleLabel(s: number): string {
  * lines dashed, and a title block.
  */
 /** Sheet sizes in millimetres, landscape. */
-export const SHEETS = { A4: { w: 297, h: 210 }, A3: { w: 420, h: 297 }, A2: { w: 594, h: 420 }, Letter: { w: 279.4, h: 215.9 } } as const;
+export const SHEETS = { A4: { w: 297, h: 210 }, A3: { w: 420, h: 297 }, A2: { w: 594, h: 420 }, Letter: { w: 279.4, h: 215.9 }, Tabloid: { w: 431.8, h: 279.4 } } as const;
 export type SheetSize = keyof typeof SHEETS;
 
 /** Where the views land on a sheet: sheet = (ox + x * scale, oy - y * scale) for layout coordinates. */

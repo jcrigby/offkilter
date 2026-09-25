@@ -125,6 +125,7 @@ top are concrete and self-contained; items lower down are directions.
 
 - [x] Mechanism-at-limit checks of the router lift example: the carriage's travel and the rev D pin arm's pivot swept with interference, clearance and alignment measured (`router_lift_limits.rs`), the BOM checked against the shop drawings
 - [x] Measuring from a photograph: `measuring_sheet` prints a grid with four bullseye marks, `measure_photo` squares a picture of parts on it up and reports their sizes, outlines and holes in millimetres, and can put them in a sketch (`crates/ok-photo`, `examples/measuring-sheet/`)
+- [x] The sheet says which size it is (a row of dots by the origin mark), and a reference of known size on it (a forensic photo scale's 10 mm bars, or a coin) gives the print scale, so a sheet that printed at 97 % still measures true; Tabloid joins the sheet sizes
 
 ## Next
 
@@ -141,5 +142,6 @@ in `docs/DECISIONS.md`.
 - [ ] Router lift: measure the Colt (clampable housing length, collet nut, bit reach) and put the numbers in `build.py`; the limits test then says whether the collet clears the table at max rise
 - [ ] Assembly sheets: an exploded iso view, driven by the client's explode slider, when the stacked view hides parts
 - [ ] Photo measuring in the web app: a server route and an upload button that show the squared-up picture and offer the sketch, so a phone photo needs no MCP session
-- [ ] Photo measuring: fit circles and straight runs to outlines (a round part already becomes a circle; a rectangle's corners are still traced pixels), and read the 100 mm bar to warn when the sheet was printed scaled
+- [ ] Photo measuring: fit circles and straight runs to outlines (a round part already becomes a circle; a rectangle's corners are still traced pixels)
+- [ ] Photo measuring: read a photo scale's millimetre graduations as well as its bars, and warn when the marks' aspect ratio says the print was stretched one way
 

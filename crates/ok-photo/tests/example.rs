@@ -1,9 +1,10 @@
 //! Makes and checks `examples/measuring-sheet/`: a synthetic photograph of
-//! the A4 sheet with parts on it (`scan.png`, what a phone would take,
-//! askew), and the measurement of it (`out/measured.png`). Both are
-//! committed; this test regenerates them so they never go stale.
+//! the Letter sheet with parts and a photo scale on it (`scan.png`, what a
+//! phone would take, askew, of a print that came out at 97 %), and the
+//! measurement of it (`out/measured.png`). Both are committed; this test
+//! regenerates them so they never go stale.
 
-use ok_photo::{measure_image, photograph, sheet_image, SheetSize};
+use ok_photo::{measure_image, photograph, sheet_image, Reference, Scene, SheetSize};
 
 fn example_dir() -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -16,15 +17,17 @@ fn example_dir() -> std::path::PathBuf {
 fn the_example_scan_measures_its_plate_and_disc() {
     let dir = example_dir();
     // A 64 x 38 plate at (30, 30) with two 6.5 mm holes 50 mm apart, a
-    // 25 mm disc with a 10 mm bore at (170, 110), and an 18 mm disc at
-    // (110, 120), on the A4 sheet at 8 px/mm.
-    let sheet = sheet_image(
-        SheetSize::A4,
-        8.0,
-        &[[30.0, 30.0, 94.0, 68.0]],
-        &[[170.0, 110.0, 12.5], [110.0, 120.0, 9.0]],
-        &[[37.0, 49.0, 3.25], [87.0, 49.0, 3.25], [170.0, 110.0, 5.0]],
-    );
+    // 25 mm washer with a 10 mm bore at (170, 110), an 18 mm disc at
+    // (110, 120), and a photo scale with five 10 mm bars along the top,
+    // on a Letter sheet printed at 97 %, at 8 px/mm.
+    let scene = Scene {
+        rects: vec![[30.0, 30.0, 94.0, 68.0]],
+        discs: vec![[170.0, 110.0, 12.5], [110.0, 120.0, 9.0]],
+        holes: vec![[37.0, 49.0, 3.25], [87.0, 49.0, 3.25], [170.0, 110.0, 5.0]],
+        print: 0.97,
+    }
+    .bars(40.0, 140.0, 10.0, 5);
+    let sheet = sheet_image(SheetSize::Letter, 8.0, &scene);
     let scan = photograph(
         &sheet,
         [
@@ -37,9 +40,16 @@ fn the_example_scan_measures_its_plate_and_disc() {
         1500,
     );
     std::fs::write(dir.join("scan.png"), ok_render::to_png(&scan)).unwrap();
-    let m = measure_image(&scan, SheetSize::A4).unwrap();
+    let m = measure_image(&scan, None, Some(&Reference::Bars(10.0))).unwrap();
     std::fs::create_dir_all(dir.join("out")).unwrap();
     std::fs::write(dir.join("out/measured.png"), &m.picture).unwrap();
+    assert!(
+        m.sheet == SheetSize::Letter && m.sheet_read,
+        "{:?}",
+        m.sheet
+    );
+    let cal = m.calibration.as_ref().expect("the bars read");
+    assert!((cal.factor - 0.97).abs() < 0.01, "{cal:?}");
     assert!(m.residual < 1.5, "fit {}", m.residual);
     assert_eq!(m.parts.len(), 3, "{:?}", m.parts);
     let plate = &m.parts[0];
@@ -74,4 +84,7 @@ fn the_example_scan_measures_its_plate_and_disc() {
         "{disc:?}"
     );
     assert!((disc.centroid[0] - 110.0).abs() < 0.5 && (disc.centroid[1] - 120.0).abs() < 0.5);
+    // Without the reference the same picture reads 3 % big.
+    let raw = measure_image(&scan, None, None).unwrap();
+    assert!((raw.parts[0].bbox[2] - raw.parts[0].bbox[0] - 64.0 / 0.97).abs() < 0.7);
 }

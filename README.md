@@ -37,7 +37,7 @@ works today, all in the browser:
   animation of any spinning or sliding mate.
 - Workflow: per-user undo/redo (inverse ops, so undoing in a shared
   document only reverts your own edit), `.okpart` JSON documents, STL and OBJ import, DXF import into sketches, STL, 3MF, STEP (faceted B-rep) and DXF export, PNG snapshots, drawing
-  sheets (SVG/DXF, A4 to A2 or Letter, chosen views with a live preview)
+  sheets (SVG/DXF, A4 to A2, Letter or Tabloid, chosen views with a live preview)
   with hidden-line removal, overall dimensions, diameter callouts for
   holes and bosses, dimensions you place
   between corners in the preview, a hatched section view, a detail
@@ -54,9 +54,9 @@ works today, all in the browser:
 - Import: STL, OBJ and STEP (faceted: planar and cylindrical faces)
   files become mesh bodies; DXF into sketches.
 - Measuring from a photo: print the measuring sheet
-  (`examples/measuring-sheet/`), lay parts on it, photograph it, and
-  the sizes, outlines and holes come back in millimetres, or as a
-  sketch ready to extrude.
+  (`examples/measuring-sheet/`), lay parts on it with a photo scale or
+  a coin for the print scale, photograph it, and the sizes, outlines
+  and holes come back in millimetres, or as a sketch ready to extrude.
 - Agents: `ok-mcp` is a Model Context Protocol server that lets a
   language model build and edit documents through the same ops the
   client uses, live in your browser or on a local file, with a report
