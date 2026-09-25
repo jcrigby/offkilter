@@ -68,7 +68,7 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
         .iter()
         .map(|t| (t.id, t.name().to_string(), t.kind_name().to_string()))
         .collect();
-    assert!(tabs.len() >= 29, "{} tabs", tabs.len());
+    assert!(tabs.len() >= 30, "{} tabs", tabs.len());
     let mut checked = 0;
     let (mut mates, mut moving, mut assemblies) = (0, 0, 0);
     for (id, name, kind) in &tabs {
@@ -77,7 +77,7 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
             let r = doc.regenerate_assembly(*id).unwrap();
             // The lift assembly places every body: its loose parts and
             // the bodies of its three sub-assemblies.
-            let least = if name == "Lift assembly" { 32 } else { 6 };
+            let least = if name == "Lift assembly" { 33 } else { 5 };
             assert!(
                 r.bodies.len() >= least,
                 "{name}: {} placed bodies",
@@ -104,7 +104,7 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
                     "the slider names the block inside the carriage assembly"
                 );
                 let subs = r.members.iter().filter(|m| m.is_some()).count();
-                assert_eq!(subs, 20, "bodies of sub-assembly instances");
+                assert_eq!(subs, 17, "bodies of sub-assembly instances");
             }
             for inst in &asm.instances {
                 let want = inst.placement.to_transform();
@@ -179,15 +179,15 @@ fn the_assembly_sheet_lists_every_part_once() {
             .id
     };
     let tab = tab_named(&doc, "Lift assembly");
-    // Twelve loose parts and three sub-assembly instances, one record
-    // each; ten distinct items.
+    // Sixteen loose parts and three sub-assembly instances, one record
+    // each; fourteen distinct items.
     let parts = ok_sheet::parts_of(&mut doc, tab).unwrap();
-    assert_eq!(parts.len(), 15);
-    assert_eq!(parts.iter().map(|p| p.3.len()).sum::<usize>(), 32, "bodies");
+    assert_eq!(parts.len(), 19);
+    assert_eq!(parts.iter().map(|p| p.3.len()).sum::<usize>(), 33, "bodies");
     let mut distinct: Vec<(u32, usize)> = parts.iter().map(|p| p.2).collect();
     distinct.sort_unstable();
     distinct.dedup();
-    assert_eq!(distinct.len(), 10);
+    assert_eq!(distinct.len(), 14);
     let refs: Vec<ok_sheet::Part> = parts
         .iter()
         .map(|(name, material, key, solids)| ok_sheet::Part {
@@ -214,7 +214,7 @@ fn the_assembly_sheet_lists_every_part_once() {
     let text = String::from_utf8_lossy(&pdf);
     assert!(
         text.contains("(Carriage assembly) Tj")
-            && text.contains("(Pin attachment) Tj")
+            && text.contains("(Arm assembly) Tj")
             && !text.contains("(SC20UU) Tj"),
         "sub-assemblies are items, their parts are not"
     );

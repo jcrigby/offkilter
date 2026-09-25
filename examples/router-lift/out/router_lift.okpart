@@ -724,9 +724,22 @@
             "kind": {
               "type": "sketch",
               "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 100.0
+                "type": "face",
+                "face": {
+                  "feature": 2,
+                  "local": 1,
+                  "near": [
+                    69932913,
+                    74846154,
+                    77424652,
+                    96597844,
+                    118404906,
+                    139988464,
+                    144944663,
+                    168648540
+                  ]
+                },
+                "offset": 0.0
               },
               "sketch": {
                 "entities": [
@@ -6850,6 +6863,58 @@
           },
           {
             "id": 3,
+            "name": "hinge relief",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 180.0,
+                      "y": 75.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 2.5
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "hinge relief",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 250.0,
+              "direction": "symmetric",
+              "end": {
+                "type": "through_all"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 5,
             "name": "dowels",
             "suppressed": false,
             "kind": {
@@ -6885,12 +6950,12 @@
             }
           },
           {
-            "id": 4,
+            "id": 6,
             "name": "dowel press fits",
             "suppressed": false,
             "kind": {
               "type": "hole",
-              "sketch": 3,
+              "sketch": 5,
               "diameter": 9.9,
               "depth": 20.0,
               "through_all": false,
@@ -6900,7 +6965,7 @@
             }
           },
           {
-            "id": 5,
+            "id": 7,
             "name": "chuck screws",
             "suppressed": false,
             "kind": {
@@ -6936,12 +7001,12 @@
             }
           },
           {
-            "id": 6,
+            "id": 8,
             "name": "chuck screw pilots",
             "suppressed": false,
             "kind": {
               "type": "hole",
-              "sketch": 5,
+              "sketch": 7,
               "diameter": 3.5,
               "depth": 29.0,
               "through_all": false,
@@ -6951,7 +7016,7 @@
             }
           }
         ],
-        "next_id": 7,
+        "next_id": 9,
         "settings": {
           "facet_angle": 5.0
         }
@@ -9204,11 +9269,76 @@
     {
       "id": 26,
       "kind": {
+        "type": "part_studio",
+        "name": "Piano hinge",
+        "features": [
+          {
+            "id": 1,
+            "name": "knuckle",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -125.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 2.5
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "knuckle",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 250.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 3,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 27,
+      "kind": {
         "type": "assembly",
         "name": "Carriage assembly",
         "instances": [
           {
-            "id": 27,
+            "id": 28,
             "name": "carriage",
             "studio": 1,
             "body": 0,
@@ -9227,7 +9357,7 @@
             }
           },
           {
-            "id": 28,
+            "id": 29,
             "name": "left upper block",
             "studio": 21,
             "body": 0,
@@ -9246,7 +9376,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 30,
             "name": "left lower block",
             "studio": 21,
             "body": 0,
@@ -9265,7 +9395,7 @@
             }
           },
           {
-            "id": 30,
+            "id": 31,
             "name": "right upper block",
             "studio": 21,
             "body": 0,
@@ -9284,7 +9414,7 @@
             }
           },
           {
-            "id": 31,
+            "id": 32,
             "name": "right lower block",
             "studio": 21,
             "body": 0,
@@ -9303,7 +9433,7 @@
             }
           },
           {
-            "id": 32,
+            "id": 33,
             "name": "T8 nut",
             "studio": 20,
             "body": 0,
@@ -9324,11 +9454,11 @@
         ],
         "mates": [
           {
-            "id": 65,
+            "id": 67,
             "name": "left upper block",
             "kind": "fastened",
             "a": {
-              "instance": 27,
+              "instance": 28,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -9338,50 +9468,6 @@
                   1170667870,
                   3109442627,
                   4186122008,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 28,
-              "face": {
-                "feature": 6,
-                "local": 2,
-                "part": 2,
-                "near": [
-                  573667395,
-                  1659127064,
-                  3422794399,
-                  3735147870,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": -98.75970149253726,
-            "angle": 180.0,
-            "flip": false
-          },
-          {
-            "id": 66,
-            "name": "left lower block",
-            "kind": "fastened",
-            "a": {
-              "instance": 27,
-              "face": {
-                "feature": 10,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  774544575,
-                  1170667870,
-                  3109442627,
-                  3187446616,
                   0,
                   0,
                   0,
@@ -9407,25 +9493,25 @@
                 ]
               }
             },
-            "offset": -98.75970149253727,
+            "offset": -98.75970149253726,
             "angle": 180.0,
             "flip": false
           },
           {
-            "id": 67,
-            "name": "right upper block",
+            "id": 68,
+            "name": "left lower block",
             "kind": "fastened",
             "a": {
-              "instance": 27,
+              "instance": 28,
               "face": {
                 "feature": 10,
                 "local": 2,
-                "part": 2,
+                "part": 0,
                 "near": [
                   774544575,
                   1170667870,
                   3109442627,
-                  4186122008,
+                  3187446616,
                   0,
                   0,
                   0,
@@ -9438,7 +9524,7 @@
               "face": {
                 "feature": 6,
                 "local": 2,
-                "part": 0,
+                "part": 2,
                 "near": [
                   573667395,
                   1659127064,
@@ -9451,25 +9537,25 @@
                 ]
               }
             },
-            "offset": 16.240298507462725,
-            "angle": 0.0,
-            "flip": true
+            "offset": -98.75970149253727,
+            "angle": 180.0,
+            "flip": false
           },
           {
-            "id": 68,
-            "name": "right lower block",
+            "id": 69,
+            "name": "right upper block",
             "kind": "fastened",
             "a": {
-              "instance": 27,
+              "instance": 28,
               "face": {
                 "feature": 10,
                 "local": 2,
-                "part": 0,
+                "part": 2,
                 "near": [
                   774544575,
                   1170667870,
                   3109442627,
-                  3187446616,
+                  4186122008,
                   0,
                   0,
                   0,
@@ -9495,16 +9581,60 @@
                 ]
               }
             },
+            "offset": 16.240298507462725,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 70,
+            "name": "right lower block",
+            "kind": "fastened",
+            "a": {
+              "instance": 28,
+              "face": {
+                "feature": 10,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  774544575,
+                  1170667870,
+                  3109442627,
+                  3187446616,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 32,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  573667395,
+                  1659127064,
+                  3422794399,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
             "offset": 16.240298507462704,
             "angle": 0.0,
             "flip": true
           },
           {
-            "id": 69,
+            "id": 71,
             "name": "nut in pocket",
             "kind": "fastened",
             "a": {
-              "instance": 27,
+              "instance": 28,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -9522,7 +9652,7 @@
               }
             },
             "b": {
-              "instance": 32,
+              "instance": 33,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -9547,13 +9677,13 @@
       }
     },
     {
-      "id": 33,
+      "id": 34,
       "kind": {
         "type": "assembly",
         "name": "Leadscrew assembly",
         "instances": [
           {
-            "id": 34,
+            "id": 35,
             "name": "leadscrew",
             "studio": 16,
             "body": 0,
@@ -9572,7 +9702,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 36,
             "name": "lower bearing",
             "studio": 17,
             "body": 0,
@@ -9591,7 +9721,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 37,
             "name": "upper bearing",
             "studio": 17,
             "body": 0,
@@ -9610,7 +9740,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 38,
             "name": "upper collar",
             "studio": 18,
             "body": 0,
@@ -9629,7 +9759,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 39,
             "name": "lower collar",
             "studio": 18,
             "body": 0,
@@ -9648,7 +9778,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 40,
             "name": "coupling nut",
             "studio": 19,
             "body": 0,
@@ -9671,30 +9801,11 @@
       }
     },
     {
-      "id": 40,
+      "id": 41,
       "kind": {
         "type": "assembly",
-        "name": "Pin attachment",
+        "name": "Arm assembly",
         "instances": [
-          {
-            "id": 41,
-            "name": "rear rail",
-            "studio": 14,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
           {
             "id": 42,
             "name": "arm",
@@ -9716,48 +9827,10 @@
           },
           {
             "id": 43,
-            "name": "left post",
-            "studio": 7,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -60.0,
-                "y": 70.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 44,
-            "name": "right post",
-            "studio": 8,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 60.0,
-                "y": 70.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 45,
             "name": "chuck",
             "studio": 9,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": 0.0,
@@ -9772,11 +9845,11 @@
             }
           },
           {
-            "id": 46,
+            "id": 44,
             "name": "guide pin",
             "studio": 25,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": 0.0,
@@ -9791,11 +9864,11 @@
             }
           },
           {
-            "id": 47,
+            "id": 45,
             "name": "left dowel",
             "studio": 24,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": -60.0,
@@ -9810,11 +9883,11 @@
             }
           },
           {
-            "id": 48,
+            "id": 46,
             "name": "right dowel",
             "studio": 24,
             "body": 0,
-            "fixed": true,
+            "fixed": false,
             "placement": {
               "position": {
                 "x": 60.0,
@@ -9829,17 +9902,194 @@
             }
           }
         ],
-        "mates": []
+        "mates": [
+          {
+            "id": 72,
+            "name": "chuck under the nose",
+            "kind": "fastened",
+            "a": {
+              "instance": 42,
+              "face": {
+                "feature": 8,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1724311043,
+                  2297703647,
+                  2589346590,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 43,
+              "face": {
+                "feature": 10,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1159760287,
+                  1170667870,
+                  1466211999,
+                  3109442627,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": -25.499999999999886,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 73,
+            "name": "pin in the chuck",
+            "kind": "fastened",
+            "a": {
+              "instance": 43,
+              "face": {
+                "feature": 4,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  322007710,
+                  1013877695,
+                  1159760287,
+                  4020363139,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 44,
+              "face": {
+                "feature": 2,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1159760287,
+                  1468198494,
+                  2870100803,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": -20.000000000000057,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 74,
+            "name": "left dowel",
+            "kind": "fastened",
+            "a": {
+              "instance": 42,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  573667395,
+                  1013877695,
+                  3422794399,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 45,
+              "face": {
+                "feature": 2,
+                "local": 1,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  3472011262,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": -9.000000000000114,
+            "angle": -0.0,
+            "flip": false
+          },
+          {
+            "id": 75,
+            "name": "right dowel",
+            "kind": "fastened",
+            "a": {
+              "instance": 42,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 1,
+                "near": [
+                  573667395,
+                  1013877695,
+                  3422794399,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 46,
+              "face": {
+                "feature": 2,
+                "local": 1,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  3472011262,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": -9.000000000000057,
+            "angle": -0.0,
+            "flip": false
+          }
+        ]
       }
     },
     {
-      "id": 49,
+      "id": 47,
       "kind": {
         "type": "assembly",
         "name": "Lift assembly",
         "instances": [
           {
-            "id": 50,
+            "id": 48,
             "name": "baseplate",
             "studio": 11,
             "body": 0,
@@ -9858,7 +10108,7 @@
             }
           },
           {
-            "id": 51,
+            "id": 49,
             "name": "left rail",
             "studio": 12,
             "body": 0,
@@ -9877,7 +10127,7 @@
             }
           },
           {
-            "id": 52,
+            "id": 50,
             "name": "right rail",
             "studio": 12,
             "body": 0,
@@ -9896,7 +10146,7 @@
             }
           },
           {
-            "id": 53,
+            "id": 51,
             "name": "top",
             "studio": 10,
             "body": 0,
@@ -9915,7 +10165,7 @@
             }
           },
           {
-            "id": 54,
+            "id": 52,
             "name": "ring",
             "studio": 4,
             "body": 0,
@@ -9934,7 +10184,7 @@
             }
           },
           {
-            "id": 55,
+            "id": 53,
             "name": "left shaft",
             "studio": 15,
             "body": 0,
@@ -9953,7 +10203,7 @@
             }
           },
           {
-            "id": 56,
+            "id": 54,
             "name": "right shaft",
             "studio": 15,
             "body": 0,
@@ -9972,9 +10222,9 @@
             }
           },
           {
-            "id": 57,
+            "id": 55,
             "name": "Leadscrew assembly",
-            "studio": 33,
+            "studio": 34,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -9991,9 +10241,9 @@
             }
           },
           {
-            "id": 58,
+            "id": 56,
             "name": "Carriage assembly",
-            "studio": 26,
+            "studio": 27,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -10010,7 +10260,7 @@
             }
           },
           {
-            "id": 59,
+            "id": 57,
             "name": "router",
             "studio": 23,
             "body": 0,
@@ -10029,9 +10279,9 @@
             }
           },
           {
-            "id": 60,
-            "name": "Pin attachment",
-            "studio": 40,
+            "id": 58,
+            "name": "rear rail",
+            "studio": 14,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -10048,7 +10298,83 @@
             }
           },
           {
+            "id": 59,
+            "name": "Arm assembly",
+            "studio": 41,
+            "body": 0,
+            "fixed": false,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 229.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 60,
+            "name": "left post",
+            "studio": 7,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -60.0,
+                "y": 70.0,
+                "z": 229.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
             "id": 61,
+            "name": "right post",
+            "studio": 8,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 60.0,
+                "y": 70.0,
+                "z": 229.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 62,
+            "name": "piano hinge",
+            "studio": 26,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 180.0,
+                "z": 304.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 63,
             "name": "left lower support",
             "studio": 22,
             "body": 0,
@@ -10067,7 +10393,7 @@
             }
           },
           {
-            "id": 62,
+            "id": 64,
             "name": "left upper support",
             "studio": 22,
             "body": 0,
@@ -10086,7 +10412,7 @@
             }
           },
           {
-            "id": 63,
+            "id": 65,
             "name": "right lower support",
             "studio": 22,
             "body": 0,
@@ -10105,7 +10431,7 @@
             }
           },
           {
-            "id": 64,
+            "id": 66,
             "name": "right upper support",
             "studio": 22,
             "body": 0,
@@ -10126,11 +10452,11 @@
         ],
         "mates": [
           {
-            "id": 70,
+            "id": 76,
             "name": "carriage travel",
             "kind": "slider",
             "a": {
-              "instance": 55,
+              "instance": 53,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -10148,8 +10474,8 @@
               }
             },
             "b": {
-              "instance": 58,
-              "sub": 28,
+              "instance": 56,
+              "sub": 29,
               "face": {
                 "feature": 4,
                 "local": 2,
@@ -10171,12 +10497,12 @@
             "flip": true
           },
           {
-            "id": 71,
+            "id": 77,
             "name": "router in clamp",
             "kind": "fastened",
             "a": {
-              "instance": 58,
-              "sub": 27,
+              "instance": 56,
+              "sub": 28,
               "face": {
                 "feature": 2,
                 "local": 10,
@@ -10194,7 +10520,7 @@
               }
             },
             "b": {
-              "instance": 59,
+              "instance": 57,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -10214,10 +10540,55 @@
             "offset": 19.999999999999854,
             "angle": 0.0,
             "flip": true
+          },
+          {
+            "id": 78,
+            "name": "arm hinge",
+            "kind": "revolute",
+            "a": {
+              "instance": 62,
+              "face": {
+                "feature": 2,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1159760287,
+                  1468198494,
+                  2870100803,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 59,
+              "sub": 42,
+              "face": {
+                "feature": 4,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  322007710,
+                  1013877695,
+                  1468198494,
+                  1833311425,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": -3.939782440574973e-15,
+            "angle": 0.0,
+            "flip": true
           }
         ]
       }
     }
   ],
-  "next_id": 72
+  "next_id": 79
 }

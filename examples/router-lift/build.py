@@ -15,6 +15,8 @@ pin_arm.scad); the STLs there are the references the CI test compares
 the kernel's parts against.
 """
 
+import collections
+import csv
 import json
 import math
 import os
@@ -119,6 +121,12 @@ class Part:
                 "name": name,
             }
         )
+
+    def sketch_on(self, face, name):
+        """A sketch on a planar face of a body: its frame is the world
+        origin projected onto the face with canonical axes, so on a face
+        normal to Z the coordinates are the standard top plane's."""
+        return self.feature({"type": "add_sketch", "plane": {"type": "face", "face": face, "offset": 0.0}, "name": name})
 
     def draw(self, sketch, op):
         self.apply({"type": "sketch", "id": sketch, "op": op})
@@ -266,7 +274,7 @@ def carriage(p):
         ],
     )
     p.circle(s, (0.0, 0.0), bore_r)
-    p.extrude(s, CAR_H, profiles="largest", name="body")
+    body = p.extrude(s, CAR_H, profiles="largest", name="body")
     # Clamp slot from the front of the ears into the bore.
     s = p.sketch("top", -1.0, "slot")
     p.rect(s, (-SLOT_W / 2, BODY_Y0 - CLAMP_EAR - 1), (SLOT_W / 2, BODY_Y0 + WALL + 1))
@@ -297,7 +305,10 @@ def carriage(p):
     xi, xo = CAR_W / 2 - 6 - NUT_T, CAR_W / 2 - 6
     z_in = zc + (BLK_L + BLK_GAP) / 2 - BLK_BZ / 2 - 5
     z_out = zc - (BLK_L + BLK_GAP) / 2 + BLK_BZ / 2 + 5
-    s = p.sketch("top", CAR_H, "upper nut traps")
+    # The upper traps are sketched on the body's top cap itself (local 1
+    # of its extrude) rather than a plane offset: the face reference has
+    # to find that cap after the nut recess and the clamp slot cut it.
+    s = p.sketch_on({"feature": body, "local": 1}, "upper nut traps")
     for sx in (-1, 1):
         for y in (-BLK_BX / 2, BLK_BX / 2):
             p.rect(s, (sx * xi, y - NUT_AF / 2), (sx * xo, y + NUT_AF / 2))
@@ -444,6 +455,7 @@ Z_CAR = SK_T + 3 + TRAVEL / 2  # 45.5: carriage bottom, mid travel
 RAIL_H = Z_TOP + PLY_T  # 210
 ARM_T, ARM_CLEAR, RAIL_D, RAIL_W, RAIL_Y1 = 38.0, 75.0, 60.0, 250.0, 240.0
 NOSE_W, NOSE_Y, REG_X, REG_Y = 80.0, -50.0, 60.0, 70.0
+HINGE_D = 5.0  # the piano hinge's knuckle
 RAIL_Y0 = RAIL_Y1 - RAIL_D  # 180: the hinge line
 
 
@@ -504,6 +516,12 @@ def arm(p):
         ],
     )
     p.extrude(s, ARM_T, name="arm")
+    # Relief for the piano hinge's knuckle along the hinge line, so the
+    # arm sits flat on the rail and the posts and turns about the knuckle
+    # (the SCAD leaves the knuckle buried in the arm's underside).
+    s = p.sketch("right", 0.0, "hinge relief")
+    p.circle(s, (RAIL_Y0, ARM_CLEAR), HINGE_D / 2)
+    p.cut(s, RAIL_W, direction="symmetric", name="hinge relief", through_all=True)
     s = p.sketch("top", ARM_CLEAR, "dowels")
     for x in (-REG_X, REG_X):
         p.point(s, (x, REG_Y))
@@ -626,6 +644,15 @@ def guide_pin(p):
     cylinder(p, PIN_D, 75.0, "guide pin")
 
 
+def piano_hinge(p):
+    """The piano hinge as its knuckle: a rod along X the length of the
+    rail, on the rail's front top corner. The leaves (1.2 mm) are let
+    into the wood and are not modelled."""
+    s = p.sketch("right", -RAIL_W / 2, "knuckle")
+    p.circle(s, (0.0, 0.0), HINGE_D / 2)
+    p.extrude(s, RAIL_W, name="knuckle")
+
+
 PARTS = [
     # (tab title, file stem, builder); the printed parts have reference STLs
     ("Carriage", "carriage", carriage),
@@ -653,6 +680,7 @@ PARTS = [
     ("Router", "router", router_body),
     ("Dowel pin", "reg_pin", reg_pin),
     ("Guide pin", "guide_pin", guide_pin),
+    ("Piano hinge", "piano_hinge", piano_hinge),
 ]
 PRINTED = {"Carriage", "Ring blank", "Ring 30", "Ring 40", "Ring 55", "Ring align", "Post round", "Post slot", "Chuck"}
 
@@ -689,6 +717,7 @@ def instances():
         at("Post slot", "right post", REG_X, REG_Y, TABLE),
         at("Chuck", "chuck", 0, 0, TABLE + ARM_CLEAR - CHUCK_H),
         at("Guide pin", "guide pin", 0, 0, TABLE + ARM_CLEAR - CHUCK_H - 45.0),
+        at("Piano hinge", "piano hinge", 0, RAIL_Y0, TABLE + ARM_CLEAR),
     ]
     for sx, side in ((-1, "left"), (1, "right")):
         for i, level in ((-1, "lower"), (1, "upper")):
@@ -710,7 +739,7 @@ def instances():
 SUBS = [
     ("Carriage assembly", (0.0, 0.0, Z_CAR), ["carriage", "left upper block", "left lower block", "right upper block", "right lower block", "T8 nut"]),
     ("Leadscrew assembly", (0.0, LS_Y, LS_Z0), ["leadscrew", "lower bearing", "upper bearing", "upper collar", "lower collar", "coupling nut"]),
-    ("Pin attachment", (0.0, 0.0, TABLE), ["rear rail", "arm", "left post", "right post", "chuck", "guide pin", "left dowel", "right dowel"]),
+    ("Arm assembly", (0.0, 0.0, TABLE), ["arm", "chuck", "guide pin", "left dowel", "right dowel"]),
 ]
 TOP = "Lift assembly"
 
@@ -720,14 +749,17 @@ TOP = "Lift assembly"
 # In the lift assembly one slider between a block's bore and its shaft
 # carries the travel of the whole carriage assembly, and the router is
 # fastened into its clamp: a connector on the carriage assembly names
-# the member that holds the face ("Carriage assembly/carriage"). The
+# the member that holds the face ("Carriage assembly/carriage"). The arm
+# assembly turns on the hinge knuckle: a revolute between the knuckle and
+# the relief in the arm's underside, swept by the limits test. The
 # mate parameters are derived from the placements in instances(), which
 # stay on the instances as the initial guess, so the resolved assemblies
 # must land exactly where the fixed ones did.
 # ---------------------------------------------------------------------
 MOVING = {
     "Carriage assembly": {"left upper block", "left lower block", "right upper block", "right lower block", "T8 nut"},
-    TOP: {"Carriage assembly", "router"},
+    "Arm assembly": {"chuck", "guide pin", "left dowel", "right dowel"},
+    TOP: {"Carriage assembly", "router", "Arm assembly"},
 }
 
 # (kind, placed connector, moving connector, radius on each, name). The
@@ -740,9 +772,16 @@ MATES = {
         ("fastened", "carriage", "right lower block", (BLK_BOLT + 0.5) / 2, BLK_BOLT / 2, "right lower block"),
         ("fastened", "carriage", "T8 nut", NUT_BODY_D / 2 + 0.3, NUT_BODY_D / 2, "nut in pocket"),
     ],
+    "Arm assembly": [
+        ("fastened", "arm", "chuck", 3.5 / 2, 4.5 / 2, "chuck under the nose"),
+        ("fastened", "chuck", "guide pin", (PIN_D + 0.2) / 2, PIN_D / 2, "pin in the chuck"),
+        ("fastened", "arm", "left dowel", 9.9 / 2, 5.0, "left dowel"),
+        ("fastened", "arm", "right dowel", 9.9 / 2, 5.0, "right dowel"),
+    ],
     TOP: [
         ("slider", "left shaft", "Carriage assembly/left upper block", SHAFT_D / 2, SHAFT_D / 2, "carriage travel"),
         ("fastened", "Carriage assembly/carriage", "router", ROUTER_D / 2 + ROUTER_CLR, ROUTER_D / 2, "router in clamp"),
+        ("revolute", "piano hinge", "Arm assembly/arm", HINGE_D / 2, HINGE_D / 2, "arm hinge"),
     ],
 }
 
@@ -927,6 +966,61 @@ def check_placed(mcp, tab, title, expected):
     return worst, report
 
 
+# The BOM tables on the two shop drawings that came with the project
+# (reference/bom_*.csv, copied from their drawing scripts), against what
+# the document actually places. Each line names the studios that stand
+# for it; a line with none is hardware the model leaves out.
+BOM_STUDIOS = {
+    "Carriage": ["Carriage"],
+    "Reducer ring set": ["Ring blank", "Ring 30", "Ring 40", "Ring 55", "Ring align"],
+    "Linear shaft": ["Shaft"],
+    "Pillow block": ["SC20UU"],
+    "Shaft support": ["SK20"],
+    "Leadscrew": ["Leadscrew"],
+    "Leadscrew nut": ["T8 nut"],
+    "Bearing": ["608 bearing"],
+    "Shaft collar": ["Collar"],
+    "Hex coupling nut": ["Coupling nut"],
+    "Table top": ["Top"],
+    "Baseplate": ["Baseplate"],
+    "Side rail": ["Side rail"],
+    "Trim router": ["Router"],
+    "Arm": ["Arm"],
+    "Rear rail": ["Rear rail"],
+    "Piano hinge": ["Piano hinge"],
+    "Registration post": ["Post round", "Post slot"],
+    "Registration pin": ["Dowel pin"],
+    "Guide-pin chuck": ["Chuck"],
+    "Guide pin": ["Guide pin"],
+}
+
+
+def bom_check(placed, studios):
+    """Every BOM line of both drawings against the document: the count
+    of instances placed (through the sub-assemblies) of the studios that
+    stand for the line, or of the studios themselves for a set the
+    assembly shows one of (the rings). Returns the lines that differ."""
+    differ = []
+    for sheet in ("bom_lift", "bom_pin_arm"):
+        with open(os.path.join(HERE, "reference", f"{sheet}.csv")) as f:
+            rows = list(csv.DictReader(f))
+        for row in rows:
+            names = BOM_STUDIOS.get(row["part"])
+            if names is None:
+                print(f"  BOM {sheet:<11} {row['no']:>2} {row['part']:<20} x{row['qty']:<3} not modelled ({row['spec']})")
+                continue
+            if row["part"] == "Reducer ring set":
+                have = sum(1 for n in names if n in studios)
+            else:
+                have = sum(placed.get(n, 0) for n in names)
+            want = int(row["qty"])
+            mark = "ok" if have == want else f"DIFFERS: model has {have}"
+            print(f"  BOM {sheet:<11} {row['no']:>2} {row['part']:<20} x{want:<3} {mark}")
+            if have != want:
+                differ.append((sheet, row["part"], want, have))
+    return differ
+
+
 def dxf_lines(path):
     """The LINE entities of a DXF as ((x1, y1), (x2, y2)) pairs."""
     toks = [t.strip() for t in open(path).read().splitlines()]
@@ -1052,6 +1146,10 @@ def main():
         else:
             check_placed(mcp, asm_tabs[title], title, expected[title])
         print()
+    # Bill of materials against the drawings that came with the project.
+    placed = collections.Counter(part_of[name] for name in placements if name not in asm_tabs)
+    differ = bom_check(placed, set(tabs))
+    print(f"BOM: {len(differ)} lines differ from the drawings" + (": " + "; ".join(f"{p} {w} on the drawing, {h} in the model" for _, p, w, h in differ) if differ else ""))
     for view, name in (("iso", "assembly_iso"), ("-1,-0.4,0.35", "assembly_front")):
         mcp.call("screenshot", {"tab": asm, "view": view, "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
     # Cut at the bit axis, keeping the far half so the cut faces face the camera.
