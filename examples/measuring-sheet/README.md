@@ -66,6 +66,15 @@ Printers rarely print at exactly 100 %, and the sheet cannot tell:
 its own 100 mm bar shrinks with it. Something of known size lying on
 the sheet can, and `reference` names it.
 
+- **A steel rule**, `reference: "rule"`. Any rule with millimetre
+  graduations, laid flat in the picture at any angle. The tool finds
+  the ticks, groups the ones whose bases share an edge, and fits their
+  positions against their count, so a 150 mm rule gives the scale to
+  about a tenth of a percent. An inch edge on the other side is told
+  apart by its pitch. This needs the ticks resolved, which a flatbed
+  scan does and a phone photo at arm's length usually does not (the
+  tool says "no rule read" rather than guess); for a phone photo use
+  the bars below.
 - **A forensic photo scale**, `reference: "bars 10"`. The ABFO No. 2
   photomacrographic scale is the standard: a rigid L, 105 mm a side,
   millimetre graduations accurate to 0.1 mm, and alternating 1 cm black
@@ -99,6 +108,31 @@ the sheet can, and `reference` names it.
 The reference is taken out of the parts list and boxed in orange on
 the picture. The picture and the sketch are then in true millimetres,
 so the drawn grid no longer lands on the printed one.
+
+## Scanning instead of photographing
+
+A flatbed scanner is the better camera for flat parts: no perspective,
+no parallax, and sharp enough to read a rule. The sheet cannot go
+under parts lying on the glass, so leave it out: put the parts and a
+steel rule on the glass, scan at 300 dpi or more, and
+
+```
+measure_photo {path: "scan.png", reference: "rule", sketch: true}
+```
+
+With no sheet marks in the picture the tool measures in the picture's
+own frame, origin at its bottom-left corner, x right, y up, at the
+scale the rule gives. `rule-scan.png` is such a scan (synthetic: the
+same plate and washer as above with a 150 mm rule laid at 3 degrees)
+and `out/rule-measured.png` its measurement:
+
+```
+No sheet marks: a flat scan, measured from the rule alone at 0.0847 mm per pixel. ...
+Rule: 151 ticks over 150 mm read at 11.811 px/mm; the millimetre edge was sixteenths on the other edge.
+Part 1: 64.0 x 38.0 mm, from (20.0, 20.0) to (84.0, 58.0), ...
+```
+
+The scanner's nominal resolution is not trusted; the rule is.
 
 ## Taking the picture
 

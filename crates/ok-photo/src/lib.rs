@@ -74,6 +74,10 @@ pub enum Reference {
     /// length in millimetres (a forensic ABFO No. 2 scale has 10 mm
     /// bars), so dark blocks repeat every twice that.
     Bars(f64),
+    /// A steel rule with millimetre graduations: its ticks are read.
+    /// Without a sheet in the picture, this makes a flat scan
+    /// measurable on its own.
+    Rule,
 }
 
 impl Reference {
@@ -89,6 +93,9 @@ impl Reference {
         };
         if let Some(d) = coin {
             return Ok(Reference::Disc(d));
+        }
+        if matches!(t.as_str(), "rule" | "ruler" | "steel rule" | "rule mm") {
+            return Ok(Reference::Rule);
         }
         let mut words = t.split_whitespace();
         let kind = words.next().unwrap_or("");
@@ -107,7 +114,7 @@ impl Reference {
             "disc" | "coin" | "round" => Ok(Reference::Disc(value)),
             "bars" | "bar" | "scale" => Ok(Reference::Bars(value)),
             _ => Err(format!(
-                "reference {text:?}: say \"disc <mm>\" for a round object, \"bars <mm>\" for a photo scale's alternating blocks, or a US coin by name"
+                "reference {text:?}: say \"rule\" for a steel rule with millimetre graduations, \"bars <mm>\" for a photo scale's alternating blocks, \"disc <mm>\" for a round object, or a US coin by name"
             )),
         }
     }
@@ -116,6 +123,7 @@ impl Reference {
         match self {
             Reference::Disc(d) => format!("a {d:.2} mm disc"),
             Reference::Bars(b) => format!("a scale with {b:.0} mm bars"),
+            Reference::Rule => "a rule's millimetre graduations".to_string(),
         }
     }
 }
@@ -279,18 +287,43 @@ pub struct Calibration {
     pub bbox: [f64; 4],
 }
 
-fn sheet_name<S: serde::Serializer>(size: &SheetSize, s: S) -> Result<S::Ok, S::Error> {
-    s.serialize_str(size.name())
+fn sheet_name<S: serde::Serializer>(size: &Option<SheetSize>, s: S) -> Result<S::Ok, S::Error> {
+    match size {
+        Some(size) => s.serialize_str(size.name()),
+        None => s.serialize_none(),
+    }
+}
+
+/// What reading a rule's graduations gave.
+#[derive(Debug, Clone, Serialize)]
+pub struct RuleReading {
+    /// Ticks used on the edge read, and the length they span.
+    pub ticks: usize,
+    pub length: f64,
+    /// Photograph pixels per millimetre at the rule.
+    pub px_per_mm: f64,
+    /// How the millimetre edge was told from an inch edge: by the
+    /// ratio between the two edges' pitches, or assumed because only
+    /// one edge read.
+    pub edge: &'static str,
+    /// The rule's centre in the photograph, in pixels.
+    pub centre: [f64; 2],
+    /// The ticks' box in the photograph, in pixels.
+    pub bbox: [f64; 4],
 }
 
 /// What `measure` found.
 #[derive(Debug, Clone, Serialize)]
 pub struct Measurement {
     /// Which sheet the picture is of, and whether the picture said so
-    /// (the size code by the origin mark) or the caller did.
+    /// (the size code by the origin mark) or the caller did. None for
+    /// a flat scan measured from a rule alone: then the frame is the
+    /// picture's own, origin at its bottom-left corner.
     #[serde(serialize_with = "sheet_name")]
-    pub sheet: SheetSize,
+    pub sheet: Option<SheetSize>,
     pub sheet_read: bool,
+    /// The rule, when one was read: how many ticks over how many mm.
+    pub rule: Option<RuleReading>,
     pub calibration: Option<Calibration>,
     /// Fiducial centres in the photograph's pixels: origin, x, xy, y.
     pub fiducials: [[f64; 2]; 4],
@@ -375,8 +408,43 @@ pub fn measure_image(
     let (w, h) = (small.width, small.height);
     let threshold = otsu(&gray);
     let dark: Vec<bool> = gray.iter().map(|&g| (g as u32) < threshold).collect();
-    let (found, dots) = find_fiducials(&dark, w, h)?;
+    let rule = match reference {
+        Some(Reference::Rule) => Some(read_rule(photo)?),
+        _ => None,
+    };
     let f = factor as f64;
+    let (found, dots) = match find_fiducials(&dark, w, h) {
+        Ok(found) => found,
+        // No sheet: with a rule read, the picture is a flat scan
+        // measured in its own frame.
+        Err(_) if rule.is_some() => {
+            let r = rule.as_ref().unwrap();
+            let (pw, ph) = (photo.width as f64, photo.height as f64);
+            let corners = [[0.0, ph], [pw, ph], [pw, 0.0], [0.0, 0.0]];
+            let (lx, ly) = (pw / r.px_per_mm, ph / r.px_per_mm);
+            let bbox = [
+                r.bbox[0] / r.px_per_mm,
+                ly - r.bbox[3] / r.px_per_mm,
+                r.bbox[2] / r.px_per_mm,
+                ly - r.bbox[1] / r.px_per_mm,
+            ];
+            let pass = rectify(photo, &corners, lx, ly, 0.0, Some((1.0, 1.0, bbox)))?;
+            return Ok(Measurement {
+                sheet: None,
+                sheet_read: false,
+                rule,
+                calibration: None,
+                fiducials: corners,
+                mm_per_pixel: pass.mm_per_pixel,
+                residual: 0.0,
+                parts: pass.parts,
+                picture: ok_render::to_png(&pass.picture),
+                picture_scale: SCALE,
+                picture_origin: [BORDER * SCALE, (pass.ly + BORDER) * SCALE],
+            });
+        }
+        Err(e) => return Err(e),
+    };
     let fiducials = [
         [found[0].0 * f, found[0].1 * f],
         [found[1].0 * f, found[1].1 * f],
@@ -395,7 +463,39 @@ pub fn measure_image(
         }
     };
     let (lx, ly) = span(size);
-    let mut pass = rectify(photo, &fiducials, lx, ly, reference)?;
+    let keep_out = (ORIGIN_RING_R + 3.0) * SCALE;
+    // A rule is read in the photograph; its pitch there against the
+    // marks' scale at the same spot gives the print scale directly.
+    let preset = |k: f64| -> Result<Option<(f64, f64, [f64; 4])>, String> {
+        let Some(r) = rule.as_ref() else {
+            return Ok(None);
+        };
+        let sheet = [[0.0, 0.0], [lx * k, 0.0], [lx * k, ly * k], [0.0, ly * k]];
+        let to_sheet = homography(&fiducials, &sheet)?;
+        let at = apply(&to_sheet, r.centre);
+        let along = apply(&to_sheet, [r.centre[0] + r.px_per_mm, r.centre[1]]);
+        let across = apply(&to_sheet, [r.centre[0], r.centre[1] + r.px_per_mm]);
+        // One true millimetre of the rule, in the sheet's millimetres.
+        let measured = (dist2(at, along).sqrt() + dist2(at, across).sqrt()) / 2.0;
+        let corners = [
+            apply(&to_sheet, [r.bbox[0], r.bbox[1]]),
+            apply(&to_sheet, [r.bbox[2], r.bbox[1]]),
+            apply(&to_sheet, [r.bbox[2], r.bbox[3]]),
+            apply(&to_sheet, [r.bbox[0], r.bbox[3]]),
+        ];
+        let mut bbox = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+        for c in corners {
+            bbox[0] = bbox[0].min(c[0]);
+            bbox[1] = bbox[1].min(c[1]);
+            bbox[2] = bbox[2].max(c[0]);
+            bbox[3] = bbox[3].max(c[1]);
+        }
+        Ok(Some((measured, 1.0, bbox)))
+    };
+    let mut pass = rectify(photo, &fiducials, lx, ly, keep_out, preset(1.0)?)?;
+    if rule.is_none() {
+        pass.reference = find_reference(reference, &pass);
+    }
     let mut calibration = None;
     if let Some(r) = reference {
         let (measured, nominal, _) = pass
@@ -404,10 +504,14 @@ pub fn measure_image(
         let k = nominal / measured;
         // Measure again in true millimetres: the marks are k times
         // their nominal spacing apart.
-        pass = rectify(photo, &fiducials, lx * k, ly * k, reference)?;
+        pass = rectify(photo, &fiducials, lx * k, ly * k, keep_out, preset(k)?)?;
+        if rule.is_none() {
+            pass.reference = find_reference(reference, &pass);
+        }
         let (_, _, bbox) = pass
             .reference
             .ok_or_else(|| format!("{} not found on the sheet", r.describe()))?;
+        exclude_reference(&mut pass, bbox);
         calibration = Some(Calibration {
             reference: r.describe(),
             measured,
@@ -417,8 +521,9 @@ pub fn measure_image(
         });
     }
     Ok(Measurement {
-        sheet: size,
+        sheet: Some(size),
         sheet_read,
+        rule,
         calibration,
         fiducials,
         mm_per_pixel: pass.mm_per_pixel,
@@ -433,10 +538,14 @@ pub fn measure_image(
 /// One rectification of the photograph onto a sheet frame whose marks
 /// are `lx` x `ly` mm apart.
 struct Pass {
+    #[allow(dead_code)]
+    lx: f64,
     ly: f64,
     mm_per_pixel: f64,
     residual: f64,
     parts: Vec<Part>,
+    /// Every dark block of 3 mm2 or more, for finding a scale's bars.
+    blocks: Vec<[f64; 4]>,
     /// The reference, when asked for and found: what it measured, its
     /// nominal size, and its box.
     reference: Option<(f64, f64, [f64; 4])>,
@@ -448,7 +557,8 @@ fn rectify(
     fiducials: &[[f64; 2]; 4],
     lx: f64,
     ly: f64,
-    reference: Option<&Reference>,
+    keep_out: f64,
+    preset: Option<(f64, f64, [f64; 4])>,
 ) -> Result<Pass, String> {
     let sheet = [[0.0, 0.0], [lx, 0.0], [lx, ly], [0.0, ly]];
     let to_sheet = homography(fiducials, &sheet)?;
@@ -491,7 +601,6 @@ fn rectify(
     // fiducials and the margins.
     let t2 = otsu(&rect_gray);
     let mut mask = vec![false; pw * ph];
-    let keep_out = (ORIGIN_RING_R + 3.0) * SCALE;
     for j in 0..ph {
         for i in 0..pw {
             let x = -BORDER + i as f64 / SCALE;
@@ -560,39 +669,16 @@ fn rectify(
         });
     }
     parts.sort_by(|a, b| b.area.total_cmp(&a.area));
-    // The reference, if asked for: found among the parts (a disc) or
-    // the smaller dark blocks (a scale's bars), then taken out of the
-    // parts along with whatever else lies within it.
-    let found = match reference {
-        None => None,
-        Some(Reference::Disc(d)) => parts
-            .iter()
-            .filter(|p| p.circularity > 0.85 && p.holes.is_empty())
-            .filter(|p| (p.diameter / d - 1.0).abs() < 0.25)
-            .min_by(|a, b| (a.diameter - d).abs().total_cmp(&(b.diameter - d).abs()))
-            .map(|p| (p.diameter, *d, p.bbox)),
-        Some(Reference::Bars(b)) => {
-            let blocks: Vec<[f64; 4]> = comps
-                .iter()
-                .filter(|c| c.area >= (3.0 * SCALE * SCALE) as usize && c.fill() > 0.6)
-                .map(|c| {
-                    let lo = mm(c.x0, c.y1 + 1);
-                    let hi = mm(c.x1 + 1, c.y0);
-                    [lo[0], lo[1], hi[0], hi[1]]
-                })
-                .collect();
-            bar_run(&blocks, 2.0 * b).map(|(pitch, bbox)| (pitch, 2.0 * b, bbox))
-        }
-    };
-    if let Some((_, _, bbox)) = found {
-        let margin = 3.0;
-        parts.retain(|p| {
-            !(p.centroid[0] > bbox[0] - margin
-                && p.centroid[0] < bbox[2] + margin
-                && p.centroid[1] > bbox[1] - margin
-                && p.centroid[1] < bbox[3] + margin)
-        });
-    }
+    // The smaller dark blocks too, for a photo scale's bars.
+    let blocks: Vec<[f64; 4]> = comps
+        .iter()
+        .filter(|c| c.area >= (3.0 * SCALE * SCALE) as usize && c.fill() > 0.6)
+        .map(|c| {
+            let lo = mm(c.x0, c.y1 + 1);
+            let hi = mm(c.x1 + 1, c.y0);
+            [lo[0], lo[1], hi[0], hi[1]]
+        })
+        .collect();
     // The overlay: the grid, the fiducials, each part's box and holes.
     let mut x = 0.0;
     while x <= lx + 1e-9 {
@@ -626,25 +712,88 @@ fn rectify(
         );
         y += 10.0;
     }
-    for s in &sheet {
-        cross(&mut picture, px(s[0]), py(s[1]), 8, Rgb(40, 90, 200));
+    if keep_out > 0.0 {
+        for s in &sheet {
+            cross(&mut picture, px(s[0]), py(s[1]), 8, Rgb(40, 90, 200));
+        }
     }
-    if let Some((_, _, b)) = found {
-        let (x0, y0, x1, y1) = (px(b[0]) - 4, py(b[3]) - 4, px(b[2]) + 4, py(b[1]) + 4);
-        hline(&mut picture, x0, x1, y0, Rgb(240, 150, 30));
-        hline(&mut picture, x0, x1, y1, Rgb(240, 150, 30));
-        vline(&mut picture, x0, y0, y1, Rgb(240, 150, 30));
-        vline(&mut picture, x1, y0, y1, Rgb(240, 150, 30));
+    let mut pass = Pass {
+        lx,
+        ly,
+        mm_per_pixel,
+        residual,
+        parts,
+        blocks,
+        reference: preset,
+        picture,
+    };
+    if let Some((_, _, bbox)) = preset {
+        exclude_reference(&mut pass, bbox);
     }
-    for p in &parts {
+    draw_parts(&mut pass);
+    Ok(pass)
+}
+
+/// The reference a pass was asked for, found among its parts (a disc)
+/// or its smaller dark blocks (a scale's bars): what it measured, its
+/// nominal size, and its box.
+fn find_reference(reference: Option<&Reference>, pass: &Pass) -> Option<(f64, f64, [f64; 4])> {
+    match reference {
+        None | Some(Reference::Rule) => None,
+        Some(Reference::Disc(d)) => pass
+            .parts
+            .iter()
+            .filter(|p| p.circularity > 0.85 && p.holes.is_empty())
+            .filter(|p| (p.diameter / d - 1.0).abs() < 0.25)
+            .min_by(|a, b| (a.diameter - d).abs().total_cmp(&(b.diameter - d).abs()))
+            .map(|p| (p.diameter, *d, p.bbox)),
+        Some(Reference::Bars(b)) => {
+            bar_run(&pass.blocks, 2.0 * b).map(|(pitch, bbox)| (pitch, 2.0 * b, bbox))
+        }
+    }
+}
+
+/// Takes the reference out of the parts, along with whatever else lies
+/// within its box (a scale's numerals, a rule's body), and boxes it on
+/// the picture.
+fn exclude_reference(pass: &mut Pass, bbox: [f64; 4]) {
+    let margin = 3.0;
+    pass.parts.retain(|p| {
+        !(p.centroid[0] > bbox[0] - margin
+            && p.centroid[0] < bbox[2] + margin
+            && p.centroid[1] > bbox[1] - margin
+            && p.centroid[1] < bbox[3] + margin)
+    });
+    let ly = pass.ly;
+    let px = |x: f64| ((x + BORDER) * SCALE) as isize;
+    let py = |y: f64| ((ly + BORDER - y) * SCALE) as isize;
+    let (x0, y0, x1, y1) = (
+        px(bbox[0]) - 4,
+        py(bbox[3]) - 4,
+        px(bbox[2]) + 4,
+        py(bbox[1]) + 4,
+    );
+    hline(&mut pass.picture, x0, x1, y0, Rgb(240, 150, 30));
+    hline(&mut pass.picture, x0, x1, y1, Rgb(240, 150, 30));
+    vline(&mut pass.picture, x0, y0, y1, Rgb(240, 150, 30));
+    vline(&mut pass.picture, x1, y0, y1, Rgb(240, 150, 30));
+}
+
+/// Boxes each part and crosses each hole on the picture.
+fn draw_parts(pass: &mut Pass) {
+    let ly = pass.ly;
+    let px = |x: f64| ((x + BORDER) * SCALE) as isize;
+    let py = |y: f64| ((ly + BORDER - y) * SCALE) as isize;
+    let picture = &mut pass.picture;
+    for p in &pass.parts {
         let (x0, y0, x1, y1) = (px(p.bbox[0]), py(p.bbox[3]), px(p.bbox[2]), py(p.bbox[1]));
-        hline(&mut picture, x0, x1, y0, Rgb(220, 40, 40));
-        hline(&mut picture, x0, x1, y1, Rgb(220, 40, 40));
-        vline(&mut picture, x0, y0, y1, Rgb(220, 40, 40));
-        vline(&mut picture, x1, y0, y1, Rgb(220, 40, 40));
+        hline(picture, x0, x1, y0, Rgb(220, 40, 40));
+        hline(picture, x0, x1, y1, Rgb(220, 40, 40));
+        vline(picture, x0, y0, y1, Rgb(220, 40, 40));
+        vline(picture, x1, y0, y1, Rgb(220, 40, 40));
         for h in &p.holes {
             cross(
-                &mut picture,
+                picture,
                 px(h.centre[0]),
                 py(h.centre[1]),
                 5,
@@ -652,13 +801,254 @@ fn rectify(
             );
         }
     }
-    Ok(Pass {
-        ly,
-        mm_per_pixel,
-        residual,
-        parts,
-        reference: found,
-        picture,
+}
+
+/// Reads a steel rule's millimetre graduations in the photograph: the
+/// ticks are the thin marks darker than their surroundings, the rule's
+/// direction is the one most of them are perpendicular to, the ticks
+/// whose bases line up are one edge, and a straight-line fit of tick
+/// position against tick index over that edge gives pixels per
+/// millimetre. A second edge with the pitch of sixteenths, thirty-
+/// seconds or sixty-fourths of an inch tells which edge is metric;
+/// with one edge the millimetre one is assumed.
+fn read_rule(photo: &Image) -> Result<RuleReading, String> {
+    // Down to at most 3600 px across: a 600 dpi scan halves, and a
+    // 0.25 mm tick is still two pixels wide.
+    let factor = (photo.width.max(photo.height) as f64 / 3600.0)
+        .ceil()
+        .max(1.0) as usize;
+    let small = shrink(photo, factor);
+    let gray = luma(&small);
+    let (w, h) = (small.width, small.height);
+    // Darker than the local mean: ticks on any body.
+    let r = 12usize;
+    let mut integral = vec![0u64; (w + 1) * (h + 1)];
+    for j in 0..h {
+        let mut row = 0u64;
+        for i in 0..w {
+            row += gray[j * w + i] as u64;
+            integral[(j + 1) * (w + 1) + i + 1] = integral[j * (w + 1) + i + 1] + row;
+        }
+    }
+    let mut mask = vec![false; w * h];
+    for j in 0..h {
+        for i in 0..w {
+            let (x0, y0) = (i.saturating_sub(r), j.saturating_sub(r));
+            let (x1, y1) = ((i + r + 1).min(w), (j + r + 1).min(h));
+            let sum = integral[y1 * (w + 1) + x1] + integral[y0 * (w + 1) + x0]
+                - integral[y0 * (w + 1) + x1]
+                - integral[y1 * (w + 1) + x0];
+            let mean = sum as f64 / ((x1 - x0) * (y1 - y0)) as f64;
+            // Well below the local mean in proportion, not just by a
+            // margin: at the rule's edge the mean is pulled up by the
+            // paper, and the body must not read as a mark there.
+            mask[j * w + i] = (gray[j * w + i] as f64) < (mean - 20.0).min(0.72 * mean);
+        }
+    }
+    // Ticks: small, thin, and their angle.
+    struct Tick {
+        c: [f64; 2],
+        angle: f64,
+        length: f64,
+        thickness: f64,
+    }
+    let ticks: Vec<Tick> = components(&mask, w, h)
+        .iter()
+        .filter(|c| c.area >= 3 && c.area <= (w * h) / 2000)
+        .filter_map(|c| {
+            let (big, little, angle) = c.axes();
+            let length = (12.0 * big).sqrt();
+            let elongation = (big / little.max(1.0 / 12.0)).sqrt();
+            (elongation >= 2.5).then_some(Tick {
+                c: [c.cx, c.cy],
+                angle,
+                length,
+                thickness: c.area as f64 / length.max(1.0),
+            })
+        })
+        .collect();
+    if ticks.len() < 20 {
+        return Err(format!(
+            "no rule read: {} tick-like marks in the picture, 20 or more are needed",
+            ticks.len()
+        ));
+    }
+    // The rule runs across the direction most ticks share.
+    let bins = 90usize;
+    let mut hist = vec![0usize; bins];
+    for t in &ticks {
+        let b = ((t.angle.rem_euclid(PI)) / PI * bins as f64) as usize % bins;
+        hist[b] += 1;
+    }
+    // The fullest bin, its neighbours breaking ties, so the angle is
+    // within a bin of most ticks.
+    let peak = (0..bins)
+        .max_by_key(|&b| (hist[b], hist[(b + bins - 1) % bins] + hist[(b + 1) % bins]))
+        .unwrap();
+    let tick_angle = (peak as f64 + 0.5) / bins as f64 * PI;
+    let aligned: Vec<&Tick> = ticks
+        .iter()
+        .filter(|t| {
+            let d = (t.angle - tick_angle).rem_euclid(PI);
+            d.min(PI - d) < 3.0 * PI / 180.0
+        })
+        .collect();
+    // Refine the direction as the mean of the aligned ticks' angles.
+    let (sx, sy) = aligned.iter().fold((0.0, 0.0), |(sx, sy), t| {
+        (sx + (2.0 * t.angle).cos(), sy + (2.0 * t.angle).sin())
+    });
+    let tick_angle = 0.5 * sy.atan2(sx);
+    let along_dir = [-(tick_angle).sin(), tick_angle.cos()];
+    let across_dir = [tick_angle.cos(), tick_angle.sin()];
+    let along = |t: &Tick| t.c[0] * along_dir[0] + t.c[1] * along_dir[1];
+    let across = |t: &Tick| t.c[0] * across_dir[0] + t.c[1] * across_dir[1];
+    // One edge: the ticks whose bases line up. A tick's base is one of
+    // its ends; try both.
+    let mut thick: Vec<f64> = aligned.iter().map(|t| t.thickness).collect();
+    thick.sort_by(f64::total_cmp);
+    let window = (3.0 * thick[thick.len() / 2]).max(2.0);
+    let ends: Vec<(f64, f64)> = aligned
+        .iter()
+        .map(|t| (across(t) - t.length / 2.0, across(t) + t.length / 2.0))
+        .collect();
+    // Cluster the ticks by that end: a run of ends with no gap wider
+    // than the tolerance is one edge (or the tips of one tick length,
+    // which fit just as well).
+    let mut groups: Vec<Vec<usize>> = Vec::new();
+    for side in 0..2 {
+        let mut order: Vec<usize> = (0..aligned.len()).collect();
+        let key = |k: usize| if side == 0 { ends[k].0 } else { ends[k].1 };
+        order.sort_by(|&a, &b| key(a).total_cmp(&key(b)));
+        let mut start = 0;
+        for end in 1..=order.len() {
+            if end == order.len() || key(order[end]) - key(order[end - 1]) > window {
+                if end - start >= 20 {
+                    groups.push(order[start..end].to_vec());
+                }
+                start = end;
+            }
+        }
+    }
+    // Fit each group: index against position.
+    struct Edge {
+        pitch: f64,
+        ticks: usize,
+        first: f64,
+        last: f64,
+        members: Vec<usize>,
+    }
+    let fit = |members: &[usize]| -> Option<Edge> {
+        let mut pos: Vec<f64> = members.iter().map(|&k| along(aligned[k])).collect();
+        pos.sort_by(f64::total_cmp);
+        pos.dedup_by(|a, b| (*a - *b).abs() < 0.5);
+        if pos.len() < 20 {
+            return None;
+        }
+        let mut gaps: Vec<f64> = pos.windows(2).map(|g| g[1] - g[0]).collect();
+        gaps.sort_by(f64::total_cmp);
+        let mut pitch = gaps[gaps.len() / 2];
+        if pitch < 2.0 {
+            return None;
+        }
+        // Index each tick from its neighbour, so a rough pitch cannot
+        // drift a whole tick over a long rule, then fit the pitch and
+        // index again with the fitted one.
+        let n = pos.len() as f64;
+        let mut rms = 0.0;
+        for _ in 0..2 {
+            let mut idx = vec![0.0; pos.len()];
+            for k in 1..pos.len() {
+                idx[k] = idx[k - 1] + ((pos[k] - pos[k - 1]) / pitch).round().max(1.0);
+            }
+            let (mi, mp) = (idx.iter().sum::<f64>() / n, pos.iter().sum::<f64>() / n);
+            let sxx: f64 = idx.iter().map(|i| (i - mi).powi(2)).sum();
+            let sxy: f64 = idx.iter().zip(&pos).map(|(i, p)| (i - mi) * (p - mp)).sum();
+            if sxx <= 0.0 {
+                return None;
+            }
+            pitch = sxy / sxx;
+            rms = (idx
+                .iter()
+                .zip(&pos)
+                .map(|(i, p)| (mp + pitch * (i - mi) - p).powi(2))
+                .sum::<f64>()
+                / n)
+                .sqrt();
+        }
+        if rms > 0.15 * pitch {
+            return None;
+        }
+        let steps = gaps
+            .iter()
+            .filter(|g| ((*g / pitch) - 1.0).abs() < 0.2)
+            .count();
+        if (steps as f64) < 0.6 * gaps.len() as f64 {
+            return None;
+        }
+        Some(Edge {
+            pitch,
+            ticks: pos.len(),
+            first: pos[0],
+            last: pos[pos.len() - 1],
+            members: members.to_vec(),
+        })
+    };
+    let mut edges: Vec<Edge> = groups.iter().filter_map(|g| fit(g)).collect();
+    edges.sort_by(|a, b| b.ticks.cmp(&a.ticks));
+    if edges.is_empty() {
+        return Err(
+            "no rule read: tick-like marks were found but none line up evenly along an edge".into(),
+        );
+    }
+    // Which edge is millimetres: the best edge, unless a second edge of
+    // a clearly different pitch says by its ratio that it is inch
+    // graduations (or that the best one is).
+    let best = &edges[0];
+    let other = edges
+        .iter()
+        .skip(1)
+        .find(|e| (e.pitch / best.pitch - 1.0).abs() > 0.05);
+    let (mm, edge_how) = match other {
+        Some(b) => {
+            let (small_, large) = if best.pitch < b.pitch {
+                (best, b)
+            } else {
+                (b, best)
+            };
+            let ratio = large.pitch / small_.pitch;
+            if (ratio - 25.4 / 16.0).abs() < 0.04 {
+                (small_, "sixteenths on the other edge")
+            } else if (ratio - 32.0 / 25.4).abs() < 0.03 {
+                (large, "thirty-seconds on the other edge")
+            } else if (ratio - 64.0 / 25.4).abs() < 0.05 {
+                (large, "sixty-fourths on the other edge")
+            } else {
+                (best, "assumed: the two edges' pitches are not inch and mm")
+            }
+        }
+        None => (best, "assumed: one edge read"),
+    };
+    let f = factor as f64;
+    let members: Vec<&Tick> = mm.members.iter().map(|&k| aligned[k]).collect();
+    let mut bbox = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+    for t in &members {
+        bbox[0] = bbox[0].min(t.c[0] - t.length / 2.0);
+        bbox[1] = bbox[1].min(t.c[1] - t.length / 2.0);
+        bbox[2] = bbox[2].max(t.c[0] + t.length / 2.0);
+        bbox[3] = bbox[3].max(t.c[1] + t.length / 2.0);
+    }
+    let n = members.len() as f64;
+    let centre = [
+        members.iter().map(|t| t.c[0]).sum::<f64>() / n * f,
+        members.iter().map(|t| t.c[1]).sum::<f64>() / n * f,
+    ];
+    Ok(RuleReading {
+        ticks: mm.ticks,
+        length: (mm.last - mm.first) / mm.pitch,
+        px_per_mm: mm.pitch * f,
+        edge: edge_how,
+        centre,
+        bbox: [bbox[0] * f, bbox[1] * f, bbox[2] * f, bbox[3] * f],
     })
 }
 
@@ -732,6 +1122,10 @@ pub struct Scene {
     pub discs: Vec<[f64; 3]>,
     pub holes: Vec<[f64; 3]>,
     pub print: f64,
+    /// A steel rule: (x, y) of its lower-left corner, its length, and
+    /// its angle in degrees. Metric ticks along its lower edge, inch
+    /// sixteenths along its upper.
+    pub rule: Option<(f64, f64, f64, f64)>,
 }
 
 impl Default for Scene {
@@ -741,8 +1135,86 @@ impl Default for Scene {
             discs: Vec::new(),
             holes: Vec::new(),
             print: 1.0,
+            rule: None,
         }
     }
+}
+
+/// Shades one point of the scene, in true millimetres: a part, or the
+/// rule's body and ticks; None where the background shows.
+fn scene_at(scene: &Scene, xt: f64, yt: f64) -> Option<Rgb> {
+    if let Some((rx, ry, len, deg)) = scene.rule {
+        let (c, s) = ((deg * PI / 180.0).cos(), (deg * PI / 180.0).sin());
+        let (dx, dy) = (xt - rx, yt - ry);
+        let (u, v) = (dx * c + dy * s, -dx * s + dy * c);
+        let width = 15.0;
+        if (0.0..=len + 6.0).contains(&u) && (0.0..=width).contains(&v) {
+            // Ticks: every mm on the bottom edge (2, 3 and 4.5 mm long),
+            // every sixteenth on the top (1.5, 2.5 and 4), 0.25 mm wide,
+            // starting 3 mm in from the end.
+            let tick = |pitch: f64, up: f64| -> Option<i64> {
+                let k = (up / pitch).round();
+                ((up - k * pitch).abs() <= 0.125 && k >= 0.0 && k * pitch <= len)
+                    .then_some(k as i64)
+            };
+            let mm_len = |k: i64| {
+                if k % 10 == 0 {
+                    4.5
+                } else if k % 5 == 0 {
+                    3.0
+                } else {
+                    2.0
+                }
+            };
+            let inch = 25.4 / 16.0;
+            let in_len = |k: i64| {
+                if k % 16 == 0 {
+                    4.0
+                } else if k % 4 == 0 {
+                    2.5
+                } else {
+                    1.5
+                }
+            };
+            let on_mm = tick(1.0, u - 3.0).is_some_and(|k| v <= mm_len(k));
+            let on_in = tick(inch, u - 3.0).is_some_and(|k| v >= width - in_len(k));
+            return Some(if on_mm || on_in {
+                Rgb(25, 25, 25)
+            } else {
+                Rgb(175, 178, 180)
+            });
+        }
+    }
+    let on_part = scene
+        .rects
+        .iter()
+        .any(|r| (r[0]..=r[2]).contains(&xt) && (r[1]..=r[3]).contains(&yt))
+        || scene
+            .discs
+            .iter()
+            .any(|d| ((xt - d[0]).powi(2) + (yt - d[1]).powi(2)).sqrt() <= d[2]);
+    let in_hole = scene
+        .holes
+        .iter()
+        .any(|d| ((xt - d[0]).powi(2) + (yt - d[1]).powi(2)).sqrt() <= d[2]);
+    (on_part && !in_hole).then_some(Rgb(40, 40, 40))
+}
+
+/// A flatbed scan of the scene, `w` x `h` mm at `s` px/mm, white
+/// background, no sheet: origin at the bottom-left, y up.
+pub fn scan_image(w: f64, h: f64, s: f64, scene: &Scene) -> Image {
+    let (pw, ph) = ((w * s) as usize, (h * s) as usize);
+    let mut img = Image::new(pw, ph, Rgb(255, 255, 255));
+    for j in 0..ph {
+        for i in 0..pw {
+            let xt = (i as f64 + 0.5) / s;
+            let yt = h - (j as f64 + 0.5) / s;
+            if let Some(c) = scene_at(scene, xt, yt) {
+                img.set(i, j, c);
+            }
+        }
+    }
+    img
 }
 
 impl Scene {
@@ -802,20 +1274,8 @@ pub fn sheet_image(size: SheetSize, s: f64, scene: &Scene) -> Image {
                     c = Rgb(0, 0, 0);
                 }
             }
-            let on_part = scene
-                .rects
-                .iter()
-                .any(|r| (r[0]..=r[2]).contains(&xt) && (r[1]..=r[3]).contains(&yt))
-                || scene
-                    .discs
-                    .iter()
-                    .any(|d| ((xt - d[0]).powi(2) + (yt - d[1]).powi(2)).sqrt() <= d[2]);
-            let in_hole = scene
-                .holes
-                .iter()
-                .any(|d| ((xt - d[0]).powi(2) + (yt - d[1]).powi(2)).sqrt() <= d[2]);
-            if on_part && !in_hole {
-                c = Rgb(40, 40, 40);
+            if let Some(part) = scene_at(scene, xt, yt) {
+                c = part;
             }
             img.set(i, j, c);
         }
@@ -1009,9 +1469,27 @@ struct Comp {
     y1: usize,
     cx: f64,
     cy: f64,
+    /// Sums of i*i, j*j and i*j, for the second moments.
+    sxx: f64,
+    syy: f64,
+    sxy: f64,
 }
 
 impl Comp {
+    /// Principal axes from the second central moments: the larger and
+    /// smaller variance and the angle of the larger, in radians from
+    /// the x axis.
+    fn axes(&self) -> (f64, f64, f64) {
+        let n = self.area as f64;
+        let (mx, my) = (self.cx - 0.5, self.cy - 0.5);
+        let vxx = self.sxx / n - mx * mx;
+        let vyy = self.syy / n - my * my;
+        let vxy = self.sxy / n - mx * my;
+        let mean = (vxx + vyy) / 2.0;
+        let d = (((vxx - vyy) / 2.0).powi(2) + vxy * vxy).sqrt();
+        let angle = 0.5 * (2.0 * vxy).atan2(vxx - vyy);
+        ((mean + d).max(0.0), (mean - d).max(0.0), angle)
+    }
     fn width(&self) -> usize {
         self.x1 - self.x0 + 1
     }
@@ -1084,6 +1562,9 @@ fn components(mask: &[bool], w: usize, h: usize) -> Vec<Comp> {
             y1: 0,
             cx: 0.0,
             cy: 0.0,
+            sxx: 0.0,
+            syy: 0.0,
+            sxy: 0.0,
         };
         stack.push(start);
         label[start] = next;
@@ -1096,6 +1577,9 @@ fn components(mask: &[bool], w: usize, h: usize) -> Vec<Comp> {
             c.y1 = c.y1.max(j);
             c.cx += i as f64;
             c.cy += j as f64;
+            c.sxx += (i * i) as f64;
+            c.syy += (j * j) as f64;
+            c.sxy += (i * j) as f64;
             let mut edge = false;
             let mut visit = |x: isize, y: isize| {
                 if x < 0 || y < 0 || x >= w as isize || y >= h as isize {
@@ -1528,7 +2012,11 @@ mod tests {
             1200,
         );
         let m = measure_image(&photo, None, None).unwrap();
-        assert!(m.sheet == SheetSize::A4 && m.sheet_read, "{:?}", m.sheet);
+        assert!(
+            m.sheet == Some(SheetSize::A4) && m.sheet_read,
+            "{:?}",
+            m.sheet
+        );
         assert!(m.calibration.is_none());
         assert!(m.residual < 1.5, "fiducial fit {} px", m.residual);
         assert!((m.mm_per_pixel - 0.23).abs() < 0.03, "{}", m.mm_per_pixel);
@@ -1614,7 +2102,7 @@ mod tests {
         // everything comes out 1/0.96 too big.
         let m = measure_image(&photo, Some(SheetSize::A4), None).unwrap();
         assert!(
-            m.sheet == SheetSize::Letter && m.sheet_read,
+            m.sheet == Some(SheetSize::Letter) && m.sheet_read,
             "{:?}",
             m.sheet
         );
@@ -1660,7 +2148,80 @@ mod tests {
             Reference::Bars(10.0)
         );
         assert_eq!(Reference::parse("disc 22").unwrap(), Reference::Disc(22.0));
-        assert!(Reference::parse("ruler").is_err());
+        assert!(Reference::parse("tape").is_err());
+    }
+
+    #[test]
+    fn a_flat_scan_is_measured_from_a_steel_rule() {
+        // A 300 dpi scan (0.0847 mm/px) of a 30 x 20 plate with a 5 mm
+        // hole, a 12 mm disc, and a 150 mm rule laid at 4 degrees.
+        let scene = Scene {
+            rects: vec![[20.0, 20.0, 50.0, 40.0]],
+            discs: vec![[80.0, 30.0, 6.0]],
+            holes: vec![[35.0, 30.0, 2.5]],
+            rule: Some((15.0, 60.0, 150.0, 4.0)),
+            ..Scene::default()
+        };
+        let scan = scan_image(200.0, 120.0, 300.0 / 25.4, &scene);
+        let err = measure_image(&scan, None, None).unwrap_err();
+        assert!(err.contains("origin mark"), "{err}");
+        let m = measure_image(&scan, None, Some(&Reference::Rule)).unwrap();
+        assert!(m.sheet.is_none() && !m.sheet_read);
+        let rule = m.rule.as_ref().expect("rule read");
+        assert!((rule.px_per_mm - 300.0 / 25.4).abs() < 0.02, "{rule:?}");
+        assert!(rule.ticks >= 140 && rule.length > 140.0, "{rule:?}");
+        assert!(rule.edge.starts_with("sixteenths"), "{rule:?}");
+        assert!(
+            (m.mm_per_pixel - 25.4 / 300.0).abs() < 1e-4,
+            "{}",
+            m.mm_per_pixel
+        );
+        assert_eq!(m.parts.len(), 2, "the rule is not a part: {:?}", m.parts);
+        let plate = &m.parts[0];
+        for (got, want) in plate.bbox.iter().zip([20.0, 20.0, 50.0, 40.0]) {
+            assert!((got - want).abs() < 0.5, "plate {:?}", plate.bbox);
+        }
+        assert!(
+            (plate.holes[0].diameter - 5.0).abs() < 0.4,
+            "{:?}",
+            plate.holes
+        );
+        let disc = &m.parts[1];
+        assert!(
+            disc.circularity > 0.85 && (disc.diameter - 12.0).abs() < 0.4,
+            "{disc:?}"
+        );
+        assert!((disc.centroid[0] - 80.0).abs() < 0.5 && (disc.centroid[1] - 30.0).abs() < 0.5);
+        // The picture spans the scan in millimetres.
+        let picture = ok_render::from_png(&m.picture).unwrap();
+        assert!((picture.width as f64 - (200.0 + 30.0) * SCALE).abs() < 4.0);
+    }
+
+    #[test]
+    fn a_rule_on_a_short_print_gives_the_print_scale() {
+        // The Letter sheet printed at 95 %, scanned at 300 dpi, with a
+        // rule and a 40 x 20 plate on it.
+        let scene = Scene {
+            rects: vec![[100.0, 30.0, 140.0, 50.0]],
+            rule: Some((30.0, 90.0, 150.0, -2.0)),
+            print: 0.95,
+            ..Scene::default()
+        };
+        let scan = sheet_image(SheetSize::Letter, 300.0 / 25.4, &scene);
+        let m = measure_image(&scan, None, Some(&Reference::Rule)).unwrap();
+        assert!(
+            m.sheet == Some(SheetSize::Letter) && m.sheet_read,
+            "{:?}",
+            m.sheet
+        );
+        let cal = m.calibration.as_ref().expect("calibrated");
+        assert!((cal.factor - 0.95).abs() < 0.005, "{cal:?}");
+        assert_eq!(m.parts.len(), 1, "the rule is not a part: {:?}", m.parts);
+        let plate = &m.parts[0];
+        for (got, want) in plate.bbox.iter().zip([100.0, 30.0, 140.0, 50.0]) {
+            assert!((got - want).abs() < 0.5, "plate {:?}", plate.bbox);
+        }
+        assert_eq!(Reference::parse("rule").unwrap(), Reference::Rule);
     }
 
     #[test]

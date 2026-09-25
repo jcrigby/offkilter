@@ -934,9 +934,12 @@ sheet size by the dots beside the origin, a homography from the four
 centres to the sheet's millimetres, the picture resampled square at
 4 px/mm, dark shapes traced and simplified into outlines with the
 paper showing through them as holes. A reference of known size on the
-sheet (a photo scale's alternating bars, found as an even run of alike
-blocks, or a disc) gives the scale the sheet was printed at, and the
-picture is resampled again in true millimetres. Its tests draw the
+sheet (a steel rule's millimetre ticks, found as thin marks darker than
+their surroundings, clustered by the edge their bases share and fitted
+index against position; a photo scale's alternating bars, found as an
+even run of alike blocks; or a disc) gives the scale the sheet was
+printed at, and the picture is resampled again in true millimetres. A
+scan with a rule and no sheet is measured in its own frame. Its tests draw the
 sheet, photograph it askew with a synthetic homography, and require
 the sizes back within half a millimetre, and a 96 % print corrected
 to within 1 %.

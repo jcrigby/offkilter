@@ -46,3 +46,6 @@ for size in ("Letter", "A4", "A3", "Tabloid"):
 # photographed askew. The sheet size comes from the dots by the origin
 # mark; the scale's 10 mm bars give the print scale.
 print(m.tool("measure_photo", path=os.path.join(HERE, "scan.png"), reference="bars 10", out=os.path.join(OUT, "measured.png")))
+# rule-scan.png is a flatbed scan with no sheet at all: the parts and a
+# steel rule on the glass. The rule's millimetre ticks give the scale.
+print(m.tool("measure_photo", path=os.path.join(HERE, "rule-scan.png"), reference="rule", out=os.path.join(OUT, "rule-measured.png")))

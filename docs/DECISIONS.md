@@ -162,3 +162,27 @@ diameter) for anyone without a scale. Once the factor is known the
 picture is rectified again in true millimetres rather than corrected
 afterwards, so the outlines, the sketch and the drawn grid all agree.
 
+## 2026-09 · A steel rule is read by fitting its ticks, and a scan needs no sheet
+
+The maintainer's reference is a steel rule, and the parts are scanned
+on a flatbed rather than photographed. A scan changes two things: the
+sheet cannot lie under parts that lie on the glass, and the picture is
+sharp enough (0.085 mm per pixel at 300 dpi) to read millimetre
+graduations, which a phone photo is not. So the rule is read directly:
+its ticks are the thin marks darker than their surroundings (local
+mean, in proportion, so a light body against white paper does not
+read as a mark at its own edge), the rule's direction is the one most
+ticks share, the ticks whose bases line up are one edge, and a
+straight-line fit of position against index over 100 or more ticks
+gives pixels per millimetre to a tenth of a percent. Reading the
+numerals was not attempted: an inch edge is told apart from the metric
+one by the ratio of the two edges' pitches, which is all the numerals
+would add. With no sheet marks in the picture the scan is measured in
+its own frame from the rule alone, through the same rectification with
+the picture's corners standing in for the marks, rather than a second
+code path. Two lessons from the synthetic tests are in the code: index
+ticks from their neighbours, not from a rough pitch that drifts a whole
+tick over a long rule, and cluster ticks by their ends rather than
+sliding a window over them, since a window over tied ends takes an
+arbitrary subset and the gaps look uneven.
+
