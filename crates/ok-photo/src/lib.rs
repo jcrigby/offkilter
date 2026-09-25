@@ -306,8 +306,10 @@ pub struct RuleReading {
     /// ratio between the two edges' pitches, or assumed because only
     /// one edge read.
     pub edge: &'static str,
-    /// The rule's centre in the photograph, in pixels.
+    /// The rule's centre in the photograph, in pixels, and the unit
+    /// direction its graduations run along there.
     pub centre: [f64; 2],
+    pub direction: [f64; 2],
     /// The ticks' box in the photograph, in pixels.
     pub bbox: [f64; 4],
 }
@@ -472,11 +474,18 @@ pub fn measure_image(
         };
         let sheet = [[0.0, 0.0], [lx * k, 0.0], [lx * k, ly * k], [0.0, ly * k]];
         let to_sheet = homography(&fiducials, &sheet)?;
+        // One true millimetre of the rule, in the sheet's millimetres,
+        // taken along the rule: a tilted picture is foreshortened one
+        // way, and the rule's pitch was read along its own direction.
         let at = apply(&to_sheet, r.centre);
-        let along = apply(&to_sheet, [r.centre[0] + r.px_per_mm, r.centre[1]]);
-        let across = apply(&to_sheet, [r.centre[0], r.centre[1] + r.px_per_mm]);
-        // One true millimetre of the rule, in the sheet's millimetres.
-        let measured = (dist2(at, along).sqrt() + dist2(at, across).sqrt()) / 2.0;
+        let step = apply(
+            &to_sheet,
+            [
+                r.centre[0] + r.px_per_mm * r.direction[0],
+                r.centre[1] + r.px_per_mm * r.direction[1],
+            ],
+        );
+        let measured = dist2(at, step).sqrt();
         let corners = [
             apply(&to_sheet, [r.bbox[0], r.bbox[1]]),
             apply(&to_sheet, [r.bbox[2], r.bbox[1]]),
@@ -812,9 +821,10 @@ fn draw_parts(pass: &mut Pass) {
 /// seconds or sixty-fourths of an inch tells which edge is metric;
 /// with one edge the millimetre one is assumed.
 fn read_rule(photo: &Image) -> Result<RuleReading, String> {
-    // Down to at most 3600 px across: a 600 dpi scan halves, and a
-    // 0.25 mm tick is still two pixels wide.
-    let factor = (photo.width.max(photo.height) as f64 / 3600.0)
+    // Down to at most 4800 px across: a 12 megapixel phone picture of
+    // a sheet, or a 300 dpi scan of one, keeps every pixel, and a
+    // 0.25 mm tick is three of them; a 600 dpi scan halves.
+    let factor = (photo.width.max(photo.height) as f64 / 4800.0)
         .ceil()
         .max(1.0) as usize;
     let small = shrink(photo, factor);
@@ -1048,6 +1058,7 @@ fn read_rule(photo: &Image) -> Result<RuleReading, String> {
         px_per_mm: mm.pitch * f,
         edge: edge_how,
         centre,
+        direction: along_dir,
         bbox: [bbox[0] * f, bbox[1] * f, bbox[2] * f, bbox[3] * f],
     })
 }
@@ -2222,6 +2233,44 @@ mod tests {
             assert!((got - want).abs() < 0.5, "plate {:?}", plate.bbox);
         }
         assert_eq!(Reference::parse("rule").unwrap(), Reference::Rule);
+    }
+
+    #[test]
+    fn a_phone_photograph_of_the_sheet_reads_the_rule_on_it() {
+        // A 12 megapixel phone picture (4000 x 3000) of the Letter sheet
+        // printed at 96 %, filling most of the frame and a little askew,
+        // with a 150 mm rule at 5 degrees and a 40 x 20 plate on it.
+        let scene = Scene {
+            rects: vec![[100.0, 30.0, 140.0, 50.0]],
+            rule: Some((30.0, 90.0, 150.0, 5.0)),
+            print: 0.96,
+            ..Scene::default()
+        };
+        let sheet = sheet_image(SheetSize::Letter, 16.0, &scene);
+        let photo = photograph(
+            &sheet,
+            [
+                [180.0, 160.0],
+                [3850.0, 240.0],
+                [3780.0, 2860.0],
+                [240.0, 2760.0],
+            ],
+            4000,
+            3000,
+        );
+        let m = measure_image(&photo, None, Some(&Reference::Rule)).unwrap();
+        let rule = m.rule.as_ref().expect("rule read");
+        assert!(rule.ticks >= 120, "{rule:?}");
+        let cal = m.calibration.as_ref().expect("calibrated");
+        assert!(
+            (cal.factor - 0.96).abs() < 0.005,
+            "{cal:?} rule {rule:?} mm/px {}",
+            m.mm_per_pixel
+        );
+        let plate = &m.parts[0];
+        for (got, want) in plate.bbox.iter().zip([100.0, 30.0, 140.0, 50.0]) {
+            assert!((got - want).abs() < 0.6, "plate {:?}", plate.bbox);
+        }
     }
 
     #[test]
