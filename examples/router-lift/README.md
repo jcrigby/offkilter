@@ -8,11 +8,12 @@ drives the `ok-mcp` server exactly as a language model would.
 - `build.py`: the build. Speaks JSON-RPC to `ok-mcp --file` over stdio,
   makes one part studio per part (sketches, extrudes, holes, revolves,
   slots), three sub-assemblies (the carriage with its blocks and nut,
-  the leadscrew with its bearings and collars, the arm with its chuck,
-  guide pin and dowels) and the lift assembly placing them and the
-  loose parts, 33 bodies in all, with the carriage assembly and the
-  router hung off one slider mate (a block's bore on its shaft) and the
-  arm assembly on a revolute about the piano hinge's knuckle; reads
+  the leadscrew with its bearings and collars, the rev D pin arm with
+  its pivot blocks, chuck, guide pin and leveling bolt) and the lift
+  assembly placing them and the loose parts, 35 bodies in all, with the
+  carriage assembly and the router hung off one slider mate (a block's
+  bore on its shaft) and the arm assembly on a revolute about the pivot
+  shaft (the SK20s and SC20UUs are the lift's studios in new poses); reads
   each part back through `report`, pictures it through `screenshot`,
   exports the printed parts through `export`, and checks the bill of
   materials against the two shop drawings' BOM tables
@@ -28,8 +29,9 @@ drives the `ok-mcp` server exactly as a language model would.
   lift's sheet has a balloon per item and the parts list, where each
   sub-assembly is one item with its own sheet listing its parts, and
   the carriage's sheet has its holes called out.
-- `reference/`: the OpenSCAD sources (rev C), the reference STLs they
-  produced for the printed parts, and the arm template DXF.
+- `reference/`: the OpenSCAD sources (lift rev C, pin arm rev D and its
+  rev C for the record), the reference STLs they produced for the
+  printed parts, the arm template DXF and the drawings' BOM tables.
 - `build-instructions.md`: the shop instructions the project came with.
 
 ```sh
@@ -51,14 +53,14 @@ facet count (the kernel's 5° facets against OpenSCAD's `$fn = 96`).
 
 `router_lift_limits.rs` is the definition of done from the design
 brief: the carriage swept to the ends of its travel and the arm on its
-hinge, with every clearance and alignment measured and every pair of
+pivot, with every clearance and alignment measured and every pair of
 placed bodies checked for interference at each position, plus the
 carriage's own features (the bore stays whole, every bolt hole reaches
-its nut trap). What it measures, at rev C:
+its nut trap). What it measures, at lift rev C and arm rev D:
 
 | Check | Result |
 |---|---|
-| Interference, carriage at min / mid / max, 528 pairs | none, apart from the hinge knuckle let into the rail's corner (1226 mm³, as the SCAD draws it) |
+| Interference, carriage at min / mid / max, 595 pairs | none |
 | Carriage bottom to the lower SK20 at min | 3.00 mm |
 | Carriage top to the top's underside at max | 23.00 mm |
 | Leadscrew parallel to each shaft over the travel | 0.0000 mm |
@@ -67,22 +69,25 @@ its nut trap). What it measures, at rev C:
 | Nut traps and the router bore | 5.7 mm of wall, bore one clean piece |
 | Block bolt holes reaching their traps | 16 of 16 |
 | Guide pin on the bit axis, level | 0.0000 mm |
-| Arm underside above the table at the nose | 75.0 mm |
+| Pin tip above the table, level | 6.0 mm (adjustable 1 to −24) |
+| Arm underside above the table at the nose | 76.0 mm |
+| Arm swept 0 to 80 degrees | clear of the table and the supports |
+| Tail meets the table | at 85 degrees (3740 mm³ into the top) |
 
 And what it found that the SCAD did not:
 
-- **The rev C hinge cannot swing.** The knuckle is on the rail's front
-  top corner and the arm lies over the rail, so lifting the nose turns
-  the tail down into the rail: 39 cm³ of overlap at 5°. The hinge line
-  belongs at the rail's back corner, or the arm should end at the hinge.
-  Rev D replaces the hinge with a shaft pivot.
-- **The guide pin runs 5 mm into the nose** as drawn (75 mm long, tip 5
-  mm above the table, nose underside at 75 mm). A clearance hole over
-  the bit axis, or the pin set lower, fixes it.
-- **The leadscrew's coupling nut stands 31 mm proud of the table**, 45
-  to 62 mm behind the bit, inside the space a template would use. The
-  registration posts stand there too (0 to 75 mm tall, 50 to 90 mm
-  behind the bit).
+- **The leveling bolt stops the arm from lifting.** Its tip rests on the
+  table with the arm level, and lifting the nose turns the tail down, so
+  it is 4.1 mm into the top by 5 degrees. It also cannot hold the nose
+  up: the nose side is heavier and the bolt pushes the tail up, not
+  down. A stop under the arm forward of the pivot does both jobs.
+- **The guide pin runs 5 mm into the nose** as drawn (75 mm long, 45 mm
+  out of the chuck, nose underside at 76 mm). A clearance hole over the
+  bit axis, or less pin out, fixes it.
+- **Stock depth behind the bit is 45 mm, not 145.** The leadscrew's
+  coupling nut stands 31 mm proud of the table 45 to 62 mm behind the
+  bit. Without it the SK20 bases set the limit at 140 mm, 30 mm forward
+  of the pivot line.
 - **The bit tip is 2 mm below the table at max rise** with the ghost
   router's guessed collet and bit lengths; measure the real router.
 - **The drawings' BOM says two guide pins; the model places one.** Every

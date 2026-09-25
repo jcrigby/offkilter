@@ -53,8 +53,6 @@ const PRINTED: &[(&str, &str)] = &[
     ("Ring 40", "ring_40"),
     ("Ring 55", "ring_55"),
     ("Ring align", "ring_align"),
-    ("Post round", "pin_post_round"),
-    ("Post slot", "pin_post_slot"),
     ("Chuck", "pin_chuck"),
 ];
 
@@ -68,7 +66,7 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
         .iter()
         .map(|t| (t.id, t.name().to_string(), t.kind_name().to_string()))
         .collect();
-    assert!(tabs.len() >= 30, "{} tabs", tabs.len());
+    assert!(tabs.len() >= 28, "{} tabs", tabs.len());
     let mut checked = 0;
     let (mut mates, mut moving, mut assemblies) = (0, 0, 0);
     for (id, name, kind) in &tabs {
@@ -77,7 +75,7 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
             let r = doc.regenerate_assembly(*id).unwrap();
             // The lift assembly places every body: its loose parts and
             // the bodies of its three sub-assemblies.
-            let least = if name == "Lift assembly" { 33 } else { 5 };
+            let least = if name == "Lift assembly" { 35 } else { 6 };
             assert!(
                 r.bodies.len() >= least,
                 "{name}: {} placed bodies",
@@ -104,7 +102,7 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
                     "the slider names the block inside the carriage assembly"
                 );
                 let subs = r.members.iter().filter(|m| m.is_some()).count();
-                assert_eq!(subs, 17, "bodies of sub-assembly instances");
+                assert_eq!(subs, 18, "bodies of sub-assembly instances");
             }
             for inst in &asm.instances {
                 let want = inst.placement.to_transform();
@@ -179,15 +177,15 @@ fn the_assembly_sheet_lists_every_part_once() {
             .id
     };
     let tab = tab_named(&doc, "Lift assembly");
-    // Sixteen loose parts and three sub-assembly instances, one record
-    // each; fourteen distinct items.
+    // Seventeen loose parts and three sub-assembly instances, one record
+    // each; twelve distinct items (the pivot's SK20s share the lift's).
     let parts = ok_sheet::parts_of(&mut doc, tab).unwrap();
-    assert_eq!(parts.len(), 19);
-    assert_eq!(parts.iter().map(|p| p.3.len()).sum::<usize>(), 33, "bodies");
+    assert_eq!(parts.len(), 20);
+    assert_eq!(parts.iter().map(|p| p.3.len()).sum::<usize>(), 35, "bodies");
     let mut distinct: Vec<(u32, usize)> = parts.iter().map(|p| p.2).collect();
     distinct.sort_unstable();
     distinct.dedup();
-    assert_eq!(distinct.len(), 14);
+    assert_eq!(distinct.len(), 12);
     let refs: Vec<ok_sheet::Part> = parts
         .iter()
         .map(|(name, material, key, solids)| ok_sheet::Part {
@@ -297,11 +295,11 @@ fn the_arm_plan_view_is_the_shop_template() {
             "template line {a:?} to {b:?} is not in the plan view"
         );
     }
-    // The dowel holes and screw pilots are in the underside: nothing
-    // round is visible from above, and they show dashed when hidden
-    // lines are asked for.
-    assert_eq!(dxf.matches("\nCIRCLE\n").count(), 0, "{dxf}");
+    // Eight block bolt holes and the leveling bolt's go through, so they
+    // are circles from above; the chuck screw slots are in the underside
+    // and show only when hidden lines are asked for.
+    assert_eq!(dxf.matches("\nCIRCLE\n").count(), 9, "{dxf}");
     let with_hidden = ok_render::view_dxf(&mut doc, arm, ok_render::View::Top, true).unwrap();
-    let hidden_circles = with_hidden.matches("CIRCLE\n8\nHIDDEN\n").count();
-    assert!(hidden_circles >= 4, "{hidden_circles} hidden circles");
+    let hidden = with_hidden.matches("\n8\nHIDDEN\n").count();
+    assert!(hidden >= 4, "{hidden} hidden entities");
 }

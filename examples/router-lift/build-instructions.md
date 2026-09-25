@@ -1,7 +1,7 @@
 # Trim Router Table + Lift — Build Instructions
 
-Rev C table/lift and rev C hinged pin attachment, 2026-09-18.
-Companion files: `trim_router_lift.scad`, `pin_arm.scad`, the two shop drawings, `carriage.stl`, `ring_*.stl`, `pin_post_round.stl`, `pin_post_slot.stl`, `pin_chuck.stl`, `ring_align.stl`, `arm_template.dxf`.
+Rev C table/lift and rev D shaft-pivot pin attachment, 2026-09-24.
+Companion files: `trim_router_lift.scad`, `pin_arm.scad`, the two shop drawings, `carriage.stl`, `ring_*.stl`, `pin_chuck.stl`, `ring_align.stl`, `arm_template.dxf`.
 
 All dimensions in mm unless noted. Coordinates: the bit axis is the origin; "behind" means toward the back edge of the top (where the pin arm mounts); "left/right" as seen standing at the front of the table.
 
@@ -102,57 +102,56 @@ The top is 380 deep so the rear 155 mm sits on the bench with the box hanging of
 
 ---
 
-## Part B — Overarm pin attachment (hinged, rev C)
+## Part B — Overarm pin attachment (shaft pivot, rev D)
+
+Nothing on the table locates the arm. It pivots on a 20 mm shaft in two SK20 supports at the back of the top, with two SC20UU blocks under its tail as the pivot bushings. Stock can be any width and up to 145 mm deep behind the bit; headroom under the arm is 76 mm.
 
 ### B1. Print
 
 | Part | Qty | Notes |
 |---|---|---|
-| pin_post_round | 1 | 40 × 40 × 75, round socket. Print upright, 100 % infill. |
-| pin_post_slot | 1 | Same, socket slotted 4 mm in X. |
-| pin_chuck | 1 | Split clamp for the 1/4" guide pin. |
+| pin_chuck | 1 | Split clamp for the 1/4" guide pin. ABS, 100 % infill. |
 | ring_align | 1 | Add to the table's ring set: 1/4" centre hole for the daily check. |
 
-### B2. Arm and rail
+### B2. Arm
 
-1. **Arm.** Laminate two 3/4" pieces, print `arm_template.dxf` full size, and cut the plan shape: 250 wide at the back, 80 wide at the nose, 290 long, 38 thick. Both faces flat; the underside is a reference.
-2. **Rail.** Glue up ply to 250 × 60 × 75 (four layers of 3/4" or two of 1-1/2"). Its top must be flat and square to the front face.
-3. **Chuck screw pilots** in the arm's underside: two 3.5 mm holes at ±12 mm either side of the bit axis, 0 mm fore-aft. Don't fit the chuck yet.
+1. Laminate two 3/4" pieces, print `arm_template.dxf` full size, and cut the plan shape: 250 wide at the tail, 80 at the nose, 275 long, 38 thick. Both faces flat; the underside is the reference.
+2. Holes, laid out on the underside with the bit axis as origin and the tail toward +Y:
 
-### B3. Rail and hinge on the top
+| Feature | Position | Spec |
+|---|---|---|
+| block bolts (8) | x = ±60 ± 17.5, y = 170 ± 20 | 5.5 through, heads on top |
+| leveling bolt | x = 0, y = 215 | 8.5 through, M8 threaded insert from the top |
+| chuck screws (2) | x = ±12, y = 0 | 3.5 pilot, slotted ±3 in Y |
 
-1. Screw the rail to the top along the back edge, centred left-right, with its back face flush with the top's back edge. Its front face is the hinge line, **180 mm behind the bit axis**.
-2. Piano hinge, 250 long: knuckle on the rail's front top corner. One leaf down the rail's front face, the other under the arm's tail. Elongate the screw holes in the leaf that goes on the arm by a millimetre each way before fitting; the hinge must not be the thing that locates the arm.
-3. Fit the arm. Down, its tail lies on the rail top and the nose sits over the bit at 75 mm above the table. Lift it; it should swing freely past 90°.
+Easiest: clamp each block in place, base up, and drill through its own holes.
 
-### B4. Guide pin and alignment ring
+### B3. Pivot on the table
 
-1. Chuck onto the nose with two #8 × 1" screws through its flange, split toward the back. Slide a 1/4" × 75 pin into it with 45 mm exposed, snug the M4.
-2. Blank ring out, alignment ring in.
-3. Lower the arm slowly. The pin should drop into the ring's centre hole. If it lands off, that offset is the arm's position error and the posts (next step) will absorb it, so don't chase it here.
+1. Cut the shaft to 250 and chamfer the ends.
+2. Screw the two SK20s to the top with their bases down, bore axis along X, centres **170 mm behind the bit axis, ±110 mm off the centreline**. Bases must both sit flat and the bores must line up; slide the shaft through both before driving the screws. Clamp screws loose.
+3. Bolt the two SC20UU to the arm's underside, bases up, with M5 × 60 and nuts, centred at ±60. Snug, not torqued.
+4. Slide the shaft out of one SK20, thread it through both blocks with the arm held level, and back into the support. Fit a shaft collar outside each block, loose.
+5. Swing the arm through its range. It must move freely with no bind; if it doesn't, loosen the SK20 base screws and let them settle, then retighten. Now tighten the SK20 clamp screws.
+6. Thread the M8 leveling bolt down through the tail insert until its tip touches the table with the arm level (nose 76 mm above the table, check with a block). Jam nut.
 
-### B5. Set the registration posts
+### B4. Guide pin and alignment
 
-This is the one-time alignment. The posts get fixed wherever the arm lands when the guide pin is centred.
+1. Chuck onto the nose with two #8 × 1" screws through the Y-slots, screws loose. Slide a 1/4" × 75 pin in with 45 mm exposed; snug the M4.
+2. Chuck a 1/4" pin in the router and raise it 20 mm above the table.
+3. Lower the arm. Slide a 1/4" ID bronze sleeve from the router's pin up onto the guide pin.
+4. **X**: slide the arm along the shaft (collars loose) until the sleeve passes freely side to side. Push both collars against their blocks and lock them.
+5. **Y**: nudge the chuck in its slots until the sleeve passes freely fore and aft. Tighten the chuck screws.
+6. Lift and drop the arm a dozen times. The sleeve should still pass. That's the alignment; it holds until something is unbolted.
+7. Alignment ring in. Lower the arm; the pin should drop straight into the centre hole. This is the daily check.
 
-1. Press the two 10 mm dowel pins 20 mm into the arm's underside at **±60 mm either side of the bit axis, 70 mm behind it**, chamfered ends out. (A 9.9 mm hole gives a press fit in ply.)
-2. Set the round post on the left and the slotted post on the right, loosely on the top with their sockets under the pins, screws not yet driven.
-3. Chuck a 1/4" pin in the router and raise it 20 mm above the table. Alignment ring out.
-4. Lower the arm. Slide a 1/4" ID bronze sleeve from the router's pin up onto the guide pin. When it passes both without binding, the pin is over the bit.
-5. With the arm down and the sleeve in place, nudge each post until its socket is centred on its dowel and the arm's underside sits flat on both post tops. Drive the two countersunk screws in each post.
-6. Lift and drop the arm a dozen times. It should seat with a click and the sleeve should still pass. Now the posts locate the arm every time; the hinge just swings.
+### B5. Hold-up and catch
 
-### B6. Hold-up and catch
+A lid stay between the arm and the top, or a magnet on a short post behind the pivot that catches a washer on the tail, holds the arm up. The tail hits the table at about 85° of lift, so the stay should hold it around 60–70°. A magnet in the table under the nose stops the arm bouncing on a chattery cut.
 
-Fit a lid stay between the rail and the arm so it stays open at about 60°, or a magnet on a short post behind the rail that catches a washer on the arm's tail. A second magnet at the nose, set into the post top, stops the arm bouncing on a chattery cut.
+### B6. Pin depth
 
-### B7. Pin depth
-
-Slide the guide pin in the chuck so its tip sits 2–3 mm above the workpiece surface with the template on top. Snug the M4. Change it when the template thickness changes.
-
-### B8. Daily check
-
-Alignment ring in, lower the arm. The pin drops into the centre hole. If it doesn't, something moved; go back to B5.
+Slide the guide pin in the chuck so its tip sits 2–3 mm above the workpiece surface with the template on top. Snug the M4. Change it when template thickness changes. For bearing-guided profile bits, fit the bronze sleeve that matches the bit's bearing OD (see operating notes).
 
 ---
 
@@ -161,7 +160,8 @@ Alignment ring in, lower the arm. The pin drops into the centre hole. If it does
 - Bit height: 1 full turn of the 9/16" socket = 2 mm. A quarter turn = 0.5 mm.
 - Backlash never shows because the router's weight keeps the nut on one flank. Set final height by raising if you want the habit.
 - Bit changes: blank ring out, raise the collet above the top, two wrenches, lower, ring in.
-- Pin routing: arm up, template on the work, arm down, pin in the groove. To hop to another groove: lift, move, drop. Alignment ring for a five-second check whenever you doubt it.
+- Pin routing: arm up, template on the work, arm down, pin on the template. To hop to another groove: lift, move, drop. Alignment ring for a five-second check whenever you doubt it.
+- Cut, then profile, from one template: the pin sets where the bit's *axis* goes, so match the pin to the bit. 1/4" pin with a 1/4" upcut; the 1/2" sleeve with a 1/2"-bearing roundover or chamfer (measure your bearings). Templates must be edge patterns the pin rides around, not grooves, for this to work. Bias the sleeve ~0.3 mm under the bearing OD so any error takes a hair more off the edge rather than leaving a step. Don't take the template off the work between the two passes.
 - Router removal: blank ring out, loosen the two clamp bolts, lift the motor out through the top.
 - Dust: the box is open front and back on purpose. Don't panel it in.
 - Check the SK20 clamp screws and the collar set screws after the first hour of use; they seat.

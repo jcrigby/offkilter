@@ -108,20 +108,19 @@ fn hits(r: &AssemblyResult, of: impl Fn(&str) -> bool) -> Vec<(String, String, f
 }
 
 /// Body pairs that overlap as drawn and are reported rather than hidden,
-/// with why: the hinge knuckle sits on the rail's front top corner with
-/// a quarter of it in the wood (the shop lets it in); the 10 mm dowels
-/// are pressed into 9.9 mm holes; and the guide pin, 75 mm long with its
-/// tip 5 mm above the table, runs 5 mm into the nose (the SCAD draws it
-/// so; a clearance hole in the nose or the pin set lower fixes it).
+/// with why. The guide pin, 75 mm long with 45 mm out of the chuck, has
+/// its top 5 mm into the nose (the SCAD draws it so; a clearance hole in
+/// the nose or less pin out fixes it). The leveling bolt's tip rests on
+/// the table when the arm is level, so lifting the nose, which turns
+/// the tail down, drives the bolt into the top from the first degree:
+/// the sweep reports its own contacts apart from that.
 const KNOWN: &[(&str, &str, &str)] = &[
-    (
-        "piano hinge",
-        "rear rail",
-        "the knuckle in the rail's corner",
-    ),
-    ("arm", "left dowel", "press fit"),
-    ("arm", "right dowel", "press fit"),
     ("arm", "guide pin", "the pin's top in the nose, as drawn"),
+    (
+        "leveling bolt",
+        "top",
+        "the tail's stop against lifting the nose",
+    ),
 ];
 
 /// A body's own name without its sub-assembly prefix.
@@ -429,14 +428,15 @@ fn the_carriage_features_are_where_the_shop_needs_them() {
 fn the_pin_arm_swings_clear_and_lands_on_the_bit() {
     let mut doc = load();
     let lift = tab_named(&doc, "Lift assembly");
-    let (hinge, angle0, offset) = mate_named(&doc, lift, "arm hinge");
+    let (pivot, angle0, offset) = mate_named(&doc, lift, "arm pivot");
     let mut rep = Report::new();
-    let at = |doc: &mut Document, a: f64| doc.preview_assembly(lift, hinge, a, offset).unwrap();
+    let at = |doc: &mut Document, a: f64| doc.preview_assembly(lift, pivot, a, offset).unwrap();
     let r = at(&mut doc, angle0);
     let table = bounds(body(&r, "top")).1.z;
     let arm = body(&r, "Arm assembly / arm");
     let pin = body(&r, "Arm assembly / guide pin");
     let chuck = body(&r, "Arm assembly / chuck");
+    let bolt = body(&r, "Arm assembly / leveling bolt");
     // Level: the guide pin on the bit axis, its tip just above the table.
     let axis = cylinders(pin)
         .into_iter()
@@ -471,47 +471,67 @@ fn the_pin_arm_swings_clear_and_lands_on_the_bit() {
         "arm underside above the table at the nose",
         format!("{nose:.1} mm"),
     );
-    // What stands in the stock envelope forward of the hinge line: the
-    // table surface up to the arm, from the hinge line forward.
-    let hinge_y = body(&r, "piano hinge").centroid().unwrap().y;
+    let bolt_tip = bounds(bolt).0.z - table;
+    rep.note(
+        "leveling bolt tip, level",
+        format!("{bolt_tip:.2} mm above the table"),
+    );
+    // What stands in the stock envelope: on the table, under the arm,
+    // forward of the pivot line; and how far behind the bit stock can
+    // reach before it meets something.
+    let pivot_y = body(&r, "pivot shaft").centroid().unwrap().y;
     let mut standing = Vec::new();
+    let mut depth = f64::INFINITY;
     for b in &r.bodies {
         let (lo, hi) = bounds(&b.solid);
-        if lo.y < hinge_y - 1e-6 && hi.z > table + 1e-6 && lo.z < table + 76.0 && b.name != "ring" {
+        let on_table = hi.z > table + 1e-6 && lo.z < table + 76.0;
+        if b.name == "ring" || !on_table {
+            continue;
+        }
+        if lo.y < pivot_y - 1e-6 {
             standing.push(format!(
-                "{} (y {:.0}..{:.0}, {:.0}..{:.0} mm above the table)",
+                "{} (y {:.0}..{:.0}, {:.0}..{:.0} mm up)",
                 b.name,
                 lo.y,
-                hi.y.min(hinge_y),
+                hi.y.min(pivot_y),
                 (lo.z - table).max(0.0),
                 hi.z - table
             ));
         }
+        if lo.y > 0.0 && !b.name.starts_with("Arm assembly /") {
+            depth = depth.min(lo.y);
+        }
     }
     rep.note(
-        "in the stock envelope forward of the hinge line",
+        "in the stock envelope forward of the pivot line",
         if standing.is_empty() {
             "nothing".into()
         } else {
             standing.join("; ")
         },
     );
-    // Sweep the hinge: the arm lifted 0..85 degrees, nothing it carries
-    // touching the table, the rail, the posts or the router.
+    rep.note(
+        "stock depth behind the bit on the table",
+        format!("{depth:.0} mm to the nearest thing standing on the table"),
+    );
+    // Sweep the pivot: the nose lifted 0..85 degrees, nothing the arm
+    // carries touching the table, the supports or the router, and the
+    // angle at which the tail first meets the table.
     let nose_z = |r: &AssemblyResult| bounds(body(r, "Arm assembly / guide pin")).0.z;
     let sign = if nose_z(&at(&mut doc, angle0 + 5.0)) > nose_z(&at(&mut doc, angle0)) {
         1.0
     } else {
         -1.0
     };
-    let mut first_hit = None;
-    let mut worst = String::new();
+    let mut first_hit: Option<(f64, String)> = None;
+    let mut bolt_in = None;
     for step in 0..=17 {
         let theta = 5.0 * step as f64;
         let r = at(&mut doc, angle0 + sign * theta);
         assert!(r.mate_errors.is_empty(), "{theta}: {:?}", r.mate_errors);
-        let found: Vec<_> = hits(&r, |n| n.starts_with("Arm assembly /"))
-            .into_iter()
+        let all = hits(&r, |n| n.starts_with("Arm assembly /"));
+        let found: Vec<_> = all
+            .iter()
             .filter(|(a, b, _)| known(a, b).is_none())
             .collect();
         if theta == 0.0 {
@@ -527,30 +547,42 @@ fn the_pin_arm_swings_clear_and_lands_on_the_bit() {
         }
         if let Some((a, b, v)) = found.first() {
             if first_hit.is_none() {
-                first_hit = Some(theta);
-                worst = format!("{a} / {b}: {v:.1} mm3 at {theta} degrees");
+                first_hit = Some((theta, format!("{a} / {b}: {v:.0} mm3 at {theta} degrees")));
+            }
+        }
+        if bolt_in.is_none() {
+            let below = table - bounds(body(&r, "Arm assembly / leveling bolt")).0.z;
+            if below > 1e-6 {
+                bolt_in = Some(format!("{below:.1} mm into the top at {theta} degrees"));
             }
         }
         if theta == 0.0 || theta == 45.0 || theta == 85.0 {
-            let tip = nose_z(&r) - table;
             rep.note(
                 &format!("arm at {theta} degrees"),
                 format!(
-                    "pin tip {tip:.1} mm above the table, {} contact(s)",
+                    "pin tip {:.1} mm above the table, {} contact(s)",
+                    nose_z(&r) - table,
                     found.len()
                 ),
             );
         }
     }
-    // The rev C hinge as drawn: the knuckle on the rail's front top
-    // corner with the arm lying over the rail, so lifting the nose turns
-    // the tail down into the rail at once. A finding, not a requirement:
-    // it prints the first contact, and rev D replaces the hinge.
     rep.note(
-        "arm swept 0..85 degrees",
-        match first_hit {
-            None => "18 positions clear".into(),
-            Some(t) => format!("first contact at {t} degrees: {worst}"),
+        "leveling bolt through the sweep",
+        bolt_in.unwrap_or_else(|| "never below the table".into()),
+    );
+    // The tail is meant to meet the table at about 85 degrees, so the
+    // sweep must be clear through 80 and the first contact is reported.
+    rep.must(
+        first_hit.as_ref().is_none_or(|(t, _)| *t > 80.0),
+        "arm swings 0..80 degrees clear of the table and the supports",
+        "17 positions".into(),
+    );
+    rep.note(
+        "tail first meets the table",
+        match &first_hit {
+            None => "not within 85 degrees".into(),
+            Some((_, what)) => what.clone(),
         },
     );
     rep.print();

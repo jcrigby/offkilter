@@ -99,8 +99,11 @@ Overlaps the SCAD draws deliberately (a knuckle let into a corner, press
 fits) are listed with their reason and reported, not hidden; a genuine
 flaw is reported as a finding and left in the model, because the SCAD
 is the design of record and the point of the check is to show what it
-missed. The first run found three: the rev C hinge binds at 5 degrees,
-the guide pin runs into the nose, and the crank nut stands in the stock
-envelope. The brief's rev D arm (shaft pivot in SK20s) was not
-available; its checks are written against rev C and will move over.
+missed. The first run, against the rev C hinged arm, found that the
+hinge binds at 5 degrees; the rev D arm on a shaft pivot swings clear
+to 80 and meets the table at 85 as intended, but its leveling bolt
+stops the lift from the first degree, the guide pin runs into the
+nose, and the crank nut stands in the stock envelope. The lift's SK20
+and SC20UU studios serve the pivot too, rotated into new poses, rather
+than duplicate parts.
 
