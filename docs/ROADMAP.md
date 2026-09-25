@@ -123,7 +123,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Benchmarks for regeneration time on realistic parts (`scripts/bench.sh`); the boolean's T-junction grid and section prefilters came out of the first run (a 4000-face cover shells in 0.65 s, from 3.9 s), the incremental boolean out of the second (0.25 s)
 - [x] `wasm-opt` in the release pipeline (from the binaryen npm package when present)
 
-- [x] Mechanism-at-limit checks of the router lift example: travel and hinge sweeps with interference, clearance and alignment measured (`router_lift_limits.rs`), the BOM checked against the shop drawings
+- [x] Mechanism-at-limit checks of the router lift example: the carriage's travel and the rev D pin arm's pivot swept with interference, clearance and alignment measured (`router_lift_limits.rs`), the BOM checked against the shop drawings
 
 ## Next
 
@@ -137,6 +137,5 @@ in `docs/DECISIONS.md`.
 - [ ] `ok-sheet`: a 1:2.5 scale between 1:2 and 1:5, so a part like the carriage assembly does not drop to 1:5 on A4 for want of a few millimetres
 - [ ] Drawing dialog: a hidden-lines choice (auto, on, off) matching the `hidden` option the MCP tool and the server already take
 - [ ] `Dockerfile.dev`: build it once on a machine with a Docker daemon; the sandbox it was written in had only the client
-- [ ] Router lift: the rev D pin arm (shaft pivot in two SK20s, blocks under the tail) when its SCAD arrives, with the hinge sweep moved to it
 - [ ] Assembly sheets: an exploded iso view, driven by the client's explode slider, when the stacked view hides parts
 

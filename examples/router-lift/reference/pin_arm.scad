@@ -1,25 +1,25 @@
 // =====================================================================
-//  Overarm Pin Attachment  —  hinged arm  (rev C)
+//  Overarm Pin Attachment  —  shaft-pivot arm  (rev D)
 //
-//  The arm is a laminated-ply plate, wide at the back where a piano hinge
-//  joins it to a rear rail on the table, tapering to a nose that carries
-//  the guide-pin chuck over the bit.  Lift the arm to move the template;
-//  drop it and two registration pins in the arm's wings seat in sockets
-//  on top of two short posts (one round socket, one slot), which locate
-//  the arm in X, Y and rotation.  The arm rests on the rail and the two
-//  posts, so height is fixed by construction.  The hinge only swings.
+//  The arm is a laminated-ply plate that pivots on a 20 mm shaft held in
+//  two SK20 supports screwed to the back of the table.  Two SC20UU blocks
+//  bolted under the arm's tail are the pivot bushings; a shaft collar
+//  against each block removes sideways float, so nothing on the table
+//  locates the arm and stock can be as wide as you like and up to the
+//  pivot line deep.  A leveling bolt in the tail lands on the table and
+//  sets the arm level (nose height); pin depth is set in the chuck.
 //
-//  Printed:  post_round, post_slot (registration sockets), chuck (guide-pin
-//            clamp under the nose).  Plus ring_align in the lift file.
-//  Wood:     arm (2 x 3/4" ply laminated, cut from arm_2d), rear rail.
-//  Bought:   1-1/2" piano hinge ~250 long, 2x 10 mm dowel pins, 1/4" drill
-//            rod pins, lid stay, 2x M4 clamp bolts, wood screws.
+//  Printed:  chuck (guide-pin clamp under the nose, slotted for Y adjust)
+//  Wood:     arm (2 x 3/4" ply laminated, cut from arm_2d)
+//  Bought:   20 mm shaft 250 (kit), 2x SK20 (kit), 2x SC20UU (kit),
+//            2x 20 mm shaft collars, M5 x 60 x 8, M8 x 100 + jam nut,
+//            1/4" drill-rod pins, lid stay or magnet
 //
 //  Frame: z = 0 table surface, origin = bit axis, +Y toward the back.  mm.
 // =====================================================================
 
 /* [Part to render] */
-part = "assembly";   // [assembly, exploded, post_round, post_slot, post_test, chuck, arm_2d, print_plate]
+part = "assembly";   // [assembly, exploded, chuck, arm_2d, print_plate]
 
 /* [Table (from trim_router_lift.scad)] */
 top_w     = 400;
@@ -28,29 +28,33 @@ top_t     = 38;
 top_y_off = 50;
 disc_d    = 90;
 
-/* [Arm and rail] */
+/* [Arm] */
 ply_t      = 19;
-arm_t      = 2*ply_t;    // laminated plate thickness
-arm_clear  = 75;         // arm underside above the table = rail height = post height
-rail_d     = 60;         // rail depth (Y); the arm's tail lies on it
-rail_w     = 250;        // rail and hinge length (X)
-rail_y1    = 240;        // back edge of the top
-nose_w     = 80;         // arm width at the nose
-nose_y     = -50;        // nose front edge
-hinge_w    = 38;         // 1-1/2" piano hinge, open
-hinge_t    = 1.2;
+arm_t      = 2*ply_t;
+nose_w     = 80;
+nose_y     = -50;
+arm_w      = 250;        // full width at the tail
+pivot_y    = 170;        // shaft axis behind the bit
+tail_y     = 225;        // tail end (table back edge is at 240)
+level_y    = 215;        // leveling bolt
 
-/* [Registration] */
-reg_x      = 60;         // posts at +/- reg_x
-reg_y      = 70;         // behind the bit line, beside the ring
-reg_pin_d  = 10;         // 10 mm dowel pins
-reg_pin_l  = 40;         // 20 pressed into the arm, 20 exposed
-post_w     = 40;
-post_h     = 75;         // = arm_clear
-socket_d   = 10.3;
-slot_len   = 4;          // extra length of the slotted socket (X)
-cone_h     = 6;
-cone_d     = 16;
+/* [Pivot hardware — measure yours] */
+shaft_d    = 20;
+shaft_len  = 250;
+sk_w       = 60;         // SK20 base length (Y)
+sk_t       = 20;         // thickness along the shaft (X)
+sk_h       = 51;         // base to shaft centre
+sk_htot    = 70;
+sk_x       = 110;        // SK20 centres at +/- sk_x
+blk_w      = 50;         // SC20UU width (Y)
+blk_l      = 45;         // length along the shaft (X)
+blk_h      = 42;
+blk_c      = 25;         // base to shaft centre
+blk_bx     = 35;         // bolt spacing along the shaft (X)
+blk_by     = 40;         // bolt spacing across (Y)
+blk_x      = 60;         // block centres at +/- blk_x
+collar_od  = 32;
+collar_h   = 12;
 
 /* [Chuck] */
 chuck_w    = 36;
@@ -58,7 +62,8 @@ chuck_dp   = 30;
 chuck_h    = 25;
 pin_d      = 6.35;
 pin_l      = 75;
-pin_out    = 45;         // exposed below the chuck as drawn (slide to set)
+pin_out    = 45;
+adj        = 3;          // +/- Y slot travel
 
 /* [General] */
 $fn = 96;
@@ -66,14 +71,14 @@ $fn = 96;
 // ---------------------------------------------------------------------
 // Derived
 // ---------------------------------------------------------------------
-rail_y0 = rail_y1 - rail_d;                 // hinge line
-z_arm   = arm_clear;                        // arm underside when down
-arm_pts = [[-rail_w/2, rail_y1], [rail_w/2, rail_y1], [rail_w/2, rail_y0],
-           [nose_w/2, nose_y], [-nose_w/2, nose_y], [-rail_w/2, rail_y0]];
+z_shaft = sk_h;                     // SK20 base on the table
+z_arm   = z_shaft + blk_c;          // arm underside when level (blocks base-up under the tail)
+arm_pts = [[-arm_w/2, tail_y], [arm_w/2, tail_y], [arm_w/2, 100],
+           [nose_w/2, nose_y], [-nose_w/2, nose_y], [-arm_w/2, 100]];
 
-echo(str("Arm blank: ", rail_w, " x ", rail_y1 - nose_y, " x ", arm_t, " mm (X x Y x thickness)"));
-echo(str("Rail: ", rail_w, " x ", rail_d, " x ", arm_clear, " mm;  piano hinge ", rail_w, " mm long on the hinge line y = ", rail_y0));
-echo(str("Posts at x = +/-", reg_x, ", y = ", reg_y, "; ", post_h, " tall.  Chuck bottom ", z_arm - chuck_h, " mm above the table"));
+echo(str("Arm blank: ", arm_w, " x ", tail_y - nose_y, " x ", arm_t, " mm;  underside ", z_arm, " above the table"));
+echo(str("Shaft ", shaft_len, " mm at y = ", pivot_y, ", z = ", z_shaft, ";  SK20s at x = +/-", sk_x, ";  blocks at x = +/-", blk_x));
+echo(str("Chuck bottom ", z_arm - chuck_h, " above the table;  stock clearance under the arm ", z_arm, " mm, up to ", pivot_y - blk_w/2, " mm behind the bit"));
 
 // ---------------------------------------------------------------------
 // Parts
@@ -82,56 +87,62 @@ module arm_2d() { polygon(arm_pts); }
 module arm() {
     difference() {
         translate([0, 0, z_arm]) linear_extrude(arm_t) arm_2d();
-        for (sx = [-1, 1]) translate([sx*reg_x, reg_y, z_arm - 1]) cylinder(d = reg_pin_d - 0.1, h = 21);   // press-fit pin holes
-        for (sx = [-1, 1]) translate([sx*12, 0, z_arm - 1]) cylinder(d = 3.5, h = 30);                    // chuck screws
+        // SC20UU bolts, M5 through, heads on top
+        for (sx = [-1, 1]) for (dx = [-1, 1]) for (dy = [-1, 1])
+            translate([sx*blk_x + dx*blk_bx/2, pivot_y + dy*blk_by/2, z_arm - 1]) cylinder(d = 5.5, h = arm_t + 2);
+        // leveling bolt, M8 through an insert
+        translate([0, level_y, z_arm - 1]) cylinder(d = 8.5, h = arm_t + 2);
+        // chuck screws: slotted in Y
+        for (sx = [-1, 1]) hull() for (dy = [-adj, adj])
+            translate([sx*12, dy, z_arm - 1]) cylinder(d = 3.5, h = 30);
     }
 }
-module rail() {
-    translate([-rail_w/2, rail_y0, 0]) cube([rail_w, rail_d, arm_clear]);
-}
-module hinge() {   // knuckle on the rail's front top corner; leaves down the rail face and under the arm
-    color("Silver") {
-        translate([0, rail_y0, z_arm]) rotate([0, 90, 0]) cylinder(d = 5, h = rail_w, center = true);
-        translate([-rail_w/2, rail_y0 - hinge_t, z_arm - hinge_w/2]) cube([rail_w, hinge_t, hinge_w/2]);
-        translate([-rail_w/2, rail_y0 - hinge_w/2, z_arm - hinge_t]) cube([rail_w, hinge_w/2, hinge_t]);
-    }
-}
-module post(slot = false) {
+module sk20() {   // base on the table (z = 0), shaft along X at z = sk_h
     difference() {
-        translate([-post_w/2, -post_w/2, 0]) cube([post_w, post_w, post_h]);
-        // socket: cone entry then straight, slotted in X on the slot post
-        hull() for (sx = (slot ? [-1, 1] : [0])) translate([sx*slot_len/2, 0, post_h - cone_h]) cylinder(d1 = socket_d, d2 = cone_d, h = cone_h + 0.01);
-        hull() for (sx = (slot ? [-1, 1] : [0])) translate([sx*slot_len/2, 0, post_h - cone_h - 16]) cylinder(d = socket_d, h = 17);
-        // two countersunk screws to the top
-        for (sy = [-1, 1]) translate([0, sy*13, -1]) { cylinder(d = 4.5, h = post_h + 2); translate([0, 0, 1]) cylinder(d1 = 4.5, d2 = 9, h = 3); }
+        union() {
+            translate([-sk_t/2, -sk_w/2, 0]) cube([sk_t, sk_w, 12]);
+            translate([-sk_t/2, -16, 0]) cube([sk_t, 32, sk_htot]);
+        }
+        translate([0, 0, sk_h]) rotate([0, 90, 0]) cylinder(d = shaft_d, h = sk_t + 2, center = true);
+        translate([-sk_t/2 - 1, -1, sk_h]) cube([sk_t + 2, 2, sk_htot]);
+        for (dy = [-1, 1]) translate([0, dy*21, -1]) cylinder(d = 6.6, h = 14);
     }
 }
+module sc20() {   // base up against the arm underside, bore along X at z_shaft
+    difference() {
+        translate([-blk_l/2, -blk_w/2, z_arm - blk_h]) cube([blk_l, blk_w, blk_h]);
+        translate([0, 0, z_shaft]) rotate([0, 90, 0]) cylinder(d = shaft_d, h = blk_l + 2, center = true);
+        for (dx = [-1, 1]) for (dy = [-1, 1]) translate([dx*blk_bx/2, dy*blk_by/2, z_arm - 15]) cylinder(d = 5, h = 16);
+    }
+}
+module collar() { rotate([0, 90, 0]) difference() { cylinder(d = collar_od, h = collar_h, center = true); cylinder(d = shaft_d, h = collar_h + 2, center = true); } }
 module chuck() {
     difference() {
         translate([-chuck_w/2, -chuck_dp/2, 0]) cube([chuck_w, chuck_dp, chuck_h]);
         translate([0, 0, -1]) cylinder(d = pin_d + 0.2, h = chuck_h + 2);
-        translate([-1, 0, -1]) cube([2, chuck_dp, chuck_h + 2]);                                 // split to the back face
-        translate([0, chuck_dp/2 - 8, chuck_h/2]) rotate([0, 90, 0]) cylinder(d = 4.3, h = chuck_w + 2, center = true);   // M4 clamp
-        for (sx = [-1, 1]) translate([sx*12, 0, -1]) { cylinder(d = 4.5, h = chuck_h + 2); cylinder(d1 = 9, d2 = 4.5, h = 4); }  // screws up into the arm
+        translate([-1, 0, -1]) cube([2, chuck_dp, chuck_h + 2]);
+        translate([0, chuck_dp/2 - 8, chuck_h/2]) rotate([0, 90, 0]) cylinder(d = 4.3, h = chuck_w + 2, center = true);
+        for (sx = [-1, 1]) translate([sx*12, 0, -1]) { cylinder(d = 4.5, h = chuck_h + 2); cylinder(d1 = 9, d2 = 4.5, h = 4); }
     }
 }
-module reg_pin() { cylinder(d = reg_pin_d, h = reg_pin_l - 2); translate([0, 0, reg_pin_l - 2]) cylinder(d1 = reg_pin_d, d2 = reg_pin_d - 4, h = 2); }
+module level_bolt() { translate([0, level_y, 0]) { cylinder(d = 8, h = z_arm + arm_t + 10); translate([0, 0, z_arm + arm_t + 2]) cylinder(d = 13/cos(30), h = 6.5, $fn = 6); } }
 module guide_pin() { cylinder(d = pin_d, h = pin_l); }
 module table_ghost() {
     color("BurlyWood", 0.35) translate([-top_w/2, -top_d/2 + top_y_off, -top_t]) cube([top_w, top_d, top_t]);
-    color("Orange") translate([0, 0, -4.7]) difference() { cylinder(d = disc_d, h = 5); translate([0, 0, -1]) cylinder(d = pin_d + 0.3, h = 7); }   // alignment ring
+    color("Orange") translate([0, 0, -4.7]) difference() { cylinder(d = disc_d, h = 5); translate([0, 0, -1]) cylinder(d = pin_d + 0.3, h = 7); }
 }
 
 // ---------------------------------------------------------------------
-// Assembly (arm down, pin in the alignment ring)
+// Assembly (arm level, pin in the alignment ring)
 // ---------------------------------------------------------------------
 module assembly() {
     table_ghost();
-    color("BurlyWood") rail();
+    color("SlateGray") for (sx = [-1, 1]) translate([sx*sk_x, pivot_y, 0]) sk20();
+    color("Silver") translate([0, pivot_y, z_shaft]) rotate([0, 90, 0]) cylinder(d = shaft_d, h = shaft_len, center = true);
+    color("SlateGray") for (sx = [-1, 1]) translate([sx*blk_x, pivot_y, 0]) sc20();
+    color("DimGray") for (sx = [-1, 1]) translate([sx*(blk_x + blk_l/2 + collar_h/2), pivot_y, z_shaft]) collar();
     color("BurlyWood") arm();
-    hinge();
-    color("Orange") for (sx = [-1, 1]) translate([sx*reg_x, reg_y, 0]) post(slot = sx > 0);
-    color("Silver") for (sx = [-1, 1]) translate([sx*reg_x, reg_y, z_arm + 20]) mirror([0, 0, 1]) reg_pin();
+    color("DarkSlateGray") level_bolt();
     color("Orange") translate([0, 0, z_arm - chuck_h]) chuck();
     color("DarkSlateGray") translate([0, 0, z_arm - chuck_h - pin_out]) guide_pin();
 }
@@ -143,26 +154,20 @@ only = "";
 module item(name) { if (only == "" || only == name) children(); }
 module exploded() {
     ex = 50;
-    item("table")     table_ghost();
-    item("rail")      color("BurlyWood") rail();
-    item("post")      color("Orange") for (sx = [-1, 1]) translate([sx*reg_x, reg_y, 0]) post(slot = sx > 0);
-    item("arm")       color("BurlyWood") translate([0, 0, 2*ex]) arm();
-    item("hinge")     translate([0, -40, ex]) hinge();
-    item("reg_pin")   color("Silver") for (sx = [-1, 1]) translate([sx*reg_x, reg_y, ex + 15]) reg_pin();
-    item("chuck")     color("Orange") translate([0, 0, z_arm - chuck_h + ex - 20]) chuck();
-    item("guide_pin") color("DarkSlateGray") translate([0, 0, 5]) guide_pin();
+    item("table")      table_ghost();
+    item("sk20")       color("SlateGray") for (sx = [-1, 1]) translate([sx*(sk_x + 40), pivot_y, 0]) sk20();
+    item("shaft")      color("Silver") translate([0, pivot_y, z_shaft + ex]) rotate([0, 90, 0]) cylinder(d = shaft_d, h = shaft_len, center = true);
+    item("sc20uu")     color("SlateGray") for (sx = [-1, 1]) translate([sx*blk_x, pivot_y, 2*ex]) sc20();
+    item("collar")     color("DimGray") for (sx = [-1, 1]) translate([sx*(blk_x + blk_l/2 + collar_h/2 + 20), pivot_y, z_shaft + ex]) collar();
+    item("arm")        color("BurlyWood") translate([0, 0, 3*ex]) arm();
+    item("level_bolt") color("DarkSlateGray") translate([0, 0, 4*ex]) level_bolt();
+    item("chuck")      color("Orange") translate([0, 0, z_arm - chuck_h + ex]) chuck();
+    item("guide_pin")  color("DarkSlateGray") translate([0, 0, 5]) guide_pin();
 }
-module print_plate() {
-    translate([-60, 0, 0]) post(false);
-    translate([0, 0, 0]) post(true);
-    translate([70, 0, 0]) chuck();
-}
+module print_plate() { chuck(); }
 
-if      (part == "assembly")   assembly();
-else if (part == "exploded")   exploded();
-else if (part == "post_round") post(false);
-else if (part == "post_slot")  post(true);
-else if (part == "post_test")  for (i = [0, 1]) translate([i*60, 0, -post_h + 25]) intersection() { post(i == 1); translate([-30, -30, post_h - 25]) cube([60, 60, 26]); }   // top 25 mm of both sockets
-else if (part == "chuck")      chuck();
-else if (part == "arm_2d")     arm_2d();
-else                           print_plate();
+if      (part == "assembly")  assembly();
+else if (part == "exploded")  exploded();
+else if (part == "chuck")     chuck();
+else if (part == "arm_2d")    arm_2d();
+else                          print_plate();

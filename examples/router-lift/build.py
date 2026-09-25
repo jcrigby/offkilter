@@ -248,8 +248,6 @@ BODY_Y1 = LS_Y + NUT_FLANGE_D / 2 + WALL  # 72.5
 EAR_W = 2 * (SLOT_W / 2 + WALL + CLAMP_BOLT_D)  # 29.3
 OPEN_D = DISC_D - 2 * RABBET_W  # 74
 
-POST_W, POST_H, SOCKET_D, SLOT_LEN, CONE_H, CONE_D = 40.0, 75.0, 10.3, 4.0, 6.0, 16.0
-CONE_ANGLE = 2 * math.degrees(math.atan((CONE_D - SOCKET_D) / 2 / CONE_H))  # included, 50.8
 CHUCK_W, CHUCK_DP, CHUCK_H, PIN_D = 36.0, 30.0, 25.0, 6.35
 
 
@@ -358,61 +356,6 @@ def ring(p, opening):
     p.hole(s, 5.0, name="spanner holes")
 
 
-def cone_cut(p, plane, offset, profile, name):
-    """A body of revolution removed about an axis through the sketch's
-    origin: `profile` is the half section as (radius, height) pairs, the
-    axis edge closing it. `plane` "front" with `offset` puts the axis at
-    y = -offset, "right" at x = offset."""
-    s = p.sketch(plane, offset, name)
-    pts = [(0.0, profile[0][1])] + list(profile) + [(0.0, profile[-1][1])]
-    p.polygon(s, pts)
-    p.revolve_cut(s, name)
-
-
-def post(p, slot):
-    """Registration post (module post()): a 40 x 40 x 75 block whose top
-    carries a socket for a 10 mm dowel with a conical entry, slotted 4 mm
-    in X on one of the pair, and two countersunk screws to the table."""
-    s = p.sketch("top", 0.0, "block")
-    p.rect(s, (-POST_W / 2, -POST_W / 2), (POST_W / 2, POST_W / 2))
-    p.extrude(s, POST_H, name="block")
-    # Straight socket: 17 tall under the cone (16 below the cone's base),
-    # with a conical entry from the socket diameter up to cone_d at the
-    # top face. On the round post that is the hole's countersink; the
-    # slotted post hulls two of them 4 mm apart, which is two revolved
-    # cones plus the section swept between them.
-    s = p.sketch("top", POST_H, "socket")
-    if slot:
-        p.slot(s, (-SLOT_LEN / 2, 0.0), (SLOT_LEN / 2, 0.0), SOCKET_D)
-        p.cut(s, CONE_H + 16, direction="reverse", name="socket")
-        cone = [(SOCKET_D / 2, POST_H - CONE_H), (CONE_D / 2, POST_H + 0.01)]
-        for x in (-SLOT_LEN / 2, SLOT_LEN / 2):
-            cone_cut(p, "right", x, cone, "cone entry")
-    else:
-        p.point(s, (0.0, 0.0))
-        p.hole(s, SOCKET_D, depth=CONE_H + 16, countersink={"diameter": CONE_D, "angle": CONE_ANGLE}, name="socket")
-    if slot:
-        s = p.sketch("right", -SLOT_LEN / 2, "cone sweep")
-        p.polygon(
-            s,
-            [
-                (-SOCKET_D / 2, POST_H - CONE_H),
-                (SOCKET_D / 2, POST_H - CONE_H),
-                (CONE_D / 2, POST_H + 0.01),
-                (-CONE_D / 2, POST_H + 0.01),
-            ],
-        )
-        p.cut(s, SLOT_LEN, name="cone sweep")
-    # Two screws to the table top, 4.5 through with the SCAD's cone at the
-    # bottom face (as modelled there: d 4.5 at z = 0 to d 9 at z = 3).
-    s = p.sketch("top", POST_H, "screws")
-    for y in (-13.0, 13.0):
-        p.point(s, (0.0, y))
-    p.hole(s, 4.5, name="screw holes")
-    for y in (-13.0, 13.0):
-        cone_cut(p, "front", -y, [(2.25, -1.0), (2.25, 0.0), (4.5, 3.0)], "screw cone")
-
-
 def chuck(p):
     """Split clamp for the 1/4" guide pin under the arm's nose (module
     chuck()): bore, split to the back face, M4 clamp bolt across, two
@@ -453,10 +396,14 @@ BASE_W = 2 * RAIL_X  # 253
 Z_TOP = SK_T + 3 + CAR_H + TRAVEL + 3 + SK_T  # 191: underside of the top
 Z_CAR = SK_T + 3 + TRAVEL / 2  # 45.5: carriage bottom, mid travel
 RAIL_H = Z_TOP + PLY_T  # 210
-ARM_T, ARM_CLEAR, RAIL_D, RAIL_W, RAIL_Y1 = 38.0, 75.0, 60.0, 250.0, 240.0
-NOSE_W, NOSE_Y, REG_X, REG_Y = 80.0, -50.0, 60.0, 70.0
-HINGE_D = 5.0  # the piano hinge's knuckle
-RAIL_Y0 = RAIL_Y1 - RAIL_D  # 180: the hinge line
+# Pin arm, rev D: the arm pivots on a 20 mm shaft in two SK20s at the
+# back of the top, two SC20UU blocks under its tail as the bushings.
+ARM_T, ARM_W, NOSE_W, NOSE_Y = 38.0, 250.0, 80.0, -50.0
+PIVOT_Y, TAIL_Y, LEVEL_Y = 170.0, 225.0, 215.0
+SK_X, BLK_X, COLLAR_OD, COLLAR_H, PIVOT_SHAFT_LEN = 110.0, 60.0, 32.0, 12.0, 250.0
+PIN_L, PIN_OUT, ADJ = 75.0, 45.0, 3.0
+Z_SHAFT = SK_H  # 51: SK20 bases on the table
+Z_ARM = Z_SHAFT + BLK_C  # 76: the arm's underside when level
 
 
 def top(p):
@@ -500,43 +447,35 @@ def side_rail(p):
 
 
 def arm(p):
-    """The hinged pin arm: a laminated plate, wide at the hinge, tapering
-    to the nose, with the registration dowel holes and the chuck screw
-    pilots in its underside."""
-    s = p.sketch("top", ARM_CLEAR, "plan")
+    """The pivot arm: a laminated plate, wide at the tail over the pivot
+    blocks, tapering to the nose; the block bolts and the leveling bolt
+    through it, the chuck screw slots in its underside."""
+    s = p.sketch("top", Z_ARM, "plan")
     p.polygon(
         s,
         [
-            (-RAIL_W / 2, RAIL_Y1),
-            (RAIL_W / 2, RAIL_Y1),
-            (RAIL_W / 2, RAIL_Y0),
+            (-ARM_W / 2, TAIL_Y),
+            (ARM_W / 2, TAIL_Y),
+            (ARM_W / 2, 100.0),
             (NOSE_W / 2, NOSE_Y),
             (-NOSE_W / 2, NOSE_Y),
-            (-RAIL_W / 2, RAIL_Y0),
+            (-ARM_W / 2, 100.0),
         ],
     )
     p.extrude(s, ARM_T, name="arm")
-    # Relief for the piano hinge's knuckle along the hinge line, so the
-    # arm sits flat on the rail and the posts and turns about the knuckle
-    # (the SCAD leaves the knuckle buried in the arm's underside).
-    s = p.sketch("right", 0.0, "hinge relief")
-    p.circle(s, (RAIL_Y0, ARM_CLEAR), HINGE_D / 2)
-    p.cut(s, RAIL_W, direction="symmetric", name="hinge relief", through_all=True)
-    s = p.sketch("top", ARM_CLEAR, "dowels")
-    for x in (-REG_X, REG_X):
-        p.point(s, (x, REG_Y))
-    p.hole(s, 9.9, depth=20.0, direction="normal", name="dowel press fits")
-    s = p.sketch("top", ARM_CLEAR, "chuck screws")
+    s = p.sketch("top", Z_ARM + ARM_T, "block bolts")
+    for sx in (-1, 1):
+        for dx in (-1, 1):
+            for dy in (-1, 1):
+                p.point(s, (sx * BLK_X + dx * BLK_BZ / 2, PIVOT_Y + dy * BLK_BX / 2))
+    p.hole(s, BLK_BOLT + 0.5, name="M5 block bolts")
+    s = p.sketch("top", Z_ARM + ARM_T, "leveling bolt")
+    p.point(s, (0.0, LEVEL_Y))
+    p.hole(s, 8.5, name="M8 insert")
+    s = p.sketch("top", Z_ARM, "chuck screws")
     for x in (-12.0, 12.0):
-        p.point(s, (x, 0.0))
-    p.hole(s, 3.5, depth=29.0, direction="normal", name="chuck screw pilots")
-
-
-def rear_rail(p):
-    """The hinge rail along the back edge of the top."""
-    s = p.sketch("top", 0.0, "blank")
-    p.rect(s, (-RAIL_W / 2, RAIL_Y0), (RAIL_W / 2, RAIL_Y1))
-    p.extrude(s, ARM_CLEAR, name="rail")
+        p.slot(s, (x, -ADJ), (x, ADJ), 3.5)
+    p.cut(s, 29.0, name="chuck screw slots")
 
 
 # ---------------------------------------------------------------------
@@ -631,26 +570,25 @@ def router_body(p):
     p.extrude(s, 12.0, op="add", name="bit")
 
 
-def reg_pin(p):
-    """A 10 mm dowel, 40 long, one end chamfered 2 mm: a revolved
-    profile, the chamfer a sketch op on the profile's corner."""
-    s = p.sketch("front", 0.0, "profile")
-    side, end = p.polygon(s, [(0.0, 0.0), (5.0, 0.0), (5.0, 40.0), (0.0, 40.0)])[1:3]
-    p.draw(s, {"type": "chamfer", "a": side, "b": end, "distance": 2.0})
-    p.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "new", "name": "dowel"})
+def pivot_shaft(p):
+    cylinder(p, SHAFT_D, PIVOT_SHAFT_LEN, "pivot shaft")
+
+
+def collar_20(p):
+    cylinder(p, COLLAR_OD, COLLAR_H, "shaft collar", bore=SHAFT_D)
 
 
 def guide_pin(p):
-    cylinder(p, PIN_D, 75.0, "guide pin")
+    cylinder(p, PIN_D, PIN_L, "guide pin")
 
 
-def piano_hinge(p):
-    """The piano hinge as its knuckle: a rod along X the length of the
-    rail, on the rail's front top corner. The leaves (1.2 mm) are let
-    into the wood and are not modelled."""
-    s = p.sketch("right", -RAIL_W / 2, "knuckle")
-    p.circle(s, (0.0, 0.0), HINGE_D / 2)
-    p.extrude(s, RAIL_W, name="knuckle")
+def level_bolt(p):
+    """M8 x 100 through the tail: the shank from the table up, the hex
+    head above the arm."""
+    cylinder(p, 8.0, Z_ARM + ARM_T + 10.0, "shank")
+    s = p.sketch("top", Z_ARM + ARM_T + 2.0, "head")
+    p.hexagon(s, (0.0, 0.0), 13.0 / math.cos(math.radians(30)) / 2)
+    p.extrude(s, 6.5, op="add", name="head")
 
 
 PARTS = [
@@ -661,14 +599,11 @@ PARTS = [
     ("Ring 40", "ring_40", lambda p: ring(p, 40.0)),
     ("Ring 55", "ring_55", lambda p: ring(p, 55.0)),
     ("Ring align", "ring_align", lambda p: ring(p, 6.6)),
-    ("Post round", "pin_post_round", lambda p: post(p, False)),
-    ("Post slot", "pin_post_slot", lambda p: post(p, True)),
     ("Chuck", "pin_chuck", chuck),
     ("Top", "top", top),
     ("Baseplate", "baseplate", baseplate),
     ("Side rail", "side_rail", side_rail),
     ("Arm", "arm", arm),
-    ("Rear rail", "rear_rail", rear_rail),
     ("Shaft", "shaft", shaft),
     ("Leadscrew", "leadscrew", leadscrew),
     ("608 bearing", "bearing_608", bearing_608),
@@ -678,11 +613,12 @@ PARTS = [
     ("SC20UU", "sc20uu", sc20uu),
     ("SK20", "sk20", sk20),
     ("Router", "router", router_body),
-    ("Dowel pin", "reg_pin", reg_pin),
     ("Guide pin", "guide_pin", guide_pin),
-    ("Piano hinge", "piano_hinge", piano_hinge),
+    ("Pivot shaft", "pivot_shaft", pivot_shaft),
+    ("Collar 20", "collar_20", collar_20),
+    ("Leveling bolt", "level_bolt", level_bolt),
 ]
-PRINTED = {"Carriage", "Ring blank", "Ring 30", "Ring 40", "Ring 55", "Ring align", "Post round", "Post slot", "Chuck"}
+PRINTED = {"Carriage", "Ring blank", "Ring 30", "Ring 40", "Ring 55", "Ring align", "Chuck"}
 
 # The assembly: every instance placed as the SCAD assembly() places it,
 # in the lift's frame (z = 0 the baseplate's top face, the bit axis the
@@ -711,13 +647,14 @@ def instances():
         at("T8 nut", "T8 nut", 0, LS_Y, Z_CAR + CAR_H - NUT_FLANGE_T - 12.0),
         at("Coupling nut", "coupling nut", 0, LS_Y, TABLE + 2),
         at("Router", "router", 0, 0, Z_CAR + CAR_H / 2 - CLAMP_H / 2 - 10),
-        at("Rear rail", "rear rail", 0, 0, TABLE),
+        # The pin arm: SK20s base down with the bore along X (the studio's
+        # base normal -X turned to -Z), blocks base up under the tail (the
+        # base normal turned to +Z), collars outside the blocks.
+        at("Pivot shaft", "pivot shaft", -PIVOT_SHAFT_LEN / 2, PIVOT_Y, TABLE + Z_SHAFT, ry=90.0),
         at("Arm", "arm", 0, 0, TABLE),
-        at("Post round", "left post", -REG_X, REG_Y, TABLE),
-        at("Post slot", "right post", REG_X, REG_Y, TABLE),
-        at("Chuck", "chuck", 0, 0, TABLE + ARM_CLEAR - CHUCK_H),
-        at("Guide pin", "guide pin", 0, 0, TABLE + ARM_CLEAR - CHUCK_H - 45.0),
-        at("Piano hinge", "piano hinge", 0, RAIL_Y0, TABLE + ARM_CLEAR),
+        at("Chuck", "chuck", 0, 0, TABLE + Z_ARM - CHUCK_H),
+        at("Guide pin", "guide pin", 0, 0, TABLE + Z_ARM - CHUCK_H - PIN_OUT),
+        at("Leveling bolt", "leveling bolt", 0, LEVEL_Y, TABLE),
     ]
     for sx, side in ((-1, "left"), (1, "right")):
         for i, level in ((-1, "lower"), (1, "upper")):
@@ -725,7 +662,9 @@ def instances():
             out.append(at("SC20UU", f"{side} {level} block", sx * CAR_W / 2, 0, z, rz=180.0 if sx < 0 else 0.0))
         for z, level in ((SK_T / 2, "lower"), (Z_TOP - SK_T / 2, "upper")):
             out.append(at("SK20", f"{side} {level} support", sx * RAIL_X, 0, z, rz=180.0 if sx > 0 else 0.0))
-        out.append(at("Dowel pin", f"{side} dowel", sx * REG_X, REG_Y, TABLE + ARM_CLEAR + 20.0, rx=180.0))
+        out.append(at("SK20", f"{side} pivot support", sx * SK_X, PIVOT_Y, TABLE, ry=-90.0))
+        out.append(at("SC20UU", f"{side} pivot block", sx * BLK_X, PIVOT_Y, TABLE + Z_ARM, ry=90.0))
+        out.append(at("Collar 20", f"{side} pivot collar", sx * (BLK_X + BLK_L / 2 + COLLAR_H / 2) - COLLAR_H / 2, PIVOT_Y, TABLE + Z_SHAFT, ry=90.0))
     return out
 
 
@@ -739,7 +678,7 @@ def instances():
 SUBS = [
     ("Carriage assembly", (0.0, 0.0, Z_CAR), ["carriage", "left upper block", "left lower block", "right upper block", "right lower block", "T8 nut"]),
     ("Leadscrew assembly", (0.0, LS_Y, LS_Z0), ["leadscrew", "lower bearing", "upper bearing", "upper collar", "lower collar", "coupling nut"]),
-    ("Arm assembly", (0.0, 0.0, TABLE), ["arm", "chuck", "guide pin", "left dowel", "right dowel"]),
+    ("Arm assembly", (0.0, 0.0, TABLE), ["arm", "left pivot block", "right pivot block", "chuck", "guide pin", "leveling bolt"]),
 ]
 TOP = "Lift assembly"
 
@@ -750,15 +689,16 @@ TOP = "Lift assembly"
 # carries the travel of the whole carriage assembly, and the router is
 # fastened into its clamp: a connector on the carriage assembly names
 # the member that holds the face ("Carriage assembly/carriage"). The arm
-# assembly turns on the hinge knuckle: a revolute between the knuckle and
-# the relief in the arm's underside, swept by the limits test. The
+# assembly turns on the pivot shaft: a revolute between the shaft and a
+# block's bore, swept by the limits test. The chuck is fixed in the arm
+# assembly (its screws sit in slots, which no cylinder mate can name). The
 # mate parameters are derived from the placements in instances(), which
 # stay on the instances as the initial guess, so the resolved assemblies
 # must land exactly where the fixed ones did.
 # ---------------------------------------------------------------------
 MOVING = {
     "Carriage assembly": {"left upper block", "left lower block", "right upper block", "right lower block", "T8 nut"},
-    "Arm assembly": {"chuck", "guide pin", "left dowel", "right dowel"},
+    "Arm assembly": {"left pivot block", "right pivot block", "guide pin", "leveling bolt"},
     TOP: {"Carriage assembly", "router", "Arm assembly"},
 }
 
@@ -773,15 +713,15 @@ MATES = {
         ("fastened", "carriage", "T8 nut", NUT_BODY_D / 2 + 0.3, NUT_BODY_D / 2, "nut in pocket"),
     ],
     "Arm assembly": [
-        ("fastened", "arm", "chuck", 3.5 / 2, 4.5 / 2, "chuck under the nose"),
+        ("fastened", "arm", "left pivot block", (BLK_BOLT + 0.5) / 2, BLK_BOLT / 2, "left pivot block"),
+        ("fastened", "arm", "right pivot block", (BLK_BOLT + 0.5) / 2, BLK_BOLT / 2, "right pivot block"),
         ("fastened", "chuck", "guide pin", (PIN_D + 0.2) / 2, PIN_D / 2, "pin in the chuck"),
-        ("fastened", "arm", "left dowel", 9.9 / 2, 5.0, "left dowel"),
-        ("fastened", "arm", "right dowel", 9.9 / 2, 5.0, "right dowel"),
+        ("fastened", "arm", "leveling bolt", 8.5 / 2, 4.0, "leveling bolt"),
     ],
     TOP: [
         ("slider", "left shaft", "Carriage assembly/left upper block", SHAFT_D / 2, SHAFT_D / 2, "carriage travel"),
         ("fastened", "Carriage assembly/carriage", "router", ROUTER_D / 2 + ROUTER_CLR, ROUTER_D / 2, "router in clamp"),
-        ("revolute", "piano hinge", "Arm assembly/arm", HINGE_D / 2, HINGE_D / 2, "arm hinge"),
+        ("revolute", "pivot shaft", "Arm assembly/left pivot block", SHAFT_D / 2, SHAFT_D / 2, "arm pivot"),
     ],
 }
 
@@ -979,40 +919,46 @@ BOM_STUDIOS = {
     "Leadscrew": ["Leadscrew"],
     "Leadscrew nut": ["T8 nut"],
     "Bearing": ["608 bearing"],
-    "Shaft collar": ["Collar"],
+    "Shaft collar": {"bom_lift": ["Collar"], "bom_pin_arm": ["Collar 20"]},
     "Hex coupling nut": ["Coupling nut"],
     "Table top": ["Top"],
     "Baseplate": ["Baseplate"],
     "Side rail": ["Side rail"],
     "Trim router": ["Router"],
     "Arm": ["Arm"],
-    "Rear rail": ["Rear rail"],
-    "Piano hinge": ["Piano hinge"],
-    "Registration post": ["Post round", "Post slot"],
-    "Registration pin": ["Dowel pin"],
+    "Pivot shaft": ["Pivot shaft"],
+    "Leveling bolt": ["Leveling bolt"],
     "Guide-pin chuck": ["Chuck"],
     "Guide pin": ["Guide pin"],
+}
+# The instances the pin arm drawing covers; the lift drawing has the rest.
+ARM_INSTANCES = {
+    "left pivot support", "right pivot support", "pivot shaft", "left pivot collar", "right pivot collar",
+    "arm", "left pivot block", "right pivot block", "chuck", "guide pin", "leveling bolt",
 }
 
 
 def bom_check(placed, studios):
     """Every BOM line of both drawings against the document: the count
     of instances placed (through the sub-assemblies) of the studios that
-    stand for the line, or of the studios themselves for a set the
-    assembly shows one of (the rings). Returns the lines that differ."""
+    stand for the line, on that drawing's side of the assembly, or of the
+    studios themselves for a set the assembly shows one of (the rings).
+    Returns the lines that differ."""
     differ = []
     for sheet in ("bom_lift", "bom_pin_arm"):
         with open(os.path.join(HERE, "reference", f"{sheet}.csv")) as f:
             rows = list(csv.DictReader(f))
         for row in rows:
             names = BOM_STUDIOS.get(row["part"])
+            if isinstance(names, dict):
+                names = names[sheet]
             if names is None:
                 print(f"  BOM {sheet:<11} {row['no']:>2} {row['part']:<20} x{row['qty']:<3} not modelled ({row['spec']})")
                 continue
             if row["part"] == "Reducer ring set":
                 have = sum(1 for n in names if n in studios)
             else:
-                have = sum(placed.get(n, 0) for n in names)
+                have = sum(placed[sheet].get(n, 0) for n in names)
             want = int(row["qty"])
             mark = "ok" if have == want else f"DIFFERS: model has {have}"
             print(f"  BOM {sheet:<11} {row['no']:>2} {row['part']:<20} x{want:<3} {mark}")
@@ -1147,7 +1093,10 @@ def main():
             check_placed(mcp, asm_tabs[title], title, expected[title])
         print()
     # Bill of materials against the drawings that came with the project.
-    placed = collections.Counter(part_of[name] for name in placements if name not in asm_tabs)
+    placed = {
+        "bom_lift": collections.Counter(part_of[n] for n in placements if n not in ARM_INSTANCES),
+        "bom_pin_arm": collections.Counter(part_of[n] for n in placements if n in ARM_INSTANCES),
+    }
     differ = bom_check(placed, set(tabs))
     print(f"BOM: {len(differ)} lines differ from the drawings" + (": " + "; ".join(f"{p} {w} on the drawing, {h} in the model" for _, p, w, h in differ) if differ else ""))
     for view, name in (("iso", "assembly_iso"), ("-1,-0.4,0.35", "assembly_front")):
@@ -1160,7 +1109,8 @@ def main():
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "note": "rev C", "path": os.path.join(out, "assembly.pdf")}))
     for title, _, _ in SUBS:
         stem = title.lower().replace(" ", "_")
-        print(mcp.call("export", {"tab": asm_tabs[title], "format": "pdf", "note": "rev C", "path": os.path.join(out, f"{stem}.pdf")}))
+        rev = "rev D" if title == "Arm assembly" else "rev C"
+        print(mcp.call("export", {"tab": asm_tabs[title], "format": "pdf", "note": rev, "path": os.path.join(out, f"{stem}.pdf")}))
     print(mcp.call("export", {"tab": tabs["Carriage"], "format": "pdf", "path": os.path.join(out, "carriage.pdf")}))
     # The carriage at the top of its travel: the slider's offset is the
     # one number that moves the carriage assembly and the router in it.
