@@ -54,9 +54,10 @@ works today, all in the browser:
 - Import: STL, OBJ and STEP (faceted: planar and cylindrical faces)
   files become mesh bodies; DXF into sketches.
 - Measuring from a photo: print the measuring sheet
-  (`examples/measuring-sheet/`), lay parts on it with a photo scale or
-  a coin for the print scale, photograph it, and the sizes, outlines
-  and holes come back in millimetres, or as a sketch ready to extrude.
+  (`examples/measuring-sheet/`), lay parts on it with a steel rule for
+  the print scale, photograph it, and the sizes, outlines and holes
+  come back in millimetres, or as a sketch ready to extrude; a flatbed
+  scan of parts with a rule needs no sheet at all.
 - Agents: `ok-mcp` is a Model Context Protocol server that lets a
   language model build and edit documents through the same ops the
   client uses, live in your browser or on a local file, with a report

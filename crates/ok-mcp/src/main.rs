@@ -798,20 +798,32 @@ impl Server {
                 .transpose()?;
             let bytes = std::fs::read(path).map_err(|e| format!("could not read {path}: {e}"))?;
             let m = ok_photo::measure(&bytes, size, reference.as_ref())?;
-            let mut caption = format!(
-                "{} sheet ({}): the four marks found ({:.2} mm per photo pixel, fit {:.1} px). Rectified at {} px/mm, the origin mark at pixel ({:.0}, {:.0}), x right, y up; the grid drawn is 10 mm, heavier every 50.\n",
-                m.sheet.name(),
-                if m.sheet_read {
-                    "read from the dots by the origin mark"
-                } else {
-                    "as given; no size code seen"
-                },
-                m.mm_per_pixel,
-                m.residual,
-                m.picture_scale,
-                m.picture_origin[0],
-                m.picture_origin[1]
-            );
+            let mut caption = match m.sheet {
+                Some(size) => format!(
+                    "{} sheet ({}): the four marks found ({:.2} mm per photo pixel, fit {:.1} px). Rectified at {} px/mm, the origin mark at pixel ({:.0}, {:.0}), x right, y up; the grid drawn is 10 mm, heavier every 50.\n",
+                    size.name(),
+                    if m.sheet_read {
+                        "read from the dots by the origin mark"
+                    } else {
+                        "as given; no size code seen"
+                    },
+                    m.mm_per_pixel,
+                    m.residual,
+                    m.picture_scale,
+                    m.picture_origin[0],
+                    m.picture_origin[1]
+                ),
+                None => format!(
+                    "No sheet marks: a flat scan, measured from the rule alone at {:.4} mm per pixel. The frame is the picture's own, origin at its bottom-left corner at pixel ({:.0}, {:.0}) of the returned picture, x right, y up; the grid drawn is 10 mm, heavier every 50.\n",
+                    m.mm_per_pixel, m.picture_origin[0], m.picture_origin[1]
+                ),
+            };
+            if let Some(r) = &m.rule {
+                caption.push_str(&format!(
+                    "Rule: {} ticks over {:.0} mm read at {:.3} px/mm; the millimetre edge was {}.\n",
+                    r.ticks, r.length, r.px_per_mm, r.edge
+                ));
+            }
             match &m.calibration {
                 Some(c) => caption.push_str(&format!(
                     "Reference: {} at ({:.0}, {:.0}) measured {:.2} mm for {:.2}, so the sheet was printed at {:.1} %; every size below is corrected by that, and the drawn grid is true millimetres.\n",
@@ -822,9 +834,10 @@ impl Server {
                     c.nominal,
                     c.factor * 100.0
                 )),
-                None => caption.push_str(
+                None if m.sheet.is_some() => caption.push_str(
                     "No reference given: sizes trust the print being at 100 % (check the sheet's 100 mm bar), or name one with reference.\n",
                 ),
+                None => {}
             }
             if m.parts.is_empty() {
                 caption.push_str("Nothing dark enough to be a part lies on the grid.\n");
@@ -1502,8 +1515,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "measure_photo",
-            "description": "Measures a photograph (JPEG or PNG) of parts lying on the printed measuring sheet: finds the four marks, squares the picture up onto the sheet's millimetres, and reports every dark shape on the grid as a part with its bounding box, area, centroid, outline and any holes (with their diameters), all in millimetres from the origin mark, x right, y up. Returns the squared-up picture with the grid and the parts drawn on it, so a feature can be named by where it sits; `out` also writes that picture. Good to a fraction of a millimetre on flat things photographed straight down; heights shift edges by parallax, so ask for a caliper reading for anything that matters and use the picture to say which. `sketch: true` adds a sketch on the current document's tab (doc, tab) with the outlines as lines and the holes as circles, ready to extrude. The sheet size is read from the dots by the origin mark; `sheet` is the fallback for a print without them. A print is rarely exactly 100 %: `reference` names a thing of known size on the sheet, and the print scale is read from it and every size corrected: 'bars 10' for a forensic photo scale with alternating 10 mm black and white bars (an ABFO No. 2 or an adhesive evidence scale), 'disc 24.26' or a US coin by name (quarter, nickel, dime, penny) for a round object.",
-            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Fallback when the picture carries no size code: A4, A3, A2, Letter or Tabloid" }, "reference": { "type": "string", "description": "A known size on the sheet: 'bars <mm>' (a photo scale's alternating blocks), 'disc <mm>', or quarter, nickel, dime, penny" }, "out": { "type": "string" }, "sketch": { "type": "boolean" }, "doc": doc_prop, "tab": tab_prop }, "required": ["path"] }
+            "description": "Measures a photograph (JPEG or PNG) of parts lying on the printed measuring sheet: finds the four marks, squares the picture up onto the sheet's millimetres, and reports every dark shape on the grid as a part with its bounding box, area, centroid, outline and any holes (with their diameters), all in millimetres from the origin mark, x right, y up. Returns the squared-up picture with the grid and the parts drawn on it, so a feature can be named by where it sits; `out` also writes that picture. Good to a fraction of a millimetre on flat things photographed straight down; heights shift edges by parallax, so ask for a caliper reading for anything that matters and use the picture to say which. `sketch: true` adds a sketch on the current document's tab (doc, tab) with the outlines as lines and the holes as circles, ready to extrude. The sheet size is read from the dots by the origin mark; `sheet` is the fallback for a print without them. A print is rarely exactly 100 %: `reference` names a thing of known size on the sheet, and the print scale is read from it and every size corrected: 'rule' for a steel rule with millimetre graduations (its ticks are read; an inch edge is told apart), 'bars 10' for a forensic photo scale with alternating 10 mm black and white bars, 'disc 24.26' or a US coin by name (quarter, nickel, dime, penny) for a round object. With 'rule' the sheet is optional: a flatbed scan of parts and a rule, no sheet, is measured in the picture's own frame (origin bottom-left), which is the sharper way when the parts are flat.",
+            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Fallback when the picture carries no size code: A4, A3, A2, Letter or Tabloid" }, "reference": { "type": "string", "description": "A known size in the picture: 'rule' (a steel rule's mm graduations; works without the sheet in a flat scan), 'bars <mm>' (a photo scale's alternating blocks), 'disc <mm>', or quarter, nickel, dime, penny" }, "out": { "type": "string" }, "sketch": { "type": "boolean" }, "doc": doc_prop, "tab": tab_prop }, "required": ["path"] }
         },
         {
             "name": "export",
@@ -1792,6 +1805,7 @@ mod tests {
                 discs: vec![[150.0, 100.0, 10.0]],
                 holes: vec![[65.0, 55.0, 4.0]],
                 print: 0.98,
+                ..ok_photo::Scene::default()
             }
             .bars(120.0, 130.0, 10.0, 4),
         );
@@ -1889,9 +1903,43 @@ mod tests {
         let (err, text) = tool_text(
             &mut server,
             "measure_photo",
-            json!({ "path": photo.display().to_string(), "reference": "ruler" }),
+            json!({ "path": photo.display().to_string(), "reference": "tape" }),
         );
         assert!(err && text.contains("reference"), "{text}");
+        // A flatbed scan with no sheet: a rule alone gives the scale.
+        let scan = ok_photo::scan_image(
+            120.0,
+            80.0,
+            300.0 / 25.4,
+            &ok_photo::Scene {
+                rects: vec![[10.0, 10.0, 40.0, 30.0]],
+                rule: Some((10.0, 45.0, 100.0, 0.0)),
+                ..ok_photo::Scene::default()
+            },
+        );
+        let flat = dir.join("flat.png");
+        std::fs::write(&flat, ok_render::to_png(&scan)).unwrap();
+        let r = call(
+            &mut server,
+            4,
+            "tools/call",
+            json!({ "name": "measure_photo", "arguments": {
+                "path": flat.display().to_string(), "reference": "rule" } }),
+        );
+        let caption = r["result"]["content"][1]["text"].as_str().unwrap();
+        assert!(caption.contains("No sheet marks: a flat scan"), "{caption}");
+        assert!(
+            caption.contains("Rule: 101 ticks over 100 mm read at 11.81"),
+            "{caption}"
+        );
+        assert!(
+            caption.contains("Part 1: 30.0 x 20.") && caption.contains("from (10.0, "),
+            "{caption}"
+        );
+        assert!(
+            !caption.contains("Part 2"),
+            "the rule is not a part: {caption}"
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
