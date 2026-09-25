@@ -39,8 +39,10 @@ class Mcp:
 
 os.makedirs(OUT, exist_ok=True)
 m = Mcp(os.path.join(OUT, "scratch.okpart"))
-for size in ("A4", "Letter", "A3"):
+for size in ("Letter", "A4", "A3", "Tabloid"):
     print(m.tool("measuring_sheet", path=os.path.join(OUT, f"measuring-sheet-{size}.pdf"), sheet=size))
-# scan.png is made by crates/ok-photo/tests/example.rs: the A4 sheet with
-# a plate and a disc on it, photographed askew.
-print(m.tool("measure_photo", path=os.path.join(HERE, "scan.png"), sheet="A4", out=os.path.join(OUT, "measured.png")))
+# scan.png is made by crates/ok-photo/tests/example.rs: a Letter sheet
+# printed at 97 % with a plate, a washer, a disc and a photo scale on it,
+# photographed askew. The sheet size comes from the dots by the origin
+# mark; the scale's 10 mm bars give the print scale.
+print(m.tool("measure_photo", path=os.path.join(HERE, "scan.png"), reference="bars 10", out=os.path.join(OUT, "measured.png")))

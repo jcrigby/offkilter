@@ -786,20 +786,46 @@ impl Server {
                 .get("path")
                 .and_then(|p| p.as_str())
                 .ok_or("measure_photo needs path: the photograph")?;
-            let size = ok_photo::SheetSize::parse(
-                args.get("sheet").and_then(|s| s.as_str()).unwrap_or(""),
-            )?;
+            let size = args
+                .get("sheet")
+                .and_then(|s| s.as_str())
+                .map(ok_photo::SheetSize::parse)
+                .transpose()?;
+            let reference = args
+                .get("reference")
+                .and_then(|s| s.as_str())
+                .map(ok_photo::Reference::parse)
+                .transpose()?;
             let bytes = std::fs::read(path).map_err(|e| format!("could not read {path}: {e}"))?;
-            let m = ok_photo::measure(&bytes, size)?;
+            let m = ok_photo::measure(&bytes, size, reference.as_ref())?;
             let mut caption = format!(
-                "{} sheet: the four marks found ({:.2} mm per photo pixel, fit {:.1} px). Rectified at {} px/mm, the origin mark at pixel ({:.0}, {:.0}), x right, y up; the grid is 10 mm, heavier every 50.\n",
-                size.name(),
+                "{} sheet ({}): the four marks found ({:.2} mm per photo pixel, fit {:.1} px). Rectified at {} px/mm, the origin mark at pixel ({:.0}, {:.0}), x right, y up; the grid drawn is 10 mm, heavier every 50.\n",
+                m.sheet.name(),
+                if m.sheet_read {
+                    "read from the dots by the origin mark"
+                } else {
+                    "as given; no size code seen"
+                },
                 m.mm_per_pixel,
                 m.residual,
                 m.picture_scale,
                 m.picture_origin[0],
                 m.picture_origin[1]
             );
+            match &m.calibration {
+                Some(c) => caption.push_str(&format!(
+                    "Reference: {} at ({:.0}, {:.0}) measured {:.2} mm for {:.2}, so the sheet was printed at {:.1} %; every size below is corrected by that, and the drawn grid is true millimetres.\n",
+                    c.reference,
+                    (c.bbox[0] + c.bbox[2]) / 2.0,
+                    (c.bbox[1] + c.bbox[3]) / 2.0,
+                    c.measured,
+                    c.nominal,
+                    c.factor * 100.0
+                )),
+                None => caption.push_str(
+                    "No reference given: sizes trust the print being at 100 % (check the sheet's 100 mm bar), or name one with reference.\n",
+                ),
+            }
             if m.parts.is_empty() {
                 caption.push_str("Nothing dark enough to be a part lies on the grid.\n");
             }
@@ -910,13 +936,15 @@ impl Server {
                     .and_then(|p| p.as_str())
                     .ok_or("measuring_sheet needs path: where to write the PDF")?;
                 let size = ok_photo::SheetSize::parse(
-                    args.get("sheet").and_then(|s| s.as_str()).unwrap_or(""),
+                    args.get("sheet")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("Letter"),
                 )?;
                 let pdf = ok_photo::sheet_pdf(size);
                 std::fs::write(path, &pdf).map_err(|e| format!("could not write {path}: {e}"))?;
                 let (lx, ly) = ok_photo::span(size);
                 Ok(format!(
-                    "wrote the {} measuring sheet to {path}: print at 100 % (the bar on it is 100 mm), lay parts on the grid, photograph it straight down with all four corner marks in the picture, then measure_photo. The marks are {lx:.0} x {ly:.0} mm apart; the double-ringed one is the origin.",
+                    "wrote the {} measuring sheet to {path}: print at 100 % (the bar on it is 100 mm), lay parts on the grid, photograph it straight down with all four corner marks in the picture, then measure_photo. The marks are {lx:.0} x {ly:.0} mm apart; the double-ringed one is the origin, and the dots beside it tell measure_photo which sheet this is.",
                     size.name()
                 ))
             }
@@ -1469,17 +1497,17 @@ fn tool_list() -> Value {
         },
         {
             "name": "measuring_sheet",
-            "description": "Writes the printable measuring sheet as a PDF: a light 10 mm grid with four bullseye marks in the corners (the origin's double-ringed) and a 100 mm bar to check the print. Print it at 100 %, lay parts on it, photograph it straight down with all four marks in view, and measure_photo reads sizes off the picture.",
-            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "A4 (default), A3, A2 or Letter" } }, "required": ["path"] }
+            "description": "Writes the printable measuring sheet as a PDF: a light 10 mm grid with four bullseye marks in the corners (the origin's double-ringed, with dots beside it that encode the sheet size) and a 100 mm bar to check the print. Print it at 100 %, lay parts on it, photograph it straight down with all four marks in view, and measure_photo reads sizes off the picture.",
+            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Letter (default), A4, A3, A2 or Tabloid" } }, "required": ["path"] }
         },
         {
             "name": "measure_photo",
-            "description": "Measures a photograph (JPEG or PNG) of parts lying on the printed measuring sheet: finds the four marks, squares the picture up onto the sheet's millimetres, and reports every dark shape on the grid as a part with its bounding box, area, centroid, outline and any holes (with their diameters), all in millimetres from the origin mark, x right, y up. Returns the squared-up picture with the grid and the parts drawn on it, so a feature can be named by where it sits; `out` also writes that picture. Good to a fraction of a millimetre on flat things photographed straight down; heights shift edges by parallax, so ask for a caliper reading for anything that matters and use the picture to say which. `sketch: true` adds a sketch on the current document's tab (doc, tab) with the outlines as lines and the holes as circles, ready to extrude.",
-            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "A4 (default), A3, A2 or Letter" }, "out": { "type": "string" }, "sketch": { "type": "boolean" }, "doc": doc_prop, "tab": tab_prop }, "required": ["path"] }
+            "description": "Measures a photograph (JPEG or PNG) of parts lying on the printed measuring sheet: finds the four marks, squares the picture up onto the sheet's millimetres, and reports every dark shape on the grid as a part with its bounding box, area, centroid, outline and any holes (with their diameters), all in millimetres from the origin mark, x right, y up. Returns the squared-up picture with the grid and the parts drawn on it, so a feature can be named by where it sits; `out` also writes that picture. Good to a fraction of a millimetre on flat things photographed straight down; heights shift edges by parallax, so ask for a caliper reading for anything that matters and use the picture to say which. `sketch: true` adds a sketch on the current document's tab (doc, tab) with the outlines as lines and the holes as circles, ready to extrude. The sheet size is read from the dots by the origin mark; `sheet` is the fallback for a print without them. A print is rarely exactly 100 %: `reference` names a thing of known size on the sheet, and the print scale is read from it and every size corrected: 'bars 10' for a forensic photo scale with alternating 10 mm black and white bars (an ABFO No. 2 or an adhesive evidence scale), 'disc 24.26' or a US coin by name (quarter, nickel, dime, penny) for a round object.",
+            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Fallback when the picture carries no size code: A4, A3, A2, Letter or Tabloid" }, "reference": { "type": "string", "description": "A known size on the sheet: 'bars <mm>' (a photo scale's alternating blocks), 'disc <mm>', or quarter, nickel, dime, penny" }, "out": { "type": "string" }, "sketch": { "type": "boolean" }, "doc": doc_prop, "tab": tab_prop }, "required": ["path"] }
         },
         {
             "name": "export",
-            "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF: a shop drawing sheet with the `views` (front, top, right, iso by default) laid out third angle on `sheet` (A4 by default; A3, A2, Letter) at the largest standard scale that fits, overall dimensions, and on a sheet of one part hidden lines dashed and diameter callouts for holes seen end-on; on an assembly a balloon per item and a parts list (`parts: false` to leave them off), where a sub-assembly instance is one item with its own sheet on its own tab; `hidden` forces hidden lines on or off; `note` goes on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
+            "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF: a shop drawing sheet with the `views` (front, top, right, iso by default) laid out third angle on `sheet` (A4 by default; A3, A2, Letter, Tabloid) at the largest standard scale that fits, overall dimensions, and on a sheet of one part hidden lines dashed and diameter callouts for holes seen end-on; on an assembly a balloon per item and a parts list (`parts: false` to leave them off), where a sub-assembly instance is one item with its own sheet on its own tab; `hidden` forces hidden lines on or off; `note` goes on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf", "pdf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" }, "views": { "type": "array", "items": { "type": "string" } }, "sheet": { "type": "string" }, "parts": { "type": "boolean" }, "note": { "type": "string" } }, "required": ["format", "path"] }
         },
         {
@@ -1759,9 +1787,13 @@ mod tests {
         let scan = ok_photo::sheet_image(
             ok_photo::SheetSize::Letter,
             5.0,
-            &[[40.0, 40.0, 90.0, 70.0]],
-            &[[150.0, 100.0, 10.0]],
-            &[[65.0, 55.0, 4.0]],
+            &ok_photo::Scene {
+                rects: vec![[40.0, 40.0, 90.0, 70.0]],
+                discs: vec![[150.0, 100.0, 10.0]],
+                holes: vec![[65.0, 55.0, 4.0]],
+                print: 0.98,
+            }
+            .bars(120.0, 130.0, 10.0, 4),
         );
         let photo = dir.join("scan.png");
         std::fs::write(&photo, ok_render::to_png(&scan)).unwrap();
@@ -1771,7 +1803,7 @@ mod tests {
             3,
             "tools/call",
             json!({ "name": "measure_photo", "arguments": {
-                "path": photo.display().to_string(), "sheet": "Letter",
+                "path": photo.display().to_string(), "reference": "bars 10",
                 "out": out.display().to_string(), "sketch": true } }),
         );
         assert_eq!(r["result"]["isError"], Value::Null, "{r}");
@@ -1779,19 +1811,24 @@ mod tests {
         assert_eq!(content[0]["type"], "image");
         let caption = content[1]["text"].as_str().unwrap();
         assert!(
-            caption.contains("Letter sheet: the four marks found"),
+            caption.contains("Letter sheet (read from the dots by the origin mark)"),
             "{caption}"
         );
         assert!(
-            caption.contains("Part 1: 50.0 x 30.") && caption.contains("from (40.0, "),
+            caption.contains("Reference: a scale with 10 mm bars at (155, 132)")
+                && caption.contains("printed at 98."),
             "{caption}"
         );
         assert!(
-            caption.contains("hole 8.0 mm across at (65.0, 55.0), round"),
+            caption.contains("Part 1: 50.") && caption.contains("from (40.0, "),
             "{caption}"
         );
         assert!(
-            caption.contains("Part 2: 20.0 x ") && caption.contains("centroid (150.0, 100.0)"),
+            caption.contains("hole 8.0 mm across at (65.") && caption.contains(", round"),
+            "{caption}"
+        );
+        assert!(
+            caption.contains("Part 2: 20.0 x ") && caption.contains("centroid (150."),
             "{caption}"
         );
         assert!(caption.contains("; round, 20.0 mm across"), "{caption}");
@@ -1801,13 +1838,15 @@ mod tests {
             "{caption}"
         );
         let picture = ok_render::from_png(&std::fs::read(&out).unwrap()).unwrap();
+        // The picture spans the marks in true millimetres: 98 % of nominal.
         let (lx, ly) = ok_photo::span(ok_photo::SheetSize::Letter);
-        assert_eq!(
-            (picture.width, picture.height),
-            (
-                ((lx + 30.0) * 4.0).round() as usize,
-                ((ly + 30.0) * 4.0).round() as usize
-            )
+        let near = |got: usize, want: f64| (got as f64 - want).abs() <= 3.0;
+        assert!(
+            near(picture.width, (lx * 0.98 + 30.0) * 4.0)
+                && near(picture.height, (ly * 0.98 + 30.0) * 4.0),
+            "{} x {}",
+            picture.width,
+            picture.height
         );
         // The outlines became a sketch: the plate's four lines, its hole, and the disc.
         let (err, report) = tool_text(&mut server, "report", json!({ "detail": "full" }));
@@ -1847,6 +1886,12 @@ mod tests {
             json!({ "path": blank.display().to_string() }),
         );
         assert!(err && text.contains("origin mark"), "{text}");
+        let (err, text) = tool_text(
+            &mut server,
+            "measure_photo",
+            json!({ "path": photo.display().to_string(), "reference": "ruler" }),
+        );
+        assert!(err && text.contains("reference"), "{text}");
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

@@ -737,7 +737,7 @@ struct PdfQuery {
     tab: Option<u32>,
     /// Comma-separated view names (`front,top,right,iso` by default).
     views: Option<String>,
-    /// `A4` (default), `A3`, `A2` or `Letter`.
+    /// `A4` (default), `A3`, `A2`, `Letter` or `Tabloid`.
     sheet: Option<String>,
     /// Balloons and a parts list (on by default).
     parts: Option<bool>,

@@ -138,3 +138,27 @@ point at, so the next question is "what is the hole at (65, 55) with
 calipers", not "describe the part". The crate has no server route or
 client yet: the tool exists for the MCP session that was asking for
 measurements.
+
+## 2026-09 · The sheet names its size with dots, and a photo scale's bars name the print scale
+
+The first sheet needed the caller to say A4 or Letter, and a Letter
+print read with the A4 spacing comes out 8 % wrong one way and 4 % the
+other with no warning. A QR code was considered and rejected: decoding
+one is a Reed-Solomon library and a mask search for five possible
+answers. A row of one to five dots beside the origin mark, read in the
+origin's own frame (its ring for scale, the x mark for direction) so
+the count is known before the size is, does the same job in twenty
+lines with the component pass the marks already use. Printing at
+exactly 100 % is the other assumption nobody can check from the
+picture, since the sheet's own bar scales with it. A calibrated thing
+on the sheet fixes that, and the forensic photo scale (ABFO No. 2,
+accurate to 0.1 mm, alternating 10 mm black and white bars) is what
+the tool reads: an even run of at least three alike dark blocks whose
+pitch says how far the print is from 100 %. Reading the scale's
+millimetre graduations was rejected for now because 0.2 mm strokes do
+not survive a phone photograph at 0.2 mm per pixel; the bars do. A
+coin does the same job less accurately (its edge shadow adds to its
+diameter) for anyone without a scale. Once the factor is known the
+picture is rectified again in true millimetres rather than corrected
+afterwards, so the outlines, the sketch and the drawn grid all agree.
+

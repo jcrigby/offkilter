@@ -584,7 +584,7 @@ takes the standard view that faces the selected face best, clips its
 lines to a circle around the face and enlarges them 2:1, drawing the
 lettered marker circle on the source view. The Drawing dialog in the client
 renders the same SVG inline as a preview and lets the user pick the views
-and the sheet size (A4, A3, A2, Letter) before downloading. Dimensions
+and the sheet size (A4, A3, A2, Letter, Tabloid) before downloading. Dimensions
 can be placed on the preview: `drawingFrame` reports where each view
 sits on the sheet, a click is mapped back into view coordinates and
 snapped to the nearest line endpoint, and two picks on one view become
@@ -929,12 +929,17 @@ port found wanting.
 
 `crates/ok-photo` reads a photograph of parts lying on a printed sheet
 with four bullseye marks (`examples/measuring-sheet/`): Otsu threshold,
-connected components, the marks found by their nested rings, a
-homography from the four centres to the sheet's millimetres, the
-picture resampled square at 4 px/mm, dark shapes traced and simplified
-into outlines with the paper showing through them as holes. Its test
-draws the sheet, photographs it askew with a synthetic homography and
-requires the sizes back within half a millimetre.
+connected components, the marks found by their nested rings and the
+sheet size by the dots beside the origin, a homography from the four
+centres to the sheet's millimetres, the picture resampled square at
+4 px/mm, dark shapes traced and simplified into outlines with the
+paper showing through them as holes. A reference of known size on the
+sheet (a photo scale's alternating bars, found as an even run of alike
+blocks, or a disc) gives the scale the sheet was printed at, and the
+picture is resampled again in true millimetres. Its tests draw the
+sheet, photograph it askew with a synthetic homography, and require
+the sizes back within half a millimetre, and a 96 % print corrected
+to within 1 %.
 
 Three layers guard the kernel. Unit tests in each crate check numbers
 (areas, volumes, DOF counts). Two randomised boolean tests in
