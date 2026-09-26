@@ -62,11 +62,11 @@ its nut trap). What it measures, at lift rev C and arm rev D:
 |---|---|
 | Interference, carriage at min / mid / max, 595 pairs | none |
 | Carriage bottom to the lower SK20 at min | 3.00 mm |
-| Carriage top to the top's underside at max | 23.00 mm |
+| Carriage top to the top's lower sheet at max | 4.00 mm |
 | Leadscrew parallel to each shaft over the travel | 0.0000 mm |
 | Router through the 74 mm opening at max rise | 4.50 mm radial clearance |
 | Collet nut top above the table at max rise | 5.0 mm |
-| Housing gripped by the 66 mm clamp band | 59 mm, 67 mm standing above the band |
+| Housing gripped by the 66 mm clamp band | all 66 mm, 12 mm below the band and 48 mm above it |
 | Bit tip, min to max rise | −10 to 35 mm above the table |
 | Carriage volume against the SCAD mesh | +0.02 % |
 | Nut traps and the router bore | 5.7 mm of wall, bore one clean piece |
@@ -119,15 +119,27 @@ And what it found that the SCAD did not:
   under the surface, the leadscrew cut to 257 so it ends there. That
   leaves 11 mm of ply between the pocket and the upper bearing's, and
   nothing stands on the table behind the bit until the pivot supports.
-- **The router sits higher in the clamp**, 17 mm up from where the SCAD
-  held it, so the collet nut's top clears the table by 5 mm at max rise
-  and a bit changes with two wrenches from above. `NUT_ABOVE_TABLE`
-  sets that and the seat follows. The band's bottom 7 mm then hold
-  nothing, and 67 mm of the assumed 126 mm housing stands above the
-  band towards the motor: the Colt's cylindrical housing has to be at
-  least that long for the band to grip its 59 mm, which is the first
-  thing to check with the router in hand. The bit tip then runs from
-  10 mm under the table at min rise to 35 mm over it at max.
+- **The lower sheet of the top is a frame over the box.** What decides
+  whether the collet reaches the table is the ply between the upper
+  SK20s' tops and the surface, 38 mm in the SCAD. The lower sheet is
+  now cut away over the rails and the upper SK20s (two rectangles,
+  from x = 54 to 146 each side over the box's depth, sawn out before
+  lamination), so the box comes up to the upper sheet and 19 mm stands
+  between the rail tops and the surface. The middle strip keeps both
+  sheets for the opening, the bearing pocket and the 20 mm crank
+  recess, which needs them. Nothing in the box changes; the table sits
+  19 mm lower over the baseplate (210 instead of 229) and the leadscrew
+  is that much shorter. A router plate would gain 9 mm more at the cost
+  of rebuilding the top around it.
+- **The router seat is set from the shop's need**, `NUT_ABOVE_TABLE`:
+  the collet nut's top clears the table by 5 mm at max rise, so a bit
+  changes with two wrenches from above. With the frame above, that
+  puts the assumed 126 mm housing 12 mm below the clamp band and 48 mm
+  above it, the band gripping all of its 66 mm, within 2 mm of where
+  the SCAD held it. (With the 38 mm top it needed 17 mm more, which
+  left the band's bottom 7 mm empty and depended on the Colt's housing
+  being long enough.) The bit tip runs from 10 mm under the table at
+  min rise to 35 mm over it at max.
 
 For a closer look at any part, `compare_stl` booleans the kernel's part
 against the mesh both ways and lists the lumps of material each has that
