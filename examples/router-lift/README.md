@@ -76,6 +76,7 @@ its nut trap). What it measures, at lift rev C and arm rev D:
 | Arm underside above the table at the nose | 76.0 mm |
 | Crank nut under the table surface | 1.0 mm, with 11 mm of ply above the bearing pocket |
 | Arm swept 0 to 80 degrees | clear of the table and the supports |
+| Bit change: arm up 45 degrees, router at max rise | nothing touching |
 | Tail meets the table | at 85 degrees (3740 mm³ into the top) |
 
 And what it found that the SCAD did not:
@@ -100,11 +101,13 @@ And what it found that the SCAD did not:
   measure on the real router, in `build.py`, is the length of the
   cylindrical housing the band can grip, the collet nut's length past
   it, and the bit beyond the nut.
-- **The bit meets the guide pin at max rise** when the pin is down in
-  the alignment ring as drawn (380 mm³, both on the bit axis). Retract
-  the router for that check; for cutting, set the pin out so its tip
-  clears the bit's height, which the nose allows once it has a
-  clearance hole.
+- **The bit meets the guide pin** when the pin is down in the alignment
+  ring as drawn and the router is at mid rise or above (both on the bit
+  axis). In use that never happens: the arm swings up out of the way
+  when the router is raised for a bit change, which the test checks
+  (arm up 45 degrees, router at max rise, nothing touching), and for
+  cutting the pin sits high enough to clear the bit, which the nose
+  allows once it has a clearance hole.
 - **The drawings' BOM says two guide pins; the model places one.** Every
   other modelled line matches.
 

@@ -8,7 +8,7 @@
 
 use ok_brep::{BoolOp, Solid, Surface};
 use ok_math::Vec3;
-use ok_model::{AssemblyResult, Document, InstanceId, MateId, TabId};
+use ok_model::{AssemblyOp, AssemblyResult, DocOp, Document, InstanceId, MateId, TabId};
 use std::path::PathBuf;
 
 fn load() -> Document {
@@ -119,7 +119,7 @@ const KNOWN: &[(&str, &str, &str)] = &[
     (
         "router",
         "Arm assembly",
-        "the bit into the guide pin, which is drawn down in the alignment ring: retract the router for that check, set the pin higher for cutting",
+        "the bit into the guide pin, which is drawn down in the alignment ring: the arm swings up out of the way when the router is raised for a bit change, and the pin sits higher for cutting",
     ),
     // The same pair as the arm sweep names it, by member: with the router
     // seated for bit changes its bit stands 12 mm over the table at mid
@@ -128,7 +128,7 @@ const KNOWN: &[(&str, &str, &str)] = &[
     (
         "router",
         "guide pin",
-        "the bit into the guide pin, which is drawn down in the alignment ring: retract the router for that check, set the pin higher for cutting",
+        "the bit into the guide pin, which is drawn down in the alignment ring: the arm swings up out of the way when the router is raised for a bit change, and the pin sits higher for cutting",
     ),
     (
         "leveling bolt",
@@ -700,6 +700,71 @@ fn the_pin_arm_swings_clear_and_lands_on_the_bit() {
             Some((_, what)) => what.clone(),
         },
     );
+    // A bit change: the arm swung up out of the way, the router at max
+    // rise with its collet nut over the table. Nothing may touch. The
+    // preview overrides one mate, so the carriage's travel is set for
+    // real and the pivot previewed.
+    let (slider, _, mid) = mate_named(&doc, lift, "carriage travel");
+    let z_of = |r: &AssemblyResult| bounds(body(r, "Carriage assembly / carriage")).0.z;
+    let up = if z_of(&doc.preview_assembly(lift, slider, 0.0, mid + 1.0).unwrap())
+        > z_of(&doc.preview_assembly(lift, slider, 0.0, mid).unwrap())
+    {
+        1.0
+    } else {
+        -1.0
+    };
+    doc.apply_with_base(
+        DocOp::Assembly {
+            tab: lift,
+            op: AssemblyOp::SetMate {
+                id: slider,
+                name: None,
+                kind: None,
+                a: None,
+                b: None,
+                offset: Some(mid + up * 45.0 / 2.0),
+                angle: None,
+                flip: None,
+            },
+        },
+        None,
+    )
+    .unwrap();
+    let r = at(&mut doc, angle0 + sign * 45.0);
+    assert!(r.mate_errors.is_empty(), "{:?}", r.mate_errors);
+    let table = bounds(body(&r, "top")).1.z;
+    let router_hits = hits(&r, |n| n == "router");
+    rep.must(
+        router_hits.is_empty(),
+        "bit change: arm up 45 degrees, router at max rise, touches nothing",
+        if router_hits.is_empty() {
+            format!(
+                "clear; collet nut {:.1} mm over the table, pin tip {:.1} mm over it",
+                nut_top_of(body(&r, "router")) - table,
+                nose_z(&r) - table
+            )
+        } else {
+            format!("{router_hits:?}")
+        },
+    );
     rep.print();
     assert!(rep.failures.is_empty(), "{:#?}", rep.failures);
+}
+
+/// The top of a router ghost's collet nut: its highest upward face
+/// below the bit's tip.
+fn nut_top_of(router: &Solid) -> f64 {
+    let bit_tip = bounds(router).1.z;
+    router
+        .faces
+        .iter()
+        .filter(|f| f.plane.normal.z > 0.999)
+        .map(|f| {
+            f.loops[0]
+                .iter()
+                .map(|&k| router.vertices[k as usize].z)
+                .fold(f64::NEG_INFINITY, f64::max)
+        })
+        .filter(|z| *z < bit_tip - 1e-6)
+        .fold(f64::NEG_INFINITY, f64::max)
 }
