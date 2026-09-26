@@ -419,6 +419,12 @@ BASE_W = 2 * RAIL_X  # 253
 Z_TOP = SK_T + 3 + CAR_H + TRAVEL + 3 + SK_T  # 191: underside of the top
 Z_CAR = SK_T + 3 + TRAVEL / 2  # 45.5: carriage bottom, mid travel
 RAIL_H = Z_TOP + PLY_T  # 210
+# The top's lower sheet is cut away over the rails and the upper SK20s
+# (two rectangles, from inside the SK20's reach to outside the rail,
+# over the box's depth) so the box's top is the upper sheet's underside.
+BOX_CUT_CLR = 1.0
+BOX_CUT_X0 = RAIL_X - SK_HTOT - 2.0  # 54.5: inside the SK20's reach
+BOX_CUT_X1 = RAIL_X + RAIL_T + BOX_CUT_CLR  # 146.5: outside the rail
 # Pin arm, rev D: the arm pivots on a 20 mm shaft in two SK20s at the
 # back of the top, two SC20UU blocks under its tail as the bushings.
 ARM_T, ARM_W, NOSE_W, NOSE_Y = 38.0, 250.0, 80.0, -50.0
@@ -431,10 +437,18 @@ Z_ARM = Z_SHAFT + BLK_C  # 76: the arm's underside when level
 
 def top(p):
     """The table top: laminated ply with the ring rabbet, the through
-    opening, the leadscrew hole and the 608 pocket in its underside."""
+    opening, the leadscrew hole and the 608 pocket in its underside. The
+    lower sheet is cut away over the box's rails and upper SK20s, so the
+    box comes up to the upper sheet and only 19 mm of ply stands between
+    the rail tops and the table surface; the middle strip, with the
+    opening, the bearing pocket and the crank recess, keeps both sheets."""
     s = p.sketch("top", 0.0, "blank")
     p.rect(s, (-TOP_W / 2, -TOP_D / 2 + TOP_Y_OFF), (TOP_W / 2, TOP_D / 2 + TOP_Y_OFF))
     p.extrude(s, TOP_T, name="top")
+    s = p.sketch("top", 0.0, "box clearance")
+    for sx in (-1, 1):
+        p.rect(s, (sx * BOX_CUT_X0, BASE_Y0 - BOX_CUT_CLR), (sx * BOX_CUT_X1, BASE_Y0 + BASE_DP + BOX_CUT_CLR))
+    p.cut(s, PLY_T, direction="normal", name="lower sheet cut away over the box")
     s = p.sketch("top", TOP_T, "opening")
     p.point(s, (0.0, 0.0))
     p.hole(s, OPEN_D, counterbore={"diameter": DISC_D + 0.4, "depth": RABBET_D}, name="opening + rabbet")
@@ -648,12 +662,15 @@ PRINTED = {"Carriage", "Ring blank", "Ring 30", "Ring 40", "Ring 55", "Ring alig
 # in the lift's frame (z = 0 the baseplate's top face, the bit axis the
 # origin, +Y towards the back). The pin attachment's frame has z = 0 at
 # the table surface, which is z_top + top_t here.
-TABLE = Z_TOP + TOP_T  # 229
+# The table surface: the rail tops carry the upper sheet alone. The top
+# part's origin is its underside, one sheet below the rail tops.
+TABLE = Z_TOP + PLY_T  # 210
+Z_TOP_UNDER = TABLE - TOP_T  # 172: the lower sheet's underside, where the upper bearing pocket is
 LS_Z0 = -(PLY_T + 9.0 + 1.0)
 # The router at mid travel: its collet nut top reaches NUT_ABOVE_TABLE
 # over the table at max rise, TRAVEL / 2 higher than this.
 ROUTER_Z = TABLE + NUT_ABOVE_TABLE - COLLET_L - ROUTER_H - TRAVEL / 2
-ROUTER_BELOW_CLAMP = (Z_CAR + CAR_H / 2 - CLAMP_H / 2) - ROUTER_Z  # -7: the band's bottom 7 mm hold nothing
+ROUTER_BELOW_CLAMP = (Z_CAR + CAR_H / 2 - CLAMP_H / 2) - ROUTER_Z  # 12: housing below the band
 
 
 def instances():
@@ -662,13 +679,13 @@ def instances():
         at("Baseplate", "baseplate", 0, 0, -PLY_T),
         at("Side rail", "left rail", -(RAIL_X + RAIL_T / 2), 0, -PLY_T),
         at("Side rail", "right rail", RAIL_X + RAIL_T / 2, 0, -PLY_T),
-        at("Top", "top", 0, 0, Z_TOP),
+        at("Top", "top", 0, 0, Z_TOP_UNDER),
         at("Ring 40", "ring", 0, 0, TABLE - RABBET_D - 4.0),
         at("Shaft", "left shaft", -SHAFT_X, 0, 0),
         at("Shaft", "right shaft", SHAFT_X, 0, 0),
         at("Leadscrew", "leadscrew", 0, LS_Y, LS_Z0),
         at("608 bearing", "lower bearing", 0, LS_Y, -BRG_T),
-        at("608 bearing", "upper bearing", 0, LS_Y, Z_TOP),
+        at("608 bearing", "upper bearing", 0, LS_Y, Z_TOP_UNDER),
         at("Collar", "upper collar", 0, LS_Y, 0),
         at("Collar", "lower collar", 0, LS_Y, -PLY_T - 9.0),
         at("Carriage", "carriage", 0, 0, Z_CAR),
