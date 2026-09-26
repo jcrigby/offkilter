@@ -237,9 +237,18 @@ ROUTER_D, ROUTER_CLR, CLAMP_H = 65.0, 0.3, 66.0
 # clamp band, then the collet nut and the bit beyond it. The SCAD draws
 # only the housing; the nut and bit are assumptions until the real
 # router is measured, and the limits test reports what they imply.
-ROUTER_H, ROUTER_BELOW_CLAMP = CLAMP_H + 60.0, 10.0
+ROUTER_H = CLAMP_H + 60.0
 COLLET_D, COLLET_L = 22.0, 16.0  # measure yours
 BIT_OUT = 30.0  # tip beyond the collet nut, 1/4" straight bit: measure yours
+# Where the router sits in the clamp is set from what the shop needs:
+# the collet nut this far above the table at max rise, so a bit changes
+# with two wrenches from above (build-instructions A7.6). The SCAD held
+# the housing with 10 mm below the clamp band, which left the nut 12 mm
+# under the table; ROUTER_BELOW_CLAMP is now derived, and negative means
+# the housing's bottom sits that far up inside the band. The limits test
+# reports how much housing the band then grips and how much stands
+# above it, for checking against the real router.
+NUT_ABOVE_TABLE = 5.0
 BLK_L, BLK_BX, BLK_BZ, BLK_GAP, BLK_W = 45.0, 40.0, 35.0, 10.0, 50.0
 BLK_BOLT = 5.0
 WALL = 8.0
@@ -641,6 +650,10 @@ PRINTED = {"Carriage", "Ring blank", "Ring 30", "Ring 40", "Ring 55", "Ring alig
 # the table surface, which is z_top + top_t here.
 TABLE = Z_TOP + TOP_T  # 229
 LS_Z0 = -(PLY_T + 9.0 + 1.0)
+# The router at mid travel: its collet nut top reaches NUT_ABOVE_TABLE
+# over the table at max rise, TRAVEL / 2 higher than this.
+ROUTER_Z = TABLE + NUT_ABOVE_TABLE - COLLET_L - ROUTER_H - TRAVEL / 2
+ROUTER_BELOW_CLAMP = (Z_CAR + CAR_H / 2 - CLAMP_H / 2) - ROUTER_Z  # -7: the band's bottom 7 mm hold nothing
 
 
 def instances():
@@ -661,7 +674,7 @@ def instances():
         at("Carriage", "carriage", 0, 0, Z_CAR),
         at("T8 nut", "T8 nut", 0, LS_Y, Z_CAR + CAR_H - NUT_FLANGE_T - 12.0),
         at("Coupling nut", "coupling nut", 0, LS_Y, TABLE - 1.0 - CRANK_NUT_L),
-        at("Router", "router", 0, 0, Z_CAR + CAR_H / 2 - CLAMP_H / 2 - ROUTER_BELOW_CLAMP),
+        at("Router", "router", 0, 0, ROUTER_Z),
         # The pin arm: SK20s base down with the bore along X (the studio's
         # base normal -X turned to -Z), blocks base up under the tail (the
         # base normal turned to +Z), collars outside the blocks.
