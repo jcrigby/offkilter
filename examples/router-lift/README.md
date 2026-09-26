@@ -65,6 +65,9 @@ its nut trap). What it measures, at lift rev C and arm rev D:
 | Carriage top to the top's underside at max | 23.00 mm |
 | Leadscrew parallel to each shaft over the travel | 0.0000 mm |
 | Router through the 74 mm opening at max rise | 4.50 mm radial clearance |
+| Collet nut top above the table at max rise | 5.0 mm |
+| Housing gripped by the 66 mm clamp band | 59 mm, 67 mm standing above the band |
+| Bit tip, min to max rise | −10 to 35 mm above the table |
 | Carriage volume against the SCAD mesh | +0.02 % |
 | Nut traps and the router bore | 5.7 mm of wall, bore one clean piece |
 | Block bolt holes reaching their traps | 16 of 16 |
@@ -89,14 +92,13 @@ And what it found that the SCAD did not:
   start 30 mm forward of the pivot line. (The leadscrew's coupling nut
   stood 31 mm proud of the table 45 mm behind the bit in the SCAD; the
   model recesses it, below.)
-- **The router may not reach.** With the SCAD's 126 mm housing held
-  with 10 mm below the clamp, and a 16 mm collet nut and 30 mm of bit
-  assumed, the nut's top is 12 mm under the table at max rise, where the
-  instructions want it above for bit changes; the bit tip runs from 27
-  mm under the table to 18 mm over it. Sliding the router 12 mm higher
-  in the clamp fixes the first if the housing allows it. Three numbers
-  to measure on the real router, in `build.py`: the length of the
-  cylindrical housing the clamp can grip, the collet nut's length past
+- **The router did not reach as the SCAD held it.** With the 126 mm
+  housing held with 10 mm below the clamp band, and a 16 mm collet nut
+  and 30 mm of bit assumed, the nut's top was 12 mm under the table at
+  max rise, where the instructions want it above for bit changes. The
+  model now seats the router from that need (below); what remains to
+  measure on the real router, in `build.py`, is the length of the
+  cylindrical housing the band can grip, the collet nut's length past
   it, and the bit beyond the nut.
 - **The bit meets the guide pin at max rise** when the pin is down in
   the alignment ring as drawn (380 mm³, both on the bit axis). Retract
@@ -114,6 +116,15 @@ And what it found that the SCAD did not:
   under the surface, the leadscrew cut to 257 so it ends there. That
   leaves 11 mm of ply between the pocket and the upper bearing's, and
   nothing stands on the table behind the bit until the pivot supports.
+- **The router sits higher in the clamp**, 17 mm up from where the SCAD
+  held it, so the collet nut's top clears the table by 5 mm at max rise
+  and a bit changes with two wrenches from above. `NUT_ABOVE_TABLE`
+  sets that and the seat follows. The band's bottom 7 mm then hold
+  nothing, and 67 mm of the assumed 126 mm housing stands above the
+  band towards the motor: the Colt's cylindrical housing has to be at
+  least that long for the band to grip its 59 mm, which is the first
+  thing to check with the router in hand. The bit tip then runs from
+  10 mm under the table at min rise to 35 mm over it at max.
 
 For a closer look at any part, `compare_stl` booleans the kernel's part
 against the mesh both ways and lists the lumps of material each has that

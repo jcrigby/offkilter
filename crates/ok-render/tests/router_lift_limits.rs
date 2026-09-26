@@ -121,6 +121,15 @@ const KNOWN: &[(&str, &str, &str)] = &[
         "Arm assembly",
         "the bit into the guide pin, which is drawn down in the alignment ring: retract the router for that check, set the pin higher for cutting",
     ),
+    // The same pair as the arm sweep names it, by member: with the router
+    // seated for bit changes its bit stands 12 mm over the table at mid
+    // travel, so the pin drawn down for the alignment check meets it
+    // there too, not only at max rise.
+    (
+        "router",
+        "guide pin",
+        "the bit into the guide pin, which is drawn down in the alignment ring: retract the router for that check, set the pin higher for cutting",
+    ),
     (
         "leveling bolt",
         "top",
@@ -282,17 +291,39 @@ fn the_lift_holds_its_clearances_over_the_travel() {
                 })
                 .filter(|z| *z < bit_tip - 1e-6)
                 .fold(f64::NEG_INFINITY, f64::max);
-            rep.note(
+            rep.must(
+                nut_top - table >= 5.0 - 1e-6,
                 "collet nut top at max rise",
                 format!(
-                    "{:.1} mm above the table surface; bit changes need it above, which takes the router {:.0} mm higher in the clamp",
-                    nut_top - table,
-                    (table - nut_top).max(0.0)
+                    "{:.1} mm above the table surface, for the wrenches",
+                    nut_top - table
                 ),
             );
             rep.note(
                 "bit tip at max rise",
                 format!("{:.1} mm above the table surface", bit_tip - table),
+            );
+            // The router sits in the clamp band where the nut's height
+            // puts it. How much housing the band grips, and how much of
+            // the assumed housing stands above it, are what to check
+            // against the real router's cylindrical part.
+            let carriage = body(&r, "Carriage assembly / carriage");
+            let (car_lo, car_hi) = bounds(carriage);
+            let band = (
+                (car_lo.z + car_hi.z) / 2.0 - 33.0,
+                (car_lo.z + car_hi.z) / 2.0 + 33.0,
+            );
+            let housing_bottom = bounds(router).0.z;
+            let housing_top = nut_top - 16.0;
+            let gripped = (housing_top.min(band.1) - housing_bottom.max(band.0)).max(0.0);
+            rep.must(
+                gripped >= 50.0,
+                "housing in the 66 mm clamp band",
+                format!(
+                    "{gripped:.0} mm gripped; the housing's bottom is {:.0} mm above the band's bottom, and {:.0} mm of housing stands above the band",
+                    housing_bottom - band.0,
+                    housing_top - band.1
+                ),
             );
             // The crank nut sits in a recess in the top, its top under the
             // surface, with ply left between the recess floor and the
