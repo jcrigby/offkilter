@@ -124,6 +124,8 @@ top are concrete and self-contained; items lower down are directions.
 - [x] `wasm-opt` in the release pipeline (from the binaryen npm package when present)
 
 - [x] Mechanism-at-limit checks of the router lift example: the carriage's travel and the rev D pin arm's pivot swept with interference, clearance and alignment measured (`router_lift_limits.rs`), the BOM checked against the shop drawings
+- [x] `ok-sheet`: a 1:2.5 scale between 1:2 and 1:5 (the carriage assembly's sheet went from 1:5 to 1:2.5 on A4), and the views beyond the elevations go in a row under them when that fits a larger scale than a row to their right
+- [x] Section views on PDF sheets: `section` (parallel to the front view) and `section-side` (parallel to the right view), each placed with `@<mm>`, cut faces hatched even-odd, captioned, the cutting plane traced with arrows on the view it is edge-on in
 - [x] Measuring from a photograph: `measuring_sheet` prints a grid with four bullseye marks, `measure_photo` squares a picture of parts on it up and reports their sizes, outlines and holes in millimetres, and can put them in a sketch (`crates/ok-photo`, `examples/measuring-sheet/`)
 - [x] The sheet says which size it is (a row of dots by the origin mark), and a reference of known size on it (a forensic photo scale's 10 mm bars, or a coin) gives the print scale, so a sheet that printed at 97 % still measures true; Tabloid joins the sheet sizes
 - [x] A steel rule as the reference: its millimetre ticks are found as thin local-dark marks, grouped by edge and fitted, an inch edge told apart by pitch; and with a rule a flatbed scan needs no sheet at all
@@ -137,8 +139,8 @@ in `docs/DECISIONS.md`.
 - [ ] Puzzle fabrication layouts: a `spread` parameter instead of always one bit diameter between rows
 - [ ] Puzzle pieces: a material per colour, so the parts list and a future cut list name the species
 - [ ] `ok-sheet`: deflate PDF content streams (a 65 KB assembly sheet would be a fraction of that); the tests grep the streams, so they inflate first
-- [ ] `ok-sheet`: a 1:2.5 scale between 1:2 and 1:5, so a part like the carriage assembly does not drop to 1:5 on A4 for want of a few millimetres
 - [ ] Drawing dialog: a hidden-lines choice (auto, on, off) matching the `hidden` option the MCP tool and the server already take
+- [ ] Drawing dialog and SVG drawings: the two PDF section views (`section`, `section-side`, each with `@<mm>`), so the client's preview matches the sheet the MCP tool writes
 - [ ] `Dockerfile.dev`: build it once on a machine with a Docker daemon; the sandbox it was written in had only the client
 - [ ] Router lift: measure the Colt (clampable housing length, collet nut, bit reach) and put the numbers in `build.py`; the limits test then says whether the collet clears the table at max rise
 - [ ] Assembly sheets: an exploded iso view, driven by the client's explode slider, when the stacked view hides parts

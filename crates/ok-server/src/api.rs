@@ -783,7 +783,10 @@ fn sheet_options(
             .filter(|s| !s.is_empty())
             .collect();
         if opts.views.is_empty() {
-            return Err("views must name at least one of front, top, right, iso".into());
+            return Err(
+                "views must name at least one of front, top, right, iso, section, section-side"
+                    .into(),
+            );
         }
     }
     Ok(opts)

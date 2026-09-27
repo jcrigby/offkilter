@@ -24,11 +24,15 @@ drives the `ok-mcp` server exactly as a language model would.
   the leadscrew at mid travel and with the carriage raised, every part).
 - `out/assembly.pdf`, `out/carriage_assembly.pdf`,
   `out/leadscrew_assembly.pdf`, `out/arm_assembly.pdf`,
-  `out/carriage.pdf`: shop drawing sheets from `export {format: "pdf"}`:
-  third-angle views at a standard scale with the overall sizes; the
-  lift's sheet has a balloon per item and the parts list, where each
-  sub-assembly is one item with its own sheet listing its parts, and
-  the carriage's sheet has its holes called out.
+  `out/carriage.pdf`, `out/top.pdf`: shop drawing sheets from
+  `export {format: "pdf"}`: third-angle views at a standard scale with
+  the overall sizes; the lift's sheet has a balloon per item and the
+  parts list, where each sub-assembly is one item with its own sheet
+  listing its parts, and the carriage's sheet has its holes called out.
+  The top's sheet adds two sections at right angles through the bit
+  axis (`section@0`, `section-side@0`), which is where the opening, the
+  rabbet, the crank recess, the bearing pocket and the lower sheet's
+  cutouts all show, hatched, with the cutting planes traced on the plan.
 - `reference/`: the OpenSCAD sources (lift rev C, pin arm rev D and its
   rev C for the record), the reference STLs they produced for the
   printed parts, the arm template DXF and the drawings' BOM tables.

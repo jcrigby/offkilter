@@ -1157,6 +1157,11 @@ def main():
         rev = "rev D" if title == "Arm assembly" else "rev C"
         print(mcp.call("export", {"tab": asm_tabs[title], "format": "pdf", "note": rev, "path": os.path.join(out, f"{stem}.pdf")}))
     print(mcp.call("export", {"tab": tabs["Carriage"], "format": "pdf", "path": os.path.join(out, "carriage.pdf")}))
+    # The top on its own sheet: plan and elevations, and two sections at
+    # right angles through the bit axis, which is where the opening, the
+    # rabbet, the crank recess, the bearing pocket and the lower sheet's
+    # cutouts all show.
+    print(mcp.call("export", {"tab": tabs["Top"], "format": "pdf", "sheet": "A3", "views": ["front", "top", "right", "section@0", "section-side@0"], "note": "sections through the bit axis", "path": os.path.join(out, "top.pdf")}))
     # The carriage at the top of its travel: the slider's offset is the
     # one number that moves the carriage assembly and the router in it.
     for offset, name in ((mid + TRAVEL / 2, "assembly_raised"), (mid, None)):
