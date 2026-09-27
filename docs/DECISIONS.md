@@ -191,3 +191,27 @@ along the rule's direction at that spot, not with an average of the x
 and y scales, which was 3 % out on a picture squashed 5 % one way.
 The rule does read in a phone picture that fills the frame with the
 sheet; the assumption that only a scan resolves the ticks was wrong.
+
+## 2026-09 · Sections on the sheet are two fixed cuts with a position, and the extra views may go in a second row
+
+The top of the router lift got features on its underside that no
+standard view shows, and the maintainer asked for two sections at
+right angles. A real package lets the author place any cutting plane;
+here the sheet offers exactly two, `section` parallel to the front
+view and `section-side` parallel to the right view, each with `@<mm>`
+for where the cut goes and through the middle of the bodies without
+it, because those two cover every part in the project and a free plane
+would need a way to draw and dimension its trace in a general view.
+The cut faces are hatched by the even-odd rule over every loop, so a
+face with a hole in it stays open, the section is captioned, and the
+plane is traced with arrows for the direction of sight on the top view
+(or the elevation the plane is edge-on in when there is no top view),
+which is the convention the client's SVG drawing already used. Two
+sections made five views, and five views in one row put a 400 mm top
+at 1:5 on A3. The layout now tries the extra views in a row under the
+elevations as well as to their right and keeps whichever fits the
+larger scale, and 1:2.5 joined the standard scales, which the roadmap
+had wanted since the carriage assembly dropped to 1:5 for want of a
+few millimetres. The client's drawing dialog still has its own single
+section; matching it to the sheet's two is on the roadmap.
+

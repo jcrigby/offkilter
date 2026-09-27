@@ -11,7 +11,7 @@
 pub mod pdf;
 
 use ok_brep::{project_view, Solid, Surface, View, ViewArc, ViewLines};
-use ok_math::{Vec2, Vec3};
+use ok_math::{Plane, Vec2, Vec3};
 use ok_model::{Document, TabId};
 pub use pdf::Anchor;
 
@@ -63,8 +63,11 @@ impl SheetSize {
 /// What to put on the sheet.
 #[derive(Debug, Clone)]
 pub struct Options {
-    /// View names in `front`, `top`, `right`, `iso`; the layout places
-    /// the first three third-angle and the rest to the right.
+    /// View names in `front`, `top`, `right`, `iso`, `section` (a cut
+    /// parallel to the front view) and `section-side` (parallel to the
+    /// right view), the two sections taking `@<mm>` for where the cut
+    /// goes (through the middle of the bodies otherwise); the layout
+    /// places the first three third-angle and the rest to the right.
     pub views: Vec<String>,
     pub sheet: SheetSize,
     /// The title block's first line.
@@ -143,6 +146,53 @@ pub fn standard_view(name: &str) -> Option<View> {
     }
 }
 
+/// A section view: which axis the cutting plane is normal to, and
+/// where along it. `section` cuts parallel to the front view (a plane
+/// y = at, the near side removed, seen from the front); `section-side`
+/// parallel to the right view (x = at, the +x side removed, seen from
+/// the right). `@<mm>` places the cut; without it the cut goes through
+/// the middle of the bodies.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SectionSpec {
+    pub axis: char,
+    pub at: Option<f64>,
+}
+
+pub fn section_spec(name: &str) -> Result<Option<SectionSpec>, String> {
+    let (base, at) = match name.split_once('@') {
+        Some((b, a)) => {
+            let at: f64 = a.trim().parse().map_err(|_| {
+                format!("view {name:?}: the cut position after @ must be a number of millimetres")
+            })?;
+            (b, Some(at))
+        }
+        None => (name, None),
+    };
+    Ok(match base {
+        "section" => Some(SectionSpec { axis: 'y', at }),
+        "section-side" => Some(SectionSpec { axis: 'x', at }),
+        _ => None,
+    })
+}
+
+impl SectionSpec {
+    /// The view direction of the section, and the cutting plane for
+    /// `ok_brep::section_view` (its normal side is removed) at `at`.
+    fn view_and_plane(self, at: f64) -> (View, Plane) {
+        match self.axis {
+            'y' => (
+                standard_view("front").unwrap(),
+                Plane::from_origin_normal(Vec3::new(0.0, at, 0.0), Vec3::new(0.0, -1.0, 0.0))
+                    .unwrap(),
+            ),
+            _ => (
+                standard_view("right").unwrap(),
+                Plane::from_origin_normal(Vec3::new(at, 0.0, 0.0), Vec3::X).unwrap(),
+            ),
+        }
+    }
+}
+
 /// The screen basis of a view as the kernel projects it.
 fn frame(view: View) -> (Vec3, Vec3) {
     let d = view.dir.normalized().unwrap_or(Vec3::Y);
@@ -167,15 +217,31 @@ struct Bounds {
     maxy: f64,
 }
 
+#[derive(Debug, Clone)]
 struct Placed {
     name: String,
     lines: ViewLines,
     callouts: Vec<Callout>,
     /// Item balloons: number and anchor in view coordinates.
     balloons: Vec<(usize, Vec2)>,
+    /// A section's cut faces (hatched), its letter, and where its
+    /// cutting plane shows edge-on: the view, whether the trace runs
+    /// horizontally there, its coordinate, and which way the arrows
+    /// point (the direction of sight) as a unit vector in that view.
+    cut: Vec<Vec<Vec2>>,
+    section: Option<SectionMark>,
     dx: f64,
     dy: f64,
     b: Bounds,
+}
+
+#[derive(Debug, Clone)]
+struct SectionMark {
+    letter: char,
+    on: String,
+    horizontal: bool,
+    at: f64,
+    sight: Vec2,
 }
 
 struct Dimension {
@@ -206,7 +272,10 @@ const TABLE_ROW: f64 = 6.0;
 const BALLOON_R: f64 = 3.5;
 /// Sheet mm between a view's box and the balloon rims around it.
 const BALLOON_GAP: f64 = 8.0;
-const STANDARD_SCALES: [f64; 10] = [10.0, 5.0, 2.0, 1.0, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01];
+const STANDARD_SCALES: [f64; 11] = [10.0, 5.0, 2.0, 1.0, 0.5, 0.4, 0.2, 0.1, 0.05, 0.02, 0.01];
+/// Sheet millimetres kept around the views for a section's caption
+/// below it and the trace letters beside the view it is drawn on.
+const SECTION_ROOM: f64 = 8.0;
 const MARGIN: f64 = 10.0;
 const BLOCK: f64 = 24.0;
 
@@ -225,6 +294,52 @@ fn arc_chords(a: &ViewArc) -> Vec<[Vec2; 2]> {
         let p = arc_point(a, a.start + (a.end - a.start) * i as f64 / n as f64);
         out.push([prev, p]);
         prev = p;
+    }
+    out
+}
+
+/// Hatch lines at 45 degrees, `spacing` apart, filling the polygons by
+/// the even-odd rule (a face with holes comes as several loops), in
+/// the polygons' own coordinates.
+fn hatch(loops: &[Vec<(f64, f64)>], spacing: f64) -> Vec<[(f64, f64); 2]> {
+    // Lines x - y = c; along a line, t = x + y.
+    let mut out = Vec::new();
+    let (mut cmin, mut cmax) = (f64::INFINITY, f64::NEG_INFINITY);
+    for l in loops {
+        for &(x, y) in l {
+            cmin = cmin.min(x - y);
+            cmax = cmax.max(x - y);
+        }
+    }
+    if !cmin.is_finite() {
+        return out;
+    }
+    let step = spacing * std::f64::consts::SQRT_2;
+    let mut c = (cmin / step).floor() * step + step / 2.0;
+    while c < cmax {
+        let mut ts: Vec<f64> = Vec::new();
+        for l in loops {
+            let n = l.len();
+            for i in 0..n {
+                let (p, q) = (l[i], l[(i + 1) % n]);
+                let (cp, cq) = (p.0 - p.1 - c, q.0 - q.1 - c);
+                if (cp < 0.0) == (cq < 0.0) {
+                    continue; // both sides equal, or both on: no crossing
+                }
+                let f = cp / (cp - cq);
+                let x = p.0 + (q.0 - p.0) * f;
+                let y = p.1 + (q.1 - p.1) * f;
+                ts.push(x + y);
+            }
+        }
+        ts.sort_by(f64::total_cmp);
+        for pair in ts.chunks(2) {
+            if pair.len() == 2 && pair[1] - pair[0] > 1e-6 {
+                let at = |t: f64| ((t + c) / 2.0, (t - c) / 2.0);
+                out.push([at(pair[0]), at(pair[1])]);
+            }
+        }
+        c += step;
     }
     out
 }
@@ -349,8 +464,10 @@ fn dim_text(v: f64) -> String {
 fn scale_label(s: f64) -> String {
     if s >= 1.0 {
         format!("{}:1", s.round() as i64)
-    } else {
+    } else if ((1.0 / s) - (1.0 / s).round()).abs() < 1e-9 {
         format!("1:{}", (1.0 / s).round() as i64)
+    } else {
+        format!("1:{:.1}", 1.0 / s)
     }
 }
 
@@ -368,6 +485,209 @@ pub struct Sheet {
     title: String,
     note: String,
     hidden: bool,
+}
+
+/// Places the views (third angle, the rest to the right of the
+/// elevations or, with `below`, in a row under them), works out the
+/// overall dimensions, and fits the sheet at the largest standard scale
+/// that keeps the views in the free area above the title block and off
+/// the parts list of `rows`. Returns the placed views, the dimensions,
+/// the scale and the sheet origin.
+fn arrange(
+    mut views: Vec<Placed>,
+    rows: &[Row],
+    sheet: SheetSize,
+    below: bool,
+) -> (Vec<Placed>, Vec<Dimension>, f64, f64, f64) {
+    // Third-angle layout in model millimetres: front at the origin, top
+    // above it, right to its right, the rest to the right of those.
+    let gap = 15.0;
+    let dim_gap = DIM_OFFSET + 8.0;
+    let fb = views
+        .iter()
+        .find(|v| v.name == "front")
+        .map(|v| v.b)
+        .unwrap_or(Bounds {
+            minx: 0.0,
+            miny: 0.0,
+            maxx: 0.0,
+            maxy: 0.0,
+        });
+    let has_top = views.iter().any(|v| v.name == "top");
+    let mut cursor_x = f64::NEG_INFINITY;
+    for v in views.iter_mut() {
+        match v.name.as_str() {
+            "front" => {}
+            "top" => v.dy = fb.maxy + gap + dim_gap - v.b.miny,
+            "right" => v.dx = fb.maxx + gap - v.b.minx,
+            _ => {}
+        }
+        if matches!(v.name.as_str(), "front" | "top" | "right") {
+            cursor_x = cursor_x.max(v.b.maxx + v.dx);
+        }
+    }
+    let mut cursor_x = if cursor_x.is_finite() {
+        cursor_x + gap
+    } else {
+        0.0
+    };
+    // The row under the elevations starts at the front view's left
+    // edge, below its width dimension.
+    let row_top = fb.miny - gap - dim_gap;
+    let mut row_x = fb.minx;
+    for v in views.iter_mut() {
+        if matches!(v.name.as_str(), "front" | "top" | "right") {
+            continue;
+        }
+        if below {
+            v.dx = row_x - v.b.minx;
+            v.dy = row_top - v.b.maxy;
+            row_x += v.b.maxx - v.b.minx + gap;
+            continue;
+        }
+        v.dx = cursor_x - v.b.minx;
+        v.dy = if v.name == "iso" && has_top {
+            fb.maxy + gap + dim_gap - v.b.miny
+        } else {
+            -v.b.miny
+        };
+        cursor_x += v.b.maxx - v.b.minx + gap;
+    }
+    // Overall dimensions: width below the front view, height left of
+    // it, depth left of the top view.
+    let mut dims = Vec::new();
+    for p in &views {
+        let (w, h) = (p.b.maxx - p.b.minx, p.b.maxy - p.b.miny);
+        let at = |x: f64, y: f64| Vec2::new(x + p.dx, y + p.dy);
+        if p.name == "front" && w > 0.0 {
+            dims.push(Dimension {
+                a: at(p.b.minx, p.b.miny),
+                b: at(p.b.maxx, p.b.miny),
+                offset: -DIM_OFFSET,
+                value: w,
+            });
+            if h > 0.0 {
+                dims.push(Dimension {
+                    a: at(p.b.minx, p.b.miny),
+                    b: at(p.b.minx, p.b.maxy),
+                    offset: DIM_OFFSET,
+                    value: h,
+                });
+            }
+        }
+        if p.name == "top" && h > 0.0 {
+            dims.push(Dimension {
+                a: at(p.b.minx, p.b.miny),
+                b: at(p.b.minx, p.b.maxy),
+                offset: DIM_OFFSET,
+                value: h,
+            });
+        }
+    }
+    let mut min = Vec2::new(f64::INFINITY, f64::INFINITY);
+    let mut max = Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY);
+    for p in &views {
+        min.x = min.x.min(p.b.minx + p.dx);
+        min.y = min.y.min(p.b.miny + p.dy);
+        max.x = max.x.max(p.b.maxx + p.dx);
+        max.y = max.y.max(p.b.maxy + p.dy);
+    }
+    if !min.x.is_finite() {
+        min = Vec2::ZERO;
+        max = Vec2::ZERO;
+    }
+    if !dims.is_empty() {
+        min -= Vec2::new(dim_gap, dim_gap);
+    }
+    // Fit the sheet at the largest standard scale where the views sit
+    // in the free area above the title block without covering the
+    // parts list, which takes the bottom-right corner of that area:
+    // centred when they can be, otherwise pushed to the top left.
+    let (sw, sh) = sheet.size();
+    let table = (!rows.is_empty()).then(|| {
+        let w: f64 = TABLE_COLS.iter().map(|c| c.1).sum();
+        (
+            sw - MARGIN - w,
+            MARGIN + BLOCK + (rows.len() as f64 + 1.0) * TABLE_ROW,
+        )
+    });
+    // Balloons hang outside their view by a leader and a circle.
+    let pad = if views.iter().any(|v| !v.balloons.is_empty()) {
+        BALLOON_GAP + 2.0 * BALLOON_R
+    } else {
+        0.0
+    };
+    // Sections need sheet room for their captions and trace letters.
+    let room = if views.iter().any(|v| v.section.is_some()) {
+        SECTION_ROOM
+    } else {
+        0.0
+    };
+    let avail_w = sw - 2.0 * MARGIN - 2.0 * pad - 2.0 * room;
+    let avail_h = sh - 2.0 * MARGIN - BLOCK - 2.0 * pad - 2.0 * room;
+    let extent_w = (max.x - min.x).max(1e-9);
+    let extent_h = (max.y - min.y).max(1e-9);
+    // Whether a view's box, placed at scale `s` with offset (ox, oy),
+    // stays off the parts list.
+    let view_clear = |p: &Placed, s: f64, ox: f64, oy: f64| {
+        let Some((tx, ty)) = table else { return true };
+        let pad = if matches!(p.name.as_str(), "front" | "top") {
+            dim_gap
+        } else {
+            0.0
+        };
+        let x1 = (p.b.maxx + p.dx) * s + ox + 2.0;
+        let y0 = (p.b.miny + p.dy - pad) * s + oy - 2.0;
+        x1 <= tx || y0 >= ty
+    };
+    let top_left = |s: f64| {
+        (
+            MARGIN + pad + room - min.x * s,
+            sh - MARGIN - pad - room - max.y * s,
+        )
+    };
+    let iso = views.iter().position(|v| v.name == "iso");
+    let mut fit = None;
+    'scales: for &s in &STANDARD_SCALES {
+        if extent_w * s > avail_w || extent_h * s > avail_h {
+            continue;
+        }
+        let centred = (
+            MARGIN + pad + room + (avail_w - extent_w * s) / 2.0 - min.x * s,
+            MARGIN + BLOCK + pad + room + (avail_h - extent_h * s) / 2.0 - min.y * s,
+        );
+        for (ox, oy) in [centred, top_left(s)] {
+            if views.iter().all(|p| view_clear(p, s, ox, oy)) {
+                fit = Some((s, ox, oy, 0.0));
+                break 'scales;
+            }
+            // The iso's height is free: lift it off the list when it
+            // is the only view in the way and the sheet has the room.
+            let Some(k) = iso else { continue };
+            let others = views
+                .iter()
+                .enumerate()
+                .all(|(i, p)| i == k || view_clear(p, s, ox, oy));
+            let Some((_, ty)) = table else { continue };
+            let v = &views[k];
+            let y0 = (v.b.miny + v.dy) * s + oy - 2.0;
+            let lift = (ty - y0) / s;
+            let top = (v.b.maxy + v.dy + lift) * s + oy;
+            if others && lift > 0.0 && top <= sh - MARGIN - pad {
+                fit = Some((s, ox, oy, lift));
+                break 'scales;
+            }
+        }
+    }
+    let (scale, ox, oy, lift) = fit.unwrap_or_else(|| {
+        let s = STANDARD_SCALES[STANDARD_SCALES.len() - 1];
+        let (ox, oy) = top_left(s);
+        (s, ox, oy, 0.0)
+    });
+    if let Some(k) = iso {
+        views[k].dy += lift;
+    }
+    (views, dims, scale, ox, oy)
 }
 
 impl Sheet {
@@ -404,10 +724,92 @@ impl Sheet {
         }
         // Views.
         let mut views: Vec<Placed> = Vec::new();
+        let mut letters = 'A'..='Z';
+        let (model_lo, model_hi) = {
+            let mut lo = Vec3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+            let mut hi = -lo;
+            for s in &solids {
+                if let Some((a, b)) = s.bounds() {
+                    lo = Vec3::new(lo.x.min(a.x), lo.y.min(a.y), lo.z.min(a.z));
+                    hi = Vec3::new(hi.x.max(b.x), hi.y.max(b.y), hi.z.max(b.z));
+                }
+            }
+            (lo, hi)
+        };
         for name in &opts.views {
+            if let Some(spec) = section_spec(name)? {
+                let at = spec.at.unwrap_or(match spec.axis {
+                    'y' => (model_lo.y + model_hi.y) / 2.0,
+                    _ => (model_lo.x + model_hi.x) / 2.0,
+                });
+                let (view, plane) = spec.view_and_plane(at);
+                let cut_lines = ok_brep::section_view(&solids, view, &plane);
+                if cut_lines.cut.is_empty() {
+                    return Err(format!(
+                        "view {name:?}: the cut at {at} misses every body (they span {} to {} along {})",
+                        if spec.axis == 'y' { model_lo.y } else { model_lo.x },
+                        if spec.axis == 'y' { model_hi.y } else { model_hi.x },
+                        spec.axis
+                    ));
+                }
+                let lines = ViewLines {
+                    visible: cut_lines.visible,
+                    hidden: Vec::new(),
+                    visible_arcs: cut_lines.visible_arcs,
+                    hidden_arcs: Vec::new(),
+                };
+                let letter = letters.next().unwrap_or('Z');
+                // Where the plane is edge-on: the top view by preference,
+                // else the other elevation. Top view (u, v) = (x, y),
+                // front (x, z), right (y, z).
+                let has_top = opts.views.iter().any(|v| v == "top");
+                let mark = match (spec.axis, has_top) {
+                    ('y', true) => SectionMark {
+                        letter,
+                        on: "top".into(),
+                        horizontal: true,
+                        at,
+                        sight: Vec2::new(0.0, 1.0),
+                    },
+                    ('y', false) => SectionMark {
+                        letter,
+                        on: "right".into(),
+                        horizontal: false,
+                        at,
+                        sight: Vec2::new(1.0, 0.0),
+                    },
+                    (_, true) => SectionMark {
+                        letter,
+                        on: "top".into(),
+                        horizontal: false,
+                        at,
+                        sight: Vec2::new(-1.0, 0.0),
+                    },
+                    (_, false) => SectionMark {
+                        letter,
+                        on: "front".into(),
+                        horizontal: false,
+                        at,
+                        sight: Vec2::new(-1.0, 0.0),
+                    },
+                };
+                let b = bounds_of(&lines);
+                views.push(Placed {
+                    name: name.clone(),
+                    lines,
+                    callouts: Vec::new(),
+                    balloons: Vec::new(),
+                    cut: cut_lines.cut,
+                    section: Some(mark),
+                    dx: 0.0,
+                    dy: 0.0,
+                    b,
+                });
+                continue;
+            }
             let Some(view) = standard_view(name) else {
                 return Err(format!(
-                    "unknown view {name:?}: use front, top, right or iso"
+                    "unknown view {name:?}: use front, top, right, iso, section or section-side (the sections take @<mm> for the cut)"
                 ));
             };
             let lines = project_view(&solids, view);
@@ -435,178 +837,31 @@ impl Sheet {
                 lines,
                 callouts,
                 balloons,
+                cut: Vec::new(),
+                section: None,
                 dx: 0.0,
                 dy: 0.0,
                 b,
             });
         }
-        // Third-angle layout in model millimetres: front at the origin, top
-        // above it, right to its right, the rest to the right of those.
-        let gap = 15.0;
-        let dim_gap = DIM_OFFSET + 8.0;
-        let fb = views
+        // The views beyond the elevations go to their right, or in a row
+        // under them when that fits a larger scale (five views in one
+        // row can force 1:5 where 1:2.5 fits two rows).
+        let rest = views
             .iter()
-            .find(|v| v.name == "front")
-            .map(|v| v.b)
-            .unwrap_or(Bounds {
-                minx: 0.0,
-                miny: 0.0,
-                maxx: 0.0,
-                maxy: 0.0,
-            });
-        let has_top = views.iter().any(|v| v.name == "top");
-        let mut cursor_x = f64::NEG_INFINITY;
-        for v in views.iter_mut() {
-            match v.name.as_str() {
-                "front" => {}
-                "top" => v.dy = fb.maxy + gap + dim_gap - v.b.miny,
-                "right" => v.dx = fb.maxx + gap - v.b.minx,
-                _ => {}
-            }
-            if matches!(v.name.as_str(), "front" | "top" | "right") {
-                cursor_x = cursor_x.max(v.b.maxx + v.dx);
-            }
-        }
-        let mut cursor_x = if cursor_x.is_finite() {
-            cursor_x + gap
-        } else {
-            0.0
-        };
-        for v in views.iter_mut() {
-            if matches!(v.name.as_str(), "front" | "top" | "right") {
-                continue;
-            }
-            v.dx = cursor_x - v.b.minx;
-            v.dy = if v.name == "iso" && has_top {
-                fb.maxy + gap + dim_gap - v.b.miny
+            .filter(|v| !matches!(v.name.as_str(), "front" | "top" | "right"))
+            .count();
+        let right = arrange(views.clone(), &rows, opts.sheet, false);
+        let (views, dims, scale, ox, oy) = if rest > 0 {
+            let below = arrange(views, &rows, opts.sheet, true);
+            if below.2 > right.2 {
+                below
             } else {
-                -v.b.miny
-            };
-            cursor_x += v.b.maxx - v.b.minx + gap;
-        }
-        // Overall dimensions: width below the front view, height left of
-        // it, depth left of the top view.
-        let mut dims = Vec::new();
-        for p in &views {
-            let (w, h) = (p.b.maxx - p.b.minx, p.b.maxy - p.b.miny);
-            let at = |x: f64, y: f64| Vec2::new(x + p.dx, y + p.dy);
-            if p.name == "front" && w > 0.0 {
-                dims.push(Dimension {
-                    a: at(p.b.minx, p.b.miny),
-                    b: at(p.b.maxx, p.b.miny),
-                    offset: -DIM_OFFSET,
-                    value: w,
-                });
-                if h > 0.0 {
-                    dims.push(Dimension {
-                        a: at(p.b.minx, p.b.miny),
-                        b: at(p.b.minx, p.b.maxy),
-                        offset: DIM_OFFSET,
-                        value: h,
-                    });
-                }
+                right
             }
-            if p.name == "top" && h > 0.0 {
-                dims.push(Dimension {
-                    a: at(p.b.minx, p.b.miny),
-                    b: at(p.b.minx, p.b.maxy),
-                    offset: DIM_OFFSET,
-                    value: h,
-                });
-            }
-        }
-        let mut min = Vec2::new(f64::INFINITY, f64::INFINITY);
-        let mut max = Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY);
-        for p in &views {
-            min.x = min.x.min(p.b.minx + p.dx);
-            min.y = min.y.min(p.b.miny + p.dy);
-            max.x = max.x.max(p.b.maxx + p.dx);
-            max.y = max.y.max(p.b.maxy + p.dy);
-        }
-        if !min.x.is_finite() {
-            min = Vec2::ZERO;
-            max = Vec2::ZERO;
-        }
-        if !dims.is_empty() {
-            min -= Vec2::new(dim_gap, dim_gap);
-        }
-        // Fit the sheet at the largest standard scale where the views sit
-        // in the free area above the title block without covering the
-        // parts list, which takes the bottom-right corner of that area:
-        // centred when they can be, otherwise pushed to the top left.
-        let (sw, sh) = opts.sheet.size();
-        let table = (!rows.is_empty()).then(|| {
-            let w: f64 = TABLE_COLS.iter().map(|c| c.1).sum();
-            (
-                sw - MARGIN - w,
-                MARGIN + BLOCK + (rows.len() as f64 + 1.0) * TABLE_ROW,
-            )
-        });
-        // Balloons hang outside their view by a leader and a circle.
-        let pad = if views.iter().any(|v| !v.balloons.is_empty()) {
-            BALLOON_GAP + 2.0 * BALLOON_R
         } else {
-            0.0
+            right
         };
-        let avail_w = sw - 2.0 * MARGIN - 2.0 * pad;
-        let avail_h = sh - 2.0 * MARGIN - BLOCK - 2.0 * pad;
-        let extent_w = (max.x - min.x).max(1e-9);
-        let extent_h = (max.y - min.y).max(1e-9);
-        // Whether a view's box, placed at scale `s` with offset (ox, oy),
-        // stays off the parts list.
-        let view_clear = |p: &Placed, s: f64, ox: f64, oy: f64| {
-            let Some((tx, ty)) = table else { return true };
-            let pad = if matches!(p.name.as_str(), "front" | "top") {
-                dim_gap
-            } else {
-                0.0
-            };
-            let x1 = (p.b.maxx + p.dx) * s + ox + 2.0;
-            let y0 = (p.b.miny + p.dy - pad) * s + oy - 2.0;
-            x1 <= tx || y0 >= ty
-        };
-        let top_left = |s: f64| (MARGIN + pad - min.x * s, sh - MARGIN - pad - max.y * s);
-        let iso = views.iter().position(|v| v.name == "iso");
-        let mut fit = None;
-        'scales: for &s in &STANDARD_SCALES {
-            if extent_w * s > avail_w || extent_h * s > avail_h {
-                continue;
-            }
-            let centred = (
-                MARGIN + pad + (avail_w - extent_w * s) / 2.0 - min.x * s,
-                MARGIN + BLOCK + pad + (avail_h - extent_h * s) / 2.0 - min.y * s,
-            );
-            for (ox, oy) in [centred, top_left(s)] {
-                if views.iter().all(|p| view_clear(p, s, ox, oy)) {
-                    fit = Some((s, ox, oy, 0.0));
-                    break 'scales;
-                }
-                // The iso's height is free: lift it off the list when it
-                // is the only view in the way and the sheet has the room.
-                let Some(k) = iso else { continue };
-                let others = views
-                    .iter()
-                    .enumerate()
-                    .all(|(i, p)| i == k || view_clear(p, s, ox, oy));
-                let Some((_, ty)) = table else { continue };
-                let v = &views[k];
-                let y0 = (v.b.miny + v.dy) * s + oy - 2.0;
-                let lift = (ty - y0) / s;
-                let top = (v.b.maxy + v.dy + lift) * s + oy;
-                if others && lift > 0.0 && top <= sh - MARGIN - pad {
-                    fit = Some((s, ox, oy, lift));
-                    break 'scales;
-                }
-            }
-        }
-        let (scale, ox, oy, lift) = fit.unwrap_or_else(|| {
-            let s = STANDARD_SCALES[STANDARD_SCALES.len() - 1];
-            let (ox, oy) = top_left(s);
-            (s, ox, oy, 0.0)
-        });
-        if let Some(k) = iso {
-            views[k].dy += lift;
-        }
         Ok(Sheet {
             size: opts.sheet,
             placed: views,
@@ -681,6 +936,70 @@ impl Sheet {
                 )
                 .collect();
             page.lines(&visible, 0.5, None);
+            if let Some(mark) = &p.section {
+                // The cut faces hatched at 45 degrees, even-odd across
+                // every loop so holes stay clear, and the caption.
+                let loops: Vec<Vec<(f64, f64)>> = p
+                    .cut
+                    .iter()
+                    .map(|l| l.iter().map(|q| (sx(q.x + p.dx), sy(q.y + p.dy))).collect())
+                    .collect();
+                page.lines(&hatch(&loops, 2.5), 0.18, None);
+                page.text(
+                    sx((p.b.minx + p.b.maxx) / 2.0 + p.dx),
+                    sy(p.b.miny + p.dy) - 6.0,
+                    3.5,
+                    &format!("SECTION {0}-{0}", mark.letter),
+                    Anchor::Middle,
+                    0.0,
+                    false,
+                );
+            }
+        }
+        // Cutting-plane traces: a chain line across the view the plane is
+        // edge-on in, arrows for the direction of sight, the letter.
+        for p in &self.placed {
+            let Some(mark) = &p.section else { continue };
+            let Some(on) = self.placed.iter().find(|q| q.name == mark.on) else {
+                continue;
+            };
+            let ext = 5.0 / s;
+            let (a, b) = if mark.horizontal {
+                (
+                    Vec2::new(on.b.minx - ext, mark.at),
+                    Vec2::new(on.b.maxx + ext, mark.at),
+                )
+            } else {
+                (
+                    Vec2::new(mark.at, on.b.miny - ext),
+                    Vec2::new(mark.at, on.b.maxy + ext),
+                )
+            };
+            let pt = |q: Vec2| (sx(q.x + on.dx), sy(q.y + on.dy));
+            page.lines(&[[pt(a), pt(b)]], 0.35, Some((6.0, 1.5)));
+            // Arrowheads at both ends, pointing the way the section looks,
+            // and the letter beyond each.
+            let (head, half) = (3.0 / s, 1.2 / s);
+            let d = mark.sight;
+            let n = Vec2::new(-d.y, d.x);
+            for end in [a, b] {
+                let tip = end + d * head;
+                let tri = [tip, end + n * half, end - n * half];
+                let pts: Vec<(f64, f64)> = tri.iter().map(|q| pt(*q)).collect();
+                page.polygon(&pts);
+                page.lines(&[[pt(end - d * head), pt(end)]], 0.35, None);
+                let label = end - d * (head + 1.5 / s);
+                let (lx, ly) = pt(label);
+                page.text(
+                    lx,
+                    ly - 1.2,
+                    3.5,
+                    &mark.letter.to_string(),
+                    Anchor::Middle,
+                    0.0,
+                    false,
+                );
+            }
         }
         // Dimensions: extension lines, the line, arrowheads and the value.
         for d in &self.dims {
@@ -1271,6 +1590,183 @@ mod tests {
         .unwrap();
         assert!((sheet.scale() - 0.1).abs() < 1e-9, "{}", sheet.scale());
         assert!(String::from_utf8_lossy(&sheet.to_pdf()).contains("/MediaBox [0 0 792 612]"));
+    }
+
+    #[test]
+    fn two_sections_cut_a_block_with_a_hole_and_are_traced_on_the_top_view() {
+        // A 60 x 40 x 20 block with a 10 mm hole through it at (30, 20).
+        let solid = {
+            let mut sk = ok_sketch::Sketch::new();
+            sk.add_rectangle(Vec2::ZERO, Vec2::new(60.0, 40.0));
+            sk.add_circle(Vec2::new(30.0, 20.0), 5.0);
+            let profiles = sk.profiles(&ok_sketch::ProfileOptions::default());
+            let profile = profiles
+                .iter()
+                .max_by(|a, b| a.area().total_cmp(&b.area()))
+                .unwrap();
+            ok_brep::extrude(
+                profile,
+                &Plane::from_origin_normal(Vec3::ZERO, Vec3::Z).unwrap(),
+                0.0,
+                20.0,
+                1,
+            )
+            .unwrap()
+        };
+        let parts = [Part {
+            name: "Block".into(),
+            material: String::new(),
+            solids: vec![&solid],
+            key: (1, 0),
+        }];
+        let opts = Options {
+            views: ["front", "top", "section@20", "section-side"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+            ..Options::default()
+        };
+        let sheet = Sheet::layout(&parts, &opts).unwrap();
+        // Section A-A through the hole's axis (y = 20): the cut face is
+        // the two walls beside the hole, so two loops, each 25 x 20.
+        let a = sheet
+            .placed
+            .iter()
+            .find(|p| p.name == "section@20")
+            .unwrap();
+        assert_eq!(a.cut.len(), 2, "{:?}", a.cut);
+        for l in &a.cut {
+            let (xs, ys): (Vec<f64>, Vec<f64>) = l.iter().map(|p| (p.x, p.y)).unzip();
+            let w = xs.iter().cloned().fold(f64::MIN, f64::max)
+                - xs.iter().cloned().fold(f64::MAX, f64::min);
+            let h = ys.iter().cloned().fold(f64::MIN, f64::max)
+                - ys.iter().cloned().fold(f64::MAX, f64::min);
+            assert!(
+                (w - 25.0).abs() < 1e-6 && (h - 20.0).abs() < 1e-6,
+                "loop {w} x {h}"
+            );
+        }
+        let mark = a.section.as_ref().unwrap();
+        assert!(
+            mark.letter == 'A'
+                && mark.on == "top"
+                && mark.horizontal
+                && (mark.at - 20.0).abs() < 1e-9
+        );
+        // Section B-B through the middle (x = 30): the same two walls.
+        let b = sheet
+            .placed
+            .iter()
+            .find(|p| p.name == "section-side")
+            .unwrap();
+        assert_eq!(b.cut.len(), 2);
+        let mark = b.section.as_ref().unwrap();
+        assert!(
+            mark.letter == 'B'
+                && mark.on == "top"
+                && !mark.horizontal
+                && (mark.at - 30.0).abs() < 1e-9
+        );
+        // Sections sit to the right of the elevation views.
+        let front = sheet.placed.iter().find(|p| p.name == "front").unwrap();
+        assert!(a.b.minx + a.dx > front.b.maxx + front.dx && b.b.minx + b.dx > a.b.maxx + a.dx);
+        // Hatching: even-odd over both loops; a line across one wall never
+        // crosses the hole.
+        let loops: Vec<Vec<(f64, f64)>> = a
+            .cut
+            .iter()
+            .map(|l| l.iter().map(|p| (p.x, p.y)).collect())
+            .collect();
+        let lines = hatch(&loops, 2.5);
+        assert!(lines.len() > 10, "{}", lines.len());
+        for [(x0, _), (x1, _)] in &lines {
+            assert!(
+                !(x0.min(*x1) < 25.0 - 1e-6 && x0.max(*x1) > 35.0 + 1e-6),
+                "a hatch line crossed the hole"
+            );
+        }
+        let pdf = sheet.to_pdf();
+        objects_are_where_the_xref_says(&pdf);
+        let text = String::from_utf8_lossy(&pdf);
+        assert!(
+            text.contains("(SECTION A-A) Tj") && text.contains("(SECTION B-B) Tj"),
+            "{text}"
+        );
+        assert!(text.contains("[6 1.5] 0 d"), "the trace is a chain line");
+        assert!(
+            text.contains("Views: front, top, section@20, section-side"),
+            "{text}"
+        );
+        // A table-top sized part with five views: one row would need 1:5
+        // on A3, two rows fit 1:2.5, so the sections go under the front.
+        let top = block(400.0, 380.0, 38.0);
+        let parts = [Part {
+            name: "Top".into(),
+            material: String::new(),
+            solids: vec![&top],
+            key: (1, 0),
+        }];
+        let sheet = Sheet::layout(
+            &parts,
+            &Options {
+                views: ["front", "top", "right", "section", "section-side"]
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect(),
+                sheet: SheetSize::A3,
+                ..Options::default()
+            },
+        )
+        .unwrap();
+        assert!(
+            (sheet.scale() - 0.4).abs() < 1e-9,
+            "scale {}",
+            sheet.scale()
+        );
+        assert_eq!(scale_label(sheet.scale()), "1:2.5");
+        let front = sheet.placed.iter().find(|p| p.name == "front").unwrap();
+        for name in ["section", "section-side"] {
+            let v = sheet.placed.iter().find(|p| p.name == name).unwrap();
+            assert!(
+                v.b.maxy + v.dy < front.b.miny + front.dy,
+                "{name} sits under the front view"
+            );
+        }
+        assert!(String::from_utf8_lossy(&sheet.to_pdf()).contains("(Scale 1:2.5) Tj"));
+        // Bad cuts are refused with their reason.
+        let err = Sheet::layout(
+            &parts,
+            &Options {
+                views: vec!["section@abc".into()],
+                ..Options::default()
+            },
+        )
+        .err()
+        .expect("refused");
+        assert!(err.contains("millimetres"), "{err}");
+        let err = Sheet::layout(
+            &parts,
+            &Options {
+                views: vec!["section@2000".into()],
+                ..Options::default()
+            },
+        )
+        .err()
+        .expect("refused");
+        assert!(
+            err.contains("misses every body") && err.contains("0 to 380 along y"),
+            "{err}"
+        );
+        let err = Sheet::layout(
+            &parts,
+            &Options {
+                views: vec!["behind".into()],
+                ..Options::default()
+            },
+        )
+        .err()
+        .expect("refused");
+        assert!(err.contains("section-side"), "{err}");
     }
 
     #[test]

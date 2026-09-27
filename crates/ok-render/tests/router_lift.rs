@@ -303,3 +303,24 @@ fn the_arm_plan_view_is_the_shop_template() {
     let hidden = with_hidden.matches("\n8\nHIDDEN\n").count();
     assert!(hidden >= 4, "{hidden} hidden entities");
 }
+
+/// The top's own sheet carries two sections at right angles through the
+/// bit axis, captioned and traced on the plan view.
+#[test]
+fn the_top_sheet_has_two_sections_through_the_bit_axis() {
+    let pdf = std::fs::read(example_dir().join("out/top.pdf")).unwrap();
+    let text = String::from_utf8_lossy(&pdf);
+    assert!(text.starts_with("%PDF-1.4"));
+    assert!(
+        text.contains("(SECTION A-A) Tj") && text.contains("(SECTION B-B) Tj"),
+        "both sections captioned"
+    );
+    assert!(
+        text.contains("Views: front, top, right, section@0, section-side@0"),
+        "the sheet names its views"
+    );
+    assert!(
+        text.contains("[6 1.5] 0 d"),
+        "the cutting planes are traced"
+    );
+}
