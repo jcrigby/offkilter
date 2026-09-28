@@ -110,10 +110,7 @@ fn hits(r: &AssemblyResult, of: impl Fn(&str) -> bool) -> Vec<(String, String, f
 /// Body pairs that overlap as drawn and are reported rather than hidden,
 /// with why. The guide pin, 75 mm long with 45 mm out of the chuck, has
 /// its top 5 mm into the nose (the SCAD draws it so; a clearance hole in
-/// the nose or less pin out fixes it). The leveling bolt's tip rests on
-/// the table when the arm is level, so lifting the nose, which turns
-/// the tail down, drives the bolt into the top from the first degree:
-/// the sweep reports its own contacts apart from that.
+/// the nose or less pin out fixes it).
 const KNOWN: &[(&str, &str, &str)] = &[
     ("arm", "guide pin", "the pin's top in the nose, as drawn"),
     (
@@ -129,11 +126,6 @@ const KNOWN: &[(&str, &str, &str)] = &[
         "router",
         "guide pin",
         "the bit into the guide pin, which is drawn down in the alignment ring: the arm swings up out of the way when the router is raised for a bit change, and the pin sits higher for cutting",
-    ),
-    (
-        "leveling bolt",
-        "top",
-        "the tail's stop against lifting the nose",
     ),
 ];
 
@@ -551,7 +543,7 @@ fn the_pin_arm_swings_clear_and_lands_on_the_bit() {
     let arm = body(&r, "Arm assembly / arm");
     let pin = body(&r, "Arm assembly / guide pin");
     let chuck = body(&r, "Arm assembly / chuck");
-    let bolt = body(&r, "Arm assembly / leveling bolt");
+    let stud = body(&r, "leveling bolt");
     // Level: the guide pin on the bit axis, its tip just above the table.
     let axis = cylinders(pin)
         .into_iter()
@@ -586,10 +578,39 @@ fn the_pin_arm_swings_clear_and_lands_on_the_bit() {
         "arm underside above the table at the nose",
         format!("{nose:.1} mm"),
     );
-    let bolt_tip = bounds(bolt).0.z - table;
+    // The nose-heavy arm rests up against the leveling nut above the
+    // tail: the tail's top face meets the nut's underside.
+    let tail_top = bounds(arm).1.z;
+    let nut_under = stud
+        .faces
+        .iter()
+        .filter(|f| f.plane.normal.z < -0.999)
+        .map(|f| {
+            f.loops[0]
+                .iter()
+                .map(|&k| stud.vertices[k as usize].z)
+                .fold(f64::INFINITY, f64::min)
+        })
+        .filter(|z| *z > table + 50.0)
+        .fold(f64::INFINITY, f64::min);
+    rep.must(
+        (nut_under - tail_top).abs() < 0.05,
+        "arm rests on the leveling nut",
+        format!(
+            "nut underside {:.2} mm above the tail's top face, nose at {nose:.1} mm",
+            nut_under - tail_top
+        ),
+    );
+    // The stud passes through the slot with clearance all round.
+    let stud_axis = stud.centroid().unwrap();
     rep.note(
-        "leveling bolt tip, level",
-        format!("{bolt_tip:.2} mm above the table"),
+        "leveling stud",
+        format!(
+            "at y = {:.0}, {:.0} mm behind the pivot, {} mm thick",
+            stud_axis.y,
+            stud_axis.y - body(&r, "pivot shaft").centroid().unwrap().y,
+            8
+        ),
     );
     // What stands in the stock envelope: on the table, under the arm,
     // forward of the pivot line; and how far behind the bit stock can
@@ -639,7 +660,7 @@ fn the_pin_arm_swings_clear_and_lands_on_the_bit() {
         -1.0
     };
     let mut first_hit: Option<(f64, String)> = None;
-    let mut bolt_in = None;
+
     for step in 0..=17 {
         let theta = 5.0 * step as f64;
         let r = at(&mut doc, angle0 + sign * theta);
@@ -665,12 +686,7 @@ fn the_pin_arm_swings_clear_and_lands_on_the_bit() {
                 first_hit = Some((theta, format!("{a} / {b}: {v:.0} mm3 at {theta} degrees")));
             }
         }
-        if bolt_in.is_none() {
-            let below = table - bounds(body(&r, "Arm assembly / leveling bolt")).0.z;
-            if below > 1e-6 {
-                bolt_in = Some(format!("{below:.1} mm into the top at {theta} degrees"));
-            }
-        }
+
         if theta == 0.0 || theta == 45.0 || theta == 85.0 {
             rep.note(
                 &format!("arm at {theta} degrees"),
@@ -682,21 +698,19 @@ fn the_pin_arm_swings_clear_and_lands_on_the_bit() {
             );
         }
     }
-    rep.note(
-        "leveling bolt through the sweep",
-        bolt_in.unwrap_or_else(|| "never below the table".into()),
-    );
-    // The tail is meant to meet the table at about 85 degrees, so the
-    // sweep must be clear through 80 and the first contact is reported.
+    // The leveling stud through the slotted tail allows a 60 degree
+    // lift (the arm rides above the shaft axis, so the stud walks
+    // forward along the slot as the nose rises): the sweep must be
+    // clear through 60 and the first contact past that is reported.
     rep.must(
-        first_hit.as_ref().is_none_or(|(t, _)| *t > 80.0),
-        "arm swings 0..80 degrees clear of the table and the supports",
-        "17 positions".into(),
+        first_hit.as_ref().is_none_or(|(t, _)| *t > 60.0),
+        "arm lifts 0..60 degrees clear of the table, the supports and the stud",
+        "13 positions".into(),
     );
     rep.note(
-        "tail first meets the table",
+        "first contact past the lift",
         match &first_hit {
-            None => "not within 85 degrees".into(),
+            None => "none within 85 degrees".into(),
             Some((_, what)) => what.clone(),
         },
     );

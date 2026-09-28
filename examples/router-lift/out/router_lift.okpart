@@ -4823,9 +4823,52 @@
               "counterbore": null,
               "countersink": null
             }
+          },
+          {
+            "id": 11,
+            "name": "leveling insert",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 38.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 215.0
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 12,
+            "name": "M8 insert for the leveling stud",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 11,
+              "diameter": 10.0,
+              "depth": 15.0,
+              "through_all": false,
+              "direction": "reverse",
+              "counterbore": null,
+              "countersink": null
+            }
           }
         ],
-        "next_id": 11,
+        "next_id": 13,
         "settings": {
           "facet_angle": 5.0
         }
@@ -5589,7 +5632,7 @@
           },
           {
             "id": 5,
-            "name": "leveling bolt",
+            "name": "leveling slot",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -5604,30 +5647,186 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 0.0,
-                      "y": 215.0
+                      "x": -4.5,
+                      "y": 144.5
                     }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -4.5,
+                      "y": 234.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 234.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 4.5,
+                      "y": 234.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": -4.5,
+                      "y": 234.0
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "arc",
+                    "center": 3,
+                    "start": 4,
+                    "end": 5
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 4.5,
+                      "y": 234.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 4.5,
+                      "y": 144.5
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "line",
+                    "start": 7,
+                    "end": 8
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 144.5
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": -4.5,
+                      "y": 144.5
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 4.5,
+                      "y": 144.5
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "arc",
+                    "center": 10,
+                    "start": 11,
+                    "end": 12
                   }
                 ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 5
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 7
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 8,
+                    "b": 12
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 11,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "tangent",
+                    "line": 2,
+                    "entity": 13
+                  },
+                  {
+                    "id": 5,
+                    "type": "tangent",
+                    "line": 2,
+                    "entity": 6
+                  },
+                  {
+                    "id": 6,
+                    "type": "tangent",
+                    "line": 9,
+                    "entity": 13
+                  },
+                  {
+                    "id": 7,
+                    "type": "tangent",
+                    "line": 9,
+                    "entity": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "equal",
+                    "a": 13,
+                    "b": 6
+                  }
+                ],
+                "next_entity": 14,
+                "next_constraint": 9
               }
             }
           },
           {
             "id": 6,
-            "name": "M8 insert",
+            "name": "leveling slot, open at the tail",
             "suppressed": false,
             "kind": {
-              "type": "hole",
+              "type": "extrude",
               "sketch": 5,
-              "diameter": 8.5,
-              "depth": 0.0,
-              "through_all": true,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 40.0,
               "direction": "reverse",
-              "counterbore": null,
-              "countersink": null
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
             }
           },
           {
@@ -8029,14 +8228,14 @@
         "features": [
           {
             "id": 1,
-            "name": "shank",
+            "name": "stud",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 0.0
+                "offset": -12.0
               },
               "sketch": {
                 "entities": [
@@ -8063,7 +8262,7 @@
           },
           {
             "id": 2,
-            "name": "shank",
+            "name": "stud",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -8071,7 +8270,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 124.0,
+              "depth": 144.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -8081,14 +8280,14 @@
           },
           {
             "id": 3,
-            "name": "head",
+            "name": "table jam nut",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 116.0
+                "offset": 0.0
               },
               "sketch": {
                 "entities": [
@@ -8321,7 +8520,7 @@
           },
           {
             "id": 4,
-            "name": "head",
+            "name": "table jam nut",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -8336,9 +8535,525 @@
               },
               "op": "add"
             }
+          },
+          {
+            "id": 5,
+            "name": "leveling nut",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 114.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 7.505553499465134
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -6.499999999999999,
+                      "y": 3.752776749732568
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": -6.499999999999999,
+                      "y": 3.752776749732568
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": -6.5,
+                      "y": -3.7527767497325653
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -6.5,
+                      "y": -3.7527767497325653
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -9.191652068949192e-16,
+                      "y": -7.505553499465134
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -9.191652068949192e-16,
+                      "y": -7.505553499465134
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.499999999999997,
+                      "y": -3.7527767497325706
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.499999999999997,
+                      "y": -3.7527767497325706
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.499999999999999,
+                      "y": 3.752776749732568
+                    }
+                  },
+                  {
+                    "id": 14,
+                    "type": "line",
+                    "start": 12,
+                    "end": 13
+                  },
+                  {
+                    "id": 15,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.499999999999999,
+                      "y": 3.752776749732568
+                    }
+                  },
+                  {
+                    "id": 16,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 7.505553499465134
+                    }
+                  },
+                  {
+                    "id": 17,
+                    "type": "line",
+                    "start": 15,
+                    "end": 16
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 12
+                  },
+                  {
+                    "id": 4,
+                    "type": "coincident",
+                    "a": 13,
+                    "b": 15
+                  },
+                  {
+                    "id": 5,
+                    "type": "coincident",
+                    "a": 16,
+                    "b": 0
+                  },
+                  {
+                    "id": 6,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 5
+                  },
+                  {
+                    "id": 7,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 8
+                  },
+                  {
+                    "id": 8,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 11
+                  },
+                  {
+                    "id": 9,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 14
+                  },
+                  {
+                    "id": 10,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 17
+                  },
+                  {
+                    "id": 11,
+                    "type": "angle",
+                    "a": 2,
+                    "b": 5,
+                    "value": 60.0
+                  },
+                  {
+                    "id": 12,
+                    "type": "angle",
+                    "a": 5,
+                    "b": 8,
+                    "value": 60.0
+                  },
+                  {
+                    "id": 13,
+                    "type": "angle",
+                    "a": 8,
+                    "b": 11,
+                    "value": 60.0
+                  }
+                ],
+                "next_entity": 18,
+                "next_constraint": 14
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "leveling nut",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 6.5,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 7,
+            "name": "jam nut",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 120.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 7.505553499465134
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -6.499999999999999,
+                      "y": 3.752776749732568
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": -6.499999999999999,
+                      "y": 3.752776749732568
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": -6.5,
+                      "y": -3.7527767497325653
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -6.5,
+                      "y": -3.7527767497325653
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -9.191652068949192e-16,
+                      "y": -7.505553499465134
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -9.191652068949192e-16,
+                      "y": -7.505553499465134
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.499999999999997,
+                      "y": -3.7527767497325706
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.499999999999997,
+                      "y": -3.7527767497325706
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.499999999999999,
+                      "y": 3.752776749732568
+                    }
+                  },
+                  {
+                    "id": 14,
+                    "type": "line",
+                    "start": 12,
+                    "end": 13
+                  },
+                  {
+                    "id": 15,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.499999999999999,
+                      "y": 3.752776749732568
+                    }
+                  },
+                  {
+                    "id": 16,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 7.505553499465134
+                    }
+                  },
+                  {
+                    "id": 17,
+                    "type": "line",
+                    "start": 15,
+                    "end": 16
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 12
+                  },
+                  {
+                    "id": 4,
+                    "type": "coincident",
+                    "a": 13,
+                    "b": 15
+                  },
+                  {
+                    "id": 5,
+                    "type": "coincident",
+                    "a": 16,
+                    "b": 0
+                  },
+                  {
+                    "id": 6,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 5
+                  },
+                  {
+                    "id": 7,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 8
+                  },
+                  {
+                    "id": 8,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 11
+                  },
+                  {
+                    "id": 9,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 14
+                  },
+                  {
+                    "id": 10,
+                    "type": "equal",
+                    "a": 2,
+                    "b": 17
+                  },
+                  {
+                    "id": 11,
+                    "type": "angle",
+                    "a": 2,
+                    "b": 5,
+                    "value": 60.0
+                  },
+                  {
+                    "id": 12,
+                    "type": "angle",
+                    "a": 5,
+                    "b": 8,
+                    "value": 60.0
+                  },
+                  {
+                    "id": 13,
+                    "type": "angle",
+                    "a": 8,
+                    "b": 11,
+                    "value": 60.0
+                  }
+                ],
+                "next_entity": 18,
+                "next_constraint": 14
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "jam nut",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 6.5,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
           }
         ],
-        "next_id": 5,
+        "next_id": 9,
         "settings": {
           "facet_angle": 5.0
         }
@@ -8913,25 +9628,6 @@
                 "z": 0.0
               }
             }
-          },
-          {
-            "id": 45,
-            "name": "leveling bolt",
-            "studio": 24,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 215.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
           }
         ],
         "mates": [
@@ -9066,62 +9762,18 @@
             "offset": -20.000000000000057,
             "angle": 0.0,
             "flip": true
-          },
-          {
-            "id": 75,
-            "name": "leveling bolt",
-            "kind": "fastened",
-            "a": {
-              "instance": 40,
-              "face": {
-                "feature": 6,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  573667395,
-                  1013877695,
-                  1159760287,
-                  3735147870,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 45,
-              "face": {
-                "feature": 2,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  1013877695,
-                  1468198494,
-                  2027755391,
-                  2870100803,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": -36.167021276595904,
-            "angle": 0.0,
-            "flip": true
           }
         ]
       }
     },
     {
-      "id": 46,
+      "id": 45,
       "kind": {
         "type": "assembly",
         "name": "Lift assembly",
         "instances": [
           {
-            "id": 47,
+            "id": 46,
             "name": "baseplate",
             "studio": 9,
             "body": 0,
@@ -9140,7 +9792,7 @@
             }
           },
           {
-            "id": 48,
+            "id": 47,
             "name": "left rail",
             "studio": 10,
             "body": 0,
@@ -9159,7 +9811,7 @@
             }
           },
           {
-            "id": 49,
+            "id": 48,
             "name": "right rail",
             "studio": 10,
             "body": 0,
@@ -9178,7 +9830,7 @@
             }
           },
           {
-            "id": 50,
+            "id": 49,
             "name": "top",
             "studio": 8,
             "body": 0,
@@ -9197,7 +9849,7 @@
             }
           },
           {
-            "id": 51,
+            "id": 50,
             "name": "ring",
             "studio": 4,
             "body": 0,
@@ -9216,7 +9868,7 @@
             }
           },
           {
-            "id": 52,
+            "id": 51,
             "name": "left shaft",
             "studio": 12,
             "body": 0,
@@ -9235,7 +9887,7 @@
             }
           },
           {
-            "id": 53,
+            "id": 52,
             "name": "right shaft",
             "studio": 12,
             "body": 0,
@@ -9254,7 +9906,7 @@
             }
           },
           {
-            "id": 54,
+            "id": 53,
             "name": "Leadscrew assembly",
             "studio": 32,
             "body": 0,
@@ -9273,7 +9925,7 @@
             }
           },
           {
-            "id": 55,
+            "id": 54,
             "name": "Carriage assembly",
             "studio": 25,
             "body": 0,
@@ -9292,7 +9944,7 @@
             }
           },
           {
-            "id": 56,
+            "id": 55,
             "name": "router",
             "studio": 20,
             "body": 0,
@@ -9311,7 +9963,7 @@
             }
           },
           {
-            "id": 57,
+            "id": 56,
             "name": "pivot shaft",
             "studio": 22,
             "body": 0,
@@ -9330,7 +9982,7 @@
             }
           },
           {
-            "id": 58,
+            "id": 57,
             "name": "Arm assembly",
             "studio": 39,
             "body": 0,
@@ -9339,6 +9991,25 @@
               "position": {
                 "x": 0.0,
                 "y": 0.0,
+                "z": 210.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 58,
+            "name": "leveling bolt",
+            "studio": 24,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 215.0,
                 "z": 210.0
               },
               "rotation": {
@@ -9503,11 +10174,11 @@
         ],
         "mates": [
           {
-            "id": 76,
+            "id": 75,
             "name": "carriage travel",
             "kind": "slider",
             "a": {
-              "instance": 52,
+              "instance": 51,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -9525,7 +10196,7 @@
               }
             },
             "b": {
-              "instance": 55,
+              "instance": 54,
               "sub": 27,
               "face": {
                 "feature": 4,
@@ -9548,11 +10219,11 @@
             "flip": true
           },
           {
-            "id": 77,
+            "id": 76,
             "name": "router in clamp",
             "kind": "fastened",
             "a": {
-              "instance": 55,
+              "instance": 54,
               "sub": 26,
               "face": {
                 "feature": 2,
@@ -9571,7 +10242,7 @@
               }
             },
             "b": {
-              "instance": 56,
+              "instance": 55,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -9593,11 +10264,11 @@
             "flip": true
           },
           {
-            "id": 78,
+            "id": 77,
             "name": "arm pivot",
             "kind": "revolute",
             "a": {
-              "instance": 57,
+              "instance": 56,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -9615,7 +10286,7 @@
               }
             },
             "b": {
-              "instance": 58,
+              "instance": 57,
               "sub": 41,
               "face": {
                 "feature": 4,
@@ -9641,5 +10312,5 @@
       }
     }
   ],
-  "next_id": 79
+  "next_id": 78
 }

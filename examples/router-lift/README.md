@@ -9,7 +9,7 @@ drives the `ok-mcp` server exactly as a language model would.
   makes one part studio per part (sketches, extrudes, holes, revolves,
   slots), three sub-assemblies (the carriage with its blocks and nut,
   the leadscrew with its bearings and collars, the rev D pin arm with
-  its pivot blocks, chuck, guide pin and leveling bolt) and the lift
+  its pivot blocks, chuck and guide pin) and the lift
   assembly placing them and the loose parts, 35 bodies in all, with the
   carriage assembly and the router hung off one slider mate (a block's
   bore on its shaft) and the arm assembly on a revolute about the pivot
@@ -79,17 +79,19 @@ its nut trap). What it measures, at lift rev C and arm rev D:
 | Pin tip above the table, level | 6.0 mm (adjustable 1 to −24) |
 | Arm underside above the table at the nose | 76.0 mm |
 | Crank nut under the table surface | 1.0 mm, with 11 mm of ply above the bearing pocket |
-| Arm swept 0 to 80 degrees | clear of the table and the supports |
+| Arm resting on the leveling nut | nut on the tail's top face, nose 76.0 mm up |
+| Arm swept 0 to 60 degrees | clear of the table, the supports and the stud; the stud meets the slot's end at 65 |
 | Bit change: arm up 45 degrees, router at max rise | nothing touching |
-| Tail meets the table | at 85 degrees (3740 mm³ into the top) |
 
 And what it found that the SCAD did not:
 
-- **The leveling bolt stops the arm from lifting.** Its tip rests on the
-  table with the arm level, and lifting the nose turns the tail down, so
-  it is 4.1 mm into the top by 5 degrees. It also cannot hold the nose
-  up: the nose side is heavier and the bolt pushes the tail up, not
-  down. A stop under the arm forward of the pivot does both jobs.
+- **The leveling bolt was on the wrong side of the arm.** As drawn, its
+  tip rested on the table with the arm level, and lifting the nose
+  turned the tail down onto it, 4.1 mm into the top by 5 degrees, so
+  the arm could not be swung up. Nor could it hold the nose up: the
+  nose side is heavier, and a bolt standing on the table only pushes
+  the tail up. The model turns it into a stud in the table through a
+  slot in the tail (below).
 - **The guide pin runs 5 mm into the nose** as drawn (75 mm long, 45 mm
   out of the chuck, nose underside at 76 mm). A clearance hole over the
   bit axis, or less pin out, fixes it.
@@ -135,6 +137,22 @@ And what it found that the SCAD did not:
   19 mm lower over the baseplate (210 instead of 229) and the leadscrew
   is that much shorter. A router plate would gain 9 mm more at the cost
   of rebuilding the top around it.
+- **The leveling bolt is a stud in the table through a slot in the
+  tail.** The M8 stands in an insert in the top at the SCAD's bolt
+  position, 45 mm behind the pivot, and passes up through a 9 mm slot
+  in the tail, open at the tail's end. A nut above the tail is what the
+  nose-heavy arm rests up against, and winding it sets the nose height;
+  a jam nut holds it. Lifting the nose takes the tail down and, because
+  the arm rides 25 mm above the shaft axis, back rather than forward, so
+  the vertical stud walks forward along the slot towards the pivot. The
+  slot runs from the tail's end to 30 mm ahead of the pivot line, and
+  the sweep shows the arm lifts 60 degrees with the stud touching
+  nothing, then meets the slot's end. Past about 60 degrees a vertical
+  stud would pass through the arm's body ahead of any slot, so the arm
+  no longer swings down to the table at 85 degrees as the SCAD's did;
+  the lid stay in the SCAD's parts list holds it at the lift it has.
+  There is no stop against the nose lifting; a wing nut run down the
+  stud under the tail would be one.
 - **The router seat is set from the shop's need**, `NUT_ABOVE_TABLE`:
   the collet nut's top clears the table by 5 mm at max rise, so a bit
   changes with two wrenches from above. With the frame above, that
