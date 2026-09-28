@@ -797,7 +797,7 @@ impl Document {
     /// itself leaves those instances without bodies (reported on them).
     pub fn regenerate_assembly(&mut self, tab: TabId) -> Result<AssemblyResult, ModelError> {
         let mut visiting = vec![tab];
-        self.regenerate_assembly_inner(tab, &mut visiting, None)
+        self.regenerate_assembly_inner(tab, &mut visiting, &[])
     }
 
     /// Resolves an assembly tab as if mate `mate` had the given angle and
@@ -810,18 +810,29 @@ impl Document {
         angle: f64,
         offset: f64,
     ) -> Result<AssemblyResult, ModelError> {
+        self.preview_assembly_at(tab, &[(mate, angle, offset)])
+    }
+
+    /// Resolves an assembly tab with several mates set at once, each to
+    /// an angle and an offset, without changing the document: one
+    /// position of a mechanism.
+    pub fn preview_assembly_at(
+        &mut self,
+        tab: TabId,
+        mates: &[(MateId, f64, f64)],
+    ) -> Result<AssemblyResult, ModelError> {
         let mut visiting = vec![tab];
-        self.regenerate_assembly_inner(tab, &mut visiting, Some((mate, angle, offset)))
+        self.regenerate_assembly_inner(tab, &mut visiting, mates)
     }
 
     fn regenerate_assembly_inner(
         &mut self,
         tab: TabId,
         visiting: &mut Vec<TabId>,
-        tweak: Option<(MateId, f64, f64)>,
+        tweaks: &[(MateId, f64, f64)],
     ) -> Result<AssemblyResult, ModelError> {
         let mut asm = self.assembly(tab)?.clone();
-        if let Some((id, angle, offset)) = tweak {
+        for &(id, angle, offset) in tweaks {
             let m = asm
                 .mates
                 .iter_mut()
@@ -845,7 +856,7 @@ impl Document {
                 Some("assembly") => {
                     if !subs.contains_key(&source) && !visiting.contains(&source) {
                         visiting.push(source);
-                        if let Ok(r) = self.regenerate_assembly_inner(source, visiting, None) {
+                        if let Ok(r) = self.regenerate_assembly_inner(source, visiting, &[]) {
                             subs.insert(source, r);
                         }
                         visiting.pop();

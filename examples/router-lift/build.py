@@ -1193,6 +1193,32 @@ def main():
             raise RuntimeError(text.split("ERROR:", 1)[1].splitlines()[0])
         if name:
             mcp.call("screenshot", {"tab": asm, "view": "iso", "section": "x:0:flip", "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
+    # Range of motion: the lift at the ends of its travel and in the
+    # middle, seen from the front; the arm level, half up and at the top
+    # of the lift its slotted tail allows, seen from the side. The pivot
+    # angle that lifts the nose is found by trying one and reading where
+    # the guide pin went.
+    report = json.loads(mcp.call("report", {"tab": asm, "detail": "full"}))
+    pivot = next(m for m in report["mates"] if m["name"] == "arm pivot")
+    angle0 = pivot["angle"]
+    pin_z = lambda rep: next(b["bounds"][0]["z"] for b in rep["bodies"] if b["name"] == "Arm assembly / guide pin")
+    mcp.call("apply", {"ops": [{"type": "set_mate", "id": pivot["id"], "angle": angle0 + 30.0}], "tab": asm})
+    lifted = pin_z(json.loads(mcp.call("report", {"tab": asm, "detail": "full"})))
+    mcp.call("apply", {"ops": [{"type": "set_mate", "id": pivot["id"], "angle": angle0}], "tab": asm})
+    sign = 1.0 if lifted > pin_z(report) else -1.0
+    lift_positions = [
+        {"carriage travel": mid - TRAVEL / 2, "label": "lowest"},
+        {"carriage travel": mid, "label": "mid travel"},
+        {"carriage travel": mid + TRAVEL / 2, "label": "highest"},
+    ]
+    arm_positions = [
+        {"arm pivot": angle0, "label": "level"},
+        {"arm pivot": angle0 + sign * 30.0, "label": "half up, 30 degrees"},
+        {"arm pivot": angle0 + sign * 60.0, "label": "up, 60 degrees"},
+    ]
+    for stem, positions, view in (("lift_motion", lift_positions, "front"), ("arm_motion", arm_positions, "right")):
+        print(mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "format": "pdf", "sheet": "A3", "path": os.path.join(out, f"{stem}.pdf")}))
+        mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "width": 400, "height": 300, "path": os.path.join(out, f"{stem}.png")})
     mcp.close()
     print(f"wrote {path}")
 

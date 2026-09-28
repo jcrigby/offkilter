@@ -12,7 +12,7 @@ apps/web  (Vite + three.js)
 crates/ok-wasm  (wasm-bindgen facade)
    ▼
 crates/ok-model  Document ─ tabs: PartStudio (Feature list ─ Op) | Assembly (instances, mates)
-crates/ok-sheet  Shop drawing sheets of a tab (views, sections, dimensions, callouts, balloons, parts list) as PDF
+crates/ok-sheet  Shop drawing sheets of a tab (views, sections, dimensions, callouts, balloons, parts list, a mechanism at several positions) as PDF
 crates/ok-photo  The printable measuring sheet, and measurements of parts from a photograph of it
    │                              │
    │                              ├─ Sketch feature  → ok-sketch (solve, profiles)

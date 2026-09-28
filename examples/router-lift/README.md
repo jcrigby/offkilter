@@ -33,6 +33,12 @@ drives the `ok-mcp` server exactly as a language model would.
   axis (`section@0`, `section-side@0`), which is where the opening, the
   rabbet, the crank recess, the bearing pocket and the lower sheet's
   cutouts all show, hatched, with the cutting planes traced on the plan.
+- `out/lift_motion.pdf`, `out/arm_motion.pdf` (and the `.png` strips):
+  range of motion from `range_of_motion`: the lift from the front at
+  the bottom, middle and top of its 45 mm travel, and the arm from the
+  side level, half up and up 60 degrees, each position captioned on
+  the sheet and side by side in the strip, every frame fitted to the
+  same box so the fixed parts stay put.
 - `reference/`: the OpenSCAD sources (lift rev C, pin arm rev D and its
   rev C for the record), the reference STLs they produced for the
   printed parts, the arm template DXF and the drawings' BOM tables.

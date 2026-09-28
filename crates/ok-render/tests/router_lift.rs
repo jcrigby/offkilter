@@ -338,3 +338,43 @@ fn the_top_sheet_has_two_sections_through_the_bit_axis() {
         "the cutting planes are traced"
     );
 }
+
+/// The range-of-motion outputs: the lift at the ends of its travel and
+/// the arm level, half up and up, each a captioned sheet and a strip.
+#[test]
+fn the_range_of_motion_sheets_show_three_positions_each() {
+    let dir = example_dir();
+    for (stem, captions) in [
+        ("lift_motion", ["lowest", "mid travel", "highest"]),
+        (
+            "arm_motion",
+            ["level", "half up, 30 degrees", "up, 60 degrees"],
+        ),
+    ] {
+        let pdf = std::fs::read(dir.join(format!("out/{stem}.pdf"))).unwrap();
+        let text = String::from_utf8_lossy(&pdf);
+        assert!(text.starts_with("%PDF-1.4"));
+        for c in captions {
+            assert!(text.contains(&format!("({c}) Tj")), "{stem}: {c} captioned");
+        }
+        assert!(text.contains("range of motion) Tj"), "{stem}: titled");
+        let png = std::fs::read(dir.join(format!("out/{stem}.png"))).unwrap();
+        let image = ok_render::from_png(&png).unwrap();
+        assert_eq!(
+            (image.width, image.height),
+            (3 * 400, 300),
+            "{stem}: three frames"
+        );
+    }
+    // The lift's strip: the carriage climbs from frame to frame, so the
+    // frames differ, and the fixed base stays put, so the bottom rows
+    // of the frames agree.
+    let png = std::fs::read(dir.join("out/lift_motion.png")).unwrap();
+    let image = ok_render::from_png(&png).unwrap();
+    let differ = |y: usize| {
+        (0..400)
+            .filter(|&x| image.pixel(x, y) != image.pixel(x + 800, y))
+            .count()
+    };
+    assert!(differ(150) > 0, "the frames differ where the carriage is");
+}

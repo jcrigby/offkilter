@@ -230,6 +230,8 @@ struct Placed {
     /// point (the direction of sight) as a unit vector in that view.
     cut: Vec<Vec<Vec2>>,
     section: Option<SectionMark>,
+    /// A caption under the view (a mechanism's position).
+    caption: Option<String>,
     dx: f64,
     dy: f64,
     b: Bounds,
@@ -617,8 +619,11 @@ fn arrange(
     } else {
         0.0
     };
-    // Sections need sheet room for their captions and trace letters.
-    let room = if views.iter().any(|v| v.section.is_some()) {
+    // Sections and captioned views need sheet room below and beside.
+    let room = if views
+        .iter()
+        .any(|v| v.section.is_some() || v.caption.is_some())
+    {
         SECTION_ROOM
     } else {
         0.0
@@ -801,6 +806,7 @@ impl Sheet {
                     balloons: Vec::new(),
                     cut: cut_lines.cut,
                     section: Some(mark),
+                    caption: None,
                     dx: 0.0,
                     dy: 0.0,
                     b,
@@ -839,11 +845,51 @@ impl Sheet {
                 balloons,
                 cut: Vec::new(),
                 section: None,
+                caption: None,
                 dx: 0.0,
                 dy: 0.0,
                 b,
             });
         }
+        Sheet::finish(views, rows, opts, hidden)
+    }
+
+    /// Lays out views projected by the caller, each with a name and an
+    /// optional caption: a mechanism drawn at several positions.
+    pub fn layout_views(
+        views: Vec<(String, ViewLines, Option<String>)>,
+        opts: &Options,
+    ) -> Result<Sheet, String> {
+        if views.is_empty() {
+            return Err("nothing to draw".into());
+        }
+        let placed = views
+            .into_iter()
+            .map(|(name, lines, caption)| {
+                let b = bounds_of(&lines);
+                Placed {
+                    name,
+                    lines,
+                    callouts: Vec::new(),
+                    balloons: Vec::new(),
+                    cut: Vec::new(),
+                    section: None,
+                    caption,
+                    dx: 0.0,
+                    dy: 0.0,
+                    b,
+                }
+            })
+            .collect();
+        Sheet::finish(placed, Vec::new(), opts, opts.hidden.unwrap_or(false))
+    }
+
+    fn finish(
+        views: Vec<Placed>,
+        rows: Vec<Row>,
+        opts: &Options,
+        hidden: bool,
+    ) -> Result<Sheet, String> {
         // The views beyond the elevations go to their right, or in a row
         // under them when that fits a larger scale (five views in one
         // row can force 1:5 where 1:2.5 fits two rows).
@@ -936,6 +982,17 @@ impl Sheet {
                 )
                 .collect();
             page.lines(&visible, 0.5, None);
+            if let Some(caption) = &p.caption {
+                page.text(
+                    sx((p.b.minx + p.b.maxx) / 2.0 + p.dx),
+                    sy(p.b.miny + p.dy) - 6.0,
+                    3.5,
+                    caption,
+                    Anchor::Middle,
+                    0.0,
+                    false,
+                );
+            }
             if let Some(mark) = &p.section {
                 // The cut faces hatched at 45 degrees, even-odd across
                 // every loop so holes stay clear, and the caption.
@@ -1459,6 +1516,48 @@ fn part_name(doc: &mut Document, (studio, body): (u32, usize)) -> Result<String,
 
 /// A tab's shop drawing as a PDF, regenerating the tab. The title
 /// defaults to the document and tab names.
+/// One position of a mechanism: its caption, and the mates to set as
+/// (id, angle in degrees, offset in mm).
+pub type Position = (String, Vec<(ok_model::MateId, f64, f64)>);
+
+/// A mechanism at several positions of its mates on one sheet: one view
+/// of the assembly per position, in a row, each captioned. `view` is a
+/// standard view name.
+pub fn motion_pdf(
+    doc: &mut Document,
+    tab: TabId,
+    view: &str,
+    positions: &[Position],
+    opts: &Options,
+) -> Result<Vec<u8>, String> {
+    let v = standard_view(view)
+        .ok_or_else(|| format!("unknown view {view:?}: use front, top, right or iso"))?;
+    if positions.is_empty() {
+        return Err("no positions to draw".into());
+    }
+    let mut views = Vec::new();
+    for (caption, mates) in positions {
+        let r = doc
+            .preview_assembly_at(tab, mates)
+            .map_err(|e| e.to_string())?;
+        let solids: Vec<&Solid> = r.bodies.iter().map(|b| &b.solid).collect();
+        views.push((
+            format!("{view} · {caption}"),
+            project_view(&solids, v),
+            Some(caption.clone()),
+        ));
+    }
+    let mut opts = opts.clone();
+    if opts.title.is_empty() {
+        let tab_name = doc
+            .tab(tab)
+            .map(|t| t.name().to_string())
+            .unwrap_or_default();
+        opts.title = format!("{} · {} · range of motion", doc.name, tab_name);
+    }
+    Ok(Sheet::layout_views(views, &opts)?.to_pdf())
+}
+
 pub fn drawing_pdf(doc: &mut Document, tab: TabId, opts: &Options) -> Result<Vec<u8>, String> {
     let parts = parts_of(doc, tab)?;
     let mut opts = opts.clone();
@@ -1767,6 +1866,35 @@ mod tests {
         .err()
         .expect("refused");
         assert!(err.contains("section-side"), "{err}");
+    }
+
+    #[test]
+    fn captioned_views_go_in_a_row_with_their_captions_under_them() {
+        // A block at three "positions": the same view three times, as a
+        // range-of-motion sheet would give it.
+        let solid = block(40.0, 20.0, 10.0);
+        let view = standard_view("front").unwrap();
+        let lines = project_view(&[&solid], view);
+        let views: Vec<(String, ViewLines, Option<String>)> = ["lowest", "working", "highest"]
+            .iter()
+            .map(|c| (format!("front · {c}"), lines.clone(), Some(c.to_string())))
+            .collect();
+        let sheet = Sheet::layout_views(views, &Options::default()).unwrap();
+        assert_eq!(sheet.placed.len(), 3);
+        // In a row, left to right, at one height.
+        for w in sheet.placed.windows(2) {
+            assert!(w[1].b.minx + w[1].dx > w[0].b.maxx + w[0].dx);
+            assert!((w[1].dy - w[0].dy).abs() < 1e-9);
+        }
+        let text = String::from_utf8_lossy(&sheet.to_pdf()).to_string();
+        for c in ["lowest", "working", "highest"] {
+            assert!(text.contains(&format!("({c}) Tj")), "{c} captioned");
+        }
+        assert!(
+            text.contains("Views: front \\267 lowest, front \\267 working, front \\267 highest"),
+            "{text}"
+        );
+        assert!(Sheet::layout_views(Vec::new(), &Options::default()).is_err());
     }
 
     #[test]
