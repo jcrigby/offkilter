@@ -75,7 +75,7 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
             let r = doc.regenerate_assembly(*id).unwrap();
             // The lift assembly places every body: its loose parts and
             // the bodies of its three sub-assemblies.
-            let least = if name == "Lift assembly" { 35 } else { 6 };
+            let least = if name == "Lift assembly" { 35 } else { 5 };
             assert!(
                 r.bodies.len() >= least,
                 "{name}: {} placed bodies",
@@ -102,7 +102,7 @@ fn every_part_regenerates_closed_and_the_printed_ones_match_their_references() {
                     "the slider names the block inside the carriage assembly"
                 );
                 let subs = r.members.iter().filter(|m| m.is_some()).count();
-                assert_eq!(subs, 18, "bodies of sub-assembly instances");
+                assert_eq!(subs, 17, "bodies of sub-assembly instances");
             }
             for inst in &asm.instances {
                 let want = inst.placement.to_transform();
@@ -177,15 +177,15 @@ fn the_assembly_sheet_lists_every_part_once() {
             .id
     };
     let tab = tab_named(&doc, "Lift assembly");
-    // Seventeen loose parts and three sub-assembly instances, one record
-    // each; twelve distinct items (the pivot's SK20s share the lift's).
+    // Eighteen loose parts and three sub-assembly instances, one record
+    // each; thirteen distinct items (the pivot's SK20s share the lift's).
     let parts = ok_sheet::parts_of(&mut doc, tab).unwrap();
-    assert_eq!(parts.len(), 20);
+    assert_eq!(parts.len(), 21);
     assert_eq!(parts.iter().map(|p| p.3.len()).sum::<usize>(), 35, "bodies");
     let mut distinct: Vec<(u32, usize)> = parts.iter().map(|p| p.2).collect();
     distinct.sort_unstable();
     distinct.dedup();
-    assert_eq!(distinct.len(), 12);
+    assert_eq!(distinct.len(), 13);
     let refs: Vec<ok_sheet::Part> = parts
         .iter()
         .map(|(name, material, key, solids)| ok_sheet::Part {
@@ -287,18 +287,32 @@ fn the_arm_plan_view_is_the_shop_template() {
     let reference =
         dxf_lines(&std::fs::read_to_string(dir.join("reference/arm_template.dxf")).unwrap());
     assert_eq!(reference.len(), 6);
+    // Each template line is in the plan, whole or as collinear pieces
+    // (the leveling slot, open at the tail, interrupts the tail's edge).
     for [a, b] in &reference {
+        let along = (*b - *a).normalized().unwrap();
+        let on_line = |p: Vec3| {
+            let d = p - *a;
+            (d.x * along.y - d.y * along.x).abs() < 1e-6
+        };
+        let ends_at = |p: Vec3| {
+            got.iter().any(|[c, d]| {
+                on_line(*c) && on_line(*d) && (c.distance(p) < 1e-6 || d.distance(p) < 1e-6)
+            })
+        };
         assert!(
-            got.iter()
-                .any(|[c, d]| (a.distance(*c) < 1e-6 && b.distance(*d) < 1e-6)
-                    || (a.distance(*d) < 1e-6 && b.distance(*c) < 1e-6)),
+            ends_at(*a) && ends_at(*b),
             "template line {a:?} to {b:?} is not in the plan view"
         );
     }
-    // Eight block bolt holes and the leveling bolt's go through, so they
-    // are circles from above; the chuck screw slots are in the underside
-    // and show only when hidden lines are asked for.
-    assert_eq!(dxf.matches("\nCIRCLE\n").count(), 9, "{dxf}");
+    // Eight block bolt holes go through, so they are circles from above;
+    // the leveling slot is lines and an arc; the chuck screw slots are in
+    // the underside and show only when hidden lines are asked for.
+    assert_eq!(dxf.matches("\nCIRCLE\n").count(), 8, "{dxf}");
+    assert!(
+        dxf.matches("\nARC\n").count() >= 1,
+        "the slot's rounded end"
+    );
     let with_hidden = ok_render::view_dxf(&mut doc, arm, ok_render::View::Top, true).unwrap();
     let hidden = with_hidden.matches("\n8\nHIDDEN\n").count();
     assert!(hidden >= 4, "{hidden} hidden entities");

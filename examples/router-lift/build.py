@@ -431,6 +431,19 @@ ARM_T, ARM_W, NOSE_W, NOSE_Y = 38.0, 250.0, 80.0, -50.0
 PIVOT_Y, TAIL_Y, LEVEL_Y = 170.0, 225.0, 215.0
 SK_X, BLK_X, COLLAR_OD, COLLAR_H, PIVOT_SHAFT_LEN = 110.0, 60.0, 32.0, 12.0, 250.0
 PIN_L, PIN_OUT, ADJ = 75.0, 45.0, 3.0
+# The leveling stud stands in the table and passes up through an
+# open-ended slot in the tail; the nut above the tail is what the
+# nose-heavy arm rests up against, and sets the nose height. Lifting the
+# nose takes the tail down and, because the arm rides 25 mm above the
+# shaft axis, back, so the vertical stud walks forward along the slot
+# towards the pivot: the slot runs from the tail's end to 30 mm ahead of
+# the pivot line, which lets the arm lift 60 degrees before the stud
+# meets the slot's end (the limits test sweeps it). Past that a vertical
+# stud would pass through the arm's body ahead of any slot, so the arm
+# no longer swings down to the table; a lid stay holds it up. A
+# departure from the SCAD, whose bolt through the tail stood tip-down on
+# the table: it could not hold the nose up and blocked the lift.
+STUD_D, STUD_SLOT_W, STUD_SLOT_TO, STUD_NUT_H, STUD_NUT_AF = 8.0, 9.0, 140.0, 6.5, 13.0
 Z_SHAFT = SK_H  # 51: SK20 bases on the table
 Z_ARM = Z_SHAFT + BLK_C  # 76: the arm's underside when level
 
@@ -458,6 +471,9 @@ def top(p):
     s = p.sketch("top", 0.0, "bearing pocket")
     p.point(s, (0.0, LS_Y))
     p.hole(s, BRG_OD, depth=BRG_T, direction="normal", name="608 pocket")
+    s = p.sketch("top", TOP_T, "leveling insert")
+    p.point(s, (0.0, LEVEL_Y))
+    p.hole(s, 10.0, depth=15.0, name="M8 insert for the leveling stud")
 
 
 def baseplate(p):
@@ -485,8 +501,9 @@ def side_rail(p):
 
 def arm(p):
     """The pivot arm: a laminated plate, wide at the tail over the pivot
-    blocks, tapering to the nose; the block bolts and the leveling bolt
-    through it, the chuck screw slots in its underside."""
+    blocks, tapering to the nose; the block bolts through it, the
+    leveling stud's slot open at the tail, the chuck screw slots in its
+    underside."""
     s = p.sketch("top", Z_ARM, "plan")
     p.polygon(
         s,
@@ -506,9 +523,9 @@ def arm(p):
             for dy in (-1, 1):
                 p.point(s, (sx * BLK_X + dx * BLK_BZ / 2, PIVOT_Y + dy * BLK_BX / 2))
     p.hole(s, BLK_BOLT + 0.5, name="M5 block bolts")
-    s = p.sketch("top", Z_ARM + ARM_T, "leveling bolt")
-    p.point(s, (0.0, LEVEL_Y))
-    p.hole(s, 8.5, name="M8 insert")
+    s = p.sketch("top", Z_ARM + ARM_T, "leveling slot")
+    p.slot(s, (0.0, STUD_SLOT_TO + STUD_SLOT_W / 2), (0.0, TAIL_Y + STUD_SLOT_W), STUD_SLOT_W)
+    p.cut(s, ARM_T + 2.0, direction="reverse", name="leveling slot, open at the tail")
     s = p.sketch("top", Z_ARM, "chuck screws")
     for x in (-12.0, 12.0):
         p.slot(s, (x, -ADJ), (x, ADJ), 3.5)
@@ -621,12 +638,14 @@ def guide_pin(p):
 
 
 def level_bolt(p):
-    """M8 x 100 through the tail: the shank from the table up, the hex
-    head above the arm."""
-    cylinder(p, 8.0, Z_ARM + ARM_T + 10.0, "shank")
-    s = p.sketch("top", Z_ARM + ARM_T + 2.0, "head")
-    p.hexagon(s, (0.0, 0.0), 13.0 / math.cos(math.radians(30)) / 2)
-    p.extrude(s, 6.5, op="add", name="head")
+    """The leveling stud: M8 threaded rod in an insert in the table (12 mm
+    in), a jam nut on the table, and above the tail the leveling nut the
+    arm rests up against with its own jam nut."""
+    cylinder(p, STUD_D, Z_ARM + ARM_T + 2.0 * STUD_NUT_H + 5.0 + 12.0, "stud", z0=-12.0)
+    for z, name in ((0.0, "table jam nut"), (Z_ARM + ARM_T, "leveling nut"), (Z_ARM + ARM_T + STUD_NUT_H, "jam nut")):
+        s = p.sketch("top", z, name)
+        p.hexagon(s, (0.0, 0.0), STUD_NUT_AF / math.cos(math.radians(30)) / 2)
+        p.extrude(s, STUD_NUT_H, op="add", name=name)
 
 
 PARTS = [
@@ -723,7 +742,7 @@ def instances():
 SUBS = [
     ("Carriage assembly", (0.0, 0.0, Z_CAR), ["carriage", "left upper block", "left lower block", "right upper block", "right lower block", "T8 nut"]),
     ("Leadscrew assembly", (0.0, LS_Y, LS_Z0), ["leadscrew", "lower bearing", "upper bearing", "upper collar", "lower collar", "coupling nut"]),
-    ("Arm assembly", (0.0, 0.0, TABLE), ["arm", "left pivot block", "right pivot block", "chuck", "guide pin", "leveling bolt"]),
+    ("Arm assembly", (0.0, 0.0, TABLE), ["arm", "left pivot block", "right pivot block", "chuck", "guide pin"]),
 ]
 TOP = "Lift assembly"
 
@@ -743,7 +762,7 @@ TOP = "Lift assembly"
 # ---------------------------------------------------------------------
 MOVING = {
     "Carriage assembly": {"left upper block", "left lower block", "right upper block", "right lower block", "T8 nut"},
-    "Arm assembly": {"left pivot block", "right pivot block", "guide pin", "leveling bolt"},
+    "Arm assembly": {"left pivot block", "right pivot block", "guide pin"},
     TOP: {"Carriage assembly", "router", "Arm assembly"},
 }
 
@@ -761,7 +780,6 @@ MATES = {
         ("fastened", "arm", "left pivot block", (BLK_BOLT + 0.5) / 2, BLK_BOLT / 2, "left pivot block"),
         ("fastened", "arm", "right pivot block", (BLK_BOLT + 0.5) / 2, BLK_BOLT / 2, "right pivot block"),
         ("fastened", "chuck", "guide pin", (PIN_D + 0.2) / 2, PIN_D / 2, "pin in the chuck"),
-        ("fastened", "arm", "leveling bolt", 8.5 / 2, 4.0, "leveling bolt"),
     ],
     TOP: [
         ("slider", "left shaft", "Carriage assembly/left upper block", SHAFT_D / 2, SHAFT_D / 2, "carriage travel"),
@@ -1030,15 +1048,20 @@ def dxf_lines(path):
 
 
 def check_template(exported, reference):
-    """Every line of the shop's arm template must be a line of the
-    exported plan view (either way round)."""
+    """Every line of the shop's arm template must be in the exported plan
+    view, whole or as collinear pieces (the leveling slot, open at the
+    tail, interrupts the tail's edge): a plan line on the template line
+    ends at each of its ends."""
     got = dxf_lines(exported)
     same = lambda p, q: abs(p[0] - q[0]) < 1e-6 and abs(p[1] - q[1]) < 1e-6
-    missing = [
-        (a, b)
-        for a, b in dxf_lines(reference)
-        if not any((same(a, c) and same(b, d)) or (same(a, d) and same(b, c)) for c, d in got)
-    ]
+
+    def covered(a, b):
+        ax, ay = b[0] - a[0], b[1] - a[1]
+        on = lambda p: abs((p[0] - a[0]) * ay - (p[1] - a[1]) * ax) < 1e-6 * math.hypot(ax, ay)
+        ends_at = lambda p: any(on(c) and on(d) and (same(c, p) or same(d, p)) for c, d in got)
+        return ends_at(a) and ends_at(b)
+
+    missing = [(a, b) for a, b in dxf_lines(reference) if not covered(a, b)]
     if missing:
         raise RuntimeError(f"arm template lines missing from the exported plan: {missing}")
     return len(got)
