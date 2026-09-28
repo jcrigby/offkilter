@@ -215,3 +215,25 @@ had wanted since the carriage assembly dropped to 1:5 for want of a
 few millimetres. The client's drawing dialog still has its own single
 section; matching it to the sheet's two is on the roadmap.
 
+## 2026-09 · Range of motion is positions drawn side by side, not an animation
+
+Showing a mechanism at its limits and in use is the first thing every
+mechanical design needs, and the next project (puzzle box mechanisms)
+will need it more than the router lift. The client has a mate
+animation, which is right for a screen and useless on paper or in a
+chat. `range_of_motion` takes a list of positions, each setting one
+or more mates to absolute values, and draws the assembly at each, side
+by side: a PNG strip for the chat, every frame fitted to the same box
+so the fixed parts stay put and only the moving ones move, or a PDF
+sheet with the view at each position captioned, which the sheet
+layout already knew how to place. Positions are given, not derived:
+the tool does not know which end of a slider is "lowest" or what
+"typical" means, and the limits test, which does know, names them.
+Overlaying the positions in phantom lines on one view, the drafting
+convention, was set aside for now because three overlaid assemblies of
+twenty parts are unreadable; it would suit a single moving part on an
+otherwise still drawing and can come when a drawing asks for it. The
+kernel gained the one thing this needed, a preview with several mates
+set at once, which the bit-change check had worked around by editing
+the document.
+

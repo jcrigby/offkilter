@@ -116,6 +116,10 @@ pub struct MateReport {
     pub id: crate::MateId,
     pub name: String,
     pub kind: crate::MateKind,
+    /// The mate's current values: the free rotation (degrees) and
+    /// separation (mm), which a range-of-motion position sets.
+    pub angle: f64,
+    pub offset: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 }
@@ -280,6 +284,8 @@ impl Document {
                             id: m.id,
                             name: m.name.clone(),
                             kind: m.kind,
+                            angle: m.angle,
+                            offset: m.offset,
                             error: r.mate_errors.get(&m.id).cloned(),
                         })
                         .collect();

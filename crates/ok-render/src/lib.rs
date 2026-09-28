@@ -362,6 +362,70 @@ pub fn screenshot(doc: &mut Document, tab: TabId, options: &Options) -> Result<V
     Ok(png::encode(&image))
 }
 
+/// An assembly at several positions of its mates, rendered side by side
+/// in one strip, each frame `options.width` wide and fitted to the same
+/// box (the union of every position's extent) so the fixed parts stay
+/// put from frame to frame. Each position sets mates to an angle and an
+/// offset.
+pub fn motion(
+    doc: &mut Document,
+    tab: TabId,
+    positions: &[Vec<(ok_model::MateId, f64, f64)>],
+    options: &Options,
+) -> Result<Image, String> {
+    if positions.is_empty() {
+        return Err("no positions to draw".into());
+    }
+    let mut results = Vec::new();
+    for p in positions {
+        results.push(doc.preview_assembly_at(tab, p).map_err(|e| e.to_string())?);
+    }
+    let fit = results
+        .iter()
+        .flat_map(|r| r.bodies.iter())
+        .flat_map(|b| b.mesh.bounds())
+        .fold(None, |acc: Option<(Vec3, Vec3)>, (lo, hi)| {
+            Some(match acc {
+                None => (lo, hi),
+                Some((a, b)) => (
+                    Vec3::new(a.x.min(lo.x), a.y.min(lo.y), a.z.min(lo.z)),
+                    Vec3::new(b.x.max(hi.x), b.y.max(hi.y), b.z.max(hi.z)),
+                ),
+            })
+        });
+    let frame = Options {
+        fit,
+        section: None,
+        ..options.clone()
+    };
+    let mut strip = Image::new(
+        options.width * positions.len(),
+        options.height,
+        Rgb(255, 255, 255),
+    );
+    for (k, r) in results.iter().enumerate() {
+        let items: Vec<Item> = r
+            .bodies
+            .iter()
+            .enumerate()
+            .map(|(i, b)| item_of(b, i))
+            .collect();
+        let image = render(&items, &frame)?;
+        for y in 0..image.height {
+            for x in 0..image.width {
+                strip.set(k * options.width + x, y, image.pixel(x, y));
+            }
+        }
+        // A hairline between frames.
+        if k > 0 {
+            for y in 0..options.height {
+                strip.set(k * options.width, y, Rgb(180, 180, 180));
+            }
+        }
+    }
+    Ok(strip)
+}
+
 /// Encodes an image as PNG.
 pub fn to_png(image: &Image) -> Vec<u8> {
     png::encode(image)

@@ -781,6 +781,157 @@ impl Server {
             }
             return Ok(ToolOut::Image { png, caption });
         }
+        if name == "range_of_motion" {
+            let id = self.doc_id(args)?;
+            let mut doc = self.backend.document(&id)?;
+            let tab = pick_tab(&doc, tab)?;
+            let asm = doc
+                .assembly(tab)
+                .map_err(|_| "range_of_motion needs an assembly tab".to_string())?
+                .clone();
+            let mate_named = |name: &str| -> Result<&ok_model::Mate, String> {
+                asm.mates.iter().find(|m| m.name == name).ok_or_else(|| {
+                    format!(
+                        "no mate {name:?} on the tab; its mates are {}",
+                        asm.mates
+                            .iter()
+                            .map(|m| format!("{:?}", m.name))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
+                })
+            };
+            // A position: a number for the one `mate` (an angle in degrees
+            // for a revolute, cylindrical or ball mate, an offset in mm for
+            // a slider or planar one), or an object of mate name to value,
+            // a value being a number or {angle, offset}.
+            let default_mate = args.get("mate").and_then(|m| m.as_str());
+            let free_value = |m: &ok_model::Mate, v: f64| -> (f64, f64) {
+                match m.kind {
+                    ok_model::MateKind::Slider | ok_model::MateKind::Planar => (m.angle, v),
+                    _ => (v, m.offset),
+                }
+            };
+            let unit = |m: &ok_model::Mate| match m.kind {
+                ok_model::MateKind::Slider | ok_model::MateKind::Planar => " mm",
+                _ => "°",
+            };
+            let list = args
+                .get("positions")
+                .and_then(|p| p.as_array())
+                .ok_or("range_of_motion needs positions: a list of mate values")?;
+            let mut positions: Vec<ok_sheet::Position> = Vec::new();
+            for p in list {
+                let mut sets = Vec::new();
+                let mut caption = Vec::new();
+                if let Some(v) = p.as_f64() {
+                    let name = default_mate.ok_or(
+                        "a bare number as a position needs `mate` to say which mate it sets",
+                    )?;
+                    let m = mate_named(name)?;
+                    let (angle, offset) = free_value(m, v);
+                    sets.push((m.id, angle, offset));
+                    caption.push(format!("{name} {v}{}", unit(m)));
+                } else if let Some(obj) = p.as_object() {
+                    for (name, v) in obj {
+                        if name == "label" {
+                            continue;
+                        }
+                        let m = mate_named(name)?;
+                        let (angle, offset) = if let Some(v) = v.as_f64() {
+                            free_value(m, v)
+                        } else {
+                            (
+                                v.get("angle").and_then(|a| a.as_f64()).unwrap_or(m.angle),
+                                v.get("offset").and_then(|o| o.as_f64()).unwrap_or(m.offset),
+                            )
+                        };
+                        sets.push((m.id, angle, offset));
+                        caption.push(match v.as_f64() {
+                            Some(v) => format!("{name} {v}{}", unit(m)),
+                            None => format!("{name} {angle}° {offset} mm"),
+                        });
+                    }
+                } else {
+                    return Err(
+                        "each position is a number or an object of mate name to value".into(),
+                    );
+                }
+                let label = p
+                    .get("label")
+                    .and_then(|l| l.as_str())
+                    .map(str::to_string)
+                    .unwrap_or_else(|| caption.join(", "));
+                positions.push((label, sets));
+            }
+            if positions.is_empty() {
+                return Err("positions is empty".into());
+            }
+            let view = args.get("view").and_then(|v| v.as_str()).unwrap_or("front");
+            let labels: Vec<&str> = positions.iter().map(|(l, _)| l.as_str()).collect();
+            let format = args.get("format").and_then(|f| f.as_str()).unwrap_or("png");
+            let path = args.get("path").and_then(|p| p.as_str());
+            match format {
+                "pdf" => {
+                    let path = path.ok_or("format pdf needs path: where to write the sheet")?;
+                    let opts = ok_sheet::Options {
+                        sheet: ok_sheet::SheetSize::parse(
+                            args.get("sheet").and_then(|s| s.as_str()).unwrap_or(""),
+                        )?,
+                        note: args
+                            .get("note")
+                            .and_then(|n| n.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                        parts: false,
+                        ..ok_sheet::Options::default()
+                    };
+                    let pdf = ok_sheet::motion_pdf(&mut doc, tab, view, &positions, &opts)?;
+                    std::fs::write(path, &pdf)
+                        .map_err(|e| format!("could not write {path}: {e}"))?;
+                    return Ok(ToolOut::Text(format!(
+                        "wrote {} bytes of PDF to {path}: the {} view at {} positions, captioned {}",
+                        pdf.len(),
+                        view,
+                        positions.len(),
+                        labels.join("; ")
+                    )));
+                }
+                "png" => {
+                    let size = |key: &str, default: usize| {
+                        args.get(key)
+                            .and_then(|v| v.as_u64())
+                            .map(|v| v as usize)
+                            .unwrap_or(default)
+                    };
+                    let options = ok_render::Options {
+                        width: size("width", 480),
+                        height: size("height", 360),
+                        view: ok_render::View::parse(view)?,
+                        ..ok_render::Options::default()
+                    };
+                    let sets: Vec<Vec<(ok_model::MateId, f64, f64)>> =
+                        positions.iter().map(|(_, s)| s.clone()).collect();
+                    let image = ok_render::motion(&mut doc, tab, &sets, &options)?;
+                    let png = ok_render::to_png(&image);
+                    let mut caption = format!(
+                        "{} view at {} positions, left to right: {}; each frame {}x{}, all fitted to the same box so the fixed parts stay put",
+                        view_name(options.view),
+                        positions.len(),
+                        labels.join("; "),
+                        options.width,
+                        options.height
+                    );
+                    if let Some(path) = path {
+                        std::fs::write(path, &png)
+                            .map_err(|e| format!("could not write {path}: {e}"))?;
+                        caption.push_str(&format!("; written to {path}"));
+                    }
+                    return Ok(ToolOut::Image { png, caption });
+                }
+                other => return Err(format!("unknown format {other:?}: png or pdf")),
+            }
+        }
         if name == "measure_photo" {
             let path = args
                 .get("path")
@@ -1450,10 +1601,12 @@ fn summarize(r: &ok_model::TabReport) -> String {
     }
     for m in &r.mates {
         s.push_str(&format!(
-            "Mate {} \"{}\" {:?}{}\n",
+            "Mate {} \"{}\" {:?} angle {} offset {}{}\n",
             m.id.0,
             m.name,
             m.kind,
+            m.angle,
+            m.offset,
             m.error
                 .as_ref()
                 .map(|e| format!(" ERROR: {e}"))
@@ -1507,6 +1660,11 @@ fn tool_list() -> Value {
             "name": "import",
             "description": "Imports an STL, OBJ or STEP (.step/.stp) file from a path as mesh bodies of the tab: STEP solids come in faceted (planes and cylinders; other surfaces are refused by name), scaled to millimetres. Returns the tab's report.",
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "path": { "type": "string" }, "name": { "type": "string", "description": "Body name (STL and OBJ; STEP bodies keep their own names)." } }, "required": ["path"] }
+        },
+        {
+            "name": "range_of_motion",
+            "description": "A mechanism drawn at several positions of its mates: the assembly tab (doc, tab) resolved with the mates set to each position and drawn side by side, so a lift shows lowest, working and highest, or an arm level, half up and fully up. `positions` is a list: a bare number sets `mate` (degrees for a revolute, cylindrical or ball mate, millimetres of offset for a slider or planar one), or an object of mate name to value (a number, or {angle, offset}) sets several mates at once; an object may carry `label` for its caption. `view` is front (default), top, right, iso or x,y,z. `format` png (default) returns one strip, every frame fitted to the same box so the fixed parts stay put, `width` x `height` each; `format` pdf writes a sheet with the view at each position captioned, on `sheet` (A4 default), `note` on the title block. `path` writes the file. Read the tab's report for the mate names and their current angle and offset; the positions are absolute values of those.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "mate": { "type": "string" }, "positions": { "type": "array", "items": {} }, "view": { "type": "string" }, "format": { "type": "string", "enum": ["png", "pdf"] }, "path": { "type": "string" }, "width": { "type": "integer" }, "height": { "type": "integer" }, "sheet": { "type": "string" }, "note": { "type": "string" } }, "required": ["positions"] }
         },
         {
             "name": "measuring_sheet",
