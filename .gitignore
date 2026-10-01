@@ -14,3 +14,4 @@ examples/router-lift/out/*.step
 __pycache__/
 examples/puzzle-top/out/*.stl
 !examples/puzzle-top/out/fixture.stl
+examples/ego-cart/out/*.stl

@@ -125,6 +125,7 @@ top are concrete and self-contained; items lower down are directions.
 
 - [x] Mechanism-at-limit checks of the router lift example: the carriage's travel and the rev D pin arm's pivot swept with interference, clearance and alignment measured (`router_lift_limits.rs`), the BOM checked against the shop drawings
 - [x] `ok-sheet`: a 1:2.5 scale between 1:2 and 1:5 (the carriage assembly's sheet went from 1:5 to 1:2.5 on A4), and the views beyond the elevations go in a row under them when that fits a larger scale than a row to their right
+- [x] A second whole project, `examples/ego-cart/`: a powered two-wheel shopping cart driven by an EGO power head through a 50:1 gearbox of printed gears, laid out from the speeds and the hill with every bought part a named assumption, and its regression test (closed parts, the gear train meshing, the load on the platform, no body inside another); the examples share one MCP client, `examples/okmcp.py`
 - [x] Range of motion: `range_of_motion` draws an assembly at several positions of its mates (any number of mates per position) side by side, as a PNG strip fitted to one box or a captioned PDF sheet; the kernel previews an assembly with several mates set at once (`preview_assembly_at`)
 - [x] Section views on PDF sheets: `section` (parallel to the front view) and `section-side` (parallel to the right view), each placed with `@<mm>`, cut faces hatched even-odd, captioned, the cutting plane traced with arrows on the view it is edge-on in
 - [x] Measuring from a photograph: `measuring_sheet` prints a grid with four bullseye marks, `measure_photo` squares a picture of parts on it up and reports their sizes, outlines and holes in millimetres, and can put them in a sketch (`crates/ok-photo`, `examples/measuring-sheet/`)
@@ -137,6 +138,9 @@ Follow-ups nobody has asked for yet, in no order; each came up while
 building something else. The reasoning behind the current choices is
 in `docs/DECISIONS.md`.
 
+- [ ] Kernel: any hole into a box with an enclosed cavity fails the boolean (through both walls, or a finite depth into one; `crates/ok-model/tests/parts.rs`, `a_hole_into_a_hollow_box`, ignored); a pocket open on one side takes a hole, and drilling before hollowing works, which is what the cart's gearbox does
+- [ ] Gear teeth: an `add_gear` feature (involute spur, then bevel) so the cart's gears print, where the discs at pitch diameter stand in today; the design rules it should refuse (undercut below 17 teeth at 20 degrees, tip clearance)
+- [ ] EGO cart: a pawl on the axle against rolling back, a dog clutch for pushing by hand, bearings in the housing, the attachment coupler once the head is measured; then the range-of-motion sheet and an interference sweep of the clutch
 - [ ] Puzzle fabrication layouts: a `spread` parameter instead of always one bit diameter between rows
 - [ ] Puzzle pieces: a material per colour, so the parts list and a future cut list name the species
 - [ ] `ok-sheet`: deflate PDF content streams (a 65 KB assembly sheet would be a fraction of that); the tests grep the streams, so they inflate first

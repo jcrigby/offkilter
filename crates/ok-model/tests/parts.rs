@@ -825,6 +825,42 @@ fn feature_pattern_and_mirror_replay_tools() {
 
 /// An open-top enclosure: a box shelled to 2 mm with its top face open,
 /// then a boss added inside and a hole through the floor.
+/// A box hollowed by a cut that leaves an enclosed cavity cannot then be
+/// drilled: the hole's boolean comes back open, whether the hole goes
+/// through both walls or a finite depth into one. A pocket open on one
+/// side takes the hole, and drilling before hollowing works. Found by
+/// the EGO cart's gearbox (examples/ego-cart); ignored until the
+/// boolean handles a solid with an inner void.
+#[test]
+#[ignore]
+fn a_hole_into_a_hollow_box() {
+    let mut p = Part::new();
+    let s = p.sketch(PlaneRef::standard(StandardPlane::Right));
+    p.rect(s, (0.0, 0.0), (60.0, 60.0));
+    p.extrude(s, 40.0, BodyOp::New);
+    let s = p.sketch(PlaneRef::Standard {
+        base: StandardPlane::Right,
+        offset: 5.0,
+    });
+    p.rect(s, (5.0, 5.0), (55.0, 55.0));
+    p.extrude(s, 30.0, BodyOp::Remove);
+    let hollow = p.volume();
+    assert!(
+        close(hollow, 60.0 * 60.0 * 40.0 - 50.0 * 50.0 * 30.0, 1e-9),
+        "{hollow}"
+    );
+    // The hole drills back from a plane past the box, through its wall.
+    let s = p.sketch(PlaneRef::Standard {
+        base: StandardPlane::Right,
+        offset: 41.0,
+    });
+    p.point(s, (30.0, 30.0));
+    p.hole(s, 10.0, None);
+    let v = p.volume();
+    let bore = 2.0 * PI * 25.0 * 5.0;
+    assert!(close(v, hollow - bore, 1e-3), "{v}");
+}
+
 #[test]
 fn shelled_enclosure_with_a_boss_inside() {
     let mut p = Part::new();
