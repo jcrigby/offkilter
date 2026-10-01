@@ -237,3 +237,26 @@ kernel gained the one thing this needed, a preview with several mates
 set at once, which the bit-change check had worked around by editing
 the document.
 
+## 2026-10 · The cart starts from its speeds and loads, and size is strength only where the torque is
+
+The EGO cart is laid out from three numbers before any geometry: the
+head's 4800 rpm, a walking pace of 1.3 m/s on 254 mm wheels, and
+80 kg up a 15 % hill. Those give 50:1 and 17 Nm at the axle, and the
+head has ten times the power the hill needs, so the gearing is set by
+pace, not torque. The advice that printed parts get strength from size
+was taken for the two spur stages, which carry the torque, and refused
+for the first stage, which carries 4800 rpm and almost nothing: a
+24 mm pinion there already runs 6 m/s at its pitch line, the limit for
+printed plastic, so that stage is kept small and may be bought. Every
+shaft is parallel to the axle and at its height, in a row behind it,
+so the gearbox is long and low and the platform sits over the tyres
+rather than over the gears. The rear wall of the housing is cut square
+to the input axis so the drive shaft's bore and the tube's seat are one
+hole drilled normal to a face, which the kernel can do, rather than an
+angled hole, which it cannot. The gears are discs at pitch diameter and
+the housing a hollow box: the increment is the layout and the numbers,
+and teeth, bearings and the clutch each get their own. Hollowing the
+housing turned up a kernel bug, any hole into a box with an enclosed
+cavity, recorded as an ignored corpus test; the build drills before it
+hollows.
+
