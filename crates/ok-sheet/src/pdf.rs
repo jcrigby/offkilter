@@ -1,6 +1,8 @@
 //! A small vector PDF writer: one page in millimetres with lines, filled
 //! polygons, circles and Helvetica text. Enough for a drawing sheet, with
-//! no dependencies and no embedded fonts (the standard 14 are assumed).
+//! no embedded fonts (the standard 14 are assumed). The content stream
+//! is deflated, which makes a sheet a quarter of its size; [`inflated`]
+//! gives it back as text for anything that greps the file.
 
 /// Where text sits relative to its anchor point.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -203,45 +205,99 @@ impl Page {
         ));
     }
 
-    /// The finished file.
+    /// The finished file: the content stream deflated.
     pub fn finish(self) -> Vec<u8> {
         let content = format!("{} 0 0 {} 0 0 cm\n{}", num(PT), num(PT), self.ops);
-        let objects: Vec<String> = vec![
-            "<< /Type /Catalog /Pages 2 0 R >>".into(),
-            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        let deflated = miniz_oxide::deflate::compress_to_vec_zlib(content.as_bytes(), 6);
+        let mut stream = format!(
+            "<< /Length {} /Filter /FlateDecode >>\nstream\n",
+            deflated.len()
+        )
+        .into_bytes();
+        stream.extend_from_slice(&deflated);
+        stream.extend_from_slice(b"\nendstream");
+        let objects: Vec<Vec<u8>> = vec![
+            b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
+            b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>".to_vec(),
             format!(
                 "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
                 num(self.width * PT),
                 num(self.height * PT)
-            ),
-            format!(
-                "<< /Length {} >>\nstream\n{}\nendstream",
-                content.len(),
-                content
-            ),
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>".into(),
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
-                .into(),
+            )
+            .into_bytes(),
+            stream,
+            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>".to_vec(),
+            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
+                .to_vec(),
         ];
-        let mut out = String::from("%PDF-1.4\n%\u{e2}\u{e3}\u{cf}\u{d3}\n");
+        let mut out: Vec<u8> = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n".to_vec();
         let mut offsets = Vec::new();
         for (i, body) in objects.iter().enumerate() {
             offsets.push(out.len());
-            out.push_str(&format!("{} 0 obj\n{}\nendobj\n", i + 1, body));
+            out.extend_from_slice(format!("{} 0 obj\n", i + 1).as_bytes());
+            out.extend_from_slice(body);
+            out.extend_from_slice(b"\nendobj\n");
         }
         let xref = out.len();
-        out.push_str(&format!(
-            "xref\n0 {}\n0000000000 65535 f \n",
-            objects.len() + 1
-        ));
+        out.extend_from_slice(
+            format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1).as_bytes(),
+        );
         for o in &offsets {
-            out.push_str(&format!("{:010} 00000 n \n", o));
+            out.extend_from_slice(format!("{:010} 00000 n \n", o).as_bytes());
         }
-        out.push_str(&format!(
-            "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n",
-            objects.len() + 1,
-            xref
-        ));
-        out.into_bytes()
+        out.extend_from_slice(
+            format!(
+                "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n",
+                objects.len() + 1,
+                xref
+            )
+            .as_bytes(),
+        );
+        out
     }
+}
+
+/// Where `needle` first occurs in `hay` at or after `from`.
+fn find(hay: &[u8], needle: &[u8], from: usize) -> Option<usize> {
+    hay.get(from..)?
+        .windows(needle.len())
+        .position(|w| w == needle)
+        .map(|p| p + from)
+}
+
+/// The file as text with every deflated stream inflated in place, for
+/// tests and tools that grep a sheet for what it draws. Bytes that are
+/// not UTF-8 come out as replacement characters, so offsets in the
+/// result mean nothing; a stream that does not inflate is left as it is.
+pub fn inflated(pdf: &[u8]) -> String {
+    let mut out = Vec::with_capacity(pdf.len() * 4);
+    let mut at = 0;
+    while let Some(s) = find(pdf, b">>\nstream\n", at) {
+        let start = s + b">>\nstream\n".len();
+        // The stream's dictionary runs back to the last "<<" before it.
+        let dict_at = pdf[at..s]
+            .windows(2)
+            .rposition(|w| w == b"<<")
+            .map_or(at, |p| p + at);
+        let dict = String::from_utf8_lossy(&pdf[dict_at..s]).into_owned();
+        let len: usize = dict
+            .split("/Length ")
+            .nth(1)
+            .and_then(|r| r.split(|c: char| !c.is_ascii_digit()).next())
+            .and_then(|n| n.parse().ok())
+            .unwrap_or(0);
+        let end = (start + len).min(pdf.len());
+        out.extend_from_slice(&pdf[at..start]);
+        let data = &pdf[start..end];
+        match dict.contains("/FlateDecode") {
+            true => match miniz_oxide::inflate::decompress_to_vec_zlib(data) {
+                Ok(raw) => out.extend_from_slice(&raw),
+                Err(_) => out.extend_from_slice(data),
+            },
+            false => out.extend_from_slice(data),
+        }
+        at = end;
+    }
+    out.extend_from_slice(&pdf[at..]);
+    String::from_utf8_lossy(&out).into_owned()
 }

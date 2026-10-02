@@ -9,6 +9,7 @@ description = "Shop drawing sheets of offkilter tabs: third-angle views at a sta
 ok-math = { workspace = true }
 ok-brep = { workspace = true }
 ok-model = { workspace = true }
+miniz_oxide = "0.9"
 
 [dev-dependencies]
 ok-sketch = { workspace = true }

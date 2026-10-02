@@ -1910,7 +1910,7 @@ mod tests {
         assert_eq!(status, StatusCode::OK);
         assert_eq!(headers[header::CONTENT_TYPE], "application/pdf");
         assert!(bytes.starts_with(b"%PDF-1.4"));
-        let pdf = String::from_utf8_lossy(&bytes);
+        let pdf = ok_sheet::pdf::inflated(&bytes);
         assert!(
             pdf.contains("(10) Tj") && pdf.contains("(20) Tj") && pdf.contains("(5) Tj"),
             "sizes"

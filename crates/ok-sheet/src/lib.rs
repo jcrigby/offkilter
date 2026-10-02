@@ -1600,35 +1600,45 @@ mod tests {
     }
 
     fn objects_are_where_the_xref_says(pdf: &[u8]) {
-        let text = String::from_utf8_lossy(pdf);
-        let xref_at: usize = text
-            .rsplit("startxref\n")
-            .next()
-            .unwrap()
-            .lines()
-            .next()
-            .unwrap()
-            .parse()
-            .unwrap();
+        // Offsets are byte offsets, and the content stream is binary, so
+        // this reads the file as bytes.
+        let find = |needle: &[u8], from: usize| -> usize {
+            pdf[from..]
+                .windows(needle.len())
+                .position(|w| w == needle)
+                .map(|p| p + from)
+                .unwrap_or_else(|| panic!("no {:?}", String::from_utf8_lossy(needle)))
+        };
+        let number = |from: usize| -> usize {
+            let digits: String = pdf[from..]
+                .iter()
+                .take_while(|b| b.is_ascii_digit())
+                .map(|&b| b as char)
+                .collect();
+            digits.parse().unwrap()
+        };
+        let sx = pdf.windows(10).rposition(|w| w == b"startxref\n").unwrap();
+        let xref_at = number(sx + 10);
         assert!(
-            text[xref_at..].starts_with("xref\n"),
+            pdf[xref_at..].starts_with(b"xref\n"),
             "startxref points at the table"
         );
-        let table = &text[xref_at..];
-        for (i, line) in table
-            .lines()
-            .skip(2)
-            .take_while(|l| l.len() == 18)
-            .enumerate()
-        {
-            let offset: usize = line[..10].parse().unwrap();
-            if i > 0 {
-                assert!(
-                    text[offset..].starts_with(&format!("{i} 0 obj")),
-                    "object {i} at {offset}"
-                );
-            }
+        let count = number(find(b"\n0 ", xref_at) + 3);
+        let first = find(b"0000000000 65535 f \n", xref_at) + 20;
+        for i in 1..count {
+            let line = first + (i - 1) * 20;
+            let offset = number(line);
+            assert!(
+                pdf[offset..].starts_with(format!("{i} 0 obj").as_bytes()),
+                "object {i} at {offset}"
+            );
         }
+        // The stream is deflated and inflates to the drawing's operators.
+        let text = pdf::inflated(pdf);
+        assert!(
+            String::from_utf8_lossy(pdf).contains("/Filter /FlateDecode") && text.contains(" cm\n"),
+            "a deflated content stream"
+        );
     }
 
     #[test]
@@ -1662,7 +1672,7 @@ mod tests {
         assert_eq!(sheet.part_rows(), 0);
         let pdf = three.to_pdf();
         assert!(pdf.starts_with(b"%PDF-1.4"));
-        let text = String::from_utf8_lossy(&pdf);
+        let text = pdf::inflated(&pdf);
         assert!(
             text.contains("/MediaBox [0 0 841.89 595.276]"),
             "A4 landscape in points"
@@ -1688,7 +1698,7 @@ mod tests {
         )
         .unwrap();
         assert!((sheet.scale() - 0.1).abs() < 1e-9, "{}", sheet.scale());
-        assert!(String::from_utf8_lossy(&sheet.to_pdf()).contains("/MediaBox [0 0 792 612]"));
+        assert!(pdf::inflated(&sheet.to_pdf()).contains("/MediaBox [0 0 792 612]"));
     }
 
     #[test]
@@ -1786,7 +1796,7 @@ mod tests {
         }
         let pdf = sheet.to_pdf();
         objects_are_where_the_xref_says(&pdf);
-        let text = String::from_utf8_lossy(&pdf);
+        let text = pdf::inflated(&pdf);
         assert!(
             text.contains("(SECTION A-A) Tj") && text.contains("(SECTION B-B) Tj"),
             "{text}"
@@ -1831,7 +1841,7 @@ mod tests {
                 "{name} sits under the front view"
             );
         }
-        assert!(String::from_utf8_lossy(&sheet.to_pdf()).contains("(Scale 1:2.5) Tj"));
+        assert!(pdf::inflated(&sheet.to_pdf()).contains("(Scale 1:2.5) Tj"));
         // Bad cuts are refused with their reason.
         let err = Sheet::layout(
             &parts,
@@ -1886,7 +1896,7 @@ mod tests {
             assert!(w[1].b.minx + w[1].dx > w[0].b.maxx + w[0].dx);
             assert!((w[1].dy - w[0].dy).abs() < 1e-9);
         }
-        let text = String::from_utf8_lossy(&sheet.to_pdf()).to_string();
+        let text = pdf::inflated(&sheet.to_pdf()).to_string();
         for c in ["lowest", "working", "highest"] {
             assert!(text.contains(&format!("({c}) Tj")), "{c} captioned");
         }
@@ -1958,7 +1968,7 @@ mod tests {
                 p.name
             );
         }
-        let text = String::from_utf8_lossy(&sheet.to_pdf()).to_string();
+        let text = pdf::inflated(&sheet.to_pdf()).to_string();
         assert!(
             text.contains("(PART) Tj")
                 && text.contains("(Plate) Tj")
@@ -1973,7 +1983,7 @@ mod tests {
         let top = sheet.placed.iter().find(|p| p.name == "top").unwrap();
         assert_eq!(top.callouts.len(), 1, "{:?}", top.callouts);
         assert!(top.callouts[0].hole && (top.callouts[0].radius - 5.0).abs() < 1e-9);
-        let text = String::from_utf8_lossy(&sheet.to_pdf()).to_string();
+        let text = pdf::inflated(&sheet.to_pdf()).to_string();
         assert!(text.contains("(\\33010)"), "a diameter callout");
         assert!(
             text.contains("[2 1] 0 d"),
@@ -2112,7 +2122,7 @@ mod tests {
             "{:?}",
             iso.balloons[0]
         );
-        let text = String::from_utf8_lossy(&sheet.to_pdf()).to_string();
+        let text = pdf::inflated(&sheet.to_pdf()).to_string();
         assert!(text.contains("(Pair) Tj") && text.contains("(Block) Tj"));
         assert!(
             !text.contains("[2 1] 0 d") && text.contains("hidden lines omitted"),
@@ -2126,7 +2136,7 @@ mod tests {
             },
         )
         .unwrap();
-        assert!(String::from_utf8_lossy(&forced.to_pdf()).contains("[2 1] 0 d"));
+        assert!(pdf::inflated(&forced.to_pdf()).contains("[2 1] 0 d"));
         // The pair's own sheet lists its blocks.
         let parts = parts_of(&mut d, pair).unwrap();
         assert_eq!(parts.len(), 2);

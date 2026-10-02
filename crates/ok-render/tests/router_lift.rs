@@ -209,7 +209,7 @@ fn the_assembly_sheet_lists_every_part_once() {
         "{} bytes",
         pdf.len()
     );
-    let text = String::from_utf8_lossy(&pdf);
+    let text = ok_sheet::pdf::inflated(&pdf);
     assert!(
         text.contains("(Carriage assembly) Tj")
             && text.contains("(Arm assembly) Tj")
@@ -241,7 +241,7 @@ fn the_assembly_sheet_lists_every_part_once() {
         .collect();
     let sheet = ok_sheet::Sheet::layout(&refs, &ok_sheet::Options::default()).unwrap();
     assert_eq!(sheet.part_rows(), 3);
-    let text = String::from_utf8_lossy(&sheet.to_pdf()).to_string();
+    let text = ok_sheet::pdf::inflated(&sheet.to_pdf()).to_string();
     assert!(text.contains("(Carriage) Tj") && text.contains("(SC20UU) Tj"));
     assert!(text.contains("(4) Tj"), "four blocks");
 }
@@ -323,8 +323,8 @@ fn the_arm_plan_view_is_the_shop_template() {
 #[test]
 fn the_top_sheet_has_two_sections_through_the_bit_axis() {
     let pdf = std::fs::read(example_dir().join("out/top.pdf")).unwrap();
-    let text = String::from_utf8_lossy(&pdf);
-    assert!(text.starts_with("%PDF-1.4"));
+    let text = ok_sheet::pdf::inflated(&pdf);
+    assert!(pdf.starts_with(b"%PDF-1.4"));
     assert!(
         text.contains("(SECTION A-A) Tj") && text.contains("(SECTION B-B) Tj"),
         "both sections captioned"
@@ -352,8 +352,8 @@ fn the_range_of_motion_sheets_show_three_positions_each() {
         ),
     ] {
         let pdf = std::fs::read(dir.join(format!("out/{stem}.pdf"))).unwrap();
-        let text = String::from_utf8_lossy(&pdf);
-        assert!(text.starts_with("%PDF-1.4"));
+        let text = ok_sheet::pdf::inflated(&pdf);
+        assert!(pdf.starts_with(b"%PDF-1.4"));
         for c in captions {
             assert!(text.contains(&format!("({c}) Tj")), "{stem}: {c} captioned");
         }
