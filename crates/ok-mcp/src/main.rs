@@ -1012,6 +1012,37 @@ impl Server {
                 if p.circularity > 0.85 {
                     caption.push_str(&format!("; round, {:.1} mm across", p.diameter));
                 }
+                let lines = p
+                    .edges
+                    .iter()
+                    .filter(|e| matches!(e, ok_photo::Edge::Line { .. }))
+                    .count();
+                let arcs: Vec<String> = p
+                    .edges
+                    .iter()
+                    .filter_map(|e| match e {
+                        ok_photo::Edge::Arc { radius, .. } => Some(format!("R{radius:.1}")),
+                        _ => None,
+                    })
+                    .collect();
+                match p.edges.as_slice() {
+                    [ok_photo::Edge::Circle { centre, radius }] => caption.push_str(&format!(
+                        "; fits a circle R{:.2} at ({:.1}, {:.1})",
+                        radius, centre[0], centre[1]
+                    )),
+                    [] => {}
+                    _ => caption.push_str(&format!(
+                        "; fits {lines} straight edge{} and {} arc{}{}",
+                        if lines == 1 { "" } else { "s" },
+                        arcs.len(),
+                        if arcs.len() == 1 { "" } else { "s" },
+                        if arcs.is_empty() {
+                            String::new()
+                        } else {
+                            format!(" ({})", arcs.join(", "))
+                        }
+                    )),
+                }
                 for h in &p.holes {
                     caption.push_str(&format!(
                         "; hole {:.1} mm across at ({:.1}, {:.1}){}",
@@ -1051,26 +1082,49 @@ impl Server {
                     .and_then(|v| v.as_u64())
                     .ok_or("the sketch was not created")?;
                 let mut ops = Vec::new();
+                let v = |p: &[f64; 2]| json!({ "x": p[0], "y": p[1] });
                 for p in &m.parts {
-                    if p.circularity > 0.85 {
+                    // The fitted edges when there are any (lines, arcs, or
+                    // the one circle a round part is); else the polygon.
+                    if !p.edges.is_empty() {
+                        for e in &p.edges {
+                            let op = match e {
+                                ok_photo::Edge::Line { a, b } => {
+                                    json!({ "type": "add_line", "a": v(a), "b": v(b) })
+                                }
+                                ok_photo::Edge::Arc {
+                                    centre,
+                                    start,
+                                    end,
+                                    ccw,
+                                    ..
+                                } => {
+                                    // The sketch's arcs run counter-clockwise.
+                                    let (s, e) = if *ccw { (start, end) } else { (end, start) };
+                                    json!({ "type": "add_arc", "center": v(centre), "start": v(s), "end": v(e) })
+                                }
+                                ok_photo::Edge::Circle { centre, radius } => {
+                                    json!({ "type": "add_circle", "center": v(centre), "radius": radius })
+                                }
+                            };
+                            ops.push(studio(json!({ "type": "sketch", "id": sketch, "op": op })));
+                        }
+                    } else if p.circularity > 0.85 {
                         ops.push(studio(json!({ "type": "sketch", "id": sketch, "op": {
                             "type": "add_circle",
                             "center": { "x": p.centroid[0], "y": p.centroid[1] },
                             "radius": p.diameter / 2.0
                         }})));
-                    }
-                    let n = if p.circularity > 0.85 {
-                        0
                     } else {
-                        p.outline.len()
-                    };
-                    for (i, a) in p.outline.iter().take(n).enumerate() {
-                        let b = p.outline[(i + 1) % n];
-                        ops.push(studio(json!({ "type": "sketch", "id": sketch, "op": {
-                            "type": "add_line",
-                            "a": { "x": a[0], "y": a[1] },
-                            "b": { "x": b[0], "y": b[1] }
-                        }})));
+                        let n = p.outline.len();
+                        for (i, a) in p.outline.iter().enumerate() {
+                            let b = p.outline[(i + 1) % n];
+                            ops.push(studio(json!({ "type": "sketch", "id": sketch, "op": {
+                                "type": "add_line",
+                                "a": { "x": a[0], "y": a[1] },
+                                "b": { "x": b[0], "y": b[1] }
+                            }})));
+                        }
                     }
                     for h in &p.holes {
                         ops.push(studio(json!({ "type": "sketch", "id": sketch, "op": {
@@ -1083,7 +1137,7 @@ impl Server {
                 let count = ops.len();
                 self.backend.apply(&id, ops)?;
                 caption.push_str(&format!(
-                    "\nSketch feature {sketch} on tab {} of the document holds the outlines: {count} lines and circles in sheet millimetres.",
+                    "\nSketch feature {sketch} on tab {} of the document holds the outlines: {count} lines, arcs and circles in sheet millimetres.",
                     tab.0
                 ));
             }

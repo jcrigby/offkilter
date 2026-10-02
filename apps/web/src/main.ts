@@ -1,4 +1,4 @@
-import { Kernel, measurePhoto, measuringSheetPdf, parseStep, type PhotoMeasurement } from "./kernel";
+import { Kernel, measurePhoto, measuringSheetPdf, parseStep, type PhotoEdge, type PhotoMeasurement } from "./kernel";
 import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
 
 /** The drawing dialog's hidden-lines choice: the kernel's rule, or forced on or off. */
@@ -1012,9 +1012,10 @@ class App implements SketchHost {
 
   /**
    * A sketch "Photo outlines" on the top plane with the measured parts' outlines
-   * and holes, as the MCP tool's `sketch: true` adds: a circle for a round part,
-   * lines around any other, a circle per hole. One undo step; returns the
-   * number of entities drawn.
+   * and holes, as the MCP tool's `sketch: true` adds: the fitted edges (lines,
+   * arcs, or the circle a round part is) when there are any, else a circle for
+   * a round part and lines around any other; a circle per hole. One undo step;
+   * returns the number of entities drawn.
    */
   addPhotoSketch(): number {
     const m = this.photo?.result;
@@ -1030,9 +1031,16 @@ class App implements SketchHost {
         this.applyRaw({ type: "sketch", id, op });
         added += 1;
       };
+      const v = (p: [number, number]) => ({ x: p[0], y: p[1] });
       for (const p of m.parts) {
         const round = p.circularity > 0.85;
-        if (round) draw({ type: "add_circle", center: { x: p.centroid[0], y: p.centroid[1] }, radius: p.diameter / 2 });
+        if (p.edges.length > 0) {
+          for (const e of p.edges) {
+            if (e.type === "line") draw({ type: "add_line", a: v(e.a), b: v(e.b) });
+            else if (e.type === "arc") draw({ type: "add_arc", center: v(e.centre), start: v(e.ccw ? e.start : e.end), end: v(e.ccw ? e.end : e.start) });
+            else draw({ type: "add_circle", center: v(e.centre), radius: e.radius });
+          }
+        } else if (round) draw({ type: "add_circle", center: { x: p.centroid[0], y: p.centroid[1] }, radius: p.diameter / 2 });
         else {
           for (let i = 0; i < p.outline.length; i++) {
             const a = p.outline[i]!, b = p.outline[(i + 1) % p.outline.length]!;
@@ -3969,6 +3977,11 @@ async function main(): Promise<void> {
       const [x0, y0, x1, y1] = p.bbox;
       let text = `Part ${k + 1}: ${fmt1(x1 - x0)} × ${fmt1(y1 - y0)} mm from (${fmt1(x0)}, ${fmt1(y0)}), area ${p.area.toFixed(0)} mm²`;
       if (p.circularity > 0.85) text += `, round, Ø${fmt1(p.diameter)}`;
+      const lines = p.edges.filter((e) => e.type === "line").length;
+      const arcs = p.edges.filter((e): e is Extract<PhotoEdge, { type: "arc" }> => e.type === "arc");
+      const circle = p.edges.length === 1 && p.edges[0]!.type === "circle" ? p.edges[0] : null;
+      if (circle && circle.type === "circle") text += `; fits a circle R${fmt1(circle.radius)} at (${fmt1(circle.centre[0])}, ${fmt1(circle.centre[1])})`;
+      else if (p.edges.length > 0) text += `; fits ${lines} straight edge${lines === 1 ? "" : "s"} and ${arcs.length} arc${arcs.length === 1 ? "" : "s"}${arcs.length > 0 ? ` (${arcs.map((a) => `R${fmt1(a.radius)}`).join(", ")})` : ""}`;
       for (const h of p.holes) text += `; hole Ø${fmt1(h.diameter)} at (${fmt1(h.centre[0])}, ${fmt1(h.centre[1])})${h.circularity > 0.85 ? "" : " (not round)"}`;
       li.textContent = text;
       list.appendChild(li);

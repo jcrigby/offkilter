@@ -968,7 +968,13 @@ connected components, the marks found by their nested rings and the
 sheet size by the dots beside the origin, a homography from the four
 centres to the sheet's millimetres, the picture resampled square at
 4 px/mm, dark shapes traced and simplified into outlines with the
-paper showing through them as holes. A reference of known size on the
+paper showing through them as holes, and each outline fitted into
+edges: from its sharpest corner, a run is extended over the following
+corners as far as a line or a least-squares circle stays within 0.3 mm
+of every boundary pixel, the circle winning where it reaches further
+(a whole outline that is one circle is a circle), the arcs' ends moved
+onto their circles and the neighbouring edges meeting them there, so
+the sketch of a photographed part is lines and arcs, not a polygon. A reference of known size on the
 sheet (a steel rule's millimetre ticks, found as thin marks darker than
 their surroundings, clustered by the edge their bases share and fitted
 index against position; a photo scale's alternating bars, found as an

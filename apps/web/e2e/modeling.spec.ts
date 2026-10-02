@@ -1067,7 +1067,13 @@ test("a photograph of parts on the measuring sheet is measured and sketched", as
   expect(Math.abs(plate.holes[0][1] - 65)).toBeLessThan(1);
   expect(Math.abs(plate.holes[0][2] - 55)).toBeLessThan(1);
   expect(Math.abs(disc.d - 20)).toBeLessThan(1);
+  // The outlines are fitted: the plate is four straight edges, the disc one circle.
+  const edges = await page.evaluate(() => (window as any).offkilter.photo.result.parts.map((p: any) => p.edges.map((e: any) => e.type)));
+  expect(edges.find((e: string[]) => e.length === 4).every((t: string) => t === "line")).toBe(true);
+  expect(edges.find((e: string[]) => e.length === 1)).toEqual(["circle"]);
   await expect(page.locator("#photo-parts li").first()).toContainText("mm");
+  await expect(page.locator("#photo-parts li", { hasText: "fits 4 straight edges" })).toHaveCount(1);
+  await expect(page.locator("#photo-parts li", { hasText: /fits a circle R(9\.[89]|10\.[01])/ })).toHaveCount(1);
   // The outlines become a sketch on the top plane, one undo step, with a circle for the disc.
   const before = await page.evaluate(() => (window as any).offkilter.summary.features.length as number);
   await page.click("#photo-sketch");
@@ -1081,7 +1087,7 @@ test("a photograph of parts on the measuring sheet is measured and sketched", as
   });
   expect(sketch.name).toBe("Photo outlines");
   expect(sketch.features).toBe(before + 1);
-  expect(sketch.lines).toBeGreaterThanOrEqual(4);
+  expect(sketch.lines).toBe(4);
   expect(sketch.circles.length).toBe(2);
   expect(sketch.circles.some((r: number) => Math.abs(r - 10) < 0.5)).toBe(true);
   expect(sketch.circles.some((r: number) => Math.abs(r - 4) < 0.5)).toBe(true);
