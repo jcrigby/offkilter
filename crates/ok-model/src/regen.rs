@@ -911,6 +911,40 @@ impl PartStudio {
         if !(gf.width.is_finite() && gf.width > ok_math::tol::LINEAR) {
             return Some("width must be positive".into());
         }
+        if gf.cone != 0.0 {
+            // A bevel gear: the apex at the centre, the teeth out along
+            // the normal (or against it), the face width along the cone.
+            let pitch =
+                match ok_sketch::gear::bevel_pitch(&gf.params(), gf.cone, opts.arc_segment_angle) {
+                    Ok(p) => p,
+                    Err(e) => return Some(e),
+                };
+            let axis = match gf.direction {
+                ExtrudeDirection::Normal => plane.normal,
+                ExtrudeDirection::Reverse => -plane.normal,
+                ExtrudeDirection::Symmetric => {
+                    return Some(
+                        "a bevel gear extends one way from its apex: normal or reverse".into(),
+                    )
+                }
+            };
+            let solid = match ok_brep::bevel_gear(
+                &pitch,
+                gf.teeth,
+                gf.width,
+                gf.bore,
+                gf.angle,
+                plane.to_world(gf.center),
+                axis,
+                plane.x_axis,
+                opts.arc_segment_angle,
+                id.0,
+            ) {
+                Ok(s) => s,
+                Err(e) => return Some(e.to_string()),
+            };
+            return Self::apply_tool(result, id, solid, gf.op);
+        }
         let profile = match ok_sketch::gear::profile(&gf.params(), opts.arc_segment_angle) {
             Ok(p) => p,
             Err(e) => return Some(e),
@@ -3072,6 +3106,125 @@ mod tests {
         assert!(r.errors().next().is_some());
     }
 
+    /// A bevel pair on shafts at 90°: a 16-tooth pinion on the top plane
+    /// (17.9 virtual teeth, just clear of undercut) and a 32-tooth wheel
+    /// on a plane turned onto the y axis, apexes
+    /// together, mesh with a space facing a tooth and clash tooth to
+    /// tooth; a symmetric bevel is refused.
+    #[test]
+    fn bevel_gears_mesh_on_shafts_at_ninety_degrees() {
+        let (n1, n2) = (16u32, 32u32);
+        let cone1 = (n1 as f64 / n2 as f64).atan().to_degrees();
+        let cone2 = 90.0 - cone1;
+        let gear =
+            |plane: PlaneRef, teeth: u32, cone: f64, angle: f64, direction: ExtrudeDirection| {
+                Op::AddGear {
+                    plane,
+                    center: Vec2::new(0.0, 0.0),
+                    module: 2.0,
+                    teeth,
+                    pressure_angle: 20.0,
+                    width: 8.0,
+                    direction,
+                    bore: 6.0,
+                    rim: 0.0,
+                    angle,
+                    backlash: 0.1,
+                    shift: 0.0,
+                    fillet: 0.0,
+                    cone,
+                    op: BodyOp::New,
+                    name: None,
+                }
+            };
+        // The wheel's plane: the top plane turned -90° about x has its
+        // normal along +y and its y axis along -z. The mesh line, where
+        // the pinion's tooth at azimuth 90° points, is (0, sin δ1, cos δ1).
+        let wheel_plane = PlaneRef::Rotated {
+            base: StandardPlane::Top,
+            axis: crate::Axis::X,
+            angle: -90.0,
+            offset: 0.0,
+        };
+        let frame = crate::rotated_plane(StandardPlane::Top, crate::Axis::X, -90.0, 0.0);
+        assert!(
+            (frame.normal - Vec3::new(0.0, 1.0, 0.0)).length() < 1e-9,
+            "{frame:?}"
+        );
+        let d1 = cone1.to_radians();
+        let line = Vec3::new(0.0, d1.sin(), d1.cos());
+        let azimuth = line
+            .dot(frame.y_axis)
+            .atan2(line.dot(frame.x_axis))
+            .to_degrees();
+        let clash_at = |wheel_angle: f64| -> f64 {
+            let mut ps = PartStudio::new("t");
+            ps.apply(gear(
+                PlaneRef::standard(StandardPlane::Top),
+                n1,
+                cone1,
+                90.0,
+                ExtrudeDirection::Normal,
+            ))
+            .unwrap();
+            ps.apply(gear(
+                wheel_plane,
+                n2,
+                cone2,
+                wheel_angle,
+                ExtrudeDirection::Normal,
+            ))
+            .unwrap();
+            let r = ps.regenerate();
+            assert!(
+                r.errors().next().is_none(),
+                "{:?}",
+                r.errors().collect::<Vec<_>>()
+            );
+            assert_eq!(r.bodies.len(), 2);
+            for b in &r.bodies {
+                b.solid.validate().unwrap();
+                let bores = b
+                    .solid
+                    .surfaces
+                    .iter()
+                    .filter(|s| matches!(s, ok_brep::Surface::Cylinder { radius, .. } if (radius - 3.0).abs() < 1e-9))
+                    .count();
+                assert_eq!(bores, 1);
+            }
+            ok_brep::boolean(
+                &r.bodies[0].solid,
+                &r.bodies[1].solid,
+                ok_brep::BoolOp::Intersection,
+            )
+            .map(|s| s.volume().abs())
+            .unwrap_or(f64::NAN)
+        };
+        let meshed = clash_at(azimuth + 180.0 / n2 as f64);
+        assert!(meshed < 0.5, "meshed pair overlaps by {meshed} mm³");
+        let clashing = clash_at(azimuth);
+        assert!(
+            clashing > 10.0,
+            "tooth on tooth overlaps by only {clashing} mm³"
+        );
+        let mut ps = PartStudio::new("t");
+        ps.apply(gear(
+            PlaneRef::standard(StandardPlane::Top),
+            n1,
+            cone1,
+            0.0,
+            ExtrudeDirection::Symmetric,
+        ))
+        .unwrap();
+        let r = ps.regenerate();
+        let err = r
+            .errors()
+            .next()
+            .map(|(_, e)| e.to_string())
+            .unwrap_or_default();
+        assert!(err.contains("one way"), "{err}");
+    }
+
     /// A 20-tooth pinion meshing with a 40-tooth gear at their centre
     /// distance: both close, the bore is one cylinder, the two do not
     /// intersect with a space facing a tooth and do tooth to tooth; the
@@ -3094,6 +3247,7 @@ mod tests {
             backlash: 0.0,
             shift: 0.0,
             fillet: 0.0,
+            cone: 0.0,
             op: BodyOp::New,
             name: None,
         };
@@ -3154,6 +3308,7 @@ mod tests {
             backlash: None,
             shift: None,
             fillet: None,
+            cone: None,
             op: None,
         })
         .unwrap();
@@ -3176,6 +3331,7 @@ mod tests {
             backlash: None,
             shift: None,
             fillet: Some(0.76),
+            cone: None,
             op: None,
         })
         .unwrap();
@@ -3209,6 +3365,7 @@ mod tests {
             backlash: None,
             shift: None,
             fillet: None,
+            cone: None,
             op: None,
         })
         .unwrap();

@@ -713,6 +713,13 @@ pub struct GearFeature {
     /// Root fillet radius, mm; zero for sharp corners.
     #[serde(default)]
     pub fillet: f64,
+    /// Pitch cone half-angle in degrees for a straight bevel gear
+    /// (`atan(teeth / mate's teeth)` for shafts at 90°); zero for a spur
+    /// gear. The apex sits at `center` on the plane and the teeth
+    /// `module × teeth / (2 sin cone)` along the normal, `width` being
+    /// the face width along the cone.
+    #[serde(default)]
+    pub cone: f64,
     #[serde(default)]
     pub op: BodyOp,
 }
@@ -845,6 +852,7 @@ impl FeatureKind {
                 "backlash".into(),
                 "shift".into(),
                 "fillet".into(),
+                "cone".into(),
             ],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
@@ -904,6 +912,7 @@ impl FeatureKind {
             (FeatureKind::Gear(g), "backlash") => Some(g.backlash),
             (FeatureKind::Gear(g), "shift") => Some(g.shift),
             (FeatureKind::Gear(g), "fillet") => Some(g.fillet),
+            (FeatureKind::Gear(g), "cone") => Some(g.cone),
             _ => None,
         }
     }
@@ -1042,6 +1051,10 @@ impl FeatureKind {
             }
             (FeatureKind::Gear(g), "fillet") => {
                 g.fillet = value;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "cone") => {
+                g.cone = value;
                 Ok(())
             }
             (FeatureKind::Hole(h), "diameter") => {

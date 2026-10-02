@@ -540,6 +540,9 @@ pub enum Op {
         shift: f64,
         #[serde(default)]
         fillet: f64,
+        /// Pitch cone half-angle in degrees for a bevel gear; zero for a spur gear.
+        #[serde(default)]
+        cone: f64,
         #[serde(default)]
         op: BodyOp,
         name: Option<String>,
@@ -572,6 +575,8 @@ pub enum Op {
         shift: Option<f64>,
         #[serde(default)]
         fillet: Option<f64>,
+        #[serde(default)]
+        cone: Option<f64>,
         #[serde(default)]
         op: Option<BodyOp>,
     },
@@ -1699,6 +1704,7 @@ impl PartStudio {
                 backlash,
                 shift,
                 fillet,
+                cone,
                 op,
                 name,
             } => {
@@ -1717,6 +1723,7 @@ impl PartStudio {
                         backlash,
                         shift,
                         fillet,
+                        cone,
                         op,
                     }),
                     name,
@@ -1737,6 +1744,7 @@ impl PartStudio {
                 backlash,
                 shift,
                 fillet,
+                cone,
                 op,
             } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Gear(g) => {
@@ -1778,6 +1786,9 @@ impl PartStudio {
                     }
                     if let Some(v) = fillet {
                         g.fillet = v;
+                    }
+                    if let Some(v) = cone {
+                        g.cone = v;
                     }
                     if let Some(v) = op {
                         g.op = v;
