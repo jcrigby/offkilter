@@ -32,8 +32,8 @@ constants at the top of `build.py` say which.
 | Flex shaft | 16 mm casing, 233 mm end to end, a 25 mm coupling at each end |
 | Worm gearbox | NMRV040, 20:1, 14 mm input, hollow 18 mm output, about 70 % efficient |
 | Drive wheel | 20 inch bicycle front wheel, 508 mm tyre, 100 mm six-bolt disc hub, 10 mm axle |
-| Ring gear | 80 teeth, module 3, internal, 265 mm rim, 20 mm face, 0.15 mm backlash; printed as six sectors, a 3 mm dowel in each rim joint |
-| Pinion | 17 teeth, module 3, 20 mm face, 18 mm bore; printed |
+| Ring gear | 80 teeth, module 3, internal, 265 mm rim, 20 mm face, 0.15 mm backlash, 0.45 mm root fillets; printed as six sectors, a 3 mm dowel in each rim joint |
+| Pinion | 17 teeth, module 3, 20 mm face, 18 mm bore, 1.14 mm root fillets; printed |
 | Ratio | 20 × 80/17 = 94.1:1 |
 | Speed | 51 rpm at the wheel, 1.36 m/s (4.9 km/h) at no load; the trigger below that |
 | Load case | 80 kg up a 15 % hill with 2 % rolling resistance |

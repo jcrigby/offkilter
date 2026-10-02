@@ -537,6 +537,10 @@ pub enum Op {
         #[serde(default)]
         backlash: f64,
         #[serde(default)]
+        shift: f64,
+        #[serde(default)]
+        fillet: f64,
+        #[serde(default)]
         op: BodyOp,
         name: Option<String>,
     },
@@ -564,6 +568,10 @@ pub enum Op {
         angle: Option<f64>,
         #[serde(default)]
         backlash: Option<f64>,
+        #[serde(default)]
+        shift: Option<f64>,
+        #[serde(default)]
+        fillet: Option<f64>,
         #[serde(default)]
         op: Option<BodyOp>,
     },
@@ -1689,6 +1697,8 @@ impl PartStudio {
                 rim,
                 angle,
                 backlash,
+                shift,
+                fillet,
                 op,
                 name,
             } => {
@@ -1705,6 +1715,8 @@ impl PartStudio {
                         rim,
                         angle,
                         backlash,
+                        shift,
+                        fillet,
                         op,
                     }),
                     name,
@@ -1723,6 +1735,8 @@ impl PartStudio {
                 rim,
                 angle,
                 backlash,
+                shift,
+                fillet,
                 op,
             } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Gear(g) => {
@@ -1758,6 +1772,12 @@ impl PartStudio {
                     }
                     if let Some(v) = backlash {
                         g.backlash = v;
+                    }
+                    if let Some(v) = shift {
+                        g.shift = v;
+                    }
+                    if let Some(v) = fillet {
+                        g.fillet = v;
                     }
                     if let Some(v) = op {
                         g.op = v;

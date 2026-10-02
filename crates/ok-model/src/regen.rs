@@ -3092,6 +3092,8 @@ mod tests {
             rim,
             angle,
             backlash: 0.0,
+            shift: 0.0,
+            fillet: 0.0,
             op: BodyOp::New,
             name: None,
         };
@@ -3150,11 +3152,47 @@ mod tests {
             rim: None,
             angle: Some(0.0),
             backlash: None,
+            shift: None,
+            fillet: None,
             op: None,
         })
         .unwrap();
         let r = ps.regenerate();
         assert!(overlap(&r) > 1e-2 * v, "{}", overlap(&r));
+        // A root fillet on the wheel: a cylinder per corner, forty of
+        // them, and the mesh unchanged.
+        ps.apply(Op::SetGear {
+            id: wheel,
+            plane: None,
+            center: None,
+            module: None,
+            teeth: None,
+            pressure_angle: None,
+            width: None,
+            direction: None,
+            bore: None,
+            rim: None,
+            angle: Some(180.0 / 40.0),
+            backlash: None,
+            shift: None,
+            fillet: Some(0.76),
+            op: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let fillets = r.bodies[1]
+            .solid
+            .surfaces
+            .iter()
+            .filter(|s| matches!(s, ok_brep::Surface::Cylinder { radius, .. } if (radius - 0.76).abs() < 1e-9))
+            .count();
+        assert_eq!(fillets, 80, "two fillets on each of forty teeth");
+        assert!(overlap(&r) < 1e-3 * v, "{}", overlap(&r));
         // Twelve teeth at 20° is refused with the rule.
         ps.apply(Op::SetGear {
             id: wheel,
@@ -3169,6 +3207,8 @@ mod tests {
             rim: None,
             angle: None,
             backlash: None,
+            shift: None,
+            fillet: None,
             op: None,
         })
         .unwrap();

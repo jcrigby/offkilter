@@ -90,8 +90,8 @@ export type FeatureKind =
   | { type: "mesh"; vertices: Vec3[]; triangles: [number, number, number][] }
   | { type: "split"; plane: PlaneRef; bodies?: number[] }
   | { type: "puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap: number; bit: number; lock: number; grain: Grain; web: number; seed: number; jitter: number; fixture: number; show: PuzzleLayout; spread: number; light?: Material; dark?: Material; tabs: PuzzleTab[]; corners: Vec2[] }
-  /** An involute spur gear: external with a `bore`, or internal (teeth inside a ring of outer diameter `rim`) when `rim` is set; `angle` turns the first tooth's centreline from the plane's x axis, `backlash` thins the teeth at the pitch circle. */
-  | { type: "gear"; plane: PlaneRef; center: Vec2; module: number; teeth: number; pressure_angle: number; width: number; direction: ExtrudeDirection; bore: number; rim: number; angle: number; backlash: number; op: BodyOp };
+  /** An involute spur gear: external with a `bore`, or internal (teeth inside a ring of outer diameter `rim`) when `rim` is set; `angle` turns the first tooth's centreline from the plane's x axis, `backlash` thins the teeth at the pitch circle, `shift` is the profile shift in modules (external only), `fillet` the root fillet radius. */
+  | { type: "gear"; plane: PlaneRef; center: Vec2; module: number; teeth: number; pressure_angle: number; width: number; direction: ExtrudeDirection; bore: number; rim: number; angle: number; backlash: number; shift: number; fillet: number; op: BodyOp };
 /** What a puzzle regenerates: the assembled design, or one colour's pieces laid out for its board with the rows spread a bit apart. */
 export type PuzzleLayout = "design" | "light" | "dark";
 /** One interlocking tab: `out` bulges towards the higher-index piece; `size` scales the tab, `width` the neck, `shift` places it along the edge (0..1). */
@@ -265,8 +265,8 @@ export type Op =
   | { type: "set_puzzle"; id: number; cols?: number; rows?: number; pitch?: number; thickness?: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; fixture?: number; show?: PuzzleLayout; spread?: number; light?: Material | null; dark?: Material | null; tabs?: PuzzleTab[]; corners?: Vec2[] }
   | { type: "set_puzzle_tab"; id: number; edge: number; out?: boolean; size?: number; width?: number; shift?: number }
   | { type: "set_puzzle_corner"; id: number; node: number; offset: Vec2 }
-  | { type: "add_gear"; plane: PlaneRef; center?: Vec2; module: number; teeth: number; pressure_angle?: number; width: number; direction?: ExtrudeDirection; bore?: number; rim?: number; angle?: number; backlash?: number; op?: BodyOp; name: string | null }
-  | { type: "set_gear"; id: number; plane?: PlaneRef | null; center?: Vec2 | null; module?: number | null; teeth?: number | null; pressure_angle?: number | null; width?: number | null; direction?: ExtrudeDirection | null; bore?: number | null; rim?: number | null; angle?: number | null; backlash?: number | null; op?: BodyOp | null }
+  | { type: "add_gear"; plane: PlaneRef; center?: Vec2; module: number; teeth: number; pressure_angle?: number; width: number; direction?: ExtrudeDirection; bore?: number; rim?: number; angle?: number; backlash?: number; shift?: number; fillet?: number; op?: BodyOp; name: string | null }
+  | { type: "set_gear"; id: number; plane?: PlaneRef | null; center?: Vec2 | null; module?: number | null; teeth?: number | null; pressure_angle?: number | null; width?: number | null; direction?: ExtrudeDirection | null; bore?: number | null; rim?: number | null; angle?: number | null; backlash?: number | null; shift?: number | null; fillet?: number | null; op?: BodyOp | null }
   | { type: "set_hole"; id: number; diameter?: number | null; depth?: number | null; through_all?: boolean | null; direction?: ExtrudeDirection | null; counterbore?: Counterbore | null; countersink?: Countersink | null }
   | { type: "add_sweep"; sketch: number; path: number; profiles?: ProfileSelection; op?: BodyOp; name: string | null }
   | { type: "set_sweep"; id: number; path?: number | null; profiles?: ProfileSelection | null; op?: BodyOp | null }

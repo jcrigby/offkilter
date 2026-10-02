@@ -2,16 +2,21 @@
 //! disc with the teeth round it and a bore through it) or internal (a
 //! ring with the teeth on its inside).
 //!
-//! Standard full-depth teeth: addendum one module, dedendum 1.25, no
-//! profile shift, no backlash (a tooth is as thick as its space at the
-//! pitch circle). Each flank is the involute of the base circle from the
-//! root (or from the base circle, with a radial flank below it, as a hob
-//! leaves) to the tip, sampled into short lines tagged as one smooth
-//! surface per flank; tips, roots, bores and rims are arcs, so they
-//! become cylinders. [`check`] refuses the designs that would not be what
-//! the drawing shows: too few teeth for the pressure angle (undercut),
-//! an internal gear whose tips fall inside its base circle, a bore or a
-//! rim that leaves less than a module of material.
+//! Standard full-depth teeth: addendum one module, dedendum 1.25, a
+//! tooth as thick as its space at the pitch circle unless backlash thins
+//! it, a profile shift that moves the rack out by `shift` modules on an
+//! external gear (thicker teeth, a taller tip, a shallower root, and
+//! fewer teeth before undercut), and an optional root fillet, a circular
+//! arc tangent to the flank and the root circle at every corner. Each
+//! flank is the involute of the base circle from the root (or from the
+//! base circle, with a radial flank below it, as a hob leaves) to the
+//! tip, sampled into short lines tagged as one smooth surface per
+//! flank; tips, roots, fillets, bores and rims are arcs, so they become
+//! cylinders. [`check`] refuses the designs that would not be what the
+//! drawing shows: too few teeth for the pressure angle and shift
+//! (undercut), an internal gear whose tips fall inside its base circle,
+//! a bore or a rim that leaves less than a module of material, a fillet
+//! too big for its corner.
 
 use crate::{Loop, Profile, SegmentCurve};
 use ok_math::Vec2;
@@ -39,6 +44,15 @@ pub struct Params {
     /// mm: the pair's circular backlash is the sum of both gears'. Zero
     /// draws the theoretical tooth; a printed pair wants 0.1 to 0.3.
     pub backlash: f64,
+    /// Profile shift coefficient, in modules, of an external gear: the
+    /// rack moved out by this much. Positive lets a pinion have fewer
+    /// teeth without undercut (+0.3 takes 12 at 20°); the pair then
+    /// mates a little further apart ([`working_centre_distance`]).
+    pub shift: f64,
+    /// Radius of the fillet at each root corner, mm; zero for a sharp
+    /// corner. The rack standard is 0.38 modules, and a printed gear is
+    /// much stronger for it.
+    pub fillet: f64,
 }
 
 /// The circles of a gear.
@@ -61,8 +75,41 @@ fn inv(a: f64) -> f64 {
 /// Fewest teeth an external gear can have at this pressure angle
 /// (degrees) without undercut: 17 at 20°, 12 at 25°, 32 at 14.5°.
 pub fn min_teeth(pressure_angle: f64) -> u32 {
+    min_teeth_shifted(pressure_angle, 0.0)
+}
+
+/// The same with a profile shift: 2 (1 - x) / sin² α, so +0.3 at 20°
+/// takes 12 teeth.
+pub fn min_teeth_shifted(pressure_angle: f64, shift: f64) -> u32 {
     let s = pressure_angle.to_radians().sin();
-    (2.0 / (s * s)).round() as u32
+    (2.0 * (1.0 - shift) / (s * s)).round().max(3.0) as u32
+}
+
+/// The centre distance two external gears mesh at with backlash-free
+/// contact, given their tooth counts, module, pressure angle (degrees)
+/// and profile shifts: the standard distance when the shifts sum to
+/// zero, found through the involute function otherwise.
+pub fn working_centre_distance(
+    module: f64,
+    pressure_angle: f64,
+    teeth: (u32, u32),
+    shifts: (f64, f64),
+) -> f64 {
+    let a = pressure_angle.to_radians();
+    let n = (teeth.0 + teeth.1) as f64;
+    let standard = module * n / 2.0;
+    let target = inv(a) + 2.0 * (shifts.0 + shifts.1) * a.tan() / n;
+    // inv is increasing; bisect for the working pressure angle.
+    let (mut lo, mut hi) = (0.0f64, 1.4f64);
+    for _ in 0..80 {
+        let mid = (lo + hi) / 2.0;
+        if inv(mid) < target {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    standard * a.cos() / ((lo + hi) / 2.0).cos()
 }
 
 /// Fewest teeth an internal gear can have at this pressure angle before
@@ -75,15 +122,16 @@ pub fn dims(p: &Params) -> Dims {
     let m = p.module;
     let rp = m * p.teeth as f64 / 2.0;
     let internal = p.rim > 0.0;
+    let x = if internal { 0.0 } else { p.shift };
     Dims {
         internal,
         pitch_radius: rp,
         base_radius: rp * p.pressure_angle.to_radians().cos(),
-        tip_radius: if internal { rp - m } else { rp + m },
+        tip_radius: if internal { rp - m } else { rp + m * (1.0 + x) },
         root_radius: if internal {
             rp + DEDENDUM * m
         } else {
-            rp - DEDENDUM * m
+            rp - m * (DEDENDUM - x)
         },
     }
 }
@@ -102,6 +150,19 @@ pub fn check(p: &Params) -> Result<Dims, String> {
     if !(p.backlash.is_finite() && p.backlash >= 0.0) {
         return Err("backlash must be zero or positive".into());
     }
+    if !(p.shift.is_finite() && (-0.5..=1.0).contains(&p.shift)) {
+        return Err("profile shift must be between -0.5 and 1 modules".into());
+    }
+    if !(p.fillet.is_finite() && p.fillet >= 0.0) {
+        return Err("fillet must be zero or positive".into());
+    }
+    if p.fillet > 0.5 * p.module {
+        return Err(format!(
+            "a fillet of {} mm is more than half a module; the rack standard is {:.2}",
+            p.fillet,
+            0.38 * p.module
+        ));
+    }
     if !p.angle.is_finite() || !p.center.x.is_finite() || !p.center.y.is_finite() {
         return Err("angle and centre must be finite".into());
     }
@@ -110,6 +171,9 @@ pub fn check(p: &Params) -> Result<Dims, String> {
     if d.internal {
         if p.bore > 0.0 {
             return Err("an internal gear takes a rim diameter, not a bore".into());
+        }
+        if p.shift != 0.0 {
+            return Err("profile shift is drawn for external gears only".into());
         }
         let least = min_internal_teeth(p.pressure_angle);
         if p.teeth < least {
@@ -126,12 +190,15 @@ pub fn check(p: &Params) -> Result<Dims, String> {
             ));
         }
     } else {
-        let least = min_teeth(p.pressure_angle);
+        let least = min_teeth_shifted(p.pressure_angle, p.shift);
         if p.teeth < least {
+            let shift_for =
+                1.0 - p.teeth as f64 * p.pressure_angle.to_radians().sin().powi(2) / 2.0;
             return Err(format!(
-                "{} teeth at {}° would be undercut: at least {least} teeth, or a larger pressure angle (25° takes {})",
+                "{} teeth at {}° would be undercut: at least {least} teeth, a profile shift of +{:.2}, or a larger pressure angle (25° takes {})",
                 p.teeth,
                 p.pressure_angle,
+                (shift_for * 100.0).ceil() / 100.0,
                 min_teeth(25.0)
             ));
         }
@@ -147,6 +214,30 @@ pub fn check(p: &Params) -> Result<Dims, String> {
     if half(d.tip_radius) <= 0.0 {
         return Err("the teeth come to a point".into());
     }
+    if p.fillet > 0.0 {
+        // The two fillets of a space must fit between its flanks at the
+        // root, with room for a root arc between them.
+        let (rf, step) = (d.root_radius, 2.0 * PI / p.teeth as f64);
+        let rc = if d.internal {
+            rf - p.fillet
+        } else {
+            rf + p.fillet
+        };
+        let delta = (p.fillet / rc).asin();
+        let space = step
+            - 2.0
+                * half(if d.internal {
+                    d.root_radius
+                } else {
+                    d.root_radius.max(d.base_radius)
+                });
+        if 2.0 * delta >= space {
+            return Err(format!(
+                "a fillet of {} mm does not fit the space between the teeth at the root",
+                p.fillet
+            ));
+        }
+    }
     Ok(d)
 }
 
@@ -157,7 +248,9 @@ pub fn check(p: &Params) -> Result<Dims, String> {
 /// deeper thins a tooth.
 fn half_angle(p: &Params, d: &Dims) -> impl Fn(f64) -> f64 {
     let n = p.teeth as f64;
-    let half_pitch = PI / (2.0 * n) - p.backlash / (2.0 * d.pitch_radius);
+    let shift = if d.internal { 0.0 } else { p.shift };
+    let half_pitch = PI / (2.0 * n) + 2.0 * shift * p.pressure_angle.to_radians().tan() / n
+        - p.backlash / (2.0 * d.pitch_radius);
     let inv_a = inv(p.pressure_angle.to_radians());
     let rb = d.base_radius;
     let internal = d.internal;
@@ -169,6 +262,37 @@ fn half_angle(p: &Params, d: &Dims) -> impl Fn(f64) -> f64 {
             half_pitch + inv_a - inv_r
         }
     }
+}
+
+/// A root fillet: the arc of radius `rho` tangent to the flank at its
+/// root end and to the root circle. `p0` is the flank's root-end point,
+/// `t` the unit direction up the flank from it, `n` the unit normal
+/// from the flank into the space, and `rc` the radius the fillet's
+/// centre sits at (the root radius plus `rho` outside, minus it on an
+/// internal gear). Returns the centre and how far up the flank from
+/// `p0` the fillet meets it, the nearer solution when there are two.
+fn fillet_corner(
+    center: Vec2,
+    p0: Vec2,
+    t: Vec2,
+    n: Vec2,
+    rho: f64,
+    rc: f64,
+) -> Option<(Vec2, f64)> {
+    let q = p0 + n * rho - center;
+    let b = q.dot(t);
+    let disc = b * b - q.length_squared() + rc * rc;
+    if disc < 0.0 {
+        return None;
+    }
+    let s = [-b - disc.sqrt(), -b + disc.sqrt()]
+        .into_iter()
+        .filter(|s| *s >= -1e-9)
+        .fold(f64::INFINITY, f64::min);
+    if !s.is_finite() {
+        return None;
+    }
+    Some((p0 + t * s + n * rho, s.max(0.0)))
 }
 
 /// Points of the gear's outline, counter-clockwise, each tagged with the
@@ -186,14 +310,40 @@ fn outline(p: &Params, d: &Dims, seg: f64) -> Loop {
     let roll = |r: f64| ((r / rb).powi(2) - 1.0).max(0.0).sqrt();
     let radius = |t: f64| rb * (1.0 + t * t).sqrt();
     let mut pts: Vec<(Vec2, SegmentCurve)> = Vec::new();
-    // Interior points of an arc from a0 to a1 (both excluded).
-    let arc = |r: f64, a0: f64, a1: f64, pts: &mut Vec<(Vec2, SegmentCurve)>| {
-        let tag = SegmentCurve::Arc { center, radius: r };
-        let steps = ((a1 - a0) / seg).ceil().max(1.0) as usize;
-        for s in 1..steps {
-            let a = a0 + (a1 - a0) * s as f64 / steps as f64;
-            pts.push((polar(r, a), tag));
+    // Interior points of an arc about `c` from a0 to a1 (both excluded),
+    // sweeping the short way.
+    let arc_about = |c: Vec2,
+                     r: f64,
+                     a0: f64,
+                     a1: f64,
+                     tag: SegmentCurve,
+                     pts: &mut Vec<(Vec2, SegmentCurve)>| {
+        let mut sweep = a1 - a0;
+        while sweep > PI {
+            sweep -= 2.0 * PI;
         }
+        while sweep < -PI {
+            sweep += 2.0 * PI;
+        }
+        // A small arc (a fillet) takes the angle whose chord sags no
+        // more than a hundredth of a millimetre, so it is not cut into
+        // facets far finer than the rest of the gear.
+        let step = seg.max(2.0 * (1.0 - 0.01 / r).max(-1.0).acos());
+        let steps = (sweep.abs() / step).ceil().max(1.0) as usize;
+        for s in 1..steps {
+            let a = a0 + sweep * s as f64 / steps as f64;
+            pts.push((c + Vec2::from_angle(a) * r, tag));
+        }
+    };
+    let arc = |r: f64, a0: f64, a1: f64, pts: &mut Vec<(Vec2, SegmentCurve)>| {
+        arc_about(
+            center,
+            r,
+            a0,
+            a1,
+            SegmentCurve::Arc { center, radius: r },
+            pts,
+        );
     };
     let tip = SegmentCurve::Arc {
         center,
@@ -219,53 +369,166 @@ fn outline(p: &Params, d: &Dims, seg: f64) -> Loop {
     let (t_lo, t_hi) = (roll(r_lo), roll(r_hi));
     let half_lo = half(r_lo);
     let half_tip = half(d.tip_radius);
-    let half_root = if radial { half_lo } else { half(d.root_radius) };
+    // The flank's sample radii from the root end to the tip end.
+    let flank_up: Vec<f64> = if d.internal {
+        (0..=FLANK_STEPS)
+            .map(|j| radius(t_hi + (t_lo - t_hi) * j as f64 / FLANK_STEPS as f64))
+            .collect()
+    } else {
+        (0..=FLANK_STEPS)
+            .map(|j| radius(t_lo + (t_hi - t_lo) * j as f64 / FLANK_STEPS as f64))
+            .collect()
+    };
+    // The root fillet of one side of a tooth: side = -1 for the right
+    // flank, +1 for the left. Returns the centre, the tangent point on
+    // the flank, the tangent point on the root circle, and how many
+    // flank samples from the root end the fillet replaces.
+    let rho = p.fillet;
+    let r_root = d.root_radius;
+    let rc = if d.internal {
+        r_root - rho
+    } else {
+        r_root + rho
+    };
+    let fillet_of = |phi: f64, side: f64| -> Option<(Vec2, Vec2, Vec2, usize)> {
+        if rho <= 0.0 {
+            return None;
+        }
+        // The flank's root end, its direction up the flank (the chord to
+        // the next sample stands in for the involute's tangent, and a
+        // radial piece below the base circle is the first chord), and
+        // the samples' distances along it. A fillet that reaches past a
+        // short radial piece carries on up the involute.
+        let mut samples: Vec<Vec2> = if radial {
+            vec![polar(r_root, phi + side * half_lo)]
+        } else {
+            Vec::new()
+        };
+        samples.extend(flank_up.iter().map(|&r| polar(r, phi + side * half(r))));
+        let p0 = samples[0];
+        let t = (samples[1] - p0).normalized()?;
+        // Into the space: square to the flank, away from the centreline.
+        let away = Vec2::from_angle(phi + side * PI / 2.0);
+        let n = if t.perp().dot(away) > 0.0 {
+            t.perp()
+        } else {
+            -t.perp()
+        };
+        let (c, s) = fillet_corner(center, p0, t, n, rho, rc)?;
+        // How many samples the fillet replaces, counting the root corner
+        // of a radial flank as the first.
+        let replaced = samples.iter().filter(|q| (**q - p0).dot(t) < s).count();
+        if replaced >= samples.len() - 1 {
+            return None;
+        }
+        let on_root = center + (c - center).normalized()? * r_root;
+        Some((c, p0 + t * s, on_root, replaced))
+    };
     for i in 0..n {
         let phi = p.angle.to_radians() + i as f64 * tau;
         let flank_right = SegmentCurve::Spline { id: 2 * i as u32 };
         let flank_left = SegmentCurve::Spline {
             id: 2 * i as u32 + 1,
         };
-        if radial {
-            pts.push((polar(d.root_radius, phi - half_lo), SegmentCurve::Line));
-        }
-        // Right flank (negative side of the centreline) from the root
-        // towards the tip, then the tip arc, then the left flank back.
-        // On an internal gear the tip is the inner end, so the flank
-        // runs inwards first.
-        let flank: Vec<f64> = if d.internal {
-            (0..=FLANK_STEPS)
-                .map(|j| radius(t_hi + (t_lo - t_hi) * j as f64 / FLANK_STEPS as f64))
-                .collect()
-        } else {
-            (0..=FLANK_STEPS)
-                .map(|j| radius(t_lo + (t_hi - t_lo) * j as f64 / FLANK_STEPS as f64))
-                .collect()
+        let right = fillet_of(phi, -1.0);
+        let left = fillet_of(phi, 1.0);
+        let fillet_tag = |c: Vec2| SegmentCurve::Arc {
+            center: c,
+            radius: rho,
         };
-        for (j, &r) in flank.iter().enumerate() {
+        // The right fillet, from the root circle up to the flank, or the
+        // root corner of a radial flank.
+        let skip_right = match &right {
+            Some((c, on_flank, on_root, replaced)) => {
+                pts.push((*on_root, fillet_tag(*c)));
+                arc_about(
+                    *c,
+                    rho,
+                    (*on_root - *c).angle(),
+                    (*on_flank - *c).angle(),
+                    fillet_tag(*c),
+                    &mut pts,
+                );
+                // On the radial piece the next point is the base circle;
+                // past it the fillet meets the involute.
+                let on_radial = radial && *replaced == 0;
+                pts.push((
+                    *on_flank,
+                    if on_radial {
+                        SegmentCurve::Line
+                    } else {
+                        flank_right
+                    },
+                ));
+                if radial {
+                    replaced.saturating_sub(1)
+                } else {
+                    *replaced
+                }
+            }
+            None => {
+                if radial {
+                    pts.push((polar(r_root, phi - half_lo), SegmentCurve::Line));
+                }
+                0
+            }
+        };
+        // Right flank (negative side of the centreline) from the root
+        // end towards the tip, then the tip arc, then the left flank
+        // back. On an internal gear the tip is the inner end.
+        for (j, &r) in flank_up.iter().enumerate().skip(skip_right) {
             let tag = if j < FLANK_STEPS { flank_right } else { tip };
             pts.push((polar(r, phi - half(r)), tag));
         }
         arc(d.tip_radius, phi - half_tip, phi + half_tip, &mut pts);
-        for (j, &r) in flank.iter().enumerate().rev() {
-            let tag = if j > 0 {
+        let replaced_left = left.as_ref().map_or(0, |f| f.3);
+        let skip_left = if radial {
+            replaced_left.saturating_sub(1)
+        } else {
+            replaced_left
+        };
+        let kept = FLANK_STEPS + 1 - skip_left;
+        for (k, &r) in flank_up.iter().rev().take(kept).enumerate() {
+            let last = k + 1 == kept;
+            let tag = if !last {
                 flank_left
-            } else if radial {
+            } else if radial && (left.is_none() || replaced_left == 0) {
                 SegmentCurve::Line
+            } else if left.is_some() {
+                flank_left
             } else {
                 root
             };
             pts.push((polar(r, phi + half(r)), tag));
         }
-        if radial {
-            pts.push((polar(d.root_radius, phi + half_lo), root));
-        }
-        arc(
-            d.root_radius,
-            phi + half_root,
-            phi + tau - half_root,
-            &mut pts,
-        );
+        // The left fillet, from the flank down to the root circle, then
+        // the root arc to the next tooth's right fillet (or corner).
+        let root_start = match &left {
+            Some((c, on_flank, on_root, _)) => {
+                pts.push((*on_flank, fillet_tag(*c)));
+                arc_about(
+                    *c,
+                    rho,
+                    (*on_flank - *c).angle(),
+                    (*on_root - *c).angle(),
+                    fillet_tag(*c),
+                    &mut pts,
+                );
+                pts.push((*on_root, root));
+                (*on_root - center).angle()
+            }
+            None => {
+                if radial {
+                    pts.push((polar(r_root, phi + half_lo), root));
+                }
+                phi + if radial { half_lo } else { half(r_root) }
+            }
+        };
+        let root_end = match fillet_of(phi + tau, -1.0) {
+            Some((_, _, on_root, _)) => (on_root - center).angle(),
+            None => phi + tau - if radial { half_lo } else { half(r_root) },
+        };
+        arc(r_root, root_start, root_end, &mut pts);
     }
     let (points, curves) = pts.into_iter().unzip();
     Loop { points, curves }
@@ -328,6 +591,8 @@ mod tests {
             bore: 0.0,
             rim: 0.0,
             backlash: 0.0,
+            shift: 0.0,
+            fillet: 0.0,
         }
     }
 
@@ -517,6 +782,145 @@ mod tests {
         assert!(!point_in_polygon(q, &outline.points));
         let q2 = Vec2::from_angle(a - 0.1 / d.pitch_radius * 1.05) * d.pitch_radius;
         assert!(point_in_polygon(q2, &outline.points));
+    }
+
+    /// A fillet at every root corner: an arc of the asked radius, the
+    /// outline still between its circles, a little more material (two
+    /// fillets of a right-angle corner add 2 (1 - π/4) ρ² per space;
+    /// the corners here run from obtuse on the internal gear to acute
+    /// on the pinion, so between a quarter and four times that), and
+    /// the mates still clear. Radial flanks
+    /// (20 teeth), an involute down to the root (50 teeth) and an
+    /// internal gear, whose spaces are narrow at the root and take only
+    /// a small fillet, each take it.
+    #[test]
+    fn root_fillets_round_every_corner_and_the_gears_still_mesh() {
+        for (teeth, rim, rho) in [(20, 0.0, 0.95), (50, 0.0, 0.95), (80, 220.0, 0.375)] {
+            let plain = Params {
+                rim,
+                ..gear(2.5, teeth, 20.0)
+            };
+            let rounded = Params {
+                fillet: rho,
+                ..plain
+            };
+            let a = profile(&plain, SEG).unwrap();
+            let b = profile(&rounded, SEG).unwrap();
+            let d = dims(&plain);
+            let teeth_loop = |pr: &Profile| {
+                if rim > 0.0 {
+                    pr.holes[0].reversed()
+                } else {
+                    pr.outer.clone()
+                }
+            };
+            let (ta, tb) = (teeth_loop(&a), teeth_loop(&b));
+            let fillets = tb
+                .curves
+                .iter()
+                .filter(|c| matches!(c, SegmentCurve::Arc { radius, .. } if (radius - rho).abs() < 1e-9))
+                .count();
+            assert!(
+                fillets >= 2 * teeth as usize,
+                "{teeth}: {fillets} fillet pieces"
+            );
+            let (lo, hi) = radii(&tb, plain.center);
+            let (rlo, rhi) = if rim > 0.0 {
+                (d.tip_radius, d.root_radius)
+            } else {
+                (d.root_radius, d.tip_radius)
+            };
+            assert!(lo >= rlo - 1e-9 && hi <= rhi + 1e-9, "{teeth}: {lo} {hi}");
+            let added = tb.signed_area() - ta.signed_area();
+            let square = 2.0 * (1.0 - PI / 4.0) * rho * rho * teeth as f64;
+            let sign = if rim > 0.0 { -1.0 } else { 1.0 };
+            assert!(
+                sign * added > 0.25 * square && sign * added < 4.0 * square,
+                "{teeth}: fillets added {added} mm², a right-angle corner's would be {}",
+                sign * square
+            );
+        }
+        // The pair of the meshing test, both rounded, still clears.
+        let a = Params {
+            fillet: 0.76,
+            ..gear(2.0, 20, 20.0)
+        };
+        let b = Params {
+            center: Vec2::new(60.0, 0.0),
+            angle: 180.0 / 40.0,
+            fillet: 0.76,
+            ..gear(2.0, 40, 20.0)
+        };
+        let (pa, pb) = (
+            profile(&a, SEG).unwrap().outer,
+            profile(&b, SEG).unwrap().outer,
+        );
+        let overlap = |x: &Loop, y: &Loop| {
+            x.points
+                .iter()
+                .filter(|p| point_in_polygon(**p, &y.points))
+                .count()
+        };
+        assert_eq!(overlap(&pa, &pb) + overlap(&pb, &pa), 0);
+    }
+
+    /// A profile shift of +0.3 lets a 12-tooth pinion at 20° through the
+    /// undercut rule, grows its tip and shrinks its root by 0.3 modules,
+    /// and the pinion meshes with a plain 40-tooth gear at the working
+    /// centre distance, which is more than the standard one.
+    #[test]
+    fn profile_shift_takes_a_small_pinion_and_moves_the_centre_distance() {
+        let e = check(&gear(2.0, 12, 20.0)).unwrap_err();
+        assert!(e.contains("profile shift of +0.3"), "{e}");
+        assert_eq!(min_teeth_shifted(20.0, 0.3), 12);
+        let pinion = Params {
+            shift: 0.3,
+            ..gear(2.0, 12, 20.0)
+        };
+        let d = check(&pinion).unwrap();
+        assert!((d.tip_radius - 14.6).abs() < 1e-9 && (d.root_radius - 10.1).abs() < 1e-9);
+        let a = working_centre_distance(2.0, 20.0, (12, 40), (0.3, 0.0));
+        assert!(a > 52.0 && a < 52.7, "{a}");
+        assert!((working_centre_distance(2.0, 20.0, (12, 40), (0.0, 0.0)) - 52.0).abs() < 1e-9);
+        let wheel = Params {
+            center: Vec2::new(a, 0.0),
+            angle: 180.0 / 40.0,
+            ..gear(2.0, 40, 20.0)
+        };
+        let (pa, pb) = (
+            profile(&pinion, SEG).unwrap().outer,
+            profile(&wheel, SEG).unwrap().outer,
+        );
+        let overlap = |x: &Loop, y: &Loop| {
+            x.points
+                .iter()
+                .filter(|p| point_in_polygon(**p, &y.points))
+                .count()
+        };
+        assert_eq!(overlap(&pa, &pb) + overlap(&pb, &pa), 0);
+        let clash = Params {
+            angle: 0.0,
+            ..wheel
+        };
+        let pc = profile(&clash, SEG).unwrap().outer;
+        assert!(overlap(&pa, &pc) + overlap(&pc, &pa) > 0);
+        // Out of range, and no shift on an internal gear.
+        assert!(check(&Params {
+            shift: 1.5,
+            ..pinion
+        })
+        .is_err());
+        assert!(check(&Params {
+            fillet: 1.5,
+            ..gear(2.0, 20, 20.0)
+        })
+        .is_err());
+        assert!(check(&Params {
+            rim: 220.0,
+            shift: 0.2,
+            ..gear(2.5, 80, 20.0)
+        })
+        .is_err());
     }
 
     #[test]

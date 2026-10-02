@@ -403,6 +403,8 @@
               "rim": 265.0,
               "angle": 0.0,
               "backlash": 0.15,
+              "shift": 0.0,
+              "fillet": 0.45,
               "op": "new"
             }
           },
@@ -936,6 +938,8 @@
               "rim": 0.0,
               "angle": -110.91176470588236,
               "backlash": 0.15,
+              "shift": 0.0,
+              "fillet": 1.14,
               "op": "new"
             }
           },

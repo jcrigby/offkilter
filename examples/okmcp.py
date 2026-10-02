@@ -185,7 +185,7 @@ class Part:
         )
 
     def gear(self, module, teeth, width, base="top", offset=0.0, plane=None, center=(0.0, 0.0), pressure_angle=20.0,
-             direction="normal", bore=0.0, rim=0.0, angle=0.0, backlash=0.0, op="new", name=None):
+             direction="normal", bore=0.0, rim=0.0, angle=0.0, backlash=0.0, shift=0.0, fillet=0.0, op="new", name=None):
         """An involute spur gear as a body: external with a `bore`, or
         internal (teeth inside a ring of outer diameter `rim`) when `rim`
         is given. `plane` is a plane reference; otherwise a standard
@@ -208,6 +208,8 @@ class Part:
                 "rim": rim,
                 "angle": angle,
                 "backlash": backlash,
+                "shift": shift,
+                "fillet": fillet,
                 "op": op,
                 "name": name,
             }
