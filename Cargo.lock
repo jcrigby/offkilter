@@ -919,6 +919,7 @@ dependencies = [
  "ok-math",
  "ok-mesh",
  "ok-model",
+ "ok-photo",
  "ok-sheet",
  "ok-sketch",
  "ok-step",

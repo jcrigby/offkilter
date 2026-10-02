@@ -1,4 +1,4 @@
-import { Kernel, parseStep } from "./kernel";
+import { Kernel, measurePhoto, measuringSheetPdf, parseStep, type PhotoMeasurement } from "./kernel";
 import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
 
 /** The drawing dialog's hidden-lines choice: the kernel's rule, or forced on or off. */
@@ -992,6 +992,58 @@ class App implements SketchHost {
       }
     } catch (e) {
       this.setStatus(`DXF import stopped: ${(e as Error).message}`);
+    }
+    this.regenerate();
+    return added;
+  }
+
+  // ------------------------------------------------------------ photo measuring
+
+  /** The photograph last measured from the Measure photo dialog, and what was found. */
+  photo: { bytes: Uint8Array; name: string; result: PhotoMeasurement | null } | null = null;
+
+  /** Measures the loaded photograph with the dialog's sheet and reference and keeps the reading. */
+  measurePhoto(opts: { sheet?: string; reference?: string }): PhotoMeasurement {
+    if (!this.photo) throw new Error("no photograph loaded");
+    const result = measurePhoto(this.photo.bytes, opts);
+    this.photo.result = result;
+    return result;
+  }
+
+  /**
+   * A sketch "Photo outlines" on the top plane with the measured parts' outlines
+   * and holes, as the MCP tool's `sketch: true` adds: a circle for a round part,
+   * lines around any other, a circle per hole. One undo step; returns the
+   * number of entities drawn.
+   */
+  addPhotoSketch(): number {
+    const m = this.photo?.result;
+    if (!m) throw new Error("nothing measured yet");
+    if (this.summary.kind !== "part_studio") throw new Error("switch to a part studio tab to sketch the outlines");
+    this.snapshot();
+    let added = 0;
+    try {
+      const made = this.applyRaw({ type: "add_sketch", plane: { type: "standard", base: "top", offset: 0 }, name: "Photo outlines" });
+      const id = made.feature;
+      if (id === null || id === undefined) throw new Error("the sketch was not created");
+      const draw = (op: SketchOp) => {
+        this.applyRaw({ type: "sketch", id, op });
+        added += 1;
+      };
+      for (const p of m.parts) {
+        const round = p.circularity > 0.85;
+        if (round) draw({ type: "add_circle", center: { x: p.centroid[0], y: p.centroid[1] }, radius: p.diameter / 2 });
+        else {
+          for (let i = 0; i < p.outline.length; i++) {
+            const a = p.outline[i]!, b = p.outline[(i + 1) % p.outline.length]!;
+            if (Math.hypot(b[0] - a[0], b[1] - a[1]) < 1e-6) continue;
+            draw({ type: "add_line", a: { x: a[0], y: a[1] }, b: { x: b[0], y: b[1] } });
+          }
+        }
+        for (const h of p.holes) draw({ type: "add_circle", center: { x: h.centre[0], y: h.centre[1] }, radius: h.diameter / 2 });
+      }
+    } catch (e) {
+      this.setStatus(`photo sketch stopped: ${(e as Error).message}`);
     }
     this.regenerate();
     return added;
@@ -3880,6 +3932,80 @@ async function main(): Promise<void> {
     fileInput.value = "";
   };
   const stlInput = $("#stl-input") as HTMLInputElement;
+  // Measure photo: a picture of parts on the printed sheet, measured in the wasm, previewed and sketched.
+  const photoInput = $("#photo-input") as HTMLInputElement;
+  const photoDialog = $("#photo-dialog") as HTMLDialogElement;
+  const photoSheet = $("#photo-sheet") as HTMLSelectElement;
+  const photoReference = $("#photo-reference") as HTMLInputElement;
+  const fmt1 = (v: number) => v.toFixed(1);
+  const renderPhoto = () => {
+    const note = $("#photo-note");
+    const list = $("#photo-parts");
+    const img = $("#photo-picture") as HTMLImageElement;
+    const sketchBtn = $("#photo-sketch") as HTMLButtonElement;
+    list.innerHTML = "";
+    if (!app.photo) return;
+    let m: PhotoMeasurement;
+    try {
+      m = app.measurePhoto({ sheet: photoSheet.value, reference: photoReference.value });
+    } catch (e) {
+      note.textContent = `${app.photo.name}: ${(e as Error).message}`;
+      img.removeAttribute("src");
+      sketchBtn.disabled = true;
+      return;
+    }
+    img.src = `data:image/png;base64,${m.picture}`;
+    const lines: string[] = [];
+    if (m.sheet) lines.push(`${m.sheet} sheet (${m.sheet_read ? "read from the dots by the origin mark" : "as given; no size code seen"}): the four marks found, ${m.mm_per_pixel.toFixed(2)} mm per photo pixel, fit ${m.residual.toFixed(1)} px.`);
+    else lines.push(`No sheet marks: a flat scan measured from the rule alone at ${m.mm_per_pixel.toFixed(4)} mm per pixel, origin at the picture's bottom-left.`);
+    if (m.rule) lines.push(`Rule: ${m.rule.ticks} ticks over ${m.rule.length.toFixed(0)} mm; the millimetre edge was ${m.rule.edge}.`);
+    if (m.calibration) lines.push(`Reference: ${m.calibration.reference} measured ${fmt1(m.calibration.measured)} mm for ${fmt1(m.calibration.nominal)}, so the sheet was printed at ${(m.calibration.factor * 100).toFixed(1)} %; every size is corrected by that.`);
+    else if (m.sheet) lines.push("No reference given: sizes trust the print being at 100 % (check the sheet's 100 mm bar), or name one and measure again.");
+    if (m.parts.length === 0) lines.push("Nothing dark enough to be a part lies on the grid.");
+    lines.push("These are top-face silhouettes; anything with height is shifted by parallax unless the camera looked straight down.");
+    note.textContent = lines.join(" ");
+    m.parts.forEach((p, k) => {
+      const li = document.createElement("li");
+      const [x0, y0, x1, y1] = p.bbox;
+      let text = `Part ${k + 1}: ${fmt1(x1 - x0)} × ${fmt1(y1 - y0)} mm from (${fmt1(x0)}, ${fmt1(y0)}), area ${p.area.toFixed(0)} mm²`;
+      if (p.circularity > 0.85) text += `, round, Ø${fmt1(p.diameter)}`;
+      for (const h of p.holes) text += `; hole Ø${fmt1(h.diameter)} at (${fmt1(h.centre[0])}, ${fmt1(h.centre[1])})${h.circularity > 0.85 ? "" : " (not round)"}`;
+      li.textContent = text;
+      list.appendChild(li);
+    });
+    sketchBtn.disabled = m.parts.length === 0 || app.summary.kind !== "part_studio";
+    sketchBtn.title = app.summary.kind === "part_studio" ? "A sketch on the top plane of every outline and hole, in sheet millimetres, ready to extrude" : "Switch to a part studio tab to sketch the outlines";
+  };
+  $("#btn-photo").onclick = () => photoInput.click();
+  photoInput.onchange = async () => {
+    const file = photoInput.files?.[0];
+    photoInput.value = "";
+    if (!file) return;
+    app.photo = { bytes: new Uint8Array(await file.arrayBuffer()), name: file.name, result: null };
+    renderPhoto();
+    photoDialog.showModal();
+  };
+  $("#photo-measure").onclick = renderPhoto;
+  photoSheet.onchange = renderPhoto;
+  photoReference.onchange = renderPhoto;
+  $("#photo-sheet-pdf").onclick = () => {
+    const size = photoSheet.value || "A4";
+    try {
+      app.download(new Blob([measuringSheetPdf(size) as BlobPart], { type: "application/pdf" }), "pdf", `measuring-sheet-${size}`);
+    } catch (err) {
+      app.setStatus(`error: ${String(err)}`);
+    }
+  };
+  $("#photo-sketch").onclick = () => {
+    try {
+      const n = app.addPhotoSketch();
+      photoDialog.close();
+      app.setStatus(`Sketched ${n} outlines and holes from ${app.photo?.name ?? "the photograph"} in sheet millimetres.`);
+    } catch (e) {
+      app.setStatus(`could not sketch the outlines: ${(e as Error).message}`);
+    }
+  };
+  $("#photo-close").onclick = () => photoDialog.close();
   $("#btn-import").onclick = () => {
     if (app.summary.kind !== "part_studio") {
       app.setStatus("Switch to a part studio tab to import a mesh.");

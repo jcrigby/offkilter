@@ -16,6 +16,7 @@ ok-brep = { workspace = true }
 ok-model = { workspace = true }
 ok-sheet = { workspace = true }
 ok-step = { workspace = true }
+ok-photo = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 wasm-bindgen = "0.2.128"
