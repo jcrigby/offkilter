@@ -230,7 +230,16 @@ export type SectionTrace = { on: string; horizontal: boolean; at: number; label:
 export type DetailMarker = { on: string; centre: Vec2; radius: number; label: string; scale: number };
 /** A diameter callout: a circle seen end-on in the view (a hole or boss), how many alike there are, and the text. */
 export type Callout = { centre: Vec2; radius: number; count: number; hole: boolean; /** Leader direction in degrees from the +x axis; concentric callouts fan out. */ angle: number };
-export type DrawingView = { name: string; lines: ViewLines; /** Closed outlines of cut faces (section views), hatched on the sheet. */ cut?: Vec2[][]; trace?: SectionTrace; /** For a detail view: where it was taken from. */ detail?: DetailMarker; /** Diameter callouts of cylinders seen end-on. */ callouts?: Callout[]; /** Item balloons of the parts list. */ balloons?: Balloon[] };
+/** What the interference check found at one position of a range-of-motion strip. */
+export type MotionCheck = { label: string; overlaps: { a: number; b: number; volume: number }[]; failed: [number, number][]; error?: string };
+export type DrawingView = { name: string; lines: ViewLines; /** Closed outlines of cut faces (section views), hatched on the sheet. */ cut?: Vec2[][]; trace?: SectionTrace; /** For a detail view: where it was taken from. */ detail?: DetailMarker; /** Diameter callouts of cylinders seen end-on. */ callouts?: Callout[]; /** Item balloons of the parts list. */ balloons?: Balloon[]; /** Text under the view; sections caption themselves. */ caption?: string; /** Captioned in red: a position where instances overlap. */ overlap?: boolean; /** For a frame of the range-of-motion strip (`motion-<k>`): its position and check. */ motion?: MotionCheck };
+
+/** The caption under a view: its own, or a section's letters. */
+function captionOf(p: DrawingView): string | undefined {
+  if (p.caption !== undefined) return p.caption;
+  if (p.name.startsWith("section")) return p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION";
+  return undefined;
+}
 
 /** A row of the parts list on a sheet. */
 export type PartsRow = { item: number; name: string; qty: number; material: string; /** Index into the summary's bodies of the item's first body, for its balloon. */ body?: number };
@@ -477,13 +486,27 @@ function layout(views: DrawingView[], gap = 15, user: UserDimension[] = []): { p
   }
   let cursorX = Math.max(fb.maxx, ...placed.map((p) => p.b.maxx + p.dx)) + gap;
   for (const v of views) {
-    if (["front", "top", "right"].includes(v.name)) continue;
+    if (["front", "top", "right"].includes(v.name) || v.name.startsWith("motion-")) continue;
     const vb = boundsOf(v.lines, v.detail);
     // The isometric sits level with the top view; the sections, seen from the front
     // and the right, share the front view's heights and sit level with it.
     const dy = v.name === "iso" && top ? fb.maxy + gap + dimGap - vb.miny : v.name.startsWith("section") ? 0 : -vb.miny;
     placed.push({ ...v, dx: cursorX - vb.minx, dy, b: vb });
     cursorX += vb.maxx - vb.minx + gap;
+  }
+  // A range-of-motion strip: its frames in a row under everything else, each with
+  // room for its caption, below the front view's width dimension.
+  const strip = views.filter((v) => v.name.startsWith("motion-"));
+  if (strip.length > 0) {
+    const bottom = Math.min(0, ...placed.map((p) => p.b.miny + p.dy)) - (front ? dimGap : 0) - gap;
+    let x = fb.minx;
+    for (const v of strip) {
+      const vb = boundsOf(v.lines);
+      // Pitch: the frame or its caption, whichever is wider (about 2 mm a character).
+      const width = Math.max(vb.maxx - vb.minx, (v.caption?.length ?? 0) * 2);
+      placed.push({ ...v, dx: x + (width - (vb.maxx - vb.minx)) / 2 - vb.minx, dy: bottom - vb.maxy, b: vb });
+      x += width + gap;
+    }
   }
   // Overall dimensions: width below the front view, height left of it,
   // depth left of the top view.
@@ -513,6 +536,7 @@ function layout(views: DrawingView[], gap = 15, user: UserDimension[] = []): { p
     // The dimensions sit up to an offset plus text height outside the views.
     min = { x: min.x - dimGap, y: min.y - dimGap };
   }
+  if (strip.length > 0) min = { x: min.x, y: min.y - 10 }; // the captions under the strip
   return { placed, dims, min, max };
 }
 
@@ -637,9 +661,9 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
       const lines = hatch(p.cut, 3 / scale);
       if (lines.length > 0) out.push(`<path class="hatch" fill="none" stroke="black" stroke-width="0.18" d="${lines.map(([a, b]) => seg(a, b)).join("")}"/>`);
     }
-    if (p.name.startsWith("section")) {
-      const label = p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION";
-      out.push(`<text class="caption" x="${X((p.b.minx + p.b.maxx) / 2 + p.dx)}" y="${Y(p.b.miny + p.dy - 6)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="black" text-anchor="middle">${label}</text>`);
+    const caption = captionOf(p);
+    if (caption !== undefined) {
+      out.push(`<text class="caption${p.overlap ? " overlap" : ""}" x="${X((p.b.minx + p.b.maxx) / 2 + p.dx)}" y="${Y(p.b.miny + p.dy - 6)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="${p.overlap ? "#c00" : "black"}" text-anchor="middle">${escapeXml(caption)}</text>`);
     }
     if (p.detail) {
       const r = p.detail.radius * p.detail.scale;
@@ -795,9 +819,10 @@ export function toDrawingDxf(views: DrawingView[], user: UserDimension[] = [], p
     for (const a of p.lines.visible_arcs ?? []) lines.push(...arcDxf(a, "VISIBLE", p.dx, p.dy));
     for (const a of p.lines.hidden_arcs ?? []) lines.push(...arcDxf(a, "HIDDEN", p.dx, p.dy));
     if (p.cut && p.cut.length > 0) add("SECTION", hatch(p.cut, 3));
-    if (p.name.startsWith("section")) {
+    const caption = captionOf(p);
+    if (caption !== undefined) {
       const x = (p.b.minx + p.b.maxx) / 2 + p.dx, y = p.b.miny + p.dy - 6;
-      lines.push("0", "TEXT", "8", "SECTION", "10", fmt(x), "20", fmt(y), "30", "0", "40", "3.5", "72", "1", "11", fmt(x), "21", fmt(y), "31", "0", "1", p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION");
+      lines.push("0", "TEXT", "8", p.name.startsWith("section") ? "SECTION" : "CAPTION", "10", fmt(x), "20", fmt(y), "30", "0", "40", "3.5", "72", "1", "11", fmt(x), "21", fmt(y), "31", "0", "1", caption);
     }
     for (const c of p.callouts ?? []) {
       const g = calloutGeometry(c, p.dx, p.dy);

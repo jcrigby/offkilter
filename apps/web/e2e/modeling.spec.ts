@@ -535,6 +535,35 @@ test("assembly tab: edge and corner mate connectors", async ({ page }) => {
   expect(b[1].z - b[0].z).toBeCloseTo(10, 5);
   expect(b[1].y - b[0].y).toBeCloseTo(5, 5);
   expect(b[1].x - b[0].x).toBeCloseTo(10, 5);
+  // The drawing dialog's range-of-motion strip: the right view of the hinge at four
+  // angles, captioned, the interference check flagging 270°, where B swings into A
+  // (5 × 5 × 10 mm overlap), and not 180°, where B lies on A.
+  await page.selectOption("#export", "drawing");
+  await expect(page.locator("#dv-motion")).toBeVisible();
+  await page.selectOption("#dv-motion-view", "right");
+  await page.fill("#dv-motion-positions", "0..270/90");
+  await page.dispatchEvent("#dv-motion-positions", "change");
+  await expect(page.locator('#drawing-preview svg g[id="view-motion-3"]')).toHaveCount(1);
+  const motion = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const strip = app.chosenDrawingViews().filter((v: any) => v.motion);
+    return { mate: app.summary.mates[0].name, frames: strip.map((v: any) => ({ label: v.motion.label, lines: v.lines.visible.length, overlaps: v.motion.overlaps.map((o: any) => o.volume), failed: v.motion.failed.length })), svg: app.toDrawingSvg(strip) };
+  });
+  expect(motion.frames.map((f: any) => f.label)).toEqual([0, 90, 180, 270].map((a) => `${motion.mate} ${a}°`));
+  for (const f of motion.frames) {
+    expect(f.lines).toBeGreaterThan(3);
+    expect(f.failed).toBe(0);
+  }
+  expect(motion.frames[0].overlaps).toEqual([]);
+  expect(motion.frames[1].overlaps).toEqual([]);
+  expect(motion.frames[2].overlaps.every((v: number) => v < 1)).toBe(true);
+  expect(motion.frames[3].overlaps.length).toBe(1);
+  expect(motion.frames[3].overlaps[0]).toBeCloseTo(250, 0);
+  expect(motion.svg).toContain('class="caption overlap"');
+  await expect(page.locator("#dv-motion-note")).toContainText(`${motion.mate} 270°`);
+  await expect(page.locator("#drawing-motion-pdf")).toBeVisible();
+  await page.click("#drawing-close");
+  await expect(page.locator("#drawing-dialog")).toBeHidden();
 
   // Corner connectors picked in the viewport: remove the hinge, park B
   // beside A, then click near a top corner of each block.

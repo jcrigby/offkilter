@@ -1175,7 +1175,71 @@ class App implements SketchHost {
     }
     const detail = this.drawingDetailView(views);
     if (detail) views.push(detail);
+    views.push(...this.drawingMotionViews());
     return views;
+  }
+
+  /**
+   * The positions of the range-of-motion strip: the dialog's list ("0, 45, 90")
+   * or range with a step ("0..90/15") of the chosen mate's free value (degrees
+   * for a turning mate, millimetres for a sliding one), each labelled. Nothing
+   * when no mate or positions are chosen, or the tab is not an assembly.
+   */
+  motionPositions(): { label: string; mates: [number, number, number][] }[] {
+    const o = this.drawingOptions.motion;
+    const m = this.mate(o.mate);
+    if (!m || this.summary.kind !== "assembly") return [];
+    const slide = m.kind === "slider" || m.kind === "planar";
+    const text = o.positions.trim();
+    let values: number[] = [];
+    const range = /^(-?[\d.]+)\s*\.\.\s*(-?[\d.]+)\s*\/\s*(-?[\d.]+)$/.exec(text);
+    if (range) {
+      const [from, to, step] = [Number(range[1]), Number(range[2]), Math.abs(Number(range[3]))];
+      if (Number.isFinite(from) && Number.isFinite(to) && step > 0) {
+        const n = Math.min(Math.floor(Math.abs(to - from) / step + 1e-9), 49);
+        for (let k = 0; k <= n; k++) values.push(from + k * Math.sign(to - from) * step);
+      }
+    } else values = text.split(/[\s,;]+/).filter((t) => t !== "").map(Number).filter((v) => Number.isFinite(v));
+    const fmt = (v: number) => v.toFixed(2).replace(/\.?0+$/, "");
+    return values.map((v) => ({ label: `${m.name} ${fmt(v)}${slide ? " mm" : "°"}`, mates: [[m.id, slide ? m.angle : v, slide ? v : m.offset]] }));
+  }
+
+  /**
+   * The range-of-motion strip: the chosen standard view of the assembly at each
+   * position, named `motion-<k>` and captioned with its position, the caption
+   * flagged (red, with the overlapping volume) where the interference check
+   * found instances overlapping; the pairs are in `motion` for the dialog's note.
+   */
+  drawingMotionViews(): DrawingView[] {
+    const positions = this.motionPositions();
+    if (positions.length === 0 || this.tab === null) return [];
+    const o = this.drawingOptions.motion;
+    const z = { x: 0, y: 0, z: 1 };
+    const frames: Record<string, { dir: Vec3; up: Vec3 }> = { front: { dir: { x: 0, y: 1, z: 0 }, up: z }, top: { dir: { x: 0, y: 0, z: -1 }, up: { x: 0, y: 1, z: 0 } }, right: { dir: { x: -1, y: 0, z: 0 }, up: z }, iso: { dir: { x: -0.6, y: 0.7, z: -0.5 }, up: z } };
+    const f = frames[o.view] ?? frames.front!;
+    const name = (id: number) => this.instance(id)?.name ?? `instance ${id}`;
+    return this.kernel.rangeOfMotion(this.tab, f.dir, f.up, positions.map((p) => p.mates), o.check).map((r, k) => {
+      const label = positions[k]!.label;
+      if ("error" in r) return { name: `motion-${k}`, lines: { visible: [], hidden: [] }, caption: `${label} · cannot resolve`, overlap: true, motion: { label, overlaps: [], failed: [], error: r.error } };
+      const volume = r.overlaps.reduce((a, x) => a + x.volume, 0);
+      const caption = r.overlaps.length > 0 ? `${label} · overlap ${volume.toFixed(1)} mm³` : r.failed.length > 0 ? `${label} · not checked` : label;
+      return { name: `motion-${k}`, lines: r.lines, caption, overlap: r.overlaps.length > 0, motion: { label, overlaps: r.overlaps, failed: r.failed } };
+    });
+  }
+
+  /** The dialog's line about the strip: every position's overlapping pairs with their volumes, or that there are none. */
+  motionNote(strip: DrawingView[]): string {
+    if (strip.length === 0) return "";
+    const name = (id: number) => this.instance(id)?.name ?? `instance ${id}`;
+    const bad = strip.filter((v) => v.motion && (v.motion.overlaps.length > 0 || v.motion.failed.length > 0 || v.motion.error));
+    if (bad.length === 0) return `${strip.length} position${strip.length === 1 ? "" : "s"}${this.drawingOptions.motion.check ? ", no overlaps" : ""}.`;
+    const at = bad.map((v) => {
+      const m = v.motion!;
+      if (m.error) return `${m.label}: ${m.error}`;
+      const pairs = [...m.overlaps.map((x) => `${name(x.a)} ∩ ${name(x.b)} ${x.volume.toFixed(1)} mm³`), ...m.failed.map(([a, b]) => `${name(a)} ∩ ${name(b)} not checked`)];
+      return `${m.label}: ${pairs.join(", ")}`;
+    });
+    return `Overlaps at ${at.join("; ")}.`;
   }
 
   /**
@@ -1345,7 +1409,7 @@ class App implements SketchHost {
   }
 
   /** Which views the drawing sheet shows (all but the side section by default), where the sections cut (null: see `drawingSectionView`), its sheet size, and whether the parts list and balloons are drawn. */
-  drawingOptions: { views: Set<string>; sectionAt: { section: number | null; "section-side": number | null }; sheet: SheetSize; parts: boolean; hidden: HiddenLines; explode: boolean } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sectionAt: { section: null, "section-side": null }, sheet: "A4", parts: true, hidden: "auto", explode: false };
+  drawingOptions: { views: Set<string>; sectionAt: { section: number | null; "section-side": number | null }; sheet: SheetSize; parts: boolean; hidden: HiddenLines; explode: boolean; /** The range-of-motion strip of an assembly: which mate steps through `positions` (see `motionPositions`), the view drawn, and whether the interference check runs at each. */ motion: { mate: number | null; positions: string; view: string; check: boolean } } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sectionAt: { section: null, "section-side": null }, sheet: "A4", parts: true, hidden: "auto", explode: false, motion: { mate: null, positions: "", view: "front", check: true } };
 
   /** The sections as the PDF sheet names them: `section@<mm>` where the cut is placed explicitly, the bare name when it goes through the middle. */
   pdfSectionNames(): string[] {
@@ -1397,11 +1461,11 @@ class App implements SketchHost {
     if (this.drawingDimensions().length > 0) this.applyDoc({ type: "set_drawing_dimensions", tab: this.summary.tab, dims: [] });
   }
 
-  /** The chosen drawing views only, their hidden lines dropped when the sheet omits them. */
+  /** The chosen drawing views (and the range-of-motion strip, which exists only when asked for), their hidden lines dropped when the sheet omits them. */
   chosenDrawingViews(): DrawingView[] {
     const hidden = this.drawingHiddenLines();
     return this.drawingViews()
-      .filter((v) => this.drawingOptions.views.has(v.name))
+      .filter((v) => this.drawingOptions.views.has(v.name) || v.name.startsWith("motion-"))
       .map((v) => (this.drawingOptions.parts ? v : { ...v, balloons: [] }))
       .map((v) => (hidden ? v : { ...v, lines: { ...v.lines, hidden: [], hidden_arcs: [] } }));
   }
@@ -1411,9 +1475,9 @@ class App implements SketchHost {
     return this.drawingOptions.parts ? this.drawingParts() : [];
   }
 
-  /** A drawing sheet of the current bodies as SVG. */
-  toDrawingSvg(): string {
-    return toDrawingSvg(this.chosenDrawingViews(), this.summary.name, this.drawingOptions.sheet, this.drawingDimensions(), this.chosenDrawingParts());
+  /** A drawing sheet of the current bodies as SVG (of `views` when given, to save projecting them again). */
+  toDrawingSvg(views: DrawingView[] = this.chosenDrawingViews()): string {
+    return toDrawingSvg(views, this.summary.name, this.drawingOptions.sheet, this.drawingDimensions(), this.chosenDrawingParts());
   }
 
   /** The drawing views as DXF lines at 1:1. */
@@ -3646,8 +3710,35 @@ async function main(): Promise<void> {
       const v = ($(id) as HTMLInputElement).value.trim();
       return v === "" || !Number.isFinite(Number(v)) ? null : Number(v);
     };
-    app.drawingOptions = { views: new Set(views), sectionAt: { section: at("#dv-section-at"), "section-side": at("#dv-section-side-at") }, sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked, hidden: ($("#dv-hidden") as HTMLSelectElement).value as HiddenLines, explode: ($("#dv-explode") as HTMLInputElement).checked };
-    $("#drawing-preview").innerHTML = app.toDrawingSvg();
+    // The range-of-motion row: an assembly's mates with a free value.
+    const motionRow = $("#dv-motion") as HTMLElement;
+    motionRow.hidden = app.summary.kind !== "assembly";
+    const mateSel = $("#dv-motion-mate") as HTMLSelectElement;
+    const free = app.summary.kind === "assembly" ? app.summary.mates.filter((m) => m.kind !== "fastened") : [];
+    if (mateSel.options.length !== free.length || [...mateSel.options].some((o, i) => Number(o.value) !== free[i]!.id)) {
+      const was = mateSel.value;
+      mateSel.innerHTML = "";
+      for (const m of free) {
+        const opt = document.createElement("option");
+        opt.value = String(m.id);
+        opt.textContent = m.name;
+        mateSel.appendChild(opt);
+      }
+      if ([...mateSel.options].some((o) => o.value === was)) mateSel.value = was;
+    }
+    const motion = { mate: mateSel.value === "" ? null : Number(mateSel.value), positions: ($("#dv-motion-positions") as HTMLInputElement).value, view: ($("#dv-motion-view") as HTMLSelectElement).value, check: ($("#dv-motion-check") as HTMLInputElement).checked };
+    app.drawingOptions = { views: new Set(views), sectionAt: { section: at("#dv-section-at"), "section-side": at("#dv-section-side-at") }, sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked, hidden: ($("#dv-hidden") as HTMLSelectElement).value as HiddenLines, explode: ($("#dv-explode") as HTMLInputElement).checked, motion };
+    let chosen: DrawingView[];
+    try {
+      chosen = app.chosenDrawingViews();
+    } catch (err) {
+      $("#dv-motion-note").textContent = String(err);
+      return;
+    }
+    $("#drawing-preview").innerHTML = app.toDrawingSvg(chosen);
+    const strip = chosen.filter((v) => v.motion);
+    $("#dv-motion-note").textContent = app.motionNote(strip);
+    ($("#drawing-motion-pdf") as HTMLButtonElement).hidden = strip.length === 0;
     ($("#dv-clear-dims") as HTMLButtonElement).disabled = app.drawingDimensions().length === 0;
   };
   // Placing dimensions: two clicks on line endpoints of one view in the preview.
@@ -3720,6 +3811,16 @@ async function main(): Promise<void> {
   ($("#dv-parts") as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-hidden") as HTMLSelectElement).onchange = renderDrawingPreview;
   ($("#dv-explode") as HTMLInputElement).onchange = renderDrawingPreview;
+  for (const id of ["#dv-motion-mate", "#dv-motion-positions", "#dv-motion-view", "#dv-motion-check"]) ($(id) as HTMLInputElement).onchange = renderDrawingPreview;
+  $("#drawing-motion-pdf").onclick = () => {
+    try {
+      const o = app.drawingOptions.motion;
+      const pdf = app.kernel.motionPdf(app.summary.tab, { view: o.view, positions: app.motionPositions(), sheet: app.drawingOptions.sheet, title: `${app.summary.name} · ${app.summary.tab_name} · range of motion` });
+      app.download(new Blob([pdf as BlobPart], { type: "application/pdf" }), "pdf", `${app.summary.name}-motion`);
+    } catch (err) {
+      app.setStatus(`error: ${String(err)}`);
+    }
+  };
   $("#drawing-svg").onclick = () => app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
   $("#drawing-dxf").onclick = () => app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
   $("#drawing-pdf").onclick = () => {

@@ -168,6 +168,14 @@
         <label title="Slide the isometric's parts apart as the viewport's Explode slider has them (set the slider first)"><input type="checkbox" id="dv-explode" /> Exploded iso</label>
       </div>
       <p class="note">A section with its @ box blank follows the viewport's section plane when one is shown on its axis; otherwise it cuts through the middle. The PDF takes the same sections.</p>
+      <div class="row drawing-options" id="dv-motion" hidden>
+        <span>Range of motion:</span>
+        <label title="The mate whose free value steps through the positions">mate <select id="dv-motion-mate"></select></label>
+        <label title="Angles in degrees for a turning mate, offsets in mm for a sliding one: a list (0, 45, 90) or a range with a step (0..90/15)">at <input id="dv-motion-positions" type="text" placeholder="0, 45, 90 or 0..90/15" class="positions" /></label>
+        <label>view <select id="dv-motion-view"><option>front</option><option>top</option><option>right</option><option>iso</option></select></label>
+        <label title="Run the interference check at every position; a frame where instances overlap is captioned in red"><input type="checkbox" id="dv-motion-check" checked /> check interference</label>
+        <span id="dv-motion-note" class="note"></span>
+      </div>
       <div class="row">
         <button id="dv-dimension" title="Measure between two corners of a view">Add dimension</button>
         <button id="dv-clear-dims" disabled>Clear dimensions</button>
@@ -177,7 +185,8 @@
       <div class="row">
         <button id="drawing-svg" class="primary">Download SVG</button>
         <button id="drawing-dxf">Download DXF</button>
-        <button id="drawing-pdf" title="A PDF of the standard and section views laid out by the kernel, with the overall dimensions, callouts, balloons and parts list (placed dimensions and the detail view stay on the SVG)">Download PDF</button>
+        <button id="drawing-pdf" title="A PDF of the standard and section views laid out by the kernel, with the overall dimensions, callouts, balloons and parts list (placed dimensions, the detail view and the range-of-motion strip stay on the SVG)">Download PDF</button>
+        <button id="drawing-motion-pdf" hidden title="A PDF of the chosen view at each position, the sheet the MCP range_of_motion tool writes">Download motion PDF</button>
         <button id="drawing-close">Close</button>
       </div>
     </dialog>

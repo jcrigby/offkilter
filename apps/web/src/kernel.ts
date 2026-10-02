@@ -157,6 +157,8 @@ export type ViewArc = { center: Vec2; major: Vec2; ratio: number; start: number;
 export type ViewLines = { visible: [Vec2, Vec2][]; hidden: [Vec2, Vec2][]; /** Circle and ellipse edges seen obliquely, as arcs rather than chords. */ visible_arcs?: ViewArc[]; hidden_arcs?: ViewArc[] };
 /** A section view: what is left after the cut, plus the cut faces' outlines (closed polygons) for hatching. */
 export type SectionLines = ViewLines & { cut: Vec2[][] };
+/** One frame of a range-of-motion strip: the assembly at a position, with the interference check's findings when it ran. */
+export type MotionFrame = { lines: ViewLines; overlaps: { a: number; b: number; volume: number }[]; failed: [number, number][] } | { error: string };
 export type Loop = { points: Vec2[] };
 export type SketchResult = { plane: PlaneFrame; solve: SolveResult; profiles: { outer: Loop; holes: Loop[] }[]; curves: SketchCurve[] };
 export type Settings = { facet_angle: number };
@@ -410,6 +412,19 @@ export class Kernel {
   puzzlePlan(tab: number, feature: number): PuzzlePlan | null {
     const r = JSON.parse(this.studio.puzzle_plan(tab, feature)) as PuzzlePlan & { error?: string };
     return r.error ? null : r;
+  }
+
+  /** The assembly tab resolved at each position (its mates set to `[id, angle, offset]`) and projected like `drawingView`; with `check`, the interference check runs at each position. */
+  rangeOfMotion(tab: number, dir: Vec3, up: Vec3, positions: [number, number, number][][], check: boolean): MotionFrame[] {
+    const spec = { dir: [dir.x, dir.y, dir.z], up: [up.x, up.y, up.z], positions: positions.map((mates) => ({ mates })), check };
+    const r = JSON.parse(this.studio.range_of_motion(tab, JSON.stringify(spec))) as MotionFrame[] | { error: string };
+    if (!Array.isArray(r)) throw new Error(r.error);
+    return r;
+  }
+
+  /** A range-of-motion sheet as a PDF, laid out by the kernel: `view` of the assembly at each labelled position. */
+  motionPdf(tab: number, opts: { view: string; positions: { label: string; mates: [number, number, number][] }[]; sheet?: string; title?: string; note?: string }): Uint8Array {
+    return this.studio.motion_pdf(tab, JSON.stringify(opts));
   }
 
   /** A shop drawing sheet of a tab as a PDF, laid out by the kernel: standard views, dimensions, callouts, balloons and a parts list. */

@@ -506,6 +506,109 @@ impl Doc {
         serde_json::to_string(&deltas).unwrap()
     }
 
+    /// A mechanism at several positions of its mates, for the drawing
+    /// dialog's range-of-motion strip: `spec_json` is `{"dir":[..],
+    /// "up":[..],"positions":[{"mates":[[mate,angle,offset],..]},..],
+    /// "check":true}`. The assembly tab `tab` is resolved at each
+    /// position without changing the document and projected like
+    /// `drawing_view`; with `check`, the interference check runs at each
+    /// position too. One entry per position: `{"lines":{..},"overlaps":
+    /// [{a,b,volume},..],"failed":[[a,b],..]}`, or `{"error":".."}` for
+    /// a position that cannot be resolved.
+    pub fn range_of_motion(&mut self, tab: u32, spec_json: &str) -> String {
+        #[derive(serde::Deserialize)]
+        struct PositionSpec {
+            mates: Vec<(u32, f64, f64)>,
+        }
+        #[derive(serde::Deserialize)]
+        struct Spec {
+            dir: [f64; 3],
+            up: [f64; 3],
+            positions: Vec<PositionSpec>,
+            #[serde(default)]
+            check: bool,
+        }
+        let spec: Spec = match serde_json::from_str(spec_json) {
+            Ok(v) => v,
+            Err(e) => return serde_json::json!({ "error": e.to_string() }).to_string(),
+        };
+        let view = ok_brep::View {
+            dir: ok_math::Vec3::new(spec.dir[0], spec.dir[1], spec.dir[2]),
+            up: ok_math::Vec3::new(spec.up[0], spec.up[1], spec.up[2]),
+        };
+        let mut out = Vec::new();
+        for p in &spec.positions {
+            let mates: Vec<(ok_model::MateId, f64, f64)> = p
+                .mates
+                .iter()
+                .map(|&(id, a, o)| (ok_model::MateId(id), a, o))
+                .collect();
+            match self.inner.preview_assembly_at(TabId(tab), &mates) {
+                Ok(r) => {
+                    let solids: Vec<&ok_brep::Solid> = r.bodies.iter().map(|b| &b.solid).collect();
+                    let lines = ok_brep::project_view(&solids, view);
+                    let (overlaps, failed) = if spec.check {
+                        r.interferences()
+                    } else {
+                        (Vec::new(), Vec::new())
+                    };
+                    out.push(serde_json::json!({ "lines": lines, "overlaps": overlaps, "failed": failed }));
+                }
+                Err(e) => out.push(serde_json::json!({ "error": e.to_string() })),
+            }
+        }
+        serde_json::to_string(&out).unwrap()
+    }
+
+    /// A range-of-motion sheet as a PDF, the one the MCP `range_of_motion`
+    /// tool writes: `spec_json` is `{"view":"front","positions":[{"label":
+    /// "..","mates":[[mate,angle,offset],..]},..],"sheet":"A4","title":"..",
+    /// "note":".."}`, the last three optional.
+    pub fn motion_pdf(&mut self, tab: u32, spec_json: &str) -> Result<Vec<u8>, JsValue> {
+        #[derive(serde::Deserialize)]
+        struct PositionSpec {
+            label: String,
+            mates: Vec<(u32, f64, f64)>,
+        }
+        #[derive(serde::Deserialize)]
+        struct Spec {
+            view: String,
+            positions: Vec<PositionSpec>,
+            #[serde(default)]
+            sheet: Option<String>,
+            #[serde(default)]
+            title: Option<String>,
+            #[serde(default)]
+            note: Option<String>,
+        }
+        let spec: Spec =
+            serde_json::from_str(spec_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let positions: Vec<ok_sheet::Position> = spec
+            .positions
+            .into_iter()
+            .map(|p| {
+                (
+                    p.label,
+                    p.mates
+                        .into_iter()
+                        .map(|(id, a, o)| (ok_model::MateId(id), a, o))
+                        .collect(),
+                )
+            })
+            .collect();
+        let mut opts = ok_sheet::Options {
+            parts: false,
+            ..ok_sheet::Options::default()
+        };
+        if let Some(s) = spec.sheet {
+            opts.sheet = ok_sheet::SheetSize::parse(&s).map_err(|e| JsValue::from_str(&e))?;
+        }
+        opts.title = spec.title.unwrap_or_default();
+        opts.note = spec.note.unwrap_or_default();
+        ok_sheet::motion_pdf(&mut self.inner, TabId(tab), &spec.view, &positions, &opts)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
     /// A section view of the current tab's bodies: `view_json` is
     /// `{"dir":[..],"up":[..],"origin":[..],"normal":[..]}`; the material
     /// on the plane's normal side is removed and the rest drawn looking

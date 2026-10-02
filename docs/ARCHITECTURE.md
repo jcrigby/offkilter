@@ -591,7 +591,14 @@ from the front) and `section-side` (B-B, x = at seen from the right),
 each cut where the dialog's `@` box says, else where the viewport's
 section plane is when it lies on that axis, else through the middle; the
 PDF button passes the same `section@<mm>` names on, so the sheet the
-kernel lays out shows the cuts the preview did. A detail view (client side)
+kernel lays out shows the cuts the preview did. On an assembly tab the
+dialog also draws a range-of-motion strip: a mate with a free value, a
+list or stepped range of its angles or offsets, and a standard view; the
+wasm `range_of_motion` resolves the assembly at each position (as the
+MCP tool and `ok-render` do, through `preview_assembly_at`), projects
+it, and runs the interference check there when asked, so a frame where
+instances overlap is captioned in red with the pair and volume; `motion_pdf`
+hands the same positions to `ok_sheet::motion_pdf`. A detail view (client side)
 takes the standard view that faces the selected face best, clips its
 lines to a circle around the face and enlarges them 2:1, drawing the
 lettered marker circle on the source view. The Drawing dialog in the client
