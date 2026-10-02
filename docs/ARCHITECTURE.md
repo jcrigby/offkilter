@@ -980,7 +980,12 @@ their surroundings, clustered by the edge their bases share and fitted
 index against position; a photo scale's alternating bars, found as an
 even run of alike blocks; or a disc) gives the scale the sheet was
 printed at, and the picture is resampled again in true millimetres. A
-scan with a rule and no sheet is measured in its own frame. Its tests draw the
+scan with a rule and no sheet is measured in its own frame. The dpi a
+PNG's `pHYs` chunk or a JPEG's JFIF header claims is read and compared
+with the rule's pitch or the marks' spacing, and a disc reference's
+width over its height (from its outline's second moments, finer than
+its pixel box) says whether the print was stretched one way; either
+disagreement is a warning on the reading, not a correction. Its tests draw the
 sheet, photograph it askew with a synthetic homography, and require
 the sizes back within half a millimetre, and a 96 % print corrected
 to within 1 %. The web app measures in the browser: the wasm exports

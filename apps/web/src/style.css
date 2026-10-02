@@ -163,6 +163,7 @@ dialog.wide { min-width: 720px; max-width: 92vw; }
 .drawing-options input.at { width: 56px; }
 .drawing-options input.positions { width: 170px; }
 .drawing-options[hidden] { display: none; }
+#photo-note.warn { color: #e8a33d; }
 .photo-preview { background: white; border: 1px solid var(--border); margin: 8px 0; max-height: 55vh; overflow: auto; }
 .photo-preview img { display: block; max-width: 100%; }
 .photo-preview img:not([src]) { display: none; }

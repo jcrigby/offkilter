@@ -975,6 +975,12 @@ impl Server {
                     r.ticks, r.length, r.px_per_mm, r.edge
                 ));
             }
+            if let Some(dpi) = m.dpi {
+                caption.push_str(&format!("The file claims {dpi:.0} dpi.\n"));
+            }
+            for w in &m.warnings {
+                caption.push_str(&format!("Warning: {w}.\n"));
+            }
             match &m.calibration {
                 Some(c) => caption.push_str(&format!(
                     "Reference: {} at ({:.0}, {:.0}) measured {:.2} mm for {:.2}, so the sheet was printed at {:.1} %; every size below is corrected by that, and the drawn grid is true millimetres.\n",

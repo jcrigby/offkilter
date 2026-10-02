@@ -314,6 +314,10 @@ pub struct Calibration {
     /// Where the reference lies on the sheet (true mm), for keeping
     /// it out of the parts and drawing it.
     pub bbox: [f64; 4],
+    /// A disc reference's width over its height as measured on the
+    /// sheet: 1 when the print is true, else the print was stretched
+    /// one way (1 for a scale's bars and a rule, which read one way).
+    pub aspect: f64,
 }
 
 fn sheet_name<S: serde::Serializer>(size: &Option<SheetSize>, s: S) -> Result<S::Ok, S::Error> {
@@ -362,6 +366,13 @@ pub struct Measurement {
     pub mm_per_pixel: f64,
     /// Fit of the four fiducials to the homography, in photograph pixels.
     pub residual: f64,
+    /// The resolution the file claims (a PNG's pHYs chunk, a JPEG's JFIF
+    /// density), in dots per inch; a scanner writes it, a phone does not.
+    pub dpi: Option<f64>,
+    /// What looks wrong with the picture or the print: a stretched
+    /// print (a reference disc wider than tall), the file's dpi
+    /// disagreeing with the rule or the marks.
+    pub warnings: Vec<String>,
     pub parts: Vec<Part>,
     /// The rectified picture with the grid and the parts drawn on it,
     /// as a PNG, `SCALE` pixels per millimetre; the sheet frame's origin
@@ -372,6 +383,59 @@ pub struct Measurement {
     /// rectified picture.
     pub picture_scale: f64,
     pub picture_origin: [f64; 2],
+}
+
+/// The resolution a PNG (pHYs chunk) or JPEG (JFIF APP0 density) file
+/// claims, as dots per inch along x and y. None when the file does not
+/// say, or says it in no unit.
+pub fn dpi_of(bytes: &[u8]) -> Option<(f64, f64)> {
+    let be32 = |b: &[u8]| u32::from_be_bytes([b[0], b[1], b[2], b[3]]) as f64;
+    let be16 = |b: &[u8]| u16::from_be_bytes([b[0], b[1]]) as f64;
+    if bytes.starts_with(&[0x89, b'P', b'N', b'G']) {
+        let mut at = 8;
+        while at + 8 <= bytes.len() {
+            let len = be32(&bytes[at..at + 4]) as usize;
+            let kind = &bytes[at + 4..at + 8];
+            if kind == b"pHYs" && at + 17 <= bytes.len() {
+                let d = &bytes[at + 8..at + 17];
+                let (x, y) = (be32(&d[0..4]), be32(&d[4..8]));
+                return (d[8] == 1 && x > 0.0 && y > 0.0).then_some((x * 0.0254, y * 0.0254));
+            }
+            if kind == b"IDAT" || kind == b"IEND" {
+                return None;
+            }
+            at += 12 + len;
+        }
+        return None;
+    }
+    if bytes.starts_with(&[0xFF, 0xD8]) {
+        let mut at = 2;
+        while at + 4 <= bytes.len() && bytes[at] == 0xFF {
+            let marker = bytes[at + 1];
+            if marker == 0xD8 || marker == 0x01 || (0xD0..=0xD7).contains(&marker) {
+                at += 2;
+                continue;
+            }
+            let len = be16(&bytes[at + 2..at + 4]) as usize;
+            if marker == 0xE0 && at + 16 <= bytes.len() && &bytes[at + 4..at + 9] == b"JFIF\0" {
+                let units = bytes[at + 11];
+                let (x, y) = (
+                    be16(&bytes[at + 12..at + 14]),
+                    be16(&bytes[at + 14..at + 16]),
+                );
+                return match units {
+                    1 if x > 0.0 && y > 0.0 => Some((x, y)),
+                    2 if x > 0.0 && y > 0.0 => Some((x * 2.54, y * 2.54)),
+                    _ => None,
+                };
+            }
+            if marker == 0xDA {
+                return None;
+            }
+            at += 2 + len;
+        }
+    }
+    None
 }
 
 /// Decodes a PNG or JPEG into RGB.
@@ -422,14 +486,35 @@ pub fn measure(
     reference: Option<&Reference>,
 ) -> Result<Measurement, String> {
     let photo = decode(bytes)?;
-    measure_image(&photo, sheet, reference)
+    measure_image_at(&photo, dpi_of(bytes), sheet, reference)
 }
 
+/// `measure` on a decoded picture that claims no resolution.
 pub fn measure_image(
     photo: &Image,
     sheet: Option<SheetSize>,
     reference: Option<&Reference>,
 ) -> Result<Measurement, String> {
+    measure_image_at(photo, None, sheet, reference)
+}
+
+/// `measure` on a decoded picture, with the resolution its file
+/// claimed (dots per inch along x and y) as a cross-check.
+pub fn measure_image_at(
+    photo: &Image,
+    dpi: Option<(f64, f64)>,
+    sheet: Option<SheetSize>,
+    reference: Option<&Reference>,
+) -> Result<Measurement, String> {
+    let mut warnings = Vec::new();
+    let dpi = dpi.map(|(x, y)| {
+        if ((x - y) / x).abs() > 0.005 {
+            warnings.push(format!(
+                "the file claims {x:.0} dpi along x and {y:.0} along y: a scan at different resolutions each way; sizes are taken from the marks or the rule, not from it"
+            ));
+        }
+        (x + y) / 2.0
+    });
     // Work at most 1800 px across for the fiducials.
     let factor = (photo.width.max(photo.height) as f64 / 1800.0)
         .ceil()
@@ -460,6 +545,16 @@ pub fn measure_image(
                 ly - r.bbox[1] / r.px_per_mm,
             ];
             let pass = rectify(photo, &corners, lx, ly, 0.0, Some((1.0, 1.0, bbox)))?;
+            if let Some(dpi) = dpi {
+                let file = dpi / 25.4;
+                if ((r.px_per_mm - file) / file).abs() > 0.02 {
+                    warnings.push(format!(
+                        "the file claims {dpi:.0} dpi ({file:.3} px/mm) but the rule reads {:.3} px/mm, {:.1} % apart; the rule is trusted, so check that it lay flat on the glass and that the scanner's resolution is what the file says",
+                        r.px_per_mm,
+                        ((r.px_per_mm - file) / file).abs() * 100.0
+                    ));
+                }
+            }
             return Ok(Measurement {
                 sheet: None,
                 sheet_read: false,
@@ -468,6 +563,8 @@ pub fn measure_image(
                 fiducials: corners,
                 mm_per_pixel: pass.mm_per_pixel,
                 residual: 0.0,
+                dpi,
+                warnings,
                 parts: pass.parts,
                 picture: ok_render::to_png(&pass.picture),
                 picture_scale: SCALE,
@@ -549,14 +646,57 @@ pub fn measure_image(
         let (_, _, bbox) = pass
             .reference
             .ok_or_else(|| format!("{} not found on the sheet", r.describe()))?;
+        // A disc shows a print stretched one way: it comes out wider
+        // than tall, or the reverse, on the sheet's millimetres.
+        let aspect = match r {
+            Reference::Disc(_) => pass
+                .parts
+                .iter()
+                .find(|p| p.bbox == bbox)
+                .map(|p| aspect_of(&p.outline))
+                .unwrap_or(1.0),
+            _ => 1.0,
+        };
         exclude_reference(&mut pass, bbox);
+        if (aspect - 1.0).abs() > 0.01 {
+            warnings.push(format!(
+                "the print seems stretched one way: the reference disc measures {:.2} x {:.2} mm on the sheet ({:.1} % {} than tall), so sizes along x and y are scaled differently and the correction by its area holds only on average; print the sheet again without fitting it to the page",
+                bbox[2] - bbox[0],
+                bbox[3] - bbox[1],
+                (aspect - 1.0).abs() * 100.0,
+                if aspect > 1.0 { "wider" } else { "narrower" }
+            ));
+        }
         calibration = Some(Calibration {
             reference: r.describe(),
             measured,
             nominal,
             factor: k,
             bbox,
+            aspect,
         });
+    }
+    // A scanned sheet: the file's resolution says how far apart the
+    // marks really are, which is the print scale, with or without a
+    // reference to agree with.
+    if let Some(dpi) = dpi {
+        let from_file = (25.4 / dpi) / pass.mm_per_pixel;
+        let k = calibration.as_ref().map(|c| c.factor).unwrap_or(1.0);
+        if ((from_file - k) / k).abs() > 0.01 {
+            warnings.push(match &calibration {
+                Some(c) => format!(
+                    "the file claims {dpi:.0} dpi, by which the sheet was printed at {:.1} %, but the {} says {:.1} %; the reference is trusted",
+                    from_file * 100.0,
+                    c.reference,
+                    k * 100.0
+                ),
+                None => format!(
+                    "the file claims {dpi:.0} dpi, by which the marks are {:.1} % of their nominal spacing apart: the sheet seems printed at {:.1} %, and sizes trust 100 %; name a reference to correct for it",
+                    from_file * 100.0,
+                    from_file * 100.0
+                ),
+            });
+        }
     }
     Ok(Measurement {
         sheet: Some(size),
@@ -566,6 +706,8 @@ pub fn measure_image(
         fiducials,
         mm_per_pixel: pass.mm_per_pixel,
         residual: pass.residual,
+        dpi,
+        warnings,
         parts: pass.parts,
         picture: ok_render::to_png(&pass.picture),
         picture_scale: SCALE,
@@ -804,6 +946,38 @@ fn find_reference(reference: Option<&Reference>, pass: &Pass) -> Option<(f64, f6
             bar_run(&pass.blocks, 2.0 * b).map(|(pitch, bbox)| (pitch, 2.0 * b, bbox))
         }
     }
+}
+
+/// A closed outline's width over its height, from the second moments
+/// of the polygon it bounds (an ellipse's semi-axes are twice the
+/// standard deviations along x and y): finer than its pixel box.
+fn aspect_of(outline: &[[f64; 2]]) -> f64 {
+    let n = outline.len();
+    if n < 3 {
+        return 1.0;
+    }
+    let (mut a, mut cx, mut cy, mut sxx, mut syy) = (0.0, 0.0, 0.0, 0.0, 0.0);
+    for i in 0..n {
+        let (p, q) = (outline[i], outline[(i + 1) % n]);
+        let cross = p[0] * q[1] - q[0] * p[1];
+        a += cross;
+        cx += (p[0] + q[0]) * cross;
+        cy += (p[1] + q[1]) * cross;
+        sxx += (p[0] * p[0] + p[0] * q[0] + q[0] * q[0]) * cross;
+        syy += (p[1] * p[1] + p[1] * q[1] + q[1] * q[1]) * cross;
+    }
+    a /= 2.0;
+    if a.abs() < 1e-12 {
+        return 1.0;
+    }
+    cx /= 6.0 * a;
+    cy /= 6.0 * a;
+    let var_x = sxx / (12.0 * a) - cx * cx;
+    let var_y = syy / (12.0 * a) - cy * cy;
+    if var_x <= 0.0 || var_y <= 0.0 {
+        return 1.0;
+    }
+    (var_x / var_y).sqrt()
 }
 
 /// Takes the reference out of the parts, along with whatever else lies
@@ -1177,6 +1351,10 @@ pub struct Scene {
     pub discs: Vec<[f64; 3]>,
     pub holes: Vec<[f64; 3]>,
     pub print: f64,
+    /// How much wider than tall the print came out (1 when true): the
+    /// sheet's own features are scaled by `print * stretch` along x and
+    /// `print` along y.
+    pub stretch: f64,
     /// A steel rule: (x, y) of its lower-left corner, its length, and
     /// its angle in degrees. Metric ticks along its lower edge, inch
     /// sixteenths along its upper.
@@ -1190,6 +1368,7 @@ impl Default for Scene {
             discs: Vec::new(),
             holes: Vec::new(),
             print: 1.0,
+            stretch: 1.0,
             rule: None,
         }
     }
@@ -1290,8 +1469,8 @@ impl Scene {
 pub fn sheet_image(size: SheetSize, s: f64, scene: &Scene) -> Image {
     let (w, h) = size.size();
     let (lx, ly) = span(size);
-    let print = scene.print;
-    let (pw, ph) = ((w * print * s) as usize, (h * print * s) as usize);
+    let (px, py) = (scene.print * scene.stretch, scene.print);
+    let (pw, ph) = ((w * px * s) as usize, (h * py * s) as usize);
     let mut img = Image::new(pw, ph, Rgb(255, 255, 255));
     let corners = [(0.0, 0.0), (lx, 0.0), (lx, ly), (0.0, ly)];
     let dots = code(size);
@@ -1299,9 +1478,9 @@ pub fn sheet_image(size: SheetSize, s: f64, scene: &Scene) -> Image {
         for i in 0..pw {
             // Sheet frame: origin at the origin fiducial, y up. The
             // sheet's own features are in printed mm, the parts in true.
-            let xt = (i as f64 + 0.5) / s - INSET * print;
-            let yt = h * print - (j as f64 + 0.5) / s - INSET * print;
-            let (x, y) = (xt / print, yt / print);
+            let xt = (i as f64 + 0.5) / s - INSET * px;
+            let yt = h * py - (j as f64 + 0.5) / s - INSET * py;
+            let (x, y) = (xt / px, yt / py);
             let mut c = Rgb(255, 255, 255);
             let on_sheet = (0.0..=lx).contains(&x) && (0.0..=ly).contains(&y);
             let on_grid = on_sheet
@@ -2605,6 +2784,147 @@ mod tests {
         for (got, want) in plate.bbox.iter().zip([100.0, 30.0, 140.0, 50.0]) {
             assert!((got - want).abs() < 0.6, "plate {:?}", plate.bbox);
         }
+    }
+
+    /// A PNG with a pHYs chunk claiming `dpi` added after its header.
+    fn with_dpi(png: &[u8], dpi_x: f64, dpi_y: f64) -> Vec<u8> {
+        let crc = |bytes: &[u8]| -> u32 {
+            let mut c = 0xFFFF_FFFFu32;
+            for &b in bytes {
+                c ^= b as u32;
+                for _ in 0..8 {
+                    c = if c & 1 == 1 {
+                        0xEDB8_8320 ^ (c >> 1)
+                    } else {
+                        c >> 1
+                    };
+                }
+            }
+            !c
+        };
+        let ihdr_end = 8 + 4 + 4 + 13 + 4;
+        let mut data = b"pHYs".to_vec();
+        data.extend_from_slice(&((dpi_x / 0.0254).round() as u32).to_be_bytes());
+        data.extend_from_slice(&((dpi_y / 0.0254).round() as u32).to_be_bytes());
+        data.push(1);
+        let mut out = png[..ihdr_end].to_vec();
+        out.extend_from_slice(&9u32.to_be_bytes());
+        out.extend_from_slice(&data);
+        out.extend_from_slice(&crc(&data).to_be_bytes());
+        out.extend_from_slice(&png[ihdr_end..]);
+        out
+    }
+
+    #[test]
+    fn the_resolution_a_file_claims_is_read() {
+        let png = ok_render::to_png(&Image::new(4, 3, Rgb(0, 0, 0)));
+        assert_eq!(dpi_of(&png), None);
+        let (x, y) = dpi_of(&with_dpi(&png, 300.0, 300.0)).unwrap();
+        assert!(
+            (x - 300.0).abs() < 0.5 && (y - 300.0).abs() < 0.5,
+            "{x} {y}"
+        );
+        assert_eq!(decode(&with_dpi(&png, 300.0, 300.0)).unwrap().width, 4);
+        // A JFIF header: version 1.1, units 1 (dpi), 300 x 200.
+        let jpeg = [
+            0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, b'J', b'F', b'I', b'F', 0, 1, 1, 1, 0x01, 0x2C,
+            0x00, 0xC8, 0, 0,
+        ];
+        assert_eq!(dpi_of(&jpeg), Some((300.0, 200.0)));
+        let mut dpcm = jpeg;
+        dpcm[13] = 2;
+        let (x, _) = dpi_of(&dpcm).unwrap();
+        assert!((x - 300.0 * 2.54).abs() < 1e-9, "{x}");
+        dpcm[13] = 0;
+        assert_eq!(dpi_of(&dpcm), None);
+    }
+
+    #[test]
+    fn a_scan_whose_dpi_disagrees_with_the_rule_is_warned_about() {
+        let scene = Scene {
+            rects: vec![[20.0, 20.0, 50.0, 40.0]],
+            rule: Some((15.0, 60.0, 150.0, 4.0)),
+            ..Scene::default()
+        };
+        let scan = ok_render::to_png(&scan_image(200.0, 120.0, 300.0 / 25.4, &scene));
+        let agree = measure(&with_dpi(&scan, 300.0, 300.0), None, Some(&Reference::Rule)).unwrap();
+        assert!((agree.dpi.unwrap() - 300.0).abs() < 0.5, "{:?}", agree.dpi);
+        assert!(agree.warnings.is_empty(), "{:?}", agree.warnings);
+        let off = measure(&with_dpi(&scan, 400.0, 400.0), None, Some(&Reference::Rule)).unwrap();
+        assert_eq!(off.warnings.len(), 1, "{:?}", off.warnings);
+        assert!(
+            off.warnings[0].contains("400 dpi") && off.warnings[0].contains("the rule is trusted"),
+            "{:?}",
+            off.warnings
+        );
+        // Sizes still come from the rule.
+        assert!((off.parts[0].bbox[2] - off.parts[0].bbox[0] - 30.0).abs() < 0.5);
+        let aniso = measure(&with_dpi(&scan, 300.0, 310.0), None, Some(&Reference::Rule)).unwrap();
+        assert!(
+            aniso
+                .warnings
+                .iter()
+                .any(|w| w.contains("different resolutions each way")),
+            "{:?}",
+            aniso.warnings
+        );
+    }
+
+    #[test]
+    fn a_print_stretched_one_way_is_warned_about_by_a_disc() {
+        // A sheet printed 3 % wider than tall, with a quarter on it.
+        let scan = sheet_image(
+            SheetSize::A4,
+            6.0,
+            &Scene {
+                rects: vec![[60.0, 50.0, 100.0, 75.0]],
+                discs: vec![[150.0, 100.0, 24.26 / 2.0]],
+                stretch: 1.03,
+                ..Scene::default()
+            },
+        );
+        let m = measure_image(&scan, None, Some(&Reference::Disc(24.26))).unwrap();
+        let c = m.calibration.as_ref().unwrap();
+        // On the sheet's (stretched) millimetres the true disc reads narrower.
+        assert!((c.aspect - 1.0 / 1.03).abs() < 0.006, "aspect {}", c.aspect);
+        assert_eq!(m.warnings.len(), 1, "{:?}", m.warnings);
+        assert!(
+            m.warnings[0].contains("stretched") && m.warnings[0].contains("narrower than tall"),
+            "{:?}",
+            m.warnings
+        );
+        let plain = sheet_image(
+            SheetSize::A4,
+            6.0,
+            &Scene {
+                discs: vec![[150.0, 100.0, 24.26 / 2.0]],
+                ..Scene::default()
+            },
+        );
+        let m = measure_image(&plain, None, Some(&Reference::Disc(24.26))).unwrap();
+        assert!((m.calibration.unwrap().aspect - 1.0).abs() < 0.01);
+        assert!(m.warnings.is_empty(), "{:?}", m.warnings);
+        // A scanned sheet whose file says 300 dpi while the marks say it was printed short.
+        let short = sheet_image(
+            SheetSize::A4,
+            300.0 / 25.4,
+            &Scene {
+                print: 0.97,
+                ..Scene::default()
+            },
+        );
+        let m = measure(
+            &with_dpi(&ok_render::to_png(&short), 300.0, 300.0),
+            None,
+            None,
+        )
+        .unwrap();
+        assert_eq!(m.warnings.len(), 1, "{:?}", m.warnings);
+        assert!(
+            m.warnings[0].contains("printed at 97.") && m.warnings[0].contains("name a reference"),
+            "{:?}",
+            m.warnings
+        );
     }
 
     #[test]

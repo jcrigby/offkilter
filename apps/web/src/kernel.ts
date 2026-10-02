@@ -490,6 +490,10 @@ export type PhotoMeasurement = {
   calibration: { reference: string; measured: number; nominal: number; factor: number } | null;
   mm_per_pixel: number;
   residual: number;
+  /** The resolution the file claims (a scanner writes it, a phone does not). */
+  dpi: number | null;
+  /** What looks wrong: a print stretched one way, or the file's dpi disagreeing with the rule or the marks. */
+  warnings: string[];
   parts: PhotoPart[];
   picture: string;
   picture_scale: number;
