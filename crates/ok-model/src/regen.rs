@@ -647,6 +647,10 @@ impl PartStudio {
                     let pf = pf.clone();
                     Self::regen_puzzle(&mut result, id, &pf, &opts)
                 }
+                FeatureKind::Gear(gf) => {
+                    let gf = gf.clone();
+                    Self::regen_gear(&mut result, id, &gf, &opts)
+                }
                 FeatureKind::Boolean(bf) => {
                     let bf = bf.clone();
                     candidates = Some(
@@ -886,6 +890,37 @@ impl PartStudio {
             Err(e) => return Some(e),
         };
         Self::apply_tool(result, id, tool, rf.op)
+    }
+
+    /// The gear's profile (`ok_sketch::gear`, which checks the design
+    /// rules) extruded its face width from the plane.
+    fn regen_gear(
+        result: &mut RegenResult,
+        id: FeatureId,
+        gf: &crate::GearFeature,
+        opts: &ProfileOptions,
+    ) -> Option<String> {
+        let plane = match result.resolve_plane(&gf.plane) {
+            Ok(p) => p,
+            Err(e) => return Some(e),
+        };
+        if !(gf.width.is_finite() && gf.width > ok_math::tol::LINEAR) {
+            return Some("width must be positive".into());
+        }
+        let profile = match ok_sketch::gear::profile(&gf.params(), opts.arc_segment_angle) {
+            Ok(p) => p,
+            Err(e) => return Some(e),
+        };
+        let (start, end) = match gf.direction {
+            ExtrudeDirection::Normal => (0.0, gf.width),
+            ExtrudeDirection::Reverse => (0.0, -gf.width),
+            ExtrudeDirection::Symmetric => (-gf.width / 2.0, gf.width / 2.0),
+        };
+        let solid = match ok_brep::extrude(&profile, &plane, start, end, id.0) {
+            Ok(s) => s,
+            Err(e) => return Some(e.to_string()),
+        };
+        Self::apply_tool(result, id, solid, gf.op)
     }
 
     /// One body per piece, named by column, row and colour, faces of
@@ -3019,6 +3054,136 @@ mod tests {
         .unwrap();
         let r = ps.regenerate();
         assert!(r.errors().next().is_some());
+    }
+
+    /// A 20-tooth pinion meshing with a 40-tooth gear at their centre
+    /// distance: both close, the bore is one cylinder, the two do not
+    /// intersect with a space facing a tooth and do tooth to tooth; the
+    /// design rules come back as the feature's error; a ring gear takes
+    /// a pinion inside it.
+    #[test]
+    fn gears_mesh_and_the_rules_show_as_errors() {
+        let mut ps = PartStudio::new("t");
+        let gear = |center: (f64, f64), teeth: u32, angle: f64, bore: f64, rim: f64| Op::AddGear {
+            plane: PlaneRef::standard(StandardPlane::Top),
+            center: Vec2::new(center.0, center.1),
+            module: 2.0,
+            teeth,
+            pressure_angle: 20.0,
+            width: 10.0,
+            direction: ExtrudeDirection::Normal,
+            bore,
+            rim,
+            angle,
+            backlash: 0.0,
+            op: BodyOp::New,
+            name: None,
+        };
+        ps.apply(gear((0.0, 0.0), 20, 0.0, 8.0, 0.0)).unwrap();
+        let wheel = ps
+            .apply(gear((60.0, 0.0), 40, 180.0 / 40.0, 0.0, 0.0))
+            .unwrap()
+            .feature
+            .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 2);
+        for b in &r.bodies {
+            b.solid.validate().unwrap();
+        }
+        let pinion = &r.bodies[0].solid;
+        // Volume: a shade under the pitch cylinder less the bore.
+        let pitch = std::f64::consts::PI * 400.0 * 10.0;
+        let bore = std::f64::consts::PI * 16.0 * 10.0;
+        let v = pinion.volume();
+        assert!(v < pitch - bore && v > 0.9 * pitch - bore, "{v}");
+        // The bore is one cylinder of radius 4 and each flank one face.
+        let cylinders = pinion
+            .surfaces
+            .iter()
+            .filter(|s| matches!(s, ok_brep::Surface::Cylinder { radius, .. } if (radius - 4.0).abs() < 1e-9))
+            .count();
+        assert_eq!(cylinders, 1);
+        let ruled = pinion
+            .surfaces
+            .iter()
+            .filter(|s| matches!(s, ok_brep::Surface::Ruled))
+            .count();
+        assert_eq!(ruled, 40);
+        let overlap = |r: &RegenResult| {
+            boolean(&r.bodies[0].solid, &r.bodies[1].solid, BoolOp::Intersection)
+                .map(|s| s.volume().abs())
+                .unwrap_or(0.0)
+        };
+        assert!(overlap(&r) < 1e-3 * v, "{}", overlap(&r));
+        // Tooth to tooth they collide.
+        ps.apply(Op::SetGear {
+            id: wheel,
+            plane: None,
+            center: None,
+            module: None,
+            teeth: None,
+            pressure_angle: None,
+            width: None,
+            direction: None,
+            bore: None,
+            rim: None,
+            angle: Some(0.0),
+            backlash: None,
+            op: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(overlap(&r) > 1e-2 * v, "{}", overlap(&r));
+        // Twelve teeth at 20° is refused with the rule.
+        ps.apply(Op::SetGear {
+            id: wheel,
+            plane: None,
+            center: None,
+            module: None,
+            teeth: Some(12),
+            pressure_angle: None,
+            width: None,
+            direction: None,
+            bore: None,
+            rim: None,
+            angle: None,
+            backlash: None,
+            op: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        let (_, e) = r.errors().next().expect("the undercut rule");
+        assert!(e.contains("undercut"), "{e}");
+        assert_eq!(r.bodies.len(), 1);
+
+        // A pinion inside a ring gear.
+        let mut ps = PartStudio::new("ring");
+        ps.apply(gear((0.0, 0.0), 80, 0.0, 0.0, 180.0)).unwrap();
+        ps.apply(gear((60.0, 0.0), 20, 180.0 / 20.0, 0.0, 0.0))
+            .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let ring = &r.bodies[0].solid;
+        ring.validate().unwrap();
+        let v_ring = ring.volume();
+        let outer = std::f64::consts::PI * 90.0 * 90.0 * 10.0;
+        let tip = std::f64::consts::PI * 78.0 * 78.0 * 10.0;
+        let root = std::f64::consts::PI * 82.5 * 82.5 * 10.0;
+        assert!(v_ring < outer - tip && v_ring > outer - root, "{v_ring}");
+        assert!(
+            overlap(&r) < 1e-3 * r.bodies[1].solid.volume(),
+            "{}",
+            overlap(&r)
+        );
     }
 
     #[test]

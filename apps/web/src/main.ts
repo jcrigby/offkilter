@@ -2,7 +2,7 @@ import { Kernel, parseStep } from "./kernel";
 import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
-import type { Axis, BlendKind, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -1870,6 +1870,7 @@ class App implements SketchHost {
     else if (f.kind.type === "variable") this.renderVariableDetail(f, body);
     else if (f.kind.type === "hole") this.renderHoleDetail(f, body);
     else if (f.kind.type === "puzzle") this.renderPuzzleDetail(f, body);
+    else if (f.kind.type === "gear") this.renderGearDetail(f, body);
     else if (f.kind.type === "sweep") this.renderSweepDetail(f, body);
     else if (f.kind.type === "loft") this.renderLoftDetail(f, body);
     else if (f.kind.type === "boolean") this.renderBooleanDetail(f, body);
@@ -2252,6 +2253,30 @@ class App implements SketchHost {
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = "Drills at every standalone point of the sketch (points not used by lines, arcs or circles). “Reverse” drills into the face the sketch sits on.";
+    body.appendChild(note);
+  }
+
+  renderGearDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "gear") return;
+    const k = f.kind;
+    const set = (patch: Partial<Extract<Op, { type: "set_gear" }>>) => this.apply({ type: "set_gear", id: f.id, ...patch });
+    this.planeFieldsFor(f, body, k.plane, (plane) => set({ plane }));
+    body.appendChild(field("Module", this.exprInput(f, "module", k.module, (v) => set({ module: v }))));
+    body.appendChild(field("Teeth", this.exprInput(f, "teeth", k.teeth, (v) => set({ teeth: Math.max(1, Math.round(v)) }))));
+    body.appendChild(field("Pressure angle°", this.exprInput(f, "pressure_angle", k.pressure_angle, (v) => set({ pressure_angle: v }))));
+    body.appendChild(field("Face width", this.exprInput(f, "width", k.width, (v) => set({ width: v }))));
+    body.appendChild(field("Direction", select(["normal", "reverse", "symmetric"], k.direction, (v) => set({ direction: v as ExtrudeDirection }))));
+    body.appendChild(field("Bore ⌀", this.exprInput(f, "bore", k.bore, (v) => set({ bore: v }))));
+    body.appendChild(field("Rim ⌀ (internal)", this.exprInput(f, "rim", k.rim, (v) => set({ rim: v }))));
+    body.appendChild(field("First tooth at°", this.exprInput(f, "angle", k.angle, (v) => set({ angle: v }))));
+    body.appendChild(field("Backlash", this.exprInput(f, "backlash", k.backlash, (v) => set({ backlash: v }))));
+    body.appendChild(field("Centre x", numberInput(k.center.x, (v) => set({ center: { x: v, y: k.center.y } }))));
+    body.appendChild(field("Centre y", numberInput(k.center.y, (v) => set({ center: { x: k.center.x, y: v } }))));
+    body.appendChild(field("Body", select(["new", "add", "remove", "intersect"], k.op, (v) => set({ op: v as BodyOp }))));
+    const d = (k.module * k.teeth).toFixed(3);
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = `Pitch diameter ${d}: mating gears sit at half the sum of their pitch diameters apart; a pinion in a ring at half the difference. A gear with an even tooth count facing another wants its first tooth turned by half a pitch (180 / teeth). Zero rim is an external gear; a rim diameter makes a ring with the teeth inside.`;
     body.appendChild(note);
   }
 
@@ -3843,6 +3868,19 @@ async function main(): Promise<void> {
       seed: Math.floor(Math.random() * 100000),
       jitter: 0,
       name: app.autoName("Puzzle"),
+    });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-gear").onclick = () => {
+    app.sketcher.exit();
+    app.apply({
+      type: "add_gear",
+      plane: { type: "standard", base: "top", offset: 0 },
+      module: 2,
+      teeth: 20,
+      width: 10,
+      bore: 8,
+      name: app.autoName("Gear"),
     });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };

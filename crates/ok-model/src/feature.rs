@@ -664,6 +664,57 @@ impl PuzzleFeature {
     }
 }
 
+/// An involute spur gear built straight from its numbers, no sketch:
+/// external (teeth round a disc, a bore through it) when `rim` is zero,
+/// internal (teeth inside a ring of that outer diameter) otherwise. The
+/// teeth and the rules are `ok_sketch::gear`; the body is the profile
+/// extruded `width` from the plane, its faces numbered as an extrude's.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GearFeature {
+    pub plane: PlaneRef,
+    /// Centre on the plane.
+    #[serde(default)]
+    pub center: Vec2,
+    pub module: f64,
+    pub teeth: u32,
+    /// Degrees; 20 unless said otherwise.
+    #[serde(default = "twenty")]
+    pub pressure_angle: f64,
+    /// Face width, the extrusion depth.
+    pub width: f64,
+    #[serde(default)]
+    pub direction: ExtrudeDirection,
+    /// Bore diameter of an external gear; zero for none.
+    #[serde(default)]
+    pub bore: f64,
+    /// Outer diameter of an internal gear; zero for an external one.
+    #[serde(default)]
+    pub rim: f64,
+    /// Degrees from the plane's x axis to the first tooth's centreline.
+    #[serde(default)]
+    pub angle: f64,
+    /// Taken off the tooth thickness at the pitch circle, mm.
+    #[serde(default)]
+    pub backlash: f64,
+    #[serde(default)]
+    pub op: BodyOp,
+}
+
+impl GearFeature {
+    pub fn params(&self) -> ok_sketch::gear::Params {
+        ok_sketch::gear::Params {
+            module: self.module,
+            teeth: self.teeth,
+            pressure_angle: self.pressure_angle,
+            center: self.center,
+            angle: self.angle,
+            bore: self.bore,
+            rim: self.rim,
+            backlash: self.backlash,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct VariableFeature {
     pub name: String,
@@ -690,6 +741,7 @@ pub enum FeatureKind {
     Mesh(MeshFeature),
     Split(SplitFeature),
     Puzzle(PuzzleFeature),
+    Gear(GearFeature),
 }
 
 impl FeatureKind {
@@ -718,6 +770,7 @@ impl FeatureKind {
             FeatureKind::Draft(_) => "Draft",
             FeatureKind::Mesh(_) => "Mesh",
             FeatureKind::Puzzle(_) => "Puzzle",
+            FeatureKind::Gear(_) => "Gear",
             FeatureKind::Split(_) => "Split",
         }
     }
@@ -760,6 +813,16 @@ impl FeatureKind {
                 "thickness".into(),
                 "gap".into(),
                 "bit".into(),
+            ],
+            FeatureKind::Gear(_) => vec![
+                "module".into(),
+                "teeth".into(),
+                "pressure_angle".into(),
+                "width".into(),
+                "bore".into(),
+                "rim".into(),
+                "angle".into(),
+                "backlash".into(),
             ],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
@@ -808,6 +871,14 @@ impl FeatureKind {
             (FeatureKind::Puzzle(p), "thickness") => Some(p.thickness),
             (FeatureKind::Puzzle(p), "gap") => Some(p.gap),
             (FeatureKind::Puzzle(p), "bit") => Some(p.bit),
+            (FeatureKind::Gear(g), "module") => Some(g.module),
+            (FeatureKind::Gear(g), "teeth") => Some(g.teeth as f64),
+            (FeatureKind::Gear(g), "pressure_angle") => Some(g.pressure_angle),
+            (FeatureKind::Gear(g), "width") => Some(g.width),
+            (FeatureKind::Gear(g), "bore") => Some(g.bore),
+            (FeatureKind::Gear(g), "rim") => Some(g.rim),
+            (FeatureKind::Gear(g), "angle") => Some(g.angle),
+            (FeatureKind::Gear(g), "backlash") => Some(g.backlash),
             _ => None,
         }
     }
@@ -904,6 +975,38 @@ impl FeatureKind {
                 p.bit = value;
                 Ok(())
             }
+            (FeatureKind::Gear(g), "module") => {
+                g.module = value;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "teeth") => {
+                g.teeth = value.round().max(0.0) as u32;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "pressure_angle") => {
+                g.pressure_angle = value;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "width") => {
+                g.width = value;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "bore") => {
+                g.bore = value;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "rim") => {
+                g.rim = value;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "angle") => {
+                g.angle = value;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "backlash") => {
+                g.backlash = value;
+                Ok(())
+            }
             (FeatureKind::Hole(h), "diameter") => {
                 h.diameter = value;
                 Ok(())
@@ -971,7 +1074,8 @@ impl FeatureKind {
             | FeatureKind::Draft(_)
             | FeatureKind::Mesh(_)
             | FeatureKind::Split(_)
-            | FeatureKind::Puzzle(_) => None,
+            | FeatureKind::Puzzle(_)
+            | FeatureKind::Gear(_) => None,
         }
     }
 }

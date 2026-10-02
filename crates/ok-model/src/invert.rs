@@ -49,6 +49,7 @@ impl PartStudio {
             | Op::AddDraft { .. }
             | Op::AddMesh { .. }
             | Op::AddPuzzle { .. }
+            | Op::AddGear { .. }
             | Op::AddSplit { .. }
             | Op::InsertFeature { .. } => result
                 .feature
@@ -215,6 +216,38 @@ impl PartStudio {
                     show: show.map(|_| p.show),
                     tabs: Some(p.tabs.clone()),
                     corners: Some(p.corners.clone()),
+                }],
+                _ => Vec::new(),
+            },
+            Op::SetGear {
+                id,
+                plane,
+                center,
+                module,
+                teeth,
+                pressure_angle,
+                width,
+                direction,
+                bore,
+                rim,
+                angle,
+                backlash,
+                op,
+            } => match before.kind() {
+                Some(FeatureKind::Gear(g)) => vec![Op::SetGear {
+                    id,
+                    plane: plane.map(|_| g.plane),
+                    center: center.map(|_| g.center),
+                    module: module.map(|_| g.module),
+                    teeth: teeth.map(|_| g.teeth),
+                    pressure_angle: pressure_angle.map(|_| g.pressure_angle),
+                    width: width.map(|_| g.width),
+                    direction: direction.map(|_| g.direction),
+                    bore: bore.map(|_| g.bore),
+                    rim: rim.map(|_| g.rim),
+                    angle: angle.map(|_| g.angle),
+                    backlash: backlash.map(|_| g.backlash),
+                    op: op.map(|_| g.op),
                 }],
                 _ => Vec::new(),
             },
@@ -440,6 +473,7 @@ impl Before {
             | Op::SetPuzzle { id, .. }
             | Op::SetPuzzleTab { id, .. }
             | Op::SetPuzzleCorner { id, .. }
+            | Op::SetGear { id, .. }
             | Op::SetSweep { id, .. }
             | Op::SetLoft { id, .. }
             | Op::SetBoolean { id, .. }

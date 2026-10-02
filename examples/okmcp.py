@@ -184,6 +184,35 @@ class Part:
             }
         )
 
+    def gear(self, module, teeth, width, base="top", offset=0.0, plane=None, center=(0.0, 0.0), pressure_angle=20.0,
+             direction="normal", bore=0.0, rim=0.0, angle=0.0, backlash=0.0, op="new", name=None):
+        """An involute spur gear as a body: external with a `bore`, or
+        internal (teeth inside a ring of outer diameter `rim`) when `rim`
+        is given. `plane` is a plane reference; otherwise a standard
+        plane `base` at `offset`. `angle` turns the first tooth's
+        centreline; a mating gear with an even tooth count wants
+        180 / teeth."""
+        if plane is None:
+            plane = {"type": "standard", "base": base, "offset": offset}
+        return self.feature(
+            {
+                "type": "add_gear",
+                "plane": plane,
+                "center": v2(*center),
+                "module": module,
+                "teeth": teeth,
+                "pressure_angle": pressure_angle,
+                "width": width,
+                "direction": direction,
+                "bore": bore,
+                "rim": rim,
+                "angle": angle,
+                "backlash": backlash,
+                "op": op,
+                "name": name,
+            }
+        )
+
     def revolve_cut(self, s, name=None):
         """Revolves the sketch's closed profile about the sketch's y axis
         and removes it: a cone, countersink or turned socket."""
