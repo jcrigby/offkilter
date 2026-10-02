@@ -278,3 +278,32 @@ so a gear's report has four to six faces per tooth, and its bore is a
 cylinder a mate can use. The tooth form is the theoretical one with no
 root fillet and no profile shift; the first pinion that needs either
 will add it.
+
+## 2026-10 · The cart becomes a tricycle, and its stability is a number in the test
+
+Rev A of the EGO cart drove a live axle through a printed gearbox,
+which needed wheels fixed to the axle, a differential or scrub in
+turns, and a printed first stage at 4800 rpm. Looking at what can be
+bought changed all three: standard wheels come on bearings for a dead
+axle, a worm gearbox turns the drive 90° and reduces 20:1 in one
+casting, and a bicycle hub's six-bolt disc mount is a machined bolt
+pattern for a printed ring gear. So rev B is one driven bicycle
+wheel with the ring on its hub, the worm box's pinion inside the
+ring, and two casters: no axle, no differential, the big printed gear
+where the torque is. The flex shaft between the EGO stub and the worm
+box is what lets the head sit where the hands want it.
+
+The tricycle's price is stability, and the first layout, casters just
+ahead of the drive wheel on a wide track with the load near the
+wheel, looked stable and was not: the support triangle is a point at
+the drive wheel, and the mass centre 37 mm ahead of it tipped at 5°
+of side slope. The model now computes the mass centre from the
+placed bodies and a mass table, and the test asserts the drive
+wheel's share, the two-bag and one-bag tip angles and the mass
+centre's position on the hill; those numbers moved the bags 250 mm
+ahead of the wheel and the casters 300 mm ahead, widened the track,
+and put "one bag goes over the wheel" in the README. The lesson is
+general: a layout question like this one is a few lines of statics
+on the model's own centroids, and it belongs in the regression test
+next to the interference check, which found five collisions in the
+same revision.

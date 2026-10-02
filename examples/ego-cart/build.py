@@ -1,18 +1,21 @@
-#!/usr/bin/env python3
-"""A powered two-wheel shopping cart driven by an EGO Multi-Head power
-head: a broadcast spreader run backwards. The power head's 7 mm drive
-shaft comes down its attachment tube into a gearbox between the wheels,
-three stages of big printed gears take 4800 rpm down to walking pace,
-and a solid axle drives two 10-inch hand-truck wheels. A platform above
-the wheels carries a large Costco bag each side.
+"""The EGO cart, rev B: a powered tricycle for two Costco bags.
+
+One 20 inch bicycle wheel at the back drives the cart; two swivel
+casters ahead of it on a wide track carry the front. The EGO power head
+is the handle, on a mast beside the wheel: the cut-off male end of an
+EGO extension pole plugs into its coupler, a flex shaft runs from that
+stub under the deck to a bought worm gearbox, and the gearbox's output
+pinion drives a printed ring gear bolted to the wheel hub's six-bolt
+disc mount. Both printed gears are `add_gear` features with real
+involute teeth, so they export to STL as they print.
 
     cargo build --release -p ok-mcp
-    python3 examples/ego-cart/build.py [out-dir]
+    python3 examples/ego-cart/build.py          # the document, pictures and sheets
+    cargo test -p ok-render --test ego_cart     # what CI runs
 
-Writes ego_cart.okpart, a PNG per part, the assembly views and the
-drawing sheets into out-dir (default examples/ego-cart/out). Every
-number that is an assumption about a bought part says so; the README
-lists what to measure.
+Frame: x across the cart (left negative), y towards the user, z up,
+origin on the ground under the drive wheel's contact. Every part is
+built in place in that frame, so the assembly only names them.
 """
 import json
 import math
@@ -22,213 +25,266 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-from okmcp import Mcp, Part  # noqa: E402
+from okmcp import Mcp, Part, v2  # noqa: E402
 
 # ---------------------------------------------------------------------
-# The cart's frame: x across the cart (the axle), +y towards the user
-# at the back, z up, origin on the ground under the axle's centre.
+# Bought parts (every number here is an assumption to measure).
 # ---------------------------------------------------------------------
+HEAD_RPM = 4800.0  # EGO PH1400 power head, no load
+HEAD_TUBE_OD, HEAD_L = 28.0, 1000.0  # its tube, coupler to motor block
+MOTOR_W, MOTOR_H, MOTOR_L = 110.0, 90.0, 240.0  # motor, battery, rear grip
+STUB_OD, STUB_L = 26.0, 150.0  # the cut male end of an EP7500 extension pole
+HEAD_SLOPE = 50.0  # degrees above horizontal, the handle's angle
 
-# Bought parts. The wheel is a 4.10/3.50-4 pneumatic hand-truck wheel
-# with 5/8" ball bearings (254 x 89, hub lengths vary 45..80 by maker:
-# measure yours); the axle is 5/8" steel rod.
-WHEEL_D, WHEEL_W, HUB_D, HUB_L = 254.0, 89.0, 60.0, 70.0
-AXLE_D = 15.875
-TRACK = 640.0  # wheel centre to wheel centre
-AXLE_L = TRACK + 2 * 60.0
-R_WHEEL = WHEEL_D / 2  # 127: the axle's height
+WHEEL_D, TYRE_W, RIM_ID = 508.0, 45.0, 400.0  # 20 inch bicycle front wheel
+HUB_D, HUB_W, AXLE_D, AXLE_L = 36.0, 100.0, 10.0, 150.0  # six-bolt disc hub
+ROTOR_X, ROTOR_BOSS_D, ROTOR_BCD, ROTOR_BOLT = -40.0, 50.0, 44.0, 5.5  # ISO six-bolt mount
+R_WHEEL = WHEEL_D / 2
 
-# The EGO power head (PH1400/PH1420): 4800 rpm no load at a 7 mm solid
-# steel shaft, turning counter-clockwise seen from the attachment end;
-# an aluminium tube of a diameter still to be measured (26 assumed), a
-# tool-free coupler. The whole head is about a metre long with the motor
-# and battery at the user's end, so the head is the cart's handle.
-HEAD_RPM = 4800.0
-SHAFT_D, TUBE_OD, TUBE_ID = 7.0, 26.0, 20.0  # measure the tube
-HEAD_L, HEAD_TUBE_OD = 1000.0, 28.0  # measure
-MOTOR_W, MOTOR_H, MOTOR_L = 110.0, 90.0, 240.0  # the motor and battery block, measure
-SLOPE = 40.0  # the handle's angle above the ground, degrees
-TUBE_L = 300.0  # our attachment tube, coupler to gearbox
+WORM_RATIO = 20  # NMRV040 worm gearbox, hollow 18 mm output, 14 mm input
+WORM_W, WORM_D, WORM_H = 60.0, 100.0, 100.0  # across the output, along the input, tall
+WORM_OUT_D, WORM_IN_D, WORM_IN_L = 18.0, 14.0, 40.0
+WORM_EFFICIENCY = 0.7
 
-# A large Costco bag: 20 x 11.5 footprint, 14 tall, in inches.
+CASTER_D, CASTER_W, CASTER_TRAIL = 200.0, 50.0, 40.0  # pneumatic swivel casters
+CASTER_X, CASTER_Y = 380.0, -340.0  # the swivel axes
+FLEX_D, FLEX_GAP = 16.0, 25.0  # flex shaft casing, and the couplings at its ends
+
+# ---------------------------------------------------------------------
+# Printed gears and the drive geometry.
+# ---------------------------------------------------------------------
+M, Z_RING, Z_PINION, FACE, PRESSURE, BACKLASH = 3.0, 80, 17, 20.0, 20.0, 0.15
+RING_RIM, WEB_T, WEB_HOLE = 265.0, 5.0, 36.5
+PINION_BORE, PINION_HUB_D, PINION_HUB_L = WORM_OUT_D + 0.2, 40.0, 15.0
+R_RING, R_PINION = M * Z_RING / 2, M * Z_PINION / 2
+CENTRE = R_RING - R_PINION  # a pinion inside a ring: the difference
+PINION_DIR = -121.5  # degrees from +y in the y-z plane, from the axle to the pinion: low enough to clear the axle beam
+PINION_Y = CENTRE * math.cos(math.radians(PINION_DIR))
+PINION_Z = R_WHEEL + CENTRE * math.sin(math.radians(PINION_DIR))
+# The ring's first tooth points along +y, and the pinion's direction is
+# a whole number of ring pitches from it, so a ring tooth points at the
+# pinion's centre: the pinion turns half a pitch so a space faces it.
+assert abs(PINION_DIR / (360.0 / Z_RING) - round(PINION_DIR / (360.0 / Z_RING))) < 1e-9
+PINION_ANGLE = PINION_DIR + 180.0 / Z_PINION
+RING_X0 = ROTOR_X - WEB_T - FACE  # the teeth, outboard of the web on the rotor face
+WORM_X1 = RING_X0 - PINION_HUB_L - 5.0  # the gearbox's inner face, clear of the pinion's hub
+WORM_X0 = WORM_X1 - WORM_W
+WORM_Y0, WORM_Y1 = PINION_Y - WORM_D / 2, PINION_Y + WORM_D / 2
+WORM_Z0, WORM_Z1 = PINION_Z - WORM_H / 2, PINION_Z + WORM_H / 2
+WORM_IN_END = (WORM_X0 + WORM_W / 2, WORM_Y1 + WORM_IN_L, PINION_Z)
+
+# ---------------------------------------------------------------------
+# Deck, frame and handle.
+# ---------------------------------------------------------------------
+PLATFORM_W, PLATFORM_T = 860.0, 12.0
+PLATFORM_Y0, PLATFORM_Y1, PLATFORM_Z = -520.0, 260.0, 270.0
+SLOT_X0, SLOT_X1, SLOT_Y0 = -80.0, 55.0, -270.0  # the wheel and ring through the deck
+RAIL, RAIL_X = 40.0, 240.0  # square tube rails under the deck
+RAIL_Y0, RAIL_Y1 = PLATFORM_Y0, 300.0  # the rear member sits behind the tyre and the deck
+DROPOUT_X, DROPOUT_T, DROPOUT_HALF = 70.0, 6.0, 40.0
+BRACKET_T = 6.0
 BAG_L, BAG_W, BAG_H = 508.0, 292.0, 356.0
+BAG_X = -SLOT_X0 + 10.0 + BAG_W / 2  # clear of the slot
+BAG_Y = -250.0  # the load centre, well ahead of the drive wheel (see stability)
+MAST_D, MAST_L, MAST_BASE = 32.0, 300.0, (WORM_IN_END[0], RAIL_Y1 - RAIL / 2, PLATFORM_Z)
+HEAD_OFFSET = 70.0  # the head rides behind and below the mast, parallel to it
+D_HEAD = (0.0, math.cos(math.radians(HEAD_SLOPE)), math.sin(math.radians(HEAD_SLOPE)))
+PERP = (0.0, D_HEAD[2], -D_HEAD[1])  # behind and below, square to the head
 
-# The gear train: a 90 degree bevel pair at the input, where the speed
-# is high and the torque low (keep that pinion small: at 4800 rpm a
-# 24 mm pitch circle runs 6 m/s), then two spur stages where the torque
-# is high and size is strength, module 2.5 and 25 mm faces. Every shaft
-# is parallel to the axle and at its height, in a row behind it, so the
-# box is long and low and the platform stays just above the wheels.
-M_BEVEL, Z_BEVEL_PINION, Z_BEVEL_GEAR = 2.0, 12, 36
-M_SPUR, Z_PINION, Z_GEAR2, Z_GEAR_AXLE = 2.5, 15, 60, 63
-FACE, FACE_BEVEL = 25.0, 20.0
-SHAFT2_D = 12.0
-RATIO = (Z_BEVEL_GEAR / Z_BEVEL_PINION) * (Z_GEAR2 / Z_PINION) * (Z_GEAR_AXLE / Z_PINION)
-PD = lambda m, z: m * z  # pitch diameter
-Y_SHAFT2 = (PD(M_SPUR, Z_PINION) + PD(M_SPUR, Z_GEAR_AXLE)) / 2  # 97.5 behind the axle
-Y_SHAFT3 = Y_SHAFT2 + (PD(M_SPUR, Z_PINION) + PD(M_SPUR, Z_GEAR2)) / 2  # 191.25
-Z_SHAFTS = R_WHEEL
 
-# The input axis: through the bevel apex on shaft 3's axis, up and back
-# at the handle's slope. The bevel gear's pitch circle sits a pinion
-# pitch radius from the apex along shaft 3, the pinion's a gear pitch
-# radius from it along the input axis.
-D_IN = (0.0, math.cos(math.radians(SLOPE)), math.sin(math.radians(SLOPE)))
-APEX = (0.0, Y_SHAFT3, Z_SHAFTS)
-ALONG = lambda t: (APEX[0] + D_IN[0] * t, APEX[1] + D_IN[1] * t, APEX[2] + D_IN[2] * t)
-R_BP, R_BG = PD(M_BEVEL, Z_BEVEL_PINION) / 2, PD(M_BEVEL, Z_BEVEL_GEAR) / 2
-T_PINION = R_BG  # the pinion's pitch plane, along the input axis from the apex
-T_TUBE0 = T_PINION + FACE_BEVEL + 8.0  # where the attachment tube's end seats
-T_COUPLER = T_TUBE0 + TUBE_L
+def add(a, b, s=1.0):
+    return (a[0] + s * b[0], a[1] + s * b[1], a[2] + s * b[2])
 
-# The gearbox housing: 110 wide (gear faces and clearances), from ahead
-# of the axle gear to behind the bevels, bottom 40 mm off the ground,
-# its rear wall square to the input axis so the shaft bore and the tube
-# seat are a hole normal to a face.
-GB_W, GB_Z0, GB_Z1, GB_Y0 = 110.0, 40.0, 215.0, -100.0
-GB_REAR_Y = 252.0  # the vertical rear wall, clear of the bevel pinion's rim inside
-GB_REAR_T = T_TUBE0 + 4.0  # the rear wall's plane: input-axis coordinate past the pinion
-_apex_t = APEX[1] * D_IN[1] + APEX[2] * D_IN[2]
-_plane = _apex_t + GB_REAR_T  # y cos + z sin = _plane on the sloped wall
-GB_SLOPE_Z0 = (_plane - GB_REAR_Y * D_IN[1]) / D_IN[2]  # where the vertical rear wall meets the slope
-GB_SLOPE_Y1 = (_plane - GB_Z1 * D_IN[2]) / D_IN[1]  # where the slope meets the top
-GB_PROFILE = [(GB_Y0, GB_Z0), (GB_REAR_Y, GB_Z0), (GB_REAR_Y, GB_SLOPE_Z0), (GB_SLOPE_Y1, GB_Z1), (GB_Y0, GB_Z1)]
-# The cavity: the profile drawn in by the wall thickness, 16 at the
-# sloped rear wall so the tube seat has material under it, through the
-# box but for the side walls that carry the bearings.
-GB_WALL, GB_REAR_WALL = 8.0, 16.0
-_inner_plane = _plane - GB_REAR_WALL
-GB_CAVITY = [
-    (GB_Y0 + GB_WALL, GB_Z0 + GB_WALL),
-    (GB_REAR_Y - GB_WALL, GB_Z0 + GB_WALL),
-    (GB_REAR_Y - GB_WALL, (_inner_plane - (GB_REAR_Y - GB_WALL) * D_IN[1]) / D_IN[2]),
-    ((_inner_plane - (GB_Z1 - GB_WALL) * D_IN[2]) / D_IN[1], GB_Z1 - GB_WALL),
-    (GB_Y0 + GB_WALL, GB_Z1 - GB_WALL),
-]
 
-# The frame: two side plates carry the axle bearings, the gearbox and
-# the platform; the platform sits just over the wheels.
-PLATE_T, PLATE_Y0, PLATE_Y1, PLATE_Z0 = 12.0, -150.0, 280.0, 60.0
-PLATFORM_W, PLATFORM_D, PLATFORM_T = 760.0, 520.0, 12.0
-PLATFORM_Z = WHEEL_D + 36.0  # 290: underside, clear of the tyres
-BAG_X = GB_W / 2 + 5.0 + PLATE_T + BAG_W / 2  # a bag outboard of each side plate
+HEAD_BASE = add(MAST_BASE, PERP, HEAD_OFFSET)  # the coupler
+STUB_END = add(HEAD_BASE, D_HEAD, -STUB_L)  # where the flex shaft arrives
+MASS = {  # kg, the cart's own parts estimated, the bags as carried
+    "drive wheel": 2.5, "axle": 0.1, "ring gear": 0.9, "pinion": 0.15, "output shaft": 0.2,
+    "worm box": 2.6, "flex shaft": 0.5, "EGO stub": 0.3, "power head": 4.5, "frame": 6.0,
+    "platform": 4.0, "left caster": 1.5, "right caster": 1.5, "left bag": 20.0, "right bag": 20.0,
+}
 
-# What the shop wants to know.
+# ---------------------------------------------------------------------
+# The numbers.
+# ---------------------------------------------------------------------
+RATIO = WORM_RATIO * Z_RING / Z_PINION
 WHEEL_RPM = HEAD_RPM / RATIO
-SPEED = WHEEL_RPM / 60.0 * math.pi * WHEEL_D / 1000.0  # m/s at no load
-LOAD_KG, GRADE, ROLLING = 80.0, 0.15, 0.02  # cart, two full bags and a hand on it; a 15 % hill
+SPEED = WHEEL_RPM / 60.0 * math.pi * WHEEL_D / 1000.0
+LOAD_KG, GRADE, ROLLING = 80.0, 0.15, 0.02
 F_HILL = LOAD_KG * 9.81 * (GRADE + ROLLING)
 T_AXLE = F_HILL * R_WHEEL / 1000.0
-T_INPUT = T_AXLE / RATIO
-P_HILL = F_HILL * SPEED * 0.85  # at the no-load speed, say
+F_TOOTH = T_AXLE / (R_RING / 1000.0)
+T_PINION = F_TOOTH * R_PINION / 1000.0
+T_HEAD = T_PINION / (WORM_RATIO * WORM_EFFICIENCY)
+P_HEAD = T_HEAD * HEAD_RPM * 2 * math.pi / 60.0
+GRIP_KG = {"dry": F_HILL / 0.6 / 9.81, "wet": F_HILL / 0.4 / 9.81}
 
 
 # ---------------------------------------------------------------------
-# Parts: each built along its own z axis at the origin, placed later.
+# Builders, all in the cart's frame.
 # ---------------------------------------------------------------------
-def cylinder(p, d, h, name, z0=0.0, bore=None):
-    """A disc or a ring: with a bore the outer circle is extruded and
-    the bore drilled, so a thin tube does not come out as its core."""
-    s = p.sketch("top", z0, name)
-    p.circle(s, (0.0, 0.0), d / 2)
-    p.extrude(s, h, name=name)
-    if bore:
-        s = p.sketch("top", z0, f"{name} bore")
-        p.point(s, (0.0, 0.0))
-        p.hole(s, bore, direction="normal", name=f"{name} bore")
+def along(p, a, b, d, name, op="new"):
+    """A cylinder from point `a` to point `b` (same x), built on a top
+    plane turned about x to face along the line."""
+    e = (b[1] - a[1], b[2] - a[2])
+    length = math.hypot(*e)
+    e = (e[0] / length, e[1] / length)
+    theta = math.atan2(-e[0], e[1])  # the turned plane's normal is (0, -sin, cos)
+    v = a[1] * math.cos(theta) + a[2] * math.sin(theta)
+    offset = a[1] * e[0] + a[2] * e[1]
+    s = p.feature({"type": "add_sketch", "plane": {"type": "rotated", "base": "top", "axis": "x", "angle": math.degrees(theta), "offset": offset}, "name": name})
+    p.circle(s, (a[0], v), d / 2)
+    return p.extrude(s, length, op=op, name=name)
 
 
-def wheel(p):
-    """Tyre and rim as one disc, the hub through it, bored for the axle."""
-    cylinder(p, WHEEL_D, WHEEL_W, "tyre", bore=AXLE_D + 0.1)
-    s = p.sketch("top", (WHEEL_W - HUB_L) / 2, "hub")
-    p.circle(s, (0.0, 0.0), HUB_D / 2)
-    p.circle(s, (0.0, 0.0), (AXLE_D + 0.1) / 2)
-    p.extrude(s, HUB_L, profiles="largest", op="add", name="hub")
+def drive_wheel(p):
+    """Tyre and rim as one ring, the hub through it with the rotor boss
+    of the disc mount, bored for the axle. Spokes are left out."""
+    s = p.sketch("right", -TYRE_W / 2, "tyre")
+    p.circle(s, (0.0, R_WHEEL), R_WHEEL)
+    p.extrude(s, TYRE_W, name="tyre and rim")
+    s = p.sketch("right", -TYRE_W / 2, "rim bore")
+    p.point(s, (0.0, R_WHEEL))
+    p.hole(s, RIM_ID, direction="normal", name="inside the rim")
+    s = p.sketch("right", -1.5, "spokes")
+    p.circle(s, (0.0, R_WHEEL), RIM_ID / 2 + 1.0)
+    p.extrude(s, 3.0, op="add", name="spokes, as a disc")
+    s = p.sketch("right", -HUB_W / 2, "hub")
+    p.circle(s, (0.0, R_WHEEL), HUB_D / 2)
+    p.extrude(s, HUB_W, op="add", name="hub")
+    s = p.sketch("right", ROTOR_X, "rotor boss")
+    p.circle(s, (0.0, R_WHEEL), ROTOR_BOSS_D / 2)
+    p.extrude(s, 10.0, op="add", name="disc mount boss")
+    s = p.sketch("right", -HUB_W / 2 - 1.0, "axle bore")
+    p.point(s, (0.0, R_WHEEL))
+    p.hole(s, AXLE_D + 0.2, direction="normal", name="axle bore")
 
 
 def axle(p):
-    cylinder(p, AXLE_D, AXLE_L, "5/8 axle")
+    s = p.sketch("right", -AXLE_L / 2, "axle")
+    p.circle(s, (0.0, R_WHEEL), AXLE_D / 2)
+    p.extrude(s, AXLE_L, name="10 mm axle")
 
 
-def gear(z, m, face, bore, hub_d=None, hub_l=0.0):
-    def build(p):
-        cylinder(p, PD(m, z), face, f"{z}t gear, module {m}", bore=bore + 0.1)
-        if hub_d:
-            # The hub on the far side from the next pinion.
-            s = p.sketch("top", -hub_l, "hub")
-            p.circle(s, (0.0, 0.0), hub_d / 2)
-            p.circle(s, (0.0, 0.0), (bore + 0.1) / 2)
-            p.extrude(s, hub_l, profiles="largest", op="add", name="hub")
-
-    return build
-
-
-def shaft2(p):
-    cylinder(p, SHAFT2_D, GB_W, "12 mm shaft")
-
-
-def drive_shaft(p):
-    cylinder(p, SHAFT_D, T_COUPLER - T_PINION + 10.0, "7 mm drive shaft")
+def ring_gear(p):
+    """Internal teeth outboard of a web that bolts to the disc mount."""
+    p.gear(M, Z_RING, FACE, base="right", offset=RING_X0, center=(0.0, R_WHEEL), pressure_angle=PRESSURE, rim=RING_RIM, backlash=BACKLASH, name=f"{Z_RING}t internal gear, module {M}")
+    s = p.sketch("right", RING_X0 + FACE, "web")
+    p.circle(s, (0.0, R_WHEEL), RING_RIM / 2)
+    p.extrude(s, WEB_T, op="add", name="web")
+    s = p.sketch("right", RING_X0 + FACE - 1.0, "web hole")
+    p.point(s, (0.0, R_WHEEL))
+    p.hole(s, WEB_HOLE, depth=WEB_T + 2.0, direction="normal", name="over the hub")
+    s = p.sketch("right", RING_X0 + FACE - 1.0, "bolt holes")
+    for i in range(6):
+        a = math.radians(60.0 * i)
+        p.point(s, (ROTOR_BCD / 2 * math.cos(a), R_WHEEL + ROTOR_BCD / 2 * math.sin(a)))
+    p.hole(s, ROTOR_BOLT, depth=WEB_T + 2.0, direction="normal", name="six M5 clearance holes")
 
 
-def attachment_tube(p):
-    cylinder(p, TUBE_OD, TUBE_L, "attachment tube", bore=TUBE_ID)
+def pinion(p):
+    p.gear(M, Z_PINION, FACE, base="right", offset=RING_X0, center=(PINION_Y, PINION_Z), pressure_angle=PRESSURE, bore=PINION_BORE, angle=PINION_ANGLE, backlash=BACKLASH, name=f"{Z_PINION}t gear, module {M}")
+    s = p.sketch("right", RING_X0, "hub")
+    p.circle(s, (PINION_Y, PINION_Z), PINION_HUB_D / 2)
+    p.circle(s, (PINION_Y, PINION_Z), PINION_BORE / 2)
+    p.extrude(s, PINION_HUB_L, direction="reverse", profiles="largest", op="add", name="hub")
+
+
+def output_shaft(p):
+    s = p.sketch("right", WORM_X0, "shaft")
+    p.circle(s, (PINION_Y, PINION_Z), WORM_OUT_D / 2)
+    p.extrude(s, RING_X0 + FACE - WORM_X0, name="18 mm output shaft")
+
+
+def worm_box(p):
+    """The NMRV040 as a block with its hollow output bore across and
+    its input shaft out of the rear face."""
+    s = p.sketch("right", WORM_X0, "housing")
+    p.rect(s, (WORM_Y0, WORM_Z0), (WORM_Y1, WORM_Z1))
+    p.extrude(s, WORM_W, name="housing")
+    s = p.sketch("right", WORM_X0 - 1.0, "output bore")
+    p.point(s, (PINION_Y, PINION_Z))
+    p.hole(s, WORM_OUT_D + 0.2, direction="normal", name="hollow output bore")
+    s = p.sketch("front", -WORM_Y1, "input")
+    p.circle(s, (WORM_IN_END[0], PINION_Z), WORM_IN_D / 2)
+    p.extrude(s, WORM_IN_L, direction="reverse", op="add", name="input shaft")
+
+
+def flex_shaft(p):
+    """The casing as a straight line from the stub to the worm's input,
+    stopping a coupling's length short of each; the real one curves
+    between the same ends."""
+    e = (WORM_IN_END[1] - STUB_END[1], WORM_IN_END[2] - STUB_END[2])
+    n = math.hypot(*e)
+    e = (0.0, e[0] / n, e[1] / n)
+    along(p, add(STUB_END, e, FLEX_GAP), add(WORM_IN_END, e, -FLEX_GAP), FLEX_D, "flex shaft casing")
+
+
+def stub(p):
+    along(p, STUB_END, HEAD_BASE, STUB_OD, "cut EP7500 end")
 
 
 def power_head(p):
-    """The EGO head as a ghost: its tube from the coupler to the motor
-    block, the block with the battery and the rear grip."""
-    cylinder(p, HEAD_TUBE_OD, HEAD_L, "head tube", bore=TUBE_ID)
-    s = p.sketch("top", HEAD_L, "motor block")
-    p.rect(s, (-MOTOR_W / 2, -MOTOR_H / 2), (MOTOR_W / 2, MOTOR_H / 2))
-    p.extrude(s, MOTOR_L, op="add", name="motor and battery")
+    top = add(HEAD_BASE, D_HEAD, HEAD_L)
+    along(p, HEAD_BASE, top, HEAD_TUBE_OD, "head tube")
+    along(p, top, add(top, D_HEAD, MOTOR_L), 1.0, "motor axis", op="add")  # a pin to hang the block on
+    # The motor block as a box across the head's axis.
+    s = p.sketch("right", top[0] - MOTOR_W / 2, "motor block")
+    c = (top[1] + D_HEAD[1] * MOTOR_L / 2, top[2] + D_HEAD[2] * MOTOR_L / 2)
+    p.rect(s, (c[0] - MOTOR_H / 2, c[1] - MOTOR_L / 2), (c[0] + MOTOR_H / 2, c[1] + MOTOR_L / 2))
+    p.extrude(s, MOTOR_W, op="add", name="motor, battery and grip")
 
 
-def gearbox(p):
-    """The housing: the y-z profile extruded across, bored for the three
-    shafts, with the drive shaft's bore and the tube's seat drilled
-    normal to the sloped rear wall."""
-    s = p.sketch("right", -GB_W / 2, "profile")
-    p.polygon(s, GB_PROFILE)
-    p.extrude(s, GB_W, name="housing")
-    # The bearing bores before the cavity: a hole into a box with an
-    # enclosed cavity fails in the kernel today (docs/ROADMAP.md).
-    s = p.sketch("right", -GB_W / 2 - 1.0, "shaft bores")
-    for y in (0.0, Y_SHAFT2, Y_SHAFT3):
-        p.point(s, (y, Z_SHAFTS))
-    p.hole(s, 28.0, direction="normal", name="bearing bores")
-    s = p.sketch("right", -GB_W / 2 + GB_WALL, "cavity")
-    p.polygon(s, GB_CAVITY)
-    p.cut(s, GB_W - 2 * GB_WALL, name="cavity")
-    # The sloped wall: the face whose normal is the input direction.
-    rep = p.report()
-    wall = next(
-        f for f in rep["bodies"][0]["faces"]
-        if abs(f["normal"]["y"] - D_IN[1]) < 1e-6 and abs(f["normal"]["z"] - D_IN[2]) < 1e-6
-    )
-    s = p.sketch_on(wall["reference"], "drive shaft bore")
-    plane = next(sk["plane"] for sk in p.report()["sketches"] if sk["feature"] == s)
-    o, u, v = plane["origin"], plane["x_axis"], plane["y_axis"]
-    hit = ALONG(GB_REAR_T)  # the input axis through the wall
-    d = (hit[0] - o["x"], hit[1] - o["y"], hit[2] - o["z"])
-    p.point(s, (d[0] * u["x"] + d[1] * u["y"] + d[2] * u["z"], d[0] * v["x"] + d[1] * v["y"] + d[2] * v["z"]))
-    p.hole(s, SHAFT_D + 3.0, depth=GB_REAR_WALL + 2.0, counterbore={"diameter": TUBE_OD + 0.5, "depth": 12.0}, name="shaft bore and tube seat")
-
-
-def side_plate(p):
-    s = p.sketch("right", 0.0, "plate")
-    p.rect(s, (PLATE_Y0, PLATE_Z0), (PLATE_Y1, PLATFORM_Z))
-    p.extrude(s, PLATE_T, name="side plate")
-    s = p.sketch("right", -1.0, "axle bore")
-    p.point(s, (0.0, Z_SHAFTS))
-    p.hole(s, AXLE_D + 1.0, direction="normal", name="axle bore")
+def frame(p):
+    """Rails and cross members under the deck, the axle beams and
+    dropout plates for the drive wheel, the gearbox bracket and the
+    mast, all one welded body."""
+    s = p.sketch("top", PLATFORM_Z - RAIL, "rails")
+    p.rect(s, (-RAIL_X - RAIL / 2, RAIL_Y0), (-RAIL_X + RAIL / 2, RAIL_Y1))
+    p.rect(s, (RAIL_X - RAIL / 2, RAIL_Y0), (RAIL_X + RAIL / 2, RAIL_Y1))
+    p.extrude(s, RAIL, name="rails")
+    s = p.sketch("top", PLATFORM_Z - RAIL, "cross members")
+    p.rect(s, (-RAIL_X - RAIL / 2, RAIL_Y0), (RAIL_X + RAIL / 2, RAIL_Y0 + RAIL))
+    p.rect(s, (-RAIL_X - RAIL / 2, RAIL_Y1 - RAIL), (RAIL_X + RAIL / 2, RAIL_Y1))
+    p.rect(s, (-RAIL_X, -RAIL / 2), (-DROPOUT_X - DROPOUT_T, RAIL / 2))
+    p.rect(s, (DROPOUT_X, -RAIL / 2), (RAIL_X, RAIL / 2))
+    p.extrude(s, RAIL, op="add", name="cross members and axle beams")
+    for x in (-DROPOUT_X - DROPOUT_T, DROPOUT_X):
+        s = p.sketch("right", x, "dropout")
+        p.rect(s, (-DROPOUT_HALF, R_WHEEL - 30.0), (DROPOUT_HALF, PLATFORM_Z))
+        p.extrude(s, DROPOUT_T, op="add", name="dropout plate")
+        s = p.sketch("right", x - 1.0, "axle hole")
+        p.point(s, (0.0, R_WHEEL))
+        p.hole(s, AXLE_D + 0.5, depth=DROPOUT_T + 2.0, direction="normal", name="axle slot")
+    s = p.sketch("right", WORM_X0 - BRACKET_T, "bracket")
+    p.rect(s, (WORM_Y0, WORM_Z0), (WORM_Y1, PLATFORM_Z))
+    p.extrude(s, BRACKET_T, op="add", name="gearbox bracket")
+    along(p, MAST_BASE, add(MAST_BASE, D_HEAD, MAST_L), MAST_D, "mast", op="add")
 
 
 def platform(p):
-    s = p.sketch("top", 0.0, "deck")
-    p.rect(s, (-PLATFORM_W / 2, -PLATFORM_D / 2), (PLATFORM_W / 2, PLATFORM_D / 2))
-    p.extrude(s, PLATFORM_T, name="platform")
+    s = p.sketch("top", PLATFORM_Z, "deck")
+    p.rect(s, (-PLATFORM_W / 2, PLATFORM_Y0), (PLATFORM_W / 2, PLATFORM_Y1))
+    p.extrude(s, PLATFORM_T, name="deck")
+    s = p.sketch("top", PLATFORM_Z, "wheel slot")
+    p.rect(s, (SLOT_X0, SLOT_Y0), (SLOT_X1, PLATFORM_Y1 + 10.0))
+    p.cut(s, PLATFORM_T, name="wheel slot")
+
+
+def caster(p):
+    """Built about its own swivel axis at the origin, placed twice."""
+    s = p.sketch("right", -CASTER_W / 2, "wheel")
+    p.circle(s, (CASTER_TRAIL, CASTER_D / 2), CASTER_D / 2)
+    p.extrude(s, CASTER_W, name="caster wheel")
+    s = p.sketch("top", CASTER_D, "yoke")
+    p.rect(s, (-35.0, -40.0), (35.0, CASTER_TRAIL + 40.0))
+    p.extrude(s, 30.0, op="add", name="yoke")
+    s = p.sketch("top", CASTER_D + 30.0, "stem")
+    p.circle(s, (0.0, 0.0), 10.0)
+    p.extrude(s, PLATFORM_Z - 6.0 - (CASTER_D + 30.0), op="add", name="swivel stem")
+    s = p.sketch("top", PLATFORM_Z - 6.0, "plate")
+    p.rect(s, (-50.0, -50.0), (50.0, 50.0))
+    p.extrude(s, 6.0, op="add", name="top plate")
 
 
 def bag(p):
@@ -238,75 +294,85 @@ def bag(p):
 
 
 PARTS = [
-    ("Wheel", "wheel", wheel),
+    ("Drive wheel", "drive_wheel", drive_wheel),
     ("Axle", "axle", axle),
-    ("Gearbox", "gearbox", gearbox),
-    ("Axle gear", "axle_gear", gear(Z_GEAR_AXLE, M_SPUR, FACE, AXLE_D, HUB_D, 15.0)),
-    ("Pinion", "pinion", gear(Z_PINION, M_SPUR, FACE, SHAFT2_D)),
-    ("Gear 2", "gear2", gear(Z_GEAR2, M_SPUR, FACE, SHAFT2_D)),
-    ("Bevel gear", "bevel_gear", gear(Z_BEVEL_GEAR, M_BEVEL, FACE_BEVEL, SHAFT2_D)),
-    ("Bevel pinion", "bevel_pinion", gear(Z_BEVEL_PINION, M_BEVEL, 12.0, SHAFT_D)),
-    ("Shaft", "shaft", shaft2),
-    ("Drive shaft", "drive_shaft", drive_shaft),
-    ("Attachment tube", "attachment_tube", attachment_tube),
+    ("Ring gear", "ring_gear", ring_gear),
+    ("Pinion", "pinion", pinion),
+    ("Output shaft", "output_shaft", output_shaft),
+    (f"Worm box NMRV040 {WORM_RATIO}:1", "worm_box", worm_box),
+    ("Flex shaft", "flex_shaft", flex_shaft),
+    ("EGO stub", "ego_stub", stub),
     ("Power head", "power_head", power_head),
-    ("Side plate", "side_plate", side_plate),
+    ("Frame", "frame", frame),
     ("Platform", "platform", platform),
+    ("Caster", "caster", caster),
     ("Bag", "bag", bag),
 ]
-PRINTED = {"Gearbox", "Axle gear", "Pinion", "Gear 2", "Bevel gear", "Bevel pinion"}
-
-# Rotations are degrees about x, y, z. A part built along +z lies along
-# +x after ry = 90, and along the input direction after rx = SLOPE - 90.
-RY_X = 90.0
-RX_IN = SLOPE - 90.0
+PRINTED = {"Ring gear", "Pinion"}
 
 
 def instances():
-    at = lambda tab, name, x, y, z, rx=0.0, ry=0.0, rz=0.0: (tab, name, (x, y, z), (rx, ry, rz))
-    along = lambda tab, name, t: at(tab, name, *ALONG(t), rx=RX_IN)
-    out = [
-        at("Wheel", "left wheel", -TRACK / 2 - WHEEL_W / 2, 0, Z_SHAFTS, ry=RY_X),
-        at("Wheel", "right wheel", TRACK / 2 - WHEEL_W / 2, 0, Z_SHAFTS, ry=RY_X),
-        at("Axle", "axle", -AXLE_L / 2, 0, Z_SHAFTS, ry=RY_X),
-        at("Gearbox", "gearbox", 0, 0, 0),
-        at("Axle gear", "axle gear", -FACE / 2, 0, Z_SHAFTS, ry=RY_X),
-        at("Pinion", "pinion 3", -FACE / 2, Y_SHAFT2, Z_SHAFTS, ry=RY_X),
-        at("Gear 2", "gear 2", FACE / 2 + 2.0, Y_SHAFT2, Z_SHAFTS, ry=RY_X),
-        at("Pinion", "pinion 2", FACE / 2 + 2.0, Y_SHAFT3, Z_SHAFTS, ry=RY_X),
-        at("Bevel gear", "bevel gear", -R_BP - FACE_BEVEL, Y_SHAFT3, Z_SHAFTS, ry=RY_X),
-        at("Shaft", "shaft 2", -GB_W / 2, Y_SHAFT2, Z_SHAFTS, ry=RY_X),
-        at("Shaft", "shaft 3", -GB_W / 2, Y_SHAFT3, Z_SHAFTS, ry=RY_X),
-        along("Bevel pinion", "bevel pinion", T_PINION),
-        along("Drive shaft", "drive shaft", T_PINION - 10.0),
-        along("Attachment tube", "attachment tube", T_TUBE0),
-        along("Power head", "power head", T_COUPLER),
-        at("Side plate", "left plate", -GB_W / 2 - 5.0 - PLATE_T, 0, 0),
-        at("Side plate", "right plate", GB_W / 2 + 5.0, 0, 0),
-        at("Platform", "platform", 0, 0, PLATFORM_Z),
-        at("Bag", "left bag", -BAG_X, 0, PLATFORM_Z + PLATFORM_T),
-        at("Bag", "right bag", BAG_X, 0, PLATFORM_Z + PLATFORM_T),
+    at = lambda tab, name, x=0.0, y=0.0, z=0.0: (tab, name, (x, y, z))
+    return [
+        at("Drive wheel", "drive wheel"),
+        at("Axle", "axle"),
+        at("Ring gear", "ring gear"),
+        at("Pinion", "pinion"),
+        at("Output shaft", "output shaft"),
+        at(f"Worm box NMRV040 {WORM_RATIO}:1", "worm box"),
+        at("Flex shaft", "flex shaft"),
+        at("EGO stub", "EGO stub"),
+        at("Power head", "power head"),
+        at("Frame", "frame"),
+        at("Platform", "platform"),
+        at("Caster", "left caster", -CASTER_X, CASTER_Y, 0.0),
+        at("Caster", "right caster", CASTER_X, CASTER_Y, 0.0),
+        at("Bag", "left bag", -BAG_X, BAG_Y, PLATFORM_Z + PLATFORM_T),
+        at("Bag", "right bag", BAG_X, BAG_Y, PLATFORM_Z + PLATFORM_T),
     ]
-    return out
+
+
+def stability(report, skip=()):
+    """Centre of mass from the placed bodies' centroids and MASS (less
+    the bodies in `skip`), the drive wheel's share of the weight, and
+    the side slope that tips the cart over the edge from the drive
+    wheel's contact to the nearer caster's."""
+    total, cg = 0.0, [0.0, 0.0, 0.0]
+    for b in report["bodies"]:
+        if b["name"] in skip:
+            continue
+        m = MASS[b["name"]]
+        c = b["centroid"]
+        total += m
+        for i, k in enumerate("xyz"):
+            cg[i] += m * c[k]
+    cg = [v / total for v in cg]
+    contact_y = CASTER_Y + CASTER_TRAIL
+    share = (cg[1] - contact_y) / (0.0 - contact_y)
+    edge = (-CASTER_X if cg[0] < 0.0 else CASTER_X, contact_y)  # the nearer side's edge
+    tip = math.degrees(math.atan2(abs(edge[0] * cg[1] - edge[1] * cg[0]) / math.hypot(*edge), cg[2]))
+    return total, cg, share, tip
 
 
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "out")
     os.makedirs(out, exist_ok=True)
+    for stale in os.listdir(out):
+        os.remove(os.path.join(out, stale))
     path = os.path.join(out, "ego_cart.okpart")
-    if os.path.exists(path):
-        os.remove(path)
     print(
-        f"gear train {Z_BEVEL_PINION}:{Z_BEVEL_GEAR} bevel, {Z_PINION}:{Z_GEAR2} and {Z_PINION}:{Z_GEAR_AXLE} spur, module {M_BEVEL} and {M_SPUR}: {RATIO:.1f}:1\n"
-        f"wheels {WHEEL_RPM:.0f} rpm at the head's {HEAD_RPM:.0f}: {SPEED:.2f} m/s ({SPEED * 3.6:.1f} km/h) at no load, the trigger below that\n"
-        f"{LOAD_KG:.0f} kg up a {GRADE * 100:.0f} % hill: {F_HILL:.0f} N at the tyres, {T_AXLE:.1f} Nm at the axle, {T_INPUT:.2f} Nm at the head, about {P_HILL:.0f} W\n"
-        f"shafts behind the axle at y = {Y_SHAFT2:.2f} and {Y_SHAFT3:.2f}; the coupler at {ALONG(T_COUPLER)[1]:.0f} back and {ALONG(T_COUPLER)[2]:.0f} up, the rear grip near {ALONG(T_COUPLER + HEAD_L)[2]:.0f} up"
+        f"drive: worm {WORM_RATIO}:1 then {Z_PINION}:{Z_RING} ring, module {M}: {RATIO:.1f}:1\n"
+        f"wheel {WHEEL_RPM:.0f} rpm at the head's {HEAD_RPM:.0f}: {SPEED:.2f} m/s ({SPEED * 3.6:.1f} km/h) at no load, the trigger below that\n"
+        f"{LOAD_KG:.0f} kg up a {GRADE * 100:.0f} % hill: {F_HILL:.0f} N at the tyre, {T_AXLE:.1f} Nm at the wheel, {F_TOOTH:.0f} N on the ring's teeth, "
+        f"{T_PINION:.1f} Nm at the pinion, {T_HEAD:.2f} Nm at the head, about {P_HEAD:.0f} W\n"
+        f"grip needs {GRIP_KG['dry']:.0f} kg on the drive wheel dry, {GRIP_KG['wet']:.0f} kg wet\n"
+        f"pinion {CENTRE:.1f} mm from the axle at {PINION_DIR:.0f} degrees; ring teeth at x {RING_X0:.0f} to {RING_X0 + FACE:.0f}, web on the rotor face at {ROTOR_X:.0f}"
     )
     mcp = Mcp(path)
     mcp.call("create_document", {"name": "ego_cart"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "EGO cart"}]})
     tabs = {}
-    for i, (title, stem, build) in enumerate(PARTS):
+    for i, (title, stem_, build) in enumerate(PARTS):
         if i == 0:
             mcp.call("apply", {"ops": [{"type": "rename_tab", "tab": 1, "name": title}]})
             tab = 1
@@ -317,10 +383,10 @@ def main():
         part = Part(mcp, tab, title)
         build(part)
         bodies = part.bodies()
-        print(f"{title:<16} tab {tab:>2}: " + ", ".join(f"{n} {v:.0f} mm3" for n, v in bodies))
-        part.screenshot(os.path.join(out, f"{stem}.png"))
+        print(f"{title:<24} tab {tab:>2}: " + ", ".join(f"{n} {v:.0f} mm3" for n, v in bodies))
+        part.screenshot(os.path.join(out, f"{stem_}.png"), view="-0.7,-0.5,0.5" if title in PRINTED else "iso")
         if title in PRINTED:
-            part.export(os.path.join(out, f"{stem}.stl"))
+            part.export(os.path.join(out, f"{stem_}.stl"))
     text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": "Cart"}]})
     asm = int(re.search(r"tab (\d+)", text).group(1))
     ops = [
@@ -330,20 +396,29 @@ def main():
             "body": 0,
             "name": name,
             "fixed": True,
-            "placement": {"position": {"x": x, "y": y, "z": z}, "rotation": {"x": rx, "y": ry, "z": rz}},
+            "placement": {"position": {"x": x, "y": y, "z": z}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}},
         }
-        for tab_title, name, (x, y, z), (rx, ry, rz) in instances()
+        for tab_title, name, (x, y, z) in instances()
     ]
     text = mcp.call("apply", {"ops": ops, "tab": asm})
     if "ERROR:" in text:
         raise RuntimeError(text.split("ERROR:", 1)[1].splitlines()[0])
     report = json.loads(mcp.call("report", {"tab": asm, "detail": "full"}))
     print(f"Cart assembly tab {asm}: {len(report['instances'])} instances, {len(report['bodies'])} bodies")
+    total, cg, share, tip = stability(report)
+    _, _, _, one_bag = stability(report, skip=("right bag",))
+    _, _, _, empty = stability(report, skip=("left bag", "right bag"))
+    print(
+        f"{total:.0f} kg with the bags, centre of mass {-cg[1]:.0f} mm ahead of the drive wheel and {cg[2]:.0f} mm up: "
+        f"{share * 100:.0f} % on the drive wheel, tips sideways at {tip:.1f} degrees; "
+        f"on the hill the mass centre moves {GRADE * cg[2]:.0f} mm towards the wheel\n"
+        f"one bag on the left tips at {one_bag:.1f} degrees, the empty cart at {empty:.1f}"
+    )
     for view, name in (("iso", "assembly_iso"), ("right", "assembly_side"), ("front", "assembly_front"), ("-0.7,0.6,0.4", "assembly_rear")):
         mcp.call("screenshot", {"tab": asm, "view": view, "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
-    mcp.call("screenshot", {"tab": asm, "view": "right", "section": "x:0:flip", "width": 1200, "height": 900, "path": os.path.join(out, "assembly_section.png")})
-    print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "note": "concept", "path": os.path.join(out, "assembly.pdf")}))
-    print(mcp.call("export", {"tab": tabs["Gearbox"], "format": "pdf", "sheet": "A3", "views": ["front", "top", "right", "section-side@0"], "note": "concept", "path": os.path.join(out, "gearbox.pdf")}))
+    mcp.call("screenshot", {"tab": asm, "view": "right", "section": f"x:{RING_X0 + FACE / 2}:flip", "width": 1200, "height": 900, "path": os.path.join(out, "assembly_section.png")})
+    print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "note": "rev B concept", "path": os.path.join(out, "assembly.pdf")}))
+    print(mcp.call("export", {"tab": tabs["Ring gear"], "format": "pdf", "sheet": "A3", "views": ["right", "front", "section@0"], "note": "print in three segments", "path": os.path.join(out, "ring_gear.pdf")}))
     mcp.close()
     print(f"wrote {path}")
 
