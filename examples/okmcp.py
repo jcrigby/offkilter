@@ -213,6 +213,22 @@ class Part:
             }
         )
 
+    def split(self, plane, name=None, bodies=None):
+        """Splits the studio's bodies (or those from the features in
+        `bodies`) by a plane reference; the pieces above the plane
+        become new bodies."""
+        op = {"type": "add_split", "plane": plane, "name": name}
+        if bodies:
+            op["bodies"] = bodies
+        return self.feature(op)
+
+    def plane_point(self, s, p):
+        """A world point in the coordinates of sketch `s`'s plane."""
+        plane = next(sk["plane"] for sk in self.report()["sketches"] if sk["feature"] == s)
+        o, u, v = plane["origin"], plane["x_axis"], plane["y_axis"]
+        d = (p[0] - o["x"], p[1] - o["y"], p[2] - o["z"])
+        return (d[0] * u["x"] + d[1] * u["y"] + d[2] * u["z"], d[0] * v["x"] + d[1] * v["y"] + d[2] * v["z"])
+
     def revolve_cut(self, s, name=None):
         """Revolves the sketch's closed profile about the sketch's y axis
         and removes it: a cone, countersink or turned socket."""

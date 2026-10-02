@@ -55,6 +55,8 @@ FLEX_D, FLEX_GAP = 16.0, 25.0  # flex shaft casing, and the couplings at its end
 # ---------------------------------------------------------------------
 M, Z_RING, Z_PINION, FACE, PRESSURE, BACKLASH = 3.0, 80, 17, 20.0, 20.0, 0.15
 RING_RIM, WEB_T, WEB_HOLE = 265.0, 5.0, 36.5
+RING_SEGMENTS = 6  # printable sectors, cut by radial planes
+DOWEL_D, DOWEL_DEPTH = 3.2, 8.0  # a 3 mm pin in each rim joint
 PINION_BORE, PINION_HUB_D, PINION_HUB_L = WORM_OUT_D + 0.2, 40.0, 15.0
 R_RING, R_PINION = M * Z_RING / 2, M * Z_PINION / 2
 CENTRE = R_RING - R_PINION  # a pinion inside a ring: the difference
@@ -99,7 +101,8 @@ def add(a, b, s=1.0):
 HEAD_BASE = add(MAST_BASE, PERP, HEAD_OFFSET)  # the coupler
 STUB_END = add(HEAD_BASE, D_HEAD, -STUB_L)  # where the flex shaft arrives
 MASS = {  # kg, the cart's own parts estimated, the bags as carried
-    "drive wheel": 2.5, "axle": 0.1, "ring gear": 0.9, "pinion": 0.15, "output shaft": 0.2,
+    "drive wheel": 2.5, "axle": 0.1, "pinion": 0.15, "output shaft": 0.2,
+    **{f"ring segment {k + 1}": 0.9 / RING_SEGMENTS for k in range(RING_SEGMENTS)},
     "worm box": 2.6, "flex shaft": 0.5, "EGO stub": 0.3, "power head": 4.5, "frame": 6.0,
     "platform": 4.0, "left caster": 1.5, "right caster": 1.5, "left bag": 20.0, "right bag": 20.0,
 }
@@ -167,7 +170,9 @@ def axle(p):
 
 
 def ring_gear(p):
-    """Internal teeth outboard of a web that bolts to the disc mount."""
+    """Internal teeth outboard of a web that bolts to the disc mount,
+    cut into sectors that fit a printer, each rim joint pinned by a
+    dowel across the cut (half a hole in each sector)."""
     p.gear(M, Z_RING, FACE, base="right", offset=RING_X0, center=(0.0, R_WHEEL), pressure_angle=PRESSURE, rim=RING_RIM, backlash=BACKLASH, name=f"{Z_RING}t internal gear, module {M}")
     s = p.sketch("right", RING_X0 + FACE, "web")
     p.circle(s, (0.0, R_WHEEL), RING_RIM / 2)
@@ -177,9 +182,26 @@ def ring_gear(p):
     p.hole(s, WEB_HOLE, depth=WEB_T + 2.0, direction="normal", name="over the hub")
     s = p.sketch("right", RING_X0 + FACE - 1.0, "bolt holes")
     for i in range(6):
-        a = math.radians(60.0 * i)
+        a = math.radians(60.0 * i + 30.0)  # between the sector cuts, not on them
         p.point(s, (ROTOR_BCD / 2 * math.cos(a), R_WHEEL + ROTOR_BCD / 2 * math.sin(a)))
     p.hole(s, ROTOR_BOLT, depth=WEB_T + 2.0, direction="normal", name="six M5 clearance holes")
+    # A dowel hole across every joint before the cuts, centred on the
+    # cut plane and running along the rim, so each sector keeps half of
+    # it: the hole is drilled from a plane square to the rim's direction
+    # at that angle (a top plane turned about x by the angle has that
+    # normal), starting a dowel's depth before the cut.
+    r_dowel = (RING_RIM / 2 + M * Z_RING / 2 - M) / 2
+    x_dowel = RING_X0 + FACE / 2
+    for k in range(RING_SEGMENTS):
+        a = 360.0 / RING_SEGMENTS * k
+        s = p.feature({"type": "add_sketch", "plane": {"type": "rotated", "base": "top", "axis": "x", "angle": a, "offset": R_WHEEL * math.cos(math.radians(a)) - DOWEL_DEPTH}, "name": f"dowel at {a:.0f} degrees"})
+        p.point(s, (x_dowel, r_dowel + R_WHEEL * math.sin(math.radians(a))))
+        p.hole(s, DOWEL_D, depth=2 * DOWEL_DEPTH, direction="normal", name=f"dowel hole at {a:.0f} degrees")
+    # Radial planes through the axle: a top plane turned about x by
+    # the cut's angle passes through the axle once offset to it.
+    for k in range(RING_SEGMENTS // 2):
+        a = 360.0 / RING_SEGMENTS * k
+        p.split({"type": "rotated", "base": "top", "axis": "x", "angle": a, "offset": R_WHEEL * math.cos(math.radians(a))}, name=f"cut at {a:.0f} degrees")
 
 
 def pinion(p):
@@ -312,11 +334,11 @@ PRINTED = {"Ring gear", "Pinion"}
 
 
 def instances():
-    at = lambda tab, name, x=0.0, y=0.0, z=0.0: (tab, name, (x, y, z))
+    at = lambda tab, name, x=0.0, y=0.0, z=0.0: (tab, name, (x, y, z), 0)
     return [
         at("Drive wheel", "drive wheel"),
         at("Axle", "axle"),
-        at("Ring gear", "ring gear"),
+            *[(f"Ring gear", f"ring segment {k + 1}", (0.0, 0.0, 0.0), k) for k in range(RING_SEGMENTS)],
         at("Pinion", "pinion"),
         at("Output shaft", "output shaft"),
         at(f"Worm box NMRV040 {WORM_RATIO}:1", "worm box"),
@@ -393,12 +415,12 @@ def main():
         {
             "type": "add_instance",
             "studio": tabs[tab_title],
-            "body": 0,
+            "body": body,
             "name": name,
             "fixed": True,
             "placement": {"position": {"x": x, "y": y, "z": z}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}},
         }
-        for tab_title, name, (x, y, z) in instances()
+        for tab_title, name, (x, y, z), body in instances()
     ]
     text = mcp.call("apply", {"ops": ops, "tab": asm})
     if "ERROR:" in text:
@@ -418,7 +440,7 @@ def main():
         mcp.call("screenshot", {"tab": asm, "view": view, "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
     mcp.call("screenshot", {"tab": asm, "view": "right", "section": f"x:{RING_X0 + FACE / 2}:flip", "width": 1200, "height": 900, "path": os.path.join(out, "assembly_section.png")})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "note": "rev B concept", "path": os.path.join(out, "assembly.pdf")}))
-    print(mcp.call("export", {"tab": tabs["Ring gear"], "format": "pdf", "sheet": "A3", "views": ["right", "front", "section@0"], "note": "print in three segments", "path": os.path.join(out, "ring_gear.pdf")}))
+    print(mcp.call("export", {"tab": tabs["Ring gear"], "format": "pdf", "sheet": "A3", "views": ["right", "front", "section@0"], "note": f"{RING_SEGMENTS} printed sectors, {DOWEL_D:.0f} mm dowels in the rim joints", "path": os.path.join(out, "ring_gear.pdf")}))
     mcp.close()
     print(f"wrote {path}")
 
