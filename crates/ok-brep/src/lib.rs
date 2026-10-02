@@ -11,6 +11,7 @@
 //! clockwise. Edges are implicit (consecutive loop vertices) and every edge
 //! of a valid solid is shared by exactly two faces in opposite directions.
 
+mod bevel;
 mod blend;
 mod boolean;
 mod corner;
@@ -25,6 +26,7 @@ mod sweep;
 mod tessellate;
 mod transform;
 
+pub use bevel::bevel_gear;
 pub use blend::{blend_edges, BlendKind};
 pub use boolean::{boolean, BoolOp};
 pub use drawing::{

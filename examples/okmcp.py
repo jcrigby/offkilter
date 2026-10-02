@@ -185,13 +185,15 @@ class Part:
         )
 
     def gear(self, module, teeth, width, base="top", offset=0.0, plane=None, center=(0.0, 0.0), pressure_angle=20.0,
-             direction="normal", bore=0.0, rim=0.0, angle=0.0, backlash=0.0, shift=0.0, fillet=0.0, op="new", name=None):
+             direction="normal", bore=0.0, rim=0.0, angle=0.0, backlash=0.0, shift=0.0, fillet=0.0, cone=0.0, op="new", name=None):
         """An involute spur gear as a body: external with a `bore`, or
         internal (teeth inside a ring of outer diameter `rim`) when `rim`
-        is given. `plane` is a plane reference; otherwise a standard
-        plane `base` at `offset`. `angle` turns the first tooth's
-        centreline; a mating gear with an even tooth count wants
-        180 / teeth."""
+        is given; a `cone` angle (degrees, atan(teeth / mate's teeth) for
+        shafts at 90°) makes it a straight bevel gear with its apex at
+        `center` and `width` the face width along the cone. `plane` is a
+        plane reference; otherwise a standard plane `base` at `offset`.
+        `angle` turns the first tooth's centreline; a mating gear with an
+        even tooth count wants 180 / teeth."""
         if plane is None:
             plane = {"type": "standard", "base": base, "offset": offset}
         return self.feature(
@@ -210,6 +212,7 @@ class Part:
                 "backlash": backlash,
                 "shift": shift,
                 "fillet": fillet,
+                "cone": cone,
                 "op": op,
                 "name": name,
             }

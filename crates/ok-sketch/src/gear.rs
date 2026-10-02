@@ -957,3 +957,290 @@ mod tests {
         assert!(check(&gear(2.0, 20, 40.0)).is_err());
     }
 }
+
+// ---- bevel gears ------------------------------------------------------
+
+/// What a segment of a bevel gear's tooth outline is: a flank (0 the
+/// leading one, 1 the trailing), the tip land, or the root land.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BevelCurve {
+    Flank(u8),
+    Tip,
+    Root,
+}
+
+/// One pitch of a straight bevel gear's teeth, drawn on the developed
+/// back cone (Tredgold's approximation): there the gear is a spur gear
+/// of `virtual_teeth` teeth, `teeth / cos δ`, and the outline is that
+/// gear's, in polar coordinates about its centre. `points` run
+/// counter-clockwise from the root corner before the tooth centred on
+/// angle 0, up its leading flank, over its tip, down its trailing flank
+/// and along the root land, ending just before the next tooth's root
+/// corner, each tagged with the curve leaving it. Angles are developed
+/// ones: the real azimuth is `phi / cos δ`, so `teeth` copies close.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BevelPitch {
+    /// Pitch cone half-angle, radians.
+    pub cone: f64,
+    pub virtual_teeth: f64,
+    /// Pitch radius at the outer end, `module × teeth / 2`.
+    pub pitch_radius: f64,
+    /// Outer cone distance, apex to the outer pitch circle.
+    pub cone_distance: f64,
+    /// The virtual gear's pitch, root and tip radii (on the back cone).
+    pub virtual_pitch_radius: f64,
+    pub virtual_root_radius: f64,
+    pub virtual_tip_radius: f64,
+    /// (rho, phi, curve): rho from the virtual centre, phi in radians.
+    pub points: Vec<(f64, f64, BevelCurve)>,
+}
+
+/// The one-pitch outline of a straight bevel gear with pitch cone
+/// half-angle `cone_deg` (for shafts at 90°, `atan(teeth / mate's
+/// teeth)`), from the spur parameters `p` (module, teeth, pressure
+/// angle, backlash; a bevel gear takes no rim, shift or fillet). `seg`
+/// is the facet angle for the tip and root lands.
+pub fn bevel_pitch(p: &Params, cone_deg: f64, seg: f64) -> Result<BevelPitch, String> {
+    if !(p.module.is_finite() && p.module > 0.0) {
+        return Err("module must be positive".into());
+    }
+    if p.teeth < 3 {
+        return Err("a gear needs at least three teeth".into());
+    }
+    if !(10.0..=35.0).contains(&p.pressure_angle) {
+        return Err("pressure angle must be between 10 and 35 degrees".into());
+    }
+    if !(cone_deg > 0.0 && cone_deg < 90.0) {
+        return Err(format!(
+            "a bevel gear's cone angle must be between 0 and 90 degrees exclusive, not {cone_deg}"
+        ));
+    }
+    if p.rim > 0.0 || p.shift != 0.0 || p.fillet > 0.0 {
+        return Err("a bevel gear takes no rim, profile shift or fillet".into());
+    }
+    if p.backlash < 0.0 {
+        return Err("backlash cannot be negative".into());
+    }
+    let cone = cone_deg.to_radians();
+    let n = p.teeth as f64;
+    let virtual_teeth = n / cone.cos();
+    let least = min_teeth(p.pressure_angle) as f64;
+    if virtual_teeth + 1e-9 < least {
+        return Err(format!(
+            "{} teeth on a {cone_deg}° cone act as {virtual_teeth:.1} virtual teeth, fewer than the {least:.0} that {}° allows without undercut: a bigger cone angle or more teeth",
+            p.teeth, p.pressure_angle
+        ));
+    }
+    let pitch_radius = p.module * n / 2.0;
+    let rv = pitch_radius / cone.cos();
+    let rb = rv * p.pressure_angle.to_radians().cos();
+    let r_root = rv - DEDENDUM * p.module;
+    let r_tip = rv + p.module;
+    if p.backlash >= PI * p.module / 2.0 {
+        return Err("backlash cannot take the whole tooth thickness".into());
+    }
+    let tau = 2.0 * PI / virtual_teeth;
+    let half_pitch = PI / (2.0 * virtual_teeth) - p.backlash / (2.0 * rv);
+    let inv_a = inv(p.pressure_angle.to_radians());
+    let half = |r: f64| half_pitch + inv_a - inv((rb / r).min(1.0).acos());
+    let r_s = rb.max(r_root);
+    if half(r_tip) <= 0.0 {
+        return Err(
+            "the teeth come to a point before the tip: too few teeth or too much backlash".into(),
+        );
+    }
+    const FLANK_STEPS: usize = 12;
+    let roll = |r: f64| ((r / rb).powi(2) - 1.0).max(0.0).sqrt();
+    let radius = |t: f64| rb * (1.0 + t * t).sqrt();
+    let (t0, t1) = (roll(r_s), roll(r_tip));
+    let mut points: Vec<(f64, f64, BevelCurve)> = Vec::new();
+    // Up the leading flank: the root corner, the radial piece to the
+    // base circle when the root lies inside it, then the involute.
+    points.push((r_root, -half(r_s), BevelCurve::Flank(0)));
+    if r_s > r_root + 1e-9 {
+        points.push((r_s, -half(r_s), BevelCurve::Flank(0)));
+    }
+    for k in 1..=FLANK_STEPS {
+        let r = radius(t0 + (t1 - t0) * k as f64 / FLANK_STEPS as f64);
+        let tag = if k == FLANK_STEPS {
+            BevelCurve::Tip
+        } else {
+            BevelCurve::Flank(0)
+        };
+        points.push((r, -half(r), tag));
+    }
+    // The tip land, then down the trailing flank.
+    let arc =
+        |a0: f64, a1: f64, points: &mut Vec<(f64, f64, BevelCurve)>, r: f64, tag: BevelCurve| {
+            let steps = ((a1 - a0).abs() / seg).floor() as usize;
+            for k in 1..steps {
+                points.push((r, a0 + (a1 - a0) * k as f64 / steps as f64, tag));
+            }
+        };
+    arc(
+        -half(r_tip),
+        half(r_tip),
+        &mut points,
+        r_tip,
+        BevelCurve::Tip,
+    );
+    for k in (0..FLANK_STEPS).rev() {
+        let r = radius(t0 + (t1 - t0) * k as f64 / FLANK_STEPS as f64);
+        // The flank's foot is the root corner when the root lies on or
+        // outside the base circle; the root land leaves it.
+        let foot = k == 0 && r_s <= r_root + 1e-9;
+        points.push((
+            r,
+            half(r),
+            if foot {
+                BevelCurve::Root
+            } else {
+                BevelCurve::Flank(1)
+            },
+        ));
+    }
+    if r_s > r_root + 1e-9 {
+        points.push((r_root, half(r_s), BevelCurve::Root));
+    }
+    arc(
+        half(r_s),
+        tau - half(r_s),
+        &mut points,
+        r_root,
+        BevelCurve::Root,
+    );
+    Ok(BevelPitch {
+        cone,
+        virtual_teeth,
+        pitch_radius,
+        cone_distance: pitch_radius / cone.sin(),
+        virtual_pitch_radius: rv,
+        virtual_root_radius: r_root,
+        virtual_tip_radius: r_tip,
+        points,
+    })
+}
+
+#[cfg(test)]
+mod bevel_tests {
+    use super::*;
+
+    fn params(teeth: u32) -> Params {
+        Params {
+            module: 2.0,
+            teeth,
+            pressure_angle: 20.0,
+            center: Vec2::new(0.0, 0.0),
+            angle: 0.0,
+            bore: 0.0,
+            rim: 0.0,
+            backlash: 0.0,
+            shift: 0.0,
+            fillet: 0.0,
+        }
+    }
+
+    #[test]
+    fn a_pitch_of_a_bevel_gear_is_a_virtual_spur_tooth() {
+        // 20 teeth at 45°: 28.3 virtual teeth, one pitch of which closes
+        // round at a real azimuth of 18°.
+        let b = bevel_pitch(&params(20), 45.0, 10f64.to_radians()).unwrap();
+        assert!(
+            (b.virtual_teeth - 28.284).abs() < 1e-3,
+            "{}",
+            b.virtual_teeth
+        );
+        assert!((b.pitch_radius - 20.0).abs() < 1e-9);
+        assert!((b.cone_distance - 20.0 * 2f64.sqrt()).abs() < 1e-9);
+        assert!((b.virtual_pitch_radius - 28.284).abs() < 1e-3);
+        let tau = 2.0 * PI / b.virtual_teeth;
+        assert!((tau / b.cone.cos() - 2.0 * PI / 20.0).abs() < 1e-12);
+        // Angles climb, within one developed pitch, and the tooth is
+        // symmetric about 0 at the pitch radius: half a pitch thick.
+        let first = b.points[0].1;
+        let last = b.points[b.points.len() - 1].1;
+        assert!(
+            first < 0.0 && last > 0.0 && last < tau + first + 1e-9,
+            "{first} {last}"
+        );
+        for w in b.points.windows(2) {
+            assert!(w[1].1 > w[0].1 - 1e-12, "{:?}", w);
+        }
+        let flank0: Vec<_> = b
+            .points
+            .iter()
+            .filter(|p| p.2 == BevelCurve::Flank(0))
+            .collect();
+        let flank1: Vec<_> = b
+            .points
+            .iter()
+            .filter(|p| p.2 == BevelCurve::Flank(1))
+            .collect();
+        assert!(
+            flank0.len() >= 12 && flank1.len() >= 11,
+            "{} {}",
+            flank0.len(),
+            flank1.len()
+        );
+        assert!(b.points.iter().any(|p| p.2 == BevelCurve::Tip));
+        // The root land is one segment at this facet angle (4.6° of land).
+        assert_eq!(
+            b.points.iter().filter(|p| p.2 == BevelCurve::Root).count(),
+            1
+        );
+        // Finer facets put interior points on the tip and root lands.
+        let fine = bevel_pitch(&params(20), 45.0, 1f64.to_radians()).unwrap();
+        assert!(
+            fine.points
+                .iter()
+                .filter(|p| p.2 == BevelCurve::Root)
+                .count()
+                >= 4
+        );
+        assert!(
+            fine.points
+                .iter()
+                .filter(|p| p.2 == BevelCurve::Tip)
+                .count()
+                >= 2
+        );
+        // Thickness at the pitch radius: the leading flank's angle there
+        // is -π/(2 N_v) (interpolated between samples).
+        let at_pitch = flank0
+            .iter()
+            .min_by(|a, b2| {
+                (a.0 - b.virtual_pitch_radius)
+                    .abs()
+                    .total_cmp(&(b2.0 - b.virtual_pitch_radius).abs())
+            })
+            .unwrap();
+        assert!(
+            (at_pitch.1.abs() - PI / (2.0 * b.virtual_teeth)).abs() < 0.01,
+            "{at_pitch:?}"
+        );
+    }
+
+    #[test]
+    fn bevel_rules() {
+        let seg = 10f64.to_radians();
+        // 12 teeth at 20° need 17 virtual teeth: at 30° they are 13.9.
+        let err = bevel_pitch(&params(12), 30.0, seg).unwrap_err();
+        assert!(
+            err.contains("virtual teeth") && err.contains("undercut"),
+            "{err}"
+        );
+        // At 60° they are 24: fine.
+        assert!(bevel_pitch(&params(12), 60.0, seg).is_ok());
+        assert!(bevel_pitch(&params(20), 0.0, seg)
+            .unwrap_err()
+            .contains("between 0 and 90"));
+        assert!(bevel_pitch(&params(20), 90.0, seg)
+            .unwrap_err()
+            .contains("between 0 and 90"));
+        let mut p = params(20);
+        p.fillet = 0.5;
+        assert!(bevel_pitch(&p, 45.0, seg)
+            .unwrap_err()
+            .contains("no rim, profile shift or fillet"));
+    }
+}
