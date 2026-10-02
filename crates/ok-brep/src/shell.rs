@@ -565,8 +565,9 @@ mod tests {
         s.validate().unwrap();
         let expected = 20f64.powi(3) - 16f64.powi(3);
         assert!((s.volume() - expected).abs() < 1e-6, "{}", s.volume());
-        // Two shells: the outside and the void.
-        assert_eq!(s.shells().len(), 2);
+        // One lump: the outside with its void inside it.
+        assert_eq!(s.shells().len(), 1);
+        assert_eq!(s.shells()[0].faces.len(), 12);
     }
 
     #[test]

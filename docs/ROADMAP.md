@@ -130,6 +130,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Section views on PDF sheets: `section` (parallel to the front view) and `section-side` (parallel to the right view), each placed with `@<mm>`, cut faces hatched even-odd, captioned, the cutting plane traced with arrows on the view it is edge-on in
 - [x] Measuring from a photograph: `measuring_sheet` prints a grid with four bullseye marks, `measure_photo` squares a picture of parts on it up and reports their sizes, outlines and holes in millimetres, and can put them in a sketch (`crates/ok-photo`, `examples/measuring-sheet/`)
 - [x] The sheet says which size it is (a row of dots by the origin mark), and a reference of known size on it (a forensic photo scale's 10 mm bars, or a coin) gives the print scale, so a sheet that printed at 97 % still measures true; Tabloid joins the sheet sizes
+- [x] Kernel: a cut that leaves an enclosed cavity keeps the body as one lump with its void (`Solid::shells` groups a void with the lump round it), so a hole into a hollow box drills both walls; before, the cavity became an inside-out body of its own and the next cut failed (`a_hole_into_a_hollow_box` ran ignored as the record of it)
 - [x] Gear teeth: `add_gear` draws an involute spur gear, external with a bore or internal with the teeth inside a ring, from module, tooth count, pressure angle, face width and backlash; each flank is one face and the circles are cylinders, so bores take mates; the design rules it refuses (undercut, an internal gear's tips inside its base circle, thin walls) come back as the feature's error, and the tests mesh a pinion with a gear and with a ring by boolean intersection
 - [x] A steel rule as the reference: its millimetre ticks are found as thin local-dark marks, grouped by edge and fitted, an inch edge told apart by pitch; and with a rule a flatbed scan needs no sheet at all
 
@@ -139,7 +140,6 @@ Follow-ups nobody has asked for yet, in no order; each came up while
 building something else. The reasoning behind the current choices is
 in `docs/DECISIONS.md`.
 
-- [ ] Kernel: any hole into a box with an enclosed cavity fails the boolean (through both walls, or a finite depth into one; `crates/ok-model/tests/parts.rs`, `a_hole_into_a_hollow_box`, ignored); a pocket open on one side takes a hole, and drilling before hollowing works, which is what the cart's gearbox does
 - [ ] Gear teeth, continued: bevel gears for the cart's first stage, a root fillet, profile shift for pinions under the undercut limit, and the cart's discs replaced by `add_gear` once its drive is settled (the ring-gear-on-the-wheel layout)
 - [ ] EGO cart: a pawl on the axle against rolling back, a dog clutch for pushing by hand, bearings in the housing, the attachment coupler once the head is measured; then the range-of-motion sheet and an interference sweep of the clutch
 - [ ] Puzzle fabrication layouts: a `spread` parameter instead of always one bit diameter between rows
