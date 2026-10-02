@@ -2439,13 +2439,16 @@ class App implements SketchHost {
     body.appendChild(field("Backlash", this.exprInput(f, "backlash", k.backlash, (v) => set({ backlash: v }))));
     body.appendChild(field("Profile shift ×m", this.exprInput(f, "shift", k.shift, (v) => set({ shift: v }))));
     body.appendChild(field("Root fillet", this.exprInput(f, "fillet", k.fillet, (v) => set({ fillet: v }))));
+    const cone = this.exprInput(f, "cone", k.cone, (v) => set({ cone: v }));
+    cone.title = "A straight bevel gear's pitch cone half-angle: atan(teeth / the mate's teeth) for shafts at 90°; 0 for a spur gear. The apex sits at the centre, the teeth out along the plane's normal, the face width along the cone (a third of the cone distance at most); no rim, shift or fillet.";
+    body.appendChild(field("Cone angle°", cone));
     body.appendChild(field("Centre x", numberInput(k.center.x, (v) => set({ center: { x: v, y: k.center.y } }))));
     body.appendChild(field("Centre y", numberInput(k.center.y, (v) => set({ center: { x: k.center.x, y: v } }))));
     body.appendChild(field("Body", select(["new", "add", "remove", "intersect"], k.op, (v) => set({ op: v as BodyOp }))));
     const d = (k.module * k.teeth).toFixed(3);
     const note = document.createElement("p");
     note.className = "note";
-    note.textContent = `Pitch diameter ${d}: mating gears sit at half the sum of their pitch diameters apart; a pinion in a ring at half the difference. A gear with an even tooth count facing another wants its first tooth turned by half a pitch (180 / teeth). Zero rim is an external gear; a rim diameter makes a ring with the teeth inside. A root fillet of 0.38 modules is the rack standard and makes a printed gear much stronger; a profile shift of +0.3 lets a 12-tooth pinion through at 20°, with the pair a little further apart.`;
+    note.textContent = `Pitch diameter ${d}: mating gears sit at half the sum of their pitch diameters apart; a pinion in a ring at half the difference. A gear with an even tooth count facing another wants its first tooth turned by half a pitch (180 / teeth). Zero rim is an external gear; a rim diameter makes a ring with the teeth inside. A root fillet of 0.38 modules is the rack standard and makes a printed gear much stronger; a profile shift of +0.3 lets a 12-tooth pinion through at 20°, with the pair a little further apart. A cone angle makes a straight bevel gear: two with angles summing to 90°, apexes together on perpendicular planes, mesh (a 16:32 pair at 26.6° and 63.4°); a gear acts as teeth / cos(cone) virtual teeth, so fewer real teeth get away without undercut.`;
     body.appendChild(note);
   }
 
