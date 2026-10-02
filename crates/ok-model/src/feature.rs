@@ -707,6 +707,12 @@ pub struct GearFeature {
     /// Taken off the tooth thickness at the pitch circle, mm.
     #[serde(default)]
     pub backlash: f64,
+    /// Profile shift of an external gear, in modules.
+    #[serde(default)]
+    pub shift: f64,
+    /// Root fillet radius, mm; zero for sharp corners.
+    #[serde(default)]
+    pub fillet: f64,
     #[serde(default)]
     pub op: BodyOp,
 }
@@ -722,6 +728,8 @@ impl GearFeature {
             bore: self.bore,
             rim: self.rim,
             backlash: self.backlash,
+            shift: self.shift,
+            fillet: self.fillet,
         }
     }
 }
@@ -835,6 +843,8 @@ impl FeatureKind {
                 "rim".into(),
                 "angle".into(),
                 "backlash".into(),
+                "shift".into(),
+                "fillet".into(),
             ],
             FeatureKind::Hole(_) => vec![
                 "diameter".into(),
@@ -892,6 +902,8 @@ impl FeatureKind {
             (FeatureKind::Gear(g), "rim") => Some(g.rim),
             (FeatureKind::Gear(g), "angle") => Some(g.angle),
             (FeatureKind::Gear(g), "backlash") => Some(g.backlash),
+            (FeatureKind::Gear(g), "shift") => Some(g.shift),
+            (FeatureKind::Gear(g), "fillet") => Some(g.fillet),
             _ => None,
         }
     }
@@ -1022,6 +1034,14 @@ impl FeatureKind {
             }
             (FeatureKind::Gear(g), "backlash") => {
                 g.backlash = value;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "shift") => {
+                g.shift = value;
+                Ok(())
+            }
+            (FeatureKind::Gear(g), "fillet") => {
+                g.fillet = value;
                 Ok(())
             }
             (FeatureKind::Hole(h), "diameter") => {
