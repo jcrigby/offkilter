@@ -518,48 +518,48 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 22.0,
-                      "y": 254.0
+                      "x": 19.052558883257653,
+                      "y": 265.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 11.000000000000002,
-                      "y": 273.05255888325763
+                      "x": 1.3471114790620886e-15,
+                      "y": 276.0
                     }
                   },
                   {
                     "id": 2,
                     "type": "point",
                     "pos": {
-                      "x": -10.999999999999996,
-                      "y": 273.05255888325763
+                      "x": -19.052558883257653,
+                      "y": 265.0
                     }
                   },
                   {
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -22.0,
-                      "y": 254.0
+                      "x": -19.05255888325765,
+                      "y": 243.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -11.00000000000001,
-                      "y": 234.94744111674237
+                      "x": -4.0413344371862654e-15,
+                      "y": 232.0
                     }
                   },
                   {
                     "id": 5,
                     "type": "point",
                     "pos": {
-                      "x": 11.000000000000002,
-                      "y": 234.9474411167423
+                      "x": 19.05255888325765,
+                      "y": 243.0
                     }
                   }
                 ],
@@ -583,9 +583,324 @@
               "counterbore": null,
               "countersink": null
             }
+          },
+          {
+            "id": 8,
+            "name": "dowel at 0 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "rotated",
+                "base": "top",
+                "axis": "x",
+                "angle": 0.0,
+                "offset": 246.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -55.0,
+                      "y": 124.75
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "dowel hole at 0 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 8,
+              "diameter": 3.2,
+              "depth": 16.0,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 10,
+            "name": "dowel at 60 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "rotated",
+                "base": "top",
+                "axis": "x",
+                "angle": 60.0,
+                "offset": 119.00000000000004
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -55.0,
+                      "y": 344.7204525612474
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "dowel hole at 60 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 10,
+              "diameter": 3.2,
+              "depth": 16.0,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 12,
+            "name": "dowel at 120 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "rotated",
+                "base": "top",
+                "axis": "x",
+                "angle": 120.0,
+                "offset": -134.99999999999994
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -55.0,
+                      "y": 344.72045256124744
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 13,
+            "name": "dowel hole at 120 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 12,
+              "diameter": 3.2,
+              "depth": 16.0,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 14,
+            "name": "dowel at 180 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "rotated",
+                "base": "top",
+                "axis": "x",
+                "angle": 180.0,
+                "offset": -262.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -55.0,
+                      "y": 124.75000000000004
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 15,
+            "name": "dowel hole at 180 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 14,
+              "diameter": 3.2,
+              "depth": 16.0,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 16,
+            "name": "dowel at 240 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "rotated",
+                "base": "top",
+                "axis": "x",
+                "angle": 240.0,
+                "offset": -135.0000000000001
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -55.0,
+                      "y": -95.22045256124736
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 17,
+            "name": "dowel hole at 240 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 16,
+              "diameter": 3.2,
+              "depth": 16.0,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 18,
+            "name": "dowel at 300 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "rotated",
+                "base": "top",
+                "axis": "x",
+                "angle": 300.0,
+                "offset": 119.00000000000004
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -55.0,
+                      "y": -95.2204525612474
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 19,
+            "name": "dowel hole at 300 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 18,
+              "diameter": 3.2,
+              "depth": 16.0,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 20,
+            "name": "cut at 0 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "split",
+              "plane": {
+                "type": "rotated",
+                "base": "top",
+                "axis": "x",
+                "angle": 0.0,
+                "offset": 254.0
+              }
+            }
+          },
+          {
+            "id": 21,
+            "name": "cut at 60 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "split",
+              "plane": {
+                "type": "rotated",
+                "base": "top",
+                "axis": "x",
+                "angle": 60.0,
+                "offset": 127.00000000000004
+              }
+            }
+          },
+          {
+            "id": 22,
+            "name": "cut at 120 degrees",
+            "suppressed": false,
+            "kind": {
+              "type": "split",
+              "plane": {
+                "type": "rotated",
+                "base": "top",
+                "axis": "x",
+                "angle": 120.0,
+                "offset": -126.99999999999994
+              }
+            }
           }
         ],
-        "next_id": 8,
+        "next_id": 23,
         "settings": {
           "facet_angle": 5.0
         }
@@ -4047,7 +4362,7 @@
           },
           {
             "id": 17,
-            "name": "ring gear",
+            "name": "ring segment 1",
             "studio": 3,
             "body": 0,
             "fixed": true,
@@ -4066,6 +4381,101 @@
           },
           {
             "id": 18,
+            "name": "ring segment 2",
+            "studio": 3,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 19,
+            "name": "ring segment 3",
+            "studio": 3,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 20,
+            "name": "ring segment 4",
+            "studio": 3,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 21,
+            "name": "ring segment 5",
+            "studio": 3,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 22,
+            "name": "ring segment 6",
+            "studio": 3,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 23,
             "name": "pinion",
             "studio": 4,
             "body": 0,
@@ -4084,7 +4494,7 @@
             }
           },
           {
-            "id": 19,
+            "id": 24,
             "name": "output shaft",
             "studio": 5,
             "body": 0,
@@ -4103,7 +4513,7 @@
             }
           },
           {
-            "id": 20,
+            "id": 25,
             "name": "worm box",
             "studio": 6,
             "body": 0,
@@ -4122,7 +4532,7 @@
             }
           },
           {
-            "id": 21,
+            "id": 26,
             "name": "flex shaft",
             "studio": 7,
             "body": 0,
@@ -4141,7 +4551,7 @@
             }
           },
           {
-            "id": 22,
+            "id": 27,
             "name": "EGO stub",
             "studio": 8,
             "body": 0,
@@ -4160,7 +4570,7 @@
             }
           },
           {
-            "id": 23,
+            "id": 28,
             "name": "power head",
             "studio": 9,
             "body": 0,
@@ -4179,7 +4589,7 @@
             }
           },
           {
-            "id": 24,
+            "id": 29,
             "name": "frame",
             "studio": 10,
             "body": 0,
@@ -4198,7 +4608,7 @@
             }
           },
           {
-            "id": 25,
+            "id": 30,
             "name": "platform",
             "studio": 11,
             "body": 0,
@@ -4217,7 +4627,7 @@
             }
           },
           {
-            "id": 26,
+            "id": 31,
             "name": "left caster",
             "studio": 12,
             "body": 0,
@@ -4236,7 +4646,7 @@
             }
           },
           {
-            "id": 27,
+            "id": 32,
             "name": "right caster",
             "studio": 12,
             "body": 0,
@@ -4255,7 +4665,7 @@
             }
           },
           {
-            "id": 28,
+            "id": 33,
             "name": "left bag",
             "studio": 13,
             "body": 0,
@@ -4274,7 +4684,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 34,
             "name": "right bag",
             "studio": 13,
             "body": 0,
@@ -4297,5 +4707,5 @@
       }
     }
   ],
-  "next_id": 30
+  "next_id": 35
 }

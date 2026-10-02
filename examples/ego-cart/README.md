@@ -32,7 +32,7 @@ constants at the top of `build.py` say which.
 | Flex shaft | 16 mm casing, 233 mm end to end, a 25 mm coupling at each end |
 | Worm gearbox | NMRV040, 20:1, 14 mm input, hollow 18 mm output, about 70 % efficient |
 | Drive wheel | 20 inch bicycle front wheel, 508 mm tyre, 100 mm six-bolt disc hub, 10 mm axle |
-| Ring gear | 80 teeth, module 3, internal, 265 mm rim, 20 mm face, 0.15 mm backlash; printed |
+| Ring gear | 80 teeth, module 3, internal, 265 mm rim, 20 mm face, 0.15 mm backlash; printed as six sectors, a 3 mm dowel in each rim joint |
 | Pinion | 17 teeth, module 3, 20 mm face, 18 mm bore; printed |
 | Ratio | 20 × 80/17 = 94.1:1 |
 | Speed | 51 rpm at the wheel, 1.36 m/s (4.9 km/h) at no load; the trigger below that |
@@ -105,6 +105,16 @@ The head rides 70 mm behind and below the mast on two clamps (not
 drawn), its coupler just behind the deck's rear edge, and the stub
 points down under the deck where the flex shaft meets it.
 
+The ring is 265 mm across, more than most printers, so the model
+drills a 3.2 mm hole 16 mm long along the rim across each of six
+joints, then cuts the ring into six 60° sectors with three radial
+planes through the axle, so every sector ends in half a dowel hole.
+Drilling before cutting is what makes that robust: the holes are
+placed by angle, not by finding cut faces afterwards. Each sector is
+about 130 × 115 mm, the web's bolt holes sit between the cuts, and
+the six glue up on the bolt pattern with a 3 mm pin across every
+joint; `ring_gear.stl` holds all six in place.
+
 What the model leaves out: spokes (a disc stands in), the casters'
 forks, the clamps on the mast, a pawl, and the curve of the flex
 shaft, which is drawn straight between its two couplings.
@@ -120,8 +130,10 @@ face, the bags on the deck inside its edges, the three wheels on the
 ground, the gearbox clear of it, the grip at hand height, and the
 stability numbers above from the same masses `build.py` prints: the
 drive wheel's share, the side tip angle with two bags and with one,
-and the mass centre ahead of the wheel on the hill. Then every pair
-of placed bodies must not intersect, the contacts that touch by
+and the mass centre ahead of the wheel on the hill; the ring's six
+sectors alike in volume, each inside a 220 mm bed, each with a dowel
+hole at both ends, and together meshing with the pinion. Then every
+pair of placed bodies must not intersect, the contacts that touch by
 design excepted. That check found five collisions while this revision
 was laid out.
 
@@ -134,9 +146,6 @@ was laid out.
 - **Pushing by hand.** Backdriving the worm through the head's motor
   is heavy without a freewheel. A swing arm for the gearbox that
   lifts the pinion out of the ring is a clutch with no extra parts.
-- **Printing the ring.** 265 mm across is more than most printers; it
-  prints in three segments with lap joints at the web, which is the
-  next detail on it.
 - **The handle.** It sits 115 mm left of centre, over the gearbox. A
   bent mast could bring the grip to the middle.
 

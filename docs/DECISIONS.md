@@ -307,3 +307,16 @@ general: a layout question like this one is a few lines of statics
 on the model's own centroids, and it belongs in the regression test
 next to the interference check, which found five collisions in the
 same revision.
+
+## 2026-10 · Drill before you cut
+
+The cart's 265 mm ring gear prints as six sectors with a dowel across
+every joint. The first attempt cut the ring and then drilled each cut
+face, finding the faces in the report by their angle: every hole
+changed the body, the references taken before the first hole went
+stale, and sectors came out with one hole or none. The holes are now
+drilled through the whole ring at the six joint angles, 16 mm long and
+centred on the cut, and the cuts come after, leaving half a hole on
+each side. Placing by angle on a known body is dependable; chasing
+faces across a sequence of edits is not, and a build script should
+prefer the former whenever the geometry lets it.
