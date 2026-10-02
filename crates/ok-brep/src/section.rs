@@ -818,7 +818,7 @@ fn chains_prepared(
         while next.get(&s).is_some_and(|v| !v.is_empty()) {
             let (poly, closed) = walk(s, &mut next, &mut remaining);
             if closed {
-                if poly.len() >= 3 && ok_sketch::signed_area(&poly).abs() > 1e-18 {
+                if !is_sliver(&poly, prepared.eps) {
                     loops.push(poly);
                 }
             } else if poly.len() >= 2 {
@@ -849,11 +849,27 @@ fn chains_prepared(
                 segment_count
             )));
         }
-        if poly.len() >= 3 && ok_sketch::signed_area(&poly).abs() > 1e-18 {
+        if !is_sliver(&poly, prepared.eps) {
             loops.push(poly);
         }
     }
     Ok(LocalSection { loops, chains })
+}
+
+/// A closed loop thinner than `eps`: fewer than three points, or an
+/// area under `eps` times its perimeter. A solid that touches the
+/// plane only along an edge sections, a hair inside, into collinear
+/// points whose signed area is rounding noise of either sign; taken as
+/// a loop, a negative one would read as a hole in material that is not
+/// there.
+fn is_sliver(poly: &[Vec2], eps: f64) -> bool {
+    if poly.len() < 3 {
+        return true;
+    }
+    let perimeter: f64 = (0..poly.len())
+        .map(|i| poly[i].distance(poly[(i + 1) % poly.len()]))
+        .sum();
+    ok_sketch::signed_area(poly).abs() <= eps * perimeter
 }
 
 #[cfg(test)]
