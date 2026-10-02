@@ -745,6 +745,8 @@ struct PdfQuery {
     note: Option<String>,
     /// Hidden lines dashed; by default on for one part, off for several.
     hidden: Option<bool>,
+    /// Explode factor for the isometric view (0, the default, in place).
+    explode: Option<f64>,
 }
 
 /// A shop drawing sheet of a tab as a PDF.
@@ -804,7 +806,7 @@ async fn export_pdf(
     let Some(json) = current_json(&hub, &id) else {
         return StatusCode::NOT_FOUND.into_response();
     };
-    let opts = match sheet_options(
+    let mut opts = match sheet_options(
         q.views.as_deref(),
         q.sheet.as_deref(),
         q.parts,
@@ -814,6 +816,7 @@ async fn export_pdf(
         Ok(o) => o,
         Err(e) => return (StatusCode::BAD_REQUEST, e).into_response(),
     };
+    opts.explode = q.explode.unwrap_or(0.0).max(0.0);
     match tokio::task::spawn_blocking(move || pdf_of(&json, q.tab, &opts)).await {
         Ok(Ok(bytes)) => (
             [

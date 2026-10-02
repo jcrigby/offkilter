@@ -602,7 +602,11 @@ DXF draw beside the automatic overall dimensions. The dialog's
 hidden-lines choice (auto, on, off) strips or keeps the dashed lines
 in the SVG and DXF and is passed to the kernel's PDF as `hidden`, auto
 being the kernel's own rule (a sheet of one part has them, an
-assembly's does not). The body summary also
+assembly's does not). Its "Exploded iso" box slides the isometric's
+parts apart as the viewport's Explode slider has them: the client
+hands the kernel its per-body offsets for the SVG and the slider's
+factor to the PDF, where `ok_sheet` recomputes the same offsets from
+the parts' box centres. The body summary also
 lists each body's cylindrical surfaces (axis, radius, extent, hole or
 boss); a standard view whose direction runs along such an axis sees it
 end-on and gets a diameter callout with a leader ("Ø12", or "4× Ø6" when

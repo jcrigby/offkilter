@@ -578,6 +578,7 @@ impl Doc {
             title: Option<String>,
             note: Option<String>,
             hidden: Option<bool>,
+            explode: Option<f64>,
         }
         let spec: Spec =
             serde_json::from_str(opts_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -592,6 +593,7 @@ impl Doc {
             opts.parts = p;
         }
         opts.hidden = spec.hidden;
+        opts.explode = spec.explode.unwrap_or(0.0).max(0.0);
         opts.title = spec.title.unwrap_or_default();
         opts.note = spec.note.unwrap_or_default();
         ok_sheet::drawing_pdf(&mut self.inner, TabId(tab), &opts).map_err(|e| JsValue::from_str(&e))
@@ -606,12 +608,35 @@ impl Doc {
         struct ViewSpec {
             dir: [f64; 3],
             up: [f64; 3],
+            /// A displacement per body (the viewer's explode offsets);
+            /// bodies past the end stay put.
+            #[serde(default)]
+            offsets: Option<Vec<[f64; 3]>>,
         }
         let spec: ViewSpec = match serde_json::from_str(view_json) {
             Ok(v) => v,
             Err(e) => return serde_json::json!({ "error": e.to_string() }).to_string(),
         };
-        let solids: Vec<&ok_brep::Solid> = self.bodies.iter().map(|b| &b.solid).collect();
+        let moved: Vec<ok_brep::Solid> = match &spec.offsets {
+            Some(offsets) => self
+                .bodies
+                .iter()
+                .enumerate()
+                .map(|(i, b)| {
+                    let o = offsets.get(i).copied().unwrap_or([0.0; 3]);
+                    b.solid
+                        .transformed(&ok_brep::Transform::translation(ok_math::Vec3::new(
+                            o[0], o[1], o[2],
+                        )))
+                })
+                .collect(),
+            None => Vec::new(),
+        };
+        let solids: Vec<&ok_brep::Solid> = if spec.offsets.is_some() {
+            moved.iter().collect()
+        } else {
+            self.bodies.iter().map(|b| &b.solid).collect()
+        };
         let view = ok_brep::View {
             dir: ok_math::Vec3::new(spec.dir[0], spec.dir[1], spec.dir[2]),
             up: ok_math::Vec3::new(spec.up[0], spec.up[1], spec.up[2]),
