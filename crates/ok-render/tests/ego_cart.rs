@@ -350,11 +350,6 @@ fn the_load_sits_on_the_deck_and_the_cart_stands_up() {
                 Some(v) if known => {
                     assert!(v < 50.0, "{} / {}: {v} mm3 at a contact", a.name, b.name)
                 }
-                // Two sectors meeting on a cut face can fail the boolean
-                // outright (`touching_ring_sectors_intersect_to_nothing`
-                // below records it); a failure between other bodies is a
-                // finding.
-                None if known && is_segment(&a.name) && is_segment(&b.name) => {}
                 None => worst.push((a.name.clone(), b.name.clone(), f64::NAN)),
                 _ => {}
             }
@@ -364,11 +359,11 @@ fn the_load_sits_on_the_deck_and_the_cart_stands_up() {
 }
 
 /// Two sectors that share a cut face, with half a dowel hole each on
-/// it, intersect to nothing. Today the boolean fails on one such pair
-/// ("result is not a closed solid"): a kernel bug on solids touching
-/// over a face with a notch in it, kept here as its record.
+/// it, intersect to nothing: the boolean once failed on such a pair
+/// because the section a hair inside a facet next to the cut was a
+/// zero-area sliver that read as a hole (see `ok_brep`'s
+/// `halves_of_a_hexagonal_prism` test).
 #[test]
-#[ignore]
 fn touching_ring_sectors_intersect_to_nothing() {
     let mut doc = load();
     let ring = tab_named(&doc, "Ring gear");

@@ -1393,3 +1393,98 @@ mod tests {
         assert_vol(&body, 9000.0 - 4.0 * PI * 4.0 * 10.0, 2e-3);
     }
 }
+
+#[cfg(test)]
+mod touching_tests {
+    use super::*;
+    use crate::extrude;
+    use ok_math::{Plane, Vec2};
+    use ok_sketch::{ProfileOptions, Sketch};
+
+    fn prism(points: &[(f64, f64)], id: u32) -> Solid {
+        let mut s = Sketch::new();
+        let mut ends = Vec::new();
+        for i in 0..points.len() {
+            let a = Vec2::new(points[i].0, points[i].1);
+            let b = Vec2::new(
+                points[(i + 1) % points.len()].0,
+                points[(i + 1) % points.len()].1,
+            );
+            let (_, pa, pb) = s.add_line(a, b);
+            ends.push((pa, pb));
+        }
+        for i in 0..ends.len() {
+            s.add_constraint(ok_sketch::Constraint::Coincident {
+                a: ends[i].1,
+                b: ends[(i + 1) % ends.len()].0,
+            });
+        }
+        let p = s.profiles(&ProfileOptions::default()).remove(0);
+        extrude(&p, &Plane::XY, 0.0, 8.0, id).unwrap()
+    }
+
+    /// Two halves of a hexagonal prism meeting on the plane through two
+    /// opposite corners. A facet of one half next to that plane has the
+    /// other half wholly on its inner side, touching it only along the
+    /// shared edge: the section a hair inside is a zero-area sliver,
+    /// which must not read as material (it once read as a hole in
+    /// material everywhere, and the facet as inside the other half).
+    #[test]
+    fn halves_of_a_hexagonal_prism_intersect_to_nothing_and_union_to_the_prism() {
+        let h = 10.0 * 3f64.sqrt() / 2.0;
+        let upper = prism(&[(10.0, 0.0), (5.0, h), (-5.0, h), (-10.0, 0.0)], 1);
+        let lower = prism(&[(-10.0, 0.0), (-5.0, -h), (5.0, -h), (10.0, 0.0)], 2);
+        let whole = 6.0 * (10.0 * h / 2.0) * 8.0;
+        assert!(
+            (upper.volume() + lower.volume() - whole).abs() < 1e-3,
+            "{} + {} vs {whole}",
+            upper.volume(),
+            lower.volume()
+        );
+        for (a, b) in [(&upper, &lower), (&lower, &upper)] {
+            let meet = boolean(a, b, BoolOp::Intersection).unwrap();
+            meet.validate().unwrap();
+            assert!(meet.volume().abs() < 1e-3, "{}", meet.volume());
+            let joined = boolean(a, b, BoolOp::Union).unwrap();
+            joined.validate().unwrap();
+            assert!(
+                (joined.volume() - whole).abs() < 1e-3,
+                "{}",
+                joined.volume()
+            );
+            let cut = boolean(a, b, BoolOp::Difference).unwrap();
+            cut.validate().unwrap();
+            assert!((cut.volume() - a.volume()).abs() < 1e-3, "{}", cut.volume());
+        }
+    }
+
+    /// Splitting a hexagonal prism by the plane through two opposite
+    /// corners fails ("4 bad edges"): the corner edges lie in the plane.
+    /// Kept as the record of it.
+    #[test]
+    #[ignore]
+    fn a_split_plane_through_two_corners_of_a_prism() {
+        let h = 10.0 * 3f64.sqrt() / 2.0;
+        let hexagon = prism(
+            &[
+                (10.0, 0.0),
+                (5.0, h),
+                (-5.0, h),
+                (-10.0, 0.0),
+                (-5.0, -h),
+                (5.0, -h),
+            ],
+            1,
+        );
+        let cut = Plane {
+            origin: Vec3::ZERO,
+            x_axis: Vec3::X,
+            y_axis: Vec3::Z,
+            normal: Vec3::Y,
+        };
+        let (below, above) = crate::split_tagged(&hexagon, &cut, 2).unwrap().unwrap();
+        below.validate().unwrap();
+        above.validate().unwrap();
+        assert!((below.volume() - above.volume()).abs() < 1e-3);
+    }
+}
