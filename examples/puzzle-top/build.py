@@ -24,6 +24,8 @@ from build import Mcp  # noqa: E402  (the router lift's MCP client)
 
 COLS, ROWS, PITCH, THICKNESS = 8, 6, 38.0, 12.0
 GAP, WEB, BIT, LOCK, JITTER, SEED = 1.5, 5.0, 6.35, 20.0, 3.0, 42
+LIGHT = {"name": "Maple", "density": 0.7}  # g/cm3: the parts list names the species
+DARK = {"name": "Walnut", "density": 0.64}
 
 
 def apply(mcp, ops, tab=1):
@@ -57,6 +59,8 @@ def main():
                 "web": WEB,
                 "seed": SEED,
                 "jitter": JITTER,
+                "light": LIGHT,
+                "dark": DARK,
                 "name": "Checkerboard puzzle",
             }
         ],
@@ -114,6 +118,8 @@ def main():
                 "seed": SEED,
                 "jitter": 2.0,
                 "fixture": 6.0,
+                "light": LIGHT,
+                "dark": DARK,
                 "name": "Tight checkerboard",
             }
         ],
@@ -132,7 +138,7 @@ def main():
     # corners of pieces that meet diagonally in the design stay clear
     # of the bit. Each is the routing template for that board.
     tight_feature = int(text.split("feature ", 1)[1].split(")")[0].split(",")[0])
-    for show, wood in (("light", "maple"), ("dark", "walnut")):
+    for show, wood in (("light", LIGHT["name"].lower()), ("dark", DARK["name"].lower())):
         apply(mcp, [{"type": "set_puzzle", "id": tight_feature, "show": show}], tab=tight)
         report = json.loads(mcp.call("report", {"tab": tight, "detail": "full"}))
         print(f"{wood} layout: {len(report['bodies'])} pieces")

@@ -91,11 +91,12 @@ A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable
 
 - `Hole { sketch, diameter, depth, through_all, direction, counterbore, countersink }`:
   drills at every standalone point of the sketch.
-- `Puzzle { plane, cols, rows, pitch, thickness, gap, bit, lock, grain, web, seed, jitter, fixture, show, tabs, corners }`:
-  a jigsaw from `ok_sketch::jigsaw`, one body per piece, an alignment
-  web in the gaps and a printable fixture tray, each piece's faces in
-  their own `local` range; or, by `show`, one colour's fabrication
-  layout (rows spread a bit apart).
+- `Puzzle { plane, cols, rows, pitch, thickness, gap, bit, lock, grain, web, seed, jitter, fixture, show, spread, light, dark, tabs, corners }`:
+  a jigsaw from `ok_sketch::jigsaw`, one body per piece carrying its
+  colour's wood as its material, an alignment web in the gaps and a
+  printable fixture tray, each piece's faces in their own `local`
+  range; or, by `show`, one colour's fabrication layout (rows `spread`
+  apart, a bit diameter unless given).
 - `Gear { plane, center, module, teeth, pressure_angle, width, direction, bore, rim, angle, backlash, op }`:
   an involute spur gear from `ok_sketch::gear`, external or (with a
   `rim`) internal, its profile extruded like a sketch region: each

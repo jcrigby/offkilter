@@ -614,6 +614,17 @@ pub struct PuzzleFeature {
     /// piece for the glue-up; zero for none.
     #[serde(default)]
     pub fixture: f64,
+    /// How much further along each row of a fabrication layout sits
+    /// than the last, mm; zero for one bit diameter, the least that
+    /// keeps the bit off the corners of pieces that meet diagonally.
+    #[serde(default)]
+    pub spread: f64,
+    /// The light pieces' wood, for the parts list and the masses.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub light: Option<crate::Material>,
+    /// The dark pieces' wood.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dark: Option<crate::Material>,
     /// One per interior edge (see `ok_sketch::jigsaw` for the order).
     pub tabs: Vec<PuzzleTab>,
     /// One offset per interior node.
@@ -813,6 +824,7 @@ impl FeatureKind {
                 "thickness".into(),
                 "gap".into(),
                 "bit".into(),
+                "spread".into(),
             ],
             FeatureKind::Gear(_) => vec![
                 "module".into(),
@@ -871,6 +883,7 @@ impl FeatureKind {
             (FeatureKind::Puzzle(p), "thickness") => Some(p.thickness),
             (FeatureKind::Puzzle(p), "gap") => Some(p.gap),
             (FeatureKind::Puzzle(p), "bit") => Some(p.bit),
+            (FeatureKind::Puzzle(p), "spread") => Some(p.spread),
             (FeatureKind::Gear(g), "module") => Some(g.module),
             (FeatureKind::Gear(g), "teeth") => Some(g.teeth as f64),
             (FeatureKind::Gear(g), "pressure_angle") => Some(g.pressure_angle),
@@ -973,6 +986,10 @@ impl FeatureKind {
             }
             (FeatureKind::Puzzle(p), "bit") => {
                 p.bit = value;
+                Ok(())
+            }
+            (FeatureKind::Puzzle(p), "spread") => {
+                p.spread = value;
                 Ok(())
             }
             (FeatureKind::Gear(g), "module") => {

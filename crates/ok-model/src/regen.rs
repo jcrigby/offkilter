@@ -729,13 +729,17 @@ impl PartStudio {
         r
     }
 
-    /// Gives bodies their user-chosen names (by creating feature).
+    /// Gives bodies their user-chosen names and materials (by creating
+    /// feature); a body whose feature gave it a material (a puzzle
+    /// piece's wood) keeps it unless the user chose one.
     fn apply_part_names(&self, result: &mut RegenResult) {
         for b in &mut result.bodies {
             if let Some(n) = self.part_names.get(&b.source) {
                 b.name = n.clone();
             }
-            b.material = self.part_materials.get(&b.source).cloned();
+            if let Some(m) = self.part_materials.get(&b.source) {
+                b.material = Some(m.clone());
+            }
         }
     }
 
@@ -947,16 +951,21 @@ impl PartStudio {
             Ok(j) => j,
             Err(e) => return Some(e),
         };
+        if pf.spread < 0.0 || !pf.spread.is_finite() {
+            return Some("row spread must be zero or positive".into());
+        }
+        let spread = if pf.spread > 0.0 { pf.spread } else { pf.bit };
         // A fabrication layout: one colour's pieces on their board, rows
-        // spread a bit apart; nothing else regenerates with it.
+        // spread apart (a bit diameter unless `spread` says otherwise);
+        // nothing else regenerates with it.
         let layout: Vec<ok_sketch::jigsaw::Piece> = match pf.show {
             crate::PuzzleLayout::Design => Vec::new(),
-            crate::PuzzleLayout::Light => ok_sketch::jigsaw::fabrication(&jig, true, pf.bit),
-            crate::PuzzleLayout::Dark => ok_sketch::jigsaw::fabrication(&jig, false, pf.bit),
+            crate::PuzzleLayout::Light => ok_sketch::jigsaw::fabrication(&jig, true, spread),
+            crate::PuzzleLayout::Dark => ok_sketch::jigsaw::fabrication(&jig, false, spread),
         };
         let design = pf.show == crate::PuzzleLayout::Design;
         let pieces: &[ok_sketch::jigsaw::Piece] = if design { &jig.pieces } else { &layout };
-        let mut bodies: Vec<(String, Solid)> = Vec::new();
+        let mut bodies: Vec<(String, Solid, Option<crate::Material>)> = Vec::new();
         let mut piece_area = 0.0;
         for (k, piece) in pieces.iter().enumerate() {
             let mut sk = ok_sketch::Sketch::new();
@@ -987,6 +996,11 @@ impl PartStudio {
                     if piece.light { "light" } else { "dark" }
                 ),
                 solid,
+                if piece.light {
+                    pf.light.clone()
+                } else {
+                    pf.dark.clone()
+                },
             ));
         }
         if design && pf.web > 0.0 && pf.gap > 0.0 {
@@ -996,7 +1010,7 @@ impl PartStudio {
                         for f in &mut solid.faces {
                             f.origin.local += (jig.pieces.len() as u32 + 1) * PIECE_LOCALS;
                         }
-                        bodies.push(("Alignment web".into(), solid));
+                        bodies.push(("Alignment web".into(), solid, None));
                     }
                     Err(e) => return Some(format!("alignment web: {e}")),
                 },
@@ -1009,14 +1023,16 @@ impl PartStudio {
                     for f in &mut solid.faces {
                         f.origin.local += (jig.pieces.len() as u32 + 2) * PIECE_LOCALS;
                     }
-                    bodies.push(("Printing fixture".into(), solid));
+                    bodies.push(("Printing fixture".into(), solid, None));
                 }
                 Err(e) => return Some(format!("printing fixture: {e}")),
             }
         }
-        for (name, solid) in bodies {
+        for (name, solid, material) in bodies {
             result.next_part += 1;
-            result.bodies.push(Body::new(name, id, solid));
+            let mut body = Body::new(name, id, solid);
+            body.material = material;
+            result.bodies.push(body);
         }
         None
     }
@@ -3186,6 +3202,143 @@ mod tests {
         );
     }
 
+    /// A fabrication layout's rows step by the bit diameter unless a
+    /// spread is given; each colour's pieces carry its wood, which a
+    /// part material chosen on the feature overrides.
+    #[test]
+    fn puzzle_rows_spread_as_asked_and_each_colour_has_its_wood() {
+        let mut ps = PartStudio::new("t");
+        let maple = crate::Material {
+            name: "Maple".into(),
+            density: 0.7,
+        };
+        let walnut = crate::Material {
+            name: "Walnut".into(),
+            density: 0.64,
+        };
+        let id = ps
+            .apply(Op::AddPuzzle {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                cols: 3,
+                rows: 2,
+                pitch: 40.0,
+                thickness: 10.0,
+                gap: 0.0,
+                bit: 6.35,
+                lock: 20.0,
+                grain: crate::Grain::X,
+                web: 0.0,
+                seed: 3,
+                jitter: 0.0,
+                fixture: 0.0,
+                show: crate::PuzzleLayout::Light,
+                spread: 0.0,
+                light: Some(maple.clone()),
+                dark: Some(walnut.clone()),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let r = ps.regenerate();
+        assert!(r.errors().next().is_none());
+        assert_eq!(r.bodies.len(), 3);
+        assert!(r.bodies.iter().all(|b| b.material.as_ref() == Some(&maple)));
+        let at = |r: &RegenResult| -> Vec<(String, f64)> {
+            r.bodies
+                .iter()
+                .map(|b| (b.name.clone(), b.solid.centroid().unwrap().y))
+                .collect()
+        };
+        let default = at(&r);
+        let set = |ps: &mut PartStudio,
+                   spread: Option<f64>,
+                   light: Option<Option<crate::Material>>,
+                   show: Option<crate::PuzzleLayout>| {
+            ps.apply(Op::SetPuzzle {
+                id,
+                cols: None,
+                rows: None,
+                pitch: None,
+                thickness: None,
+                gap: None,
+                bit: None,
+                lock: None,
+                grain: None,
+                web: None,
+                seed: None,
+                jitter: None,
+                fixture: None,
+                show,
+                spread,
+                light,
+                dark: None,
+                tabs: None,
+                corners: None,
+            })
+            .unwrap();
+        };
+        set(&mut ps, Some(20.0), None, None);
+        let wide = at(&ps.regenerate());
+        for ((name, y0), (_, y1)) in default.iter().zip(&wide) {
+            let row: f64 = name
+                .split(',')
+                .nth(1)
+                .and_then(|s| s.split(' ').next())
+                .and_then(|s| s.parse::<f64>().ok())
+                .unwrap()
+                - 1.0;
+            assert!(
+                (y1 - y0 - row * (20.0 - 6.35)).abs() < 1e-4,
+                "{name}: {y0} -> {y1}"
+            );
+        }
+        // The dark board carries walnut; the design has both woods; a
+        // material chosen on the feature overrides, and clearing the
+        // light wood leaves those pieces bare.
+        set(&mut ps, None, None, Some(crate::PuzzleLayout::Dark));
+        let r = ps.regenerate();
+        assert!(r
+            .bodies
+            .iter()
+            .all(|b| b.material.as_ref() == Some(&walnut)));
+        set(&mut ps, None, None, Some(crate::PuzzleLayout::Design));
+        let r = ps.regenerate();
+        let woods: Vec<Option<String>> = r
+            .bodies
+            .iter()
+            .map(|b| b.material.as_ref().map(|m| m.name.clone()))
+            .collect();
+        assert_eq!(
+            woods,
+            ["Maple", "Walnut", "Maple", "Walnut", "Maple", "Walnut"]
+                .iter()
+                .map(|s| Some(s.to_string()))
+                .collect::<Vec<_>>()
+        );
+        ps.apply(Op::SetPartMaterial {
+            source: id,
+            material: Some(crate::Material {
+                name: "Plywood".into(),
+                density: 0.6,
+            }),
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(r
+            .bodies
+            .iter()
+            .all(|b| b.material.as_ref().map(|m| m.name.as_str()) == Some("Plywood")));
+        ps.apply(Op::SetPartMaterial {
+            source: id,
+            material: None,
+        })
+        .unwrap();
+        set(&mut ps, None, Some(None), None);
+        let r = ps.regenerate();
+        assert!(r.bodies[0].material.is_none() && r.bodies[1].material.as_ref() == Some(&walnut));
+    }
+
     #[test]
     fn puzzle_makes_a_body_per_piece_and_an_alignment_web() {
         let mut ps = PartStudio::new("t");
@@ -3204,6 +3357,9 @@ mod tests {
             jitter: 2.0,
             fixture: 0.0,
             show: crate::PuzzleLayout::Design,
+            spread: 0.0,
+            light: None,
+            dark: None,
             name: None,
         };
         let id = ps.apply(puzzle(0.0, 0.0)).unwrap().feature.unwrap();
@@ -3247,6 +3403,9 @@ mod tests {
             seed: None,
             jitter: None,
             fixture: None,
+            spread: None,
+            light: None,
+            dark: None,
             show: None,
             tabs: None,
             corners: None,
@@ -3285,6 +3444,9 @@ mod tests {
             seed: None,
             jitter: None,
             fixture: None,
+            spread: None,
+            light: None,
+            dark: None,
             show: None,
             tabs: None,
             corners: None,
@@ -3341,6 +3503,9 @@ mod tests {
             jitter: None,
             fixture: Some(5.0),
             show: None,
+            spread: None,
+            light: None,
+            dark: None,
             tabs: None,
             corners: None,
         })
@@ -3392,6 +3557,9 @@ mod tests {
                 seed: None,
                 jitter: None,
                 fixture: None,
+                spread: None,
+                light: None,
+                dark: None,
                 show: Some(show),
                 tabs: None,
                 corners: None,

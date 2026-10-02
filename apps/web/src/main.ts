@@ -5,7 +5,7 @@ import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoi
 type HiddenLines = "auto" | "on" | "off";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
-import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -2304,8 +2304,25 @@ class App implements SketchHost {
     body.appendChild(field("Lock angle°", numberInput(k.lock, (v) => set({ lock: v }))));
     body.appendChild(field("Grain along", select(["x", "y"], k.grain, (v) => set({ grain: v as Grain }))));
     const show = select(["design", "light", "dark"], k.show, (v) => set({ show: v as PuzzleLayout }));
-    show.title = "The assembled design, or one colour's pieces laid out for its board with each row a bit diameter further along, so the bit rounds no corners";
+    show.title = "The assembled design, or one colour's pieces laid out for its board with each row further along than the last, so the bit rounds no corners";
     body.appendChild(field("Show", show));
+    const spread = this.exprInput(f, "spread", k.spread, (v) => set({ spread: Math.max(0, v) }));
+    spread.title = "How much further along each row of a board layout sits than the last; 0 is one bit diameter, the least that keeps the bit off diagonal corners";
+    body.appendChild(field("Row spread", spread));
+    const wood = (label: string, current: Material | undefined, onChange: (m: Material | null) => void) => {
+      const sel = select(["", ...MATERIALS.map((m) => m.name)], current?.name ?? "", (v) => onChange(MATERIALS.find((m) => m.name === v) ?? null));
+      if (current && !MATERIALS.some((m) => m.name === current.name)) {
+        const o = document.createElement("option");
+        o.value = current.name;
+        o.textContent = current.name;
+        sel.appendChild(o);
+        sel.value = current.name;
+      }
+      sel.title = "The wood of this colour's pieces: named in the parts list, its density gives their masses";
+      body.appendChild(field(label, sel));
+    };
+    wood("Light wood", k.light, (m) => set({ light: m }));
+    wood("Dark wood", k.dark, (m) => set({ dark: m }));
     body.appendChild(field("Web height", numberInput(k.web, (v) => set({ web: v }))));
     body.appendChild(field("Fixture depth", numberInput(k.fixture, (v) => set({ fixture: v }))));
     body.appendChild(field("Corner jitter", numberInput(k.jitter, (v) => set({ jitter: v }))));
@@ -2872,6 +2889,10 @@ class App implements SketchHost {
 
 /** Common materials with densities in g/cm³. */
 const MATERIALS: { name: string; density: number }[] = [
+  { name: "Maple", density: 0.7 },
+  { name: "Walnut", density: 0.64 },
+  { name: "Cherry", density: 0.58 },
+  { name: "Oak", density: 0.75 },
   { name: "Steel", density: 7.85 },
   { name: "Stainless steel", density: 8.0 },
   { name: "Aluminium", density: 2.7 },
