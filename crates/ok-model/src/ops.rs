@@ -1,8 +1,8 @@
 use crate::{
     BlendFeature, BlendKind, BodyOp, BooleanFeature, BooleanOp, CopyOp, Counterbore, Countersink,
     DraftFeature, EdgeRef, ExtrudeDirection, ExtrudeEnd, ExtrudeFeature, FaceRef, Feature,
-    FeatureId, FeatureKind, HoleFeature, LoftFeature, Material, MeshFeature, MirrorFeature,
-    ModelError, MoveFaceFeature, PartStudio, PatternFeature, PatternKind, PlaneRef,
+    FeatureId, FeatureKind, GearFeature, HoleFeature, LoftFeature, Material, MeshFeature,
+    MirrorFeature, ModelError, MoveFaceFeature, PartStudio, PatternFeature, PatternKind, PlaneRef,
     ProfileSelection, Projection, ProjectionSource, RevolveAxis, RevolveFeature, ShellFeature,
     SketchFeature, SplitFeature, SweepFeature, VariableFeature, PROJECTION_BLOCK,
 };
@@ -502,6 +502,58 @@ pub enum Op {
         node: usize,
         offset: Vec2,
     },
+    /// An involute spur gear on a plane (see `GearFeature`): external,
+    /// or internal when `rim` (its outer diameter) is given.
+    AddGear {
+        plane: PlaneRef,
+        #[serde(default)]
+        center: Vec2,
+        module: f64,
+        teeth: u32,
+        #[serde(default = "default_pressure_angle")]
+        pressure_angle: f64,
+        width: f64,
+        #[serde(default)]
+        direction: ExtrudeDirection,
+        #[serde(default)]
+        bore: f64,
+        #[serde(default)]
+        rim: f64,
+        #[serde(default)]
+        angle: f64,
+        #[serde(default)]
+        backlash: f64,
+        #[serde(default)]
+        op: BodyOp,
+        name: Option<String>,
+    },
+    SetGear {
+        id: FeatureId,
+        #[serde(default)]
+        plane: Option<PlaneRef>,
+        #[serde(default)]
+        center: Option<Vec2>,
+        #[serde(default)]
+        module: Option<f64>,
+        #[serde(default)]
+        teeth: Option<u32>,
+        #[serde(default)]
+        pressure_angle: Option<f64>,
+        #[serde(default)]
+        width: Option<f64>,
+        #[serde(default)]
+        direction: Option<ExtrudeDirection>,
+        #[serde(default)]
+        bore: Option<f64>,
+        #[serde(default)]
+        rim: Option<f64>,
+        #[serde(default)]
+        angle: Option<f64>,
+        #[serde(default)]
+        backlash: Option<f64>,
+        #[serde(default)]
+        op: Option<BodyOp>,
+    },
     SetDraft {
         id: FeatureId,
         #[serde(default)]
@@ -570,6 +622,10 @@ fn default_reverse() -> ExtrudeDirection {
 }
 
 /// Serde helper distinguishing "absent" from "explicitly null".
+fn default_pressure_angle() -> f64 {
+    20.0
+}
+
 fn default_bit() -> f64 {
     6.35
 }
@@ -1589,6 +1645,94 @@ impl PartStudio {
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "puzzle")),
+            },
+            Op::AddGear {
+                plane,
+                center,
+                module,
+                teeth,
+                pressure_angle,
+                width,
+                direction,
+                bore,
+                rim,
+                angle,
+                backlash,
+                op,
+                name,
+            } => {
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Gear(GearFeature {
+                        plane,
+                        center,
+                        module,
+                        teeth,
+                        pressure_angle,
+                        width,
+                        direction,
+                        bore,
+                        rim,
+                        angle,
+                        backlash,
+                        op,
+                    }),
+                    name,
+                ));
+            }
+            Op::SetGear {
+                id,
+                plane,
+                center,
+                module,
+                teeth,
+                pressure_angle,
+                width,
+                direction,
+                bore,
+                rim,
+                angle,
+                backlash,
+                op,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Gear(g) => {
+                    if let Some(v) = plane {
+                        g.plane = v;
+                    }
+                    if let Some(v) = center {
+                        g.center = v;
+                    }
+                    if let Some(v) = module {
+                        g.module = v;
+                    }
+                    if let Some(v) = teeth {
+                        g.teeth = v;
+                    }
+                    if let Some(v) = pressure_angle {
+                        g.pressure_angle = v;
+                    }
+                    if let Some(v) = width {
+                        g.width = v;
+                    }
+                    if let Some(v) = direction {
+                        g.direction = v;
+                    }
+                    if let Some(v) = bore {
+                        g.bore = v;
+                    }
+                    if let Some(v) = rim {
+                        g.rim = v;
+                    }
+                    if let Some(v) = angle {
+                        g.angle = v;
+                    }
+                    if let Some(v) = backlash {
+                        g.backlash = v;
+                    }
+                    if let Some(v) = op {
+                        g.op = v;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "gear")),
             },
             Op::SetPuzzleCorner { id, node, offset } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Puzzle(p) => {

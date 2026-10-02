@@ -260,3 +260,21 @@ housing turned up a kernel bug, any hole into a box with an enclosed
 cavity, recorded as an ignored corpus test; the build drills before it
 hollows.
 
+## 2026-10 · Gears are a feature, not a sketch
+
+A gear could have been a sketch op that draws its teeth as lines and
+arcs, the way `add_polygon` and `add_slot` work, and it would then
+extrude, pattern and mate like any sketch. It is a feature instead
+(`add_gear`), with the profile built straight from module, tooth count
+and pressure angle at regeneration. Two reasons. A gear with eighty
+teeth is three thousand sketch points, which the constraint solver
+would carry on every edit for nothing, since no one constrains a tooth.
+And the numbers are the design: changing the tooth count of a feature
+regenerates the gear, where a sketch would have to be redrawn, and the
+rules a gear should refuse (undercut, a ring's tips inside its base
+circle, a bore under the roots) are checks on numbers, not on drawn
+geometry. The flanks are sampled involutes tagged as one surface each,
+so a gear's report has four to six faces per tooth, and its bore is a
+cylinder a mate can use. The tooth form is the theoretical one with no
+root fillet and no profile shift; the first pinion that needs either
+will add it.

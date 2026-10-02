@@ -96,6 +96,12 @@ A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable
   web in the gaps and a printable fixture tray, each piece's faces in
   their own `local` range; or, by `show`, one colour's fabrication
   layout (rows spread a bit apart).
+- `Gear { plane, center, module, teeth, pressure_angle, width, direction, bore, rim, angle, backlash, op }`:
+  an involute spur gear from `ok_sketch::gear`, external or (with a
+  `rim`) internal, its profile extruded like a sketch region: each
+  flank one ruled face, tips, roots, bore and rim cylinders. The
+  design rules (undercut, tips inside the base circle, thin walls)
+  are the feature's error.
 
 Solid features share one path: select regions (or points for holes),
 build a tool solid (the union of one solid per region), then apply the
