@@ -977,7 +977,13 @@ printed at, and the picture is resampled again in true millimetres. A
 scan with a rule and no sheet is measured in its own frame. Its tests draw the
 sheet, photograph it askew with a synthetic homography, and require
 the sizes back within half a millimetre, and a 96 % print corrected
-to within 1 %.
+to within 1 %. The web app measures in the browser: the wasm exports
+`measure_photo` (the reading as JSON with the squared-up picture as a
+base64 PNG) and `measuring_sheet_pdf`, and the Measure photo button's
+dialog shows the picture, the parts with their sizes and holes, takes a
+sheet size and a reference, downloads the printable sheet, and adds the
+"Photo outlines" sketch the MCP tool's `sketch: true` adds, so a phone
+photo needs no MCP session and no server (see `docs/DECISIONS.md`).
 
 Three layers guard the kernel. Unit tests in each crate check numbers
 (areas, volumes, DOF counts). Two randomised boolean tests in

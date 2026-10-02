@@ -3,7 +3,7 @@
 // `Op` on a part studio tab, an `AssemblyOp` on an assembly tab, or a
 // tab-level change.
 
-import init, { Doc, parse_step, version as kernelVersion } from "./wasm/ok_wasm.js";
+import init, { Doc, measure_photo, measuring_sheet_pdf, parse_step, version as kernelVersion } from "./wasm/ok_wasm.js";
 
 export type Vec2 = { x: number; y: number };
 export type Vec3 = { x: number; y: number; z: number };
@@ -478,6 +478,32 @@ export class Kernel {
 }
 
 /** Reads a STEP file (text) into mesh bodies for `add_mesh`; planes and cylinders come in faceted, other surfaces are refused by name. */
+/** A part found on the measuring sheet, in its millimetres: x right, y up from the origin mark. */
+export type PhotoPart = { /** x0, y0, x1, y1. */ bbox: [number, number, number, number]; area: number; centroid: [number, number]; /** Diameter of the circle with the silhouette's area: the size, if round. */ diameter: number; /** 1 for a disc, less for anything else. */ circularity: number; outline: [number, number][]; holes: { centre: [number, number]; diameter: number; circularity: number; area: number }[] };
+/** What `measurePhoto` found: the MCP `measure_photo` tool's reading, with the squared-up picture as a base64 PNG. */
+export type PhotoMeasurement = {
+  sheet: string | null;
+  sheet_read: boolean;
+  rule: { ticks: number; length: number; px_per_mm: number; edge: string } | null;
+  calibration: { reference: string; measured: number; nominal: number; factor: number } | null;
+  mm_per_pixel: number;
+  residual: number;
+  parts: PhotoPart[];
+  picture: string;
+  picture_scale: number;
+  picture_origin: [number, number];
+};
+
+/** Measures a photograph (JPEG or PNG) of parts on the printed measuring sheet; `sheet` is the fallback size, `reference` a thing of known size on it (rule, quarter, bars 10, disc 24.26). */
+export function measurePhoto(bytes: Uint8Array, opts: { sheet?: string; reference?: string } = {}): PhotoMeasurement {
+  return JSON.parse(measure_photo(bytes, JSON.stringify(opts))) as PhotoMeasurement;
+}
+
+/** The printable measuring sheet (A4, A3, A2, Letter, Tabloid) as a PDF. */
+export function measuringSheetPdf(size: string): Uint8Array {
+  return measuring_sheet_pdf(size);
+}
+
 export function parseStep(text: string): { name: string; vertices: Vec3[]; triangles: [number, number, number][] }[] {
   return JSON.parse(parse_step(text));
 }

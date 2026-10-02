@@ -156,7 +156,7 @@ in `docs/DECISIONS.md`.
 - [x] Drawing dialog and SVG drawings: the two PDF section views (`section`, `section-side`, each with `@<mm>`), so the client's preview matches the sheet the MCP tool writes
 - [ ] `Dockerfile.dev`: build it once on a machine with a Docker daemon; the sandbox it was written in had only the client
 - [ ] Router lift: measure the Colt (clampable housing length, collet nut, bit reach) and put the numbers in `build.py`; the limits test then says whether the collet clears the table at max rise
-- [ ] Photo measuring in the web app: a server route and an upload button that show the squared-up picture and offer the sketch, so a phone photo needs no MCP session
+- [x] Photo measuring in the web app: a Measure photo button whose dialog shows the squared-up picture and the parts, takes the sheet size and a reference, downloads the printable sheet and adds the outlines sketch; measured in the wasm (`ok-photo` builds for wasm32), not behind a server route, so it works without a server too
 - [ ] Photo measuring: fit circles and straight runs to outlines (a round part already becomes a circle; a rectangle's corners are still traced pixels)
 - [ ] Photo measuring: warn when the marks' aspect ratio says the print was stretched one way; read a scanner's dpi from the file as a cross-check on the rule
 

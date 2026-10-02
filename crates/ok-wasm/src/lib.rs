@@ -847,6 +847,70 @@ impl Default for Doc {
 /// Kernel version, for the client's about box.
 /// Reads a STEP file into mesh bodies for `add_mesh`: JSON
 /// `[{name, vertices: [{x,y,z}], triangles: [[a,b,c]]}]`, in millimetres.
+/// Measures a photograph (JPEG or PNG) of parts lying on the printed
+/// measuring sheet, as the MCP `measure_photo` tool does: `opts_json` is
+/// `{"sheet":"A4","reference":"rule"}`, both optional (the sheet is the
+/// fallback when the picture's size code is not read; the reference a
+/// thing of known size on it). The result is the measurement as JSON
+/// (sheet, rule, calibration, parts with outlines and holes in sheet
+/// millimetres) with the squared-up picture added as `picture`, a PNG in
+/// base64, drawn at `picture_scale` px/mm with the origin mark at
+/// `picture_origin`.
+#[wasm_bindgen]
+pub fn measure_photo(bytes: &[u8], opts_json: &str) -> Result<String, JsError> {
+    #[derive(serde::Deserialize, Default)]
+    #[serde(default)]
+    struct Opts {
+        sheet: Option<String>,
+        reference: Option<String>,
+    }
+    let opts: Opts = serde_json::from_str(opts_json).map_err(|e| JsError::new(&e.to_string()))?;
+    let sheet = opts
+        .sheet
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| ok_photo::SheetSize::parse(&s))
+        .transpose()
+        .map_err(|e| JsError::new(&e))?;
+    let reference = opts
+        .reference
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| ok_photo::Reference::parse(&s))
+        .transpose()
+        .map_err(|e| JsError::new(&e))?;
+    let m = ok_photo::measure(bytes, sheet, reference.as_ref()).map_err(|e| JsError::new(&e))?;
+    let mut out = serde_json::to_value(&m).map_err(|e| JsError::new(&e.to_string()))?;
+    out["picture"] = serde_json::Value::String(base64(&m.picture));
+    Ok(out.to_string())
+}
+
+/// The printable measuring sheet (`size` in A4, A3, A2, Letter, Tabloid)
+/// as a PDF: print it at 100 %, lay parts on it, photograph it straight
+/// down, and `measure_photo` reads sizes off the picture.
+#[wasm_bindgen]
+pub fn measuring_sheet_pdf(size: &str) -> Result<Vec<u8>, JsError> {
+    let size = ok_photo::SheetSize::parse(size).map_err(|e| JsError::new(&e))?;
+    Ok(ok_photo::sheet_pdf(size))
+}
+
+fn base64(bytes: &[u8]) -> String {
+    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let n = chunk
+            .iter()
+            .enumerate()
+            .fold(0u32, |n, (i, &b)| n | ((b as u32) << (16 - 8 * i)));
+        for i in 0..4 {
+            out.push(if i <= chunk.len() {
+                T[((n >> (18 - 6 * i)) & 63) as usize] as char
+            } else {
+                '='
+            });
+        }
+    }
+    out
+}
+
 #[wasm_bindgen]
 pub fn parse_step(text: &str) -> Result<String, JsError> {
     let bodies = ok_step::read_step(text).map_err(|e| JsError::new(&e))?;

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import path from "node:path";
 import { clickViewport, featureNames, openDemo, ready, status, volume } from "./helpers";
 
 test("demo part regenerates with the expected volume", async ({ page }) => {
@@ -1041,6 +1042,52 @@ test("import a DXF outline into a sketch and extrude it", async ({ page }) => {
   expect(result.regions).toBeGreaterThanOrEqual(2);
   // The 40 x 20 plate minus the Ø8 hole, 5 deep.
   expect(result.volume).toBeCloseTo((800 - Math.PI * 16) * 5, -1);
+});
+
+test("a photograph of parts on the measuring sheet is measured and sketched", async ({ page }) => {
+  await openDemo(page);
+  // A synthetic photo (crates/ok-photo's sheet_image + photograph): a Letter sheet, askew,
+  // with a 50 x 30 plate drilled 8 mm at (65, 55) and a 20 mm disc at (150, 100).
+  await page.locator("#photo-input").setInputFiles(path.resolve("e2e/fixtures/measuring-photo.png"));
+  await expect(page.locator("#photo-dialog")).toBeVisible();
+  await expect(page.locator("#photo-note")).toContainText("Letter sheet (read from the dots by the origin mark)");
+  await expect(page.locator("#photo-picture")).toHaveAttribute("src", /^data:image\/png;base64,/);
+  await expect(page.locator("#photo-parts li")).toHaveCount(2);
+  const parts = await page.evaluate(() => (window as any).offkilter.photo.result.parts.map((p: any) => ({ w: p.bbox[2] - p.bbox[0], h: p.bbox[3] - p.bbox[1], x0: p.bbox[0], y0: p.bbox[1], d: p.diameter, round: p.circularity > 0.85, holes: p.holes.map((h: any) => [h.diameter, h.centre[0], h.centre[1]]) })));
+  const plate = parts.find((p: any) => !p.round);
+  const disc = parts.find((p: any) => p.round);
+  expect(plate).toBeDefined();
+  expect(disc).toBeDefined();
+  expect(Math.abs(plate.w - 50)).toBeLessThan(1);
+  expect(Math.abs(plate.h - 30)).toBeLessThan(1);
+  expect(Math.abs(plate.x0 - 40)).toBeLessThan(1);
+  expect(Math.abs(plate.y0 - 40)).toBeLessThan(1);
+  expect(plate.holes.length).toBe(1);
+  expect(Math.abs(plate.holes[0][0] - 8)).toBeLessThan(1);
+  expect(Math.abs(plate.holes[0][1] - 65)).toBeLessThan(1);
+  expect(Math.abs(plate.holes[0][2] - 55)).toBeLessThan(1);
+  expect(Math.abs(disc.d - 20)).toBeLessThan(1);
+  await expect(page.locator("#photo-parts li").first()).toContainText("mm");
+  // The outlines become a sketch on the top plane, one undo step, with a circle for the disc.
+  const before = await page.evaluate(() => (window as any).offkilter.summary.features.length as number);
+  await page.click("#photo-sketch");
+  await expect(page.locator("#photo-dialog")).toBeHidden();
+  await expect(page.locator("#feature-list")).toContainText("Photo outlines");
+  const sketch = await page.evaluate(() => {
+    const app = (window as any).offkilter;
+    const f = app.summary.features[app.summary.features.length - 1];
+    const e = f.kind.sketch.entities;
+    return { name: f.name, lines: e.filter((x: any) => x.type === "line").length, circles: e.filter((x: any) => x.type === "circle").map((c: any) => c.radius), features: app.summary.features.length };
+  });
+  expect(sketch.name).toBe("Photo outlines");
+  expect(sketch.features).toBe(before + 1);
+  expect(sketch.lines).toBeGreaterThanOrEqual(4);
+  expect(sketch.circles.length).toBe(2);
+  expect(sketch.circles.some((r: number) => Math.abs(r - 10) < 0.5)).toBe(true);
+  expect(sketch.circles.some((r: number) => Math.abs(r - 4) < 0.5)).toBe(true);
+  expect(await status(page)).toMatch(/Sketched \d+ outlines/);
+  await page.keyboard.press("Control+z");
+  await expect(page.locator("#feature-list")).not.toContainText("Photo outlines");
 });
 
 test("drawing views remove hidden lines and export as SVG and DXF", async ({ page }) => {

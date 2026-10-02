@@ -320,3 +320,17 @@ centred on the cut, and the cuts come after, leaving half a hole on
 each side. Placing by angle on a known body is dependable; chasing
 faces across a sequence of edits is not, and a build script should
 prefer the former whenever the geometry lets it.
+
+## Photo measuring runs in the wasm, not behind a server route
+
+The roadmap had a server route and an upload for measuring a phone photo
+from the web app. `ok-photo` is a kernel crate (pure Rust, no I/O) and
+already built for wasm32, so the client measures in the browser: the
+photograph never leaves the phone, and the app works the same from a
+static host or a local file as against `ok-server`. The cost is about
+200 KB of wasm for the JPEG decoder and the rasteriser that draws the
+squared-up picture, and a 12-megapixel photo takes a second or two in
+one thread. A server route would have kept the wasm small and let the
+server cache sheets, but every other reading tool (DXF, STEP, STL) is
+client side too, and a route would have been one more thing that only
+works signed in.

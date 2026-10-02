@@ -65,6 +65,8 @@
           <option value="bom">Bill of materials (CSV)</option>
         </select>
         <button id="btn-import" title="Import an STL or OBJ mesh as a body">Import mesh</button>
+        <button id="btn-photo" title="Measure parts photographed on the printed measuring sheet, and sketch their outlines">Measure photo</button>
+        <input id="photo-input" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" hidden />
         <input id="file-input" type="file" accept=".okpart,.json" hidden />
         <input id="stl-input" type="file" accept=".stl,.obj,.step,.stp" hidden />
         <input id="dxf-input" type="file" accept=".dxf" hidden />
@@ -188,6 +190,22 @@
         <button id="drawing-pdf" title="A PDF of the standard and section views laid out by the kernel, with the overall dimensions, callouts, balloons and parts list (placed dimensions, the detail view and the range-of-motion strip stay on the SVG)">Download PDF</button>
         <button id="drawing-motion-pdf" hidden title="A PDF of the chosen view at each position, the sheet the MCP range_of_motion tool writes">Download motion PDF</button>
         <button id="drawing-close">Close</button>
+      </div>
+    </dialog>
+    <dialog id="photo-dialog" class="wide">
+      <h3>Measure a photograph</h3>
+      <div class="row drawing-options">
+        <label title="The sheet the parts lie on, for when the picture's size code (the dots by the origin mark) is not read">Sheet <select id="photo-sheet"><option value="">auto</option><option>A4</option><option>A3</option><option>A2</option><option>Letter</option><option>Tabloid</option></select></label>
+        <label title="A thing of known size on the sheet that gives the print scale: rule (a steel rule's mm ticks), bars 10 (a photo scale), disc 24.26, or a US coin (quarter, nickel, dime, penny)">Reference <input id="photo-reference" type="text" placeholder="rule, quarter, bars 10…" class="positions" /></label>
+        <button id="photo-measure">Measure again</button>
+        <button id="photo-sheet-pdf" title="The printable measuring sheet for the chosen size (A4 when auto): print it at 100 %, lay parts on it, photograph it straight down with all four marks in view">Download measuring sheet</button>
+      </div>
+      <p id="photo-note" class="note"></p>
+      <div class="photo-preview"><img id="photo-picture" alt="The squared-up photograph with the grid and parts drawn on it" /></div>
+      <ul id="photo-parts" class="docs-list"></ul>
+      <div class="row">
+        <button id="photo-sketch" class="primary" title="A sketch on the top plane of every outline and hole, in sheet millimetres, ready to extrude">Add sketch of the outlines</button>
+        <button id="photo-close">Close</button>
       </div>
     </dialog>
     <dialog id="help-dialog">
