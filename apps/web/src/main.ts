@@ -3969,9 +3969,12 @@ async function main(): Promise<void> {
     if (m.rule) lines.push(`Rule: ${m.rule.ticks} ticks over ${m.rule.length.toFixed(0)} mm; the millimetre edge was ${m.rule.edge}.`);
     if (m.calibration) lines.push(`Reference: ${m.calibration.reference} measured ${fmt1(m.calibration.measured)} mm for ${fmt1(m.calibration.nominal)}, so the sheet was printed at ${(m.calibration.factor * 100).toFixed(1)} %; every size is corrected by that.`);
     else if (m.sheet) lines.push("No reference given: sizes trust the print being at 100 % (check the sheet's 100 mm bar), or name one and measure again.");
+    if (m.dpi !== null) lines.push(`The file claims ${m.dpi.toFixed(0)} dpi.`);
     if (m.parts.length === 0) lines.push("Nothing dark enough to be a part lies on the grid.");
     lines.push("These are top-face silhouettes; anything with height is shifted by parallax unless the camera looked straight down.");
+    for (const w of m.warnings) lines.push(`⚠ ${w.charAt(0).toUpperCase()}${w.slice(1)}.`);
     note.textContent = lines.join(" ");
+    note.classList.toggle("warn", m.warnings.length > 0);
     m.parts.forEach((p, k) => {
       const li = document.createElement("li");
       const [x0, y0, x1, y1] = p.bbox;
