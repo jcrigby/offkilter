@@ -159,14 +159,15 @@
         <label><input type="checkbox" id="dv-top" checked /> Top</label>
         <label><input type="checkbox" id="dv-right" checked /> Right</label>
         <label><input type="checkbox" id="dv-iso" checked /> Isometric</label>
-        <label><input type="checkbox" id="dv-section" checked /> Section A-A</label>
-        <label><input type="checkbox" id="dv-detail" checked /> Detail B <span id="dv-detail-note" class="note">(select a face first)</span></label>
+        <label title="A cut parallel to the front view, seen from the front; @ is the model y of the cut, blank for the middle"><input type="checkbox" id="dv-section" checked /> Section A-A @ <input id="dv-section-at" type="number" step="any" placeholder="mid" class="at" /> mm</label>
+        <label title="A cut parallel to the right view, seen from the right; @ is the model x of the cut, blank for the middle"><input type="checkbox" id="dv-section-side" /> Section B-B @ <input id="dv-section-side-at" type="number" step="any" placeholder="mid" class="at" /> mm</label>
+        <label><input type="checkbox" id="dv-detail" checked /> Detail C <span id="dv-detail-note" class="note">(select a face first)</span></label>
         <label><input type="checkbox" id="dv-parts" checked /> Parts list &amp; balloons</label>
         <label>Sheet <select id="dv-sheet"><option>A4</option><option>A3</option><option>A2</option><option>Letter</option><option>Tabloid</option></select></label>
         <label title="Dashed hidden lines: auto shows them on a sheet of one part and leaves them off an assembly's">Hidden lines <select id="dv-hidden"><option value="auto">auto</option><option value="on">on</option><option value="off">off</option></select></label>
         <label title="Slide the isometric's parts apart as the viewport's Explode slider has them (set the slider first)"><input type="checkbox" id="dv-explode" /> Exploded iso</label>
       </div>
-      <p class="note">The section follows the viewport's section plane when one is shown; otherwise it cuts through the middle, parallel to the front view.</p>
+      <p class="note">A section with its @ box blank follows the viewport's section plane when one is shown on its axis; otherwise it cuts through the middle. The PDF takes the same sections.</p>
       <div class="row">
         <button id="dv-dimension" title="Measure between two corners of a view">Add dimension</button>
         <button id="dv-clear-dims" disabled>Clear dimensions</button>
@@ -176,7 +177,7 @@
       <div class="row">
         <button id="drawing-svg" class="primary">Download SVG</button>
         <button id="drawing-dxf">Download DXF</button>
-        <button id="drawing-pdf" title="A PDF of the standard views laid out by the kernel, with the overall dimensions, callouts, balloons and parts list (placed dimensions, section and detail views stay on the SVG)">Download PDF</button>
+        <button id="drawing-pdf" title="A PDF of the standard and section views laid out by the kernel, with the overall dimensions, callouts, balloons and parts list (placed dimensions and the detail view stay on the SVG)">Download PDF</button>
         <button id="drawing-close">Close</button>
       </div>
     </dialog>

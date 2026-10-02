@@ -153,7 +153,7 @@ in `docs/DECISIONS.md`.
 - [ ] Kernel: a section through a solid with very fine facets can fail to close (the cart's ring sectors with their fillets cut into 0.04 mm facets made adjacent sectors' intersection fail with "cross-section of solid is not closed"; the gear now samples a fillet by chord sag, about four facets, and the pairs pass, but the sensitivity is still there)
 - [ ] EGO cart: a pawl or a freewheel hub against rolling back, the swing arm that lifts the pinion out of the ring for pushing by hand (then its range-of-motion sheet and an interference sweep), the clamps on the mast, and the EP7500 stub once it is measured
 - [ ] Range of motion in the web app: a positions list on the drawing dialog and a strip in the preview, and a step of a mate's value with the interference check run at each position (the limits test does this in Rust for the router lift; a puzzle-box mechanism will want it from the client)
-- [ ] Drawing dialog and SVG drawings: the two PDF section views (`section`, `section-side`, each with `@<mm>`), so the client's preview matches the sheet the MCP tool writes
+- [x] Drawing dialog and SVG drawings: the two PDF section views (`section`, `section-side`, each with `@<mm>`), so the client's preview matches the sheet the MCP tool writes
 - [ ] `Dockerfile.dev`: build it once on a machine with a Docker daemon; the sandbox it was written in had only the client
 - [ ] Router lift: measure the Colt (clampable housing length, collet nut, bit reach) and put the numbers in `build.py`; the limits test then says whether the collet clears the table at max rise
 - [ ] Photo measuring in the web app: a server route and an upload button that show the squared-up picture and offer the sketch, so a phone photo needs no MCP session

@@ -1169,8 +1169,10 @@ class App implements SketchHost {
       standard("right", { x: -1, y: 0, z: 0 }, z),
       { name: "iso", lines: this.kernel.drawingView(isoDir, z, offsets), balloons: this.drawingBalloons(isoDir, z, offsets) },
     ];
-    const section = this.drawingSectionView();
-    if (section) views.push(section);
+    for (const name of ["section", "section-side"] as const) {
+      const section = this.drawingSectionView(name);
+      if (section) views.push(section);
+    }
     const detail = this.drawingDetailView(views);
     if (detail) views.push(detail);
     return views;
@@ -1271,7 +1273,7 @@ class App implements SketchHost {
   }
 
   /**
-   * DETAIL B: the neighbourhood of the selected face, enlarged 2:1, taken
+   * DETAIL C: the neighbourhood of the selected face, enlarged 2:1, taken
    * from whichever standard view faces it best. Nothing without a selected face.
    */
   drawingDetailView(views: DrawingView[]): DrawingView | null {
@@ -1304,37 +1306,62 @@ class App implements SketchHost {
     const arcs = [...(source.lines.visible_arcs ?? []), ...(source.lines.hidden_arcs ?? [])].flatMap((a) => arcChords(a));
     for (const [a, b] of [...source.lines.visible, ...source.lines.hidden, ...arcs]) ext = Math.max(ext, Math.abs(a.x - centre.x), Math.abs(a.y - centre.y), Math.abs(b.x - centre.x), Math.abs(b.y - centre.y));
     const radius = Math.min(Math.max(size * 0.6, 2), Math.max(ext * 0.35, 2));
-    return detailView(source, centre, radius, 2, "B");
+    return detailView(source, centre, radius, 2, "C");
   }
 
   /**
-   * Section A-A: the viewport's section plane when one is shown, else a cut through the
-   * middle of the model parallel to the front view. The removed side is the one the
-   * viewport removes (the axis coordinate beyond the offset, or before it when flipped).
+   * The two section views the PDF sheet also draws. `section` (A-A) cuts the
+   * plane y = at and looks at it from the front, the near side removed;
+   * `section-side` (B-B) cuts x = at and looks from the right, the +x side
+   * removed. The cut goes where the dialog's `@` box says, else where the
+   * viewport's section plane is when it lies on the same axis (and removes
+   * the side the viewport removes), else through the middle of the model.
    */
-  drawingSectionView(): DrawingView | null {
+  drawingSectionView(name: "section" | "section-side"): DrawingView | null {
     const bounds = this.viewer.bodyBounds();
     if (!bounds) return null;
-    const sec = this.section ?? { axis: "y" as const, t: 0.5, flip: true };
-    const at = bounds.min[sec.axis] + (bounds.max[sec.axis] - bounds.min[sec.axis]) * sec.t;
-    const unit = { x: sec.axis === "x" ? 1 : 0, y: sec.axis === "y" ? 1 : 0, z: sec.axis === "z" ? 1 : 0 };
-    const sign = sec.flip ? -1 : 1;
-    const normal = { x: unit.x * sign, y: unit.y * sign, z: unit.z * sign };
-    // Look at the cut from the removed side: along -normal, with z (or y for a horizontal cut) up.
-    const dir = { x: -normal.x, y: -normal.y, z: -normal.z };
-    const up = sec.axis === "z" ? { x: 0, y: 1, z: 0 } : { x: 0, y: 0, z: 1 };
-    const origin = { x: unit.x * at, y: unit.y * at, z: unit.z * at };
-    const lines = this.kernel.drawingSection(dir, up, origin, normal);
+    const axis = name === "section" ? "y" : "x";
+    const asked = this.drawingOptions.sectionAt[name];
+    const viewport = this.section?.axis === axis ? this.section : null;
+    let flip = axis === "y";
+    let at: number;
+    if (asked !== null && Number.isFinite(asked)) at = asked;
+    else if (viewport) {
+      at = bounds.min[axis] + (bounds.max[axis] - bounds.min[axis]) * viewport.t;
+      flip = viewport.flip;
+    } else at = (bounds.min[axis] + bounds.max[axis]) / 2;
+    const unit = { x: axis === "x" ? 1 : 0, y: axis === "y" ? 1 : 0, z: 0 };
+    const sign = flip ? -1 : 1;
+    const normal = { x: unit.x * sign, y: unit.y * sign, z: 0 };
+    // Look at the cut from the removed side: along -normal, with z up.
+    const dir = { x: -normal.x, y: -normal.y, z: 0 };
+    const origin = { x: unit.x * at, y: unit.y * at, z: 0 };
+    const lines = this.kernel.drawingSection(dir, { x: 0, y: 0, z: 1 }, origin, normal);
     if (lines.cut.length === 0) return null;
-    // Where the cutting plane shows edge-on: a horizontal trace on the top view for a
-    // y cut (top view y = model y), vertical on the top view for an x cut, and a
-    // horizontal trace on the front view for a z cut (front view y = model z).
-    const trace = sec.axis === "y" ? { on: "top", horizontal: true, at } : sec.axis === "x" ? { on: "top", horizontal: false, at } : { on: "front", horizontal: true, at };
-    return { name: "section", lines, cut: lines.cut, trace: { ...trace, label: "A", towards: sign } };
+    // Where the cutting plane shows edge-on in the top view: horizontal for a y cut
+    // (top view y = model y), vertical for an x cut (top view x = model x).
+    const trace = { on: "top", horizontal: axis === "y", at, label: name === "section" ? "A" : "B", towards: sign };
+    return { name, lines, cut: lines.cut, trace };
   }
 
-  /** Which views the drawing sheet shows (all by default), its sheet size, and whether the parts list and balloons are drawn. */
-  drawingOptions: { views: Set<string>; sheet: SheetSize; parts: boolean; hidden: HiddenLines; explode: boolean } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4", parts: true, hidden: "auto", explode: false };
+  /** Which views the drawing sheet shows (all but the side section by default), where the sections cut (null: see `drawingSectionView`), its sheet size, and whether the parts list and balloons are drawn. */
+  drawingOptions: { views: Set<string>; sectionAt: { section: number | null; "section-side": number | null }; sheet: SheetSize; parts: boolean; hidden: HiddenLines; explode: boolean } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sectionAt: { section: null, "section-side": null }, sheet: "A4", parts: true, hidden: "auto", explode: false };
+
+  /** The sections as the PDF sheet names them: `section@<mm>` where the cut is placed explicitly, the bare name when it goes through the middle. */
+  pdfSectionNames(): string[] {
+    const out: string[] = [];
+    for (const name of ["section", "section-side"] as const) {
+      if (!this.drawingOptions.views.has(name)) continue;
+      const view = this.drawingSectionView(name);
+      if (!view || !view.trace) continue;
+      // The PDF cuts through the middle on its own; anywhere else it is told where.
+      const axis = name === "section" ? "y" : "x";
+      const bounds = this.viewer.bodyBounds()!;
+      const middle = (bounds.min[axis] + bounds.max[axis]) / 2;
+      out.push(Math.abs(view.trace.at - middle) < 1e-9 ? name : `${name}@${view.trace.at.toFixed(3).replace(/\.?0+$/, "")}`);
+    }
+    return out;
+  }
 
   /** Whether the sheet draws hidden lines: as chosen, or by the kernel's rule (a sheet of one part has them, an assembly's does not). */
   drawingHiddenLines(): boolean {
@@ -3613,9 +3640,13 @@ async function main(): Promise<void> {
   app.undo(); // no-op that initialises the button states
   const drawingDialog = $("#drawing-dialog") as HTMLDialogElement;
   const renderDrawingPreview = () => {
-    const views = ["front", "top", "right", "iso", "section", "detail"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
+    const views = ["front", "top", "right", "iso", "section", "section-side", "detail"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
     ($("#dv-detail-note") as HTMLElement).hidden = !!app.selectedFace;
-    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked, hidden: ($("#dv-hidden") as HTMLSelectElement).value as HiddenLines, explode: ($("#dv-explode") as HTMLInputElement).checked };
+    const at = (id: string) => {
+      const v = ($(id) as HTMLInputElement).value.trim();
+      return v === "" || !Number.isFinite(Number(v)) ? null : Number(v);
+    };
+    app.drawingOptions = { views: new Set(views), sectionAt: { section: at("#dv-section-at"), "section-side": at("#dv-section-side-at") }, sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked, hidden: ($("#dv-hidden") as HTMLSelectElement).value as HiddenLines, explode: ($("#dv-explode") as HTMLInputElement).checked };
     $("#drawing-preview").innerHTML = app.toDrawingSvg();
     ($("#dv-clear-dims") as HTMLButtonElement).disabled = app.drawingDimensions().length === 0;
   };
@@ -3683,7 +3714,8 @@ async function main(): Promise<void> {
     renderDrawingPreview();
     $("#dv-dim-note").textContent = `Dimension ${value.toFixed(2).replace(/\.?0+$/, "")} mm placed on the ${best.view} view. Click two more points, or Add dimension again to stop.`;
   };
-  for (const n of ["front", "top", "right", "iso", "section", "detail"]) ($(`#dv-${n}`) as HTMLInputElement).onchange = renderDrawingPreview;
+  for (const n of ["front", "top", "right", "iso", "section", "section-side", "detail"]) ($(`#dv-${n}`) as HTMLInputElement).onchange = renderDrawingPreview;
+  for (const n of ["section", "section-side"]) ($(`#dv-${n}-at`) as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-sheet") as HTMLSelectElement).onchange = renderDrawingPreview;
   ($("#dv-parts") as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-hidden") as HTMLSelectElement).onchange = renderDrawingPreview;
@@ -3691,7 +3723,7 @@ async function main(): Promise<void> {
   $("#drawing-svg").onclick = () => app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
   $("#drawing-dxf").onclick = () => app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
   $("#drawing-pdf").onclick = () => {
-    const views = ["front", "top", "right", "iso"].filter((v) => app.drawingOptions.views.has(v));
+    const views = [...["front", "top", "right", "iso"].filter((v) => app.drawingOptions.views.has(v)), ...app.pdfSectionNames()];
     try {
       const hidden = app.drawingOptions.hidden === "auto" ? undefined : app.drawingOptions.hidden === "on";
       const explode = app.drawingOptions.explode ? app.viewer.explodeFactor() : 0;

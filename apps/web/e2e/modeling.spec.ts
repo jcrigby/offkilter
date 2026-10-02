@@ -1040,15 +1040,25 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   const callouts = await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.drawingViews().find((v: any) => v.name === "top").callouts);
   expect(callouts.some((c: any) => c.hole && Math.abs(c.radius - 6) < 1e-9)).toBe(true);
   expect(callouts.some((c: any) => !c.hole)).toBe(true);
-  // A section A-A through the middle of the plate: hatched cut faces and a trace on the top view.
-  const section = await page.evaluate(() => {
-    const v = (window as unknown as { offkilter: any }).offkilter.drawingViews().find((x: any) => x.name === "section");
-    return v ? { cut: v.cut.length, visible: v.lines.visible.length, trace: v.trace } : null;
+  // Section A-A through the middle of the plate (y = 20, parallel to the front view) and
+  // B-B parallel to the right view: hatched cut faces and lettered traces on the top view.
+  const sections = await page.evaluate(() => {
+    const views = (window as unknown as { offkilter: any }).offkilter.drawingViews();
+    const pick = (name: string) => {
+      const v = views.find((x: any) => x.name === name);
+      return v ? { cut: v.cut.length, visible: v.lines.visible.length, trace: v.trace } : null;
+    };
+    return { a: pick("section"), b: pick("section-side") };
   });
-  expect(section).not.toBeNull();
-  expect(section!.cut).toBeGreaterThan(0);
-  expect(section!.trace.on).toBe("top");
+  expect(sections.a).not.toBeNull();
+  expect(sections.a!.cut).toBeGreaterThan(0);
+  expect(sections.a!.trace).toMatchObject({ on: "top", horizontal: true, label: "A" });
+  expect(sections.a!.trace.at).toBeCloseTo(20, 6);
+  expect(sections.b).not.toBeNull();
+  expect(sections.b!.cut).toBeGreaterThan(0);
+  expect(sections.b!.trace).toMatchObject({ on: "top", horizontal: false, label: "B" });
   expect(svg).toContain('id="view-section"');
+  expect(svg).not.toContain('id="view-section-side"');
   expect(svg).toContain('class="hatch"');
   expect(svg).toContain("SECTION A-A");
   expect(svg).toContain('class="trace"');
@@ -1058,7 +1068,7 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
     app.selectedFace = app.summary.bodies[0].faces.find((f: any) => f.surface === "plane" && f.normal.z > 0.9).origin;
     const v = app.drawingViews().find((x: any) => x.name === "detail");
     const svg: string = app.toDrawingSvg();
-    return { present: !!v, on: v?.detail?.on, scale: v?.detail?.scale, lines: v?.lines.visible.length, hasCaption: svg.includes("DETAIL B (2:1)"), hasMarker: svg.includes('class="detail-marker"') };
+    return { present: !!v, on: v?.detail?.on, scale: v?.detail?.scale, lines: v?.lines.visible.length, hasCaption: svg.includes("DETAIL C (2:1)"), hasMarker: svg.includes('class="detail-marker"') };
   });
   expect(detail.present).toBe(true);
   expect(detail.on).toBe("top");
@@ -1087,6 +1097,23 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   await page.check("#dv-explode");
   await expect(page.locator('#drawing-preview svg g[id="view-front"]')).toHaveCount(1);
   await page.uncheck("#dv-explode");
+  // The side section joins the sheet when asked, and its @ box moves the cut: through the
+  // Ø12 hole at x = 27 the cut shows the hole's walls, which the PDF is then asked for too.
+  await page.check("#dv-section-side");
+  await expect(page.locator('#drawing-preview svg g[id="view-section-side"]')).toHaveCount(1);
+  await expect(page.locator("#drawing-preview svg text.caption", { hasText: "SECTION B-B" })).toHaveCount(1);
+  await page.fill("#dv-section-side-at", "27");
+  await page.dispatchEvent("#dv-section-side-at", "change");
+  const side = await page.evaluate(() => {
+    const app = (window as unknown as { offkilter: any }).offkilter;
+    const v = app.chosenDrawingViews().find((x: any) => x.name === "section-side");
+    return { at: v.trace.at, cut: v.cut.length, pdf: app.pdfSectionNames() };
+  });
+  expect(side.at).toBe(27);
+  expect(side.cut).toBeGreaterThan(0);
+  expect(side.pdf).toEqual(["section", "section-side@27"]);
+  await page.uncheck("#dv-section-side");
+  await page.fill("#dv-section-side-at", "");
   // Placing a dimension: two clicks on corners of the right view measure their span.
   await page.click("#dv-dimension");
   const placed = await page.evaluate(() => {

@@ -160,6 +160,7 @@ h4 { margin: 14px 0 4px; font-size: 12px; color: var(--text-dim); text-transform
 dialog.wide { min-width: 720px; max-width: 92vw; }
 .drawing-options { flex-wrap: wrap; gap: 12px; font-size: 12px; align-items: center; }
 .drawing-options label { display: inline-flex; align-items: center; gap: 4px; }
+.drawing-options input.at { width: 56px; }
 .drawing-preview { background: white; border: 1px solid var(--border); margin: 8px 0; min-height: 200px; }
 .drawing-preview svg { width: 100%; height: auto; display: block; }
 .drawing-preview.picking { cursor: crosshair; }
