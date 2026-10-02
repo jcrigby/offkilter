@@ -87,9 +87,9 @@ pub fn bevel_gear(
     let mut polys: Vec<Polygon> = Vec::new();
     let mut local = 0u32;
     let push = |pts: Vec<Vec3>,
-                    surface: usize,
-                    polys: &mut Vec<Polygon>,
-                    local: &mut u32|
+                surface: usize,
+                polys: &mut Vec<Polygon>,
+                local: &mut u32|
      -> Result<(), BrepError> {
         // Drop repeated points; a facet needs three distinct ones.
         let mut v: Vec<Vec3> = Vec::with_capacity(pts.len());
