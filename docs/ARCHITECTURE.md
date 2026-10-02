@@ -596,7 +596,11 @@ sits on the sheet, a click is mapped back into view coordinates and
 snapped to the nearest line endpoint, and two picks on one view become
 a `DrawingDimension` (aligned, its text along the span, the dimension
 line on the side away from the view's middle) that both the SVG and the
-DXF draw beside the automatic overall dimensions. The body summary also
+DXF draw beside the automatic overall dimensions. The dialog's
+hidden-lines choice (auto, on, off) strips or keeps the dashed lines
+in the SVG and DXF and is passed to the kernel's PDF as `hidden`, auto
+being the kernel's own rule (a sheet of one part has them, an
+assembly's does not). The body summary also
 lists each body's cylindrical surfaces (axis, radius, extent, hole or
 boss); a standard view whose direction runs along such an axis sees it
 end-on and gets a diameter callout with a leader ("Ø12", or "4× Ø6" when
