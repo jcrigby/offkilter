@@ -479,7 +479,9 @@ function layout(views: DrawingView[], gap = 15, user: UserDimension[] = []): { p
   for (const v of views) {
     if (["front", "top", "right"].includes(v.name)) continue;
     const vb = boundsOf(v.lines, v.detail);
-    const dy = v.name === "iso" && top ? fb.maxy + gap + dimGap - vb.miny : -vb.miny;
+    // The isometric sits level with the top view; the sections, seen from the front
+    // and the right, share the front view's heights and sit level with it.
+    const dy = v.name === "iso" && top ? fb.maxy + gap + dimGap - vb.miny : v.name.startsWith("section") ? 0 : -vb.miny;
     placed.push({ ...v, dx: cursorX - vb.minx, dy, b: vb });
     cursorX += vb.maxx - vb.minx + gap;
   }
@@ -635,7 +637,7 @@ export function toDrawingSvg(views: DrawingView[], title: string, size: SheetSiz
       const lines = hatch(p.cut, 3 / scale);
       if (lines.length > 0) out.push(`<path class="hatch" fill="none" stroke="black" stroke-width="0.18" d="${lines.map(([a, b]) => seg(a, b)).join("")}"/>`);
     }
-    if (p.name === "section") {
+    if (p.name.startsWith("section")) {
       const label = p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION";
       out.push(`<text class="caption" x="${X((p.b.minx + p.b.maxx) / 2 + p.dx)}" y="${Y(p.b.miny + p.dy - 6)}" font-family="Helvetica, Arial, sans-serif" font-size="3.5" fill="black" text-anchor="middle">${label}</text>`);
     }
@@ -793,7 +795,7 @@ export function toDrawingDxf(views: DrawingView[], user: UserDimension[] = [], p
     for (const a of p.lines.visible_arcs ?? []) lines.push(...arcDxf(a, "VISIBLE", p.dx, p.dy));
     for (const a of p.lines.hidden_arcs ?? []) lines.push(...arcDxf(a, "HIDDEN", p.dx, p.dy));
     if (p.cut && p.cut.length > 0) add("SECTION", hatch(p.cut, 3));
-    if (p.name === "section") {
+    if (p.name.startsWith("section")) {
       const x = (p.b.minx + p.b.maxx) / 2 + p.dx, y = p.b.miny + p.dy - 6;
       lines.push("0", "TEXT", "8", "SECTION", "10", fmt(x), "20", fmt(y), "30", "0", "40", "3.5", "72", "1", "11", fmt(x), "21", fmt(y), "31", "0", "1", p.trace ? `SECTION ${p.trace.label}-${p.trace.label}` : "SECTION");
     }

@@ -585,9 +585,13 @@ draws what remains with the same hidden-line removal, and returns the
 outlines of the faces lying in the cut plane. The client hatches those at
 45° (clipped by the even-odd rule, so holes stay clear), captions the view
 "SECTION A-A" and draws the cutting-plane trace, lettered at both ends,
-across the view where the plane shows edge-on. The plane is the
-viewport's section plane when one is shown, else a cut through the middle
-of the model parallel to the front view. A detail view (client side)
+across the top view, where the plane shows edge-on. The client draws the
+two sections the PDF sheet knows: `section` (A-A, the plane y = at seen
+from the front) and `section-side` (B-B, x = at seen from the right),
+each cut where the dialog's `@` box says, else where the viewport's
+section plane is when it lies on that axis, else through the middle; the
+PDF button passes the same `section@<mm>` names on, so the sheet the
+kernel lays out shows the cuts the preview did. A detail view (client side)
 takes the standard view that faces the selected face best, clips its
 lines to a circle around the face and enlarges them 2:1, drawing the
 lettered marker circle on the source view. The Drawing dialog in the client
