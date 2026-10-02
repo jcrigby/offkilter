@@ -830,9 +830,10 @@ fn feature_pattern_and_mirror_replay_tools() {
 /// through both walls or a finite depth into one. A pocket open on one
 /// side takes the hole, and drilling before hollowing works. Found by
 /// the EGO cart's gearbox (examples/ego-cart); ignored until the
-/// boolean handles a solid with an inner void.
+/// boolean handles a solid with an inner void. (It did; the model split
+/// the hollow box into its outer shell and an inside-out cavity "body",
+/// and drilled each.)
 #[test]
-#[ignore]
 fn a_hole_into_a_hollow_box() {
     let mut p = Part::new();
     let s = p.sketch(PlaneRef::standard(StandardPlane::Right));
@@ -887,7 +888,7 @@ fn shelled_enclosure_with_a_boss_inside() {
         boss > 0.0 && close(boss, PI * 25.0 * 10.0, 5e-3),
         "boss {boss}"
     );
-    // Closed shell of a separate block: two shells, one body.
+    // Closed shell of a separate block: one lump with a void, one body.
     let s3 = p.sketch(PlaneRef::Standard {
         base: StandardPlane::Top,
         offset: 40.0,
@@ -903,7 +904,8 @@ fn shelled_enclosure_with_a_boss_inside() {
     assert_eq!(r.bodies.len(), 2);
     let block = r.bodies.iter().find(|b| b.source != box_id).unwrap();
     assert!(close(block.solid.volume(), 1000.0 - 512.0, 1e-9));
-    assert_eq!(block.solid.shells().len(), 2);
+    assert_eq!(block.solid.shells().len(), 1);
+    assert_eq!(block.solid.shells()[0].faces.len(), 12);
 }
 
 /// Direct edits on a bracket: the top face is pulled up, a side face is

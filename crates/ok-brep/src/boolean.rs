@@ -1206,10 +1206,12 @@ mod tests {
         assert!(boolean(&small, &big, BoolOp::Difference)
             .unwrap()
             .is_empty());
-        // A fully buried void: outer shell plus inverted inner shell.
+        // A fully buried void: outer shell plus inverted inner shell,
+        // one lump.
         let hollow = boolean(&big, &small, BoolOp::Difference).unwrap();
         assert_vol(&hollow, 992.0, 1e-9);
-        assert_eq!(hollow.shells().len(), 2);
+        assert_eq!(hollow.shells().len(), 1);
+        assert_eq!(hollow.shells()[0].faces.len(), 12);
     }
 
     #[test]
@@ -1255,7 +1257,7 @@ mod tests {
         assert_eq!(boolean(&inner, &big, BoolOp::Union).unwrap().faces.len(), 6);
         let hollow = boolean(&big, &inner, BoolOp::Difference).unwrap();
         assert_vol(&hollow, 992.0, 1e-9);
-        assert_eq!(hollow.shells().len(), 2);
+        assert_eq!(hollow.shells().len(), 1);
         assert!(
             !hollow.contains(Vec3::new(5.0, 5.0, 5.0)),
             "the void is outside"
@@ -1285,7 +1287,11 @@ mod tests {
         );
         let u = boolean(&hollow, &speck, BoolOp::Union).unwrap();
         assert_vol(&u, 993.0, 1e-9);
-        assert_eq!(u.shells().len(), 3);
+        // Two lumps: the hollow box with its void, and the speck in it.
+        let lumps = u.shells();
+        assert_eq!(lumps.len(), 2);
+        assert_vol(&lumps[0], 992.0, 1e-9);
+        assert_vol(&lumps[1], 1.0, 1e-9);
     }
 
     #[test]

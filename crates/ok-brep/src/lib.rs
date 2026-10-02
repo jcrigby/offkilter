@@ -1204,7 +1204,10 @@ impl Solid {
             .collect()
     }
 
-    /// Splits the solid into connected shells (separate lumps).
+    /// Splits the solid into separate lumps: its connected shells, with
+    /// every void (an inverted shell, negative volume) kept inside the
+    /// smallest lump that encloses it, so a hollow box stays one lump.
+    /// Largest first.
     pub fn shells(&self) -> Vec<Solid> {
         let n = self.faces.len();
         let mut parent: Vec<usize> = (0..n).collect();
@@ -1237,16 +1240,40 @@ impl Solid {
         for (i, p) in polys.into_iter().enumerate() {
             groups.entry(find(&mut parent, i)).or_default().push(p);
         }
-        let mut out: Vec<Solid> = groups
+        let shells: Vec<(Solid, f64)> = groups
             .into_values()
             .filter_map(|polys| Solid::from_polygons(polys, self.surfaces.clone()).ok())
+            .map(|s| {
+                let v = s.volume();
+                (s, v)
+            })
             .collect();
-        out.sort_by(|a, b| {
-            b.volume()
-                .partial_cmp(&a.volume())
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-        out
+        type Shells = Vec<(Solid, f64)>;
+        let (mut lumps, voids): (Shells, Shells) = shells.into_iter().partition(|(_, v)| *v > 0.0);
+        for (void, v) in voids {
+            let probe = void.vertices[0];
+            let host = lumps
+                .iter()
+                .enumerate()
+                .filter(|(_, (l, _))| l.contains(probe))
+                .min_by(|a, b| {
+                    a.1 .1
+                        .partial_cmp(&b.1 .1)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
+                .map(|(i, _)| i);
+            match host {
+                Some(i) => {
+                    lumps[i].0 = lumps[i].0.merged(&void);
+                    lumps[i].1 += v;
+                }
+                // A void with no lump round it is not a void; keep it
+                // rather than lose geometry.
+                None => lumps.push((void, v)),
+            }
+        }
+        lumps.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        lumps.into_iter().map(|(s, _)| s).collect()
     }
 }
 
