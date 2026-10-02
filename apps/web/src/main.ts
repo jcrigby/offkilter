@@ -1161,11 +1161,13 @@ class App implements SketchHost {
     const z = { x: 0, y: 0, z: 1 };
     const standard = (name: string, dir: Vec3, up: Vec3): DrawingView => ({ name, lines: this.kernel.drawingView(dir, up), callouts: this.drawingCallouts(dir, up) });
     const isoDir = { x: -0.6, y: 0.7, z: -0.5 };
+    // The isometric exploded as the viewport is, when asked.
+    const offsets = this.drawingOptions.explode && this.viewer.explodeFactor() > 0 ? this.summary.bodies.map((_, i) => this.viewer.bodyOffset(i)) : undefined;
     const views: DrawingView[] = [
       standard("front", { x: 0, y: 1, z: 0 }, z),
       standard("top", { x: 0, y: 0, z: -1 }, { x: 0, y: 1, z: 0 }),
       standard("right", { x: -1, y: 0, z: 0 }, z),
-      { name: "iso", lines: this.kernel.drawingView(isoDir, z), balloons: this.drawingBalloons(isoDir, z) },
+      { name: "iso", lines: this.kernel.drawingView(isoDir, z, offsets), balloons: this.drawingBalloons(isoDir, z, offsets) },
     ];
     const section = this.drawingSectionView();
     if (section) views.push(section);
@@ -1204,13 +1206,16 @@ class App implements SketchHost {
   }
 
   /** Balloons for a view: each parts-list item anchored at the centroid of its first body, projected into the view. */
-  drawingBalloons(dir: Vec3, up: Vec3): Balloon[] {
+  drawingBalloons(dir: Vec3, up: Vec3, offsets?: Vec3[]): Balloon[] {
     const { u, v } = this.viewFrame(dir, up);
     const dot = (a: Vec3, b: Vec3) => a.x * b.x + a.y * b.y + a.z * b.z;
     const out: Balloon[] = [];
     for (const row of this.drawingParts()) {
-      const c = row.body !== undefined ? this.summary.bodies[row.body]?.centroid : null;
-      if (c) out.push({ item: row.item, at: { x: dot(c, u), y: dot(c, v) } });
+      const c0 = row.body !== undefined ? this.summary.bodies[row.body]?.centroid : null;
+      if (!c0) continue;
+      const o = row.body !== undefined ? offsets?.[row.body] : undefined;
+      const c = o ? { x: c0.x + o.x, y: c0.y + o.y, z: c0.z + o.z } : c0;
+      out.push({ item: row.item, at: { x: dot(c, u), y: dot(c, v) } });
     }
     return out;
   }
@@ -1329,7 +1334,7 @@ class App implements SketchHost {
   }
 
   /** Which views the drawing sheet shows (all by default), its sheet size, and whether the parts list and balloons are drawn. */
-  drawingOptions: { views: Set<string>; sheet: SheetSize; parts: boolean; hidden: HiddenLines } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4", parts: true, hidden: "auto" };
+  drawingOptions: { views: Set<string>; sheet: SheetSize; parts: boolean; hidden: HiddenLines; explode: boolean } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4", parts: true, hidden: "auto", explode: false };
 
   /** Whether the sheet draws hidden lines: as chosen, or by the kernel's rule (a sheet of one part has them, an assembly's does not). */
   drawingHiddenLines(): boolean {
@@ -3610,7 +3615,7 @@ async function main(): Promise<void> {
   const renderDrawingPreview = () => {
     const views = ["front", "top", "right", "iso", "section", "detail"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
     ($("#dv-detail-note") as HTMLElement).hidden = !!app.selectedFace;
-    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked, hidden: ($("#dv-hidden") as HTMLSelectElement).value as HiddenLines };
+    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked, hidden: ($("#dv-hidden") as HTMLSelectElement).value as HiddenLines, explode: ($("#dv-explode") as HTMLInputElement).checked };
     $("#drawing-preview").innerHTML = app.toDrawingSvg();
     ($("#dv-clear-dims") as HTMLButtonElement).disabled = app.drawingDimensions().length === 0;
   };
@@ -3682,13 +3687,15 @@ async function main(): Promise<void> {
   ($("#dv-sheet") as HTMLSelectElement).onchange = renderDrawingPreview;
   ($("#dv-parts") as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-hidden") as HTMLSelectElement).onchange = renderDrawingPreview;
+  ($("#dv-explode") as HTMLInputElement).onchange = renderDrawingPreview;
   $("#drawing-svg").onclick = () => app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
   $("#drawing-dxf").onclick = () => app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
   $("#drawing-pdf").onclick = () => {
     const views = ["front", "top", "right", "iso"].filter((v) => app.drawingOptions.views.has(v));
     try {
       const hidden = app.drawingOptions.hidden === "auto" ? undefined : app.drawingOptions.hidden === "on";
-      const pdf = app.kernel.drawingPdf(app.summary.tab, { views, sheet: app.drawingOptions.sheet, parts: app.drawingOptions.parts, hidden, title: `${app.summary.name} · ${app.summary.tab_name}` });
+      const explode = app.drawingOptions.explode ? app.viewer.explodeFactor() : 0;
+      const pdf = app.kernel.drawingPdf(app.summary.tab, { views, sheet: app.drawingOptions.sheet, parts: app.drawingOptions.parts, hidden, explode, title: `${app.summary.name} · ${app.summary.tab_name}` });
       app.download(new Blob([pdf as BlobPart], { type: "application/pdf" }), "pdf", `${app.summary.name}-drawing`);
     } catch (err) {
       app.setStatus(`error: ${String(err)}`);

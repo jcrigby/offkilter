@@ -80,6 +80,11 @@ pub struct Options {
     /// Hidden lines, dashed. Absent: on a sheet of one part, off on a
     /// sheet of several (an assembly), where they only clutter.
     pub hidden: Option<bool>,
+    /// Explodes the isometric view: every part slides away from the
+    /// parts' common centre by this times its own offset from it (the
+    /// client's slider runs 0 to 1.5). Zero draws the parts in place.
+    /// The other views stay as built.
+    pub explode: f64,
 }
 
 impl Default for Options {
@@ -94,6 +99,7 @@ impl Default for Options {
             note: String::new(),
             parts: true,
             hidden: None,
+            explode: 0.0,
         }
     }
 }
@@ -710,6 +716,42 @@ impl Sheet {
         keys.dedup();
         let one_part = keys.len() <= 1;
         let hidden = opts.hidden.unwrap_or(one_part);
+        // The exploded parts for the isometric view: each slid from the
+        // common centre of the parts' boxes by its own offset times the
+        // factor, as the client's explode slider does.
+        let exploded: Vec<Vec<Solid>> = if opts.explode > 0.0 {
+            let centre = |ss: &[&Solid]| -> Option<Vec3> {
+                let mut lo = Vec3::new(f64::MAX, f64::MAX, f64::MAX);
+                let mut hi = Vec3::new(f64::MIN, f64::MIN, f64::MIN);
+                for s in ss {
+                    let (a, b) = s.bounds()?;
+                    lo = Vec3::new(lo.x.min(a.x), lo.y.min(a.y), lo.z.min(a.z));
+                    hi = Vec3::new(hi.x.max(b.x), hi.y.max(b.y), hi.z.max(b.z));
+                }
+                Some((lo + hi) * 0.5)
+            };
+            let centres: Vec<Vec3> = parts
+                .iter()
+                .map(|p| centre(&p.solids).unwrap_or(Vec3::ZERO))
+                .collect();
+            let all = centres.iter().fold(Vec3::ZERO, |a, c| a + *c) * (1.0 / centres.len() as f64);
+            parts
+                .iter()
+                .zip(&centres)
+                .map(|(p, c)| {
+                    let shift = ok_brep::Transform::translation((*c - all) * opts.explode);
+                    p.solids.iter().map(|s| s.transformed(&shift)).collect()
+                })
+                .collect()
+        } else {
+            Vec::new()
+        };
+        let iso_parts: Vec<Vec<&Solid>> = if exploded.is_empty() {
+            parts.iter().map(|p| p.solids.clone()).collect()
+        } else {
+            exploded.iter().map(|ss| ss.iter().collect()).collect()
+        };
+        let iso_solids: Vec<&Solid> = iso_parts.iter().flatten().copied().collect();
         // Parts list rows: one per distinct part, in order of first appearance.
         let mut rows: Vec<Row> = Vec::new();
         if opts.parts && parts.len() > 1 {
@@ -818,7 +860,7 @@ impl Sheet {
                     "unknown view {name:?}: use front, top, right, iso, section or section-side (the sections take @<mm> for the cut)"
                 ));
             };
-            let lines = project_view(&solids, view);
+            let lines = project_view(if name == "iso" { &iso_solids } else { &solids }, view);
             // Hole callouts belong on a part's own sheet: an assembly
             // view is a thicket of holes seen end-on.
             let callouts = if name == "iso" || !one_part {
@@ -830,7 +872,7 @@ impl Sheet {
                 let (u, v) = frame(view);
                 rows.iter()
                     .filter_map(|r| {
-                        centroid_of(&parts[r.body].solids)
+                        centroid_of(&iso_parts[r.body])
                             .map(|c| (r.item, Vec2::new(c.dot(u), c.dot(v))))
                     })
                     .collect()
@@ -1905,6 +1947,54 @@ mod tests {
             "{text}"
         );
         assert!(Sheet::layout_views(Vec::new(), &Options::default()).is_err());
+    }
+
+    /// Exploding slides the isometric's parts apart (and their balloons
+    /// with them) and leaves the other views alone.
+    #[test]
+    fn an_exploded_isometric_spreads_the_parts_and_nothing_else() {
+        let a = block(20.0, 20.0, 10.0);
+        let b = block(20.0, 20.0, 10.0)
+            .transformed(&ok_brep::Transform::translation(Vec3::new(30.0, 0.0, 0.0)));
+        let parts = [
+            Part {
+                name: "Left".into(),
+                material: String::new(),
+                solids: vec![&a],
+                key: (1, 0),
+            },
+            Part {
+                name: "Right".into(),
+                material: String::new(),
+                solids: vec![&b],
+                key: (2, 0),
+            },
+        ];
+        let stacked = Sheet::layout(&parts, &Options::default()).unwrap();
+        let apart = Sheet::layout(
+            &parts,
+            &Options {
+                explode: 1.0,
+                ..Options::default()
+            },
+        )
+        .unwrap();
+        let iso = |s: &Sheet| s.placed.iter().find(|p| p.name == "iso").unwrap().clone();
+        let front = |s: &Sheet| s.placed.iter().find(|p| p.name == "front").unwrap().clone();
+        let gap = |p: &Placed| (p.balloons[0].1 - p.balloons[1].1).length();
+        let (i0, i1) = (iso(&stacked), iso(&apart));
+        // Each part moves by its full offset from the middle (15 mm), so
+        // the balloons end up twice as far apart in the isometric.
+        assert!(
+            (gap(&i1) / gap(&i0) - 2.0).abs() < 1e-6,
+            "{} vs {}",
+            gap(&i0),
+            gap(&i1)
+        );
+        assert!(i1.b.maxx - i1.b.minx > i0.b.maxx - i0.b.minx);
+        let (f0, f1) = (front(&stacked), front(&apart));
+        assert!((f0.b.maxx - f0.b.minx - (f1.b.maxx - f1.b.minx)).abs() < 1e-9);
+        assert!(pdf::inflated(&apart.to_pdf()).contains("(1) Tj"));
     }
 
     #[test]

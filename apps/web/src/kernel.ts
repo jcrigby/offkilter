@@ -413,13 +413,15 @@ export class Kernel {
   }
 
   /** A shop drawing sheet of a tab as a PDF, laid out by the kernel: standard views, dimensions, callouts, balloons and a parts list. */
-  drawingPdf(tab: number, opts: { views?: string[]; sheet?: string; parts?: boolean; title?: string; note?: string; hidden?: boolean }): Uint8Array {
+  drawingPdf(tab: number, opts: { views?: string[]; sheet?: string; parts?: boolean; title?: string; note?: string; hidden?: boolean; explode?: number }): Uint8Array {
     return this.studio.drawing_pdf(tab, JSON.stringify(opts));
   }
 
-  /** Orthographic projection of the current tab's bodies with hidden lines removed. */
-  drawingView(dir: Vec3, up: Vec3): ViewLines {
-    const r = JSON.parse(this.studio.drawing_view(JSON.stringify({ dir: [dir.x, dir.y, dir.z], up: [up.x, up.y, up.z] }))) as ViewLines & { error?: string };
+  /** Orthographic projection of the current tab's bodies with hidden lines removed; `offsets` slides each body first (the viewer's explode). */
+  drawingView(dir: Vec3, up: Vec3, offsets?: Vec3[]): ViewLines {
+    const spec: { dir: number[]; up: number[]; offsets?: number[][] } = { dir: [dir.x, dir.y, dir.z], up: [up.x, up.y, up.z] };
+    if (offsets) spec.offsets = offsets.map((o) => [o.x, o.y, o.z]);
+    const r = JSON.parse(this.studio.drawing_view(JSON.stringify(spec))) as ViewLines & { error?: string };
     if (r.error) throw new Error(r.error);
     return r;
   }

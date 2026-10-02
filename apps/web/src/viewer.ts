@@ -263,6 +263,11 @@ export class Viewer {
     return m.matrixWorld.toArray();
   }
 
+  /** The explode slider's factor as set (0 in place). */
+  explodeFactor(): number {
+    return this.explode;
+  }
+
   /** Current explode displacement of a body (for tests and labels). */
   bodyOffset(index: number): Vec3 {
     return this.offsets[index] ?? { x: 0, y: 0, z: 0 };
