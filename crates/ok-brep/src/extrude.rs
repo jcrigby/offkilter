@@ -17,6 +17,13 @@ pub fn extrude(
             "profile has fewer than three points".into(),
         ));
     }
+    // A plane whose axes do not go round its normal the right-handed way
+    // would turn every loop inside out.
+    if plane.x_axis.cross(plane.y_axis).dot(plane.normal) <= 0.0 {
+        return Err(crate::BrepError::Degenerate(
+            "left-handed plane frame: x_axis × y_axis must point along the normal".into(),
+        ));
+    }
     if (end - start).abs() <= ok_math::tol::LINEAR {
         return Err(crate::BrepError::Degenerate("extrude depth is zero".into()));
     }

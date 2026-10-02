@@ -1459,10 +1459,11 @@ mod touching_tests {
     }
 
     /// Splitting a hexagonal prism by the plane through two opposite
-    /// corners fails ("4 bad edges"): the corner edges lie in the plane.
-    /// Kept as the record of it.
+    /// corners, whose edges lie in the plane: two closed halves. (A first
+    /// version of this test passed a left-handed plane and read the open
+    /// result as a kernel bug; `extrude` now refuses such a frame rather
+    /// than build inside-out faces from it.)
     #[test]
-    #[ignore]
     fn a_split_plane_through_two_corners_of_a_prism() {
         let h = 10.0 * 3f64.sqrt() / 2.0;
         let hexagon = prism(
@@ -1478,13 +1479,21 @@ mod touching_tests {
         );
         let cut = Plane {
             origin: Vec3::ZERO,
-            x_axis: Vec3::X,
-            y_axis: Vec3::Z,
+            x_axis: Vec3::Z,
+            y_axis: Vec3::X,
             normal: Vec3::Y,
         };
         let (below, above) = crate::split_tagged(&hexagon, &cut, 2).unwrap().unwrap();
         below.validate().unwrap();
         above.validate().unwrap();
         assert!((below.volume() - above.volume()).abs() < 1e-3);
+        assert!((below.volume() + above.volume() - hexagon.volume()).abs() < 1e-3);
+        let left_handed = Plane {
+            x_axis: Vec3::X,
+            y_axis: Vec3::Z,
+            ..cut
+        };
+        let err = crate::split_tagged(&hexagon, &left_handed, 2).unwrap_err();
+        assert!(err.to_string().contains("left-handed"), "{err}");
     }
 }
