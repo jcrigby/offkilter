@@ -445,6 +445,12 @@ pub enum Op {
         fixture: f64,
         #[serde(default)]
         show: crate::PuzzleLayout,
+        #[serde(default)]
+        spread: f64,
+        #[serde(default)]
+        light: Option<Material>,
+        #[serde(default)]
+        dark: Option<Material>,
         name: Option<String>,
     },
     /// Changing the grid, seed or jitter reseeds every tab and corner
@@ -477,6 +483,13 @@ pub enum Op {
         fixture: Option<f64>,
         #[serde(default)]
         show: Option<crate::PuzzleLayout>,
+        #[serde(default)]
+        spread: Option<f64>,
+        /// `null` clears the wood.
+        #[serde(default, with = "double_option")]
+        light: Option<Option<Material>>,
+        #[serde(default, with = "double_option")]
+        dark: Option<Option<Material>>,
         #[serde(default)]
         tabs: Option<Vec<crate::PuzzleTab>>,
         #[serde(default)]
@@ -1505,6 +1518,9 @@ impl PartStudio {
                 jitter,
                 fixture,
                 show,
+                spread,
+                light,
+                dark,
                 name,
             } => {
                 let mut pf = crate::PuzzleFeature {
@@ -1522,6 +1538,9 @@ impl PartStudio {
                     jitter,
                     fixture,
                     show,
+                    spread,
+                    light,
+                    dark,
                     tabs: Vec::new(),
                     corners: Vec::new(),
                 };
@@ -1543,6 +1562,9 @@ impl PartStudio {
                 jitter,
                 fixture,
                 show,
+                spread,
+                light,
+                dark,
                 tabs,
                 corners,
             } => match &mut self.feature_mut(id)?.kind {
@@ -1589,6 +1611,15 @@ impl PartStudio {
                     }
                     if let Some(v) = show {
                         p.show = v;
+                    }
+                    if let Some(v) = spread {
+                        p.spread = v;
+                    }
+                    if let Some(v) = light {
+                        p.light = v;
+                    }
+                    if let Some(v) = dark {
+                        p.dark = v;
                     }
                     if regrid {
                         p.reseed();

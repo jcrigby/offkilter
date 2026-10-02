@@ -130,6 +130,7 @@ top are concrete and self-contained; items lower down are directions.
 - [x] Section views on PDF sheets: `section` (parallel to the front view) and `section-side` (parallel to the right view), each placed with `@<mm>`, cut faces hatched even-odd, captioned, the cutting plane traced with arrows on the view it is edge-on in
 - [x] Measuring from a photograph: `measuring_sheet` prints a grid with four bullseye marks, `measure_photo` squares a picture of parts on it up and reports their sizes, outlines and holes in millimetres, and can put them in a sketch (`crates/ok-photo`, `examples/measuring-sheet/`)
 - [x] The sheet says which size it is (a row of dots by the origin mark), and a reference of known size on it (a forensic photo scale's 10 mm bars, or a coin) gives the print scale, so a sheet that printed at 97 % still measures true; Tabloid joins the sheet sizes
+- [x] Puzzle: a `spread` for the fabrication layouts' rows (zero keeps one bit diameter) and a wood per colour (`light`, `dark`, name and density) that every piece carries as its material, so the parts list names the species and the masses follow; the puzzle-top example sets maple and walnut
 - [x] Drawing dialog: a hidden-lines choice (auto, on, off) that strips the dashed lines from the SVG and DXF and sets the PDF's `hidden`, auto being the kernel's rule
 - [x] `ok-sheet`: the PDF content stream is deflated (the router lift's assembly sheet went from 148 KB to 32 KB); `ok_sheet::pdf::inflated` gives a sheet back as text for the tests and anything else that greps one
 - [x] EGO cart rev B: a powered tricycle, one 20 inch bicycle wheel driven through a printed internal ring gear on its disc mount by a bought worm box's pinion, a flex shaft from the EGO stub, two casters on a wide track; `build.py` and the regression test compute the stability from the parts' masses (drive wheel share, side tip angle with two bags, one bag and none, the mass centre on the hill) and that set the load and caster positions
@@ -145,8 +146,6 @@ in `docs/DECISIONS.md`.
 
 - [ ] Gear teeth, continued: bevel gears, a root fillet, profile shift for pinions under the undercut limit, and a ring gear split into printable segments with lap joints (the cart's is 265 mm across)
 - [ ] EGO cart: a pawl or a freewheel hub against rolling back, the swing arm that lifts the pinion out of the ring for pushing by hand (then its range-of-motion sheet and an interference sweep), the clamps on the mast, and the EP7500 stub once it is measured
-- [ ] Puzzle fabrication layouts: a `spread` parameter instead of always one bit diameter between rows
-- [ ] Puzzle pieces: a material per colour, so the parts list and a future cut list name the species
 - [ ] Range of motion in the web app: a positions list on the drawing dialog and a strip in the preview, and a step of a mate's value with the interference check run at each position (the limits test does this in Rust for the router lift; a puzzle-box mechanism will want it from the client)
 - [ ] Drawing dialog and SVG drawings: the two PDF section views (`section`, `section-side`, each with `@<mm>`), so the client's preview matches the sheet the MCP tool writes
 - [ ] `Dockerfile.dev`: build it once on a machine with a Docker daemon; the sandbox it was written in had only the client

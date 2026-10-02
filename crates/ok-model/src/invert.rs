@@ -195,6 +195,9 @@ impl PartStudio {
                 jitter,
                 fixture,
                 show,
+                spread,
+                light,
+                dark,
                 ..
             } => match before.kind() {
                 // Any change may have reseeded the tabs and corners, so the
@@ -214,6 +217,9 @@ impl PartStudio {
                     jitter: jitter.map(|_| p.jitter),
                     fixture: fixture.map(|_| p.fixture),
                     show: show.map(|_| p.show),
+                    spread: spread.map(|_| p.spread),
+                    light: light.map(|_| p.light.clone()),
+                    dark: dark.map(|_| p.dark.clone()),
                     tabs: Some(p.tabs.clone()),
                     corners: Some(p.corners.clone()),
                 }],

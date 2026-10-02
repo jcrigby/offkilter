@@ -31,6 +31,15 @@
               "jitter": 3.0,
               "show": "design",
               "fixture": 0.0,
+              "spread": 0.0,
+              "light": {
+                "name": "Maple",
+                "density": 0.7
+              },
+              "dark": {
+                "name": "Walnut",
+                "density": 0.64
+              },
               "tabs": [
                 {
                   "out": true,
@@ -706,6 +715,15 @@
               "jitter": 2.0,
               "show": "design",
               "fixture": 6.0,
+              "spread": 0.0,
+              "light": {
+                "name": "Maple",
+                "density": 0.7
+              },
+              "dark": {
+                "name": "Walnut",
+                "density": 0.64
+              },
               "tabs": [
                 {
                   "out": true,

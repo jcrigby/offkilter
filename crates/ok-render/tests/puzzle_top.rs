@@ -105,6 +105,23 @@ fn the_tight_top_has_a_fixture_and_fabrication_layouts() {
         _ => unreachable!(),
     };
     assert!(feature.gap == 0.0 && feature.show == ok_model::PuzzleLayout::Design);
+    // Each colour's pieces carry its wood.
+    assert_eq!(
+        feature.light.as_ref().map(|m| m.name.as_str()),
+        Some("Maple")
+    );
+    assert_eq!(
+        feature.dark.as_ref().map(|m| m.name.as_str()),
+        Some("Walnut")
+    );
+    for b in &r.bodies[..48] {
+        let wood = b.material.as_ref().map(|m| m.name.as_str());
+        if b.name.ends_with("light") {
+            assert_eq!(wood, Some("Maple"), "{}", b.name);
+        } else {
+            assert_eq!(wood, Some("Walnut"), "{}", b.name);
+        }
+    }
     let plan = ok_sketch::jigsaw::plan(&feature.params()).unwrap();
     assert!(plan.problems.is_empty(), "{plan:?}");
     assert!(
@@ -148,6 +165,9 @@ fn the_tight_top_has_a_fixture_and_fabrication_layouts() {
                 seed: None,
                 jitter: None,
                 fixture: None,
+                spread: None,
+                light: None,
+                dark: None,
                 show: Some(show),
                 tabs: None,
                 corners: None,
