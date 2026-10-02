@@ -885,6 +885,7 @@ dependencies = [
 name = "ok-sheet"
 version = "0.1.0"
 dependencies = [
+ "miniz_oxide",
  "ok-brep",
  "ok-math",
  "ok-model",

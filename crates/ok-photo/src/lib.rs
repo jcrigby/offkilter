@@ -1978,14 +1978,14 @@ mod tests {
     #[test]
     fn the_sheet_is_a_pdf_with_four_marks_and_a_grid() {
         let pdf = sheet_pdf(SheetSize::A4);
-        let text = String::from_utf8_lossy(&pdf);
+        let text = ok_sheet::pdf::inflated(&pdf);
         assert!(text.starts_with("%PDF-1.4"));
         assert!(text.contains("/MediaBox [0 0 841.89 595.276]"));
         // Filled discs: origin ring, its hole, three per bullseye, and
         // the one code dot of A4.
         assert_eq!(text.matches("c h f Q").count(), 2 + 4 * 3 + 1);
         assert_eq!(code(SheetSize::A4), 1);
-        let letter = String::from_utf8_lossy(&sheet_pdf(SheetSize::Letter)).to_string();
+        let letter = ok_sheet::pdf::inflated(&sheet_pdf(SheetSize::Letter));
         assert_eq!(letter.matches("c h f Q").count(), 2 + 4 * 3 + 2);
         assert_eq!(size_of_code(2), Some(SheetSize::Letter));
         assert_eq!(size_of_code(5), Some(SheetSize::Tabloid));

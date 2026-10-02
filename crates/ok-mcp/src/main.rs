@@ -1870,7 +1870,7 @@ mod tests {
         );
         let sheet = std::fs::read(&pdf).unwrap();
         assert!(sheet.starts_with(b"%PDF-1.4"));
-        let sheet = String::from_utf8_lossy(&sheet);
+        let sheet = ok_sheet::pdf::inflated(&sheet);
         assert!(
             sheet.contains("\\330") && sheet.contains("(checked \\267 offkilter) Tj"),
             "{sheet}"
@@ -1946,7 +1946,7 @@ mod tests {
         );
         assert!(!err && text.contains("Letter measuring sheet"), "{text}");
         assert!(text.contains("229 x 166 mm apart"), "{text}");
-        let sheet = String::from_utf8_lossy(&std::fs::read(&pdf).unwrap()).to_string();
+        let sheet = ok_sheet::pdf::inflated(&std::fs::read(&pdf).unwrap());
         assert!(sheet.starts_with("%PDF-1.4") && sheet.contains("the bar below is 100 mm"));
         let (err, text) = tool_text(
             &mut server,
