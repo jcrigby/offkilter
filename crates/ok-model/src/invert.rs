@@ -238,6 +238,8 @@ impl PartStudio {
                 rim,
                 angle,
                 backlash,
+                shift,
+                fillet,
                 op,
             } => match before.kind() {
                 Some(FeatureKind::Gear(g)) => vec![Op::SetGear {
@@ -253,6 +255,8 @@ impl PartStudio {
                     rim: rim.map(|_| g.rim),
                     angle: angle.map(|_| g.angle),
                     backlash: backlash.map(|_| g.backlash),
+                    shift: shift.map(|_| g.shift),
+                    fillet: fillet.map(|_| g.fillet),
                     op: op.map(|_| g.op),
                 }],
                 _ => Vec::new(),

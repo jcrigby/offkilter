@@ -54,6 +54,7 @@ FLEX_D, FLEX_GAP = 16.0, 25.0  # flex shaft casing, and the couplings at its end
 # Printed gears and the drive geometry.
 # ---------------------------------------------------------------------
 M, Z_RING, Z_PINION, FACE, PRESSURE, BACKLASH = 3.0, 80, 17, 20.0, 20.0, 0.15
+FILLET_PINION, FILLET_RING = 0.38 * M, 0.15 * M  # root fillets: the rack standard, and what a ring's narrow spaces take
 RING_RIM, WEB_T, WEB_HOLE = 265.0, 5.0, 36.5
 RING_SEGMENTS = 6  # printable sectors, cut by radial planes
 DOWEL_D, DOWEL_DEPTH = 3.2, 8.0  # a 3 mm pin in each rim joint
@@ -173,7 +174,7 @@ def ring_gear(p):
     """Internal teeth outboard of a web that bolts to the disc mount,
     cut into sectors that fit a printer, each rim joint pinned by a
     dowel across the cut (half a hole in each sector)."""
-    p.gear(M, Z_RING, FACE, base="right", offset=RING_X0, center=(0.0, R_WHEEL), pressure_angle=PRESSURE, rim=RING_RIM, backlash=BACKLASH, name=f"{Z_RING}t internal gear, module {M}")
+    p.gear(M, Z_RING, FACE, base="right", offset=RING_X0, center=(0.0, R_WHEEL), pressure_angle=PRESSURE, rim=RING_RIM, backlash=BACKLASH, fillet=FILLET_RING, name=f"{Z_RING}t internal gear, module {M}")
     s = p.sketch("right", RING_X0 + FACE, "web")
     p.circle(s, (0.0, R_WHEEL), RING_RIM / 2)
     p.extrude(s, WEB_T, op="add", name="web")
@@ -205,7 +206,7 @@ def ring_gear(p):
 
 
 def pinion(p):
-    p.gear(M, Z_PINION, FACE, base="right", offset=RING_X0, center=(PINION_Y, PINION_Z), pressure_angle=PRESSURE, bore=PINION_BORE, angle=PINION_ANGLE, backlash=BACKLASH, name=f"{Z_PINION}t gear, module {M}")
+    p.gear(M, Z_PINION, FACE, base="right", offset=RING_X0, center=(PINION_Y, PINION_Z), pressure_angle=PRESSURE, bore=PINION_BORE, angle=PINION_ANGLE, backlash=BACKLASH, fillet=FILLET_PINION, name=f"{Z_PINION}t gear, module {M}")
     s = p.sketch("right", RING_X0, "hub")
     p.circle(s, (PINION_Y, PINION_Z), PINION_HUB_D / 2)
     p.circle(s, (PINION_Y, PINION_Z), PINION_BORE / 2)
