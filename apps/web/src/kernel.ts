@@ -478,8 +478,10 @@ export class Kernel {
 }
 
 /** Reads a STEP file (text) into mesh bodies for `add_mesh`; planes and cylinders come in faceted, other surfaces are refused by name. */
+/** An edge fitted to a run of a part's outline: a straight run, an arc (counter-clockwise from start to end when `ccw`), or the one circle a round part is. */
+export type PhotoEdge = { type: "line"; a: [number, number]; b: [number, number] } | { type: "arc"; centre: [number, number]; radius: number; start: [number, number]; end: [number, number]; ccw: boolean } | { type: "circle"; centre: [number, number]; radius: number };
 /** A part found on the measuring sheet, in its millimetres: x right, y up from the origin mark. */
-export type PhotoPart = { /** x0, y0, x1, y1. */ bbox: [number, number, number, number]; area: number; centroid: [number, number]; /** Diameter of the circle with the silhouette's area: the size, if round. */ diameter: number; /** 1 for a disc, less for anything else. */ circularity: number; outline: [number, number][]; holes: { centre: [number, number]; diameter: number; circularity: number; area: number }[] };
+export type PhotoPart = { /** x0, y0, x1, y1. */ bbox: [number, number, number, number]; area: number; centroid: [number, number]; /** Diameter of the circle with the silhouette's area: the size, if round. */ diameter: number; /** 1 for a disc, less for anything else. */ circularity: number; outline: [number, number][]; /** The outline as fitted edges meeting at shared vertices; empty when nothing fits. */ edges: PhotoEdge[]; holes: { centre: [number, number]; diameter: number; circularity: number; area: number }[] };
 /** What `measurePhoto` found: the MCP `measure_photo` tool's reading, with the squared-up picture as a base64 PNG. */
 export type PhotoMeasurement = {
   sheet: string | null;

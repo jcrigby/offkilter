@@ -257,7 +257,36 @@ pub struct Part {
     pub circularity: f64,
     /// The silhouette, simplified, counter-clockwise in the sheet frame.
     pub outline: Vec<[f64; 2]>,
+    /// The outline as fitted edges, counter-clockwise, meeting at
+    /// shared vertices: straight runs and arcs where the traced boundary
+    /// lies within 0.3 mm of them, or one circle when the whole outline
+    /// is round. Empty when nothing fits.
+    pub edges: Vec<Edge>,
     pub holes: Vec<Hole>,
+}
+
+/// An edge fitted to a run of a part's outline.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum Edge {
+    Line {
+        a: [f64; 2],
+        b: [f64; 2],
+    },
+    /// From `start` to `end` about `centre`, counter-clockwise when
+    /// `ccw` (a convex corner of the part), clockwise otherwise (a
+    /// notch).
+    Arc {
+        centre: [f64; 2],
+        radius: f64,
+        start: [f64; 2],
+        end: [f64; 2],
+        ccw: bool,
+    },
+    Circle {
+        centre: [f64; 2],
+        radius: f64,
+    },
 }
 
 /// A hole through a part, seen as paper showing through it.
@@ -639,11 +668,25 @@ fn rectify(
         let lo = mm(c.x0, c.y1 + 1);
         let hi = mm(c.x1 + 1, c.y0);
         let centroid = [-BORDER + c.cx / SCALE, ly + BORDER - c.cy / SCALE];
-        let outline: Vec<[f64; 2]> =
-            simplify(&trace(&c.labels_of(&mask, pw), pw, ph, c), 0.3 * SCALE)
-                .into_iter()
-                .map(|(i, j)| mm(i, j))
-                .collect();
+        let mut traced = trace(&c.labels_of(&mask, pw), pw, ph, c);
+        // Counter-clockwise in the sheet frame (y up), whichever way the
+        // tracer went round in the picture.
+        let signed = (0..traced.len())
+            .map(|i| {
+                let (a, b) = (mm(traced[i].0, traced[i].1), {
+                    let q = traced[(i + 1) % traced.len()];
+                    mm(q.0, q.1)
+                });
+                a[0] * b[1] - b[0] * a[1]
+            })
+            .sum::<f64>();
+        if signed < 0.0 {
+            traced.reverse();
+        }
+        let corners = simplify_indices(&traced, 0.3 * SCALE);
+        let dense: Vec<[f64; 2]> = traced.iter().map(|&(i, j)| mm(i, j)).collect();
+        let outline: Vec<[f64; 2]> = corners.iter().map(|&k| dense[k]).collect();
+        let edges = fit_edges(&dense, &corners, 0.3);
         let mut holes = Vec::new();
         for l in &light_comps {
             let inside = l.x0 > c.x0 && l.y0 > c.y0 && l.x1 < c.x1 && l.y1 < c.y1;
@@ -674,6 +717,7 @@ fn rectify(
             diameter: 2.0 * (filled / PI).sqrt(),
             circularity: (4.0 * PI * filled / (perimeter * perimeter)).min(1.0),
             outline,
+            edges,
             holes,
         });
     }
@@ -1890,10 +1934,11 @@ fn trace(mask: &[bool], w: usize, h: usize, c: &Comp) -> Vec<(usize, usize)> {
 
 /// Douglas–Peucker on a closed polyline, tolerance in pixels: the loop
 /// is split at the point farthest from its start into two open runs.
-fn simplify(points: &[(usize, usize)], tol: f64) -> Vec<(usize, usize)> {
+/// Returns the indices of the points kept, in order.
+fn simplify_indices(points: &[(usize, usize)], tol: f64) -> Vec<usize> {
     let n = points.len();
     if n < 4 {
-        return points.to_vec();
+        return (0..n).collect();
     }
     let mut pts: Vec<[f64; 2]> = points.iter().map(|&(x, y)| [x as f64, y as f64]).collect();
     pts.push(pts[0]);
@@ -1906,12 +1951,206 @@ fn simplify(points: &[(usize, usize)], tol: f64) -> Vec<(usize, usize)> {
     keep[n] = true;
     dp(&pts, 0, far, tol, &mut keep);
     dp(&pts, far, n, tol, &mut keep);
-    points
+    keep[..n]
         .iter()
-        .zip(&keep[..n])
+        .enumerate()
         .filter(|(_, k)| **k)
-        .map(|(p, _)| *p)
+        .map(|(i, _)| i)
         .collect()
+}
+
+/// A least-squares circle through `pts` (Kåsa's algebraic fit): centre,
+/// radius, and the largest distance of a point from the circle. None
+/// when the points are too few or collinear.
+fn circle_fit(pts: &[[f64; 2]]) -> Option<([f64; 2], f64, f64)> {
+    if pts.len() < 3 {
+        return None;
+    }
+    // Centre the data for conditioning.
+    let n = pts.len() as f64;
+    let mx = pts.iter().map(|p| p[0]).sum::<f64>() / n;
+    let my = pts.iter().map(|p| p[1]).sum::<f64>() / n;
+    let (mut suu, mut suv, mut svv, mut suuu, mut svvv, mut suvv, mut svuu) =
+        (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    for p in pts {
+        let (u, v) = (p[0] - mx, p[1] - my);
+        suu += u * u;
+        suv += u * v;
+        svv += v * v;
+        suuu += u * u * u;
+        svvv += v * v * v;
+        suvv += u * v * v;
+        svuu += v * u * u;
+    }
+    let det = suu * svv - suv * suv;
+    if det.abs() < 1e-9 * (suu + svv).powi(2).max(1e-12) {
+        return None;
+    }
+    let bu = (suuu + suvv) / 2.0;
+    let bv = (svvv + svuu) / 2.0;
+    let uc = (bu * svv - bv * suv) / det;
+    let vc = (bv * suu - bu * suv) / det;
+    let r = (uc * uc + vc * vc + (suu + svv) / n).sqrt();
+    let centre = [uc + mx, vc + my];
+    if !r.is_finite() || !centre[0].is_finite() || !centre[1].is_finite() {
+        return None;
+    }
+    let dev = pts
+        .iter()
+        .map(|p| (dist2(*p, centre).sqrt() - r).abs())
+        .fold(0.0, f64::max);
+    Some((centre, r, dev))
+}
+
+/// Straight runs and arcs fitted to a closed outline (`dense`, every
+/// boundary pixel in millimetres, counter-clockwise) between its
+/// simplified corners (`corners`, indices into `dense`): from the
+/// sharpest corner, each run is extended over the following corners as
+/// far as a line or a circle stays within `tol` of every boundary point,
+/// the circle taking over where it reaches further; a run of the whole
+/// outline that is one circle is a `Circle`. Edges meet at corner
+/// points, so they chain into a closed loop.
+fn fit_edges(dense: &[[f64; 2]], corners: &[usize], tol: f64) -> Vec<Edge> {
+    let (n, m) = (dense.len(), corners.len());
+    if n < 8 || m < 2 {
+        return Vec::new();
+    }
+    if let Some((centre, radius, dev)) = circle_fit(dense) {
+        if dev <= tol {
+            return vec![Edge::Circle { centre, radius }];
+        }
+    }
+    // The boundary points from corner k to corner l (cyclic), inclusive.
+    let run = |k: usize, l: usize| -> Vec<[f64; 2]> {
+        let (s, e) = (corners[k % m], corners[l % m]);
+        if e > s {
+            dense[s..=e].to_vec()
+        } else {
+            dense[s..].iter().chain(&dense[..=e]).copied().collect()
+        }
+    };
+    let line_dev = |pts: &[[f64; 2]]| -> f64 {
+        let (a, b) = (pts[0], pts[pts.len() - 1]);
+        pts.iter().map(|p| seg_dist(*p, a, b)).fold(0.0, f64::max)
+    };
+    // Start at the sharpest corner, so no run straddles a true corner.
+    let turn = |k: usize| -> f64 {
+        let (p, c, q) = (
+            dense[corners[(k + m - 1) % m]],
+            dense[corners[k]],
+            dense[corners[(k + 1) % m]],
+        );
+        let (ax, ay) = (c[0] - p[0], c[1] - p[1]);
+        let (bx, by) = (q[0] - c[0], q[1] - c[1]);
+        let la = (ax * ax + ay * ay).sqrt();
+        let lb = (bx * bx + by * by).sqrt();
+        if la < 1e-12 || lb < 1e-12 {
+            0.0
+        } else {
+            ((ax * bx + ay * by) / (la * lb)).clamp(-1.0, 1.0).acos()
+        }
+    };
+    let start = (0..m)
+        .max_by(|&a, &b| turn(a).total_cmp(&turn(b)))
+        .unwrap_or(0);
+    let mut edges = Vec::new();
+    let mut k = start;
+    let mut covered = 0;
+    while covered < m {
+        let max_l = k + (m - covered);
+        let mut line_to = k + 1;
+        let mut j = k + 2;
+        while j <= max_l && line_dev(&run(k, j)) <= tol {
+            line_to = j;
+            j += 1;
+        }
+        let mut arc_to: Option<(usize, [f64; 2], f64)> = None;
+        let mut j = k + 2;
+        while j <= max_l {
+            match circle_fit(&run(k, j)) {
+                Some((c, r, dev)) if dev <= tol && r < 1000.0 => {
+                    arc_to = Some((j, c, r));
+                    j += 1;
+                }
+                _ => break,
+            }
+        }
+        let (edge, next) = match arc_to {
+            Some((j, centre, radius)) if j > line_to => {
+                let pts = run(k, j);
+                // The fitted circle, its ends the corner points moved onto
+                // it (by at most `tol`); the neighbouring edges follow.
+                let onto = |p: [f64; 2]| -> [f64; 2] {
+                    let d = dist2(p, centre).sqrt();
+                    if d < 1e-9 {
+                        p
+                    } else {
+                        [
+                            centre[0] + (p[0] - centre[0]) * radius / d,
+                            centre[1] + (p[1] - centre[1]) * radius / d,
+                        ]
+                    }
+                };
+                let (start, end) = (onto(pts[0]), onto(pts[pts.len() - 1]));
+                let through = pts[pts.len() / 2];
+                let ccw = (start[0] - centre[0]) * (through[1] - centre[1])
+                    - (start[1] - centre[1]) * (through[0] - centre[0])
+                    > 0.0;
+                (
+                    Edge::Arc {
+                        centre,
+                        radius,
+                        start,
+                        end,
+                        ccw,
+                    },
+                    j,
+                )
+            }
+            _ => (
+                Edge::Line {
+                    a: dense[corners[k % m]],
+                    b: dense[corners[line_to % m]],
+                },
+                line_to,
+            ),
+        };
+        edges.push(edge);
+        covered += next - k;
+        k = next;
+    }
+    // Chain the edges: an arc's ends were moved onto its circle, so the
+    // edge before ends and the edge after begins where the arc does.
+    let count = edges.len();
+    for i in 0..count {
+        let next = (i + 1) % count;
+        if let Some(start) = arc_start(&edges[next]) {
+            match &mut edges[i] {
+                Edge::Line { b, .. } => *b = start,
+                Edge::Arc { end, .. } => *end = start,
+                Edge::Circle { .. } => {}
+            }
+        } else if let Some(end) = arc_end(&edges[i]) {
+            if let Edge::Line { a, .. } = &mut edges[next] {
+                *a = end;
+            }
+        }
+    }
+    edges
+}
+
+fn arc_start(e: &Edge) -> Option<[f64; 2]> {
+    match e {
+        Edge::Arc { start, .. } => Some(*start),
+        _ => None,
+    }
+}
+
+fn arc_end(e: &Edge) -> Option<[f64; 2]> {
+    match e {
+        Edge::Arc { end, .. } => Some(*end),
+        _ => None,
+    }
 }
 
 fn dist2(a: [f64; 2], b: [f64; 2]) -> f64 {
@@ -2081,9 +2320,104 @@ mod tests {
             "{} outline points",
             rect.outline.len()
         );
+        // Fitted edges: the rectangle is four straight runs meeting at its
+        // corners, the disc one circle.
+        assert_eq!(rect.edges.len(), 4, "{:?}", rect.edges);
+        for e in &rect.edges {
+            let Edge::Line { a, b } = e else {
+                panic!("{e:?}")
+            };
+            for p in [a, b] {
+                let near_x = (p[0] - 60.0).abs() < 0.6 || (p[0] - 100.0).abs() < 0.6;
+                let near_y = (p[1] - 50.0).abs() < 0.6 || (p[1] - 75.0).abs() < 0.6;
+                assert!(near_x && near_y, "corner {p:?}");
+            }
+        }
+        match disc.edges.as_slice() {
+            [Edge::Circle { centre, radius }] => {
+                assert!(
+                    (centre[0] - 150.0).abs() < 0.5 && (centre[1] - 100.0).abs() < 0.5,
+                    "{centre:?}"
+                );
+                assert!((radius - 15.0).abs() < 0.4, "{radius}");
+            }
+            other => panic!("{other:?}"),
+        }
         let picture = ok_render::from_png(&m.picture).unwrap();
         assert_eq!(picture.width, ((247.0 + 30.0) * SCALE) as usize);
         assert_eq!(picture.height, ((160.0 + 30.0) * SCALE) as usize);
+    }
+
+    #[test]
+    fn a_tab_with_a_rounded_end_fits_three_lines_and_an_arc() {
+        // A 40 x 25 bar whose right end is a half disc of radius 12.5,
+        // and a notch: a 5 mm hole broken into the bottom edge.
+        let scan = sheet_image(
+            SheetSize::A4,
+            6.0,
+            &Scene {
+                rects: vec![[60.0, 50.0, 100.0, 75.0]],
+                discs: vec![[100.0, 62.5, 12.5]],
+                holes: vec![[75.0, 50.0, 2.5]],
+                ..Scene::default()
+            },
+        );
+        let m = measure_image(&scan, None, None).unwrap();
+        assert_eq!(m.parts.len(), 1, "{:?}", m.parts);
+        let tab = &m.parts[0];
+        let lines: Vec<_> = tab
+            .edges
+            .iter()
+            .filter(|e| matches!(e, Edge::Line { .. }))
+            .collect();
+        let arcs: Vec<_> = tab
+            .edges
+            .iter()
+            .filter_map(|e| match e {
+                Edge::Arc {
+                    centre,
+                    radius,
+                    ccw,
+                    ..
+                } => Some((*centre, *radius, *ccw)),
+                _ => None,
+            })
+            .collect();
+        // Left, top and bottom (the bottom in two pieces either side of the notch).
+        assert_eq!(lines.len(), 4, "{:?}", tab.edges);
+        assert_eq!(arcs.len(), 2, "{:?}", tab.edges);
+        let (end, notch) = if arcs[0].1 > arcs[1].1 {
+            (arcs[0], arcs[1])
+        } else {
+            (arcs[1], arcs[0])
+        };
+        assert!(
+            (end.0[0] - 100.0).abs() < 0.7 && (end.0[1] - 62.5).abs() < 0.7,
+            "end centre {:?}",
+            end.0
+        );
+        assert!((end.1 - 12.5).abs() < 0.5, "end radius {}", end.1);
+        assert!(end.2, "the rounded end turns counter-clockwise");
+        assert!(
+            (notch.0[0] - 75.0).abs() < 0.7 && (notch.0[1] - 50.0).abs() < 0.7,
+            "notch centre {:?}",
+            notch.0
+        );
+        assert!((notch.1 - 2.5).abs() < 0.5, "notch radius {}", notch.1);
+        assert!(!notch.2, "the notch turns clockwise");
+        // The edges chain: each ends where the next begins.
+        let ends = |e: &Edge| match e {
+            Edge::Line { a, b } => (*a, *b),
+            Edge::Arc { start, end, .. } => (*start, *end),
+            Edge::Circle { centre, .. } => (*centre, *centre),
+        };
+        for (i, e) in tab.edges.iter().enumerate() {
+            let next = &tab.edges[(i + 1) % tab.edges.len()];
+            assert!(
+                dist2(ends(e).1, ends(next).0) < 1e-12,
+                "{e:?} then {next:?}"
+            );
+        }
     }
 
     #[test]
