@@ -1076,6 +1076,13 @@ test("drawing views remove hidden lines and export as SVG and DXF", async ({ pag
   await expect(page.locator("#drawing-preview svg")).toHaveAttribute("width", "420mm");
   await expect(page.locator('#drawing-preview svg g[id="view-iso"]')).toHaveCount(0);
   await expect(page.locator('#drawing-preview svg g[id="view-front"]')).toHaveCount(1);
+  // Hidden lines: a sheet of one part shows them by default, and the choice removes them.
+  const dashed = page.locator("#drawing-preview svg path.hidden");
+  await expect(dashed.first()).toBeAttached();
+  await page.selectOption("#dv-hidden", "off");
+  await expect(dashed).toHaveCount(0);
+  await page.selectOption("#dv-hidden", "auto");
+  await expect(dashed.first()).toBeAttached();
   // Placing a dimension: two clicks on corners of the right view measure their span.
   await page.click("#dv-dimension");
   const placed = await page.evaluate(() => {

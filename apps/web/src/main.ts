@@ -1,5 +1,8 @@
 import { Kernel, parseStep } from "./kernel";
 import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoint, to3mf, toBom, toDrawingDxf, toDrawingSvg, toDxf, toStl, type Balloon, type Callout, type DrawingFrame, type DrawingView, type PartsRow, type SheetSize, type UserDimension } from "./export";
+
+/** The drawing dialog's hidden-lines choice: the kernel's rule, or forced on or off. */
+type HiddenLines = "auto" | "on" | "off";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
 import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
@@ -1326,7 +1329,13 @@ class App implements SketchHost {
   }
 
   /** Which views the drawing sheet shows (all by default), its sheet size, and whether the parts list and balloons are drawn. */
-  drawingOptions: { views: Set<string>; sheet: SheetSize; parts: boolean } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4", parts: true };
+  drawingOptions: { views: Set<string>; sheet: SheetSize; parts: boolean; hidden: HiddenLines } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sheet: "A4", parts: true, hidden: "auto" };
+
+  /** Whether the sheet draws hidden lines: as chosen, or by the kernel's rule (a sheet of one part has them, an assembly's does not). */
+  drawingHiddenLines(): boolean {
+    const h = this.drawingOptions.hidden;
+    return h === "auto" ? this.drawingParts().length <= 1 : h === "on";
+  }
 
   /** The dimensions placed on this tab's drawing; they live in the document. */
   drawingDimensions(): UserDimension[] {
@@ -1356,11 +1365,13 @@ class App implements SketchHost {
     if (this.drawingDimensions().length > 0) this.applyDoc({ type: "set_drawing_dimensions", tab: this.summary.tab, dims: [] });
   }
 
-  /** The chosen drawing views only. */
+  /** The chosen drawing views only, their hidden lines dropped when the sheet omits them. */
   chosenDrawingViews(): DrawingView[] {
+    const hidden = this.drawingHiddenLines();
     return this.drawingViews()
       .filter((v) => this.drawingOptions.views.has(v.name))
-      .map((v) => (this.drawingOptions.parts ? v : { ...v, balloons: [] }));
+      .map((v) => (this.drawingOptions.parts ? v : { ...v, balloons: [] }))
+      .map((v) => (hidden ? v : { ...v, lines: { ...v.lines, hidden: [], hidden_arcs: [] } }));
   }
 
   /** The parts list for the sheet, or none when it is switched off. */
@@ -3576,7 +3587,7 @@ async function main(): Promise<void> {
   const renderDrawingPreview = () => {
     const views = ["front", "top", "right", "iso", "section", "detail"].filter((n) => ($(`#dv-${n}`) as HTMLInputElement).checked);
     ($("#dv-detail-note") as HTMLElement).hidden = !!app.selectedFace;
-    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked };
+    app.drawingOptions = { views: new Set(views), sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked, hidden: ($("#dv-hidden") as HTMLSelectElement).value as HiddenLines };
     $("#drawing-preview").innerHTML = app.toDrawingSvg();
     ($("#dv-clear-dims") as HTMLButtonElement).disabled = app.drawingDimensions().length === 0;
   };
@@ -3647,12 +3658,14 @@ async function main(): Promise<void> {
   for (const n of ["front", "top", "right", "iso", "section", "detail"]) ($(`#dv-${n}`) as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-sheet") as HTMLSelectElement).onchange = renderDrawingPreview;
   ($("#dv-parts") as HTMLInputElement).onchange = renderDrawingPreview;
+  ($("#dv-hidden") as HTMLSelectElement).onchange = renderDrawingPreview;
   $("#drawing-svg").onclick = () => app.download(new Blob([app.toDrawingSvg()], { type: "image/svg+xml" }), "svg", `${app.summary.name}-drawing`);
   $("#drawing-dxf").onclick = () => app.download(new Blob([app.toDrawingDxf()], { type: "application/dxf" }), "dxf", `${app.summary.name}-drawing`);
   $("#drawing-pdf").onclick = () => {
     const views = ["front", "top", "right", "iso"].filter((v) => app.drawingOptions.views.has(v));
     try {
-      const pdf = app.kernel.drawingPdf(app.summary.tab, { views, sheet: app.drawingOptions.sheet, parts: app.drawingOptions.parts, title: `${app.summary.name} · ${app.summary.tab_name}` });
+      const hidden = app.drawingOptions.hidden === "auto" ? undefined : app.drawingOptions.hidden === "on";
+      const pdf = app.kernel.drawingPdf(app.summary.tab, { views, sheet: app.drawingOptions.sheet, parts: app.drawingOptions.parts, hidden, title: `${app.summary.name} · ${app.summary.tab_name}` });
       app.download(new Blob([pdf as BlobPart], { type: "application/pdf" }), "pdf", `${app.summary.name}-drawing`);
     } catch (err) {
       app.setStatus(`error: ${String(err)}`);

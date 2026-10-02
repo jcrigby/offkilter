@@ -413,7 +413,7 @@ export class Kernel {
   }
 
   /** A shop drawing sheet of a tab as a PDF, laid out by the kernel: standard views, dimensions, callouts, balloons and a parts list. */
-  drawingPdf(tab: number, opts: { views?: string[]; sheet?: string; parts?: boolean; title?: string; note?: string }): Uint8Array {
+  drawingPdf(tab: number, opts: { views?: string[]; sheet?: string; parts?: boolean; title?: string; note?: string; hidden?: boolean }): Uint8Array {
     return this.studio.drawing_pdf(tab, JSON.stringify(opts));
   }
 
