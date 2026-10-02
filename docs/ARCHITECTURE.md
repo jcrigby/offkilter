@@ -933,11 +933,13 @@ which requires every part to close and the printed parts to match their
 OpenSCAD reference meshes in volume and extent. Its README lists what the
 port found wanting.
 
-`examples/ego-cart/` is a second whole project, a powered shopping cart
-with a 50:1 gearbox of printed gears, built the same way from its
-speeds and loads; `crates/ok-render/tests/ego_cart.rs` regenerates it
-and checks the gear train meshes and nothing is placed inside anything
-else. Both scripts drive the MCP server through `examples/okmcp.py`.
+`examples/ego-cart/` is a second whole project, a powered tricycle for
+two shopping bags with a printed ring gear on its bicycle drive wheel,
+built the same way from its speeds and loads;
+`crates/ok-render/tests/ego_cart.rs` regenerates it and checks the
+pinion meshes in the ring, the cart's stability from its masses, and
+that nothing is placed inside anything else. Both scripts drive the
+MCP server through `examples/okmcp.py`.
 
 `crates/ok-photo` reads a photograph of parts lying on a printed sheet
 with four bullseye marks (`examples/measuring-sheet/`): Otsu threshold,

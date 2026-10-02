@@ -55,8 +55,9 @@ works today, all in the browser:
   files become mesh bodies; DXF into sketches.
 - Whole projects built through the MCP server, as a language model
   would: a router lift (`examples/router-lift/`) and a powered shopping
-  cart with a gearbox of printed gears (`examples/ego-cart/`), each with
-  a regression test that checks the mechanism, not just the parts.
+  cart with a printed ring gear on its wheel (`examples/ego-cart/`),
+  each with a regression test that checks the mechanism, not just the
+  parts.
 - Measuring from a photo: print the measuring sheet
   (`examples/measuring-sheet/`), lay parts on it with a steel rule for
   the print scale, photograph it, and the sizes, outlines and holes
