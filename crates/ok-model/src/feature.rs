@@ -614,6 +614,12 @@ pub struct PuzzleFeature {
     /// piece for the glue-up; zero for none.
     #[serde(default)]
     pub fixture: f64,
+    /// Depth of the grooves of a printable pattern plate: the gap
+    /// lattice cut that deep into a slab, for a pilot the size of the
+    /// gap to ride in while a bit of the same size cuts the pieces apart
+    /// from one board (the kerf is the gap); zero for none.
+    #[serde(default)]
+    pub groove: f64,
     /// How much further along each row of a fabrication layout sits
     /// than the last, mm; zero for one bit diameter, the least that
     /// keeps the bit off the corners of pieces that meet diagonally.
@@ -646,6 +652,10 @@ pub enum PuzzleLayout {
     Light,
     /// The dark pieces on their board, rows spread a bit apart.
     Dark,
+    /// The printable pattern plate alone: the gap lattice as grooves
+    /// `groove` deep in a slab, for cutting the gapped top from one
+    /// board with a pilot and a bit the size of the gap.
+    Pattern,
 }
 
 fn twenty() -> f64 {

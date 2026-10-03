@@ -31,6 +31,7 @@
               "jitter": 3.0,
               "show": "design",
               "fixture": 0.0,
+              "groove": 12.5,
               "spread": 0.0,
               "light": {
                 "name": "Maple",
@@ -715,6 +716,7 @@
               "jitter": 2.0,
               "show": "design",
               "fixture": 6.0,
+              "groove": 0.0,
               "spread": 0.0,
               "light": {
                 "name": "Maple",

@@ -988,6 +988,12 @@ impl PartStudio {
         if pf.spread < 0.0 || !pf.spread.is_finite() {
             return Some("row spread must be zero or positive".into());
         }
+        if pf.groove < 0.0 || !pf.groove.is_finite() {
+            return Some("groove depth must be zero or positive".into());
+        }
+        if pf.groove > 0.0 && pf.gap <= 0.0 {
+            return Some("a pattern plate needs a gap: its grooves are the gaps".into());
+        }
         let spread = if pf.spread > 0.0 { pf.spread } else { pf.bit };
         // A fabrication layout: one colour's pieces on their board, rows
         // spread apart (a bit diameter unless `spread` says otherwise);
@@ -996,8 +1002,44 @@ impl PartStudio {
             crate::PuzzleLayout::Design => Vec::new(),
             crate::PuzzleLayout::Light => ok_sketch::jigsaw::fabrication(&jig, true, spread),
             crate::PuzzleLayout::Dark => ok_sketch::jigsaw::fabrication(&jig, false, spread),
+            crate::PuzzleLayout::Pattern => Vec::new(),
         };
         let design = pf.show == crate::PuzzleLayout::Design;
+        if pf.show == crate::PuzzleLayout::Pattern {
+            // The pattern plate alone: the lattice is what the design's
+            // pieces leave of the board, so their areas are still needed.
+            if pf.groove <= 0.0 {
+                return Some("the pattern layout needs a groove depth".into());
+            }
+            let mut area = 0.0;
+            for piece in &jig.pieces {
+                let mut sk = ok_sketch::Sketch::new();
+                ok_sketch::jigsaw::draw(&piece.outline, &mut sk);
+                let profiles = sk.profiles(opts);
+                if profiles.len() != 1 {
+                    return Some(format!(
+                        "piece {},{} does not close into one region ({} found)",
+                        piece.col + 1,
+                        piece.row + 1,
+                        profiles.len()
+                    ));
+                }
+                area += profiles[0].area();
+            }
+            return match Self::puzzle_pattern_plate(&jig, &plane, pf.groove, area, opts) {
+                Ok(mut solid) => {
+                    for f in &mut solid.faces {
+                        f.origin.local += (jig.pieces.len() as u32 + 3) * PIECE_LOCALS;
+                    }
+                    result.next_part += 1;
+                    result
+                        .bodies
+                        .push(Body::new("Pattern plate".into(), id, solid));
+                    None
+                }
+                Err(e) => Some(format!("pattern plate: {e}")),
+            };
+        }
         let pieces: &[ok_sketch::jigsaw::Piece] = if design { &jig.pieces } else { &layout };
         let mut bodies: Vec<(String, Solid, Option<crate::Material>)> = Vec::new();
         let mut piece_area = 0.0;
@@ -1115,6 +1157,35 @@ impl PartStudio {
             })?;
         }
         Ok(tray)
+    }
+
+    /// A plate to print as the cutting pattern: a slab a margin wider
+    /// than the board, the gap lattice cut `depth` deep into it from the
+    /// top, with a floor under the grooves. A pilot the size of the gap
+    /// rides in the grooves while a bit of that size, on the same slide,
+    /// cuts the pieces apart from one board; the pilot bottoming in a
+    /// groove sets the last pass, so `depth` is the board's thickness
+    /// and a little.
+    fn puzzle_pattern_plate(
+        jig: &ok_sketch::jigsaw::Jigsaw,
+        plane: &Plane,
+        depth: f64,
+        piece_area: f64,
+        opts: &ProfileOptions,
+    ) -> Result<Solid, String> {
+        const MARGIN: f64 = 10.0;
+        const FLOOR: f64 = 3.0;
+        let mut sk = ok_sketch::Sketch::new();
+        sk.add_rectangle(
+            Vec2::new(-MARGIN, -MARGIN),
+            Vec2::new(jig.width + MARGIN, jig.height + MARGIN),
+        );
+        let slab = sk.profiles(opts).into_iter().next().ok_or("no slab")?;
+        let plate = ok_brep::extrude(&slab, plane, -FLOOR, depth, 0).map_err(|e| e.to_string())?;
+        let lattice = Self::puzzle_web(jig, piece_area, opts)?;
+        let cutter =
+            ok_brep::extrude(&lattice, plane, 0.0, depth + 1.0, 0).map_err(|e| e.to_string())?;
+        boolean(&plate, &cutter, BoolOp::Difference).map_err(|e| e.to_string())
     }
 
     /// The region between the pieces: every outline plus the short
@@ -3402,6 +3473,124 @@ mod tests {
     /// A fabrication layout's rows step by the bit diameter unless a
     /// spread is given; each colour's pieces carry its wood, which a
     /// part material chosen on the feature overrides.
+    /// A 3 x 2 puzzle with a 2 mm gap and a pattern plate: the plate is
+    /// one closed body a margin wider than the board, its grooves as deep
+    /// as asked, and the material it lacks is the gap lattice that deep.
+    #[test]
+    fn a_puzzle_pattern_plate_has_the_gaps_as_grooves() {
+        let add = |gap: f64, groove: f64| Op::AddPuzzle {
+            plane: PlaneRef::standard(StandardPlane::Top),
+            cols: 3,
+            rows: 2,
+            pitch: 40.0,
+            thickness: 10.0,
+            gap,
+            bit: 2.0,
+            lock: 20.0,
+            grain: crate::Grain::X,
+            web: 0.0,
+            seed: 3,
+            jitter: 0.0,
+            fixture: 0.0,
+            groove,
+            show: crate::PuzzleLayout::Design,
+            spread: 0.0,
+            light: None,
+            dark: None,
+            name: None,
+        };
+        // The design: six pieces and nothing else, the groove notwithstanding.
+        let mut ps = PartStudio::new("t");
+        let id = ps.apply(add(2.0, 10.5)).unwrap().feature.unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(
+            r.bodies.len(),
+            6,
+            "{:?}",
+            r.bodies.iter().map(|b| &b.name).collect::<Vec<_>>()
+        );
+        let pieces: f64 = r.bodies.iter().map(|b| b.solid.volume() / 10.0).sum();
+        // The pattern layout: the plate alone.
+        ps.apply(Op::SetPuzzle {
+            id,
+            cols: None,
+            rows: None,
+            pitch: None,
+            thickness: None,
+            gap: None,
+            bit: None,
+            lock: None,
+            grain: None,
+            web: None,
+            seed: None,
+            jitter: None,
+            fixture: None,
+            groove: None,
+            show: Some(crate::PuzzleLayout::Pattern),
+            spread: None,
+            light: None,
+            dark: None,
+            tabs: None,
+            corners: None,
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 1);
+        let plate = &r.bodies[0];
+        assert_eq!(plate.name, "Pattern plate");
+        plate.solid.validate().unwrap();
+        let (lo, hi) = plate.solid.bounds().unwrap();
+        assert!(
+            (lo.x + 10.0).abs() < 1e-9 && (hi.x - 130.0).abs() < 1e-9,
+            "{lo:?} {hi:?}"
+        );
+        assert!(
+            (lo.z + 3.0).abs() < 1e-9 && (hi.z - 10.5).abs() < 1e-9,
+            "{lo:?} {hi:?}"
+        );
+        let slab = 140.0 * 100.0 * 13.5;
+        let lattice = 120.0 * 80.0 - pieces;
+        let missing = slab - plate.solid.volume();
+        assert!(
+            (missing - lattice * 10.5).abs() < 0.02 * lattice * 10.5,
+            "grooves take {missing} mm³ of the slab, the gap lattice {lattice} mm² by 10.5"
+        );
+        // A plate without a gap has nothing to groove.
+        let mut ps = PartStudio::new("t");
+        ps.apply(add(0.0, 10.5)).unwrap();
+        let r = ps.regenerate();
+        let err = r
+            .errors()
+            .next()
+            .map(|(_, e)| e.to_string())
+            .unwrap_or_default();
+        assert!(err.contains("needs a gap"), "{err}");
+        // Nor the layout without a groove depth.
+        let mut ps = PartStudio::new("t");
+        let mut op = add(2.0, 0.0);
+        if let Op::AddPuzzle { show, .. } = &mut op {
+            *show = crate::PuzzleLayout::Pattern;
+        }
+        ps.apply(op).unwrap();
+        let r = ps.regenerate();
+        let err = r
+            .errors()
+            .next()
+            .map(|(_, e)| e.to_string())
+            .unwrap_or_default();
+        assert!(err.contains("needs a groove depth"), "{err}");
+    }
+
     #[test]
     fn puzzle_rows_spread_as_asked_and_each_colour_has_its_wood() {
         let mut ps = PartStudio::new("t");
@@ -3428,6 +3617,7 @@ mod tests {
                 seed: 3,
                 jitter: 0.0,
                 fixture: 0.0,
+                groove: 0.0,
                 show: crate::PuzzleLayout::Light,
                 spread: 0.0,
                 light: Some(maple.clone()),
@@ -3466,6 +3656,7 @@ mod tests {
                 seed: None,
                 jitter: None,
                 fixture: None,
+                groove: None,
                 show,
                 spread,
                 light,
@@ -3553,6 +3744,7 @@ mod tests {
             seed: 3,
             jitter: 2.0,
             fixture: 0.0,
+            groove: 0.0,
             show: crate::PuzzleLayout::Design,
             spread: 0.0,
             light: None,
@@ -3600,6 +3792,7 @@ mod tests {
             seed: None,
             jitter: None,
             fixture: None,
+            groove: None,
             spread: None,
             light: None,
             dark: None,
@@ -3641,6 +3834,7 @@ mod tests {
             seed: None,
             jitter: None,
             fixture: None,
+            groove: None,
             spread: None,
             light: None,
             dark: None,
@@ -3699,6 +3893,7 @@ mod tests {
             seed: None,
             jitter: None,
             fixture: Some(5.0),
+            groove: None,
             show: None,
             spread: None,
             light: None,
@@ -3754,6 +3949,7 @@ mod tests {
                 seed: None,
                 jitter: None,
                 fixture: None,
+                groove: None,
                 spread: None,
                 light: None,
                 dark: None,

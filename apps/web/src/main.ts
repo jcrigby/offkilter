@@ -2464,8 +2464,8 @@ class App implements SketchHost {
     body.appendChild(field("Router bit ⌀", this.exprInput(f, "bit", k.bit, (v) => set({ bit: v }))));
     body.appendChild(field("Lock angle°", numberInput(k.lock, (v) => set({ lock: v }))));
     body.appendChild(field("Grain along", select(["x", "y"], k.grain, (v) => set({ grain: v as Grain }))));
-    const show = select(["design", "light", "dark"], k.show, (v) => set({ show: v as PuzzleLayout }));
-    show.title = "The assembled design, or one colour's pieces laid out for its board with each row further along than the last, so the bit rounds no corners";
+    const show = select(["design", "light", "dark", "pattern"], k.show, (v) => set({ show: v as PuzzleLayout }));
+    show.title = "The assembled design; one colour's pieces laid out for its board with each row further along than the last, so the bit rounds no corners; or the printable pattern plate with the gaps as grooves";
     body.appendChild(field("Show", show));
     const spread = this.exprInput(f, "spread", k.spread, (v) => set({ spread: Math.max(0, v) }));
     spread.title = "How much further along each row of a board layout sits than the last; 0 is one bit diameter, the least that keeps the bit off diagonal corners";
@@ -2486,6 +2486,9 @@ class App implements SketchHost {
     wood("Dark wood", k.dark, (m) => set({ dark: m }));
     body.appendChild(field("Web height", numberInput(k.web, (v) => set({ web: v }))));
     body.appendChild(field("Fixture depth", numberInput(k.fixture, (v) => set({ fixture: v }))));
+    const groove = numberInput(k.groove, (v) => set({ groove: v }));
+    groove.title = "A printable pattern plate with the gaps as grooves this deep: a pilot the size of the gap rides in them while a bit of that size cuts the pieces apart from one board, the kerf being the gap; the board's thickness and a little. 0 for none.";
+    body.appendChild(field("Pattern groove", groove));
     body.appendChild(field("Corner jitter", numberInput(k.jitter, (v) => set({ jitter: v }))));
     const reseed = button("Reseed", () => set({ seed: Math.floor(Math.random() * 100000) }));
     reseed.title = "New random tab directions and corner positions (undo brings the old ones back)";

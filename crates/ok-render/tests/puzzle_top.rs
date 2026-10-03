@@ -78,6 +78,82 @@ fn the_puzzle_regenerates_into_pieces_and_a_web() {
     assert!(elapsed.as_secs() < 20, "{elapsed:?}");
 }
 
+/// The resin top's pattern plate, the layout the script exports for
+/// printing: the gap lattice as grooves the board's thickness and a half
+/// millimetre deep, in a slab 10 mm wider all round, and nothing else.
+#[test]
+fn the_top_has_a_pattern_plate_to_print() {
+    let dir = example_dir();
+    let json = std::fs::read_to_string(dir.join("out/puzzle_top.okpart")).unwrap();
+    let mut doc = ok_model::Document::from_json(&json).unwrap();
+    let tab = doc.tabs[0].id;
+    let r = doc.regenerate_studio(tab, None).unwrap();
+    let (feature_id, feature) = match &doc.tabs[0].kind {
+        ok_model::TabKind::PartStudio(ps) => match &ps.features()[0].kind {
+            ok_model::FeatureKind::Puzzle(p) => (ps.features()[0].id, p.clone()),
+            other => panic!("{other:?}"),
+        },
+        _ => unreachable!(),
+    };
+    assert!(
+        (feature.groove - feature.thickness - 0.5).abs() < 1e-9,
+        "{}",
+        feature.groove
+    );
+    let web_area = r.bodies[48].solid.volume() / feature.web;
+    if let ok_model::TabKind::PartStudio(ps) = &mut doc.tabs[0].kind {
+        ps.apply(ok_model::Op::SetPuzzle {
+            id: feature_id,
+            cols: None,
+            rows: None,
+            pitch: None,
+            thickness: None,
+            gap: None,
+            bit: None,
+            lock: None,
+            grain: None,
+            web: None,
+            seed: None,
+            jitter: None,
+            fixture: None,
+            groove: None,
+            spread: None,
+            light: None,
+            dark: None,
+            show: Some(ok_model::PuzzleLayout::Pattern),
+            tabs: None,
+            corners: None,
+        })
+        .unwrap();
+    }
+    let r = doc.regenerate_studio(tab, None).unwrap();
+    assert!(
+        r.errors().next().is_none(),
+        "{:?}",
+        r.errors().collect::<Vec<_>>()
+    );
+    assert_eq!(r.bodies.len(), 1);
+    let plate = &r.bodies[0];
+    assert_eq!(plate.name, "Pattern plate");
+    plate.solid.validate().unwrap();
+    let (lo, hi) = plate.solid.bounds().unwrap();
+    assert!(
+        (hi.z - feature.groove).abs() < 1e-9 && (lo.z + 3.0).abs() < 1e-9,
+        "{lo:?} {hi:?}"
+    );
+    assert!(
+        (lo.x + 10.0).abs() < 1e-9 && (hi.x - 8.0 * feature.pitch - 10.0).abs() < 1e-9,
+        "{lo:?} {hi:?}"
+    );
+    let slab = (8.0 * feature.pitch + 20.0) * (6.0 * feature.pitch + 20.0) * (feature.groove + 3.0);
+    let grooves = slab - plate.solid.volume();
+    assert!(
+        (grooves - web_area * feature.groove).abs() < 0.02 * web_area * feature.groove,
+        "grooves {grooves} vs lattice {web_area} by {}",
+        feature.groove
+    );
+}
+
 /// The tight version: no gap, a tray with a pocket per piece, and a
 /// fabrication layout per colour with the rows spread a bit apart.
 #[test]
@@ -165,6 +241,7 @@ fn the_tight_top_has_a_fixture_and_fabrication_layouts() {
                 seed: None,
                 jitter: None,
                 fixture: None,
+                groove: None,
                 spread: None,
                 light: None,
                 dark: None,

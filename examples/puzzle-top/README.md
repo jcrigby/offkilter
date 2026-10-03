@@ -27,6 +27,14 @@ cargo test -p ok-render --test puzzle_top     # what CI runs
   for its own size, neck and position, and a corner drags. A design the
   rules refuse still draws, with the rules listed under it.
 - `out/templates.dxf`: every piece outline of the resin top at 1:1.
+- `out/pattern_plate.stl` (and `pattern_plate.png`): the resin top's
+  pattern plate, the `pattern` layout: the 1.5 mm gap lattice as
+  grooves 12.5 mm deep in a slab 10 mm wider than the board, to print
+  and lay beside the blank. A 1.5 mm pilot in the grooves and a 1.5 mm
+  bit beside it on the same slide cut every piece from one board in one
+  sitting, the kerf being the gap; the pilot bottoming in the groove is
+  the last pass. (At 12 mm stock a 2 mm bit and gap is the safer pair;
+  the gap and groove are parameters.)
 - `out/maple_templates.dxf`, `out/walnut_templates.dxf` (and the
   `*_layout.png` pictures): the tight top's fabrication layouts, one
   colour's pieces on their board with every row a bit diameter further
