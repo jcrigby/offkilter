@@ -24,6 +24,7 @@ from build import Mcp  # noqa: E402  (the router lift's MCP client)
 
 COLS, ROWS, PITCH, THICKNESS = 8, 6, 38.0, 12.0
 GAP, WEB, BIT, LOCK, JITTER, SEED = 1.5, 5.0, 6.35, 20.0, 3.0, 42
+GROOVE = THICKNESS + 0.5  # the pattern plate's grooves: the pilot bottoms there on the last pass, the bit just through the board
 LIGHT = {"name": "Maple", "density": 0.7}  # g/cm3: the parts list names the species
 DARK = {"name": "Walnut", "density": 0.64}
 
@@ -57,6 +58,7 @@ def main():
                 "lock": LOCK,
                 "grain": "x",
                 "web": WEB,
+                "groove": GROOVE,
                 "seed": SEED,
                 "jitter": JITTER,
                 "light": LIGHT,
@@ -96,6 +98,14 @@ def main():
         mcp.call("screenshot", {"tab": 1, "view": view, "width": 1200, "height": 900, "path": os.path.join(out, f"{name}.png")})
     # The routing templates: every outline at 1:1, and the pieces as STL.
     print(mcp.call("export", {"tab": 1, "format": "dxf", "view": "top", "path": os.path.join(out, "templates.dxf")}))
+    # The pattern plate for cutting the gapped top from one board: a
+    # pilot the size of the gap rides its grooves while a bit that size,
+    # on the same slide, cuts the kerf that is the gap. Its own layout,
+    # exported to print, then back to the design.
+    apply(mcp, [{"type": "set_puzzle", "id": feature, "show": "pattern"}])
+    mcp.call("screenshot", {"tab": 1, "view": "iso", "width": 1200, "height": 900, "path": os.path.join(out, "pattern_plate.png")})
+    print(mcp.call("export", {"tab": 1, "format": "stl", "body": "Pattern plate", "path": os.path.join(out, "pattern_plate.stl")}))
+    apply(mcp, [{"type": "set_puzzle", "id": feature, "show": "design"}])
     print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(out, "pieces.stl")}))
     # The tight version: no gap at all, no web, and a tray to print.
     text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "Tight top"}]})

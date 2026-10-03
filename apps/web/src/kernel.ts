@@ -89,11 +89,11 @@ export type FeatureKind =
   | { type: "draft"; faces: FaceRef[]; neutral: PlaneRef; angle: number }
   | { type: "mesh"; vertices: Vec3[]; triangles: [number, number, number][] }
   | { type: "split"; plane: PlaneRef; bodies?: number[] }
-  | { type: "puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap: number; bit: number; lock: number; grain: Grain; web: number; seed: number; jitter: number; fixture: number; show: PuzzleLayout; spread: number; light?: Material; dark?: Material; tabs: PuzzleTab[]; corners: Vec2[] }
+  | { type: "puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap: number; bit: number; lock: number; grain: Grain; web: number; seed: number; jitter: number; fixture: number; /** Groove depth of the printable pattern plate (the gap lattice as grooves); 0 for none. */ groove: number; show: PuzzleLayout; spread: number; light?: Material; dark?: Material; tabs: PuzzleTab[]; corners: Vec2[] }
   /** An involute spur gear: external with a `bore`, or internal (teeth inside a ring of outer diameter `rim`) when `rim` is set; `angle` turns the first tooth's centreline from the plane's x axis, `backlash` thins the teeth at the pitch circle, `shift` is the profile shift in modules (external only), `fillet` the root fillet radius. */
   | { type: "gear"; plane: PlaneRef; center: Vec2; module: number; teeth: number; pressure_angle: number; width: number; direction: ExtrudeDirection; bore: number; rim: number; angle: number; backlash: number; shift: number; fillet: number; /** Pitch cone half-angle in degrees of a bevel gear; 0 for a spur gear. */ cone: number; op: BodyOp };
 /** What a puzzle regenerates: the assembled design, or one colour's pieces laid out for its board with the rows spread a bit apart. */
-export type PuzzleLayout = "design" | "light" | "dark";
+export type PuzzleLayout = "design" | "light" | "dark" | "pattern";
 /** One interlocking tab: `out` bulges towards the higher-index piece; `size` scales the tab, `width` the neck, `shift` places it along the edge (0..1). */
 export type PuzzleTab = { out: boolean; size: number; width: number; shift: number };
 export type Grain = "x" | "y";
@@ -263,8 +263,8 @@ export type Op =
   | { type: "set_variable"; id: number; name?: string | null; expression?: string | null }
   | { type: "set_binding"; id: number; field: string; expression: string | null }
   | { type: "add_hole"; sketch: number; diameter: number; depth?: number; through_all?: boolean; direction?: ExtrudeDirection; counterbore?: Counterbore | null; countersink?: Countersink | null; name: string | null }
-  | { type: "add_puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; fixture?: number; show?: PuzzleLayout; spread?: number; light?: Material; dark?: Material; name: string | null }
-  | { type: "set_puzzle"; id: number; cols?: number; rows?: number; pitch?: number; thickness?: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; fixture?: number; show?: PuzzleLayout; spread?: number; light?: Material | null; dark?: Material | null; tabs?: PuzzleTab[]; corners?: Vec2[] }
+  | { type: "add_puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; fixture?: number; groove?: number; show?: PuzzleLayout; spread?: number; light?: Material; dark?: Material; name: string | null }
+  | { type: "set_puzzle"; id: number; cols?: number; rows?: number; pitch?: number; thickness?: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; fixture?: number; groove?: number; show?: PuzzleLayout; spread?: number; light?: Material | null; dark?: Material | null; tabs?: PuzzleTab[]; corners?: Vec2[] }
   | { type: "set_puzzle_tab"; id: number; edge: number; out?: boolean; size?: number; width?: number; shift?: number }
   | { type: "set_puzzle_corner"; id: number; node: number; offset: Vec2 }
   | { type: "add_gear"; plane: PlaneRef; center?: Vec2; module: number; teeth: number; pressure_angle?: number; width: number; direction?: ExtrudeDirection; bore?: number; rim?: number; angle?: number; backlash?: number; shift?: number; fillet?: number; cone?: number; op?: BodyOp; name: string | null }

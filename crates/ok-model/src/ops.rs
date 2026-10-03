@@ -444,6 +444,8 @@ pub enum Op {
         #[serde(default)]
         fixture: f64,
         #[serde(default)]
+        groove: f64,
+        #[serde(default)]
         show: crate::PuzzleLayout,
         #[serde(default)]
         spread: f64,
@@ -481,6 +483,8 @@ pub enum Op {
         jitter: Option<f64>,
         #[serde(default)]
         fixture: Option<f64>,
+        #[serde(default)]
+        groove: Option<f64>,
         #[serde(default)]
         show: Option<crate::PuzzleLayout>,
         #[serde(default)]
@@ -1530,6 +1534,7 @@ impl PartStudio {
                 seed,
                 jitter,
                 fixture,
+                groove,
                 show,
                 spread,
                 light,
@@ -1550,6 +1555,7 @@ impl PartStudio {
                     seed,
                     jitter,
                     fixture,
+                    groove,
                     show,
                     spread,
                     light,
@@ -1574,6 +1580,7 @@ impl PartStudio {
                 seed,
                 jitter,
                 fixture,
+                groove,
                 show,
                 spread,
                 light,
@@ -1621,6 +1628,9 @@ impl PartStudio {
                     }
                     if let Some(v) = fixture {
                         p.fixture = v;
+                    }
+                    if let Some(v) = groove {
+                        p.groove = v;
                     }
                     if let Some(v) = show {
                         p.show = v;

@@ -334,3 +334,17 @@ one thread. A server route would have kept the wasm small and let the
 server cache sheets, but every other reading tool (DXF, STEP, STL) is
 client side too, and a route would have been one more thing that only
 works signed in.
+
+## The puzzle's resin gap is the kerf
+
+The gapped top was going to be pin-routed piece by piece from a
+template layout with the rows spread apart. The pattern plate replaces
+that: the gap lattice printed as grooves, a pilot the size of the gap
+riding in them and a bit of the same size beside it on one slide, so
+the kerf is the gap and all 48 pieces come off one board in one sitting,
+in their places, with no offset between template and cut. It needs a
+gap, which the resin top has and the tight top does not, and a bit as
+thin as the gap, which is why the stock should stay at 10 to 12 mm and
+the gap can go to 2 mm. The tight top keeps the template route. The
+plate is its own layout (`show: "pattern"`) rather than a body in the
+design, so the design's drawings and template DXF stay what they were.
