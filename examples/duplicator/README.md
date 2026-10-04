@@ -24,9 +24,10 @@ balloons and list.
 
 ## How it is built
 
-- **Base and Y.** A 900 x 810 ply base. The two Y shafts (700 mm) run
+- **Base and Y.** A 900 x 855 ply base. The two Y shafts (700 mm) run
   front to back at x = ±415 on SK20s standing straight on the ply, with
-  two blocks 230 apart on each. The rails are that far out so the tool
+  two blocks 230 apart on each, 45 mm back of centre so the deck over
+  them clears the carriage plate. The rails are that far out so the tool
   plate's ends pass over the front supports at the last pass with the
   bit at the blank's edge (at ±380 they clipped them by 1.5 mm), and
   the shafts are 700 rather than 600 because the Z pair only needs 250
@@ -34,17 +35,21 @@ balloons and list.
   the puzzle. The two work platforms (330 x 300) sit
   between the rails, the pattern's 3.5 mm lower so the plate's top is
   level with a 12 mm blank.
-- **The gantry.** One piece on the four Y blocks: a deck (890 x 280,
+- **The gantry.** One piece on the four Y blocks: a deck (890 x 300,
   one ply) across both rails, a wall (890 x 270, one ply) standing on
-  its back edge, and a triangular gusset in each corner. Two separate
+  it, and a triangular gusset in each corner. Two separate
   beds with a post each would rack, one side running ahead of the
   other with only the X shafts' bending to stop it (about 90 N/mm for
   the pair, half a millimetre for a lopsided 50 N push); as an angle
   the deck takes racking as in-plane shear, the wall the fore-and-aft
-  bending, and the gussets close each end into a triangle. The deck is
-  an H in plan, a 240 mm bite out of its front edge where the Z
-  carriage plate hangs to the board top, and it rides 45 mm above the
-  blank and clears the Y supports at full travel. One bridge on two
+  bending, and the gussets close each end into a triangle. The deck's
+  front edge is 11 mm behind the Z carriage plate, which hangs from the
+  X shafts to the board top and sweeps the whole X travel in front of
+  it (an earlier version notched the deck round the plate, which would
+  have pinned the X travel to the notch; the sweep test now intersects
+  every pair of parts that move differently, which is what catches
+  that). The deck rides 45 mm above the blank and clears the Y supports
+  at full travel. One bridge on two
   round rails needs them parallel to within the blocks' clearance: set
   the SK20s by sliding the finished gantry end to end before the last
   tightening.
@@ -82,8 +87,8 @@ the fence beside it; both are ply and both are meant to be marked.
 | | |
 |---|---|
 | Travel | X ±277.5, Y ±192.5, Z 62.5 down from the drawn raised pose |
-| Sweep | the bit at the blank's edges and middle, every 25 mm in Y from the reference hole to the back edge, first and last pass: no moving part meets a fixed one but the tools in the work |
-| Gantry | deck on all four Y blocks, wall on the deck full width, deck 45 above the blank, the carriage plate through the notch |
+| Sweep | the bit at the blank's edges and middle, every 25 mm in Y from the reference hole to the back edge, first and last pass (the stop screw backed off for the last): no two parts that move differently meet but the tools in the work |
+| Gantry | deck on all four Y blocks, wall on the deck full width, deck 45 above the blank and behind the carriage plate |
 | Reach | bit over the 304 x 260 blank, pilot over the 304 x 260 lattice |
 | Depth | tips 40 above the board raised; first pass 4 mm; last pass 12.5 mm, 52.5 of the 62.5 mm of travel |
 | Clearance at the last pass | chuck 5.5 mm above the plate; tool plate 36 mm above the blank |
