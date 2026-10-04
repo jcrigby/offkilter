@@ -21,8 +21,8 @@ the last. The pilot is 2 mm drill rod in a keyless mini chuck whose
 
 Frame: x across, y toward the operator negative, z up from the base
 top. All in mm; every part built in place at mid travel, Z raised.
-Shafts: X 760 (x2), Y 600 (x2), Z 250 (x2): the four 1000 mm shafts on
-hand cut 760 + 240 and 600 + 400, the Z pair from the 400 offcuts; the
+Shafts: X 760 (x2), Y 700 (x2), Z 250 (x2): the four 1000 mm shafts on
+hand cut 760 + 240 and 700 + 300, the Z pair from the 300 offcuts; the
 third SFC20 kit supplies the last four SK20s and SC20UUs.
 """
 import os
@@ -39,7 +39,7 @@ SHAFT_D = 20.0
 SK_W, SK_T, SK_H, SK_HTOT = 60.0, 20.0, 51.0, 70.0      # SK20: base width, thickness along the shaft, base to centre, height
 BLK_W, BLK_L, BLK_H, BLK_C = 50.0, 45.0, 42.0, 25.0     # SC20UU: width across, length along the shaft, height, base to centre
 # Base and platforms.
-BASE = dict(x=(-450.0, 450.0), y=(-430.0, 330.0), z=(-PLY, 0.0))
+BASE = dict(x=(-450.0, 450.0), y=(-430.0, 380.0), z=(-PLY, 0.0))
 TOOL_Y = -280.0                                         # the bit and pilot at mid travel
 BIT_X, PILOT_X = -175.0, 175.0                          # the two tools, over the two platforms
 PLATFORM_W, PLATFORM_D = 330.0, 300.0
@@ -47,11 +47,11 @@ BOARD_W, BOARD_D, BOARD_T = 304.0, 260.0, 12.0
 PLATE_W, PLATE_D, PLATE_FLOOR, GROOVE_D, GROOVE_W = 324.0, 280.0, 3.0, 12.5, 2.0
 BOARD_TOP = PLY + BOARD_T                               # 31: the Z slide's datum
 # Y axis: shafts along y at x = +/-300, on SK20s on risers.
-Y_RAIL_X, Y_SHAFT = 380.0, (-300.0, 300.0)              # rails outside the platforms (x to +/-340) and their risers
-Y_SK_Y = (-290.0, 290.0)                                # support centres
+Y_RAIL_X, Y_SHAFT = 415.0, (-350.0, 350.0)              # rails outside the platforms (x to +/-340), their supports clear of the tool plate's ends at full X
+Y_SK_Y = (-340.0, 340.0)                                # support centres
 Y_AXIS_Z = SK_H                                         # 51: the supports stand on the base
 Y_BED_Z = Y_AXIS_Z + BLK_C                              # 76: the blocks' bases up, the deck on them
-DECK_X, DECK_Y = 430.0, 140.0                           # the deck, 860 x 280, over both rails' blocks
+DECK_X, DECK_Y = 445.0, 140.0                           # the deck, 890 x 280, over both rails' blocks
 NOTCH_X, NOTCH_Y = 120.0, -100.0                        # the bite out of its front edge for the Z carriage plate
 YC = 0.0                                                # the carriages' y at this pose
 # X axis: two shafts along x, one above the other, between upright posts on the Y beds.
@@ -116,7 +116,7 @@ def ycyl(p, name, y0, y1, cx, cz, d, op="new"):
 
 
 def base(p):
-    box(p, "base, 900 x 760 ply", BASE["x"], BASE["y"], BASE["z"])
+    box(p, "base, 900 x 810 ply", BASE["x"], BASE["y"], BASE["z"])
 
 
 def deck(p):
@@ -160,7 +160,7 @@ def y_supports(p):
 
 def y_shafts(p):
     for i, sx in enumerate((-Y_RAIL_X, Y_RAIL_X)):
-        ycyl(p, "20 mm shaft, Y, 600", Y_SHAFT[0], Y_SHAFT[1], sx, Y_AXIS_Z, SHAFT_D, op="new" if i == 0 else "add")
+        ycyl(p, "20 mm shaft, Y, 700", Y_SHAFT[0], Y_SHAFT[1], sx, Y_AXIS_Z, SHAFT_D, op="new" if i == 0 else "add")
 
 
 def y_blocks(p):
@@ -392,7 +392,7 @@ PARTS = [
 
 GROUPS = [
     ("base_y", "Base and Y axis", ["Base", "Y supports SK20", "Y shafts", "Y blocks SC20UU", "Deck", "Platforms", "Fences"],
-     "ply base 900 x 760; Y shafts 600 at x = +/-380, SK20s 580 apart; one deck 860 x 280 on the four blocks, 230 apart"),
+     "ply base 900 x 810; Y shafts 700 at x = +/-415, SK20s 680 apart; one deck 890 x 280 on the four blocks, 230 apart"),
     ("x_axis", "X axis", ["Deck", "Wall", "Gussets", "X supports SK20", "X shafts", "X blocks SC20UU"],
      "deck and wall, one ply each, an angle with a gusset in each corner; X shafts 760 at z = 160 and 310, SK20s 740 apart"),
     ("z_axis", "Z axis", ["X blocks SC20UU", "Z carriage plate", "Z supports SK20", "Z shafts", "Z blocks SC20UU"],
@@ -434,7 +434,7 @@ def main():
         mcp.call("screenshot", {"tab": asm, "view": view, "width": 1600, "height": 1100, "path": os.path.join(OUT, f"{name}.png")})
     mcp.call("screenshot", {"tab": asm, "view": "front", "section": f"y:{TOOL_Y + 0.5}:flip", "width": 1600, "height": 1100, "path": os.path.join(OUT, "section_tools.png")})
     mcp.call("screenshot", {"tab": asm, "view": "right", "section": "x:0", "width": 1600, "height": 1100, "path": os.path.join(OUT, "section_carriage.png")})
-    print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A2", "note": "round rail duplicator, puzzle size: X 760 stacked, Y 600, Z 250 shafts; one-piece gantry on the Y blocks", "path": os.path.join(OUT, "duplicator.pdf")}))
+    print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A2", "note": "round rail duplicator, puzzle size: X 760 stacked, Y 700, Z 250 shafts; one-piece gantry on the Y blocks", "path": os.path.join(OUT, "duplicator.pdf")}))
     # Sub-assembly sheets: each group of parts on its own tab, drawn at the
     # largest scale that fits an A3, with its own balloons and parts list.
     for file, title, group, note in GROUPS:

@@ -194,7 +194,10 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
     );
     println!("travel x -{x_minus} +{x_plus}, y -{y_minus} +{y_plus}, z -{z_down} +{z_up}");
     assert!(x_minus > 250.0 && x_plus > 250.0, "X travel");
-    assert!(y_minus > 135.0 && y_plus > 135.0, "Y travel");
+    assert!(
+        y_minus > 185.0 && y_plus > 185.0,
+        "Y travel: 100 beyond the puzzle"
+    );
     assert!(z_down > 50.0, "Z travel down {z_down}");
 
     // Reach: the bit over the whole blank, the pilot over the whole
@@ -372,4 +375,141 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
         let v = overlap(body(&r, a), body(&r, b)).unwrap_or_else(|| panic!("{a} x {b}"));
         assert!(v < 1e-6, "{a} x {b}: {v} mm3");
     }
+}
+
+/// The parts that move with the Y gantry (and, within it, with the X
+/// slide and the Z slide), by the name of the studio that places them.
+const GANTRY: &[&str] = &[
+    "Y blocks SC20UU",
+    "Deck",
+    "Wall",
+    "Gussets",
+    "X supports SK20",
+    "X shafts",
+];
+const X_SLIDE: &[&str] = &[
+    "X blocks SC20UU",
+    "Z carriage plate",
+    "Z supports SK20",
+    "Z shafts",
+];
+const Z_SLIDE: &[&str] = &[
+    "Z blocks SC20UU",
+    "Tool support",
+    "Tool support webs",
+    "Clamp bolts",
+    "Router",
+    "Pilot",
+    "Stop screw",
+];
+
+fn in_groups(name: &str, groups: &[&str]) -> bool {
+    groups
+        .iter()
+        .any(|g| name == *g || name.starts_with(&format!("{g} ")))
+}
+
+/// The tools in the work are the point: the bit in the blank (and, on
+/// the last pass, half a millimetre into the platform under it and a
+/// half kerf into the fence where the pattern runs to the blank's edge),
+/// the pilot in the plate's grooves or its reference hole.
+fn tool_in_work(a: &str, b: &str) -> bool {
+    (a == "Router" || a == "Pilot")
+        && [
+            "Blank",
+            "Pattern plate",
+            "Platforms 1",
+            "Platforms 2",
+            "Fences 1",
+            "Fences 2",
+        ]
+        .contains(&b)
+}
+
+/// The machine swept over the work: the bit at the blank's left edge,
+/// middle and right edge, every 25 mm from the reference hole's y to the
+/// blank's back edge, at the first and the last pass; every moving part
+/// against every fixed one. The drawn pose is mid travel with the slide
+/// raised, so the poses are offsets from it. A touch is allowed; an
+/// overlap that is not a tool in the work is a collision.
+#[test]
+fn the_machine_clears_itself_over_the_work() {
+    let mut doc = load();
+    let machine = tab_named(&doc, "Duplicator");
+    let r = doc.regenerate_assembly(machine).unwrap();
+    let (bit_lo, bit_hi) = bounds(body(&r, "Router"));
+    let bit = Vec3::new(
+        (bit_lo.x + bit_hi.x) / 2.0,
+        (bit_lo.y + bit_hi.y) / 2.0,
+        bit_lo.z,
+    );
+    let (blank_lo, blank_hi) = bounds(body(&r, "Blank"));
+    let (plate_lo, plate_hi) = bounds(body(&r, "Pattern plate"));
+    // Where the bit has to go: the blank's corners and, through the
+    // pilot, the reference hole 5 mm inside the plate's front-left corner.
+    let xs = [blank_lo.x - bit.x, 0.0, blank_hi.x - bit.x];
+    let (y0, y1) = (
+        (plate_lo.y + 5.0 - bit.y).min(blank_lo.y - bit.y),
+        blank_hi.y - bit.y,
+    );
+    let steps = ((y1 - y0) / 25.0).ceil() as usize;
+    let ys: Vec<f64> = (0..=steps)
+        .map(|i| y0 + (y1 - y0) * i as f64 / steps as f64)
+        .collect();
+    let first_pass = -(bit.z - blank_hi.z) + 4.0;
+    let last_pass = -(bit.z - plate_hi.z) - 12.5;
+    let fixed: Vec<&ok_model::Body> = r
+        .bodies
+        .iter()
+        .filter(|b| {
+            !in_groups(&b.name, GANTRY)
+                && !in_groups(&b.name, X_SLIDE)
+                && !in_groups(&b.name, Z_SLIDE)
+        })
+        .collect();
+    let mut hits = Vec::new();
+    let mut poses = 0;
+    for &dx in &xs {
+        for &dy in &ys {
+            poses += 1;
+            for &dz in &[first_pass, last_pass] {
+                for b in &r.bodies {
+                    let shift = if in_groups(&b.name, Z_SLIDE) {
+                        Vec3::new(dx, dy, dz)
+                    } else if in_groups(&b.name, X_SLIDE) {
+                        Vec3::new(dx, dy, 0.0)
+                    } else if in_groups(&b.name, GANTRY) {
+                        Vec3::new(0.0, dy, 0.0)
+                    } else {
+                        continue;
+                    };
+                    let moved = b.solid.transformed(&ok_brep::Transform::translation(shift));
+                    for f in &fixed {
+                        match overlap(&moved, &f.solid) {
+                            Some(v) if v > 1e-3 && !tool_in_work(&b.name, &f.name) => {
+                                hits.push(format!(
+                                    "{} x {} at ({dx}, {dy}, {dz}): {v:.1} mm3",
+                                    b.name, f.name
+                                ))
+                            }
+                            Some(v) if v > 100.0 => hits.push(format!(
+                                "{} x {} at ({dx}, {dy}, {dz}): {v:.1} mm3 of tool in the work",
+                                b.name, f.name
+                            )),
+                            None => hits.push(format!(
+                                "{} x {} at ({dx}, {dy}, {dz}): boolean failed",
+                                b.name, f.name
+                            )),
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+    println!("{} poses", poses * 2);
+    for h in &hits {
+        println!("{h}");
+    }
+    assert!(hits.is_empty(), "{} collisions", hits.len());
 }
