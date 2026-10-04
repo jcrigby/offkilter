@@ -80,7 +80,8 @@ fn the_puzzle_regenerates_into_pieces_and_a_web() {
 
 /// The resin top's pattern plate, the layout the script exports for
 /// printing: the gap lattice as grooves the board's thickness and a half
-/// millimetre deep, in a slab 10 mm wider all round, and nothing else.
+/// millimetre deep, in a slab 10 mm wider all round, and a reference
+/// hole the size of the gap 5 mm inside the slab's front-left corner.
 #[test]
 fn the_top_has_a_pattern_plate_to_print() {
     let dir = example_dir();
@@ -145,8 +146,30 @@ fn the_top_has_a_pattern_plate_to_print() {
         (lo.x + 10.0).abs() < 1e-9 && (hi.x - 8.0 * feature.pitch - 10.0).abs() < 1e-9,
         "{lo:?} {hi:?}"
     );
+    // The reference hole: one cylinder of the gap's radius through the
+    // plate at (-5, -5), outside the board's outline.
+    let holes: Vec<_> = plate
+        .solid
+        .surfaces
+        .iter()
+        .filter_map(|s| match s {
+            ok_brep::Surface::Cylinder { origin, radius, .. }
+                if (radius - feature.gap / 2.0).abs() < 1e-9 =>
+            {
+                Some(*origin)
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(holes.len(), 1, "{holes:?}");
+    assert!(
+        (holes[0].x + 5.0).abs() < 1e-9 && (holes[0].y + 5.0).abs() < 1e-9,
+        "{:?}",
+        holes[0]
+    );
+    let hole = std::f64::consts::PI * (feature.gap / 2.0).powi(2) * (feature.groove + 3.0);
     let slab = (8.0 * feature.pitch + 20.0) * (6.0 * feature.pitch + 20.0) * (feature.groove + 3.0);
-    let grooves = slab - plate.solid.volume();
+    let grooves = slab - hole - plate.solid.volume();
     assert!(
         (grooves - web_area * feature.groove).abs() < 0.02 * web_area * feature.groove,
         "grooves {grooves} vs lattice {web_area} by {}",

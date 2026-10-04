@@ -1026,7 +1026,7 @@ impl PartStudio {
                 }
                 area += profiles[0].area();
             }
-            return match Self::puzzle_pattern_plate(&jig, &plane, pf.groove, area, opts) {
+            return match Self::puzzle_pattern_plate(&jig, &plane, pf.groove, pf.gap, area, opts) {
                 Ok(mut solid) => {
                     for f in &mut solid.faces {
                         f.origin.local += (jig.pieces.len() as u32 + 3) * PIECE_LOCALS;
@@ -1166,15 +1166,23 @@ impl PartStudio {
     /// cuts the pieces apart from one board; the pilot bottoming in a
     /// groove sets the last pass, so `depth` is the board's thickness
     /// and a little.
+    /// The printable pattern plate: the gap lattice as grooves `depth`
+    /// deep in a slab `MARGIN` wider than the board all round on a
+    /// `FLOOR`, with a reference hole the size of the gap `REFERENCE`
+    /// inside the slab's front-left corner, outside the board's outline:
+    /// the pilot in it puts the bit at the matching point beside the
+    /// blank, which is how the blank's fence is set.
     fn puzzle_pattern_plate(
         jig: &ok_sketch::jigsaw::Jigsaw,
         plane: &Plane,
         depth: f64,
+        gap: f64,
         piece_area: f64,
         opts: &ProfileOptions,
     ) -> Result<Solid, String> {
         const MARGIN: f64 = 10.0;
         const FLOOR: f64 = 3.0;
+        const REFERENCE: f64 = 5.0;
         let mut sk = ok_sketch::Sketch::new();
         sk.add_rectangle(
             Vec2::new(-MARGIN, -MARGIN),
@@ -1185,7 +1193,17 @@ impl PartStudio {
         let lattice = Self::puzzle_web(jig, piece_area, opts)?;
         let cutter =
             ok_brep::extrude(&lattice, plane, 0.0, depth + 1.0, 0).map_err(|e| e.to_string())?;
-        boolean(&plate, &cutter, BoolOp::Difference).map_err(|e| e.to_string())
+        let plate = boolean(&plate, &cutter, BoolOp::Difference).map_err(|e| e.to_string())?;
+        let mut sk = ok_sketch::Sketch::new();
+        sk.add_circle(Vec2::new(REFERENCE - MARGIN, REFERENCE - MARGIN), gap / 2.0);
+        let hole = sk
+            .profiles(opts)
+            .into_iter()
+            .next()
+            .ok_or("no reference hole")?;
+        let drill = ok_brep::extrude(&hole, plane, -FLOOR - 1.0, depth + 1.0, 0)
+            .map_err(|e| e.to_string())?;
+        boolean(&plate, &drill, BoolOp::Difference).map_err(|e| e.to_string())
     }
 
     /// The region between the pieces: every outline plus the short
