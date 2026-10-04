@@ -32,7 +32,9 @@ reference hole, at the centre, and at the back-right corner).
 
 ## How it is built
 
-- **Base and Y.** A 900 x 855 ply base. The two Y shafts (700 mm) run
+- **Base and Y.** A 900 x 855 ply base on three battens (two plies
+  glued, 38 x 40, the full width, clear of the Y supports' T-nuts), so
+  it cannot sag over the bench. The two Y shafts (700 mm) run
   front to back at x = ±415 on SK20s standing straight on the ply, with
   two blocks 230 apart on each, 45 mm back of centre so the deck over
   them clears the carriage plate. The rails are that far out so the tool
@@ -118,6 +120,48 @@ now.
 The last pass cuts half a millimetre into the platform under the
 blank and, where the pattern runs to the blank's edge, a half kerf into
 the fence beside it; both are ply and both are meant to be marked.
+
+## Hardware
+
+Bought parts bolt through the ply into T-nuts, never into wood screws:
+the rail supports are aligned by loosening and sliding, and ply will
+not take a wood screw loosened and retightened more than a couple of
+times. Ply joints are glued, the screws clamps and insurance: number 8,
+32 mm into face grain, 50 mm into an edge. The SK20's slots (6.6 mm,
+for M6) and the SC20UU's tapped holes (M5 or M6 by maker) are what they
+usually are; measure the kit before buying. `build.py` writes the same
+schedule to `out/hardware.csv`.
+
+| Joint | Fastener | Count |
+|---|---|---|
+| 12 SK20 supports: 4 Y on the base, 4 X on the wall, 4 Z on the carriage plate | M6 x 40 hex bolt, washer, pronged T-nut from the far face | 24 |
+| 4 Y blocks under the deck, from above | M5 x 30 (or M6) into the block | 16 |
+| 4 X blocks on the carriage plate's back, from its front face | M5 x 30 (or M6) into the block | 16 |
+| 4 Z blocks on the support plate's back, from its front face | M5 x 30 (or M6) into the block; the lower pair countersunk, before the tool plate goes on | 16 |
+| Router clamp | M6 x 100 knob bolt, hex nut in the pocket | 1 |
+| Pilot clamp | M4 x 90 knob bolt, hex nut in the pocket | 1 |
+| Stop screw | M8 x 90 with a knob, through an M8 T-nut set into the top of the ear so the load presses it into the wood, an M8 jam nut above the ear to lock the setting | 1 |
+| Blank's slotted fence | M5 x 25 bolt and washer into a T-nut set into the platform from below, before the platform is screwed down | 6 |
+| Balancer bracket leg to the carriage plate | M6 x 40 bolt and T-nut (the arm's 50 mm overhang turns the reel's 40 N into a prying load) | 2 |
+| Cable eye on the ear | M4 screw eye | 1 |
+| Balancer hook in the arm | 8 mm S-hook or shackle | 1 |
+| Wall onto the deck's back edge, from below through the deck | no. 8 x 50, every 100 mm, glued | 9 |
+| Gussets to the deck and the wall | no. 8 x 50, 3 each way, glued | 12 |
+| Tool plate's two plies laminated | no. 8 x 32, countersunk from below, clear of the bores | 8 |
+| Tool plate to the support plate, from behind | no. 8 x 50, glued | 4 |
+| Webs to the support plate from behind and down into the tool plate | no. 8 x 50, 2 each way, glued | 12 |
+| Stop ear to the support plate, from behind | no. 8 x 50, glued | 2 |
+| Balancer bracket arm to its leg | no. 8 x 50, glued | 2 |
+| Battens under the base | no. 8 x 32 from above, countersunk, every 150 mm, glued | 18 |
+| Platforms to the base, countersunk flush | no. 8 x 32 | 12 |
+| Pattern plate's L fence | no. 6 x 25 | 6 |
+
+Two order-of-assembly catches. The Z supports' T-nuts go into the back
+of the carriage plate at heights 41 to 61 and 251 to 271, which clears
+the X blocks behind it. The lower Z blocks' bolt heads land on the
+support plate's front face inside the band the tool plate glues over,
+so those two blocks are bolted with countersunk heads before the tool
+plate goes on.
 
 ## The numbers the test checks
 
