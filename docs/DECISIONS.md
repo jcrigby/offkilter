@@ -348,3 +348,7 @@ thin as the gap, which is why the stock should stay at 10 to 12 mm and
 the gap can go to 2 mm. The tight top keeps the template route. The
 plate is its own layout (`show: "pattern"`) rather than a body in the
 design, so the design's drawings and template DXF stay what they were.
+The plate carries a reference hole the size of the gap 5 mm inside its
+front-left corner, outside the board: with the pilot in it the bit sits
+5 mm outside the blank's corner, which is how the blank's fence on the
+duplicator is set, so the hole lives in the plate and not in a jig.
