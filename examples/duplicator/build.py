@@ -1,11 +1,12 @@
 """The carving duplicator (Woodsmith SN12918) rebuilt on 20 mm round
 rail: the Y rails straight on a ply base, one gantry riding both of
-them (a deck across the two rails' blocks and a wall standing on its
-back edge, an angle that cannot rack, with a gusset in each corner),
-the two X rails one above the other on the wall, the Z carriage plate
-riding them on blocks bolted to its back (no bed, no joint in bending),
-the Z slide on its front, and two work platforms, the blank on one and
-the printed puzzle pattern plate on the other.
+them (a deck across the two rails' blocks and a wall standing on it,
+an angle that cannot rack, with a gusset in each corner), the two X
+rails one above the other on the wall, the Z carriage plate riding
+them on blocks bolted to its back (no bed, no joint in bending) and
+hanging in front of the deck's front edge, clear of it over the whole
+X travel, the Z slide on its front, and two work platforms, the blank
+on one and the printed puzzle pattern plate on the other.
 
 The router motor and the pilot sit side by side in split clamps through
 one 38 mm tool plate, both bores drilled in one setup, the slits to the
@@ -39,7 +40,7 @@ SHAFT_D = 20.0
 SK_W, SK_T, SK_H, SK_HTOT = 60.0, 20.0, 51.0, 70.0      # SK20: base width, thickness along the shaft, base to centre, height
 BLK_W, BLK_L, BLK_H, BLK_C = 50.0, 45.0, 42.0, 25.0     # SC20UU: width across, length along the shaft, height, base to centre
 # Base and platforms.
-BASE = dict(x=(-450.0, 450.0), y=(-430.0, 380.0), z=(-PLY, 0.0))
+BASE = dict(x=(-450.0, 450.0), y=(-430.0, 425.0), z=(-PLY, 0.0))
 TOOL_Y = -280.0                                         # the bit and pilot at mid travel
 BIT_X, PILOT_X = -175.0, 175.0                          # the two tools, over the two platforms
 PLATFORM_W, PLATFORM_D = 330.0, 300.0
@@ -47,12 +48,12 @@ BOARD_W, BOARD_D, BOARD_T = 304.0, 260.0, 12.0
 PLATE_W, PLATE_D, PLATE_FLOOR, GROOVE_D, GROOVE_W = 324.0, 280.0, 3.0, 12.5, 2.0
 BOARD_TOP = PLY + BOARD_T                               # 31: the Z slide's datum
 # Y axis: shafts along y at x = +/-300, on SK20s on risers.
-Y_RAIL_X, Y_SHAFT = 415.0, (-350.0, 350.0)              # rails outside the platforms (x to +/-340), their supports clear of the tool plate's ends at full X
-Y_SK_Y = (-340.0, 340.0)                                # support centres
+Y_RAIL_X, Y_SHAFT = 415.0, (-305.0, 395.0)              # rails outside the platforms (x to +/-340), their supports clear of the tool plate's ends at full X
+Y_SK_Y = (-295.0, 385.0)                                # support centres, 45 back of centre with the gantry's blocks
 Y_AXIS_Z = SK_H                                         # 51: the supports stand on the base
 Y_BED_Z = Y_AXIS_Z + BLK_C                              # 76: the blocks' bases up, the deck on them
-DECK_X, DECK_Y = 445.0, 140.0                           # the deck, 890 x 280, over both rails' blocks
-NOTCH_X, NOTCH_Y = 120.0, -100.0                        # the bite out of its front edge for the Z carriage plate
+DECK_X, DECK_FRONT, DECK_BACK = 445.0, -100.0, 200.0   # the deck, 890 x 300, over both rails' blocks, its front edge behind the Z carriage plate
+Y_BLOCK_Y = (-70.0, 160.0)                              # the gantry's blocks, 230 apart, under the deck
 YC = 0.0                                                # the carriages' y at this pose
 # X axis: two shafts along x, one above the other, between upright posts on the Y beds.
 X_SHAFT = (-380.0, 380.0)
@@ -116,22 +117,20 @@ def ycyl(p, name, y0, y1, cx, cz, d, op="new"):
 
 
 def base(p):
-    box(p, "base, 900 x 810 ply", BASE["x"], BASE["y"], BASE["z"])
+    box(p, "base, 900 x 855 ply", BASE["x"], BASE["y"], BASE["z"])
 
 
 def deck(p):
     """One ply across both Y rails' blocks, the gantry's floor: racking
-    is in-plane shear of this sheet. An H in plan, the bite out of the
-    front edge for the Z carriage plate, which hangs to the board top."""
-    s = p.sketch("top", Y_BED_Z, "deck")
-    p.polygon(s, [(-DECK_X, YC - DECK_Y), (-NOTCH_X, YC - DECK_Y), (-NOTCH_X, YC + NOTCH_Y), (NOTCH_X, YC + NOTCH_Y),
-                  (NOTCH_X, YC - DECK_Y), (DECK_X, YC - DECK_Y), (DECK_X, YC + DECK_Y), (-DECK_X, YC + DECK_Y)])
-    p.extrude(s, PLY, op="new", name="deck, ply")
+    is in-plane shear of this sheet. Its front edge is behind the Z
+    carriage plate, which hangs from the X shafts to the board top and
+    sweeps the whole X travel in front of it."""
+    box(p, "deck, ply", (-DECK_X, DECK_X), (YC + DECK_FRONT, YC + DECK_BACK), (Y_BED_Z, Y_BED_Z + PLY))
 
 
 def wall(p):
-    """One ply standing on the deck's back edge, full width, the X
-    supports on its front face: with the deck it is an angle."""
+    """One ply standing on the deck, full width, the X supports on its
+    front face: with the deck it is an angle."""
     box(p, "wall, ply", (-DECK_X, DECK_X), (POST_FACE_Y, POST_FACE_Y + WALL_T), (Y_BED_Z + PLY, PLATE_TOP + 20.0))
 
 
@@ -139,7 +138,7 @@ def gussets(p):
     """A triangular web in each corner of the angle, glued to the deck and the wall."""
     for i, sx in enumerate((-Y_RAIL_X, Y_RAIL_X)):
         s = p.sketch("right", sx - PLY / 2, "gusset")
-        p.polygon(s, [(POST_FACE_Y + WALL_T, Y_BED_Z + PLY), (YC + 135.0, Y_BED_Z + PLY), (POST_FACE_Y + WALL_T, PLATE_TOP)])
+        p.polygon(s, [(POST_FACE_Y + WALL_T, Y_BED_Z + PLY), (YC + DECK_BACK - 5.0, Y_BED_Z + PLY), (POST_FACE_Y + WALL_T, PLATE_TOP)])
         p.extrude(s, PLY, op="new" if i == 0 else "add", name="gusset, ply")
 
 
@@ -166,11 +165,11 @@ def y_shafts(p):
 def y_blocks(p):
     first = True
     for sx in (-Y_RAIL_X, Y_RAIL_X):
-        for by in (YC - 115.0, YC + 115.0):
+        for by in (YC + Y_BLOCK_Y[0], YC + Y_BLOCK_Y[1]):
             box(p, "block", (sx - BLK_W / 2, sx + BLK_W / 2), (by - BLK_L / 2, by + BLK_L / 2), (Y_BED_Z - BLK_H, Y_BED_Z), op="new" if first else "add")
             first = False
     for sx in (-Y_RAIL_X, Y_RAIL_X):
-        for by in (YC - 115.0, YC + 115.0):
+        for by in (YC + Y_BLOCK_Y[0], YC + Y_BLOCK_Y[1]):
             s = p.sketch("front", -(by + BLK_L / 2 + 1.0), "bore")
             p.point(s, (sx, Y_AXIS_Z))
             p.hole(s, SHAFT_D, depth=BLK_L + 2.0, direction="normal", name="shaft bore")
@@ -392,7 +391,7 @@ PARTS = [
 
 GROUPS = [
     ("base_y", "Base and Y axis", ["Base", "Y supports SK20", "Y shafts", "Y blocks SC20UU", "Deck", "Platforms", "Fences"],
-     "ply base 900 x 810; Y shafts 700 at x = +/-415, SK20s 680 apart; one deck 890 x 280 on the four blocks, 230 apart"),
+     "ply base 900 x 855; Y shafts 700 at x = +/-415, SK20s 680 apart; one deck 890 x 300 on the four blocks, 230 apart"),
     ("x_axis", "X axis", ["Deck", "Wall", "Gussets", "X supports SK20", "X shafts", "X blocks SC20UU"],
      "deck and wall, one ply each, an angle with a gusset in each corner; X shafts 760 at z = 160 and 310, SK20s 740 apart"),
     ("z_axis", "Z axis", ["X blocks SC20UU", "Z carriage plate", "Z supports SK20", "Z shafts", "Z blocks SC20UU"],

@@ -125,6 +125,24 @@ fn flat_faces(s: &Solid, up: f64) -> Vec<Flat> {
         .collect()
 }
 
+/// How far the slide drops from the drawn pose before the stop screw's
+/// tip lands on the stop block on the carriage plate.
+fn stop_landing(r: &AssemblyResult) -> f64 {
+    let (screw_lo, screw_hi) = bounds(body(r, "Stop screw"));
+    let (sx, sy) = (
+        (screw_lo.x + screw_hi.x) / 2.0,
+        (screw_lo.y + screw_hi.y) / 2.0,
+    );
+    let plate = body(r, "Z carriage plate");
+    let top = flat_faces(plate, 1.0)
+        .into_iter()
+        .filter(|f| f.z < bounds(plate).1.z - 1e-6 && f.contains(sx, sy))
+        .map(|f| f.z)
+        .fold(f64::NEG_INFINITY, f64::max);
+    assert!(top.is_finite(), "no stop block under the screw");
+    screw_lo.z - top
+}
+
 #[test]
 fn every_part_regenerates_closed_and_the_machine_places_every_body() {
     let mut doc = load();
@@ -253,28 +271,14 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
     let raised = bit.z - blank_hi.z;
     println!("tips {raised} above the board");
     assert!(raised >= 30.0);
-    let (screw_lo, screw_hi) = bounds(body(&r, "Stop screw"));
-    let screw = Vec3::new(
-        (screw_lo.x + screw_hi.x) / 2.0,
-        (screw_lo.y + screw_hi.y) / 2.0,
-        screw_lo.z,
-    );
     let plate = body(&r, "Z carriage plate");
     assert!(
         (bounds(plate).0.z - blank_hi.z).abs() < 1e-6,
         "the carriage plate's bottom is the board top"
     );
-    let stop_block_top = flat_faces(plate, 1.0)
-        .into_iter()
-        .filter(|f| f.z < bounds(plate).1.z - 1e-6 && f.contains(screw.x, screw.y))
-        .map(|f| f.z)
-        .fold(f64::NEG_INFINITY, f64::max);
-    assert!(stop_block_top.is_finite(), "no stop block under the screw");
-    let first_pass = raised - (screw_lo.z - stop_block_top);
-    println!(
-        "stop screw lands after {} mm: first pass {first_pass} deep",
-        screw_lo.z - stop_block_top
-    );
+    let landing = stop_landing(&r);
+    let first_pass = raised - landing;
+    println!("stop screw lands after {landing} mm: first pass {first_pass} deep");
     assert!(
         first_pass > 2.0 && first_pass < 6.0,
         "first pass {first_pass}"
@@ -295,7 +299,7 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
     );
     // For the pilot to bottom, the screw backs off until it lands after
     // the whole drop: so many turns of M8 from the first-pass setting.
-    let back_off = drop - (screw.z - stop_block_top);
+    let back_off = drop - landing;
     println!(
         "back the stop screw off {back_off} mm ({:.0} turns) for the last pass",
         back_off / 1.25
@@ -324,7 +328,7 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
 
     // The gantry is one piece on the Y blocks: the deck spans both rails'
     // blocks and the wall stands on it, and the carriage plate runs
-    // through the deck's notch down to the board top.
+    // in front of the deck's front edge down to the board top.
     let deck = body(&r, "Deck");
     let (deck_lo, deck_hi) = bounds(deck);
     for b in group(&r, "Y blocks SC20UU") {
@@ -353,11 +357,11 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
     let (plate_lo, plate_hi2) = bounds(plate);
     assert!(
         plate_lo.z < deck_lo.z && plate_hi2.z > deck_hi.z,
-        "the carriage plate crosses the deck's height"
+        "the carriage plate hangs past the deck's height"
     );
     assert!(
-        overlap(plate, deck).unwrap() < 1e-6,
-        "the carriage plate runs through the notch"
+        deck_lo.y > plate_hi2.y + 5.0,
+        "the deck's front edge is behind the carriage plate, so the plate sweeps X clear of it"
     );
 
     // The tools sit in their clamps without touching the plate, and the
@@ -428,10 +432,14 @@ fn tool_in_work(a: &str, b: &str) -> bool {
 
 /// The machine swept over the work: the bit at the blank's left edge,
 /// middle and right edge, every 25 mm from the reference hole's y to the
-/// blank's back edge, at the first and the last pass; every moving part
-/// against every fixed one. The drawn pose is mid travel with the slide
-/// raised, so the poses are offsets from it. A touch is allowed; an
-/// overlap that is not a tool in the work is a collision.
+/// blank's back edge, at the first and the last pass; every pair of
+/// parts that move differently (the gantry in y, the X slide in x on
+/// it, the Z slide in z on that, the rest fixed) intersected. The drawn
+/// pose is mid travel with the slide raised, so the poses are offsets
+/// from it. A touch is allowed; an overlap that is not a tool in the
+/// work is a collision. Checking only moving parts against fixed ones
+/// once let a notch in the deck round the carriage plate through, which
+/// would have pinned the X travel to the notch.
 #[test]
 fn the_machine_clears_itself_over_the_work() {
     let mut doc = load();
@@ -458,48 +466,60 @@ fn the_machine_clears_itself_over_the_work() {
         .collect();
     let first_pass = -(bit.z - blank_hi.z) + 4.0;
     let last_pass = -(bit.z - plate_hi.z) - 12.5;
-    let fixed: Vec<&ok_model::Body> = r
-        .bodies
-        .iter()
-        .filter(|b| {
-            !in_groups(&b.name, GANTRY)
-                && !in_groups(&b.name, X_SLIDE)
-                && !in_groups(&b.name, Z_SLIDE)
-        })
-        .collect();
+    // The stop screw is drawn set for the first pass; for a deeper pass
+    // the operator backs it off until it lands after the drop.
+    let landing = stop_landing(&r);
+    let shift_of = |name: &str, dx: f64, dy: f64, dz: f64| -> Vec3 {
+        if name == "Stop screw" {
+            Vec3::new(dx, dy, dz + (-dz - landing).max(0.0))
+        } else if in_groups(name, Z_SLIDE) {
+            Vec3::new(dx, dy, dz)
+        } else if in_groups(name, X_SLIDE) {
+            Vec3::new(dx, dy, 0.0)
+        } else if in_groups(name, GANTRY) {
+            Vec3::new(0.0, dy, 0.0)
+        } else {
+            Vec3::ZERO
+        }
+    };
     let mut hits = Vec::new();
     let mut poses = 0;
     for &dx in &xs {
         for &dy in &ys {
             poses += 1;
             for &dz in &[first_pass, last_pass] {
-                for b in &r.bodies {
-                    let shift = if in_groups(&b.name, Z_SLIDE) {
-                        Vec3::new(dx, dy, dz)
-                    } else if in_groups(&b.name, X_SLIDE) {
-                        Vec3::new(dx, dy, 0.0)
-                    } else if in_groups(&b.name, GANTRY) {
-                        Vec3::new(0.0, dy, 0.0)
-                    } else {
-                        continue;
-                    };
-                    let moved = b.solid.transformed(&ok_brep::Transform::translation(shift));
-                    for f in &fixed {
-                        match overlap(&moved, &f.solid) {
-                            Some(v) if v > 1e-3 && !tool_in_work(&b.name, &f.name) => {
-                                hits.push(format!(
-                                    "{} x {} at ({dx}, {dy}, {dz}): {v:.1} mm3",
-                                    b.name, f.name
-                                ))
+                // Every body at this pose; a pair that moves alike (two
+                // parts of the gantry, two fixed parts) cannot meet anew.
+                let placed: Vec<(&str, Vec3, Solid)> = r
+                    .bodies
+                    .iter()
+                    .map(|b| {
+                        let shift = shift_of(&b.name, dx, dy, dz);
+                        let solid = if shift == Vec3::ZERO {
+                            b.solid.clone()
+                        } else {
+                            b.solid.transformed(&ok_brep::Transform::translation(shift))
+                        };
+                        (b.name.as_str(), shift, solid)
+                    })
+                    .collect();
+                for i in 0..placed.len() {
+                    for j in i + 1..placed.len() {
+                        let (a, sa, pa) = &placed[i];
+                        let (b, sb, pb) = &placed[j];
+                        if sa == sb {
+                            continue;
+                        }
+                        let in_work = tool_in_work(a, b) || tool_in_work(b, a);
+                        match overlap(pa, pb) {
+                            Some(v) if v > 1e-3 && !in_work => {
+                                hits.push(format!("{a} x {b} at ({dx}, {dy}, {dz}): {v:.1} mm3"))
                             }
                             Some(v) if v > 100.0 => hits.push(format!(
-                                "{} x {} at ({dx}, {dy}, {dz}): {v:.1} mm3 of tool in the work",
-                                b.name, f.name
+                                "{a} x {b} at ({dx}, {dy}, {dz}): {v:.1} mm3 of tool in the work"
                             )),
-                            None => hits.push(format!(
-                                "{} x {} at ({dx}, {dy}, {dz}): boolean failed",
-                                b.name, f.name
-                            )),
+                            None => hits
+                                .push(format!("{a} x {b} at ({dx}, {dy}, {dz}): boolean failed")),
                             _ => {}
                         }
                     }
