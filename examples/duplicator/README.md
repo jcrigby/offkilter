@@ -86,6 +86,21 @@ reference hole, at the centre, and at the back-right corner).
   should sit 5 mm outside the blank's corner both ways, and the slotted
   fence moves by the difference.
 
+The pattern plate is also the example of the duplicator check, the
+`duplicator_check` tool and `ok_brep::duplicate_check`: a body meant to
+be printed and copied is sampled from above as a height field, the bit
+is rolled over it (a flat disc or a ball) for the surface it can leave,
+and the copy's shortfalls are reported: material under overhangs the
+pilot never sees, concave corners tighter than the bit, depths beyond
+its reach. `check_2mm.png` shows the plate with the 2 mm bit, which
+rides every groove and leaves nothing; `check_3mm.png` with a 1/8 in
+bit, which enters none of them and leaves the whole lattice red. The
+first run of the check found that the plate as drawn was a pocket with
+groove stubs at its edges: its grooves had been cut from one sketch of
+overlapping rectangles, and a cut takes every region a sketch encloses,
+the squares between the grooves included. Each groove is its own sketch
+now.
+
 The last pass cuts half a millimetre into the platform under the
 blank and, where the pattern runs to the blank's edge, a half kerf into
 the fence beside it; both are ply and both are meant to be marked.

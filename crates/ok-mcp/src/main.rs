@@ -574,6 +574,37 @@ impl From<String> for ToolOut {
     }
 }
 
+/// The master from above as a picture: grey by height, red where the
+/// bit leaves material, blue where the master is deeper than it reaches,
+/// light grey where there is no material.
+fn duplicator_map(report: &ok_brep::DuplicateReport) -> ok_render::Image {
+    use ok_render::Rgb;
+    let f = &report.field;
+    let scale = (800 / f.cols.max(f.rows)).max(1);
+    let (w, h) = (f.cols * scale, f.rows * scale);
+    let mut image = ok_render::Image::new(w, h, Rgb(235, 235, 235));
+    let span = (f.top - f.floor).max(1e-9);
+    for j in 0..f.rows {
+        for i in 0..f.cols {
+            let k = j * f.cols + i;
+            let Some(height) = f.heights[k] else { continue };
+            let g = (60.0 + 190.0 * (height - f.floor) / span).round() as u8;
+            let mut c = Rgb(g, g, g);
+            if report.residual[k] > ok_brep::RESIDUAL_TOLERANCE {
+                c = Rgb(220, 60, 50);
+            } else if f.top - height > report.bit.reach + 1e-9 {
+                c = Rgb(60, 90, 220);
+            }
+            for dy in 0..scale {
+                for dx in 0..scale {
+                    image.set(i * scale + dx, (f.rows - 1 - j) * scale + dy, c);
+                }
+            }
+        }
+    }
+    image
+}
+
 fn tabs_of(doc: &ok_model::Document) -> Value {
     Value::Array(
         doc.tabs
@@ -778,6 +809,95 @@ impl Server {
             if let Some(path) = args.get("path").and_then(|p| p.as_str()) {
                 std::fs::write(path, &png).map_err(|e| format!("could not write {path}: {e}"))?;
                 caption.push_str(&format!("; written to {path}"));
+            }
+            return Ok(ToolOut::Image { png, caption });
+        }
+        if name == "duplicator_check" {
+            let id = self.doc_id(args)?;
+            let mut doc = self.backend.document(&id)?;
+            let tab = pick_tab(&doc, tab)?;
+            let diameter = args
+                .get("bit")
+                .and_then(|b| b.as_f64())
+                .ok_or("duplicator_check needs bit: the bit's diameter in mm")?;
+            let shape = match args.get("shape").and_then(|s| s.as_str()).unwrap_or("flat") {
+                "flat" => ok_brep::BitShape::Flat,
+                "ball" => ok_brep::BitShape::Ball,
+                other => return Err(format!("shape is flat or ball, not {other}")),
+            };
+            let bit = ok_brep::Bit {
+                diameter,
+                reach: args
+                    .get("reach")
+                    .and_then(|r| r.as_f64())
+                    .unwrap_or(3.0 * diameter),
+                shape,
+            };
+            let pitch = args.get("pitch").and_then(|p| p.as_f64());
+            let kind = doc.tab(tab).map(|t| t.kind_name()).ok_or("no such tab")?;
+            let bodies = if kind == "assembly" {
+                doc.regenerate_assembly(tab)
+                    .map_err(|e| e.to_string())?
+                    .bodies
+            } else {
+                doc.regenerate_studio(tab, None)
+                    .map_err(|e| e.to_string())?
+                    .bodies
+            };
+            let wanted = args.get("body").and_then(|b| match b {
+                Value::String(s) => Some(s.clone()),
+                Value::Number(n) => Some(n.to_string()),
+                _ => None,
+            });
+            let body = match &wanted {
+                None if bodies.len() == 1 => &bodies[0],
+                None => {
+                    return Err(format!(
+                        "the tab has {} bodies; name one with body: {}",
+                        bodies.len(),
+                        bodies
+                            .iter()
+                            .map(|b| b.name.as_str())
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ))
+                }
+                Some(w) => bodies
+                    .iter()
+                    .find(|b| &b.name == w)
+                    .or_else(|| w.parse::<usize>().ok().and_then(|i| bodies.get(i)))
+                    .ok_or_else(|| format!("no body {w} on the tab"))?,
+            };
+            let report = ok_brep::duplicate_check(&body.solid, &bit, pitch)?;
+            let png = ok_render::to_png(&duplicator_map(&report));
+            let shape_name = match shape {
+                ok_brep::BitShape::Flat => "flat",
+                ok_brep::BitShape::Ball => "ball-nose",
+            };
+            let mut caption = format!(
+                "{}: sampled {}x{} cells of {:.2} mm from above; its top surface spans {:.1} mm of height, the master {:.0} mm3. With a {} mm {shape_name} bit reaching {} mm: {}",
+                body.name,
+                report.field.cols,
+                report.field.rows,
+                report.field.pitch,
+                report.depth_max,
+                report.volume,
+                bit.diameter,
+                bit.reach,
+                if report.problems.is_empty() {
+                    format!(
+                        "the copy would be the master (the bit leaves at most {:.2} mm in any corner, the copy's volume is within {:.1} % of the master's).",
+                        report.residual_max,
+                        100.0 * (report.copy_volume - report.volume).abs() / report.volume.max(1e-9)
+                    )
+                } else {
+                    report.problems.join("; ") + "."
+                }
+            );
+            caption.push_str(" The picture is the master from above, light where high, red where the bit cannot reach in, blue where it is too deep.");
+            if let Some(path) = args.get("path").and_then(|p| p.as_str()) {
+                std::fs::write(path, &png).map_err(|e| format!("could not write {path}: {e}"))?;
+                caption.push_str(&format!(" Written to {path}."));
             }
             return Ok(ToolOut::Image { png, caption });
         }
@@ -1726,6 +1846,11 @@ fn tool_list() -> Value {
             "name": "range_of_motion",
             "description": "A mechanism drawn at several positions of its mates: the assembly tab (doc, tab) resolved with the mates set to each position and drawn side by side, so a lift shows lowest, working and highest, or an arm level, half up and fully up. `positions` is a list: a bare number sets `mate` (degrees for a revolute, cylindrical or ball mate, millimetres of offset for a slider or planar one), or an object of mate name to value (a number, or {angle, offset}) sets several mates at once; an object may carry `label` for its caption. `view` is front (default), top, right, iso or x,y,z. `format` png (default) returns one strip, every frame fitted to the same box so the fixed parts stay put, `width` x `height` each; `format` pdf writes a sheet with the view at each position captioned, on `sheet` (A4 default), `note` on the title block. `path` writes the file. Read the tab's report for the mate names and their current angle and offset; the positions are absolute values of those.",
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "mate": { "type": "string" }, "positions": { "type": "array", "items": {} }, "view": { "type": "string" }, "format": { "type": "string", "enum": ["png", "pdf"] }, "path": { "type": "string" }, "width": { "type": "integer" }, "height": { "type": "integer" }, "sheet": { "type": "string" }, "note": { "type": "string" } }, "required": ["positions"] }
+        },
+        {
+            "name": "duplicator_check",
+            "description": "Whether a body can be copied on a duplicator (a pilot tracing it from above, a bit of the same shape cutting beside it), for a master meant to be printed and copied in wood: samples the body's top surface from above as a height field, rolls the bit over it to get the surface the bit can leave, and reports what the copy would miss: material under overhangs the pilot never sees (undercuts), concave corners tighter than the bit, and depths beyond the bit's reach. `bit` is the diameter in mm; `reach` how far below the body's highest point it can cut (three diameters unless given); `shape` flat (default) or ball; `body` names one body of the tab (or its index) when it has several; `pitch` the sample spacing (a quarter of the bit unless given). Returns a picture of the master from above (light where high, red where the bit cannot reach in, blue where too deep), with the findings as its caption; `path` writes the picture.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "body": { "type": "string" }, "bit": { "type": "number" }, "reach": { "type": "number" }, "shape": { "type": "string", "enum": ["flat", "ball"] }, "pitch": { "type": "number" }, "path": { "type": "string" } }, "required": ["bit"] }
         },
         {
             "name": "measuring_sheet",
