@@ -17,10 +17,18 @@ python3 examples/duplicator/build.py          # the document, pictures and sheet
 cargo test -p ok-render --test duplicator     # what CI runs
 ```
 
-`out/duplicator.pdf` is the whole machine on an A2 with a parts list;
-`base_y.pdf`, `x_axis.pdf`, `z_axis.pdf` and `tool_holder.pdf` are the
-four sub-assemblies on A3s at a larger scale, each with its own
-balloons and list.
+`out/duplicator.pdf` is the whole machine on an A2 with a parts list,
+the three moving groups as single items; `gantry.pdf`, `x_slide.pdf`
+and `z_slide.pdf` are those sub-assemblies on A3s at a larger scale,
+each with its own balloons and list. The machine moves on four slider
+mates (the gantry on a Y shaft, the X slide on the gantry's lower X
+shaft, the Z slide on the X slide's left Z shaft, the stop screw in
+the tool support's ear), whose parameters `build.py` reads off the
+drawn pose; `motion_z.pdf` draws the depth sequence from the front
+(raised, first pass on the stop screw, last pass with the screw backed
+off and the pilot in the groove) and `motion_xy.pdf` the reach from
+above (the bit at the blank's front-left corner with the pilot at the
+reference hole, at the centre, and at the back-right corner).
 
 ## How it is built
 
@@ -46,9 +54,9 @@ balloons and list.
   front edge is 11 mm behind the Z carriage plate, which hangs from the
   X shafts to the board top and sweeps the whole X travel in front of
   it (an earlier version notched the deck round the plate, which would
-  have pinned the X travel to the notch; the sweep test now intersects
-  every pair of parts that move differently, which is what catches
-  that). The deck rides 45 mm above the blank and clears the Y supports
+  have pinned the X travel to the notch; the sweep test now resolves
+  each pose from the sliders and intersects every pair of bodies from
+  different instances, which is what catches that). The deck rides 45 mm above the blank and clears the Y supports
   at full travel. One bridge on two
   round rails needs them parallel to within the blocks' clearance: set
   the SK20s by sliding the finished gantry end to end before the last
@@ -87,7 +95,7 @@ the fence beside it; both are ply and both are meant to be marked.
 | | |
 |---|---|
 | Travel | X ±277.5, Y ±192.5, Z 62.5 down from the drawn raised pose |
-| Sweep | the bit at the blank's edges and middle, every 25 mm in Y from the reference hole to the back edge, first and last pass (the stop screw backed off for the last): no two parts that move differently meet but the tools in the work |
+| Sweep | the sliders set so the bit is at the blank's edges and middle, every 25 mm in Y from the reference hole to the back edge, first and last pass (the stop screw backed off for the last), each pose resolved by the kernel: no two bodies of different instances meet but the tools in the work |
 | Gantry | deck on all four Y blocks, wall on the deck full width, deck 45 above the blank and behind the carriage plate |
 | Reach | bit over the 304 x 260 blank, pilot over the 304 x 260 lattice |
 | Depth | tips 40 above the board raised; first pass 4 mm; last pass 12.5 mm, 52.5 of the 62.5 mm of travel |

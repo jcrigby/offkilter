@@ -9,7 +9,7 @@
 
 use ok_brep::{BoolOp, Solid};
 use ok_math::Vec3;
-use ok_model::{AssemblyResult, Document, TabId};
+use ok_model::{AssemblyResult, Document, MateId, TabId};
 use std::path::PathBuf;
 
 fn example_dir() -> PathBuf {
@@ -29,10 +29,16 @@ fn tab_named(doc: &Document, name: &str) -> TabId {
         .id
 }
 
+/// A placed body's own name: a sub-assembly's member is placed as
+/// "Sub / member".
+fn member(name: &str) -> &str {
+    name.rsplit(" / ").next().unwrap()
+}
+
 fn body<'a>(r: &'a AssemblyResult, name: &str) -> &'a Solid {
     &r.bodies
         .iter()
-        .find(|b| b.name == name)
+        .find(|b| member(&b.name) == name)
         .unwrap_or_else(|| panic!("no body {name}"))
         .solid
 }
@@ -46,7 +52,7 @@ fn group<'a>(r: &'a AssemblyResult, prefix: &str) -> Vec<&'a Solid> {
     let v: Vec<_> = r
         .bodies
         .iter()
-        .filter(|b| b.name == prefix || b.name.starts_with(&format!("{prefix} ")))
+        .filter(|b| member(&b.name) == prefix || member(&b.name).starts_with(&format!("{prefix} ")))
         .map(|b| &b.solid)
         .collect();
     assert!(!v.is_empty(), "no bodies {prefix}");
@@ -175,13 +181,8 @@ fn every_part_regenerates_closed_and_the_machine_places_every_body() {
     let r = doc.regenerate_assembly(machine).unwrap();
     assert_eq!(r.bodies.len(), 51);
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
-    // The sub-assembly sheets draw subsets of the same bodies.
-    for (name, want) in [
-        ("Base and Y axis", 16),
-        ("X axis", 14),
-        ("Z axis", 15),
-        ("Tool holder", 9),
-    ] {
+    // The three motion sub-assemblies, each with its own sheet.
+    for (name, want) in [("Gantry", 14), ("X slide", 11), ("Z slide", 12)] {
         let sub = tab_named(&doc, name);
         let r = doc.regenerate_assembly(sub).unwrap();
         assert_eq!(r.bodies.len(), want, "{name}");
@@ -381,38 +382,6 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
     }
 }
 
-/// The parts that move with the Y gantry (and, within it, with the X
-/// slide and the Z slide), by the name of the studio that places them.
-const GANTRY: &[&str] = &[
-    "Y blocks SC20UU",
-    "Deck",
-    "Wall",
-    "Gussets",
-    "X supports SK20",
-    "X shafts",
-];
-const X_SLIDE: &[&str] = &[
-    "X blocks SC20UU",
-    "Z carriage plate",
-    "Z supports SK20",
-    "Z shafts",
-];
-const Z_SLIDE: &[&str] = &[
-    "Z blocks SC20UU",
-    "Tool support",
-    "Tool support webs",
-    "Clamp bolts",
-    "Router",
-    "Pilot",
-    "Stop screw",
-];
-
-fn in_groups(name: &str, groups: &[&str]) -> bool {
-    groups
-        .iter()
-        .any(|g| name == *g || name.starts_with(&format!("{g} ")))
-}
-
 /// The tools in the work are the point: the bit in the blank (and, on
 /// the last pass, half a millimetre into the platform under it and a
 /// half kerf into the fence where the pattern runs to the blank's edge),
@@ -430,20 +399,57 @@ fn tool_in_work(a: &str, b: &str) -> bool {
         .contains(&b)
 }
 
-/// The machine swept over the work: the bit at the blank's left edge,
-/// middle and right edge, every 25 mm from the reference hole's y to the
-/// blank's back edge, at the first and the last pass; every pair of
-/// parts that move differently (the gantry in y, the X slide in x on
-/// it, the Z slide in z on that, the rest fixed) intersected. The drawn
-/// pose is mid travel with the slide raised, so the poses are offsets
-/// from it. A touch is allowed; an overlap that is not a tool in the
-/// work is a collision. Checking only moving parts against fixed ones
-/// once let a notch in the deck round the carriage plate through, which
-/// would have pinned the X travel to the notch.
+/// The machine's sliders: (id, offset as drawn, the sign that moves the
+/// part the positive way along its axis), by name.
+fn sliders(
+    doc: &mut Document,
+    tab: TabId,
+) -> std::collections::BTreeMap<String, (MateId, f64, f64)> {
+    let asm = doc.assembly(tab).unwrap();
+    let mates: Vec<(MateId, String, f64)> = asm
+        .mates
+        .iter()
+        .map(|m| (m.id, m.name.clone(), m.offset))
+        .collect();
+    assert_eq!(mates.len(), 4, "four sliders");
+    let mut out = std::collections::BTreeMap::new();
+    for (id, name, offset) in mates {
+        let (part, axis): (&str, fn(Vec3) -> f64) = match name.as_str() {
+            "Y travel" => ("Deck", |v| v.y),
+            "X travel" => ("Z carriage plate", |v| v.x),
+            "Z travel" => ("Tool support", |v| v.z),
+            "stop screw" => ("Stop screw", |v| v.z),
+            other => panic!("unexpected mate {other}"),
+        };
+        let r0 = doc.regenerate_assembly(tab).unwrap();
+        let r1 = doc
+            .preview_assembly_at(tab, &[(id, 0.0, offset + 10.0)])
+            .unwrap();
+        let moved = axis(bounds(body(&r1, part)).0) - axis(bounds(body(&r0, part)).0);
+        assert!(
+            (moved.abs() - 10.0).abs() < 1e-6,
+            "{name} moves {part} by {moved}"
+        );
+        out.insert(name, (id, offset, moved.signum()));
+    }
+    out
+}
+
+/// The machine swept over the work on its sliders: the bit at the
+/// blank's left edge, middle and right edge, every 25 mm from the
+/// reference hole's y to the blank's back edge, at the first and the
+/// last pass (the stop screw backed off for the last, as the operator
+/// does); the kernel resolves each pose from the mates and every pair of
+/// bodies from different instances is intersected. A touch is allowed;
+/// an overlap that is not a tool in the work is a collision. Checking
+/// only moving parts against fixed ones once let a notch in the deck
+/// round the carriage plate through, which would have pinned the X
+/// travel to the notch.
 #[test]
 fn the_machine_clears_itself_over_the_work() {
     let mut doc = load();
     let machine = tab_named(&doc, "Duplicator");
+    let sliders = sliders(&mut doc, machine);
     let r = doc.regenerate_assembly(machine).unwrap();
     let (bit_lo, bit_hi) = bounds(body(&r, "Router"));
     let bit = Vec3::new(
@@ -466,52 +472,38 @@ fn the_machine_clears_itself_over_the_work() {
         .collect();
     let first_pass = -(bit.z - blank_hi.z) + 4.0;
     let last_pass = -(bit.z - plate_hi.z) - 12.5;
-    // The stop screw is drawn set for the first pass; for a deeper pass
-    // the operator backs it off until it lands after the drop.
     let landing = stop_landing(&r);
-    let shift_of = |name: &str, dx: f64, dy: f64, dz: f64| -> Vec3 {
-        if name == "Stop screw" {
-            Vec3::new(dx, dy, dz + (-dz - landing).max(0.0))
-        } else if in_groups(name, Z_SLIDE) {
-            Vec3::new(dx, dy, dz)
-        } else if in_groups(name, X_SLIDE) {
-            Vec3::new(dx, dy, 0.0)
-        } else if in_groups(name, GANTRY) {
-            Vec3::new(0.0, dy, 0.0)
-        } else {
-            Vec3::ZERO
-        }
+    let at = |name: &str, d: f64| {
+        let (id, offset, sign) = sliders[name];
+        (id, 0.0, offset + sign * d)
     };
     let mut hits = Vec::new();
     let mut poses = 0;
     for &dx in &xs {
         for &dy in &ys {
-            poses += 1;
             for &dz in &[first_pass, last_pass] {
-                // Every body at this pose; a pair that moves alike (two
-                // parts of the gantry, two fixed parts) cannot meet anew.
-                let placed: Vec<(&str, Vec3, Solid)> = r
-                    .bodies
-                    .iter()
-                    .map(|b| {
-                        let shift = shift_of(&b.name, dx, dy, dz);
-                        let solid = if shift == Vec3::ZERO {
-                            b.solid.clone()
-                        } else {
-                            b.solid.transformed(&ok_brep::Transform::translation(shift))
-                        };
-                        (b.name.as_str(), shift, solid)
-                    })
-                    .collect();
-                for i in 0..placed.len() {
-                    for j in i + 1..placed.len() {
-                        let (a, sa, pa) = &placed[i];
-                        let (b, sb, pb) = &placed[j];
-                        if sa == sb {
-                            continue;
+                poses += 1;
+                let back_off = (-dz - landing).max(0.0);
+                let r = doc
+                    .preview_assembly_at(
+                        machine,
+                        &[
+                            at("X travel", dx),
+                            at("Y travel", dy),
+                            at("Z travel", dz),
+                            at("stop screw", back_off),
+                        ],
+                    )
+                    .unwrap();
+                assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
+                for i in 0..r.bodies.len() {
+                    for j in i + 1..r.bodies.len() {
+                        if r.placed[i] == r.placed[j] {
+                            continue; // one rigid group
                         }
+                        let (a, b) = (member(&r.bodies[i].name), member(&r.bodies[j].name));
                         let in_work = tool_in_work(a, b) || tool_in_work(b, a);
-                        match overlap(pa, pb) {
+                        match overlap(&r.bodies[i].solid, &r.bodies[j].solid) {
                             Some(v) if v > 1e-3 && !in_work => {
                                 hits.push(format!("{a} x {b} at ({dx}, {dy}, {dz}): {v:.1} mm3"))
                             }
@@ -527,7 +519,7 @@ fn the_machine_clears_itself_over_the_work() {
             }
         }
     }
-    println!("{} poses", poses * 2);
+    println!("{poses} poses");
     for h in &hits {
         println!("{h}");
     }
