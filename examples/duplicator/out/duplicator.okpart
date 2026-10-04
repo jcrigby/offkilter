@@ -8559,6 +8559,692 @@
       "id": 15,
       "kind": {
         "type": "part_studio",
+        "name": "Balancer bracket",
+        "features": [
+          {
+            "id": 1,
+            "name": "bracket leg, ply",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 290.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -25.0,
+                      "y": -149.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": -149.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": -149.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": -130.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": -130.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -25.0,
+                      "y": -130.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -25.0,
+                      "y": -130.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -25.0,
+                      "y": -149.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "bracket leg, ply",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 129.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "bracket arm, ply",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 400.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -25.0,
+                      "y": -210.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": -210.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": -210.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": -130.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": -130.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -25.0,
+                      "y": -130.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -25.0,
+                      "y": -130.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -25.0,
+                      "y": -210.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "bracket arm, ply",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 5,
+            "name": "hook hole",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 420.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -190.0
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "hook hole",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 5,
+              "diameter": 8.0,
+              "depth": 21.0,
+              "through_all": false,
+              "direction": "reverse",
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 7,
+            "name": "cable",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 203.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -190.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 0.75
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "cable",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 107.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 9,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 16,
+      "kind": {
+        "type": "part_studio",
+        "name": "Balancer reel",
+        "features": [
+          {
+            "id": 1,
+            "name": "hook",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 380.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.0,
+                      "y": -193.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.0,
+                      "y": -193.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.0,
+                      "y": -193.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.0,
+                      "y": -187.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.0,
+                      "y": -187.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.0,
+                      "y": -187.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.0,
+                      "y": -187.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.0,
+                      "y": -193.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "hook",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "spring balancer, 1 to 3 kg",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -18.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -190.0,
+                      "y": 345.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 35.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "spring balancer, 1 to 3 kg",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 36.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          }
+        ],
+        "next_id": 5,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 17,
+      "kind": {
+        "type": "part_studio",
         "name": "Tool support",
         "features": [
           {
@@ -9076,6 +9762,58 @@
           },
           {
             "id": 7,
+            "name": "cable eye",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 195.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -190.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "cable eye",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 8.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 9,
             "name": "router bore",
             "suppressed": false,
             "kind": {
@@ -9103,12 +9841,12 @@
             }
           },
           {
-            "id": 8,
+            "id": 10,
             "name": "router clamp bore, 66",
             "suppressed": false,
             "kind": {
               "type": "hole",
-              "sketch": 7,
+              "sketch": 9,
               "diameter": 66.0,
               "depth": 40.0,
               "through_all": false,
@@ -9118,7 +9856,7 @@
             }
           },
           {
-            "id": 9,
+            "id": 11,
             "name": "pilot bore",
             "suppressed": false,
             "kind": {
@@ -9146,12 +9884,12 @@
             }
           },
           {
-            "id": 10,
+            "id": 12,
             "name": "chuck shank bore, 9.7",
             "suppressed": false,
             "kind": {
               "type": "hole",
-              "sketch": 9,
+              "sketch": 11,
               "diameter": 9.7,
               "depth": 40.0,
               "through_all": false,
@@ -9161,7 +9899,7 @@
             }
           },
           {
-            "id": 11,
+            "id": 13,
             "name": "slits",
             "suppressed": false,
             "kind": {
@@ -9446,12 +10184,12 @@
             }
           },
           {
-            "id": 12,
+            "id": 14,
             "name": "clamp slits, to the front",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 11,
+              "sketch": 13,
               "profiles": {
                 "type": "all"
               },
@@ -9464,7 +10202,7 @@
             }
           },
           {
-            "id": 13,
+            "id": 15,
             "name": "router bolt",
             "suppressed": false,
             "kind": {
@@ -9492,12 +10230,12 @@
             }
           },
           {
-            "id": 14,
+            "id": 16,
             "name": "M6 clearance",
             "suppressed": false,
             "kind": {
               "type": "hole",
-              "sketch": 13,
+              "sketch": 15,
               "diameter": 6.5,
               "depth": 98.0,
               "through_all": false,
@@ -9507,7 +10245,7 @@
             }
           },
           {
-            "id": 15,
+            "id": 17,
             "name": "pilot bolt",
             "suppressed": false,
             "kind": {
@@ -9535,12 +10273,12 @@
             }
           },
           {
-            "id": 16,
+            "id": 18,
             "name": "M4 clearance",
             "suppressed": false,
             "kind": {
               "type": "hole",
-              "sketch": 15,
+              "sketch": 17,
               "diameter": 4.5,
               "depth": 86.0,
               "through_all": false,
@@ -9550,7 +10288,7 @@
             }
           },
           {
-            "id": 17,
+            "id": 19,
             "name": "nut pockets",
             "suppressed": false,
             "kind": {
@@ -9835,12 +10573,12 @@
             }
           },
           {
-            "id": 18,
+            "id": 20,
             "name": "nut pockets, from the top",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 17,
+              "sketch": 19,
               "profiles": {
                 "type": "all"
               },
@@ -9853,7 +10591,7 @@
             }
           },
           {
-            "id": 19,
+            "id": 21,
             "name": "screw hole",
             "suppressed": false,
             "kind": {
@@ -9881,12 +10619,12 @@
             }
           },
           {
-            "id": 20,
+            "id": 22,
             "name": "M8 tapped",
             "suppressed": false,
             "kind": {
               "type": "hole",
-              "sketch": 19,
+              "sketch": 21,
               "diameter": 8.0,
               "depth": 21.0,
               "through_all": false,
@@ -9896,14 +10634,14 @@
             }
           }
         ],
-        "next_id": 21,
+        "next_id": 23,
         "settings": {
           "facet_angle": 5.0
         }
       }
     },
     {
-      "id": 16,
+      "id": 18,
       "kind": {
         "type": "part_studio",
         "name": "Tool support webs",
@@ -10228,7 +10966,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 19,
       "kind": {
         "type": "part_studio",
         "name": "Clamp bolts",
@@ -10449,7 +11187,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 20,
       "kind": {
         "type": "part_studio",
         "name": "Router",
@@ -10618,7 +11356,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 21,
       "kind": {
         "type": "part_studio",
         "name": "Pilot",
@@ -10787,7 +11525,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 22,
       "kind": {
         "type": "part_studio",
         "name": "Stop screw",
@@ -10904,7 +11642,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 23,
       "kind": {
         "type": "part_studio",
         "name": "Platforms",
@@ -11259,7 +11997,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 24,
       "kind": {
         "type": "part_studio",
         "name": "Fences",
@@ -12870,7 +13608,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 25,
       "kind": {
         "type": "part_studio",
         "name": "Blank",
@@ -13054,7 +13792,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 26,
       "kind": {
         "type": "part_studio",
         "name": "Pattern plate",
@@ -16017,13 +16755,13 @@
       }
     },
     {
-      "id": 25,
+      "id": 27,
       "kind": {
         "type": "assembly",
         "name": "Gantry",
         "instances": [
           {
-            "id": 26,
+            "id": 28,
             "name": "Y blocks SC20UU 1",
             "studio": 4,
             "body": 0,
@@ -16042,7 +16780,7 @@
             }
           },
           {
-            "id": 27,
+            "id": 29,
             "name": "Y blocks SC20UU 2",
             "studio": 4,
             "body": 1,
@@ -16061,7 +16799,7 @@
             }
           },
           {
-            "id": 28,
+            "id": 30,
             "name": "Y blocks SC20UU 3",
             "studio": 4,
             "body": 2,
@@ -16080,7 +16818,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 31,
             "name": "Y blocks SC20UU 4",
             "studio": 4,
             "body": 3,
@@ -16099,7 +16837,7 @@
             }
           },
           {
-            "id": 30,
+            "id": 32,
             "name": "Deck",
             "studio": 5,
             "body": 0,
@@ -16118,7 +16856,7 @@
             }
           },
           {
-            "id": 31,
+            "id": 33,
             "name": "Wall",
             "studio": 6,
             "body": 0,
@@ -16137,7 +16875,7 @@
             }
           },
           {
-            "id": 32,
+            "id": 34,
             "name": "Gussets 1",
             "studio": 7,
             "body": 0,
@@ -16156,7 +16894,7 @@
             }
           },
           {
-            "id": 33,
+            "id": 35,
             "name": "Gussets 2",
             "studio": 7,
             "body": 1,
@@ -16175,7 +16913,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 36,
             "name": "X supports SK20 1",
             "studio": 8,
             "body": 0,
@@ -16194,7 +16932,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 37,
             "name": "X supports SK20 2",
             "studio": 8,
             "body": 1,
@@ -16213,7 +16951,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 38,
             "name": "X supports SK20 3",
             "studio": 8,
             "body": 2,
@@ -16232,7 +16970,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 39,
             "name": "X supports SK20 4",
             "studio": 8,
             "body": 3,
@@ -16251,7 +16989,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 40,
             "name": "X shafts 1",
             "studio": 9,
             "body": 0,
@@ -16270,7 +17008,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 41,
             "name": "X shafts 2",
             "studio": 9,
             "body": 1,
@@ -16293,13 +17031,13 @@
       }
     },
     {
-      "id": 40,
+      "id": 42,
       "kind": {
         "type": "assembly",
         "name": "X slide",
         "instances": [
           {
-            "id": 41,
+            "id": 43,
             "name": "X blocks SC20UU 1",
             "studio": 10,
             "body": 0,
@@ -16318,7 +17056,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 44,
             "name": "X blocks SC20UU 2",
             "studio": 10,
             "body": 1,
@@ -16337,7 +17075,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 45,
             "name": "X blocks SC20UU 3",
             "studio": 10,
             "body": 2,
@@ -16356,7 +17094,7 @@
             }
           },
           {
-            "id": 44,
+            "id": 46,
             "name": "X blocks SC20UU 4",
             "studio": 10,
             "body": 3,
@@ -16375,7 +17113,7 @@
             }
           },
           {
-            "id": 45,
+            "id": 47,
             "name": "Z carriage plate",
             "studio": 11,
             "body": 0,
@@ -16394,7 +17132,7 @@
             }
           },
           {
-            "id": 46,
+            "id": 48,
             "name": "Z supports SK20 1",
             "studio": 12,
             "body": 0,
@@ -16413,7 +17151,7 @@
             }
           },
           {
-            "id": 47,
+            "id": 49,
             "name": "Z supports SK20 2",
             "studio": 12,
             "body": 1,
@@ -16432,7 +17170,7 @@
             }
           },
           {
-            "id": 48,
+            "id": 50,
             "name": "Z supports SK20 3",
             "studio": 12,
             "body": 2,
@@ -16451,7 +17189,7 @@
             }
           },
           {
-            "id": 49,
+            "id": 51,
             "name": "Z supports SK20 4",
             "studio": 12,
             "body": 3,
@@ -16470,7 +17208,7 @@
             }
           },
           {
-            "id": 50,
+            "id": 52,
             "name": "Z shafts 1",
             "studio": 13,
             "body": 0,
@@ -16489,10 +17227,67 @@
             }
           },
           {
-            "id": 51,
+            "id": 53,
             "name": "Z shafts 2",
             "studio": 13,
             "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 54,
+            "name": "Balancer bracket 1",
+            "studio": 15,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 55,
+            "name": "Balancer bracket 2",
+            "studio": 15,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 56,
+            "name": "Balancer reel",
+            "studio": 16,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
@@ -16512,13 +17307,13 @@
       }
     },
     {
-      "id": 52,
+      "id": 57,
       "kind": {
         "type": "assembly",
         "name": "Z slide",
         "instances": [
           {
-            "id": 53,
+            "id": 58,
             "name": "Z blocks SC20UU 1",
             "studio": 14,
             "body": 0,
@@ -16537,7 +17332,7 @@
             }
           },
           {
-            "id": 54,
+            "id": 59,
             "name": "Z blocks SC20UU 2",
             "studio": 14,
             "body": 1,
@@ -16556,7 +17351,7 @@
             }
           },
           {
-            "id": 55,
+            "id": 60,
             "name": "Z blocks SC20UU 3",
             "studio": 14,
             "body": 2,
@@ -16575,7 +17370,7 @@
             }
           },
           {
-            "id": 56,
+            "id": 61,
             "name": "Z blocks SC20UU 4",
             "studio": 14,
             "body": 3,
@@ -16594,105 +17389,10 @@
             }
           },
           {
-            "id": 57,
-            "name": "Tool support",
-            "studio": 15,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 58,
-            "name": "Tool support webs 1",
-            "studio": 16,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 59,
-            "name": "Tool support webs 2",
-            "studio": 16,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 60,
-            "name": "Tool support webs 3",
-            "studio": 16,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 61,
-            "name": "Clamp bolts 1",
-            "studio": 17,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
             "id": 62,
-            "name": "Clamp bolts 2",
+            "name": "Tool support",
             "studio": 17,
-            "body": 1,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
@@ -16709,7 +17409,7 @@
           },
           {
             "id": 63,
-            "name": "Router",
+            "name": "Tool support webs 1",
             "studio": 18,
             "body": 0,
             "fixed": true,
@@ -16728,8 +17428,103 @@
           },
           {
             "id": 64,
-            "name": "Pilot",
+            "name": "Tool support webs 2",
+            "studio": 18,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 65,
+            "name": "Tool support webs 3",
+            "studio": 18,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 66,
+            "name": "Clamp bolts 1",
             "studio": 19,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 67,
+            "name": "Clamp bolts 2",
+            "studio": 19,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 68,
+            "name": "Router",
+            "studio": 20,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 69,
+            "name": "Pilot",
+            "studio": 21,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -16750,13 +17545,13 @@
       }
     },
     {
-      "id": 65,
+      "id": 70,
       "kind": {
         "type": "assembly",
         "name": "Duplicator",
         "instances": [
           {
-            "id": 66,
+            "id": 71,
             "name": "Base",
             "studio": 1,
             "body": 0,
@@ -16775,7 +17570,7 @@
             }
           },
           {
-            "id": 67,
+            "id": 72,
             "name": "Y supports SK20 1",
             "studio": 2,
             "body": 0,
@@ -16794,7 +17589,7 @@
             }
           },
           {
-            "id": 68,
+            "id": 73,
             "name": "Y supports SK20 2",
             "studio": 2,
             "body": 1,
@@ -16813,7 +17608,7 @@
             }
           },
           {
-            "id": 69,
+            "id": 74,
             "name": "Y supports SK20 3",
             "studio": 2,
             "body": 2,
@@ -16832,7 +17627,7 @@
             }
           },
           {
-            "id": 70,
+            "id": 75,
             "name": "Y supports SK20 4",
             "studio": 2,
             "body": 3,
@@ -16851,7 +17646,7 @@
             }
           },
           {
-            "id": 71,
+            "id": 76,
             "name": "Y shafts 1",
             "studio": 3,
             "body": 0,
@@ -16870,7 +17665,7 @@
             }
           },
           {
-            "id": 72,
+            "id": 77,
             "name": "Y shafts 2",
             "studio": 3,
             "body": 1,
@@ -16889,84 +17684,8 @@
             }
           },
           {
-            "id": 73,
+            "id": 78,
             "name": "Platforms 1",
-            "studio": 21,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 74,
-            "name": "Platforms 2",
-            "studio": 21,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 75,
-            "name": "Fences 1",
-            "studio": 22,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 76,
-            "name": "Fences 2",
-            "studio": 22,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 77,
-            "name": "Blank",
             "studio": 23,
             "body": 0,
             "fixed": true,
@@ -16984,8 +17703,27 @@
             }
           },
           {
-            "id": 78,
-            "name": "Pattern plate",
+            "id": 79,
+            "name": "Platforms 2",
+            "studio": 23,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 80,
+            "name": "Fences 1",
             "studio": 24,
             "body": 0,
             "fixed": true,
@@ -17003,49 +17741,11 @@
             }
           },
           {
-            "id": 79,
-            "name": "Gantry",
-            "studio": 25,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 80,
-            "name": "X slide",
-            "studio": 40,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
             "id": 81,
-            "name": "Z slide",
-            "studio": 52,
-            "body": 0,
-            "fixed": false,
+            "name": "Fences 2",
+            "studio": 24,
+            "body": 1,
+            "fixed": true,
             "placement": {
               "position": {
                 "x": 0.0,
@@ -17061,8 +17761,103 @@
           },
           {
             "id": 82,
+            "name": "Blank",
+            "studio": 25,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 83,
+            "name": "Pattern plate",
+            "studio": 26,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 84,
+            "name": "Gantry",
+            "studio": 27,
+            "body": 0,
+            "fixed": false,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 85,
+            "name": "X slide",
+            "studio": 42,
+            "body": 0,
+            "fixed": false,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 86,
+            "name": "Z slide",
+            "studio": 57,
+            "body": 0,
+            "fixed": false,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 87,
             "name": "Stop screw",
-            "studio": 20,
+            "studio": 22,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -17081,11 +17876,11 @@
         ],
         "mates": [
           {
-            "id": 83,
+            "id": 88,
             "name": "Y travel",
             "kind": "slider",
             "a": {
-              "instance": 71,
+              "instance": 76,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -17103,8 +17898,8 @@
               }
             },
             "b": {
-              "instance": 79,
-              "sub": 26,
+              "instance": 84,
+              "sub": 28,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -17126,12 +17921,12 @@
             "flip": true
           },
           {
-            "id": 84,
+            "id": 89,
             "name": "X travel",
             "kind": "slider",
             "a": {
-              "instance": 79,
-              "sub": 38,
+              "instance": 84,
+              "sub": 40,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -17149,8 +17944,8 @@
               }
             },
             "b": {
-              "instance": 80,
-              "sub": 41,
+              "instance": 85,
+              "sub": 43,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -17172,12 +17967,12 @@
             "flip": true
           },
           {
-            "id": 85,
+            "id": 90,
             "name": "Z travel",
             "kind": "slider",
             "a": {
-              "instance": 80,
-              "sub": 50,
+              "instance": 85,
+              "sub": 52,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -17195,8 +17990,8 @@
               }
             },
             "b": {
-              "instance": 81,
-              "sub": 53,
+              "instance": 86,
+              "sub": 58,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -17218,21 +18013,21 @@
             "flip": true
           },
           {
-            "id": 86,
+            "id": 91,
             "name": "stop screw",
             "kind": "slider",
             "a": {
-              "instance": 81,
-              "sub": 57,
+              "instance": 86,
+              "sub": 62,
               "face": {
-                "feature": 20,
+                "feature": 22,
                 "local": 2,
                 "part": 0,
                 "near": [
-                  934894750,
+                  263818306,
                   3041767615,
-                  3408523651,
                   3422794399,
+                  4079559007,
                   0,
                   0,
                   0,
@@ -17241,7 +18036,7 @@
               }
             },
             "b": {
-              "instance": 82,
+              "instance": 87,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -17266,5 +18061,5 @@
       }
     }
   ],
-  "next_id": 87
+  "next_id": 92
 }
