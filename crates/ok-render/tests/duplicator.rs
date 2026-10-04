@@ -152,15 +152,15 @@ fn every_part_regenerates_closed_and_the_machine_places_every_body() {
             placed += r.bodies.len();
         }
     }
-    assert_eq!(placed, 53);
+    assert_eq!(placed, 51);
     let machine = tab_named(&doc, "Duplicator");
     let r = doc.regenerate_assembly(machine).unwrap();
-    assert_eq!(r.bodies.len(), 53);
+    assert_eq!(r.bodies.len(), 51);
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
     // The sub-assembly sheets draw subsets of the same bodies.
     for (name, want) in [
-        ("Base and Y axis", 17),
-        ("X axis", 16),
+        ("Base and Y axis", 16),
+        ("X axis", 14),
         ("Z axis", 15),
         ("Tool holder", 9),
     ] {
@@ -319,12 +319,53 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
         "tool plate clears the blank"
     );
 
+    // The gantry is one piece on the Y blocks: the deck spans both rails'
+    // blocks and the wall stands on it, and the carriage plate runs
+    // through the deck's notch down to the board top.
+    let deck = body(&r, "Deck");
+    let (deck_lo, deck_hi) = bounds(deck);
+    for b in group(&r, "Y blocks SC20UU") {
+        let (lo, hi) = bounds(b);
+        assert!((hi.z - deck_lo.z).abs() < 1e-6, "a Y block under the deck");
+        assert!(deck_lo.x < lo.x && hi.x < deck_hi.x && deck_lo.y < lo.y && hi.y < deck_hi.y);
+    }
+    let wall = body(&r, "Wall");
+    let (wall_lo, wall_hi) = bounds(wall);
+    assert!(
+        (wall_lo.z - deck_hi.z).abs() < 1e-6,
+        "the wall stands on the deck"
+    );
+    assert!(
+        (wall_lo.x - deck_lo.x).abs() < 1e-6 && (wall_hi.x - deck_hi.x).abs() < 1e-6,
+        "full width"
+    );
+    println!("deck {} above the blank", deck_lo.z - blank_hi.z);
+    assert!(deck_lo.z - blank_hi.z > 40.0, "the deck clears the work");
+    for b in group(&r, "Y supports SK20") {
+        assert!(
+            bounds(b).1.z < deck_lo.z,
+            "the deck passes over the Y supports"
+        );
+    }
+    let (plate_lo, plate_hi2) = bounds(plate);
+    assert!(
+        plate_lo.z < deck_lo.z && plate_hi2.z > deck_hi.z,
+        "the carriage plate crosses the deck's height"
+    );
+    assert!(
+        overlap(plate, deck).unwrap() < 1e-6,
+        "the carriage plate runs through the notch"
+    );
+
     // The tools sit in their clamps without touching the plate, and the
     // fences sit beside the work.
     for (a, b) in [
         ("Router", "Tool support"),
         ("Pilot", "Tool support"),
         ("Tool support", "Z carriage plate"),
+        ("Wall", "Z carriage plate"),
+        ("Deck", "Blank"),
+        ("Deck", "Fences 1"),
         ("Blank", "Fences 1"),
         ("Pattern plate", "Fences 2"),
     ] {
