@@ -24,13 +24,18 @@ balloons and list.
 
 ## How it is built
 
-- **Base and Y.** A 900 x 760 ply base. The two Y shafts (600 mm) run
-  front to back at x = ±380 on SK20s standing straight on the ply, with
-  two blocks 230 apart on each. The two work platforms (330 x 300) sit
+- **Base and Y.** A 900 x 810 ply base. The two Y shafts (700 mm) run
+  front to back at x = ±415 on SK20s standing straight on the ply, with
+  two blocks 230 apart on each. The rails are that far out so the tool
+  plate's ends pass over the front supports at the last pass with the
+  bit at the blank's edge (at ±380 they clipped them by 1.5 mm), and
+  the shafts are 700 rather than 600 because the Z pair only needs 250
+  of the offcut, which buys 100 mm of Y travel for a job longer than
+  the puzzle. The two work platforms (330 x 300) sit
   between the rails, the pattern's 3.5 mm lower so the plate's top is
   level with a 12 mm blank.
-- **The gantry.** One piece on the four Y blocks: a deck (860 x 280,
-  one ply) across both rails, a wall (860 x 270, one ply) standing on
+- **The gantry.** One piece on the four Y blocks: a deck (890 x 280,
+  one ply) across both rails, a wall (890 x 270, one ply) standing on
   its back edge, and a triangular gusset in each corner. Two separate
   beds with a post each would rack, one side running ahead of the
   other with only the X shafts' bending to stop it (about 90 N/mm for
@@ -68,16 +73,21 @@ balloons and list.
   should sit 5 mm outside the blank's corner both ways, and the slotted
   fence moves by the difference.
 
+The last pass cuts half a millimetre into the platform under the
+blank and, where the pattern runs to the blank's edge, a half kerf into
+the fence beside it; both are ply and both are meant to be marked.
+
 ## The numbers the test checks
 
 | | |
 |---|---|
-| Travel | X ±277.5, Y ±142.5, Z 62.5 down from the drawn raised pose |
+| Travel | X ±277.5, Y ±192.5, Z 62.5 down from the drawn raised pose |
+| Sweep | the bit at the blank's edges and middle, every 25 mm in Y from the reference hole to the back edge, first and last pass: no moving part meets a fixed one but the tools in the work |
 | Gantry | deck on all four Y blocks, wall on the deck full width, deck 45 above the blank, the carriage plate through the notch |
 | Reach | bit over the 304 x 260 blank, pilot over the 304 x 260 lattice |
 | Depth | tips 40 above the board raised; first pass 4 mm; last pass 12.5 mm, 52.5 of the 62.5 mm of travel |
 | Clearance at the last pass | chuck 5.5 mm above the plate; tool plate 36 mm above the blank |
-| Shafts | X 760 x 2, Y 600 x 2, Z 250 x 2: the four 1000 mm shafts cut 760 + 240 and 600 + 400, Z from the 400s |
+| Shafts | X 760 x 2, Y 700 x 2, Z 250 x 2: the four 1000 mm shafts cut 760 + 240 and 700 + 300, Z from the 300s |
 
 Every bought-part size (SK20, SC20UU, the router barrel, the chuck) is
 a catalogue number to measure before cutting.
