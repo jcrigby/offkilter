@@ -26,6 +26,8 @@ Shafts: X 760 (x2), Y 700 (x2), Z 250 (x2): the four 1000 mm shafts on
 hand cut 760 + 240 and 700 + 300, the Z pair from the 300 offcuts; the
 third SFC20 kit supplies the last four SK20s and SC20UUs.
 """
+import json
+import math
 import os
 import re
 import sys
@@ -389,16 +391,117 @@ PARTS = [
 ]
 
 
-GROUPS = [
-    ("base_y", "Base and Y axis", ["Base", "Y supports SK20", "Y shafts", "Y blocks SC20UU", "Deck", "Platforms", "Fences"],
-     "ply base 900 x 855; Y shafts 700 at x = +/-415, SK20s 680 apart; one deck 890 x 300 on the four blocks, 230 apart"),
-    ("x_axis", "X axis", ["Deck", "Wall", "Gussets", "X supports SK20", "X shafts", "X blocks SC20UU"],
+# ---------------------------------------------------------------------
+# Motion. Three sub-assemblies, each a rigid group of parts built in
+# place, and the stop screw on its own; in the top assembly one slider
+# each: the gantry on a Y shaft, the X slide on the gantry's lower X
+# shaft, the Z slide on the X slide's left Z shaft, and the stop screw
+# in the tool support's ear. The mate parameters are read off the drawn
+# pose, so the resolved assembly lands exactly where the fixed one did,
+# and the range-of-motion sheets then move the mates.
+# ---------------------------------------------------------------------
+MOTION = [
+    ("gantry", "Gantry", ["Y blocks SC20UU", "Deck", "Wall", "Gussets", "X supports SK20", "X shafts"],
      "deck and wall, one ply each, an angle with a gusset in each corner; X shafts 760 at z = 160 and 310, SK20s 740 apart"),
-    ("z_axis", "Z axis", ["X blocks SC20UU", "Z carriage plate", "Z supports SK20", "Z shafts", "Z blocks SC20UU"],
+    ("x_slide", "X slide", ["X blocks SC20UU", "Z carriage plate", "Z supports SK20", "Z shafts"],
      "carriage plate 220 x 314, one ply, X blocks on its back; Z shafts 250 at x = +/-60, SK20s 210 apart"),
-    ("tool_holder", "Tool holder", ["Tool support", "Tool support webs", "Clamp bolts", "Router", "Pilot", "Stop screw"],
+    ("z_slide", "Z slide", ["Z blocks SC20UU", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Pilot"],
      "tool plate 480 x 110 x 38; split clamps 66 (router) and 9.7 (chuck shank), slits to the front"),
 ]
+FIXED = ["Base", "Y supports SK20", "Y shafts", "Platforms", "Fences", "Blank", "Pattern plate"]
+# (name, placed side, moving side, radius on each): "Sub/part" names a member of a sub-assembly.
+MATES = [
+    ("Y travel", "Y shafts 1", "Gantry/Y blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2),
+    ("X travel", "Gantry/X shafts 1", "X slide/X blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2),
+    ("Z travel", "X slide/Z shafts 1", "Z slide/Z blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2),
+    ("stop screw", "Z slide/Tool support", "Stop screw", SCREW_D / 2, SCREW_D / 2),
+]
+
+
+def _v(d):
+    return (d["x"], d["y"], d["z"])
+
+
+def _sub(a, b):
+    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+
+def _dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def _cross(a, b):
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+
+
+def _norm(a):
+    k = 1.0 / math.sqrt(_dot(a, a))
+    return (a[0] * k, a[1] * k, a[2] * k)
+
+
+def _frame(cyl, face):
+    """The connector frame of a cylindrical face as the kernel builds it
+    (see docs/OPS.md): origin at the face's middle on the axis, z along
+    the axis, x and y canonical for z. Every part is built in place, so
+    the frame on the studio's body is the frame in the world."""
+    o, z = _v(cyl["origin"]), _norm(_v(cyl["axis"]))
+    c = _v(face["centroid"])
+    t = _dot(_sub(c, o), z)
+    origin = (o[0] + z[0] * t, o[1] + z[1] * t, o[2] + z[2] * t)
+    hint = (1.0, 0.0, 0.0) if abs(z[0]) < 0.9 else (0.0, 1.0, 0.0)
+    y = _norm(_cross(z, hint))
+    x = _cross(y, z)
+    return origin, x, y, z
+
+
+def coaxial(body_a, body_b, ra, rb):
+    """The first cylinder of radius ra on body_a and rb on body_b that
+    share an axis, with their frames (the bodies from a studio report)."""
+    faces = lambda b: {json.dumps(f["reference"], sort_keys=True): f for f in b["faces"]}
+    fa, fb = faces(body_a), faces(body_b)
+    for ca in body_a["cylinders"]:
+        if abs(ca["radius"] - ra) > 1e-6:
+            continue
+        ta = _frame(ca, fa[json.dumps(ca["reference"], sort_keys=True)])
+        for cb in body_b["cylinders"]:
+            if abs(cb["radius"] - rb) > 1e-6:
+                continue
+            tb = _frame(cb, fb[json.dumps(cb["reference"], sort_keys=True)])
+            d = _sub(tb[0], ta[0])
+            off = _sub(d, tuple(ta[3][i] * _dot(d, ta[3]) for i in range(3)))
+            if math.sqrt(_dot(_cross(ta[3], tb[3]), _cross(ta[3], tb[3]))) < 1e-9 and math.sqrt(_dot(off, off)) < 1e-6:
+                return ca, cb, ta, tb
+    raise RuntimeError(f"no coaxial cylinders of radii {ra} and {rb}")
+
+
+def mate_parameters(target, moving):
+    """offset, angle, flip that put `moving` where the mate rule puts it
+    from `target`: z opposed unless flip, x turned by angle about z,
+    origin offset along the target's z."""
+    ot, xt, _, zt = target
+    om, xm, _, zm = moving
+    flip = _dot(zt, zm) > 0.0
+    z = zt if flip else tuple(-c for c in zt)
+    offset = _dot(_sub(om, ot), zt)
+    angle = math.degrees(math.atan2(_dot(_cross(xt, xm), z), _dot(xt, xm)))
+    return offset, angle, flip
+
+
+def instance_ids(mcp, tab):
+    report = json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))
+    return {i["name"]: i["id"] for i in report["instances"]}
+
+
+def apply(mcp, ops, tab):
+    text = mcp.call("apply", {"ops": ops, "tab": tab})
+    if "ERROR:" in text:
+        raise RuntimeError(text.split("ERROR:", 1)[1].splitlines()[0])
+    return text
+
+
+def instance_ops(tabs, bodies, titles, fixed):
+    return [{"type": "add_instance", "studio": tabs[t], "body": k, "name": t if len(bodies[t]) == 1 else f"{t} {k + 1}", "fixed": fixed,
+             "placement": {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}} for t in titles for k in range(len(bodies[t]))]
 
 
 def main():
@@ -409,7 +512,7 @@ def main():
     mcp = Mcp(path)
     mcp.call("create_document", {"name": "duplicator"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Carving duplicator on round rail"}]})
-    tabs, bodies = {}, {}
+    tabs, bodies, reports = {}, {}, {}
     for i, (title, fn) in enumerate(PARTS):
         if i == 0:
             mcp.call("apply", {"ops": [{"type": "rename_tab", "tab": 1, "name": title}]}); tab = 1
@@ -420,32 +523,106 @@ def main():
         part = Part(mcp, tab, title)
         fn(part)
         bodies[title] = part.bodies()
+        reports[title] = json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))["bodies"]
         print(f"{title:<20} tab {tab:>2}: {len(bodies[title])} bodies")
+    # The three motion sub-assemblies, every member fixed in place.
+    sub_tabs, sub_ids = {}, {}
+    for file, title, members, note in MOTION:
+        text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": title}]})
+        sub_tabs[title] = int(re.search(r"tab (\d+)", text).group(1))
+        apply(mcp, instance_ops(tabs, bodies, members, True), sub_tabs[title])
+        sub_ids[title] = instance_ids(mcp, sub_tabs[title])
+        print(f"{title:<20} tab {sub_tabs[title]:>2}: {len(sub_ids[title])} instances")
+    # The machine: the fixed parts, the three sub-assemblies and the stop
+    # screw, each moving one on a slider.
     text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": "Duplicator"}]})
     asm = int(re.search(r"tab (\d+)", text).group(1))
-    ops = [{"type": "add_instance", "studio": tabs[t], "body": k, "name": t if len(bodies[t]) == 1 else f"{t} {k + 1}", "fixed": True,
-            "placement": {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}} for t, _ in PARTS for k in range(len(bodies[t]))]
-    text = mcp.call("apply", {"ops": ops, "tab": asm})
-    if "ERROR:" in text:
-        raise RuntimeError(text)
-    print(f"assembly tab {asm}: {len(ops)} instances")
+    ops = instance_ops(tabs, bodies, FIXED, True)
+    ops += [{"type": "add_instance", "studio": sub_tabs[title], "body": 0, "name": title, "fixed": False,
+             "placement": {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}} for _, title, _, _ in MOTION]
+    ops += instance_ops(tabs, bodies, ["Stop screw"], False)
+    apply(mcp, ops, asm)
+    ids = instance_ids(mcp, asm)
+
+    def side(spec):
+        """A connector: an instance of the machine, or Sub/member."""
+        if "/" in spec:
+            sub, member = spec.split("/", 1)
+            return {"instance": ids[sub], "sub": sub_ids[sub][member]}, member
+        return {"instance": ids[spec]}, spec
+
+    def body_of(member):
+        """The studio body an instance was placed from."""
+        m = re.fullmatch(r"(.*) (\d+)", member)
+        title, k = (m.group(1), int(m.group(2)) - 1) if m and m.group(1) in reports else (member, 0)
+        return reports[title][k]
+
+    mate_ops = []
+    for name, a, b, ra, rb in MATES:
+        ca_ref, a_member = side(a)
+        cb_ref, b_member = side(b)
+        ca, cb, ta, tb = coaxial(body_of(a_member), body_of(b_member), ra, rb)
+        offset, angle, flip = mate_parameters(ta, tb)
+        mate_ops.append({"type": "add_mate", "kind": "slider", "a": {**ca_ref, "face": ca["reference"]}, "b": {**cb_ref, "face": cb["reference"]},
+                         "offset": offset, "angle": angle, "flip": flip, "name": name})
+    apply(mcp, mate_ops, asm)
+    report = json.loads(mcp.call("report", {"tab": asm, "detail": "full"}))
+    for m in report["mates"]:
+        if m.get("error"):
+            raise RuntimeError(f"mate {m['name']}: {m['error']}")
+    worst = 0.0
+    for i in report["instances"]:
+        if i.get("error"):
+            raise RuntimeError(f"instance {i['name']}: {i['error']}")
+        if "placed" in i:
+            worst = max(worst, max(abs(c) for c in _v(i["placed"]["position"])))
+    mates = {m["name"]: m for m in report["mates"]}
+    print(f"assembly tab {asm}: {len(ids)} instances, {len(mates)} sliders, resolved to the drawn pose (worst {worst:.1e} mm)")
+
+    def where(name):
+        rep = json.loads(mcp.call("report", {"tab": asm, "detail": "full"}))
+        return _v(next(i for i in rep["instances"] if i["name"] == name)["placed"]["position"])
+
+    # Which way each slider's offset moves its part, by trying it.
+    signs = {}
+    for name, part, axis in (("Y travel", "Gantry", 1), ("X travel", "X slide", 0), ("Z travel", "Z slide", 2), ("stop screw", "Stop screw", 2)):
+        m = mates[name]
+        apply(mcp, [{"type": "set_mate", "id": m["id"], "offset": m["offset"] + 10.0}], asm)
+        moved = where(part)[axis]
+        apply(mcp, [{"type": "set_mate", "id": m["id"], "offset": m["offset"]}], asm)
+        signs[name] = 1.0 if moved > 0.0 else -1.0
+        assert abs(abs(moved) - 10.0) < 1e-6, f"{name}: {part} moved {moved}"
+    at = lambda name, d: mates[name]["offset"] + signs[name] * d
+
     for view, name in (("-0.55,-0.75,0.45", "iso"), ("0.75,-0.55,0.4", "iso_right"), ("front", "front"), ("right", "right"), ("top", "top")):
         mcp.call("screenshot", {"tab": asm, "view": view, "width": 1600, "height": 1100, "path": os.path.join(OUT, f"{name}.png")})
     mcp.call("screenshot", {"tab": asm, "view": "front", "section": f"y:{TOOL_Y + 0.5}:flip", "width": 1600, "height": 1100, "path": os.path.join(OUT, "section_tools.png")})
     mcp.call("screenshot", {"tab": asm, "view": "right", "section": "x:0", "width": 1600, "height": 1100, "path": os.path.join(OUT, "section_carriage.png")})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A2", "note": "round rail duplicator, puzzle size: X 760 stacked, Y 700, Z 250 shafts; one-piece gantry on the Y blocks", "path": os.path.join(OUT, "duplicator.pdf")}))
-    # Sub-assembly sheets: each group of parts on its own tab, drawn at the
-    # largest scale that fits an A3, with its own balloons and parts list.
-    for file, title, group, note in GROUPS:
-        text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": title}]})
-        sub = int(re.search(r"tab (\d+)", text).group(1))
-        ops = [{"type": "add_instance", "studio": tabs[t], "body": k, "name": t if len(bodies[t]) == 1 else f"{t} {k + 1}", "fixed": True,
-                "placement": {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}} for t in group for k in range(len(bodies[t]))]
-        text = mcp.call("apply", {"ops": ops, "tab": sub})
-        if "ERROR:" in text:
-            raise RuntimeError(text)
-        mcp.call("screenshot", {"tab": sub, "view": "-0.55,-0.75,0.45", "width": 1600, "height": 1100, "path": os.path.join(OUT, f"{file}_iso.png")})
-        print(mcp.call("export", {"tab": sub, "format": "pdf", "sheet": "A3", "note": note, "path": os.path.join(OUT, f"{file}.pdf")}))
+    for file, title, _, note in MOTION:
+        mcp.call("screenshot", {"tab": sub_tabs[title], "view": "-0.55,-0.75,0.45", "width": 1600, "height": 1100, "path": os.path.join(OUT, f"{file}_iso.png")})
+        print(mcp.call("export", {"tab": sub_tabs[title], "format": "pdf", "sheet": "A3", "note": note, "path": os.path.join(OUT, f"{file}.pdf")}))
+    # Range of motion. The depth sequence from the front: raised, the
+    # first pass on the stop screw, the last pass with the screw backed
+    # off and the pilot in the groove. The reach from above: the bit at
+    # the blank's front-left corner (the pilot at the reference hole),
+    # at the centre and at the back-right corner.
+    raised = ZC - TIP_BELOW - BOARD_TOP                     # 40: the tips above the board
+    landing = (ZC - 10.0 - STOP_PROTRUDE) - STOP_BLOCK["z"][1]  # how far the slide drops before the screw lands: 36
+    last = raised + GROOVE_D                                # 52.5
+    z_positions = [
+        {"Z travel": at("Z travel", 0.0), "label": f"raised, tips {raised:g} up"},
+        {"Z travel": at("Z travel", -landing), "label": f"first pass, {raised - landing:g} mm, on the screw"},
+        {"Z travel": at("Z travel", -last), "stop screw": at("stop screw", last - landing), "label": f"last pass, {GROOVE_D:g} mm, screw backed off"},
+    ]
+    xy_positions = [
+        {"X travel": at("X travel", -BOARD_W / 2), "Y travel": at("Y travel", -PLATE_D / 2 + REF_IN), "label": "front-left corner, reference hole"},
+        {"X travel": at("X travel", 0.0), "Y travel": at("Y travel", 0.0), "label": "centre"},
+        {"X travel": at("X travel", BOARD_W / 2), "Y travel": at("Y travel", BOARD_D / 2), "label": "back-right corner"},
+    ]
+    for stem, positions, view in (("motion_z", z_positions, "front"), ("motion_xy", xy_positions, "top")):
+        print(mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, f"{stem}.pdf")}))
+        mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "width": 1800, "height": 600, "path": os.path.join(OUT, f"{stem}.png")})
     mcp.close()
 
 
