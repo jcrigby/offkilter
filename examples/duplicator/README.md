@@ -79,6 +79,20 @@ reference hole, at the centre, and at the back-right corner).
   on a stop block on the carriage plate: set for a 4 mm first pass, it
   backs off 13 turns for the last, where the pilot bottoming in the
   12.5 mm groove is the limit.
+- **Balance.** The Z slide weighs about 4.2 kg (1.6 of ply in the tool
+  support, 0.75 in its four blocks, 1.5 for the Colt, the rest chuck,
+  pilot and knobs). Left to gravity the pilot would ride the groove
+  floor under 41 N, and its 12 N of drag would bend a 2 mm rod 18 mm
+  out of the chuck by 0.15 mm, a tenth of the gap, reversing with
+  every stroke. A retractable spring balancer (the 1 to 3 kg kind)
+  hangs from a ply bracket on the carriage plate's face, its cable
+  down to an eye on the stop ear, set to leave about half a kilogram
+  on the pilot. A counterweight would double the moving mass and has
+  nowhere to hang, an extension spring flat enough would be 350 mm
+  long, and a gas spring's stiction is the force band in question. The
+  reel sits between the upper Z shaft supports, above the support
+  plate by 59 mm at the raised pose, and the cable passes 8 mm in
+  front of the stop screw's knob; the sweep checks all of it.
 - **Calibration.** An L fence on each platform, the blank's 30 mm wide
   with slots across its legs. The pattern plate has a 2 mm reference
   hole 5 mm inside its front-left corner, outside the board's outline:

@@ -13,7 +13,9 @@ one 38 mm tool plate, both bores drilled in one setup, the slits to the
 front so tightening shifts each tool in y and never in the x spacing
 that calibration sets. Depth: an M8 stop screw on a stop block limits
 the early passes; the pilot bottoming in the pattern's groove limits
-the last. The pilot is 2 mm drill rod in a keyless mini chuck whose
+the last. A spring balancer on the carriage plate carries all but half
+a kilogram of the Z slide, so the pilot rides the groove with a few
+newtons and its drag cannot bend it. The pilot is 2 mm drill rod in a keyless mini chuck whose
 3/8 in shank slides in its clamp to set the height.
 
     cargo build --release -p ok-mcp
@@ -90,6 +92,18 @@ ZC = Z0 + 155.0                                         # raised: tips 40 above 
 STOP_BLOCK = dict(x=(-15.0, 15.0), y=(PLATE_FACE_Y - 40.0, PLATE_FACE_Y), z=(Z0 + 30.0, Z0 + 60.0))
 EAR_Y = (SUPPORT_Y[1], PLATE_FACE_Y - 20.0)
 SCREW_D, SCREW_Y = 8.0, PLATE_FACE_Y - 30.0
+# The balancer: a retractable spring reel on a bracket at the top of the
+# carriage plate, its cable down to an eye on the tool support's ear,
+# set to carry all but half a kilogram or so of the 4.2 kg Z slide, so
+# the pilot rides the groove floor with a few newtons and its drag
+# cannot bend it. The reel hangs in front of the plate above the Z
+# supports, between the upper Z shaft supports, and the cable passes
+# 8 mm in front of the stop screw's knob.
+BAL_Y = PLATE_FACE_Y - 60.0                              # -190: the cable's line, over the ear, the drum clear of the bracket leg
+BAL_X = 25.0                                             # the bracket's half width, between the upper Z supports' bases
+BAL_LEG_Z, BAL_ARM_Z = (290.0, 419.0), (400.0, 419.0)   # the leg on the plate's face, the arm over the reel
+REEL_D, REEL_W, REEL_Z = 70.0, 36.0, 345.0               # a 1 to 3 kg spring balancer's drum, hung from the arm
+HOOK_H, CABLE_D, EYE_D, EYE_H = 20.0, 1.5, 6.0, 8.0
 STOP_PROTRUDE = 49.0                                    # below the ear: set for the first pass, 4 mm deep; backed off past 32.5 for the pilot's pass
 
 
@@ -254,6 +268,7 @@ def tool_support(p):
     box(p, "support plate, ply", (-110.0, 110.0), SUPPORT_Y, (zb, ZC + 65.0))
     box(p, "tool plate, two plies", (BIT_X - 65.0, PILOT_X + 65.0), TOOL_PLATE_Y, (zb, zb + TOOL_T), op="add")
     box(p, "stop ear", (-15.0, 15.0), EAR_Y, (ZC - 10.0, ZC + 9.0), op="add")
+    vcyl(p, "cable eye", 0.0, BAL_Y, ZC + 9.0, ZC + 9.0 + EYE_H, EYE_D, op="add")
     # Both bores in one drill-press setup, then a slit from each to the front edge.
     s = p.sketch("top", zb + TOOL_T + 1.0, "router bore")
     p.point(s, (BIT_X, TOOL_Y))
@@ -291,6 +306,26 @@ def clamp_bolts(p):
     xcyl(p, "knob", BIT_X - 77.0, BIT_X - 65.0, wall_y, zm, 25.0, op="add")
     xcyl(p, "M4 x 90 knob bolt", PILOT_X - 18.0, PILOT_X + 75.0, wall_y, zm, PILOT_BOLT_D, op="new")
     xcyl(p, "knob", PILOT_X + 65.0, PILOT_X + 75.0, wall_y, zm, 18.0, op="add")
+
+
+def balancer_bracket(p):
+    """The reel's bracket, a leg on the carriage plate's face above the Z
+    supports and an arm over the reel, with the cable down to the eye on
+    the ear: drawn at the raised pose, so at a lower pose the cable ends
+    short of the eye rather than through it."""
+    box(p, "bracket leg, ply", (-BAL_X, BAL_X), (PLATE_FACE_Y - PLY, PLATE_FACE_Y), BAL_LEG_Z)
+    box(p, "bracket arm, ply", (-BAL_X, BAL_X), (BAL_Y - 20.0, PLATE_FACE_Y), BAL_ARM_Z, op="add")
+    s = p.sketch("top", BAL_ARM_Z[1] + 1.0, "hook hole")
+    p.point(s, (0.0, BAL_Y))
+    p.hole(s, 8.0, depth=BAL_ARM_Z[1] - BAL_ARM_Z[0] + 2.0, direction="reverse", name="hook hole")
+    vcyl(p, "cable", 0.0, BAL_Y, ZC + 9.0 + EYE_H, REEL_Z - REEL_D / 2, CABLE_D, op="new")
+
+
+def balancer_reel(p):
+    """A 1 to 3 kg retractable spring balancer on its hook (its own
+    studio: an add joins every body it touches and the first one too)."""
+    box(p, "hook", (-3.0, 3.0), (BAL_Y - 3.0, BAL_Y + 3.0), (REEL_Z + REEL_D / 2, BAL_ARM_Z[0] - 1.0))
+    xcyl(p, "spring balancer, 1 to 3 kg", -REEL_W / 2, REEL_W / 2, BAL_Y, REEL_Z, REEL_D, op="add")
 
 
 def tool_support_webs(p):
@@ -388,7 +423,7 @@ def pattern(p):
 PARTS = [
     ("Base", base), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Deck", deck), ("Wall", wall), ("Gussets", gussets),
     ("X supports SK20", x_supports), ("X shafts", x_shafts), ("X blocks SC20UU", x_blocks),
-    ("Z carriage plate", carriage_plate), ("Z supports SK20", z_supports), ("Z shafts", z_shafts), ("Z blocks SC20UU", z_blocks),
+    ("Z carriage plate", carriage_plate), ("Z supports SK20", z_supports), ("Z shafts", z_shafts), ("Z blocks SC20UU", z_blocks), ("Balancer bracket", balancer_bracket), ("Balancer reel", balancer_reel),
     ("Tool support", tool_support), ("Tool support webs", tool_support_webs), ("Clamp bolts", clamp_bolts), ("Router", router), ("Pilot", pilot), ("Stop screw", stop_screw),
     ("Platforms", platforms), ("Fences", fences), ("Blank", blank), ("Pattern plate", pattern),
 ]
@@ -406,8 +441,8 @@ PARTS = [
 MOTION = [
     ("gantry", "Gantry", ["Y blocks SC20UU", "Deck", "Wall", "Gussets", "X supports SK20", "X shafts"],
      "deck and wall, one ply each, an angle with a gusset in each corner; X shafts 760 at z = 160 and 310, SK20s 740 apart"),
-    ("x_slide", "X slide", ["X blocks SC20UU", "Z carriage plate", "Z supports SK20", "Z shafts"],
-     "carriage plate 220 x 314, one ply, X blocks on its back; Z shafts 250 at x = +/-60, SK20s 210 apart"),
+    ("x_slide", "X slide", ["X blocks SC20UU", "Z carriage plate", "Z supports SK20", "Z shafts", "Balancer bracket", "Balancer reel"],
+     "carriage plate 220 x 314, one ply, X blocks on its back; Z shafts 250 at x = +/-60, SK20s 210 apart; spring balancer on a bracket"),
     ("z_slide", "Z slide", ["Z blocks SC20UU", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Pilot"],
      "tool plate 480 x 110 x 38; split clamps 66 (router) and 9.7 (chuck shank), slits to the front"),
 ]

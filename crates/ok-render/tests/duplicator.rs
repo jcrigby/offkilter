@@ -158,7 +158,7 @@ fn every_part_regenerates_closed_and_the_machine_places_every_body() {
         .map(|t| (t.id, t.name().to_string(), t.kind_name().to_string()))
         .collect();
     let studios = tabs.iter().filter(|t| t.2 == "part_studio").count();
-    assert_eq!(studios, 24, "{studios} part studios");
+    assert_eq!(studios, 26, "{studios} part studios");
     let mut placed = 0;
     for (id, name, kind) in &tabs {
         if kind == "part_studio" {
@@ -176,13 +176,13 @@ fn every_part_regenerates_closed_and_the_machine_places_every_body() {
             placed += r.bodies.len();
         }
     }
-    assert_eq!(placed, 51);
+    assert_eq!(placed, 54);
     let machine = tab_named(&doc, "Duplicator");
     let r = doc.regenerate_assembly(machine).unwrap();
-    assert_eq!(r.bodies.len(), 51);
+    assert_eq!(r.bodies.len(), 54);
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
     // The three motion sub-assemblies, each with its own sheet.
-    for (name, want) in [("Gantry", 14), ("X slide", 11), ("Z slide", 12)] {
+    for (name, want) in [("Gantry", 14), ("X slide", 14), ("Z slide", 12)] {
         let sub = tab_named(&doc, name);
         let r = doc.regenerate_assembly(sub).unwrap();
         assert_eq!(r.bodies.len(), want, "{name}");
