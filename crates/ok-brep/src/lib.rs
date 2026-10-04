@@ -16,6 +16,7 @@ mod blend;
 mod boolean;
 mod corner;
 mod drawing;
+mod duplicate;
 mod extrude;
 mod fasthash;
 mod loft;
@@ -32,6 +33,9 @@ pub use boolean::{boolean, BoolOp};
 pub use drawing::{
     project_view, section_view, split, split_tagged, view_dxf, SectionLines, View, ViewArc,
     ViewLines,
+};
+pub use duplicate::{
+    check as duplicate_check, Bit, BitShape, DuplicateReport, HeightField, RESIDUAL_TOLERANCE,
 };
 pub mod clip2d;
 pub mod exact;

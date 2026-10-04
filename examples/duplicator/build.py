@@ -367,13 +367,16 @@ def fences(p):
 def pattern(p):
     z0 = PLY - 3.5
     box(p, "printed pattern plate", (PILOT_X - PLATE_W / 2, PILOT_X + PLATE_W / 2), (TOOL_Y - PLATE_D / 2, TOOL_Y + PLATE_D / 2), (z0, z0 + PLATE_FLOOR + GROOVE_D))
-    # A few of the gap lattice's grooves, to show the pilot's work.
-    s = p.sketch("top", z0 + PLATE_FLOOR + GROOVE_D + 1.0, "grooves")
-    for k in range(-3, 4):
-        p.rect(s, (PILOT_X - 152.0, TOOL_Y + k * 38.0 - GROOVE_W / 2), (PILOT_X + 152.0, TOOL_Y + k * 38.0 + GROOVE_W / 2))
-    for k in range(-4, 5):
-        p.rect(s, (PILOT_X + k * 38.0 - GROOVE_W / 2, TOOL_Y - 130.0), (PILOT_X + k * 38.0 + GROOVE_W / 2, TOOL_Y + 130.0))
-    p.cut(s, GROOVE_D + 1.0, direction="reverse", name="gap lattice, as grooves")
+    # A stand-in for the gap lattice: a grid of grooves, each cut from
+    # its own sketch. One sketch of all of them would also enclose the
+    # squares between, and a cut takes every region a sketch encloses;
+    # the duplicator check on the plate is what found that.
+    grooves = [((PILOT_X - 152.0, TOOL_Y + k * 38.0 - GROOVE_W / 2), (PILOT_X + 152.0, TOOL_Y + k * 38.0 + GROOVE_W / 2)) for k in range(-3, 4)]
+    grooves += [((PILOT_X + k * 38.0 - GROOVE_W / 2, TOOL_Y - 130.0), (PILOT_X + k * 38.0 + GROOVE_W / 2, TOOL_Y + 130.0)) for k in range(-4, 5)]
+    for n, (a, b) in enumerate(grooves):
+        s = p.sketch("top", z0 + PLATE_FLOOR + GROOVE_D + 1.0, f"groove {n + 1}")
+        p.rect(s, a, b)
+        p.cut(s, GROOVE_D + 1.0, direction="reverse", name=f"groove {n + 1}")
     # The reference hole: 5 mm inside the front-left corner, outside the
     # board's outline. The pilot in it puts the bit 5 mm outside the blank's
     # corner; the plunge mark in the platform is what the slotted fence is set by.
@@ -623,6 +626,10 @@ def main():
     for stem, positions, view in (("motion_z", z_positions, "front"), ("motion_xy", xy_positions, "top")):
         print(mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, f"{stem}.pdf")}))
         mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "width": 1800, "height": 600, "path": os.path.join(OUT, f"{stem}.png")})
+    # The pattern plate as a master: its grooves are the gap wide, so a
+    # bit the size of the gap follows them and the next size up does not.
+    for d, stem in ((BIT_D, "check_2mm"), (3.175, "check_3mm")):
+        print(mcp.call("duplicator_check", {"tab": tabs["Pattern plate"], "bit": d, "reach": GROOVE_D + 2.0, "pitch": 0.5, "path": os.path.join(OUT, f"{stem}.png")}))
     mcp.close()
 
 

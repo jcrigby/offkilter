@@ -525,3 +525,49 @@ fn the_machine_clears_itself_over_the_work() {
     }
     assert!(hits.is_empty(), "{} collisions", hits.len());
 }
+
+/// The pattern plate as a master for the duplicator itself: its grooves
+/// are the gap wide, so a bit the size of the gap rides them and leaves
+/// nothing, and the next size up (an eighth of an inch) cannot enter
+/// them at all: every groove reads as a corner tighter than the bit.
+#[test]
+fn the_pattern_plate_is_a_master_for_a_bit_the_size_of_the_gap_and_not_for_a_bigger_one() {
+    let mut doc = load();
+    let tab = tab_named(&doc, "Pattern plate");
+    let r = doc.regenerate_studio(tab, None).unwrap();
+    let plate = &r.bodies[0].solid;
+    let (lo, hi) = bounds(plate);
+    let floor = flat_faces(plate, 1.0)
+        .into_iter()
+        .filter(|f| f.z < hi.z - 1e-6 && f.z > lo.z + 1e-6)
+        .map(|f| f.z)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let groove = hi.z - floor;
+    let slab = (hi.x - lo.x) * (hi.y - lo.y) * (hi.z - lo.z);
+    let lattice = (slab - plate.volume()) / groove;
+    let bit = |d: f64| ok_brep::Bit {
+        diameter: d,
+        reach: groove + 2.0,
+        shape: ok_brep::BitShape::Flat,
+    };
+    let fine = ok_brep::duplicate_check(plate, &bit(2.0), Some(0.5)).unwrap();
+    println!(
+        "2 mm bit: residual {} mm2 up to {} mm, undercut {} mm3, {:?}",
+        fine.residual_area, fine.residual_max, fine.undercut_volume, fine.problems
+    );
+    assert!(fine.problems.is_empty(), "{:?}", fine.problems);
+    assert!((fine.depth_max - groove).abs() < 1e-6);
+    let coarse = ok_brep::duplicate_check(plate, &bit(3.175), Some(0.5)).unwrap();
+    println!(
+        "1/8 in bit: residual {} mm2 of a {lattice:.0} mm2 lattice, up to {} mm, {:?}",
+        coarse.residual_area, coarse.residual_max, coarse.problems
+    );
+    assert_eq!(coarse.problems.len(), 1, "{:?}", coarse.problems);
+    assert!(coarse.problems[0].starts_with("concave corners"));
+    assert!(
+        (coarse.residual_area - lattice).abs() < 0.1 * lattice,
+        "{} vs {lattice}",
+        coarse.residual_area
+    );
+    assert!((coarse.residual_max - groove).abs() < 0.1);
+}
