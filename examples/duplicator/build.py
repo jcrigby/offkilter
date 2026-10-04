@@ -45,6 +45,7 @@ SK_W, SK_T, SK_H, SK_HTOT = 60.0, 20.0, 51.0, 70.0      # SK20: base width, thic
 BLK_W, BLK_L, BLK_H, BLK_C = 50.0, 45.0, 42.0, 25.0     # SC20UU: width across, length along the shaft, height, base to centre
 # Base and platforms.
 BASE = dict(x=(-450.0, 450.0), y=(-430.0, 425.0), z=(-PLY, 0.0))
+BATTEN_Y, BATTEN_H = ((-430.0, -390.0), (-20.0, 20.0), (330.0, 370.0)), 40.0   # under the base, clear of the Y supports' T-nuts at y -295 and 385
 TOOL_Y = -280.0                                         # the bit and pilot at mid travel
 BIT_X, PILOT_X = -175.0, 175.0                          # the two tools, over the two platforms
 PLATFORM_W, PLATFORM_D = 330.0, 300.0
@@ -134,6 +135,14 @@ def ycyl(p, name, y0, y1, cx, cz, d, op="new"):
 
 def base(p):
     box(p, "base, 900 x 855 ply", BASE["x"], BASE["y"], BASE["z"])
+
+
+def battens(p):
+    """Three battens under the base, two plies glued (38 x 40), the full
+    width: the base cannot sag over the bench, and the Y supports'
+    T-nuts have room underneath."""
+    for i, (y0, y1) in enumerate(BATTEN_Y):
+        box(p, "batten, two plies", BASE["x"], (y0, y1), (-PLY - BATTEN_H, -PLY), op="new" if i == 0 else "add")
 
 
 def deck(p):
@@ -421,7 +430,7 @@ def pattern(p):
 
 
 PARTS = [
-    ("Base", base), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Deck", deck), ("Wall", wall), ("Gussets", gussets),
+    ("Base", base), ("Battens", battens), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Deck", deck), ("Wall", wall), ("Gussets", gussets),
     ("X supports SK20", x_supports), ("X shafts", x_shafts), ("X blocks SC20UU", x_blocks),
     ("Z carriage plate", carriage_plate), ("Z supports SK20", z_supports), ("Z shafts", z_shafts), ("Z blocks SC20UU", z_blocks), ("Balancer bracket", balancer_bracket), ("Balancer reel", balancer_reel),
     ("Tool support", tool_support), ("Tool support webs", tool_support_webs), ("Clamp bolts", clamp_bolts), ("Router", router), ("Pilot", pilot), ("Stop screw", stop_screw),
@@ -446,13 +455,46 @@ MOTION = [
     ("z_slide", "Z slide", ["Z blocks SC20UU", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Pilot"],
      "tool plate 480 x 110 x 38; split clamps 66 (router) and 9.7 (chuck shank), slits to the front"),
 ]
-FIXED = ["Base", "Y supports SK20", "Y shafts", "Platforms", "Fences", "Blank", "Pattern plate"]
+FIXED = ["Base", "Battens", "Y supports SK20", "Y shafts", "Platforms", "Fences", "Blank", "Pattern plate"]
 # (name, placed side, moving side, radius on each): "Sub/part" names a member of a sub-assembly.
 MATES = [
     ("Y travel", "Y shafts 1", "Gantry/Y blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2),
     ("X travel", "Gantry/X shafts 1", "X slide/X blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2),
     ("Z travel", "X slide/Z shafts 1", "Z slide/Z blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2),
     ("stop screw", "Z slide/Tool support", "Stop screw", SCREW_D / 2, SCREW_D / 2),
+]
+
+
+# ---------------------------------------------------------------------
+# Hardware. Bought parts bolt through the ply into T-nuts, never into
+# wood screws, since the rail supports are aligned by loosening and
+# sliding. Ply joints are glued, the screws clamps and insurance:
+# number 8, 32 mm into face grain, 50 mm into an edge. The SK20's slots
+# and the SC20UU's tapped holes are what they usually are; measure the
+# kit before buying.
+# ---------------------------------------------------------------------
+HARDWARE = [
+    ("12 SK20 supports: 4 Y on the base, 4 X on the wall, 4 Z on the carriage plate", "M6 x 40 hex bolt, washer, pronged T-nut from the far face", 24),
+    ("4 Y blocks under the deck, from above", "M5 x 30 (or M6, as the block is tapped) into the block", 16),
+    ("4 X blocks on the carriage plate's back, from its front face", "M5 x 30 (or M6) into the block", 16),
+    ("4 Z blocks on the support plate's back, from its front face; the lower pair countersunk, before the tool plate goes on", "M5 x 30 (or M6) into the block", 16),
+    ("Router clamp", "M6 x 100 knob bolt, hex nut in the pocket", 1),
+    ("Pilot clamp", "M4 x 90 knob bolt, hex nut in the pocket", 1),
+    ("Stop screw", "M8 x 90 with a knob, through an M8 T-nut set into the top of the ear, an M8 jam nut above the ear", 1),
+    ("Blank's slotted fence", "M5 x 25 bolt and washer into a T-nut set into the platform from below, before the platform is screwed down", 6),
+    ("Balancer bracket leg to the carriage plate", "M6 x 40 bolt and T-nut", 2),
+    ("Cable eye on the ear", "M4 screw eye", 1),
+    ("Balancer hook in the arm", "an 8 mm S-hook or shackle", 1),
+    ("Wall onto the deck's back edge, from below through the deck", "no. 8 x 50 wood screw, every 100 mm, glued", 9),
+    ("Gussets to the deck and the wall", "no. 8 x 50 wood screw, 3 each way, glued", 12),
+    ("Tool plate's two plies laminated", "no. 8 x 32 wood screw, countersunk from below, clear of the bores", 8),
+    ("Tool plate to the support plate, from behind", "no. 8 x 50 wood screw, glued", 4),
+    ("Webs to the support plate from behind and down into the tool plate", "no. 8 x 50 wood screw, 2 each way, glued", 12),
+    ("Stop ear to the support plate, from behind", "no. 8 x 50 wood screw, glued", 2),
+    ("Balancer bracket arm to its leg", "no. 8 x 50 wood screw, glued", 2),
+    ("Battens under the base", "no. 8 x 32 wood screw from above, countersunk, every 150 mm, glued", 18),
+    ("Platforms to the base, countersunk flush", "no. 8 x 32 wood screw", 12),
+    ("Pattern plate's L fence", "no. 6 x 25 wood screw", 6),
 ]
 
 
@@ -661,6 +703,11 @@ def main():
     for stem, positions, view in (("motion_z", z_positions, "front"), ("motion_xy", xy_positions, "top")):
         print(mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, f"{stem}.pdf")}))
         mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "width": 1800, "height": 600, "path": os.path.join(OUT, f"{stem}.png")})
+    with open(os.path.join(OUT, "hardware.csv"), "w") as f:
+        f.write("joint,fastener,count\n")
+        for joint, fastener, count in HARDWARE:
+            f.write(f'"{joint}","{fastener}",{count}\n')
+    print(f"hardware: {sum(c for _, _, c in HARDWARE)} fasteners in {len(HARDWARE)} lines")
     # The pattern plate as a master: its grooves are the gap wide, so a
     # bit the size of the gap follows them and the next size up does not.
     for d, stem in ((BIT_D, "check_2mm"), (3.175, "check_3mm")):
