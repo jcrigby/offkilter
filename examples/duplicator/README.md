@@ -25,14 +25,26 @@ balloons and list.
 ## How it is built
 
 - **Base and Y.** A 900 x 760 ply base. The two Y shafts (600 mm) run
-  front to back at x = ±380 on SK20s standing straight on the ply, and
-  a 100 x 280 ply bed rides each on two blocks 230 apart. The two work
-  platforms (330 x 300) sit between the rails, the pattern's 3.5 mm
-  lower so the plate's top is level with a 12 mm blank.
-- **X.** An upright post (120 wide, one ply, a triangular gusset behind
-  it down to the bed's back) on each Y bed carries two X shafts
-  (760 mm) one above the other, 150 apart, on SK20s on the posts' front
-  faces.
+  front to back at x = ±380 on SK20s standing straight on the ply, with
+  two blocks 230 apart on each. The two work platforms (330 x 300) sit
+  between the rails, the pattern's 3.5 mm lower so the plate's top is
+  level with a 12 mm blank.
+- **The gantry.** One piece on the four Y blocks: a deck (860 x 280,
+  one ply) across both rails, a wall (860 x 270, one ply) standing on
+  its back edge, and a triangular gusset in each corner. Two separate
+  beds with a post each would rack, one side running ahead of the
+  other with only the X shafts' bending to stop it (about 90 N/mm for
+  the pair, half a millimetre for a lopsided 50 N push); as an angle
+  the deck takes racking as in-plane shear, the wall the fore-and-aft
+  bending, and the gussets close each end into a triangle. The deck is
+  an H in plan, a 240 mm bite out of its front edge where the Z
+  carriage plate hangs to the board top, and it rides 45 mm above the
+  blank and clears the Y supports at full travel. One bridge on two
+  round rails needs them parallel to within the blocks' clearance: set
+  the SK20s by sliding the finished gantry end to end before the last
+  tightening.
+- **X.** Two X shafts (760 mm) one above the other, 150 apart, on
+  SK20s on the wall's front face.
 - **Z.** The carriage plate (220 x 314, one ply) rides the X shafts on
   four blocks bolted to its back, no bed and no joint in bending. Two
   Z shafts (250 mm) stand on its face on SK20s, and the tool support
@@ -61,6 +73,7 @@ balloons and list.
 | | |
 |---|---|
 | Travel | X ±277.5, Y ±142.5, Z 62.5 down from the drawn raised pose |
+| Gantry | deck on all four Y blocks, wall on the deck full width, deck 45 above the blank, the carriage plate through the notch |
 | Reach | bit over the 304 x 260 blank, pilot over the 304 x 260 lattice |
 | Depth | tips 40 above the board raised; first pass 4 mm; last pass 12.5 mm, 52.5 of the 62.5 mm of travel |
 | Clearance at the last pass | chuck 5.5 mm above the plate; tool plate 36 mm above the blank |
