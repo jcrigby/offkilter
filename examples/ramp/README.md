@@ -258,7 +258,7 @@ brief, this is why.
 - **Fold.** One revolute, `fold`, between the pipe and panel 2's flush
   rail bore, its parameters read off the drawn pose. The fold goes
   under: panel 2's free end drops, and at 180 degrees it lies under
-  panel 1, bottoms 2 in apart (twice `PIN_DROP`), lugs interleaved.
+  panel 1, bottoms 3 in apart (twice `PIN_DROP`), lugs interleaved.
   The bottom skin's hinge-end edge has the 3/8 chamfer and the test
   finds no interference at 0, 5, 10, 20, 45, 90, 135, 170 and 180
   degrees.
@@ -284,10 +284,23 @@ brief, this is why.
   the four interior lugs side by side without overlap, the handle 7.5
   in bare, and the rails and cheeks paired at each end of the pipe;
   sweeps the fold; measures the open ramp at 96 x 24 over the rails
-  and the folded package at 24 x 46 x 8.75 over the rails and 48 over
-  the stubs; and reads the sheet yield off the parts: the four skins
+  and the folded package at 24 x 9.75 with the bottoms 3 in apart and
+  the lugs filling the gap; and reads the sheet yield off the parts: the four skins
   are 82 % of one 4 x 8 (two 21 in rips crosscut at 45), the birch
   34 % of another.
 
 Pipe length came out at 26 in with the caps outside its ends, 28 in
-over the caps. The open questions in §7 stand.
+over the caps.
+
+`PIN_DROP` and the lugs' radius are 1-1/2, not the 1 the brief
+assumed, which answers the first open question in §7. The 7/16 wall a
+1 in radius leaves round the 1-1/8 bore holds the 375 lb per lug on
+paper (about 290 psi in tension and shear-out, 240 psi bearing, in two
+plies of birch), but it is one pin diameter of end distance, and
+shear-out at the end is the failure a shock load finds. The radius
+cannot exceed the pin drop without the half-round meeting the other
+panel's bottom, so both went to 1-1/2: a 15/16 wall, the lever arm
+3.875 and the pipe tension about 1,860 lb, the folded bottoms 3 in
+apart and the package 9.75 thick, the lugs 3 in below the deck at the
+joint, and the rail taper 8 in long for the longer climb. The other
+open questions stand.

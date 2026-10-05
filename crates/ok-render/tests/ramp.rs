@@ -131,7 +131,7 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
     let (po, pa) = cylinders(pipe, 1.05 / 2.0)[0];
     assert!(pa.x.abs() > 1.0 - 1e-9, "pipe along x: {pa:?}");
     assert!(
-        (po.y).abs() < 1e-6 && (po.z + 1.0 * IN).abs() < 1e-6,
+        (po.y).abs() < 1e-6 && (po.z + 1.5 * IN).abs() < 1e-6,
         "{po:?}"
     );
     // Six lug bores of 1-1/8 in on it, two in each panel's rails and two
@@ -326,21 +326,24 @@ fn the_fold_clears_itself_and_the_packages_measure_up() {
     );
     let gap = (b1.0.z - b2.1.z) / IN;
     println!("folded: bottoms {gap:.3} in apart");
-    assert!((gap - 2.0).abs() < 1e-6);
+    assert!((gap - 3.0).abs() < 1e-6, "twice the pin drop");
     let (lo, hi) = extent(&r, |b| {
         b.name.contains("rail_") && !b.name.contains("spacer")
     });
     let (w, l, t) = ((hi.x - lo.x) / IN, (hi.y - lo.y) / IN, (hi.z - lo.z) / IN);
     println!("folded package over the rails: {w:.3} x {l:.3} x {t:.3} in");
-    assert!((w - 24.0).abs() < 1e-6 && (t - (2.0 * 3.375 + 2.0)).abs() < 1e-6);
+    assert!(
+        (w - 24.0).abs() < 1e-6 && (t - (2.0 * 3.375 + 3.0)).abs() < 1e-6,
+        "{w} x {t}"
+    );
     // The rails run to 45 and their half-rounds an inch past the joint;
     // the stubs make the panel's 48.
-    assert!((l - 46.0).abs() < 1e-6, "{l} over the rails");
+    assert!((l - 46.5).abs() < 1e-6, "{l} over the rails");
     let panels = extent(&r, |b| b.name.starts_with("panel"));
     let ly = (panels.1.y - panels.0.y) / IN;
     println!("folded package over the panels: {ly:.3} in long");
     assert!(
-        (ly - 49.0).abs() < 1e-6,
+        (ly - 49.5).abs() < 1e-6,
         "{ly}: 48 from the joint to the stubs' ends and the half-rounds past it"
     );
     // The interior lugs fill the gap: panel 1's hang down to panel 2's

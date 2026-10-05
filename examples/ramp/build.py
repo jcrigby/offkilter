@@ -40,13 +40,13 @@ RIB = 1.5                          # 2x2 actual, on edge: the box is SKIN + RIB 
 BOX = 2 * SKIN + RIB               # 2.375
 SKIN_END = 45.0                    # the skins stop here; the stubs run bare to 48
 CURB = 1.0                         # the rails stand this much above the deck
-PIN_DROP = 1.0                     # pipe centre below the bottom skin: lever arm against hang
+PIN_DROP = 1.5                     # pipe centre below the bottom skin: lever arm against hang, and the most the lugs' radius can be
 PIPE_OD, PIPE_ID, PIPE_L = 1.05, 0.824, 26.0   # 3/4 Sch 40
 BORE = 1.125                       # the lug bores
 BIRCH = 0.75                       # the rails, cheeks, spacer and lug plies
 RAIL_H = BOX + CURB                # 3.375 along the length
-LUG_R = 1.0                        # the half-round about the pin, so the rail bottom reaches -2
-TAPER = 6.0                        # the rail bottom climbs back to z = 0 over this
+LUG_R = 1.5                        # the half-round about the pin: a 15/16 wall round the bore, the rail bottom at -3; no more than PIN_DROP or it meets the other panel
+TAPER = 8.0                        # the rail bottom climbs back to z = 0 over this
 CHAMFER = 0.375                    # the bottom skin's hinge-end edge, which sweeps a 1 in radius about the pin
 RIBS = (1.5, 4.5, 10.5, 15.0, 19.5)   # rib centres; 4.5 and 15 are the lug lines
 LUG_A, LUG_B = 4.5, 15.0           # interior lug centres: a + b = W - 1.5 so the turned panel's nest beside them
