@@ -48,7 +48,7 @@ RAIL_H = BOX + CURB                # 3.375 along the length
 LUG_R = 1.5                        # the half-round about the pin: a 15/16 wall round the bore, the rail bottom at -3; no more than PIN_DROP or it meets the other panel
 TAPER = 8.0                        # the rail bottom climbs back to z = 0 over this
 CHAMFER = 0.375                    # the bottom skin's hinge-end edge, which sweeps a 1 in radius about the pin
-RIBS = (1.5, 4.5, 10.5, 15.0, 19.5)   # rib centres; 4.5 and 15 are the lug lines
+RIBS = (1.5, 6.0, 10.5, 13.5, 19.5)   # rib centres: a lug lies against the rib at 6 and the one at 13.5
 LUG_A, LUG_B = 4.5, 15.0           # interior lug centres: a + b = W - 1.5 so the turned panel's nest beside them
 LUG_T, LUG_IN = 1.5, 6.0           # two plies thick; the part inside the box, behind the joint block
 NOTCH_L = 3.0                      # the bottom skin's notch, where the lug passes through
@@ -115,11 +115,10 @@ def skin_bottom(p):
 
 
 def rib_span(c):
-    """Where a rib runs: behind the joint block, or behind its lug, to
-    the free end, or to the stubs on the outer lines."""
-    y0 = JOINT + LUG_IN if c in (LUG_A, LUG_B) else JOINT
-    y1 = STUB_Y0 if (c < STUB_W or c > W - STUB_W) else SKIN_END
-    return y0, y1
+    """Where a rib runs: from the joint block to the free end, or to the
+    stubs where it would meet one."""
+    y1 = STUB_Y0 if (c - RIB / 2 < STUB_W or c + RIB / 2 > W - STUB_W) else SKIN_END
+    return JOINT, y1
 
 
 def ribs(p):
@@ -195,10 +194,12 @@ def rail_spacer(p):
 
 
 def interior_lug(a):
-    """A lug in the rib line at x = a: two plies of birch, the part
-    inside the box behind the joint block and in line with its rib,
-    down through the bottom skin's notch, and the half-round about the
-    pin under the joint block, tapering back up to the skin."""
+    """A lug at x = a: two plies of birch, its foot inside the box behind
+    the joint block and against the side of a rib (screwed to it, and
+    nailed from the bottom skin), down through the skin's notch, and the
+    half-round about the pin under the joint block, tapering back up to
+    the skin. The pull on it bears on the joint block; the fasteners
+    hold it square and are the insurance."""
     def build(p):
         x0, x1 = a - LUG_T / 2, a + LUG_T / 2
         profile_x(p, "interior lug, two plies birch", x0, x1,
@@ -258,19 +259,17 @@ RAMP_PARTS = [("pipe", pipe), ("pipe_cap", pipe_caps), ("end_plate", end_plates)
 CUTLIST = [
     ("top skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX", 2, "one 4x8 sheet: two 21 in rips, each crosscut at 45 and 45"),
     ("bottom skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX, two 1-1/2 x 3 notches", 2, "from the same sheet"),
-    ("rib", "2x2 x 32.5", 4, "outer lines, joint block to stubs"),
-    ("rib", "2x2 x 26.5", 4, "lug lines, lug to stubs"),
+    ("rib", "2x2 x 32.5", 8, "the four lines that meet a stub, joint block to stubs"),
     ("rib", "2x2 x 41.5", 2, "middle line, joint block to the skins' end"),
-    ("cross block", "2x2 x 1.5", 4, "between the outer and lug lines"),
-    ("cross block", "2x2 x 4.5", 4, "between the lug and middle lines"),
-    ("cross block", "2x2 x 3", 4, "between the middle and lug lines"),
-    ("cross block", "2x2 x 3", 4, "between the lug and outer lines"),
+    ("cross block", "2x2 x 3", 8, "between the ribs at 1.5 and 6, and 6 and 10.5"),
+    ("cross block", "2x2 x 1.5", 4, "between the ribs at 10.5 and 13.5"),
+    ("cross block", "2x2 x 4.5", 4, "between the ribs at 13.5 and 19.5"),
     ("joint block", "2x4 flat x 21", 2, ""),
     ("stub", "2x8 x 12", 4, "3 in bare past the skins"),
     ("rail", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g}, lug profile", 4, "two flush, two on spacers"),
     ("lug cheek", "3/4 birch, 6 x 2, lug profile", 4, "inside the flush rail, outside the spaced one"),
     ("rail spacer", f"3/4 birch, {SKIN_END:g} x {BOX:g}", 2, ""),
-    ("interior lug", "3/4 birch, 9.5 x 4, two laminated", 8, "4 lugs of 2 plies"),
+    ("interior lug", "3/4 birch, 9.5 x 4, two laminated", 8, "4 lugs of 2 plies; two no. 8 x 2-1/2 screws into the rib beside each, three 1-1/4 nails from the bottom skin into the foot"),
     ("hinge pipe", f"3/4 Sch 40 galvanized, {PIPE_L:g}, threaded both ends", 1, "with two caps"),
     ("ground angle", "1/8 x 1 aluminium angle x 21", 1, "over the bevel"),
 ]

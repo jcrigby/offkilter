@@ -184,6 +184,17 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
         (centres[1] - centres[0] - 1.5).abs() < 1e-6
             && (centres[3] - centres[2] - 1.5).abs() < 1e-6
     );
+    // Each lug's foot lies against the side of a rib of its own panel.
+    for (name, lo, hi) in &lugs {
+        let panel = name.split(" / ").next().unwrap();
+        let beside = r.bodies.iter().any(|b| {
+            b.name.starts_with(panel) && b.name.contains("/ rib") && {
+                let (rl, rh) = bounds(&b.solid);
+                (rl.x / IN - hi).abs() < 1e-6 || (rh.x / IN - lo).abs() < 1e-6
+            }
+        });
+        assert!(beside, "{name} lies against no rib");
+    }
     let handle = lugs[2].1 - lugs[1].2;
     println!("bare pipe between the inner lugs: {handle} in");
     assert!(handle >= 7.0, "handle {handle}");

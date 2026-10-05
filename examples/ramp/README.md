@@ -250,7 +250,15 @@ brief, this is why.
   body in the studio and each of those parts needs a half-round added
   to its profile. The ribs are five bodies of their real lengths (the
   lug lines start behind the lugs, the outer lines stop at the stubs),
-  which is what the cut list wants anyway.
+  which is what the cut list wants anyway. The ribs are at 1.5, 6,
+  10.5, 13.5 and 19.5, not the brief's 1.5, 4.5, 10.5, 15 and 19.5:
+  the lugs stay at 4.5 and 15 (that is the 7.5 in handle) and each
+  one's foot lies against the side of a rib instead of in line with
+  it, so the lug is screwed to the rib through the faces and nailed
+  from the bottom skin into the foot. The pull on a lug bears on the
+  joint block (about 170 psi on 2.25 in²), so those fasteners hold the
+  lug square during glue-up and are the insurance if a glue line lets
+  go; the top skin stays solid.
 - **Panel.** A `panel` assembly of fixed instances, used twice in
   `ramp`: panel 2 is the same tab placed turned 180 degrees about z
   and moved 21 in x. Fixed placement rather than fastened mates, since
