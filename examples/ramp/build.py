@@ -1,8 +1,8 @@
-"""A folding torsion-box truck ramp: two identical 21 x 48 in panels of
-15/32 in ply skins on 2x2 ribs, hinged on a 3/4 in pipe below the
-decks that doubles as the carrying handle and pulls out to separate the
-halves. The brief is README.md in this directory; this script is the
-document it asked for.
+"""A folding torsion-box truck ramp: two 21 x 48 in panels of 15/32 in
+ply skins on 2x2 ribs, hinged on a 3/4 in pipe below the decks that
+doubles as the carrying handle and pulls out to separate the halves.
+The brief is README.md in this directory; this script is the document
+it asked for, with the changes its section 8 records.
 
     cargo build --release -p ok-mcp
     python3 examples/ramp/build.py            # the document, pictures, sheets and cut list
@@ -10,13 +10,16 @@ document it asked for.
 
 The shop works in inches, the document in millimetres like the other
 examples: every dimension is a named constant in inches and the helpers
-convert. Frame of one panel: x across the width (0 to 21), y along the
+convert. Frame of a panel: x across the width (0 to 21), y along the
 length (0 at the hinge end, 48 at the free end), z up from the bottom
-face of the bottom skin. The second panel is the same sub-assembly
-turned 180 degrees about z and moved 21 in x, so its flush rail lands
-beside the first's spaced rail and its lugs between the first's. Each
-panel is built in place in its own frame; the pipe, caps, end plates
-and ground angle are built in the ramp's frame.
+face of the bottom skin. The two panels differ only at the hinge: panel
+A's rails carry their lugs in one piece, panel B's rails are plain with
+a lug stub screwed to the outside of each, and the interior lugs sit
+against different ribs, so that on the pipe each end has A's rail lug
+beside B's stub and B's interior lugs land outboard of A's. Panel B is
+placed turned 180 degrees about z and moved 21 in x. Each panel is
+built in place in its own frame; the pipe, caps, end plates and ground
+angle are built in the ramp's frame.
 """
 import json
 import math
@@ -32,7 +35,7 @@ OUT = os.path.join(HERE, "out")
 IN = 25.4
 
 # ---------------------------------------------------------------------
-# The panel, in inches.
+# The panels, in inches.
 # ---------------------------------------------------------------------
 W, L = 21.0, 48.0                  # a panel, over the box
 SKIN = 0.4375                      # 15/32 CDX
@@ -41,17 +44,22 @@ BOX = 2 * SKIN + RIB               # 2.375
 SKIN_END = 45.0                    # the skins stop here; the stubs run bare to 48
 CURB = 1.0                         # the rails stand this much above the deck
 PIN_DROP = 1.5                     # pipe centre below the bottom skin: lever arm against hang, and the most the lugs' radius can be
-PIPE_OD, PIPE_ID, PIPE_L = 1.05, 0.824, 26.0   # 3/4 Sch 40
+PIPE_OD, PIPE_ID = 1.05, 0.824     # 3/4 Sch 40
 BORE = 1.125                       # the lug bores
-BIRCH = 0.75                       # the rails, cheeks, spacer and lug plies
+BIRCH = 0.75                       # the rails, stubs and lugs: one ply
 RAIL_H = BOX + CURB                # 3.375 along the length
 LUG_R = 1.5                        # the half-round about the pin: a 15/16 wall round the bore, the rail bottom at -3; no more than PIN_DROP or it meets the other panel
-TAPER = 8.0                        # the rail bottom climbs back to z = 0 over this
-CHAMFER = 0.375                    # the bottom skin's hinge-end edge, which sweeps a 1 in radius about the pin
-RIBS = (1.5, 6.0, 10.5, 13.5, 19.5)   # rib centres: a lug lies against the rib at 6 and the one at 13.5
-LUG_A, LUG_B = 4.5, 15.0           # interior lug centres: a + b = W - 1.5 so the turned panel's nest beside them
-LUG_T, LUG_IN = 1.5, 6.0           # two plies thick; the part inside the box, behind the joint block
+TAPER = 8.0                        # the lug bottom climbs back to z = 0 over this
+CHAMFER = 0.375                    # the bottom skin's hinge-end edge, which sweeps a 1-1/2 in radius about the pin
+RIBS = (1.5, 6.0, 10.5, 13.5, 19.5)   # rib centres, both panels
+# Interior lug centres (one ply, against a rib's side): panel A beside
+# the ribs at 6 and 13.5, panel B beside the ribs at 1.5 and 19.5, so
+# that turned, B's land outboard of A's on the pipe.
+LUGS_A = (6.0 - RIB / 2 - BIRCH / 2, 13.5 + RIB / 2 + BIRCH / 2)      # 4.875, 14.625
+LUGS_B = (1.5 + RIB / 2 + BIRCH / 2, 19.5 - RIB / 2 - BIRCH / 2)      # 2.625, 18.375
+LUG_IN = 6.0                       # the foot inside the box, behind the joint block
 NOTCH_L = 3.0                      # the bottom skin's notch, where the lug passes through
+STUB_LAP = 2.5                     # panel B's lug stub laps the rail's outside face this far up
 CROSS_Y = (16.0, 32.0)             # cross block rows
 JOINT = 3.5                        # the 2x4 flat across the hinge end, between the skins
 STUB_W, STUB_L, STUB_Y0 = 7.25, 12.0, 36.0   # 2x8 flat at the free end, 12 long from y 36, bare past 45
@@ -60,9 +68,9 @@ PLATE_L = 2.0                      # the end plates' ghost
 ANGLE_T, ANGLE_LEG = 0.125, 1.0    # the aluminium angle over the ground edge
 CAP_OD, CAP_L = 1.3, 1.0
 
-# The turned panel's placement in the ramp: 180 degrees about z, moved
-# W in x: its x runs 21 to 0, its y 0 to -48.
-PANEL2 = ((W * IN, 0.0, 0.0), (0.0, 0.0, 180.0))
+# Panel B's placement in the ramp: 180 degrees about z, moved W in x:
+# its x runs 21 to 0, its y 0 to -48.
+PLACE_B = ((W * IN, 0.0, 0.0), (0.0, 0.0, 180.0))
 
 
 def mm(*v):
@@ -97,21 +105,23 @@ def bore_x(p, name, x0, x1, cy, cz, d):
     p.hole(s, d * IN, depth=(x1 - x0 + 1.0) * IN, direction="normal", name=name)
 
 
-# -- panel parts ------------------------------------------------------
+# -- parts both panels share -------------------------------------------
 
 def skin_top(p):
     f = box(p, "top skin, 15/32 CDX", (0.0, W), (0.0, SKIN_END), (BOX - SKIN, BOX))
     p.apply({"type": "set_binding", "id": f, "field": "depth", "expression": "#skin"})
 
 
-def skin_bottom(p):
+def skin_bottom(lugs):
     """The bottom skin, its hinge-end bottom edge chamfered since it
-    sweeps a 1 in radius about the pin, and notched for the lugs."""
-    profile_x(p, "bottom skin, 15/32 CDX", 0.0, W, [(CHAMFER, 0.0), (SKIN_END, 0.0), (SKIN_END, SKIN), (0.0, SKIN), (0.0, CHAMFER)])
-    s = p.sketch("top", SKIN * IN + 1.0, "lug notches")
-    for a in (LUG_A, LUG_B):
-        p.rect(s, mm(a - LUG_T / 2, JOINT), mm(a + LUG_T / 2, JOINT + NOTCH_L))
-    p.cut(s, SKIN * IN + 2.0, direction="reverse", name="lug notches")
+    sweeps a radius about the pin, and notched where the lugs pass."""
+    def build(p):
+        profile_x(p, "bottom skin, 15/32 CDX", 0.0, W, [(CHAMFER, 0.0), (SKIN_END, 0.0), (SKIN_END, SKIN), (0.0, SKIN), (0.0, CHAMFER)])
+        s = p.sketch("top", SKIN * IN + 1.0, "lug notches")
+        for a in lugs:
+            p.rect(s, mm(a - BIRCH / 2, JOINT), mm(a + BIRCH / 2, JOINT + NOTCH_L))
+        p.cut(s, SKIN * IN + 2.0, direction="reverse", name="lug notches")
+    return build
 
 
 def rib_span(c):
@@ -143,7 +153,7 @@ def stubs(p):
     """2x8 flat at the free end's outer positions, 3 in bare past the
     skins for the end plates or the ground bevel. The bevel is a
     suppressed feature: on in the stub's own sheet, off in the ramp,
-    whose panels are identical and only one of them meets the ground."""
+    where only panel B's end meets the ground."""
     for x0 in (0.0, W - STUB_W):
         box(p, "tailgate stub, 2x8 flat x 12", (x0, x0 + STUB_W), (STUB_Y0, L), (SKIN, SKIN + RIB), op="new")
     back = RIB * math.tan(math.radians(BEVEL))
@@ -153,56 +163,50 @@ def stubs(p):
     p.apply({"type": "set_suppressed", "id": f, "suppressed": True})
 
 
-def rail_profile():
-    return [(0.0, RAIL_H), (SKIN_END, RAIL_H), (SKIN_END, 0.0), (TAPER, 0.0), (0.0, -2 * LUG_R)]
+# -- the hinge: panel A's rails with lugs, panel B's plain rails and stubs
 
-
-def rail_flush(p):
-    """The rail glued flush to the box side at x = 0, 3/4 birch on edge,
-    a curb above the deck, a half-round about the pin below it."""
-    profile_x(p, "flush rail, 3/4 birch", -BIRCH, 0.0, rail_profile(), circle=((0.0, -PIN_DROP), LUG_R))
-    bore_x(p, "pipe bore", -BIRCH, 0.0, 0.0, -PIN_DROP, BORE)
-
-
-def rail_spaced(p):
-    """The rail on the other side, on a 3/4 spacer, so the turned panel's
-    flush rail lands beside it on the pipe."""
-    profile_x(p, "spaced rail, 3/4 birch", W + BIRCH, W + 2 * BIRCH, rail_profile(), circle=((0.0, -PIN_DROP), LUG_R))
-    bore_x(p, "pipe bore", W + BIRCH, W + 2 * BIRCH, 0.0, -PIN_DROP, BORE)
-
-
-def cheek_profile():
+def lug_profile():
+    """The hanging part about the pin: from the skin line down the
+    half-round and back up over TAPER."""
     return [(0.0, 0.0), (TAPER, 0.0), (0.0, -2 * LUG_R)]
 
 
-def cheek_flush(p):
-    """A second ply under the box inside the flush rail, so the pipe
-    bears on 1-1/2 in of birch."""
-    profile_x(p, "lug cheek, 3/4 birch", 0.0, BIRCH, cheek_profile(), circle=((0.0, -PIN_DROP), LUG_R))
-    bore_x(p, "pipe bore", 0.0, BIRCH, 0.0, -PIN_DROP, BORE)
+def rail_with_lug(x0):
+    """Panel A: a flush rail, 3/4 birch on edge, a curb above the deck,
+    its lug built in below the deck as one piece."""
+    def build(p):
+        profile_x(p, "rail with lug, 3/4 birch", x0, x0 + BIRCH,
+                  [(0.0, RAIL_H), (SKIN_END, RAIL_H), (SKIN_END, 0.0), (TAPER, 0.0), (0.0, -2 * LUG_R)], circle=((0.0, -PIN_DROP), LUG_R))
+        bore_x(p, "pipe bore", x0, x0 + BIRCH, 0.0, -PIN_DROP, BORE)
+    return build
 
 
-def cheek_spaced(p):
-    """The spaced rail's cheek goes outside: inside is where the turned
-    panel's flush rail sits."""
-    profile_x(p, "lug cheek, 3/4 birch", W + 2 * BIRCH, W + 3 * BIRCH, cheek_profile(), circle=((0.0, -PIN_DROP), LUG_R))
-    bore_x(p, "pipe bore", W + 2 * BIRCH, W + 3 * BIRCH, 0.0, -PIN_DROP, BORE)
+def rails_plain(p):
+    """Panel B: two flush rails, no lug, ending flat on the joint plane."""
+    for i, x0 in enumerate((-BIRCH, W)):
+        box(p, "rail, 3/4 birch", (x0, x0 + BIRCH), (0.0, SKIN_END), (0.0, RAIL_H), op="new")
 
 
-def rail_spacer(p):
-    box(p, "rail spacer, 3/4 birch", (W, W + BIRCH), (0.0, SKIN_END), (0.0, BOX))
+def lug_stub(x0):
+    """Panel B: a lug screwed to the outside of a plain rail at the hinge
+    end, lapping the rail's face STUB_LAP up from the deck line."""
+    def build(p):
+        profile_x(p, "lug stub, 3/4 birch", x0, x0 + BIRCH,
+                  [(0.0, STUB_LAP), (TAPER, STUB_LAP), (TAPER, 0.0), (0.0, -2 * LUG_R)], circle=((0.0, -PIN_DROP), LUG_R))
+        bore_x(p, "pipe bore", x0, x0 + BIRCH, 0.0, -PIN_DROP, BORE)
+    return build
 
 
 def interior_lug(a):
-    """A lug at x = a: two plies of birch, its foot inside the box behind
+    """A lug at x = a: one ply of birch, its foot inside the box behind
     the joint block and against the side of a rib (screwed to it, and
     nailed from the bottom skin), down through the skin's notch, and the
     half-round about the pin under the joint block, tapering back up to
     the skin. The pull on it bears on the joint block; the fasteners
     hold it square and are the insurance."""
     def build(p):
-        x0, x1 = a - LUG_T / 2, a + LUG_T / 2
-        profile_x(p, "interior lug, two plies birch", x0, x1,
+        x0, x1 = a - BIRCH / 2, a + BIRCH / 2
+        profile_x(p, "interior lug, 3/4 birch", x0, x1,
                   [(0.0, 0.0), (0.0, -2 * LUG_R), (JOINT, -2 * LUG_R), (JOINT + NOTCH_L, 0.0)], circle=((0.0, -PIN_DROP), LUG_R))
         box(p, "through the notch", (x0, x1), (JOINT, JOINT + NOTCH_L), (0.0, SKIN), op="add")
         box(p, "inside the box", (x0, x1), (JOINT, JOINT + LUG_IN), (SKIN, SKIN + RIB), op="add")
@@ -212,26 +216,26 @@ def interior_lug(a):
 
 # -- ramp parts, in the ramp's frame ----------------------------------
 
-PIPE_X = (-3 * BIRCH - 0.25, W + 3 * BIRCH + 0.25)   # -2.5 to 23.5: 26 in, a quarter past each outer cheek for the caps
+PIPE_X = (-2 * BIRCH - 0.25, W + 2 * BIRCH + 0.25)   # -1.75 to 22.75: 24-1/2 in, a quarter past each stub for the caps
 
 
 def pipe(p):
     s = p.sketch("right", PIPE_X[0] * IN, "pipe")
     p.circle(s, mm(0.0, -PIN_DROP), PIPE_OD / 2 * IN)
-    p.extrude(s, (PIPE_X[1] - PIPE_X[0]) * IN, name="hinge pipe, 3/4 Sch 40 x 26")
+    p.extrude(s, (PIPE_X[1] - PIPE_X[0]) * IN, name=f"hinge pipe, 3/4 Sch 40 x {PIPE_X[1] - PIPE_X[0]:g}")
     bore_x(p, "bore", PIPE_X[0], PIPE_X[1], 0.0, -PIN_DROP, PIPE_ID)
 
 
 def pipe_caps(p):
-    for i, (x0, x1) in enumerate(((PIPE_X[0] - CAP_L, PIPE_X[0]), (PIPE_X[1], PIPE_X[1] + CAP_L))):
+    for x0, x1 in ((PIPE_X[0] - CAP_L, PIPE_X[0]), (PIPE_X[1], PIPE_X[1] + CAP_L)):
         s = p.sketch("right", x0 * IN, "cap")
         p.circle(s, mm(0.0, -PIN_DROP), CAP_OD / 2 * IN)
         p.extrude(s, (x1 - x0) * IN, op="new", name="pipe cap, 3/4")
 
 
 def end_plates(p):
-    """Ghosts of the ramp end plates on the first panel's bare stubs: a
-    block with the 1-1/2 x 7-1/4 pocket, 2 in long, no casting."""
+    """Ghosts of the ramp end plates on panel A's bare stubs: a block
+    with the 1-1/2 x 7-1/4 pocket, 2 in long, no casting."""
     for x0 in (0.0, W - STUB_W):
         box(p, "end plate (ghost)", (x0 - 0.25, x0 + STUB_W + 0.25), (L - PLATE_L, L), (0.0, BOX), op="new")
     for x0 in (0.0, W - STUB_W):
@@ -241,24 +245,24 @@ def end_plates(p):
 
 
 def ground_angle(p):
-    """1/8 x 1 aluminium angle over the turned panel's ground edge, at
-    the ramp's y = -48: a leg on the stubs' top and a leg down the end."""
+    """1/8 x 1 aluminium angle over panel B's ground edge, at the ramp's
+    y = -48: a leg on the stubs' top and a leg down the end."""
     y = -L
     box(p, "ground angle, 1/8 x 1 aluminium x 21", (0.0, W), (y, y + ANGLE_LEG), (SKIN + RIB, SKIN + RIB + ANGLE_T))
     box(p, "leg", (0.0, W), (y - ANGLE_T, y), (SKIN + RIB + ANGLE_T - ANGLE_LEG, SKIN + RIB + ANGLE_T), op="add")
 
 
-PANEL_PARTS = [
-    ("skin_top", skin_top), ("skin_bottom", skin_bottom), ("rib", ribs), ("cross_block", cross_blocks), ("joint_block", joint_block),
-    ("stub", stubs), ("rail_flush", rail_flush), ("rail_spaced", rail_spaced), ("lug_cheek_flush", cheek_flush), ("lug_cheek_spaced", cheek_spaced),
-    ("rail_spacer", rail_spacer), ("interior_lug_a", interior_lug(LUG_A)), ("interior_lug_b", interior_lug(LUG_B)),
-]
+SHARED = [("skin_top", skin_top), ("rib", ribs), ("cross_block", cross_blocks), ("joint_block", joint_block), ("stub", stubs)]
+PANEL_A = [("skin_bottom_a", skin_bottom(LUGS_A)), ("rail_lug_left", rail_with_lug(-BIRCH)), ("rail_lug_right", rail_with_lug(W)),
+           ("interior_lug_a1", interior_lug(LUGS_A[0])), ("interior_lug_a2", interior_lug(LUGS_A[1]))]
+PANEL_B = [("skin_bottom_b", skin_bottom(LUGS_B)), ("rail_plain", rails_plain), ("lug_stub_left", lug_stub(-2 * BIRCH)), ("lug_stub_right", lug_stub(W + BIRCH)),
+           ("interior_lug_b1", interior_lug(LUGS_B[0])), ("interior_lug_b2", interior_lug(LUGS_B[1]))]
 RAMP_PARTS = [("pipe", pipe), ("pipe_cap", pipe_caps), ("end_plate", end_plates), ("ground_angle", ground_angle)]
 
 # The cut list: what to cut, in inches, per the shop's stock.
 CUTLIST = [
     ("top skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX", 2, "one 4x8 sheet: two 21 in rips, each crosscut at 45 and 45"),
-    ("bottom skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX, two 1-1/2 x 3 notches", 2, "from the same sheet"),
+    ("bottom skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX, two 3/4 x 3 notches", 2, "from the same sheet; the notches differ between the panels"),
     ("rib", "2x2 x 32.5", 8, "the four lines that meet a stub, joint block to stubs"),
     ("rib", "2x2 x 41.5", 2, "middle line, joint block to the skins' end"),
     ("cross block", "2x2 x 3", 8, "between the ribs at 1.5 and 6, and 6 and 10.5"),
@@ -266,11 +270,11 @@ CUTLIST = [
     ("cross block", "2x2 x 4.5", 4, "between the ribs at 13.5 and 19.5"),
     ("joint block", "2x4 flat x 21", 2, ""),
     ("stub", "2x8 x 12", 4, "3 in bare past the skins"),
-    ("rail", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g}, lug profile", 4, "two flush, two on spacers"),
-    ("lug cheek", "3/4 birch, 6 x 2, lug profile", 4, "inside the flush rail, outside the spaced one"),
-    ("rail spacer", f"3/4 birch, {SKIN_END:g} x {BOX:g}", 2, ""),
-    ("interior lug", "3/4 birch, 9.5 x 4, two laminated", 8, "4 lugs of 2 plies; two no. 8 x 2-1/2 screws into the rib beside each, three 1-1/4 nails from the bottom skin into the foot"),
-    ("hinge pipe", f"3/4 Sch 40 galvanized, {PIPE_L:g}, threaded both ends", 1, "with two caps"),
+    ("rail with lug", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g} with the lug profile, {TAPER:g} x {2 * LUG_R:g} below", 2, "panel A, flush both sides"),
+    ("rail", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g}", 2, "panel B, flush both sides"),
+    ("lug stub", f"3/4 birch, {TAPER:g} x {STUB_LAP + 2 * LUG_R:g}, lug profile", 2, "panel B, screwed to the outside of each rail: four no. 8 x 1-1/4"),
+    ("interior lug", f"3/4 birch, {JOINT + LUG_IN:g} x {RIB + SKIN + 2 * LUG_R:g}, lug profile", 4, "two per panel; two no. 8 x 2 screws into the rib beside each, three 1-1/4 nails from the bottom skin into the foot"),
+    ("hinge pipe", f"3/4 Sch 40 galvanized, {PIPE_X[1] - PIPE_X[0]:g}, threaded both ends", 1, "with two caps"),
     ("ground angle", "1/8 x 1 aluminium angle x 21", 1, "over the bevel"),
 ]
 
@@ -377,6 +381,10 @@ def instance_ops(tabs, bodies, titles, fixed, placement=IDENTITY):
              "placement": {"position": {"x": x, "y": y, "z": z}, "rotation": {"x": rx, "y": ry, "z": rz}}} for t in titles for k in range(len(bodies[t]))]
 
 
+def instance_ids(mcp, tab):
+    return {i["name"]: i["id"] for i in json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))["instances"]}
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "ramp.okpart")
@@ -386,7 +394,7 @@ def main():
     mcp.call("create_document", {"name": "ramp"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Folding torsion-box truck ramp"}]})
     tabs, bodies, reports = {}, {}, {}
-    for i, (title, fn) in enumerate(PANEL_PARTS + RAMP_PARTS):
+    for i, (title, fn) in enumerate(SHARED + PANEL_A + PANEL_B + RAMP_PARTS):
         if i == 0:
             mcp.call("apply", {"ops": [{"type": "rename_tab", "tab": 1, "name": title}]}); tab = 1
         else:
@@ -398,33 +406,34 @@ def main():
         # extrudes are bound to them; the sketched profiles carry their
         # values and are redrawn by this script.
         apply(mcp, [{"type": "add_variable", "name": n, "expression": f"{v * IN:g}"} for n, v in
-                    (("skin", SKIN), ("rib", RIB), ("curb", CURB), ("pin_drop", PIN_DROP), ("lug_a", LUG_A), ("lug_b", LUG_B))], tab)
+                    (("skin", SKIN), ("rib", RIB), ("curb", CURB), ("pin_drop", PIN_DROP), ("lug_r", LUG_R))], tab)
         fn(part)
         bodies[title] = part.bodies()
         reports[title] = json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))["bodies"]
         print(f"{title:<18} tab {tab:>2}: {len(bodies[title])} bodies")
-    # The panel: every part fixed in place. The same tab is placed twice
-    # in the ramp, the second time turned.
-    text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": "panel"}]})
-    panel = int(re.search(r"tab (\d+)", text).group(1))
-    apply(mcp, instance_ops(tabs, bodies, [t for t, _ in PANEL_PARTS], True), panel)
-    panel_ids = {i["name"]: i["id"] for i in json.loads(mcp.call("report", {"tab": panel, "detail": "full"}))["instances"]}
-    print(f"panel tab {panel}: {len(panel_ids)} instances")
+    # The two panels, every part fixed in place in the panel's frame.
+    panels = {}
+    for name, parts in (("panel A", SHARED + PANEL_A), ("panel B", SHARED + PANEL_B)):
+        text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": name}]})
+        panels[name] = int(re.search(r"tab (\d+)", text).group(1))
+        apply(mcp, instance_ops(tabs, bodies, [t for t, _ in parts], True), panels[name])
+        print(f"{name:<18} tab {panels[name]:>2}: {len(instance_ids(mcp, panels[name]))} instances")
+    b_ids = instance_ids(mcp, panels["panel B"])
     text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": "ramp"}]})
     ramp = int(re.search(r"tab (\d+)", text).group(1))
-    ops = [{"type": "add_instance", "studio": panel, "body": 0, "name": "panel 1", "fixed": True,
+    ops = [{"type": "add_instance", "studio": panels["panel A"], "body": 0, "name": "panel A", "fixed": True,
             "placement": {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}},
-           {"type": "add_instance", "studio": panel, "body": 0, "name": "panel 2", "fixed": False,
-            "placement": {"position": dict(zip("xyz", PANEL2[0])), "rotation": dict(zip("xyz", PANEL2[1]))}}]
+           {"type": "add_instance", "studio": panels["panel B"], "body": 0, "name": "panel B", "fixed": False,
+            "placement": {"position": dict(zip("xyz", PLACE_B[0])), "rotation": dict(zip("xyz", PLACE_B[1]))}}]
     ops += instance_ops(tabs, bodies, [t for t, _ in RAMP_PARTS], True)
     apply(mcp, ops, ramp)
-    ids = {i["name"]: i["id"] for i in json.loads(mcp.call("report", {"tab": ramp, "detail": "full"}))["instances"]}
-    # The fold: a revolute between the pipe and the turned panel's flush
-    # rail bore, its parameters read off the drawn pose.
-    ca, cb, ta, tb = coaxial(reports["pipe"][0], PIPE_OD / 2 * IN, IDENTITY, reports["rail_flush"][0], BORE / 2 * IN, PANEL2)
+    ids = instance_ids(mcp, ramp)
+    # The fold: a revolute between the pipe and panel B's left lug stub
+    # bore, its parameters read off the drawn pose.
+    ca, cb, ta, tb = coaxial(reports["pipe"][0], PIPE_OD / 2 * IN, IDENTITY, reports["lug_stub_left"][0], BORE / 2 * IN, PLACE_B)
     offset, angle, flip = mate_parameters(ta, tb)
     apply(mcp, [{"type": "add_mate", "kind": "revolute", "a": {"instance": ids["pipe"], "face": ca["reference"]},
-                 "b": {"instance": ids["panel 2"], "sub": panel_ids["rail_flush"], "face": cb["reference"]},
+                 "b": {"instance": ids["panel B"], "sub": b_ids["lug_stub_left"], "face": cb["reference"]},
                  "offset": offset, "angle": angle, "flip": flip, "name": "fold"}], ramp)
     report = json.loads(mcp.call("report", {"tab": ramp, "detail": "full"}))
     for m in report["mates"]:
@@ -433,38 +442,40 @@ def main():
     for i in report["instances"]:
         if i.get("error"):
             raise RuntimeError(f"instance {i['name']}: {i['error']}")
-    p2 = next(i for i in report["instances"] if i["name"] == "panel 2")["placed"]
-    drift = max(abs(_v(p2["position"])[k] - PANEL2[0][k]) for k in range(3))
+    pb = next(i for i in report["instances"] if i["name"] == "panel B")["placed"]
+    drift = max(abs(_v(pb["position"])[k] - PLACE_B[0][k]) for k in range(3))
     fold = next(m for m in report["mates"] if m["name"] == "fold")
     print(f"ramp tab {ramp}: {len(ids)} instances, the fold resolved to the drawn pose (worst {drift:.1e} mm)")
 
-    def free_end_z(angle_):
+    def low_b(angle_):
         apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": angle_}], ramp)
         rep = json.loads(mcp.call("report", {"tab": ramp, "detail": "full"}))
-        lo = min(b["bounds"][0]["z"] for b in rep["bodies"] if b["name"].startswith("panel 2 /"))
-        return lo
+        return min(b["bounds"][0]["z"] for b in rep["bodies"] if b["name"].startswith("panel B /"))
 
-    # Which way folds under: the turned panel swings down and under the
-    # first, bottoms together, so its free end drops.
-    sign = 1.0 if free_end_z(fold["angle"] + 30.0) < free_end_z(fold["angle"]) - 1.0 else -1.0
+    # Which way folds under: panel B swings down and under panel A,
+    # bottoms together, so its free end drops.
+    sign = 1.0 if low_b(fold["angle"] + 30.0) < low_b(fold["angle"]) - 1.0 else -1.0
     at = lambda deg: fold["angle"] + sign * deg
 
     for view, name in (("iso", "ramp_iso"), ("-0.6,-0.7,0.4", "ramp_front"), ("right", "ramp_side")):
         mcp.call("screenshot", {"tab": ramp, "view": view, "width": 1600, "height": 1000, "path": os.path.join(OUT, f"{name}.png")})
-    mcp.call("screenshot", {"tab": ramp, "view": "right", "section": f"x:{LUG_A * IN}:flip", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_lug_section.png")})
-    mcp.call("screenshot", {"tab": panel, "view": "0.5,-0.7,-0.5", "width": 1600, "height": 1000, "path": os.path.join(OUT, "panel_below.png")})
-    # The box from below with the bottom skin cut away: the lug feet
-    # against their ribs, the joint block, the top skin intact above.
-    mcp.call("screenshot", {"tab": panel, "view": "0.3,-0.4,-0.85", "section": f"z:{(SKIN + 0.05) * IN}", "width": 1600, "height": 1000, "path": os.path.join(OUT, "panel_cutaway.png")})
+    mcp.call("screenshot", {"tab": ramp, "view": "right", "section": f"x:{LUGS_A[0] * IN}:flip", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_lug_section.png")})
+    mcp.call("screenshot", {"tab": ramp, "view": "-0.5,-0.6,-0.6", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_below.png")})
+    for name, stem in (("panel A", "panel_a"), ("panel B", "panel_b")):
+        mcp.call("screenshot", {"tab": panels[name], "view": "0.5,-0.7,-0.5", "width": 1600, "height": 1000, "path": os.path.join(OUT, f"{stem}_below.png")})
+        # The box from below with the bottom skin cut away: the lug feet
+        # against their ribs, the joint block, the top skin intact above.
+        mcp.call("screenshot", {"tab": panels[name], "view": "0.3,-0.4,-0.85", "section": f"z:{(SKIN + 0.05) * IN}", "width": 1600, "height": 1000, "path": os.path.join(OUT, f"{stem}_cutaway.png")})
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(180.0)}], ramp)
     mcp.call("screenshot", {"tab": ramp, "view": "iso", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded.png")})
     mcp.call("screenshot", {"tab": ramp, "view": "right", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded_side.png")})
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(0.0)}], ramp)
-    # Sheets: the panel with a section across the width at mid-length
+    # Sheets: each panel with a section across the width at mid-length
     # and one along the length through a lug; the ramp with balloons;
     # the stub with its bevel on.
-    print(mcp.call("export", {"tab": panel, "format": "pdf", "sheet": "A3", "views": ["front", "top", "right", f"section@{SKIN_END / 2 * IN}", f"section-side@{LUG_A * IN}"],
-                              "note": "one panel: 21 x 48 x 2-3/8 torsion box, rails 3/4 birch, lugs two plies", "path": os.path.join(OUT, "panel.pdf")}))
+    for name, stem, lug in (("panel A", "panel_a", LUGS_A[0]), ("panel B", "panel_b", LUGS_B[0])):
+        print(mcp.call("export", {"tab": panels[name], "format": "pdf", "sheet": "A3", "views": ["front", "top", "right", f"section@{SKIN_END / 2 * IN}", f"section-side@{lug * IN}"],
+                                  "note": f"{name}: 21 x 48 x 2-3/8 torsion box, rails and lugs 3/4 birch", "path": os.path.join(OUT, f"{stem}.pdf")}))
     print(mcp.call("export", {"tab": ramp, "format": "pdf", "sheet": "A3", "note": "two panels on the pipe, open; the pipe pulls to separate them", "path": os.path.join(OUT, "ramp.pdf")}))
     stub_report = json.loads(mcp.call("report", {"tab": tabs["stub"], "detail": "full"}))
     bevel = next(f["id"] for f in stub_report["features"] if f["name"].startswith("ground bevel"))

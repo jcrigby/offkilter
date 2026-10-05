@@ -243,74 +243,87 @@ no interference at 0/45/90/135/180°; folded package extents ≈
 ok-render --test ramp` checks it. Where the build departs from the
 brief, this is why.
 
-- **Parts.** One studio per part as listed in §5, in inches through
-  `IN = 25.4`, every part built in place in the panel's frame. The two
-  rails, the two cheeks and the two interior lugs are separate studios
-  rather than two bodies in one, because a kernel `add` joins every
-  body in the studio and each of those parts needs a half-round added
-  to its profile. The ribs are five bodies of their real lengths (the
-  lug lines start behind the lugs, the outer lines stop at the stubs),
-  which is what the cut list wants anyway. The ribs are at 1.5, 6,
-  10.5, 13.5 and 19.5, not the brief's 1.5, 4.5, 10.5, 15 and 19.5:
-  the lugs stay at 4.5 and 15 (that is the 7.5 in handle) and each
-  one's foot lies against the side of a rib instead of in line with
-  it, so the lug is screwed to the rib through the faces and nailed
-  from the bottom skin into the foot. The pull on a lug bears on the
-  joint block (about 170 psi on 2.25 in²), so those fasteners hold the
+- **Two panels, not one.** The brief's identical panels needed a 3/4
+  spacer under one rail of each so the rail lugs could sit side by
+  side on the pipe, which put a 3/4 step in each rail at the joint.
+  Instead the two halves differ only at the hinge. Panel A's rails
+  are flush on both sides and carry their lugs in one piece. Panel B's
+  rails are plain and flush, with a lug stub (an 8 x 5-1/2 plate with
+  the half-round, lapping the rail's lower 2-1/2 in) screwed to the
+  outside of each. On the pipe each end has A's rail lug with B's
+  stub beside it, 24 over the lugs, 22.5 over the rails, no step. The
+  interior lugs sit against different ribs on the two panels (A's
+  against the ribs at 6 and 13.5, B's against those at 1.5 and 19.5),
+  so B's land outboard of A's and the handle between the inner pair
+  is 9 in of bare pipe. No cheeks, no spacers; the pipe is 24-1/2.
+- **Lugs one ply.** With the 1-1/2 radius the wall round the bore is
+  15/16, and at the 465 lb a lug carries (the 1,860 lb pipe tension
+  over four lugs per panel) a single 3/4 birch lug sees about 330 psi
+  in tension and shear-out and 590 psi of pipe bearing on the bore,
+  the bearing the governing number at roughly half of what birch ply
+  takes. The doubling was buying back the thin wall the radius
+  already fixed.
+- **Lug feet against ribs.** Each interior lug's foot lies against the
+  side of a rib, screwed to it through the faces and nailed from the
+  bottom skin, the top skin solid. The pull on a lug bears on the
+  joint block (about 210 psi on 1.1 in²), so the fasteners hold the
   lug square during glue-up and are the insurance if a glue line lets
-  go; the top skin stays solid.
-- **Panel.** A `panel` assembly of fixed instances, used twice in
-  `ramp`: panel 2 is the same tab placed turned 180 degrees about z
-  and moved 21 in x. Fixed placement rather than fastened mates, since
-  the panel is one glued box and a mate per part would say nothing.
-- **Fold.** One revolute, `fold`, between the pipe and panel 2's flush
-  rail bore, its parameters read off the drawn pose. The fold goes
-  under: panel 2's free end drops, and at 180 degrees it lies under
-  panel 1, bottoms 3 in apart (twice `PIN_DROP`), lugs interleaved.
-  The bottom skin's hinge-end edge has the 3/8 chamfer and the test
-  finds no interference at 0, 5, 10, 20, 45, 90, 135, 170 and 180
-  degrees.
-- **Tunables.** `skin`, `rib`, `curb`, `pin_drop`, `lug_a` and `lug_b`
-  are document variables; the skin and rib extrude depths are bound to
-  the first two. The rest live in sketched profiles, which this script
+  go. The ribs are at 1.5, 6, 10.5, 13.5 and 19.5 on both panels.
+- **Pin drop and lug radius 1-1/2**, not the 1 the brief assumed,
+  which answers the first open question in §7: the 7/16 wall a 1 in
+  radius leaves is one pin diameter of end distance, and the radius
+  cannot exceed the pin drop without the half-round meeting the other
+  panel's bottom. The lever arm is 3.875, the folded bottoms 3 apart,
+  the package 9.75 thick, the lugs 3 below the deck at the joint, the
+  rail taper 8 in long.
+- **Parts.** One studio per part, in inches through `IN = 25.4`, every
+  part built in place in the panel's frame; the skins, ribs, cross
+  blocks, joint block and stubs are shared by both panels, the bottom
+  skin's notches excepted. The rails with lugs, the stubs and the
+  interior lugs are a studio each because a kernel `add` joins every
+  body in the studio and each needs a half-round added to its profile.
+- **Panels and ramp.** `panel A` and `panel B` are assemblies of fixed
+  instances; the ramp places B turned 180 degrees about z and moved
+  21 in x. Fixed placement rather than fastened mates, since a panel
+  is one glued box and a mate per part would say nothing.
+- **Fold.** One revolute, `fold`, between the pipe and panel B's left
+  lug stub bore, its parameters read off the drawn pose. The fold goes
+  under: B's free end drops, and at 180 degrees it lies under A,
+  bottoms 3 in apart, lugs interleaved. The bottom skin's hinge-end
+  edge has the 3/8 chamfer and the test finds no interference at 0,
+  5, 10, 20, 45, 90, 135, 170 and 180 degrees.
+- **Tunables.** `skin`, `rib`, `curb`, `pin_drop` and `lug_r` are
+  document variables; the skin and rib extrude depths are bound to the
+  first two. The rest live in sketched profiles, which this script
   redraws from the constants at the top.
 - **Bevel and angle.** The stub's 30 degree bevel is a suppressed
-  feature: on in `out/stub.pdf`, off in the ramp, whose two panels are
-  identical. The ground angle is a ramp-level part on panel 2's end,
-  the end plates ghosts on panel 1's stubs.
+  feature: on in `out/stub.pdf`, off in the ramp. The ground angle is
+  a ramp-level part on panel B's end, the end plates ghosts on panel
+  A's stubs.
 - **Outputs.** `out/ramp.okpart`; `ramp_iso`, `ramp_front`,
-  `ramp_side`, `ramp_folded`, `ramp_folded_side`, `panel_below`
-  (lugs, notches, cheeks), `panel_cutaway` (from below with the bottom
+  `ramp_side`, `ramp_below`, `ramp_folded`, `ramp_folded_side`,
+  `panel_a_below` and `panel_b_below` (lugs, notches, stubs),
+  `panel_a_cutaway` and `panel_b_cutaway` (from below with the bottom
   skin cut away: the lug feet against their ribs, the joint block, the
   top skin intact) and `ramp_lug_section` (through a lug on the pipe
-  axis); `panel.pdf` with a section across the width at
-  mid-length and one along the length through a lug; `ramp.pdf` with
-  the panel as one item twice and the pipe as one item; `stub.pdf`;
-  `fold.pdf` and `fold.png` at 0, 45, 90, 135 and 180 degrees from
-  the side; `cutlist.csv`.
-- **The test** regenerates every part closed and places every instance;
-  finds the eight bores (two rails and two lugs per panel) on the
-  pipe's axis within a hundredth of a millimetre; checks a + b = 19.5,
-  the four interior lugs side by side without overlap, the handle 7.5
-  in bare, and the rails and cheeks paired at each end of the pipe;
-  sweeps the fold; measures the open ramp at 96 x 24 over the rails
-  and the folded package at 24 x 9.75 with the bottoms 3 in apart and
-  the lugs filling the gap; and reads the sheet yield off the parts: the four skins
-  are 82 % of one 4 x 8 (two 21 in rips crosscut at 45), the birch
-  34 % of another.
+  axis); `panel_a.pdf` and `panel_b.pdf` with a section across the
+  width at mid-length and one along the length through a lug;
+  `ramp.pdf` with each panel as one item and the pipe as one;
+  `stub.pdf`; `fold.pdf` and `fold.png` at 0, 45, 90, 135 and 180
+  degrees from the side; `cutlist.csv`.
+- **The test** regenerates every part closed and places every
+  instance; finds the eight bores (a rail lug or stub and an interior
+  lug on each side of each panel) on the pipe's axis within a
+  hundredth of a millimetre; checks the interior lugs one ply, B's
+  outboard of A's, none overlapping, each against a rib of its own
+  panel, the handle 9 in bare, and A's rail lug beside B's stub at
+  each end of the pipe; sweeps the fold; measures the open ramp at 96
+  long and 22.5 over the rails, the folded package 24 over the lugs
+  and 9.75 thick with the bottoms 3 in apart and the lugs filling the
+  gap; and reads the sheet yield off the parts: the four skins are
+  82 % of one 4 x 8 (two 21 in rips crosscut at 45), the birch about
+  a quarter of another.
 
-Pipe length came out at 26 in with the caps outside its ends, 28 in
-over the caps.
-
-`PIN_DROP` and the lugs' radius are 1-1/2, not the 1 the brief
-assumed, which answers the first open question in §7. The 7/16 wall a
-1 in radius leaves round the 1-1/8 bore holds the 375 lb per lug on
-paper (about 290 psi in tension and shear-out, 240 psi bearing, in two
-plies of birch), but it is one pin diameter of end distance, and
-shear-out at the end is the failure a shock load finds. The radius
-cannot exceed the pin drop without the half-round meeting the other
-panel's bottom, so both went to 1-1/2: a 15/16 wall, the lever arm
-3.875 and the pipe tension about 1,860 lb, the folded bottoms 3 in
-apart and the package 9.75 thick, the lugs 3 in below the deck at the
-joint, and the rail taper 8 in long for the longer climb. The other
-open questions stand.
+The remaining open questions in §7 stand: the curb height, the rail
+taper against a full skid, the end plates with the rail ending 3 in
+short, and the rib pitch.
