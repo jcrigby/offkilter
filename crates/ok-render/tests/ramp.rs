@@ -384,7 +384,7 @@ fn extent(r: &AssemblyResult, keep: impl Fn(&Body) -> bool) -> (Vec3, Vec3) {
 }
 
 /// Sheet yield: the four skins come out of one 4 x 8 of CDX, and the
-/// rails, cheeks, spacers and lug plies out of about half a 4 x 8 of
+/// rails, lugs, stubs, ribs and cross blocks out of under half a 4 x 8 of
 /// birch, both read off the parts' faces.
 #[test]
 fn the_skins_fill_one_sheet_and_the_birch_half_of_another() {
@@ -411,29 +411,23 @@ fn the_skins_fill_one_sheet_and_the_birch_half_of_another() {
         let (lo, hi) = bounds(&b.solid);
         (hi.y - lo.y) * (hi.z - lo.z) / (IN * IN)
     };
-    let mut birch = 0.0;
-    for name in [
-        "rail_lug_left",
-        "rail_lug_right",
-        "interior_lug_a1",
-        "interior_lug_a2",
-    ] {
-        birch += side(named(&r, name)[0]);
-    }
+    // The birch: rails, lugs, stubs, ribs and cross blocks of both panels,
+    // each read as its side area (it stands on edge).
     let rb = doc.regenerate_assembly(tab_named(&doc, "panel B")).unwrap();
-    for name in [
-        "lug_stub_left",
-        "lug_stub_right",
-        "interior_lug_b1",
-        "interior_lug_b2",
-        "rail_plain 1",
-        "rail_plain 2",
-    ] {
-        birch += side(named(&rb, name)[0]);
-    }
+    let is_birch = |b: &Body| {
+        let n = b.name.rsplit(" / ").next().unwrap();
+        n.contains("rail") || n.contains("lug") || n.contains("rib") || n.contains("cross_block")
+    };
+    let birch: f64 = r
+        .bodies
+        .iter()
+        .chain(rb.bodies.iter())
+        .filter(|b| is_birch(b))
+        .map(side)
+        .sum();
     println!(
         "birch: {birch:.0} in2, {:.0} % of a sheet",
         100.0 * birch / sheet
     );
-    assert!(birch > 0.15 * sheet && birch < 0.4 * sheet, "{birch}");
+    assert!(birch > 0.25 * sheet && birch < 0.5 * sheet, "{birch}");
 }

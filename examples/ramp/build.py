@@ -39,14 +39,15 @@ IN = 25.4
 # ---------------------------------------------------------------------
 W, L = 21.0, 48.0                  # a panel, over the box
 SKIN = 0.4375                      # 15/32 CDX
-RIB = 1.5                          # 2x2 actual, on edge: the box is SKIN + RIB + SKIN
+RIB = 1.5                          # the box's core, and the ribs' height: the box is SKIN + RIB + SKIN
+RIB_W = 0.75                       # the ribs and cross blocks: strips ripped from the 3/4 birch, on edge
 BOX = 2 * SKIN + RIB               # 2.375
 SKIN_END = 45.0                    # the skins stop here; the stubs run bare to 48
 CURB = 1.0                         # the rails stand this much above the deck
 PIN_DROP = 1.5                     # pipe centre below the bottom skin: lever arm against hang, and the most the lugs' radius can be
 PIPE_OD, PIPE_ID = 1.05, 0.824     # 3/4 Sch 40
 BORE = 1.125                       # the lug bores
-BIRCH = 0.75                       # the rails, stubs and lugs: one ply
+BIRCH = 0.75                       # the rails, stubs, lugs, ribs and cross blocks: one ply
 RAIL_H = BOX + CURB                # 3.375 along the length
 LUG_R = 1.5                        # the half-round about the pin: a 15/16 wall round the bore, the rail bottom at -3; no more than PIN_DROP or it meets the other panel
 TAPER = 8.0                        # the lug bottom climbs back to z = 0 over this
@@ -55,8 +56,8 @@ RIBS = (1.5, 6.0, 10.5, 13.5, 19.5)   # rib centres, both panels
 # Interior lug centres (one ply, against a rib's side): panel A beside
 # the ribs at 6 and 13.5, panel B beside the ribs at 1.5 and 19.5, so
 # that turned, B's land outboard of A's on the pipe.
-LUGS_A = (6.0 - RIB / 2 - BIRCH / 2, 13.5 + RIB / 2 + BIRCH / 2)      # 4.875, 14.625
-LUGS_B = (1.5 + RIB / 2 + BIRCH / 2, 19.5 - RIB / 2 - BIRCH / 2)      # 2.625, 18.375
+LUGS_A = (6.0 - RIB_W / 2 - BIRCH / 2, 13.5 + RIB_W / 2 + BIRCH / 2)      # 5.25, 14.25
+LUGS_B = (1.5 + RIB_W / 2 + BIRCH / 2, 19.5 - RIB_W / 2 - BIRCH / 2)      # 2.25, 18.75
 LUG_IN = 6.0                       # the foot inside the box, behind the joint block
 NOTCH_L = 3.0                      # the bottom skin's notch, where the lug passes through
 STUB_LAP = 2.5                     # panel B's lug stub laps the rail's outside face this far up
@@ -127,14 +128,14 @@ def skin_bottom(lugs):
 def rib_span(c):
     """Where a rib runs: from the joint block to the free end, or to the
     stubs where it would meet one."""
-    y1 = STUB_Y0 if (c - RIB / 2 < STUB_W or c + RIB / 2 > W - STUB_W) else SKIN_END
+    y1 = STUB_Y0 if (c - RIB_W / 2 < STUB_W or c + RIB_W / 2 > W - STUB_W) else SKIN_END
     return JOINT, y1
 
 
 def ribs(p):
     for i, c in enumerate(RIBS):
         y0, y1 = rib_span(c)
-        f = box(p, f"rib, 2x2 x {y1 - y0:g}", (c - RIB / 2, c + RIB / 2), (y0, y1), (SKIN, SKIN + RIB), op="new")
+        f = box(p, f"rib, 3/4 birch strip x {y1 - y0:g}", (c - RIB_W / 2, c + RIB_W / 2), (y0, y1), (SKIN, SKIN + RIB), op="new")
         if i == 0:
             p.apply({"type": "set_binding", "id": f, "field": "depth", "expression": "#rib"})
 
@@ -142,7 +143,7 @@ def ribs(p):
 def cross_blocks(p):
     for y in CROSS_Y:
         for a, b in zip(RIBS, RIBS[1:]):
-            box(p, f"cross block, 2x2 x {b - a - RIB:g}", (a + RIB / 2, b - RIB / 2), (y - RIB / 2, y + RIB / 2), (SKIN, SKIN + RIB), op="new")
+            box(p, f"cross block, 3/4 birch strip x {b - a - RIB_W:g}", (a + RIB_W / 2, b - RIB_W / 2), (y - RIB_W / 2, y + RIB_W / 2), (SKIN, SKIN + RIB), op="new")
 
 
 def joint_block(p):
@@ -263,17 +264,17 @@ RAMP_PARTS = [("pipe", pipe), ("pipe_cap", pipe_caps), ("end_plate", end_plates)
 CUTLIST = [
     ("top skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX", 2, "one 4x8 sheet: two 21 in rips, each crosscut at 45 and 45"),
     ("bottom skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX, two 3/4 x 3 notches", 2, "from the same sheet; the notches differ between the panels"),
-    ("rib", "2x2 x 32.5", 8, "the four lines that meet a stub, joint block to stubs"),
-    ("rib", "2x2 x 41.5", 2, "middle line, joint block to the skins' end"),
-    ("cross block", "2x2 x 3", 8, "between the ribs at 1.5 and 6, and 6 and 10.5"),
-    ("cross block", "2x2 x 1.5", 4, "between the ribs at 10.5 and 13.5"),
-    ("cross block", "2x2 x 4.5", 4, "between the ribs at 13.5 and 19.5"),
-    ("joint block", "2x4 flat x 21", 2, ""),
-    ("stub", "2x8 x 12", 4, "3 in bare past the skins"),
+    ("rib", "3/4 birch strip, 1-1/2 x 32.5", 8, "the four lines that meet a stub, joint block to stubs; glued and brad-nailed through the skins"),
+    ("rib", "3/4 birch strip, 1-1/2 x 41.5", 2, "middle line, joint block to the skins' end"),
+    ("cross block", "3/4 birch strip, 1-1/2 x 3.75", 8, "between the ribs at 1.5 and 6, and 6 and 10.5"),
+    ("cross block", "3/4 birch strip, 1-1/2 x 2.25", 4, "between the ribs at 10.5 and 13.5"),
+    ("cross block", "3/4 birch strip, 1-1/2 x 5.25", 4, "between the ribs at 13.5 and 19.5"),
+    ("joint block", "2x4 flat x 21", 2, "lumber: the lugs bear on it"),
+    ("stub", "2x8 x 12", 4, "lumber: the end plates clamp 1-1/2 x 7-1/4; 3 in bare past the skins"),
     ("rail with lug", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g} with the lug profile, {TAPER:g} x {2 * LUG_R:g} below", 2, "panel A, flush both sides"),
     ("rail", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g}", 2, "panel B, flush both sides"),
-    ("lug stub", f"3/4 birch, {TAPER:g} x {STUB_LAP + 2 * LUG_R:g}, lug profile", 2, "panel B, screwed to the outside of each rail: four no. 8 x 1-1/4"),
-    ("interior lug", f"3/4 birch, {JOINT + LUG_IN:g} x {RIB + SKIN + 2 * LUG_R:g}, lug profile", 4, "two per panel; two no. 8 x 2 screws into the rib beside each, three 1-1/4 nails from the bottom skin into the foot"),
+    ("lug stub", f"3/4 birch, {TAPER:g} x {STUB_LAP + 2 * LUG_R:g}, lug profile", 2, "panel B, glued and brad-nailed to the outside of each rail over the lap"),
+    ("interior lug", f"3/4 birch, {JOINT + LUG_IN:g} x {RIB + SKIN + 2 * LUG_R:g}, lug profile", 4, "two per panel; glued and brad-nailed through the face into the rib beside it and from the bottom skin into the foot"),
     ("hinge pipe", f"3/4 Sch 40 galvanized, {PIPE_X[1] - PIPE_X[0]:g}, threaded both ends", 1, "with two caps"),
     ("ground angle", "1/8 x 1 aluminium angle x 21", 1, "over the bevel"),
 ]

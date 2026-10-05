@@ -249,13 +249,13 @@ brief, this is why.
   Instead the two halves differ only at the hinge. Panel A's rails
   are flush on both sides and carry their lugs in one piece. Panel B's
   rails are plain and flush, with a lug stub (an 8 x 5-1/2 plate with
-  the half-round, lapping the rail's lower 2-1/2 in) screwed to the
-  outside of each. On the pipe each end has A's rail lug with B's
+  the half-round, lapping the rail's lower 2-1/2 in) glued and
+  brad-nailed to the outside of each. On the pipe each end has A's rail lug with B's
   stub beside it, 24 over the lugs, 22.5 over the rails, no step. The
   interior lugs sit against different ribs on the two panels (A's
   against the ribs at 6 and 13.5, B's against those at 1.5 and 19.5),
   so B's land outboard of A's and the handle between the inner pair
-  is 9 in of bare pipe. No cheeks, no spacers; the pipe is 24-1/2.
+  is 8-1/4 in of bare pipe. No cheeks, no spacers; the pipe is 24-1/2.
 - **Lugs one ply.** With the 1-1/2 radius the wall round the bore is
   15/16, and at the 465 lb a lug carries (the 1,860 lb pipe tension
   over four lugs per panel) a single 3/4 birch lug sees about 330 psi
@@ -263,8 +263,19 @@ brief, this is why.
   the bearing the governing number at roughly half of what birch ply
   takes. The doubling was buying back the thin wall the radius
   already fixed.
+- **Ribs from the birch, and brads.** The ribs and cross blocks are
+  3/4 birch strips on edge, ripped from the sheet the rails and lugs
+  come from, not 2x2s: straight, stable, exactly 3/4 wide, and about
+  1-1/2 lb lighter per panel; as shear webs they are good for about
+  the same as a 2x2 of spruce, and the skins carry the bending. A
+  screw into the edge of 3/4 ply holds poorly, so the box is glued
+  and brad-nailed throughout (skins to ribs, lugs to ribs and from
+  the skin into the feet, stubs to rails) and weighted while it
+  cures; the only screws left are the pipe caps. The joint block
+  stays a 2x4 (the lugs bear on it) and the stubs 2x8 (the end plates
+  clamp 1-1/2 x 7-1/4).
 - **Lug feet against ribs.** Each interior lug's foot lies against the
-  side of a rib, screwed to it through the faces and nailed from the
+  side of a rib, brad-nailed to it through the faces and from the
   bottom skin, the top skin solid. The pull on a lug bears on the
   joint block (about 210 psi on 1.1 in²), so the fasteners hold the
   lug square during glue-up and are the insurance if a glue line lets
@@ -316,13 +327,13 @@ brief, this is why.
   lug on each side of each panel) on the pipe's axis within a
   hundredth of a millimetre; checks the interior lugs one ply, B's
   outboard of A's, none overlapping, each against a rib of its own
-  panel, the handle 9 in bare, and A's rail lug beside B's stub at
+  panel, the handle 8-1/4 in bare, and A's rail lug beside B's stub at
   each end of the pipe; sweeps the fold; measures the open ramp at 96
   long and 22.5 over the rails, the folded package 24 over the lugs
   and 9.75 thick with the bottoms 3 in apart and the lugs filling the
   gap; and reads the sheet yield off the parts: the four skins are
-  82 % of one 4 x 8 (two 21 in rips crosscut at 45), the birch about
-  a quarter of another.
+  82 % of one 4 x 8 (two 21 in rips crosscut at 45), the birch, ribs
+  included, about 40 % of another.
 
 The remaining open questions in §7 stand: the curb height, the rail
 taper against a full skid, the end plates with the rail ending 3 in
