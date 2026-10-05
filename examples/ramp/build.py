@@ -453,6 +453,9 @@ def main():
         mcp.call("screenshot", {"tab": ramp, "view": view, "width": 1600, "height": 1000, "path": os.path.join(OUT, f"{name}.png")})
     mcp.call("screenshot", {"tab": ramp, "view": "right", "section": f"x:{LUG_A * IN}:flip", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_lug_section.png")})
     mcp.call("screenshot", {"tab": panel, "view": "0.5,-0.7,-0.5", "width": 1600, "height": 1000, "path": os.path.join(OUT, "panel_below.png")})
+    # The box from below with the bottom skin cut away: the lug feet
+    # against their ribs, the joint block, the top skin intact above.
+    mcp.call("screenshot", {"tab": panel, "view": "0.3,-0.4,-0.85", "section": f"z:{(SKIN + 0.05) * IN}", "width": 1600, "height": 1000, "path": os.path.join(OUT, "panel_cutaway.png")})
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(180.0)}], ramp)
     mcp.call("screenshot", {"tab": ramp, "view": "iso", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded.png")})
     mcp.call("screenshot", {"tab": ramp, "view": "right", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded_side.png")})

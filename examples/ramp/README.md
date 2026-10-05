@@ -280,8 +280,10 @@ brief, this is why.
   the end plates ghosts on panel 1's stubs.
 - **Outputs.** `out/ramp.okpart`; `ramp_iso`, `ramp_front`,
   `ramp_side`, `ramp_folded`, `ramp_folded_side`, `panel_below`
-  (lugs, notches, cheeks) and `ramp_lug_section` (through a lug on the
-  pipe axis); `panel.pdf` with a section across the width at
+  (lugs, notches, cheeks), `panel_cutaway` (from below with the bottom
+  skin cut away: the lug feet against their ribs, the joint block, the
+  top skin intact) and `ramp_lug_section` (through a lug on the pipe
+  axis); `panel.pdf` with a section across the width at
   mid-length and one along the length through a lug; `ramp.pdf` with
   the panel as one item twice and the pipe as one item; `stub.pdf`;
   `fold.pdf` and `fold.png` at 0, 45, 90, 135 and 180 degrees from
