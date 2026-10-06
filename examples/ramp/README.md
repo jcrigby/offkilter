@@ -310,6 +310,23 @@ brief, this is why.
   document variables; the skin and rib extrude depths are bound to the
   first two. The rest live in sketched profiles, which this script
   redraws from the constants at the top.
+- **Hinge section.** The section is cut through the middle of panel
+  B's first interior lug from the right wall (at 18-3/4), so the
+  hatched profile is that lug, pipe and all, with panel A's lug seen
+  behind it. The sheet draws the three lugs at the cut (B's interior
+  lug, A's behind it, B's lug stub) by themselves beneath the section,
+  in the same folded pose.
+- **Cut sheets.** Two assemblies lay the real bodies flat on a 4 x 8
+  sheet, 96 along x: the CDX in two 21 in rips, a top and a bottom
+  skin each; the birch in rips along the sheet, the two rails with
+  lugs (6-3/8 wide, 46-1/2 long) end to end, the plain rails, then the
+  four interior lugs and two lug stubs in a 5-1/2 rip, then 1-1/2 in
+  strips for the ribs and cross blocks packed first-fit by length,
+  23-3/4 in of the sheet's 48 in all. Each piece sits a kerf from the
+  next; the script checks every piece lies flat on and inside its
+  sheet before drawing it, and the test that no two overlap. The ply
+  bodies carry their names and material (CDX 0.55, birch 0.68 g/cm3),
+  so the parts lists read "rib · 1.5 x 32.5" rather than "Part 1".
 - **Bevel and angle.** The ground stub's 30 degree bevel is a
   suppressed feature: on in `out/stub.pdf`, off in the ramp. The
   ground angle, 1/8 x 1-1/2, is a ramp-level part on panel B's flush
@@ -333,8 +350,11 @@ brief, this is why.
   the right wall and the first interior lug and fitted to the hinge:
   the two panels' lugs passing each other on the pipe, each its full
   length) with `hinge_section.pdf` the same cut as a sheet, hidden
-  lines dashed, so each lug's foot shows inside its box and where one
-  panel's lug passes behind the other's; `panel_a.pdf` and `panel_b.pdf` with a section across the
+  lines dashed, so the cut lug's foot shows inside its box and where
+  panel A's lug passes behind it, and the three lugs at the cut drawn
+  by themselves below it; `cut_sheet_cdx.pdf` and `cut_sheet_birch.pdf`,
+  the plywood pieces laid flat on their 4 x 8 sheets with a 1/8 kerf
+  between, numbered against a list; `panel_a.pdf` and `panel_b.pdf` with a section across the
   width at mid-length and one along the length through a lug;
   `ramp.pdf` with each panel as one item and the pipe as one;
   `stub.pdf`; `fold.pdf` and `fold.png` at 0, 45, 90, 135 and 180

@@ -107,8 +107,8 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     }
     assert_eq!(
         bodies,
-        15 + 7 + 9 + 6,
-        "shared, panel A, panel B and ramp parts"
+        15 + 7 + 9 + 6 + 2,
+        "shared, panel A, panel B, ramp parts and the two sheets"
     );
     for (name, want) in [("panel A", 22), ("panel B", 24)] {
         let panel = tab_named(&doc, name);
@@ -483,4 +483,72 @@ fn the_skins_fill_one_sheet_and_the_birch_half_of_another() {
         100.0 * birch / sheet
     );
     assert!(birch > 0.25 * sheet && birch < 0.5 * sheet, "{birch}");
+}
+
+/// The cut sheets: every plywood piece lies flat on its 4 x 8, inside
+/// it, a kerf from its neighbours, and the pieces are the parts.
+#[test]
+fn the_cut_sheets_lay_every_ply_piece_flat_and_apart() {
+    let mut doc = load();
+    for (name, thickness, count, material) in [
+        ("cut sheet, CDX", 0.4375, 4, "15/32 CDX"),
+        ("cut sheet, birch", 0.75, 36, "3/4 birch"),
+    ] {
+        let tab = tab_named(&doc, name);
+        let r = doc.regenerate_assembly(tab).unwrap();
+        assert!(r.instance_errors.is_empty(), "{name}");
+        let sheet = r
+            .bodies
+            .iter()
+            .find(|b| b.name.starts_with("sheet_"))
+            .unwrap();
+        let (slo, shi) = bounds(&sheet.solid);
+        assert!(
+            ((shi.x - slo.x) / IN - 96.0).abs() < 1e-6
+                && ((shi.y - slo.y) / IN - 48.0).abs() < 1e-6
+        );
+        let pieces: Vec<&Body> = r
+            .bodies
+            .iter()
+            .filter(|b| !b.name.starts_with("sheet_"))
+            .collect();
+        assert_eq!(pieces.len(), count, "{name}");
+        let mut area = 0.0;
+        for (i, p) in pieces.iter().enumerate() {
+            let (lo, hi) = bounds(&p.solid);
+            assert!(
+                lo.z > -1e-6 && (hi.z / IN - thickness).abs() < 1e-6,
+                "{}: z {} to {}",
+                p.name,
+                lo.z,
+                hi.z
+            );
+            assert!(
+                lo.x > -1e-6 && hi.x < shi.x + 1e-6 && lo.y > -1e-6 && hi.y < shi.y + 1e-6,
+                "{} is off the sheet",
+                p.name
+            );
+            assert_eq!(
+                p.material.as_ref().map(|m| m.name.as_str()),
+                Some(material),
+                "{}",
+                p.name
+            );
+            area += (hi.x - lo.x) * (hi.y - lo.y);
+            for q in &pieces[..i] {
+                let (qlo, qhi) = bounds(&q.solid);
+                let apart = lo.x >= qhi.x + 0.1 * IN
+                    || qlo.x >= hi.x + 0.1 * IN
+                    || lo.y >= qhi.y + 0.1 * IN
+                    || qlo.y >= hi.y + 0.1 * IN;
+                assert!(apart, "{} and {} overlap or touch", p.name, q.name);
+            }
+        }
+        let yield_ = area / ((shi.x - slo.x) * (shi.y - slo.y));
+        println!(
+            "{name}: {count} pieces, {:.0}% of the sheet by bounding box",
+            yield_ * 100.0
+        );
+        assert!(yield_ < 0.9 && yield_ > 0.2, "{yield_}");
+    }
 }

@@ -235,6 +235,15 @@
         "next_id": 8,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "top skin 21 x 45"
+        },
+        "part_materials": {
+          "7": {
+            "name": "15/32 CDX",
+            "density": 0.55
+          }
         }
       }
     },
@@ -1156,6 +1165,35 @@
         "next_id": 16,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "1.5 x 32.5",
+          "9": "1.5 x 32.5",
+          "11": "1.5 x 41.5",
+          "13": "1.5 x 32.5",
+          "15": "1.5 x 32.5"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "9": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "11": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "13": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "15": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -2587,6 +2625,50 @@
         "next_id": 22,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "1.5 x 3.75",
+          "9": "1.5 x 3.75",
+          "11": "1.5 x 2.25",
+          "13": "1.5 x 5.25",
+          "15": "1.5 x 3.75",
+          "17": "1.5 x 3.75",
+          "19": "1.5 x 2.25",
+          "21": "1.5 x 5.25"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "9": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "11": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "13": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "15": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "17": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "19": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "21": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -3226,6 +3308,10 @@
         "next_id": 10,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "tailgate stub 2x8 x 12",
+          "9": "tailgate stub 2x8 x 12"
         }
       }
     },
@@ -3740,6 +3826,15 @@
         "next_id": 10,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "bottom skin 21 x 45, notched"
+        },
+        "part_materials": {
+          "7": {
+            "name": "15/32 CDX",
+            "density": 0.55
+          }
         }
       }
     },
@@ -4046,6 +4141,15 @@
         "next_id": 12,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "rail with lug 45 x 3.375"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -4352,6 +4456,15 @@
         "next_id": 12,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "rail with lug 45 x 3.375"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -4978,6 +5091,15 @@
         "next_id": 16,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "interior lug 9.5 x 4.9375"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -5604,6 +5726,15 @@
         "next_id": 16,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "interior lug 9.5 x 4.9375"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -6113,6 +6244,10 @@
         "next_id": 12,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "ground stub 2x8 x 9",
+          "9": "ground stub 2x8 x 9"
         }
       }
     },
@@ -6627,6 +6762,15 @@
         "next_id": 10,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "bottom skin 21 x 45, notched"
+        },
+        "part_materials": {
+          "7": {
+            "name": "15/32 CDX",
+            "density": 0.55
+          }
         }
       }
     },
@@ -7032,6 +7176,20 @@
         "next_id": 10,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "rail 45 x 3.375",
+          "9": "rail 45 x 3.375"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          },
+          "9": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -7316,6 +7474,15 @@
         "next_id": 12,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "lug stub 8 x 5.5"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -7600,6 +7767,15 @@
         "next_id": 12,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "lug stub 8 x 5.5"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -8226,6 +8402,15 @@
         "next_id": 16,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "interior lug 9.5 x 4.9375"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -8852,6 +9037,15 @@
         "next_id": 16,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "interior lug 9.5 x 4.9375"
+        },
+        "part_materials": {
+          "7": {
+            "name": "3/4 birch",
+            "density": 0.68
+          }
         }
       }
     },
@@ -10402,11 +10596,485 @@
     {
       "id": 22,
       "kind": {
+        "type": "part_studio",
+        "name": "sheet_cdx",
+        "features": [
+          {
+            "id": 1,
+            "name": "#skin",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "skin",
+              "expression": "11.1125"
+            }
+          },
+          {
+            "id": 2,
+            "name": "#rib",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "rib",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 3,
+            "name": "#curb",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "curb",
+              "expression": "25.4"
+            }
+          },
+          {
+            "id": 4,
+            "name": "#pin_drop",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "pin_drop",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 5,
+            "name": "#lug_r",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "lug_r",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 6,
+            "name": "4 x 8 sheet, 15/32 CDX",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -11.1125
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 2438.3999999999996,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 2438.3999999999996,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 2438.3999999999996,
+                      "y": 1219.1999999999998
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 2438.3999999999996,
+                      "y": 1219.1999999999998
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1219.1999999999998
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1219.1999999999998
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "4 x 8 sheet, 15/32 CDX",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 6,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 11.1125,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 8,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "4 x 8 sheet of 15/32 CDX"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "kind": {
+        "type": "part_studio",
+        "name": "sheet_birch",
+        "features": [
+          {
+            "id": 1,
+            "name": "#skin",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "skin",
+              "expression": "11.1125"
+            }
+          },
+          {
+            "id": 2,
+            "name": "#rib",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "rib",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 3,
+            "name": "#curb",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "curb",
+              "expression": "25.4"
+            }
+          },
+          {
+            "id": 4,
+            "name": "#pin_drop",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "pin_drop",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 5,
+            "name": "#lug_r",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "lug_r",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 6,
+            "name": "4 x 8 sheet, 3/4 birch",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -19.049999999999997
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 2438.3999999999996,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 2438.3999999999996,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 2438.3999999999996,
+                      "y": 1219.1999999999998
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 2438.3999999999996,
+                      "y": 1219.1999999999998
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1219.1999999999998
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1219.1999999999998
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "4 x 8 sheet, 3/4 birch",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 6,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 8,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "4 x 8 sheet of 3/4 birch"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "kind": {
         "type": "assembly",
         "name": "panel A",
         "instances": [
           {
-            "id": 23,
+            "id": 25,
             "name": "skin_top",
             "studio": 1,
             "body": 0,
@@ -10425,7 +11093,7 @@
             }
           },
           {
-            "id": 24,
+            "id": 26,
             "name": "rib 1",
             "studio": 2,
             "body": 0,
@@ -10444,7 +11112,7 @@
             }
           },
           {
-            "id": 25,
+            "id": 27,
             "name": "rib 2",
             "studio": 2,
             "body": 1,
@@ -10463,7 +11131,7 @@
             }
           },
           {
-            "id": 26,
+            "id": 28,
             "name": "rib 3",
             "studio": 2,
             "body": 2,
@@ -10482,7 +11150,7 @@
             }
           },
           {
-            "id": 27,
+            "id": 29,
             "name": "rib 4",
             "studio": 2,
             "body": 3,
@@ -10501,7 +11169,7 @@
             }
           },
           {
-            "id": 28,
+            "id": 30,
             "name": "rib 5",
             "studio": 2,
             "body": 4,
@@ -10520,7 +11188,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 31,
             "name": "cross_block 1",
             "studio": 3,
             "body": 0,
@@ -10539,7 +11207,7 @@
             }
           },
           {
-            "id": 30,
+            "id": 32,
             "name": "cross_block 2",
             "studio": 3,
             "body": 1,
@@ -10558,7 +11226,7 @@
             }
           },
           {
-            "id": 31,
+            "id": 33,
             "name": "cross_block 3",
             "studio": 3,
             "body": 2,
@@ -10577,7 +11245,7 @@
             }
           },
           {
-            "id": 32,
+            "id": 34,
             "name": "cross_block 4",
             "studio": 3,
             "body": 3,
@@ -10596,7 +11264,7 @@
             }
           },
           {
-            "id": 33,
+            "id": 35,
             "name": "cross_block 5",
             "studio": 3,
             "body": 4,
@@ -10615,7 +11283,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 36,
             "name": "cross_block 6",
             "studio": 3,
             "body": 5,
@@ -10634,7 +11302,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 37,
             "name": "cross_block 7",
             "studio": 3,
             "body": 6,
@@ -10653,7 +11321,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 38,
             "name": "cross_block 8",
             "studio": 3,
             "body": 7,
@@ -10672,7 +11340,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 39,
             "name": "joint_block",
             "studio": 4,
             "body": 0,
@@ -10691,7 +11359,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 40,
             "name": "stub 1",
             "studio": 5,
             "body": 0,
@@ -10710,7 +11378,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 41,
             "name": "stub 2",
             "studio": 5,
             "body": 1,
@@ -10729,7 +11397,7 @@
             }
           },
           {
-            "id": 40,
+            "id": 42,
             "name": "skin_bottom_a",
             "studio": 6,
             "body": 0,
@@ -10748,7 +11416,7 @@
             }
           },
           {
-            "id": 41,
+            "id": 43,
             "name": "rail_lug_left",
             "studio": 7,
             "body": 0,
@@ -10767,7 +11435,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 44,
             "name": "rail_lug_right",
             "studio": 8,
             "body": 0,
@@ -10786,7 +11454,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 45,
             "name": "interior_lug_a1",
             "studio": 9,
             "body": 0,
@@ -10805,7 +11473,7 @@
             }
           },
           {
-            "id": 44,
+            "id": 46,
             "name": "interior_lug_a2",
             "studio": 10,
             "body": 0,
@@ -10828,13 +11496,13 @@
       }
     },
     {
-      "id": 45,
+      "id": 47,
       "kind": {
         "type": "assembly",
         "name": "panel B",
         "instances": [
           {
-            "id": 46,
+            "id": 48,
             "name": "skin_top",
             "studio": 1,
             "body": 0,
@@ -10853,7 +11521,7 @@
             }
           },
           {
-            "id": 47,
+            "id": 49,
             "name": "rib 1",
             "studio": 2,
             "body": 0,
@@ -10872,7 +11540,7 @@
             }
           },
           {
-            "id": 48,
+            "id": 50,
             "name": "rib 2",
             "studio": 2,
             "body": 1,
@@ -10891,7 +11559,7 @@
             }
           },
           {
-            "id": 49,
+            "id": 51,
             "name": "rib 3",
             "studio": 2,
             "body": 2,
@@ -10910,7 +11578,7 @@
             }
           },
           {
-            "id": 50,
+            "id": 52,
             "name": "rib 4",
             "studio": 2,
             "body": 3,
@@ -10929,7 +11597,7 @@
             }
           },
           {
-            "id": 51,
+            "id": 53,
             "name": "rib 5",
             "studio": 2,
             "body": 4,
@@ -10948,7 +11616,7 @@
             }
           },
           {
-            "id": 52,
+            "id": 54,
             "name": "cross_block 1",
             "studio": 3,
             "body": 0,
@@ -10967,7 +11635,7 @@
             }
           },
           {
-            "id": 53,
+            "id": 55,
             "name": "cross_block 2",
             "studio": 3,
             "body": 1,
@@ -10986,7 +11654,7 @@
             }
           },
           {
-            "id": 54,
+            "id": 56,
             "name": "cross_block 3",
             "studio": 3,
             "body": 2,
@@ -11005,7 +11673,7 @@
             }
           },
           {
-            "id": 55,
+            "id": 57,
             "name": "cross_block 4",
             "studio": 3,
             "body": 3,
@@ -11024,7 +11692,7 @@
             }
           },
           {
-            "id": 56,
+            "id": 58,
             "name": "cross_block 5",
             "studio": 3,
             "body": 4,
@@ -11043,7 +11711,7 @@
             }
           },
           {
-            "id": 57,
+            "id": 59,
             "name": "cross_block 6",
             "studio": 3,
             "body": 5,
@@ -11062,7 +11730,7 @@
             }
           },
           {
-            "id": 58,
+            "id": 60,
             "name": "cross_block 7",
             "studio": 3,
             "body": 6,
@@ -11081,7 +11749,7 @@
             }
           },
           {
-            "id": 59,
+            "id": 61,
             "name": "cross_block 8",
             "studio": 3,
             "body": 7,
@@ -11100,7 +11768,7 @@
             }
           },
           {
-            "id": 60,
+            "id": 62,
             "name": "joint_block",
             "studio": 4,
             "body": 0,
@@ -11119,7 +11787,7 @@
             }
           },
           {
-            "id": 61,
+            "id": 63,
             "name": "stub_ground 1",
             "studio": 11,
             "body": 0,
@@ -11138,7 +11806,7 @@
             }
           },
           {
-            "id": 62,
+            "id": 64,
             "name": "stub_ground 2",
             "studio": 11,
             "body": 1,
@@ -11157,7 +11825,7 @@
             }
           },
           {
-            "id": 63,
+            "id": 65,
             "name": "skin_bottom_b",
             "studio": 12,
             "body": 0,
@@ -11176,7 +11844,7 @@
             }
           },
           {
-            "id": 64,
+            "id": 66,
             "name": "rail_plain 1",
             "studio": 13,
             "body": 0,
@@ -11195,7 +11863,7 @@
             }
           },
           {
-            "id": 65,
+            "id": 67,
             "name": "rail_plain 2",
             "studio": 13,
             "body": 1,
@@ -11214,7 +11882,7 @@
             }
           },
           {
-            "id": 66,
+            "id": 68,
             "name": "lug_stub_left",
             "studio": 14,
             "body": 0,
@@ -11233,7 +11901,7 @@
             }
           },
           {
-            "id": 67,
+            "id": 69,
             "name": "lug_stub_right",
             "studio": 15,
             "body": 0,
@@ -11252,7 +11920,7 @@
             }
           },
           {
-            "id": 68,
+            "id": 70,
             "name": "interior_lug_b1",
             "studio": 16,
             "body": 0,
@@ -11271,7 +11939,7 @@
             }
           },
           {
-            "id": 69,
+            "id": 71,
             "name": "interior_lug_b2",
             "studio": 17,
             "body": 0,
@@ -11294,15 +11962,15 @@
       }
     },
     {
-      "id": 70,
+      "id": 72,
       "kind": {
         "type": "assembly",
         "name": "ramp",
         "instances": [
           {
-            "id": 71,
+            "id": 73,
             "name": "panel A",
-            "studio": 22,
+            "studio": 24,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -11319,9 +11987,9 @@
             }
           },
           {
-            "id": 72,
+            "id": 74,
             "name": "panel B",
-            "studio": 45,
+            "studio": 47,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -11338,7 +12006,7 @@
             }
           },
           {
-            "id": 73,
+            "id": 75,
             "name": "pipe",
             "studio": 18,
             "body": 0,
@@ -11357,7 +12025,7 @@
             }
           },
           {
-            "id": 74,
+            "id": 76,
             "name": "pipe_cap 1",
             "studio": 19,
             "body": 0,
@@ -11376,7 +12044,7 @@
             }
           },
           {
-            "id": 75,
+            "id": 77,
             "name": "pipe_cap 2",
             "studio": 19,
             "body": 1,
@@ -11395,7 +12063,7 @@
             }
           },
           {
-            "id": 76,
+            "id": 78,
             "name": "end_plate 1",
             "studio": 20,
             "body": 0,
@@ -11414,7 +12082,7 @@
             }
           },
           {
-            "id": 77,
+            "id": 79,
             "name": "end_plate 2",
             "studio": 20,
             "body": 1,
@@ -11433,7 +12101,7 @@
             }
           },
           {
-            "id": 78,
+            "id": 80,
             "name": "ground_angle",
             "studio": 21,
             "body": 0,
@@ -11454,11 +12122,11 @@
         ],
         "mates": [
           {
-            "id": 79,
+            "id": 81,
             "name": "fold",
             "kind": "revolute",
             "a": {
-              "instance": 73,
+              "instance": 75,
               "face": {
                 "feature": 7,
                 "local": 2,
@@ -11476,8 +12144,8 @@
               }
             },
             "b": {
-              "instance": 72,
-              "sub": 66,
+              "instance": 74,
+              "sub": 68,
               "face": {
                 "feature": 11,
                 "local": 2,
@@ -11500,7 +12168,825 @@
           }
         ]
       }
+    },
+    {
+      "id": 82,
+      "kind": {
+        "type": "assembly",
+        "name": "cut sheet, CDX",
+        "instances": [
+          {
+            "id": 83,
+            "name": "sheet_cdx",
+            "studio": 22,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 84,
+            "name": "skin_top 1 #1",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 533.4,
+                "z": -49.2125
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 85,
+            "name": "skin_bottom_a 1 #2",
+            "studio": 6,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1146.175,
+                "y": 533.4,
+                "z": -0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 86,
+            "name": "skin_top 1 #3",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 1069.975,
+                "z": -49.2125
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 87,
+            "name": "skin_bottom_b 1 #4",
+            "studio": 12,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1146.175,
+                "y": 1069.975,
+                "z": -0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -90.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    },
+    {
+      "id": 88,
+      "kind": {
+        "type": "assembly",
+        "name": "cut sheet, birch",
+        "instances": [
+          {
+            "id": 89,
+            "name": "sheet_birch",
+            "studio": 23,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 90,
+            "name": "rail_lug_left 1 #1",
+            "studio": 7,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 38.099999999999994,
+                "y": 85.725,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 91,
+            "name": "rail_lug_right 1 #2",
+            "studio": 8,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1222.3749999999998,
+                "y": 85.725,
+                "z": 552.4500000000004
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 92,
+            "name": "rail_plain 1 #3",
+            "studio": 13,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 250.825,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 93,
+            "name": "rail_plain 2 #4",
+            "studio": 13,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1146.175,
+                "y": 250.825,
+                "z": 552.4499999999999
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 94,
+            "name": "interior_lug_a1 1 #5",
+            "studio": 9,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 38.099999999999994,
+                "y": 303.2125,
+                "z": 142.87500000000006
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 95,
+            "name": "interior_lug_a2 1 #6",
+            "studio": 10,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 320.67499999999995,
+                "y": 303.2125,
+                "z": 371.475
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 96,
+            "name": "interior_lug_b1 1 #7",
+            "studio": 16,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 603.25,
+                "y": 303.2125,
+                "z": 66.67500000000003
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 97,
+            "name": "interior_lug_b2 1 #8",
+            "studio": 17,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 885.8249999999999,
+                "y": 303.2125,
+                "z": 485.775
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 98,
+            "name": "lug_stub_left 1 #9",
+            "studio": 14,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1168.4,
+                "y": 317.5,
+                "z": -19.049999999999997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 99,
+            "name": "lug_stub_right 1 #10",
+            "studio": 15,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1412.8749999999998,
+                "y": 317.5,
+                "z": 571.5
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 100,
+            "name": "rib 3 #11",
+            "studio": 2,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.89999999999999,
+                "y": 446.0875,
+                "z": 276.22499999999997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 101,
+            "name": "rib 3 #12",
+            "studio": 2,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 968.375,
+                "y": 446.0875,
+                "z": 276.22499999999997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 102,
+            "name": "cross_block 4 #13",
+            "studio": 3,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1762.1249999999998,
+                "y": 385.7625,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 103,
+            "name": "cross_block 4 #14",
+            "studio": 3,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1898.65,
+                "y": 385.7625,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 104,
+            "name": "rib 1 #15",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.89999999999999,
+                "y": 487.3624999999999,
+                "z": 47.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 105,
+            "name": "rib 1 #16",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 739.775,
+                "y": 487.3624999999999,
+                "z": 47.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 106,
+            "name": "cross_block 4 #17",
+            "studio": 3,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1304.925,
+                "y": 427.0375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 107,
+            "name": "cross_block 4 #18",
+            "studio": 3,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1441.45,
+                "y": 427.0375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 108,
+            "name": "cross_block 1 #19",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1882.775,
+                "y": 427.0375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 109,
+            "name": "cross_block 1 #20",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1981.2,
+                "y": 427.0375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 110,
+            "name": "cross_block 1 #21",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 2079.625,
+                "y": 427.0375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 111,
+            "name": "cross_block 1 #22",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 2178.0499999999997,
+                "y": 427.0375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 112,
+            "name": "cross_block 1 #23",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 2276.475,
+                "y": 427.0375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 113,
+            "name": "rib 1 #24",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.89999999999999,
+                "y": 528.6374999999999,
+                "z": 47.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 114,
+            "name": "rib 1 #25",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 739.775,
+                "y": 528.6374999999999,
+                "z": 47.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 115,
+            "name": "cross_block 1 #26",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1609.725,
+                "y": 468.31249999999994,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 116,
+            "name": "cross_block 1 #27",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1708.15,
+                "y": 468.31249999999994,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 117,
+            "name": "cross_block 1 #28",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1806.575,
+                "y": 468.31249999999994,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 118,
+            "name": "cross_block 3 #29",
+            "studio": 3,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1676.4,
+                "y": 468.31249999999994,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 119,
+            "name": "cross_block 3 #30",
+            "studio": 3,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1736.725,
+                "y": 468.31249999999994,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 120,
+            "name": "cross_block 3 #31",
+            "studio": 3,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1797.0500000000002,
+                "y": 468.31249999999994,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 121,
+            "name": "cross_block 3 #32",
+            "studio": 3,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1857.375,
+                "y": 468.31249999999994,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 122,
+            "name": "rib 1 #33",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.89999999999999,
+                "y": 569.9124999999999,
+                "z": 47.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 123,
+            "name": "rib 1 #34",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 739.775,
+                "y": 569.9124999999999,
+                "z": 47.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 124,
+            "name": "rib 1 #35",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.89999999999999,
+                "y": 611.1875,
+                "z": 47.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 125,
+            "name": "rib 1 #36",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 739.775,
+                "y": 611.1875,
+                "z": 47.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
     }
   ],
-  "next_id": 80
+  "next_id": 126
 }

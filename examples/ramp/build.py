@@ -73,7 +73,10 @@ CAP_OD, CAP_L = 1.3, 1.0
 # Panel B's placement in the ramp: 180 degrees about z, moved W in x:
 # its x runs 21 to 0, its y 0 to -48.
 PLACE_B = ((W * IN, 0.0, 0.0), (0.0, 0.0, 180.0))
-HINGE_CUT = W - 1.0                # the hinge section: between the right wall and the first interior lug
+HINGE_CUT = W - LUGS_B[0]          # the hinge section: through the middle of the first interior lug from the right wall, panel B's
+KERF = 0.125                       # the cut sheets: a saw kerf between pieces
+SHEET_W, SHEET_L = 48.0, 96.0      # a 4 x 8 sheet laid 96 along x, 48 along y
+PLY = {"cdx": ("15/32 CDX", 0.55), "birch": ("3/4 birch", 0.68)}   # the parts list's material and g/cm3
 
 
 def mm(*v):
@@ -85,6 +88,16 @@ def box(p, name, x, y, z, op="new"):
     s = p.sketch("top", z[0] * IN, name)
     p.rect(s, mm(x[0], y[0]), mm(x[1], y[1]))
     return p.extrude(s, (z[1] - z[0]) * IN, op=op, name=name)
+
+
+def part_is(p, f, name, ply=None):
+    """Names the body feature `f` made and, for plywood, sets its
+    material: what the parts lists and cut sheets call it."""
+    ops = [{"type": "rename_part", "source": f, "name": name}]
+    if ply:
+        material, density = PLY[ply]
+        ops.append({"type": "set_part_material", "source": f, "material": {"name": material, "density": density}})
+    p.apply(*ops)
 
 
 def profile_x(p, name, x0, x1, pts, circle=None, op="new"):
@@ -99,6 +112,7 @@ def profile_x(p, name, x0, x1, pts, circle=None, op="new"):
         p.circle(s, mm(cy, cz), r * IN)
         p.extrude(s, (x1 - x0) * IN, op="add", name=f"{name} round")
     return f
+    return f
 
 
 def bore_x(p, name, x0, x1, cy, cz, d):
@@ -112,6 +126,7 @@ def bore_x(p, name, x0, x1, cy, cz, d):
 
 def skin_top(p):
     f = box(p, "top skin, 15/32 CDX", (0.0, W), (0.0, SKIN_END), (BOX - SKIN, BOX))
+    part_is(p, f, f"top skin {W:g} x {SKIN_END:g}", "cdx")
     p.apply({"type": "set_binding", "id": f, "field": "depth", "expression": "#skin"})
 
 
@@ -119,7 +134,8 @@ def skin_bottom(lugs):
     """The bottom skin, its hinge-end bottom edge chamfered since it
     sweeps a radius about the pin, and notched where the lugs pass."""
     def build(p):
-        profile_x(p, "bottom skin, 15/32 CDX", 0.0, W, [(CHAMFER, 0.0), (SKIN_END, 0.0), (SKIN_END, SKIN), (0.0, SKIN), (0.0, CHAMFER)])
+        f = profile_x(p, "bottom skin, 15/32 CDX", 0.0, W, [(CHAMFER, 0.0), (SKIN_END, 0.0), (SKIN_END, SKIN), (0.0, SKIN), (0.0, CHAMFER)])
+        part_is(p, f, f"bottom skin {W:g} x {SKIN_END:g}, notched", "cdx")
         s = p.sketch("top", SKIN * IN + 1.0, "lug notches")
         for a in lugs:
             p.rect(s, mm(a - BIRCH / 2, JOINT), mm(a + BIRCH / 2, JOINT + NOTCH_L))
@@ -138,6 +154,7 @@ def ribs(p):
     for i, c in enumerate(RIBS):
         y0, y1 = rib_span(c)
         f = box(p, f"rib, 3/4 birch strip x {y1 - y0:g}", (c - RIB_W / 2, c + RIB_W / 2), (y0, y1), (SKIN, SKIN + RIB), op="new")
+        part_is(p, f, f"{RIB:g} x {y1 - y0:g}", "birch")
         if i == 0:
             p.apply({"type": "set_binding", "id": f, "field": "depth", "expression": "#rib"})
 
@@ -145,7 +162,8 @@ def ribs(p):
 def cross_blocks(p):
     for y in CROSS_Y:
         for a, b in zip(RIBS, RIBS[1:]):
-            box(p, f"cross block, 3/4 birch strip x {b - a - RIB_W:g}", (a + RIB_W / 2, b - RIB_W / 2), (y - RIB_W / 2, y + RIB_W / 2), (SKIN, SKIN + RIB), op="new")
+            f = box(p, f"cross block, 3/4 birch strip x {b - a - RIB_W:g}", (a + RIB_W / 2, b - RIB_W / 2), (y - RIB_W / 2, y + RIB_W / 2), (SKIN, SKIN + RIB), op="new")
+            part_is(p, f, f"{RIB:g} x {b - a - RIB_W:g}", "birch")
 
 
 def joint_block(p):
@@ -161,7 +179,8 @@ def stubs(end):
     def build(p):
         name = "tailgate stub" if end > SKIN_END else "ground stub"
         for x0 in (0.0, W - STUB_W):
-            box(p, f"{name}, 2x8 flat x {end - STUB_Y0:g}", (x0, x0 + STUB_W), (STUB_Y0, end), (SKIN, SKIN + RIB), op="new")
+            f = box(p, f"{name}, 2x8 flat x {end - STUB_Y0:g}", (x0, x0 + STUB_W), (STUB_Y0, end), (SKIN, SKIN + RIB), op="new")
+            part_is(p, f, f"{name} 2x8 x {end - STUB_Y0:g}")
         if end <= SKIN_END:
             back = RIB * math.tan(math.radians(BEVEL))
             s = p.sketch("right", -1.0 * IN, "bevel")
@@ -183,8 +202,9 @@ def rail_with_lug(x0):
     """Panel A: a flush rail, 3/4 birch on edge, a curb above the deck,
     its lug built in below the deck as one piece."""
     def build(p):
-        profile_x(p, "rail with lug, 3/4 birch", x0, x0 + BIRCH,
-                  [(0.0, RAIL_H), (SKIN_END, RAIL_H), (SKIN_END, 0.0), (TAPER, 0.0), (0.0, -2 * LUG_R)], circle=((0.0, -PIN_DROP), LUG_R))
+        f = profile_x(p, "rail with lug, 3/4 birch", x0, x0 + BIRCH,
+                      [(0.0, RAIL_H), (SKIN_END, RAIL_H), (SKIN_END, 0.0), (TAPER, 0.0), (0.0, -2 * LUG_R)], circle=((0.0, -PIN_DROP), LUG_R))
+        part_is(p, f, f"rail with lug {SKIN_END:g} x {RAIL_H:g}", "birch")
         bore_x(p, "pipe bore", x0, x0 + BIRCH, 0.0, -PIN_DROP, BORE)
     return build
 
@@ -192,15 +212,17 @@ def rail_with_lug(x0):
 def rails_plain(p):
     """Panel B: two flush rails, no lug, ending flat on the joint plane."""
     for i, x0 in enumerate((-BIRCH, W)):
-        box(p, "rail, 3/4 birch", (x0, x0 + BIRCH), (0.0, SKIN_END), (0.0, RAIL_H), op="new")
+        f = box(p, "rail, 3/4 birch", (x0, x0 + BIRCH), (0.0, SKIN_END), (0.0, RAIL_H), op="new")
+        part_is(p, f, f"rail {SKIN_END:g} x {RAIL_H:g}", "birch")
 
 
 def lug_stub(x0):
     """Panel B: a lug screwed to the outside of a plain rail at the hinge
     end, lapping the rail's face STUB_LAP up from the deck line."""
     def build(p):
-        profile_x(p, "lug stub, 3/4 birch", x0, x0 + BIRCH,
-                  [(0.0, STUB_LAP), (TAPER, STUB_LAP), (TAPER, 0.0), (0.0, -2 * LUG_R)], circle=((0.0, -PIN_DROP), LUG_R))
+        f = profile_x(p, "lug stub, 3/4 birch", x0, x0 + BIRCH,
+                      [(0.0, STUB_LAP), (TAPER, STUB_LAP), (TAPER, 0.0), (0.0, -2 * LUG_R)], circle=((0.0, -PIN_DROP), LUG_R))
+        part_is(p, f, f"lug stub {TAPER:g} x {STUB_LAP + 2 * LUG_R:g}", "birch")
         bore_x(p, "pipe bore", x0, x0 + BIRCH, 0.0, -PIN_DROP, BORE)
     return build
 
@@ -214,8 +236,9 @@ def interior_lug(a):
     hold it square and are the insurance."""
     def build(p):
         x0, x1 = a - BIRCH / 2, a + BIRCH / 2
-        profile_x(p, "interior lug, 3/4 birch", x0, x1,
-                  [(0.0, 0.0), (0.0, -2 * LUG_R), (JOINT, -2 * LUG_R), (JOINT + NOTCH_L, 0.0)], circle=((0.0, -PIN_DROP), LUG_R))
+        f = profile_x(p, "interior lug, 3/4 birch", x0, x1,
+                      [(0.0, 0.0), (0.0, -2 * LUG_R), (JOINT, -2 * LUG_R), (JOINT + NOTCH_L, 0.0)], circle=((0.0, -PIN_DROP), LUG_R))
+        part_is(p, f, f"interior lug {JOINT + LUG_IN:g} x {RIB + SKIN + 2 * LUG_R:g}", "birch")
         box(p, "through the notch", (x0, x1), (JOINT, JOINT + NOTCH_L), (0.0, SKIN), op="add")
         box(p, "inside the box", (x0, x1), (JOINT, JOINT + LUG_IN), (SKIN, SKIN + RIB), op="add")
         bore_x(p, "pipe bore", x0, x1, 0.0, -PIN_DROP, BORE)
@@ -279,6 +302,18 @@ PANEL_A = [("stub", stubs(L)), ("skin_bottom_a", skin_bottom(LUGS_A)), ("rail_lu
 PANEL_B = [("stub_ground", stubs(SKIN_END)), ("skin_bottom_b", skin_bottom(LUGS_B)), ("rail_plain", rails_plain), ("lug_stub_left", lug_stub(-2 * BIRCH)),
            ("lug_stub_right", lug_stub(W + BIRCH)), ("interior_lug_b1", interior_lug(LUGS_B[0])), ("interior_lug_b2", interior_lug(LUGS_B[1]))]
 RAMP_PARTS = [("pipe", pipe), ("pipe_cap", pipe_caps), ("end_plate", end_plates), ("ground_angle", ground_angle)]
+
+
+def sheet(t, material):
+    """A 4 x 8 sheet, its top at z = 0, for the cut sheets to lay the
+    pieces on."""
+    def build(p):
+        f = box(p, f"4 x 8 sheet, {material}", (0.0, SHEET_L), (0.0, SHEET_W), (-t, 0.0))
+        part_is(p, f, f"4 x 8 sheet of {material}")
+    return build
+
+
+SHEETS = [("sheet_cdx", sheet(SKIN, "15/32 CDX")), ("sheet_birch", sheet(BIRCH, "3/4 birch"))]
 
 # The cut list: what to cut, in inches, per the shop's stock.
 CUTLIST = [
@@ -408,6 +443,77 @@ def instance_ids(mcp, tab):
     return {i["name"]: i["id"] for i in json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))["instances"]}
 
 
+# -- cut sheets ---------------------------------------------------------
+#
+# A piece is (part title, body index, x0, y0, lay): where its near
+# corner goes on the sheet (inches, the sheet 96 along x) and how it
+# lies, turned so its long way runs along x and its thickness up. `lay`
+# says which way the thickness runs as built: "x" for the profiles
+# extruded along x and the ribs, "y" for the cross blocks, "z" for the
+# skins. The placement turns about x, then y, then z, then moves.
+
+def placement_flat(body, x0, y0, lay):
+    lo, hi = body["bounds"]
+    X0, Y0 = x0 * IN, y0 * IN
+    if lay == "x":      # about y by 90 then z by -90: x' = y, y' = -z, z' = -x
+        pos, rot = (X0 - lo["y"], Y0 + hi["z"], hi["x"]), (0.0, 90.0, -90.0)
+    elif lay == "y":    # about x by -90: x' = x, y' = z, z' = -y
+        pos, rot = (X0 - lo["x"], Y0 - lo["z"], hi["y"]), (-90.0, 0.0, 0.0)
+    else:               # about z by -90: x' = y, y' = -x
+        pos, rot = (X0 - lo["y"], Y0 + hi["x"], -lo["z"]), (0.0, 0.0, -90.0)
+    return {"position": dict(zip("xyz", pos)), "rotation": dict(zip("xyz", rot))}
+
+
+def flat_size(body, lay):
+    """The piece's footprint on the sheet (along x, across y), inches."""
+    lo, hi = body["bounds"]
+    d = {k: (hi[k] - lo[k]) / IN for k in "xyz"}
+    return {"x": (d["y"], d["z"]), "y": (d["x"], d["z"]), "z": (d["y"], d["x"])}[lay]
+
+
+def nest_cdx():
+    """Two 21 in rips of the CDX, each a top skin and a bottom skin."""
+    return [("skin_top", 0, 0.0, 0.0, "z"), ("skin_bottom_a", 0, SKIN_END + KERF, 0.0, "z"),
+            ("skin_top", 0, 0.0, W + KERF, "z"), ("skin_bottom_b", 0, SKIN_END + KERF, W + KERF, "z")]
+
+
+def nest_birch(reports):
+    """Rips across the birch: the rails with lugs, the plain rails, the
+    lugs and stubs, then 1-1/2 in strips for the ribs and cross blocks,
+    first-fit by length."""
+    pieces, y = [], 0.0
+    def rip(items):
+        nonlocal y
+        width, x = 0.0, 0.0
+        for part, k, lay in items:
+            along, across = flat_size(reports[part][k], lay)
+            pieces.append((part, k, x, y, lay))
+            width, x = max(width, across), x + along + KERF
+        assert x - KERF <= SHEET_L + 1e-9, f"rip of {items[0][0]} runs {x - KERF:g} in"
+        y += width + KERF
+    rip([("rail_lug_left", 0, "x"), ("rail_lug_right", 0, "x")])
+    rip([("rail_plain", 0, "x"), ("rail_plain", 1, "x")])
+    rip([(f"interior_lug_{t}", 0, "x") for t in ("a1", "a2", "b1", "b2")] + [("lug_stub_left", 0, "x"), ("lug_stub_right", 0, "x")])
+    # Strips: eight ribs at 32-1/2 (rib body 0, twice per panel line),
+    # two at 41-1/2 (rib body 2), the cross blocks by length.
+    strips = [("rib", 0, "x")] * 8 + [("rib", 2, "x")] * 2 + [("cross_block", 0, "y")] * 8 + [("cross_block", 2, "y")] * 4 + [("cross_block", 3, "y")] * 4
+    strips.sort(key=lambda it: -flat_size(reports[it[0]][it[1]], it[2])[0])
+    rows = []
+    for it in strips:
+        along = flat_size(reports[it[0]][it[1]], it[2])[0]
+        for row in rows:
+            if row[0] + KERF + along <= SHEET_L:
+                row[0] += KERF + along
+                row[1].append(it)
+                break
+        else:
+            rows.append([along, [it]])
+    for _, items in rows:
+        rip(items)
+    assert y - KERF <= SHEET_W, f"the birch nest is {y - KERF:g} in across"
+    return pieces
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "ramp.okpart")
@@ -417,7 +523,7 @@ def main():
     mcp.call("create_document", {"name": "ramp"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Folding torsion-box truck ramp"}]})
     tabs, bodies, reports = {}, {}, {}
-    for i, (title, fn) in enumerate(SHARED + PANEL_A + PANEL_B + RAMP_PARTS):
+    for i, (title, fn) in enumerate(SHARED + PANEL_A + PANEL_B + RAMP_PARTS + SHEETS):
         if i == 0:
             mcp.call("apply", {"ops": [{"type": "rename_tab", "tab": 1, "name": title}]}); tab = 1
         else:
@@ -496,18 +602,21 @@ def main():
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(180.0)}], ramp)
     mcp.call("screenshot", {"tab": ramp, "view": "iso", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded.png")})
     mcp.call("screenshot", {"tab": ramp, "view": "right", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded_side.png")})
-    # The hinge at 90 degrees, cut between the right wall and the first
-    # interior lug (panel B's at 18-3/4, inside both panels' ribs at
-    # 19-1/2) and fitted to the lugs, not the panels: the two panels'
-    # lugs passing each other on the pipe, the full length of each.
+    # The hinge at 90 degrees, cut through the middle of the first
+    # interior lug from the right wall (panel B's, at 18-3/4) and fitted
+    # to the lugs, not the panels: that lug's whole profile hatched, the
+    # pipe through it, panel A's lug behind it.
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(90.0)}], ramp)
     window = ",".join(f"{v * IN:g}" for v in (HINGE_CUT - 3.0, -4.0, -9.0, HINGE_CUT + 1.0, 10.5, 3.5))
     mcp.call("screenshot", {"tab": ramp, "view": "right", "section": f"x:{HINGE_CUT * IN}:flip", "fit": window, "width": 1400, "height": 1200,
                             "path": os.path.join(OUT, "ramp_hinge_section.png")})
-    # The same cut as a sheet with hidden lines: each lug's foot inside
-    # its box, and where one panel's lug passes behind the other's.
-    print(mcp.call("export", {"tab": ramp, "format": "pdf", "sheet": "A4", "views": [f"section-side@{HINGE_CUT * IN}"], "hidden": True, "window": window, "parts": False,
-                              "note": f"folded 90 degrees, cut {W - HINGE_CUT:g} in inside the right wall; hidden lines dashed", "path": os.path.join(OUT, "hinge_section.pdf")}))
+    # The same cut as a sheet with hidden lines (the lug's foot inside
+    # its box, panel A's lug where it passes behind), and the three
+    # lugs at the cut drawn by themselves beneath it, in the same pose.
+    print(mcp.call("export", {"tab": ramp, "format": "pdf", "sheet": "A3", "hidden": True, "window": window, "parts": False,
+                              "views": [f"section-side@{HINGE_CUT * IN}", "right of interior_lug_b1", "right of interior_lug_a2", "right of lug_stub_right"],
+                              "note": f"folded 90 degrees, cut through panel B's lug at {HINGE_CUT:g} in; hidden lines dashed; the lugs at the cut alone below",
+                              "path": os.path.join(OUT, "hinge_section.pdf")}))
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(0.0)}], ramp)
     # Sheets: each panel with a section across the width at mid-length
     # and one along the length through a lug; the ramp with balloons;
@@ -525,6 +634,28 @@ def main():
     positions = [{"fold": at(d), "label": f"{d:g} degrees" if d else "open"} for d in (0.0, 45.0, 90.0, 135.0, 180.0)]
     print(mcp.call("range_of_motion", {"tab": ramp, "positions": positions, "view": "right", "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "fold.pdf")}))
     mcp.call("range_of_motion", {"tab": ramp, "positions": positions, "view": "right", "width": 2000, "height": 500, "path": os.path.join(OUT, "fold.png")})
+    # Cut sheets: the plywood pieces, the real bodies, laid flat on a
+    # 4 x 8 with a kerf between, each sheet an assembly drawn from the
+    # top with its pieces numbered.
+    for name, stem, title, t, pieces in (("cut sheet, CDX", "cut_sheet_cdx", "sheet_cdx", SKIN, nest_cdx()),
+                                         ("cut sheet, birch", "cut_sheet_birch", "sheet_birch", BIRCH, nest_birch(reports))):
+        text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": name}]})
+        tab = int(re.search(r"tab (\d+)", text).group(1))
+        ops = instance_ops(tabs, bodies, [title], True)
+        for n, (part, k, x0, y0, lay) in enumerate(pieces):
+            ops.append({"type": "add_instance", "studio": tabs[part], "body": k, "name": f"{part} {k + 1} #{n + 1}", "fixed": True,
+                        "placement": placement_flat(reports[part][k], x0, y0, lay)})
+        apply(mcp, ops, tab)
+        r = json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))
+        for b in r["bodies"]:
+            if b["name"].startswith(title):
+                continue
+            lo, hi = b["bounds"]
+            assert -1e-6 <= lo["z"] and hi["z"] <= t * IN + 1e-6, f"{b['name']} is not flat on the sheet: z {lo['z']:.2f}..{hi['z']:.2f}"
+            assert -1e-6 <= lo["x"] and hi["x"] <= SHEET_L * IN + 1e-6 and -1e-6 <= lo["y"] and hi["y"] <= SHEET_W * IN + 1e-6, f"{b['name']} is off the sheet"
+        print(f"{name:<18} tab {tab:>2}: {len(pieces)} pieces")
+        print(mcp.call("export", {"tab": tab, "format": "pdf", "sheet": "A3", "views": ["top"], "hidden": False,
+                                  "note": f"4 x 8 of {t:g} in ply, 96 along x; {KERF:g} in kerf between pieces; numbered as listed", "path": os.path.join(OUT, f"{stem}.pdf")}))
     with open(os.path.join(OUT, "cutlist.csv"), "w") as f:
         f.write("item,size,qty,note\n")
         for item, size, qty, note in CUTLIST:
