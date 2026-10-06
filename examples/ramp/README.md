@@ -332,7 +332,9 @@ brief, this is why.
   axis) and `ramp_hinge_section` (folded to 90 degrees, cut between
   the right wall and the first interior lug and fitted to the hinge:
   the two panels' lugs passing each other on the pipe, each its full
-  length); `panel_a.pdf` and `panel_b.pdf` with a section across the
+  length) with `hinge_section.pdf` the same cut as a sheet, hidden
+  lines dashed, so each lug's foot shows inside its box and where one
+  panel's lug passes behind the other's; `panel_a.pdf` and `panel_b.pdf` with a section across the
   width at mid-length and one along the length through a lug;
   `ramp.pdf` with each panel as one item and the pipe as one;
   `stub.pdf`; `fold.pdf` and `fold.png` at 0, 45, 90, 135 and 180

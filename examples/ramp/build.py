@@ -504,6 +504,10 @@ def main():
     window = ",".join(f"{v * IN:g}" for v in (HINGE_CUT - 3.0, -4.0, -9.0, HINGE_CUT + 1.0, 10.5, 3.5))
     mcp.call("screenshot", {"tab": ramp, "view": "right", "section": f"x:{HINGE_CUT * IN}:flip", "fit": window, "width": 1400, "height": 1200,
                             "path": os.path.join(OUT, "ramp_hinge_section.png")})
+    # The same cut as a sheet with hidden lines: each lug's foot inside
+    # its box, and where one panel's lug passes behind the other's.
+    print(mcp.call("export", {"tab": ramp, "format": "pdf", "sheet": "A4", "views": [f"section-side@{HINGE_CUT * IN}"], "hidden": True, "window": window, "parts": False,
+                              "note": f"folded 90 degrees, cut {W - HINGE_CUT:g} in inside the right wall; hidden lines dashed", "path": os.path.join(OUT, "hinge_section.pdf")}))
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(0.0)}], ramp)
     # Sheets: each panel with a section across the width at mid-length
     # and one along the length through a lug; the ramp with balloons;
