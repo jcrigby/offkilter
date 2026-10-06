@@ -72,6 +72,7 @@ CAP_OD, CAP_L = 1.3, 1.0
 # Panel B's placement in the ramp: 180 degrees about z, moved W in x:
 # its x runs 21 to 0, its y 0 to -48.
 PLACE_B = ((W * IN, 0.0, 0.0), (0.0, 0.0, 180.0))
+HINGE_CUT = W - 1.0                # the hinge section: between the right wall and the first interior lug
 
 
 def mm(*v):
@@ -470,6 +471,14 @@ def main():
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(180.0)}], ramp)
     mcp.call("screenshot", {"tab": ramp, "view": "iso", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded.png")})
     mcp.call("screenshot", {"tab": ramp, "view": "right", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded_side.png")})
+    # The hinge at 90 degrees, cut between the right wall and the first
+    # interior lug (panel B's at 18-3/4, inside both panels' ribs at
+    # 19-1/2) and fitted to the lugs, not the panels: the two panels'
+    # lugs passing each other on the pipe, the full length of each.
+    apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(90.0)}], ramp)
+    window = ",".join(f"{v * IN:g}" for v in (HINGE_CUT - 3.0, -4.0, -9.0, HINGE_CUT + 1.0, 10.5, 3.5))
+    mcp.call("screenshot", {"tab": ramp, "view": "right", "section": f"x:{HINGE_CUT * IN}:flip", "fit": window, "width": 1400, "height": 1200,
+                            "path": os.path.join(OUT, "ramp_hinge_section.png")})
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(0.0)}], ramp)
     # Sheets: each panel with a section across the width at mid-length
     # and one along the length through a lug; the ramp with balloons;

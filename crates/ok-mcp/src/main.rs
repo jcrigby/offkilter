@@ -440,6 +440,9 @@ impl Backend {
                 if let Some(s) = &options.section {
                     query.push(format!("section={}", section_name(s)));
                 }
+                if let Some(f) = &options.fit {
+                    query.push(format!("fit={}", ok_render::fit_name(f)));
+                }
                 let (s, bytes) =
                     self.request_bytes(&format!("/docs/{id}/screenshot?{}", query.join("&")))?;
                 if (200..300).contains(&s) {
@@ -792,11 +795,15 @@ impl Server {
                     "" => None,
                     s => Some(ok_render::Section::parse(s)?),
                 },
+                fit: match text("fit") {
+                    "" => None,
+                    s => Some(ok_render::parse_fit(s)?),
+                },
                 ..ok_render::Options::default()
             };
             let png = self.backend.screenshot(&id, tab, &options)?;
             let mut caption = format!(
-                "{} view of the tab, {}x{}{}",
+                "{} view of the tab, {}x{}{}{}",
                 view_name(options.view),
                 options.width,
                 options.height,
@@ -804,6 +811,11 @@ impl Server {
                     .section
                     .as_ref()
                     .map(|s| format!(", sectioned at {}", section_name(s)))
+                    .unwrap_or_default(),
+                options
+                    .fit
+                    .as_ref()
+                    .map(|f| format!(", fitted to {}", ok_render::fit_name(f)))
                     .unwrap_or_default()
             );
             if let Some(path) = args.get("path").and_then(|p| p.as_str()) {
@@ -1834,8 +1846,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "screenshot",
-            "description": "A PNG of the tab's bodies from a standard view (top, front, right, iso) or an x,y,z eye direction, rendered without a browser; optionally sectioned by an axis-aligned plane (section 'z:10' keeps z >= 10, 'z:10:flip' the other side, cut faces hatched; the iso eye looks from +x,+y,+z, so a section at x:0 shows the kept half's outside and 'x:0:flip' its cut faces). Look at it after building something to check it is what was meant. width and height default to 640x480; path also writes the file.",
-            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "view": { "type": "string" }, "section": { "type": "string" }, "width": { "type": "integer" }, "height": { "type": "integer" }, "path": { "type": "string" } } }
+            "description": "A PNG of the tab's bodies from a standard view (top, front, right, iso) or an x,y,z eye direction, rendered without a browser; optionally sectioned by an axis-aligned plane (section 'z:10' keeps z >= 10, 'z:10:flip' the other side, cut faces hatched; the iso eye looks from +x,+y,+z, so a section at x:0 shows the kept half's outside and 'x:0:flip' its cut faces). fit 'x0,y0,z0,x1,y1,z1' (mm) fits the view to that box instead of to the bodies: a detail window on one corner of a large assembly, the rest running off the frame. Look at it after building something to check it is what was meant. width and height default to 640x480; path also writes the file.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "view": { "type": "string" }, "section": { "type": "string" }, "fit": { "type": "string" }, "width": { "type": "integer" }, "height": { "type": "integer" }, "path": { "type": "string" } } }
         },
         {
             "name": "import",
@@ -2016,6 +2028,21 @@ mod tests {
         assert_eq!(base64(&png), content[0]["data"].as_str().unwrap());
         let (err, text) = tool_text(&mut server, "screenshot", json!({ "view": "sideways" }));
         assert!(err && text.contains("unknown view"), "{text}");
+        let r = call(
+            &mut server,
+            8,
+            "tools/call",
+            json!({ "name": "screenshot", "arguments": { "view": "top", "fit": "0,0,0,5,5,5", "width": 32, "height": 32 } }),
+        );
+        assert!(
+            r["result"]["content"][1]["text"]
+                .as_str()
+                .unwrap()
+                .contains("fitted to 0,0,0,5,5,5"),
+            "{r}"
+        );
+        let (err, text) = tool_text(&mut server, "screenshot", json!({ "fit": "1,2" }));
+        assert!(err && text.contains("x0,y0,z0,x1,y1,z1"), "{text}");
         let step = dir.join("out.step");
         let (err, _) = tool_text(
             &mut server,

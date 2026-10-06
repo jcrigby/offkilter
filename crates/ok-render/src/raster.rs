@@ -135,30 +135,34 @@ struct Buffers {
 }
 
 pub(crate) fn render(items: &[Item], options: &Options) -> Image {
+    let item_points = || {
+        items.iter().flat_map(|it| {
+            it.mesh
+                .positions
+                .chunks_exact(3)
+                .chain(it.cap.positions.chunks_exact(3))
+                .map(|p| Vec3::new(p[0] as f64, p[1] as f64, p[2] as f64))
+        })
+    };
     let camera = match options.fit {
-        Some((lo, hi)) => Camera::new(
-            options,
-            (0..8)
-                .map(|k| {
+        Some((lo, hi)) => {
+            let mut camera = Camera::new(
+                options,
+                (0..8).map(|k| {
                     Vec3::new(
                         if k & 1 == 0 { lo.x } else { hi.x },
                         if k & 2 == 0 { lo.y } else { hi.y },
                         if k & 4 == 0 { lo.z } else { hi.z },
                     )
-                })
-                .collect::<Vec<_>>()
-                .into_iter(),
-        ),
-        None => Camera::new(
-            options,
-            items.iter().flat_map(|it| {
-                it.mesh
-                    .positions
-                    .chunks_exact(3)
-                    .chain(it.cap.positions.chunks_exact(3))
-                    .map(|p| Vec3::new(p[0] as f64, p[1] as f64, p[2] as f64))
-            }),
-        ),
+                }),
+            );
+            // The frame is the box's; the depth tolerances stay the
+            // scene's, so edges and silhouettes draw as they would unfitted.
+            let depth = Camera::new(options, item_points()).depth_range;
+            camera.depth_range = camera.depth_range.max(depth);
+            camera
+        }
+        None => Camera::new(options, item_points()),
     };
     let (w, h) = (options.width, options.height);
     let mut buf = Buffers {
