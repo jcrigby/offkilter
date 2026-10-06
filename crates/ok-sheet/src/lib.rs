@@ -79,7 +79,9 @@ pub struct Options {
     /// author); the kernel has no clock, so the caller supplies it.
     pub note: String,
     /// Balloons and a parts list; the balloons go on the isometric
-    /// view, or on the first standard view when there is none.
+    /// view, or, without one, on the sheet's only standard view (a cut
+    /// sheet seen from the top); a sheet of several views and no
+    /// isometric gets none, since an edge-on view would carry them.
     pub parts: bool,
     /// Hidden lines, dashed. Absent: on a sheet of one part, off on a
     /// sheet of several (an assembly), where they only clutter.
@@ -899,12 +901,16 @@ impl Sheet {
             }
             (lo, hi)
         };
-        let balloon_view = opts
+        let standard: Vec<&String> = opts
             .views
             .iter()
+            .filter(|v| standard_view(v).is_some())
+            .collect();
+        let balloon_view = standard
+            .iter()
             .find(|v| v.as_str() == "iso")
-            .or_else(|| opts.views.iter().find(|v| standard_view(v).is_some()))
-            .cloned()
+            .or_else(|| (standard.len() == 1).then(|| &standard[0]))
+            .map(|v| v.to_string())
             .unwrap_or_default();
         for name in &opts.views {
             // `<view> of <names>`: the bodies whose names contain one of
@@ -2305,10 +2311,13 @@ mod tests {
             right.b
         );
         assert_eq!(right.caption.as_deref(), Some("top · right"));
-        // Balloons: on the iso when there is one, else on the first view.
+        // Balloons: on the iso when there is one, else on a lone standard
+        // view; two standard views without an iso get none.
         assert!(sheet.placed[0].balloons.len() == 2 && sheet.placed[1].balloons.is_empty());
         let with_iso = layout(&["front", "iso"]).unwrap();
         assert!(with_iso.placed[0].balloons.is_empty() && with_iso.placed[1].balloons.len() == 2);
+        let two = layout(&["right", "front"]).unwrap();
+        assert!(two.placed.iter().all(|p| p.balloons.is_empty()));
         assert!(pdf::inflated(&sheet.to_pdf()).contains("(front \\267 LEFT BLOCK) Tj"));
         // Nothing of that name, or a section, is refused.
         let err = layout(&["front of middle"]).err().expect("refused");
