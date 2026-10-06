@@ -477,6 +477,10 @@ def main():
         mcp.call("screenshot", {"tab": ramp, "view": view, "width": 1600, "height": 1000, "path": os.path.join(OUT, f"{name}.png")})
     mcp.call("screenshot", {"tab": ramp, "view": "right", "section": f"x:{LUGS_A[0] * IN}:flip", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_lug_section.png")})
     mcp.call("screenshot", {"tab": ramp, "view": "-0.5,-0.6,-0.6", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_below.png")})
+    # The ground angle on panel B's end: the leg on the stubs' end faces
+    # with its screw holes, the lip out flush with their top.
+    window = ",".join(f"{v * IN:g}" for v in (-2.0, -L - 4.0, -1.0, W + 2.0, -L + 6.0, 3.0))
+    mcp.call("screenshot", {"tab": ramp, "view": "-0.5,-0.8,0.5", "fit": window, "width": 1400, "height": 900, "path": os.path.join(OUT, "ramp_angle.png")})
     for name, stem in (("panel A", "panel_a"), ("panel B", "panel_b")):
         mcp.call("screenshot", {"tab": panels[name], "view": "0.5,-0.7,-0.5", "width": 1600, "height": 1000, "path": os.path.join(OUT, f"{stem}_below.png")})
         # The box from below with the bottom skin cut away: the lug feet

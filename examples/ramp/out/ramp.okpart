@@ -9587,7 +9587,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 49.2125
+                "offset": 46.037499999999994
               },
               "sketch": {
                 "entities": [
@@ -9596,7 +9596,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1219.1999999999998
+                      "y": -1244.6
                     }
                   },
                   {
@@ -9604,7 +9604,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1219.1999999999998
+                      "y": -1244.6
                     }
                   },
                   {
@@ -9618,7 +9618,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1219.1999999999998
+                      "y": -1244.6
                     }
                   },
                   {
@@ -9626,7 +9626,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1193.8
+                      "y": -1219.1999999999998
                     }
                   },
                   {
@@ -9640,7 +9640,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1193.8
+                      "y": -1219.1999999999998
                     }
                   },
                   {
@@ -9648,7 +9648,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1193.8
+                      "y": -1219.1999999999998
                     }
                   },
                   {
@@ -9662,7 +9662,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1193.8
+                      "y": -1219.1999999999998
                     }
                   },
                   {
@@ -9670,7 +9670,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1219.1999999999998
+                      "y": -1244.6
                     }
                   },
                   {
@@ -9751,14 +9751,14 @@
           },
           {
             "id": 8,
-            "name": "leg",
+            "name": "leg down the end",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 26.987499999999997
+                "offset": 23.8125
               },
               "sketch": {
                 "entities": [
@@ -9904,7 +9904,7 @@
           },
           {
             "id": 9,
-            "name": "leg",
+            "name": "leg down the end",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -9919,9 +9919,76 @@
               },
               "op": "add"
             }
+          },
+          {
+            "id": 10,
+            "name": "screw holes",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 1231.9
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 53.974999999999994,
+                      "y": 41.592499999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 130.17499999999998,
+                      "y": 31.4325
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 403.225,
+                      "y": 41.592499999999994
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 479.4249999999999,
+                      "y": 31.4325
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 4,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "screw holes, #10",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 10,
+              "diameter": 4.762499999999999,
+              "depth": 25.4,
+              "through_all": false,
+              "direction": "reverse",
+              "counterbore": null,
+              "countersink": null
+            }
           }
         ],
-        "next_id": 10,
+        "next_id": 12,
         "settings": {
           "facet_angle": 5.0
         }

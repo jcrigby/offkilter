@@ -317,7 +317,8 @@ brief, this is why.
   shows it on the square end; with the bevel cut, that end face
   stands plumb on the ground and the lip lies flat on it.
 - **Outputs.** `out/ramp.okpart`; `ramp_iso`, `ramp_front`,
-  `ramp_side`, `ramp_below`, `ramp_folded`, `ramp_folded_side`,
+  `ramp_side`, `ramp_below`, `ramp_angle` (the ground angle on panel
+  B's end), `ramp_folded`, `ramp_folded_side`,
   `panel_a_below` and `panel_b_below` (lugs, notches, stubs),
   `panel_a_cutaway` and `panel_b_cutaway` (from below with the bottom
   skin cut away: the lug feet against their ribs, the joint block, the

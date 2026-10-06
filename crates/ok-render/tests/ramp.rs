@@ -125,6 +125,42 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     );
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
     assert_eq!(doc.assembly(ramp).unwrap().mates.len(), 1, "the fold");
+    // The ground angle hangs on panel B's end: one leg flat on the stubs'
+    // end faces, the other out past the end flush with the stubs' top,
+    // with a screw hole into each stub's end grain, two per stub.
+    let stubs = extent(&r, |b| b.name.starts_with("panel B / stub"));
+    let (lo, hi) = extent(&r, |b| b.name == "ground_angle");
+    assert!((stubs.0.y / IN + 48.0).abs() < 1e-6, "the stubs end at -48");
+    assert!(
+        (hi.y - stubs.0.y).abs() < 1e-6,
+        "the leg is on the end face"
+    );
+    assert!(
+        ((hi.y - lo.y) / IN - 1.0).abs() < 1e-6,
+        "the lip reaches 1 in out"
+    );
+    assert!((hi.z - stubs.1.z).abs() < 1e-6, "flush with the stubs' top");
+    assert!(
+        ((hi.z - lo.z) / IN - 1.0).abs() < 1e-6,
+        "the leg is 1 in down"
+    );
+    let angle = r.bodies.iter().find(|b| b.name == "ground_angle").unwrap();
+    let holes = cylinders(&angle.solid, 0.1875 / 2.0);
+    assert_eq!(holes.len(), 4, "four #10 holes");
+    for b in r
+        .bodies
+        .iter()
+        .filter(|b| b.name.starts_with("panel B / stub"))
+    {
+        let (slo, shi) = bounds(&b.solid);
+        let n = holes
+            .iter()
+            .filter(|(o, a)| {
+                a.y.abs() > 0.999 && o.x > slo.x && o.x < shi.x && o.z > slo.z && o.z < shi.z
+            })
+            .count();
+        assert_eq!(n, 2, "two screws into {}", b.name);
+    }
 }
 
 #[test]
