@@ -188,11 +188,12 @@ fn the_assembly_sheet_lists_every_part_once() {
     assert_eq!(distinct.len(), 13);
     let refs: Vec<ok_sheet::Part> = parts
         .iter()
-        .map(|(name, material, key, solids)| ok_sheet::Part {
+        .map(|(name, material, key, solids, names)| ok_sheet::Part {
             name: name.clone(),
             material: material.clone(),
             solids: solids.iter().collect(),
             key: *key,
+            names: names.clone(),
         })
         .collect();
     let opts = ok_sheet::Options {
@@ -232,11 +233,12 @@ fn the_assembly_sheet_lists_every_part_once() {
     assert_eq!(parts.len(), 6);
     let refs: Vec<ok_sheet::Part> = parts
         .iter()
-        .map(|(name, material, key, solids)| ok_sheet::Part {
+        .map(|(name, material, key, solids, names)| ok_sheet::Part {
             name: name.clone(),
             material: material.clone(),
             solids: solids.iter().collect(),
             key: *key,
+            names: names.clone(),
         })
         .collect();
     let sheet = ok_sheet::Sheet::layout(&refs, &ok_sheet::Options::default()).unwrap();
