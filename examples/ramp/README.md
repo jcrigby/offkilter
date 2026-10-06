@@ -62,7 +62,7 @@ pin in a single 3/4" ply lug was marginal; this is why the lugs are
 | rails and lugs | 3/4" birch plywood | ~1 sheet half | rails 4-3/8" tall; lug cheeks and interior lugs laminated to 1-1/2" |
 | rail spacer | 3/4" birch | 2 × 48" × 2-3/8" | under the "spaced" rail on each panel (§4) |
 | hinge pipe | 3/4" Sch 40 galvanized pipe, 1.05" OD, threaded both ends | 1 × ~26" | plus two 3/4" pipe caps |
-| ground edge | 1/8" × 1" aluminium angle | 2 × 21" | over the 30° bevel |
+| ground edge | 1/8" × 1" aluminium angle | 2 × 21" | one leg screwed to the stubs' end faces, the other out past the end as the lip (§8) |
 | end plates | existing Erickson-type 2x8 ramp end plates | 2 pr | tailgate end only; model as a ghost body |
 | adhesive | PL Premium (polyurethane construction adhesive) | | every rib and block face |
 | screws | 1" and 1-1/4" | | 1" through skins into 2x2s; longer only into 2x8 / 2x4 |
@@ -310,7 +310,12 @@ brief, this is why.
 - **Bevel and angle.** The stub's 30 degree bevel is a suppressed
   feature: on in `out/stub.pdf`, off in the ramp. The ground angle is
   a ramp-level part on panel B's end, the end plates ghosts on panel
-  A's stubs.
+  A's stubs. The angle's one leg lies flat against the stubs' end
+  faces and is screwed into their end grain (four #10 x 2, two per
+  stub, one high and one low); the other leg runs out past the end
+  flush with the stubs' top, the lip the wheel rolls off. The ramp
+  shows it on the square end; with the bevel cut, that end face
+  stands plumb on the ground and the lip lies flat on it.
 - **Outputs.** `out/ramp.okpart`; `ramp_iso`, `ramp_front`,
   `ramp_side`, `ramp_below`, `ramp_folded`, `ramp_folded_side`,
   `panel_a_below` and `panel_b_below` (lugs, notches, stubs),

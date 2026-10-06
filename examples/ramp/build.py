@@ -66,7 +66,8 @@ JOINT = 3.5                        # the 2x4 flat across the hinge end, between 
 STUB_W, STUB_L, STUB_Y0 = 7.25, 12.0, 36.0   # 2x8 flat at the free end, 12 long from y 36, bare past 45
 BEVEL = 30.0                       # degrees, on the ground end
 PLATE_L = 2.0                      # the end plates' ghost
-ANGLE_T, ANGLE_LEG = 0.125, 1.0    # the aluminium angle over the ground edge
+ANGLE_T, ANGLE_LEG = 0.125, 1.0    # the aluminium angle on the ground end
+ANGLE_SCREW_D, ANGLE_SCREW_Z = 0.1875, (0.3, 0.7)   # #10 clearance; the two rows below the stubs' top
 CAP_OD, CAP_L = 1.3, 1.0
 
 # Panel B's placement in the ramp: 180 degrees about z, moved W in x:
@@ -247,11 +248,23 @@ def end_plates(p):
 
 
 def ground_angle(p):
-    """1/8 x 1 aluminium angle over panel B's ground edge, at the ramp's
-    y = -48: a leg on the stubs' top and a leg down the end."""
+    """1/8 x 1 aluminium angle on panel B's ground end, at the ramp's
+    y = -48: one leg flat against the stubs' end faces, screwed into
+    their end grain, the other out past the end flush with the stubs'
+    top, the lip the wheel rolls off. With the bevel on, that end face
+    stands plumb and the lip lies on the ground."""
     y = -L
-    box(p, "ground angle, 1/8 x 1 aluminium x 21", (0.0, W), (y, y + ANGLE_LEG), (SKIN + RIB, SKIN + RIB + ANGLE_T))
-    box(p, "leg", (0.0, W), (y - ANGLE_T, y), (SKIN + RIB + ANGLE_T - ANGLE_LEG, SKIN + RIB + ANGLE_T), op="add")
+    top = SKIN + RIB
+    box(p, "ground angle, 1/8 x 1 aluminium x 21", (0.0, W), (y - ANGLE_LEG, y), (top - ANGLE_T, top))
+    box(p, "leg down the end", (0.0, W), (y - ANGLE_T, y), (top - ANGLE_LEG, top), op="add")
+    # Two screws per stub through the leg into the end grain, one high
+    # and one low, 3 in apart.
+    s = p.sketch("front", -(y - 0.5) * IN, "screw holes")
+    for x0 in (0.0, W - STUB_W):
+        xc = x0 + STUB_W / 2
+        for dx, dz in ((-1.5, ANGLE_SCREW_Z[0]), (1.5, ANGLE_SCREW_Z[1])):
+            p.point(s, mm(xc + dx, top - dz))
+    p.hole(s, ANGLE_SCREW_D * IN, depth=1.0 * IN, direction="reverse", name="screw holes, #10")
 
 
 SHARED = [("skin_top", skin_top), ("rib", ribs), ("cross_block", cross_blocks), ("joint_block", joint_block), ("stub", stubs)]
@@ -277,7 +290,8 @@ CUTLIST = [
     ("lug stub", f"3/4 birch, {TAPER:g} x {STUB_LAP + 2 * LUG_R:g}, lug profile", 2, "panel B, glued and brad-nailed to the outside of each rail over the lap"),
     ("interior lug", f"3/4 birch, {JOINT + LUG_IN:g} x {RIB + SKIN + 2 * LUG_R:g}, lug profile", 4, "two per panel; glued and brad-nailed through the face into the rib beside it and from the bottom skin into the foot"),
     ("hinge pipe", f"3/4 Sch 40 galvanized, {PIPE_X[1] - PIPE_X[0]:g}, threaded both ends", 1, "with two caps"),
-    ("ground angle", "1/8 x 1 aluminium angle x 21", 1, "over the bevel"),
+    ("ground angle", "1/8 x 1 aluminium angle x 21", 1, "one leg against the stubs' end faces, the other out past the end flush with their top"),
+    ("angle screw", "#10 x 2 pan head", 4, "through the angle's leg into each stub's end grain, two per stub, one high and one low"),
 ]
 
 
