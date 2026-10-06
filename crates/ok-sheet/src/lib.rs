@@ -66,8 +66,11 @@ pub struct Options {
     /// View names in `front`, `top`, `right`, `iso`, `section` (a cut
     /// parallel to the front view) and `section-side` (parallel to the
     /// right view), the two sections taking `@<mm>` for where the cut
-    /// goes (through the middle of the bodies otherwise); the layout
-    /// places the first three third-angle and the rest to the right.
+    /// goes (through the middle of the bodies otherwise), and
+    /// `<view> of <names>` (`right of lug`, `front of rib 1; rib 2`): a
+    /// standard view of only the bodies whose names contain one of the
+    /// `;`-separated texts, drawn alone and captioned; the layout places
+    /// the first three third-angle and the rest to the right or below.
     pub views: Vec<String>,
     pub sheet: SheetSize,
     /// The title block's first line.
@@ -75,7 +78,8 @@ pub struct Options {
     /// A second line for the title block's right half (a date, an
     /// author); the kernel has no clock, so the caller supplies it.
     pub note: String,
-    /// Balloons and a parts list.
+    /// Balloons and a parts list; the balloons go on the isometric
+    /// view, or on the first standard view when there is none.
     pub parts: bool,
     /// Hidden lines, dashed. Absent: on a sheet of one part, off on a
     /// sheet of several (an assembly), where they only clutter.
@@ -146,6 +150,10 @@ pub struct Part<'a> {
     pub material: String,
     pub solids: Vec<&'a Solid>,
     pub key: (u32, usize),
+    /// What each solid is called (a placed body's name, `sub / body` in
+    /// a sub-assembly), one per solid, for views of chosen bodies; empty
+    /// means they all go by the part's name.
+    pub names: Vec<String>,
 }
 
 /// Volume-weighted centroid of several solids (a balloon's anchor).
@@ -891,7 +899,72 @@ impl Sheet {
             }
             (lo, hi)
         };
+        let balloon_view = opts
+            .views
+            .iter()
+            .find(|v| v.as_str() == "iso")
+            .or_else(|| opts.views.iter().find(|v| standard_view(v).is_some()))
+            .cloned()
+            .unwrap_or_default();
         for name in &opts.views {
+            // `<view> of <names>`: the bodies whose names contain one of
+            // the `;`-separated texts, drawn alone and captioned.
+            if let Some((base, of)) = name.split_once(" of ") {
+                let (base, of) = (base.trim(), of.trim());
+                let Some(view) = standard_view(base) else {
+                    return Err(format!(
+                        "view {name:?}: a view of chosen bodies takes front, top, right or iso before \"of\""
+                    ));
+                };
+                let wanted: Vec<String> = of
+                    .split(';')
+                    .map(|t| t.trim().to_lowercase())
+                    .filter(|t| !t.is_empty())
+                    .collect();
+                if wanted.is_empty() {
+                    return Err(format!("view {name:?}: name the bodies after \"of\""));
+                }
+                let chosen: Vec<&Solid> = parts
+                    .iter()
+                    .flat_map(|p| {
+                        p.solids.iter().enumerate().map(move |(k, s)| {
+                            (p.names.get(k).unwrap_or(&p.name).to_lowercase(), *s)
+                        })
+                    })
+                    .filter(|(n, _)| wanted.iter().any(|w| n.contains(w.as_str())))
+                    .map(|(_, s)| s)
+                    .collect();
+                if chosen.is_empty() {
+                    let mut have: Vec<String> = parts
+                        .iter()
+                        .flat_map(|p| {
+                            (0..p.solids.len())
+                                .map(move |k| p.names.get(k).unwrap_or(&p.name).clone())
+                        })
+                        .collect();
+                    have.dedup();
+                    return Err(format!(
+                        "view {name:?}: no body is named like {of:?}; the bodies are {}",
+                        have.join(", ")
+                    ));
+                }
+                let lines = project_view(&chosen, view);
+                let b = bounds_of(&lines);
+                views.push(Placed {
+                    name: name.clone(),
+                    lines,
+                    callouts: Vec::new(),
+                    balloons: Vec::new(),
+                    cut: Vec::new(),
+                    section: None,
+                    caption: Some(format!("{base} · {of}")),
+                    window: None,
+                    dx: 0.0,
+                    dy: 0.0,
+                    b,
+                });
+                continue;
+            }
             if let Some(spec) = section_spec(name)? {
                 let at = spec.at.unwrap_or(match spec.axis {
                     'y' => (model_lo.y + model_hi.y) / 2.0,
@@ -978,7 +1051,7 @@ impl Sheet {
             }
             let Some(view) = standard_view(name) else {
                 return Err(format!(
-                    "unknown view {name:?}: use front, top, right, iso, section or section-side (the sections take @<mm> for the cut)"
+                    "unknown view {name:?}: use front, top, right, iso, section or section-side (the sections take @<mm> for the cut), or a view of chosen bodies, e.g. \"right of lug\""
                 ));
             };
             let lines = project_view(if name == "iso" { &iso_solids } else { &solids }, view);
@@ -1002,7 +1075,7 @@ impl Sheet {
                     .filter(|c| inside(c.centre))
                     .collect()
             };
-            let balloons = if name == "iso" {
+            let balloons = if *name == balloon_view {
                 let (u, v) = frame(view);
                 rows.iter()
                     .filter_map(|r| {
@@ -1621,7 +1694,7 @@ impl Sheet {
 
 /// A body for a sheet: name, material, the key grouping identical parts,
 /// and the solid.
-pub type PartRecord = (String, String, (u32, usize), Vec<Solid>);
+pub type PartRecord = (String, String, (u32, usize), Vec<Solid>, Vec<String>);
 
 /// The parts of a tab for a sheet: a part studio's bodies, or an
 /// assembly's placed bodies grouped by the part they are instances of.
@@ -1647,6 +1720,7 @@ pub fn parts_of(doc: &mut Document, tab: TabId) -> Result<Vec<PartRecord>, Strin
             if last == Some(*inst) {
                 if let Some(rec) = out.last_mut() {
                     rec.3.push(b.solid.clone());
+                    rec.4.push(b.name.clone());
                     if rec.1 != material {
                         rec.1.clear();
                     }
@@ -1660,7 +1734,13 @@ pub fn parts_of(doc: &mut Document, tab: TabId) -> Result<Vec<PartRecord>, Strin
             } else {
                 (i.studio.0, i.body)
             };
-            out.push((part_name(doc, key)?, material, key, vec![b.solid.clone()]));
+            out.push((
+                part_name(doc, key)?,
+                material,
+                key,
+                vec![b.solid.clone()],
+                vec![b.name.clone()],
+            ));
         }
         Ok(out)
     } else {
@@ -1679,6 +1759,7 @@ pub fn parts_of(doc: &mut Document, tab: TabId) -> Result<Vec<PartRecord>, Strin
                         .unwrap_or_default(),
                     (tab.0, k),
                     vec![b.solid.clone()],
+                    vec![b.name.clone()],
                 )
             })
             .collect())
@@ -1765,11 +1846,12 @@ pub fn drawing_pdf(doc: &mut Document, tab: TabId, opts: &Options) -> Result<Vec
     }
     let refs: Vec<Part> = parts
         .iter()
-        .map(|(name, material, key, solids)| Part {
+        .map(|(name, material, key, solids, names)| Part {
             name: name.clone(),
             material: material.clone(),
             solids: solids.iter().collect(),
             key: *key,
+            names: names.clone(),
         })
         .collect();
     Ok(Sheet::layout(&refs, &opts)?.to_pdf())
@@ -1844,6 +1926,7 @@ mod tests {
             material: String::new(),
             solids: vec![&solid],
             key: (1, 0),
+            names: Vec::new(),
         }];
         let sheet = Sheet::layout(&parts, &Options::default()).unwrap();
         assert_eq!(sheet.placed.len(), 4);
@@ -1883,6 +1966,7 @@ mod tests {
             material: String::new(),
             solids: vec![&big],
             key: (1, 0),
+            names: Vec::new(),
         }];
         let sheet = Sheet::layout(
             &parts,
@@ -1922,6 +2006,7 @@ mod tests {
             material: String::new(),
             solids: vec![&solid],
             key: (1, 0),
+            names: Vec::new(),
         }];
         let opts = Options {
             views: ["front", "top", "section@20", "section-side"]
@@ -2009,6 +2094,7 @@ mod tests {
             material: String::new(),
             solids: vec![&top],
             key: (1, 0),
+            names: Vec::new(),
         }];
         let sheet = Sheet::layout(
             &parts,
@@ -2101,6 +2187,7 @@ mod tests {
             material: String::new(),
             solids: vec![&solid],
             key: (1, 0),
+            names: Vec::new(),
         }];
         let section = |hidden: Option<bool>, window: Option<(Vec3, Vec3)>| {
             Sheet::layout(
@@ -2169,6 +2256,71 @@ mod tests {
     }
 
     #[test]
+    fn a_view_of_chosen_bodies_draws_them_alone_and_balloons_find_the_top_view() {
+        let a = block(10.0, 10.0, 10.0);
+        let b = block(10.0, 10.0, 10.0)
+            .transformed(&ok_brep::Transform::translation(Vec3::new(30.0, 0.0, 0.0)));
+        let parts = [
+            Part {
+                name: "Left".into(),
+                material: String::new(),
+                solids: vec![&a],
+                key: (1, 0),
+                names: vec!["Base / left block".into()],
+            },
+            Part {
+                name: "Right".into(),
+                material: String::new(),
+                solids: vec![&b],
+                key: (2, 0),
+                names: Vec::new(),
+            },
+        ];
+        let layout = |views: &[&str]| {
+            Sheet::layout(
+                &parts,
+                &Options {
+                    views: views.iter().map(|s| s.to_string()).collect(),
+                    ..Options::default()
+                },
+            )
+        };
+        // Both blocks span 40 from the front; "of" picks one by its body
+        // name or, with none, by the part's, and captions the view.
+        let sheet = layout(&["front", "front of LEFT BLOCK", "top of right"]).unwrap();
+        let whole = &sheet.placed[0];
+        assert!((whole.b.maxx - whole.b.minx - 40.0).abs() < 1e-9);
+        let left = &sheet.placed[1];
+        assert!(
+            (left.b.maxx - left.b.minx - 10.0).abs() < 1e-9,
+            "{:?}",
+            left.b
+        );
+        assert!(left.b.minx.abs() < 1e-9, "the left block, at the origin");
+        assert_eq!(left.caption.as_deref(), Some("front · LEFT BLOCK"));
+        let right = &sheet.placed[2];
+        assert!(
+            (right.b.minx - 30.0).abs() < 1e-9,
+            "the right block, {:?}",
+            right.b
+        );
+        assert_eq!(right.caption.as_deref(), Some("top · right"));
+        // Balloons: on the iso when there is one, else on the first view.
+        assert!(sheet.placed[0].balloons.len() == 2 && sheet.placed[1].balloons.is_empty());
+        let with_iso = layout(&["front", "iso"]).unwrap();
+        assert!(with_iso.placed[0].balloons.is_empty() && with_iso.placed[1].balloons.len() == 2);
+        assert!(pdf::inflated(&sheet.to_pdf()).contains("(front \\267 LEFT BLOCK) Tj"));
+        // Nothing of that name, or a section, is refused.
+        let err = layout(&["front of middle"]).err().expect("refused");
+        assert!(
+            err.contains("no body is named like \"middle\"") && err.contains("Base / left block"),
+            "{err}"
+        );
+        let err = layout(&["section of left"]).err().expect("refused");
+        assert!(err.contains("front, top, right or iso"), "{err}");
+    }
+
+    #[test]
     fn captioned_views_go_in_a_row_with_their_captions_under_them() {
         // A block at three "positions": the same view three times, as a
         // range-of-motion sheet would give it.
@@ -2210,12 +2362,14 @@ mod tests {
                 material: String::new(),
                 solids: vec![&a],
                 key: (1, 0),
+                names: Vec::new(),
             },
             Part {
                 name: "Right".into(),
                 material: String::new(),
                 solids: vec![&b],
                 key: (2, 0),
+                names: Vec::new(),
             },
         ];
         let stacked = Sheet::layout(&parts, &Options::default()).unwrap();
@@ -2273,18 +2427,21 @@ mod tests {
                 material: "Maple".into(),
                 solids: vec![&plate],
                 key: (2, 0),
+                names: Vec::new(),
             },
             Part {
                 name: "Peg".into(),
                 material: String::new(),
                 solids: vec![&peg],
                 key: (3, 0),
+                names: Vec::new(),
             },
             Part {
                 name: "Peg".into(),
                 material: String::new(),
                 solids: vec![&peg2],
                 key: (3, 0),
+                names: Vec::new(),
             },
         ];
         let sheet = Sheet::layout(&parts, &Options::default()).unwrap();
@@ -2433,11 +2590,12 @@ mod tests {
         assert_eq!(parts[2].3.len(), 1);
         let refs: Vec<Part> = parts
             .iter()
-            .map(|(name, material, key, solids)| Part {
+            .map(|(name, material, key, solids, names)| Part {
                 name: name.clone(),
                 material: material.clone(),
                 solids: solids.iter().collect(),
                 key: *key,
+                names: names.clone(),
             })
             .collect();
         let sheet = Sheet::layout(&refs, &Options::default()).unwrap();
@@ -2502,6 +2660,7 @@ mod tests {
                 material: String::new(),
                 solids: vec![s],
                 key: (1, k),
+                names: Vec::new(),
             })
             .collect();
         let opts = Options {
