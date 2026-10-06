@@ -58,11 +58,11 @@ pin in a single 3/4" ply lug was marginal; this is why the lugs are
 | ribs | 2x2 (actual 1.5" × 1.5") SPF, or 2x4 ripped in half | ~5 × 8 ft | pick straight, dry |
 | cross blocks | same 2x2 | from above | cut to fit between ribs |
 | joint blocking | 2x4 flat (1.5" thick × 3.5" wide) | 2 × 21" | one per panel, across the hinge end, inside the skins |
-| tailgate stubs | 2x8 (1.5" × 7.25") | 2 × 12" per panel | outer rib positions at the tailgate end; run 3" past the skins, bare, for the end plates |
+| stubs | 2x8 (1.5" × 7.25") | 2 × 12" (tailgate panel), 2 × 9" (ground panel) | outer rib positions at the free end; the tailgate panel's run 3" past the skins, bare, for the end plates; the ground panel's stop flush with the skins (§8) |
 | rails and lugs | 3/4" birch plywood | ~1 sheet half | rails 4-3/8" tall; lug cheeks and interior lugs laminated to 1-1/2" |
 | rail spacer | 3/4" birch | 2 × 48" × 2-3/8" | under the "spaced" rail on each panel (§4) |
 | hinge pipe | 3/4" Sch 40 galvanized pipe, 1.05" OD, threaded both ends | 1 × ~26" | plus two 3/4" pipe caps |
-| ground edge | 1/8" × 1" aluminium angle | 2 × 21" | one leg screwed to the stubs' end faces, the other out past the end as the lip (§8) |
+| ground edge | 1/8" × 1-1/2" aluminium angle | 1 × 21" | one leg screwed to the ground panel's flush end, the other out past it as the lip (§8) |
 | end plates | existing Erickson-type 2x8 ramp end plates | 2 pr | tailgate end only; model as a ghost body |
 | adhesive | PL Premium (polyurethane construction adhesive) | | every rib and block face |
 | screws | 1" and 1-1/4" | | 1" through skins into 2x2s; longer only into 2x8 / 2x4 |
@@ -289,10 +289,13 @@ brief, this is why.
   rail taper 8 in long.
 - **Parts.** One studio per part, in inches through `IN = 25.4`, every
   part built in place in the panel's frame; the skins, ribs, cross
-  blocks, joint block and stubs are shared by both panels, the bottom
-  skin's notches excepted. The rails with lugs, the stubs and the
-  interior lugs are a studio each because a kernel `add` joins every
-  body in the studio and each needs a half-round added to its profile.
+  blocks and joint block are shared by both panels, the bottom skin's
+  notches excepted. The stubs differ: panel A's run 3 in bare past
+  the skins for the end plates, panel B's stop flush with the skins'
+  end at 45 and carry the bevel feature. The rails with lugs, the lug
+  stubs and the interior lugs are a studio each because a kernel
+  `add` joins every body in the studio and each needs a half-round
+  added to its profile.
 - **Panels and ramp.** `panel A` and `panel B` are assemblies of fixed
   instances; the ramp places B turned 180 degrees about z and moved
   21 in x. Fixed placement rather than fastened mates, since a panel
@@ -307,15 +310,18 @@ brief, this is why.
   document variables; the skin and rib extrude depths are bound to the
   first two. The rest live in sketched profiles, which this script
   redraws from the constants at the top.
-- **Bevel and angle.** The stub's 30 degree bevel is a suppressed
-  feature: on in `out/stub.pdf`, off in the ramp. The ground angle is
-  a ramp-level part on panel B's end, the end plates ghosts on panel
-  A's stubs. The angle's one leg lies flat against the stubs' end
-  faces and is screwed into their end grain (four #10 x 2, two per
-  stub, one high and one low); the other leg runs out past the end
-  flush with the stubs' top, the lip the wheel rolls off. The ramp
-  shows it on the square end; with the bevel cut, that end face
-  stands plumb on the ground and the lip lies flat on it.
+- **Bevel and angle.** The ground stub's 30 degree bevel is a
+  suppressed feature: on in `out/stub.pdf`, off in the ramp. The
+  ground angle, 1/8 x 1-1/2, is a ramp-level part on panel B's flush
+  end, the end plates ghosts on panel A's bare stubs. The angle's one
+  leg lies flat against the end face (the skins' edges and the stubs'
+  ends) and is screwed into the stubs' end grain, four #10 x 2, two
+  per stub, one high and one low, both rows below the top skin, which
+  is why the leg is 1-1/2 rather than the 1 the brief had; the other
+  leg runs out past the end flush with the top skin, the lip the
+  wheel rolls off. The ramp shows it on the square end; with the bevel
+  cut across the whole end, that face stands plumb on the ground and
+  the lip lies flat on it.
 - **Outputs.** `out/ramp.okpart`; `ramp_iso`, `ramp_front`,
   `ramp_side`, `ramp_below`, `ramp_angle` (the ground angle on panel
   B's end), `ramp_folded`, `ramp_folded_side`,

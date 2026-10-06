@@ -42,7 +42,7 @@ SKIN = 0.4375                      # 15/32 CDX
 RIB = 1.5                          # the box's core, and the ribs' height: the box is SKIN + RIB + SKIN
 RIB_W = 0.75                       # the ribs and cross blocks: strips ripped from the 3/4 birch, on edge
 BOX = 2 * SKIN + RIB               # 2.375
-SKIN_END = 45.0                    # the skins stop here; the stubs run bare to 48
+SKIN_END = 45.0                    # the skins stop here; panel A's stubs run bare to 48, panel B's stop flush
 CURB = 1.0                         # the rails stand this much above the deck
 PIN_DROP = 1.5                     # pipe centre below the bottom skin: lever arm against hang, and the most the lugs' radius can be
 PIPE_OD, PIPE_ID = 1.05, 0.824     # 3/4 Sch 40
@@ -63,11 +63,11 @@ NOTCH_L = 3.0                      # the bottom skin's notch, where the lug pass
 STUB_LAP = 2.5                     # panel B's lug stub laps the rail's outside face this far up
 CROSS_Y = (16.0, 32.0)             # cross block rows
 JOINT = 3.5                        # the 2x4 flat across the hinge end, between the skins
-STUB_W, STUB_L, STUB_Y0 = 7.25, 12.0, 36.0   # 2x8 flat at the free end, 12 long from y 36, bare past 45
+STUB_W, STUB_L, STUB_Y0 = 7.25, 12.0, 36.0   # 2x8 flat at the free end from y 36: 12 long on panel A, bare past 45; 9 on panel B, flush
 BEVEL = 30.0                       # degrees, on the ground end
 PLATE_L = 2.0                      # the end plates' ghost
-ANGLE_T, ANGLE_LEG = 0.125, 1.0    # the aluminium angle on the ground end
-ANGLE_SCREW_D, ANGLE_SCREW_Z = 0.1875, (0.3, 0.7)   # #10 clearance; the two rows below the stubs' top
+ANGLE_T, ANGLE_LEG = 0.125, 1.5    # the aluminium angle on the ground end: 1-1/2 legs, so both screw rows clear the top skin
+ANGLE_SCREW_D, ANGLE_SCREW_Z = 0.1875, (0.65, 1.25)   # #10 clearance; the two rows below the top, both in the stubs' end grain
 CAP_OD, CAP_L = 1.3, 1.0
 
 # Panel B's placement in the ramp: 180 degrees about z, moved W in x:
@@ -152,18 +152,23 @@ def joint_block(p):
     box(p, "joint block, 2x4 flat x 21", (0.0, W), (0.0, JOINT), (SKIN, SKIN + RIB))
 
 
-def stubs(p):
-    """2x8 flat at the free end's outer positions, 3 in bare past the
-    skins for the end plates or the ground bevel. The bevel is a
-    suppressed feature: on in the stub's own sheet, off in the ramp,
-    where only panel B's end meets the ground."""
-    for x0 in (0.0, W - STUB_W):
-        box(p, "tailgate stub, 2x8 flat x 12", (x0, x0 + STUB_W), (STUB_Y0, L), (SKIN, SKIN + RIB), op="new")
-    back = RIB * math.tan(math.radians(BEVEL))
-    s = p.sketch("right", -1.0 * IN, "bevel")
-    p.polygon(s, [mm(L - back, SKIN + RIB), mm(L + 0.1, SKIN + RIB), mm(L + 0.1, SKIN)])
-    f = p.cut(s, (W + 2.0) * IN, direction="normal", name=f"ground bevel, {BEVEL:g} degrees")
-    p.apply({"type": "set_suppressed", "id": f, "suppressed": True})
+def stubs(end):
+    """2x8 flat at the free end's outer positions: panel A's run 3 in
+    bare past the skins for the end plates; panel B's stop flush with
+    the skins' end, where the angle goes. The ground bevel is a
+    suppressed feature on panel B's: on in the stub's own sheet, off in
+    the ramp."""
+    def build(p):
+        name = "tailgate stub" if end > SKIN_END else "ground stub"
+        for x0 in (0.0, W - STUB_W):
+            box(p, f"{name}, 2x8 flat x {end - STUB_Y0:g}", (x0, x0 + STUB_W), (STUB_Y0, end), (SKIN, SKIN + RIB), op="new")
+        if end <= SKIN_END:
+            back = RIB * math.tan(math.radians(BEVEL))
+            s = p.sketch("right", -1.0 * IN, "bevel")
+            p.polygon(s, [mm(end - back, SKIN + RIB), mm(end + 0.1, SKIN + RIB), mm(end + 0.1, SKIN)])
+            f = p.cut(s, (W + 2.0) * IN, direction="normal", name=f"ground bevel, {BEVEL:g} degrees")
+            p.apply({"type": "set_suppressed", "id": f, "suppressed": True})
+    return build
 
 
 # -- the hinge: panel A's rails with lugs, panel B's plain rails and stubs
@@ -248,17 +253,18 @@ def end_plates(p):
 
 
 def ground_angle(p):
-    """1/8 x 1 aluminium angle on panel B's ground end, at the ramp's
-    y = -48: one leg flat against the stubs' end faces, screwed into
-    their end grain, the other out past the end flush with the stubs'
-    top, the lip the wheel rolls off. With the bevel on, that end face
-    stands plumb and the lip lies on the ground."""
-    y = -L
-    top = SKIN + RIB
-    box(p, "ground angle, 1/8 x 1 aluminium x 21", (0.0, W), (y - ANGLE_LEG, y), (top - ANGLE_T, top))
+    """1/8 x 1-1/2 aluminium angle on panel B's ground end, at the
+    ramp's y = -45, where the stubs stop flush with the skins: one leg
+    flat against the end face, screwed into the stubs' end grain, the
+    other out past the end flush with the top skin, the lip the wheel
+    rolls off. With the bevel on, that end face stands plumb and the
+    lip lies on the ground."""
+    y = -SKIN_END
+    top = BOX
+    box(p, "ground angle, 1/8 x 1-1/2 aluminium x 21", (0.0, W), (y - ANGLE_LEG, y), (top - ANGLE_T, top))
     box(p, "leg down the end", (0.0, W), (y - ANGLE_T, y), (top - ANGLE_LEG, top), op="add")
     # Two screws per stub through the leg into the end grain, one high
-    # and one low, 3 in apart.
+    # and one low (both below the top skin), 3 in apart.
     s = p.sketch("front", -(y - 0.5) * IN, "screw holes")
     for x0 in (0.0, W - STUB_W):
         xc = x0 + STUB_W / 2
@@ -267,11 +273,11 @@ def ground_angle(p):
     p.hole(s, ANGLE_SCREW_D * IN, depth=1.0 * IN, direction="reverse", name="screw holes, #10")
 
 
-SHARED = [("skin_top", skin_top), ("rib", ribs), ("cross_block", cross_blocks), ("joint_block", joint_block), ("stub", stubs)]
-PANEL_A = [("skin_bottom_a", skin_bottom(LUGS_A)), ("rail_lug_left", rail_with_lug(-BIRCH)), ("rail_lug_right", rail_with_lug(W)),
+SHARED = [("skin_top", skin_top), ("rib", ribs), ("cross_block", cross_blocks), ("joint_block", joint_block)]
+PANEL_A = [("stub", stubs(L)), ("skin_bottom_a", skin_bottom(LUGS_A)), ("rail_lug_left", rail_with_lug(-BIRCH)), ("rail_lug_right", rail_with_lug(W)),
            ("interior_lug_a1", interior_lug(LUGS_A[0])), ("interior_lug_a2", interior_lug(LUGS_A[1]))]
-PANEL_B = [("skin_bottom_b", skin_bottom(LUGS_B)), ("rail_plain", rails_plain), ("lug_stub_left", lug_stub(-2 * BIRCH)), ("lug_stub_right", lug_stub(W + BIRCH)),
-           ("interior_lug_b1", interior_lug(LUGS_B[0])), ("interior_lug_b2", interior_lug(LUGS_B[1]))]
+PANEL_B = [("stub_ground", stubs(SKIN_END)), ("skin_bottom_b", skin_bottom(LUGS_B)), ("rail_plain", rails_plain), ("lug_stub_left", lug_stub(-2 * BIRCH)),
+           ("lug_stub_right", lug_stub(W + BIRCH)), ("interior_lug_b1", interior_lug(LUGS_B[0])), ("interior_lug_b2", interior_lug(LUGS_B[1]))]
 RAMP_PARTS = [("pipe", pipe), ("pipe_cap", pipe_caps), ("end_plate", end_plates), ("ground_angle", ground_angle)]
 
 # The cut list: what to cut, in inches, per the shop's stock.
@@ -284,13 +290,14 @@ CUTLIST = [
     ("cross block", "3/4 birch strip, 1-1/2 x 2.25", 4, "between the ribs at 10.5 and 13.5"),
     ("cross block", "3/4 birch strip, 1-1/2 x 5.25", 4, "between the ribs at 13.5 and 19.5"),
     ("joint block", "2x4 flat x 21", 2, "lumber: the lugs bear on it"),
-    ("stub", "2x8 x 12", 4, "lumber: the end plates clamp 1-1/2 x 7-1/4; 3 in bare past the skins"),
+    ("tailgate stub", "2x8 x 12", 2, "panel A, lumber: the end plates clamp 1-1/2 x 7-1/4; 3 in bare past the skins"),
+    ("ground stub", f"2x8 x {SKIN_END - STUB_Y0:g}", 2, "panel B, lumber: flush with the skins' end; the 30 degree bevel is cut across the whole end"),
     ("rail with lug", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g} with the lug profile, {TAPER:g} x {2 * LUG_R:g} below", 2, "panel A, flush both sides"),
     ("rail", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g}", 2, "panel B, flush both sides"),
     ("lug stub", f"3/4 birch, {TAPER:g} x {STUB_LAP + 2 * LUG_R:g}, lug profile", 2, "panel B, glued and brad-nailed to the outside of each rail over the lap"),
     ("interior lug", f"3/4 birch, {JOINT + LUG_IN:g} x {RIB + SKIN + 2 * LUG_R:g}, lug profile", 4, "two per panel; glued and brad-nailed through the face into the rib beside it and from the bottom skin into the foot"),
     ("hinge pipe", f"3/4 Sch 40 galvanized, {PIPE_X[1] - PIPE_X[0]:g}, threaded both ends", 1, "with two caps"),
-    ("ground angle", "1/8 x 1 aluminium angle x 21", 1, "one leg against the stubs' end faces, the other out past the end flush with their top"),
+    ("ground angle", "1/8 x 1-1/2 aluminium angle x 21", 1, "one leg against panel B's flush end, the other out past it flush with the top skin"),
     ("angle screw", "#10 x 2 pan head", 4, "through the angle's leg into each stub's end grain, two per stub, one high and one low"),
 ]
 
@@ -479,7 +486,7 @@ def main():
     mcp.call("screenshot", {"tab": ramp, "view": "-0.5,-0.6,-0.6", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_below.png")})
     # The ground angle on panel B's end: the leg on the stubs' end faces
     # with its screw holes, the lip out flush with their top.
-    window = ",".join(f"{v * IN:g}" for v in (-2.0, -L - 4.0, -1.0, W + 2.0, -L + 6.0, 3.0))
+    window = ",".join(f"{v * IN:g}" for v in (-2.0, -SKIN_END - 4.0, -1.0, W + 2.0, -SKIN_END + 6.0, 3.0))
     mcp.call("screenshot", {"tab": ramp, "view": "-0.5,-0.8,0.5", "fit": window, "width": 1400, "height": 900, "path": os.path.join(OUT, "ramp_angle.png")})
     for name, stem in (("panel A", "panel_a"), ("panel B", "panel_b")):
         mcp.call("screenshot", {"tab": panels[name], "view": "0.5,-0.7,-0.5", "width": 1600, "height": 1000, "path": os.path.join(OUT, f"{stem}_below.png")})
@@ -500,16 +507,16 @@ def main():
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(0.0)}], ramp)
     # Sheets: each panel with a section across the width at mid-length
     # and one along the length through a lug; the ramp with balloons;
-    # the stub with its bevel on.
+    # the ground stub with its bevel on.
     for name, stem, lug in (("panel A", "panel_a", LUGS_A[0]), ("panel B", "panel_b", LUGS_B[0])):
         print(mcp.call("export", {"tab": panels[name], "format": "pdf", "sheet": "A3", "views": ["front", "top", "right", f"section@{SKIN_END / 2 * IN}", f"section-side@{lug * IN}"],
                                   "note": f"{name}: 21 x 48 x 2-3/8 torsion box, rails and lugs 3/4 birch", "path": os.path.join(OUT, f"{stem}.pdf")}))
     print(mcp.call("export", {"tab": ramp, "format": "pdf", "sheet": "A3", "note": "two panels on the pipe, open; the pipe pulls to separate them", "path": os.path.join(OUT, "ramp.pdf")}))
-    stub_report = json.loads(mcp.call("report", {"tab": tabs["stub"], "detail": "full"}))
+    stub_report = json.loads(mcp.call("report", {"tab": tabs["stub_ground"], "detail": "full"}))
     bevel = next(f["id"] for f in stub_report["features"] if f["name"].startswith("ground bevel"))
-    apply(mcp, [{"type": "set_suppressed", "id": bevel, "suppressed": False}], tabs["stub"])
-    print(mcp.call("export", {"tab": tabs["stub"], "format": "pdf", "sheet": "A4", "note": "the ground panel's stubs, beveled 30 degrees", "path": os.path.join(OUT, "stub.pdf")}))
-    apply(mcp, [{"type": "set_suppressed", "id": bevel, "suppressed": True}], tabs["stub"])
+    apply(mcp, [{"type": "set_suppressed", "id": bevel, "suppressed": False}], tabs["stub_ground"])
+    print(mcp.call("export", {"tab": tabs["stub_ground"], "format": "pdf", "sheet": "A4", "note": "the ground panel's stubs, flush with the skins, beveled 30 degrees", "path": os.path.join(OUT, "stub.pdf")}))
+    apply(mcp, [{"type": "set_suppressed", "id": bevel, "suppressed": True}], tabs["stub_ground"])
     # The fold from the side, 0 to 180 degrees.
     positions = [{"fold": at(d), "label": f"{d:g} degrees" if d else "open"} for d in (0.0, 45.0, 90.0, 135.0, 180.0)]
     print(mcp.call("range_of_motion", {"tab": ramp, "positions": positions, "view": "right", "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "fold.pdf")}))

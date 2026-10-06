@@ -107,7 +107,7 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     }
     assert_eq!(
         bodies,
-        17 + 5 + 7 + 6,
+        15 + 7 + 9 + 6,
         "shared, panel A, panel B and ramp parts"
     );
     for (name, want) in [("panel A", 22), ("panel B", 24)] {
@@ -125,24 +125,37 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     );
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
     assert_eq!(doc.assembly(ramp).unwrap().mates.len(), 1, "the fold");
-    // The ground angle hangs on panel B's end: one leg flat on the stubs'
-    // end faces, the other out past the end flush with the stubs' top,
-    // with a screw hole into each stub's end grain, two per stub.
+    // Panel B's stubs stop flush with its skins at 45; panel A's run
+    // bare to 48 for the end plates.
     let stubs = extent(&r, |b| b.name.starts_with("panel B / stub"));
+    let skins = extent(&r, |b| b.name.starts_with("panel B / skin"));
+    assert!(
+        (stubs.0.y / IN + 45.0).abs() < 1e-6,
+        "panel B's stubs end at -45"
+    );
+    assert!((stubs.0.y - skins.0.y).abs() < 1e-6, "flush with the skins");
+    let a_stubs = extent(&r, |b| b.name.starts_with("panel A / stub"));
+    assert!(
+        (a_stubs.1.y / IN - 48.0).abs() < 1e-6,
+        "panel A's stubs run to 48"
+    );
+    // The ground angle hangs on that flush end: one leg flat on the end
+    // face, the other out past it flush with the top skin, with a screw
+    // hole into each stub's end grain, two per stub, both below the
+    // top skin.
     let (lo, hi) = extent(&r, |b| b.name == "ground_angle");
-    assert!((stubs.0.y / IN + 48.0).abs() < 1e-6, "the stubs end at -48");
     assert!(
         (hi.y - stubs.0.y).abs() < 1e-6,
         "the leg is on the end face"
     );
     assert!(
-        ((hi.y - lo.y) / IN - 1.0).abs() < 1e-6,
-        "the lip reaches 1 in out"
+        ((hi.y - lo.y) / IN - 1.5).abs() < 1e-6,
+        "the lip reaches 1.5 in out"
     );
-    assert!((hi.z - stubs.1.z).abs() < 1e-6, "flush with the stubs' top");
+    assert!((hi.z - skins.1.z).abs() < 1e-6, "flush with the top skin");
     assert!(
-        ((hi.z - lo.z) / IN - 1.0).abs() < 1e-6,
-        "the leg is 1 in down"
+        ((hi.z - lo.z) / IN - 1.5).abs() < 1e-6,
+        "the leg is 1.5 in down"
     );
     let angle = r.bodies.iter().find(|b| b.name == "ground_angle").unwrap();
     let holes = cylinders(&angle.solid, 0.1875 / 2.0);
@@ -279,7 +292,8 @@ fn the_fold_clears_itself_and_the_packages_measure_up() {
     let fold = asm.mates.iter().find(|m| m.name == "fold").unwrap();
     let (id, angle0, offset) = (fold.id, fold.angle, fold.offset);
     let r0 = doc.regenerate_assembly(ramp).unwrap();
-    // Open: 96 by 24 over the rails, decks coplanar, joint faces touching.
+    // Open: 93 long (panel A's bare stubs to 48, panel B flush at 45),
+    // 24 over the rails, decks coplanar, joint faces touching.
     let (lo, hi) = extent(&r0, |b| {
         !b.name.contains("end_plate") && !b.name.contains("ground_angle")
     });
@@ -289,7 +303,10 @@ fn the_fold_clears_itself_and_the_packages_measure_up() {
         (hi.y - lo.y) / IN,
         (hi.z - lo.z) / IN
     );
-    assert!(((hi.y - lo.y) / IN - 96.0).abs() < 1e-6);
+    assert!(
+        ((hi.y - lo.y) / IN - 93.0).abs() < 1e-6,
+        "48 and 45 from the joint"
+    );
     let rails = extent(&r0, |b| b.name.contains("/ rail"));
     assert!(
         ((rails.1.x - rails.0.x) / IN - 22.5).abs() < 1e-6,

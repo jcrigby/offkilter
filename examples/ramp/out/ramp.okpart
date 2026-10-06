@@ -3221,113 +3221,9 @@
               },
               "op": "new"
             }
-          },
-          {
-            "id": 10,
-            "name": "bevel",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -25.4
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 1197.2029547438751,
-                      "y": 49.2125
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 1221.74,
-                      "y": 49.2125
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 1221.74,
-                      "y": 49.2125
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 1221.74,
-                      "y": 11.1125
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 1221.74,
-                      "y": 11.1125
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 1197.2029547438751,
-                      "y": 49.2125
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 9,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 11,
-            "name": "ground bevel, 30 degrees",
-            "suppressed": true,
-            "kind": {
-              "type": "extrude",
-              "sketch": 10,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 584.1999999999999,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
           }
         ],
-        "next_id": 12,
+        "next_id": 10,
         "settings": {
           "facet_angle": 5.0
         }
@@ -5715,6 +5611,515 @@
       "id": 11,
       "kind": {
         "type": "part_studio",
+        "name": "stub_ground",
+        "features": [
+          {
+            "id": 1,
+            "name": "#skin",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "skin",
+              "expression": "11.1125"
+            }
+          },
+          {
+            "id": 2,
+            "name": "#rib",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "rib",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 3,
+            "name": "#curb",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "curb",
+              "expression": "25.4"
+            }
+          },
+          {
+            "id": 4,
+            "name": "#pin_drop",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "pin_drop",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 5,
+            "name": "#lug_r",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "lug_r",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 6,
+            "name": "ground stub, 2x8 flat x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 11.1125
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "ground stub, 2x8 flat x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 6,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 38.099999999999994,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 8,
+            "name": "ground stub, 2x8 flat x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 11.1125
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 349.25,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 533.4,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 533.4,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 533.4,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 533.4,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 349.25,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 349.25,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 349.25,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "ground stub, 2x8 flat x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 8,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 38.099999999999994,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 10,
+            "name": "bevel",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -25.4
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 1121.002954743875,
+                      "y": 49.2125
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 1145.54,
+                      "y": 49.2125
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 1145.54,
+                      "y": 49.2125
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 1145.54,
+                      "y": 11.1125
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 1145.54,
+                      "y": 11.1125
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 1121.002954743875,
+                      "y": 49.2125
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 9,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "ground bevel, 30 degrees",
+            "suppressed": true,
+            "kind": {
+              "type": "extrude",
+              "sketch": 10,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 584.1999999999999,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          }
+        ],
+        "next_id": 12,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 12,
+      "kind": {
+        "type": "part_studio",
         "name": "skin_bottom_b",
         "features": [
           {
@@ -6226,7 +6631,7 @@
       }
     },
     {
-      "id": 12,
+      "id": 13,
       "kind": {
         "type": "part_studio",
         "name": "rail_plain",
@@ -6631,7 +7036,7 @@
       }
     },
     {
-      "id": 13,
+      "id": 14,
       "kind": {
         "type": "part_studio",
         "name": "lug_stub_left",
@@ -6915,7 +7320,7 @@
       }
     },
     {
-      "id": 14,
+      "id": 15,
       "kind": {
         "type": "part_studio",
         "name": "lug_stub_right",
@@ -7199,7 +7604,7 @@
       }
     },
     {
-      "id": 15,
+      "id": 16,
       "kind": {
         "type": "part_studio",
         "name": "interior_lug_b1",
@@ -7825,7 +8230,7 @@
       }
     },
     {
-      "id": 16,
+      "id": 17,
       "kind": {
         "type": "part_studio",
         "name": "interior_lug_b2",
@@ -8451,7 +8856,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 18,
       "kind": {
         "type": "part_studio",
         "name": "pipe",
@@ -8609,7 +9014,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 19,
       "kind": {
         "type": "part_studio",
         "name": "pipe_cap",
@@ -8776,7 +9181,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 20,
       "kind": {
         "type": "part_studio",
         "name": "end_plate",
@@ -9523,7 +9928,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 21,
       "kind": {
         "type": "part_studio",
         "name": "ground_angle",
@@ -9580,14 +9985,14 @@
           },
           {
             "id": 6,
-            "name": "ground angle, 1/8 x 1 aluminium x 21",
+            "name": "ground angle, 1/8 x 1-1/2 aluminium x 21",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 46.037499999999994
+                "offset": 57.15
               },
               "sketch": {
                 "entities": [
@@ -9596,7 +10001,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1244.6
+                      "y": -1181.1
                     }
                   },
                   {
@@ -9604,7 +10009,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1244.6
+                      "y": -1181.1
                     }
                   },
                   {
@@ -9618,7 +10023,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1244.6
+                      "y": -1181.1
                     }
                   },
                   {
@@ -9626,7 +10031,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1219.1999999999998
+                      "y": -1143.0
                     }
                   },
                   {
@@ -9640,7 +10045,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1219.1999999999998
+                      "y": -1143.0
                     }
                   },
                   {
@@ -9648,7 +10053,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1219.1999999999998
+                      "y": -1143.0
                     }
                   },
                   {
@@ -9662,7 +10067,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1219.1999999999998
+                      "y": -1143.0
                     }
                   },
                   {
@@ -9670,7 +10075,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1244.6
+                      "y": -1181.1
                     }
                   },
                   {
@@ -9733,7 +10138,7 @@
           },
           {
             "id": 7,
-            "name": "ground angle, 1/8 x 1 aluminium x 21",
+            "name": "ground angle, 1/8 x 1-1/2 aluminium x 21",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -9758,7 +10163,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 23.8125
+                "offset": 22.225
               },
               "sketch": {
                 "entities": [
@@ -9767,7 +10172,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1222.375
+                      "y": -1146.175
                     }
                   },
                   {
@@ -9775,7 +10180,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1222.375
+                      "y": -1146.175
                     }
                   },
                   {
@@ -9789,7 +10194,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1222.375
+                      "y": -1146.175
                     }
                   },
                   {
@@ -9797,7 +10202,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1219.1999999999998
+                      "y": -1143.0
                     }
                   },
                   {
@@ -9811,7 +10216,7 @@
                     "type": "point",
                     "pos": {
                       "x": 533.4,
-                      "y": -1219.1999999999998
+                      "y": -1143.0
                     }
                   },
                   {
@@ -9819,7 +10224,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1219.1999999999998
+                      "y": -1143.0
                     }
                   },
                   {
@@ -9833,7 +10238,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1219.1999999999998
+                      "y": -1143.0
                     }
                   },
                   {
@@ -9841,7 +10246,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1222.375
+                      "y": -1146.175
                     }
                   },
                   {
@@ -9912,7 +10317,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 25.4,
+              "depth": 38.099999999999994,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -9929,7 +10334,7 @@
               "plane": {
                 "type": "standard",
                 "base": "front",
-                "offset": 1231.9
+                "offset": 1155.7
               },
               "sketch": {
                 "entities": [
@@ -9938,7 +10343,7 @@
                     "type": "point",
                     "pos": {
                       "x": 53.974999999999994,
-                      "y": 41.592499999999994
+                      "y": 43.815
                     }
                   },
                   {
@@ -9946,7 +10351,7 @@
                     "type": "point",
                     "pos": {
                       "x": 130.17499999999998,
-                      "y": 31.4325
+                      "y": 28.575
                     }
                   },
                   {
@@ -9954,7 +10359,7 @@
                     "type": "point",
                     "pos": {
                       "x": 403.225,
-                      "y": 41.592499999999994
+                      "y": 43.815
                     }
                   },
                   {
@@ -9962,7 +10367,7 @@
                     "type": "point",
                     "pos": {
                       "x": 479.4249999999999,
-                      "y": 31.4325
+                      "y": 28.575
                     }
                   }
                 ],
@@ -9995,13 +10400,13 @@
       }
     },
     {
-      "id": 21,
+      "id": 22,
       "kind": {
         "type": "assembly",
         "name": "panel A",
         "instances": [
           {
-            "id": 22,
+            "id": 23,
             "name": "skin_top",
             "studio": 1,
             "body": 0,
@@ -10020,7 +10425,7 @@
             }
           },
           {
-            "id": 23,
+            "id": 24,
             "name": "rib 1",
             "studio": 2,
             "body": 0,
@@ -10039,7 +10444,7 @@
             }
           },
           {
-            "id": 24,
+            "id": 25,
             "name": "rib 2",
             "studio": 2,
             "body": 1,
@@ -10058,7 +10463,7 @@
             }
           },
           {
-            "id": 25,
+            "id": 26,
             "name": "rib 3",
             "studio": 2,
             "body": 2,
@@ -10077,7 +10482,7 @@
             }
           },
           {
-            "id": 26,
+            "id": 27,
             "name": "rib 4",
             "studio": 2,
             "body": 3,
@@ -10096,7 +10501,7 @@
             }
           },
           {
-            "id": 27,
+            "id": 28,
             "name": "rib 5",
             "studio": 2,
             "body": 4,
@@ -10115,7 +10520,7 @@
             }
           },
           {
-            "id": 28,
+            "id": 29,
             "name": "cross_block 1",
             "studio": 3,
             "body": 0,
@@ -10134,7 +10539,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 30,
             "name": "cross_block 2",
             "studio": 3,
             "body": 1,
@@ -10153,7 +10558,7 @@
             }
           },
           {
-            "id": 30,
+            "id": 31,
             "name": "cross_block 3",
             "studio": 3,
             "body": 2,
@@ -10172,7 +10577,7 @@
             }
           },
           {
-            "id": 31,
+            "id": 32,
             "name": "cross_block 4",
             "studio": 3,
             "body": 3,
@@ -10191,7 +10596,7 @@
             }
           },
           {
-            "id": 32,
+            "id": 33,
             "name": "cross_block 5",
             "studio": 3,
             "body": 4,
@@ -10210,7 +10615,7 @@
             }
           },
           {
-            "id": 33,
+            "id": 34,
             "name": "cross_block 6",
             "studio": 3,
             "body": 5,
@@ -10229,7 +10634,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 35,
             "name": "cross_block 7",
             "studio": 3,
             "body": 6,
@@ -10248,7 +10653,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 36,
             "name": "cross_block 8",
             "studio": 3,
             "body": 7,
@@ -10267,7 +10672,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 37,
             "name": "joint_block",
             "studio": 4,
             "body": 0,
@@ -10286,7 +10691,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 38,
             "name": "stub 1",
             "studio": 5,
             "body": 0,
@@ -10305,7 +10710,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 39,
             "name": "stub 2",
             "studio": 5,
             "body": 1,
@@ -10324,7 +10729,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 40,
             "name": "skin_bottom_a",
             "studio": 6,
             "body": 0,
@@ -10343,7 +10748,7 @@
             }
           },
           {
-            "id": 40,
+            "id": 41,
             "name": "rail_lug_left",
             "studio": 7,
             "body": 0,
@@ -10362,7 +10767,7 @@
             }
           },
           {
-            "id": 41,
+            "id": 42,
             "name": "rail_lug_right",
             "studio": 8,
             "body": 0,
@@ -10381,7 +10786,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 43,
             "name": "interior_lug_a1",
             "studio": 9,
             "body": 0,
@@ -10400,7 +10805,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 44,
             "name": "interior_lug_a2",
             "studio": 10,
             "body": 0,
@@ -10423,13 +10828,13 @@
       }
     },
     {
-      "id": 44,
+      "id": 45,
       "kind": {
         "type": "assembly",
         "name": "panel B",
         "instances": [
           {
-            "id": 45,
+            "id": 46,
             "name": "skin_top",
             "studio": 1,
             "body": 0,
@@ -10448,7 +10853,7 @@
             }
           },
           {
-            "id": 46,
+            "id": 47,
             "name": "rib 1",
             "studio": 2,
             "body": 0,
@@ -10467,7 +10872,7 @@
             }
           },
           {
-            "id": 47,
+            "id": 48,
             "name": "rib 2",
             "studio": 2,
             "body": 1,
@@ -10486,7 +10891,7 @@
             }
           },
           {
-            "id": 48,
+            "id": 49,
             "name": "rib 3",
             "studio": 2,
             "body": 2,
@@ -10505,7 +10910,7 @@
             }
           },
           {
-            "id": 49,
+            "id": 50,
             "name": "rib 4",
             "studio": 2,
             "body": 3,
@@ -10524,7 +10929,7 @@
             }
           },
           {
-            "id": 50,
+            "id": 51,
             "name": "rib 5",
             "studio": 2,
             "body": 4,
@@ -10543,7 +10948,7 @@
             }
           },
           {
-            "id": 51,
+            "id": 52,
             "name": "cross_block 1",
             "studio": 3,
             "body": 0,
@@ -10562,7 +10967,7 @@
             }
           },
           {
-            "id": 52,
+            "id": 53,
             "name": "cross_block 2",
             "studio": 3,
             "body": 1,
@@ -10581,7 +10986,7 @@
             }
           },
           {
-            "id": 53,
+            "id": 54,
             "name": "cross_block 3",
             "studio": 3,
             "body": 2,
@@ -10600,7 +11005,7 @@
             }
           },
           {
-            "id": 54,
+            "id": 55,
             "name": "cross_block 4",
             "studio": 3,
             "body": 3,
@@ -10619,7 +11024,7 @@
             }
           },
           {
-            "id": 55,
+            "id": 56,
             "name": "cross_block 5",
             "studio": 3,
             "body": 4,
@@ -10638,7 +11043,7 @@
             }
           },
           {
-            "id": 56,
+            "id": 57,
             "name": "cross_block 6",
             "studio": 3,
             "body": 5,
@@ -10657,7 +11062,7 @@
             }
           },
           {
-            "id": 57,
+            "id": 58,
             "name": "cross_block 7",
             "studio": 3,
             "body": 6,
@@ -10676,7 +11081,7 @@
             }
           },
           {
-            "id": 58,
+            "id": 59,
             "name": "cross_block 8",
             "studio": 3,
             "body": 7,
@@ -10695,7 +11100,7 @@
             }
           },
           {
-            "id": 59,
+            "id": 60,
             "name": "joint_block",
             "studio": 4,
             "body": 0,
@@ -10714,46 +11119,8 @@
             }
           },
           {
-            "id": 60,
-            "name": "stub 1",
-            "studio": 5,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
             "id": 61,
-            "name": "stub 2",
-            "studio": 5,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 62,
-            "name": "skin_bottom_b",
+            "name": "stub_ground 1",
             "studio": 11,
             "body": 0,
             "fixed": true,
@@ -10771,8 +11138,27 @@
             }
           },
           {
+            "id": 62,
+            "name": "stub_ground 2",
+            "studio": 11,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
             "id": 63,
-            "name": "rail_plain 1",
+            "name": "skin_bottom_b",
             "studio": 12,
             "body": 0,
             "fixed": true,
@@ -10791,26 +11177,7 @@
           },
           {
             "id": 64,
-            "name": "rail_plain 2",
-            "studio": 12,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 65,
-            "name": "lug_stub_left",
+            "name": "rail_plain 1",
             "studio": 13,
             "body": 0,
             "fixed": true,
@@ -10828,8 +11195,27 @@
             }
           },
           {
+            "id": 65,
+            "name": "rail_plain 2",
+            "studio": 13,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
             "id": 66,
-            "name": "lug_stub_right",
+            "name": "lug_stub_left",
             "studio": 14,
             "body": 0,
             "fixed": true,
@@ -10848,7 +11234,7 @@
           },
           {
             "id": 67,
-            "name": "interior_lug_b1",
+            "name": "lug_stub_right",
             "studio": 15,
             "body": 0,
             "fixed": true,
@@ -10867,8 +11253,27 @@
           },
           {
             "id": 68,
-            "name": "interior_lug_b2",
+            "name": "interior_lug_b1",
             "studio": 16,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 69,
+            "name": "interior_lug_b2",
+            "studio": 17,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -10889,15 +11294,15 @@
       }
     },
     {
-      "id": 69,
+      "id": 70,
       "kind": {
         "type": "assembly",
         "name": "ramp",
         "instances": [
           {
-            "id": 70,
+            "id": 71,
             "name": "panel A",
-            "studio": 21,
+            "studio": 22,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -10914,9 +11319,9 @@
             }
           },
           {
-            "id": 71,
+            "id": 72,
             "name": "panel B",
-            "studio": 44,
+            "studio": 45,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -10933,27 +11338,8 @@
             }
           },
           {
-            "id": 72,
-            "name": "pipe",
-            "studio": 17,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
             "id": 73,
-            "name": "pipe_cap 1",
+            "name": "pipe",
             "studio": 18,
             "body": 0,
             "fixed": true,
@@ -10972,26 +11358,7 @@
           },
           {
             "id": 74,
-            "name": "pipe_cap 2",
-            "studio": 18,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 75,
-            "name": "end_plate 1",
+            "name": "pipe_cap 1",
             "studio": 19,
             "body": 0,
             "fixed": true,
@@ -11009,8 +11376,8 @@
             }
           },
           {
-            "id": 76,
-            "name": "end_plate 2",
+            "id": 75,
+            "name": "pipe_cap 2",
             "studio": 19,
             "body": 1,
             "fixed": true,
@@ -11028,9 +11395,47 @@
             }
           },
           {
-            "id": 77,
-            "name": "ground_angle",
+            "id": 76,
+            "name": "end_plate 1",
             "studio": 20,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 77,
+            "name": "end_plate 2",
+            "studio": 20,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 78,
+            "name": "ground_angle",
+            "studio": 21,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -11049,11 +11454,11 @@
         ],
         "mates": [
           {
-            "id": 78,
+            "id": 79,
             "name": "fold",
             "kind": "revolute",
             "a": {
-              "instance": 72,
+              "instance": 73,
               "face": {
                 "feature": 7,
                 "local": 2,
@@ -11071,8 +11476,8 @@
               }
             },
             "b": {
-              "instance": 71,
-              "sub": 65,
+              "instance": 72,
+              "sub": 66,
               "face": {
                 "feature": 11,
                 "local": 2,
@@ -11097,5 +11502,5 @@
       }
     }
   ],
-  "next_id": 79
+  "next_id": 80
 }
