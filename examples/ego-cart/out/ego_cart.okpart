@@ -405,6 +405,7 @@
               "backlash": 0.15,
               "shift": 0.0,
               "fillet": 0.45,
+              "cone": 0.0,
               "op": "new"
             }
           },
@@ -940,6 +941,7 @@
               "backlash": 0.15,
               "shift": 0.0,
               "fillet": 1.14,
+              "cone": 0.0,
               "op": "new"
             }
           },
