@@ -929,6 +929,33 @@ mod tests {
         v
     }
 
+    #[test]
+    fn part_names_and_materials_survive_the_json_round_trip() {
+        // The studio keeps them in maps keyed by feature id, which JSON
+        // writes as string keys; reading those back used to fail.
+        let mut doc = Document::new("named");
+        let tab = doc.tabs[0].id;
+        let ops = serde_json::json!([
+            { "type": "studio", "tab": tab.0, "op": { "type": "add_sketch", "plane": { "type": "standard", "base": "top", "offset": 0 }, "name": null } },
+            { "type": "studio", "tab": tab.0, "op": { "type": "sketch", "id": 1, "op": { "type": "add_rectangle", "a": { "x": 0, "y": 0 }, "b": { "x": 20, "y": 10 } } } },
+            { "type": "studio", "tab": tab.0, "op": { "type": "add_extrude", "sketch": 1, "depth": 5, "name": null } },
+            { "type": "studio", "tab": tab.0, "op": { "type": "rename_part", "source": 2, "name": "lid" } },
+            { "type": "studio", "tab": tab.0, "op": { "type": "set_part_material", "source": 2, "material": { "name": "oak", "density": 0.7 } } }
+        ]);
+        let ops: Vec<DocOp> = serde_json::from_value(ops).unwrap();
+        doc.apply_all(ops).unwrap();
+        let json = doc.to_json();
+        assert!(json.contains("\"part_names\""), "{json}");
+        let mut back = Document::from_json(&json).expect("the document reads back");
+        let r = back.regenerate_studio(tab, None).unwrap();
+        assert_eq!(r.bodies[0].name, "lid");
+        assert_eq!(
+            r.bodies[0].material.as_ref().map(|m| m.name.as_str()),
+            Some("oak")
+        );
+        assert_eq!(back.to_json(), json);
+    }
+
     fn round_trip(d: &mut Document, op: DocOp) -> DocOpResult {
         let before = d.to_json();
         let r = d.apply_with_inverse(op.clone(), None).unwrap();
