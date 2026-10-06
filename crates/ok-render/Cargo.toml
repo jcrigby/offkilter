@@ -6,6 +6,7 @@ license.workspace = true
 description = "Headless PNG renders of offkilter tabs: a software rasteriser over the display tessellation"
 
 [dependencies]
+ok-sheet = { workspace = true }
 ok-math = { workspace = true }
 ok-mesh = { workspace = true }
 ok-brep = { workspace = true }
@@ -13,6 +14,5 @@ ok-model = { workspace = true }
 miniz_oxide = "0.9"
 
 [dev-dependencies]
-ok-sheet = { workspace = true }
 ok-sketch = { workspace = true }
 serde_json = { workspace = true }

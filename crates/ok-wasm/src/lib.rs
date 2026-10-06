@@ -682,6 +682,7 @@ impl Doc {
             note: Option<String>,
             hidden: Option<bool>,
             explode: Option<f64>,
+            window: Option<String>,
         }
         let spec: Spec =
             serde_json::from_str(opts_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -697,6 +698,10 @@ impl Doc {
         }
         opts.hidden = spec.hidden;
         opts.explode = spec.explode.unwrap_or(0.0).max(0.0);
+        opts.window = match spec.window.as_deref().filter(|w| !w.is_empty()) {
+            Some(w) => Some(ok_sheet::parse_box(w).map_err(|e| JsValue::from_str(&e))?),
+            None => None,
+        };
         opts.title = spec.title.unwrap_or_default();
         opts.note = spec.note.unwrap_or_default();
         ok_sheet::drawing_pdf(&mut self.inner, TabId(tab), &opts).map_err(|e| JsValue::from_str(&e))
