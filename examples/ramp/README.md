@@ -316,8 +316,11 @@ brief, this is why.
   `panel_a_below` and `panel_b_below` (lugs, notches, stubs),
   `panel_a_cutaway` and `panel_b_cutaway` (from below with the bottom
   skin cut away: the lug feet against their ribs, the joint block, the
-  top skin intact) and `ramp_lug_section` (through a lug on the pipe
-  axis); `panel_a.pdf` and `panel_b.pdf` with a section across the
+  top skin intact), `ramp_lug_section` (through a lug on the pipe
+  axis) and `ramp_hinge_section` (folded to 90 degrees, cut between
+  the right wall and the first interior lug and fitted to the hinge:
+  the two panels' lugs passing each other on the pipe, each its full
+  length); `panel_a.pdf` and `panel_b.pdf` with a section across the
   width at mid-length and one along the length through a lug;
   `ramp.pdf` with each panel as one item and the pipe as one;
   `stub.pdf`; `fold.pdf` and `fold.png` at 0, 45, 90, 135 and 180

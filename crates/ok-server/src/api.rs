@@ -1056,6 +1056,8 @@ struct ScreenshotQuery {
     height: Option<usize>,
     /// Draw display edges and silhouettes (default true).
     edges: Option<bool>,
+    /// `x0,y0,z0,x1,y1,z1`: a box to fit the view to, a detail window.
+    fit: Option<String>,
 }
 
 /// A PNG of a tab from a chosen view, rendered on the server without a
@@ -1116,6 +1118,12 @@ fn screenshot_options(q: &ScreenshotQuery) -> Result<ok_render::Options, String>
             .map(ok_render::Section::parse)
             .transpose()?,
         edges: q.edges.unwrap_or(true),
+        fit: q
+            .fit
+            .as_deref()
+            .filter(|s| !s.is_empty())
+            .map(ok_render::parse_fit)
+            .transpose()?,
         ..defaults
     })
 }
@@ -1948,6 +1956,18 @@ mod tests {
         let (status, _, _) =
             call_bytes(&app, &format!("/api/docs/{id}/screenshot?width=5000"), None).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
+        // A detail window: the view fitted to a box, not to the bodies.
+        let (status, _, _) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/screenshot?view=top&width=64&height=64&fit=0,0,0,5,5,5"),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        let (status, _, bytes) =
+            call_bytes(&app, &format!("/api/docs/{id}/screenshot?fit=0,0,0"), None).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert!(String::from_utf8_lossy(&bytes).contains("x0,y0,z0,x1,y1,z1"));
         // A PNG preview can be stored and read back; anything else is refused.
         let png = b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR".to_vec();
         let (status, _, _) = call_bytes(&app, &format!("/api/docs/{id}/thumbnail"), None).await;

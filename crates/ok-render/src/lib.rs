@@ -130,6 +130,36 @@ impl Section {
     }
 }
 
+/// Parses a box to fit the camera to, `"x0,y0,z0,x1,y1,z1"` in model
+/// units: a detail window, so a screenshot zooms on one corner of a
+/// large assembly. Either corner may come first.
+pub fn parse_fit(text: &str) -> Result<(Vec3, Vec3), String> {
+    let parts: Vec<&str> = text.split(',').map(str::trim).collect();
+    if parts.len() != 6 {
+        return Err(format!(
+            "fit {text:?}: use x0,y0,z0,x1,y1,z1, the box to fit the view to"
+        ));
+    }
+    let mut v = [0.0_f64; 6];
+    for (k, part) in parts.iter().enumerate() {
+        v[k] = part
+            .parse()
+            .map_err(|_| format!("fit value {part:?} is not a number"))?;
+    }
+    let lo = Vec3::new(v[0].min(v[3]), v[1].min(v[4]), v[2].min(v[5]));
+    let hi = Vec3::new(v[0].max(v[3]), v[1].max(v[4]), v[2].max(v[5]));
+    if (hi.x - lo.x).max(hi.y - lo.y).max(hi.z - lo.z) <= 0.0 {
+        return Err(format!("fit {text:?}: the box has no size"));
+    }
+    Ok((lo, hi))
+}
+
+/// The text `parse_fit` reads, for passing a fit on.
+pub fn fit_name(fit: &(Vec3, Vec3)) -> String {
+    let (lo, hi) = fit;
+    format!("{},{},{},{},{},{}", lo.x, lo.y, lo.z, hi.x, hi.y, hi.z)
+}
+
 /// What to render and how.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Options {
@@ -141,7 +171,8 @@ pub struct Options {
     pub edges: bool,
     /// Draw the axis triad in the lower left corner.
     pub triad: bool,
-    /// Fit the camera to this box instead of the items' extent.
+    /// Fit the camera to this box instead of the items' extent: a detail
+    /// window; what lies outside is drawn as far as the frame goes.
     pub fit: Option<(Vec3, Vec3)>,
 }
 
@@ -335,18 +366,20 @@ pub fn screenshot(doc: &mut Document, tab: TabId, options: &Options) -> Result<V
             // so the picture does not jump as the plane moves.
             let mut o = options.clone();
             o.section = None;
-            o.fit = bodies.iter().flat_map(|b| b.mesh.bounds()).fold(
-                None,
-                |acc: Option<(Vec3, Vec3)>, (lo, hi)| {
-                    Some(match acc {
-                        None => (lo, hi),
-                        Some((a, b)) => (
-                            Vec3::new(a.x.min(lo.x), a.y.min(lo.y), a.z.min(lo.z)),
-                            Vec3::new(b.x.max(hi.x), b.y.max(hi.y), b.z.max(hi.z)),
-                        ),
-                    })
-                },
-            );
+            o.fit = options.fit.or_else(|| {
+                bodies.iter().flat_map(|b| b.mesh.bounds()).fold(
+                    None,
+                    |acc: Option<(Vec3, Vec3)>, (lo, hi)| {
+                        Some(match acc {
+                            None => (lo, hi),
+                            Some((a, b)) => (
+                                Vec3::new(a.x.min(lo.x), a.y.min(lo.y), a.z.min(lo.z)),
+                                Vec3::new(b.x.max(hi.x), b.y.max(hi.y), b.z.max(hi.z)),
+                            ),
+                        })
+                    },
+                )
+            });
             (items, o)
         }
         None => (
@@ -520,6 +553,27 @@ mod tests {
     }
 
     #[test]
+    fn a_fit_window_zooms_on_part_of_the_scene() {
+        // The cube is 10 across; a window over its lower-left quarter
+        // puts that quarter in the fitted square and the rest off frame.
+        let m = cube(10.0);
+        let items = [item(m, PALETTE[0])];
+        let mut o = opts(View::Top);
+        o.fit = Some((Vec3::new(0.0, 0.0, 0.0), Vec3::new(5.0, 5.0, 10.0)));
+        let img = render(&items, &o).unwrap();
+        let n = painted(&img);
+        // The quarter fills the 88 px square in the middle of the 200 x
+        // 100 frame; the rest of the cube runs out through the top and
+        // the right: 144 px wide (from x = 56 to the edge) by 94 high.
+        assert!((n as f64 - 144.0 * 94.0).abs() < 600.0, "painted {n} px");
+        assert!(
+            img.pixel(2, img.height - 3) == raster::BACKGROUND
+                && img.pixel(img.width - 1, 0) != raster::BACKGROUND,
+            "the window's corner stays in the margin, the rest runs off the frame"
+        );
+    }
+
+    #[test]
     fn the_iso_view_shows_three_faces_in_three_shades() {
         let m = cube(10.0);
         let items = [item(m, PALETTE[0])];
@@ -613,6 +667,15 @@ mod tests {
             }
         );
         assert!(Section::parse("w:1").is_err());
+        let fit = parse_fit("10, 5, 0, -10, -5, 2").unwrap();
+        assert_eq!(
+            fit,
+            (Vec3::new(-10.0, -5.0, 0.0), Vec3::new(10.0, 5.0, 2.0))
+        );
+        assert_eq!(fit_name(&fit), "-10,-5,0,10,5,2");
+        assert!(parse_fit("1,2,3").is_err());
+        assert!(parse_fit("0,0,0,0,0,0").is_err());
+        assert!(parse_fit("a,0,0,1,1,1").is_err());
         assert!(!s.keeps(Vec3::X));
         assert!(s.keeps(Vec3::X * -3.0));
     }
