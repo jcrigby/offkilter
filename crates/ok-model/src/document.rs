@@ -867,15 +867,23 @@ impl Document {
         }
         let mut solids: BTreeMap<InstanceId, Vec<ok_brep::Solid>> = BTreeMap::new();
         let mut members: BTreeMap<InstanceId, Vec<crate::assembly::Member>> = BTreeMap::new();
+        // The parts' materials, carried onto the placed bodies in the
+        // same order, so a parts list can name them and masses follow.
+        let mut materials: BTreeMap<InstanceId, Vec<Option<crate::Material>>> = BTreeMap::new();
         for inst in &asm.instances {
             if let Some(b) = studios
                 .get(&inst.studio)
                 .and_then(|r| r.bodies.get(inst.body))
             {
                 solids.insert(inst.id, vec![b.solid.clone()]);
+                materials.insert(inst.id, vec![b.material.clone()]);
             } else if let Some(r) = subs.get(&inst.studio) {
                 if !r.bodies.is_empty() {
                     solids.insert(inst.id, r.bodies.iter().map(|b| b.solid.clone()).collect());
+                    materials.insert(
+                        inst.id,
+                        r.bodies.iter().map(|b| b.material.clone()).collect(),
+                    );
                     members.insert(
                         inst.id,
                         r.placed
@@ -887,7 +895,16 @@ impl Document {
                 }
             }
         }
-        Ok(asm.resolve_groups(&solids, &members))
+        let mut result = asm.resolve_groups(&solids, &members);
+        let mut next: BTreeMap<InstanceId, usize> = BTreeMap::new();
+        for (body, inst) in result.bodies.iter_mut().zip(&result.placed) {
+            let k = next.entry(*inst).or_insert(0);
+            if let Some(m) = materials.get(inst).and_then(|ms| ms.get(*k)) {
+                body.material = m.clone();
+            }
+            *k += 1;
+        }
+        Ok(result)
     }
 }
 
@@ -927,6 +944,33 @@ mod tests {
         let mut v: serde_json::Value = serde_json::from_str(json).unwrap();
         strip(&mut v);
         v
+    }
+
+    #[test]
+    fn part_names_and_materials_survive_the_json_round_trip() {
+        // The studio keeps them in maps keyed by feature id, which JSON
+        // writes as string keys; reading those back used to fail.
+        let mut doc = Document::new("named");
+        let tab = doc.tabs[0].id;
+        let ops = serde_json::json!([
+            { "type": "studio", "tab": tab.0, "op": { "type": "add_sketch", "plane": { "type": "standard", "base": "top", "offset": 0 }, "name": null } },
+            { "type": "studio", "tab": tab.0, "op": { "type": "sketch", "id": 1, "op": { "type": "add_rectangle", "a": { "x": 0, "y": 0 }, "b": { "x": 20, "y": 10 } } } },
+            { "type": "studio", "tab": tab.0, "op": { "type": "add_extrude", "sketch": 1, "depth": 5, "name": null } },
+            { "type": "studio", "tab": tab.0, "op": { "type": "rename_part", "source": 2, "name": "lid" } },
+            { "type": "studio", "tab": tab.0, "op": { "type": "set_part_material", "source": 2, "material": { "name": "oak", "density": 0.7 } } }
+        ]);
+        let ops: Vec<DocOp> = serde_json::from_value(ops).unwrap();
+        doc.apply_all(ops).unwrap();
+        let json = doc.to_json();
+        assert!(json.contains("\"part_names\""), "{json}");
+        let mut back = Document::from_json(&json).expect("the document reads back");
+        let r = back.regenerate_studio(tab, None).unwrap();
+        assert_eq!(r.bodies[0].name, "lid");
+        assert_eq!(
+            r.bodies[0].material.as_ref().map(|m| m.name.as_str()),
+            Some("oak")
+        );
+        assert_eq!(back.to_json(), json);
     }
 
     fn round_trip(d: &mut Document, op: DocOp) -> DocOpResult {
@@ -1006,6 +1050,30 @@ mod tests {
             .tab
             .unwrap();
         (d, studio, asm, e)
+    }
+
+    #[test]
+    fn an_assembly_carries_its_parts_materials_onto_the_placed_bodies() {
+        let (mut d, studio, asm, e) = block_doc();
+        let ops = serde_json::json!([
+            { "type": "studio", "tab": studio.0, "op": { "type": "set_part_material", "source": e.0, "material": { "name": "oak", "density": 0.7 } } },
+            { "type": "assembly", "tab": asm.0, "op": { "type": "add_instance", "studio": studio.0, "body": 0, "name": "one", "fixed": true,
+                "placement": { "position": { "x": 0, "y": 0, "z": 0 }, "rotation": { "x": 0, "y": 0, "z": 0 } } } },
+            { "type": "assembly", "tab": asm.0, "op": { "type": "add_instance", "studio": studio.0, "body": 0, "name": "two", "fixed": true,
+                "placement": { "position": { "x": 50, "y": 0, "z": 0 }, "rotation": { "x": 0, "y": 0, "z": 90 } } } }
+        ]);
+        let ops: Vec<DocOp> = serde_json::from_value(ops).unwrap();
+        d.apply_all(ops).unwrap();
+        let r = d.regenerate_assembly(asm).unwrap();
+        assert_eq!(r.bodies.len(), 2);
+        for b in &r.bodies {
+            assert_eq!(
+                b.material.as_ref().map(|m| (m.name.as_str(), m.density)),
+                Some(("oak", 0.7)),
+                "{}",
+                b.name
+            );
+        }
     }
 
     #[test]

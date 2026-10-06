@@ -4,8 +4,39 @@ use ok_sketch::{EntityId, Sketch};
 use serde::{Deserialize, Serialize};
 
 /// Stable identifier of a feature within a part studio.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize)]
 pub struct FeatureId(pub u32);
+
+/// A feature id reads back from a number, or from the string a JSON
+/// object key has to be: the part names and materials a studio keeps
+/// are maps keyed by feature id, written as `{"7": "lid"}`.
+impl<'de> Deserialize<'de> for FeatureId {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<FeatureId, D::Error> {
+        struct V;
+        impl serde::de::Visitor<'_> for V {
+            type Value = FeatureId;
+            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                f.write_str("a feature id, a number or a string of digits")
+            }
+            fn visit_u64<E: serde::de::Error>(self, v: u64) -> Result<FeatureId, E> {
+                u32::try_from(v)
+                    .map(FeatureId)
+                    .map_err(|_| E::custom(format!("feature id {v} is out of range")))
+            }
+            fn visit_i64<E: serde::de::Error>(self, v: i64) -> Result<FeatureId, E> {
+                u32::try_from(v)
+                    .map(FeatureId)
+                    .map_err(|_| E::custom(format!("feature id {v} is out of range")))
+            }
+            fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<FeatureId, E> {
+                v.parse()
+                    .map(FeatureId)
+                    .map_err(|_| E::custom(format!("feature id {v:?} is not a number")))
+            }
+        }
+        d.deserialize_any(V)
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
