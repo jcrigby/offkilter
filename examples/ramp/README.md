@@ -58,11 +58,11 @@ pin in a single 3/4" ply lug was marginal; this is why the lugs are
 | ribs | 2x2 (actual 1.5" × 1.5") SPF, or 2x4 ripped in half | ~5 × 8 ft | pick straight, dry |
 | cross blocks | same 2x2 | from above | cut to fit between ribs |
 | joint blocking | 2x4 flat (1.5" thick × 3.5" wide) | 2 × 21" | one per panel, across the hinge end, inside the skins |
-| tailgate stubs | 2x8 (1.5" × 7.25") | 2 × 12" per panel | outer rib positions at the tailgate end; run 3" past the skins, bare, for the end plates |
+| stubs | 2x8 (1.5" × 7.25") | 2 × 12" (tailgate panel), 2 × 9" (ground panel) | outer rib positions at the free end; the tailgate panel's run 3" past the skins, bare, for the end plates; the ground panel's stop flush with the skins (§8) |
 | rails and lugs | 3/4" birch plywood | ~1 sheet half | rails 4-3/8" tall; lug cheeks and interior lugs laminated to 1-1/2" |
 | rail spacer | 3/4" birch | 2 × 48" × 2-3/8" | under the "spaced" rail on each panel (§4) |
 | hinge pipe | 3/4" Sch 40 galvanized pipe, 1.05" OD, threaded both ends | 1 × ~26" | plus two 3/4" pipe caps |
-| ground edge | 1/8" × 1" aluminium angle | 2 × 21" | over the 30° bevel |
+| ground edge | 1/8" × 1-1/2" aluminium angle | 1 × 21" | one leg screwed to the ground panel's flush end, the other out past it as the lip (§8) |
 | end plates | existing Erickson-type 2x8 ramp end plates | 2 pr | tailgate end only; model as a ghost body |
 | adhesive | PL Premium (polyurethane construction adhesive) | | every rib and block face |
 | screws | 1" and 1-1/4" | | 1" through skins into 2x2s; longer only into 2x8 / 2x4 |
@@ -289,10 +289,13 @@ brief, this is why.
   rail taper 8 in long.
 - **Parts.** One studio per part, in inches through `IN = 25.4`, every
   part built in place in the panel's frame; the skins, ribs, cross
-  blocks, joint block and stubs are shared by both panels, the bottom
-  skin's notches excepted. The rails with lugs, the stubs and the
-  interior lugs are a studio each because a kernel `add` joins every
-  body in the studio and each needs a half-round added to its profile.
+  blocks and joint block are shared by both panels, the bottom skin's
+  notches excepted. The stubs differ: panel A's run 3 in bare past
+  the skins for the end plates, panel B's stop flush with the skins'
+  end at 45 and carry the bevel feature. The rails with lugs, the lug
+  stubs and the interior lugs are a studio each because a kernel
+  `add` joins every body in the studio and each needs a half-round
+  added to its profile.
 - **Panels and ramp.** `panel A` and `panel B` are assemblies of fixed
   instances; the ramp places B turned 180 degrees about z and moved
   21 in x. Fixed placement rather than fastened mates, since a panel
@@ -307,12 +310,38 @@ brief, this is why.
   document variables; the skin and rib extrude depths are bound to the
   first two. The rest live in sketched profiles, which this script
   redraws from the constants at the top.
-- **Bevel and angle.** The stub's 30 degree bevel is a suppressed
-  feature: on in `out/stub.pdf`, off in the ramp. The ground angle is
-  a ramp-level part on panel B's end, the end plates ghosts on panel
-  A's stubs.
+- **Hinge section.** The section is cut through the middle of panel
+  B's first interior lug from the right wall (at 18-3/4), so the
+  hatched profile is that lug, pipe and all, with panel A's lug seen
+  behind it. The sheet draws the three lugs at the cut (B's interior
+  lug, A's behind it, B's lug stub) by themselves beneath the section,
+  in the same folded pose.
+- **Cut sheets.** Two assemblies lay the real bodies flat on a 4 x 8
+  sheet, 96 along x: the CDX in two 21 in rips, a top and a bottom
+  skin each; the birch in rips along the sheet, the two rails with
+  lugs (6-3/8 wide, 46-1/2 long) end to end, the plain rails, then the
+  four interior lugs and two lug stubs in a 5-1/2 rip, then 1-1/2 in
+  strips for the ribs and cross blocks packed first-fit by length,
+  23-3/4 in of the sheet's 48 in all. Each piece sits a kerf from the
+  next; the script checks every piece lies flat on and inside its
+  sheet before drawing it, and the test that no two overlap. The ply
+  bodies carry their names and material (CDX 0.55, birch 0.68 g/cm3),
+  so the parts lists read "rib · 1.5 x 32.5" rather than "Part 1".
+- **Bevel and angle.** The ground stub's 30 degree bevel is a
+  suppressed feature: on in `out/stub.pdf`, off in the ramp. The
+  ground angle, 1/8 x 1-1/2, is a ramp-level part on panel B's flush
+  end, the end plates ghosts on panel A's bare stubs. The angle's one
+  leg lies flat against the end face (the skins' edges and the stubs'
+  ends) and is screwed into the stubs' end grain, four #10 x 2, two
+  per stub, one high and one low, both rows below the top skin, which
+  is why the leg is 1-1/2 rather than the 1 the brief had; the other
+  leg runs out past the end flush with the top skin, the lip the
+  wheel rolls off. The ramp shows it on the square end; with the bevel
+  cut across the whole end, that face stands plumb on the ground and
+  the lip lies flat on it.
 - **Outputs.** `out/ramp.okpart`; `ramp_iso`, `ramp_front`,
-  `ramp_side`, `ramp_below`, `ramp_folded`, `ramp_folded_side`,
+  `ramp_side`, `ramp_below`, `ramp_angle` (the ground angle on panel
+  B's end), `ramp_folded`, `ramp_folded_side`,
   `panel_a_below` and `panel_b_below` (lugs, notches, stubs),
   `panel_a_cutaway` and `panel_b_cutaway` (from below with the bottom
   skin cut away: the lug feet against their ribs, the joint block, the
@@ -320,7 +349,12 @@ brief, this is why.
   axis) and `ramp_hinge_section` (folded to 90 degrees, cut between
   the right wall and the first interior lug and fitted to the hinge:
   the two panels' lugs passing each other on the pipe, each its full
-  length); `panel_a.pdf` and `panel_b.pdf` with a section across the
+  length) with `hinge_section.pdf` the same cut as a sheet, hidden
+  lines dashed, so the cut lug's foot shows inside its box and where
+  panel A's lug passes behind it, and the three lugs at the cut drawn
+  by themselves below it; `cut_sheet_cdx.pdf` and `cut_sheet_birch.pdf`,
+  the plywood pieces laid flat on their 4 x 8 sheets with a 1/8 kerf
+  between, numbered against a list; `panel_a.pdf` and `panel_b.pdf` with a section across the
   width at mid-length and one along the length through a lug;
   `ramp.pdf` with each panel as one item and the pipe as one;
   `stub.pdf`; `fold.pdf` and `fold.png` at 0, 45, 90, 135 and 180
