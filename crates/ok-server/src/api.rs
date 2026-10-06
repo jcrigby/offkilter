@@ -747,6 +747,8 @@ struct PdfQuery {
     hidden: Option<bool>,
     /// Explode factor for the isometric view (0, the default, in place).
     explode: Option<f64>,
+    /// `x0,y0,z0,x1,y1,z1`: a detail window every view is clipped to.
+    window: Option<String>,
 }
 
 /// A shop drawing sheet of a tab as a PDF.
@@ -817,6 +819,13 @@ async fn export_pdf(
         Err(e) => return (StatusCode::BAD_REQUEST, e).into_response(),
     };
     opts.explode = q.explode.unwrap_or(0.0).max(0.0);
+    opts.window = match q.window.as_deref().filter(|w| !w.is_empty()) {
+        Some(w) => match ok_sheet::parse_box(w) {
+            Ok(b) => Some(b),
+            Err(e) => return (StatusCode::BAD_REQUEST, e).into_response(),
+        },
+        None => None,
+    };
     match tokio::task::spawn_blocking(move || pdf_of(&json, q.tab, &opts)).await {
         Ok(Ok(bytes)) => (
             [
@@ -1934,6 +1943,19 @@ mod tests {
         let (status, _, _) =
             call_bytes(&app, &format!("/api/docs/{id}/export/pdf?sheet=b5"), None).await;
         assert_eq!(status, StatusCode::BAD_REQUEST);
+        // A detail window clips the views to a box; a bad one is refused.
+        let (status, _, bytes) = call_bytes(
+            &app,
+            &format!("/api/docs/{id}/export/pdf?tab=1&views=front&window=0,0,0,5,5,5"),
+            None,
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+        assert!(bytes.starts_with(b"%PDF"));
+        let (status, _, bytes) =
+            call_bytes(&app, &format!("/api/docs/{id}/export/pdf?window=1,2"), None).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert!(String::from_utf8_lossy(&bytes).contains("x0,y0,z0,x1,y1,z1"));
         // A rendered view of the tab, without a browser.
         let (status, headers, bytes) = call_bytes(
             &app,

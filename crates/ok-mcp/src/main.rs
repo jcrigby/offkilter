@@ -1557,6 +1557,10 @@ impl Server {
                         .to_string(),
                     hidden: args.get("hidden").and_then(|h| h.as_bool()),
                     explode: args.get("explode").and_then(|e| e.as_f64()).unwrap_or(0.0),
+                    window: match args.get("window").and_then(|w| w.as_str()).unwrap_or("") {
+                        "" => None,
+                        w => Some(ok_sheet::parse_box(w)?),
+                    },
                     ..ok_sheet::Options::default()
                 };
                 match args.get("views") {
@@ -1598,9 +1602,14 @@ impl Server {
                         format!(" (view {}, 1:1 mm)", view_name(view))
                     } else if format == "pdf" {
                         format!(
-                            " ({} sheet, views {})",
+                            " ({} sheet, views {}{})",
                             sheet.sheet.name(),
-                            sheet.views.join(", ")
+                            sheet.views.join(", "),
+                            sheet
+                                .window
+                                .as_ref()
+                                .map(|w| format!(", window {}", ok_sheet::box_name(w)))
+                                .unwrap_or_default()
                         )
                     } else {
                         String::new()
@@ -1876,8 +1885,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "export",
-            "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF: a shop drawing sheet with the `views` (front, top, right, iso by default; also section, a cut parallel to the front view, and section-side, parallel to the right view, each taking @<mm> for where the cut goes, through the middle otherwise: cut faces hatched, SECTION A-A captioned, the cutting plane traced with arrows on the top view) laid out third angle on `sheet` (A4 by default; A3, A2, Letter, Tabloid) at the largest standard scale that fits, overall dimensions, and on a sheet of one part hidden lines dashed and diameter callouts for holes seen end-on; on an assembly a balloon per item and a parts list (`parts: false` to leave them off), where a sub-assembly instance is one item with its own sheet on its own tab; `hidden` forces hidden lines on or off; `note` goes on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
-            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf", "pdf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" }, "views": { "type": "array", "items": { "type": "string" } }, "sheet": { "type": "string" }, "parts": { "type": "boolean" }, "note": { "type": "string" }, "explode": { "type": "number" } }, "required": ["format", "path"] }
+            "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF: a shop drawing sheet with the `views` (front, top, right, iso by default; also section, a cut parallel to the front view, and section-side, parallel to the right view, each taking @<mm> for where the cut goes, through the middle otherwise: cut faces hatched, SECTION A-A captioned, the cutting plane traced with arrows on the top view) laid out third angle on `sheet` (A4 by default; A3, A2, Letter, Tabloid) at the largest standard scale that fits, overall dimensions, and on a sheet of one part hidden lines dashed and diameter callouts for holes seen end-on; on an assembly a balloon per item and a parts list (`parts: false` to leave them off), where a sub-assembly instance is one item with its own sheet on its own tab; `hidden` forces hidden lines on or off (on, a section also shows what lies behind its cut, dashed); `window` 'x0,y0,z0,x1,y1,z1' (mm) is a detail window: every view is clipped to that box and framed by it, so one corner of a large assembly comes out at a scale that reads; `note` goes on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf", "pdf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" }, "views": { "type": "array", "items": { "type": "string" } }, "sheet": { "type": "string" }, "parts": { "type": "boolean" }, "note": { "type": "string" }, "explode": { "type": "number" }, "window": { "type": "string" } }, "required": ["format", "path"] }
         },
         {
             "name": "document_url",

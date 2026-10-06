@@ -85,6 +85,11 @@ pub struct Options {
     /// client's slider runs 0 to 1.5). Zero draws the parts in place.
     /// The other views stay as built.
     pub explode: f64,
+    /// A detail window: a box in model millimetres that every view is
+    /// cut down to, its lines clipped to the box as seen from that
+    /// view and the view framed by the box, so a corner of a large
+    /// assembly comes out at a scale that reads.
+    pub window: Option<(Vec3, Vec3)>,
 }
 
 impl Default for Options {
@@ -100,8 +105,37 @@ impl Default for Options {
             parts: true,
             hidden: None,
             explode: 0.0,
+            window: None,
         }
     }
+}
+
+/// Parses a box, `"x0,y0,z0,x1,y1,z1"` in model millimetres, either
+/// corner first: a detail window, or the box a screenshot is fitted to.
+pub fn parse_box(text: &str) -> Result<(Vec3, Vec3), String> {
+    let parts: Vec<&str> = text.split(',').map(str::trim).collect();
+    if parts.len() != 6 {
+        return Err(format!(
+            "box {text:?}: use x0,y0,z0,x1,y1,z1, two opposite corners in millimetres"
+        ));
+    }
+    let mut v = [0.0_f64; 6];
+    for (k, part) in parts.iter().enumerate() {
+        v[k] = part
+            .parse()
+            .map_err(|_| format!("box value {part:?} is not a number"))?;
+    }
+    let lo = Vec3::new(v[0].min(v[3]), v[1].min(v[4]), v[2].min(v[5]));
+    let hi = Vec3::new(v[0].max(v[3]), v[1].max(v[4]), v[2].max(v[5]));
+    if (hi.x - lo.x).max(hi.y - lo.y).max(hi.z - lo.z) <= 0.0 {
+        return Err(format!("box {text:?} has no size"));
+    }
+    Ok((lo, hi))
+}
+
+/// The text `parse_box` reads, for passing a box on.
+pub fn box_name((lo, hi): &(Vec3, Vec3)) -> String {
+    format!("{},{},{},{},{},{}", lo.x, lo.y, lo.z, hi.x, hi.y, hi.z)
 }
 
 /// An item on the sheet: its solids (one for a body, every placed body
@@ -238,9 +272,83 @@ struct Placed {
     section: Option<SectionMark>,
     /// A caption under the view (a mechanism's position).
     caption: Option<String>,
+    /// The detail window in view coordinates: the lines are clipped to
+    /// it already, the hatching is clipped to it when drawn.
+    window: Option<Bounds>,
     dx: f64,
     dy: f64,
     b: Bounds,
+}
+
+/// The box's extent as seen from `view`: the window of a detail view.
+fn window_of(view: View, (lo, hi): (Vec3, Vec3)) -> Bounds {
+    let (u, v) = frame(view);
+    let mut b = Bounds {
+        minx: f64::INFINITY,
+        miny: f64::INFINITY,
+        maxx: f64::NEG_INFINITY,
+        maxy: f64::NEG_INFINITY,
+    };
+    for k in 0..8 {
+        let p = Vec3::new(
+            if k & 1 == 0 { lo.x } else { hi.x },
+            if k & 2 == 0 { lo.y } else { hi.y },
+            if k & 4 == 0 { lo.z } else { hi.z },
+        );
+        let (x, y) = (p.dot(u), p.dot(v));
+        b.minx = b.minx.min(x);
+        b.miny = b.miny.min(y);
+        b.maxx = b.maxx.max(x);
+        b.maxy = b.maxy.max(y);
+    }
+    b
+}
+
+/// The part of the segment inside the window (Liang-Barsky).
+fn clip_segment(a: Vec2, b: Vec2, w: &Bounds) -> Option<[Vec2; 2]> {
+    let (mut t0, mut t1) = (0.0_f64, 1.0_f64);
+    let d = b - a;
+    for (p, q) in [
+        (-d.x, a.x - w.minx),
+        (d.x, w.maxx - a.x),
+        (-d.y, a.y - w.miny),
+        (d.y, w.maxy - a.y),
+    ] {
+        if p == 0.0 {
+            if q < 0.0 {
+                return None;
+            }
+            continue;
+        }
+        let t = q / p;
+        if p < 0.0 {
+            t0 = t0.max(t);
+        } else {
+            t1 = t1.min(t);
+        }
+        if t0 > t1 {
+            return None;
+        }
+    }
+    (t1 - t0 > 1e-12).then(|| [a + d * t0, a + d * t1])
+}
+
+/// The lines cut down to the window: segments clipped, arcs replaced by
+/// their clipped chords.
+fn clip_lines(lines: ViewLines, w: &Bounds) -> ViewLines {
+    let clip = |segs: &[[Vec2; 2]], arcs: &[ViewArc]| -> Vec<[Vec2; 2]> {
+        segs.iter()
+            .copied()
+            .chain(arcs.iter().flat_map(arc_chords))
+            .filter_map(|[a, b]| clip_segment(a, b, w))
+            .collect()
+    };
+    ViewLines {
+        visible: clip(&lines.visible, &lines.visible_arcs),
+        hidden: clip(&lines.hidden, &lines.hidden_arcs),
+        visible_arcs: Vec::new(),
+        hidden_arcs: Vec::new(),
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -799,11 +907,23 @@ impl Sheet {
                         spec.axis
                     ));
                 }
+                // A section shows no hidden lines unless asked: what
+                // lies behind the cut is the point of cutting.
+                let asked = opts.hidden == Some(true);
                 let lines = ViewLines {
                     visible: cut_lines.visible,
-                    hidden: Vec::new(),
+                    hidden: if asked { cut_lines.hidden } else { Vec::new() },
                     visible_arcs: cut_lines.visible_arcs,
-                    hidden_arcs: Vec::new(),
+                    hidden_arcs: if asked {
+                        cut_lines.hidden_arcs
+                    } else {
+                        Vec::new()
+                    },
+                };
+                let window = opts.window.map(|w| window_of(view, w));
+                let lines = match &window {
+                    Some(w) => clip_lines(lines, w),
+                    None => lines,
                 };
                 let letter = letters.next().unwrap_or('Z');
                 // Where the plane is edge-on: the top view by preference,
@@ -840,7 +960,7 @@ impl Sheet {
                         sight: Vec2::new(-1.0, 0.0),
                     },
                 };
-                let b = bounds_of(&lines);
+                let b = window.unwrap_or_else(|| bounds_of(&lines));
                 views.push(Placed {
                     name: name.clone(),
                     lines,
@@ -849,6 +969,7 @@ impl Sheet {
                     cut: cut_lines.cut,
                     section: Some(mark),
                     caption: None,
+                    window,
                     dx: 0.0,
                     dy: 0.0,
                     b,
@@ -861,12 +982,25 @@ impl Sheet {
                 ));
             };
             let lines = project_view(if name == "iso" { &iso_solids } else { &solids }, view);
+            let window = opts.window.map(|w| window_of(view, w));
+            let lines = match &window {
+                Some(w) => clip_lines(lines, w),
+                None => lines,
+            };
+            let inside = |p: Vec2| {
+                window.is_none_or(|w| {
+                    p.x >= w.minx && p.x <= w.maxx && p.y >= w.miny && p.y <= w.maxy
+                })
+            };
             // Hole callouts belong on a part's own sheet: an assembly
             // view is a thicket of holes seen end-on.
             let callouts = if name == "iso" || !one_part {
                 Vec::new()
             } else {
                 callouts(&solids, view)
+                    .into_iter()
+                    .filter(|c| inside(c.centre))
+                    .collect()
             };
             let balloons = if name == "iso" {
                 let (u, v) = frame(view);
@@ -875,11 +1009,12 @@ impl Sheet {
                         centroid_of(&iso_parts[r.body])
                             .map(|c| (r.item, Vec2::new(c.dot(u), c.dot(v))))
                     })
+                    .filter(|(_, p)| inside(*p))
                     .collect()
             } else {
                 Vec::new()
             };
-            let b = bounds_of(&lines);
+            let b = window.unwrap_or_else(|| bounds_of(&lines));
             views.push(Placed {
                 name: name.clone(),
                 lines,
@@ -888,6 +1023,7 @@ impl Sheet {
                 cut: Vec::new(),
                 section: None,
                 caption: None,
+                window,
                 dx: 0.0,
                 dy: 0.0,
                 b,
@@ -917,6 +1053,7 @@ impl Sheet {
                     cut: Vec::new(),
                     section: None,
                     caption,
+                    window: None,
                     dx: 0.0,
                     dy: 0.0,
                     b,
@@ -1043,7 +1180,23 @@ impl Sheet {
                     .iter()
                     .map(|l| l.iter().map(|q| (sx(q.x + p.dx), sy(q.y + p.dy))).collect())
                     .collect();
-                page.lines(&hatch(&loops, 2.5), 0.18, None);
+                let mut hatching = hatch(&loops, 2.5);
+                if let Some(w) = &p.window {
+                    let w = Bounds {
+                        minx: sx(w.minx + p.dx),
+                        miny: sy(w.miny + p.dy),
+                        maxx: sx(w.maxx + p.dx),
+                        maxy: sy(w.maxy + p.dy),
+                    };
+                    hatching = hatching
+                        .iter()
+                        .filter_map(|[a, b]| {
+                            clip_segment(Vec2::new(a.0, a.1), Vec2::new(b.0, b.1), &w)
+                        })
+                        .map(|[a, b]| [(a.x, a.y), (b.x, b.y)])
+                        .collect();
+                }
+                page.lines(&hatching, 0.18, None);
                 page.text(
                     sx((p.b.minx + p.b.maxx) / 2.0 + p.dx),
                     sy(p.b.miny + p.dy) - 6.0,
@@ -1918,6 +2071,101 @@ mod tests {
         .err()
         .expect("refused");
         assert!(err.contains("section-side"), "{err}");
+    }
+
+    #[test]
+    fn a_window_clips_the_views_to_a_box_and_a_section_shows_hidden_lines_when_asked() {
+        // The block with the hole again, 60 x 40 x 20; a side section at
+        // x = 40 keeps the hole (at x = 30) behind the cut face: dashed
+        // only when hidden lines are asked for.
+        let solid = {
+            let mut sk = ok_sketch::Sketch::new();
+            sk.add_rectangle(Vec2::ZERO, Vec2::new(60.0, 40.0));
+            sk.add_circle(Vec2::new(30.0, 20.0), 5.0);
+            let profiles = sk.profiles(&ok_sketch::ProfileOptions::default());
+            let profile = profiles
+                .iter()
+                .max_by(|a, b| a.area().total_cmp(&b.area()))
+                .unwrap();
+            ok_brep::extrude(
+                profile,
+                &Plane::from_origin_normal(Vec3::ZERO, Vec3::Z).unwrap(),
+                0.0,
+                20.0,
+                1,
+            )
+            .unwrap()
+        };
+        let parts = [Part {
+            name: "Block".into(),
+            material: String::new(),
+            solids: vec![&solid],
+            key: (1, 0),
+        }];
+        let section = |hidden: Option<bool>, window: Option<(Vec3, Vec3)>| {
+            Sheet::layout(
+                &parts,
+                &Options {
+                    views: vec!["section-side@40".into()],
+                    hidden,
+                    window,
+                    ..Options::default()
+                },
+            )
+            .unwrap()
+        };
+        let plain = section(None, None);
+        assert!(
+            plain.placed[0].lines.hidden.is_empty(),
+            "a section hides nothing by default"
+        );
+        let asked = section(Some(true), None);
+        assert!(
+            !asked.placed[0].lines.hidden.is_empty()
+                || !asked.placed[0].lines.hidden_arcs.is_empty(),
+            "the hole behind the cut, dashed"
+        );
+        assert!((plain.scale() - asked.scale()).abs() < 1e-9);
+        // A window over the block's lower-left quarter, as seen from the
+        // right (y right, z up): every line inside it, the frame its size,
+        // the scale larger than the whole block's.
+        let w = (Vec3::new(0.0, 0.0, 0.0), Vec3::new(60.0, 20.0, 10.0));
+        let detail = section(Some(true), Some(w));
+        let v = &detail.placed[0];
+        assert!(
+            (v.b.minx, v.b.miny, v.b.maxx, v.b.maxy) == (0.0, 0.0, 20.0, 10.0),
+            "{:?}",
+            v.b
+        );
+        for [a, b] in v.lines.visible.iter().chain(&v.lines.hidden) {
+            for p in [a, b] {
+                assert!(
+                    p.x >= -1e-9 && p.x <= 20.0 + 1e-9 && p.y >= -1e-9 && p.y <= 10.0 + 1e-9,
+                    "{p:?} outside the window"
+                );
+            }
+        }
+        assert!(v.lines.visible_arcs.is_empty() && v.lines.hidden_arcs.is_empty());
+        assert!(
+            !v.lines.visible.is_empty() && !v.lines.hidden.is_empty(),
+            "the block's corner and the hole's lower half are in the window"
+        );
+        assert!(
+            detail.scale() > asked.scale(),
+            "{} vs {}",
+            detail.scale(),
+            asked.scale()
+        );
+        // The window's hatching stays in the frame on the sheet.
+        let pdf = detail.to_pdf();
+        objects_are_where_the_xref_says(&pdf);
+        assert!(pdf::inflated(&pdf).contains("SECTION A-A"));
+        // A box with no size is refused, as is a short one.
+        assert!(parse_box("1,2,3,1,2,3").is_err());
+        assert!(parse_box("1,2,3").is_err());
+        let b = parse_box("10, 5, 0, -10, -5, 2").unwrap();
+        assert_eq!(b, (Vec3::new(-10.0, -5.0, 0.0), Vec3::new(10.0, 5.0, 2.0)));
+        assert_eq!(box_name(&b), "-10,-5,0,10,5,2");
     }
 
     #[test]

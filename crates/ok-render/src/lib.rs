@@ -130,34 +130,16 @@ impl Section {
     }
 }
 
-/// Parses a box to fit the camera to, `"x0,y0,z0,x1,y1,z1"` in model
-/// units: a detail window, so a screenshot zooms on one corner of a
-/// large assembly. Either corner may come first.
+/// Parses the box a screenshot is fitted to, `"x0,y0,z0,x1,y1,z1"` in
+/// model units (`ok_sheet::parse_box`): a detail window, so a
+/// screenshot zooms on one corner of a large assembly.
 pub fn parse_fit(text: &str) -> Result<(Vec3, Vec3), String> {
-    let parts: Vec<&str> = text.split(',').map(str::trim).collect();
-    if parts.len() != 6 {
-        return Err(format!(
-            "fit {text:?}: use x0,y0,z0,x1,y1,z1, the box to fit the view to"
-        ));
-    }
-    let mut v = [0.0_f64; 6];
-    for (k, part) in parts.iter().enumerate() {
-        v[k] = part
-            .parse()
-            .map_err(|_| format!("fit value {part:?} is not a number"))?;
-    }
-    let lo = Vec3::new(v[0].min(v[3]), v[1].min(v[4]), v[2].min(v[5]));
-    let hi = Vec3::new(v[0].max(v[3]), v[1].max(v[4]), v[2].max(v[5]));
-    if (hi.x - lo.x).max(hi.y - lo.y).max(hi.z - lo.z) <= 0.0 {
-        return Err(format!("fit {text:?}: the box has no size"));
-    }
-    Ok((lo, hi))
+    ok_sheet::parse_box(text)
 }
 
 /// The text `parse_fit` reads, for passing a fit on.
 pub fn fit_name(fit: &(Vec3, Vec3)) -> String {
-    let (lo, hi) = fit;
-    format!("{},{},{},{},{},{}", lo.x, lo.y, lo.z, hi.x, hi.y, hi.z)
+    ok_sheet::box_name(fit)
 }
 
 /// What to render and how.
