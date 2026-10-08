@@ -1643,11 +1643,13 @@ impl Sheet {
             None,
         );
         let by = MARGIN + BLOCK;
+        // Each half of the block holds its lines; a long one is elided.
+        let half = sw / 2.0 - MARGIN - 8.0;
         page.text(
             MARGIN + 4.0,
             by - 9.0,
             6.0,
-            &self.title,
+            &elide(&self.title, 6.0, half),
             Anchor::Left,
             0.0,
             false,
@@ -1657,15 +1659,19 @@ impl Sheet {
             MARGIN + 4.0,
             by - 18.0,
             3.5,
-            &format!(
-                "Views: {} · third angle{} · mm · {}",
-                names.join(", "),
-                if self.hidden {
-                    ""
-                } else {
-                    " · hidden lines omitted"
-                },
-                self.size.name()
+            &elide(
+                &format!(
+                    "Views: {} · third angle{} · mm · {}",
+                    names.join(", "),
+                    if self.hidden {
+                        ""
+                    } else {
+                        " · hidden lines omitted"
+                    },
+                    self.size.name()
+                ),
+                3.5,
+                half,
             ),
             Anchor::Left,
             0.0,
@@ -1689,13 +1695,31 @@ impl Sheet {
             sw / 2.0 + 4.0,
             by - 18.0,
             3.5,
-            &note,
+            &elide(&note, 3.5, half),
             Anchor::Left,
             0.0,
             false,
         );
         page.finish()
     }
+}
+
+/// `text` cut to fit `width` mm at `size` pt, ending in "..." when it
+/// had to be, so a title block line stays in its half of the block.
+fn elide(text: &str, size: f64, width: f64) -> String {
+    if pdf::text_width(text, size) <= width {
+        return text.to_string();
+    }
+    let chars: Vec<char> = text.chars().collect();
+    let mut n = chars.len();
+    while n > 0 {
+        n -= 1;
+        let cut: String = chars[..n].iter().collect::<String>().trim_end().to_string() + "...";
+        if pdf::text_width(&cut, size) <= width {
+            return cut;
+        }
+    }
+    "...".to_string()
 }
 
 /// A body for a sheet: name, material, the key grouping identical parts,
@@ -2259,6 +2283,54 @@ mod tests {
         let b = parse_box("10, 5, 0, -10, -5, 2").unwrap();
         assert_eq!(b, (Vec3::new(-10.0, -5.0, 0.0), Vec3::new(10.0, 5.0, 2.0)));
         assert_eq!(box_name(&b), "-10,-5,0,10,5,2");
+    }
+
+    #[test]
+    fn long_title_block_lines_are_elided_to_their_half_of_the_block() {
+        let a = block(10.0, 10.0, 10.0);
+        let part = Part {
+            name: "Block".into(),
+            material: String::new(),
+            solids: vec![&a],
+            key: (1, 0),
+            names: vec!["a body with a long name".into()],
+        };
+        let long = "right of a body with a long name".to_string();
+        let sheet = Sheet::layout(
+            &[part],
+            &Options {
+                views: vec![
+                    "front".into(),
+                    long.clone(),
+                    long.clone(),
+                    long.clone(),
+                    long.clone(),
+                ],
+                title: "a title ".repeat(20),
+                note: "a note ".repeat(40),
+                ..Options::default()
+            },
+        )
+        .unwrap();
+        let text = pdf::inflated(&sheet.to_pdf());
+        let half = SheetSize::A4.size().0 / 2.0 - MARGIN - 8.0;
+        for (start, size) in [("(Views: ", 3.5), ("(a note ", 3.5), ("(a title ", 6.0)] {
+            let line = text
+                .split(start)
+                .nth(1)
+                .unwrap_or_else(|| panic!("no line starting {start}"))
+                .split(") Tj")
+                .next()
+                .unwrap();
+            assert!(line.ends_with("..."), "{start}: {line}");
+            assert!(pdf::text_width(line, size) <= half, "{start}: {line}");
+            assert!(
+                pdf::text_width(line, size) > half - 12.0 * size,
+                "{start} is cut short: {line}"
+            );
+        }
+        assert_eq!(elide("short", 3.5, 100.0), "short");
+        assert_eq!(elide("anything", 3.5, 0.0), "...");
     }
 
     #[test]
