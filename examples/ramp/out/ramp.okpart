@@ -4129,7 +4129,7 @@
             "kind": {
               "type": "hole",
               "sketch": 10,
-              "diameter": 28.575,
+              "diameter": 33.3375,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -4444,7 +4444,7 @@
             "kind": {
               "type": "hole",
               "sketch": 10,
-              "diameter": 28.575,
+              "diameter": 33.3375,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -5079,7 +5079,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 28.575,
+              "diameter": 33.3375,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -5714,7 +5714,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 28.575,
+              "diameter": 33.3375,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -5740,6 +5740,344 @@
     },
     {
       "id": 11,
+      "kind": {
+        "type": "part_studio",
+        "name": "bushing_a",
+        "features": [
+          {
+            "id": 1,
+            "name": "#skin",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "skin",
+              "expression": "11.1125"
+            }
+          },
+          {
+            "id": 2,
+            "name": "#rib",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "rib",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 3,
+            "name": "#curb",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "curb",
+              "expression": "25.4"
+            }
+          },
+          {
+            "id": 4,
+            "name": "#pin_drop",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "pin_drop",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 5,
+            "name": "#lug_r",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "lug_r",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 6,
+            "name": "bushing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -19.049999999999997
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 16.66875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "bushing, 0.75 long",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 6,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 8,
+            "name": "bushing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 123.825
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 16.66875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "bushing, 0.75 long",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 8,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 10,
+            "name": "bushing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 352.42499999999995
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 16.66875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "bushing, 0.75 long",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 10,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 12,
+            "name": "bushing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 533.4
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 16.66875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 13,
+            "name": "bushing, 0.75 long",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 12,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 14,
+            "name": "bushing bore",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -31.75
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 15,
+            "name": "bushing bore",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 14,
+              "diameter": 26.987499999999997,
+              "depth": 596.9,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          }
+        ],
+        "next_id": 16,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "bushing 1.0625 x 1.3125 x 0.75",
+          "9": "bushing 1.0625 x 1.3125 x 0.75",
+          "11": "bushing 1.0625 x 1.3125 x 0.75",
+          "13": "bushing 1.0625 x 1.3125 x 0.75"
+        },
+        "part_materials": {
+          "7": {
+            "name": "SAE 841 bronze",
+            "density": 6.4
+          },
+          "9": {
+            "name": "SAE 841 bronze",
+            "density": 6.4
+          },
+          "11": {
+            "name": "SAE 841 bronze",
+            "density": 6.4
+          },
+          "13": {
+            "name": "SAE 841 bronze",
+            "density": 6.4
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
       "kind": {
         "type": "part_studio",
         "name": "stub_ground",
@@ -6252,7 +6590,7 @@
       }
     },
     {
-      "id": 12,
+      "id": 13,
       "kind": {
         "type": "part_studio",
         "name": "skin_bottom_b",
@@ -6775,7 +7113,7 @@
       }
     },
     {
-      "id": 13,
+      "id": 14,
       "kind": {
         "type": "part_studio",
         "name": "rail_plain",
@@ -7194,7 +7532,7 @@
       }
     },
     {
-      "id": 14,
+      "id": 15,
       "kind": {
         "type": "part_studio",
         "name": "lug_stub_left",
@@ -7462,7 +7800,7 @@
             "kind": {
               "type": "hole",
               "sketch": 10,
-              "diameter": 28.575,
+              "diameter": 33.3375,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -7487,7 +7825,7 @@
       }
     },
     {
-      "id": 15,
+      "id": 16,
       "kind": {
         "type": "part_studio",
         "name": "lug_stub_right",
@@ -7755,7 +8093,7 @@
             "kind": {
               "type": "hole",
               "sketch": 10,
-              "diameter": 28.575,
+              "diameter": 33.3375,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -7780,7 +8118,7 @@
       }
     },
     {
-      "id": 16,
+      "id": 17,
       "kind": {
         "type": "part_studio",
         "name": "interior_lug_b1",
@@ -8390,7 +8728,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 28.575,
+              "diameter": 33.3375,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -8415,7 +8753,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 18,
       "kind": {
         "type": "part_studio",
         "name": "interior_lug_b2",
@@ -9025,7 +9363,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 28.575,
+              "diameter": 33.3375,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -9050,7 +9388,345 @@
       }
     },
     {
-      "id": 18,
+      "id": 19,
+      "kind": {
+        "type": "part_studio",
+        "name": "bushing_b",
+        "features": [
+          {
+            "id": 1,
+            "name": "#skin",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "skin",
+              "expression": "11.1125"
+            }
+          },
+          {
+            "id": 2,
+            "name": "#rib",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "rib",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 3,
+            "name": "#curb",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "curb",
+              "expression": "25.4"
+            }
+          },
+          {
+            "id": 4,
+            "name": "#pin_drop",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "pin_drop",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 5,
+            "name": "#lug_r",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "lug_r",
+              "expression": "38.1"
+            }
+          },
+          {
+            "id": 6,
+            "name": "bushing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -38.099999999999994
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 16.66875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "bushing, 0.75 long",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 6,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 8,
+            "name": "bushing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 47.625
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 16.66875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "bushing, 0.75 long",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 8,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 10,
+            "name": "bushing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 466.725
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 16.66875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "bushing, 0.75 long",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 10,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 12,
+            "name": "bushing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 552.4499999999999
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 16.66875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 13,
+            "name": "bushing, 0.75 long",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 12,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 14,
+            "name": "bushing bore",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -50.8
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 15,
+            "name": "bushing bore",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 14,
+              "diameter": 26.987499999999997,
+              "depth": 635.0,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          }
+        ],
+        "next_id": 16,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "bushing 1.0625 x 1.3125 x 0.75",
+          "9": "bushing 1.0625 x 1.3125 x 0.75",
+          "11": "bushing 1.0625 x 1.3125 x 0.75",
+          "13": "bushing 1.0625 x 1.3125 x 0.75"
+        },
+        "part_materials": {
+          "7": {
+            "name": "SAE 841 bronze",
+            "density": 6.4
+          },
+          "9": {
+            "name": "SAE 841 bronze",
+            "density": 6.4
+          },
+          "11": {
+            "name": "SAE 841 bronze",
+            "density": 6.4
+          },
+          "13": {
+            "name": "SAE 841 bronze",
+            "density": 6.4
+          }
+        }
+      }
+    },
+    {
+      "id": 20,
       "kind": {
         "type": "part_studio",
         "name": "pipe",
@@ -9208,7 +9884,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 21,
       "kind": {
         "type": "part_studio",
         "name": "pipe_cap",
@@ -9375,7 +10051,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 22,
       "kind": {
         "type": "part_studio",
         "name": "end_plate",
@@ -10122,7 +10798,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 23,
       "kind": {
         "type": "part_studio",
         "name": "ground_angle",
@@ -10594,7 +11270,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 24,
       "kind": {
         "type": "part_studio",
         "name": "sheet_cdx",
@@ -10831,7 +11507,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 25,
       "kind": {
         "type": "part_studio",
         "name": "sheet_birch",
@@ -11068,13 +11744,13 @@
       }
     },
     {
-      "id": 24,
+      "id": 26,
       "kind": {
         "type": "assembly",
         "name": "panel A",
         "instances": [
           {
-            "id": 25,
+            "id": 27,
             "name": "skin_top",
             "studio": 1,
             "body": 0,
@@ -11093,7 +11769,7 @@
             }
           },
           {
-            "id": 26,
+            "id": 28,
             "name": "rib 1",
             "studio": 2,
             "body": 0,
@@ -11112,7 +11788,7 @@
             }
           },
           {
-            "id": 27,
+            "id": 29,
             "name": "rib 2",
             "studio": 2,
             "body": 1,
@@ -11131,7 +11807,7 @@
             }
           },
           {
-            "id": 28,
+            "id": 30,
             "name": "rib 3",
             "studio": 2,
             "body": 2,
@@ -11150,7 +11826,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 31,
             "name": "rib 4",
             "studio": 2,
             "body": 3,
@@ -11169,7 +11845,7 @@
             }
           },
           {
-            "id": 30,
+            "id": 32,
             "name": "rib 5",
             "studio": 2,
             "body": 4,
@@ -11188,7 +11864,7 @@
             }
           },
           {
-            "id": 31,
+            "id": 33,
             "name": "cross_block 1",
             "studio": 3,
             "body": 0,
@@ -11207,7 +11883,7 @@
             }
           },
           {
-            "id": 32,
+            "id": 34,
             "name": "cross_block 2",
             "studio": 3,
             "body": 1,
@@ -11226,7 +11902,7 @@
             }
           },
           {
-            "id": 33,
+            "id": 35,
             "name": "cross_block 3",
             "studio": 3,
             "body": 2,
@@ -11245,7 +11921,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 36,
             "name": "cross_block 4",
             "studio": 3,
             "body": 3,
@@ -11264,7 +11940,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 37,
             "name": "cross_block 5",
             "studio": 3,
             "body": 4,
@@ -11283,7 +11959,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 38,
             "name": "cross_block 6",
             "studio": 3,
             "body": 5,
@@ -11302,7 +11978,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 39,
             "name": "cross_block 7",
             "studio": 3,
             "body": 6,
@@ -11321,7 +11997,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 40,
             "name": "cross_block 8",
             "studio": 3,
             "body": 7,
@@ -11340,7 +12016,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 41,
             "name": "joint_block",
             "studio": 4,
             "body": 0,
@@ -11359,7 +12035,7 @@
             }
           },
           {
-            "id": 40,
+            "id": 42,
             "name": "stub 1",
             "studio": 5,
             "body": 0,
@@ -11378,7 +12054,7 @@
             }
           },
           {
-            "id": 41,
+            "id": 43,
             "name": "stub 2",
             "studio": 5,
             "body": 1,
@@ -11397,7 +12073,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 44,
             "name": "skin_bottom_a",
             "studio": 6,
             "body": 0,
@@ -11416,7 +12092,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 45,
             "name": "rail_lug_left",
             "studio": 7,
             "body": 0,
@@ -11435,7 +12111,7 @@
             }
           },
           {
-            "id": 44,
+            "id": 46,
             "name": "rail_lug_right",
             "studio": 8,
             "body": 0,
@@ -11454,7 +12130,7 @@
             }
           },
           {
-            "id": 45,
+            "id": 47,
             "name": "interior_lug_a1",
             "studio": 9,
             "body": 0,
@@ -11473,10 +12149,86 @@
             }
           },
           {
-            "id": 46,
+            "id": 48,
             "name": "interior_lug_a2",
             "studio": 10,
             "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 49,
+            "name": "bushing_a 1",
+            "studio": 11,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 50,
+            "name": "bushing_a 2",
+            "studio": 11,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 51,
+            "name": "bushing_a 3",
+            "studio": 11,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 52,
+            "name": "bushing_a 4",
+            "studio": 11,
+            "body": 3,
             "fixed": true,
             "placement": {
               "position": {
@@ -11496,13 +12248,13 @@
       }
     },
     {
-      "id": 47,
+      "id": 53,
       "kind": {
         "type": "assembly",
         "name": "panel B",
         "instances": [
           {
-            "id": 48,
+            "id": 54,
             "name": "skin_top",
             "studio": 1,
             "body": 0,
@@ -11521,7 +12273,7 @@
             }
           },
           {
-            "id": 49,
+            "id": 55,
             "name": "rib 1",
             "studio": 2,
             "body": 0,
@@ -11540,7 +12292,7 @@
             }
           },
           {
-            "id": 50,
+            "id": 56,
             "name": "rib 2",
             "studio": 2,
             "body": 1,
@@ -11559,7 +12311,7 @@
             }
           },
           {
-            "id": 51,
+            "id": 57,
             "name": "rib 3",
             "studio": 2,
             "body": 2,
@@ -11578,7 +12330,7 @@
             }
           },
           {
-            "id": 52,
+            "id": 58,
             "name": "rib 4",
             "studio": 2,
             "body": 3,
@@ -11597,7 +12349,7 @@
             }
           },
           {
-            "id": 53,
+            "id": 59,
             "name": "rib 5",
             "studio": 2,
             "body": 4,
@@ -11616,7 +12368,7 @@
             }
           },
           {
-            "id": 54,
+            "id": 60,
             "name": "cross_block 1",
             "studio": 3,
             "body": 0,
@@ -11635,7 +12387,7 @@
             }
           },
           {
-            "id": 55,
+            "id": 61,
             "name": "cross_block 2",
             "studio": 3,
             "body": 1,
@@ -11654,7 +12406,7 @@
             }
           },
           {
-            "id": 56,
+            "id": 62,
             "name": "cross_block 3",
             "studio": 3,
             "body": 2,
@@ -11673,7 +12425,7 @@
             }
           },
           {
-            "id": 57,
+            "id": 63,
             "name": "cross_block 4",
             "studio": 3,
             "body": 3,
@@ -11692,7 +12444,7 @@
             }
           },
           {
-            "id": 58,
+            "id": 64,
             "name": "cross_block 5",
             "studio": 3,
             "body": 4,
@@ -11711,7 +12463,7 @@
             }
           },
           {
-            "id": 59,
+            "id": 65,
             "name": "cross_block 6",
             "studio": 3,
             "body": 5,
@@ -11730,7 +12482,7 @@
             }
           },
           {
-            "id": 60,
+            "id": 66,
             "name": "cross_block 7",
             "studio": 3,
             "body": 6,
@@ -11749,7 +12501,7 @@
             }
           },
           {
-            "id": 61,
+            "id": 67,
             "name": "cross_block 8",
             "studio": 3,
             "body": 7,
@@ -11768,7 +12520,7 @@
             }
           },
           {
-            "id": 62,
+            "id": 68,
             "name": "joint_block",
             "studio": 4,
             "body": 0,
@@ -11787,46 +12539,8 @@
             }
           },
           {
-            "id": 63,
+            "id": 69,
             "name": "stub_ground 1",
-            "studio": 11,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 64,
-            "name": "stub_ground 2",
-            "studio": 11,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 65,
-            "name": "skin_bottom_b",
             "studio": 12,
             "body": 0,
             "fixed": true,
@@ -11844,8 +12558,27 @@
             }
           },
           {
-            "id": 66,
-            "name": "rail_plain 1",
+            "id": 70,
+            "name": "stub_ground 2",
+            "studio": 12,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 71,
+            "name": "skin_bottom_b",
             "studio": 13,
             "body": 0,
             "fixed": true,
@@ -11863,27 +12596,8 @@
             }
           },
           {
-            "id": 67,
-            "name": "rail_plain 2",
-            "studio": 13,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 68,
-            "name": "lug_stub_left",
+            "id": 72,
+            "name": "rail_plain 1",
             "studio": 14,
             "body": 0,
             "fixed": true,
@@ -11901,8 +12615,27 @@
             }
           },
           {
-            "id": 69,
-            "name": "lug_stub_right",
+            "id": 73,
+            "name": "rail_plain 2",
+            "studio": 14,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 74,
+            "name": "lug_stub_left",
             "studio": 15,
             "body": 0,
             "fixed": true,
@@ -11920,8 +12653,8 @@
             }
           },
           {
-            "id": 70,
-            "name": "interior_lug_b1",
+            "id": 75,
+            "name": "lug_stub_right",
             "studio": 16,
             "body": 0,
             "fixed": true,
@@ -11939,10 +12672,105 @@
             }
           },
           {
-            "id": 71,
-            "name": "interior_lug_b2",
+            "id": 76,
+            "name": "interior_lug_b1",
             "studio": 17,
             "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 77,
+            "name": "interior_lug_b2",
+            "studio": 18,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 78,
+            "name": "bushing_b 1",
+            "studio": 19,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 79,
+            "name": "bushing_b 2",
+            "studio": 19,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 80,
+            "name": "bushing_b 3",
+            "studio": 19,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 81,
+            "name": "bushing_b 4",
+            "studio": 19,
+            "body": 3,
             "fixed": true,
             "placement": {
               "position": {
@@ -11962,15 +12790,15 @@
       }
     },
     {
-      "id": 72,
+      "id": 82,
       "kind": {
         "type": "assembly",
         "name": "ramp",
         "instances": [
           {
-            "id": 73,
+            "id": 83,
             "name": "panel A",
-            "studio": 24,
+            "studio": 26,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -11987,9 +12815,9 @@
             }
           },
           {
-            "id": 74,
+            "id": 84,
             "name": "panel B",
-            "studio": 47,
+            "studio": 53,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -12006,9 +12834,9 @@
             }
           },
           {
-            "id": 75,
+            "id": 85,
             "name": "pipe",
-            "studio": 18,
+            "studio": 20,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12025,85 +12853,85 @@
             }
           },
           {
-            "id": 76,
+            "id": 86,
             "name": "pipe_cap 1",
-            "studio": 19,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 77,
-            "name": "pipe_cap 2",
-            "studio": 19,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 78,
-            "name": "end_plate 1",
-            "studio": 20,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 79,
-            "name": "end_plate 2",
-            "studio": 20,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 80,
-            "name": "ground_angle",
             "studio": 21,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 87,
+            "name": "pipe_cap 2",
+            "studio": 21,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 88,
+            "name": "end_plate 1",
+            "studio": 22,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 89,
+            "name": "end_plate 2",
+            "studio": 22,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 90,
+            "name": "ground_angle",
+            "studio": 23,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12122,11 +12950,11 @@
         ],
         "mates": [
           {
-            "id": 81,
+            "id": 91,
             "name": "fold",
             "kind": "revolute",
             "a": {
-              "instance": 75,
+              "instance": 85,
               "face": {
                 "feature": 7,
                 "local": 2,
@@ -12144,8 +12972,8 @@
               }
             },
             "b": {
-              "instance": 74,
-              "sub": 68,
+              "instance": 84,
+              "sub": 74,
               "face": {
                 "feature": 11,
                 "local": 2,
@@ -12162,7 +12990,7 @@
                 ]
               }
             },
-            "offset": 295.2749999999998,
+            "offset": 295.2749999999997,
             "angle": 180.0,
             "flip": false
           }
@@ -12170,15 +12998,15 @@
       }
     },
     {
-      "id": 82,
+      "id": 92,
       "kind": {
         "type": "assembly",
         "name": "cut sheet, CDX",
         "instances": [
           {
-            "id": 83,
+            "id": 93,
             "name": "sheet_cdx",
-            "studio": 22,
+            "studio": 24,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12195,7 +13023,7 @@
             }
           },
           {
-            "id": 84,
+            "id": 94,
             "name": "skin_top 1 #1",
             "studio": 1,
             "body": 0,
@@ -12214,7 +13042,7 @@
             }
           },
           {
-            "id": 85,
+            "id": 95,
             "name": "skin_bottom_a 1 #2",
             "studio": 6,
             "body": 0,
@@ -12233,7 +13061,7 @@
             }
           },
           {
-            "id": 86,
+            "id": 96,
             "name": "skin_top 1 #3",
             "studio": 1,
             "body": 0,
@@ -12252,9 +13080,9 @@
             }
           },
           {
-            "id": 87,
+            "id": 97,
             "name": "skin_bottom_b 1 #4",
-            "studio": 12,
+            "studio": 13,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12275,15 +13103,15 @@
       }
     },
     {
-      "id": 88,
+      "id": 98,
       "kind": {
         "type": "assembly",
         "name": "cut sheet, birch",
         "instances": [
           {
-            "id": 89,
+            "id": 99,
             "name": "sheet_birch",
-            "studio": 23,
+            "studio": 25,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12300,7 +13128,7 @@
             }
           },
           {
-            "id": 90,
+            "id": 100,
             "name": "rail_lug_left 1 #1",
             "studio": 7,
             "body": 0,
@@ -12319,7 +13147,7 @@
             }
           },
           {
-            "id": 91,
+            "id": 101,
             "name": "rail_lug_right 1 #2",
             "studio": 8,
             "body": 0,
@@ -12338,9 +13166,9 @@
             }
           },
           {
-            "id": 92,
+            "id": 102,
             "name": "rail_plain 1 #3",
-            "studio": 13,
+            "studio": 14,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12357,9 +13185,9 @@
             }
           },
           {
-            "id": 93,
+            "id": 103,
             "name": "rail_plain 2 #4",
-            "studio": 13,
+            "studio": 14,
             "body": 1,
             "fixed": true,
             "placement": {
@@ -12376,7 +13204,7 @@
             }
           },
           {
-            "id": 94,
+            "id": 104,
             "name": "interior_lug_a1 1 #5",
             "studio": 9,
             "body": 0,
@@ -12395,7 +13223,7 @@
             }
           },
           {
-            "id": 95,
+            "id": 105,
             "name": "interior_lug_a2 1 #6",
             "studio": 10,
             "body": 0,
@@ -12414,9 +13242,9 @@
             }
           },
           {
-            "id": 96,
+            "id": 106,
             "name": "interior_lug_b1 1 #7",
-            "studio": 16,
+            "studio": 17,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12433,9 +13261,9 @@
             }
           },
           {
-            "id": 97,
+            "id": 107,
             "name": "interior_lug_b2 1 #8",
-            "studio": 17,
+            "studio": 18,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12452,9 +13280,9 @@
             }
           },
           {
-            "id": 98,
+            "id": 108,
             "name": "lug_stub_left 1 #9",
-            "studio": 14,
+            "studio": 15,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12471,9 +13299,9 @@
             }
           },
           {
-            "id": 99,
+            "id": 109,
             "name": "lug_stub_right 1 #10",
-            "studio": 15,
+            "studio": 16,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -12490,7 +13318,7 @@
             }
           },
           {
-            "id": 100,
+            "id": 110,
             "name": "rib 3 #11",
             "studio": 2,
             "body": 2,
@@ -12509,7 +13337,7 @@
             }
           },
           {
-            "id": 101,
+            "id": 111,
             "name": "rib 3 #12",
             "studio": 2,
             "body": 2,
@@ -12528,7 +13356,7 @@
             }
           },
           {
-            "id": 102,
+            "id": 112,
             "name": "cross_block 4 #13",
             "studio": 3,
             "body": 3,
@@ -12547,7 +13375,7 @@
             }
           },
           {
-            "id": 103,
+            "id": 113,
             "name": "cross_block 4 #14",
             "studio": 3,
             "body": 3,
@@ -12566,7 +13394,7 @@
             }
           },
           {
-            "id": 104,
+            "id": 114,
             "name": "rib 1 #15",
             "studio": 2,
             "body": 0,
@@ -12585,7 +13413,7 @@
             }
           },
           {
-            "id": 105,
+            "id": 115,
             "name": "rib 1 #16",
             "studio": 2,
             "body": 0,
@@ -12604,7 +13432,7 @@
             }
           },
           {
-            "id": 106,
+            "id": 116,
             "name": "cross_block 4 #17",
             "studio": 3,
             "body": 3,
@@ -12623,7 +13451,7 @@
             }
           },
           {
-            "id": 107,
+            "id": 117,
             "name": "cross_block 4 #18",
             "studio": 3,
             "body": 3,
@@ -12642,7 +13470,7 @@
             }
           },
           {
-            "id": 108,
+            "id": 118,
             "name": "cross_block 1 #19",
             "studio": 3,
             "body": 0,
@@ -12661,7 +13489,7 @@
             }
           },
           {
-            "id": 109,
+            "id": 119,
             "name": "cross_block 1 #20",
             "studio": 3,
             "body": 0,
@@ -12680,7 +13508,7 @@
             }
           },
           {
-            "id": 110,
+            "id": 120,
             "name": "cross_block 1 #21",
             "studio": 3,
             "body": 0,
@@ -12699,7 +13527,7 @@
             }
           },
           {
-            "id": 111,
+            "id": 121,
             "name": "cross_block 1 #22",
             "studio": 3,
             "body": 0,
@@ -12718,7 +13546,7 @@
             }
           },
           {
-            "id": 112,
+            "id": 122,
             "name": "cross_block 1 #23",
             "studio": 3,
             "body": 0,
@@ -12737,7 +13565,7 @@
             }
           },
           {
-            "id": 113,
+            "id": 123,
             "name": "rib 1 #24",
             "studio": 2,
             "body": 0,
@@ -12756,7 +13584,7 @@
             }
           },
           {
-            "id": 114,
+            "id": 124,
             "name": "rib 1 #25",
             "studio": 2,
             "body": 0,
@@ -12775,7 +13603,7 @@
             }
           },
           {
-            "id": 115,
+            "id": 125,
             "name": "cross_block 1 #26",
             "studio": 3,
             "body": 0,
@@ -12794,7 +13622,7 @@
             }
           },
           {
-            "id": 116,
+            "id": 126,
             "name": "cross_block 1 #27",
             "studio": 3,
             "body": 0,
@@ -12813,7 +13641,7 @@
             }
           },
           {
-            "id": 117,
+            "id": 127,
             "name": "cross_block 1 #28",
             "studio": 3,
             "body": 0,
@@ -12832,7 +13660,7 @@
             }
           },
           {
-            "id": 118,
+            "id": 128,
             "name": "cross_block 3 #29",
             "studio": 3,
             "body": 2,
@@ -12851,7 +13679,7 @@
             }
           },
           {
-            "id": 119,
+            "id": 129,
             "name": "cross_block 3 #30",
             "studio": 3,
             "body": 2,
@@ -12870,7 +13698,7 @@
             }
           },
           {
-            "id": 120,
+            "id": 130,
             "name": "cross_block 3 #31",
             "studio": 3,
             "body": 2,
@@ -12889,7 +13717,7 @@
             }
           },
           {
-            "id": 121,
+            "id": 131,
             "name": "cross_block 3 #32",
             "studio": 3,
             "body": 2,
@@ -12908,7 +13736,7 @@
             }
           },
           {
-            "id": 122,
+            "id": 132,
             "name": "rib 1 #33",
             "studio": 2,
             "body": 0,
@@ -12927,7 +13755,7 @@
             }
           },
           {
-            "id": 123,
+            "id": 133,
             "name": "rib 1 #34",
             "studio": 2,
             "body": 0,
@@ -12946,7 +13774,7 @@
             }
           },
           {
-            "id": 124,
+            "id": 134,
             "name": "rib 1 #35",
             "studio": 2,
             "body": 0,
@@ -12965,7 +13793,7 @@
             }
           },
           {
-            "id": 125,
+            "id": 135,
             "name": "rib 1 #36",
             "studio": 2,
             "body": 0,
@@ -12988,5 +13816,5 @@
       }
     }
   ],
-  "next_id": 126
+  "next_id": 136
 }

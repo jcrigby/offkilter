@@ -1,6 +1,6 @@
 //! The folding truck ramp (examples/ramp) as a regression suite: every
 //! part regenerates closed, the panel and the ramp place every
-//! instance, the six lug bores share the pipe's axis, the interior lugs
+//! instance, the eight lug bores and their bushings share the pipe's axis, the interior lugs
 //! obey the nesting rule and leave the handle bare, the fold clears
 //! itself from open to folded, and the open and folded packages measure
 //! what the brief says. Every number prints (`--nocapture`); inches
@@ -107,10 +107,10 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     }
     assert_eq!(
         bodies,
-        15 + 7 + 9 + 6 + 2,
+        15 + 11 + 13 + 6 + 2,
         "shared, panel A, panel B, ramp parts and the two sheets"
     );
-    for (name, want) in [("panel A", 22), ("panel B", 24)] {
+    for (name, want) in [("panel A", 26), ("panel B", 28)] {
         let panel = tab_named(&doc, name);
         let r = doc.regenerate_assembly(panel).unwrap();
         assert_eq!(r.bodies.len(), want, "{name}");
@@ -120,7 +120,7 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     let r = doc.regenerate_assembly(ramp).unwrap();
     assert_eq!(
         r.bodies.len(),
-        22 + 24 + 6,
+        26 + 28 + 6,
         "two panels, the pipe, two caps, two end plates, the angle"
     );
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
@@ -189,8 +189,9 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
         (po.y).abs() < 1e-6 && (po.z + 1.5 * IN).abs() < 1e-6,
         "{po:?}"
     );
-    // Six lug bores of 1-1/8 in on it, two in each panel's rails and two
-    // interior per panel, within a hundredth of a millimetre.
+    // Eight lug bores of 1-5/16 in on it, the bushings' seats, two in
+    // each panel's rails and two interior per panel, within a
+    // hundredth of a millimetre.
     let mut bores = 0;
     for name in [
         "rail_lug_left",
@@ -203,7 +204,7 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
         "interior_lug_b2",
     ] {
         for b in named(&r, name) {
-            let cs = cylinders(&b.solid, 1.125 / 2.0);
+            let cs = cylinders(&b.solid, 1.3125 / 2.0);
             assert_eq!(cs.len(), 1, "{}: {} bores", b.name, cs.len());
             let (o, a) = cs[0];
             assert!(a.x.abs() > 1.0 - 1e-9, "{}: {a:?}", b.name);
@@ -216,6 +217,46 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
         bores, 8,
         "two rail lugs or stubs and two interior lugs per panel"
     );
+    // A bronze bushing in each, 3/4 long and flush with its lug, bored
+    // 1-1/16 on the axis: a slip fit on the pipe's 1.05.
+    let mut bushings = 0;
+    for b in r.bodies.iter().filter(|b| b.name.contains("/ bushing_")) {
+        let (o, a) = *cylinders(&b.solid, 1.0625 / 2.0)
+            .first()
+            .unwrap_or_else(|| panic!("{}: no 1-1/16 bore", b.name));
+        assert!(a.x.abs() > 1.0 - 1e-9, "{}: {a:?}", b.name);
+        let off = Vec3::new(0.0, o.y - po.y, o.z - po.z);
+        assert!(off.length() < 0.01, "{}: {off:?} off the pipe axis", b.name);
+        assert_eq!(
+            cylinders(&b.solid, 1.3125 / 2.0).len(),
+            1,
+            "{}: the seat",
+            b.name
+        );
+        let (lo, hi) = bounds(&b.solid);
+        assert!(
+            ((hi.x - lo.x) / IN - 0.75).abs() < 1e-6,
+            "{}: one ply long",
+            b.name
+        );
+        let panel = b.name.split(" / ").next().unwrap();
+        let in_lug = r.bodies.iter().any(|l| {
+            l.name.starts_with(panel)
+                && (l.name.contains("lug") || l.name.contains("rail_lug"))
+                && !l.name.contains("bushing")
+                && {
+                    let (ll, lh) = bounds(&l.solid);
+                    (ll.x - lo.x).abs() < 1e-6 && (lh.x - hi.x).abs() < 1e-6
+                }
+        });
+        assert!(in_lug, "{}: flush with no lug of its panel", b.name);
+        assert_eq!(
+            b.material.as_ref().map(|m| m.name.as_str()),
+            Some("SAE 841 bronze")
+        );
+        bushings += 1;
+    }
+    assert_eq!(bushings, 8, "a bushing in every lug");
     // The interior lugs: one ply each, panel B's outboard of panel A's,
     // none overlapping, each against a rib of its own panel, and the
     // bare pipe between the inner pair the handle.

@@ -13,6 +13,7 @@ item,size,qty,note
 "rail","3/4 birch, 45 x 3.375",2,"panel B, flush both sides"
 "lug stub","3/4 birch, 8 x 5.5, lug profile",2,"panel B, glued and brad-nailed to the outside of each rail over the lap"
 "interior lug","3/4 birch, 9.5 x 4.9375, lug profile",4,"two per panel; glued and brad-nailed through the face into the rib beside it and from the bottom skin into the foot"
+"bushing","SAE 841 bronze sleeve, 1.0625 ID x 1.3125 OD x 0.75",8,"one pressed into every lug, flush both faces; a slip fit on the pipe's 1.05"
 "hinge pipe","3/4 Sch 40 galvanized, 24.5, threaded both ends",1,"with two caps"
 "ground angle","1/8 x 1-1/2 aluminium angle x 21",1,"one leg against panel B's flush end, the other out past it flush with the top skin"
 "angle screw","#10 x 2 pan head",4,"through the angle's leg into each stub's end grain, two per stub, one high and one low"
