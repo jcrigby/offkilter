@@ -255,29 +255,32 @@ brief, this is why.
   13.5, 18-3/8, 23-7/8 and 30-3/8 (symmetric, the second and fifth
   clearing the 2x8 stubs by 3/8), five cross blocks a row (5-3/4,
   4-3/4, 4-1/8, 4-3/4, 5-3/4), the joint block and the ground angle at
-  31-7/8, the pipe 35-3/8, the panels 33-3/8 over the rails and
-  34-7/8 over the lugs. The hinge keeps four lugs a panel; A's
-  interior lugs sit inboard of the ribs at 8 and 23-7/8 (at 7-1/4 and
-  24-5/8), B's inboard of the edge ribs (2-1/4 and 29-5/8), and the
-  handle between the inner pair grows to 16-5/8 in of bare pipe. The
-  loads in the lug and bearing numbers below are unchanged, since the
-  ramp carries the same aerator; a 1/2 in pipe bending as a handle
-  over 16-5/8 in with the 45 lb folded package on it sees under 10
-  ksi. Sections 1 to 7 keep the brief's 21 in numbers.
-- **Two panels, not one.** The brief's identical panels needed a 3/4
-  spacer under one rail of each so the rail lugs could sit side by
-  side on the pipe, which put a 3/4 step in each rail at the joint.
-  Instead the two halves differ only at the hinge. Panel A's rails
-  are flush on both sides and carry their lugs in one piece. Panel B's
-  rails are plain and flush, with a lug stub (an 8 x 5-1/2 plate with
-  the half-round, lapping the rail's lower 2-1/2 in) glued and
-  brad-nailed to the outside of each. On the pipe each end has A's rail lug with B's
-  stub beside it, 34-7/8 over the lugs, 33-3/8 over the rails, no
-  step. The interior lugs sit against different ribs on the two panels
-  (A's inboard of the ribs at 8 and 23-7/8, B's inboard of the edge
-  ribs at 1.5 and 30-3/8), so B's land outboard of A's and the handle
-  between the inner pair is 16-5/8 in of bare pipe. No cheeks, no
-  spacers; the pipe is 35-3/8.
+  31-7/8, the panels 33-3/8 over the rails. The hinge is the next
+  bullet's. The loads in the lug and bearing numbers below are
+  unchanged, since the ramp carries the same aerator; a 1/2 in pipe
+  bending as a handle over 13-5/8 in with the 45 lb folded package on
+  it sees under 10 ksi. Sections 1 to 7 keep the brief's 21 in
+  numbers.
+- **All lugs alike, inside the rails (2026-10-08).** The rail lugs and
+  the lug stubs are gone: both panels have plain flush rails and four
+  identical interior lugs, so nothing stands past the rails but the
+  pipe caps, and the two panels differ only at the free end. The lugs
+  sit on the far (+x) side of the ribs at 1.5, 8, 23-7/8 and 30-3/8,
+  at 2-1/4, 8-3/4, 24-5/8 and 31-1/8, the same on both panels; the
+  ribs are symmetric about the middle, so panel B turned lands its
+  lugs on the near side of the same ribs, and across the pipe they
+  run B, A, B, A, B, A, B, A, each pair with a rib between them, the
+  middle pair 13-5/8 apart for the handle. The pipe is 33-3/8, flush
+  with the rails' outer faces, its caps the only thing beyond them.
+  Four lugs a panel as before, so the lug numbers below hold; the
+  bottom skins are now alike too, notched at the same four places.
+- **No rail lugs, no spacers.** The brief's identical panels needed a
+  3/4 spacer under one rail of each so the rail lugs could sit side
+  by side on the pipe, which put a 3/4 step in each rail at the
+  joint. The first answer was two panels differing at the hinge
+  (lugs in A's rails, stubs outside B's); the one above is simpler:
+  no lugs in or on the rails at all, four alike inside, and the rails
+  plain and flush on both panels. No cheeks, no spacers, no step.
 - **Lugs one ply.** With the 1-1/2 radius the wall round the bushing
   seat is 27/32, and at the 465 lb a lug carries (the 1,860 lb pipe
   tension over four lugs per panel) a single 3/4 birch lug sees about
@@ -311,7 +314,7 @@ brief, this is why.
   cures; the only screws left are the pipe caps. The joint block
   stays a 2x4 (the lugs bear on it) and the stubs 2x8 (the end plates
   clamp 1-1/2 x 7-1/4).
-- **Lug feet against ribs.** Each interior lug's foot lies against the
+- **Lug feet against ribs.** Each lug's foot lies against the
   side of a rib, brad-nailed to it through the faces and from the
   bottom skin, the top skin solid. The pull on a lug bears on the
   joint block (about 210 psi on 1.1 in²), so the fasteners hold the
@@ -327,19 +330,18 @@ brief, this is why.
   rail taper 8 in long.
 - **Parts.** One studio per part, in inches through `IN = 25.4`, every
   part built in place in the panel's frame; the skins, ribs, cross
-  blocks and joint block are shared by both panels, the bottom skin's
-  notches excepted. The stubs differ: panel A's run 3 in bare past
-  the skins for the end plates, panel B's stop flush with the skins'
-  end at 45 and carry the bevel feature. The rails with lugs, the lug
-  stubs and the interior lugs are a studio each because a kernel
-  `add` joins every body in the studio and each needs a half-round
-  added to its profile.
+  blocks, joint block, rails, lugs and bushings are shared by both
+  panels. Only the stubs differ: panel A's run 3 in bare past the
+  skins for the end plates, panel B's stop flush with the skins' end
+  at 45 and carry the bevel feature. The four lugs are a studio each
+  because a kernel `add` joins every body in the studio and each
+  needs a half-round added to its profile.
 - **Panels and ramp.** `panel A` and `panel B` are assemblies of fixed
   instances; the ramp places B turned 180 degrees about z and moved
   31-7/8 in x. Fixed placement rather than fastened mates, since a panel
   is one glued box and a mate per part would say nothing.
-- **Fold.** One revolute, `fold`, between the pipe and panel B's left
-  lug stub bore, its parameters read off the drawn pose. The fold goes
+- **Fold.** One revolute, `fold`, between the pipe and panel B's first
+  lug's bore, its parameters read off the drawn pose. The fold goes
   under: B's free end drops, and at 180 degrees it lies under A,
   bottoms 3 in apart, lugs interleaved. The bottom skin's hinge-end
   edge has the 3/8 chamfer and the test finds no interference at 0,
@@ -349,20 +351,19 @@ brief, this is why.
   first two. The rest live in sketched profiles, which this script
   redraws from the constants at the top.
 - **Hinge section.** The section is cut through the middle of panel
-  B's first interior lug from the right wall (at 18-3/4), so the
-  hatched profile is that lug, pipe and all, with panel A's lug seen
-  behind it. The sheet draws the three lugs at the cut (B's interior
-  lug, A's behind it, B's lug stub) by themselves beneath the section,
-  in the same folded pose.
+  B's first lug from the right wall (at 29-5/8), so the hatched
+  profile is that lug, pipe, bushing and all, with panel A's lug seen
+  behind it. The sheet draws that lug and A's beside it by themselves
+  beneath the section, each with its bushing, in the same folded
+  pose.
 - **Cut sheets.** Three assemblies lay the real bodies flat on their
   sheets, long way along x: the first CDX sheet (95-7/8 x 47-7/8) cut
   in thirds, a top skin, a bottom skin and a top skin, each 31-7/8
   along the sheet and 45 of its 47-7/8 across; the second with the
   other bottom skin at one end; the birch (a true 48 x 96) in rips
-  along the sheet, the two rails with lugs (6-3/8 wide, 46-1/2 long)
-  end to end, the plain rails, then the four interior lugs and two
-  lug stubs in a 5-1/2 rip, then six 1-1/2 in strips for the twelve
-  ribs and twenty cross blocks packed first-fit by length, 25-1/4 in
+  along the sheet, the four rails end to end in two 3-3/8 rips, the
+  eight lugs in a 5-1/2 rip, then six 1-1/2 in strips for the twelve
+  ribs and twenty cross blocks packed first-fit by length, 22-1/2 in
   of the sheet's 48 in all. Each piece sits a kerf from the
   next; the script checks every piece lies flat on and inside its
   sheet before drawing it, and the test that no two overlap. The ply
@@ -401,17 +402,17 @@ brief, this is why.
   `stub.pdf`; `fold.pdf` and `fold.png` at 0, 45, 90, 135 and 180
   degrees from the side; `cutlist.csv`.
 - **The test** regenerates every part closed and places every
-  instance; finds the eight bores (a rail lug or stub and an interior
-  lug on each side of each panel) and the eight bushings in them on
-  the pipe's axis within a hundredth of a millimetre; checks the interior lugs one ply, B's
-  outboard of A's, none overlapping, each against a rib of its own
-  panel, the handle 16-5/8 in bare, and A's rail lug beside B's stub
-  at each end of the pipe; sweeps the fold; measures the open ramp at
-  93 long and 33-3/8 over the rails, the folded package 34-7/8 over
-  the lugs and 9.75 thick with the bottoms 3 in apart and the lugs
+  instance; finds the eight bores (four lugs a panel) and the eight
+  bushings in them on the pipe's axis within a hundredth of a
+  millimetre; checks the lugs one ply, alternating B, A across the
+  pipe, none overlapping, each against a rib of its own panel, all
+  inside the rails with the pipe ending at the rails' faces, and the
+  handle 13-5/8 in bare; sweeps the fold; measures the open ramp at
+  93 long and 33-3/8 over the rails, the folded package the same over
+  the rails and 9.75 thick with the bottoms 3 in apart and the lugs
   filling the gap; and reads the sheet yield off the parts: the four
   skins are 1-1/4 CDX sheets (three as thirds of one, the fourth from
-  a second), the birch, ribs included, about 42 % of a sheet.
+  a second), the birch, ribs included, about 38 % of a sheet.
 
 The remaining open questions in §7 stand: the curb height, the rail
 taper against a full skid, the end plates with the rail ending 3 in
