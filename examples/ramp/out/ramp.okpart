@@ -4129,7 +4129,7 @@
             "kind": {
               "type": "hole",
               "sketch": 10,
-              "diameter": 33.3375,
+              "diameter": 33.400999999999996,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -4444,7 +4444,7 @@
             "kind": {
               "type": "hole",
               "sketch": 10,
-              "diameter": 33.3375,
+              "diameter": 33.400999999999996,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -5079,7 +5079,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 33.3375,
+              "diameter": 33.400999999999996,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -5714,7 +5714,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 33.3375,
+              "diameter": 33.400999999999996,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -5819,7 +5819,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.66875
+                    "radius": 16.700499999999998
                   }
                 ],
                 "constraints": [],
@@ -5871,7 +5871,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.66875
+                    "radius": 16.700499999999998
                   }
                 ],
                 "constraints": [],
@@ -5923,7 +5923,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.66875
+                    "radius": 16.700499999999998
                   }
                 ],
                 "constraints": [],
@@ -5975,7 +5975,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.66875
+                    "radius": 16.700499999999998
                   }
                 ],
                 "constraints": [],
@@ -6037,7 +6037,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 26.987499999999997,
+              "diameter": 26.644599999999997,
               "depth": 596.9,
               "through_all": false,
               "direction": "normal",
@@ -6051,27 +6051,27 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "7": "bushing 1.0625 x 1.3125 x 0.75",
-          "9": "bushing 1.0625 x 1.3125 x 0.75",
-          "11": "bushing 1.0625 x 1.3125 x 0.75",
-          "13": "bushing 1.0625 x 1.3125 x 0.75"
+          "7": "bushing, 1 Sch 40 ring x 0.75",
+          "9": "bushing, 1 Sch 40 ring x 0.75",
+          "11": "bushing, 1 Sch 40 ring x 0.75",
+          "13": "bushing, 1 Sch 40 ring x 0.75"
         },
         "part_materials": {
           "7": {
-            "name": "SAE 841 bronze",
-            "density": 6.4
+            "name": "galvanized steel",
+            "density": 7.85
           },
           "9": {
-            "name": "SAE 841 bronze",
-            "density": 6.4
+            "name": "galvanized steel",
+            "density": 7.85
           },
           "11": {
-            "name": "SAE 841 bronze",
-            "density": 6.4
+            "name": "galvanized steel",
+            "density": 7.85
           },
           "13": {
-            "name": "SAE 841 bronze",
-            "density": 6.4
+            "name": "galvanized steel",
+            "density": 7.85
           }
         }
       }
@@ -7800,7 +7800,7 @@
             "kind": {
               "type": "hole",
               "sketch": 10,
-              "diameter": 33.3375,
+              "diameter": 33.400999999999996,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -8093,7 +8093,7 @@
             "kind": {
               "type": "hole",
               "sketch": 10,
-              "diameter": 33.3375,
+              "diameter": 33.400999999999996,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -8728,7 +8728,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 33.3375,
+              "diameter": 33.400999999999996,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -9363,7 +9363,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 33.3375,
+              "diameter": 33.400999999999996,
               "depth": 44.45,
               "through_all": false,
               "direction": "normal",
@@ -9468,7 +9468,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.66875
+                    "radius": 16.700499999999998
                   }
                 ],
                 "constraints": [],
@@ -9520,7 +9520,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.66875
+                    "radius": 16.700499999999998
                   }
                 ],
                 "constraints": [],
@@ -9572,7 +9572,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.66875
+                    "radius": 16.700499999999998
                   }
                 ],
                 "constraints": [],
@@ -9624,7 +9624,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.66875
+                    "radius": 16.700499999999998
                   }
                 ],
                 "constraints": [],
@@ -9686,7 +9686,7 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 26.987499999999997,
+              "diameter": 26.644599999999997,
               "depth": 635.0,
               "through_all": false,
               "direction": "normal",
@@ -9700,27 +9700,27 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "7": "bushing 1.0625 x 1.3125 x 0.75",
-          "9": "bushing 1.0625 x 1.3125 x 0.75",
-          "11": "bushing 1.0625 x 1.3125 x 0.75",
-          "13": "bushing 1.0625 x 1.3125 x 0.75"
+          "7": "bushing, 1 Sch 40 ring x 0.75",
+          "9": "bushing, 1 Sch 40 ring x 0.75",
+          "11": "bushing, 1 Sch 40 ring x 0.75",
+          "13": "bushing, 1 Sch 40 ring x 0.75"
         },
         "part_materials": {
           "7": {
-            "name": "SAE 841 bronze",
-            "density": 6.4
+            "name": "galvanized steel",
+            "density": 7.85
           },
           "9": {
-            "name": "SAE 841 bronze",
-            "density": 6.4
+            "name": "galvanized steel",
+            "density": 7.85
           },
           "11": {
-            "name": "SAE 841 bronze",
-            "density": 6.4
+            "name": "galvanized steel",
+            "density": 7.85
           },
           "13": {
-            "name": "SAE 841 bronze",
-            "density": 6.4
+            "name": "galvanized steel",
+            "density": 7.85
           }
         }
       }
@@ -9806,7 +9806,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 13.335
+                    "radius": 10.668
                   }
                 ],
                 "constraints": [],
@@ -9817,7 +9817,7 @@
           },
           {
             "id": 7,
-            "name": "hinge pipe, 3/4 Sch 40 x 24.5",
+            "name": "hinge pipe, 1/2 Sch 40 x 24.5",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -9868,7 +9868,7 @@
             "kind": {
               "type": "hole",
               "sketch": 8,
-              "diameter": 20.929599999999997,
+              "diameter": 15.798799999999998,
               "depth": 647.6999999999999,
               "through_all": false,
               "direction": "normal",
@@ -9948,7 +9948,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -69.85
+                "offset": -66.675
               },
               "sketch": {
                 "entities": [
@@ -9964,7 +9964,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.509999999999998
+                    "radius": 12.7
                   }
                 ],
                 "constraints": [],
@@ -9975,7 +9975,7 @@
           },
           {
             "id": 7,
-            "name": "pipe cap, 3/4",
+            "name": "pipe cap, 1/2",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -9983,7 +9983,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 25.4,
+              "depth": 22.225,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -10016,7 +10016,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 16.509999999999998
+                    "radius": 12.7
                   }
                 ],
                 "constraints": [],
@@ -10027,7 +10027,7 @@
           },
           {
             "id": 9,
-            "name": "pipe cap, 3/4",
+            "name": "pipe cap, 1/2",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -10035,7 +10035,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 25.4,
+              "depth": 22.225,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -12990,7 +12990,7 @@
                 ]
               }
             },
-            "offset": 295.2749999999997,
+            "offset": 295.27500000000003,
             "angle": 180.0,
             "flip": false
           }

@@ -45,8 +45,8 @@ BOX = 2 * SKIN + RIB               # 2.375
 SKIN_END = 45.0                    # the skins stop here; panel A's stubs run bare to 48, panel B's stop flush
 CURB = 1.0                         # the rails stand this much above the deck
 PIN_DROP = 1.5                     # pipe centre below the bottom skin: lever arm against hang, and the most the lugs' radius can be
-PIPE_OD, PIPE_ID = 1.05, 0.824     # 3/4 Sch 40
-BUSH_ID, BUSH_OD = 1.0625, 1.3125  # the lug bushings, bronze sleeves: a slip fit on the pipe, pressed into the lugs
+PIPE_OD, PIPE_ID = 0.84, 0.622     # 1/2 Sch 40
+BUSH_ID, BUSH_OD = 1.049, 1.315    # the lug bushings: 1 Sch 40 pipe cut into rings, pressed into the lugs; the pin runs loose in them
 BORE = BUSH_OD                     # the lug bores: the bushings' seat
 BIRCH = 0.75                       # the rails, stubs, lugs, ribs and cross blocks: one ply
 RAIL_H = BOX + CURB                # 3.375 along the length
@@ -69,7 +69,7 @@ BEVEL = 30.0                       # degrees, on the ground end
 PLATE_L = 2.0                      # the end plates' ghost
 ANGLE_T, ANGLE_LEG = 0.125, 1.5    # the aluminium angle on the ground end: 1-1/2 legs, so both screw rows clear the top skin
 ANGLE_SCREW_D, ANGLE_SCREW_Z = 0.1875, (0.65, 1.25)   # #10 clearance; the two rows below the top, both in the stubs' end grain
-CAP_OD, CAP_L = 1.3, 1.0
+CAP_OD, CAP_L = 1.0, 0.875         # 1/2 malleable caps
 
 # Panel B's placement in the ramp: 180 degrees about z, moved W in x:
 # its x runs 21 to 0, its y 0 to -48.
@@ -77,7 +77,7 @@ PLACE_B = ((W * IN, 0.0, 0.0), (0.0, 0.0, 180.0))
 HINGE_CUT = W - LUGS_B[0]          # the hinge section: through the middle of the first interior lug from the right wall, panel B's
 KERF = 0.125                       # the cut sheets: a saw kerf between pieces
 SHEET_W, SHEET_L = 48.0, 96.0      # a 4 x 8 sheet laid 96 along x, 48 along y
-MATERIALS = {"cdx": ("15/32 CDX", 0.55), "birch": ("3/4 birch", 0.68), "bronze": ("SAE 841 bronze", 6.4)}   # the parts list's material and g/cm3
+MATERIALS = {"cdx": ("15/32 CDX", 0.55), "birch": ("3/4 birch", 0.68), "steel": ("galvanized steel", 7.85)}   # the parts list's material and g/cm3
 
 
 def mm(*v):
@@ -248,7 +248,7 @@ def interior_lug(a):
 
 # -- ramp parts, in the ramp's frame ----------------------------------
 
-# The lug bushings: one bronze sleeve pressed into each lug, flush
+# The lug bushings: a ring of 1 in pipe pressed into each lug, flush
 # both faces, at the lug's own span along x in the panel's frame.
 BUSH_A = [(-BIRCH, 0.0), (LUGS_A[0] - BIRCH / 2, LUGS_A[0] + BIRCH / 2), (LUGS_A[1] - BIRCH / 2, LUGS_A[1] + BIRCH / 2), (W, W + BIRCH)]
 BUSH_B = [(-2 * BIRCH, -BIRCH), (LUGS_B[0] - BIRCH / 2, LUGS_B[0] + BIRCH / 2), (LUGS_B[1] - BIRCH / 2, LUGS_B[1] + BIRCH / 2), (W + BIRCH, W + 2 * BIRCH)]
@@ -261,7 +261,7 @@ def bushings(spans):
             s = p.sketch("right", x0 * IN, "bushing")
             p.circle(s, mm(0.0, -PIN_DROP), BUSH_OD / 2 * IN)
             f = p.extrude(s, (x1 - x0) * IN, op="new", name=f"bushing, {x1 - x0:g} long")
-            part_is(p, f, f"bushing {BUSH_ID:g} x {BUSH_OD:g} x {x1 - x0:g}", "bronze")
+            part_is(p, f, f"bushing, 1 Sch 40 ring x {x1 - x0:g}", "steel")
         bore_x(p, "bushing bore", spans[0][0], spans[-1][1], 0.0, -PIN_DROP, BUSH_ID)
     return build
 
@@ -272,7 +272,7 @@ PIPE_X = (-2 * BIRCH - 0.25, W + 2 * BIRCH + 0.25)   # -1.75 to 22.75: 24-1/2 in
 def pipe(p):
     s = p.sketch("right", PIPE_X[0] * IN, "pipe")
     p.circle(s, mm(0.0, -PIN_DROP), PIPE_OD / 2 * IN)
-    p.extrude(s, (PIPE_X[1] - PIPE_X[0]) * IN, name=f"hinge pipe, 3/4 Sch 40 x {PIPE_X[1] - PIPE_X[0]:g}")
+    p.extrude(s, (PIPE_X[1] - PIPE_X[0]) * IN, name=f"hinge pipe, 1/2 Sch 40 x {PIPE_X[1] - PIPE_X[0]:g}")
     bore_x(p, "bore", PIPE_X[0], PIPE_X[1], 0.0, -PIN_DROP, PIPE_ID)
 
 
@@ -280,7 +280,7 @@ def pipe_caps(p):
     for x0, x1 in ((PIPE_X[0] - CAP_L, PIPE_X[0]), (PIPE_X[1], PIPE_X[1] + CAP_L)):
         s = p.sketch("right", x0 * IN, "cap")
         p.circle(s, mm(0.0, -PIN_DROP), CAP_OD / 2 * IN)
-        p.extrude(s, (x1 - x0) * IN, op="new", name="pipe cap, 3/4")
+        p.extrude(s, (x1 - x0) * IN, op="new", name="pipe cap, 1/2")
 
 
 def end_plates(p):
@@ -350,8 +350,8 @@ CUTLIST = [
     ("rail", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g}", 2, "panel B, flush both sides"),
     ("lug stub", f"3/4 birch, {TAPER:g} x {STUB_LAP + 2 * LUG_R:g}, lug profile", 2, "panel B, glued and brad-nailed to the outside of each rail over the lap"),
     ("interior lug", f"3/4 birch, {JOINT + LUG_IN:g} x {RIB + SKIN + 2 * LUG_R:g}, lug profile", 4, "two per panel; glued and brad-nailed through the face into the rib beside it and from the bottom skin into the foot"),
-    ("bushing", f"SAE 841 bronze sleeve, {BUSH_ID:g} ID x {BUSH_OD:g} OD x {BIRCH:g}", 8, "one pressed into every lug, flush both faces; a slip fit on the pipe's 1.05"),
-    ("hinge pipe", f"3/4 Sch 40 galvanized, {PIPE_X[1] - PIPE_X[0]:g}, threaded both ends", 1, "with two caps"),
+    ("bushing", f"1 Sch 40 galvanized pipe cut into {BIRCH:g} rings, {BUSH_ID:g} ID x {BUSH_OD:g} OD", 8, "one pressed into every lug, flush both faces, faced square; the pin runs loose in them"),
+    ("hinge pipe", f"1/2 Sch 40 galvanized, {PIPE_X[1] - PIPE_X[0]:g}, threaded both ends", 1, "with two caps"),
     ("ground angle", "1/8 x 1-1/2 aluminium angle x 21", 1, "one leg against panel B's flush end, the other out past it flush with the top skin"),
     ("angle screw", "#10 x 2 pan head", 4, "through the angle's leg into each stub's end grain, two per stub, one high and one low"),
 ]

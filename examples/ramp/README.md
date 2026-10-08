@@ -61,8 +61,8 @@ pin in a single 3/4" ply lug was marginal; this is why the lugs are
 | stubs | 2x8 (1.5" × 7.25") | 2 × 12" (tailgate panel), 2 × 9" (ground panel) | outer rib positions at the free end; the tailgate panel's run 3" past the skins, bare, for the end plates; the ground panel's stop flush with the skins (§8) |
 | rails and lugs | 3/4" birch plywood | ~1 sheet half | rails 4-3/8" tall; lug cheeks and interior lugs laminated to 1-1/2" |
 | rail spacer | 3/4" birch | 2 × 48" × 2-3/8" | under the "spaced" rail on each panel (§4) |
-| hinge pipe | 3/4" Sch 40 galvanized pipe, 1.05" OD, threaded both ends | 1 × ~26" | plus two 3/4" pipe caps |
-| bushings | SAE 841 oil-impregnated bronze sleeve, 1-1/16" ID × 1-5/16" OD × 3/4" | 8 | one pressed into every lug, flush both faces; a slip fit on the pipe (§8) |
+| hinge pipe | 1/2" Sch 40 galvanized pipe, 0.840" OD, threaded both ends | 1 × 24-1/2" | plus two 1/2" pipe caps (§8) |
+| bushings | 1" Sch 40 galvanized pipe, 1.049" ID × 1.315" OD, cut into 3/4" rings | 8 | one pressed into every lug, flush both faces; the pin runs loose in them (§8) |
 | ground edge | 1/8" × 1-1/2" aluminium angle | 1 × 21" | one leg screwed to the ground panel's flush end, the other out past it as the lip (§8) |
 | end plates | existing Erickson-type 2x8 ramp end plates | 2 pr | tailgate end only; model as a ghost body |
 | adhesive | PL Premium (polyurethane construction adhesive) | | every rib and block face |
@@ -264,16 +264,21 @@ brief, this is why.
   bushing on its seat, the bearing the governing number at under half
   of what birch ply takes. The doubling was buying back the thin wall
   the radius already fixed.
-- **Bushings.** Every lug bore carries a bronze sleeve, SAE 841
-  oil-impregnated, 1-1/16 ID x 1-5/16 OD x 3/4: a slip fit on the
-  pipe's 1.050 and a press fit in the lug, flush with both faces, so
-  the pipe turns in bronze rather than wearing the ply's end grain and
-  the bearing on the wood is spread over the sleeve's larger diameter.
-  The lug bores are 1-5/16 for the seat, bored in place through the
-  rail bores as before so all eight are coaxial; the sleeves are
-  pressed in afterwards. In the model each panel has a `bushing`
-  studio of four bodies at its lugs' spans, placed with the rest, and
-  the hinge section cuts one with its lug.
+- **Bushings, and a smaller pin.** The pin is 1/2 Sch 40 pipe (0.840
+  OD) and every lug bore carries a ring of 1 Sch 40 pipe (1.049 ID,
+  1.315 OD) cut 3/4 long and faced square: a press fit in the lug,
+  flush with both faces, so the pin wears on steel rather than the
+  ply's end grain, and the bearing on the wood is spread over the
+  ring's larger diameter. The pin has about 0.2 of play in the rings,
+  which is accepted: the rings are there for wear, not for a fit, and
+  the hinge carries its load through the lugs' faces. (1 in pipe
+  inside 1-1/4 rings, 0.065 of play, is the tighter pair if the
+  rattle matters; 3/4 in 1 is an interference.) The lug bores are
+  1-5/16 for the seat, bored in place through the rail bores as before
+  so all eight are coaxial; the rings are pressed in afterwards. In
+  the model each panel has a `bushing` studio of four bodies at its
+  lugs' spans, placed with the rest, and the hinge section cuts one
+  with its lug.
 - **Ribs from the birch, and brads.** The ribs and cross blocks are
   3/4 birch strips on edge, ripped from the sheet the rails and lugs
   come from, not 2x2s: straight, stable, exactly 3/4 wide, and about

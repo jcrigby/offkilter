@@ -183,13 +183,13 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
     let r = doc.regenerate_assembly(ramp).unwrap();
     // The pipe's axis: along x, through (0, -1) in y and z.
     let pipe = &body(&r, "pipe").solid;
-    let (po, pa) = cylinders(pipe, 1.05 / 2.0)[0];
+    let (po, pa) = cylinders(pipe, 0.84 / 2.0)[0];
     assert!(pa.x.abs() > 1.0 - 1e-9, "pipe along x: {pa:?}");
     assert!(
         (po.y).abs() < 1e-6 && (po.z + 1.5 * IN).abs() < 1e-6,
         "{po:?}"
     );
-    // Eight lug bores of 1-5/16 in on it, the bushings' seats, two in
+    // Eight lug bores of 1.315 in on it, the bushing rings' seats, two in
     // each panel's rails and two interior per panel, within a
     // hundredth of a millimetre.
     let mut bores = 0;
@@ -204,7 +204,7 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
         "interior_lug_b2",
     ] {
         for b in named(&r, name) {
-            let cs = cylinders(&b.solid, 1.3125 / 2.0);
+            let cs = cylinders(&b.solid, 1.315 / 2.0);
             assert_eq!(cs.len(), 1, "{}: {} bores", b.name, cs.len());
             let (o, a) = cs[0];
             assert!(a.x.abs() > 1.0 - 1e-9, "{}: {a:?}", b.name);
@@ -217,18 +217,18 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
         bores, 8,
         "two rail lugs or stubs and two interior lugs per panel"
     );
-    // A bronze bushing in each, 3/4 long and flush with its lug, bored
-    // 1-1/16 on the axis: a slip fit on the pipe's 1.05.
+    // A ring of 1 in pipe in each, 3/4 long and flush with its lug, its
+    // 1.049 bore on the axis, the 0.84 pin loose in it.
     let mut bushings = 0;
     for b in r.bodies.iter().filter(|b| b.name.contains("/ bushing_")) {
-        let (o, a) = *cylinders(&b.solid, 1.0625 / 2.0)
+        let (o, a) = *cylinders(&b.solid, 1.049 / 2.0)
             .first()
-            .unwrap_or_else(|| panic!("{}: no 1-1/16 bore", b.name));
+            .unwrap_or_else(|| panic!("{}: no 1.049 bore", b.name));
         assert!(a.x.abs() > 1.0 - 1e-9, "{}: {a:?}", b.name);
         let off = Vec3::new(0.0, o.y - po.y, o.z - po.z);
         assert!(off.length() < 0.01, "{}: {off:?} off the pipe axis", b.name);
         assert_eq!(
-            cylinders(&b.solid, 1.3125 / 2.0).len(),
+            cylinders(&b.solid, 1.315 / 2.0).len(),
             1,
             "{}: the seat",
             b.name
@@ -252,7 +252,7 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
         assert!(in_lug, "{}: flush with no lug of its panel", b.name);
         assert_eq!(
             b.material.as_ref().map(|m| m.name.as_str()),
-            Some("SAE 841 bronze")
+            Some("galvanized steel")
         );
         bushings += 1;
     }
