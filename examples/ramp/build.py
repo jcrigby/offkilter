@@ -1,4 +1,4 @@
-"""A folding torsion-box truck ramp: two 21 x 48 in panels of 15/32 in
+"""A folding torsion-box truck ramp: two 31-7/8 x 48 in panels of 15/32 in
 ply skins on 2x2 ribs, hinged on a 3/4 in pipe below the decks that
 doubles as the carrying handle and pulls out to separate the halves.
 The brief is README.md in this directory; this script is the document
@@ -10,14 +10,14 @@ it asked for, with the changes its section 8 records.
 
 The shop works in inches, the document in millimetres like the other
 examples: every dimension is a named constant in inches and the helpers
-convert. Frame of a panel: x across the width (0 to 21), y along the
+convert. Frame of a panel: x across the width (0 to 31-7/8), y along the
 length (0 at the hinge end, 48 at the free end), z up from the bottom
 face of the bottom skin. The two panels differ only at the hinge: panel
 A's rails carry their lugs in one piece, panel B's rails are plain with
 a lug stub screwed to the outside of each, and the interior lugs sit
 against different ribs, so that on the pipe each end has A's rail lug
 beside B's stub and B's interior lugs land outboard of A's. Panel B is
-placed turned 180 degrees about z and moved 21 in x. Each panel is
+placed turned 180 degrees about z and moved 31-7/8 in x. Each panel is
 built in place in its own frame; the pipe, caps, end plates and ground
 angle are built in the ramp's frame.
 """
@@ -37,7 +37,10 @@ IN = 25.4
 # ---------------------------------------------------------------------
 # The panels, in inches.
 # ---------------------------------------------------------------------
-W, L = 21.0, 48.0                  # a panel, over the box
+CDX_SHEET = (95.875, 47.875)       # a 4x8 of CDX sheathing is sized for spacing: 95-7/8 x 47-7/8
+BIRCH_SHEET = (96.0, 48.0)         # the hardwood ply is a true 4x8
+KERF = 0.125                       # the cut sheets: a saw kerf between pieces
+W, L = (CDX_SHEET[0] - 2 * KERF) / 3, 48.0   # a panel, over the box: 31-7/8, a third of the CDX sheet with two kerfs, for a 29 in aerator
 SKIN = 0.4375                      # 15/32 CDX
 RIB = 1.5                          # the box's core, and the ribs' height: the box is SKIN + RIB + SKIN
 RIB_W = 0.75                       # the ribs and cross blocks: strips ripped from the 3/4 birch, on edge
@@ -53,12 +56,12 @@ RAIL_H = BOX + CURB                # 3.375 along the length
 LUG_R = 1.5                        # the half-round about the pin: a 27/32 wall round the bushing seat, the rail bottom at -3; no more than PIN_DROP or it meets the other panel
 TAPER = 8.0                        # the lug bottom climbs back to z = 0 over this
 CHAMFER = 0.375                    # the bottom skin's hinge-end edge, which sweeps a 1-1/2 in radius about the pin
-RIBS = (1.5, 6.0, 10.5, 13.5, 19.5)   # rib centres, both panels
-# Interior lug centres (one ply, against a rib's side): panel A beside
-# the ribs at 6 and 13.5, panel B beside the ribs at 1.5 and 19.5, so
+RIBS = (1.5, 8.0, 13.5, W - 13.5, W - 8.0, W - 1.5)   # rib centres, both panels, symmetric: 1.5, 8, 13.5, 18-3/8, 23-7/8, 30-3/8; the second and fifth clear the 2x8 stubs by 3/8
+# Interior lug centres (one ply, against a rib's side): panel A inboard
+# of the ribs at 8 and 23-7/8, panel B inboard of the edge ribs, so
 # that turned, B's land outboard of A's on the pipe.
-LUGS_A = (6.0 - RIB_W / 2 - BIRCH / 2, 13.5 + RIB_W / 2 + BIRCH / 2)      # 5.25, 14.25
-LUGS_B = (1.5 + RIB_W / 2 + BIRCH / 2, 19.5 - RIB_W / 2 - BIRCH / 2)      # 2.25, 18.75
+LUGS_A = (RIBS[1] - RIB_W / 2 - BIRCH / 2, RIBS[4] + RIB_W / 2 + BIRCH / 2)      # 7.25, 24.625
+LUGS_B = (RIBS[0] + RIB_W / 2 + BIRCH / 2, RIBS[5] - RIB_W / 2 - BIRCH / 2)      # 2.25, 29.625
 LUG_IN = 6.0                       # the foot inside the box, behind the joint block
 NOTCH_L = 3.0                      # the bottom skin's notch, where the lug passes through
 STUB_LAP = 2.5                     # panel B's lug stub laps the rail's outside face this far up
@@ -72,11 +75,9 @@ ANGLE_SCREW_D, ANGLE_SCREW_Z = 0.1875, (0.65, 1.25)   # #10 clearance; the two r
 CAP_OD, CAP_L = 1.0, 0.875         # 1/2 malleable caps
 
 # Panel B's placement in the ramp: 180 degrees about z, moved W in x:
-# its x runs 21 to 0, its y 0 to -48.
+# its x runs 31-7/8 to 0, its y 0 to -48.
 PLACE_B = ((W * IN, 0.0, 0.0), (0.0, 0.0, 180.0))
 HINGE_CUT = W - LUGS_B[0]          # the hinge section: through the middle of the first interior lug from the right wall, panel B's
-KERF = 0.125                       # the cut sheets: a saw kerf between pieces
-SHEET_W, SHEET_L = 48.0, 96.0      # a 4 x 8 sheet laid 96 along x, 48 along y
 MATERIALS = {"cdx": ("15/32 CDX", 0.55), "birch": ("3/4 birch", 0.68), "steel": ("galvanized steel", 7.85)}   # the parts list's material and g/cm3
 
 
@@ -168,7 +169,7 @@ def cross_blocks(p):
 
 
 def joint_block(p):
-    box(p, "joint block, 2x4 flat x 21", (0.0, W), (0.0, JOINT), (SKIN, SKIN + RIB))
+    box(p, f"joint block, 2x4 flat x {W:g}", (0.0, W), (0.0, JOINT), (SKIN, SKIN + RIB))
 
 
 def stubs(end):
@@ -266,7 +267,7 @@ def bushings(spans):
     return build
 
 
-PIPE_X = (-2 * BIRCH - 0.25, W + 2 * BIRCH + 0.25)   # -1.75 to 22.75: 24-1/2 in, a quarter past each stub for the caps
+PIPE_X = (-2 * BIRCH - 0.25, W + 2 * BIRCH + 0.25)   # -1.75 to 33.625: 35-3/8 in, a quarter past each stub for the caps
 
 
 def pipe(p):
@@ -303,7 +304,7 @@ def ground_angle(p):
     lip lies on the ground."""
     y = -SKIN_END
     top = BOX
-    box(p, "ground angle, 1/8 x 1-1/2 aluminium x 21", (0.0, W), (y - ANGLE_LEG, y), (top - ANGLE_T, top))
+    box(p, f"ground angle, 1/8 x 1-1/2 aluminium x {W:g}", (0.0, W), (y - ANGLE_LEG, y), (top - ANGLE_T, top))
     box(p, "leg down the end", (0.0, W), (y - ANGLE_T, y), (top - ANGLE_LEG, top), op="add")
     # Two screws per stub through the leg into the end grain, one high
     # and one low (both below the top skin), 3 in apart.
@@ -323,27 +324,38 @@ PANEL_B = [("stub_ground", stubs(SKIN_END)), ("skin_bottom_b", skin_bottom(LUGS_
 RAMP_PARTS = [("pipe", pipe), ("pipe_cap", pipe_caps), ("end_plate", end_plates), ("ground_angle", ground_angle)]
 
 
-def sheet(t, material):
+def sheet(t, material, size):
     """A 4 x 8 sheet, its top at z = 0, for the cut sheets to lay the
     pieces on."""
     def build(p):
-        f = box(p, f"4 x 8 sheet, {material}", (0.0, SHEET_L), (0.0, SHEET_W), (-t, 0.0))
-        part_is(p, f, f"4 x 8 sheet of {material}")
+        f = box(p, f"4 x 8 sheet, {material}", (0.0, size[0]), (0.0, size[1]), (-t, 0.0))
+        part_is(p, f, f"4 x 8 sheet of {material}, {size[0]:g} x {size[1]:g}")
     return build
 
 
-SHEETS = [("sheet_cdx", sheet(SKIN, "15/32 CDX")), ("sheet_birch", sheet(BIRCH, "3/4 birch"))]
+SHEETS = [("sheet_cdx", sheet(SKIN, "15/32 CDX", CDX_SHEET)), ("sheet_birch", sheet(BIRCH, "3/4 birch", BIRCH_SHEET))]
 
 # The cut list: what to cut, in inches, per the shop's stock.
+def rib_lines():
+    """The ribs and cross blocks by length, both panels."""
+    ribs, blocks = {}, {}
+    for c in RIBS:
+        y0, y1 = rib_span(c)
+        ribs.setdefault(y1 - y0, []).append(c)
+    for a, b in zip(RIBS, RIBS[1:]):
+        blocks.setdefault(b - a - RIB_W, []).append((a, b))
+    out = [("rib", f"3/4 birch strip, 1-1/2 x {n:g}", 2 * len(cs), f"at {', '.join(f'{c:g}' for c in cs)}; " + (
+        "joint block to the stubs" if n < SKIN_END - JOINT else "joint block to the skins' end") + "; glued and brad-nailed through the skins") for n, cs in sorted(ribs.items())]
+    out += [("cross block", f"3/4 birch strip, 1-1/2 x {n:g}", 2 * len(CROSS_Y) * len(gs),
+             "between the ribs at " + " and ".join(f"{a:g} and {b:g}" for a, b in gs)) for n, gs in sorted(blocks.items())]
+    return out
+
+
 CUTLIST = [
-    ("top skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX", 2, "one 4x8 sheet: two 21 in rips, each crosscut at 45 and 45"),
-    ("bottom skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX, two 3/4 x 3 notches", 2, "from the same sheet; the notches differ between the panels"),
-    ("rib", "3/4 birch strip, 1-1/2 x 32.5", 8, "the four lines that meet a stub, joint block to stubs; glued and brad-nailed through the skins"),
-    ("rib", "3/4 birch strip, 1-1/2 x 41.5", 2, "middle line, joint block to the skins' end"),
-    ("cross block", "3/4 birch strip, 1-1/2 x 3.75", 8, "between the ribs at 1.5 and 6, and 6 and 10.5"),
-    ("cross block", "3/4 birch strip, 1-1/2 x 2.25", 4, "between the ribs at 10.5 and 13.5"),
-    ("cross block", "3/4 birch strip, 1-1/2 x 5.25", 4, "between the ribs at 13.5 and 19.5"),
-    ("joint block", "2x4 flat x 21", 2, "lumber: the lugs bear on it"),
+    ("top skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX", 2, f"from 31-7/8 x 47-7/8 thirds of a CDX sheet (95-7/8 with two kerfs), three to a sheet, the fourth from a second; trimmed to {SKIN_END:g}"),
+    ("bottom skin", f"{W:g} x {SKIN_END:g} x 15/32 CDX, two 3/4 x 3 notches", 2, "from the same thirds; the notches differ between the panels"),
+] + rib_lines() + [
+    ("joint block", f"2x4 flat x {W:g}", 2, "lumber: the lugs bear on it"),
     ("tailgate stub", "2x8 x 12", 2, "panel A, lumber: the end plates clamp 1-1/2 x 7-1/4; 3 in bare past the skins"),
     ("ground stub", f"2x8 x {SKIN_END - STUB_Y0:g}", 2, "panel B, lumber: flush with the skins' end; the 30 degree bevel is cut across the whole end"),
     ("rail with lug", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g} with the lug profile, {TAPER:g} x {2 * LUG_R:g} below", 2, "panel A, flush both sides"),
@@ -352,7 +364,7 @@ CUTLIST = [
     ("interior lug", f"3/4 birch, {JOINT + LUG_IN:g} x {RIB + SKIN + 2 * LUG_R:g}, lug profile", 4, "two per panel; glued and brad-nailed through the face into the rib beside it and from the bottom skin into the foot"),
     ("bushing", f"1 Sch 40 galvanized pipe cut into {BIRCH:g} rings, {BUSH_ID:g} ID x {BUSH_OD:g} OD", 8, "one pressed into every lug, flush both faces, faced square; the pin runs loose in them"),
     ("hinge pipe", f"1/2 Sch 40 galvanized, {PIPE_X[1] - PIPE_X[0]:g}, threaded both ends", 1, "with two caps"),
-    ("ground angle", "1/8 x 1-1/2 aluminium angle x 21", 1, "one leg against panel B's flush end, the other out past it flush with the top skin"),
+    ("ground angle", f"1/8 x 1-1/2 aluminium angle x {W:g}", 1, "one leg against panel B's flush end, the other out past it flush with the top skin"),
     ("angle screw", "#10 x 2 pan head", 4, "through the angle's leg into each stub's end grain, two per stub, one high and one low"),
 ]
 
@@ -470,7 +482,9 @@ def instance_ids(mcp, tab):
 # lies, turned so its long way runs along x and its thickness up. `lay`
 # says which way the thickness runs as built: "x" for the profiles
 # extruded along x and the ribs, "y" for the cross blocks, "z" for the
-# skins. The placement turns about x, then y, then z, then moves.
+# skins turned to run along the sheet, "flat" for the skins as built
+# (their width along the sheet, for the thirds). The placement turns
+# about x, then y, then z, then moves.
 
 def placement_flat(body, x0, y0, lay):
     lo, hi = body["bounds"]
@@ -479,8 +493,10 @@ def placement_flat(body, x0, y0, lay):
         pos, rot = (X0 - lo["y"], Y0 + hi["z"], hi["x"]), (0.0, 90.0, -90.0)
     elif lay == "y":    # about x by -90: x' = x, y' = z, z' = -y
         pos, rot = (X0 - lo["x"], Y0 - lo["z"], hi["y"]), (-90.0, 0.0, 0.0)
-    else:               # about z by -90: x' = y, y' = -x
+    elif lay == "z":    # about z by -90: x' = y, y' = -x
         pos, rot = (X0 - lo["y"], Y0 + hi["x"], -lo["z"]), (0.0, 0.0, -90.0)
+    else:               # "flat": as built, x along x
+        pos, rot = (X0 - lo["x"], Y0 - lo["y"], -lo["z"]), (0.0, 0.0, 0.0)
     return {"position": dict(zip("xyz", pos)), "rotation": dict(zip("xyz", rot))}
 
 
@@ -488,13 +504,19 @@ def flat_size(body, lay):
     """The piece's footprint on the sheet (along x, across y), inches."""
     lo, hi = body["bounds"]
     d = {k: (hi[k] - lo[k]) / IN for k in "xyz"}
-    return {"x": (d["y"], d["z"]), "y": (d["x"], d["z"]), "z": (d["y"], d["x"])}[lay]
+    return {"x": (d["y"], d["z"]), "y": (d["x"], d["z"]), "z": (d["y"], d["x"]), "flat": (d["x"], d["y"])}[lay]
 
 
 def nest_cdx():
-    """Two 21 in rips of the CDX, each a top skin and a bottom skin."""
-    return [("skin_top", 0, 0.0, 0.0, "z"), ("skin_bottom_a", 0, SKIN_END + KERF, 0.0, "z"),
-            ("skin_top", 0, 0.0, W + KERF, "z"), ("skin_bottom_b", 0, SKIN_END + KERF, W + KERF, "z")]
+    """The first CDX sheet cut in thirds across its length: three skins,
+    each 31-7/8 along the sheet and 45 of its 47-7/8 across."""
+    return [("skin_top", 0, 0.0, 0.0, "flat"), ("skin_bottom_a", 0, W + KERF, 0.0, "flat"), ("skin_top", 0, 2 * (W + KERF), 0.0, "flat")]
+
+
+def nest_cdx_2():
+    """The second CDX sheet: the fourth skin from one end, two thirds
+    of the sheet left over."""
+    return [("skin_bottom_b", 0, 0.0, 0.0, "flat")]
 
 
 def nest_birch(reports):
@@ -509,20 +531,19 @@ def nest_birch(reports):
             along, across = flat_size(reports[part][k], lay)
             pieces.append((part, k, x, y, lay))
             width, x = max(width, across), x + along + KERF
-        assert x - KERF <= SHEET_L + 1e-9, f"rip of {items[0][0]} runs {x - KERF:g} in"
+        assert x - KERF <= BIRCH_SHEET[0] + 1e-9, f"rip of {items[0][0]} runs {x - KERF:g} in"
         y += width + KERF
     rip([("rail_lug_left", 0, "x"), ("rail_lug_right", 0, "x")])
     rip([("rail_plain", 0, "x"), ("rail_plain", 1, "x")])
     rip([(f"interior_lug_{t}", 0, "x") for t in ("a1", "a2", "b1", "b2")] + [("lug_stub_left", 0, "x"), ("lug_stub_right", 0, "x")])
-    # Strips: eight ribs at 32-1/2 (rib body 0, twice per panel line),
-    # two at 41-1/2 (rib body 2), the cross blocks by length.
-    strips = [("rib", 0, "x")] * 8 + [("rib", 2, "x")] * 2 + [("cross_block", 0, "y")] * 8 + [("cross_block", 2, "y")] * 4 + [("cross_block", 3, "y")] * 4
+    # Strips: every rib and cross block body, twice (one per panel).
+    strips = ([("rib", k, "x") for k in range(len(reports["rib"]))] + [("cross_block", k, "y") for k in range(len(reports["cross_block"]))]) * 2
     strips.sort(key=lambda it: -flat_size(reports[it[0]][it[1]], it[2])[0])
     rows = []
     for it in strips:
         along = flat_size(reports[it[0]][it[1]], it[2])[0]
         for row in rows:
-            if row[0] + KERF + along <= SHEET_L:
+            if row[0] + KERF + along <= BIRCH_SHEET[0]:
                 row[0] += KERF + along
                 row[1].append(it)
                 break
@@ -530,7 +551,7 @@ def nest_birch(reports):
             rows.append([along, [it]])
     for _, items in rows:
         rip(items)
-    assert y - KERF <= SHEET_W, f"the birch nest is {y - KERF:g} in across"
+    assert y - KERF <= BIRCH_SHEET[1], f"the birch nest is {y - KERF:g} in across"
     return pieces
 
 
@@ -645,7 +666,7 @@ def main():
     # the ground stub with its bevel on.
     for name, stem, lug in (("panel A", "panel_a", LUGS_A[0]), ("panel B", "panel_b", LUGS_B[0])):
         print(mcp.call("export", {"tab": panels[name], "format": "pdf", "sheet": "A3", "views": ["front", "top", "right", f"section@{SKIN_END / 2 * IN}", f"section-side@{lug * IN}"],
-                                  "note": f"{name}: 21 x 48 x 2-3/8 torsion box, rails and lugs 3/4 birch", "path": os.path.join(OUT, f"{stem}.pdf")}))
+                                  "note": f"{name}: {W:g} x 48 x 2-3/8 torsion box, rails and lugs 3/4 birch", "path": os.path.join(OUT, f"{stem}.pdf")}))
     print(mcp.call("export", {"tab": ramp, "format": "pdf", "sheet": "A3", "note": "two panels on the pipe, open; the pipe pulls to separate them", "path": os.path.join(OUT, "ramp.pdf")}))
     stub_report = json.loads(mcp.call("report", {"tab": tabs["stub_ground"], "detail": "full"}))
     bevel = next(f["id"] for f in stub_report["features"] if f["name"].startswith("ground bevel"))
@@ -659,8 +680,9 @@ def main():
     # Cut sheets: the plywood pieces, the real bodies, laid flat on a
     # 4 x 8 with a kerf between, each sheet an assembly drawn from the
     # top with its pieces numbered.
-    for name, stem, title, t, pieces in (("cut sheet, CDX", "cut_sheet_cdx", "sheet_cdx", SKIN, nest_cdx()),
-                                         ("cut sheet, birch", "cut_sheet_birch", "sheet_birch", BIRCH, nest_birch(reports))):
+    for name, stem, title, t, size, pieces in (("cut sheet, CDX 1", "cut_sheet_cdx", "sheet_cdx", SKIN, CDX_SHEET, nest_cdx()),
+                                               ("cut sheet, CDX 2", "cut_sheet_cdx_2", "sheet_cdx", SKIN, CDX_SHEET, nest_cdx_2()),
+                                               ("cut sheet, birch", "cut_sheet_birch", "sheet_birch", BIRCH, BIRCH_SHEET, nest_birch(reports))):
         text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": name}]})
         tab = int(re.search(r"tab (\d+)", text).group(1))
         ops = instance_ops(tabs, bodies, [title], True)
@@ -674,10 +696,10 @@ def main():
                 continue
             lo, hi = b["bounds"]
             assert -1e-6 <= lo["z"] and hi["z"] <= t * IN + 1e-6, f"{b['name']} is not flat on the sheet: z {lo['z']:.2f}..{hi['z']:.2f}"
-            assert -1e-6 <= lo["x"] and hi["x"] <= SHEET_L * IN + 1e-6 and -1e-6 <= lo["y"] and hi["y"] <= SHEET_W * IN + 1e-6, f"{b['name']} is off the sheet"
+            assert -1e-6 <= lo["x"] and hi["x"] <= size[0] * IN + 1e-6 and -1e-6 <= lo["y"] and hi["y"] <= size[1] * IN + 1e-6, f"{b['name']} is off the sheet"
         print(f"{name:<18} tab {tab:>2}: {len(pieces)} pieces")
         print(mcp.call("export", {"tab": tab, "format": "pdf", "sheet": "A3", "views": ["top"], "hidden": False,
-                                  "note": f"4 x 8 of {t:g} in ply, 96 along x; {KERF:g} in kerf between pieces; numbered as listed", "path": os.path.join(OUT, f"{stem}.pdf")}))
+                                  "note": f"{size[0]:g} x {size[1]:g} of {t:g} in ply, long way along x; {KERF:g} in kerf between pieces; numbered as listed", "path": os.path.join(OUT, f"{stem}.pdf")}))
     with open(os.path.join(OUT, "cutlist.csv"), "w") as f:
         f.write("item,size,qty,note\n")
         for item, size, qty, note in CUTLIST:

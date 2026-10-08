@@ -12,6 +12,9 @@ use ok_model::{AssemblyResult, Body, Document, TabId};
 use std::path::PathBuf;
 
 const IN: f64 = 25.4;
+/// The panels' width over the box: a third of a 95-7/8 CDX sheet with
+/// two kerfs, for a 29 in aerator.
+const W: f64 = (95.875 - 0.25) / 3.0;
 
 fn load() -> Document {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/ramp");
@@ -107,10 +110,10 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     }
     assert_eq!(
         bodies,
-        15 + 11 + 13 + 6 + 2,
+        18 + 11 + 13 + 6 + 2,
         "shared, panel A, panel B, ramp parts and the two sheets"
     );
-    for (name, want) in [("panel A", 26), ("panel B", 28)] {
+    for (name, want) in [("panel A", 29), ("panel B", 31)] {
         let panel = tab_named(&doc, name);
         let r = doc.regenerate_assembly(panel).unwrap();
         assert_eq!(r.bodies.len(), want, "{name}");
@@ -120,7 +123,7 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     let r = doc.regenerate_assembly(ramp).unwrap();
     assert_eq!(
         r.bodies.len(),
-        26 + 28 + 6,
+        29 + 31 + 6,
         "two panels, the pipe, two caps, two end plates, the angle"
     );
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
@@ -320,8 +323,8 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
         "side by side"
     );
     assert!(
-        (ends[3].2 - ends[0].1 - 24.0).abs() < 1e-6,
-        "24 over the lugs"
+        (ends[3].2 - ends[0].1 - (W + 3.0)).abs() < 1e-6,
+        "the width and 1-1/2 of lugs each side"
     );
 }
 
@@ -334,7 +337,7 @@ fn the_fold_clears_itself_and_the_packages_measure_up() {
     let (id, angle0, offset) = (fold.id, fold.angle, fold.offset);
     let r0 = doc.regenerate_assembly(ramp).unwrap();
     // Open: 93 long (panel A's bare stubs to 48, panel B flush at 45),
-    // 24 over the rails, decks coplanar, joint faces touching.
+    // the width and 3 over the rails, decks coplanar, joint faces touching.
     let (lo, hi) = extent(&r0, |b| {
         !b.name.contains("end_plate") && !b.name.contains("ground_angle")
     });
@@ -350,7 +353,7 @@ fn the_fold_clears_itself_and_the_packages_measure_up() {
     );
     let rails = extent(&r0, |b| b.name.contains("/ rail"));
     assert!(
-        ((rails.1.x - rails.0.x) / IN - 22.5).abs() < 1e-6,
+        ((rails.1.x - rails.0.x) / IN - (W + 1.5)).abs() < 1e-6,
         "{} over the rails",
         (rails.1.x - rails.0.x) / IN
     );
@@ -427,7 +430,7 @@ fn the_fold_clears_itself_and_the_packages_measure_up() {
     let (w, l, t) = ((hi.x - lo.x) / IN, (hi.y - lo.y) / IN, (hi.z - lo.z) / IN);
     println!("folded package over the rails: {w:.3} x {l:.3} x {t:.3} in");
     assert!(
-        (w - 24.0).abs() < 1e-6 && (t - (2.0 * 3.375 + 3.0)).abs() < 1e-6,
+        (w - (W + 3.0)).abs() < 1e-6 && (t - (2.0 * 3.375 + 3.0)).abs() < 1e-6,
         "{w} x {t}"
     );
     // The rails run to 45 and their half-rounds an inch past the joint;
@@ -481,7 +484,7 @@ fn extent(r: &AssemblyResult, keep: impl Fn(&Body) -> bool) -> (Vec3, Vec3) {
 /// rails, lugs, stubs, ribs and cross blocks out of under half a 4 x 8 of
 /// birch, both read off the parts' faces.
 #[test]
-fn the_skins_fill_one_sheet_and_the_birch_half_of_another() {
+fn the_skins_take_a_sheet_and_a_third_and_the_birch_half_of_another() {
     let mut doc = load();
     let panel = tab_named(&doc, "panel A");
     let r = doc.regenerate_assembly(panel).unwrap();
@@ -490,17 +493,22 @@ fn the_skins_fill_one_sheet_and_the_birch_half_of_another() {
         (hi.x - lo.x) * (hi.y - lo.y) / (IN * IN)
     };
     let skins: f64 = 2.0 * (area(named(&r, "skin_top")[0]) + area(named(&r, "skin_bottom_a")[0]));
-    let sheet = 48.0 * 96.0;
-    println!(
-        "skins: {skins:.0} in2 of a {sheet:.0} in2 sheet ({:.0} %)",
-        100.0 * skins / sheet
-    );
-    assert!(skins <= sheet, "the skins do not fit one sheet");
-    // Two rips of the skins' width from a 48 in sheet, each crosscut
-    // into two skins' lengths from 96.
+    // CDX sheathing is sized for spacing, 95-7/8 x 47-7/8: three skins
+    // come out of one sheet as thirds of its length with two kerfs, and
+    // the fourth from a second sheet.
+    let sheet = 95.875 * 47.875;
+    println!("skins: {skins:.0} in2, {:.2} CDX sheets", skins / sheet);
     let (lo, hi) = bounds(&named(&r, "skin_top")[0].solid);
     let (sw, sl) = ((hi.x - lo.x) / IN, (hi.y - lo.y) / IN);
-    assert!(2.0 * sw <= 48.0 && 2.0 * sl <= 96.0, "{sw} x {sl} skins");
+    assert!(
+        (sw - W).abs() < 1e-6 && (sl - 45.0).abs() < 1e-6,
+        "{sw} x {sl} skins"
+    );
+    assert!(
+        3.0 * sw + 2.0 * 0.125 <= 95.875 + 1e-9 && sl <= 47.875,
+        "three to a sheet"
+    );
+    assert!(skins > sheet && skins < 2.0 * sheet, "{skins}");
     let side = |b: &Body| {
         let (lo, hi) = bounds(&b.solid);
         (hi.y - lo.y) * (hi.z - lo.z) / (IN * IN)
@@ -531,9 +539,10 @@ fn the_skins_fill_one_sheet_and_the_birch_half_of_another() {
 #[test]
 fn the_cut_sheets_lay_every_ply_piece_flat_and_apart() {
     let mut doc = load();
-    for (name, thickness, count, material) in [
-        ("cut sheet, CDX", 0.4375, 4, "15/32 CDX"),
-        ("cut sheet, birch", 0.75, 36, "3/4 birch"),
+    for (name, thickness, count, material, size) in [
+        ("cut sheet, CDX 1", 0.4375, 3, "15/32 CDX", (95.875, 47.875)),
+        ("cut sheet, CDX 2", 0.4375, 1, "15/32 CDX", (95.875, 47.875)),
+        ("cut sheet, birch", 0.75, 42, "3/4 birch", (96.0, 48.0)),
     ] {
         let tab = tab_named(&doc, name);
         let r = doc.regenerate_assembly(tab).unwrap();
@@ -545,8 +554,8 @@ fn the_cut_sheets_lay_every_ply_piece_flat_and_apart() {
             .unwrap();
         let (slo, shi) = bounds(&sheet.solid);
         assert!(
-            ((shi.x - slo.x) / IN - 96.0).abs() < 1e-6
-                && ((shi.y - slo.y) / IN - 48.0).abs() < 1e-6
+            ((shi.x - slo.x) / IN - size.0).abs() < 1e-6
+                && ((shi.y - slo.y) / IN - size.1).abs() < 1e-6
         );
         let pieces: Vec<&Body> = r
             .bodies
@@ -590,6 +599,6 @@ fn the_cut_sheets_lay_every_ply_piece_flat_and_apart() {
             "{name}: {count} pieces, {:.0}% of the sheet by bounding box",
             yield_ * 100.0
         );
-        assert!(yield_ < 0.9 && yield_ > 0.2, "{yield_}");
+        assert!(yield_ < 0.95 && yield_ > 0.2, "{yield_}");
     }
 }

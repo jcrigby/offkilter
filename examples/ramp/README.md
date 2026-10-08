@@ -54,16 +54,16 @@ pin in a single 3/4" ply lug was marginal; this is why the lugs are
 
 | item | spec | qty | notes |
 |------|------|-----|-------|
-| plywood, skins | 15/32" (0.4375") CDX sheathing, 4×8 | 1 sheet | rip two 21" strips, crosscut each at 48" → all four skins; C face up on top skins |
+| plywood, skins | 15/32" (0.4375") CDX sheathing, 4×8 (sized 95-7/8 × 47-7/8) | 2 sheets | cut the first in thirds across its length → three 31-7/8 × 47-7/8 skins, the fourth from the second sheet; trim each to 45; C face up on top skins (§8) |
 | ribs | 2x2 (actual 1.5" × 1.5") SPF, or 2x4 ripped in half | ~5 × 8 ft | pick straight, dry |
 | cross blocks | same 2x2 | from above | cut to fit between ribs |
-| joint blocking | 2x4 flat (1.5" thick × 3.5" wide) | 2 × 21" | one per panel, across the hinge end, inside the skins |
+| joint blocking | 2x4 flat (1.5" thick × 3.5" wide) | 2 × 31-7/8" | one per panel, across the hinge end, inside the skins (§8) |
 | stubs | 2x8 (1.5" × 7.25") | 2 × 12" (tailgate panel), 2 × 9" (ground panel) | outer rib positions at the free end; the tailgate panel's run 3" past the skins, bare, for the end plates; the ground panel's stop flush with the skins (§8) |
 | rails and lugs | 3/4" birch plywood | ~1 sheet half | rails 4-3/8" tall; lug cheeks and interior lugs laminated to 1-1/2" |
 | rail spacer | 3/4" birch | 2 × 48" × 2-3/8" | under the "spaced" rail on each panel (§4) |
-| hinge pipe | 1/2" Sch 40 galvanized pipe, 0.840" OD, threaded both ends | 1 × 24-1/2" | plus two 1/2" pipe caps (§8) |
+| hinge pipe | 1/2" Sch 40 galvanized pipe, 0.840" OD, threaded both ends | 1 × 35-3/8" | plus two 1/2" pipe caps (§8) |
 | bushings | 1" Sch 40 galvanized pipe, 1.049" ID × 1.315" OD, cut into 3/4" rings | 8 | one pressed into every lug, flush both faces; the pin runs loose in them (§8) |
-| ground edge | 1/8" × 1-1/2" aluminium angle | 1 × 21" | one leg screwed to the ground panel's flush end, the other out past it as the lip (§8) |
+| ground edge | 1/8" × 1-1/2" aluminium angle | 1 × 31-7/8" | one leg screwed to the ground panel's flush end, the other out past it as the lip (§8) |
 | end plates | existing Erickson-type 2x8 ramp end plates | 2 pr | tailgate end only; model as a ghost body |
 | adhesive | PL Premium (polyurethane construction adhesive) | | every rib and block face |
 | screws | 1" and 1-1/4" | | 1" through skins into 2x2s; longer only into 2x8 / 2x4 |
@@ -244,6 +244,26 @@ no interference at 0/45/90/135/180°; folded package extents ≈
 ok-render --test ramp` checks it. Where the build departs from the
 brief, this is why.
 
+- **Width 31-7/8 (2026-10-08).** The aerator measured 29 in across at
+  the store, so the 21 in panels of the brief became 31-7/8: a 4x8 of
+  CDX sheathing is sized for spacing at 95-7/8 x 47-7/8, and cut in
+  thirds across its length with two 1/8 kerfs it gives three 31-7/8 x
+  47-7/8 blanks, each trimmed to 45. Three skins come from the first
+  sheet and the fourth from a second, which keeps two thirds of itself
+  for something else. `W` in the script is that third, and everything
+  across the width follows it: six ribs instead of five, at 1.5, 8,
+  13.5, 18-3/8, 23-7/8 and 30-3/8 (symmetric, the second and fifth
+  clearing the 2x8 stubs by 3/8), five cross blocks a row (5-3/4,
+  4-3/4, 4-1/8, 4-3/4, 5-3/4), the joint block and the ground angle at
+  31-7/8, the pipe 35-3/8, the panels 33-3/8 over the rails and
+  34-7/8 over the lugs. The hinge keeps four lugs a panel; A's
+  interior lugs sit inboard of the ribs at 8 and 23-7/8 (at 7-1/4 and
+  24-5/8), B's inboard of the edge ribs (2-1/4 and 29-5/8), and the
+  handle between the inner pair grows to 16-5/8 in of bare pipe. The
+  loads in the lug and bearing numbers below are unchanged, since the
+  ramp carries the same aerator; a 1/2 in pipe bending as a handle
+  over 16-5/8 in with the 45 lb folded package on it sees under 10
+  ksi. Sections 1 to 7 keep the brief's 21 in numbers.
 - **Two panels, not one.** The brief's identical panels needed a 3/4
   spacer under one rail of each so the rail lugs could sit side by
   side on the pipe, which put a 3/4 step in each rail at the joint.
@@ -252,11 +272,12 @@ brief, this is why.
   rails are plain and flush, with a lug stub (an 8 x 5-1/2 plate with
   the half-round, lapping the rail's lower 2-1/2 in) glued and
   brad-nailed to the outside of each. On the pipe each end has A's rail lug with B's
-  stub beside it, 24 over the lugs, 22.5 over the rails, no step. The
-  interior lugs sit against different ribs on the two panels (A's
-  against the ribs at 6 and 13.5, B's against those at 1.5 and 19.5),
-  so B's land outboard of A's and the handle between the inner pair
-  is 8-1/4 in of bare pipe. No cheeks, no spacers; the pipe is 24-1/2.
+  stub beside it, 34-7/8 over the lugs, 33-3/8 over the rails, no
+  step. The interior lugs sit against different ribs on the two panels
+  (A's inboard of the ribs at 8 and 23-7/8, B's inboard of the edge
+  ribs at 1.5 and 30-3/8), so B's land outboard of A's and the handle
+  between the inner pair is 16-5/8 in of bare pipe. No cheeks, no
+  spacers; the pipe is 35-3/8.
 - **Lugs one ply.** With the 1-1/2 radius the wall round the bushing
   seat is 27/32, and at the 465 lb a lug carries (the 1,860 lb pipe
   tension over four lugs per panel) a single 3/4 birch lug sees about
@@ -295,7 +316,8 @@ brief, this is why.
   bottom skin, the top skin solid. The pull on a lug bears on the
   joint block (about 210 psi on 1.1 in²), so the fasteners hold the
   lug square during glue-up and are the insurance if a glue line lets
-  go. The ribs are at 1.5, 6, 10.5, 13.5 and 19.5 on both panels.
+  go. The ribs are at 1.5, 8, 13.5, 18-3/8, 23-7/8 and 30-3/8 on both
+  panels.
 - **Pin drop and lug radius 1-1/2**, not the 1 the brief assumed,
   which answers the first open question in §7: the 7/16 wall a 1 in
   radius leaves is one pin diameter of end distance, and the radius
@@ -314,7 +336,7 @@ brief, this is why.
   added to its profile.
 - **Panels and ramp.** `panel A` and `panel B` are assemblies of fixed
   instances; the ramp places B turned 180 degrees about z and moved
-  21 in x. Fixed placement rather than fastened mates, since a panel
+  31-7/8 in x. Fixed placement rather than fastened mates, since a panel
   is one glued box and a mate per part would say nothing.
 - **Fold.** One revolute, `fold`, between the pipe and panel B's left
   lug stub bore, its parameters read off the drawn pose. The fold goes
@@ -332,13 +354,16 @@ brief, this is why.
   behind it. The sheet draws the three lugs at the cut (B's interior
   lug, A's behind it, B's lug stub) by themselves beneath the section,
   in the same folded pose.
-- **Cut sheets.** Two assemblies lay the real bodies flat on a 4 x 8
-  sheet, 96 along x: the CDX in two 21 in rips, a top and a bottom
-  skin each; the birch in rips along the sheet, the two rails with
-  lugs (6-3/8 wide, 46-1/2 long) end to end, the plain rails, then the
-  four interior lugs and two lug stubs in a 5-1/2 rip, then 1-1/2 in
-  strips for the ribs and cross blocks packed first-fit by length,
-  23-3/4 in of the sheet's 48 in all. Each piece sits a kerf from the
+- **Cut sheets.** Three assemblies lay the real bodies flat on their
+  sheets, long way along x: the first CDX sheet (95-7/8 x 47-7/8) cut
+  in thirds, a top skin, a bottom skin and a top skin, each 31-7/8
+  along the sheet and 45 of its 47-7/8 across; the second with the
+  other bottom skin at one end; the birch (a true 48 x 96) in rips
+  along the sheet, the two rails with lugs (6-3/8 wide, 46-1/2 long)
+  end to end, the plain rails, then the four interior lugs and two
+  lug stubs in a 5-1/2 rip, then six 1-1/2 in strips for the twelve
+  ribs and twenty cross blocks packed first-fit by length, 25-1/4 in
+  of the sheet's 48 in all. Each piece sits a kerf from the
   next; the script checks every piece lies flat on and inside its
   sheet before drawing it, and the test that no two overlap. The ply
   bodies carry their names and material (CDX 0.55, birch 0.68 g/cm3),
@@ -380,13 +405,13 @@ brief, this is why.
   lug on each side of each panel) and the eight bushings in them on
   the pipe's axis within a hundredth of a millimetre; checks the interior lugs one ply, B's
   outboard of A's, none overlapping, each against a rib of its own
-  panel, the handle 8-1/4 in bare, and A's rail lug beside B's stub at
-  each end of the pipe; sweeps the fold; measures the open ramp at 96
-  long and 22.5 over the rails, the folded package 24 over the lugs
-  and 9.75 thick with the bottoms 3 in apart and the lugs filling the
-  gap; and reads the sheet yield off the parts: the four skins are
-  82 % of one 4 x 8 (two 21 in rips crosscut at 45), the birch, ribs
-  included, about 40 % of another.
+  panel, the handle 16-5/8 in bare, and A's rail lug beside B's stub
+  at each end of the pipe; sweeps the fold; measures the open ramp at
+  93 long and 33-3/8 over the rails, the folded package 34-7/8 over
+  the lugs and 9.75 thick with the bottoms 3 in apart and the lugs
+  filling the gap; and reads the sheet yield off the parts: the four
+  skins are 1-1/4 CDX sheets (three as thirds of one, the fourth from
+  a second), the birch, ribs included, about 42 % of a sheet.
 
 The remaining open questions in §7 stand: the curb height, the rail
 taper against a full skid, the end plates with the rail ending 3 in
