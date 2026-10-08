@@ -20,6 +20,18 @@ use std::io::{BufRead, Write};
 const REFERENCE: &str = include_str!("../../../docs/OPS.md");
 const PROTOCOL: &str = "2024-11-05";
 
+/// A sheet view name as the export tool takes it: lowercased, except
+/// the body names after "of" in a view of chosen bodies, which the
+/// sheet matches without regard to case and captions as given.
+fn sheet_view_name(s: &str) -> String {
+    let s = s.trim();
+    let lower = s.to_ascii_lowercase();
+    match lower.find(" of ") {
+        Some(i) => format!("{} of {}", lower[..i].trim(), s[i + 4..].trim()),
+        None => lower,
+    }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let backend = match Backend::from_args(&args) {
@@ -1568,13 +1580,13 @@ impl Server {
                         sheet.views = list
                             .iter()
                             .filter_map(|v| v.as_str())
-                            .map(|s| s.trim().to_lowercase())
+                            .map(sheet_view_name)
                             .collect();
                     }
                     Some(Value::String(s)) => {
                         sheet.views = s
                             .split(',')
-                            .map(|v| v.trim().to_lowercase())
+                            .map(sheet_view_name)
                             .filter(|v| !v.is_empty())
                             .collect();
                     }
@@ -1898,6 +1910,19 @@ fn tool_list() -> Value {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn view_names_keep_the_case_of_the_bodies_after_of() {
+        assert_eq!(super::sheet_view_name(" Front "), "front");
+        assert_eq!(
+            super::sheet_view_name("Section-Side@12.5"),
+            "section-side@12.5"
+        );
+        assert_eq!(
+            super::sheet_view_name("Right of panel B / lug_1; panel B / bushing 1"),
+            "right of panel B / lug_1; panel B / bushing 1"
+        );
+    }
+
     use super::*;
 
     fn local_server(dir: &std::path::Path) -> Server {
