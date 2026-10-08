@@ -57,7 +57,8 @@ works today, all in the browser:
   would: a router lift (`examples/router-lift/`) and a powered shopping
   cart with a printed ring gear on its wheel (`examples/ego-cart/`),
   each with a regression test that checks the mechanism, not just the
-  parts.
+  parts; and small ones, such as a dummy PCIe card to print
+  (`examples/pcie-dummy/`).
 - Measuring from a photo: print the measuring sheet
   (`examples/measuring-sheet/`), lay parts on it with a steel rule for
   the print scale, photograph it, and the sizes, outlines and holes
