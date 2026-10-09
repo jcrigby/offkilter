@@ -43,7 +43,7 @@ NUT_D, NUT_T = 30.0, 6.0          # outer locking nut (G)
 COLLAR_D = 40.0                   # bearing collar round the spindle, disc to gearhead (G)
 GH_X = (28.0, 75.0)               # gearhead along the spindle from the disc's inner face (M: 25-28 and 72-75 in the photo)
 GH_FWD, GH_BACK = 57.0, 28.0      # gearhead from the spindle centre toward the body, and the nose behind it (G: 85 long, spindle 28 from the nose)
-GH_HALF = 32.0                    # gearhead half-height about the spindle axis, boss face to boss face / 2 (G)
+GH_HALF = 37.0                    # gearhead half-height about the spindle axis, boss face to spindle centre (M: 36-37, spindle at 51.5 and the boss face at 88 on a rule across the gearhead; the larger taken)
 BOSS_X = 52.0                     # side-handle boss centre from the disc's inner face (M: 52 +/- 1)
 BOSS_FWD = 16.5                   # boss centre ahead of the spindle centre along the body (M: bolt at 35, spindle at 51.5 on a rule across the flange)
 BOSS_THREAD, BOSS_DEPTH = 10.0, 10.0   # M10 x 1.5 (M: a bolt fitted at the store), threaded through a 10 mm wall into the gearcase (M)
@@ -91,6 +91,11 @@ PIVOT_Z = (ARM_Z[0] + ARM_Z[1]) / 2
 ARM_X = (BOSS_X - ARM_W / 2 * IN, BOSS_X + ARM_W / 2 * IN)      # centred over the boss
 CHEEK_L = (ARM_X[0] - WASHER_T - ARM_W * IN, ARM_X[0] - WASHER_T)
 CHEEK_R = (ARM_X[1] + WASHER_T, ARM_X[1] + WASHER_T + ARM_W * IN)
+
+# The smallest a disc may wear to: the stop is reset as it wears, which
+# brings the gearhead down by the same amount; change the disc while the
+# gearhead still clears the rod by 1 mm.
+DISC_CHANGE_D = math.ceil(DISC_D - 2.0 * (DISC_D / 2 - OVERCUT - ROD_D / 2 - GH_HALF - 1.0))
 
 MATERIALS = {"birch": ("3/4 birch ply", 0.68), "hardwood": ("maple", 0.70), "steel": ("steel", 7.85), "rod": ("hardened steel", 7.85)}
 
@@ -383,7 +388,7 @@ HARDWARE = [
     ("hose clamp", "stainless, 2-1/2 to 4 in", 2, f"joined into one loop round the arm and the motor body, {-CLAMP_Y:g} mm ahead of the spindle"),
     ("stop bolt", "1/4-20 x 2-1/2 hex bolt, 2 nuts", 1, "threaded into the post's top (a tee nut, or tapped into hardwood), its head under the arm, locked with a jam nut"),
     ("return spring", "screen-door spring or a short bungee", 1, "from the arm's front to a screw in the base's back edge, enough to lift the head off the work"),
-    ("disc", "4-1/2 x 0.040 x 7/8 metal cut-off, Type 1, rated 13,300 rpm", 5, "11,000 rpm grinder; reset the stop bolt as the disc wears"),
+    ("disc", "4-1/2 x 0.040 x 7/8 metal cut-off, Type 1, rated 13,300 rpm", 5, f"11,000 rpm grinder; reset the stop bolt as the disc wears and change the disc at {DISC_CHANGE_D} mm, before the gearhead reaches the rod"),
     ("clamps", "F-clamps or quick-grips", 2, "the base to the bench through its front corners"),
 ]
 
@@ -453,7 +458,7 @@ def main():
     print(f"rod axis z {ROD_Z:.2f}, disc bottom at the stop z {low:.2f} ({ROD_Z - low:.2f} past the axis), "
           f"spindle z {DISC_Z:.2f}, pivot z {PIVOT_Z:.2f}, the disc plunges {plunge:.1f} degrees off vertical at the stop")
     print(f"gearhead underside z {DISC_Z - GH_HALF:.2f}: {DISC_Z - GH_HALF - (ROD_Z + ROD_D / 2):.1f} over the rod, "
-          f"{DISC_Z - GH_HALF - V_TOP_Z:.1f} over the V-blocks; a disc worn to {2 * (DISC_D / 2 - (DISC_Z - GH_HALF - ROD_Z - ROD_D / 2)):.0f} mm puts the gearhead on the rod")
+          f"{DISC_Z - GH_HALF - V_TOP_Z:.1f} over the V-blocks; a disc worn to {2 * (DISC_D / 2 - (DISC_Z - GH_HALF - ROD_Z - ROD_D / 2)):.0f} mm puts the gearhead on the rod: change it at {DISC_CHANGE_D}")
 
     # Pictures: the saw down on its stop and raised; the swing from the side.
     shot = lambda name, **kw: mcp.call("screenshot", {"tab": saw, "width": 1600, "height": 1100, "path": os.path.join(OUT, f"{name}.png"), **kw})

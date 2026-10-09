@@ -39,7 +39,7 @@ the rod turns instead:
    edge damages the blocks' ball tracks.
 
 The disc only ever has to reach the rod's centre, about 10 mm, so the
-gearhead stays 14.6 mm above the rod and 22.9 mm above the V-blocks
+gearhead stays 9.6 mm above the rod and 17.9 mm above the V-blocks
 (the test checks both). The disc never reaches the base, so the base
 has no kerf slot.
 
@@ -106,31 +106,33 @@ test says whether it still works.
 | gearhead along the spindle from the disc | 28 to 75 mm | photo, +/- 3 |
 | boss thread | M10 x 1.5 | measured: a bolt fitted at the store |
 | boss centre ahead of the spindle centre | 16.5 mm | measured: bolt at 35 and spindle at 51.5 on a rule across the flange |
-| gearhead half-height about the spindle (boss face to axis) | 32 mm | guess: **measure**, it sets the arm's height and the gearhead's clearance over the rod |
+| gearhead half-height about the spindle (boss face to axis) | 37 mm | measured: 36-37 on a rule across the gearhead; the larger taken |
 | gearhead nose behind the spindle / ahead to the body | 28 / 57 mm | photo |
 | motor body diameter | 62 mm | guess |
 | boss wall | 10 mm, threaded through into the gearcase | measured: the bolt does not bottom |
 
 What the numbers give, as the build prints them: the rod's axis sits
 55.4 mm above the bench and the spindle 112.1 mm; the pivot is 8 in
-behind the spindle and 51 mm above it, so the disc comes down 14 degrees
+behind the spindle and 56 mm above it, so the disc comes down 15 degrees
 off vertical at the stop. Raised 20 degrees, the disc is 62 mm above
 the rod.
 
 ## Findings
 
-- A disc worn to about 85 mm diameter brings the gearhead down onto
-  the rod. Change discs before then. The real figure depends on the
-  gearhead half-height, which is a guess.
-- The disc plunges 14 degrees off vertical at the stop because the arm
+- **Change the disc at 97 mm.** Each time the stop is reset for a worn
+  disc, the gearhead comes down by the same amount, and with a disc
+  worn to 95 mm it sits on the rod. A new disc clears by 9.6 mm, so
+  each disc gets about 17 mm of wear: expect two or three for the six
+  cuts. Nothing in the layout buys more: the clearance is the disc's
+  radius less the rod's radius, the overcut and the gearhead's
+  half-height, all fixed.
+- The disc plunges 15 degrees off vertical at the stop because the arm
   sits on top of the gearhead, above the spindle. That doesn't matter
   for a turned rod. A lower pivot would make it vertical, at the cost of
   a dropped lug on the arm.
 
 ## Open
 
-- [ ] Measure the gearhead's height (top boss face to the spindle's
-      centre) and put it in `build.py`.
 - [ ] An up stop, so the spring cannot throw the head back past the
       cheeks. A cord from the arm to the base is enough.
 - [ ] Mount blocks for the Bauer and the Hercules: a block per grinder,

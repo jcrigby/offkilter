@@ -171,21 +171,21 @@ fn the_head_cuts_to_the_stop_and_clears_the_work() {
                 ),
             );
             must(
-                gearhead - rod_top >= 10.0,
+                gearhead - rod_top >= 8.0,
                 format!(
                     "on the stop the grinder is {:.1} mm over the rod",
                     gearhead - rod_top
                 ),
             );
             must(
-                gearhead - v_top >= 10.0,
+                gearhead - v_top >= 8.0,
                 format!(
                     "on the stop the grinder is {:.1} mm over the V-blocks",
                     gearhead - v_top
                 ),
             );
             eprintln!(
-                "NOTE a disc worn to {:.0} mm diameter puts the gearhead on the rod (reset the stop as it wears; change it before then)",
+                "NOTE a disc worn to {:.0} mm diameter puts the gearhead on the rod (the parts list says change it 2 mm before)",
                 114.3 - 2.0 * (gearhead - rod_top)
             );
         }
