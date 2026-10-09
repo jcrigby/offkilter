@@ -65,10 +65,12 @@ base when cutting steel.
   M10 x 50 bolt down through it. Two hose clamps joined into one loop
   hold the arm to the motor body 130 mm ahead of the spindle, so the
   grinder cannot rock on the bolt.
-- **Depth stop:** a 1-1/2 square post, 4 tall, under the arm between the
-  disc and the pivot. A 1/4-20 bolt in its top has its head bearing on
-  the arm's underside, locked with a jam nut. Turning the bolt sets the
-  depth; reset it as the disc wears.
+- **Depth stop:** a 1-1/2 square post, 4 tall, under the arm 3-3/4 to
+  5-1/4 behind the spindle. That is past the guard's reach however the
+  guard is turned. A 1/4-20 bolt in its top has its head bearing on the
+  arm's underside, locked with a jam nut. Turning the bolt sets the
+  depth: the disc moves 2.3 times what the bolt does, so a quarter turn
+  is about 0.7 mm. Reset it as the disc wears.
 - **V-blocks:** hardwood 1-1/2 thick with a 90 degree V 1-1/4 wide. Cut
   them as one block, make the first kerf, then screw them down square to
   it, split at the disc.

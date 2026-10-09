@@ -73,7 +73,8 @@ ARM_FRONT = -6.0                  # the arm's front end, over the motor body whe
 CHEEK_W = 3.0                     # cheeks front to back
 PIVOT_D, PIVOT_BORE = 0.5, 0.512  # 1/2 in bolt, 13 mm bores drilled snug and waxed
 WASHER_T, WASHER_OD = 1.6, 27.0   # 1/2 SAE washers (mm): one each side of the arm, one under the head and nut
-POST = (1.75, 3.25)               # the depth-stop post along y, 1-1/2 square, under the arm
+POST = (3.75, 5.25)               # the depth-stop post along y, 1-1/2 square, under the arm: behind the guard's reach
+                                  # however it is turned (62.5 from the spindle), at 2.3 times leverage on the disc
 POST_H = 4.0
 STOP_D = 0.25                     # 1/4-20 stop bolt, its head bearing on the arm's underside
 CLAMP_Y = -130.0                  # mm: the hose clamps round arm and body

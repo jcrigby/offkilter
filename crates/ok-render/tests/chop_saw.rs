@@ -141,6 +141,18 @@ fn the_head_cuts_to_the_stop_and_clears_the_work() {
             bad.is_empty(),
             format!("up {deg} degrees: no interference but the disc in its cut: {bad:?}"),
         );
+        // The guard stays well clear of the depth stop however it is
+        // turned: the post and its bolt behind the guard's whole circle
+        // (62.5 mm about the spindle, build.py GUARD_R).
+        let (dlo, dhi) = body(&r, "head / disc").bounds().unwrap();
+        let spindle_y = (dlo.y + dhi.y) / 2.0;
+        for stop in ["stop post", "stop bolt"] {
+            let g = body(&r, stop).bounds().unwrap().0.y - (spindle_y + 62.5);
+            must(
+                g >= 20.0,
+                format!("up {deg} degrees: the {stop} is {g:.1} mm behind the guard's circle"),
+            );
+        }
         if deg == 0.0 {
             must(
                 (rod - low - 0.5).abs() < 0.05,
