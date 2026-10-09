@@ -8505,7 +8505,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -19.049999999999997
+                "offset": 3.175
               },
               "sketch": {
                 "entities": [
@@ -8532,7 +8532,7 @@
           },
           {
             "id": 7,
-            "name": "hinge pipe, 1/2 Sch 40 x 33.375",
+            "name": "hinge nipple, 1/2 Sch 40 x 10",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -8540,7 +8540,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 847.7249999999999,
+              "depth": 254.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -8550,6 +8550,58 @@
           },
           {
             "id": 8,
+            "name": "pipe",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 552.4499999999999
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 10.668
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "hinge nipple, 1/2 Sch 40 x 10",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 8,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 254.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 10,
             "name": "bore",
             "suppressed": false,
             "kind": {
@@ -8557,7 +8609,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -31.75
+                "offset": -9.525
               },
               "sketch": {
                 "entities": [
@@ -8577,14 +8629,14 @@
             }
           },
           {
-            "id": 9,
+            "id": 11,
             "name": "bore",
             "suppressed": false,
             "kind": {
               "type": "hole",
-              "sketch": 8,
+              "sketch": 10,
               "diameter": 15.798799999999998,
-              "depth": 873.125,
+              "depth": 828.675,
               "through_all": false,
               "direction": "normal",
               "counterbore": null,
@@ -8592,7 +8644,7 @@
             }
           }
         ],
-        "next_id": 10,
+        "next_id": 12,
         "settings": {
           "facet_angle": 5.0
         }
@@ -8663,7 +8715,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -41.275
+                "offset": -19.049999999999997
               },
               "sketch": {
                 "entities": [
@@ -8715,7 +8767,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 828.675
+                "offset": 257.175
               },
               "sketch": {
                 "entities": [
@@ -8757,9 +8809,113 @@
               },
               "op": "new"
             }
+          },
+          {
+            "id": 10,
+            "name": "cap",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 530.225
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 12.7
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "pipe cap, 1/2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 10,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 22.225,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 12,
+            "name": "cap",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 806.4499999999999
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -38.099999999999994
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 12.7
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 13,
+            "name": "pipe cap, 1/2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 12,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 22.225,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
           }
         ],
-        "next_id": 10,
+        "next_id": 14,
         "settings": {
           "facet_angle": 5.0
         }
@@ -11702,7 +11858,7 @@
           },
           {
             "id": 87,
-            "name": "pipe",
+            "name": "pipe 1",
             "studio": 14,
             "body": 0,
             "fixed": true,
@@ -11721,6 +11877,25 @@
           },
           {
             "id": 88,
+            "name": "pipe 2",
+            "studio": 14,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 89,
             "name": "pipe_cap 1",
             "studio": 15,
             "body": 0,
@@ -11739,7 +11914,7 @@
             }
           },
           {
-            "id": 89,
+            "id": 90,
             "name": "pipe_cap 2",
             "studio": 15,
             "body": 1,
@@ -11758,7 +11933,45 @@
             }
           },
           {
-            "id": 90,
+            "id": 91,
+            "name": "pipe_cap 3",
+            "studio": 15,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 92,
+            "name": "pipe_cap 4",
+            "studio": 15,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 93,
             "name": "end_plate 1",
             "studio": 16,
             "body": 0,
@@ -11777,7 +11990,7 @@
             }
           },
           {
-            "id": 91,
+            "id": 94,
             "name": "end_plate 2",
             "studio": 16,
             "body": 1,
@@ -11796,7 +12009,7 @@
             }
           },
           {
-            "id": 92,
+            "id": 95,
             "name": "ground_angle",
             "studio": 17,
             "body": 0,
@@ -11817,7 +12030,7 @@
         ],
         "mates": [
           {
-            "id": 93,
+            "id": 96,
             "name": "fold",
             "kind": "revolute",
             "a": {
@@ -11840,7 +12053,7 @@
             },
             "b": {
               "instance": 86,
-              "sub": 74,
+              "sub": 77,
               "face": {
                 "feature": 15,
                 "local": 2,
@@ -11857,7 +12070,7 @@
                 ]
               }
             },
-            "offset": 347.6624999999997,
+            "offset": -111.12499999999916,
             "angle": 180.0,
             "flip": false
           }
@@ -11865,13 +12078,13 @@
       }
     },
     {
-      "id": 94,
+      "id": 97,
       "kind": {
         "type": "assembly",
         "name": "cut sheet, CDX 1",
         "instances": [
           {
-            "id": 95,
+            "id": 98,
             "name": "sheet_cdx",
             "studio": 18,
             "body": 0,
@@ -11890,7 +12103,7 @@
             }
           },
           {
-            "id": 96,
+            "id": 99,
             "name": "skin_top 1 #1",
             "studio": 1,
             "body": 0,
@@ -11909,7 +12122,7 @@
             }
           },
           {
-            "id": 97,
+            "id": 100,
             "name": "skin_bottom 1 #2",
             "studio": 2,
             "body": 0,
@@ -11928,7 +12141,7 @@
             }
           },
           {
-            "id": 98,
+            "id": 101,
             "name": "skin_top 1 #3",
             "studio": 1,
             "body": 0,
@@ -11951,13 +12164,13 @@
       }
     },
     {
-      "id": 99,
+      "id": 102,
       "kind": {
         "type": "assembly",
         "name": "cut sheet, CDX 2",
         "instances": [
           {
-            "id": 100,
+            "id": 103,
             "name": "sheet_cdx",
             "studio": 18,
             "body": 0,
@@ -11976,7 +12189,7 @@
             }
           },
           {
-            "id": 101,
+            "id": 104,
             "name": "skin_bottom 1 #1",
             "studio": 2,
             "body": 0,
@@ -11999,13 +12212,13 @@
       }
     },
     {
-      "id": 102,
+      "id": 105,
       "kind": {
         "type": "assembly",
         "name": "cut sheet, birch",
         "instances": [
           {
-            "id": 103,
+            "id": 106,
             "name": "sheet_birch",
             "studio": 19,
             "body": 0,
@@ -12024,7 +12237,7 @@
             }
           },
           {
-            "id": 104,
+            "id": 107,
             "name": "rail 1 #1",
             "studio": 6,
             "body": 0,
@@ -12043,7 +12256,7 @@
             }
           },
           {
-            "id": 105,
+            "id": 108,
             "name": "rail 2 #2",
             "studio": 6,
             "body": 1,
@@ -12062,7 +12275,7 @@
             }
           },
           {
-            "id": 106,
+            "id": 109,
             "name": "rail 1 #3",
             "studio": 6,
             "body": 0,
@@ -12081,7 +12294,7 @@
             }
           },
           {
-            "id": 107,
+            "id": 110,
             "name": "rail 2 #4",
             "studio": 6,
             "body": 1,
@@ -12100,7 +12313,7 @@
             }
           },
           {
-            "id": 108,
+            "id": 111,
             "name": "lug_1 1 #5",
             "studio": 7,
             "body": 0,
@@ -12119,7 +12332,7 @@
             }
           },
           {
-            "id": 109,
+            "id": 112,
             "name": "lug_2 1 #6",
             "studio": 8,
             "body": 0,
@@ -12138,7 +12351,7 @@
             }
           },
           {
-            "id": 110,
+            "id": 113,
             "name": "lug_3 1 #7",
             "studio": 9,
             "body": 0,
@@ -12157,7 +12370,7 @@
             }
           },
           {
-            "id": 111,
+            "id": 114,
             "name": "lug_4 1 #8",
             "studio": 10,
             "body": 0,
@@ -12176,7 +12389,7 @@
             }
           },
           {
-            "id": 112,
+            "id": 115,
             "name": "lug_1 1 #9",
             "studio": 7,
             "body": 0,
@@ -12195,7 +12408,7 @@
             }
           },
           {
-            "id": 113,
+            "id": 116,
             "name": "lug_2 1 #10",
             "studio": 8,
             "body": 0,
@@ -12214,7 +12427,7 @@
             }
           },
           {
-            "id": 114,
+            "id": 117,
             "name": "lug_3 1 #11",
             "studio": 9,
             "body": 0,
@@ -12233,7 +12446,7 @@
             }
           },
           {
-            "id": 115,
+            "id": 118,
             "name": "lug_4 1 #12",
             "studio": 10,
             "body": 0,
@@ -12252,7 +12465,7 @@
             }
           },
           {
-            "id": 116,
+            "id": 119,
             "name": "rib 2 #13",
             "studio": 3,
             "body": 1,
@@ -12271,7 +12484,7 @@
             }
           },
           {
-            "id": 117,
+            "id": 120,
             "name": "rib 3 #14",
             "studio": 3,
             "body": 2,
@@ -12290,7 +12503,7 @@
             }
           },
           {
-            "id": 118,
+            "id": 121,
             "name": "cross_block 5 #15",
             "studio": 4,
             "body": 4,
@@ -12309,7 +12522,7 @@
             }
           },
           {
-            "id": 119,
+            "id": 122,
             "name": "cross_block 10 #16",
             "studio": 4,
             "body": 9,
@@ -12328,7 +12541,7 @@
             }
           },
           {
-            "id": 120,
+            "id": 123,
             "name": "rib 4 #17",
             "studio": 3,
             "body": 3,
@@ -12347,7 +12560,7 @@
             }
           },
           {
-            "id": 121,
+            "id": 124,
             "name": "rib 5 #18",
             "studio": 3,
             "body": 4,
@@ -12366,7 +12579,7 @@
             }
           },
           {
-            "id": 122,
+            "id": 125,
             "name": "cross_block 5 #19",
             "studio": 4,
             "body": 4,
@@ -12385,7 +12598,7 @@
             }
           },
           {
-            "id": 123,
+            "id": 126,
             "name": "cross_block 10 #20",
             "studio": 4,
             "body": 9,
@@ -12404,7 +12617,7 @@
             }
           },
           {
-            "id": 124,
+            "id": 127,
             "name": "rib 2 #21",
             "studio": 3,
             "body": 1,
@@ -12423,7 +12636,7 @@
             }
           },
           {
-            "id": 125,
+            "id": 128,
             "name": "rib 3 #22",
             "studio": 3,
             "body": 2,
@@ -12442,7 +12655,7 @@
             }
           },
           {
-            "id": 126,
+            "id": 129,
             "name": "cross_block 1 #23",
             "studio": 4,
             "body": 0,
@@ -12461,7 +12674,7 @@
             }
           },
           {
-            "id": 127,
+            "id": 130,
             "name": "cross_block 6 #24",
             "studio": 4,
             "body": 5,
@@ -12480,7 +12693,7 @@
             }
           },
           {
-            "id": 128,
+            "id": 131,
             "name": "rib 4 #25",
             "studio": 3,
             "body": 3,
@@ -12499,7 +12712,7 @@
             }
           },
           {
-            "id": 129,
+            "id": 132,
             "name": "rib 5 #26",
             "studio": 3,
             "body": 4,
@@ -12518,7 +12731,7 @@
             }
           },
           {
-            "id": 130,
+            "id": 133,
             "name": "cross_block 1 #27",
             "studio": 4,
             "body": 0,
@@ -12537,7 +12750,7 @@
             }
           },
           {
-            "id": 131,
+            "id": 134,
             "name": "cross_block 6 #28",
             "studio": 4,
             "body": 5,
@@ -12556,7 +12769,7 @@
             }
           },
           {
-            "id": 132,
+            "id": 135,
             "name": "rib 1 #29",
             "studio": 3,
             "body": 0,
@@ -12575,7 +12788,7 @@
             }
           },
           {
-            "id": 133,
+            "id": 136,
             "name": "rib 6 #30",
             "studio": 3,
             "body": 5,
@@ -12594,7 +12807,7 @@
             }
           },
           {
-            "id": 134,
+            "id": 137,
             "name": "cross_block 2 #31",
             "studio": 4,
             "body": 1,
@@ -12613,7 +12826,7 @@
             }
           },
           {
-            "id": 135,
+            "id": 138,
             "name": "cross_block 7 #32",
             "studio": 4,
             "body": 6,
@@ -12632,7 +12845,7 @@
             }
           },
           {
-            "id": 136,
+            "id": 139,
             "name": "cross_block 2 #33",
             "studio": 4,
             "body": 1,
@@ -12651,7 +12864,7 @@
             }
           },
           {
-            "id": 137,
+            "id": 140,
             "name": "cross_block 7 #34",
             "studio": 4,
             "body": 6,
@@ -12670,7 +12883,7 @@
             }
           },
           {
-            "id": 138,
+            "id": 141,
             "name": "cross_block 4 #35",
             "studio": 4,
             "body": 3,
@@ -12689,7 +12902,7 @@
             }
           },
           {
-            "id": 139,
+            "id": 142,
             "name": "cross_block 9 #36",
             "studio": 4,
             "body": 8,
@@ -12708,7 +12921,7 @@
             }
           },
           {
-            "id": 140,
+            "id": 143,
             "name": "rib 1 #37",
             "studio": 3,
             "body": 0,
@@ -12727,7 +12940,7 @@
             }
           },
           {
-            "id": 141,
+            "id": 144,
             "name": "rib 6 #38",
             "studio": 3,
             "body": 5,
@@ -12746,7 +12959,7 @@
             }
           },
           {
-            "id": 142,
+            "id": 145,
             "name": "cross_block 4 #39",
             "studio": 4,
             "body": 3,
@@ -12765,7 +12978,7 @@
             }
           },
           {
-            "id": 143,
+            "id": 146,
             "name": "cross_block 9 #40",
             "studio": 4,
             "body": 8,
@@ -12784,7 +12997,7 @@
             }
           },
           {
-            "id": 144,
+            "id": 147,
             "name": "cross_block 3 #41",
             "studio": 4,
             "body": 2,
@@ -12803,7 +13016,7 @@
             }
           },
           {
-            "id": 145,
+            "id": 148,
             "name": "cross_block 8 #42",
             "studio": 4,
             "body": 7,
@@ -12822,7 +13035,7 @@
             }
           },
           {
-            "id": 146,
+            "id": 149,
             "name": "cross_block 3 #43",
             "studio": 4,
             "body": 2,
@@ -12841,7 +13054,7 @@
             }
           },
           {
-            "id": 147,
+            "id": 150,
             "name": "cross_block 8 #44",
             "studio": 4,
             "body": 7,
@@ -12864,5 +13077,5 @@
       }
     }
   ],
-  "next_id": 148
+  "next_id": 151
 }
