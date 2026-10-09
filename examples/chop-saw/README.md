@@ -100,7 +100,7 @@ test says whether it still works.
 | disc | 4-1/2 x 0.040 x 7/8 cut-off | label (4-1/2 in, 11,000 rpm, 5/8-11) |
 | side-handle boss centre from the disc's inner face | 52 mm | measured, +/- 1 |
 | gearhead along the spindle from the disc | 28 to 75 mm | photo, +/- 3 |
-| boss thread | M10 x 1.5 | guess: bigger than the Bauer's handle; confirm at the store (or 3/8-16) |
+| boss thread | M10 x 1.5 | measured: a bolt fitted at the store |
 | boss centre ahead of the spindle centre | 14 mm | photo, +/- 5: **measure next** |
 | gearhead half-height about the spindle (boss face to axis) | 32 mm | guess: **measure**, it sets the arm's height and the gearhead's clearance over the rod |
 | gearhead nose behind the spindle / ahead to the body | 28 / 57 mm | photo |
@@ -125,8 +125,8 @@ the rod.
 
 ## Open
 
-- [ ] Measure the boss's offset ahead of the spindle and the gearhead's
-      height, confirm the boss thread, and put the numbers in `build.py`.
+- [ ] Measure the boss's offset ahead of the spindle, the gearhead's
+      height and the boss's thread depth, and put the numbers in `build.py`.
 - [ ] An up stop, so the spring cannot throw the head back past the
       cheeks. A cord from the arm to the base is enough.
 - [ ] Mount blocks for the Bauer and the Hercules: a block per grinder,

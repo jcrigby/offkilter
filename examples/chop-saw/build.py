@@ -46,7 +46,7 @@ GH_FWD, GH_BACK = 57.0, 28.0      # gearhead from the spindle centre toward the 
 GH_HALF = 32.0                    # gearhead half-height about the spindle axis, boss face to boss face / 2 (G)
 BOSS_X = 52.0                     # side-handle boss centre from the disc's inner face (M: 52 +/- 1)
 BOSS_FWD = 14.0                   # boss centre ahead of the spindle centre along the body (G: 12-15)
-BOSS_THREAD, BOSS_DEPTH = 10.0, 20.0   # M10 x 1.5 (G: bigger than the Bauer's M8; confirm at the store) and how deep it is threaded (G)
+BOSS_THREAD, BOSS_DEPTH = 10.0, 20.0   # M10 x 1.5 (M: a bolt fitted at the store) and how deep it is threaded (G)
 BODY_D, BODY_L = 62.0, 183.0      # motor body diameter and length past the gearhead (G)
 GUARD_R, GUARD_T = 62.5, 1.5      # the guard's rim radius and sheet thickness (G)
 GUARD_X = (-10.0, 4.5)            # rim across the disc, back plate on the gearhead side (G)
@@ -373,7 +373,7 @@ IDENTITY = {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "
 HARDWARE = [
     ("pivot bolt", "1/2-13 x 5-1/2 hex bolt, nylock nut", 1, "through both cheeks and the arm; snug the nut until the arm has no side play and still falls under its own weight"),
     ("washer", "1/2 SAE flat washer", 4, "one under the head, one under the nut, one each side of the arm"),
-    ("boss bolt", "M10 x 1.5 x 50 hex bolt (confirm the thread in the boss; 3/8-16 if not metric), washer", 1, "down through the arm into the grinder's top side-handle boss, about 10 mm of thread engaged; 60 long if the boss is threaded deeper than 20"),
+    ("boss bolt", "M10 x 1.5 x 50 hex bolt, washer", 1, "down through the arm into the grinder's top side-handle boss, about 10 mm of thread engaged; 60 long if the boss is threaded deeper than 20"),
     ("hose clamp", "stainless, 2-1/2 to 4 in", 2, f"joined into one loop round the arm and the motor body, {-CLAMP_Y:g} mm ahead of the spindle"),
     ("stop bolt", "1/4-20 x 2-1/2 hex bolt, 2 nuts", 1, "threaded into the post's top (a tee nut, or tapped into hardwood), its head under the arm, locked with a jam nut"),
     ("return spring", "screen-door spring or a short bungee", 1, "from the arm's front to a screw in the base's back edge, enough to lift the head off the work"),
