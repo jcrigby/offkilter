@@ -2802,7 +2802,7 @@
               "type": "hole",
               "sketch": 11,
               "diameter": 10.0,
-              "depth": 20.0,
+              "depth": 10.0,
               "through_all": false,
               "direction": "reverse",
               "counterbore": null,
@@ -3261,7 +3261,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 134.16713562373093
+                "offset": 135.06713562373093
               },
               "sketch": {
                 "entities": [
@@ -3306,7 +3306,7 @@
           },
           {
             "id": 3,
-            "name": "boss bolt washer",
+            "name": "boss bolt washers",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -3340,7 +3340,7 @@
           },
           {
             "id": 4,
-            "name": "boss bolt washer",
+            "name": "boss bolt washers",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -3348,7 +3348,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 2.0,
+              "depth": 2.9000000000000057,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3365,7 +3365,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 184.16713562373093
+                "offset": 185.06713562373093
               },
               "sketch": {
                 "entities": [
@@ -3400,7 +3400,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 6.5,
+              "depth": 6.400000000000006,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3414,7 +3414,7 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "2": "boss bolt, M10 x 50 hex, washer"
+          "2": "boss bolt, M10 x 50 hex, 2.9 mm of washers"
         },
         "part_materials": {
           "2": {

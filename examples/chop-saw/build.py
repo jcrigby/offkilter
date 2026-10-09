@@ -46,7 +46,9 @@ GH_FWD, GH_BACK = 57.0, 28.0      # gearhead from the spindle centre toward the 
 GH_HALF = 32.0                    # gearhead half-height about the spindle axis, boss face to boss face / 2 (G)
 BOSS_X = 52.0                     # side-handle boss centre from the disc's inner face (M: 52 +/- 1)
 BOSS_FWD = 14.0                   # boss centre ahead of the spindle centre along the body (G: 12-15)
-BOSS_THREAD, BOSS_DEPTH = 10.0, 20.0   # M10 x 1.5 (M: a bolt fitted at the store) and how deep it is threaded (G)
+BOSS_THREAD, BOSS_DEPTH = 10.0, 10.0   # M10 x 1.5 (M: a bolt fitted at the store), threaded through a 10 mm wall into the gearcase (M)
+BOSS_BOLT_L = 50.0                # the boss bolt's length under the head
+BOSS_ENGAGE = 9.0                 # thread in the boss: short of the wall, so the tip never reaches the gears
 BODY_D, BODY_L = 62.0, 183.0      # motor body diameter and length past the gearhead (G)
 GUARD_R, GUARD_T = 62.5, 1.5      # the guard's rim radius and sheet thickness (G)
 GUARD_X = (-10.0, 4.5)            # rim across the disc, back plate on the gearhead side (G)
@@ -286,11 +288,15 @@ def guard(p):
 
 
 def boss_bolt(p):
-    """Through the arm into the top boss, a washer under the head."""
-    f = cyl_z(p, "boss bolt", ARM_Z[1] + 2.0 - 50.0, ARM_Z[1] + 2.0, BOSS_X, -BOSS_FWD, BOSS_THREAD - 0.3)
-    cyl_z(p, "boss bolt washer", ARM_Z[1], ARM_Z[1] + 2.0, BOSS_X, -BOSS_FWD, 21.0, op="add")
-    cyl_z(p, "boss bolt head", ARM_Z[1] + 2.0, ARM_Z[1] + 8.5, BOSS_X, -BOSS_FWD, 18.0, op="add")
-    part_is(p, f, "boss bolt, M10 x 50 hex, washer", "steel")
+    """Through the arm into the top boss, washers under the head: as many
+    as leave BOSS_ENGAGE of thread below the arm, since the boss is a
+    wall into the gearcase and a longer reach would meet the gears."""
+    stack = BOSS_BOLT_L - ARM_W * IN - BOSS_ENGAGE
+    tip = ARM_Z[0] - BOSS_ENGAGE
+    f = cyl_z(p, "boss bolt", tip, tip + BOSS_BOLT_L, BOSS_X, -BOSS_FWD, BOSS_THREAD - 0.3)
+    cyl_z(p, "boss bolt washers", ARM_Z[1], ARM_Z[1] + stack, BOSS_X, -BOSS_FWD, 21.0, op="add")
+    cyl_z(p, "boss bolt head", ARM_Z[1] + stack, ARM_Z[1] + stack + 6.4, BOSS_X, -BOSS_FWD, 18.0, op="add")
+    part_is(p, f, f"boss bolt, M10 x {BOSS_BOLT_L:g} hex, {stack:.1f} mm of washers", "steel")
 
 
 STAND = [("base", base), ("infeed V-block", v_block("infeed V-block", V_IN)), ("outfeed V-block", v_block("outfeed V-block", V_OUT)),
@@ -373,7 +379,7 @@ IDENTITY = {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "
 HARDWARE = [
     ("pivot bolt", "1/2-13 x 5-1/2 hex bolt, nylock nut", 1, "through both cheeks and the arm; snug the nut until the arm has no side play and still falls under its own weight"),
     ("washer", "1/2 SAE flat washer", 4, "one under the head, one under the nut, one each side of the arm"),
-    ("boss bolt", "M10 x 1.5 x 50 hex bolt, washer", 1, "down through the arm into the grinder's top side-handle boss, about 10 mm of thread engaged; 60 long if the boss is threaded deeper than 20"),
+    ("boss bolt", f"M10 x 1.5 x {BOSS_BOLT_L:g} hex bolt, M10 washers", 1, f"down through the arm into the grinder's top side-handle boss; the boss is a 10 mm wall into the gearcase, so before tightening, stack washers under the head until the bolt stands {BOSS_ENGAGE:g} mm below the arm's underside (about {BOSS_BOLT_L - ARM_W * IN - BOSS_ENGAGE:.0f} mm of washers for a 1-1/2 arm; more if the ply is thinner). Never longer"),
     ("hose clamp", "stainless, 2-1/2 to 4 in", 2, f"joined into one loop round the arm and the motor body, {-CLAMP_Y:g} mm ahead of the spindle"),
     ("stop bolt", "1/4-20 x 2-1/2 hex bolt, 2 nuts", 1, "threaded into the post's top (a tee nut, or tapped into hardwood), its head under the arm, locked with a jam nut"),
     ("return spring", "screen-door spring or a short bungee", 1, "from the arm's front to a screw in the base's back edge, enough to lift the head off the work"),

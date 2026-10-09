@@ -62,7 +62,11 @@ base when cutting steel.
   door hinge.
 - **Arm:** two plies glued to 1-1/2 square, 14-3/4 long, round at the
   back. It sits on the gearhead's top side-handle boss, held by one
-  M10 x 50 bolt down through it. Two hose clamps joined into one loop
+  M10 x 50 bolt down through it. The boss is threaded through a 10 mm
+  wall into the gearcase, so the bolt must stop short of the gears: stack
+  washers under its head until it stands 9 mm below the arm's underside
+  before it goes in (about 3 mm of washers on a true 1-1/2 arm; "3/4" ply
+  is often 18 mm, which wants more). Two hose clamps joined into one loop
   hold the arm to the motor body 130 mm ahead of the spindle, so the
   grinder cannot rock on the bolt.
 - **Depth stop:** a 1-1/2 square post, 4 tall, under the arm 3-3/4 to
@@ -105,7 +109,7 @@ test says whether it still works.
 | gearhead half-height about the spindle (boss face to axis) | 32 mm | guess: **measure**, it sets the arm's height and the gearhead's clearance over the rod |
 | gearhead nose behind the spindle / ahead to the body | 28 / 57 mm | photo |
 | motor body diameter | 62 mm | guess |
-| boss thread depth | 20 mm | guess: decides 50 or 60 mm for the boss bolt |
+| boss wall | 10 mm, threaded through into the gearcase | measured: the bolt does not bottom |
 
 What the numbers give, as the build prints them: the rod's axis sits
 55.4 mm above the bench and the spindle 112.1 mm; the pivot is 8 in
@@ -126,7 +130,7 @@ the rod.
 ## Open
 
 - [ ] Measure the boss's offset ahead of the spindle, the gearhead's
-      height and the boss's thread depth, and put the numbers in `build.py`.
+      height, and put the numbers in `build.py`.
 - [ ] An up stop, so the spring cannot throw the head back past the
       cheeks. A cord from the arm to the base is enough.
 - [ ] Mount blocks for the Bauer and the Hercules: a block per grinder,

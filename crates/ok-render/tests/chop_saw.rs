@@ -154,6 +154,15 @@ fn the_head_cuts_to_the_stop_and_clears_the_work() {
             );
         }
         if deg == 0.0 {
+            // The boss is a 10 mm wall into the gearcase: the bolt's tip
+            // must stay inside it.
+            let reach = lo_z(body(&r, "head / arm")) - lo_z(body(&r, "head / boss bolt"));
+            must(
+                (8.0..10.0).contains(&reach),
+                format!(
+                    "the boss bolt reaches {reach:.1} mm below the arm, inside the 10 mm boss wall"
+                ),
+            );
             must(
                 (rod - low - 0.5).abs() < 0.05,
                 format!(
