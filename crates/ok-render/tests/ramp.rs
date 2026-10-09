@@ -1,7 +1,7 @@
 //! The folding truck ramp (examples/ramp) as a regression suite: every
 //! part regenerates closed, the panel and the ramp place every
-//! instance, the eight lug bores and their bushings share the pipe's axis, the lugs
-//! interleave inside the rails and leave the handle bare, the fold clears
+//! instance, the eight lug bores and their bushings share the nipples' axis, the lugs
+//! interleave inside the rails with a nipple through each four, the fold clears
 //! itself from open to folded, and the open and folded packages measure
 //! what the brief says. Every number prints (`--nocapture`); inches
 //! throughout, converted from the document's millimetres.
@@ -110,7 +110,7 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     }
     assert_eq!(
         bodies,
-        29 + 2 + 2 + 6 + 2,
+        29 + 2 + 2 + 9 + 2,
         "shared, panel A, panel B, ramp parts and the two sheets"
     );
     for (name, want) in [("panel A", 31), ("panel B", 31)] {
@@ -123,8 +123,8 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     let r = doc.regenerate_assembly(ramp).unwrap();
     assert_eq!(
         r.bodies.len(),
-        31 + 31 + 6,
-        "two panels, the pipe, two caps, two end plates, the angle"
+        31 + 31 + 9,
+        "two panels, two nipples, four caps, two end plates, the angle"
     );
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
     assert_eq!(doc.assembly(ramp).unwrap().mates.len(), 1, "the fold");
@@ -180,14 +180,17 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
 }
 
 #[test]
-fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
+fn the_eight_lugs_share_the_nipples_axis_and_interleave_inside_the_rails() {
     let mut doc = load();
     let ramp = tab_named(&doc, "ramp");
     let r = doc.regenerate_assembly(ramp).unwrap();
-    // The pipe's axis: along x, through (0, -1) in y and z.
-    let pipe = &body(&r, "pipe").solid;
+    // The nipples' axis: along x, through (0, -1.5) in y and z, both
+    // of them.
+    let pipe = &body(&r, "pipe 1").solid;
     let (po, pa) = cylinders(pipe, 0.84 / 2.0)[0];
     assert!(pa.x.abs() > 1.0 - 1e-9, "pipe along x: {pa:?}");
+    let (qo, qa) = cylinders(&body(&r, "pipe 2").solid, 0.84 / 2.0)[0];
+    assert!(qa.x.abs() > 1.0 - 1e-9 && (qo.y - po.y).abs() < 1e-6 && (qo.z - po.z).abs() < 1e-6);
     assert!(
         (po.y).abs() < 1e-6 && (po.z + 1.5 * IN).abs() < 1e-6,
         "{po:?}"
@@ -285,15 +288,59 @@ fn the_six_lugs_share_the_pipe_axis_and_nest_with_the_handle_bare() {
         rails.0.x / IN < lugs[0].1 && rails.1.x / IN > lugs[7].2,
         "nothing past the rails"
     );
-    let handle = lugs[4].1 - lugs[3].2;
-    println!("bare pipe between the middle lugs: {handle} in");
-    assert!(handle >= 7.0, "handle {handle}");
-    // The pipe is flush with the rails' faces, the caps alone beyond.
-    let (plo, phi) = bounds(pipe);
+    // Two precut 10 in nipples, one through each side's four lugs, the
+    // outer caps ending flush with the rails' faces and the inner caps
+    // in the gap between the middle lugs, clear of them.
+    for (name, from, to) in [("pipe 1", 0, 3), ("pipe 2", 4, 7)] {
+        let (plo, phi) = bounds(&body(&r, name).solid);
+        assert!(
+            ((phi.x - plo.x) / IN - 10.0).abs() < 1e-6,
+            "{name} is a 10 in nipple"
+        );
+        assert!(
+            plo.x / IN < lugs[from].1 && phi.x / IN > lugs[to].2,
+            "{name} through its four lugs"
+        );
+    }
+    let caps: Vec<(f64, f64)> = r
+        .bodies
+        .iter()
+        .filter(|b| b.name.starts_with("pipe_cap"))
+        .map(|b| {
+            let (lo, hi) = bounds(&b.solid);
+            (lo.x / IN, hi.x / IN)
+        })
+        .collect();
+    assert_eq!(caps.len(), 4);
+    let (clo, chi) = caps
+        .iter()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), c| {
+            (a.min(c.0), b.max(c.1))
+        });
     assert!(
-        (plo.x - rails.0.x).abs() < 1e-6 && (phi.x - rails.1.x).abs() < 1e-6,
-        "the pipe ends at the rails"
+        (clo - rails.0.x / IN).abs() < 1e-6 && (chi - rails.1.x / IN).abs() < 1e-6,
+        "the outer caps end at the rails' faces"
     );
+    for (c0, c1) in &caps {
+        for (name, l0, l1) in &lugs {
+            assert!(
+                *c1 <= l0 + 1e-6 || *c0 >= l1 - 1e-6,
+                "cap {c0}..{c1} meets {name}"
+            );
+        }
+    }
+    let right = caps
+        .iter()
+        .filter(|c| c.0 > W / 2.0)
+        .map(|c| c.0)
+        .fold(f64::INFINITY, f64::min);
+    let left = caps
+        .iter()
+        .filter(|c| c.1 < W / 2.0)
+        .map(|c| c.1)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let gap = right - left;
+    println!("between the inner caps: {gap} in");
 }
 
 #[test]

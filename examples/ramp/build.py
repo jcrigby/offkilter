@@ -245,21 +245,27 @@ def bushings(spans):
     return build
 
 
-PIPE_X = (-BIRCH, W + BIRCH)       # flush with the rails' outer faces: 33-3/8 in; only the caps stand past the rails
+# Two precut nipples, one through each side's four lugs, placed so the
+# outer caps end flush with the rails' outer faces; the inner caps sit
+# in the gap between the middle lugs.
+NIPPLE = 10.0
+PIPES = [(CAP_L - BIRCH, CAP_L - BIRCH + NIPPLE), (W + BIRCH - CAP_L - NIPPLE, W + BIRCH - CAP_L)]   # 1/8 to 10-1/8 and 21-3/4 to 31-3/4
 
 
 def pipe(p):
-    s = p.sketch("right", PIPE_X[0] * IN, "pipe")
-    p.circle(s, mm(0.0, -PIN_DROP), PIPE_OD / 2 * IN)
-    p.extrude(s, (PIPE_X[1] - PIPE_X[0]) * IN, name=f"hinge pipe, 1/2 Sch 40 x {PIPE_X[1] - PIPE_X[0]:g}")
-    bore_x(p, "bore", PIPE_X[0], PIPE_X[1], 0.0, -PIN_DROP, PIPE_ID)
+    for x0, x1 in PIPES:
+        s = p.sketch("right", x0 * IN, "pipe")
+        p.circle(s, mm(0.0, -PIN_DROP), PIPE_OD / 2 * IN)
+        p.extrude(s, (x1 - x0) * IN, op="new", name=f"hinge nipple, 1/2 Sch 40 x {x1 - x0:g}")
+    bore_x(p, "bore", PIPES[0][0], PIPES[-1][1], 0.0, -PIN_DROP, PIPE_ID)
 
 
 def pipe_caps(p):
-    for x0, x1 in ((PIPE_X[0] - CAP_L, PIPE_X[0]), (PIPE_X[1], PIPE_X[1] + CAP_L)):
-        s = p.sketch("right", x0 * IN, "cap")
-        p.circle(s, mm(0.0, -PIN_DROP), CAP_OD / 2 * IN)
-        p.extrude(s, (x1 - x0) * IN, op="new", name="pipe cap, 1/2")
+    for x0, x1 in PIPES:
+        for a, b in ((x0 - CAP_L, x0), (x1, x1 + CAP_L)):
+            s = p.sketch("right", a * IN, "cap")
+            p.circle(s, mm(0.0, -PIN_DROP), CAP_OD / 2 * IN)
+            p.extrude(s, (b - a) * IN, op="new", name="pipe cap, 1/2")
 
 
 def end_plates(p):
@@ -338,7 +344,8 @@ CUTLIST = [
     ("rail", f"3/4 birch, {SKIN_END:g} x {RAIL_H:g}", 4, "two per panel, flush both sides, plain: the lugs are all inside them"),
     ("lug", f"3/4 birch, {JOINT + LUG_IN:g} x {RIB + SKIN + 2 * LUG_R:g}, lug profile", 8, "four per panel, all alike, on the far side of the ribs at 1.5, 8, 23-7/8 and 30-3/8; glued and brad-nailed through the face into the rib and from the bottom skin into the foot"),
     ("bushing", f"1 Sch 40 galvanized pipe cut into {BIRCH:g} rings, {BUSH_ID:g} ID x {BUSH_OD:g} OD", 8, "one pressed into every lug, flush both faces, faced square; the pin runs loose in them"),
-    ("hinge pipe", f"1/2 Sch 40 galvanized, {PIPE_X[1] - PIPE_X[0]:g}, threaded both ends", 1, "flush with the rails' faces; with two caps, which are all that stands past the rails"),
+    ("hinge nipple", f"1/2 Sch 40 galvanized, {NIPPLE:g} precut, threaded both ends", 2, "one through each side's four lugs, capped both ends; the outer caps end flush with the rails' faces"),
+    ("pipe cap", "1/2 malleable", 4, "the outer pair retain the nipples, the inner pair sit in the gap between the middle lugs"),
     ("ground angle", f"1/8 x 1-1/2 aluminium angle x {W:g}", 1, "one leg against panel B's flush end, the other out past it flush with the top skin"),
     ("angle screw", "#10 x 2 pan head", 4, "through the angle's leg into each stub's end grain, two per stub, one high and one low"),
 ]
@@ -573,12 +580,12 @@ def main():
     ops += instance_ops(tabs, bodies, [t for t, _ in RAMP_PARTS], True)
     apply(mcp, ops, ramp)
     ids = instance_ids(mcp, ramp)
-    # The fold: a revolute between the pipe and panel B's left lug stub
-    # bore, its parameters read off the drawn pose.
-    ca, cb, ta, tb = coaxial(reports["pipe"][0], PIPE_OD / 2 * IN, IDENTITY, reports["lug_1"][0], BORE / 2 * IN, PLACE_B)
+    # The fold: a revolute between the left nipple and panel B's lug on
+    # it (lug 4, which turned lands first from the left wall).
+    ca, cb, ta, tb = coaxial(reports["pipe"][0], PIPE_OD / 2 * IN, IDENTITY, reports["lug_4"][0], BORE / 2 * IN, PLACE_B)
     offset, angle, flip = mate_parameters(ta, tb)
-    apply(mcp, [{"type": "add_mate", "kind": "revolute", "a": {"instance": ids["pipe"], "face": ca["reference"]},
-                 "b": {"instance": ids["panel B"], "sub": b_ids["lug_1"], "face": cb["reference"]},
+    apply(mcp, [{"type": "add_mate", "kind": "revolute", "a": {"instance": ids["pipe 1"], "face": ca["reference"]},
+                 "b": {"instance": ids["panel B"], "sub": b_ids["lug_4"], "face": cb["reference"]},
                  "offset": offset, "angle": angle, "flip": flip, "name": "fold"}], ramp)
     report = json.loads(mcp.call("report", {"tab": ramp, "detail": "full"}))
     for m in report["mates"]:
