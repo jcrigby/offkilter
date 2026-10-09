@@ -164,6 +164,7 @@ in `docs/DECISIONS.md`.
 - [x] Photo measuring in the web app: a Measure photo button whose dialog shows the squared-up picture and the parts, takes the sheet size and a reference, downloads the printable sheet and adds the outlines sketch; measured in the wasm (`ok-photo` builds for wasm32), not behind a server route, so it works without a server too
 - [x] Photo measuring: outlines fitted into straight runs and arcs (least-squares circles, greedy over the simplified corners, within 0.3 mm of the traced boundary), or one circle; the MCP and web sketches draw those instead of the polygon
 - [x] Photo measuring: a disc reference wider than tall (by its outline's second moments) warns that the print was stretched one way; a scanner's dpi is read from the PNG or JPEG file and warns when it disagrees with the rule or the marks (the MCP caption and the web dialog show the warnings)
+- [x] A mini chop saw from a 4-1/2 in angle grinder as an example (`examples/chop-saw`, preliminary, the brief and what is measured in its README): the grinder on a laminated birch arm pivoting on a 1/2 in bolt between two cheeks, a ply base clamped to the bench, V-blocks so the duplicator's 20 mm hardened shafts are turned under the disc against a depth stop 0.5 mm past their axis; the head a sub-assembly on a revolute, a swing sheet, and `crates/ok-render/tests/chop_saw.rs` for the cut depth, the gearhead's clearance over the rod, the boss bolt inside the boss wall, the stop clear of the guard and interference from the stop to 20 degrees up
 
 ## Backlog
 
