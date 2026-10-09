@@ -61,7 +61,7 @@ pin in a single 3/4" ply lug was marginal; this is why the lugs are
 | stubs | 2x8 (1.5" × 7.25") | 2 × 12" (tailgate panel), 2 × 9" (ground panel) | outer rib positions at the free end; the tailgate panel's run 3" past the skins, bare, for the end plates; the ground panel's stop flush with the skins (§8) |
 | rails and lugs | 3/4" birch plywood | ~1 sheet half | rails 4-3/8" tall; lug cheeks and interior lugs laminated to 1-1/2" |
 | rail spacer | 3/4" birch | 2 × 48" × 2-3/8" | under the "spaced" rail on each panel (§4) |
-| hinge pipe | 1/2" Sch 40 galvanized pipe, 0.840" OD, threaded both ends | 1 × 35-3/8" | plus two 1/2" pipe caps (§8) |
+| hinge pins | 1/2" Sch 40 galvanized precut nipples, 0.840" OD, threaded both ends | 2 × 10" | plus four 1/2" pipe caps (§8) |
 | bushings | 1" Sch 40 galvanized pipe, 1.049" ID × 1.315" OD, cut into 3/4" rings | 8 | one pressed into every lug, flush both faces; the pin runs loose in them (§8) |
 | ground edge | 1/8" × 1-1/2" aluminium angle | 1 × 31-7/8" | one leg screwed to the ground panel's flush end, the other out past it as the lip (§8) |
 | end plates | existing Erickson-type 2x8 ramp end plates | 2 pr | tailgate end only; model as a ghost body |
@@ -257,10 +257,8 @@ brief, this is why.
   4-3/4, 4-1/8, 4-3/4, 5-3/4), the joint block and the ground angle at
   31-7/8, the panels 33-3/8 over the rails. The hinge is the next
   bullet's. The loads in the lug and bearing numbers below are
-  unchanged, since the ramp carries the same aerator; a 1/2 in pipe
-  bending as a handle over 13-5/8 in with the 45 lb folded package on
-  it sees under 10 ksi. Sections 1 to 7 keep the brief's 21 in
-  numbers.
+  unchanged, since the ramp carries the same aerator. Sections 1 to 7
+  keep the brief's 21 in numbers.
 - **All lugs alike, inside the rails (2026-10-08).** The rail lugs and
   the lug stubs are gone: both panels have plain flush rails and four
   identical interior lugs, so nothing stands past the rails but the
@@ -270,10 +268,22 @@ brief, this is why.
   ribs are symmetric about the middle, so panel B turned lands its
   lugs on the near side of the same ribs, and across the pipe they
   run B, A, B, A, B, A, B, A, each pair with a rib between them, the
-  middle pair 13-5/8 apart for the handle. The pipe is 33-3/8, flush
-  with the rails' outer faces, its caps the only thing beyond them.
-  Four lugs a panel as before, so the lug numbers below hold; the
-  bottom skins are now alike too, notched at the same four places.
+  middle pair 13-5/8 apart. The pin is the next bullet's. Four lugs a
+  panel as before, so the lug numbers below hold; the bottom skins
+  are now alike too, notched at the same four places.
+- **Two 10 in nipples (2026-10-09).** The store's precut nipples come
+  24 and 36, and a one-piece pin wanted 33-3/8 threaded both ends. So
+  the pin is two 10 in nipples, one through each side's four lugs
+  (3/8 to 9-1/8 and 22-3/4 to 31-1/2), each set 1/8 inside the box
+  edge so its outer cap ends flush with the rail's outer face and its
+  inner cap sits in the gap between the middle lugs, the inner caps
+  9-7/8 apart. Nothing stands past the sides at all. Each half of the
+  hinge is its own pin through four lugs, the two coaxial through the
+  lugs' bores; unscrew an outer cap and pull a nipple to separate the
+  halves. The cost is the handle: there is no bare pipe between the
+  inner lugs any more, so the hinge no longer makes one, and §7 gains
+  a question (a webbing loop on a rail at the balance point, or a
+  hand hole).
 - **No rail lugs, no spacers.** The brief's identical panels needed a
   3/4 spacer under one rail of each so the rail lugs could sit side
   by side on the pipe, which put a 3/4 step in each rail at the
@@ -340,8 +350,9 @@ brief, this is why.
   instances; the ramp places B turned 180 degrees about z and moved
   31-7/8 in x. Fixed placement rather than fastened mates, since a panel
   is one glued box and a mate per part would say nothing.
-- **Fold.** One revolute, `fold`, between the pipe and panel B's first
-  lug's bore, its parameters read off the drawn pose. The fold goes
+- **Fold.** One revolute, `fold`, between the left nipple and panel
+  B's lug on it (lug 4, first from the left wall once turned), its
+  parameters read off the drawn pose. The fold goes
   under: B's free end drops, and at 180 degrees it lies under A,
   bottoms 3 in apart, lugs interleaved. The bottom skin's hinge-end
   edge has the 3/8 chamfer and the test finds no interference at 0,
@@ -406,8 +417,9 @@ brief, this is why.
   bushings in them on the pipe's axis within a hundredth of a
   millimetre; checks the lugs one ply, alternating B, A across the
   pipe, none overlapping, each against a rib of its own panel, all
-  inside the rails with the pipe ending at the rails' faces, and the
-  handle 13-5/8 in bare; sweeps the fold; measures the open ramp at
+  inside the rails, a 10 in nipple through each four with the outer
+  caps ending at the rails' faces and the inner caps clear of the
+  lugs; sweeps the fold; measures the open ramp at
   93 long and 33-3/8 over the rails, the folded package the same over
   the rails and 9.75 thick with the bottoms 3 in apart and the lugs
   filling the gap; and reads the sheet yield off the parts: the four
@@ -416,4 +428,5 @@ brief, this is why.
 
 The remaining open questions in §7 stand: the curb height, the rail
 taper against a full skid, the end plates with the rail ending 3 in
-short, and the rib pitch.
+short, and the rib pitch; and one new one, a carrying handle, since
+the nipples leave no bare pipe between the lugs.

@@ -12,6 +12,7 @@ item,size,qty,note
 "rail","3/4 birch, 45 x 3.375",4,"two per panel, flush both sides, plain: the lugs are all inside them"
 "lug","3/4 birch, 9.5 x 4.9375, lug profile",8,"four per panel, all alike, on the far side of the ribs at 1.5, 8, 23-7/8 and 30-3/8; glued and brad-nailed through the face into the rib and from the bottom skin into the foot"
 "bushing","1 Sch 40 galvanized pipe cut into 0.75 rings, 1.049 ID x 1.315 OD",8,"one pressed into every lug, flush both faces, faced square; the pin runs loose in them"
-"hinge pipe","1/2 Sch 40 galvanized, 33.375, threaded both ends",1,"flush with the rails' faces; with two caps, which are all that stands past the rails"
+"hinge nipple","1/2 Sch 40 galvanized, 10 precut, threaded both ends",2,"one through each side's four lugs, capped both ends; the outer caps end flush with the rails' faces"
+"pipe cap","1/2 malleable",4,"the outer pair retain the nipples, the inner pair sit in the gap between the middle lugs"
 "ground angle","1/8 x 1-1/2 aluminium angle x 31.875",1,"one leg against panel B's flush end, the other out past it flush with the top skin"
 "angle screw","#10 x 2 pan head",4,"through the angle's leg into each stub's end grain, two per stub, one high and one low"
