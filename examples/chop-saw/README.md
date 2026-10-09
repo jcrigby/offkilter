@@ -105,7 +105,7 @@ test says whether it still works.
 | side-handle boss centre from the disc's inner face | 52 mm | measured, +/- 1 |
 | gearhead along the spindle from the disc | 28 to 75 mm | photo, +/- 3 |
 | boss thread | M10 x 1.5 | measured: a bolt fitted at the store |
-| boss centre ahead of the spindle centre | 18.5 mm | measured: bolt at 35 and spindle at 53.5 on a rule across the flange, read by eye |
+| boss centre ahead of the spindle centre | 16.5 mm | measured: bolt at 35 and spindle at 51.5 on a rule across the flange |
 | gearhead half-height about the spindle (boss face to axis) | 32 mm | guess: **measure**, it sets the arm's height and the gearhead's clearance over the rod |
 | gearhead nose behind the spindle / ahead to the body | 28 / 57 mm | photo |
 | motor body diameter | 62 mm | guess |
