@@ -78,6 +78,29 @@ resolution, 5° by default, and STEP files carry those facets as planar
 faces) and STEP import. See
 [docs/ROADMAP.md](docs/ROADMAP.md).
 
+## Screenshots
+
+The examples open in the client, on a desktop and on a phone, taken by
+`apps/web/scripts/screenshots.cjs` against the document server: the
+carving duplicator, the router lift, the puzzle top, the ramp's lug
+with its extrude selected, the Docs dialog with the examples on the
+server, and the cart on a phone.
+
+<p>
+  <img src="docs/screenshots/desktop-duplicator.png" alt="The carving duplicator assembly open in the client on a desktop: the tab bar, instances, mates and parts on the left, the machine in the viewport" width="100%">
+</p>
+<p>
+  <img src="docs/screenshots/desktop-lift.png" alt="The router lift assembly on a desktop" width="24%">
+  <img src="docs/screenshots/desktop-puzzle.png" alt="The puzzle top studio on a desktop, its pieces listed with their woods" width="24%">
+  <img src="docs/screenshots/desktop-part.png" alt="A lug part studio on a desktop with its extrude selected: the feature list, the variables, and the extrude's fields" width="24%">
+  <img src="docs/screenshots/desktop-docs.png" alt="The Docs dialog on a desktop listing the example documents on the server" width="24%">
+</p>
+<p>
+  <img src="docs/screenshots/phone-cart.png" alt="The cart assembly on a phone: the top bar wrapped, the viewport on top and the sidebar as a drawer under it" width="32%">
+  <img src="docs/screenshots/phone-part.png" alt="A lug part studio on a phone with its extrude selected" width="32%">
+  <img src="docs/screenshots/phone-docs.png" alt="The Docs dialog on a phone listing the example documents on the server" width="32%">
+</p>
+
 ## Layout
 
 | Path | What |
@@ -181,6 +204,9 @@ applies ops through the server, and can hand back a `screenshot` so you
 see the result in the chat. To watch live instead, open the document's
 URL in the phone's browser over your LAN or a tailnet (`tailscale serve
 8080` gives it an HTTPS name; add `--secure-cookies` to the server then).
+On a phone the client puts the viewport on top and the sidebar under it
+as a drawer, with the top bar wrapped and the measuring and import
+controls left off; one finger orbits, two zoom and pan.
 
 If the server has accounts, add `"--login", "NAME:PASSWORD"` to the args
 in `.mcp.json` (or register it with `claude mcp add` instead) so the
