@@ -164,7 +164,7 @@ export class Viewer {
   private resize(): void {
     const w = this.container.clientWidth || 1;
     const h = this.container.clientHeight || 1;
-    this.renderer.setSize(w, h, false);
+    this.renderer.setSize(w, h);
     this.labelRenderer.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();

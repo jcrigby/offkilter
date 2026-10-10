@@ -48,7 +48,9 @@ button:disabled { opacity: 0.5; cursor: default; }
 button.active { background: rgba(78, 161, 255, 0.25); border-color: var(--accent); }
 .row.tools { margin-top: 4px; }
 #sidebar { grid-area: side; display: flex; flex-direction: column; background: var(--bg-panel); border-right: 1px solid var(--border); overflow: hidden; }
-.panel { display: flex; flex-direction: column; min-height: 0; }
+.panel { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.panel[hidden] { display: none; }
+.panel > ul { flex: 1 1 auto; min-height: 0; }
 .panel:first-child { flex: 0 1 45%; border-bottom: 1px solid var(--border); }
 .panel:last-child { flex: 1 1 auto; }
 .panel-title { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; flex-wrap: wrap; gap: 4px; }
@@ -173,3 +175,26 @@ dialog.wide { min-width: 720px; max-width: 92vw; }
 .drawing-preview.picking svg g.dimension.user { stroke: #36c; }
 
 .part-list li .pmaterial { flex-basis: 100%; margin-left: 22px; font-size: 11px; max-width: 200px; background: var(--bg); color: var(--text-dim); border: 1px solid var(--border); border-radius: 3px; }
+
+/* Phones and narrow windows: the viewport on top, the sidebar as a
+   scrolling drawer under it, the top bar wrapping. */
+@media (max-width: 760px) {
+  #app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr minmax(0, 42vh) 24px;
+    grid-template-areas: "top" "view" "side" "status";
+    height: 100dvh;
+  }
+  #topbar { flex-wrap: wrap; height: auto; padding: 4px 8px; gap: 4px 6px; }
+  #topbar .quality, #btn-measure, #topbar .section, #btn-import, #btn-photo { display: none; }
+  .studio-name { width: 100%; order: 10; }
+  .spacer { display: none; }
+  .divider { display: none; }
+  #sidebar { border-right: none; border-top: 1px solid var(--border); overflow-y: auto; }
+  .panel:first-child { flex: 0 0 auto; }
+  .panel:last-child { flex: 0 0 auto; }
+  .part-list { max-height: none; }
+  dialog { min-width: 0; width: 94vw; max-width: 94vw; }
+  dialog.wide { min-width: 0; }
+  #statusbar { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
