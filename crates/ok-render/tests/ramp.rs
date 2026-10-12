@@ -13,9 +13,11 @@ use ok_model::{AssemblyResult, Body, Document, TabId};
 use std::path::PathBuf;
 
 const IN: f64 = 25.4;
-/// The panels' width over the box: a third of a 95-7/8 CDX sheet with
-/// two kerfs, for a 29 in aerator.
-const W: f64 = (95.875 - 0.25) / 3.0;
+/// The panels' width over the box, a rip along the OSB sheet, for a
+/// 29 in aerator.
+const W: f64 = 31.875;
+/// The rails' height: the 2-13/16 box and the 1 in curb.
+const RAIL_H: f64 = 2.8125 + 1.0;
 
 fn load() -> Document {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/ramp");
@@ -104,10 +106,10 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     }
     assert_eq!(
         bodies,
-        36 + 2 + 2 + 5 + 2,
+        41 + 4 + 4 + 5 + 2,
         "shared, panel A, panel B, ramp parts and the two sheets"
     );
-    for (name, want) in [("panel A", 38), ("panel B", 38)] {
+    for (name, want) in [("panel A", 45), ("panel B", 45)] {
         let panel = tab_named(&doc, name);
         let r = doc.regenerate_assembly(panel).unwrap();
         assert_eq!(r.bodies.len(), want, "{name}");
@@ -117,13 +119,13 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     let r = doc.regenerate_assembly(ramp).unwrap();
     assert_eq!(
         r.bodies.len(),
-        38 + 38 + 5,
+        45 + 45 + 5,
         "two panels, two bolts, two end plates, the angle"
     );
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
     assert_eq!(doc.assembly(ramp).unwrap().mates.len(), 1, "the fold");
     // Panel B's stubs stop flush with its skins at 45; panel A's run
-    // bare to 48 for the end plates.
+    // bare to 48 for the end plates, their shims stopping with the skins.
     let stubs = extent(&r, |b| b.name.starts_with("panel B / stub"));
     let skins = extent(&r, |b| b.name.starts_with("panel B / skin"));
     assert!(
@@ -136,23 +138,61 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
         (a_stubs.1.y / IN - 48.0).abs() < 1e-6,
         "panel A's stubs run to 48"
     );
+    // The core is 1-15/16: a 2x4 or 2x8 flat and a 7/16 shim of the
+    // skin stock over it, the shim ending with the skins; the ribs
+    // the same height in one piece.
+    for name in ["panel A / stub", "panel B / stub", "panel A / joint_block"] {
+        let lumber = extent(&r, |b| b.name.starts_with(name) && b.material.is_none());
+        let shim = extent(&r, |b| {
+            b.name.starts_with(name)
+                && b.material.as_ref().map(|m| m.name.as_str()) == Some("7/16 OSB")
+        });
+        assert!(
+            ((lumber.1.z - lumber.0.z) / IN - 1.5).abs() < 1e-6
+                && (shim.0.z - lumber.1.z).abs() < 1e-6
+                && ((shim.1.z - shim.0.z) / IN - 0.4375).abs() < 1e-6,
+            "{name}: lumber {:?}, shim {:?}",
+            lumber,
+            shim
+        );
+        let skin = extent(&r, |b| {
+            b.name.starts_with(
+                &name
+                    .replace("stub", "skin_top")
+                    .replace("joint_block", "skin_top"),
+            )
+        });
+        assert!(
+            (skin.0.z - shim.1.z).abs() < 1e-6,
+            "{name}: the shim meets the top skin"
+        );
+        if name.ends_with("stub") {
+            let far = shim.0.y.abs().max(shim.1.y.abs()) / IN;
+            assert!((far - 45.0).abs() < 1e-6, "{name}: shim to {far}, not 45");
+        }
+    }
+    let rib = extent(&r, |b| b.name == "panel A / rib 1");
+    assert!(
+        ((rib.1.z - rib.0.z) / IN - 1.9375).abs() < 1e-6,
+        "ribs 1-15/16"
+    );
     // The ground angle hangs on that flush end: one leg flat on the end
     // face, the other out past it flush with the top skin, with a screw
     // hole into each stub's end grain, two per stub, both below the
-    // top skin.
+    // top skin, in the 2x8 under its shim.
     let (lo, hi) = extent(&r, |b| b.name == "ground_angle");
     assert!(
         (hi.y - stubs.0.y).abs() < 1e-6,
         "the leg is on the end face"
     );
     assert!(
-        ((hi.y - lo.y) / IN - 1.5).abs() < 1e-6,
-        "the lip reaches 1.5 in out"
+        ((hi.y - lo.y) / IN - 2.0).abs() < 1e-6,
+        "the lip reaches 2 in out"
     );
     assert!((hi.z - skins.1.z).abs() < 1e-6, "flush with the top skin");
     assert!(
-        ((hi.z - lo.z) / IN - 1.5).abs() < 1e-6,
-        "the leg is 1.5 in down"
+        ((hi.z - lo.z) / IN - 2.0).abs() < 1e-6,
+        "the leg is 2 in down"
     );
     let angle = r.bodies.iter().find(|b| b.name == "ground_angle").unwrap();
     let holes = cylinders(&angle.solid, 0.1875 / 2.0);
@@ -160,7 +200,7 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     for b in r
         .bodies
         .iter()
-        .filter(|b| b.name.starts_with("panel B / stub"))
+        .filter(|b| b.name.starts_with("panel B / stub") && b.material.is_none())
     {
         let (slo, shi) = bounds(&b.solid);
         let n = holes
@@ -216,8 +256,8 @@ fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
             assert!(off.length() < 0.01, "{}: {off:?} off the bolt axis", b.name);
             assert_eq!(
                 cylinders(&b.solid, 0.34375 / 2.0).len(),
-                4,
-                "{}: four screw holes",
+                6,
+                "{}: six screw holes",
                 b.name
             );
             assert_eq!(b.material.as_ref().map(|m| m.name.as_str()), Some("steel"));
@@ -286,7 +326,7 @@ fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
             b.name
         );
     }
-    // The screws: four a plate, 5/16 x 3-1/8 along x from the plate's
+    // The screws: six a plate, 5/16 x 3-1/8 along x from the plate's
     // outer face, through the rail (3/4), the edge rib (3/4) and into
     // the two-ply hinge block (1-1/2), the point inside the block: each
     // lies in a rail, a rib and both blocks of its own panel, and bites
@@ -347,7 +387,7 @@ fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
         );
         screws += 1;
     }
-    assert_eq!(screws, 16, "four a plate");
+    assert_eq!(screws, 24, "six a plate");
     // The bolt: head, washer, plate, 1/8 washer, plate, washer, nut
     // along x, 2 of shank from under the head, head and nut outside
     // the plates and the washers (1-1/16 across) against them.
@@ -475,7 +515,7 @@ fn the_fold_clears_itself_and_the_packages_measure_up() {
     let (w, l, t) = ((hi.x - lo.x) / IN, (hi.y - lo.y) / IN, (hi.z - lo.z) / IN);
     println!("folded package over the rails: {w:.3} x {l:.3} x {t:.3} in");
     assert!(
-        (w - (W + 1.5)).abs() < 1e-6 && (t - (2.0 * 3.375 + 3.0)).abs() < 1e-6,
+        (w - (W + 1.5)).abs() < 1e-6 && (t - (2.0 * RAIL_H + 3.0)).abs() < 1e-6,
         "{w} x {t}"
     );
     // The plain rails run to 45; the stubs make the panel's 48.
@@ -518,9 +558,10 @@ fn extent(r: &AssemblyResult, keep: impl Fn(&Body) -> bool) -> (Vec3, Vec3) {
     (lo, hi)
 }
 
-/// Sheet yield: the four skins come out of a 4 x 8 of CDX and a third
-/// of another, and the rails, ribs, cross blocks and hinge blocks out
-/// of under half a 4 x 8 of birch, both read off the parts' faces.
+/// Sheet yield: the four skins come out of two 4 x 8s of OSB ripped
+/// along their length, the shims from the first's offcut, and the
+/// rails, ribs, cross blocks and hinge blocks out of under half a 4 x 8
+/// of birch, all read off the parts' faces.
 #[test]
 fn the_skins_take_a_sheet_and_a_third_and_the_birch_half_of_another() {
     let mut doc = load();
@@ -531,11 +572,12 @@ fn the_skins_take_a_sheet_and_a_third_and_the_birch_half_of_another() {
         (hi.x - lo.x) * (hi.y - lo.y) / (IN * IN)
     };
     let skins: f64 = 2.0 * (area(named(&r, "skin_top")[0]) + area(named(&r, "skin_bottom")[0]));
-    // CDX sheathing is sized for spacing, 95-7/8 x 47-7/8: three skins
-    // come out of one sheet as thirds of its length with two kerfs, and
-    // the fourth from a second sheet.
+    // OSB sheathing is sized for spacing, 95-7/8 x 47-7/8: a sheet
+    // ripped 31-7/8 along its length (the strength axis, which runs
+    // along the ramp) gives two 45 in skins with a kerf, and a 16 in
+    // strip over.
     let sheet = 95.875 * 47.875;
-    println!("skins: {skins:.0} in2, {:.2} CDX sheets", skins / sheet);
+    println!("skins: {skins:.0} in2, {:.2} OSB sheets", skins / sheet);
     let (lo, hi) = bounds(&named(&r, "skin_top")[0].solid);
     let (sw, sl) = ((hi.x - lo.x) / IN, (hi.y - lo.y) / IN);
     assert!(
@@ -543,8 +585,8 @@ fn the_skins_take_a_sheet_and_a_third_and_the_birch_half_of_another() {
         "{sw} x {sl} skins"
     );
     assert!(
-        3.0 * sw + 2.0 * 0.125 <= 95.875 + 1e-9 && sl <= 47.875,
-        "three to a sheet"
+        2.0 * sl + 0.125 <= 95.875 + 1e-9 && sw + 16.0 <= 47.875,
+        "two to a sheet, 16 in over"
     );
     assert!(skins > sheet && skins < 2.0 * sheet, "{skins}");
     let side = |b: &Body| {
@@ -581,8 +623,8 @@ fn the_skins_take_a_sheet_and_a_third_and_the_birch_half_of_another() {
 fn the_cut_sheets_lay_every_ply_piece_flat_and_apart() {
     let mut doc = load();
     for (name, thickness, count, material, size) in [
-        ("cut sheet, CDX 1", 0.4375, 3, "15/32 CDX", (95.875, 47.875)),
-        ("cut sheet, CDX 2", 0.4375, 1, "15/32 CDX", (95.875, 47.875)),
+        ("cut sheet, OSB 1", 0.4375, 8, "7/16 OSB", (95.875, 47.875)),
+        ("cut sheet, OSB 2", 0.4375, 2, "7/16 OSB", (95.875, 47.875)),
         ("cut sheet, birch", 0.75, 44, "3/4 birch", (96.0, 48.0)),
     ] {
         let tab = tab_named(&doc, name);

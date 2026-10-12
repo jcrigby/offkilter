@@ -24,7 +24,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -59,14 +59,14 @@
           },
           {
             "id": 6,
-            "name": "top skin, 15/32 CDX",
+            "name": "top skin, 7/16 OSB",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 49.2125
+                "offset": 60.325
               },
               "sketch": {
                 "entities": [
@@ -212,7 +212,7 @@
           },
           {
             "id": 7,
-            "name": "top skin, 15/32 CDX",
+            "name": "top skin, 7/16 OSB",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -241,8 +241,8 @@
         },
         "part_materials": {
           "7": {
-            "name": "15/32 CDX",
-            "density": 0.55
+            "name": "7/16 OSB",
+            "density": 0.62
           }
         }
       }
@@ -270,7 +270,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -305,7 +305,7 @@
           },
           {
             "id": 6,
-            "name": "bottom skin, 15/32 CDX",
+            "name": "bottom skin, 7/16 OSB",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -435,7 +435,7 @@
           },
           {
             "id": 7,
-            "name": "bottom skin, 15/32 CDX",
+            "name": "bottom skin, 7/16 OSB",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -461,8 +461,8 @@
         },
         "part_materials": {
           "7": {
-            "name": "15/32 CDX",
-            "density": 0.55
+            "name": "7/16 OSB",
+            "density": 0.62
           }
         }
       }
@@ -490,7 +490,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -686,7 +686,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -860,7 +860,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1031,7 +1031,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1202,7 +1202,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1373,7 +1373,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1544,7 +1544,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1558,12 +1558,12 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "7": "1.5 x 32.5",
-          "9": "1.5 x 41.5",
-          "11": "1.5 x 41.5",
-          "13": "1.5 x 41.5",
-          "15": "1.5 x 41.5",
-          "17": "1.5 x 32.5"
+          "7": "1.9375 x 32.5",
+          "9": "1.9375 x 41.5",
+          "11": "1.9375 x 41.5",
+          "13": "1.9375 x 41.5",
+          "15": "1.9375 x 41.5",
+          "17": "1.9375 x 32.5"
         },
         "part_materials": {
           "7": {
@@ -1616,7 +1616,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -1812,7 +1812,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1983,7 +1983,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2154,7 +2154,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2325,7 +2325,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2496,7 +2496,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2667,7 +2667,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2838,7 +2838,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3009,7 +3009,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3180,7 +3180,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3351,7 +3351,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3365,16 +3365,16 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "7": "1.5 x 6.875",
-          "9": "1.5 x 4.75",
-          "11": "1.5 x 4.125",
-          "13": "1.5 x 4.75",
-          "15": "1.5 x 6.875",
-          "17": "1.5 x 6.875",
-          "19": "1.5 x 4.75",
-          "21": "1.5 x 4.125",
-          "23": "1.5 x 4.75",
-          "25": "1.5 x 6.875"
+          "7": "1.9375 x 6.875",
+          "9": "1.9375 x 4.75",
+          "11": "1.9375 x 4.125",
+          "13": "1.9375 x 4.75",
+          "15": "1.9375 x 6.875",
+          "17": "1.9375 x 6.875",
+          "19": "1.9375 x 4.75",
+          "21": "1.9375 x 4.125",
+          "23": "1.9375 x 4.75",
+          "25": "1.9375 x 6.875"
         },
         "part_materials": {
           "7": {
@@ -3443,7 +3443,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -3646,11 +3646,192 @@
               },
               "op": "new"
             }
+          },
+          {
+            "id": 8,
+            "name": "joint shim, 7/16 OSB strip x 31.875",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 49.2125
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 88.89999999999999
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 88.89999999999999
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 88.89999999999999
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 88.89999999999999
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "joint shim, 7/16 OSB strip x 31.875",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 8,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 11.1125,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
           }
         ],
-        "next_id": 8,
+        "next_id": 10,
         "settings": {
           "facet_angle": 5.0
+        },
+        "part_names": {
+          "7": "joint block 2x4 x 31.875",
+          "9": "joint shim 3.5 x 31.875"
+        },
+        "part_materials": {
+          "9": {
+            "name": "7/16 OSB",
+            "density": 0.62
+          }
         }
       }
     },
@@ -3677,7 +3858,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -3873,7 +4054,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 85.725,
+              "depth": 96.8375,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4044,7 +4225,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 85.725,
+              "depth": 96.8375,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4058,8 +4239,8 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "7": "rail 45 x 3.375",
-          "9": "rail 45 x 3.375"
+          "7": "rail 45 x 3.8125",
+          "9": "rail 45 x 3.8125"
         },
         "part_materials": {
           "7": {
@@ -4096,7 +4277,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -4177,7 +4358,7 @@
                     "type": "point",
                     "pos": {
                       "x": 38.099999999999994,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4191,7 +4372,7 @@
                     "type": "point",
                     "pos": {
                       "x": 38.099999999999994,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4199,7 +4380,7 @@
                     "type": "point",
                     "pos": {
                       "x": 19.049999999999997,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4213,7 +4394,7 @@
                     "type": "point",
                     "pos": {
                       "x": 19.049999999999997,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4292,7 +4473,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4348,7 +4529,7 @@
                     "type": "point",
                     "pos": {
                       "x": 57.15,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4362,7 +4543,7 @@
                     "type": "point",
                     "pos": {
                       "x": 57.15,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4370,7 +4551,7 @@
                     "type": "point",
                     "pos": {
                       "x": 38.099999999999994,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4384,7 +4565,7 @@
                     "type": "point",
                     "pos": {
                       "x": 38.099999999999994,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4463,7 +4644,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4519,7 +4700,7 @@
                     "type": "point",
                     "pos": {
                       "x": 771.525,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4533,7 +4714,7 @@
                     "type": "point",
                     "pos": {
                       "x": 771.525,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4541,7 +4722,7 @@
                     "type": "point",
                     "pos": {
                       "x": 752.4749999999999,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4555,7 +4736,7 @@
                     "type": "point",
                     "pos": {
                       "x": 752.4749999999999,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4634,7 +4815,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4690,7 +4871,7 @@
                     "type": "point",
                     "pos": {
                       "x": 790.5749999999999,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4704,7 +4885,7 @@
                     "type": "point",
                     "pos": {
                       "x": 790.5749999999999,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4712,7 +4893,7 @@
                     "type": "point",
                     "pos": {
                       "x": 771.525,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4726,7 +4907,7 @@
                     "type": "point",
                     "pos": {
                       "x": 771.525,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -4805,7 +4986,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 49.2125,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4819,10 +5000,10 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "7": "1.5 x 6.5",
-          "9": "1.5 x 6.5",
-          "11": "1.5 x 6.5",
-          "13": "1.5 x 6.5"
+          "7": "1.9375 x 9.25",
+          "9": "1.9375 x 9.25",
+          "11": "1.9375 x 9.25",
+          "13": "1.9375 x 9.25"
         },
         "part_materials": {
           "7": {
@@ -4867,7 +5048,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -4918,15 +5099,15 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": 50.8
+                      "y": 63.5
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 254.0,
-                      "y": 50.8
+                      "x": 323.84999999999997,
+                      "y": 63.5
                     }
                   },
                   {
@@ -4939,15 +5120,15 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 254.0,
-                      "y": 50.8
+                      "x": 323.84999999999997,
+                      "y": 63.5
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 254.0,
+                      "x": 323.84999999999997,
                       "y": 0.0
                     }
                   },
@@ -4961,7 +5142,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 254.0,
+                      "x": 323.84999999999997,
                       "y": 0.0
                     }
                   },
@@ -5014,7 +5195,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": 50.8
+                      "y": 63.5
                     }
                   },
                   {
@@ -5161,7 +5342,7 @@
                     "type": "point",
                     "pos": {
                       "x": 114.3,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5169,7 +5350,7 @@
                     "type": "point",
                     "pos": {
                       "x": 152.39999999999998,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5177,7 +5358,7 @@
                     "type": "point",
                     "pos": {
                       "x": 190.5,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5185,12 +5366,28 @@
                     "type": "point",
                     "pos": {
                       "x": 228.6,
-                      "y": 30.1625
+                      "y": 35.71875
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 266.7,
+                      "y": 35.71875
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 304.79999999999995,
+                      "y": 35.71875
                     }
                   }
                 ],
                 "constraints": [],
-                "next_entity": 4,
+                "next_entity": 6,
                 "next_constraint": 0
               }
             }
@@ -5228,7 +5425,7 @@
                     "type": "point",
                     "pos": {
                       "x": 114.3,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5280,7 +5477,7 @@
                     "type": "point",
                     "pos": {
                       "x": 152.39999999999998,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5332,7 +5529,7 @@
                     "type": "point",
                     "pos": {
                       "x": 190.5,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5384,7 +5581,7 @@
                     "type": "point",
                     "pos": {
                       "x": 228.6,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5417,18 +5614,124 @@
               },
               "op": "new"
             }
+          },
+          {
+            "id": 22,
+            "name": "screw",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -25.4
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 266.7,
+                      "y": 35.71875
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.96875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 23,
+            "name": "lug screw, 5/16 x 3-1/8",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 22,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 79.375,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 24,
+            "name": "screw",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -25.4
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 304.79999999999995,
+                      "y": 35.71875
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.96875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 25,
+            "name": "lug screw, 5/16 x 3-1/8",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 24,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 79.375,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
           }
         ],
-        "next_id": 22,
+        "next_id": 26,
         "settings": {
           "facet_angle": 5.0
         },
         "part_names": {
-          "7": "lug plate 1/4 x 5 x 11.5",
+          "7": "lug plate 1/4 x 5.5 x 14.25",
           "15": "lug screw 5/16 x 3-1/8",
           "17": "lug screw 5/16 x 3-1/8",
           "19": "lug screw 5/16 x 3-1/8",
-          "21": "lug screw 5/16 x 3-1/8"
+          "21": "lug screw 5/16 x 3-1/8",
+          "23": "lug screw 5/16 x 3-1/8",
+          "25": "lug screw 5/16 x 3-1/8"
         },
         "part_materials": {
           "7": {
@@ -5448,6 +5751,14 @@
             "density": 7.85
           },
           "21": {
+            "name": "steel",
+            "density": 7.85
+          },
+          "23": {
+            "name": "steel",
+            "density": 7.85
+          },
+          "25": {
             "name": "steel",
             "density": 7.85
           }
@@ -5477,7 +5788,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -5528,15 +5839,15 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": 50.8
+                      "y": 63.5
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 254.0,
-                      "y": 50.8
+                      "x": 323.84999999999997,
+                      "y": 63.5
                     }
                   },
                   {
@@ -5549,15 +5860,15 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 254.0,
-                      "y": 50.8
+                      "x": 323.84999999999997,
+                      "y": 63.5
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 254.0,
+                      "x": 323.84999999999997,
                       "y": 0.0
                     }
                   },
@@ -5571,7 +5882,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 254.0,
+                      "x": 323.84999999999997,
                       "y": 0.0
                     }
                   },
@@ -5624,7 +5935,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": 50.8
+                      "y": 63.5
                     }
                   },
                   {
@@ -5771,7 +6082,7 @@
                     "type": "point",
                     "pos": {
                       "x": 114.3,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5779,7 +6090,7 @@
                     "type": "point",
                     "pos": {
                       "x": 152.39999999999998,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5787,7 +6098,7 @@
                     "type": "point",
                     "pos": {
                       "x": 190.5,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -5795,12 +6106,28 @@
                     "type": "point",
                     "pos": {
                       "x": 228.6,
-                      "y": 30.1625
+                      "y": 35.71875
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 266.7,
+                      "y": 35.71875
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 304.79999999999995,
+                      "y": 35.71875
                     }
                   }
                 ],
                 "constraints": [],
-                "next_entity": 4,
+                "next_entity": 6,
                 "next_constraint": 0
               }
             }
@@ -5868,7 +6195,7 @@
                     "type": "point",
                     "pos": {
                       "x": 838.1999999999999,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -5882,7 +6209,7 @@
                     "type": "point",
                     "pos": {
                       "x": 838.1999999999999,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -5890,7 +6217,7 @@
                     "type": "point",
                     "pos": {
                       "x": 828.675,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -5904,7 +6231,7 @@
                     "type": "point",
                     "pos": {
                       "x": 828.675,
-                      "y": 254.0
+                      "y": 323.84999999999997
                     }
                   },
                   {
@@ -5983,7 +6310,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 50.8,
+              "depth": 63.5,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -6009,7 +6336,7 @@
                     "type": "point",
                     "pos": {
                       "x": 114.3,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -6061,7 +6388,7 @@
                     "type": "point",
                     "pos": {
                       "x": 152.39999999999998,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -6113,7 +6440,7 @@
                     "type": "point",
                     "pos": {
                       "x": 190.5,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -6165,7 +6492,7 @@
                     "type": "point",
                     "pos": {
                       "x": 228.6,
-                      "y": 30.1625
+                      "y": 35.71875
                     }
                   },
                   {
@@ -6198,19 +6525,125 @@
               },
               "op": "new"
             }
+          },
+          {
+            "id": 24,
+            "name": "screw",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 844.55
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 266.7,
+                      "y": 35.71875
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.96875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 25,
+            "name": "lug screw, 5/16 x 3-1/8",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 24,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 79.375,
+              "direction": "reverse",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 26,
+            "name": "screw",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 844.55
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 304.79999999999995,
+                      "y": 35.71875
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.96875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 27,
+            "name": "lug screw, 5/16 x 3-1/8",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 26,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 79.375,
+              "direction": "reverse",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
           }
         ],
-        "next_id": 24,
+        "next_id": 28,
         "settings": {
           "facet_angle": 5.0
         },
         "part_names": {
-          "7": "lug plate 1/4 x 5 x 11.5",
-          "15": "lug spacer 3/8 x 2 x 8.25",
+          "7": "lug plate 1/4 x 5.5 x 14.25",
+          "15": "lug spacer 3/8 x 2.5 x 11",
           "17": "lug screw 5/16 x 3-1/8",
           "19": "lug screw 5/16 x 3-1/8",
           "21": "lug screw 5/16 x 3-1/8",
-          "23": "lug screw 5/16 x 3-1/8"
+          "23": "lug screw 5/16 x 3-1/8",
+          "25": "lug screw 5/16 x 3-1/8",
+          "27": "lug screw 5/16 x 3-1/8"
         },
         "part_materials": {
           "7": {
@@ -6234,6 +6667,14 @@
             "density": 7.85
           },
           "23": {
+            "name": "steel",
+            "density": 7.85
+          },
+          "25": {
+            "name": "steel",
+            "density": 7.85
+          },
+          "27": {
             "name": "steel",
             "density": 7.85
           }
@@ -6263,7 +6704,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -6637,15 +7078,369 @@
               },
               "op": "new"
             }
+          },
+          {
+            "id": 10,
+            "name": "stub shim, 7/16 OSB strip x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 49.2125
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "stub shim, 7/16 OSB strip x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 10,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 11.1125,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 12,
+            "name": "stub shim, 7/16 OSB strip x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 49.2125
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 625.4749999999999,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 625.4749999999999,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 625.4749999999999,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 625.4749999999999,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 13,
+            "name": "stub shim, 7/16 OSB strip x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 12,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 11.1125,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
           }
         ],
-        "next_id": 10,
+        "next_id": 14,
         "settings": {
           "facet_angle": 5.0
         },
         "part_names": {
           "7": "tailgate stub 2x8 x 12",
-          "9": "tailgate stub 2x8 x 12"
+          "9": "tailgate stub 2x8 x 12",
+          "11": "stub shim 7.25 x 9",
+          "13": "stub shim 7.25 x 9"
+        },
+        "part_materials": {
+          "11": {
+            "name": "7/16 OSB",
+            "density": 0.62
+          },
+          "13": {
+            "name": "7/16 OSB",
+            "density": 0.62
+          }
         }
       }
     },
@@ -6672,7 +7467,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -7049,6 +7844,348 @@
           },
           {
             "id": 10,
+            "name": "stub shim, 7/16 OSB strip x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 49.2125
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 184.15,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "stub shim, 7/16 OSB strip x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 10,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 11.1125,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 12,
+            "name": "stub shim, 7/16 OSB strip x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 49.2125
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 625.4749999999999,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 809.625,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 625.4749999999999,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 625.4749999999999,
+                      "y": 1143.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 625.4749999999999,
+                      "y": 914.4
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 13,
+            "name": "stub shim, 7/16 OSB strip x 9",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 12,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 11.1125,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 14,
             "name": "bevel",
             "suppressed": false,
             "kind": {
@@ -7064,8 +8201,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 1121.002954743875,
-                      "y": 49.2125
+                      "x": 1114.5871498775057,
+                      "y": 60.325
                     }
                   },
                   {
@@ -7073,7 +8210,7 @@
                     "type": "point",
                     "pos": {
                       "x": 1145.54,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -7087,7 +8224,7 @@
                     "type": "point",
                     "pos": {
                       "x": 1145.54,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -7116,8 +8253,8 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 1121.002954743875,
-                      "y": 49.2125
+                      "x": 1114.5871498775057,
+                      "y": 60.325
                     }
                   },
                   {
@@ -7134,12 +8271,12 @@
             }
           },
           {
-            "id": 11,
+            "id": 15,
             "name": "ground bevel, 30 degrees",
             "suppressed": true,
             "kind": {
               "type": "extrude",
-              "sketch": 10,
+              "sketch": 14,
               "profiles": {
                 "type": "all"
               },
@@ -7152,13 +8289,25 @@
             }
           }
         ],
-        "next_id": 12,
+        "next_id": 16,
         "settings": {
           "facet_angle": 5.0
         },
         "part_names": {
           "7": "ground stub 2x8 x 9",
-          "9": "ground stub 2x8 x 9"
+          "9": "ground stub 2x8 x 9",
+          "11": "stub shim 7.25 x 9",
+          "13": "stub shim 7.25 x 9"
+        },
+        "part_materials": {
+          "11": {
+            "name": "7/16 OSB",
+            "density": 0.62
+          },
+          "13": {
+            "name": "7/16 OSB",
+            "density": 0.62
+          }
         }
       }
     },
@@ -7185,7 +8334,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -7886,7 +9035,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -8082,7 +9231,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 60.325,
+              "depth": 71.4375,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -8253,7 +9402,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 60.325,
+              "depth": 71.4375,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -8309,7 +9458,7 @@
                     "type": "point",
                     "pos": {
                       "x": 184.15,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -8323,7 +9472,7 @@
                     "type": "point",
                     "pos": {
                       "x": 184.15,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -8331,7 +9480,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -8345,7 +9494,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -8480,7 +9629,7 @@
                     "type": "point",
                     "pos": {
                       "x": 809.625,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -8494,7 +9643,7 @@
                     "type": "point",
                     "pos": {
                       "x": 809.625,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -8502,7 +9651,7 @@
                     "type": "point",
                     "pos": {
                       "x": 625.4749999999999,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -8516,7 +9665,7 @@
                     "type": "point",
                     "pos": {
                       "x": 625.4749999999999,
-                      "y": 49.2125
+                      "y": 60.325
                     }
                   },
                   {
@@ -8633,7 +9782,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -8668,14 +9817,14 @@
           },
           {
             "id": 6,
-            "name": "ground angle, 1/8 x 1-1/2 aluminium x 31.875",
+            "name": "ground angle, 1/8 x 2 aluminium x 31.875",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 57.15
+                "offset": 68.2625
               },
               "sketch": {
                 "entities": [
@@ -8684,7 +9833,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1181.1
+                      "y": -1193.8
                     }
                   },
                   {
@@ -8692,7 +9841,7 @@
                     "type": "point",
                     "pos": {
                       "x": 809.625,
-                      "y": -1181.1
+                      "y": -1193.8
                     }
                   },
                   {
@@ -8706,7 +9855,7 @@
                     "type": "point",
                     "pos": {
                       "x": 809.625,
-                      "y": -1181.1
+                      "y": -1193.8
                     }
                   },
                   {
@@ -8758,7 +9907,7 @@
                     "type": "point",
                     "pos": {
                       "x": 0.0,
-                      "y": -1181.1
+                      "y": -1193.8
                     }
                   },
                   {
@@ -8821,7 +9970,7 @@
           },
           {
             "id": 7,
-            "name": "ground angle, 1/8 x 1-1/2 aluminium x 31.875",
+            "name": "ground angle, 1/8 x 2 aluminium x 31.875",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -8846,7 +9995,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 22.225
+                "offset": 20.6375
               },
               "sketch": {
                 "entities": [
@@ -9000,7 +10149,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 38.099999999999994,
+              "depth": 50.8,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -9026,7 +10175,7 @@
                     "type": "point",
                     "pos": {
                       "x": 53.974999999999994,
-                      "y": 43.815
+                      "y": 43.497499999999995
                     }
                   },
                   {
@@ -9034,7 +10183,7 @@
                     "type": "point",
                     "pos": {
                       "x": 130.17499999999998,
-                      "y": 28.575
+                      "y": 28.2575
                     }
                   },
                   {
@@ -9042,7 +10191,7 @@
                     "type": "point",
                     "pos": {
                       "x": 679.4499999999999,
-                      "y": 43.815
+                      "y": 43.497499999999995
                     }
                   },
                   {
@@ -9050,7 +10199,7 @@
                     "type": "point",
                     "pos": {
                       "x": 755.65,
-                      "y": 28.575
+                      "y": 28.2575
                     }
                   }
                 ],
@@ -9086,7 +10235,7 @@
       "id": 15,
       "kind": {
         "type": "part_studio",
-        "name": "sheet_cdx",
+        "name": "sheet_osb",
         "features": [
           {
             "id": 1,
@@ -9105,7 +10254,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -9140,7 +10289,7 @@
           },
           {
             "id": 6,
-            "name": "4 x 8 sheet, 15/32 CDX",
+            "name": "4 x 8 sheet, 7/16 OSB",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -9293,7 +10442,7 @@
           },
           {
             "id": 7,
-            "name": "4 x 8 sheet, 15/32 CDX",
+            "name": "4 x 8 sheet, 7/16 OSB",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -9315,7 +10464,7 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "7": "4 x 8 sheet of 15/32 CDX, 95.875 x 47.875"
+          "7": "4 x 8 sheet of 7/16 OSB, 95.875 x 47.875"
         }
       }
     },
@@ -9342,7 +10491,7 @@
             "kind": {
               "type": "variable",
               "name": "rib",
-              "expression": "38.1"
+              "expression": "49.2125"
             }
           },
           {
@@ -9906,7 +11055,7 @@
           },
           {
             "id": 36,
-            "name": "joint_block",
+            "name": "joint_block 1",
             "studio": 5,
             "body": 0,
             "fixed": true,
@@ -9925,6 +11074,25 @@
           },
           {
             "id": 37,
+            "name": "joint_block 2",
+            "studio": 5,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 38,
             "name": "rail 1",
             "studio": 6,
             "body": 0,
@@ -9943,7 +11111,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 39,
             "name": "rail 2",
             "studio": 6,
             "body": 1,
@@ -9962,7 +11130,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 40,
             "name": "hinge_block 1",
             "studio": 7,
             "body": 0,
@@ -9981,7 +11149,7 @@
             }
           },
           {
-            "id": 40,
+            "id": 41,
             "name": "hinge_block 2",
             "studio": 7,
             "body": 1,
@@ -10000,7 +11168,7 @@
             }
           },
           {
-            "id": 41,
+            "id": 42,
             "name": "hinge_block 3",
             "studio": 7,
             "body": 2,
@@ -10019,7 +11187,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 43,
             "name": "hinge_block 4",
             "studio": 7,
             "body": 3,
@@ -10038,7 +11206,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 44,
             "name": "lug_left 1",
             "studio": 8,
             "body": 0,
@@ -10057,7 +11225,7 @@
             }
           },
           {
-            "id": 44,
+            "id": 45,
             "name": "lug_left 2",
             "studio": 8,
             "body": 1,
@@ -10076,7 +11244,7 @@
             }
           },
           {
-            "id": 45,
+            "id": 46,
             "name": "lug_left 3",
             "studio": 8,
             "body": 2,
@@ -10095,7 +11263,7 @@
             }
           },
           {
-            "id": 46,
+            "id": 47,
             "name": "lug_left 4",
             "studio": 8,
             "body": 3,
@@ -10114,7 +11282,7 @@
             }
           },
           {
-            "id": 47,
+            "id": 48,
             "name": "lug_left 5",
             "studio": 8,
             "body": 4,
@@ -10133,7 +11301,45 @@
             }
           },
           {
-            "id": 48,
+            "id": 49,
+            "name": "lug_left 6",
+            "studio": 8,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 50,
+            "name": "lug_left 7",
+            "studio": 8,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 51,
             "name": "lug_right 1",
             "studio": 9,
             "body": 0,
@@ -10152,7 +11358,7 @@
             }
           },
           {
-            "id": 49,
+            "id": 52,
             "name": "lug_right 2",
             "studio": 9,
             "body": 1,
@@ -10171,7 +11377,7 @@
             }
           },
           {
-            "id": 50,
+            "id": 53,
             "name": "lug_right 3",
             "studio": 9,
             "body": 2,
@@ -10190,7 +11396,7 @@
             }
           },
           {
-            "id": 51,
+            "id": 54,
             "name": "lug_right 4",
             "studio": 9,
             "body": 3,
@@ -10209,7 +11415,7 @@
             }
           },
           {
-            "id": 52,
+            "id": 55,
             "name": "lug_right 5",
             "studio": 9,
             "body": 4,
@@ -10228,7 +11434,7 @@
             }
           },
           {
-            "id": 53,
+            "id": 56,
             "name": "lug_right 6",
             "studio": 9,
             "body": 5,
@@ -10247,7 +11453,45 @@
             }
           },
           {
-            "id": 54,
+            "id": 57,
+            "name": "lug_right 7",
+            "studio": 9,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 58,
+            "name": "lug_right 8",
+            "studio": 9,
+            "body": 7,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 59,
             "name": "stub 1",
             "studio": 10,
             "body": 0,
@@ -10266,10 +11510,48 @@
             }
           },
           {
-            "id": 55,
+            "id": 60,
             "name": "stub 2",
             "studio": 10,
             "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 61,
+            "name": "stub 3",
+            "studio": 10,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 62,
+            "name": "stub 4",
+            "studio": 10,
+            "body": 3,
             "fixed": true,
             "placement": {
               "position": {
@@ -10289,13 +11571,13 @@
       }
     },
     {
-      "id": 56,
+      "id": 63,
       "kind": {
         "type": "assembly",
         "name": "panel B",
         "instances": [
           {
-            "id": 57,
+            "id": 64,
             "name": "skin_top",
             "studio": 1,
             "body": 0,
@@ -10314,7 +11596,7 @@
             }
           },
           {
-            "id": 58,
+            "id": 65,
             "name": "skin_bottom",
             "studio": 2,
             "body": 0,
@@ -10333,7 +11615,7 @@
             }
           },
           {
-            "id": 59,
+            "id": 66,
             "name": "rib 1",
             "studio": 3,
             "body": 0,
@@ -10352,7 +11634,7 @@
             }
           },
           {
-            "id": 60,
+            "id": 67,
             "name": "rib 2",
             "studio": 3,
             "body": 1,
@@ -10371,7 +11653,7 @@
             }
           },
           {
-            "id": 61,
+            "id": 68,
             "name": "rib 3",
             "studio": 3,
             "body": 2,
@@ -10390,7 +11672,7 @@
             }
           },
           {
-            "id": 62,
+            "id": 69,
             "name": "rib 4",
             "studio": 3,
             "body": 3,
@@ -10409,7 +11691,7 @@
             }
           },
           {
-            "id": 63,
+            "id": 70,
             "name": "rib 5",
             "studio": 3,
             "body": 4,
@@ -10428,7 +11710,7 @@
             }
           },
           {
-            "id": 64,
+            "id": 71,
             "name": "rib 6",
             "studio": 3,
             "body": 5,
@@ -10447,7 +11729,7 @@
             }
           },
           {
-            "id": 65,
+            "id": 72,
             "name": "cross_block 1",
             "studio": 4,
             "body": 0,
@@ -10466,7 +11748,7 @@
             }
           },
           {
-            "id": 66,
+            "id": 73,
             "name": "cross_block 2",
             "studio": 4,
             "body": 1,
@@ -10485,7 +11767,7 @@
             }
           },
           {
-            "id": 67,
+            "id": 74,
             "name": "cross_block 3",
             "studio": 4,
             "body": 2,
@@ -10504,7 +11786,7 @@
             }
           },
           {
-            "id": 68,
+            "id": 75,
             "name": "cross_block 4",
             "studio": 4,
             "body": 3,
@@ -10523,7 +11805,7 @@
             }
           },
           {
-            "id": 69,
+            "id": 76,
             "name": "cross_block 5",
             "studio": 4,
             "body": 4,
@@ -10542,7 +11824,7 @@
             }
           },
           {
-            "id": 70,
+            "id": 77,
             "name": "cross_block 6",
             "studio": 4,
             "body": 5,
@@ -10561,7 +11843,7 @@
             }
           },
           {
-            "id": 71,
+            "id": 78,
             "name": "cross_block 7",
             "studio": 4,
             "body": 6,
@@ -10580,7 +11862,7 @@
             }
           },
           {
-            "id": 72,
+            "id": 79,
             "name": "cross_block 8",
             "studio": 4,
             "body": 7,
@@ -10599,7 +11881,7 @@
             }
           },
           {
-            "id": 73,
+            "id": 80,
             "name": "cross_block 9",
             "studio": 4,
             "body": 8,
@@ -10618,7 +11900,7 @@
             }
           },
           {
-            "id": 74,
+            "id": 81,
             "name": "cross_block 10",
             "studio": 4,
             "body": 9,
@@ -10637,8 +11919,8 @@
             }
           },
           {
-            "id": 75,
-            "name": "joint_block",
+            "id": 82,
+            "name": "joint_block 1",
             "studio": 5,
             "body": 0,
             "fixed": true,
@@ -10656,7 +11938,26 @@
             }
           },
           {
-            "id": 76,
+            "id": 83,
+            "name": "joint_block 2",
+            "studio": 5,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 84,
             "name": "rail 1",
             "studio": 6,
             "body": 0,
@@ -10675,7 +11976,7 @@
             }
           },
           {
-            "id": 77,
+            "id": 85,
             "name": "rail 2",
             "studio": 6,
             "body": 1,
@@ -10694,7 +11995,7 @@
             }
           },
           {
-            "id": 78,
+            "id": 86,
             "name": "hinge_block 1",
             "studio": 7,
             "body": 0,
@@ -10713,7 +12014,7 @@
             }
           },
           {
-            "id": 79,
+            "id": 87,
             "name": "hinge_block 2",
             "studio": 7,
             "body": 1,
@@ -10732,7 +12033,7 @@
             }
           },
           {
-            "id": 80,
+            "id": 88,
             "name": "hinge_block 3",
             "studio": 7,
             "body": 2,
@@ -10751,7 +12052,7 @@
             }
           },
           {
-            "id": 81,
+            "id": 89,
             "name": "hinge_block 4",
             "studio": 7,
             "body": 3,
@@ -10770,7 +12071,7 @@
             }
           },
           {
-            "id": 82,
+            "id": 90,
             "name": "lug_left 1",
             "studio": 8,
             "body": 0,
@@ -10789,7 +12090,7 @@
             }
           },
           {
-            "id": 83,
+            "id": 91,
             "name": "lug_left 2",
             "studio": 8,
             "body": 1,
@@ -10808,7 +12109,7 @@
             }
           },
           {
-            "id": 84,
+            "id": 92,
             "name": "lug_left 3",
             "studio": 8,
             "body": 2,
@@ -10827,7 +12128,7 @@
             }
           },
           {
-            "id": 85,
+            "id": 93,
             "name": "lug_left 4",
             "studio": 8,
             "body": 3,
@@ -10846,7 +12147,7 @@
             }
           },
           {
-            "id": 86,
+            "id": 94,
             "name": "lug_left 5",
             "studio": 8,
             "body": 4,
@@ -10865,7 +12166,45 @@
             }
           },
           {
-            "id": 87,
+            "id": 95,
+            "name": "lug_left 6",
+            "studio": 8,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 96,
+            "name": "lug_left 7",
+            "studio": 8,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 97,
             "name": "lug_right 1",
             "studio": 9,
             "body": 0,
@@ -10884,7 +12223,7 @@
             }
           },
           {
-            "id": 88,
+            "id": 98,
             "name": "lug_right 2",
             "studio": 9,
             "body": 1,
@@ -10903,7 +12242,7 @@
             }
           },
           {
-            "id": 89,
+            "id": 99,
             "name": "lug_right 3",
             "studio": 9,
             "body": 2,
@@ -10922,7 +12261,7 @@
             }
           },
           {
-            "id": 90,
+            "id": 100,
             "name": "lug_right 4",
             "studio": 9,
             "body": 3,
@@ -10941,7 +12280,7 @@
             }
           },
           {
-            "id": 91,
+            "id": 101,
             "name": "lug_right 5",
             "studio": 9,
             "body": 4,
@@ -10960,7 +12299,7 @@
             }
           },
           {
-            "id": 92,
+            "id": 102,
             "name": "lug_right 6",
             "studio": 9,
             "body": 5,
@@ -10979,7 +12318,45 @@
             }
           },
           {
-            "id": 93,
+            "id": 103,
+            "name": "lug_right 7",
+            "studio": 9,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 104,
+            "name": "lug_right 8",
+            "studio": 9,
+            "body": 7,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 105,
             "name": "stub_ground 1",
             "studio": 11,
             "body": 0,
@@ -10998,10 +12375,48 @@
             }
           },
           {
-            "id": 94,
+            "id": 106,
             "name": "stub_ground 2",
             "studio": 11,
             "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 107,
+            "name": "stub_ground 3",
+            "studio": 11,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 108,
+            "name": "stub_ground 4",
+            "studio": 11,
+            "body": 3,
             "fixed": true,
             "placement": {
               "position": {
@@ -11021,13 +12436,13 @@
       }
     },
     {
-      "id": 95,
+      "id": 109,
       "kind": {
         "type": "assembly",
         "name": "ramp",
         "instances": [
           {
-            "id": 96,
+            "id": 110,
             "name": "panel A",
             "studio": 17,
             "body": 0,
@@ -11046,9 +12461,9 @@
             }
           },
           {
-            "id": 97,
+            "id": 111,
             "name": "panel B",
-            "studio": 56,
+            "studio": 63,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -11065,7 +12480,7 @@
             }
           },
           {
-            "id": 98,
+            "id": 112,
             "name": "hinge_bolt 1",
             "studio": 12,
             "body": 0,
@@ -11084,7 +12499,7 @@
             }
           },
           {
-            "id": 99,
+            "id": 113,
             "name": "hinge_bolt 2",
             "studio": 12,
             "body": 1,
@@ -11103,7 +12518,7 @@
             }
           },
           {
-            "id": 100,
+            "id": 114,
             "name": "end_plate 1",
             "studio": 13,
             "body": 0,
@@ -11122,7 +12537,7 @@
             }
           },
           {
-            "id": 101,
+            "id": 115,
             "name": "end_plate 2",
             "studio": 13,
             "body": 1,
@@ -11141,7 +12556,7 @@
             }
           },
           {
-            "id": 102,
+            "id": 116,
             "name": "ground_angle",
             "studio": 14,
             "body": 0,
@@ -11162,11 +12577,11 @@
         ],
         "mates": [
           {
-            "id": 103,
+            "id": 117,
             "name": "fold",
             "kind": "revolute",
             "a": {
-              "instance": 98,
+              "instance": 112,
               "face": {
                 "feature": 9,
                 "local": 2,
@@ -11184,8 +12599,8 @@
               }
             },
             "b": {
-              "instance": 97,
-              "sub": 87,
+              "instance": 111,
+              "sub": 97,
               "face": {
                 "feature": 11,
                 "local": 2,
@@ -11210,14 +12625,14 @@
       }
     },
     {
-      "id": 104,
+      "id": 118,
       "kind": {
         "type": "assembly",
-        "name": "cut sheet, CDX 1",
+        "name": "cut sheet, OSB 1",
         "instances": [
           {
-            "id": 105,
-            "name": "sheet_cdx",
+            "id": 119,
+            "name": "sheet_osb",
             "studio": 15,
             "body": 0,
             "fixed": true,
@@ -11235,7 +12650,7 @@
             }
           },
           {
-            "id": 106,
+            "id": 120,
             "name": "skin_top 1 #1",
             "studio": 1,
             "body": 0,
@@ -11243,27 +12658,46 @@
             "placement": {
               "position": {
                 "x": 0.0,
-                "y": 0.0,
-                "z": -49.2125
+                "y": 809.625,
+                "z": -60.325
               },
               "rotation": {
                 "x": 0.0,
                 "y": 0.0,
-                "z": 0.0
+                "z": -90.0
               }
             }
           },
           {
-            "id": 107,
+            "id": 121,
             "name": "skin_bottom 1 #2",
             "studio": 2,
             "body": 0,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 812.8,
-                "y": 0.0,
+                "x": 1146.175,
+                "y": 809.625,
                 "z": -0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 122,
+            "name": "joint_block 2 #3",
+            "studio": 5,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 812.8,
+                "z": -49.2125
               },
               "rotation": {
                 "x": 0.0,
@@ -11273,21 +12707,97 @@
             }
           },
           {
-            "id": 108,
-            "name": "skin_top 1 #3",
-            "studio": 1,
-            "body": 0,
+            "id": 123,
+            "name": "joint_block 2 #4",
+            "studio": 5,
+            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 1625.6,
-                "y": 0.0,
+                "x": 0.0,
+                "y": 904.875,
                 "z": -49.2125
               },
               "rotation": {
                 "x": 0.0,
                 "y": 0.0,
                 "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 124,
+            "name": "stub 3 #5",
+            "studio": 10,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -914.4,
+                "y": 1181.1,
+                "z": -49.2125
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 125,
+            "name": "stub 4 #6",
+            "studio": 10,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -682.625,
+                "y": 1806.575,
+                "z": -49.2125
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 126,
+            "name": "stub_ground 3 #7",
+            "studio": 11,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -450.85,
+                "y": 1181.1,
+                "z": -49.2125
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 127,
+            "name": "stub_ground 4 #8",
+            "studio": 11,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -219.07500000000005,
+                "y": 1806.575,
+                "z": -49.2125
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -90.0
               }
             }
           }
@@ -11296,14 +12806,14 @@
       }
     },
     {
-      "id": 109,
+      "id": 128,
       "kind": {
         "type": "assembly",
-        "name": "cut sheet, CDX 2",
+        "name": "cut sheet, OSB 2",
         "instances": [
           {
-            "id": 110,
-            "name": "sheet_cdx",
+            "id": 129,
+            "name": "sheet_osb",
             "studio": 15,
             "body": 0,
             "fixed": true,
@@ -11321,21 +12831,40 @@
             }
           },
           {
-            "id": 111,
-            "name": "skin_bottom 1 #1",
-            "studio": 2,
+            "id": 130,
+            "name": "skin_top 1 #1",
+            "studio": 1,
             "body": 0,
             "fixed": true,
             "placement": {
               "position": {
                 "x": 0.0,
+                "y": 809.625,
+                "z": -60.325
+              },
+              "rotation": {
+                "x": 0.0,
                 "y": 0.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 131,
+            "name": "skin_bottom 1 #2",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1146.175,
+                "y": 809.625,
                 "z": -0.0
               },
               "rotation": {
                 "x": 0.0,
                 "y": 0.0,
-                "z": 0.0
+                "z": -90.0
               }
             }
           }
@@ -11344,13 +12873,13 @@
       }
     },
     {
-      "id": 112,
+      "id": 132,
       "kind": {
         "type": "assembly",
         "name": "cut sheet, birch",
         "instances": [
           {
-            "id": 113,
+            "id": 133,
             "name": "sheet_birch",
             "studio": 16,
             "body": 0,
@@ -11369,7 +12898,7 @@
             }
           },
           {
-            "id": 114,
+            "id": 134,
             "name": "rail 1 #1",
             "studio": 6,
             "body": 0,
@@ -11377,388 +12906,8 @@
             "placement": {
               "position": {
                 "x": 0.0,
-                "y": 85.725,
+                "y": 96.8375,
                 "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 115,
-            "name": "rail 2 #2",
-            "studio": 6,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 1146.175,
-                "y": 85.725,
-                "z": 828.675
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 116,
-            "name": "rail 1 #3",
-            "studio": 6,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 174.625,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 117,
-            "name": "rail 2 #4",
-            "studio": 6,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 1146.175,
-                "y": 174.625,
-                "z": 828.675
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 118,
-            "name": "rib 2 #5",
-            "studio": 3,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -88.89999999999999,
-                "y": 227.0125,
-                "z": 212.725
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 119,
-            "name": "rib 3 #6",
-            "studio": 3,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 968.375,
-                "y": 227.0125,
-                "z": 352.42499999999995
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 120,
-            "name": "cross_block 1 #7",
-            "studio": 4,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 2095.4999999999995,
-                "y": 166.68749999999997,
-                "z": 415.9249999999999
-              },
-              "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 121,
-            "name": "cross_block 2 #8",
-            "studio": 4,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 2079.625,
-                "y": 166.68749999999997,
-                "z": 415.9249999999999
-              },
-              "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 122,
-            "name": "rib 4 #9",
-            "studio": 3,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -88.89999999999999,
-                "y": 268.28749999999997,
-                "z": 476.25
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 123,
-            "name": "rib 5 #10",
-            "studio": 3,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 968.375,
-                "y": 268.28749999999997,
-                "z": 615.9499999999999
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 124,
-            "name": "cross_block 5 #11",
-            "studio": 4,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 1498.6,
-                "y": 207.9625,
-                "z": 415.9249999999999
-              },
-              "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 125,
-            "name": "cross_block 7 #12",
-            "studio": 4,
-            "body": 6,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 2079.625,
-                "y": 207.9625,
-                "z": 822.3249999999999
-              },
-              "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 126,
-            "name": "rib 2 #13",
-            "studio": 3,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -88.89999999999999,
-                "y": 309.56249999999994,
-                "z": 212.725
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 127,
-            "name": "rib 3 #14",
-            "studio": 3,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 968.375,
-                "y": 309.56249999999994,
-                "z": 352.42499999999995
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 128,
-            "name": "cross_block 6 #15",
-            "studio": 4,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 2095.4999999999995,
-                "y": 249.23749999999995,
-                "z": 822.3249999999999
-              },
-              "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 129,
-            "name": "cross_block 2 #16",
-            "studio": 4,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 2079.625,
-                "y": 249.23749999999995,
-                "z": 415.9249999999999
-              },
-              "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 130,
-            "name": "rib 4 #17",
-            "studio": 3,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -88.89999999999999,
-                "y": 350.8375,
-                "z": 476.25
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 131,
-            "name": "rib 5 #18",
-            "studio": 3,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 968.375,
-                "y": 350.8375,
-                "z": 615.9499999999999
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 132,
-            "name": "cross_block 10 #19",
-            "studio": 4,
-            "body": 9,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 1498.6,
-                "y": 290.5125,
-                "z": 822.3249999999999
-              },
-              "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 133,
-            "name": "cross_block 7 #20",
-            "studio": 4,
-            "body": 6,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 2079.625,
-                "y": 290.5125,
-                "z": 822.3249999999999
-              },
-              "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 134,
-            "name": "rib 1 #21",
-            "studio": 3,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -88.89999999999999,
-                "y": 392.1124999999999,
-                "z": 19.049999999999997
               },
               "rotation": {
                 "x": 0.0,
@@ -11769,15 +12918,15 @@
           },
           {
             "id": 135,
-            "name": "rib 6 #22",
-            "studio": 3,
-            "body": 5,
+            "name": "rail 2 #2",
+            "studio": 6,
+            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 739.775,
-                "y": 392.1124999999999,
-                "z": 809.625
+                "x": 1146.175,
+                "y": 96.8375,
+                "z": 828.675
               },
               "rotation": {
                 "x": 0.0,
@@ -11788,128 +12937,90 @@
           },
           {
             "id": 136,
-            "name": "cross_block 1 #23",
-            "studio": 4,
+            "name": "rail 1 #3",
+            "studio": 6,
             "body": 0,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 1638.3,
-                "y": 331.78749999999997,
-                "z": 415.9249999999999
+                "x": 0.0,
+                "y": 196.85,
+                "z": 0.0
               },
               "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
               }
             }
           },
           {
             "id": 137,
-            "name": "cross_block 5 #24",
-            "studio": 4,
-            "body": 4,
+            "name": "rail 2 #4",
+            "studio": 6,
+            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 1219.1999999999998,
-                "y": 331.78749999999997,
-                "z": 415.9249999999999
+                "x": 1146.175,
+                "y": 196.85,
+                "z": 828.675
               },
               "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
               }
             }
           },
           {
             "id": 138,
-            "name": "cross_block 6 #25",
-            "studio": 4,
-            "body": 5,
+            "name": "rib 2 #5",
+            "studio": 3,
+            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 1993.9,
-                "y": 331.78749999999997,
-                "z": 822.3249999999999
+                "x": -88.89999999999999,
+                "y": 260.35,
+                "z": 212.725
               },
               "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
               }
             }
           },
           {
             "id": 139,
-            "name": "cross_block 10 #26",
-            "studio": 4,
-            "body": 9,
+            "name": "rib 3 #6",
+            "studio": 3,
+            "body": 2,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 1574.8000000000002,
-                "y": 331.78749999999997,
-                "z": 822.3249999999999
+                "x": 968.375,
+                "y": 260.35,
+                "z": 352.42499999999995
               },
               "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
               }
             }
           },
           {
             "id": 140,
-            "name": "rib 1 #27",
-            "studio": 3,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -88.89999999999999,
-                "y": 433.38749999999993,
-                "z": 19.049999999999997
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 141,
-            "name": "rib 6 #28",
-            "studio": 3,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 739.775,
-                "y": 433.38749999999993,
-                "z": 809.625
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 142,
-            "name": "hinge_block 1 #29",
+            "name": "hinge_block 1 #7",
             "studio": 7,
             "body": 0,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 1568.4499999999998,
-                "y": 433.38749999999993,
+                "x": 2025.6499999999996,
+                "y": 260.35,
                 "z": 38.099999999999994
               },
               "rotation": {
@@ -11920,15 +13031,53 @@
             }
           },
           {
+            "id": 141,
+            "name": "rib 4 #8",
+            "studio": 3,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.89999999999999,
+                "y": 312.7375,
+                "z": 476.25
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 142,
+            "name": "rib 5 #9",
+            "studio": 3,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 968.375,
+                "y": 312.7375,
+                "z": 615.9499999999999
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
             "id": 143,
-            "name": "hinge_block 2 #30",
+            "name": "hinge_block 2 #10",
             "studio": 7,
             "body": 1,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 1736.725,
-                "y": 433.38749999999993,
+                "x": 2025.6499999999996,
+                "y": 312.7375,
                 "z": 57.15
               },
               "rotation": {
@@ -11940,15 +13089,15 @@
           },
           {
             "id": 144,
-            "name": "hinge_block 3 #31",
-            "studio": 7,
-            "body": 2,
+            "name": "rib 2 #11",
+            "studio": 3,
+            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 1905.0,
-                "y": 433.38749999999993,
-                "z": 771.525
+                "x": -88.89999999999999,
+                "y": 365.12499999999994,
+                "z": 212.725
               },
               "rotation": {
                 "x": 0.0,
@@ -11959,15 +13108,15 @@
           },
           {
             "id": 145,
-            "name": "hinge_block 4 #32",
-            "studio": 7,
-            "body": 3,
+            "name": "rib 3 #12",
+            "studio": 3,
+            "body": 2,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 2073.2749999999996,
-                "y": 433.38749999999993,
-                "z": 790.5749999999999
+                "x": 968.375,
+                "y": 365.12499999999994,
+                "z": 352.42499999999995
               },
               "rotation": {
                 "x": 0.0,
@@ -11978,71 +13127,14 @@
           },
           {
             "id": 146,
-            "name": "cross_block 3 #33",
-            "studio": 4,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 1978.025,
-                "y": 373.06249999999994,
-                "z": 415.9249999999999
-              },
-              "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 147,
-            "name": "hinge_block 1 #34",
-            "studio": 7,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -88.89999999999999,
-                "y": 474.6625,
-                "z": 38.099999999999994
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 148,
-            "name": "hinge_block 2 #35",
-            "studio": 7,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 79.37500000000001,
-                "y": 474.6625,
-                "z": 57.15
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 90.0,
-                "z": -90.0
-              }
-            }
-          },
-          {
-            "id": 149,
-            "name": "hinge_block 3 #36",
+            "name": "hinge_block 3 #13",
             "studio": 7,
             "body": 2,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 247.65000000000003,
-                "y": 474.6625,
+                "x": 2025.6499999999996,
+                "y": 365.12499999999994,
                 "z": 771.525
               },
               "rotation": {
@@ -12053,15 +13145,53 @@
             }
           },
           {
-            "id": 150,
-            "name": "hinge_block 4 #37",
+            "id": 147,
+            "name": "rib 4 #14",
+            "studio": 3,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.89999999999999,
+                "y": 417.5125,
+                "z": 476.25
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 148,
+            "name": "rib 5 #15",
+            "studio": 3,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 968.375,
+                "y": 417.5125,
+                "z": 615.9499999999999
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 149,
+            "name": "hinge_block 4 #16",
             "studio": 7,
             "body": 3,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 415.92500000000007,
-                "y": 474.6625,
+                "x": 2025.6499999999996,
+                "y": 417.5125,
                 "z": 790.5749999999999
               },
               "rotation": {
@@ -12072,53 +13202,167 @@
             }
           },
           {
-            "id": 151,
-            "name": "cross_block 4 #38",
-            "studio": 4,
-            "body": 3,
+            "id": 150,
+            "name": "rib 1 #17",
+            "studio": 3,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 196.85,
-                "y": 414.3375,
-                "z": 415.9249999999999
+                "x": -88.89999999999999,
+                "y": 469.9,
+                "z": 19.049999999999997
               },
               "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 151,
+            "name": "rib 6 #18",
+            "studio": 3,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 739.775,
+                "y": 469.9,
+                "z": 809.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
               }
             }
           },
           {
             "id": 152,
-            "name": "cross_block 9 #39",
-            "studio": 4,
-            "body": 8,
+            "name": "hinge_block 1 #19",
+            "studio": 7,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 320.67500000000007,
-                "y": 414.3375,
-                "z": 822.3249999999999
+                "x": 1568.4499999999998,
+                "y": 469.9,
+                "z": 38.099999999999994
               },
               "rotation": {
-                "x": -90.0,
-                "y": 0.0,
-                "z": 0.0
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
               }
             }
           },
           {
             "id": 153,
-            "name": "cross_block 4 #40",
-            "studio": 4,
+            "name": "hinge_block 2 #20",
+            "studio": 7,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1806.575,
+                "y": 469.9,
+                "z": 57.15
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 154,
+            "name": "hinge_block 3 #21",
+            "studio": 7,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 2044.7,
+                "y": 469.9,
+                "z": 771.525
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 155,
+            "name": "rib 1 #22",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.89999999999999,
+                "y": 522.2875,
+                "z": 19.049999999999997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 156,
+            "name": "rib 6 #23",
+            "studio": 3,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 739.775,
+                "y": 522.2875,
+                "z": 809.625
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 157,
+            "name": "hinge_block 4 #24",
+            "studio": 7,
             "body": 3,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 444.5,
-                "y": 414.3375,
+                "x": 1568.4499999999998,
+                "y": 522.2875,
+                "z": 790.5749999999999
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": -90.0
+              }
+            }
+          },
+          {
+            "id": 158,
+            "name": "cross_block 1 #25",
+            "studio": 4,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1876.425,
+                "y": 450.85,
                 "z": 415.9249999999999
               },
               "rotation": {
@@ -12129,15 +13373,34 @@
             }
           },
           {
-            "id": 154,
-            "name": "cross_block 9 #41",
+            "id": 159,
+            "name": "cross_block 5 #26",
             "studio": 4,
-            "body": 8,
+            "body": 4,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 568.325,
-                "y": 414.3375,
+                "x": 1457.3250000000005,
+                "y": 450.85,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 160,
+            "name": "cross_block 6 #27",
+            "studio": 4,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 2232.0249999999996,
+                "y": 450.85,
                 "z": 822.3249999999999
               },
               "rotation": {
@@ -12148,15 +13411,281 @@
             }
           },
           {
-            "id": 155,
+            "id": 161,
+            "name": "cross_block 10 #28",
+            "studio": 4,
+            "body": 9,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -615.9499999999999,
+                "y": 503.2375,
+                "z": 822.3249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 162,
+            "name": "cross_block 1 #29",
+            "studio": 4,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 158.75,
+                "y": 503.2375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 163,
+            "name": "cross_block 5 #30",
+            "studio": 4,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -260.34999999999997,
+                "y": 503.2375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 164,
+            "name": "cross_block 6 #31",
+            "studio": 4,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 514.35,
+                "y": 503.2375,
+                "z": 822.3249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 165,
+            "name": "cross_block 10 #32",
+            "studio": 4,
+            "body": 9,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 95.25,
+                "y": 503.2375,
+                "z": 822.3249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 166,
+            "name": "cross_block 2 #33",
+            "studio": 4,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 676.275,
+                "y": 503.2375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 167,
+            "name": "cross_block 7 #34",
+            "studio": 4,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 800.0999999999999,
+                "y": 503.2375,
+                "z": 822.3249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 168,
+            "name": "cross_block 2 #35",
+            "studio": 4,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 923.9249999999998,
+                "y": 503.2375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 169,
+            "name": "cross_block 7 #36",
+            "studio": 4,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1047.75,
+                "y": 503.2375,
+                "z": 822.3249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 170,
+            "name": "cross_block 4 #37",
+            "studio": 4,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 908.05,
+                "y": 503.2375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 171,
+            "name": "cross_block 9 #38",
+            "studio": 4,
+            "body": 8,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1031.875,
+                "y": 503.2375,
+                "z": 822.3249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 172,
+            "name": "cross_block 4 #39",
+            "studio": 4,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1155.6999999999998,
+                "y": 503.2375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 173,
+            "name": "cross_block 9 #40",
+            "studio": 4,
+            "body": 8,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1279.525,
+                "y": 503.2375,
+                "z": 822.3249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 174,
+            "name": "cross_block 3 #41",
+            "studio": 4,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 1527.175,
+                "y": 503.2375,
+                "z": 415.9249999999999
+              },
+              "rotation": {
+                "x": -90.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 175,
             "name": "cross_block 8 #42",
             "studio": 4,
             "body": 7,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 815.9749999999999,
-                "y": 414.3375,
+                "x": 1635.125,
+                "y": 503.2375,
                 "z": 822.3249999999999
               },
               "rotation": {
@@ -12167,15 +13696,15 @@
             }
           },
           {
-            "id": 156,
+            "id": 176,
             "name": "cross_block 3 #43",
             "studio": 4,
             "body": 2,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 923.925,
-                "y": 414.3375,
+                "x": 1743.075,
+                "y": 503.2375,
                 "z": 415.9249999999999
               },
               "rotation": {
@@ -12186,15 +13715,15 @@
             }
           },
           {
-            "id": 157,
+            "id": 177,
             "name": "cross_block 8 #44",
             "studio": 4,
             "body": 7,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 1031.875,
-                "y": 414.3375,
+                "x": 1851.025,
+                "y": 503.2375,
                 "z": 822.3249999999999
               },
               "rotation": {
@@ -12209,5 +13738,5 @@
       }
     }
   ],
-  "next_id": 158
+  "next_id": 178
 }
