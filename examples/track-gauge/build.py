@@ -34,6 +34,19 @@ T = 6.0 / IN                # both legs' thickness; the track's edge is 5 tall a
 LEN = 60.0 / IN             # along the sheet edge
 DROP = 12.0 / IN            # the fence hangs this far below the depth leg, over the sheet's edge
 GROOVE = 2.0 / IN           # dust groove along the inside corner, so a crumb there cannot hold the fence off the edge
+ROUND = 4.0 / IN            # the four corners in plan
+ENGRAVE = 0.6 / IN          # the labels, cut into the top face: three layers at 0.2
+# Seven-segment lettering for the labels, in millimetres on a cell 6
+# wide and 10 tall with a 1.2 stroke; each segment is a bar (u0, v0,
+# u1, v1), u along the line and v up, with 0.3 between bars so they
+# never overlap and the sketch's regions stay simple.
+SEG = {"a": (0.0, 8.8, 6.0, 10.0), "b": (4.8, 5.9, 6.0, 8.5), "c": (4.8, 1.5, 6.0, 4.1), "d": (0.0, 0.0, 6.0, 1.2),
+       "e": (0.0, 1.5, 1.2, 4.1), "f": (0.0, 5.9, 1.2, 8.5), "g": (0.0, 4.4, 6.0, 5.6)}
+GLYPHS = {"2": (6.0, [SEG[k] for k in "abged"]),
+          ".": (1.2, [(0.0, 0.0, 1.2, 1.2)]),
+          '"': (3.5, [(0.0, 7.0, 1.2, 10.0), (2.3, 7.0, 3.5, 10.0)]),
+          "m": (8.0, [(0.0, 0.0, 1.2, 5.3), (3.4, 0.0, 4.6, 5.3), (6.8, 0.0, 8.0, 5.3), (0.0, 5.6, 8.0, 6.8)])}
+LABELS = (('2"', 11.0), ("2.2mm", 28.0))   # each line's bottom, mm out from the fence's inner face
 # The picture of it in use: a corner of a 3/4 sheet, a track and the kerf.
 SHEET, SHEET_T = 24.0, 0.75
 TRACK_W, TRACK_T, TRACK_Y = 7.25, 0.2, (-3.0, 27.0)   # a Festool-pattern track: 184 wide, 5 thick at its edge
@@ -43,6 +56,30 @@ MATERIALS = {"petg": ("PETG", 1.27), "ply": ("3/4 plywood", 0.6), "aluminium": (
 
 def mm(*v):
     return tuple(c * IN for c in v)
+
+
+def face(report, normal, x=None):
+    """The reference of the body's planar face with this normal (and
+    centroid x, when two share the normal), from a full report."""
+    for fc in report["bodies"][0]["faces"]:
+        n = fc["normal"]
+        if all(abs(n[k] - v) < 1e-6 for k, v in zip("xyz", normal)) and (x is None or abs(fc["centroid"]["x"] - x * IN) < 1e-6):
+            return fc["reference"]
+    raise KeyError(f"no face with normal {normal}")
+
+
+def label_bars(text, x0):
+    """The bars of a line of lettering as (x, y) corner pairs, inches:
+    the line centred on y and reading along -y (left to right for
+    someone standing at the sheet edge), the glyphs' up along +x."""
+    width = sum(GLYPHS[c][0] for c in text) + 2.0 * (len(text) - 1)
+    u, bars = -width / 2, []
+    for c in text:
+        w, segs = GLYPHS[c]
+        for u0, v0, u1, v1 in segs:
+            bars.append(((x0 + v0) / IN, -(u + u1) / IN, (x0 + v1) / IN, -(u + u0) / IN))
+        u += w + 2.0
+    return bars
 
 
 def part_is(p, f, name, material=None):
@@ -69,6 +106,17 @@ def gauge(p):
     s = p.sketch("top", 0.0, "dust groove")
     p.rect(s, mm(0.0, -LEN), mm(GROOVE, LEN))
     p.cut(s, GROOVE * IN, direction="normal", name="dust groove, 2 mm square")
+    # The four corners in plan, from the faces the report lists.
+    r = p.report()
+    edges = [{"a": face(r, (0.0, sy, 0.0)), "b": face(r, (nx, 0.0, 0.0), x)} for sy in (1.0, -1.0) for nx, x in ((-1.0, -T), (1.0, WIDTH + KERF))]
+    p.apply({"type": "add_blend", "kind": "fillet", "edges": edges, "size": ROUND * IN, "name": f"corners, R{ROUND * IN:g}"})
+    # The labels, engraved in the top face: the strip's width and the
+    # kerf it allows for.
+    s = p.sketch("top", T * IN, "labels")
+    for text, x0 in LABELS:
+        for x0_, y0, x1, y1 in label_bars(text, x0):
+            p.rect(s, mm(x0_, y0), mm(x1, y1))
+    p.cut(s, ENGRAVE * IN, direction="reverse", name="labels, engraved 0.6")
     part_is(p, f, f"edge gauge, {WIDTH:g} in strip, {KERF * IN:g} mm kerf", "petg")
 
 
@@ -124,9 +172,10 @@ def main():
     print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "gauge.stl")}))
     mcp.call("screenshot", {"tab": 1, "view": "-0.7,-0.6,0.45", "width": 1400, "height": 900, "path": os.path.join(OUT, "gauge.png")})
     mcp.call("screenshot", {"tab": 1, "view": "0.5,-0.7,-0.5", "width": 1400, "height": 900, "path": os.path.join(OUT, "gauge_below.png")})
+    mcp.call("screenshot", {"tab": 1, "view": "top", "width": 1400, "height": 900, "path": os.path.join(OUT, "gauge_top.png")})
     mcp.call("screenshot", {"tab": 4, "view": "-0.55,-0.7,0.45", "width": 1600, "height": 1000, "path": os.path.join(OUT, "in_use.png")})
     print(mcp.call("export", {"tab": 1, "format": "pdf", "sheet": "A4", "views": ["front", "top", "right", "iso"],
-                              "note": f"printed, one piece, an L extruded {LEN * IN:g} along the edge; the depth leg {WIDTH:g} in + {KERF * IN:g} mm kerf = {(WIDTH + KERF) * IN:.1f} mm from the fence's inner face; 6 mm legs, the fence {DROP * IN:g} below; 2 mm dust groove",
+                              "note": f"printed, one piece, an L extruded {LEN * IN:g} along the edge; the depth leg {WIDTH:g} in + {KERF * IN:g} mm kerf = {(WIDTH + KERF) * IN:.1f} mm from the fence's inner face; 6 mm legs, the fence {DROP * IN:g} below; 2 mm dust groove; corners R{ROUND * IN:g}; labels engraved {ENGRAVE * IN:g}",
                               "path": os.path.join(OUT, "gauge.pdf")}))
     print(mcp.call("export", {"tab": 4, "format": "pdf", "sheet": "A4", "views": ["iso", f"section@{(GAUGE_Y[0] + 2.0) * IN:g}"],
                               "window": ",".join(f"{v * IN:g}" for v in (-1.5, -0.5, -1.0, WIDTH + KERF + 3.0, 6.0, 1.5)),
