@@ -58,7 +58,8 @@ works today, all in the browser:
   cart with a printed ring gear on its wheel (`examples/ego-cart/`),
   each with a regression test that checks the mechanism, not just the
   parts; and small ones, such as a dummy PCIe card to print
-  (`examples/pcie-dummy/`) and a mini chop saw from an angle grinder
+  (`examples/pcie-dummy/`), a track saw edge gauge
+  (`examples/track-gauge/`) and a mini chop saw from an angle grinder
   (`examples/chop-saw/`).
 - Measuring from a photo: print the measuring sheet
   (`examples/measuring-sheet/`), lay parts on it with a steel rule for
