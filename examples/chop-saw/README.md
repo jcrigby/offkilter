@@ -2,9 +2,10 @@
 
 Preliminary. The old orange 4-1/2 in grinder (Chicago Electric /
 Central Machinery, 11,000 rpm, 5/8-11 spindle, 2004) on a wooden arm
-that swings on a 1/2 in bolt between two laminated birch cheeks. The
-whole thing is one plywood base clamped to the bench, with no welding
-and no printed parts. Its first job is the duplicator's six cuts in the
+that swings on a 1/2 in bolt between two 2x4 cheeks. The whole thing is
+one plywood base clamped to the bench, with no welding and no printed
+parts. Every piece but the base is lumber cut to length on the sliding
+miter saw: no rips and no curves. Its first job is the duplicator's six cuts in the
 20 mm hardened shafts (X 760 x2, Y 700 x2 and Z 250 x2 from four
 1000 mm SFC20s). The Bauer and the 7-9 in Hercules come later as their
 own mount blocks.
@@ -25,7 +26,7 @@ disc will. A 20 mm rod is too much for a 4-1/2 in disc to plunge
 through in one go without the gearhead coming down on the work, so
 the rod turns instead:
 
-1. The rod lies in two hardwood V-blocks, one each side of the disc
+1. The rod lies in two V-blocks, one each side of the disc
    with a 1/2 in gap between them. It is not clamped.
 2. The arm comes down onto the **depth stop**. The stop is set so the
    disc's bottom ends **0.5 mm past the rod's axis** and no further.
@@ -39,7 +40,7 @@ the rod turns instead:
    edge damages the blocks' ball tracks.
 
 The disc only ever has to reach the rod's centre, about 10 mm, so the
-gearhead stays 9.6 mm above the rod and 17.9 mm above the V-blocks
+gearhead stays 9.6 mm above the rod and 14.7 mm above the V-blocks
 (the test checks both). The disc never reaches the base, so the base
 has no kerf slot.
 
@@ -52,32 +53,36 @@ base when cutting steel.
 
 `out/parts.csv` has the wood and the hardware. In short:
 
-- **Base:** 3/4 birch ply, 16 x 14-1/2. Clamp it to the bench through
-  its front corners.
-- **Cheeks:** two pairs of 3/4 ply glued to 1-1/2, 3 wide, with a
-  half-round top. A snug 1/2 in hole runs through each pair, waxed.
-  This is the ramp's lesson: thickness at the bearing is what keeps the
-  disc from twisting. The bolt is carried over 4-1/2 in (cheek, arm,
-  cheek), with a washer each side of the arm and none of the slop of a
-  door hinge.
-- **Arm:** two plies glued to 1-1/2 square, 14-3/4 long, round at the
-  back. It sits on the gearhead's top side-handle boss, held by one
-  M10 x 50 bolt down through it. The boss is threaded through a 10 mm
-  wall into the gearcase, so the bolt must stop short of the gears: stack
-  washers under its head until it stands 9 mm below the arm's underside
-  before it goes in (about 3 mm of washers on a true 1-1/2 arm; "3/4" ply
-  is often 18 mm, which wants more). Two hose clamps joined into one loop
-  hold the arm to the motor body 130 mm ahead of the spindle, so the
-  grinder cannot rock on the bolt.
-- **Depth stop:** a 1-1/2 square post, 4 tall, under the arm 3-3/4 to
-  5-1/4 behind the spindle. That is past the guard's reach however the
-  guard is turned. A 1/4-20 bolt in its top has its head bearing on the
-  arm's underside, locked with a jam nut. Turning the bolt sets the
-  depth: the disc moves 2.3 times what the bolt does, so a quarter turn
-  is about 0.7 mm. Reset it as the disc wears.
-- **V-blocks:** hardwood 1-1/2 thick with a 90 degree V 1-1/4 wide. Cut
-  them as one block, make the first kerf, then screw them down square to
-  it, split at the disc.
+- **Base:** 3/4 ply, 16 x 14-1/2. The one piece not cut on the miter
+  saw: rough-cut it with the jigsaw, or have the store cut it. Its size
+  does not matter. Clamp it to the bench through its front corners.
+- **Cheeks:** two 2x4s on end, 6-1/2 long, both top corners mitred off
+  1 in at 45 degrees. Clamp them together and drill the 1/2 in hole
+  through both at once, 1-1/2 below the top, snug and waxed. This is
+  the ramp's lesson: thickness at the bearing is what keeps the disc
+  from twisting. The bolt is carried over 4-1/2 in (cheek, arm, cheek),
+  with a washer each side of the arm and none of the slop of a door
+  hinge.
+- **Arm:** a straight 2x2, 14-3/4 long, square at both ends, the pivot
+  hole 3/4 from the back end. It sits on the gearhead's top side-handle
+  boss, held by one M10 x 50 bolt down through it. The boss is threaded
+  through a 10 mm wall into the gearcase, so the bolt must stop short of
+  the gears: stack washers under its head until it stands 9 mm below the
+  arm's underside before it goes in (about 3 mm of washers on a true
+  1-1/2 in 2x2; measure, they vary). Two hose clamps joined into one
+  loop hold the arm to the motor body 130 mm ahead of the spindle, so
+  the grinder cannot rock on the bolt.
+- **Depth stop:** a 2x2 post, 3-1/4 tall, under the arm 3-3/4 to 5-1/4
+  behind the spindle. That is past the guard's reach however the guard
+  is turned. A 1/4-20 bolt in its top has its head bearing on the arm's
+  underside, locked with a jam nut. Turning the bolt sets the depth:
+  the disc moves 2.3 times what the bolt does, so a quarter turn is
+  about 0.7 mm. Reset it as the disc wears.
+- **V-blocks:** four pieces of 1x4, each 2 long with one end bevelled
+  45 degrees on the miter saw. Lay two flat with the bevels facing and
+  their bottom edges touching: that is a 90 degree V, 3-1/2 long, with
+  its apex on the base. Make the first kerf, then screw the pairs down
+  square to it, one each side of the disc with a 1/2 in gap.
 - **Return spring:** a screen-door spring or a bungee from the arm's
   front to the base's back edge, enough to lift the head off the work.
   It is not drawn.
@@ -112,7 +117,7 @@ test says whether it still works.
 | boss wall | 10 mm, threaded through into the gearcase | measured: the bolt does not bottom |
 
 What the numbers give, as the build prints them: the rod's axis sits
-55.4 mm above the bench and the spindle 112.1 mm; the pivot is 8 in
+33.2 mm above the base's top and the spindle 89.8 mm; the pivot is 8 in
 behind the spindle and 56 mm above it, so the disc comes down 15 degrees
 off vertical at the stop. Raised 20 degrees, the disc is 62 mm above
 the rod.

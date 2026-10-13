@@ -118,7 +118,12 @@ fn the_head_cuts_to_the_stop_and_clears_the_work() {
         );
         let low = disc_low(&r);
         let gearhead = lo_z(body(&r, "head / grinder"));
-        let v_top = hi_z(body(&r, "outfeed V-block"));
+        let v_top = r
+            .bodies
+            .iter()
+            .filter(|b| b.name.starts_with("outfeed V-block"))
+            .map(|b| hi_z(&b.solid))
+            .fold(f64::MIN, f64::max);
         let all = hits(&r);
         let in_cut = all.iter().any(|(a, b, _)| {
             (a == "head / disc" && b == "rod") || (a == "rod" && b == "head / disc")

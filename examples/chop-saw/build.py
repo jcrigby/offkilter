@@ -63,41 +63,46 @@ OVERCUT = 0.5                     # the depth stop puts the disc's bottom this f
 # ---------------------------------------------------------------------
 # The stand, inches.
 # ---------------------------------------------------------------------
-PLY = 0.75                        # 3/4 birch ply, the ramp's leftovers
+# Every piece but the base is lumber cut to length on the sliding miter
+# saw: no rips and no curves. The base is any 3/4 ply rough-cut to size.
+PLY = 0.75                        # the base: 3/4 ply
 BASE_X, BASE_Y = (-8.0, 8.0), (-4.5, 10.0)   # 16 x 14-1/2
-V_H, V_DEPTH = 1.5, 2.5           # V-blocks: hardwood 1-1/2 tall, 2-1/2 front to back
-V_TOP = 1.25                      # the 90 degree groove's width at the top
-V_IN = (-5.75, -0.28)             # infeed V-block along x (its inner face 7 mm from the disc)
-V_OUT = (0.24, 4.75)              # outfeed V-block (6 mm from the disc on the gearhead side)
-ARM_W = 1.5                       # arm and cheeks: two plies of 3/4 birch laminated, 1-1/2 square
+V_T, V_W, V_PIECE = 0.75, 3.5, 2.0    # V-blocks: 1x4 (3/4 x 3-1/2) cut 2 long with a 45 degree bevel on one end, two to a V
+V_GAP = (7.0, 6.0)                # mm from the disc to the infeed and outfeed V's inner faces
+V_IN = (-V_W - V_GAP[0] / IN, -V_GAP[0] / IN)   # infeed V along x
+V_OUT = (V_GAP[1] / IN, V_GAP[1] / IN + V_W)    # outfeed V
+ARM_W = 1.5                       # the arm: a 2x2 (1-1/2 square); the cheeks and post the same thickness
 PIVOT_Y = 8.0                     # pivot behind the spindle
 ARM_FRONT = -6.0                  # the arm's front end, over the motor body where the hose clamps go
-CHEEK_W = 3.0                     # cheeks front to back
+CHEEK_W = 3.5                     # cheeks: 2x4 standing on end, 3-1/2 front to back
+CHEEK_TOP = 1.5                   # the cheeks' top above the pivot, both corners mitred off 45 degrees
+CHAMFER = 1.0
 PIVOT_D, PIVOT_BORE = 0.5, 0.512  # 1/2 in bolt, 13 mm bores drilled snug and waxed
 WASHER_T, WASHER_OD = 1.6, 27.0   # 1/2 SAE washers (mm): one each side of the arm, one under the head and nut
 POST = (3.75, 5.25)               # the depth-stop post along y, 1-1/2 square, under the arm: behind the guard's reach
                                   # however it is turned (62.5 from the spindle), at 2.3 times leverage on the disc
-POST_H = 4.0
 STOP_D = 0.25                     # 1/4-20 stop bolt, its head bearing on the arm's underside
 CLAMP_Y = -130.0                  # mm: the hose clamps round arm and body
 
 # Derived heights, millimetres.
 BASE_TOP = PLY * IN
-V_TOP_Z = BASE_TOP + V_H * IN
-ROD_Z = V_TOP_Z - V_TOP / 2 * IN + ROD_D / 2 * math.sqrt(2.0)   # the rod's axis, sitting in the 90 degree V
+V_TOP_Z = BASE_TOP + V_T * IN
+ROD_Z = BASE_TOP + ROD_D / 2 * math.sqrt(2.0)                   # the rod's axis in the 90 degree V, whose apex is on the base
 DISC_Z = ROD_Z - OVERCUT + DISC_D / 2                           # the spindle axis with the arm on its stop
 ARM_Z = (DISC_Z + GH_HALF, DISC_Z + GH_HALF + ARM_W * IN)       # the arm sits on the gearhead's top boss
 PIVOT_Z = (ARM_Z[0] + ARM_Z[1]) / 2
 ARM_X = (BOSS_X - ARM_W / 2 * IN, BOSS_X + ARM_W / 2 * IN)      # centred over the boss
 CHEEK_L = (ARM_X[0] - WASHER_T - ARM_W * IN, ARM_X[0] - WASHER_T)
 CHEEK_R = (ARM_X[1] + WASHER_T, ARM_X[1] + WASHER_T + ARM_W * IN)
+CHEEK_L_IN = (PIVOT_Z + CHEEK_TOP * IN - BASE_TOP) / IN         # the cheeks' length
+POST_H = math.floor(((ARM_Z[0] - BASE_TOP) / IN - 0.875) * 4) / 4   # the stop post: its bolt stands about an inch
 
 # The smallest a disc may wear to: the stop is reset as it wears, which
 # brings the gearhead down by the same amount; change the disc while the
 # gearhead still clears the rod by 1 mm.
 DISC_CHANGE_D = math.ceil(DISC_D - 2.0 * (DISC_D / 2 - OVERCUT - ROD_D / 2 - GH_HALF - 1.0))
 
-MATERIALS = {"birch": ("3/4 birch ply", 0.68), "hardwood": ("maple", 0.70), "steel": ("steel", 7.85), "rod": ("hardened steel", 7.85)}
+MATERIALS = {"birch": ("3/4 ply", 0.68), "hardwood": ("pine", 0.45), "steel": ("steel", 7.85), "rod": ("hardened steel", 7.85)}
 
 
 def mm(*v):
@@ -157,13 +162,6 @@ def profile_x(p, name, x0, x1, pts, op="new"):
     return p.extrude(s, x1 - x0, op=op, name=name)
 
 
-def round_end_x(p, name, x0, x1, y, z, r):
-    """A half-round on a bar's end: a full circle unioned on."""
-    s = p.sketch("right", x0, name)
-    p.circle(s, (y, z), r)
-    p.extrude(s, x1 - x0, op="add", name=name)
-
-
 def half_annulus_x(p, name, x0, x1, y, z, r_out, r_in, op="new"):
     """The upper half of a ring about an axis along x, from x0 to x1."""
     s = p.sketch("right", x0, name)
@@ -183,25 +181,28 @@ def base(p):
 
 
 def v_block(name, span):
-    """A 90 degree groove, apex on y = 0, the rod's axis above it."""
+    """Two pieces of 1x4, each with a 45 degree bevel on one end, laid
+    flat with the bevels facing and their bottom edges touching on y = 0:
+    a 90 degree V with its apex on the base."""
     def build(p):
-        h, d = V_TOP / 2 * IN, V_DEPTH / 2 * IN
         x0, x1 = span
-        f = profile_x(p, name, x0 * IN, x1 * IN, [(-d, BASE_TOP), (d, BASE_TOP), (d, V_TOP_Z), (h, V_TOP_Z), (0.0, V_TOP_Z - h), (-h, V_TOP_Z), (-d, V_TOP_Z)])
-        part_is(p, f, f"{name}, {x1 - x0:.2f} x {V_DEPTH:g} x {V_H:g}", "hardwood")
+        t, w = V_T * IN, V_PIECE * IN
+        for side, k in ((1.0, "back"), (-1.0, "front")):
+            pts = [(0.0, BASE_TOP), (side * w, BASE_TOP), (side * w, BASE_TOP + t), (side * t, BASE_TOP + t)]
+            f = profile_x(p, f"{name}, {k}", x0 * IN, x1 * IN, pts if side > 0 else pts[::-1])
+            part_is(p, f, f"{name}, {k}: 1x4 x {V_PIECE:g}, 45 degree bevel", "hardwood")
     return build
 
 
 def cheek(name, span):
-    """Two plies laminated, a half-round over the pivot."""
+    """A 2x4 on end, its top corners mitred off at 45 degrees."""
     def build(p):
         y0, y1 = PIVOT_Y * IN - CHEEK_W / 2 * IN, PIVOT_Y * IN + CHEEK_W / 2 * IN
-        r = CHEEK_W / 2 * IN
+        top, c = PIVOT_Z + CHEEK_TOP * IN, CHAMFER * IN
         x0, x1 = span
-        f = profile_x(p, name, x0, x1, [(y0, BASE_TOP), (y1, BASE_TOP), (y1, PIVOT_Z), (y0, PIVOT_Z)])
-        round_end_x(p, f"{name} round", x0, x1, PIVOT_Y * IN, PIVOT_Z, r)
+        f = profile_x(p, name, x0, x1, [(y0, BASE_TOP), (y1, BASE_TOP), (y1, top - c), (y1 - c, top), (y0 + c, top), (y0, top - c)])
         bore_x(p, f"{name} bore", x0, x1, PIVOT_Y * IN, PIVOT_Z, PIVOT_BORE * IN)
-        part_is(p, f, f"{name}, 2 x 3/4 ply, {CHEEK_W:g} x {(PIVOT_Z + r - BASE_TOP) / IN:.2f}", "birch")
+        part_is(p, f, f"{name}, 2x4 x {CHEEK_L_IN:.2f}", "hardwood")
     return build
 
 
@@ -213,7 +214,7 @@ POST_C = ((ARM_X[0] + ARM_X[1]) / 2, (POST[0] + POST[1]) / 2 * IN)
 def stop_post(p):
     f = block(p, "stop post", POST_X, mm(*POST), (BASE_TOP, POST_TOP))
     bore_down(p, "stop bolt hole", POST_TOP, POST_C[0], POST_C[1], STOP_D * IN, 1.5 * IN)
-    part_is(p, f, f"stop post, 2 x 3/4 ply, 1-1/2 square x {POST_H:g}", "birch")
+    part_is(p, f, f"stop post, 2x2 x {POST_H:g}", "hardwood")
 
 
 def stop_bolt(p):
@@ -257,13 +258,12 @@ def rod(p):
 # -- the head: everything on the arm ------------------------------------
 
 def arm(p):
-    """Two plies laminated, a half-round about the pivot."""
-    y0, y1 = ARM_FRONT * IN, PIVOT_Y * IN
+    """A 2x2, square at both ends, the pivot hole 3/4 in from the back."""
+    y0, y1 = ARM_FRONT * IN, (PIVOT_Y + ARM_W / 2) * IN
     f = profile_x(p, "arm", ARM_X[0], ARM_X[1], [(y0, ARM_Z[0]), (y1, ARM_Z[0]), (y1, ARM_Z[1]), (y0, ARM_Z[1])])
-    round_end_x(p, "arm round", ARM_X[0], ARM_X[1], y1, PIVOT_Z, ARM_W / 2 * IN)
-    bore_x(p, "arm pivot bore", ARM_X[0], ARM_X[1], y1, PIVOT_Z, PIVOT_BORE * IN)
+    bore_x(p, "arm pivot bore", ARM_X[0], ARM_X[1], PIVOT_Y * IN, PIVOT_Z, PIVOT_BORE * IN)
     bore_down(p, "arm boss bolt hole", ARM_Z[1], BOSS_X, -BOSS_FWD, BOSS_THREAD + 0.5, ARM_W * IN + 2.0)
-    part_is(p, f, f"arm, 2 x 3/4 ply, 1-1/2 square x {(y1 - y0) / IN + ARM_W / 2:.2f}", "birch")
+    part_is(p, f, f"arm, 2x2 x {(y1 - y0) / IN:.2f}", "hardwood")
 
 
 def grinder(p):
@@ -384,7 +384,7 @@ IDENTITY = {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "
 HARDWARE = [
     ("pivot bolt", "1/2-13 x 5-1/2 hex bolt, nylock nut", 1, "through both cheeks and the arm; snug the nut until the arm has no side play and still falls under its own weight"),
     ("washer", "1/2 SAE flat washer", 4, "one under the head, one under the nut, one each side of the arm"),
-    ("boss bolt", f"M10 x 1.5 x {BOSS_BOLT_L:g} hex bolt, M10 washers", 1, f"down through the arm into the grinder's top side-handle boss; the boss is a 10 mm wall into the gearcase, so before tightening, stack washers under the head until the bolt stands {BOSS_ENGAGE:g} mm below the arm's underside (about {BOSS_BOLT_L - ARM_W * IN - BOSS_ENGAGE:.0f} mm of washers for a 1-1/2 arm; more if the ply is thinner). Never longer"),
+    ("boss bolt", f"M10 x 1.5 x {BOSS_BOLT_L:g} hex bolt, M10 washers", 1, f"down through the arm into the grinder's top side-handle boss; the boss is a 10 mm wall into the gearcase, so before tightening, stack washers under the head until the bolt stands {BOSS_ENGAGE:g} mm below the arm's underside (about {BOSS_BOLT_L - ARM_W * IN - BOSS_ENGAGE:.0f} mm of washers on a 1-1/2 in 2x2; measure, they vary). Never longer"),
     ("hose clamp", "stainless, 2-1/2 to 4 in", 2, f"joined into one loop round the arm and the motor body, {-CLAMP_Y:g} mm ahead of the spindle"),
     ("stop bolt", "1/4-20 x 2-1/2 hex bolt, 2 nuts", 1, "threaded into the post's top (a tee nut, or tapped into hardwood), its head under the arm, locked with a jam nut"),
     ("return spring", "screen-door spring or a short bungee", 1, "from the arm's front to a screw in the base's back edge, enough to lift the head off the work"),
@@ -393,11 +393,11 @@ HARDWARE = [
 ]
 
 CUTLIST = [
-    ("base", f"3/4 birch ply, {BASE_X[1] - BASE_X[0]:g} x {BASE_Y[1] - BASE_Y[0]:g}", 1, "the rod runs left to right across it"),
-    ("cheek", f"3/4 birch ply, {CHEEK_W:g} x {(PIVOT_Z + CHEEK_W / 2 * IN - BASE_TOP) / IN:.2f}, round top", 4, "glued in pairs to 1-1/2; 1/2 in hole through each pair at the round's centre, then glued and screwed to the base from below"),
-    ("arm", f"3/4 birch ply, 1-1/2 x {PIVOT_Y - ARM_FRONT + ARM_W / 2:.2f}, round back end", 2, "glued to 1-1/2 square; 1/2 in hole at the round's centre, 10.5 mm hole for the boss bolt"),
-    ("stop post", f"3/4 birch ply, 1-1/2 x {POST_H:g}", 2, "glued to 1-1/2 square, screwed to the base"),
-    ("V-block", f"hardwood 1-1/2 thick, {V_DEPTH:g} wide, {V_IN[1] - V_IN[0]:.2f} and {V_OUT[1] - V_OUT[0]:.2f} long", 2, f"a 90 degree V {V_TOP:g} wide along the top, cut as one block; screwed down after the first kerf, square to it, with a 1/2 in gap at the disc"),
+    ("base", f"3/4 ply, {BASE_X[1] - BASE_X[0]:g} x {BASE_Y[1] - BASE_Y[0]:g}", 1, "the one piece not cut on the miter saw: rough-cut with the jigsaw, or have the store cut it; its size does not matter"),
+    ("cheek", f"2x4 x {CHEEK_L_IN:.2f}, both top corners mitred off 1 in at 45 degrees", 2, "1/2 in hole through the pair, clamped together, 1-1/2 below the top; glued and screwed to the base from below"),
+    ("arm", f"2x2 x {PIVOT_Y - ARM_FRONT + ARM_W / 2:.2f}, square ends", 1, "pick a straight one; 1/2 in hole 3/4 in from the back end, 10.5 mm hole for the boss bolt"),
+    ("stop post", f"2x2 x {POST_H:g}", 1, "screwed to the base from below"),
+    ("V-block piece", f"1x4 x {V_PIECE:g}, one end bevelled 45 degrees", 4, "two to a V, laid flat with the bevels facing and their bottom edges touching; screwed down after the first kerf, square to it, with a 1/2 in gap at the disc"),
 ]
 
 
