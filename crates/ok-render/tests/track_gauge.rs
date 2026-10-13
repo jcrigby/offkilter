@@ -1,9 +1,9 @@
-//! The track saw edge gauge (examples/track-gauge): the fence and base
-//! regenerate closed at their sizes, the base 2 in plus the kerf wide
-//! from the fence's inner face with its dust groove and pilot holes,
-//! the fence with its two countersunk holes; and in use the sheet
-//! edge, the gauge, the track's edge and the kerf line up so the strip
-//! the blade leaves is exactly 2 in.
+//! The track saw edge gauge (examples/track-gauge): one printed T
+//! regenerates closed at its sizes, the stem 2 in plus the kerf long
+//! from the fence's inner face with its dust groove, every face square
+//! to the axes so it prints flat, and the STL is written; in use the
+//! sheet edge, the gauge, the track's edge and the kerf line up so the
+//! strip the blade leaves is exactly 2 in.
 
 use ok_brep::{Solid, Surface};
 use ok_math::Vec3;
@@ -13,12 +13,19 @@ use std::path::PathBuf;
 const IN: f64 = 25.4;
 const WIDTH: f64 = 2.0;
 const KERF: f64 = 2.2 / IN;
-const T: f64 = 0.75;
-const LEN: f64 = 4.0;
+const T: f64 = 6.0 / IN;
+const FENCE_T: f64 = 6.0 / IN;
+const FENCE_L: f64 = 120.0 / IN;
+const STEM_W: f64 = 40.0 / IN;
+const DROP: f64 = 12.0 / IN;
+const GROOVE: f64 = 2.0 / IN;
+
+fn dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/track-gauge")
+}
 
 fn load() -> Document {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/track-gauge");
-    let json = std::fs::read_to_string(dir.join("out/track_gauge.okpart")).unwrap();
+    let json = std::fs::read_to_string(dir().join("out/track_gauge.okpart")).unwrap();
     Document::from_json(&json).unwrap()
 }
 
@@ -40,19 +47,6 @@ fn near(a: f64, b: f64) -> bool {
     (a - b).abs() < 1e-6
 }
 
-/// Cylinders of about radius `r` (inches) and their unit axes.
-fn cylinders(s: &Solid, r: f64) -> Vec<Vec3> {
-    s.surfaces
-        .iter()
-        .filter_map(|sf| match sf {
-            Surface::Cylinder { axis, radius, .. } if (radius - r * IN).abs() < 1e-6 => {
-                Some(axis.normalized().unwrap_or(Vec3::X))
-            }
-            _ => None,
-        })
-        .collect()
-}
-
 fn body<'a>(bodies: &'a [Body], name: &str) -> &'a Body {
     bodies
         .iter()
@@ -61,7 +55,7 @@ fn body<'a>(bodies: &'a [Body], name: &str) -> &'a Body {
 }
 
 #[test]
-fn the_fence_and_base_regenerate_at_their_sizes_with_the_groove_and_holes() {
+fn the_gauge_is_one_printed_t_at_its_sizes_with_the_groove() {
     let mut doc = load();
     let r = doc
         .regenerate_studio(tab_named(&doc, "gauge"), None)
@@ -71,81 +65,84 @@ fn the_fence_and_base_regenerate_at_their_sizes_with_the_groove_and_holes() {
         "{:?}",
         r.statuses
     );
-    assert_eq!(r.bodies.len(), 2, "fence and base");
-    for b in &r.bodies {
-        b.solid.validate().unwrap();
-        assert_eq!(b.material.as_ref().map(|m| m.name.as_str()), Some("maple"));
-    }
-    let fence = &r.bodies[0];
-    let base = &r.bodies[1];
-    assert!(fence.name.starts_with("fence") && base.name.starts_with("base"));
-    // The fence: 3/4 thick outside the sheet edge, 1-1/2 tall, hanging
-    // 3/4 below the base's underside; two #8 clearance holes along x
-    // with their countersinks (cones, not cylinders) on its outer face.
-    let (lo, hi) = bounds(&fence.solid);
+    assert_eq!(r.bodies.len(), 1, "one piece to print");
+    let g = &r.bodies[0];
+    g.solid.validate().unwrap();
+    assert_eq!(g.material.as_ref().map(|m| m.name.as_str()), Some("PETG"));
+    // The envelope: the fence 6 mm outside the sheet edge and 120 along
+    // it, hanging 12 below the stem's underside and flush with its top;
+    // the stem 6 thick from the fence's inner face out 2 in plus the
+    // kerf, 53.0 mm.
+    let (lo, hi) = bounds(&g.solid);
     assert!(
-        near(lo.x, -T) && near(hi.x, 0.0),
-        "fence x {}..{}",
-        lo.x,
-        hi.x
-    );
-    assert!(near(lo.y, 0.0) && near(hi.y, LEN));
-    assert!(
-        near(lo.z, -T) && near(hi.z, T),
-        "fence z {}..{}",
-        lo.z,
-        hi.z
-    );
-    let holes = cylinders(&fence.solid, 0.17 / 2.0);
-    assert_eq!(holes.len(), 2, "two clearance holes");
-    assert!(holes.iter().all(|a| a.x.abs() > 1.0 - 1e-9), "along x");
-    assert!(
-        fence
-            .solid
-            .surfaces
-            .iter()
-            .filter(|s| matches!(s, Surface::Cone { .. }))
-            .count()
-            >= 2,
-        "countersunk"
-    );
-    let v = fence.solid.volume() / IN.powi(3);
-    println!("fence {v:.3} in3");
-    assert!(
-        v > 4.44 && v < 4.47,
-        "{v}: 4.5 less the two countersunk holes"
-    );
-    // The base: from the fence's inner face out 2 in plus the kerf,
-    // 3/4 thick on the sheet, with the 1/8 dust groove along its inside
-    // bottom edge and two 7/64 pilots in its edge.
-    let (lo, hi) = bounds(&base.solid);
-    assert!(
-        near(lo.x, 0.0) && near(hi.x, WIDTH + KERF),
-        "base x {}..{}",
+        near(lo.x, -FENCE_T) && near(hi.x, WIDTH + KERF),
+        "x {}..{}",
         lo.x,
         hi.x
     );
     assert!(near(hi.x * IN, 53.0), "53.0 mm: 50.8 and a 2.2 kerf");
-    assert!(near(lo.z, 0.0) && near(hi.z, T) && near(lo.y, 0.0) && near(hi.y, LEN));
-    let pilots = cylinders(&base.solid, 0.109 / 2.0);
-    assert_eq!(pilots.len(), 2, "two pilots");
-    assert!(pilots.iter().all(|a| a.x.abs() > 1.0 - 1e-9));
-    let want = (WIDTH + KERF) * T * LEN
-        - 0.125 * 0.125 * LEN
-        - 2.0 * std::f64::consts::PI * (0.109_f64 / 2.0).powi(2) * T;
-    let v = base.solid.volume() / IN.powi(3);
-    println!("base {v:.4} in3, {want:.4} wanted");
-    assert!((v - want).abs() < 1e-3, "{v}: the groove and the pilots");
-    // The groove is at the inside bottom edge: the base's underside
-    // starts 1/8 out from the fence, and nothing of it lies in the
-    // groove's corner.
-    let in_groove = base.solid.surfaces.iter().any(|s| match s {
+    assert!(
+        near(lo.y, -FENCE_L / 2.0) && near(hi.y, FENCE_L / 2.0),
+        "y {}..{}",
+        lo.y,
+        hi.y
+    );
+    assert!(near(lo.z, -DROP) && near(hi.z, T), "z {}..{}", lo.z, hi.z);
+    // A T in plan: at the stem's end the body is STEM_W across, at the
+    // fence FENCE_L across. Read off the planes: a face normal to y at
+    // y = STEM_W / 2 and one at FENCE_L / 2.
+    let y_faces: Vec<f64> = g
+        .solid
+        .surfaces
+        .iter()
+        .filter_map(|s| match s {
+            Surface::Plane { normal, offset } if normal.y.abs() > 0.999 => {
+                Some((offset * normal.y).abs() / IN)
+            }
+            _ => None,
+        })
+        .collect();
+    assert!(
+        y_faces.iter().any(|y| near(*y, STEM_W / 2.0)),
+        "the stem's sides"
+    );
+    assert!(
+        y_faces.iter().any(|y| near(*y, FENCE_L / 2.0)),
+        "the fence's ends"
+    );
+    // The volume: the fence and the stem less the 2 mm groove along
+    // the stem's inside bottom edge.
+    let want =
+        FENCE_T * FENCE_L * (DROP + T) + (WIDTH + KERF) * STEM_W * T - GROOVE * GROOVE * STEM_W;
+    let v = g.solid.volume() / IN.powi(3);
+    println!(
+        "gauge {v:.4} in3 ({:.0} mm3), {want:.4} wanted",
+        v * IN.powi(3)
+    );
+    assert!((v - want).abs() < 1e-6, "{v}: the T less the groove");
+    let in_groove = g.solid.surfaces.iter().any(|s| match s {
         Surface::Plane { normal, offset } => {
-            normal.z.abs() > 0.999 && near((offset * normal.z).abs(), 0.125 * IN)
+            normal.z.abs() > 0.999 && near((offset * normal.z).abs(), GROOVE * IN)
         }
         _ => false,
     });
-    assert!(in_groove, "the groove's ceiling at z = 1/8");
+    assert!(in_groove, "the groove's ceiling at z = 2 mm");
+    // Nothing overhangs when it prints on its top face: every face
+    // normal points along an axis, so there is no sloped surface, and
+    // the top is one plane.
+    assert!(
+        g.solid.surfaces.iter().all(|s| matches!(s, Surface::Plane { normal, .. } if normal.x.abs() > 0.999 || normal.y.abs() > 0.999 || normal.z.abs() > 0.999)),
+        "all faces square to the axes"
+    );
+    // The STL is written: a binary STL of the T's facets.
+    let bytes = std::fs::read(dir().join("out/gauge.stl")).unwrap();
+    let tris = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
+    assert_eq!(
+        bytes.len(),
+        84 + 50 * tris,
+        "a binary STL of {tris} triangles"
+    );
+    assert!(tris >= 28, "{tris} triangles: the T has 14 faces");
 }
 
 #[test]
@@ -153,7 +150,7 @@ fn in_use_the_track_sits_on_the_gauge_and_the_kerf_leaves_two_inches() {
     let mut doc = load();
     let r = doc.regenerate_assembly(tab_named(&doc, "in use")).unwrap();
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
-    assert_eq!(r.bodies.len(), 7, "sheet, track, kerf, two gauges");
+    assert_eq!(r.bodies.len(), 5, "sheet, track, kerf, two gauges");
     let sheet = bounds(&body(&r.bodies, "sheet").solid);
     let track = bounds(&body(&r.bodies, "track").solid);
     let kerf = bounds(&body(&r.bodies, "kerf").solid);
@@ -175,19 +172,26 @@ fn in_use_the_track_sits_on_the_gauge_and_the_kerf_leaves_two_inches() {
         "the track's edge on the kerf's far side"
     );
     for n in 1..=2 {
-        let fence = bounds(&body(&r.bodies, &format!("gauge {n} / fence")).solid);
-        let base = bounds(&body(&r.bodies, &format!("gauge {n} / base")).solid);
-        // Hooked on: the fence's inner face on the sheet's edge, the
-        // base on the sheet's top, its face where the track's edge is.
-        assert!(near(fence.1.x, sheet.0.x), "gauge {n}: fence on the edge");
-        assert!(near(base.0.z, sheet.1.z), "gauge {n}: base on the sheet");
+        let g = bounds(&body(&r.bodies, &format!("gauge {n}")).solid);
+        // Hooked on: the fence's inner face on the sheet's edge (the
+        // body starts a fence thickness outside it), the stem on the
+        // sheet's top, its end where the track's edge is, within the
+        // track's length.
         assert!(
-            near(base.1.x, track.0.x),
-            "gauge {n}: the track against its face"
+            near(g.0.x, sheet.0.x - FENCE_T),
+            "gauge {n}: fence on the edge"
         );
         assert!(
-            base.0.y >= track.0.y && base.1.y <= track.1.y,
-            "gauge {n}: within the track's length"
+            near(g.0.z, sheet.1.z - DROP),
+            "gauge {n}: hanging over the edge"
+        );
+        assert!(
+            near(g.1.x, track.0.x),
+            "gauge {n}: the track against its end"
+        );
+        assert!(
+            g.0.y >= track.0.y && g.1.y <= track.1.y && g.0.y >= sheet.0.y && g.1.y <= sheet.1.y,
+            "gauge {n}: within the track and the sheet"
         );
     }
     println!(
