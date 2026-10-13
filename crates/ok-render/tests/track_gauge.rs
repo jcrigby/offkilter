@@ -1,8 +1,9 @@
 //! The track saw edge gauge (examples/track-gauge): one printed L,
 //! extruded along the edge, regenerates closed at its sizes, the depth
 //! leg 2 in plus the kerf long from the fence's inner face with its
-//! dust groove, every face square to the axes so it prints flat, and
-//! the STL is written; in use the sheet edge, the gauge, the track's
+//! dust groove, its corners rounded, its labels engraved in the top,
+//! every other face square to the axes so it prints flat, and the STL
+//! is written; in use the sheet edge, the gauge, the track's
 //! edge and the kerf line up so the strip the blade leaves is exactly
 //! 2 in.
 
@@ -19,6 +20,8 @@ const FENCE_T: f64 = 6.0 / IN;
 const LEN: f64 = 60.0 / IN;
 const DROP: f64 = 12.0 / IN;
 const GROOVE: f64 = 2.0 / IN;
+const ROUND: f64 = 4.0 / IN;
+const ENGRAVE: f64 = 0.6 / IN;
 
 fn dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/track-gauge")
@@ -88,22 +91,69 @@ fn the_gauge_is_one_printed_l_at_its_sizes_with_the_groove() {
         hi.y
     );
     assert!(near(lo.z, -DROP) && near(hi.z, T), "z {}..{}", lo.z, hi.z);
-    // An extrusion: the only faces normal to y are its two ends.
-    let y_faces = g
+    // An extrusion: its two ends are the faces normal to y at the ends
+    // (the lettering's bars have walls facing y too, inside).
+    let ends = g
         .solid
         .surfaces
         .iter()
-        .filter(|s| matches!(s, Surface::Plane { normal, .. } if normal.y.abs() > 0.999))
+        .filter(|s| {
+            matches!(s, Surface::Plane { normal, offset }
+            if normal.y.abs() > 0.999 && near(offset.abs(), LEN / 2.0 * IN))
+        })
         .count();
-    assert_eq!(y_faces, 2, "an L extruded along the edge");
-    // The volume: the L's section less the 2 mm groove, by the length.
-    let want = (FENCE_T * (DROP + T) + (WIDTH + KERF) * T - GROOVE * GROOVE) * LEN;
+    assert_eq!(ends, 2, "an L extruded along the edge");
+    // The four corners in plan are rounded R4: four vertical cylinders
+    // of that radius at the corners, the fence's full height and the
+    // depth leg's.
+    let rounds: Vec<&Surface> = g
+        .solid
+        .surfaces
+        .iter()
+        .filter(|s| matches!(s, Surface::Cylinder { radius, .. } if near(*radius, ROUND * IN)))
+        .collect();
+    assert_eq!(rounds.len(), 4, "four rounded corners");
+    for r in &rounds {
+        if let Surface::Cylinder { origin, axis, .. } = r {
+            let a = axis.normalized().unwrap();
+            assert!(a.z.abs() > 0.999, "a vertical corner");
+            let (x, y) = (origin.x / IN, origin.y / IN);
+            assert!(
+                (near(x, -FENCE_T + ROUND) || near(x, WIDTH + KERF - ROUND))
+                    && near(y.abs(), LEN / 2.0 - ROUND),
+                "corner at {x}, {y}"
+            );
+        }
+    }
+    // The labels: bars engraved 0.6 into the top face, their floors
+    // planes at T - 0.6; the two lines together take 20 or more bars.
+    let floors = g
+        .solid
+        .surfaces
+        .iter()
+        .filter(|s| {
+            matches!(s, Surface::Plane { normal, offset }
+            if normal.z.abs() > 0.999 && near((offset * normal.z).abs(), (T - ENGRAVE) * IN))
+        })
+        .count();
+    assert!(floors >= 20, "{floors} label bars");
+    // The volume: the L's section less the groove, by the length, less
+    // the four corners, less the lettering (about 150 mm2 of bars, 0.6
+    // deep).
+    let section = FENCE_T * (DROP + T) + (WIDTH + KERF) * T - GROOVE * GROOVE;
+    let corner = (1.0 - std::f64::consts::PI / 4.0) * ROUND * ROUND;
+    let solid = section * LEN - 2.0 * corner * (DROP + T) - 2.0 * corner * T;
     let v = g.solid.volume() / IN.powi(3);
+    let lettering = (solid - v) * IN.powi(3);
     println!(
-        "gauge {v:.4} in3 ({:.0} mm3), {want:.4} wanted",
-        v * IN.powi(3)
+        "gauge {v:.4} in3 ({:.0} mm3), {:.0} mm3 of lettering",
+        v * IN.powi(3),
+        lettering
     );
-    assert!((v - want).abs() < 1e-6, "{v}: the L less the groove");
+    assert!(
+        lettering > 60.0 && lettering < 110.0,
+        "{lettering} mm3 of lettering: expected 150 mm2 by 0.6"
+    );
     let in_groove = g.solid.surfaces.iter().any(|s| match s {
         Surface::Plane { normal, offset } => {
             normal.z.abs() > 0.999 && near((offset * normal.z).abs(), GROOVE * IN)
@@ -111,16 +161,17 @@ fn the_gauge_is_one_printed_l_at_its_sizes_with_the_groove() {
         _ => false,
     });
     assert!(in_groove, "the groove's ceiling at z = 2 mm");
-    // Nothing overhangs when it prints on its top face: every face
-    // normal points along an axis, so there is no sloped surface, and
-    // the top is one plane.
+    // Nothing overhangs when it prints on its top face: every face is
+    // a plane square to the axes or one of the vertical corner rounds,
+    // and the top is one plane.
     assert!(
-        g.solid
-            .surfaces
-            .iter()
-            .all(|s| matches!(s, Surface::Plane { normal, .. }
-            if normal.x.abs() > 0.999 || normal.y.abs() > 0.999 || normal.z.abs() > 0.999)),
-        "all faces square to the axes"
+        g.solid.surfaces.iter().all(|s| match s {
+            Surface::Plane { normal, .. } =>
+                normal.x.abs() > 0.999 || normal.y.abs() > 0.999 || normal.z.abs() > 0.999,
+            Surface::Cylinder { axis, .. } => axis.normalized().unwrap().z.abs() > 0.999,
+            _ => false,
+        }),
+        "all faces square to the axes or vertical rounds"
     );
     // The STL is written: a binary STL of the L's facets.
     let bytes = std::fs::read(dir().join("out/gauge.stl")).unwrap();
@@ -130,7 +181,10 @@ fn the_gauge_is_one_printed_l_at_its_sizes_with_the_groove() {
         84 + 50 * tris,
         "a binary STL of {tris} triangles"
     );
-    assert!(tris >= 16, "{tris} triangles: the L has 8 faces");
+    assert!(
+        tris >= 200,
+        "{tris} triangles: the L, four rounds and the lettering"
+    );
 }
 
 #[test]

@@ -36,6 +36,8 @@ body, `out/gauge.stl`:
 | fence, the short leg | 6 thick, 18 tall, hanging 12 below the depth leg | hooks over the sheet edge; its inner face registers on the edge |
 | depth, the long leg | 6 thick, 53.0 long from the fence's inner face | lies on the sheet; its end face is what the track's edge butts against |
 | dust groove | 2 mm square along the inside corner | so a crumb of sawdust in the corner cannot hold the fence off the edge |
+| corners | R4 on the four corners in plan | nothing sharp in the hand or to catch on the track |
+| labels | `2"` and `2.2mm`, engraved 0.6 deep in the top face | the strip it cuts and the kerf it allows for, in case a second one is ever made for another blade; seven-segment bars, so the sketch needs no font |
 
 6 mm legs print stiff in three or four perimeters; the track's edge
 is 5 mm tall, so the 6 mm end face catches all of it. 60 mm along the
@@ -44,7 +46,9 @@ one at each end of the track.
 
 Printing: PETG or PLA, 0.2 layers, three or four perimeters, any
 infill. Print it on its top face, the one flat face, with no supports:
-every surface is square to the axes, so nothing overhangs. The faces
+every surface is square to the axes or a vertical round, so nothing
+overhangs, and the labels are three layers of recess in the first
+face down, which prints cleanly. The faces
 that register (the fence's inner face, the depth leg's end and its
 underside) are vertical walls and a top surface of that print, away
 from the first layer's elephant foot. Check the depth leg's end
@@ -58,9 +62,13 @@ cut.
 ## The model
 
 - `gauge`: the fence as the short leg, the depth leg added to it,
-  extruded from the fence's inner face by `#width + #kerf`, and the
-  dust groove cut along the inside corner. One body, PETG, exported as
-  the STL.
+  extruded from the fence's inner face by `#width + #kerf`, the dust
+  groove cut along the inside corner, a fillet on the four corner
+  edges (picked from the faces the report lists by their normals),
+  and the labels cut 0.6 into the top from one sketch of bars: each
+  glyph is a few seven-segment bars with 0.3 between them, so no two
+  overlap and the sketch's regions stay simple. One body, PETG,
+  exported as the STL.
 - `sheet` and `track`: a 24 x 24 corner of 3/4 ply with its top at
   z = 0 and its edge at x = 0, a 7-1/4 x 0.2 track bar with its edge at
   `WIDTH + KERF`, and the kerf as a 2.2 mm body through the sheet from
@@ -68,12 +76,14 @@ cut.
 - `in use`: an assembly of those with two gauges hooked on the edge, at
   each end of the track.
 - Outputs in `out/`: `track_gauge.okpart`, `gauge.stl`, `gauge.png`,
-  `gauge_below.png` (the hook and the groove), `in_use.png`,
+  `gauge_top.png` (the labels), `gauge_below.png` (the hook and the
+  groove), `in_use.png`,
   `gauge.pdf` (front, top, right and iso) and `in_use.pdf` (the gauge
   on the sheet, and a section across it through the track and kerf).
 - The test checks the L at its sizes, the depth leg 53.0 mm from the
-  fence's inner face, that it is one extrusion (two end faces only),
-  the volume with the groove taken out, every face square to the axes
-  (so it prints flat), the binary STL, and in use the sheet edge,
-  fence, depth leg's end, track edge and kerf lining up so the strip
-  is exactly 2 in.
+  fence's inner face, that it is one extrusion (two end faces), the
+  four R4 rounds at the corners, the labels' floors 0.6 down and their
+  volume, the volume with the groove and corners taken out, every face
+  square to the axes or a vertical round (so it prints flat), the
+  binary STL, and in use the sheet edge, fence, depth leg's end, track
+  edge and kerf lining up so the strip is exactly 2 in.
