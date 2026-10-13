@@ -1,0 +1,1375 @@
+{
+  "name": "Track saw edge gauge, 2 in",
+  "tabs": [
+    {
+      "id": 1,
+      "kind": {
+        "type": "part_studio",
+        "name": "gauge",
+        "features": [
+          {
+            "id": 1,
+            "name": "#width",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "width",
+              "expression": "50.8"
+            }
+          },
+          {
+            "id": 2,
+            "name": "#kerf",
+            "suppressed": false,
+            "kind": {
+              "type": "variable",
+              "name": "kerf",
+              "expression": "2.2"
+            }
+          },
+          {
+            "id": 3,
+            "name": "fence",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -19.049999999999997
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 101.6,
+                      "y": -19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 101.6,
+                      "y": -19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 101.6,
+                      "y": 19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 101.6,
+                      "y": 19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "fence, 3/4 x 1-1/2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 5,
+            "name": "screw holes",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -19.049999999999997
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.4,
+                      "y": 9.525
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 76.19999999999999,
+                      "y": 9.525
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "screw holes, #8 countersunk",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 5,
+              "diameter": 4.3180000000000005,
+              "depth": 25.4,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": {
+                "diameter": 8.889999999999999,
+                "angle": 82.0
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "base",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 101.6,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 101.6,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 101.6,
+                      "y": 19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 101.6,
+                      "y": 19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 19.049999999999997
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "base, 2 in plus the kerf wide",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 52.99999999999999,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            },
+            "bindings": {
+              "depth": "#width + #kerf"
+            }
+          },
+          {
+            "id": 9,
+            "name": "dust groove",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -25.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.175,
+                      "y": -25.4
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.175,
+                      "y": -25.4
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.175,
+                      "y": 127.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.175,
+                      "y": 127.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 127.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 127.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -25.4
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 10,
+            "name": "dust groove, 1/8 square",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 9,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 3.175,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 11,
+            "name": "pilot holes",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.4,
+                      "y": 9.525
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 76.19999999999999,
+                      "y": 9.525
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 12,
+            "name": "pilot holes, 7/64",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 11,
+              "diameter": 2.7685999999999997,
+              "depth": 19.049999999999997,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          }
+        ],
+        "next_id": 13,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "4": "fence 3/4 x 1.5 x 4",
+          "8": "base 3/4 x 2.087 x 4"
+        },
+        "part_materials": {
+          "4": {
+            "name": "maple",
+            "density": 0.7
+          },
+          "8": {
+            "name": "maple",
+            "density": 0.7
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "kind": {
+        "type": "part_studio",
+        "name": "sheet",
+        "features": [
+          {
+            "id": 1,
+            "name": "sheet",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -19.049999999999997
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 609.5999999999999,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 609.5999999999999,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 609.5999999999999,
+                      "y": 609.5999999999999
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 609.5999999999999,
+                      "y": 609.5999999999999
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 609.5999999999999
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 609.5999999999999
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "a corner of the sheet",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 3,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "2": "sheet, the corner being cut"
+        },
+        "part_materials": {
+          "2": {
+            "name": "3/4 plywood",
+            "density": 0.6
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "kind": {
+        "type": "part_studio",
+        "name": "track",
+        "features": [
+          {
+            "id": 1,
+            "name": "track",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.99999999999999,
+                      "y": -76.19999999999999
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 237.15,
+                      "y": -76.19999999999999
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 237.15,
+                      "y": -76.19999999999999
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 237.15,
+                      "y": 685.8
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 237.15,
+                      "y": 685.8
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.99999999999999,
+                      "y": 685.8
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.99999999999999,
+                      "y": 685.8
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.99999999999999,
+                      "y": -76.19999999999999
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "track",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 5.08,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "kerf",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -19.049999999999997
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 50.8,
+                      "y": -76.19999999999999
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.99999999999999,
+                      "y": -76.19999999999999
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.99999999999999,
+                      "y": -76.19999999999999
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.99999999999999,
+                      "y": 685.8
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.99999999999999,
+                      "y": 685.8
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 50.8,
+                      "y": 685.8
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 50.8,
+                      "y": 685.8
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 50.8,
+                      "y": -76.19999999999999
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "kerf",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 5,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "2": "track, its splinter guard edge on the gauge",
+          "4": "kerf, 2.2 mm, 2 in from the edge"
+        },
+        "part_materials": {
+          "2": {
+            "name": "aluminium",
+            "density": 2.7
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "kind": {
+        "type": "assembly",
+        "name": "in use",
+        "instances": [
+          {
+            "id": 5,
+            "name": "sheet",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "track",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "kerf",
+            "studio": 3,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "gauge 1 / fence",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 25.4,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "gauge 1 / base",
+            "studio": 1,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 25.4,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 10,
+            "name": "gauge 2 / fence",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 482.6,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "gauge 2 / base",
+            "studio": 1,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 482.6,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    }
+  ],
+  "next_id": 12
+}
