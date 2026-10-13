@@ -3,8 +3,9 @@ edge 2 in plus the blade's kerf from the edge of a sheet, so the cut
 leaves a 2 in strip. Hook the fence over the sheet edge, slide the
 track up to the gauge's face, lift the gauge off, cut. Two of them, one
 at each end of the track, square the track to the edge as well. One
-printed piece, a T in plan: the fence is the crossbar along the sheet
-edge, the stem reaches out to the track.
+printed piece, an L in section extruded along the edge: the short leg
+is the fence, hooking down over the sheet edge, the long leg is the
+depth, lying on the sheet out to the track.
 
     cargo build --release -p ok-mcp
     python3 examples/track-gauge/build.py       # the document, the STL, pictures and sheets
@@ -12,8 +13,8 @@ edge, the stem reaches out to the track.
 
 The strip is in inches, the print in millimetres, the document in
 millimetres. Frame: x across from the sheet edge (the fence's inner
-face is x = 0), y along the edge (the T's centreline is y = 0), z up
-from the sheet's top face (the stem's underside is z = 0).
+face is x = 0), y along the edge (the L's middle is y = 0), z up from
+the sheet's top face (the depth leg's underside is z = 0).
 """
 import os
 import sys
@@ -28,17 +29,15 @@ IN = 25.4
 WIDTH = 2.0                 # the strip the cut leaves between the sheet edge and the kerf, inches
 KERF = 2.2 / IN             # the blade: 2.2 mm on a Festool or Makita track saw; 1.5 or 1.6 on their thin-kerf blades
 # The print, in millimetres: 6 mm walls print stiff in three or four
-# perimeters, the fence long enough to hold the T square to the edge,
-# the stem wide enough to register the track's edge.
-T = 6.0 / IN                # the stem's thickness on the sheet, and the fence's; the track's edge is 5 tall against the stem's end
-FENCE_L = 120.0 / IN        # the crossbar along the sheet edge
-STEM_W = 40.0 / IN          # the stem across, centred on the fence
-DROP = 12.0 / IN            # the fence hangs this far below the stem, over the sheet's edge
-GROOVE = 2.0 / IN           # dust groove along the stem's inside bottom edge, so a crumb in the corner cannot hold the fence off
+# perimeters, and the L is long enough along the edge to sit square.
+T = 6.0 / IN                # both legs' thickness; the track's edge is 5 tall against the depth leg's end
+LEN = 60.0 / IN             # along the sheet edge
+DROP = 12.0 / IN            # the fence hangs this far below the depth leg, over the sheet's edge
+GROOVE = 2.0 / IN           # dust groove along the inside corner, so a crumb there cannot hold the fence off the edge
 # The picture of it in use: a corner of a 3/4 sheet, a track and the kerf.
 SHEET, SHEET_T = 24.0, 0.75
 TRACK_W, TRACK_T, TRACK_Y = 7.25, 0.2, (-3.0, 27.0)   # a Festool-pattern track: 184 wide, 5 thick at its edge
-GAUGE_Y = (3.0, 21.0)       # the T's centrelines: one gauge at each end of the cut
+GAUGE_Y = (3.0, 21.0)       # the L's middles: one gauge at each end of the cut
 MATERIALS = {"petg": ("PETG", 1.27), "ply": ("3/4 plywood", 0.6), "aluminium": ("aluminium", 2.7)}
 
 
@@ -55,20 +54,20 @@ def part_is(p, f, name, material=None):
 
 
 def gauge(p):
-    """One body: the fence as the T's crossbar, the stem added to it
-    out to WIDTH + KERF, its length bound to the variables, and the
-    dust groove cut along the inside corner."""
+    """One body: the fence as the L's short leg, the depth leg added to
+    it out to WIDTH + KERF with its length bound to the variables, and
+    the dust groove cut along the inside corner."""
     p.apply({"type": "add_variable", "name": "width", "expression": f"{WIDTH * IN:g}"},
             {"type": "add_variable", "name": "kerf", "expression": f"{KERF * IN:g}"})
     s = p.sketch("right", -T * IN, "fence")
-    p.rect(s, mm(-FENCE_L / 2, -DROP), mm(FENCE_L / 2, T))
-    f = p.extrude(s, T * IN, op="new", name="fence, the crossbar")
-    s = p.sketch("right", 0.0, "stem")
-    p.rect(s, mm(-STEM_W / 2, 0.0), mm(STEM_W / 2, T))
-    g = p.extrude(s, (WIDTH + KERF) * IN, op="add", name="stem, 2 in plus the kerf long")
+    p.rect(s, mm(-LEN / 2, -DROP), mm(LEN / 2, T))
+    f = p.extrude(s, T * IN, op="new", name="fence, the short leg")
+    s = p.sketch("right", 0.0, "depth")
+    p.rect(s, mm(-LEN / 2, 0.0), mm(LEN / 2, T))
+    g = p.extrude(s, (WIDTH + KERF) * IN, op="add", name="depth, 2 in plus the kerf")
     p.apply({"type": "set_binding", "id": g, "field": "depth", "expression": "#width + #kerf"})
     s = p.sketch("top", 0.0, "dust groove")
-    p.rect(s, mm(0.0, -FENCE_L), mm(GROOVE, FENCE_L))
+    p.rect(s, mm(0.0, -LEN), mm(GROOVE, LEN))
     p.cut(s, GROOVE * IN, direction="normal", name="dust groove, 2 mm square")
     part_is(p, f, f"edge gauge, {WIDTH:g} in strip, {KERF * IN:g} mm kerf", "petg")
 
@@ -127,7 +126,7 @@ def main():
     mcp.call("screenshot", {"tab": 1, "view": "0.5,-0.7,-0.5", "width": 1400, "height": 900, "path": os.path.join(OUT, "gauge_below.png")})
     mcp.call("screenshot", {"tab": 4, "view": "-0.55,-0.7,0.45", "width": 1600, "height": 1000, "path": os.path.join(OUT, "in_use.png")})
     print(mcp.call("export", {"tab": 1, "format": "pdf", "sheet": "A4", "views": ["front", "top", "right", "iso"],
-                              "note": f"printed, one piece; the stem {WIDTH:g} in + {KERF * IN:g} mm kerf = {(WIDTH + KERF) * IN:.1f} mm from the fence's inner face; 6 mm walls, the fence {DROP * IN:g} below the stem; 2 mm dust groove",
+                              "note": f"printed, one piece, an L extruded {LEN * IN:g} along the edge; the depth leg {WIDTH:g} in + {KERF * IN:g} mm kerf = {(WIDTH + KERF) * IN:.1f} mm from the fence's inner face; 6 mm legs, the fence {DROP * IN:g} below; 2 mm dust groove",
                               "path": os.path.join(OUT, "gauge.pdf")}))
     print(mcp.call("export", {"tab": 4, "format": "pdf", "sheet": "A4", "views": ["iso", f"section@{(GAUGE_Y[0] + 2.0) * IN:g}"],
                               "window": ",".join(f"{v * IN:g}" for v in (-1.5, -0.5, -1.0, WIDTH + KERF + 3.0, 6.0, 1.5)),

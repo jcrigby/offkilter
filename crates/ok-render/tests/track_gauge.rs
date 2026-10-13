@@ -1,9 +1,10 @@
-//! The track saw edge gauge (examples/track-gauge): one printed T
-//! regenerates closed at its sizes, the stem 2 in plus the kerf long
-//! from the fence's inner face with its dust groove, every face square
-//! to the axes so it prints flat, and the STL is written; in use the
-//! sheet edge, the gauge, the track's edge and the kerf line up so the
-//! strip the blade leaves is exactly 2 in.
+//! The track saw edge gauge (examples/track-gauge): one printed L,
+//! extruded along the edge, regenerates closed at its sizes, the depth
+//! leg 2 in plus the kerf long from the fence's inner face with its
+//! dust groove, every face square to the axes so it prints flat, and
+//! the STL is written; in use the sheet edge, the gauge, the track's
+//! edge and the kerf line up so the strip the blade leaves is exactly
+//! 2 in.
 
 use ok_brep::{Solid, Surface};
 use ok_math::Vec3;
@@ -15,8 +16,7 @@ const WIDTH: f64 = 2.0;
 const KERF: f64 = 2.2 / IN;
 const T: f64 = 6.0 / IN;
 const FENCE_T: f64 = 6.0 / IN;
-const FENCE_L: f64 = 120.0 / IN;
-const STEM_W: f64 = 40.0 / IN;
+const LEN: f64 = 60.0 / IN;
 const DROP: f64 = 12.0 / IN;
 const GROOVE: f64 = 2.0 / IN;
 
@@ -55,7 +55,7 @@ fn body<'a>(bodies: &'a [Body], name: &str) -> &'a Body {
 }
 
 #[test]
-fn the_gauge_is_one_printed_t_at_its_sizes_with_the_groove() {
+fn the_gauge_is_one_printed_l_at_its_sizes_with_the_groove() {
     let mut doc = load();
     let r = doc
         .regenerate_studio(tab_named(&doc, "gauge"), None)
@@ -69,10 +69,10 @@ fn the_gauge_is_one_printed_t_at_its_sizes_with_the_groove() {
     let g = &r.bodies[0];
     g.solid.validate().unwrap();
     assert_eq!(g.material.as_ref().map(|m| m.name.as_str()), Some("PETG"));
-    // The envelope: the fence 6 mm outside the sheet edge and 120 along
-    // it, hanging 12 below the stem's underside and flush with its top;
-    // the stem 6 thick from the fence's inner face out 2 in plus the
-    // kerf, 53.0 mm.
+    // The envelope: the fence 6 mm outside the sheet edge, hanging 12
+    // below the depth leg's underside and flush with its top; the
+    // depth leg 6 thick from the fence's inner face out 2 in plus the
+    // kerf, 53.0 mm; 60 along the edge, the same section throughout.
     let (lo, hi) = bounds(&g.solid);
     assert!(
         near(lo.x, -FENCE_T) && near(hi.x, WIDTH + KERF),
@@ -82,44 +82,28 @@ fn the_gauge_is_one_printed_t_at_its_sizes_with_the_groove() {
     );
     assert!(near(hi.x * IN, 53.0), "53.0 mm: 50.8 and a 2.2 kerf");
     assert!(
-        near(lo.y, -FENCE_L / 2.0) && near(hi.y, FENCE_L / 2.0),
+        near(lo.y, -LEN / 2.0) && near(hi.y, LEN / 2.0),
         "y {}..{}",
         lo.y,
         hi.y
     );
     assert!(near(lo.z, -DROP) && near(hi.z, T), "z {}..{}", lo.z, hi.z);
-    // A T in plan: at the stem's end the body is STEM_W across, at the
-    // fence FENCE_L across. Read off the planes: a face normal to y at
-    // y = STEM_W / 2 and one at FENCE_L / 2.
-    let y_faces: Vec<f64> = g
+    // An extrusion: the only faces normal to y are its two ends.
+    let y_faces = g
         .solid
         .surfaces
         .iter()
-        .filter_map(|s| match s {
-            Surface::Plane { normal, offset } if normal.y.abs() > 0.999 => {
-                Some((offset * normal.y).abs() / IN)
-            }
-            _ => None,
-        })
-        .collect();
-    assert!(
-        y_faces.iter().any(|y| near(*y, STEM_W / 2.0)),
-        "the stem's sides"
-    );
-    assert!(
-        y_faces.iter().any(|y| near(*y, FENCE_L / 2.0)),
-        "the fence's ends"
-    );
-    // The volume: the fence and the stem less the 2 mm groove along
-    // the stem's inside bottom edge.
-    let want =
-        FENCE_T * FENCE_L * (DROP + T) + (WIDTH + KERF) * STEM_W * T - GROOVE * GROOVE * STEM_W;
+        .filter(|s| matches!(s, Surface::Plane { normal, .. } if normal.y.abs() > 0.999))
+        .count();
+    assert_eq!(y_faces, 2, "an L extruded along the edge");
+    // The volume: the L's section less the 2 mm groove, by the length.
+    let want = (FENCE_T * (DROP + T) + (WIDTH + KERF) * T - GROOVE * GROOVE) * LEN;
     let v = g.solid.volume() / IN.powi(3);
     println!(
         "gauge {v:.4} in3 ({:.0} mm3), {want:.4} wanted",
         v * IN.powi(3)
     );
-    assert!((v - want).abs() < 1e-6, "{v}: the T less the groove");
+    assert!((v - want).abs() < 1e-6, "{v}: the L less the groove");
     let in_groove = g.solid.surfaces.iter().any(|s| match s {
         Surface::Plane { normal, offset } => {
             normal.z.abs() > 0.999 && near((offset * normal.z).abs(), GROOVE * IN)
@@ -131,10 +115,14 @@ fn the_gauge_is_one_printed_t_at_its_sizes_with_the_groove() {
     // normal points along an axis, so there is no sloped surface, and
     // the top is one plane.
     assert!(
-        g.solid.surfaces.iter().all(|s| matches!(s, Surface::Plane { normal, .. } if normal.x.abs() > 0.999 || normal.y.abs() > 0.999 || normal.z.abs() > 0.999)),
+        g.solid
+            .surfaces
+            .iter()
+            .all(|s| matches!(s, Surface::Plane { normal, .. }
+            if normal.x.abs() > 0.999 || normal.y.abs() > 0.999 || normal.z.abs() > 0.999)),
         "all faces square to the axes"
     );
-    // The STL is written: a binary STL of the T's facets.
+    // The STL is written: a binary STL of the L's facets.
     let bytes = std::fs::read(dir().join("out/gauge.stl")).unwrap();
     let tris = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
     assert_eq!(
@@ -142,7 +130,7 @@ fn the_gauge_is_one_printed_t_at_its_sizes_with_the_groove() {
         84 + 50 * tris,
         "a binary STL of {tris} triangles"
     );
-    assert!(tris >= 28, "{tris} triangles: the T has 14 faces");
+    assert!(tris >= 16, "{tris} triangles: the L has 8 faces");
 }
 
 #[test]
