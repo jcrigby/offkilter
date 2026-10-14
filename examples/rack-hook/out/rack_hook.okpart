@@ -1,0 +1,1920 @@
+{
+  "name": "Coat hook for a wire rack's rail",
+  "tabs": [
+    {
+      "id": 1,
+      "kind": {
+        "type": "part_studio",
+        "name": "hook",
+        "features": [
+          {
+            "id": 1,
+            "name": "U over the rail",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 7.75
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "U over the rail",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "the rail's room",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -1.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.75
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "the rail's room",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 20.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 5,
+            "name": "the U's opening",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -1.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.75,
+                      "y": -8.75
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.75,
+                      "y": -8.75
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.75,
+                      "y": -8.75
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.75,
+                      "y": -8.75
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "the U's opening",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 20.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 7,
+            "name": "leg behind the rail",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -7.75,
+                      "y": -25.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.75,
+                      "y": -25.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.75,
+                      "y": -25.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -7.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -7.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -7.75,
+                      "y": -25.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "leg behind the rail",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 9,
+            "name": "its rounded end",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -5.75,
+                      "y": -25.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 2.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 10,
+            "name": "its rounded end",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 9,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 11,
+            "name": "leg down the front",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 3.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 12,
+            "name": "leg down the front",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 11,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 13,
+            "name": "hook 1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 17.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 14.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 14,
+            "name": "hook 1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 13,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 15,
+            "name": "hook 1, inside",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -1.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 17.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 10.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 16,
+            "name": "hook 1, inside",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 15,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 20.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 17,
+            "name": "hook 1, throat",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -1.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.75,
+                      "y": -41.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.75,
+                      "y": -41.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -41.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -41.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 18,
+            "name": "hook 1, throat",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 17,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 20.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 19,
+            "name": "hook 1, tip",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 31.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 31.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 31.75,
+                      "y": -35.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 31.75,
+                      "y": -35.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.75,
+                      "y": -35.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.75,
+                      "y": -35.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.75,
+                      "y": -55.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 20,
+            "name": "hook 1, tip",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 19,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 21,
+            "name": "hook 1, rounded end",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 29.75,
+                      "y": -35.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 2.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 22,
+            "name": "hook 1, rounded end",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 21,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 23,
+            "name": "hook 2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 17.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 14.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 24,
+            "name": "hook 2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 23,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 25,
+            "name": "hook 2, inside",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -1.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 17.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 10.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 26,
+            "name": "hook 2, inside",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 25,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 20.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 27,
+            "name": "hook 2, throat",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -1.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.75,
+                      "y": -96.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.75,
+                      "y": -96.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -96.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -96.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 28,
+            "name": "hook 2, throat",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 27,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 20.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 29,
+            "name": "hook 2, tip",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 31.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 31.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 31.75,
+                      "y": -90.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 31.75,
+                      "y": -90.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.75,
+                      "y": -90.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.75,
+                      "y": -90.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.75,
+                      "y": -110.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 30,
+            "name": "hook 2, tip",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 29,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 31,
+            "name": "hook 2, rounded end",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 29.75,
+                      "y": -90.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 2.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 32,
+            "name": "hook 2, rounded end",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 31,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 18.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          }
+        ],
+        "next_id": 33,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "2": "rack hook, 0.25 in rail"
+        },
+        "part_materials": {
+          "2": {
+            "name": "PETG",
+            "density": 1.27
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "kind": {
+        "type": "part_studio",
+        "name": "rails",
+        "features": [
+          {
+            "id": 1,
+            "name": "rail 1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -40.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.175
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "rail 1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 100.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "rail 2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -40.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -25.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.175
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "rail 2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 100.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 5,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "2": "top rail, 1/4 wire",
+          "4": "lower rail, 1/4 wire"
+        },
+        "part_materials": {
+          "2": {
+            "name": "plated steel",
+            "density": 7.85
+          },
+          "4": {
+            "name": "plated steel",
+            "density": 7.85
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "kind": {
+        "type": "assembly",
+        "name": "on the rail",
+        "instances": [
+          {
+            "id": 5,
+            "name": "top rail",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "lower rail",
+            "studio": 2,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "hook",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    },
+    {
+      "id": 4,
+      "kind": {
+        "type": "assembly",
+        "name": "print",
+        "instances": [
+          {
+            "id": 8,
+            "name": "hook, on its side",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 18.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 90.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    }
+  ],
+  "next_id": 9
+}
