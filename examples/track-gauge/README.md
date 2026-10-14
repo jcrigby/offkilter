@@ -45,10 +45,13 @@ edge is enough bearing on the edge to sit square; print two and use
 one at each end of the track.
 
 Printing: PETG or PLA, 0.2 layers, three or four perimeters, any
-infill. Print it on its top face, the one flat face, with no supports:
-every surface is square to the axes or a vertical round, so nothing
-overhangs, and the labels are three layers of recess in the first
-face down, which prints cleanly. The faces
+infill. It prints on its top face, the one flat face, with no
+supports: every surface is square to the axes or a vertical round, so
+nothing overhangs, and the labels are three layers of recess in the
+face on the bed, which prints cleanly. `out/gauge.stl` is already
+turned over that way, the flat face at z = 0 and the fence standing
+up, so it drops into a slicer as it should print; the model's own
+frame is the in-use orientation, flat face up. The faces
 that register (the fence's inner face, the depth leg's end and its
 underside) are vertical walls and a top surface of that print, away
 from the first layer's elephant foot. Check the depth leg's end
@@ -75,7 +78,10 @@ cut.
   `WIDTH` to `WIDTH + KERF`, so the picture shows where the blade goes.
 - `in use`: an assembly of those with two gauges hooked on the edge, at
   each end of the track.
-- Outputs in `out/`: `track_gauge.okpart`, `gauge.stl`, `gauge.png`,
+- `print`: the gauge turned 180 degrees onto its top face, that face
+  at z = 0; the STL is exported from this tab, so it is bed-down.
+- Outputs in `out/`: `track_gauge.okpart`, `gauge.stl` (bed-down),
+  `gauge_print.png` (as it prints), `gauge.png`,
   `gauge_top.png` (the labels), `gauge_below.png` (the hook and the
   groove), `in_use.png`,
   `gauge.pdf` (front, top, right and iso) and `in_use.pdf` (the gauge

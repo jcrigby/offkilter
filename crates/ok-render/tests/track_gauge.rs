@@ -3,7 +3,7 @@
 //! leg 2 in plus the kerf long from the fence's inner face with its
 //! dust groove, its corners rounded, its labels engraved in the top,
 //! every other face square to the axes so it prints flat, and the STL
-//! is written; in use the sheet edge, the gauge, the track's
+//! is written turned over for the bed; in use the sheet edge, the gauge, the track's
 //! edge and the kerf line up so the strip the blade leaves is exactly
 //! 2 in.
 
@@ -173,7 +173,10 @@ fn the_gauge_is_one_printed_l_at_its_sizes_with_the_groove() {
         }),
         "all faces square to the axes or vertical rounds"
     );
-    // The STL is written: a binary STL of the L's facets.
+    // The STL is written from the `print` assembly, the gauge turned
+    // onto its flat top face: a binary STL whose lowest vertices are
+    // that face at z = 0 and whose highest are the fence's bottom edge
+    // at 18, the fence's and the depth leg's thicknesses and the drop.
     let bytes = std::fs::read(dir().join("out/gauge.stl")).unwrap();
     let tris = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
     assert_eq!(
@@ -184,6 +187,22 @@ fn the_gauge_is_one_printed_l_at_its_sizes_with_the_groove() {
     assert!(
         tris >= 200,
         "{tris} triangles: the L, four rounds and the lettering"
+    );
+    let (mut zlo, mut zhi) = (f64::INFINITY, f64::NEG_INFINITY);
+    for t in 0..tris {
+        let rec = &bytes[84 + 50 * t..84 + 50 * t + 48];
+        for v in 0..3 {
+            let at = 12 + 12 * v + 8;
+            let z = f32::from_le_bytes(rec[at..at + 4].try_into().unwrap()) as f64;
+            zlo = zlo.min(z);
+            zhi = zhi.max(z);
+        }
+    }
+    println!("stl: {tris} triangles, z {zlo:.3}..{zhi:.3} mm");
+    assert!(zlo.abs() < 1e-3, "the top face on the bed");
+    assert!(
+        ((zhi - (T + DROP) * IN).abs()) < 1e-3,
+        "the fence standing up to {zhi}"
     );
 }
 
