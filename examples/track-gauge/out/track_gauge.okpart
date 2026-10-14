@@ -4735,7 +4735,7 @@
         "name": "in use",
         "instances": [
           {
-            "id": 5,
+            "id": 6,
             "name": "sheet",
             "studio": 2,
             "body": 0,
@@ -4754,7 +4754,7 @@
             }
           },
           {
-            "id": 6,
+            "id": 7,
             "name": "track",
             "studio": 3,
             "body": 0,
@@ -4773,7 +4773,7 @@
             }
           },
           {
-            "id": 7,
+            "id": 8,
             "name": "kerf",
             "studio": 3,
             "body": 1,
@@ -4792,7 +4792,7 @@
             }
           },
           {
-            "id": 8,
+            "id": 9,
             "name": "gauge 1",
             "studio": 1,
             "body": 0,
@@ -4811,7 +4811,7 @@
             }
           },
           {
-            "id": 9,
+            "id": 10,
             "name": "gauge 2",
             "studio": 1,
             "body": 0,
@@ -4832,7 +4832,36 @@
         ],
         "mates": []
       }
+    },
+    {
+      "id": 5,
+      "kind": {
+        "type": "assembly",
+        "name": "print",
+        "instances": [
+          {
+            "id": 11,
+            "name": "gauge, top face down",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 6.0
+              },
+              "rotation": {
+                "x": 180.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
     }
   ],
-  "next_id": 10
+  "next_id": 12
 }

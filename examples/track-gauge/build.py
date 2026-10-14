@@ -142,9 +142,9 @@ def track(p):
     part_is(p, f, f"kerf, {KERF * IN:g} mm, {WIDTH:g} in from the edge")
 
 
-def instance(studio, body, name, y=0.0):
+def instance(studio, body, name, y=0.0, z=0.0, rx=0.0):
     return {"type": "add_instance", "studio": studio, "body": body, "name": name, "fixed": True,
-            "placement": {"position": {"x": 0.0, "y": y * IN, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}}
+            "placement": {"position": {"x": 0.0, "y": y * IN, "z": z * IN}, "rotation": {"x": rx, "y": 0.0, "z": 0.0}}}
 
 
 def main():
@@ -158,7 +158,8 @@ def main():
                                {"type": "rename_tab", "tab": 1, "name": "gauge"},
                                {"type": "add_part_studio", "name": "sheet"},
                                {"type": "add_part_studio", "name": "track"},
-                               {"type": "add_assembly", "name": "in use"}]})
+                               {"type": "add_assembly", "name": "in use"},
+                               {"type": "add_assembly", "name": "print"}]})
     for tab, build in ((1, gauge), (2, sheet), (3, track)):
         p = Part(mcp, tab, str(tab))
         build(p)
@@ -169,7 +170,12 @@ def main():
     ops += [instance(1, 0, f"gauge {n + 1}", y) for n, y in enumerate(GAUGE_Y)]
     mcp.call("apply", {"ops": ops, "tab": 4})
     print(f"in use: {len(ops)} instances")
-    print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "gauge.stl")}))
+    # The print: the gauge turned over onto its flat top face, that
+    # face on the bed at z = 0 and the fence standing up, so the STL
+    # drops into a slicer the right way up.
+    mcp.call("apply", {"ops": [instance(1, 0, "gauge, top face down", z=T, rx=180.0)], "tab": 5})
+    print(mcp.call("export", {"tab": 5, "format": "stl", "path": os.path.join(OUT, "gauge.stl")}))
+    mcp.call("screenshot", {"tab": 5, "view": "-0.7,-0.6,0.45", "width": 1400, "height": 900, "path": os.path.join(OUT, "gauge_print.png")})
     mcp.call("screenshot", {"tab": 1, "view": "-0.7,-0.6,0.45", "width": 1400, "height": 900, "path": os.path.join(OUT, "gauge.png")})
     mcp.call("screenshot", {"tab": 1, "view": "0.5,-0.7,-0.5", "width": 1400, "height": 900, "path": os.path.join(OUT, "gauge_below.png")})
     mcp.call("screenshot", {"tab": 1, "view": "top", "width": 1400, "height": 900, "path": os.path.join(OUT, "gauge_top.png")})
