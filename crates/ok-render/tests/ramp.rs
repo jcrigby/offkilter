@@ -1,10 +1,9 @@
 //! The folding truck ramp (examples/ramp) as a regression suite: every
 //! part regenerates closed, the panel and the ramp place every
-//! instance, the four steel lug plates share their bolts' axis and pair
-//! up outside the rails with the 1/8 gap between them, the screws bite
-//! three and a quarter inches of plywood, the fold clears itself from
-//! open to folded, and the open and folded packages measure what the
-//! brief says. Every number prints (`--nocapture`); inches
+//! instance, the hinge's bars pair their struts on the bolts outside
+//! the rails with the bands flat on them, the screws bite three inches
+//! of plywood, the fold clears itself from open to folded, and the
+//! open and folded packages measure what the brief says. Every number prints (`--nocapture`); inches
 //! throughout, converted from the document's millimetres.
 
 use ok_brep::{BoolOp, Solid, Surface};
@@ -106,10 +105,10 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     }
     assert_eq!(
         bodies,
-        41 + 4 + 4 + 5 + 2,
+        43 + 4 + 4 + 5 + 2,
         "shared, panel A, panel B, ramp parts and the two sheets"
     );
-    for (name, want) in [("panel A", 45), ("panel B", 45)] {
+    for (name, want) in [("panel A", 47), ("panel B", 47)] {
         let panel = tab_named(&doc, name);
         let r = doc.regenerate_assembly(panel).unwrap();
         assert_eq!(r.bodies.len(), want, "{name}");
@@ -119,7 +118,7 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     let r = doc.regenerate_assembly(ramp).unwrap();
     assert_eq!(
         r.bodies.len(),
-        45 + 45 + 5,
+        47 + 47 + 5,
         "two panels, two bolts, two end plates, the angle"
     );
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
@@ -214,12 +213,12 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
 }
 
 #[test]
-fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
+fn the_hinge_bars_pair_their_struts_on_the_bolts_outside_the_rails() {
     let mut doc = load();
     let ramp = tab_named(&doc, "ramp");
     let r = doc.regenerate_assembly(ramp).unwrap();
     // The two bolts' axis: along x, through (0, -1.5) in y and z, both
-    // of them, each a 1/2 shank under a 3/4 head.
+    // of them, each a 1/2 shank 1-1/2 long under a 3/4 head.
     let bolts: Vec<&Body> = r
         .bodies
         .iter()
@@ -243,17 +242,34 @@ fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
         );
         assert_eq!(b.material.as_ref().map(|m| m.name.as_str()), Some("steel"));
     }
-    // Four 1/4 steel plates, their 17/32 holes on that axis within a
-    // hundredth of a millimetre, each with four 11/32 screw holes.
-    let mut plates: Vec<(String, f64, f64)> = Vec::new();
-    for name in ["lug_left 1", "lug_right 1"] {
+    let rails = extent(&r, |b| b.name.contains("/ rail"));
+    let (rl, rh) = (rails.0.x / IN, rails.1.x / IN);
+    assert!((rl + 0.75).abs() < 1e-6 && (rh - (W + 0.75)).abs() < 1e-6);
+    // The bands: four, 1/4 steel, 2 tall from 0.4 above the panel's
+    // bottom, 11-3/4 long from the joint, six 11/32 holes along x; on the
+    // left of the ramp A's left band is against the rail and B's turned
+    // right band a bar further out, on the right the other way about.
+    let mut bands: Vec<(String, f64, f64)> = Vec::new();
+    for name in ["hinge_left 1", "hinge_right 1"] {
         for b in named(&r, name) {
-            let cs = cylinders(&b.solid, 0.53125 / 2.0);
-            assert_eq!(cs.len(), 1, "{}: {} pivot holes", b.name, cs.len());
-            let (o, a) = cs[0];
-            assert!(a.x.abs() > 1.0 - 1e-9, "{}: {a:?}", b.name);
-            let off = Vec3::new(0.0, o.y - po.y, o.z - po.z);
-            assert!(off.length() < 0.01, "{}: {off:?} off the bolt axis", b.name);
+            let (lo, hi) = bounds(&b.solid);
+            assert!(
+                (hi.x - lo.x - 0.25 * IN).abs() < 1e-6,
+                "{}: 1/4 bar",
+                b.name
+            );
+            assert!(
+                (lo.z / IN - 0.4).abs() < 1e-6 && (hi.z / IN - 2.4).abs() < 1e-6,
+                "{}: z {}..{}",
+                b.name,
+                lo.z / IN,
+                hi.z / IN
+            );
+            assert!(
+                (lo.y.abs().min(hi.y.abs())) < 1e-6 && ((hi.y - lo.y) / IN - 11.75).abs() < 1e-6,
+                "{}: from the joint back 11-3/4",
+                b.name
+            );
             assert_eq!(
                 cylinders(&b.solid, 0.34375 / 2.0).len(),
                 6,
@@ -261,81 +277,126 @@ fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
                 b.name
             );
             assert_eq!(b.material.as_ref().map(|m| m.name.as_str()), Some("steel"));
-            let (lo, hi) = bounds(&b.solid);
-            assert!(
-                (hi.x - lo.x - 0.25 * IN).abs() < 1e-6,
-                "{}: 1/4 plate",
-                b.name
-            );
-            plates.push((b.name.clone(), lo.x / IN, hi.x / IN));
+            bands.push((b.name.clone(), lo.x / IN, hi.x / IN));
         }
     }
-    plates.sort_by(|a, b| a.1.total_cmp(&b.1));
-    println!("lug plates across the bolts: {plates:?}");
-    assert_eq!(plates.len(), 4, "two a panel");
-    // Outside the rails, a pair a side: on the left panel A's left
-    // plate flat on its rail with panel B's turned right plate outside
-    // it on B's spacer, 1/8 (a washer) between; on the right B's turned
-    // left plate flat on A's rail under A's spaced right one. Nothing
-    // of a plate inside the box.
-    let rails = extent(&r, |b| b.name.contains("/ rail"));
-    let (rl, rh) = (rails.0.x / IN, rails.1.x / IN);
-    assert!((rl + 0.75).abs() < 1e-6 && (rh - (W + 0.75)).abs() < 1e-6);
-    let want = [
-        ("panel B / lug_right 1", rl - 0.375 - 0.25),
-        ("panel A / lug_left 1", rl - 0.25),
-        ("panel B / lug_left 1", rh),
-        ("panel A / lug_right 1", rh + 0.375),
+    bands.sort_by(|a, b| a.1.total_cmp(&b.1));
+    let want_bands = [
+        ("panel B / hinge_right 1", rl - 0.5),
+        ("panel A / hinge_left 1", rl - 0.25),
+        ("panel B / hinge_left 1", rh),
+        ("panel A / hinge_right 1", rh + 0.25),
     ];
-    for ((name, lo, _), (wname, wlo)) in plates.iter().zip(want) {
+    for ((name, lo, _), (wname, wlo)) in bands.iter().zip(want_bands) {
         assert_eq!(name, wname);
         assert!((lo - wlo).abs() < 1e-6, "{name} at {lo}, not {wlo}");
     }
-    for pair in [&plates[0..2], &plates[2..4]] {
+    // The struts: four, 1/4 steel, 2-1/2 wide, their 17/32 holes on the
+    // bolts' axis within a hundredth of a millimetre, the rounded end
+    // about it, four screw holes, the long faces at 25 degrees; a
+    // pair's two struts touch on the bolt, A's left outside B's turned
+    // right on the left of the ramp, and inside it on the right.
+    let mut struts: Vec<(String, f64, f64)> = Vec::new();
+    for name in ["hinge_left 2", "hinge_right 2"] {
+        for b in named(&r, name) {
+            let cs = cylinders(&b.solid, 0.53125 / 2.0);
+            assert_eq!(cs.len(), 1, "{}: {} pivot holes", b.name, cs.len());
+            let (o, a) = cs[0];
+            assert!(a.x.abs() > 1.0 - 1e-9, "{}: {a:?}", b.name);
+            let off = Vec3::new(0.0, o.y - po.y, o.z - po.z);
+            assert!(off.length() < 0.01, "{}: {off:?} off the bolt axis", b.name);
+            let (ro, _) = cylinders(&b.solid, 1.25)[0];
+            assert!(
+                (ro.y - po.y).abs() < 1e-6 && (ro.z - po.z).abs() < 1e-6,
+                "{}: the round end about the bolt",
+                b.name
+            );
+            assert_eq!(
+                cylinders(&b.solid, 0.34375 / 2.0).len(),
+                4,
+                "{}: four screw holes",
+                b.name
+            );
+            let sloped = b.solid.surfaces.iter().any(|sf| match sf {
+                Surface::Plane { normal, .. } => {
+                    normal.x.abs() < 1e-6
+                        && ((normal.z.abs() - 25f64.to_radians().cos()).abs() < 1e-6)
+                }
+                _ => false,
+            });
+            assert!(sloped, "{}: a face at 25 degrees", b.name);
+            let (lo, hi) = bounds(&b.solid);
+            assert!(
+                (hi.x - lo.x - 0.25 * IN).abs() < 1e-6,
+                "{}: 1/4 bar",
+                b.name
+            );
+            assert_eq!(b.material.as_ref().map(|m| m.name.as_str()), Some("steel"));
+            struts.push((b.name.clone(), lo.x / IN, hi.x / IN));
+        }
+    }
+    struts.sort_by(|a, b| a.1.total_cmp(&b.1));
+    println!("struts across the bolts: {struts:?}");
+    let want_struts = [
+        ("panel A / hinge_left 2", rl - 0.5),
+        ("panel B / hinge_right 2", rl - 0.25),
+        ("panel A / hinge_right 2", rh),
+        ("panel B / hinge_left 2", rh + 0.25),
+    ];
+    for ((name, lo, _), (wname, wlo)) in struts.iter().zip(want_struts) {
+        assert_eq!(name, wname);
+        assert!((lo - wlo).abs() < 1e-6, "{name} at {lo}, not {wlo}");
+    }
+    for pair in [&struts[0..2], &struts[2..4]] {
         let gap = pair[1].1 - pair[0].2;
         assert!(
-            (gap - 0.125).abs() < 1e-6,
-            "{} to {}: {gap}",
+            gap.abs() < 1e-6,
+            "{} to {}: {gap}, not touching",
             pair[0].0,
             pair[1].0
         );
     }
-    let over = plates[3].2 - plates[0].1;
-    println!("over the lug plates: {over:.3} in");
-    assert!((over - (W + 2.75)).abs() < 1e-6, "{over}");
-    // The spacer fills the 3/8 behind each right plate, from 1-3/4
-    // back of the joint: nothing of the band floats.
-    for b in named(&r, "lug_right 2") {
+    let over = struts[3].2 - struts[0].1;
+    println!("over the hinge bars: {over:.3} in");
+    assert!((over - (W + 2.5)).abs() < 1e-6, "{over}");
+    // The packer under each right band's far end, in the strut's plane
+    // against the rail, 2-1/2 long to the band's end.
+    for b in named(&r, "hinge_right 3") {
         let (lo, hi) = bounds(&b.solid);
         assert!(
-            ((hi.x - lo.x) / IN - 0.375).abs() < 1e-6,
-            "{}: 3/8 bar",
+            (hi.x - lo.x - 0.25 * IN).abs() < 1e-6,
+            "{}: 1/4 bar",
             b.name
         );
-        assert_eq!(
-            b.material.as_ref().map(|m| m.name.as_str()),
-            Some("aluminium")
+        assert!(
+            ((hi.y - lo.y) / IN - 2.5).abs() < 1e-6
+                && (lo.y.abs().max(hi.y.abs()) / IN - 11.75).abs() < 1e-6,
+            "{}: y {}..{}",
+            b.name,
+            lo.y / IN,
+            hi.y / IN
         );
-        let plate = plates
+        let strut = struts
             .iter()
-            .find(|p| p.0 == b.name.replace("lug_right 2", "lug_right 1"))
+            .find(|s| s.0 == b.name.replace("hinge_right 3", "hinge_right 2"))
             .unwrap();
         assert!(
-            (hi.x / IN - plate.1).abs() < 1e-6 || (lo.x / IN - plate.2).abs() < 1e-6,
-            "{}: not against its plate",
+            (lo.x / IN - strut.1).abs() < 1e-6,
+            "{}: in the strut's plane",
             b.name
         );
     }
-    // The screws: six a plate, 5/16 x 3-1/8 along x from the plate's
-    // outer face, through the rail (3/4), the edge rib (3/4) and into
-    // the two-ply hinge block (1-1/2), the point inside the block: each
-    // lies in a rail, a rib and both blocks of its own panel, and bites
-    // the block an inch or more (3/8 less behind the spacer).
+    // The screws: six a side, 5/16 x 3-1/8 along x from the outermost
+    // bar at each one, through the band always and the strut at the
+    // first four, into the rail (3/4), the edge rib (3/4) and the
+    // two-ply hinge block (1-1/2) of their own panel, an inch or more
+    // into the block and short of its far face.
     let mut screws = 0;
+    let mut through_strut = 0;
     for b in r
         .bodies
         .iter()
-        .filter(|b| b.name.contains("/ lug_left ") || b.name.contains("/ lug_right "))
+        .filter(|b| b.name.contains("/ hinge_left ") || b.name.contains("/ hinge_right "))
     {
         if cylinders(&b.solid, 0.3125 / 2.0).is_empty() {
             continue;
@@ -347,6 +408,11 @@ fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
             b.name
         );
         let panel = b.name.split(" / ").next().unwrap();
+        let side = if b.name.contains("hinge_left") {
+            "hinge_left"
+        } else {
+            "hinge_right"
+        };
         let (cy, cz) = ((lo.y + hi.y) / 2.0, (lo.z + hi.z) / 2.0);
         let through = |member: &str| {
             r.bodies
@@ -358,6 +424,23 @@ fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
                 })
                 .count()
         };
+        assert_eq!(
+            through(&format!("/ {side} 1")),
+            1,
+            "{}: through its band",
+            b.name
+        );
+        let strut_too = through(&format!("/ {side} 2")) == 1;
+        if strut_too {
+            through_strut += 1;
+        }
+        assert_eq!(
+            strut_too,
+            cy.abs() / IN < 9.0,
+            "{}: {} the strut",
+            b.name,
+            if strut_too { "through" } else { "misses" }
+        );
         assert_eq!(through("/ rail"), 1, "{}: through a rail", b.name);
         assert_eq!(through("/ rib"), 1, "{}: through an edge rib", b.name);
         assert_eq!(
@@ -366,8 +449,6 @@ fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
             "{}: through both blocks",
             b.name
         );
-        // Bites all the way: the point past the second block's near
-        // face by over an inch, short of its far face.
         let blocks = extent(&r, |m| {
             m.name.starts_with(panel) && m.name.contains("/ hinge_block") && {
                 let (ml, mh) = bounds(&m.solid);
@@ -387,29 +468,32 @@ fn the_four_lug_plates_pair_up_on_the_bolts_outside_the_rails() {
         );
         screws += 1;
     }
-    assert_eq!(screws, 24, "six a plate");
-    // The bolt: head, washer, plate, 1/8 washer, plate, washer, nut
-    // along x, 2 of shank from under the head, head and nut outside
-    // the plates and the washers (1-1/16 across) against them.
+    assert_eq!(screws, 24, "six a side");
+    assert_eq!(through_strut, 16, "four a side through the strut");
+    // The bolt: head, washer, strut, strut, washer, nut along x, 1-1/2
+    // of shank from under the head, the head a washer off the outer
+    // strut.
     for b in &bolts {
         let (lo, hi) = bounds(&b.solid);
         assert!(
-            ((hi.x - lo.x) / IN - (2.0 + 0.3125)).abs() < 1e-6,
-            "{}: 2 under the head",
+            ((hi.x - lo.x) / IN - (1.5 + 0.3125)).abs() < 1e-6,
+            "{}: 1-1/2 under the head",
             b.name
         );
-        let washers = cylinders(&b.solid, 1.0625 / 2.0);
-        assert_eq!(washers.len(), 3, "{}: three washers", b.name);
-        let head = cylinders(&b.solid, 0.375);
-        assert_eq!(head.len(), 2, "{}: a head and a nut", b.name);
+        assert_eq!(
+            cylinders(&b.solid, 1.0625 / 2.0).len(),
+            2,
+            "{}: two washers",
+            b.name
+        );
         let outer = if lo.x < 0.0 { lo.x } else { hi.x } / IN;
-        let plate = if lo.x < 0.0 { plates[0].1 } else { plates[3].2 };
+        let strut = if lo.x < 0.0 { struts[0].1 } else { struts[3].2 };
         assert!(
-            ((outer - plate).abs() - (0.09 + 0.3125)).abs() < 1e-6,
-            "{}: the head {} off its plate at {}",
+            ((outer - strut).abs() - (0.09 + 0.3125)).abs() < 1e-6,
+            "{}: the head {} off its strut at {}",
             b.name,
             outer,
-            plate
+            strut
         );
     }
 }
@@ -524,16 +608,16 @@ fn the_fold_clears_itself_and_the_packages_measure_up() {
     let ly = (panels.1.y - panels.0.y) / IN;
     println!("folded package over the panels: {ly:.3} in long");
     assert!(
-        (ly - 49.5).abs() < 1e-6,
-        "{ly}: 48 from the joint to the stubs' ends and the half-rounds past it"
+        (ly - 49.25).abs() < 1e-6,
+        "{ly}: 48 from the joint to the stubs' ends and the struts' round ends past it"
     );
-    // Folded, the plates still pair: each side's two plates share the
-    // bolt and touch nothing (the sweep above), the turned plate's
-    // half-round hanging where the open one's did.
+    // Folded, the struts still pair: each side's two share the bolt
+    // and touch nothing (the sweep above), the turned strut's round
+    // end hanging where the open one's did.
     for b in r
         .bodies
         .iter()
-        .filter(|b| b.name.ends_with("/ lug_left 1") || b.name.ends_with("/ lug_right 1"))
+        .filter(|b| b.name.ends_with("/ hinge_left 2") || b.name.ends_with("/ hinge_right 2"))
     {
         let cs = cylinders(&b.solid, 0.53125 / 2.0);
         assert_eq!(cs.len(), 1, "{}", b.name);
