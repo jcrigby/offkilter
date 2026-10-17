@@ -52,22 +52,26 @@ CURB = 1.0                         # the rails stand this much above the deck
 PIN_DROP = 1.5                     # pipe centre below the bottom skin: lever arm against hang, and the most the lugs' radius can be
 BIRCH = 0.75                       # the rails, ribs, cross blocks and hinge blocks: one ply
 RAIL_H = BOX + CURB                # 3.8125 along the length
-LUG_R = 1.5                        # the lug's half-round about the pin; no more than PIN_DROP or it meets the other panel
-TAPER = 8.0                        # the lug bottom climbs back to z = 0 over this
-# The lug plates: 1/4 steel, from LUG_TOP above the bottom skin down
-# round the pin, LUG_L long from the joint; the left one flat on its
-# rail, the right one on a spacer so the two panels' lugs pass; six
-# structural screws each through the rail, the edge rib and the hinge
-# block behind it; a 1/2 bolt through each pair as the pivot.
-LUG_T, LUG_TOP, LUG_L = 0.25, 2.5, 12.75
-SPACER_T, SPACER_Y0 = 0.375, LUG_R + 0.25     # 3/8 bar under the right lug, from 1-3/4 behind the joint
-GAP = SPACER_T - LUG_T                        # 1/8 between the two lugs of a pair: a washer
-BOLT_D, HOLE_D, BOLT_L = 0.5, 0.53125, 2.0    # the pivot bolt and the plates' 17/32 hole
+# The hinge: two straight bars a side, 1/4 steel. A band 2 x 8-1/4 flat
+# along the rail's face, from where the hinge block starts, carries the screws into the rail, the edge rib
+# and the hinge block; a strut 2-1/2 wide runs from the pivot hole
+# below the box up at STRUT_ANGLE onto the band, lapped over it, and
+# four of the band's screws pass through it. On the left side the
+# band is against the rail and the strut outside it; on the right the
+# strut is against the rail and the band outside, so that turned, the
+# other panel's strut lands beside this one's on the bolt with nothing
+# between. A 1/2 bolt through each pair of struts is the pivot.
+BAR_T = 0.25                                  # the bars' thickness, both
+BAND_W, BAND_L, BAND_Z0 = 2.0, 11.75, 0.4      # the band: 2 x 1/4 bar, from the hinge block's start (JOINT) back to 11-3/4, its bottom 0.4 above the panel's bottom
+STRUT_W, STRUT_L, STRUT_ANGLE = 2.5, 10.75, 25.0  # the strut: 2-1/2 x 1/4 bar, 10-3/4 overall with a rounded pivot end, at 25 degrees
+PACKER_Y0 = 9.25                              # the right side's band is outside the strut: a packer of the same bar under its far end from here
+GAP = 0.0                                     # the two struts of a pair touch on the bolt
+BOLT_D, HOLE_D, BOLT_L = 0.5, 0.53125, 1.5    # the pivot bolt and the struts' 17/32 hole
 HEAD_D, HEAD_T, NUT_T = 0.75, 0.3125, 0.4375  # hex head across flats, as a cylinder
 WASHER_OD, WASHER_T = 1.0625, 0.09            # 1/2 SAE flat washers under the head and nut
 SCREW_D, SCREW_L = 0.3125, 3.125              # 5/16 x 3-1/8 structural screws (GRK RSS or equal)
-SCREW_Y = (4.5, 6.0, 7.5, 9.0, 10.5, 12.0)    # along the lug, behind the joint block, 3/4 short of the plate's end
-HINGE_BLOCK_T, HINGE_BLOCK_L = 2 * BIRCH, LUG_L  # two more plies behind each edge rib, joint block to the plate's end
+SCREW_Y = (4.5, 5.75, 7.0, 8.25, 9.75, 11.0)  # along the band behind the joint block; the first four cross the strut, the last two clear its end
+HINGE_BLOCK_T, HINGE_BLOCK_L = 2 * BIRCH, BAND_L  # two more plies behind each edge rib, joint block to the band's end
 CHAMFER = 0.375                    # the bottom skin's hinge-end edge, which sweeps a 1-1/2 in radius about the pin
 RIBS = (RIB_W / 2, 8.0, 13.5, W - 13.5, W - 8.0, W - RIB_W / 2)   # rib centres, both panels, symmetric: the edge ribs flush with the sides behind the rails (the lug screws go through them), the second and fifth clearing the 2x8 stubs by 3/8
 CROSS_Y = (16.0, 32.0)             # cross block rows
@@ -81,8 +85,24 @@ ANGLE_SCREW_D, ANGLE_SCREW_Z = 0.1875, (1.1, 1.7)     # #10 clearance; the two r
 # Panel B's placement in the ramp: 180 degrees about z, moved W in x:
 # its x runs 31-7/8 to 0, its y 0 to -48.
 PLACE_B = ((W * IN, 0.0, 0.0), (0.0, 0.0, 180.0))
-HINGE_CUT = -(BIRCH + LUG_T / 2)   # the hinge section: through panel A's left lug plate
-MATERIALS = {"osb": ("7/16 OSB", 0.62), "birch": ("3/4 birch", 0.68), "steel": ("steel", 7.85), "aluminium": ("aluminium", 2.7)}   # the parts list's material and g/cm3
+HINGE_CUT = -(BIRCH + 1.5 * BAR_T)  # the hinge section: through panel A's left strut
+MATERIALS = {"osb": ("7/16 OSB", 0.62), "birch": ("3/4 birch", 0.68), "steel": ("steel", 7.85), "aluminium": ("aluminium", 2.7)}
+# The strut's frame: s along it from the pivot, t across it.
+STRUT_D = (math.cos(math.radians(STRUT_ANGLE)), math.sin(math.radians(STRUT_ANGLE)))
+STRUT_N = (-STRUT_D[1], STRUT_D[0])
+
+
+def on_strut(y, z):
+    """(s, t) of a point in the y-z plane in the strut's frame."""
+    dy, dz = y, z + PIN_DROP
+    return dy * STRUT_D[0] + dz * STRUT_D[1], dy * STRUT_N[0] + dz * STRUT_N[1]
+
+
+def strut_covers(y, z, margin):
+    """Whether a hole of radius `margin` at (y, z) lies within the
+    strut's bar."""
+    s_, t = on_strut(y, z)
+    return margin <= s_ <= STRUT_L - STRUT_W / 2 - margin and abs(t) <= STRUT_W / 2 - margin   # the parts list's material and g/cm3
 
 
 def mm(*v):
@@ -230,60 +250,72 @@ def hinge_blocks(p):
             part_is(p, f, f"{RIB:g} x {HINGE_BLOCK_L - JOINT:g}", "birch")
 
 
-def lug_plate(spaced):
-    """A 1/4 steel lug on the outside of a rail: a band LUG_TOP tall on
-    the rail's face from the joint back LUG_L, the half-round about
-    the pin below the box, tapering back up to the skin over TAPER; a
-    17/32 hole at the pin and six 11/32 holes for the screws. The
-    right lug sits on a 3/8 spacer so that turned, the other panel's
-    left lug lands beside it; the screws are bodies of their own."""
+def hinge(right):
+    """One side's hinge bars on the outside of the rail: the band flat
+    along the rail's face and the strut from the pivot hole up onto it,
+    one against the rail and the other outside it (the band inside on
+    the left, the strut inside on the right); a 17/32 pivot hole in the
+    strut, 11/32 screw holes through whatever each screw crosses, a
+    packer under the right band's far end, and the screws as bodies."""
+    def plane(k):
+        """The x range of the k-th bar out from the rail's face."""
+        x0 = W + BIRCH + k * BAR_T if right else -BIRCH - (k + 1) * BAR_T
+        return x0, x0 + BAR_T
+
     def build(p):
-        x0 = W + BIRCH + SPACER_T if spaced else -BIRCH - LUG_T
-        x1 = x0 + LUG_T
-        f = profile_x(p, "lug plate, 1/4 steel", x0, x1,
-                      [(0.0, LUG_TOP), (LUG_L, LUG_TOP), (LUG_L, 0.0), (TAPER, 0.0), (0.0, -2 * LUG_R)], circle=((0.0, -PIN_DROP), LUG_R))
-        part_is(p, f, f"lug plate 1/4 x {LUG_TOP + PIN_DROP + LUG_R:g} x {LUG_L + LUG_R:g}", "steel")
-        bore_x(p, "pivot hole, 17/32", x0, x1, 0.0, -PIN_DROP, HOLE_D)
-        s = p.sketch("right", (x0 - 0.5) * IN, "screw holes")
+        band_x, strut_x = (plane(1), plane(0)) if right else (plane(0), plane(1))
+        f = box(p, "hinge band, 2 x 1/4 bar", band_x, (JOINT, BAND_L), (BAND_Z0, BAND_Z0 + BAND_W), op="new")
+        part_is(p, f, f"hinge band 1/4 x {BAND_W:g} x {BAND_L - JOINT:g}", "steel")
+        h, l = STRUT_W / 2, STRUT_L - STRUT_W / 2
+        pt = lambda s_, t: (s_ * STRUT_D[0] + t * STRUT_N[0], -PIN_DROP + s_ * STRUT_D[1] + t * STRUT_N[1])
+        f = profile_x(p, "hinge strut, 2-1/2 x 1/4 bar", strut_x[0], strut_x[1], [pt(0.0, -h), pt(l, -h), pt(l, h), pt(0.0, h)], circle=((0.0, -PIN_DROP), h))
+        part_is(p, f, f"hinge strut 1/4 x {STRUT_W:g} x {STRUT_L:g}", "steel")
+        bore_x(p, "pivot hole, 17/32", strut_x[0], strut_x[1], 0.0, -PIN_DROP, HOLE_D)
+        if right:
+            f = box(p, "packer, 2 x 1/4 bar", plane(0), (PACKER_Y0, BAND_L), (BAND_Z0, BAND_Z0 + BAND_W), op="new")
+            part_is(p, f, f"hinge packer 1/4 x {BAND_W:g} x {BAND_L - PACKER_Y0:g}", "steel")
+        # The screw holes through every bar on each screw's line, from
+        # just outside the stack's outer face.
+        outer = plane(1)[1] if right else plane(1)[0]
+        s = p.sketch("right", (outer + (0.5 if right else -0.5)) * IN, "screw holes")
         for y in SCREW_Y:
             p.point(s, mm(y, SKIN + RIB / 2))
-        p.hole(s, (SCREW_D + 0.03125) * IN, depth=(LUG_T + 1.0) * IN, direction="normal", name="screw holes, 11/32")
-        if spaced:
-            f = box(p, "lug spacer, 3/8 aluminium bar", (W + BIRCH, W + BIRCH + SPACER_T), (SPACER_Y0, LUG_L), (0.0, LUG_TOP), op="new")
-            part_is(p, f, f"lug spacer 3/8 x {LUG_TOP:g} x {LUG_L - SPACER_Y0:g}", "aluminium")
-        # The screws, head out on the plate's outer face, in through the
-        # plate, the rail, the edge rib and the hinge block.
+        p.hole(s, (SCREW_D + 0.03125) * IN, depth=(2 * BAR_T + 1.0) * IN, direction="reverse" if right else "normal", name="screw holes, 11/32")
+        # The screws, head on the outermost bar at each one, in through
+        # the bars, the rail, the edge rib and the hinge block.
         for y in SCREW_Y:
-            s = p.sketch("right", (x1 if spaced else x0) * IN, "screw")
+            crosses = strut_covers(y, SKIN + RIB / 2, (SCREW_D + 0.03125) / 2)
+            assert crosses == (y <= SCREW_Y[3]), f"screw at {y}: {'crosses' if crosses else 'misses'} the strut"
+            head = outer if (crosses or right) else band_x[0]
+            s = p.sketch("right", head * IN, "screw")
             p.circle(s, mm(y, SKIN + RIB / 2), SCREW_D / 2 * IN)
-            f = p.extrude(s, SCREW_L * IN, direction="reverse" if spaced else "normal", op="new", name="lug screw, 5/16 x 3-1/8")
-            part_is(p, f, "lug screw 5/16 x 3-1/8", "steel")
+            f = p.extrude(s, SCREW_L * IN, direction="reverse" if right else "normal", op="new", name="hinge screw, 5/16 x 3-1/8")
+            part_is(p, f, "hinge screw 5/16 x 3-1/8", "steel")
     return build
 
 
 # -- ramp parts, in the ramp's frame ----------------------------------
 
 def hinge_bolts(p):
-    """The two pivots: on each side a 1/2 x 2 bolt through the pair of
-    lugs, head out, a washer under the head and the nut and a 1/8 one
-    between the lugs, a nylock nut inboard under the box; one body a
-    side, the washers and nut unioned on. On the left the outer lug is
-    panel B's right one (turned), on the right it is panel A's."""
+    """The two pivots: on each side a 1/2 x 1-1/2 bolt through the pair
+    of struts, head out, a washer under the head and the nut, a nylock
+    nut inboard under the box; one body a side, the washers and nut
+    unioned on. On the left the outer strut is panel A's, the inner
+    panel B's right one (turned); on the right the other way about."""
     for side in (-1.0, 1.0):
-        outer = -(BIRCH + SPACER_T + LUG_T) if side < 0 else W + BIRCH + SPACER_T + LUG_T   # the outer lug's outer face
+        outer = -(BIRCH + 2 * BAR_T) if side < 0 else W + BIRCH + 2 * BAR_T   # the outer strut's outer face
         at = lambda d: outer + side * d                                                       # d out from that face, negative in
         def cyl(name, a, b, d, op="add"):
             s = p.sketch("right", min(a, b) * IN, name)
             p.circle(s, mm(0.0, -PIN_DROP), d / 2 * IN)
             return p.extrude(s, abs(b - a) * IN, op=op, name=name)
-        f = cyl("hinge bolt, 1/2 x 2 hex", at(WASHER_T), at(WASHER_T + HEAD_T), HEAD_D, op="new")
+        f = cyl("hinge bolt, 1/2 x 1-1/2 hex", at(WASHER_T), at(WASHER_T + HEAD_T), HEAD_D, op="new")
         cyl("shank", at(WASHER_T), at(WASHER_T - BOLT_L), BOLT_D)
         cyl("washer under the head", at(0.0), at(WASHER_T), WASHER_OD)
-        cyl("washer between the lugs", at(-LUG_T), at(-LUG_T - GAP), WASHER_OD)
-        inner = -(2 * LUG_T + GAP)                                                            # the inner lug's inner face
+        inner = -(2 * BAR_T + GAP)                                                            # the inner strut's inner face
         cyl("washer under the nut", at(inner), at(inner - WASHER_T), WASHER_OD)
         cyl("nylock nut", at(inner - WASHER_T), at(inner - WASHER_T - NUT_T), HEAD_D)
-        part_is(p, f, "hinge bolt 1/2 x 2 hex, grade 5, nylock, 3 washers", "steel")
+        part_is(p, f, "hinge bolt 1/2 x 1-1/2 hex, grade 5, nylock, 2 washers", "steel")
 
 
 def end_plates(p):
@@ -319,7 +351,7 @@ def ground_angle(p):
 
 
 SHARED = [("skin_top", skin_top), ("skin_bottom", skin_bottom), ("rib", ribs), ("cross_block", cross_blocks), ("joint_block", joint_block), ("rail", rails_plain),
-          ("hinge_block", hinge_blocks), ("lug_left", lug_plate(False)), ("lug_right", lug_plate(True))]
+          ("hinge_block", hinge_blocks), ("hinge_left", hinge(False)), ("hinge_right", hinge(True))]
 PANEL_A = [("stub", stubs(L))]
 PANEL_B = [("stub_ground", stubs(SKIN_END))]
 RAMP_PARTS = [("hinge_bolt", hinge_bolts), ("end_plate", end_plates), ("ground_angle", ground_angle)]
@@ -362,11 +394,12 @@ CUTLIST = [
     ("tailgate stub", "2x8 x 12", 2, "panel A, lumber: the end plates clamp 1-1/2 x 7-1/4; 3 in bare past the skins"),
     ("ground stub", f"2x8 x {SKIN_END - STUB_Y0:g}", 2, "panel B, lumber: flush with the skins' end; the 30 degree bevel is cut across the whole end"),
     ("rail", f"3/4 birch, {SKIN_END:g} x {inch(RAIL_H)}", 4, "two per panel, flush both sides, glued and brad-nailed to the skins' edges and the edge ribs"),
-    ("hinge block", f"3/4 birch strip, {inch(RIB)} x {HINGE_BLOCK_L - JOINT:g}", 8, "two glued face to face behind each edge rib from the joint block back, so the lug screws bite 3 in of ply (2-1/2 behind the spacer)"),
-    ("lug plate", f"1/4 steel plate, {LUG_TOP + PIN_DROP + LUG_R:g} x {LUG_L + LUG_R:g}, lug profile", 4, "two per panel, on the outside of the rails at the hinge end: the left flat on the rail, the right on the spacer; a 17/32 hole at the pin, six 11/32 screw holes; cut, drill, deburr, paint"),
-    ("lug spacer", f"3/8 x {inch(LUG_TOP)} aluminium flat bar x {LUG_L - SPACER_Y0:g}", 2, "under each panel's right lug, from 1-3/4 behind the joint, so the two panels' lugs pass side by side"),
-    ("lug screw", "5/16 x 3-1/8 structural screw, GRK RSS or equal", 24, "six per lug through the plate, the rail, the edge rib and the hinge block"),
-    ("hinge bolt", "1/2 x 2 grade 5 hex bolt, nylock nut, two 1/2 SAE washers, one 1/2 x 1/8 washer", 2, "the pivot, one each side, the 1/8 washer between the lugs; left a hair loose; pull the two bolts and the halves separate"),
+    ("hinge block", f"3/4 birch strip, {inch(RIB)} x {HINGE_BLOCK_L - JOINT:g}", 8, "two glued face to face behind each edge rib from the joint block back, so the hinge screws bite 3 in of ply"),
+    ("hinge band", f"2 x 1/4 steel flat bar x {BAND_L - JOINT:g}", 4, "flat along the rail's outer face from 3-1/2 behind the joint, where the hinge block starts, back to 11-3/4, its bottom 0.4 above the panel's bottom; six 11/32 holes at 4-1/2, 5-3/4, 7, 8-1/4, 9-3/4 and 11; on the left against the rail, on the right outside the strut"),
+    ("hinge strut", f"2-1/2 x 1/4 steel flat bar x {STRUT_L:g}", 4, f"from the pivot hole up at {STRUT_ANGLE:g} degrees onto the band, lapped over it, four of the band's screws through it; a 17/32 hole 1-1/4 from one end, that end rounded; on the left outside the band, on the right against the rail"),
+    ("hinge packer", f"2 x 1/4 steel flat bar x {BAND_L - PACKER_Y0:g}", 2, "under the right band's far end, where the strut is not behind it"),
+    ("hinge screw", "5/16 x 3-1/8 structural screw, GRK RSS or equal", 24, "six per side through the bars, the rail, the edge rib and the hinge block; the first four through both bars"),
+    ("hinge bolt", "1/2 x 1-1/2 grade 5 hex bolt, nylock nut, two 1/2 SAE washers", 2, "the pivot, one each side, through the two struts; left a hair loose; pull the two bolts and the halves separate"),
     ("ground angle", f"1/8 x 2 aluminium angle x {W:g}", 1, "one leg against panel B's flush end, the other out past it flush with the top skin"),
     ("angle screw", "#10 x 2 pan head", 4, "through the angle's leg into each stub's end grain, two per stub, one high and one low"),
 ]
@@ -584,7 +617,7 @@ def main():
         # extrudes are bound to them; the sketched profiles carry their
         # values and are redrawn by this script.
         apply(mcp, [{"type": "add_variable", "name": n, "expression": f"{v * IN:g}"} for n, v in
-                    (("skin", SKIN), ("rib", RIB), ("curb", CURB), ("pin_drop", PIN_DROP), ("lug_r", LUG_R))], tab)
+                    (("skin", SKIN), ("rib", RIB), ("curb", CURB), ("pin_drop", PIN_DROP))], tab)
         fn(part)
         bodies[title] = part.bodies()
         reports[title] = json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))["bodies"]
@@ -608,10 +641,10 @@ def main():
     ids = instance_ids(mcp, ramp)
     # The fold: a revolute between the left bolt and panel B's right
     # lug, which turned lands on the left beside A's.
-    ca, cb, ta, tb = coaxial(reports["hinge_bolt"][0], BOLT_D / 2 * IN, IDENTITY, reports["lug_right"][0], HOLE_D / 2 * IN, PLACE_B)
+    ca, cb, ta, tb = coaxial(reports["hinge_bolt"][0], BOLT_D / 2 * IN, IDENTITY, reports["hinge_right"][1], HOLE_D / 2 * IN, PLACE_B)
     offset, angle, flip = mate_parameters(ta, tb)
     apply(mcp, [{"type": "add_mate", "kind": "revolute", "a": {"instance": ids["hinge_bolt 1"], "face": ca["reference"]},
-                 "b": {"instance": ids["panel B"], "sub": b_ids["lug_right 1"], "face": cb["reference"]},
+                 "b": {"instance": ids["panel B"], "sub": b_ids["hinge_right 2"], "face": cb["reference"]},
                  "offset": offset, "angle": angle, "flip": flip, "name": "fold"}], ramp)
     report = json.loads(mcp.call("report", {"tab": ramp, "detail": "full"}))
     for m in report["mates"]:
@@ -651,20 +684,19 @@ def main():
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(180.0)}], ramp)
     mcp.call("screenshot", {"tab": ramp, "view": "iso", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded.png")})
     mcp.call("screenshot", {"tab": ramp, "view": "right", "width": 1600, "height": 1000, "path": os.path.join(OUT, "ramp_folded_side.png")})
-    # The hinge at 90 degrees, cut through panel A's left lug plate and
-    # fitted to the lugs, not the panels: the plate's profile hatched,
-    # the bolt through it, panel B's lug behind it.
+    # The hinge at 90 degrees, cut through panel A's left strut and
+    # fitted to the hinge, not the panels: the strut hatched, the bolt
+    # through it, the band and panel B's strut behind it.
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(90.0)}], ramp)
-    window = ",".join(f"{v * IN:g}" for v in (HINGE_CUT - 3.0, -4.0, -9.0, HINGE_CUT + 2.0, LUG_L + 2.0, 4.0))
+    window = ",".join(f"{v * IN:g}" for v in (HINGE_CUT - 3.0, -4.0, -9.0, HINGE_CUT + 2.0, BAND_L + 2.0, 4.0))
     mcp.call("screenshot", {"tab": ramp, "view": "right", "section": f"x:{HINGE_CUT * IN}:flip", "fit": window, "width": 1400, "height": 1200,
                             "path": os.path.join(OUT, "ramp_hinge_section.png")})
     # The same cut as a sheet with hidden lines (the screws in the rail
-    # and block, panel B's lug where it passes behind), and the two lug
-    # plates of the pair drawn by themselves beneath it, in the same
-    # pose.
+    # and block, panel B's strut where it passes behind), and each
+    # side's bars drawn by themselves beneath it, in the same pose.
     print(mcp.call("export", {"tab": ramp, "format": "pdf", "sheet": "A3", "hidden": True, "window": window, "parts": False,
-                              "views": [f"section-side@{HINGE_CUT * IN:g}", "right of panel A / lug_left 1", "right of panel B / lug_right 1"],
-                              "note": f"folded 90 degrees, cut through panel A's left lug plate at {HINGE_CUT:g} in; hidden lines dashed; the pair's two plates alone below",
+                              "views": [f"section-side@{HINGE_CUT * IN:g}", "right of panel A / hinge_left", "right of panel B / hinge_right"],
+                              "note": f"folded 90 degrees, cut through panel A's left strut at {HINGE_CUT:g} in; hidden lines dashed; each side's band, strut and screws alone below",
                               "path": os.path.join(OUT, "hinge_section.pdf")}))
     apply(mcp, [{"type": "set_mate", "id": fold["id"], "angle": at(0.0)}], ramp)
     # Sheets: each panel with a section across the width at mid-length
@@ -672,7 +704,7 @@ def main():
     # balloons; the ground stub with its bevel on.
     for name, stem, lug in (("panel A", "panel_a", RIB_W + BIRCH), ("panel B", "panel_b", RIB_W + BIRCH)):
         print(mcp.call("export", {"tab": panels[name], "format": "pdf", "sheet": "A3", "views": ["front", "top", "right", f"section@{SKIN_END / 2 * IN}", f"section-side@{lug * IN}"],
-                                  "note": f"{name}: {W:g} x 48 x {inch(BOX)} torsion box, 7/16 OSB on 3/4 birch, rails 3/4 birch, lugs 1/4 steel", "path": os.path.join(OUT, f"{stem}.pdf")}))
+                                  "note": f"{name}: {W:g} x 48 x {inch(BOX)} torsion box, 7/16 OSB on 3/4 birch, rails 3/4 birch, hinge bars 1/4 steel", "path": os.path.join(OUT, f"{stem}.pdf")}))
     print(mcp.call("export", {"tab": ramp, "format": "pdf", "sheet": "A3", "note": "two panels on two 1/2 bolts, open; pull the bolts to separate them", "path": os.path.join(OUT, "ramp.pdf")}))
     stub_report = json.loads(mcp.call("report", {"tab": tabs["stub_ground"], "detail": "full"}))
     bevel = next(f["id"] for f in stub_report["features"] if f["name"].startswith("ground bevel"))
