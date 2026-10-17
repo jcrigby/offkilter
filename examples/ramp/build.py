@@ -52,8 +52,8 @@ CURB = 1.0                         # the rails stand this much above the deck
 PIN_DROP = 1.5                     # pipe centre below the bottom skin: lever arm against hang, and the most the lugs' radius can be
 BIRCH = 0.75                       # the rails, ribs, cross blocks and hinge blocks: one ply
 RAIL_H = BOX + CURB                # 3.8125 along the length
-# The hinge: two straight bars a side, 1/4 steel. A band 2 x 11-3/4 flat
-# along the rail's face carries the screws into the rail, the edge rib
+# The hinge: two straight bars a side, 1/4 steel. A band 2 x 8-1/4 flat
+# along the rail's face, from where the hinge block starts, carries the screws into the rail, the edge rib
 # and the hinge block; a strut 2-1/2 wide runs from the pivot hole
 # below the box up at STRUT_ANGLE onto the band, lapped over it, and
 # four of the band's screws pass through it. On the left side the
@@ -62,7 +62,7 @@ RAIL_H = BOX + CURB                # 3.8125 along the length
 # other panel's strut lands beside this one's on the bolt with nothing
 # between. A 1/2 bolt through each pair of struts is the pivot.
 BAR_T = 0.25                                  # the bars' thickness, both
-BAND_W, BAND_L, BAND_Z0 = 2.0, 11.75, 0.4      # the band: 2 x 1/4 bar, from the joint back 11-3/4, its bottom 0.4 above the panel's bottom
+BAND_W, BAND_L, BAND_Z0 = 2.0, 11.75, 0.4      # the band: 2 x 1/4 bar, from the hinge block's start (JOINT) back to 11-3/4, its bottom 0.4 above the panel's bottom
 STRUT_W, STRUT_L, STRUT_ANGLE = 2.5, 10.75, 25.0  # the strut: 2-1/2 x 1/4 bar, 10-3/4 overall with a rounded pivot end, at 25 degrees
 PACKER_Y0 = 9.25                              # the right side's band is outside the strut: a packer of the same bar under its far end from here
 GAP = 0.0                                     # the two struts of a pair touch on the bolt
@@ -264,8 +264,8 @@ def hinge(right):
 
     def build(p):
         band_x, strut_x = (plane(1), plane(0)) if right else (plane(0), plane(1))
-        f = box(p, "hinge band, 2 x 1/4 bar", band_x, (0.0, BAND_L), (BAND_Z0, BAND_Z0 + BAND_W), op="new")
-        part_is(p, f, f"hinge band 1/4 x {BAND_W:g} x {BAND_L:g}", "steel")
+        f = box(p, "hinge band, 2 x 1/4 bar", band_x, (JOINT, BAND_L), (BAND_Z0, BAND_Z0 + BAND_W), op="new")
+        part_is(p, f, f"hinge band 1/4 x {BAND_W:g} x {BAND_L - JOINT:g}", "steel")
         h, l = STRUT_W / 2, STRUT_L - STRUT_W / 2
         pt = lambda s_, t: (s_ * STRUT_D[0] + t * STRUT_N[0], -PIN_DROP + s_ * STRUT_D[1] + t * STRUT_N[1])
         f = profile_x(p, "hinge strut, 2-1/2 x 1/4 bar", strut_x[0], strut_x[1], [pt(0.0, -h), pt(l, -h), pt(l, h), pt(0.0, h)], circle=((0.0, -PIN_DROP), h))
@@ -395,7 +395,7 @@ CUTLIST = [
     ("ground stub", f"2x8 x {SKIN_END - STUB_Y0:g}", 2, "panel B, lumber: flush with the skins' end; the 30 degree bevel is cut across the whole end"),
     ("rail", f"3/4 birch, {SKIN_END:g} x {inch(RAIL_H)}", 4, "two per panel, flush both sides, glued and brad-nailed to the skins' edges and the edge ribs"),
     ("hinge block", f"3/4 birch strip, {inch(RIB)} x {HINGE_BLOCK_L - JOINT:g}", 8, "two glued face to face behind each edge rib from the joint block back, so the hinge screws bite 3 in of ply"),
-    ("hinge band", f"2 x 1/4 steel flat bar x {BAND_L:g}", 4, "flat along the rail's outer face from the joint back, its bottom 0.4 above the panel's bottom; six 11/32 holes at 4-1/2, 5-3/4, 7, 8-1/4, 9-3/4 and 11; on the left against the rail, on the right outside the strut"),
+    ("hinge band", f"2 x 1/4 steel flat bar x {BAND_L - JOINT:g}", 4, "flat along the rail's outer face from 3-1/2 behind the joint, where the hinge block starts, back to 11-3/4, its bottom 0.4 above the panel's bottom; six 11/32 holes at 4-1/2, 5-3/4, 7, 8-1/4, 9-3/4 and 11; on the left against the rail, on the right outside the strut"),
     ("hinge strut", f"2-1/2 x 1/4 steel flat bar x {STRUT_L:g}", 4, f"from the pivot hole up at {STRUT_ANGLE:g} degrees onto the band, lapped over it, four of the band's screws through it; a 17/32 hole 1-1/4 from one end, that end rounded; on the left outside the band, on the right against the rail"),
     ("hinge packer", f"2 x 1/4 steel flat bar x {BAND_L - PACKER_Y0:g}", 2, "under the right band's far end, where the strut is not behind it"),
     ("hinge screw", "5/16 x 3-1/8 structural screw, GRK RSS or equal", 24, "six per side through the bars, the rail, the edge rib and the hinge block; the first four through both bars"),

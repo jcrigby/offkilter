@@ -13,7 +13,7 @@ item,size,qty,note
 "ground stub","2x8 x 9",2,"panel B, lumber: flush with the skins' end; the 30 degree bevel is cut across the whole end"
 "rail","3/4 birch, 45 x 3-13/16",4,"two per panel, flush both sides, glued and brad-nailed to the skins' edges and the edge ribs"
 "hinge block","3/4 birch strip, 1-15/16 x 8.25",8,"two glued face to face behind each edge rib from the joint block back, so the hinge screws bite 3 in of ply"
-"hinge band","2 x 1/4 steel flat bar x 11.75",4,"flat along the rail's outer face from the joint back, its bottom 0.4 above the panel's bottom; six 11/32 holes at 4-1/2, 5-3/4, 7, 8-1/4, 9-3/4 and 11; on the left against the rail, on the right outside the strut"
+"hinge band","2 x 1/4 steel flat bar x 8.25",4,"flat along the rail's outer face from 3-1/2 behind the joint, where the hinge block starts, back to 11-3/4, its bottom 0.4 above the panel's bottom; six 11/32 holes at 4-1/2, 5-3/4, 7, 8-1/4, 9-3/4 and 11; on the left against the rail, on the right outside the strut"
 "hinge strut","2-1/2 x 1/4 steel flat bar x 10.75",4,"from the pivot hole up at 25 degrees onto the band, lapped over it, four of the band's screws through it; a 17/32 hole 1-1/4 from one end, that end rounded; on the left outside the band, on the right against the rail"
 "hinge packer","2 x 1/4 steel flat bar x 2.5",2,"under the right band's far end, where the strut is not behind it"
 "hinge screw","5/16 x 3-1/8 structural screw, GRK RSS or equal",24,"six per side through the bars, the rail, the edge rib and the hinge block; the first four through both bars"

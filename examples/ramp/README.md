@@ -66,7 +66,7 @@ shopping list behind it.
 | rails, ribs, cross blocks, hinge blocks | 3/4 birch plywood, 4x8 | 1 sheet | 42 % of it (`out/cut_sheet_birch.pdf`) |
 | joint blocks | 2x4 flat | 2 x 31-7/8 | across the hinge end between the skins under a 3-1/2 x 31-7/8 OSB shim; the decks butt on it under load |
 | stubs | 2x8 | 2 x 12 (tailgate panel), 2 x 9 (ground panel) | outer rib positions at the free end under a 7-1/4 x 9 OSB shim; the tailgate panel's run 3 in bare past the skins for the end plates, the ground panel's stop flush with the skins |
-| hinge bands | 2 x 1/4 mild steel flat bar | 4 x 11-3/4 | flat along each rail's outer face from the joint back; six 11/32 holes; deburred and painted |
+| hinge bands | 2 x 1/4 mild steel flat bar | 4 x 8-1/4 | flat along each rail's outer face from 3-1/2 behind the joint back to 11-3/4; six 11/32 holes; deburred and painted |
 | hinge struts | 2-1/2 x 1/4 mild steel flat bar | 4 x 10-3/4 | from the pivot hole up at 25 degrees onto the band; a 17/32 hole 1-1/4 from one end, that end rounded, four 11/32 holes; the two struts' pivot holes drilled stacked |
 | hinge packers | 2 x 1/4 flat bar, offcuts | 2 x 2-1/2 | under each right band's far end, where the strut is not behind it |
 | hinge screws | 5/16 x 3-1/8 structural screws (GRK RSS or equal), washer head | 24 | six a side, through the bars, the rail, the edge rib and the hinge block |
@@ -130,17 +130,21 @@ and its y 0 to -48.
 The hinge axis is parallel to x at y = 0, the joint plane where the
 panels' skins and joint blocks butt, at z = -1-1/2 (`PIN_DROP`).
 
-- **Bands.** Four alike, 2 x 1/4 flat bar, 11-3/4 long, flat along
-  the rail's outer face from the joint back, the bar's bottom 0.4
-  above the panel's bottom so it lies over the core. Six 11/32 holes
-  at 4-1/2, 5-3/4, 7, 8-1/4, 9-3/4 and 11 from the joint, level with
-  the middle of the ribs, all behind the joint block.
+- **Bands.** Four alike, 2 x 1/4 flat bar, 8-1/4 long, flat along
+  the rail's outer face from 3-1/2 behind the joint, where the hinge
+  block starts, back to 11-3/4, the bar's bottom 0.4 above the
+  panel's bottom so it lies over the core. Six 11/32 holes at 4-1/2,
+  5-3/4, 7, 8-1/4, 9-3/4 and 11 from the joint, level with the middle
+  of the ribs. The band does not reach the joint: ahead of the hinge
+  block there is only the joint block's end grain to screw into, and
+  the strut takes its load through the screws behind it, so bar there
+  would do nothing.
 - **Struts.** Four alike, 2-1/2 x 1/4 flat bar, 10-3/4 long with one
   end rounded about a 17/32 hole 1-1/4 from it. The hole is the pivot,
   1-1/2 below the bottom skin on the joint plane, and the bar runs up
-  from it at 25 degrees onto the band's face, lapped over it from
-  about 1 in behind the joint to 9, so the band's first four screws
-  pass through 11/32 holes in the strut too. Nothing in a strut is
+  from it at 25 degrees across the rail's face and onto the band from
+  3-1/2 to 9, so the band's first four screws pass through 11/32 holes
+  in the strut too. Nothing in a strut is
   cut but its end, and the four pivot holes are drilled with the bars
   stacked so they agree.
 - **Where they sit.** On each panel's left side the band is against
@@ -296,13 +300,13 @@ the box.
    Glue the hinge blocks to the edge ribs, two plies behind each from
    3-1/2 to 11-3/4. Glue the shims to the joint blocks and the stubs
    (the stub shims from 36 to 45 only).
-3. Cut the bars: four bands 11-3/4 from 2 x 1/4, four struts 10-3/4
+3. Cut the bars: four bands 8-1/4 from 2 x 1/4, four struts 10-3/4
    from 2-1/2 x 1/4, two packers 2-1/2 from the 2 x 1/4 offcut. Round
    one end of each strut and drill the 17/32 pivot holes 1-1/4 from
    it with the four stacked and clamped. Lay a band on the rail's
-   face with its bottom 0.4 up, the strut over it from the pivot
-   point at 25 degrees, mark and drill the six 11/32 holes through
-   both at once. Deburr, paint.
+   face with its bottom 0.4 up and its near end 3-1/2 behind the
+   joint, the strut over it from the pivot point at 25 degrees, mark
+   and drill the six 11/32 holes through both at once. Deburr, paint.
 4. On a flat surface: bottom skin, PL on every rib face, the edge
    ribs with their blocks flush with the sides, the inner ribs, cross
    blocks, shimmed joint block and shimmed stubs down, brads through
@@ -406,6 +410,8 @@ under one rail so the rail lugs could pass. What changed, and why:
   Swapping which bar is against the rail between the left and right
   sides puts the two struts side by side on the bolt with no spacer,
   so the hinge stands 1/2 proud instead of 5/8 and the 1/8 washer
-  goes. The band grew from the 10 first proposed to 11-3/4 to keep
-  six screws, and the strut from 7 to 10-3/4 so four of them cross
-  it clear of its end.
+  goes. The band's far end went from the 10 first proposed to 11-3/4
+  to keep six screws, the strut from 7 to 10-3/4 so four of them
+  cross it clear of its end, and the band's near end was pulled back
+  from the joint to the hinge block's start, since the 3-1/2 in ahead
+  of it had nothing to screw into and carried nothing.

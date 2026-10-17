@@ -246,7 +246,7 @@ fn the_hinge_bars_pair_their_struts_on_the_bolts_outside_the_rails() {
     let (rl, rh) = (rails.0.x / IN, rails.1.x / IN);
     assert!((rl + 0.75).abs() < 1e-6 && (rh - (W + 0.75)).abs() < 1e-6);
     // The bands: four, 1/4 steel, 2 tall from 0.4 above the panel's
-    // bottom, 11-3/4 long from the joint, six 11/32 holes along x; on the
+    // bottom, 8-1/4 long from the hinge block's start to 11-3/4, six 11/32 holes along x; on the
     // left of the ramp A's left band is against the rail and B's turned
     // right band a bar further out, on the right the other way about.
     let mut bands: Vec<(String, f64, f64)> = Vec::new();
@@ -266,8 +266,9 @@ fn the_hinge_bars_pair_their_struts_on_the_bolts_outside_the_rails() {
                 hi.z / IN
             );
             assert!(
-                (lo.y.abs().min(hi.y.abs())) < 1e-6 && ((hi.y - lo.y) / IN - 11.75).abs() < 1e-6,
-                "{}: from the joint back 11-3/4",
+                (lo.y.abs().min(hi.y.abs()) / IN - 3.5).abs() < 1e-6
+                    && (lo.y.abs().max(hi.y.abs()) / IN - 11.75).abs() < 1e-6,
+                "{}: from 3-1/2 behind the joint back to 11-3/4",
                 b.name
             );
             assert_eq!(
