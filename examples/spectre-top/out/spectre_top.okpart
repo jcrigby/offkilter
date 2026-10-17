@@ -1,0 +1,54 @@
+{
+  "name": "Spectre top",
+  "tabs": [
+    {
+      "id": 1,
+      "kind": {
+        "type": "part_studio",
+        "name": "Top",
+        "features": [
+          {
+            "id": 1,
+            "name": "Spectre puzzle",
+            "suppressed": false,
+            "kind": {
+              "type": "spectre",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "width": 304.0,
+              "height": 228.0,
+              "edge": 12.7,
+              "thickness": 12.0,
+              "gap": 1.5,
+              "bulge": 0.6,
+              "shift": {
+                "x": 4.0,
+                "y": 0.0
+              },
+              "scrap": 150.0,
+              "web": 5.0,
+              "groove": 12.5,
+              "show": "design",
+              "light": {
+                "name": "Maple",
+                "density": 0.7
+              },
+              "dark": {
+                "name": "Walnut",
+                "density": 0.64
+              }
+            }
+          }
+        ],
+        "next_id": 2,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    }
+  ],
+  "next_id": 2
+}

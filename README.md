@@ -60,7 +60,8 @@ works today, all in the browser:
   parts; and small ones, such as a dummy PCIe card to print
   (`examples/pcie-dummy/`), a track saw edge gauge
   (`examples/track-gauge/`), a coat hook for a wire rack's rail
-  (`examples/rack-hook/`) and a mini chop saw from an angle grinder
+  (`examples/rack-hook/`), a puzzle top tiled with the Spectre
+  (`examples/spectre-top/`) and a mini chop saw from an angle grinder
   (`examples/chop-saw/`).
 - Measuring from a photo: print the measuring sheet
   (`examples/measuring-sheet/`), lay parts on it with a steel rule for

@@ -12,6 +12,7 @@ pub mod gear;
 pub mod jigsaw;
 mod loops;
 mod solver;
+pub mod spectre;
 mod spline;
 
 pub use entity::{Constraint, ConstraintId, Entity, EntityId};

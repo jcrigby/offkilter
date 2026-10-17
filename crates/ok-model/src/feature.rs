@@ -672,6 +672,85 @@ fn quarter_inch() -> f64 {
     6.35
 }
 
+/// A Spectre puzzle: a patch of the curved aperiodic monotile under a
+/// rectangular board, one body per piece (the tiles the board reaches,
+/// eroded by half the gap and clipped to the board's edges), the
+/// mystic pairs dark and the rest light, plus an alignment web in the
+/// gaps; or the printable pattern plate. See `ok_sketch::spectre`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SpectreFeature {
+    pub plane: PlaneRef,
+    /// The board, mm.
+    pub width: f64,
+    pub height: f64,
+    /// The tile's edge length, mm.
+    pub edge: f64,
+    pub thickness: f64,
+    /// Gap between pieces, mm: zero for a tight fit, wider for a resin fill.
+    #[serde(default)]
+    pub gap: f64,
+    /// How far each edge's curve stands off the straight edge, as a
+    /// fraction of it: Kaplan's 0.6; zero for the straight-sided tile.
+    #[serde(default = "kaplan_bulge")]
+    pub bulge: f64,
+    /// Slides the tiling under the board, mm (zero centres the patch).
+    #[serde(default)]
+    pub shift: Vec2,
+    /// Pieces smaller than this area, mm², are left to the resin.
+    #[serde(default = "default_scrap")]
+    pub scrap: f64,
+    /// Height of the alignment web body in the gaps; zero for none.
+    #[serde(default)]
+    pub web: f64,
+    /// Depth of the grooves of the printable pattern plate; zero for none.
+    #[serde(default)]
+    pub groove: f64,
+    #[serde(default)]
+    pub show: SpectreLayout,
+    /// The light pieces' wood.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub light: Option<crate::Material>,
+    /// The dark pieces' (the mystic pairs') wood.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dark: Option<crate::Material>,
+}
+
+fn kaplan_bulge() -> f64 {
+    ok_sketch::spectre::KAPLAN_BULGE
+}
+
+/// A sliver under a square centimetre is resin, not a piece.
+pub fn default_scrap() -> f64 {
+    100.0
+}
+
+impl SpectreFeature {
+    pub fn params(&self) -> ok_sketch::spectre::Params {
+        ok_sketch::spectre::Params {
+            width: self.width,
+            height: self.height,
+            edge: self.edge,
+            gap: self.gap,
+            bulge: self.bulge,
+            shift: self.shift,
+            scrap: self.scrap,
+        }
+    }
+}
+
+/// Which layout of a Spectre puzzle regenerates.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum SpectreLayout {
+    /// The assembled top: every piece and the web.
+    #[default]
+    Design,
+    /// The printable pattern plate alone: the gaps as grooves `groove`
+    /// deep in a slab, for cutting the top from one board with a pilot
+    /// and a bit the size of the gap.
+    Pattern,
+}
+
 /// Which layout of a puzzle regenerates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -809,6 +888,7 @@ pub enum FeatureKind {
     Split(SplitFeature),
     Puzzle(PuzzleFeature),
     Gear(GearFeature),
+    Spectre(SpectreFeature),
 }
 
 impl FeatureKind {
@@ -838,6 +918,7 @@ impl FeatureKind {
             FeatureKind::Mesh(_) => "Mesh",
             FeatureKind::Puzzle(_) => "Puzzle",
             FeatureKind::Gear(_) => "Gear",
+            FeatureKind::Spectre(_) => "Spectre",
             FeatureKind::Split(_) => "Split",
         }
     }
@@ -881,6 +962,17 @@ impl FeatureKind {
                 "gap".into(),
                 "bit".into(),
                 "spread".into(),
+            ],
+            FeatureKind::Spectre(_) => vec![
+                "width".into(),
+                "height".into(),
+                "edge".into(),
+                "thickness".into(),
+                "gap".into(),
+                "bulge".into(),
+                "scrap".into(),
+                "web".into(),
+                "groove".into(),
             ],
             FeatureKind::Gear(_) => vec![
                 "module".into(),
@@ -943,6 +1035,15 @@ impl FeatureKind {
             (FeatureKind::Puzzle(p), "gap") => Some(p.gap),
             (FeatureKind::Puzzle(p), "bit") => Some(p.bit),
             (FeatureKind::Puzzle(p), "spread") => Some(p.spread),
+            (FeatureKind::Spectre(s), "width") => Some(s.width),
+            (FeatureKind::Spectre(s), "height") => Some(s.height),
+            (FeatureKind::Spectre(s), "edge") => Some(s.edge),
+            (FeatureKind::Spectre(s), "thickness") => Some(s.thickness),
+            (FeatureKind::Spectre(s), "gap") => Some(s.gap),
+            (FeatureKind::Spectre(s), "bulge") => Some(s.bulge),
+            (FeatureKind::Spectre(s), "scrap") => Some(s.scrap),
+            (FeatureKind::Spectre(s), "web") => Some(s.web),
+            (FeatureKind::Spectre(s), "groove") => Some(s.groove),
             (FeatureKind::Gear(g), "module") => Some(g.module),
             (FeatureKind::Gear(g), "teeth") => Some(g.teeth as f64),
             (FeatureKind::Gear(g), "pressure_angle") => Some(g.pressure_angle),
@@ -1052,6 +1153,42 @@ impl FeatureKind {
             }
             (FeatureKind::Puzzle(p), "spread") => {
                 p.spread = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "width") => {
+                s.width = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "height") => {
+                s.height = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "edge") => {
+                s.edge = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "thickness") => {
+                s.thickness = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "gap") => {
+                s.gap = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "bulge") => {
+                s.bulge = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "scrap") => {
+                s.scrap = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "web") => {
+                s.web = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "groove") => {
+                s.groove = value;
                 Ok(())
             }
             (FeatureKind::Gear(g), "module") => {
@@ -1166,7 +1303,8 @@ impl FeatureKind {
             | FeatureKind::Mesh(_)
             | FeatureKind::Split(_)
             | FeatureKind::Puzzle(_)
-            | FeatureKind::Gear(_) => None,
+            | FeatureKind::Gear(_)
+            | FeatureKind::Spectre(_) => None,
         }
     }
 }

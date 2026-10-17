@@ -584,6 +584,66 @@ pub enum Op {
         #[serde(default)]
         op: Option<BodyOp>,
     },
+    /// A Spectre puzzle (see `SpectreFeature`): the curved aperiodic
+    /// monotile under a board, one body per piece.
+    AddSpectre {
+        plane: PlaneRef,
+        width: f64,
+        height: f64,
+        edge: f64,
+        thickness: f64,
+        #[serde(default)]
+        gap: f64,
+        #[serde(default = "default_bulge")]
+        bulge: f64,
+        #[serde(default)]
+        shift: Vec2,
+        #[serde(default = "crate::feature::default_scrap")]
+        scrap: f64,
+        #[serde(default)]
+        web: f64,
+        #[serde(default)]
+        groove: f64,
+        #[serde(default)]
+        show: crate::SpectreLayout,
+        #[serde(default)]
+        light: Option<Material>,
+        #[serde(default)]
+        dark: Option<Material>,
+        name: Option<String>,
+    },
+    SetSpectre {
+        id: FeatureId,
+        #[serde(default)]
+        plane: Option<PlaneRef>,
+        #[serde(default)]
+        width: Option<f64>,
+        #[serde(default)]
+        height: Option<f64>,
+        #[serde(default)]
+        edge: Option<f64>,
+        #[serde(default)]
+        thickness: Option<f64>,
+        #[serde(default)]
+        gap: Option<f64>,
+        #[serde(default)]
+        bulge: Option<f64>,
+        #[serde(default)]
+        shift: Option<Vec2>,
+        #[serde(default)]
+        scrap: Option<f64>,
+        #[serde(default)]
+        web: Option<f64>,
+        #[serde(default)]
+        groove: Option<f64>,
+        #[serde(default)]
+        show: Option<crate::SpectreLayout>,
+        /// `null` clears the wood.
+        #[serde(default, with = "double_option")]
+        light: Option<Option<Material>>,
+        #[serde(default, with = "double_option")]
+        dark: Option<Option<Material>>,
+    },
     SetDraft {
         id: FeatureId,
         #[serde(default)]
@@ -645,6 +705,10 @@ pub enum Op {
         source: FeatureId,
         material: Option<Material>,
     },
+}
+
+fn default_bulge() -> f64 {
+    ok_sketch::spectre::KAPLAN_BULGE
 }
 
 fn default_reverse() -> ExtrudeDirection {
@@ -1699,6 +1763,106 @@ impl PartStudio {
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "puzzle")),
+            },
+            Op::AddSpectre {
+                plane,
+                width,
+                height,
+                edge,
+                thickness,
+                gap,
+                bulge,
+                shift,
+                scrap,
+                web,
+                groove,
+                show,
+                light,
+                dark,
+                name,
+            } => {
+                out.feature = Some(self.push_feature(
+                    FeatureKind::Spectre(crate::SpectreFeature {
+                        plane,
+                        width,
+                        height,
+                        edge,
+                        thickness,
+                        gap,
+                        bulge,
+                        shift,
+                        scrap,
+                        web,
+                        groove,
+                        show,
+                        light,
+                        dark,
+                    }),
+                    name,
+                ));
+            }
+            Op::SetSpectre {
+                id,
+                plane,
+                width,
+                height,
+                edge,
+                thickness,
+                gap,
+                bulge,
+                shift,
+                scrap,
+                web,
+                groove,
+                show,
+                light,
+                dark,
+            } => match &mut self.feature_mut(id)?.kind {
+                FeatureKind::Spectre(s) => {
+                    if let Some(v) = plane {
+                        s.plane = v;
+                    }
+                    if let Some(v) = width {
+                        s.width = v;
+                    }
+                    if let Some(v) = height {
+                        s.height = v;
+                    }
+                    if let Some(v) = edge {
+                        s.edge = v;
+                    }
+                    if let Some(v) = thickness {
+                        s.thickness = v;
+                    }
+                    if let Some(v) = gap {
+                        s.gap = v;
+                    }
+                    if let Some(v) = bulge {
+                        s.bulge = v;
+                    }
+                    if let Some(v) = shift {
+                        s.shift = v;
+                    }
+                    if let Some(v) = scrap {
+                        s.scrap = v;
+                    }
+                    if let Some(v) = web {
+                        s.web = v;
+                    }
+                    if let Some(v) = groove {
+                        s.groove = v;
+                    }
+                    if let Some(v) = show {
+                        s.show = v;
+                    }
+                    if let Some(v) = light {
+                        s.light = v;
+                    }
+                    if let Some(v) = dark {
+                        s.dark = v;
+                    }
+                }
+                _ => return Err(ModelError::WrongFeatureKind(id, "spectre")),
             },
             Op::AddGear {
                 plane,

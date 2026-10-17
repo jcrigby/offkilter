@@ -651,6 +651,10 @@ impl PartStudio {
                     let gf = gf.clone();
                     Self::regen_gear(&mut result, id, &gf, &opts)
                 }
+                FeatureKind::Spectre(sf) => {
+                    let sf = sf.clone();
+                    Self::regen_spectre(&mut result, id, &sf, &opts)
+                }
                 FeatureKind::Boolean(bf) => {
                     let bf = bf.clone();
                     candidates = Some(
@@ -961,6 +965,119 @@ impl PartStudio {
         Self::apply_tool(result, id, solid, gf.op)
     }
 
+    /// A Spectre puzzle: one body per piece (numbered, light or dark),
+    /// faces of piece `k` carrying local indices from `k * PIECE_LOCALS`,
+    /// then the alignment web (the lattice of gaps, `web` high); or, by
+    /// `show`, the pattern plate alone, every gap region a groove.
+    fn regen_spectre(
+        result: &mut RegenResult,
+        id: FeatureId,
+        sf: &crate::SpectreFeature,
+        opts: &ProfileOptions,
+    ) -> Option<String> {
+        const PIECE_LOCALS: u32 = 1 << 12;
+        let plane = match result.resolve_plane(&sf.plane) {
+            Ok(p) => p,
+            Err(e) => return Some(e),
+        };
+        if sf.thickness <= 0.0 || !sf.thickness.is_finite() {
+            return Some("thickness must be positive".into());
+        }
+        if sf.web < 0.0 || !sf.web.is_finite() {
+            return Some("web height must be zero or positive".into());
+        }
+        if sf.groove < 0.0 || !sf.groove.is_finite() {
+            return Some("groove depth must be zero or positive".into());
+        }
+        if sf.groove > 0.0 && sf.gap <= 0.0 {
+            return Some("a pattern plate needs a gap: its grooves are the gaps".into());
+        }
+        let patch = match ok_sketch::spectre::build(&sf.params(), opts.arc_segment_angle) {
+            Ok(p) => p,
+            Err(e) => return Some(e),
+        };
+        if sf.show == crate::SpectreLayout::Pattern {
+            if sf.groove <= 0.0 {
+                return Some("the pattern layout needs a groove depth".into());
+            }
+            let gaps = match ok_sketch::spectre::lattice(&patch, opts) {
+                Ok(g) => g,
+                Err(e) => return Some(format!("pattern plate: {e}")),
+            };
+            return match Self::pattern_plate(
+                patch.width,
+                patch.height,
+                &plane,
+                sf.groove,
+                sf.gap,
+                &gaps,
+                opts,
+            ) {
+                Ok(mut solid) => {
+                    for f in &mut solid.faces {
+                        f.origin.local += (patch.pieces.len() as u32 + 3) * PIECE_LOCALS;
+                    }
+                    result.next_part += 1;
+                    result
+                        .bodies
+                        .push(Body::new("Pattern plate".into(), id, solid));
+                    None
+                }
+                Err(e) => Some(format!("pattern plate: {e}")),
+            };
+        }
+        let mut bodies: Vec<(String, Solid, Option<crate::Material>)> = Vec::new();
+        for (k, piece) in patch.pieces.iter().enumerate() {
+            let profile = match ok_sketch::spectre::piece_profile(piece, opts) {
+                Ok(p) => p,
+                Err(e) => return Some(e),
+            };
+            let mut solid = match ok_brep::extrude(&profile, &plane, 0.0, sf.thickness, id.0) {
+                Ok(s) => s,
+                Err(e) => return Some(format!("piece {}: {e}", k + 1)),
+            };
+            for f in &mut solid.faces {
+                f.origin.local += (k as u32 + 1) * PIECE_LOCALS;
+            }
+            bodies.push((
+                format!(
+                    "Piece {} {}",
+                    k + 1,
+                    if piece.mystic { "dark" } else { "light" }
+                ),
+                solid,
+                if piece.mystic {
+                    sf.dark.clone()
+                } else {
+                    sf.light.clone()
+                },
+            ));
+        }
+        if sf.web > 0.0 && sf.gap > 0.0 {
+            // The web is the lattice proper; a gap the board's edge closes
+            // off in one piece's concavity is left to the resin.
+            match ok_sketch::spectre::lattice(&patch, opts) {
+                Ok(gaps) => match ok_brep::extrude(&gaps[0], &plane, 0.0, sf.web, id.0) {
+                    Ok(mut solid) => {
+                        for f in &mut solid.faces {
+                            f.origin.local += (patch.pieces.len() as u32 + 1) * PIECE_LOCALS;
+                        }
+                        bodies.push(("Alignment web".into(), solid, None));
+                    }
+                    Err(e) => return Some(format!("alignment web: {e}")),
+                },
+                Err(e) => return Some(format!("alignment web: {e}")),
+            }
+        }
+        for (name, solid, material) in bodies {
+            result.next_part += 1;
+            let mut body = Body::new(name, id, solid);
+            body.material = material;
+            result.bodies.push(body);
+        }
+        None
+    }
+
     /// One body per piece, named by column, row and colour, faces of
     /// piece `k` carrying local indices from `k * PIECE_LOCALS`; then the
     /// alignment web (the gaps, `web` high) as one more body.
@@ -1026,7 +1143,19 @@ impl PartStudio {
                 }
                 area += profiles[0].area();
             }
-            return match Self::puzzle_pattern_plate(&jig, &plane, pf.groove, pf.gap, area, opts) {
+            let lattice = match Self::puzzle_web(&jig, area, opts) {
+                Ok(l) => l,
+                Err(e) => return Some(format!("pattern plate: {e}")),
+            };
+            return match Self::pattern_plate(
+                jig.width,
+                jig.height,
+                &plane,
+                pf.groove,
+                pf.gap,
+                &[lattice],
+                opts,
+            ) {
                 Ok(mut solid) => {
                     for f in &mut solid.faces {
                         f.origin.local += (jig.pieces.len() as u32 + 3) * PIECE_LOCALS;
@@ -1172,12 +1301,13 @@ impl PartStudio {
     /// inside the slab's front-left corner, outside the board's outline:
     /// the pilot in it puts the bit at the matching point beside the
     /// blank, which is how the blank's fence is set.
-    fn puzzle_pattern_plate(
-        jig: &ok_sketch::jigsaw::Jigsaw,
+    fn pattern_plate(
+        width: f64,
+        height: f64,
         plane: &Plane,
         depth: f64,
         gap: f64,
-        piece_area: f64,
+        lattice: &[Profile],
         opts: &ProfileOptions,
     ) -> Result<Solid, String> {
         const MARGIN: f64 = 10.0;
@@ -1186,14 +1316,16 @@ impl PartStudio {
         let mut sk = ok_sketch::Sketch::new();
         sk.add_rectangle(
             Vec2::new(-MARGIN, -MARGIN),
-            Vec2::new(jig.width + MARGIN, jig.height + MARGIN),
+            Vec2::new(width + MARGIN, height + MARGIN),
         );
         let slab = sk.profiles(opts).into_iter().next().ok_or("no slab")?;
-        let plate = ok_brep::extrude(&slab, plane, -FLOOR, depth, 0).map_err(|e| e.to_string())?;
-        let lattice = Self::puzzle_web(jig, piece_area, opts)?;
-        let cutter =
-            ok_brep::extrude(&lattice, plane, 0.0, depth + 1.0, 0).map_err(|e| e.to_string())?;
-        let plate = boolean(&plate, &cutter, BoolOp::Difference).map_err(|e| e.to_string())?;
+        let mut plate =
+            ok_brep::extrude(&slab, plane, -FLOOR, depth, 0).map_err(|e| e.to_string())?;
+        for gaps in lattice {
+            let cutter =
+                ok_brep::extrude(gaps, plane, 0.0, depth + 1.0, 0).map_err(|e| e.to_string())?;
+            plate = boolean(&plate, &cutter, BoolOp::Difference).map_err(|e| e.to_string())?;
+        }
         let mut sk = ok_sketch::Sketch::new();
         sk.add_circle(Vec2::new(REFERENCE - MARGIN, REFERENCE - MARGIN), gap / 2.0);
         let hole = sk
@@ -3486,6 +3618,165 @@ mod tests {
             "{}",
             overlap(&r)
         );
+    }
+
+    /// A Spectre puzzle on a small board: every tile the board reaches
+    /// is a piece, eroded by half the gap and clipped to the board, the
+    /// mystic pairs dark with their own wood; the web is the lattice
+    /// between them; the pattern layout is one plate with every gap,
+    /// pockets included, as a groove.
+    #[test]
+    fn a_spectre_puzzle_makes_pieces_a_web_and_a_pattern_plate() {
+        let (w, h, t, gap, groove) = (120.0, 90.0, 10.0, 1.5, 10.5);
+        let mut ps = PartStudio::new("t");
+        let id = ps
+            .apply(Op::AddSpectre {
+                plane: PlaneRef::standard(StandardPlane::Top),
+                width: w,
+                height: h,
+                edge: 12.0,
+                thickness: t,
+                gap,
+                bulge: ok_sketch::spectre::KAPLAN_BULGE,
+                shift: Vec2::ZERO,
+                scrap: 50.0,
+                web: 4.0,
+                groove,
+                show: crate::SpectreLayout::Design,
+                light: Some(crate::Material {
+                    name: "maple".into(),
+                    density: 0.7,
+                }),
+                dark: Some(crate::Material {
+                    name: "walnut".into(),
+                    density: 0.64,
+                }),
+                name: None,
+            })
+            .unwrap()
+            .feature
+            .unwrap();
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        let pieces: Vec<&Body> = r
+            .bodies
+            .iter()
+            .filter(|b| b.name.starts_with("Piece "))
+            .collect();
+        let web = r
+            .bodies
+            .iter()
+            .find(|b| b.name == "Alignment web")
+            .expect("web");
+        assert_eq!(pieces.len() + 1, r.bodies.len());
+        let whole = ok_sketch::spectre::TILE_AREA * 144.0;
+        assert!(
+            pieces.len() as f64 > w * h / whole,
+            "{} pieces",
+            pieces.len()
+        );
+        let mut piece_area = 0.0;
+        let (mut light, mut dark) = (0, 0);
+        for b in &pieces {
+            b.solid
+                .validate()
+                .unwrap_or_else(|e| panic!("{}: {e}", b.name));
+            let (lo, hi) = b.solid.bounds().unwrap();
+            assert!(
+                lo.x >= -1e-6 && lo.y >= -1e-6 && lo.z.abs() < 1e-9,
+                "{}: {lo:?}",
+                b.name
+            );
+            assert!(
+                hi.x <= w + 1e-6 && hi.y <= h + 1e-6 && (hi.z - t).abs() < 1e-9,
+                "{}: {hi:?}",
+                b.name
+            );
+            piece_area += b.solid.volume() / t;
+            let wood = b.material.as_ref().map(|m| m.name.as_str());
+            if b.name.ends_with("dark") {
+                dark += 1;
+                assert_eq!(wood, Some("walnut"), "{}", b.name);
+            } else {
+                light += 1;
+                assert_eq!(wood, Some("maple"), "{}", b.name);
+            }
+        }
+        assert!(dark > 0 && dark < light, "{dark} dark, {light} light");
+        // The web is the lattice: the gaps less any pocket the board's
+        // edge closes off in a piece's concavity.
+        let (lo, hi) = web.solid.bounds().unwrap();
+        assert!(lo.x >= -1e-6 && lo.y >= -1e-6 && hi.x <= w + 1e-6 && hi.y <= h + 1e-6);
+        assert!(
+            lo.z.abs() < 1e-9 && (hi.z - 4.0).abs() < 1e-9,
+            "{lo:?} {hi:?}"
+        );
+        let web_area = web.solid.volume() / 4.0;
+        let gaps = w * h - piece_area;
+        // A small board has a lot of edge, and so of pockets.
+        assert!(
+            web_area <= gaps + 1e-6 && web_area > 0.8 * gaps,
+            "web {web_area} of gaps {gaps}"
+        );
+        // The pattern layout: the plate alone, with every gap a groove.
+        let show = |ps: &mut PartStudio, show: crate::SpectreLayout| {
+            ps.apply(Op::SetSpectre {
+                id,
+                plane: None,
+                width: None,
+                height: None,
+                edge: None,
+                thickness: None,
+                gap: None,
+                bulge: None,
+                shift: None,
+                scrap: None,
+                web: None,
+                groove: None,
+                show: Some(show),
+                light: None,
+                dark: None,
+            })
+            .unwrap();
+        };
+        show(&mut ps, crate::SpectreLayout::Pattern);
+        let r = ps.regenerate();
+        assert!(
+            r.errors().next().is_none(),
+            "{:?}",
+            r.errors().collect::<Vec<_>>()
+        );
+        assert_eq!(r.bodies.len(), 1);
+        let plate = &r.bodies[0];
+        assert_eq!(plate.name, "Pattern plate");
+        plate.solid.validate().unwrap();
+        let (lo, hi) = plate.solid.bounds().unwrap();
+        assert!(
+            (lo.x + 10.0).abs() < 1e-6 && (lo.y + 10.0).abs() < 1e-6 && (lo.z + 3.0).abs() < 1e-9,
+            "{lo:?}"
+        );
+        assert!(
+            (hi.x - w - 10.0).abs() < 1e-6
+                && (hi.y - h - 10.0).abs() < 1e-6
+                && (hi.z - groove).abs() < 1e-9,
+            "{hi:?}"
+        );
+        let slab = (w + 20.0) * (h + 20.0) * (groove + 3.0);
+        let hole = std::f64::consts::PI * (gap / 2.0).powi(2) * (groove + 3.0);
+        let expect = slab - gaps * groove - hole;
+        assert!(
+            (plate.solid.volume() - expect).abs() < 0.002 * expect,
+            "{} vs {expect}",
+            plate.solid.volume()
+        );
+        // And back to the design.
+        show(&mut ps, crate::SpectreLayout::Design);
+        let r = ps.regenerate();
+        assert_eq!(r.bodies.len(), pieces.len() + 1);
     }
 
     /// A fabrication layout's rows step by the bit diameter unless a
