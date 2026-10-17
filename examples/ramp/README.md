@@ -199,8 +199,13 @@ The numbers below are at that 13,500 peak.
   bolt in single shear 7,900 psi with the struts touching (no spacer,
   so no couple to speak of) and the bolt bearing on the 1/4 bar
   12,000 psi: nothing for steel. The strut hands its pull to the band
-  through the four screws that cross both, about 390 lb each in
-  bearing on the strut's holes, 6,600 psi.
+  through the four screws that cross both. The strut is a lever: the
+  pull at the pivot sits 2.9 in below the lap, so besides their 390 lb
+  share those screws carry a 4,500 in·lb couple over the lap's 3-3/4
+  in, about 1,200 lb on the outer one, 15,000 psi of bearing on the
+  strut's hole, steel on steel. A near-vertical strut would put that
+  couple on two screws an inch apart, 4,900 lb each, which is why the
+  strut slopes: the slope is what makes the lap long.
 - **The screws.** The pull sits 2.9 in below the screw line, so the
   screw group into the wood also takes a moment of about 4,500 in·lb
   in the bars' plane; building the plate from two bars changes
