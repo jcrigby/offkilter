@@ -6,9 +6,10 @@
 //! enclosing another one gets it as a hole; the inner region is still
 //! reported as its own profile, as in most CAD sketchers.
 //!
-//! Limitations of this first implementation: edges must only meet at
-//! endpoints (crossing lines are not split), and curves sharing a tangent
-//! at a vertex are ordered by direction only.
+//! Edges are split where they cross and where another edge's endpoint
+//! lies on them, so the graph only meets at vertices; candidates for
+//! either come from a grid, not from every pair. Curves sharing a
+//! tangent at a vertex are ordered by direction only.
 
 use crate::{Constraint, Entity, EntityId, Sketch};
 use ok_math::Vec2;
@@ -195,6 +196,52 @@ enum Curve {
     },
 }
 
+/// A uniform grid over the plane holding, per cell, the items whose
+/// boxes touch it, so that only items sharing a cell need comparing.
+struct Grid {
+    cell: f64,
+    cells: HashMap<(i64, i64), Vec<usize>>,
+}
+
+impl Grid {
+    fn new(cell: f64) -> Grid {
+        Grid {
+            cell: cell.max(1e-9),
+            cells: HashMap::new(),
+        }
+    }
+
+    fn range(&self, lo: Vec2, hi: Vec2) -> ((i64, i64), (i64, i64)) {
+        let f = |v: f64| (v / self.cell).floor() as i64;
+        ((f(lo.x), f(lo.y)), (f(hi.x), f(hi.y)))
+    }
+
+    fn insert(&mut self, i: usize, lo: Vec2, hi: Vec2) {
+        let ((x0, y0), (x1, y1)) = self.range(lo, hi);
+        for x in x0..=x1 {
+            for y in y0..=y1 {
+                self.cells.entry((x, y)).or_default().push(i);
+            }
+        }
+    }
+
+    /// The items whose boxes share a cell with this box, each once, in
+    /// index order.
+    fn near(&self, lo: Vec2, hi: Vec2, out: &mut Vec<usize>) {
+        out.clear();
+        let ((x0, y0), (x1, y1)) = self.range(lo, hi);
+        for x in x0..=x1 {
+            for y in y0..=y1 {
+                if let Some(v) = self.cells.get(&(x, y)) {
+                    out.extend(v);
+                }
+            }
+        }
+        out.sort_unstable();
+        out.dedup();
+    }
+}
+
 struct Edge {
     a: usize,
     b: usize,
@@ -249,11 +296,20 @@ impl Graph {
                 }
             }
         }
-        // Positional merging for points that happen to coincide.
+        // Positional merging for points that happen to coincide: only
+        // points in the same or a neighbouring cell of a grid as fine as
+        // the tolerance can be that close.
         let tol2 = opts.merge_tolerance * opts.merge_tolerance;
-        for i in 0..points.len() {
-            for j in i + 1..points.len() {
-                if (points[i].1 - points[j].1).length_squared() <= tol2 {
+        let mut grid = Grid::new(opts.merge_tolerance);
+        for (i, (_, p)) in points.iter().enumerate() {
+            grid.insert(i, *p, *p);
+        }
+        let mut near = Vec::new();
+        let pad = Vec2::new(opts.merge_tolerance, opts.merge_tolerance);
+        for (i, (_, p)) in points.iter().enumerate() {
+            grid.near(*p - pad, *p + pad, &mut near);
+            for &j in &near {
+                if j > i && (*p - points[j].1).length_squared() <= tol2 {
                     uf.union(i, j);
                 }
             }
@@ -349,6 +405,22 @@ impl Graph {
         g.split_at_crossings(opts.merge_tolerance);
         g.prune_dangling();
         g
+    }
+
+    /// A box round the edge: its ends for a line, the whole circle for
+    /// an arc.
+    fn bbox(&self, e: &Edge) -> (Vec2, Vec2) {
+        let (a, b) = (self.verts[e.a], self.verts[e.b]);
+        match e.curve {
+            Curve::Line => (
+                Vec2::new(a.x.min(b.x), a.y.min(b.y)),
+                Vec2::new(a.x.max(b.x), a.y.max(b.y)),
+            ),
+            Curve::Arc { center } => {
+                let r = 0.5 * (a.distance(center) + b.distance(center));
+                (center - Vec2::new(r, r), center + Vec2::new(r, r))
+            }
+        }
     }
 
     /// Parameter of `p` along an edge if `p` lies on it strictly inside
@@ -465,25 +537,50 @@ impl Graph {
         let n = self.edges.len();
         let mut splits: Vec<Vec<(f64, usize)>> = vec![Vec::new(); n];
         let mut new_verts: Vec<Vec2> = Vec::new();
+        // Only edges whose boxes share a cell of a grid can meet, and only
+        // vertices in an edge's box can lie on it: a cell about two mean
+        // edges across, no finer than the biggest edge needs.
+        let boxes: Vec<(Vec2, Vec2)> = self.edges.iter().map(|e| self.bbox(e)).collect();
+        let extent = |b: &(Vec2, Vec2)| (b.1.x - b.0.x).max(b.1.y - b.0.y);
+        let mean = boxes.iter().map(extent).sum::<f64>() / n.max(1) as f64;
+        let widest = boxes.iter().map(extent).fold(0.0, f64::max);
+        let cell = (2.0 * mean).max(widest / 256.0).max(tol * 10.0);
+        let mut edge_grid = Grid::new(cell);
+        for (i, b) in boxes.iter().enumerate() {
+            edge_grid.insert(i, b.0, b.1);
+        }
+        let mut vert_grid = Grid::new(cell);
+        let mut used = vec![false; self.verts.len()];
+        for e in &self.edges {
+            used[e.a] = true;
+            used[e.b] = true;
+        }
+        for (v, p) in self.verts.iter().enumerate() {
+            if used[v] {
+                vert_grid.insert(v, *p, *p);
+            }
+        }
+        let pad = Vec2::new(tol, tol);
+        let mut near = Vec::new();
         // Endpoints lying on other edges.
         for i in 0..n {
-            for j in 0..n {
-                if i == j {
+            vert_grid.near(boxes[i].0 - pad, boxes[i].1 + pad, &mut near);
+            for &v in &near {
+                if v == self.edges[i].a || v == self.edges[i].b {
                     continue;
                 }
-                for v in [self.edges[j].a, self.edges[j].b] {
-                    if v == self.edges[i].a || v == self.edges[i].b {
-                        continue;
-                    }
-                    if let Some(t) = self.param_on_edge(&self.edges[i], self.verts[v], tol) {
-                        splits[i].push((t, v));
-                    }
+                if let Some(t) = self.param_on_edge(&self.edges[i], self.verts[v], tol) {
+                    splits[i].push((t, v));
                 }
             }
         }
         // Proper crossings.
         for i in 0..n {
-            for j in i + 1..n {
+            edge_grid.near(boxes[i].0 - pad, boxes[i].1 + pad, &mut near);
+            for &j in &near {
+                if j <= i {
+                    continue;
+                }
                 for p in self.crossings(&self.edges[i], &self.edges[j], tol) {
                     let existing = self.verts.iter().position(|v| v.distance(p) <= tol);
                     let v = match existing {

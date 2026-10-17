@@ -352,3 +352,30 @@ The plate carries a reference hole the size of the gap 5 mm inside its
 front-left corner, outside the board: with the pilot in it the bit sits
 5 mm outside the blank's corner, which is how the blank's fence on the
 duplicator is set, so the hole lives in the plate and not in a jig.
+
+## 2026-10 · The Spectre top is a kernel feature, and its mystics are the dark wood
+
+The rounded Spectre's edges alternate in and out like a jigsaw's, so a
+patch of it under the puzzle box's board is a puzzle top. Building it
+as sketches through the MCP server was tried first and rejected: each
+piece is a polyline of some four hundred points, so a top is thirty
+thousand sketch lines in the document, slow to draw and to find
+regions in, where the checkerboard stores a dozen numbers. It is now
+`add_spectre`, holding the board, the edge, the gap, the curve and a
+shift, and `ok_sketch::spectre` lays the shallowest patch that covers
+the board, erodes every tile the board reaches by half the gap and
+clips it to the board with the region finder, so a tile the edge cuts
+in two is two pieces. Polylines rather than arcs for the outlines: the
+curve is a cubic, a biarc with the same end tangents is a flatter
+curve, and the pattern plate and the DXF do not mind. Two woods cannot
+alternate on this tiling (three tiles meet at a vertex) and three
+cannot colour it properly (a tile with seven neighbours round it needs
+four), so the pieces follow Kaplan's mystics scheme instead, the pairs
+that stand in for a ninth supertile dark and the field light; on a
+gapped top the resin outlines every piece anyway. The web is the one
+connected lattice: a gap the board's edge closes off inside a piece's
+concavity, where the neighbour beyond the edge had a lobe, is left to
+the resin, while the pattern plate grooves it like the rest. The
+region finder's point merging and crossing checks were every pair;
+they now go through a grid, which the lattice needed and every sketch
+gains from.

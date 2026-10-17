@@ -50,6 +50,7 @@ impl PartStudio {
             | Op::AddMesh { .. }
             | Op::AddPuzzle { .. }
             | Op::AddGear { .. }
+            | Op::AddSpectre { .. }
             | Op::AddSplit { .. }
             | Op::InsertFeature { .. } => result
                 .feature
@@ -224,6 +225,42 @@ impl PartStudio {
                     dark: dark.map(|_| p.dark.clone()),
                     tabs: Some(p.tabs.clone()),
                     corners: Some(p.corners.clone()),
+                }],
+                _ => Vec::new(),
+            },
+            Op::SetSpectre {
+                id,
+                plane,
+                width,
+                height,
+                edge,
+                thickness,
+                gap,
+                bulge,
+                shift,
+                scrap,
+                web,
+                groove,
+                show,
+                light,
+                dark,
+            } => match before.kind() {
+                Some(FeatureKind::Spectre(s)) => vec![Op::SetSpectre {
+                    id,
+                    plane: plane.map(|_| s.plane),
+                    width: width.map(|_| s.width),
+                    height: height.map(|_| s.height),
+                    edge: edge.map(|_| s.edge),
+                    thickness: thickness.map(|_| s.thickness),
+                    gap: gap.map(|_| s.gap),
+                    bulge: bulge.map(|_| s.bulge),
+                    shift: shift.map(|_| s.shift),
+                    scrap: scrap.map(|_| s.scrap),
+                    web: web.map(|_| s.web),
+                    groove: groove.map(|_| s.groove),
+                    show: show.map(|_| s.show),
+                    light: light.map(|_| s.light.clone()),
+                    dark: dark.map(|_| s.dark.clone()),
                 }],
                 _ => Vec::new(),
             },
@@ -488,6 +525,7 @@ impl Before {
             | Op::SetPuzzleTab { id, .. }
             | Op::SetPuzzleCorner { id, .. }
             | Op::SetGear { id, .. }
+            | Op::SetSpectre { id, .. }
             | Op::SetSweep { id, .. }
             | Op::SetLoft { id, .. }
             | Op::SetBoolean { id, .. }

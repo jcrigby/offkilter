@@ -5,7 +5,7 @@ import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoi
 type HiddenLines = "auto" | "on" | "off";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
-import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, SpectreLayout, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -2038,6 +2038,7 @@ class App implements SketchHost {
     else if (f.kind.type === "hole") this.renderHoleDetail(f, body);
     else if (f.kind.type === "puzzle") this.renderPuzzleDetail(f, body);
     else if (f.kind.type === "gear") this.renderGearDetail(f, body);
+    else if (f.kind.type === "spectre") this.renderSpectreDetail(f, body);
     else if (f.kind.type === "sweep") this.renderSweepDetail(f, body);
     else if (f.kind.type === "loft") this.renderLoftDetail(f, body);
     else if (f.kind.type === "boolean") this.renderBooleanDetail(f, body);
@@ -2449,6 +2450,55 @@ class App implements SketchHost {
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = `Pitch diameter ${d}: mating gears sit at half the sum of their pitch diameters apart; a pinion in a ring at half the difference. A gear with an even tooth count facing another wants its first tooth turned by half a pitch (180 / teeth). Zero rim is an external gear; a rim diameter makes a ring with the teeth inside. A root fillet of 0.38 modules is the rack standard and makes a printed gear much stronger; a profile shift of +0.3 lets a 12-tooth pinion through at 20°, with the pair a little further apart. A cone angle makes a straight bevel gear: two with angles summing to 90°, apexes together on perpendicular planes, mesh (a 16:32 pair at 26.6° and 63.4°); a gear acts as teeth / cos(cone) virtual teeth, so fewer real teeth get away without undercut.`;
+    body.appendChild(note);
+  }
+
+  renderSpectreDetail(f: FeatureSummary, body: HTMLElement): void {
+    if (f.kind.type !== "spectre") return;
+    const k = f.kind;
+    const set = (patch: Partial<Extract<Op, { type: "set_spectre" }>>) => this.apply({ type: "set_spectre", id: f.id, ...patch });
+    this.planeFieldsFor(f, body, k.plane, (plane) => set({ plane }));
+    body.appendChild(field("Board width", this.exprInput(f, "width", k.width, (v) => set({ width: v }))));
+    body.appendChild(field("Board height", this.exprInput(f, "height", k.height, (v) => set({ height: v }))));
+    const edge = this.exprInput(f, "edge", k.edge, (v) => set({ edge: v }));
+    edge.title = "The tile's edge length: a tile is about 4.7 edges across and 8.2 square edges in area";
+    body.appendChild(field("Tile edge", edge));
+    body.appendChild(field("Thickness", this.exprInput(f, "thickness", k.thickness, (v) => set({ thickness: v }))));
+    const gap = this.exprInput(f, "gap", k.gap, (v) => set({ gap: v }));
+    gap.title = "Between pieces, for a resin fill; a quarter of the edge at most";
+    body.appendChild(field("Gap", gap));
+    const bulge = this.exprInput(f, "bulge", k.bulge, (v) => set({ bulge: v }));
+    bulge.title = "How far each edge's curve stands off the straight edge, as a fraction of it: 0.6 is Kaplan's, 0 the straight-sided tile";
+    body.appendChild(field("Curve", bulge));
+    body.appendChild(field("Shift x", numberInput(k.shift.x, (v) => set({ shift: { x: v, y: k.shift.y } }))));
+    body.appendChild(field("Shift y", numberInput(k.shift.y, (v) => set({ shift: { x: k.shift.x, y: v } }))));
+    const scrap = this.exprInput(f, "scrap", k.scrap, (v) => set({ scrap: Math.max(0, v) }));
+    scrap.title = "Pieces smaller than this area (mm²), the slivers the board's edge cuts off outer tiles, are left to the resin";
+    body.appendChild(field("Scrap under", scrap));
+    const show = select(["design", "pattern"], k.show, (v) => set({ show: v as SpectreLayout }));
+    show.title = "The assembled design, or the printable pattern plate with the gaps as grooves";
+    body.appendChild(field("Show", show));
+    const wood = (label: string, current: Material | undefined, onChange: (m: Material | null) => void) => {
+      const sel = select(["", ...MATERIALS.map((m) => m.name)], current?.name ?? "", (v) => onChange(MATERIALS.find((m) => m.name === v) ?? null));
+      if (current && !MATERIALS.some((m) => m.name === current.name)) {
+        const o = document.createElement("option");
+        o.value = current.name;
+        o.textContent = current.name;
+        sel.appendChild(o);
+        sel.value = current.name;
+      }
+      sel.title = "The wood of these pieces: named in the parts list, its density gives their masses";
+      body.appendChild(field(label, sel));
+    };
+    wood("Light wood", k.light, (m) => set({ light: m }));
+    wood("Dark wood (mystics)", k.dark, (m) => set({ dark: m }));
+    body.appendChild(field("Web height", numberInput(k.web, (v) => set({ web: v }))));
+    const groove = numberInput(k.groove, (v) => set({ groove: v }));
+    groove.title = "A printable pattern plate with the gaps as grooves this deep: a pilot the size of the gap rides in them while a bit of that size cuts the pieces apart from one board, the kerf being the gap; the board's thickness and a little. 0 for none.";
+    body.appendChild(field("Pattern groove", groove));
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = `The curved Spectre, the aperiodic monotile, laid under the board: every tile it reaches is a piece, the board's edge cutting the outer ones (slivers under the scrap area go to the resin), and the pairs that stand in for a ninth supertile (the mystics) are the dark ones. No two woods can alternate on this tiling (three tiles meet at a vertex) and a gapped top outlines every piece anyway. Shift slides the tiling under the board to change which tiles it gets. The web is a body filling the gaps; the pattern plate cuts the top from one board with a pilot and a bit the size of the gap.`;
     body.appendChild(note);
   }
 
@@ -4205,6 +4255,20 @@ async function main(): Promise<void> {
       width: 10,
       bore: 8,
       name: app.autoName("Gear"),
+    });
+    app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
+  };
+  $("#btn-add-spectre").onclick = () => {
+    app.sketcher.exit();
+    app.apply({
+      type: "add_spectre",
+      plane: { type: "standard", base: "top", offset: 0 },
+      width: 304,
+      height: 228,
+      edge: 12.7,
+      thickness: 12,
+      gap: 1.5,
+      name: app.autoName("Spectre"),
     });
     app.select(app.summary.features[app.summary.features.length - 1]?.id ?? null);
   };
