@@ -594,8 +594,12 @@ pub enum Op {
         thickness: f64,
         #[serde(default)]
         gap: f64,
+        #[serde(default)]
+        curve: crate::SpectreCurve,
         #[serde(default = "default_bulge")]
         bulge: f64,
+        #[serde(default)]
+        bit: f64,
         #[serde(default)]
         shift: Vec2,
         #[serde(default = "crate::feature::default_scrap")]
@@ -627,7 +631,11 @@ pub enum Op {
         #[serde(default)]
         gap: Option<f64>,
         #[serde(default)]
+        curve: Option<crate::SpectreCurve>,
+        #[serde(default)]
         bulge: Option<f64>,
+        #[serde(default)]
+        bit: Option<f64>,
         #[serde(default)]
         shift: Option<Vec2>,
         #[serde(default)]
@@ -1771,7 +1779,9 @@ impl PartStudio {
                 edge,
                 thickness,
                 gap,
+                curve,
                 bulge,
+                bit,
                 shift,
                 scrap,
                 web,
@@ -1789,7 +1799,9 @@ impl PartStudio {
                         edge,
                         thickness,
                         gap,
+                        curve,
                         bulge,
+                        bit,
                         shift,
                         scrap,
                         web,
@@ -1809,7 +1821,9 @@ impl PartStudio {
                 edge,
                 thickness,
                 gap,
+                curve,
                 bulge,
+                bit,
                 shift,
                 scrap,
                 web,
@@ -1837,8 +1851,14 @@ impl PartStudio {
                     if let Some(v) = gap {
                         s.gap = v;
                     }
+                    if let Some(v) = curve {
+                        s.curve = v;
+                    }
                     if let Some(v) = bulge {
                         s.bulge = v;
+                    }
+                    if let Some(v) = bit {
+                        s.bit = v;
                     }
                     if let Some(v) = shift {
                         s.shift = v;

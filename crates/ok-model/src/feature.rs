@@ -1,5 +1,6 @@
 use ok_math::{Plane, Vec2, Vec3};
 pub use ok_sketch::jigsaw::{Grain, Tab as PuzzleTab};
+pub use ok_sketch::spectre::Curve as SpectreCurve;
 use ok_sketch::{EntityId, Sketch};
 use serde::{Deserialize, Serialize};
 
@@ -689,10 +690,19 @@ pub struct SpectreFeature {
     /// Gap between pieces, mm: zero for a tight fit, wider for a resin fill.
     #[serde(default)]
     pub gap: f64,
+    /// The shape of each edge's curve: Kaplan's cubic, or a circular arc.
+    #[serde(default)]
+    pub curve: SpectreCurve,
     /// How far each edge's curve stands off the straight edge, as a
-    /// fraction of it: Kaplan's 0.6; zero for the straight-sided tile.
+    /// fraction of it: the cubic's control offset (Kaplan's 0.6) or the
+    /// arc's sagitta; zero for the straight-sided tile.
     #[serde(default = "kaplan_bulge")]
     pub bulge: f64,
+    /// Diameter of the router bit each piece is cut with, mm: the four
+    /// inside corners are filleted to its radius and the convex corners
+    /// meeting them rounded to match; zero for sharp corners.
+    #[serde(default)]
+    pub bit: f64,
     /// Slides the tiling under the board, mm (zero centres the patch).
     #[serde(default)]
     pub shift: Vec2,
@@ -731,7 +741,9 @@ impl SpectreFeature {
             height: self.height,
             edge: self.edge,
             gap: self.gap,
+            curve: self.curve,
             bulge: self.bulge,
+            bit: self.bit,
             shift: self.shift,
             scrap: self.scrap,
         }
@@ -970,6 +982,7 @@ impl FeatureKind {
                 "thickness".into(),
                 "gap".into(),
                 "bulge".into(),
+                "bit".into(),
                 "scrap".into(),
                 "web".into(),
                 "groove".into(),
@@ -1042,6 +1055,7 @@ impl FeatureKind {
             (FeatureKind::Spectre(s), "gap") => Some(s.gap),
             (FeatureKind::Spectre(s), "bulge") => Some(s.bulge),
             (FeatureKind::Spectre(s), "scrap") => Some(s.scrap),
+            (FeatureKind::Spectre(s), "bit") => Some(s.bit),
             (FeatureKind::Spectre(s), "web") => Some(s.web),
             (FeatureKind::Spectre(s), "groove") => Some(s.groove),
             (FeatureKind::Gear(g), "module") => Some(g.module),
@@ -1181,6 +1195,10 @@ impl FeatureKind {
             }
             (FeatureKind::Spectre(s), "scrap") => {
                 s.scrap = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "bit") => {
+                s.bit = value;
                 Ok(())
             }
             (FeatureKind::Spectre(s), "web") => {

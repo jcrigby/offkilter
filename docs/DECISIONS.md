@@ -379,3 +379,25 @@ the resin, while the pattern plate grooves it like the rest. The
 region finder's point merging and crossing checks were every pair;
 they now go through a grid, which the lattice needed and every sketch
 gains from.
+
+## 2026-10 · A piece routed to its template is shaped by the bit, and its mate agrees
+
+The 4 in box's top is cut piece by piece with a 3/16 in flush trim
+bit, each piece the template for its own blank. A flush trim bit
+follows a template exactly except where the template turns inside a
+circle the bit's size, where it leaves a fillet of its own radius; so
+the design has to draw what the bit will do, or the pieces will not
+nest. Two rules came out of it. The edge curve must clear the bit's
+radius on its concave side everywhere, which Kaplan's cubic does only
+above a 10 mm edge or so (its apex is 0.28 of the edge), so the feature
+grew a circular-arc edge, one radius all along, 0.57 of the edge at the
+sagitta that meets the corners at Kaplan's angle; the cubic stays the
+default and a curve tighter than the bit is refused rather than drawn.
+And the tile's four inside corners, which sit only ever at vertices of
+two tiles, are filleted to the bit and the convex corner across the
+vertex is rounded to the same circle, found by bisection on the two
+shared curves, so what the fillet adds to one piece the rounding takes
+off its mate and the pieces still fill the board. Convex corners at
+vertices of three or four tiles stay sharp, since the bit cuts those as
+drawn. Rounding every convex corner was considered and rejected: it
+leaves a small void at every three-tile vertex for no gain.

@@ -100,14 +100,16 @@ A `PartStudio` is an ordered `Vec<Feature>`. A feature has a stable
   lattice (the web's region) cut `groove` deep into a slab a margin
   wider than the board, for a pilot the size of the gap to ride in
   while a bit that size cuts the pieces apart from one board.
-- `Spectre { plane, width, height, edge, thickness, gap, bulge, shift, scrap, web, groove, show, light, dark }`:
+- `Spectre { plane, width, height, edge, thickness, gap, curve, bulge, bit, shift, scrap, web, groove, show, light, dark }`:
   a puzzle top from `ok_sketch::spectre`, the curved aperiodic monotile
   under a rectangular board: the shallowest substitution patch that
   covers the board (its boundary edges off the board, its tiles under
   every corner), every tile the board reaches eroded by half the gap
   (reflex corners rounded, the rest mitred) and clipped to the board by
   the region finder (slivers under `scrap` left to the resin), one body
-  per piece with its wood, the mystic pairs dark; the web is the largest region between the pieces, and the
+  per piece with its wood, the mystic pairs dark; with a `bit`, the
+  inside corners are filleted to its radius and the convex corners that
+  meet them rounded to the same circle before the erosion; the web is the largest region between the pieces, and the
   pattern plate, shared with the puzzle, grooves every region between
   them, pockets the board's edge closes off included.
 - `Gear { plane, center, module, teeth, pressure_angle, width, direction, bore, rim, angle, backlash, shift, fillet, cone, op }`:

@@ -5,7 +5,7 @@ import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoi
 type HiddenLines = "auto" | "on" | "off";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
-import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, SpectreLayout, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, SpectreLayout, SpectreCurve, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -2467,9 +2467,15 @@ class App implements SketchHost {
     const gap = this.exprInput(f, "gap", k.gap, (v) => set({ gap: v }));
     gap.title = "Between pieces, for a resin fill; a quarter of the edge at most";
     body.appendChild(field("Gap", gap));
+    const curve = select(["cubic", "arc"], k.curve, (v) => set({ curve: v as SpectreCurve }));
+    curve.title = "Kaplan's cubic, tightest at its apex (0.28 of the edge at 0.6), or a circular arc, one radius all along (0.57 of the edge at 0.3) and kinder to a router bit";
+    body.appendChild(field("Curve", curve));
     const bulge = this.exprInput(f, "bulge", k.bulge, (v) => set({ bulge: v }));
-    bulge.title = "How far each edge's curve stands off the straight edge, as a fraction of it: 0.6 is Kaplan's, 0 the straight-sided tile";
-    body.appendChild(field("Curve", bulge));
+    bulge.title = "How far each edge's curve stands off the straight edge, as a fraction of it: the cubic's control offset (0.6 is Kaplan's) or the arc's sagitta (0.3 matches Kaplan's corners); 0 is the straight-sided tile";
+    body.appendChild(field("Bulge", bulge));
+    const bit = this.exprInput(f, "bit", k.bit, (v) => set({ bit: Math.max(0, v) }));
+    bit.title = "Diameter of the router bit each piece is cut with: the four inside corners are filleted to its radius and the convex corners meeting them rounded to match, so the pieces still nest; a curve tighter than the bit is refused. 0 for sharp corners.";
+    body.appendChild(field("Router bit ⌀", bit));
     body.appendChild(field("Shift x", numberInput(k.shift.x, (v) => set({ shift: { x: v, y: k.shift.y } }))));
     body.appendChild(field("Shift y", numberInput(k.shift.y, (v) => set({ shift: { x: k.shift.x, y: v } }))));
     const scrap = this.exprInput(f, "scrap", k.scrap, (v) => set({ scrap: Math.max(0, v) }));
@@ -2498,7 +2504,7 @@ class App implements SketchHost {
     body.appendChild(field("Pattern groove", groove));
     const note = document.createElement("p");
     note.className = "note";
-    note.textContent = `The curved Spectre, the aperiodic monotile, laid under the board: every tile it reaches is a piece, the board's edge cutting the outer ones (slivers under the scrap area go to the resin), and the pairs that stand in for a ninth supertile (the mystics) are the dark ones. No two woods can alternate on this tiling (three tiles meet at a vertex) and a gapped top outlines every piece anyway. Shift slides the tiling under the board to change which tiles it gets. The web is a body filling the gaps; the pattern plate cuts the top from one board with a pilot and a bit the size of the gap.`;
+    note.textContent = `The curved Spectre, the aperiodic monotile, laid under the board: every tile it reaches is a piece, the board's edge cutting the outer ones (slivers under the scrap area go to the resin), and the pairs that stand in for a ninth supertile (the mystics) are the dark ones. No two woods can alternate on this tiling (three tiles meet at a vertex) and a gapped top outlines every piece anyway. Shift slides the tiling under the board to change which tiles it gets. With a router bit, the inside corners are filleted to it and their mates rounded, for pieces routed one by one to their templates. The web is a body filling the gaps; the pattern plate cuts the top from one board with a pilot and a bit the size of the gap.`;
     body.appendChild(note);
   }
 
