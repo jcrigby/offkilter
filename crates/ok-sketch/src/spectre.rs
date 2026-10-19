@@ -64,15 +64,37 @@ pub struct Params {
     pub edge: f64,
     /// Gap between pieces, mm (0 for a tight fit).
     pub gap: f64,
-    /// How far each edge's curve control points stand off the edge, as
-    /// a fraction of the edge; 0 gives the straight-sided tile.
+    /// The shape of each edge's curve.
+    pub curve: Curve,
+    /// How far the curve stands off the straight edge, as a fraction of
+    /// it: the control points' offset for a cubic, the sagitta for an
+    /// arc; 0 gives the straight-sided tile.
     pub bulge: f64,
+    /// Diameter of the router bit each piece is cut with, mm; zero for
+    /// none. With a bit, the tile's four inside corners are filleted to
+    /// its radius and the convex corners that meet them rounded to
+    /// match, so the pieces still nest, and a curve tighter than the
+    /// bit is refused.
+    pub bit: f64,
     /// Slides the tiling under the board, mm: with zero the patch's
     /// bounding box is centred on the board.
     pub shift: Vec2,
     /// Pieces smaller than this area, mm², are left to the resin: the
     /// board's edge cuts slivers off the outer tiles wherever it falls.
     pub scrap: f64,
+}
+
+/// The shape of an edge's curve.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum Curve {
+    /// Kaplan's cubic: control points a third and two thirds along the
+    /// edge, `bulge` edge lengths to the side; tightest at its apex.
+    #[default]
+    Cubic,
+    /// A circular arc of sagitta `bulge` edge lengths: one radius all
+    /// along, `(1/4 + bulge²) / (2 bulge)` edges, kinder to a router bit.
+    Arc,
 }
 
 /// One piece: a tile (or the part of one the board's edge leaves)
@@ -370,7 +392,7 @@ fn vertex(i: usize) -> Vec2 {
 
 /// The curved tile with unit edges in its own frame, counter-clockwise,
 /// `per_edge` straight pieces per edge, the first vertex first.
-pub fn curved_tile(bulge: f64, per_edge: usize) -> Vec<Vec2> {
+pub fn curved_tile(curve: Curve, bulge: f64, per_edge: usize) -> Vec<Vec2> {
     let n = per_edge.max(1);
     let mut out = Vec::with_capacity(14 * n);
     let mut sign = 1.0;
@@ -378,15 +400,45 @@ pub fn curved_tile(bulge: f64, per_edge: usize) -> Vec<Vec2> {
         let a = vertex(i + 13);
         let b = vertex(i);
         let v = b - a;
-        let w = v.perp() * (sign * bulge);
-        let c1 = a + v * 0.33 + w;
-        let c2 = a + v * 0.67 + w;
-        for k in 1..=n {
-            let t = k as f64 / n as f64;
-            let u = 1.0 - t;
-            out.push(
-                a * (u * u * u) + c1 * (3.0 * u * u * t) + c2 * (3.0 * u * t * t) + b * (t * t * t),
-            );
+        match curve {
+            Curve::Cubic => {
+                let w = v.perp() * (sign * bulge);
+                let c1 = a + v * 0.33 + w;
+                let c2 = a + v * 0.67 + w;
+                for k in 1..=n {
+                    let t = k as f64 / n as f64;
+                    let u = 1.0 - t;
+                    out.push(
+                        a * (u * u * u)
+                            + c1 * (3.0 * u * u * t)
+                            + c2 * (3.0 * u * t * t)
+                            + b * (t * t * t),
+                    );
+                }
+            }
+            Curve::Arc if bulge.abs() > 1e-9 => {
+                // The circle through both ends whose apex stands `bulge`
+                // off the edge's middle, swept the short way.
+                let radius = (0.25 + bulge * bulge) / (2.0 * bulge);
+                let centre = (a + b) * 0.5 - v.perp() * (sign * (radius - bulge));
+                let a0 = (a - centre).angle();
+                let mut sweep = (b - centre).angle() - a0;
+                while sweep > std::f64::consts::PI {
+                    sweep -= std::f64::consts::TAU;
+                }
+                while sweep < -std::f64::consts::PI {
+                    sweep += std::f64::consts::TAU;
+                }
+                for k in 1..=n {
+                    let t = k as f64 / n as f64;
+                    out.push(centre + Vec2::from_angle(a0 + sweep * t) * radius);
+                }
+            }
+            Curve::Arc => {
+                for k in 1..=n {
+                    out.push(a + v * (k as f64 / n as f64));
+                }
+            }
         }
         sign = -sign;
     }
@@ -397,9 +449,175 @@ pub fn curved_tile(bulge: f64, per_edge: usize) -> Vec<Vec2> {
 
 /// Straight pieces per edge at the given facet angle: the curve turns
 /// through twice the angle its ends make with the edge.
-pub fn pieces_per_edge(bulge: f64, facet: f64) -> usize {
-    let turn = 2.0 * bulge.abs().atan2(0.33);
-    ((turn / facet.max(1e-3)).ceil() as usize).clamp(4, 64)
+pub fn pieces_per_edge(curve: Curve, bulge: f64, facet: f64) -> usize {
+    let end_angle = match curve {
+        Curve::Cubic => bulge.abs().atan2(0.33),
+        Curve::Arc => 2.0 * (2.0 * bulge.abs()).atan(),
+    };
+    ((2.0 * end_angle / facet.max(1e-3)).ceil() as usize).clamp(4, 64)
+}
+
+/// The tightest radius along an edge's curve, in edge lengths: what a
+/// router bit following the concave side has to get round.
+pub fn tightest_radius(curve: Curve, bulge: f64) -> f64 {
+    if bulge.abs() < 1e-9 {
+        return f64::INFINITY;
+    }
+    match curve {
+        Curve::Arc => (0.25 + bulge * bulge) / (2.0 * bulge),
+        Curve::Cubic => {
+            // One edge from (0, 0) to (1, 0), sampled finely: the apex
+            // at t = 1/2 is the tightest.
+            let (c1, c2) = (Vec2::new(0.33, bulge), Vec2::new(0.67, bulge));
+            let at = |t: f64| {
+                let u = 1.0 - t;
+                c1 * (3.0 * u * u * t) + c2 * (3.0 * u * t * t) + Vec2::new(t * t * t, 0.0)
+            };
+            let mut best = f64::INFINITY;
+            for i in 1..400 {
+                let (a, b, c) = (
+                    at((i - 1) as f64 / 400.0),
+                    at(i as f64 / 400.0),
+                    at((i + 1) as f64 / 400.0),
+                );
+                let cross = (b - a).cross(c - b).abs();
+                if cross > 1e-15 {
+                    best = best.min(a.distance(b) * b.distance(c) * a.distance(c) / (2.0 * cross));
+                }
+            }
+            best
+        }
+    }
+}
+
+/// Interior angles of the straight tile at its vertices, degrees.
+const ANGLES: [u32; 14] = [
+    90, 240, 90, 120, 270, 120, 90, 120, 270, 120, 180, 120, 90, 240,
+];
+
+// -- a router bit's corners ----------------------------------------------
+
+/// Closest point on the polyline `pts` to `p`, as (distance, index of
+/// the segment's first point, parameter along it).
+fn nearest_on(pts: &[Vec2], p: Vec2) -> (f64, usize, f64) {
+    let mut best = (f64::INFINITY, 0, 0.0);
+    for i in 0..pts.len().saturating_sub(1) {
+        let (a, b) = (pts[i], pts[i + 1]);
+        let d = b - a;
+        let len2 = d.length_squared();
+        let t = if len2 > 0.0 {
+            ((p - a).dot(d) / len2).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
+        let dist = p.distance(a + d * t);
+        if dist < best.0 {
+            best = (dist, i, t);
+        }
+    }
+    best
+}
+
+/// The point `s` along a polyline from its start, and the unit
+/// direction of the piece it lies on.
+fn along_polyline(pts: &[Vec2], s: f64) -> (Vec2, Vec2) {
+    let mut left = s;
+    for i in 0..pts.len() - 1 {
+        let d = pts[i + 1] - pts[i];
+        let len = d.length();
+        if left <= len || i + 2 == pts.len() {
+            let t = if len > 0.0 {
+                (left / len).min(1.0)
+            } else {
+                0.0
+            };
+            return (pts[i] + d * t, d.normalized().unwrap_or(Vec2::X));
+        }
+        left -= len;
+    }
+    (*pts.last().unwrap(), Vec2::X)
+}
+
+/// Replaces the corner at `at` of the counter-clockwise polygon by the
+/// arc of radius `r` tangent to both curves meeting there: outside the
+/// polygon for an inside corner (what a bit of that radius leaves), or
+/// inside it for a convex corner (what its mate then needs). The arc is
+/// sampled at `facet`.
+fn round_corner(
+    poly: &[Vec2],
+    at: usize,
+    r: f64,
+    outside: bool,
+    facet: f64,
+) -> Result<Vec<Vec2>, String> {
+    let n = poly.len();
+    // Rotate so the corner sits in the middle and nothing wraps.
+    let shift = (at + n - n / 2) % n;
+    let p: Vec<Vec2> = (0..n).map(|i| poly[(i + shift) % n]).collect();
+    let at = n / 2;
+    // The curve into the corner, walked back from it, and the curve out.
+    let back: Vec<Vec2> = (0..=at).rev().map(|i| p[i]).collect();
+    let fwd: Vec<Vec2> = (at..n).map(|i| p[i]).collect();
+    let side = if outside { -1.0 } else { 1.0 };
+    // Circle centre from a cut `s` back along the incoming curve: its
+    // distance to the outgoing curve must be r too.
+    let centre = |s: f64| {
+        let (a, dir) = along_polyline(&back, s);
+        // `dir` runs away from the corner; travel along the polygon is
+        // the other way, so the left normal of travel is -dir.perp().
+        (a, a + dir.perp() * (-side * r))
+    };
+    let gap = |s: f64| nearest_on(&fwd, centre(s).1).0 - r;
+    let reach: f64 = back.windows(2).map(|w| w[0].distance(w[1])).sum::<f64>() * 0.45;
+    let (mut lo, mut hi) = (1e-6, reach.min(4.0 * r));
+    if gap(lo) > 0.0 || gap(hi) < 0.0 {
+        return Err(format!("a bit of radius {r:.2} does not fit the corner"));
+    }
+    for _ in 0..60 {
+        let mid = 0.5 * (lo + hi);
+        if gap(mid) < 0.0 {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    let s = 0.5 * (lo + hi);
+    let (a, c) = centre(s);
+    let (_, j, t) = nearest_on(&fwd, c);
+    let b = fwd[j] + (fwd[j + 1] - fwd[j]) * t;
+    let (_, i, u) = nearest_on(&back, a);
+    // The arc from a to b about c, the short way.
+    let a0 = (a - c).angle();
+    let mut sweep = (b - c).angle() - a0;
+    while sweep > std::f64::consts::PI {
+        sweep -= std::f64::consts::TAU;
+    }
+    while sweep < -std::f64::consts::PI {
+        sweep += std::f64::consts::TAU;
+    }
+    let steps = ((sweep.abs() / facet.max(1e-3)).ceil() as usize).max(1);
+    let mut out: Vec<Vec2> = Vec::with_capacity(n + steps);
+    // Up to the cut on the incoming curve: `a` lies between back[i + 1]
+    // and back[i], which are p[at - i - 1] and p[at - i].
+    let _ = u;
+    out.extend_from_slice(&p[..at - i]);
+    for k in 0..=steps {
+        out.push(c + Vec2::from_angle(a0 + sweep * k as f64 / steps as f64) * r);
+    }
+    // From the cut on the outgoing curve: `b` lies between fwd[j] and
+    // fwd[j + 1], which are p[at + j] and p[at + j + 1].
+    out.extend_from_slice(&p[(at + j + 1).min(n)..]);
+    // Drop near-duplicates the cuts may have left.
+    let mut clean: Vec<Vec2> = Vec::with_capacity(out.len());
+    for q in out {
+        if clean.last().is_none_or(|l| l.distance(q) > 1e-7) {
+            clean.push(q);
+        }
+    }
+    if clean.len() > 3 && clean[0].distance(*clean.last().unwrap()) <= 1e-7 {
+        clean.pop();
+    }
+    Ok(clean)
 }
 
 // -- offsets, clipping ---------------------------------------------------
@@ -632,6 +850,27 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
     if !(p.bulge.is_finite() && (0.0..=1.0).contains(&p.bulge)) {
         return Err("bulge must be between 0 (straight edges) and 1".into());
     }
+    if p.curve == Curve::Arc && p.bulge > 0.5 {
+        return Err("an arc's sagitta must be at most half the edge (a semicircle)".into());
+    }
+    if !(p.bit.is_finite() && p.bit >= 0.0) {
+        return Err("bit must be zero or positive".into());
+    }
+    if p.bit > 0.0 {
+        let tightest = tightest_radius(p.curve, p.bulge) * p.edge;
+        if tightest < p.bit / 2.0 {
+            return Err(format!(
+                "the curve's tightest radius {tightest:.2} mm is under the bit's {:.2}: a flatter curve or a longer edge",
+                p.bit / 2.0
+            ));
+        }
+        if p.bit > p.edge {
+            return Err(format!(
+                "bit {:.2} is over the edge {:.2}: its fillets would meet",
+                p.bit, p.edge
+            ));
+        }
+    }
     if !(p.shift.x.is_finite() && p.shift.y.is_finite()) {
         return Err("shift must be finite".into());
     }
@@ -641,8 +880,8 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
     // The curves and the rounded corners want no finer than 10°: the
     // pieces are polylines, and a top is a few hundred of them.
     let facet = facet.max(10f64.to_radians());
-    let per_edge = pieces_per_edge(p.bulge, facet);
-    let local = curved_tile(p.bulge, per_edge);
+    let per_edge = pieces_per_edge(p.curve, p.bulge, facet);
+    let local = curved_tile(p.curve, p.bulge, per_edge);
     let margin = p.bulge.abs().max(0.1);
     let board = (Vec2::ZERO, Vec2::new(p.width, p.height));
     let centre = Vec2::new(p.width, p.height) * 0.5 + p.shift;
@@ -761,6 +1000,16 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
         arc_segment_angle: facet,
         merge_tolerance: 1e-6,
     };
+    // How many tiles meet at each vertex: a convex corner at a vertex of
+    // two tiles meets an inside corner, and takes its rounding.
+    let mut at_vertex: HashMap<Key, u32> = HashMap::new();
+    if p.bit > 0.0 {
+        for (_, xf) in &all {
+            for i in 0..14 {
+                *at_vertex.entry(key(apply(xf, vertex(i)))).or_insert(0) += 1;
+            }
+        }
+    }
     let mut pieces = Vec::new();
     let mut touched = 0;
     for (k, (mystic, xf)) in all.iter().enumerate() {
@@ -771,6 +1020,27 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
         let (lo, hi) = bbox(&poly);
         if lo.x >= p.width || hi.x <= 0.0 || lo.y >= p.height || hi.y <= 0.0 {
             continue;
+        }
+        if p.bit > 0.0 {
+            // Inside corners get the bit's fillet; a convex corner that
+            // meets one (two tiles at the vertex) is rounded to match.
+            // The corners are found by their points, since each rounding
+            // renumbers the polygon.
+            let corners: Vec<(Vec2, bool)> = (0..14)
+                .filter_map(|i| {
+                    let q = apply(xf, vertex(i));
+                    let inside = ANGLES[i] > 180;
+                    let mate = ANGLES[i] < 180 && at_vertex.get(&key(q)) == Some(&2);
+                    (inside || mate).then(|| (place(q), inside))
+                })
+                .collect();
+            for (q, inside) in corners {
+                let at = (0..poly.len())
+                    .min_by(|&a, &b| poly[a].distance(q).total_cmp(&poly[b].distance(q)))
+                    .unwrap();
+                poly = round_corner(&poly, at, p.bit / 2.0, inside, facet)
+                    .map_err(|e| format!("tile {}: {e}", k + 1))?;
+            }
         }
         let eroded = offset(&poly, p.gap / 2.0, facet);
         if self_intersects(&eroded) {
@@ -911,7 +1181,20 @@ mod tests {
         let straight: Vec<Vec2> = (0..14).map(vertex).collect();
         assert!(near(signed_area(&straight), TILE_AREA, 1e-12));
         // The curves add on one side what they take off the other.
-        let curved = curved_tile(KAPLAN_BULGE, 32);
+        let curved = curved_tile(Curve::Cubic, KAPLAN_BULGE, 32);
+        let arced = curved_tile(Curve::Arc, 0.3, 32);
+        assert!(
+            near(signed_area(&arced), TILE_AREA, 1e-3),
+            "{}",
+            signed_area(&arced)
+        );
+        assert!(near(
+            tightest_radius(Curve::Arc, 0.3),
+            (0.25 + 0.09) / 0.6,
+            1e-12
+        ));
+        let apex = tightest_radius(Curve::Cubic, KAPLAN_BULGE);
+        assert!(apex > 0.27 && apex < 0.29, "{apex}");
         assert!(
             near(signed_area(&curved), TILE_AREA, 1e-3),
             "{}",
@@ -935,7 +1218,7 @@ mod tests {
         );
         let mut owners: HashMap<_, u32> = HashMap::new();
         let mut mids: HashMap<_, Vec2> = HashMap::new();
-        let local = curved_tile(KAPLAN_BULGE, 2);
+        let local = curved_tile(Curve::Cubic, KAPLAN_BULGE, 2);
         for (_, xf) in &all {
             assert!(near(det(xf), 1.0, 1e-9));
             let verts: Vec<Vec2> = (0..14).map(|i| apply(xf, vertex(i))).collect();
@@ -1039,7 +1322,9 @@ mod tests {
             height: 100.0,
             edge: 12.7,
             gap: 1.5,
+            curve: Curve::Cubic,
             bulge: KAPLAN_BULGE,
+            bit: 0.0,
             shift: Vec2::ZERO,
             scrap: 0.0,
         };
@@ -1167,5 +1452,83 @@ mod tests {
             near(kept + gaps, area, 1e-6 * area),
             "{kept} + {gaps} vs {area}"
         );
+    }
+
+    #[test]
+    fn a_bit_fillets_the_inside_corners_and_rounds_their_mates_so_the_pieces_still_nest() {
+        let facet = 10f64.to_radians();
+        let params = Params {
+            width: 101.6,
+            height: 101.6,
+            edge: 9.0,
+            gap: 0.0,
+            curve: Curve::Arc,
+            bulge: 0.3,
+            bit: 4.7625,
+            shift: Vec2::ZERO,
+            scrap: 0.0,
+        };
+        let patch = build(&params, facet).unwrap();
+        let area = params.width * params.height;
+        let sum: f64 = patch.pieces.iter().map(|p| signed_area(&p.outline)).sum();
+        // What a fillet adds to one piece its mate's rounding takes off.
+        assert!(near(sum, area, 1e-4 * area), "{sum} vs {area}");
+        // No inside corner is sharper than the sampled fillet arcs, and
+        // no outline doubles back on itself.
+        for piece in &patch.pieces {
+            assert!(!self_intersects(&piece.outline), "tile {}", piece.tile);
+            let n = piece.outline.len();
+            for i in 0..n {
+                let (a, b, c) = (
+                    piece.outline[(i + n - 1) % n],
+                    piece.outline[i],
+                    piece.outline[(i + 1) % n],
+                );
+                let (u, v) = (b - a, c - b);
+                let turn = u.cross(v).atan2(u.dot(v)).to_degrees();
+                assert!(
+                    turn > -(facet.to_degrees() + 3.0),
+                    "tile {}: turn {turn:.1} at {b:?}",
+                    piece.tile
+                );
+            }
+        }
+        // The same board without the bit has sharp inside corners.
+        let sharp = build(
+            &Params {
+                bit: 0.0,
+                ..params.clone()
+            },
+            facet,
+        )
+        .unwrap();
+        let sharpest = sharp
+            .pieces
+            .iter()
+            .flat_map(|p| {
+                let n = p.outline.len();
+                (0..n).map(move |i| {
+                    let (a, b, c) = (
+                        p.outline[(i + n - 1) % n],
+                        p.outline[i],
+                        p.outline[(i + 1) % n],
+                    );
+                    (b - a).cross(c - b).atan2((b - a).dot(c - b)).to_degrees()
+                })
+            })
+            .fold(0.0, f64::min);
+        assert!(sharpest < -55.0, "{sharpest}");
+        // Kaplan's curve at an 8 mm edge is tighter than the bit, and says so.
+        let err = build(
+            &Params {
+                curve: Curve::Cubic,
+                bulge: KAPLAN_BULGE,
+                edge: 8.0,
+                ..params.clone()
+            },
+            facet,
+        )
+        .unwrap_err();
+        assert!(err.contains("tightest radius"), "{err}");
     }
 }

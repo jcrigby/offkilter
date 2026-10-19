@@ -1,0 +1,56 @@
+{
+  "name": "Spectre box top",
+  "tabs": [
+    {
+      "id": 1,
+      "kind": {
+        "type": "part_studio",
+        "name": "Top",
+        "features": [
+          {
+            "id": 1,
+            "name": "Spectre top",
+            "suppressed": false,
+            "kind": {
+              "type": "spectre",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "width": 101.6,
+              "height": 101.6,
+              "edge": 9.0,
+              "thickness": 12.0,
+              "gap": 0.0,
+              "curve": "arc",
+              "bulge": 0.3,
+              "bit": 4.762499999999999,
+              "shift": {
+                "x": -3.0,
+                "y": 2.0
+              },
+              "scrap": 40.0,
+              "web": 0.0,
+              "groove": 0.0,
+              "show": "design",
+              "light": {
+                "name": "Maple",
+                "density": 0.7
+              },
+              "dark": {
+                "name": "Walnut",
+                "density": 0.64
+              }
+            }
+          }
+        ],
+        "next_id": 2,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    }
+  ],
+  "next_id": 2
+}
