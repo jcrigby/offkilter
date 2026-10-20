@@ -706,6 +706,10 @@ pub struct SpectreFeature {
     /// Slides the tiling under the board, mm (zero centres the patch).
     #[serde(default)]
     pub shift: Vec2,
+    /// Turns the tiling under the board, degrees anticlockwise about
+    /// the patch's centre, before the shift.
+    #[serde(default)]
+    pub angle: f64,
     /// Pieces smaller than this area, mm², are left to the resin.
     #[serde(default = "default_scrap")]
     pub scrap: f64,
@@ -745,6 +749,7 @@ impl SpectreFeature {
             bulge: self.bulge,
             bit: self.bit,
             shift: self.shift,
+            angle: self.angle,
             scrap: self.scrap,
         }
     }
@@ -983,6 +988,7 @@ impl FeatureKind {
                 "gap".into(),
                 "bulge".into(),
                 "bit".into(),
+                "angle".into(),
                 "scrap".into(),
                 "web".into(),
                 "groove".into(),
@@ -1056,6 +1062,7 @@ impl FeatureKind {
             (FeatureKind::Spectre(s), "bulge") => Some(s.bulge),
             (FeatureKind::Spectre(s), "scrap") => Some(s.scrap),
             (FeatureKind::Spectre(s), "bit") => Some(s.bit),
+            (FeatureKind::Spectre(s), "angle") => Some(s.angle),
             (FeatureKind::Spectre(s), "web") => Some(s.web),
             (FeatureKind::Spectre(s), "groove") => Some(s.groove),
             (FeatureKind::Gear(g), "module") => Some(g.module),
@@ -1199,6 +1206,10 @@ impl FeatureKind {
             }
             (FeatureKind::Spectre(s), "bit") => {
                 s.bit = value;
+                Ok(())
+            }
+            (FeatureKind::Spectre(s), "angle") => {
+                s.angle = value;
                 Ok(())
             }
             (FeatureKind::Spectre(s), "web") => {

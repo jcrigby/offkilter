@@ -77,8 +77,11 @@ pub struct Params {
     /// bit is refused.
     pub bit: f64,
     /// Slides the tiling under the board, mm: with zero the patch's
-    /// bounding box is centred on the board.
+    /// most interior point sits at the board's centre.
     pub shift: Vec2,
+    /// Turns the tiling under the board, degrees anticlockwise about
+    /// that point, before the shift.
+    pub angle: f64,
     /// Pieces smaller than this area, mm², are left to the resin: the
     /// board's edge cuts slivers off the outer tiles wherever it falls.
     pub scrap: f64,
@@ -874,6 +877,11 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
     if !(p.shift.x.is_finite() && p.shift.y.is_finite()) {
         return Err("shift must be finite".into());
     }
+    if !p.angle.is_finite() {
+        return Err("angle must be finite".into());
+    }
+    let turn = Vec2::from_angle(p.angle.to_radians());
+    let spin = move |v: Vec2| Vec2::new(v.x * turn.x - v.y * turn.y, v.x * turn.y + v.y * turn.x);
     if !(p.scrap.is_finite() && p.scrap >= 0.0) {
         return Err("scrap must be zero or positive".into());
     }
@@ -926,7 +934,7 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
             continue;
         }
         let patch_centre = pole.1;
-        let place = |q: Vec2| (q - patch_centre) * p.edge + centre;
+        let place = |q: Vec2| spin((q - patch_centre) * p.edge) + centre;
         // Covered: the board's corners each lie in a tile and no edge
         // of the patch's boundary crosses the board.
         let mut corners_in = [false; 4];
@@ -938,15 +946,12 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
         ];
         for (_, xf) in &all {
             let verts = verts_of(xf);
-            let (tlo, thi) = bbox(&verts);
-            let (tlo, thi) = (
-                place(tlo - Vec2::new(margin, margin)),
-                place(thi + Vec2::new(margin, margin)),
-            );
-            let (tlo, thi) = (
-                Vec2::new(tlo.x.min(thi.x), tlo.y.min(thi.y)),
-                Vec2::new(tlo.x.max(thi.x), tlo.y.max(thi.y)),
-            );
+            // The placed tile's box, from its placed vertices (the tiling may
+            // be turned), a curve's bulge wider.
+            let placed_verts: Vec<Vec2> = verts.iter().map(|v| place(*v)).collect();
+            let (tlo, thi) = bbox(&placed_verts);
+            let pad = Vec2::new(margin, margin) * p.edge;
+            let (tlo, thi) = (tlo - pad, thi + pad);
             if corners
                 .iter()
                 .any(|c| c.x >= tlo.x && c.x <= thi.x && c.y >= tlo.y && c.y <= thi.y)
@@ -995,7 +1000,7 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
             "no patch up to depth 5 covers the board: a smaller board or a longer edge".into(),
         );
     };
-    let place = |q: Vec2| (q - patch_centre) * p.edge + centre;
+    let place = |q: Vec2| spin((q - patch_centre) * p.edge) + centre;
     let opts = ProfileOptions {
         arc_segment_angle: facet,
         merge_tolerance: 1e-6,
@@ -1326,6 +1331,7 @@ mod tests {
             bulge: KAPLAN_BULGE,
             bit: 0.0,
             shift: Vec2::ZERO,
+            angle: 0.0,
             scrap: 0.0,
         };
         let facet = 5f64.to_radians();
@@ -1466,6 +1472,7 @@ mod tests {
             bulge: 0.3,
             bit: 4.7625,
             shift: Vec2::ZERO,
+            angle: 0.0,
             scrap: 0.0,
         };
         let patch = build(&params, facet).unwrap();
@@ -1530,5 +1537,28 @@ mod tests {
         )
         .unwrap_err();
         assert!(err.contains("tightest radius"), "{err}");
+        // Turned under the board, the pieces still fill it exactly, and a
+        // full turn is no turn.
+        let turned = build(
+            &Params {
+                angle: 37.0,
+                ..params.clone()
+            },
+            facet,
+        )
+        .unwrap();
+        let sum: f64 = turned.pieces.iter().map(|p| signed_area(&p.outline)).sum();
+        assert!(near(sum, area, 1e-4 * area), "{sum} vs {area}");
+        assert!(turned.pieces[0].outline != patch.pieces[0].outline);
+        let full = build(
+            &Params {
+                angle: 360.0,
+                ..params.clone()
+            },
+            facet,
+        )
+        .unwrap();
+        assert_eq!(full.pieces.len(), patch.pieces.len());
+        assert!(full.pieces[0].outline[0].distance(patch.pieces[0].outline[0]) < 1e-9);
     }
 }

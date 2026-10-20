@@ -183,6 +183,7 @@ fn the_pattern_plate_grooves_every_gap() {
             bulge: None,
             bit: None,
             shift: None,
+            angle: None,
             scrap: None,
             web: None,
             groove: None,

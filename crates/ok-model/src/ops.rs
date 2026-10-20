@@ -602,6 +602,8 @@ pub enum Op {
         bit: f64,
         #[serde(default)]
         shift: Vec2,
+        #[serde(default)]
+        angle: f64,
         #[serde(default = "crate::feature::default_scrap")]
         scrap: f64,
         #[serde(default)]
@@ -638,6 +640,8 @@ pub enum Op {
         bit: Option<f64>,
         #[serde(default)]
         shift: Option<Vec2>,
+        #[serde(default)]
+        angle: Option<f64>,
         #[serde(default)]
         scrap: Option<f64>,
         #[serde(default)]
@@ -1783,6 +1787,7 @@ impl PartStudio {
                 bulge,
                 bit,
                 shift,
+                angle,
                 scrap,
                 web,
                 groove,
@@ -1803,6 +1808,7 @@ impl PartStudio {
                         bulge,
                         bit,
                         shift,
+                        angle,
                         scrap,
                         web,
                         groove,
@@ -1825,6 +1831,7 @@ impl PartStudio {
                 bulge,
                 bit,
                 shift,
+                angle,
                 scrap,
                 web,
                 groove,
@@ -1862,6 +1869,9 @@ impl PartStudio {
                     }
                     if let Some(v) = shift {
                         s.shift = v;
+                    }
+                    if let Some(v) = angle {
+                        s.angle = v;
                     }
                     if let Some(v) = scrap {
                         s.scrap = v;

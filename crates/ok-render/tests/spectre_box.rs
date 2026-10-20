@@ -174,6 +174,7 @@ fn the_bit_only_changes_the_corners() {
             bulge: None,
             bit: Some(0.0),
             shift: None,
+            angle: None,
             scrap: None,
             web: None,
             groove: None,
