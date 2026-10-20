@@ -62,8 +62,10 @@ works today, all in the browser:
   (`examples/track-gauge/`), a coat hook for a wire rack's rail
   (`examples/rack-hook/`), a puzzle top tiled with the Spectre
   (`examples/spectre-top/`), the same for a 4 in box with every piece
-  shaped for the router bit that cuts it (`examples/spectre-box/`) and
-  a mini chop saw from an angle grinder (`examples/chop-saw/`).
+  shaped for the router bit that cuts it (`examples/spectre-box/`),
+  a mini chop saw from an angle grinder (`examples/chop-saw/`) and a
+  sliding cutoff grinder adapted from a published plan
+  (`examples/cutoff-grinder/`).
 - Measuring from a photo: print the measuring sheet
   (`examples/measuring-sheet/`), lay parts on it with a steel rule for
   the print scale, photograph it, and the sizes, outlines and holes
