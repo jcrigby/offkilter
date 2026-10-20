@@ -2478,6 +2478,9 @@ class App implements SketchHost {
     body.appendChild(field("Router bit ⌀", bit));
     body.appendChild(field("Shift x", numberInput(k.shift.x, (v) => set({ shift: { x: v, y: k.shift.y } }))));
     body.appendChild(field("Shift y", numberInput(k.shift.y, (v) => set({ shift: { x: k.shift.x, y: v } }))));
+    const angle = this.exprInput(f, "angle", k.angle, (v) => set({ angle: v }));
+    angle.title = "Turns the tiling under the board, degrees anticlockwise about the patch's centre, before the shift";
+    body.appendChild(field("Turn°", angle));
     const scrap = this.exprInput(f, "scrap", k.scrap, (v) => set({ scrap: Math.max(0, v) }));
     scrap.title = "Pieces smaller than this area (mm²), the slivers the board's edge cuts off outer tiles, are left to the resin";
     body.appendChild(field("Scrap under", scrap));
