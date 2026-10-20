@@ -173,7 +173,7 @@ fn the_carriage_slides_and_the_grinder_plunges_clear_of_everything() {
             .map(|x| x.volume() > 1e-3)
             .unwrap_or(true)
     };
-    let mut stop = |doc: &mut Document, sign: f64, pin: &str| {
+    let stop = |doc: &mut Document, sign: f64, pin: &str| {
         let (mut free, mut hit) = (0.0f64, 6.0f64);
         for _ in 0..16 {
             let mid = (free + hit) / 2.0;
@@ -196,7 +196,6 @@ fn the_carriage_slides_and_the_grinder_plunges_clear_of_everything() {
         forward + backward >= 4.0,
         format!("the travel is {:.2} in", forward + backward),
     );
-    let travel = forward.min(backward) - 0.05;
     let positions = [-forward + 0.05, 0.0, backward - 0.05];
     for dy in positions {
         for deg in [0.0, plunge / 2.0, plunge] {
