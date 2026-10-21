@@ -19,6 +19,9 @@ pub struct Doc {
     bodies: Vec<Body>,
     /// Last assembly regeneration, for on-demand checks.
     assembly: Option<ok_model::AssemblyResult>,
+    /// The last Spectre plan, by its parameters: the panel asks for it
+    /// on every render and the patch takes a moment to lay.
+    spectre_plan: std::cell::RefCell<Option<(String, String)>>,
 }
 
 #[derive(Serialize)]
@@ -261,6 +264,7 @@ impl Doc {
             last: RegenResult::default(),
             bodies: Vec::new(),
             assembly: None,
+            spectre_plan: Default::default(),
         }
     }
 
@@ -271,6 +275,7 @@ impl Doc {
             last: RegenResult::default(),
             bodies: Vec::new(),
             assembly: None,
+            spectre_plan: Default::default(),
         }
     }
 
@@ -282,6 +287,7 @@ impl Doc {
             last: RegenResult::default(),
             bodies: Vec::new(),
             assembly: None,
+            spectre_plan: Default::default(),
         })
     }
 
@@ -666,6 +672,77 @@ impl Doc {
             },
             _ => error("not a puzzle feature".into()),
         }
+    }
+
+    /// A Spectre feature's plan: the board with every piece's outline,
+    /// tile, mystic flag and wood slot, the patch's depth and tile
+    /// count, the curve's tightest radius against the bit, the piece
+    /// counts per wood and the smallest piece's area; `{"error": ...}`
+    /// when the feature cannot be laid.
+    pub fn spectre_plan(&self, tab: u32, feature: u32) -> String {
+        let error = |e: String| serde_json::json!({ "error": e }).to_string();
+        let studio = match self.inner.tab(TabId(tab)).map(|t| &t.kind) {
+            Some(TabKind::PartStudio(p)) => p,
+            _ => return error("not a part studio tab".into()),
+        };
+        let kind = studio
+            .features()
+            .iter()
+            .find(|f| f.id.0 == feature)
+            .map(|f| &f.kind);
+        let Some(ok_model::FeatureKind::Spectre(sf)) = kind else {
+            return error("not a spectre feature".into());
+        };
+        let params = sf.params();
+        let key = format!("{params:?}");
+        if let Some((k, plan)) = self.spectre_plan.borrow().as_ref() {
+            if *k == key {
+                return plan.clone();
+            }
+        }
+        let plan = match ok_sketch::spectre::build(&params, 10f64.to_radians()) {
+            Ok(patch) => {
+                let mut counts = [0usize; 4];
+                let mut smallest = f64::INFINITY;
+                let pieces: Vec<serde_json::Value> = patch
+                    .pieces
+                    .iter()
+                    .map(|p| {
+                        let n = p.outline.len();
+                        let area = (0..n)
+                            .map(|i| p.outline[i].cross(p.outline[(i + 1) % n]))
+                            .sum::<f64>()
+                            / 2.0;
+                        counts[(p.wood as usize).min(3)] += 1;
+                        smallest = smallest.min(area);
+                        serde_json::json!({
+                            "tile": p.tile,
+                            "mystic": p.mystic,
+                            "wood": p.wood,
+                            "area": area,
+                            "outline": p.outline.iter().map(|q| serde_json::json!({ "x": q.x, "y": q.y })).collect::<Vec<_>>(),
+                        })
+                    })
+                    .collect();
+                serde_json::json!({
+                    "width": patch.width,
+                    "height": patch.height,
+                    "depth": patch.depth,
+                    "tiles": patch.tiles,
+                    "edge": params.edge,
+                    "bit": params.bit,
+                    // Straight edges have no curve to measure: null.
+                    "tightest": Some(ok_sketch::spectre::tightest_radius(params.curve, params.bulge) * params.edge).filter(|r| r.is_finite()),
+                    "pieces": pieces,
+                    "counts": counts,
+                    "smallest": smallest,
+                })
+                .to_string()
+            }
+            Err(e) => error(e),
+        };
+        *self.spectre_plan.borrow_mut() = Some((key, plan.clone()));
+        plan
     }
 
     /// A shop drawing sheet of a tab as a PDF: `opts_json` is

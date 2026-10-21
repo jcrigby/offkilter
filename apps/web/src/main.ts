@@ -2533,6 +2533,7 @@ class App implements SketchHost {
     const groove = numberInput(k.groove, (v) => set({ groove: v }));
     groove.title = "A printable pattern plate with the gaps as grooves this deep: a pilot the size of the gap rides in them while a bit of that size cuts the pieces apart from one board, the kerf being the gap; the board's thickness and a little. 0 for none.";
     body.appendChild(field("Pattern groove", groove));
+    body.appendChild(this.spectrePlanSvg(f));
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = `The curved Spectre, the aperiodic monotile, laid under the board: every tile it reaches is a piece, the board's edge cutting the outer ones (slivers under the scrap area go to the resin). The woods follow the scheme: the pairs that stand in for a ninth supertile (the mystics) dark, or a draw of two to four woods; no two woods can alternate on this tiling (three tiles meet at a vertex), but four can keep every neighbour apart, and a gapped top outlines every piece anyway. Shift slides the tiling under the board to change which tiles it gets. With a router bit, the inside corners are filleted to it and their mates rounded, for pieces routed one by one to their templates. The web is a body filling the gaps; the pattern plate cuts the top from one board with a pilot and a bit the size of the gap.`;
@@ -2599,6 +2600,122 @@ class App implements SketchHost {
     note.className = "note";
     note.textContent = `${k.cols * k.rows} pieces, ${k.tabs.length} tabs (${outs} out), ${k.corners.length} movable corners. Click a tab's head to flip it, select it to size it; drag a corner. Light and dark pieces alternate; cut each colour from its own board so the grain runs on. The gap is between pieces only. Show a colour's layout to see its pieces as they sit on their board, rows spread a bit apart so the corners route clean; export that view as DXF for the templates. The web is a body filling the gaps; the fixture is a tray to print with a pocket for every piece.`;
     body.appendChild(note);
+  }
+
+  /** The Spectre top drawn flat: the pieces by wood inside the board's outline. Dragging slides the tiling under the board (the shift); the wheel scales the tile (the edge) about the pointer. */
+  spectrePlanSvg(f: FeatureSummary): HTMLElement {
+    const wrap = document.createElement("div");
+    wrap.className = "spectre-plan";
+    if (f.kind.type !== "spectre") return wrap;
+    const k = f.kind;
+    const plan = this.kernel.spectrePlan(this.summary.tab, f.id);
+    if (!plan) {
+      wrap.textContent = f.error ?? "No plan.";
+      return wrap;
+    }
+    const ns = "http://www.w3.org/2000/svg";
+    const m = Math.max(plan.width, plan.height) * 0.03;
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", `${-m} ${-m} ${plan.width + 2 * m} ${plan.height + 2 * m}`);
+    svg.setAttribute("class", "spectre-svg");
+    const g = document.createElementNS(ns, "g");
+    g.setAttribute("transform", `translate(0 ${plan.height}) scale(1 -1)`);
+    svg.appendChild(g);
+    const woodNames = ["light", "dark", "third", "fourth"];
+    for (const [i, piece] of plan.pieces.entries()) {
+      if (piece.outline.length < 3) continue;
+      const d = piece.outline.map((p, j) => `${j ? "L" : "M"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ") + " Z";
+      const path = document.createElementNS(ns, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("class", `piece w${piece.wood}${piece.mystic ? " mystic" : ""}`);
+      path.appendChild(document.createElementNS(ns, "title")).textContent = `Piece ${i + 1} ${woodNames[piece.wood] ?? ""}${piece.mystic ? " (mystic)" : ""}: ${piece.area.toFixed(0)} mm², tile ${piece.tile + 1}`;
+      g.appendChild(path);
+    }
+    const board = document.createElementNS(ns, "rect");
+    board.setAttribute("x", "0");
+    board.setAttribute("y", "0");
+    board.setAttribute("width", String(plan.width));
+    board.setAttribute("height", String(plan.height));
+    board.setAttribute("class", "board");
+    g.appendChild(board);
+    // Drag slides the tiling with the pointer; the wheel scales the edge
+    // about the pointer, the shift scaling with it so the tiling stays put
+    // under the pointer.
+    // Board millimetres from the pointer, through the svg's own frame
+    // (the group's moves while a drag shows), y up.
+    const toLocal = (e: PointerEvent | WheelEvent): Vec2 => {
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return { x: 0, y: 0 };
+      const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+      return { x: p.x, y: plan.height - p.y };
+    };
+    let drag: { start: Vec2; last: Vec2 } | null = null;
+    svg.addEventListener("pointerdown", (e) => {
+      drag = { start: toLocal(e), last: toLocal(e) };
+      svg.setPointerCapture(e.pointerId);
+      svg.classList.add("dragging");
+      e.preventDefault();
+    });
+    svg.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      const p = toLocal(e);
+      g.setAttribute("transform", `translate(${p.x - drag.start.x} ${plan.height + (p.y - drag.start.y)}) scale(1 -1)`);
+      drag.last = p;
+    });
+    const endDrag = (e: PointerEvent) => {
+      if (!drag) return;
+      const p = toLocal(e);
+      const dx = p.x - drag.start.x;
+      const dy = p.y - drag.start.y;
+      drag = null;
+      svg.classList.remove("dragging");
+      if (Math.hypot(dx, dy) < 0.5) {
+        g.setAttribute("transform", `translate(0 ${plan.height}) scale(1 -1)`);
+        return;
+      }
+      this.apply({ type: "set_spectre", id: f.id, shift: { x: k.shift.x + dx, y: k.shift.y + dy } });
+    };
+    svg.addEventListener("pointerup", endDrag);
+    svg.addEventListener("pointercancel", endDrag);
+    let zoom = 1;
+    let zoomTimer: number | null = null;
+    let zoomAt: Vec2 = { x: plan.width / 2, y: plan.height / 2 };
+    svg.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      zoom *= Math.exp(-e.deltaY * 0.0015);
+      zoomAt = toLocal(e);
+      if (zoomTimer !== null) window.clearTimeout(zoomTimer);
+      zoomTimer = window.setTimeout(() => {
+        zoomTimer = null;
+        const factor = zoom;
+        zoom = 1;
+        if (Math.abs(factor - 1) < 1e-3) return;
+        // The tiling is centred at the board's centre plus the shift (in
+        // patch units it is the pole); scaling about the pointer keeps the
+        // tile under it in place.
+        const c = { x: plan.width / 2 + k.shift.x, y: plan.height / 2 + k.shift.y };
+        const shift = { x: k.shift.x + (c.x - zoomAt.x) * (factor - 1), y: k.shift.y + (c.y - zoomAt.y) * (factor - 1) };
+        this.apply({ type: "set_spectre", id: f.id, edge: Math.max(1, k.edge * factor), shift });
+      }, 200);
+    }, { passive: false });
+    wrap.appendChild(svg);
+    const stats = document.createElement("div");
+    stats.className = "spectre-stats";
+    const used = plan.counts.map((n, i) => (n ? `${n} ${woodNames[i]}` : "")).filter(Boolean).join(", ");
+    const tightest = plan.tightest;
+    const bitLine = tightest === null
+      ? "; straight edges"
+      : plan.bit > 0
+        ? `; bit radius ${(plan.bit / 2).toFixed(2)} mm against the curve's tightest ${tightest.toFixed(2)}${tightest >= plan.bit / 2 ? "" : " ✗"}`
+        : `; the curve's tightest radius ${tightest.toFixed(2)} mm`;
+    stats.innerHTML = `${plan.pieces.length} pieces (${used}) from ${plan.tiles} tiles of a depth ${plan.depth} patch; smallest ${plan.smallest.toFixed(0)} mm²${bitLine}`;
+    if (tightest !== null && plan.bit > 0 && tightest < plan.bit / 2) stats.classList.add("bad");
+    wrap.appendChild(stats);
+    const hint = document.createElement("p");
+    hint.className = "note";
+    hint.textContent = "Drag the plan to slide the tiling under the board; scroll over it to scale the tile about the pointer. Every change regenerates the top.";
+    wrap.appendChild(hint);
+    return wrap;
   }
 
   /** The puzzle drawn flat: pieces by colour, tab heads to click, corners to drag, and the broken rules underneath. */

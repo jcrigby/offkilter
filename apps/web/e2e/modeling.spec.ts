@@ -405,6 +405,62 @@ test("puzzle feature: a grid of interlocking pieces and an alignment web", async
   expect(await page.evaluate(() => (window as unknown as { offkilter: any }).offkilter.summary.bodies.length)).toBe(7);
 });
 
+test("spectre feature: the plan under the board slides and scales", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  await page.click("#btn-add-spectre");
+  await page.waitForTimeout(500);
+  const state = () =>
+    page.evaluate(() => {
+      const app = (window as unknown as { offkilter: any }).offkilter;
+      const k = app.summary.features[0].kind;
+      return { pieces: app.summary.bodies.filter((b: any) => b.name.startsWith("Piece")).length, errors: app.summary.features.filter((f: any) => f.error).length, shift: k.shift as { x: number; y: number }, edge: k.edge as number, scheme: k.scheme as string };
+    });
+  const first = await state();
+  expect(first.errors).toBe(0);
+  expect(first.pieces).toBeGreaterThan(40);
+  expect(first.scheme).toBe("mystics");
+  // The plan draws every piece, the mystic pairs in the dark wood.
+  await expect(page.locator(".spectre-svg .piece")).toHaveCount(first.pieces);
+  expect(await page.locator(".spectre-svg .piece.w1.mystic").count()).toBeGreaterThan(5);
+  await expect(page.locator(".spectre-stats")).toContainText("pieces");
+  // Dragging the plan slides the tiling: the shift follows the pointer.
+  await page.locator(".spectre-svg").scrollIntoViewIfNeeded();
+  const box = (await page.locator(".spectre-svg").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 30, box.y + box.height / 2, { steps: 4 });
+  await page.mouse.up();
+  await page.waitForTimeout(1500);
+  const slid = await state();
+  expect(slid.shift.x).toBeGreaterThan(first.shift.x + 5);
+  expect(Math.abs(slid.shift.y - first.shift.y)).toBeLessThan(1);
+  expect(slid.errors).toBe(0);
+  // Scrolling scales the tile.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, -300);
+  await page.waitForTimeout(1800);
+  const scaled = await state();
+  expect(scaled.edge).toBeGreaterThan(first.edge * 1.2);
+  expect(scaled.errors).toBe(0);
+  // Four woods, no two neighbours alike: the plan shows all four.
+  await page.locator("#detail-body select").filter({ hasText: "mystic pairs dark" }).selectOption("four_map");
+  await page.waitForTimeout(1500);
+  for (const w of ["w0", "w1", "w2", "w3"]) expect(await page.locator(`.spectre-svg .piece.${w}`).count()).toBeGreaterThan(0);
+  await expect(page.locator("#detail-body")).toContainText("Fourth wood");
+  // The straight tile has no curve to measure; the plan still draws.
+  const bulge = page.locator("#detail-body .field", { hasText: "Bulge" }).locator("input");
+  await bulge.fill("0");
+  await bulge.press("Enter");
+  await page.waitForTimeout(1500);
+  await expect(page.locator(".spectre-stats")).toContainText("straight edges");
+  // The straight tile covers the same area, so about as many pieces as the curved one at this edge.
+  expect(await page.locator(".spectre-svg .piece").count()).toBeGreaterThan(scaled.pieces * 0.6);
+});
+
 test("assembly tab: insert two instances and mate them face to face", async ({ page }) => {
   page.on("dialog", (d) => d.accept(d.defaultValue()));
   await page.goto("/");

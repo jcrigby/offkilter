@@ -109,6 +109,17 @@ button.active { background: rgba(78, 161, 255, 0.25); border-color: var(--accent
 .puzzle-svg .tab.in { fill: #e5642c; }
 .puzzle-svg .tab.selected { stroke: #ff0; stroke-width: 1.2; }
 .puzzle-svg .corner { fill: #fff; stroke: #222; stroke-width: 0.5; cursor: move; }
+.spectre-plan { margin: 8px 0; }
+.spectre-svg { width: 100%; display: block; background: #777; border-radius: 4px; cursor: grab; touch-action: none; }
+.spectre-svg.dragging { cursor: grabbing; }
+.spectre-svg .piece { stroke: #333; stroke-width: 0.4; }
+.spectre-svg .piece.w0 { fill: #e9d9b4; }
+.spectre-svg .piece.w1 { fill: #6e4a2a; }
+.spectre-svg .piece.w2 { fill: #c48661; }
+.spectre-svg .piece.w3 { fill: #d4b56a; }
+.spectre-svg .board { fill: none; stroke: #fff; stroke-width: 0.8; stroke-dasharray: 4 3; }
+.spectre-stats { font-family: var(--mono, ui-monospace, monospace); font-size: 12px; color: var(--muted, #aaa); margin: 4px 0; }
+.spectre-stats .bad { color: var(--danger, #e55); }
 .puzzle-problems { color: var(--danger, #e55); font-size: 12px; padding-left: 16px; margin: 6px 0; }
 .error { color: var(--err); margin: 8px 0; }
 .edge-list { list-style: none; padding: 0; margin: 6px 0; }
