@@ -5,7 +5,7 @@ import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoi
 type HiddenLines = "auto" | "on" | "off";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
-import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, SpectreLayout, SpectreCurve, SpectreScheme, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, SpectreLayout, SpectreCurve, SpectreScheme, RipFound, RipSearch, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -98,6 +98,10 @@ class App implements SketchHost {
   selected: number | null = null;
   /** The puzzle tab whose numbers the panel shows (an interior edge index). */
   puzzleTab: number | null = null;
+  /** The rip planner: the grid point a cut starts from, the search's results once run, and the ranking shown. */
+  ripPending: Vec2 | null = null;
+  ripSearch: RipSearch | null = null;
+  ripMode: keyof RipSearch = "kit";
   sketcher = new Sketcher(this);
   sync = new Sync(
     {
@@ -2507,6 +2511,7 @@ class App implements SketchHost {
       ["three_random", "three woods at random"],
       ["four_map", "four woods, neighbours apart"],
       ["mix", "four woods, light favoured"],
+      ["profiles", "by strip profile (rips)"],
     ];
     const scheme = document.createElement("select");
     for (const [value, label] of SCHEMES) {
@@ -2519,7 +2524,7 @@ class App implements SketchHost {
     scheme.addEventListener("change", () => set({ scheme: scheme.value as SpectreScheme }));
     scheme.title = "How the pieces get their woods: the pairs standing in for a ninth supertile (the mystics) dark and the rest light; all light; two or three woods at random; light and dark by the tile's turn (only a mystic's partner sits at an odd turn, so one of each pair is dark); or four woods with no two neighbours alike, spread evenly or with the light wood favoured and the fourth rare";
     body.appendChild(field("Woods", scheme));
-    const woodsUsed = { mystics: 2, one: 1, two_random: 2, two_turn: 2, three_random: 3, four_map: 4, mix: 4 }[k.scheme];
+    const woodsUsed = { mystics: 2, one: 1, two_random: 2, two_turn: 2, three_random: 3, four_map: 4, mix: 4, profiles: 4 }[k.scheme];
     wood("Light wood", k.light, (m) => set({ light: m }));
     if (woodsUsed >= 2) wood(k.scheme === "mystics" ? "Dark wood (mystics)" : "Dark wood", k.dark, (m) => set({ dark: m }));
     if (woodsUsed >= 3) wood("Third wood", k.third, (m) => set({ third: m }));
@@ -2534,6 +2539,7 @@ class App implements SketchHost {
     groove.title = "A printable pattern plate with the gaps as grooves this deep: a pilot the size of the gap rides in them while a bit of that size cuts the pieces apart from one board, the kerf being the gap; the board's thickness and a little. 0 for none.";
     body.appendChild(field("Pattern groove", groove));
     body.appendChild(this.spectrePlanSvg(f));
+    body.appendChild(this.spectreRipsSvg(f));
     const note = document.createElement("p");
     note.className = "note";
     note.textContent = `The curved Spectre, the aperiodic monotile, laid under the board: every tile it reaches is a piece, the board's edge cutting the outer ones (slivers under the scrap area go to the resin). The woods follow the scheme: the pairs that stand in for a ninth supertile (the mystics) dark, or a draw of two to four woods; no two woods can alternate on this tiling (three tiles meet at a vertex), but four can keep every neighbour apart, and a gapped top outlines every piece anyway. Shift slides the tiling under the board to change which tiles it gets. With a router bit, the inside corners are filleted to it and their mates rounded, for pieces routed one by one to their templates. The web is a body filling the gaps; the pattern plate cuts the top from one board with a pilot and a bit the size of the gap.`;
@@ -2714,6 +2720,156 @@ class App implements SketchHost {
     const hint = document.createElement("p");
     hint.className = "note";
     hint.textContent = "Drag the plan to slide the tiling under the board; scroll over it to scale the tile about the pointer. Every change regenerates the top.";
+    wrap.appendChild(hint);
+    return wrap;
+  }
+
+  /** The straight Spectre on its 30° grid, ripped by the feature's cuts: click two grid points on one line to add a cut, undo or clear them, or take a decomposition the search found. The pieces are read by the saw and gathered into a kit of profiles. */
+  spectreRipsSvg(f: FeatureSummary): HTMLElement {
+    const wrap = document.createElement("div");
+    wrap.className = "rips-plan";
+    if (f.kind.type !== "spectre") return wrap;
+    const k = f.kind;
+    const cuts: [Vec2, Vec2][] = k.rips ?? [];
+    const head = document.createElement("h4");
+    head.textContent = "Rips";
+    wrap.appendChild(head);
+    let rips;
+    try {
+      rips = this.kernel.spectreRips(cuts);
+    } catch (e) {
+      wrap.appendChild(Object.assign(document.createElement("p"), { className: "error", textContent: String(e) }));
+      return wrap;
+    }
+    const setCuts = (next: [Vec2, Vec2][]) => this.apply({ type: "set_spectre", id: f.id, rips: next });
+    const row = document.createElement("div");
+    row.className = "row";
+    row.append(
+      button("Undo cut", () => setCuts(cuts.slice(0, -1))),
+      button("Clear cuts", () => setCuts([])),
+      button(this.ripSearch ? "Decompositions found" : "Find decompositions", () => {
+        this.ripSearch = this.kernel.spectreRipsSearch();
+        this.renderDetail();
+      }),
+    );
+    if (k.bulge !== 0) row.append(button("Straighten the tile", () => this.apply({ type: "set_spectre", id: f.id, bulge: 0 })));
+    wrap.appendChild(row);
+    // The tile on its grid.
+    const ns = "http://www.w3.org/2000/svg";
+    const xs = rips.tile.map((p) => p.x);
+    const ys = rips.tile.map((p) => p.y);
+    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    const m = 0.45;
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", `${x0 - m} ${-(y1 + m)} ${x1 - x0 + 2 * m} ${y1 - y0 + 2 * m}`);
+    svg.setAttribute("class", "rips-svg");
+    const g = document.createElementNS(ns, "g");
+    g.setAttribute("transform", "scale(1 -1)");
+    svg.appendChild(g);
+    const pt = (p: Vec2) => `${p.x.toFixed(4)} ${p.y.toFixed(4)}`;
+    const el = (name: string, attrs: Record<string, string>) => {
+      const e = document.createElementNS(ns, name);
+      for (const [a, v] of Object.entries(attrs)) e.setAttribute(a, v);
+      return e;
+    };
+    for (const [i, piece] of rips.pieces.entries()) {
+      const path = el("path", { d: piece.outline.map((p, j) => `${j ? "L" : "M"} ${pt(p)}`).join(" ") + " Z", class: `piece p${piece.profile}` });
+      path.appendChild(document.createElementNS(ns, "title")).textContent = `Piece ${i + 1}, profile ${String.fromCharCode(65 + piece.profile)}: ${piece.saw.worst === "through" ? "through rips" : piece.saw.worst === "rabbet" ? `rips and ${piece.saw.rabbets} rabbet(s)` : piece.saw.worst === "dado" ? "needs a dado" : "not on the saw: " + piece.saw.why}`;
+      g.appendChild(path);
+    }
+    for (const l of rips.lines) {
+      const a = { x: l.p.x - 20 * l.d.x, y: l.p.y - 20 * l.d.y };
+      const b = { x: l.p.x + 20 * l.d.x, y: l.p.y + 20 * l.d.y };
+      g.appendChild(el("line", { x1: String(a.x), y1: String(a.y), x2: String(b.x), y2: String(b.y), class: "grid" }));
+    }
+    g.appendChild(el("path", { d: rips.tile.map((p, j) => `${j ? "L" : "M"} ${pt(p)}`).join(" ") + " Z", class: "outline" }));
+    for (const [a, b] of cuts) g.appendChild(el("line", { x1: String(a.x), y1: String(a.y), x2: String(b.x), y2: String(b.y), class: "cut" }));
+    // Grid points: the first click picks one, the second a point it can
+    // cut to, along a 30° line through the tile.
+    const same = (a: Vec2, b: Vec2) => Math.hypot(a.x - b.x, a.y - b.y) < 1e-6;
+    const inTile = (p: Vec2) => {
+      const t = rips.tile;
+      let inside = false;
+      for (let i = 0, j = t.length - 1; i < t.length; j = i++) {
+        const [a, b] = [t[i]!, t[j]!];
+        if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+      }
+      if (inside) return true;
+      for (let i = 0; i < t.length; i++) {
+        const [a, b] = [t[i]!, t[(i + 1) % t.length]!];
+        const d = { x: b.x - a.x, y: b.y - a.y };
+        const s = ((p.x - a.x) * d.x + (p.y - a.y) * d.y) / (d.x * d.x + d.y * d.y);
+        if (s > -1e-9 && s < 1 + 1e-9 && Math.abs(d.x * (p.y - a.y) - d.y * (p.x - a.x)) / Math.hypot(d.x, d.y) < 1e-6) return true;
+      }
+      return false;
+    };
+    const cutOk = (a: Vec2, b: Vec2) => {
+      if (same(a, b)) return false;
+      const deg = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+      const r = Math.abs(deg % 30);
+      if (Math.min(r, 30 - r) > 0.5) return false;
+      for (let i = 1; i < 24; i++) if (!inTile({ x: a.x + ((b.x - a.x) * i) / 24, y: a.y + ((b.y - a.y) * i) / 24 })) return false;
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      return !rips.tile.some((p, i) => {
+        const q = rips.tile[(i + 1) % rips.tile.length]!;
+        const d = { x: q.x - p.x, y: q.y - p.y };
+        return Math.abs(d.x * (mid.y - p.y) - d.y * (mid.x - p.x)) / Math.hypot(d.x, d.y) < 1e-6;
+      });
+    };
+    const pending = this.ripPending;
+    for (const n of rips.nodes) {
+      const eligible = pending !== null && cutOk(pending, n);
+      const c = el("circle", { cx: String(n.x), cy: String(n.y), r: eligible || (pending && same(pending, n)) ? "0.07" : "0.035", class: `node${pending && same(pending, n) ? " pending" : ""}${eligible ? " eligible" : ""}` });
+      c.addEventListener("click", () => {
+        if (pending === null) {
+          this.ripPending = n;
+          this.renderDetail();
+        } else if (cutOk(pending, n)) {
+          this.ripPending = null;
+          setCuts([...cuts, [pending, n]]);
+        } else {
+          this.ripPending = same(pending, n) ? null : n;
+          this.renderDetail();
+        }
+      });
+      g.appendChild(c);
+    }
+    wrap.appendChild(svg);
+    // The kit and the verdicts.
+    const kit = document.createElement("div");
+    kit.className = "rips-kit";
+    const verdict = (s: { worst: string; rabbets: number; dados: number; max_tilt: number; why: string }) =>
+      s.worst === "through" ? `through rips, tilt ≤ ${Math.round(s.max_tilt)}°` : s.worst === "rabbet" ? `rips + ${s.rabbets} rabbet${s.rabbets > 1 ? "s" : ""}, tilt ≤ ${Math.round(s.max_tilt)}°` : s.worst === "dado" ? `needs a dado` : `not on the saw: ${s.why}`;
+    const fmt = (v: number) => (Math.abs(v - Math.round(v)) < 0.002 ? String(Math.round(v)) : v.toFixed(2));
+    const lines: string[] = [];
+    rips.kit.forEach((p, j) => {
+      const sides = p.outline.map((a, i) => Math.hypot(p.outline[(i + 1) % p.outline.length]!.x - a.x, p.outline[(i + 1) % p.outline.length]!.y - a.y));
+      lines.push(`Profile ${String.fromCharCode(65 + j)} × ${p.count}: sides ${sides.map(fmt).join(", ")} e; corners ${p.saw.angles.map((a) => Math.round(a) + "°").join(", ")}; ${verdict(p.saw)}`);
+    });
+    const worst = rips.pieces.reduce((w, p) => Math.max(w, ["through", "rabbet", "dado", "no"].indexOf(p.saw.worst)), 0);
+    kit.innerHTML = `<div>${cuts.length} cut${cuts.length === 1 ? "" : "s"}, ${rips.pieces.length} piece${rips.pieces.length === 1 ? "" : "s"}, ${rips.kit.length} profile${rips.kit.length === 1 ? "" : "s"}: ${["all through rips", "rips and rabbets", "a dado needed", "a piece the saw cannot make"][worst]}</div>` + lines.map((l) => `<div${l.includes("not on the saw") ? ' class="bad"' : ""}>${l}</div>`).join("");
+    wrap.appendChild(kit);
+    // The search's decompositions.
+    if (this.ripSearch) {
+      const modes: [keyof RipSearch, string][] = [["kit", "fewest profiles"], ["through", "fewest pieces"], ["rabbet", "rabbets allowed"]];
+      const sel = select(modes.map(([, l]) => l), modes.find(([m]) => m === this.ripMode)?.[1] ?? "fewest profiles", (v) => {
+        this.ripMode = modes.find(([, l]) => l === v)?.[0] ?? "kit";
+        this.renderDetail();
+      });
+      wrap.appendChild(field("Ranked by", sel));
+      const list = document.createElement("div");
+      list.className = "rips-list";
+      const sig = (cs: [Vec2, Vec2][]) => cs.map((c) => c.map((p) => `${p.x.toFixed(4)},${p.y.toFixed(4)}`).sort().join(";")).sort().join("|");
+      for (const r of this.ripSearch[this.ripMode] as RipFound[]) {
+        const how = r.worst === 0 ? "through rips" : `${r.rabbets} rabbet${r.rabbets > 1 ? "s" : ""}`;
+        const b = button(`${r.kinds} profile${r.kinds > 1 ? "s" : ""} · ${r.pieces} piece${r.pieces > 1 ? "s" : ""} of ${r.shares.join("/")} % · ${how} · thinnest ${r.minw.toFixed(2)} e · tilt ${Math.round(r.tilt)}°`, () => setCuts(r.cuts), "rip-found" + (sig(r.cuts) === sig(cuts) ? " on" : ""));
+        list.appendChild(b);
+      }
+      wrap.appendChild(list);
+    }
+    const hint = document.createElement("p");
+    hint.className = "note";
+    hint.textContent = "The straight tile on lines at every 30° through its vertices: click a grid point, then one of the ringed points it can cut to. The cuts split every tile of the top into strip profiles, read as a table saw would: a face is a through rip when its line clears the piece at both ends, a rabbet when it stops at an inside corner, a dado between two; every cut needs a face the whole piece sits to one side of, within a 45° blade tilt. Mirror images count as one profile, since the stock just flips. The search tries every set of up to four cuts from the inside corners and one more from any corner.";
     wrap.appendChild(hint);
     return wrap;
   }

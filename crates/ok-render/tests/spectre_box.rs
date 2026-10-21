@@ -185,6 +185,7 @@ fn the_bit_only_changes_the_corners() {
             dark: None,
             third: None,
             fourth: None,
+            rips: None,
         })
         .unwrap();
     }

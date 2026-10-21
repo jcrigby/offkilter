@@ -3654,6 +3654,7 @@ mod tests {
                 }),
                 third: None,
                 fourth: None,
+                rips: Vec::new(),
                 name: None,
             })
             .unwrap()
@@ -3750,6 +3751,7 @@ mod tests {
                 dark: None,
                 third: None,
                 fourth: None,
+                rips: None,
             })
             .unwrap();
         };
@@ -3785,6 +3787,7 @@ mod tests {
                 name: woods[3].into(),
                 density: 0.75,
             })),
+            rips: None,
         })
         .unwrap();
         let r = ps.regenerate();

@@ -49,6 +49,8 @@ const SPECTRE: [(f64, f64); 14] = [
 const KEYS: [usize; 4] = [3, 5, 7, 11];
 /// Area of the tile with unit edges (the curves add and take away the
 /// same amount), `3 + 3√3`.
+pub mod rips;
+
 pub const TILE_AREA: f64 = 8.196_152_422_706_632;
 
 /// Kaplan's curve: the control points `0.6` edge lengths off the edge.
@@ -89,6 +91,10 @@ pub struct Params {
     pub scheme: Scheme,
     /// Seed of the random schemes.
     pub seed: u32,
+    /// Rips: cuts across the straight tile, in tile units, each along a
+    /// 30° line, that split every tile into strip profiles (see
+    /// `rips`); only with the straight tile (`bulge` 0).
+    pub rips: Vec<rips::Cut>,
 }
 
 /// How the pieces get their woods: a wood slot (0 to 3, light, dark,
@@ -116,6 +122,10 @@ pub enum Scheme {
     /// Four woods with no two neighbours alike, the light wood favoured
     /// and the fourth rare.
     Mix,
+    /// By the strip profile the rips make, in the kit's order (largest
+    /// first): a piece of the first profile light, the second dark, and
+    /// so on. Without rips, every piece light.
+    Profiles,
 }
 
 /// The shape of an edge's curve.
@@ -144,6 +154,9 @@ pub struct Piece {
     /// 3 fourth.
     #[serde(default)]
     pub wood: u8,
+    /// With rips, which strip profile of the kit this piece is cut from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub profile: Option<u8>,
     /// Counter-clockwise outline, the gap taken off and the board's
     /// edges applied.
     pub outline: Vec<Vec2>,
@@ -426,7 +439,7 @@ pub fn tiles(depth: u32) -> Vec<(bool, Xf)> {
 
 // -- the curved tile -----------------------------------------------------
 
-fn vertex(i: usize) -> Vec2 {
+pub(crate) fn vertex(i: usize) -> Vec2 {
     Vec2::new(SPECTRE[i % 14].0, SPECTRE[i % 14].1)
 }
 
@@ -896,6 +909,17 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
     if !(p.bit.is_finite() && p.bit >= 0.0) {
         return Err("bit must be zero or positive".into());
     }
+    if !p.rips.is_empty() {
+        if p.bulge != 0.0 {
+            return Err("rips need the straight tile: set the bulge to 0".into());
+        }
+        if let Some(c) = p.rips.iter().find(|c| !rips::cut_ok(c[0], c[1])) {
+            return Err(format!(
+                "rip from ({:.3}, {:.3}) to ({:.3}, {:.3}) is not a cut along a 30° line through the tile",
+                c[0].x, c[0].y, c[1].x, c[1].y
+            ));
+        }
+    }
     if p.bit > 0.0 {
         let tightest = tightest_radius(p.curve, p.bulge) * p.edge;
         if tightest < p.bit / 2.0 {
@@ -1102,10 +1126,40 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
                 tile: k as u32,
                 mystic: *mystic,
                 wood: woods[k],
+                profile: None,
                 outline,
             });
         }
         touched += kept as usize;
+    }
+    if !p.rips.is_empty() {
+        // Every piece splits by the strip profiles the rips make,
+        // mapped through its tile's placement; a profile's pieces take
+        // its wood under the profiles scheme.
+        let faces = rips::pieces(&p.rips);
+        let profiles = rips::profile_of(&faces);
+        let mut split = Vec::new();
+        for piece in pieces {
+            let xf = &all[piece.tile as usize].1;
+            let parts = rips::split_by(&piece.outline, &faces, |q| place(apply(xf, q)));
+            for (j, outline) in parts {
+                if signed_area(&outline) < p.scrap {
+                    continue;
+                }
+                split.push(Piece {
+                    tile: piece.tile,
+                    mystic: piece.mystic,
+                    wood: if p.scheme == Scheme::Profiles {
+                        profiles[j].min(3)
+                    } else {
+                        piece.wood
+                    },
+                    profile: Some(profiles[j]),
+                    outline,
+                });
+            }
+        }
+        pieces = split;
     }
     if pieces.is_empty() {
         return Err("no tile reaches the board".into());
@@ -1132,7 +1186,7 @@ pub fn colour(all: &[(bool, Xf)], scheme: Scheme, seed: u32) -> Vec<u8> {
     };
     match scheme {
         Scheme::Mystics => all.iter().map(|(m, _)| *m as u8).collect(),
-        Scheme::One => vec![0; n],
+        Scheme::One | Scheme::Profiles => vec![0; n],
         Scheme::TwoRandom => (0..n).map(|_| (rng.next() % 2) as u8).collect(),
         Scheme::TwoTurn => all.iter().map(|(_, xf)| turn_odd(xf) as u8).collect(),
         Scheme::ThreeRandom => (0..n).map(|_| (rng.next() % 3) as u8).collect(),
@@ -1481,6 +1535,7 @@ mod tests {
             scrap: 0.0,
             scheme: Scheme::Mystics,
             seed: 0,
+            rips: Vec::new(),
         };
         let facet = 5f64.to_radians();
         let patch = build(&params, facet).unwrap();
@@ -1624,6 +1679,7 @@ mod tests {
             scrap: 0.0,
             scheme: Scheme::Mystics,
             seed: 0,
+            rips: Vec::new(),
         };
         let patch = build(&params, facet).unwrap();
         let area = params.width * params.height;
@@ -1798,11 +1854,84 @@ mod tests {
                 scrap: 0.0,
                 scheme: Scheme::FourMap,
                 seed: 1,
+                rips: Vec::new(),
             },
             5f64.to_radians(),
         )
         .unwrap();
         let w = colour(&tiles(patch.depth), Scheme::FourMap, 1);
         assert!(patch.pieces.iter().all(|p| p.wood == w[p.tile as usize]));
+    }
+
+    #[test]
+    fn rips_split_every_straight_tile_into_its_profiles() {
+        let plain = Params {
+            width: 150.0,
+            height: 100.0,
+            edge: 12.7,
+            gap: 1.5,
+            curve: Curve::Cubic,
+            bulge: 0.0,
+            bit: 0.0,
+            shift: Vec2::ZERO,
+            angle: 20.0,
+            scrap: 0.0,
+            scheme: Scheme::Profiles,
+            seed: 0,
+            rips: Vec::new(),
+        };
+        let facet = 10f64.to_radians();
+        let whole = build(&plain, facet).unwrap();
+        let best = rips::ranked().kit[0].clone();
+        let ripped = build(
+            &Params {
+                rips: best.cuts.clone(),
+                ..plain.clone()
+            },
+            facet,
+        )
+        .unwrap();
+        // Six profiles per tile; the same wood as a whole.
+        assert!(
+            ripped.pieces.len() > 3 * whole.pieces.len(),
+            "{} from {}",
+            ripped.pieces.len(),
+            whole.pieces.len()
+        );
+        let a: f64 = whole.pieces.iter().map(|p| signed_area(&p.outline)).sum();
+        let b: f64 = ripped.pieces.iter().map(|p| signed_area(&p.outline)).sum();
+        assert!((a - b).abs() < 1e-6 * a, "{a} vs {b}");
+        assert!(ripped.pieces.iter().all(|p| p.profile.is_some()));
+        // Two profiles, the first (the larger) light and the second dark.
+        let profiles: std::collections::BTreeSet<u8> =
+            ripped.pieces.iter().filter_map(|p| p.profile).collect();
+        assert_eq!(profiles.len(), 2);
+        assert!(ripped.pieces.iter().all(|p| p.wood == p.profile.unwrap()));
+        let whole_tiles = ripped
+            .pieces
+            .iter()
+            .filter(|p| p.outline.len() == 4)
+            .count();
+        assert!(whole_tiles > 0);
+        // The curved tile cannot be ripped, nor can a cut off the grid.
+        let err = build(
+            &Params {
+                bulge: KAPLAN_BULGE,
+                rips: best.cuts.clone(),
+                ..plain.clone()
+            },
+            facet,
+        )
+        .unwrap_err();
+        assert!(err.contains("straight"), "{err}");
+        let err = build(
+            &Params {
+                rips: vec![[vertex(8), vertex(4)]],
+                ..plain.clone()
+            },
+            facet,
+        )
+        .unwrap_err();
+        assert!(err.contains("30°"), "{err}");
     }
 }

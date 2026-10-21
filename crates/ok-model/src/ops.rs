@@ -624,6 +624,8 @@ pub enum Op {
         third: Option<Material>,
         #[serde(default)]
         fourth: Option<Material>,
+        #[serde(default)]
+        rips: Vec<[Vec2; 2]>,
         name: Option<String>,
     },
     SetSpectre {
@@ -671,6 +673,9 @@ pub enum Op {
         third: Option<Option<Material>>,
         #[serde(default, with = "double_option")]
         fourth: Option<Option<Material>>,
+        /// The whole list; an empty one clears the rips.
+        #[serde(default)]
+        rips: Option<Vec<[Vec2; 2]>>,
     },
     SetDraft {
         id: FeatureId,
@@ -1814,6 +1819,7 @@ impl PartStudio {
                 dark,
                 third,
                 fourth,
+                rips,
                 name,
             } => {
                 out.feature = Some(self.push_feature(
@@ -1839,6 +1845,7 @@ impl PartStudio {
                         dark,
                         third,
                         fourth,
+                        rips,
                     }),
                     name,
                 ));
@@ -1866,6 +1873,7 @@ impl PartStudio {
                 dark,
                 third,
                 fourth,
+                rips,
             } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Spectre(s) => {
                     if let Some(v) = plane {
@@ -1930,6 +1938,9 @@ impl PartStudio {
                     }
                     if let Some(v) = fourth {
                         s.fourth = v;
+                    }
+                    if let Some(v) = rips {
+                        s.rips = v;
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "spectre")),

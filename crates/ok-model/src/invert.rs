@@ -251,6 +251,7 @@ impl PartStudio {
                 dark,
                 third,
                 fourth,
+                rips,
             } => match before.kind() {
                 Some(FeatureKind::Spectre(s)) => vec![Op::SetSpectre {
                     id,
@@ -275,6 +276,7 @@ impl PartStudio {
                     dark: dark.map(|_| s.dark.clone()),
                     third: third.map(|_| s.third.clone()),
                     fourth: fourth.map(|_| s.fourth.clone()),
+                    rips: rips.map(|_| s.rips.clone()),
                 }],
                 _ => Vec::new(),
             },
