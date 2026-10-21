@@ -457,7 +457,8 @@ test("spectre feature: the plan under the board slides and scales", async ({ pag
   await bulge.press("Enter");
   await page.waitForTimeout(1500);
   await expect(page.locator(".spectre-stats")).toContainText("straight edges");
-  expect(await page.locator(".spectre-svg .piece").count()).toBeGreaterThan(40);
+  // The straight tile covers the same area, so about as many pieces as the curved one at this edge.
+  expect(await page.locator(".spectre-svg .piece").count()).toBeGreaterThan(scaled.pieces * 0.6);
 });
 
 test("assembly tab: insert two instances and mate them face to face", async ({ page }) => {
