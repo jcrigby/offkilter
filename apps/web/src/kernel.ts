@@ -109,6 +109,8 @@ export type Grain = "x" | "y";
 export type PuzzleSeg = { type: "line"; a: Vec2; b: Vec2 } | { type: "arc"; center: Vec2; radius: number; start: Vec2; end: Vec2; ccw: boolean };
 /** The plan of a puzzle: outlines (the gap taken off), each tab's head centre and direction in edge order, each movable corner in node order, and the rules the design breaks. */
 export type PuzzlePlan = { pieces: { col: number; row: number; light: boolean; outline: PuzzleSeg[] }[]; width: number; height: number; tab_heads: { at: Vec2; out: boolean }[]; nodes: Vec2[]; problems: string[]; notes: string[] };
+/** A Spectre feature laid flat: every piece's outline in board millimetres with its tile, mystic flag and wood slot; the patch's depth and tile count; the curve's tightest radius (mm) against the bit; piece counts per wood slot; the smallest piece's area. */
+export type SpectrePlan = { width: number; height: number; depth: number; tiles: number; edge: number; bit: number; tightest: number; pieces: { tile: number; mystic: boolean; wood: number; area: number; outline: Vec2[] }[]; counts: number[]; smallest: number };
 export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 /** A conical entry: its diameter at the face and its included angle in degrees (90 for metric flat heads). */
@@ -421,6 +423,12 @@ export class Kernel {
   /** The plan of a puzzle feature of the current tab, drawable even when its rules fail; null if the feature is not a puzzle. */
   puzzlePlan(tab: number, feature: number): PuzzlePlan | null {
     const r = JSON.parse(this.studio.puzzle_plan(tab, feature)) as PuzzlePlan & { error?: string };
+    return r.error ? null : r;
+  }
+
+  /** A Spectre feature's plan (see `SpectrePlan`), or null when it cannot be laid. */
+  spectrePlan(tab: number, feature: number): SpectrePlan | null {
+    const r = JSON.parse(this.studio.spectre_plan(tab, feature)) as SpectrePlan & { error?: string };
     return r.error ? null : r;
   }
 
