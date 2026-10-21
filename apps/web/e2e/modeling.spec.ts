@@ -461,6 +461,55 @@ test("spectre feature: the plan under the board slides and scales", async ({ pag
   expect(await page.locator(".spectre-svg .piece").count()).toBeGreaterThan(scaled.pieces * 0.6);
 });
 
+test("spectre feature: rips split the straight tile into a kit of profiles", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  await page.click("#btn-add-spectre");
+  await page.waitForTimeout(500);
+  const state = () =>
+    page.evaluate(() => {
+      const app = (window as unknown as { offkilter: any }).offkilter;
+      const k = app.summary.features[0].kind;
+      return { pieces: app.summary.bodies.filter((b: any) => b.name.startsWith("Piece")).length, errors: app.summary.features.filter((f: any) => f.error).length, bulge: k.bulge as number, rips: (k.rips ?? []) as unknown[], names: app.summary.bodies.map((b: any) => b.name as string) };
+    });
+  // The planner wants the straight tile; one button straightens it.
+  await expect(page.locator(".rips-plan")).toContainText("0 cuts, 1 piece, 1 profile");
+  await page.locator(".rips-plan button", { hasText: "Straighten" }).click();
+  await page.waitForTimeout(1500);
+  const straight = await state();
+  expect(straight.bulge).toBe(0);
+  expect(straight.errors).toBe(0);
+  // The search finds the two-profile kit; taking it rips every tile.
+  await page.locator(".rips-plan button", { hasText: "Find decompositions" }).click();
+  await page.waitForSelector(".rip-found", { timeout: 90000 });
+  const first = page.locator(".rip-found").first();
+  await expect(first).toContainText("2 profiles");
+  await first.click();
+  await page.waitForTimeout(2500);
+  const ripped = await state();
+  expect(ripped.rips.length).toBe(5);
+  expect(ripped.errors).toBe(0);
+  expect(ripped.pieces).toBeGreaterThan(3 * straight.pieces);
+  await expect(page.locator(".rips-plan")).toContainText("2 profiles: all through rips");
+  await expect(page.locator(".rips-svg .piece")).toHaveCount(6);
+  // By profile: the larger profile's pieces light, the other dark.
+  await page.locator("#detail-body select").filter({ hasText: "mystic pairs dark" }).selectOption("profiles");
+  await page.waitForTimeout(2500);
+  const byProfile = await state();
+  expect(byProfile.names.filter((n) => n.endsWith(" dark")).length).toBeGreaterThan(byProfile.names.filter((n) => n.endsWith(" light")).length);
+  // Undo takes the last cut off; clear takes them all.
+  await page.locator(".rips-plan button", { hasText: "Undo cut" }).click();
+  await page.waitForTimeout(2500);
+  expect((await state()).rips.length).toBe(4);
+  await page.locator(".rips-plan button", { hasText: "Clear cuts" }).click();
+  await page.waitForTimeout(2500);
+  expect((await state()).rips.length).toBe(0);
+  expect((await state()).pieces).toBe(straight.pieces);
+});
+
 test("assembly tab: insert two instances and mate them face to face", async ({ page }) => {
   page.on("dialog", (d) => d.accept(d.defaultValue()));
   await page.goto("/");

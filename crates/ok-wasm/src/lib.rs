@@ -745,6 +745,54 @@ impl Doc {
         plan
     }
 
+    /// The straight Spectre ripped by `cuts_json` (`[[{x,y},{x,y}], ...]`,
+    /// tile units): the tile, its corner angles, the 30° grid's lines and
+    /// points, the pieces the cuts make with their profile index and what
+    /// the saw thinks of each, and the kit of distinct profiles.
+    pub fn spectre_rips(&self, cuts_json: &str) -> String {
+        let error = |e: String| serde_json::json!({ "error": e }).to_string();
+        let cuts: Vec<[ok_math::Vec2; 2]> = match serde_json::from_str(cuts_json) {
+            Ok(c) => c,
+            Err(e) => return error(e.to_string()),
+        };
+        use ok_sketch::spectre::rips;
+        if let Some(c) = cuts.iter().find(|c| !rips::cut_ok(c[0], c[1])) {
+            return error(format!(
+                "a cut from ({:.3}, {:.3}) to ({:.3}, {:.3}) is not along a 30° line through the tile",
+                c[0].x, c[0].y, c[1].x, c[1].y
+            ));
+        }
+        let pieces = rips::pieces(&cuts);
+        let profiles = rips::profile_of(&pieces);
+        let kit = rips::kit(&pieces);
+        serde_json::json!({
+            "tile": rips::tile(),
+            "angles": rips::angles(),
+            "lines": rips::lines(),
+            "nodes": rips::nodes(),
+            "pieces": pieces.iter().zip(&profiles).map(|(p, &j)| serde_json::json!({
+                "outline": p,
+                "profile": j,
+                "saw": rips::saw(p),
+            })).collect::<Vec<_>>(),
+            "kit": kit.iter().map(|g| serde_json::json!({
+                "outline": g.outline,
+                "count": g.count,
+                "pieces": g.pieces,
+                "saw": rips::saw(&g.outline),
+            })).collect::<Vec<_>>(),
+        })
+        .to_string()
+    }
+
+    /// The decompositions of the straight Spectre the rip search finds,
+    /// ranked by fewest profiles (`kit`), fewest pieces with through rips
+    /// only (`through`) and with rabbets allowed (`rabbet`). The search
+    /// runs once and takes a few seconds.
+    pub fn spectre_rips_search(&self) -> String {
+        serde_json::to_string(ok_sketch::spectre::rips::ranked()).unwrap_or_default()
+    }
+
     /// A shop drawing sheet of a tab as a PDF: `opts_json` is
     /// `{"views":["front","top","right","iso"],"sheet":"A4","parts":true,
     /// "title":"...","note":"..."}`, every field optional.

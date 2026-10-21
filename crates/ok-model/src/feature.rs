@@ -739,6 +739,11 @@ pub struct SpectreFeature {
     pub third: Option<crate::Material>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fourth: Option<crate::Material>,
+    /// Rips: cuts across the straight tile (tile units, each along a
+    /// 30° line) that split every piece into strip profiles, for a top
+    /// glued up from ripped stock; only with the bulge at 0.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub rips: Vec<[Vec2; 2]>,
 }
 
 fn kaplan_bulge() -> f64 {
@@ -765,6 +770,7 @@ impl SpectreFeature {
             scrap: self.scrap,
             scheme: self.scheme,
             seed: self.seed,
+            rips: self.rips.clone(),
         }
     }
 

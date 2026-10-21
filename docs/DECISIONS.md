@@ -420,3 +420,27 @@ while keeping neighbours apart. The pieces are named by their slot
 (light, dark, third, fourth), not by the wood's name, so a document
 whose woods are unset still names its pieces, and the two-wood
 examples keep their names.
+
+## 2026-10 · The Spectre's rips are a feature parameter, and the saw's rules are the kernel's
+
+The plan for a Spectre top in two woods is to rip strip profiles on the
+table saw, glue them into straight Spectre extrusions and cut the tiles
+from those, so what matters is which few profiles a tile divides into.
+The rip planner started as a page beside the app; it moved into the
+kernel as `ok_sketch::spectre::rips` so a chosen set of cuts is part of
+the document (`rips` on the feature, in tile units) and every tile of a
+top splits by it, with a wood per profile, instead of living in a
+browser tab. Cuts run only along the 30° lines through the tile's
+vertices: every edge of the tile lies on one, so pieces cut that way
+have faces at 60°, 90° or 120° to each other, which is what a saw tilted
+to 30° at most can make; a free-angle cut would make a profile nothing
+rests square for. The saw's reading of a profile (through rip, rabbet,
+dado, nothing) is the kernel's so the search and the panel agree, and
+so a decomposition can be tested. The search is bounded at four cuts
+from the inside corners plus one from any corner: the straight tile
+has four inside corners, none sharing a line, so through rips need all
+four cuts and five pieces, and one more cut is enough to bring the kit
+to two profiles (two of one, four of the other); a wider search was not
+worth its seconds in the panel. Rabbets are allowed as a ranking, not a
+default, since every rabbet is a second setup per face. Mirror images
+are one profile because stock just flips over.
