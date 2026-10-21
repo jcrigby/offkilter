@@ -1,6 +1,7 @@
 use ok_math::{Plane, Vec2, Vec3};
 pub use ok_sketch::jigsaw::{Grain, Tab as PuzzleTab};
 pub use ok_sketch::spectre::Curve as SpectreCurve;
+pub use ok_sketch::spectre::Scheme as SpectreScheme;
 use ok_sketch::{EntityId, Sketch};
 use serde::{Deserialize, Serialize};
 
@@ -721,12 +722,23 @@ pub struct SpectreFeature {
     pub groove: f64,
     #[serde(default)]
     pub show: SpectreLayout,
+    /// How the pieces get their woods.
+    #[serde(default)]
+    pub scheme: SpectreScheme,
+    /// Seed of the random schemes.
+    #[serde(default)]
+    pub seed: u32,
     /// The light pieces' wood.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub light: Option<crate::Material>,
-    /// The dark pieces' (the mystic pairs') wood.
+    /// The dark pieces' wood (the mystic pairs', under that scheme).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dark: Option<crate::Material>,
+    /// The third and fourth woods, for the schemes that draw them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub third: Option<crate::Material>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fourth: Option<crate::Material>,
 }
 
 fn kaplan_bulge() -> f64 {
@@ -751,9 +763,24 @@ impl SpectreFeature {
             shift: self.shift,
             angle: self.angle,
             scrap: self.scrap,
+            scheme: self.scheme,
+            seed: self.seed,
+        }
+    }
+
+    /// The wood of a slot the scheme hands out: light, dark, third, fourth.
+    pub fn wood(&self, slot: u8) -> Option<crate::Material> {
+        match slot {
+            0 => self.light.clone(),
+            1 => self.dark.clone(),
+            2 => self.third.clone(),
+            _ => self.fourth.clone(),
         }
     }
 }
+
+/// The names the wood slots give the pieces.
+pub const SPECTRE_WOOD_NAMES: [&str; 4] = ["light", "dark", "third", "fourth"];
 
 /// Which layout of a Spectre puzzle regenerates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]

@@ -5,7 +5,7 @@ import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoi
 type HiddenLines = "auto" | "on" | "off";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
-import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, SpectreLayout, SpectreCurve, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, SpectreLayout, SpectreCurve, SpectreScheme, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -2499,15 +2499,43 @@ class App implements SketchHost {
       sel.title = "The wood of these pieces: named in the parts list, its density gives their masses";
       body.appendChild(field(label, sel));
     };
+    const SCHEMES: [SpectreScheme, string][] = [
+      ["mystics", "mystic pairs dark"],
+      ["one", "one wood"],
+      ["two_random", "two woods at random"],
+      ["two_turn", "two woods by turn"],
+      ["three_random", "three woods at random"],
+      ["four_map", "four woods, neighbours apart"],
+      ["mix", "four woods, light favoured"],
+    ];
+    const scheme = document.createElement("select");
+    for (const [value, label] of SCHEMES) {
+      const o = document.createElement("option");
+      o.value = value;
+      o.textContent = label;
+      scheme.appendChild(o);
+    }
+    scheme.value = k.scheme;
+    scheme.addEventListener("change", () => set({ scheme: scheme.value as SpectreScheme }));
+    scheme.title = "How the pieces get their woods: the pairs standing in for a ninth supertile (the mystics) dark and the rest light; all light; two or three woods at random; light and dark by the tile's turn (only a mystic's partner sits at an odd turn, so one of each pair is dark); or four woods with no two neighbours alike, spread evenly or with the light wood favoured and the fourth rare";
+    body.appendChild(field("Woods", scheme));
+    const woodsUsed = { mystics: 2, one: 1, two_random: 2, two_turn: 2, three_random: 3, four_map: 4, mix: 4 }[k.scheme];
     wood("Light wood", k.light, (m) => set({ light: m }));
-    wood("Dark wood (mystics)", k.dark, (m) => set({ dark: m }));
+    if (woodsUsed >= 2) wood(k.scheme === "mystics" ? "Dark wood (mystics)" : "Dark wood", k.dark, (m) => set({ dark: m }));
+    if (woodsUsed >= 3) wood("Third wood", k.third, (m) => set({ third: m }));
+    if (woodsUsed >= 4) wood("Fourth wood", k.fourth, (m) => set({ fourth: m }));
+    if (k.scheme.endsWith("random") || k.scheme === "four_map" || k.scheme === "mix") {
+      const reseed = button("Reseed", () => set({ seed: Math.floor(Math.random() * 100000) }));
+      reseed.title = "Draw the woods again (undo brings the old draw back)";
+      body.appendChild(field(`Seed ${k.seed}`, reseed));
+    }
     body.appendChild(field("Web height", numberInput(k.web, (v) => set({ web: v }))));
     const groove = numberInput(k.groove, (v) => set({ groove: v }));
     groove.title = "A printable pattern plate with the gaps as grooves this deep: a pilot the size of the gap rides in them while a bit of that size cuts the pieces apart from one board, the kerf being the gap; the board's thickness and a little. 0 for none.";
     body.appendChild(field("Pattern groove", groove));
     const note = document.createElement("p");
     note.className = "note";
-    note.textContent = `The curved Spectre, the aperiodic monotile, laid under the board: every tile it reaches is a piece, the board's edge cutting the outer ones (slivers under the scrap area go to the resin), and the pairs that stand in for a ninth supertile (the mystics) are the dark ones. No two woods can alternate on this tiling (three tiles meet at a vertex) and a gapped top outlines every piece anyway. Shift slides the tiling under the board to change which tiles it gets. With a router bit, the inside corners are filleted to it and their mates rounded, for pieces routed one by one to their templates. The web is a body filling the gaps; the pattern plate cuts the top from one board with a pilot and a bit the size of the gap.`;
+    note.textContent = `The curved Spectre, the aperiodic monotile, laid under the board: every tile it reaches is a piece, the board's edge cutting the outer ones (slivers under the scrap area go to the resin). The woods follow the scheme: the pairs that stand in for a ninth supertile (the mystics) dark, or a draw of two to four woods; no two woods can alternate on this tiling (three tiles meet at a vertex), but four can keep every neighbour apart, and a gapped top outlines every piece anyway. Shift slides the tiling under the board to change which tiles it gets. With a router bit, the inside corners are filleted to it and their mates rounded, for pieces routed one by one to their templates. The web is a body filling the gaps; the pattern plate cuts the top from one board with a pilot and a bit the size of the gap.`;
     body.appendChild(note);
   }
 

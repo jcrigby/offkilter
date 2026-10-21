@@ -85,6 +85,37 @@ pub struct Params {
     /// Pieces smaller than this area, mm², are left to the resin: the
     /// board's edge cuts slivers off the outer tiles wherever it falls.
     pub scrap: f64,
+    /// How the pieces get their woods.
+    pub scheme: Scheme,
+    /// Seed of the random schemes.
+    pub seed: u32,
+}
+
+/// How the pieces get their woods: a wood slot (0 to 3, light, dark,
+/// third, fourth) per tile, both pieces of a tile the board's edge cuts
+/// getting the same one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum Scheme {
+    /// The mystic pairs dark, every other tile light.
+    #[default]
+    Mystics,
+    /// Every tile light.
+    One,
+    /// Light or dark at random.
+    TwoRandom,
+    /// Light or dark by the tile's turn: tiles at even multiples of
+    /// 30° light, odd ones dark. Only a mystic's partner is odd, so this
+    /// is the mystic scheme with one of each pair light.
+    TwoTurn,
+    /// Light, dark or the third wood at random.
+    ThreeRandom,
+    /// Four woods with no two neighbours alike, a map colouring, the
+    /// woods used about equally.
+    FourMap,
+    /// Four woods with no two neighbours alike, the light wood favoured
+    /// and the fourth rare.
+    Mix,
 }
 
 /// The shape of an edge's curve.
@@ -106,8 +137,13 @@ pub enum Curve {
 pub struct Piece {
     /// Index of the tile in the patch.
     pub tile: u32,
-    /// One of a pair standing in for the ninth supertile: a dark piece.
+    /// One of a pair standing in for the ninth supertile: a dark piece
+    /// under the mystic scheme.
     pub mystic: bool,
+    /// The wood slot the scheme gave the tile: 0 light, 1 dark, 2 third,
+    /// 3 fourth.
+    #[serde(default)]
+    pub wood: u8,
     /// Counter-clockwise outline, the gap taken off and the board's
     /// edges applied.
     pub outline: Vec<Vec2>,
@@ -128,7 +164,8 @@ pub struct Patch {
 
 // -- affine transforms, as Kaplan's [a b tx c d ty] ----------------------
 
-type Xf = [f64; 6];
+/// An affine transform, as Kaplan's `[a b tx c d ty]`.
+pub type Xf = [f64; 6];
 const IDENT: Xf = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
 
 fn mul(a: &Xf, b: &Xf) -> Xf {
@@ -1015,6 +1052,7 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
             }
         }
     }
+    let woods = colour(&all, p.scheme, p.seed);
     let mut pieces = Vec::new();
     let mut touched = 0;
     for (k, (mystic, xf)) in all.iter().enumerate() {
@@ -1063,6 +1101,7 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
             pieces.push(Piece {
                 tile: k as u32,
                 mystic: *mystic,
+                wood: woods[k],
                 outline,
             });
         }
@@ -1078,6 +1117,113 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
         depth,
         tiles: touched,
     })
+}
+
+/// A wood slot for every tile of a patch under a scheme. The tiles are
+/// the whole patch, so a board gets the same woods wherever it sits on
+/// it and however the random schemes fall.
+pub fn colour(all: &[(bool, Xf)], scheme: Scheme, seed: u32) -> Vec<u8> {
+    let n = all.len();
+    let mut rng = Rng(seed ^ 0x9e37_79b9);
+    let turn_odd = |xf: &Xf| -> bool {
+        // The tile's turn in 30° steps, from where its x axis points.
+        let deg = xf[3].atan2(xf[0]).to_degrees();
+        ((deg / 30.0).round() as i64).rem_euclid(2) == 1
+    };
+    match scheme {
+        Scheme::Mystics => all.iter().map(|(m, _)| *m as u8).collect(),
+        Scheme::One => vec![0; n],
+        Scheme::TwoRandom => (0..n).map(|_| (rng.next() % 2) as u8).collect(),
+        Scheme::TwoTurn => all.iter().map(|(_, xf)| turn_odd(xf) as u8).collect(),
+        Scheme::ThreeRandom => (0..n).map(|_| (rng.next() % 3) as u8).collect(),
+        Scheme::FourMap | Scheme::Mix => {
+            // Neighbours: tiles sharing an edge.
+            let mut owners: HashMap<EdgeKey, Vec<usize>> = HashMap::new();
+            for (k, (_, xf)) in all.iter().enumerate() {
+                for i in 0..14 {
+                    let (a, b) = (apply(xf, vertex(i)), apply(xf, vertex(i + 1)));
+                    owners.entry(edge_key(a, b)).or_default().push(k);
+                }
+            }
+            let mut adj: Vec<Vec<usize>> = vec![Vec::new(); n];
+            for ks in owners.values() {
+                if let [a, b] = ks[..] {
+                    adj[a].push(b);
+                    adj[b].push(a);
+                }
+            }
+            let weights: [u32; 4] = if scheme == Scheme::Mix {
+                [8, 4, 2, 1]
+            } else {
+                [1, 1, 1, 1]
+            };
+            // DSatur: the tile with the most distinct neighbouring woods
+            // next, ties by degree then at random; a wood from those its
+            // neighbours lack, drawn by weight. A patch is a map, so
+            // four always suffice in practice; a few retries cover the
+            // order's bad luck.
+            let mut best: Option<(usize, Vec<u8>)> = None;
+            for _ in 0..24 {
+                let mut wood: Vec<Option<u8>> = vec![None; n];
+                let mut clashes = 0;
+                let noise: Vec<u32> = (0..n).map(|_| rng.next()).collect();
+                for _ in 0..n {
+                    let k = (0..n)
+                        .filter(|&k| wood[k].is_none())
+                        .max_by_key(|&k| {
+                            let sat = adj[k]
+                                .iter()
+                                .filter_map(|&j| wood[j])
+                                .collect::<std::collections::BTreeSet<u8>>()
+                                .len();
+                            (sat, adj[k].len(), noise[k])
+                        })
+                        .unwrap();
+                    let used: Vec<u8> = adj[k].iter().filter_map(|&j| wood[j]).collect();
+                    let free: Vec<u8> = (0..4u8).filter(|w| !used.contains(w)).collect();
+                    let pick = if free.is_empty() {
+                        clashes += 1;
+                        (rng.next() % 4) as u8
+                    } else {
+                        let total: u32 = free.iter().map(|&w| weights[w as usize]).sum();
+                        let mut r = rng.next() % total;
+                        let mut chosen = free[0];
+                        for &w in &free {
+                            if r < weights[w as usize] {
+                                chosen = w;
+                                break;
+                            }
+                            r -= weights[w as usize];
+                        }
+                        chosen
+                    };
+                    wood[k] = Some(pick);
+                }
+                let result: Vec<u8> = wood.into_iter().map(|w| w.unwrap()).collect();
+                if best.as_ref().is_none_or(|(c, _)| clashes < *c) {
+                    best = Some((clashes, result));
+                }
+                if clashes == 0 {
+                    break;
+                }
+            }
+            best.unwrap().1
+        }
+    }
+}
+
+/// A small seeded generator (mulberry32), so a seed draws the same
+/// woods everywhere.
+struct Rng(u32);
+
+impl Rng {
+    fn next(&mut self) -> u32 {
+        self.0 = self.0.wrapping_add(0x6d2b_79f5);
+        let mut z = self.0;
+        z = (z ^ (z >> 15)).wrapping_mul(z | 1);
+        z ^= z.wrapping_add((z ^ (z >> 7)).wrapping_mul(z | 61));
+        z ^ (z >> 14)
+    }
 }
 
 /// Draws an outline into a sketch as lines.
@@ -1333,6 +1479,8 @@ mod tests {
             shift: Vec2::ZERO,
             angle: 0.0,
             scrap: 0.0,
+            scheme: Scheme::Mystics,
+            seed: 0,
         };
         let facet = 5f64.to_radians();
         let patch = build(&params, facet).unwrap();
@@ -1474,6 +1622,8 @@ mod tests {
             shift: Vec2::ZERO,
             angle: 0.0,
             scrap: 0.0,
+            scheme: Scheme::Mystics,
+            seed: 0,
         };
         let patch = build(&params, facet).unwrap();
         let area = params.width * params.height;
@@ -1560,5 +1710,99 @@ mod tests {
         .unwrap();
         assert_eq!(full.pieces.len(), patch.pieces.len());
         assert!(full.pieces[0].outline[0].distance(patch.pieces[0].outline[0]) < 1e-9);
+    }
+
+    #[test]
+    fn the_schemes_give_every_tile_a_wood_and_the_map_ones_keep_neighbours_apart() {
+        let all = tiles(2);
+        // Neighbours by shared edge, as the colouring sees them.
+        let mut owners: HashMap<EdgeKey, Vec<usize>> = HashMap::new();
+        for (k, (_, xf)) in all.iter().enumerate() {
+            for i in 0..14 {
+                owners
+                    .entry(edge_key(apply(xf, vertex(i)), apply(xf, vertex(i + 1))))
+                    .or_default()
+                    .push(k);
+            }
+        }
+        let pairs: Vec<(usize, usize)> = owners
+            .values()
+            .filter_map(|ks| match ks[..] {
+                [a, b] => Some((a, b)),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(pairs.len(), 406);
+        let mystic = colour(&all, Scheme::Mystics, 0);
+        assert!(all.iter().zip(&mystic).all(|((m, _), w)| *w == *m as u8));
+        assert!(colour(&all, Scheme::One, 7).iter().all(|&w| w == 0));
+        // A mystic pair is one tile and its partner turned 30°: the turn
+        // scheme gives them different woods, and every other tile the
+        // light one.
+        let turn = colour(&all, Scheme::TwoTurn, 0);
+        for &(a, b) in &pairs {
+            if all[a].0 && all[b].0 {
+                assert_ne!(turn[a], turn[b], "pair {a} {b}");
+            }
+        }
+        assert_eq!(
+            turn.iter().filter(|&&w| w == 1).count(),
+            all.iter().filter(|(m, _)| *m).count() / 2
+        );
+        for (scheme, woods) in [(Scheme::TwoRandom, 2), (Scheme::ThreeRandom, 3)] {
+            let w = colour(&all, scheme, 3);
+            assert!(w.iter().all(|&x| x < woods));
+            assert!(
+                (0..woods).all(|x| w.contains(&x)),
+                "{scheme:?} uses every wood"
+            );
+            assert_eq!(w, colour(&all, scheme, 3), "the seed repeats");
+            assert_ne!(w, colour(&all, scheme, 4), "another seed differs");
+        }
+        for scheme in [Scheme::FourMap, Scheme::Mix] {
+            let w = colour(&all, scheme, 1);
+            for &(a, b) in &pairs {
+                assert_ne!(
+                    w[a], w[b],
+                    "{scheme:?}: tiles {a} and {b} share an edge and a wood"
+                );
+            }
+            let counts: Vec<usize> = (0..4u8)
+                .map(|x| w.iter().filter(|&&y| y == x).count())
+                .collect();
+            assert!(counts.iter().all(|&c| c > 0), "{scheme:?}: {counts:?}");
+            if scheme == Scheme::Mix {
+                assert!(
+                    counts[0] > counts[3],
+                    "the mix favours the light wood: {counts:?}"
+                );
+            } else {
+                assert!(
+                    counts[0] < 2 * counts[3],
+                    "the map spreads the woods: {counts:?}"
+                );
+            }
+        }
+        // The pieces carry their tile's wood.
+        let patch = build(
+            &Params {
+                width: 150.0,
+                height: 100.0,
+                edge: 12.7,
+                gap: 1.5,
+                curve: Curve::Cubic,
+                bulge: KAPLAN_BULGE,
+                bit: 0.0,
+                shift: Vec2::ZERO,
+                angle: 0.0,
+                scrap: 0.0,
+                scheme: Scheme::FourMap,
+                seed: 1,
+            },
+            5f64.to_radians(),
+        )
+        .unwrap();
+        let w = colour(&tiles(patch.depth), Scheme::FourMap, 1);
+        assert!(patch.pieces.iter().all(|p| p.wood == w[p.tile as usize]));
     }
 }

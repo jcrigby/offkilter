@@ -179,8 +179,12 @@ fn the_bit_only_changes_the_corners() {
             web: None,
             groove: None,
             show: None,
+            scheme: None,
+            seed: None,
             light: None,
             dark: None,
+            third: None,
+            fourth: None,
         })
         .unwrap();
     }
