@@ -2702,11 +2702,14 @@ class App implements SketchHost {
     const stats = document.createElement("div");
     stats.className = "spectre-stats";
     const used = plan.counts.map((n, i) => (n ? `${n} ${woodNames[i]}` : "")).filter(Boolean).join(", ");
-    const bitLine = plan.bit > 0
-      ? `; bit radius ${(plan.bit / 2).toFixed(2)} mm against the curve's tightest ${plan.tightest.toFixed(2)}${plan.tightest >= plan.bit / 2 ? "" : " ✗"}`
-      : `; the curve's tightest radius ${plan.tightest.toFixed(2)} mm`;
+    const tightest = plan.tightest;
+    const bitLine = tightest === null
+      ? "; straight edges"
+      : plan.bit > 0
+        ? `; bit radius ${(plan.bit / 2).toFixed(2)} mm against the curve's tightest ${tightest.toFixed(2)}${tightest >= plan.bit / 2 ? "" : " ✗"}`
+        : `; the curve's tightest radius ${tightest.toFixed(2)} mm`;
     stats.innerHTML = `${plan.pieces.length} pieces (${used}) from ${plan.tiles} tiles of a depth ${plan.depth} patch; smallest ${plan.smallest.toFixed(0)} mm²${bitLine}`;
-    if (plan.bit > 0 && plan.tightest < plan.bit / 2) stats.classList.add("bad");
+    if (tightest !== null && plan.bit > 0 && tightest < plan.bit / 2) stats.classList.add("bad");
     wrap.appendChild(stats);
     const hint = document.createElement("p");
     hint.className = "note";

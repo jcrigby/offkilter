@@ -110,7 +110,7 @@ export type PuzzleSeg = { type: "line"; a: Vec2; b: Vec2 } | { type: "arc"; cent
 /** The plan of a puzzle: outlines (the gap taken off), each tab's head centre and direction in edge order, each movable corner in node order, and the rules the design breaks. */
 export type PuzzlePlan = { pieces: { col: number; row: number; light: boolean; outline: PuzzleSeg[] }[]; width: number; height: number; tab_heads: { at: Vec2; out: boolean }[]; nodes: Vec2[]; problems: string[]; notes: string[] };
 /** A Spectre feature laid flat: every piece's outline in board millimetres with its tile, mystic flag and wood slot; the patch's depth and tile count; the curve's tightest radius (mm) against the bit; piece counts per wood slot; the smallest piece's area. */
-export type SpectrePlan = { width: number; height: number; depth: number; tiles: number; edge: number; bit: number; tightest: number; pieces: { tile: number; mystic: boolean; wood: number; area: number; outline: Vec2[] }[]; counts: number[]; smallest: number };
+export type SpectrePlan = { width: number; height: number; depth: number; tiles: number; edge: number; bit: number; /** Null for the straight tile. */ tightest: number | null; pieces: { tile: number; mystic: boolean; wood: number; area: number; outline: Vec2[] }[]; counts: number[]; smallest: number };
 export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 /** A conical entry: its diameter at the face and its included angle in degrees (90 for metric flat heads). */

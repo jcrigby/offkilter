@@ -451,6 +451,13 @@ test("spectre feature: the plan under the board slides and scales", async ({ pag
   await page.waitForTimeout(1500);
   for (const w of ["w0", "w1", "w2", "w3"]) expect(await page.locator(`.spectre-svg .piece.${w}`).count()).toBeGreaterThan(0);
   await expect(page.locator("#detail-body")).toContainText("Fourth wood");
+  // The straight tile has no curve to measure; the plan still draws.
+  const bulge = page.locator("#detail-body .field", { hasText: "Bulge" }).locator("input");
+  await bulge.fill("0");
+  await bulge.press("Enter");
+  await page.waitForTimeout(1500);
+  await expect(page.locator(".spectre-stats")).toContainText("straight edges");
+  expect(await page.locator(".spectre-svg .piece").count()).toBeGreaterThan(40);
 });
 
 test("assembly tab: insert two instances and mate them face to face", async ({ page }) => {

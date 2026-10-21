@@ -731,7 +731,8 @@ impl Doc {
                     "tiles": patch.tiles,
                     "edge": params.edge,
                     "bit": params.bit,
-                    "tightest": ok_sketch::spectre::tightest_radius(params.curve, params.bulge) * params.edge,
+                    // Straight edges have no curve to measure: null.
+                    "tightest": Some(ok_sketch::spectre::tightest_radius(params.curve, params.bulge) * params.edge).filter(|r| r.is_finite()),
                     "pieces": pieces,
                     "counts": counts,
                     "smallest": smallest,
