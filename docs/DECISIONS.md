@@ -401,3 +401,22 @@ off its mate and the pieces still fill the board. Convex corners at
 vertices of three or four tiles stay sharp, since the bit cuts those as
 drawn. Rounding every convex corner was considered and rejected: it
 leaves a small void at every three-tile vertex for no gain.
+
+## 2026-10 · Spectre woods are a scheme over the whole patch
+
+The mystic scheme was the only one, because two woods cannot alternate
+on this tiling. Asked for one wood, two or three at random and a mix,
+the feature grew a `scheme` with a seed and two more woods. The
+colouring is computed over every tile of the patch, not over the
+pieces the board keeps, so sliding or turning the board changes which
+tiles it gets but not what colour each tile is: the plan stays
+readable while the board is moved. The four-wood schemes are a DSatur
+map colouring (most-constrained tile first, ties by degree then by the
+seed), which four woods always manage on these patches in practice,
+with a few re-draws against the order's bad luck rather than a proof.
+Weighted DSatur (8:4:2:1) gives the "mix" the look of a mostly-light
+top with the fourth wood rare, which a plain random draw cannot do
+while keeping neighbours apart. The pieces are named by their slot
+(light, dark, third, fourth), not by the wood's name, so a document
+whose woods are unset still names its pieces, and the two-wood
+examples keep their names.

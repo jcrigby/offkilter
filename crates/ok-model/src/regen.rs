@@ -1043,14 +1043,10 @@ impl PartStudio {
                 format!(
                     "Piece {} {}",
                     k + 1,
-                    if piece.mystic { "dark" } else { "light" }
+                    crate::feature::SPECTRE_WOOD_NAMES[(piece.wood as usize).min(3)]
                 ),
                 solid,
-                if piece.mystic {
-                    sf.dark.clone()
-                } else {
-                    sf.light.clone()
-                },
+                sf.wood(piece.wood),
             ));
         }
         if sf.web > 0.0 && sf.gap > 0.0 {
@@ -3646,6 +3642,8 @@ mod tests {
                 web: 4.0,
                 groove,
                 show: crate::SpectreLayout::Design,
+                scheme: crate::SpectreScheme::Mystics,
+                seed: 0,
                 light: Some(crate::Material {
                     name: "maple".into(),
                     density: 0.7,
@@ -3654,6 +3652,8 @@ mod tests {
                     name: "walnut".into(),
                     density: 0.64,
                 }),
+                third: None,
+                fourth: None,
                 name: None,
             })
             .unwrap()
@@ -3744,11 +3744,66 @@ mod tests {
                 web: None,
                 groove: None,
                 show: Some(show),
+                scheme: None,
+                seed: None,
                 light: None,
                 dark: None,
+                third: None,
+                fourth: None,
             })
             .unwrap();
         };
+        // Four woods, no two neighbours alike: every piece named by its
+        // slot and carrying that slot's wood.
+        let woods = ["maple", "walnut", "cherry", "white oak"];
+        ps.apply(Op::SetSpectre {
+            id,
+            plane: None,
+            width: None,
+            height: None,
+            edge: None,
+            thickness: None,
+            gap: None,
+            curve: None,
+            bulge: None,
+            bit: None,
+            shift: None,
+            angle: None,
+            scrap: None,
+            web: None,
+            groove: None,
+            show: None,
+            scheme: Some(crate::SpectreScheme::FourMap),
+            seed: Some(3),
+            light: None,
+            dark: None,
+            third: Some(Some(crate::Material {
+                name: woods[2].into(),
+                density: 0.56,
+            })),
+            fourth: Some(Some(crate::Material {
+                name: woods[3].into(),
+                density: 0.75,
+            })),
+        })
+        .unwrap();
+        let r = ps.regenerate();
+        assert!(r.errors().next().is_none());
+        let mut used = [0usize; 4];
+        for b in r.bodies.iter().filter(|b| b.name.starts_with("Piece")) {
+            let slot = crate::feature::SPECTRE_WOOD_NAMES
+                .iter()
+                .position(|n| b.name.ends_with(n))
+                .unwrap_or_else(|| panic!("{}", b.name));
+            assert_eq!(
+                b.material.as_ref().map(|m| m.name.as_str()),
+                Some(woods[slot]),
+                "{}",
+                b.name
+            );
+            used[slot] += 1;
+        }
+        assert!(used.iter().all(|&n| n > 0), "{used:?}");
         show(&mut ps, crate::SpectreLayout::Pattern);
         let r = ps.regenerate();
         assert!(

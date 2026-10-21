@@ -613,9 +613,17 @@ pub enum Op {
         #[serde(default)]
         show: crate::SpectreLayout,
         #[serde(default)]
+        scheme: crate::SpectreScheme,
+        #[serde(default)]
+        seed: u32,
+        #[serde(default)]
         light: Option<Material>,
         #[serde(default)]
         dark: Option<Material>,
+        #[serde(default)]
+        third: Option<Material>,
+        #[serde(default)]
+        fourth: Option<Material>,
         name: Option<String>,
     },
     SetSpectre {
@@ -650,11 +658,19 @@ pub enum Op {
         groove: Option<f64>,
         #[serde(default)]
         show: Option<crate::SpectreLayout>,
+        #[serde(default)]
+        scheme: Option<crate::SpectreScheme>,
+        #[serde(default)]
+        seed: Option<u32>,
         /// `null` clears the wood.
         #[serde(default, with = "double_option")]
         light: Option<Option<Material>>,
         #[serde(default, with = "double_option")]
         dark: Option<Option<Material>>,
+        #[serde(default, with = "double_option")]
+        third: Option<Option<Material>>,
+        #[serde(default, with = "double_option")]
+        fourth: Option<Option<Material>>,
     },
     SetDraft {
         id: FeatureId,
@@ -1792,8 +1808,12 @@ impl PartStudio {
                 web,
                 groove,
                 show,
+                scheme,
+                seed,
                 light,
                 dark,
+                third,
+                fourth,
                 name,
             } => {
                 out.feature = Some(self.push_feature(
@@ -1813,8 +1833,12 @@ impl PartStudio {
                         web,
                         groove,
                         show,
+                        scheme,
+                        seed,
                         light,
                         dark,
+                        third,
+                        fourth,
                     }),
                     name,
                 ));
@@ -1836,8 +1860,12 @@ impl PartStudio {
                 web,
                 groove,
                 show,
+                scheme,
+                seed,
                 light,
                 dark,
+                third,
+                fourth,
             } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Spectre(s) => {
                     if let Some(v) = plane {
@@ -1885,11 +1913,23 @@ impl PartStudio {
                     if let Some(v) = show {
                         s.show = v;
                     }
+                    if let Some(v) = scheme {
+                        s.scheme = v;
+                    }
+                    if let Some(v) = seed {
+                        s.seed = v;
+                    }
                     if let Some(v) = light {
                         s.light = v;
                     }
                     if let Some(v) = dark {
                         s.dark = v;
+                    }
+                    if let Some(v) = third {
+                        s.third = v;
+                    }
+                    if let Some(v) = fourth {
+                        s.fourth = v;
                     }
                 }
                 _ => return Err(ModelError::WrongFeatureKind(id, "spectre")),

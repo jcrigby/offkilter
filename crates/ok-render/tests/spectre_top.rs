@@ -188,8 +188,12 @@ fn the_pattern_plate_grooves_every_gap() {
             web: None,
             groove: None,
             show: Some(SpectreLayout::Pattern),
+            scheme: None,
+            seed: None,
             light: None,
             dark: None,
+            third: None,
+            fourth: None,
         })
         .unwrap();
     }
