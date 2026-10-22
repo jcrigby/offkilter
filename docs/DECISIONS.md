@@ -444,3 +444,33 @@ to two profiles (two of one, four of the other); a wider search was not
 worth its seconds in the panel. Rabbets are allowed as a ranking, not a
 default, since every rabbet is a second setup per face. Mirror images
 are one profile because stock just flips over.
+
+## 2026-10 · The stack cage has no rails, twelve indices and a ball-nose bit
+
+The dry stack for the Spectre pieces (`examples/spectre-cage`) began
+as a hex tube with corner rails carrying the panels in grooves. Rails
+with any foot along the blank's faces shade the blank's corners from
+every window, and the bit then cannot reach the profile's extreme
+points nor remove the corner material around them: with 4 mm feet a
+third of the outline was out of reach. So the panels are mitred and
+meet at the corners, the rods lie in the V between adjacent panels'
+outer faces and hold them in, and the window is the whole face. Six
+flat indices still miss the tile's deep bays, which open toward the
+hex's corners wherever the profile is turned; a V cradle the hex sits
+in on a corner adds the six corner directions through the same
+panels, and with twelve the clocking search reaches the whole outline
+at a 48 mm hex. The bit is a ball nose, not the flush trim bit the
+spectre-box pieces were drawn for: a flat bit on a duplicator leaves
+only vertical walls and flat floors, and `duplicator_check` on the
+master from above shows the profile's curves as corners it cannot
+make, where a ball of the same radius follows them, the fillets being
+its own. The reach rule is the ball's: the ball on the edge, its
+shank's column swept to the window clear of everything. The master is
+one shape with sharp convex corners rather than the tiling's pieces
+with some corners rounded to seat in a mate's fillet: a stack routed
+as one prism can only be one shape, and a top with a gap does not need
+the rounding. Fins are kept to the hex's six sectors, so they never
+meet whatever the profile, and stop short of it sideways as well as
+down, since a sampled envelope with clearance taken only along the
+column cut into a vertical wall between samples, which the fin test
+found by boolean.

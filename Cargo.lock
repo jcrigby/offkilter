@@ -804,6 +804,7 @@ dependencies = [
  "ok-photo",
  "ok-render",
  "ok-sheet",
+ "ok-sketch",
  "ok-step",
  "serde",
  "serde_json",

@@ -879,13 +879,8 @@ fn bbox(pts: &[Vec2]) -> (Vec2, Vec2) {
     (lo, hi)
 }
 
-/// Builds the puzzle: the shallowest patch whose tiles cover the board
-/// once its most interior point (the tile centre furthest from the
-/// patch's boundary) is put at the board's centre and shifted, every
-/// tile the board reaches eroded by half the gap and clipped to the
-/// board. `facet` is the angle per straight piece of the curves and
-/// the rounded corners.
-pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
+/// The parameter checks `build` and `master` share.
+fn validate(p: &Params) -> Result<(), String> {
     for (name, v) in [("width", p.width), ("height", p.height), ("edge", p.edge)] {
         if !(v.is_finite() && v > 0.0) {
             return Err(format!("{name} must be positive"));
@@ -941,11 +936,126 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
     if !p.angle.is_finite() {
         return Err("angle must be finite".into());
     }
-    let turn = Vec2::from_angle(p.angle.to_radians());
-    let spin = move |v: Vec2| Vec2::new(v.x * turn.x - v.y * turn.y, v.x * turn.y + v.y * turn.x);
     if !(p.scrap.is_finite() && p.scrap >= 0.0) {
         return Err("scrap must be zero or positive".into());
     }
+    Ok(())
+}
+
+/// One whole tile as the pieces of a top are routed, counter-clockwise
+/// in a frame centred on its smallest enclosing circle, in millimetres.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct Master {
+    pub outline: Vec<Vec2>,
+    /// Radius of the smallest circle round the outline: half of what a
+    /// blank has to be across.
+    pub radius: f64,
+    pub area: f64,
+}
+
+/// The master every piece of a top is cut from: the curve at `edge`, the
+/// four inside corners filleted to the bit (a bit coming round a corner
+/// leaves its own radius there), eroded by half the gap, the convex
+/// corners left sharp (a bit goes round them). In a tiling some convex
+/// corners are also rounded to seat in a mate's fillet; a top with a gap
+/// does not need that, and a stack routed as one prism cannot have it,
+/// so the master leaves it off. Centred on the smallest circle round it,
+/// so a hex blank across twice `radius` just holds it.
+pub fn master(p: &Params, facet: f64) -> Result<Master, String> {
+    validate(p)?;
+    let facet = facet.max(10f64.to_radians());
+    let per_edge = pieces_per_edge(p.curve, p.bulge, facet);
+    let mut poly: Vec<Vec2> = curved_tile(p.curve, p.bulge, per_edge)
+        .into_iter()
+        .map(|q| q * p.edge)
+        .collect();
+    if p.bit > 0.0 {
+        for i in (0..14).filter(|&i| ANGLES[i] > 180) {
+            let q = vertex(i) * p.edge;
+            let at = (0..poly.len())
+                .min_by(|&a, &b| poly[a].distance(q).total_cmp(&poly[b].distance(q)))
+                .unwrap();
+            poly = round_corner(&poly, at, p.bit / 2.0, true, facet)?;
+        }
+    }
+    let eroded = offset(&poly, p.gap / 2.0, facet);
+    if self_intersects(&eroded) {
+        return Err("the gap is too wide for the edge: the tile loses a lobe to it".into());
+    }
+    let (centre, radius) = enclosing_circle(&eroded);
+    let outline: Vec<Vec2> = eroded.into_iter().map(|q| q - centre).collect();
+    let area = signed_area(&outline);
+    Ok(Master {
+        outline,
+        radius,
+        area,
+    })
+}
+
+/// The smallest circle round the points (Welzl's algorithm, iterative).
+pub fn enclosing_circle(pts: &[Vec2]) -> (Vec2, f64) {
+    fn circle2(a: Vec2, b: Vec2) -> (Vec2, f64) {
+        ((a + b) * 0.5, a.distance(b) * 0.5)
+    }
+    fn circle3(a: Vec2, b: Vec2, c: Vec2) -> Option<(Vec2, f64)> {
+        let (bx, by) = (b.x - a.x, b.y - a.y);
+        let (cx, cy) = (c.x - a.x, c.y - a.y);
+        let d = 2.0 * (bx * cy - by * cx);
+        if d.abs() < 1e-12 {
+            return None;
+        }
+        let ux = (cy * (bx * bx + by * by) - by * (cx * cx + cy * cy)) / d;
+        let uy = (bx * (cx * cx + cy * cy) - cx * (bx * bx + by * by)) / d;
+        let centre = Vec2::new(a.x + ux, a.y + uy);
+        Some((centre, centre.distance(a)))
+    }
+    let inside = |c: &(Vec2, f64), q: Vec2| c.0.distance(q) <= c.1 + 1e-9;
+    let mut c = match pts {
+        [] => return (Vec2::ZERO, 0.0),
+        [a] => return (*a, 0.0),
+        [a, b, ..] => circle2(*a, *b),
+    };
+    for i in 0..pts.len() {
+        if inside(&c, pts[i]) {
+            continue;
+        }
+        c = (pts[i], 0.0);
+        for j in 0..i {
+            if inside(&c, pts[j]) {
+                continue;
+            }
+            c = circle2(pts[i], pts[j]);
+            for k in 0..j {
+                if inside(&c, pts[k]) {
+                    continue;
+                }
+                c = circle3(pts[i], pts[j], pts[k]).unwrap_or_else(|| {
+                    // Collinear: the two farthest apart.
+                    let mut best = circle2(pts[i], pts[j]);
+                    for (u, v) in [(pts[i], pts[k]), (pts[j], pts[k])] {
+                        let cc = circle2(u, v);
+                        if cc.1 > best.1 {
+                            best = cc;
+                        }
+                    }
+                    best
+                });
+            }
+        }
+    }
+    c
+}
+
+/// Builds the puzzle: the shallowest patch whose tiles cover the board
+/// once its most interior point (the tile centre furthest from the
+/// patch's boundary) is put at the board's centre and shifted, every
+/// tile the board reaches eroded by half the gap and clipped to the
+/// board. `facet` is the angle per straight piece of the curves and
+/// the rounded corners.
+pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
+    validate(p)?;
+    let turn = Vec2::from_angle(p.angle.to_radians());
+    let spin = move |v: Vec2| Vec2::new(v.x * turn.x - v.y * turn.y, v.x * turn.y + v.y * turn.x);
     // The curves and the rounded corners want no finer than 10°: the
     // pieces are polylines, and a top is a few hundred of them.
     let facet = facet.max(10f64.to_radians());
@@ -1373,6 +1483,80 @@ mod tests {
 
     fn near(a: f64, b: f64, tol: f64) -> bool {
         (a - b).abs() < tol
+    }
+
+    /// A tile with no board to speak of: `master` needs none.
+    fn tile_params() -> Params {
+        Params {
+            width: 1.0,
+            height: 1.0,
+            edge: 10.0,
+            gap: 0.0,
+            curve: Curve::Arc,
+            bulge: 0.0,
+            bit: 0.0,
+            shift: Vec2::ZERO,
+            angle: 0.0,
+            scrap: 0.0,
+            scheme: Scheme::Mystics,
+            seed: 0,
+            rips: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn the_master_is_one_tile_centred_on_its_circle_with_the_bit_in_its_corners() {
+        let straight = tile_params();
+        let m = master(&straight, 10f64.to_radians()).unwrap();
+        // The straight tile's smallest circle is 4.732 edges across.
+        assert!(near(m.radius, 2.366 * 10.0, 0.01), "{}", m.radius);
+        assert!(near(m.area, TILE_AREA * 100.0, 1e-6), "{}", m.area);
+        let far = m.outline.iter().map(|q| q.length()).fold(0.0, f64::max);
+        assert!(near(far, m.radius, 1e-6), "{far} vs {}", m.radius);
+        let p = Params {
+            edge: 9.0,
+            curve: Curve::Arc,
+            bulge: 0.3,
+            bit: 4.7625,
+            gap: 0.7,
+            ..tile_params()
+        };
+        let m = master(&p, 10f64.to_radians()).unwrap();
+        assert!(signed_area(&m.outline) > 0.0);
+        let tile = TILE_AREA * 81.0;
+        // Half a gap off all round and four fillets: a little under the tile.
+        assert!(m.area > 0.9 * tile && m.area < tile, "{} of {tile}", m.area);
+        assert!(m.radius > 2.3 * 9.0 && m.radius < 2.7 * 9.0, "{}", m.radius);
+        assert!(m.outline.iter().all(|q| q.length() <= m.radius + 1e-9));
+        // No inside corner sharper than the fillet's facets.
+        let n = m.outline.len();
+        for i in 0..n {
+            let (a, b, c) = (
+                m.outline[(i + n - 1) % n],
+                m.outline[i],
+                m.outline[(i + 1) % n],
+            );
+            let turn = (b - a).cross(c - b).atan2((b - a).dot(c - b)).to_degrees();
+            assert!(turn > -13.0, "turn {turn:.1} at {b:?}");
+        }
+        // The same tile without the bit has the sharp inside corners back,
+        // and less area: a fillet is material the bit leaves in a notch.
+        let sharp = master(
+            &Params {
+                bit: 0.0,
+                ..p.clone()
+            },
+            10f64.to_radians(),
+        )
+        .unwrap();
+        assert!(
+            sharp.area < m.area && sharp.area > m.area - 10.0,
+            "{} vs {}",
+            sharp.area,
+            m.area
+        );
+        let err = master(&Params { gap: 2.5, ..p }, 10f64.to_radians()).unwrap_err();
+        assert!(err.contains("quarter of the edge"), "{err}");
     }
 
     #[test]

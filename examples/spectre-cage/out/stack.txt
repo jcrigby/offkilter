@@ -1,0 +1,27 @@
+# 26 laminates of 3 mm (1.5 veneer on 1.5 ply), hex 48 across flats, end A first
+  1  Cherry
+  2  Walnut
+  3  Ebony
+  4  Ebony
+  5  Walnut
+  6  Ebony
+  7  Cherry
+  8  Ebony
+  9  Maple
+ 10  Ebony
+ 11  Walnut
+ 12  Ebony
+ 13  Maple
+ 14  Maple
+ 15  Ebony
+ 16  Walnut
+ 17  Maple
+ 18  Ebony
+ 19  Cherry
+ 20  Maple
+ 21  Walnut
+ 22  Cherry
+ 23  Cherry
+ 24  Walnut
+ 25  Ebony
+ 26  Ebony
