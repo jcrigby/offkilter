@@ -1,13 +1,16 @@
 //! The Spectre stack cage (examples/spectre-cage) as a regression
-//! suite: the master is the tile the top's pieces are cut from, centred
-//! in a hex blank that holds it; every edge of its profile is reachable
-//! by a vertical bit at one of the twelve indices the two cradles give
-//! (the bit's body swept down from the open window clear of the profile
-//! and the panels still in place); every finned panel clears the master
-//! and the other fins and fills its sector to within the clearance; and
-//! the loaded cage reads back as the stack it holds, the rods clear of
-//! everything, the flanges the same hex as the master's ends, resting
-//! on the cradles. Every number prints (`--nocapture`).
+//! suite: each master is the tile the top's pieces are cut from, the
+//! curved one with its knobs rounded for a ball-nose bit, the straight
+//! one exact for a square-end bit, centred in one hex blank that holds
+//! both; every edge of each profile is reachable by its bit at one of
+//! the twelve indices the two cradles give (a ball on the edge with its
+//! shank's column clear of the profile and the panels still in place; a
+//! square-end bit parallel to the edge or flat on it, its body's column
+//! clear); every finned panel clears its master and the other fins and
+//! fills its sector to within the clearance; and the loaded cage reads
+//! back as the stack it holds, the rods clear of everything, the flanges
+//! the same hex as the masters' ends, resting on the cradles. Every
+//! number prints (`--nocapture`).
 
 use ok_brep::{BoolOp, Solid};
 use ok_math::{Vec2, Vec3};
@@ -182,30 +185,28 @@ fn ray_hit(poly: &[Vec2], o: Vec2, d: Vec2) -> Option<f64> {
     best
 }
 
-/// The profile in its hex with the panels round it and the bit's radius:
-/// what the reach check sweeps against.
+/// The profile in its hex with the panels round it and the bit: what
+/// the reach check sweeps against.
 struct Scene<'a> {
     outline: &'a [Vec2],
     hx: &'a Hex,
     panels: &'a [Vec<Vec2>],
     r: f64,
+    flat: bool,
+    /// An edge shorter than this a square-end bit leaves as a corner.
+    short: f64,
 }
 
 impl Scene<'_> {
-    /// Whether the bit coming down direction `d` with panel `open` off
-    /// can cut the surface point `m` with outward normal `ne`: the ball
-    /// beside the point is swept up to the window in steps, and at every
-    /// step its circle stays off the profile and off every panel but the
-    /// open one.
-    fn reachable(&self, m: Vec2, ne: Vec2, d: Vec2, open: usize) -> bool {
-        if ne.dot(d) < -0.02 {
-            return false;
-        }
+    /// Whether a bit standing at `c` can be drawn up direction `d` out of
+    /// the window with panel `open` off, from `from` above `c` on: at
+    /// every step its circle stays off the profile and off every panel
+    /// but the open one.
+    fn column_clear(&self, c: Vec2, d: Vec2, open: usize, from: f64) -> bool {
         let r = self.r;
-        let c = m + ne * r;
         let steps = ((self.hx.apothem + self.hx.panel_t + r) / 0.25).ceil() as usize;
         for s in 0..=steps {
-            let q = c + d * (0.05 + s as f64 * 0.25);
+            let q = c + d * (from + s as f64 * 0.25);
             if dist_to_polygon(q, self.outline) < r - 0.06 {
                 return false;
             }
@@ -219,14 +220,75 @@ impl Scene<'_> {
         }
         true
     }
+
+    /// Whether the bit coming down direction `d` with panel `open` off
+    /// can cut the edge of length `len` along `e` at `m` with outward
+    /// normal `ne`. A ball-nose bit: the edge does not face away, and
+    /// with the ball on it the shank's column is clear. A square-end
+    /// bit: the edge is parallel to the bit and the column beside it is
+    /// clear, or the edge faces straight up and the column over it is
+    /// clear with the bit somewhere over the edge; an edge shorter than
+    /// `short` it leaves as the corner.
+    fn reachable(&self, m: Vec2, e: Vec2, ne: Vec2, len: f64, d: Vec2, open: usize) -> bool {
+        let r = self.r;
+        if !self.flat {
+            return ne.dot(d) >= -0.02 && self.column_clear(m + ne * r, d, open, 0.05);
+        }
+        if len < self.short {
+            return true;
+        }
+        if e.dot(d).abs() > 0.9999 {
+            return self.column_clear(m + ne * r, d, open, 0.05);
+        }
+        if ne.dot(d) > 0.9999 {
+            let t = Vec2::new(d.y, -d.x);
+            return [-r + 0.1, -r / 2.0, 0.0, r / 2.0, r - 0.1]
+                .iter()
+                .any(|off| self.column_clear(m + t * *off, d, open, r));
+        }
+        false
+    }
 }
 
-/// The profile of the master in the hex, clocked as the build chose.
-fn profile(doc: &Document, n: &serde_json::Value) -> (Vec<Vec2>, ok_sketch::spectre::Master) {
+/// One master's settings from the build's numbers.
+struct MasterCfg {
+    name: String,
+    params: ok_sketch::spectre::Params,
+    round: f64,
+    flat: bool,
+    phase: f64,
+}
+
+fn masters(doc: &Document, n: &serde_json::Value) -> Vec<MasterCfg> {
     let sf = spectre(doc, tab_named(doc, "Top"));
-    let m = ok_sketch::spectre::master(&sf.params(), num(n, "round"), 10f64.to_radians()).unwrap();
-    let outline: Vec<Vec2> = m.outline.iter().map(|q| rot(*q, num(n, "phase"))).collect();
-    (outline, m)
+    let mut out = Vec::new();
+    for (name, cfg) in n["masters"].as_object().unwrap() {
+        let curve = match cfg["curve"].as_str().unwrap() {
+            "arc" => ok_model::SpectreCurve::Arc,
+            _ => ok_model::SpectreCurve::Cubic,
+        };
+        out.push(MasterCfg {
+            name: name.clone(),
+            params: ok_sketch::spectre::Params {
+                curve,
+                bulge: num(cfg, "bulge"),
+                bit: num(cfg, "bit"),
+                ..sf.params()
+            },
+            round: num(cfg, "round"),
+            flat: cfg["shape"].as_str().unwrap() == "flat",
+            phase: num(cfg, "phase"),
+        });
+    }
+    out.sort_by(|a, b| a.name.cmp(&b.name));
+    out
+}
+
+/// A master's profile in the hex, clocked as the build chose.
+fn profile(m: &MasterCfg) -> (Vec<Vec2>, ok_sketch::spectre::Master) {
+    let master = ok_sketch::spectre::master(&m.params, m.round, 10f64.to_radians()).unwrap();
+    let outline: Vec<Vec2> = master.outline.iter().map(|q| rot(*q, m.phase)).collect();
+    (outline, master)
 }
 
 fn hex_of(n: &serde_json::Value) -> Hex {
@@ -241,55 +303,13 @@ fn hex_of(n: &serde_json::Value) -> Hex {
 }
 
 #[test]
-fn the_master_is_the_tile_the_top_is_cut_from_centred_in_a_hex_that_holds_it() {
+fn each_master_is_the_tile_the_top_is_cut_from_centred_in_a_hex_that_holds_both() {
     let mut doc = load();
     let n = numbers();
     let sf = spectre(&doc, tab_named(&doc, "Top"));
-    assert_eq!(
-        (sf.edge, sf.gap, sf.bulge),
-        (num(&n, "edge"), num(&n, "gap"), num(&n, "bulge"))
-    );
+    assert_eq!((sf.edge, sf.gap), (num(&n, "edge"), num(&n, "gap")));
     assert!((sf.bit - num(&n, "bit")).abs() < 1e-9);
-    let (outline, m) = profile(&doc, &n);
     let hx = hex_of(&n);
-    // The knobs are rounded to the bit: the master is a little under the
-    // same tile with its corners sharp, and no convex corner turns more
-    // than the facets.
-    let sharp = ok_sketch::spectre::master(&sf.params(), 0.0, 10f64.to_radians()).unwrap();
-    assert!(
-        num(&n, "round") > 0.0 && m.area < sharp.area && m.area > sharp.area - 20.0,
-        "{} vs {}",
-        m.area,
-        sharp.area
-    );
-    let count = outline.len();
-    let sharpest = (0..count)
-        .map(|i| {
-            let (a, b, c) = (
-                outline[(i + count - 1) % count],
-                outline[i],
-                outline[(i + 1) % count],
-            );
-            (b - a).cross(c - b).atan2((b - a).dot(c - b)).to_degrees()
-        })
-        .fold(0.0, f64::max);
-    assert!(sharpest < 25.0, "a convex turn of {sharpest} degrees");
-    // The blank holds the master's circle with its margin, and every
-    // point of the clocked outline is inside the hex by that margin.
-    assert!(
-        2.0 * m.radius + 2.0 < hx.f,
-        "{} across in {}",
-        2.0 * m.radius,
-        hx.f
-    );
-    for q in &outline {
-        for k in 0..6 {
-            let (_, nk) = hx.frame(k);
-            assert!(q.dot(nk) < hx.apothem - 1.0, "{q:?} against face {k}");
-        }
-    }
-    // The master body is that profile over the stack, with a hex end
-    // the flanges' size at each end.
     let top = regen(&mut doc, "Top");
     let pieces = top
         .bodies
@@ -301,215 +321,325 @@ fn the_master_is_the_tile_the_top_is_cut_from_centred_in_a_hex_that_holds_it() {
     assert_eq!(count, pieces as f64 + 2.0);
     let length = count * num(&n, "laminate");
     assert_eq!(length, num(&n, "length"));
-    let master = regen(&mut doc, "Master");
-    let solid = body(&master, "Master");
     let f_out = num(&n, "F_out");
     let end = num(&n, "master_end");
     let hex_area = 3f64.sqrt() / 2.0 * f_out * f_out;
-    let expected = m.area * length + 2.0 * hex_area * end;
-    let volume = solid.volume();
-    assert!(
-        (volume - expected).abs() < 0.01 * expected,
-        "{volume} vs {expected}"
-    );
-    let (lo, hi) = bounds(solid);
-    assert!(
-        (lo.x + end).abs() < 1e-6 && (hi.x - length - end).abs() < 1e-6,
-        "{lo:?} {hi:?}"
-    );
-    assert!(
-        (hi.z - lo.z - f_out).abs() < 1e-6,
-        "ends {} across",
-        hi.z - lo.z
-    );
-    // Seen from above on the flat cradle, the profile alone (the fins'
-    // tab has it without the ends) has no corner tighter than the
-    // ball-nose bit: the fillets are the bit's own, and the arcs twice
-    // it. What a pilot from above never sees, the bays' undersides, is
-    // for the other indices.
-    let fins = regen(&mut doc, "Finned panels");
-    let prism = body(&fins, "Master");
-    let report = ok_brep::duplicate_check(
-        prism,
-        &ok_brep::Bit {
-            diameter: sf.bit,
-            reach: 200.0,
-            shape: ok_brep::BitShape::Ball,
-        },
-        Some(0.2),
-    )
-    .unwrap();
-    eprintln!(
-        "master {volume:.0} mm3, {} points, {:.2} across, clocked {} deg; from above a ball bit leaves {:.1} mm2 of residual, {:.0} mm3 under overhangs",
-        outline.len(),
-        2.0 * m.radius,
-        num(&n, "phase"),
-        report.residual_area,
-        report.undercut_volume
-    );
-    // The fillets are polylines at 10 degree facets, chords a few
-    // hundredths inside the ball's circle, so the residual is that high
-    // and no more: nothing a bit of this radius cannot get into.
-    assert!(report.residual_max < 0.1, "{:?}", report.problems);
-    assert!(report.residual_area < 30.0, "{:?}", report.problems);
-    assert!(
-        report.undercut_volume > 0.0,
-        "the bays must be undercuts from one side"
-    );
+    let all = masters(&doc, &n);
+    assert_eq!(all.len(), 2);
+    for mc in &all {
+        let (outline, m) = profile(mc);
+        let count = outline.len();
+        let turn = |i: usize| {
+            let (a, b, c) = (
+                outline[(i + count - 1) % count],
+                outline[i],
+                outline[(i + 1) % count],
+            );
+            (b - a).cross(c - b).atan2((b - a).dot(c - b)).to_degrees()
+        };
+        if mc.round > 0.0 {
+            // The curved master: its knobs rounded to the bit, so a
+            // little under the same tile with its corners sharp, and no
+            // convex corner turning more than the facets.
+            let sharp = ok_sketch::spectre::master(&mc.params, 0.0, 10f64.to_radians()).unwrap();
+            assert!(
+                m.area < sharp.area && m.area > sharp.area - 20.0,
+                "{}: {} vs {}",
+                mc.name,
+                m.area,
+                sharp.area
+            );
+            let sharpest = (0..count).map(turn).fold(0.0, f64::max);
+            assert!(
+                sharpest < 25.0,
+                "{}: a convex turn of {sharpest} degrees",
+                mc.name
+            );
+        } else {
+            // The straight master: the tile exactly but for the gap, so
+            // every edge longer than the gap's rounding of a corner lies
+            // on the 30 degree grid, where a square-end bit can be
+            // parallel or square to it at one of the twelve indices.
+            assert!(mc.flat && mc.params.bulge == 0.0 && mc.params.bit == 0.0);
+            let short = num(&n, "short");
+            let mut on_grid = 0.0;
+            for i in 0..count {
+                let e = outline[(i + 1) % count] - outline[i];
+                if e.length() < short {
+                    continue;
+                }
+                let deg = e.angle().to_degrees().rem_euclid(30.0);
+                let off = deg.min(30.0 - deg);
+                assert!(
+                    off < 0.01,
+                    "{}: an edge {off} degrees off the grid",
+                    mc.name
+                );
+                on_grid += e.length();
+            }
+            assert!(on_grid > 14.0 * sf.edge * 0.9, "{} mm on the grid", on_grid);
+            assert!(
+                (m.area
+                    - (ok_sketch::spectre::TILE_AREA * sf.edge * sf.edge
+                        - 0.5 * sf.gap * 14.0 * sf.edge))
+                    .abs()
+                    < 5.0,
+                "{}: {} mm2",
+                mc.name,
+                m.area
+            );
+        }
+        // The blank holds the master's circle with its margin, and every
+        // point of the clocked outline is inside the hex by that margin.
+        assert!(
+            2.0 * m.radius + 2.0 < hx.f,
+            "{}: {} across in {}",
+            mc.name,
+            2.0 * m.radius,
+            hx.f
+        );
+        for q in &outline {
+            for k in 0..6 {
+                let (_, nk) = hx.frame(k);
+                assert!(
+                    q.dot(nk) < hx.apothem - 1.0,
+                    "{}: {q:?} against face {k}",
+                    mc.name
+                );
+            }
+        }
+        // The master body is that profile over the stack, with a hex end
+        // the flanges' size at each end.
+        let master = regen(&mut doc, &format!("Master {}", mc.name));
+        let solid = body(&master, "Master");
+        let expected = m.area * length + 2.0 * hex_area * end;
+        let volume = solid.volume();
+        assert!(
+            (volume - expected).abs() < 0.01 * expected,
+            "{}: {volume} vs {expected}",
+            mc.name
+        );
+        let (lo, hi) = bounds(solid);
+        assert!(
+            (lo.x + end).abs() < 1e-6 && (hi.x - length - end).abs() < 1e-6,
+            "{lo:?} {hi:?}"
+        );
+        assert!(
+            (hi.z - lo.z - f_out).abs() < 1e-6,
+            "ends {} across",
+            hi.z - lo.z
+        );
+        eprintln!(
+            "{} master {volume:.0} mm3, {} points, {:.2} across, clocked {} deg",
+            mc.name,
+            outline.len(),
+            2.0 * m.radius,
+            mc.phase
+        );
+        if !mc.flat {
+            // Seen from above on the flat cradle, the curved profile
+            // alone (the fins' tab has it without the ends) has no corner
+            // tighter than the ball-nose bit: the fillets are the bit's
+            // own, and the arcs twice it. What a pilot from above never
+            // sees, the bays' undersides, is for the other indices.
+            let fins = regen(&mut doc, &format!("Fins {}", mc.name));
+            let prism = body(&fins, "Master");
+            let report = ok_brep::duplicate_check(
+                prism,
+                &ok_brep::Bit {
+                    diameter: sf.bit,
+                    reach: 200.0,
+                    shape: ok_brep::BitShape::Ball,
+                },
+                Some(0.2),
+            )
+            .unwrap();
+            eprintln!(
+                "  from above a ball bit leaves {:.1} mm2 of residual, {:.0} mm3 under overhangs",
+                report.residual_area, report.undercut_volume
+            );
+            // The fillets are polylines at 10 degree facets, chords a few
+            // hundredths inside the ball's circle, so the residual is that
+            // high and no more.
+            assert!(report.residual_max < 0.1, "{:?}", report.problems);
+            assert!(report.residual_area < 30.0, "{:?}", report.problems);
+            assert!(
+                report.undercut_volume > 0.0,
+                "the bays must be undercuts from one side"
+            );
+        }
+    }
 }
 
 #[test]
-fn every_edge_of_the_profile_is_reachable_at_one_of_the_twelve_indices() {
+fn every_edge_of_each_profile_is_reachable_by_its_bit_at_one_of_the_twelve_indices() {
     let doc = load();
     let n = numbers();
-    let (outline, _) = profile(&doc, &n);
     let hx = hex_of(&n);
     let panels: Vec<Vec<Vec2>> = (0..6).map(|k| hx.panel(k)).collect();
     let idx = hx.indices();
-    let scene = Scene {
-        outline: &outline,
-        hx: &hx,
-        panels: &panels,
-        r: num(&n, "bit") / 2.0,
-    };
-    let count = outline.len();
-    let (mut total, mut covered) = (0.0, 0.0);
-    let mut per = vec![0.0; idx.len()];
-    let mut missed = Vec::new();
-    for i in 0..count {
-        let (a, b) = (outline[i], outline[(i + 1) % count]);
-        let e = b - a;
-        let len = e.length();
-        if len < 1e-9 {
-            continue;
-        }
-        let m = (a + b) * 0.5;
-        let ne = Vec2::new(e.y, -e.x) * (1.0 / len);
-        total += len;
-        let mut ok = false;
-        for (w, (d, open, _)) in idx.iter().enumerate() {
-            if scene.reachable(m, ne, *d, *open) {
-                ok = true;
-                per[w] += len;
+    for mc in masters(&doc, &n) {
+        let (outline, _) = profile(&mc);
+        let scene = Scene {
+            outline: &outline,
+            hx: &hx,
+            panels: &panels,
+            r: num(&n, "bit") / 2.0,
+            flat: mc.flat,
+            short: num(&n, "short"),
+        };
+        let count = outline.len();
+        let edges: Vec<(Vec2, Vec2, Vec2, f64)> = (0..count)
+            .filter_map(|i| {
+                let (a, b) = (outline[i], outline[(i + 1) % count]);
+                let e = b - a;
+                let len = e.length();
+                (len > 1e-9).then(|| {
+                    (
+                        (a + b) * 0.5,
+                        e * (1.0 / len),
+                        Vec2::new(e.y, -e.x) * (1.0 / len),
+                        len,
+                    )
+                })
+            })
+            .collect();
+        let total: f64 = edges.iter().map(|e| e.3).sum();
+        let mut per = vec![0.0; idx.len()];
+        let mut covered = 0.0;
+        let mut missed = Vec::new();
+        for (m, e, ne, len) in &edges {
+            let mut ok = false;
+            for (w, (d, open, _)) in idx.iter().enumerate() {
+                if scene.reachable(*m, *e, *ne, *len, *d, *open) {
+                    ok = true;
+                    per[w] += len;
+                }
+            }
+            if ok {
+                covered += len;
+            } else {
+                missed.push(*m);
             }
         }
-        if ok {
-            covered += len;
-        } else {
-            missed.push(m);
+        for ((_, _, label), l) in idx.iter().zip(&per) {
+            eprintln!("{} / {label}: {l:.0} mm of {total:.0}", mc.name);
         }
+        // Every window cuts something at its flat index, and the whole
+        // outline is reached somewhere.
+        for (w, (_, _, label)) in idx.iter().enumerate().take(6) {
+            assert!(per[w] > 1.0, "{}: {label} cuts only {} mm", mc.name, per[w]);
+        }
+        assert!(
+            missed.is_empty(),
+            "{}: {:.1}% reached; unreachable at {:?}",
+            mc.name,
+            100.0 * covered / total,
+            &missed[..missed.len().min(8)]
+        );
+        // And six flat indices alone would not do: the curved tile's bays
+        // open toward the hex's corners, and the straight tile has edges
+        // on every other line of the grid.
+        let flat_only: f64 = edges
+            .iter()
+            .filter(|(m, e, ne, len)| {
+                idx.iter()
+                    .take(6)
+                    .any(|(d, open, _)| scene.reachable(*m, *e, *ne, *len, *d, *open))
+            })
+            .map(|e| e.3)
+            .sum();
+        eprintln!(
+            "{}: flat indices alone reach {:.1}%",
+            mc.name,
+            100.0 * flat_only / total
+        );
+        assert!(flat_only < 0.99 * total);
     }
-    for ((_, _, label), l) in idx.iter().zip(&per) {
-        eprintln!("{label}: {l:.0} mm of {total:.0}");
-    }
-    // Every window cuts something at its flat index, and the whole
-    // outline is reached somewhere.
-    for (w, (_, _, label)) in idx.iter().enumerate().take(6) {
-        assert!(per[w] > 10.0, "{label} cuts only {} mm", per[w]);
-    }
-    assert!(
-        missed.is_empty(),
-        "{:.1}% reached; unreachable at {:?}",
-        100.0 * covered / total,
-        &missed[..missed.len().min(8)]
-    );
-    // And six flat indices alone would not do: the tile's bays open
-    // toward the hex's corners.
-    let flat_only: f64 = (0..count)
-        .filter_map(|i| {
-            let (a, b) = (outline[i], outline[(i + 1) % count]);
-            let e = b - a;
-            let len = e.length();
-            let m = (a + b) * 0.5;
-            let ne = Vec2::new(e.y, -e.x) * (1.0 / len);
-            idx.iter()
-                .take(6)
-                .any(|(d, open, _)| scene.reachable(m, ne, *d, *open))
-                .then_some(len)
-        })
-        .sum();
-    eprintln!("flat indices alone reach {:.1}%", 100.0 * flat_only / total);
-    assert!(flat_only < 0.99 * total);
 }
 
 #[test]
-fn the_finned_panels_clear_the_master_and_each_other_and_fill_their_sectors() {
+fn the_finned_panels_clear_their_master_and_each_other_and_fill_their_sectors() {
     let mut doc = load();
     let n = numbers();
-    let (outline, _) = profile(&doc, &n);
     let hx = hex_of(&n);
     let clear = num(&n, "clear");
     let length = num(&n, "length");
-    let r = regen(&mut doc, "Finned panels");
-    let master = body(&r, "Master");
-    let fins: Vec<&Solid> = (1..=6)
-        .map(|k| body(&r, &format!("Finned panel {k}")))
-        .collect();
-    for (k, fin) in fins.iter().enumerate() {
-        let hit = overlap(fin, master);
-        assert!(
-            hit < 1e-6,
-            "finned panel {} meets the master: {hit} mm3",
-            k + 1
-        );
-        for (j, other) in fins.iter().enumerate().skip(k + 1) {
-            let hit = overlap(fin, other);
+    for mc in masters(&doc, &n) {
+        let (outline, _) = profile(&mc);
+        let r = regen(&mut doc, &format!("Fins {}", mc.name));
+        let master = body(&r, "Master");
+        let fins: Vec<&Solid> = (1..=6)
+            .map(|k| body(&r, &format!("Finned panel {k}")))
+            .collect();
+        for (k, fin) in fins.iter().enumerate() {
+            let hit = overlap(fin, master);
             assert!(
                 hit < 1e-6,
-                "finned panels {} and {} meet: {hit} mm3",
-                k + 1,
-                j + 1
+                "{}: finned panel {} meets the master: {hit} mm3",
+                mc.name,
+                k + 1
+            );
+            for (j, other) in fins.iter().enumerate().skip(k + 1) {
+                let hit = overlap(fin, other);
+                assert!(
+                    hit < 1e-6,
+                    "{}: finned panels {} and {} meet: {hit} mm3",
+                    mc.name,
+                    k + 1,
+                    j + 1
+                );
+            }
+            // The fin fills the column over the profile within its
+            // sector, the clearance off every way: the envelope sampled
+            // finely across the window, the least depth within the
+            // clearance taken, as the build did, and compared with the
+            // body less its plate.
+            let (t, nn) = hx.frame(k);
+            let half = hx.side / 2.0 - hx.mitre_clear - 0.2;
+            let step = 0.02;
+            let count = ((2.0 * half) / step).ceil() as usize;
+            let raw: Vec<f64> = (0..=count)
+                .map(|i| {
+                    let x = -half + i as f64 * step;
+                    let o = t * x + nn * hx.apothem;
+                    let hit = ray_hit(&outline, o, nn * -1.0).unwrap_or(f64::INFINITY);
+                    let sector = hx.apothem * (1.0 - x.abs() / (hx.side / 2.0));
+                    hit.min(sector)
+                })
+                .collect();
+            let reach = (clear / step).round() as usize;
+            let mut area = 0.0;
+            for i in 0..=count {
+                let lo = i.saturating_sub(reach);
+                let hi = (i + reach).min(count);
+                let d = raw[lo..=hi].iter().cloned().fold(f64::INFINITY, f64::min) - clear;
+                area += d.max(0.0) * step;
+            }
+            let (lo, hi) = bounds(fin);
+            let plate = ok_sketch::signed_area(&hx.panel(k)).abs() * (hi.x - lo.x);
+            let fin_volume = fin.volume() - plate;
+            let expected = area * (length - 1.0);
+            eprintln!(
+                "{} / finned panel {}: fin {fin_volume:.0} mm3, sector column {expected:.0} mm3",
+                mc.name,
+                k + 1
+            );
+            // Lobes too thin to print are left off, so the body is a
+            // little under the column; never over it.
+            assert!(
+                fin_volume <= expected * 1.03 + 1.0,
+                "{}: fin {} over its column: {fin_volume} vs {expected}",
+                mc.name,
+                k + 1
+            );
+            assert!(
+                fin_volume >= expected * 0.9,
+                "{}: fin {} under its column: {fin_volume} vs {expected}",
+                mc.name,
+                k + 1
             );
         }
-        // The fin fills the column over the profile within its sector,
-        // the clearance off every way: the envelope sampled finely
-        // across the window, the least depth within the clearance taken,
-        // as the build did, and compared with the body less its plate.
-        let (t, nn) = hx.frame(k);
-        let half = hx.side / 2.0 - hx.mitre_clear - 0.2;
-        let step = 0.02;
-        let count = ((2.0 * half) / step).ceil() as usize;
-        let raw: Vec<f64> = (0..=count)
-            .map(|i| {
-                let x = -half + i as f64 * step;
-                let o = t * x + nn * hx.apothem;
-                let hit = ray_hit(&outline, o, nn * -1.0).unwrap_or(f64::INFINITY);
-                let sector = hx.apothem * (1.0 - x.abs() / (hx.side / 2.0));
-                hit.min(sector)
-            })
-            .collect();
-        let reach = (clear / step).round() as usize;
-        let mut area = 0.0;
-        for i in 0..=count {
-            let lo = i.saturating_sub(reach);
-            let hi = (i + reach).min(count);
-            let d = raw[lo..=hi].iter().cloned().fold(f64::INFINITY, f64::min) - clear;
-            area += d.max(0.0) * step;
-        }
-        let plate = {
-            let p = hx.panel(k);
-            let (lo, hi) = bounds(fin);
-            let _ = (lo, hi);
-            ok_sketch::signed_area(&p).abs() * (hi.x - lo.x)
-        };
-        let fin_volume = fin.volume() - plate;
-        let expected = area * (length - 1.0);
-        eprintln!(
-            "finned panel {}: fin {fin_volume:.0} mm3, sector column {expected:.0} mm3",
-            k + 1
-        );
-        // Lobes too thin to print are left off, so the body is a little
-        // under the column; never over it.
-        assert!(
-            fin_volume <= expected * 1.03 + 1.0,
-            "fin {} over its column: {fin_volume} vs {expected}",
-            k + 1
-        );
-        assert!(
-            fin_volume >= expected * 0.9,
-            "fin {} under its column: {fin_volume} vs {expected}",
-            k + 1
-        );
     }
 }
 
