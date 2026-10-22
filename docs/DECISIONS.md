@@ -459,13 +459,19 @@ flat indices still miss the tile's deep bays, which open toward the
 hex's corners wherever the profile is turned; a V cradle the hex sits
 in on a corner adds the six corner directions through the same
 panels, and with twelve the clocking search reaches the whole outline
-at a 48 mm hex. The bit is a ball nose, not the flush trim bit the
-spectre-box pieces were drawn for: a flat bit on a duplicator leaves
-only vertical walls and flat floors, and `duplicator_check` on the
-master from above shows the profile's curves as corners it cannot
+at a 48 mm hex. The bit for the curved tile is a ball nose, not the flush trim bit
+the spectre-box pieces were drawn for: a flat bit on a duplicator
+leaves only vertical walls and flat floors, and `duplicator_check` on
+the master from above shows the profile's curves as corners it cannot
 make, where a ball of the same radius follows them, the fillets being
 its own. The reach rule is the ball's: the ball on the edge, its
-shank's column swept to the window clear of everything. The master is
+shank's column swept to the window clear of everything. The straight
+tile is the other way round: every edge of it lies on the 30° grid,
+so with twelve indices each edge can be presented parallel to a
+square-end bit or flat to its floor, and that bit makes the tile
+exactly, sharp inside corners and all, where a ball would fillet
+them. The example carries both masters for one cage and stack, each
+with its own finned panels, and the reach check has a rule per bit. The master is
 one shape rather than the tiling's pieces, which have the convex
 corners at a vertex of two tiles rounded to seat in a mate's fillet
 and the rest sharp: a stack routed as one prism can only be one

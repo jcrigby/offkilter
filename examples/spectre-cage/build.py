@@ -14,8 +14,8 @@ rods come out, the pieces fall apart finished.
     cargo test -p ok-render --test spectre_cage    # what CI runs
 
 Writes out/spectre_cage.okpart, screenshots, the printable parts as
-STL (the master with its hex ends, an end plug, a plain panel, the six
-finned panels, the flat and the V cradle), the stack order, and
+STL (each master with its hex ends and its six finned panels, an end
+plug, a plain panel, the flat and the V cradle), the stack order, and
 out/cage.json with the numbers the test checks.
 """
 import json
@@ -35,9 +35,21 @@ IN = 25.4
 # and four woods, no two neighbours alike.
 SIDE, THICKNESS = 4.0 * IN, 3.0                 # the top: veneer on a backer, 3 mm all up
 EDGE, CURVE, BULGE = 9.0, "arc", 0.3
-BIT = 3.0 / 16.0 * IN                           # the duplicator's ball-nose bit and pilot: the tile's inside corners are its fillets, and a ball follows the curves a flat bit would step
+BIT = 3.0 / 16.0 * IN                           # the duplicator's bit and pilot, 3/16 in either way
 GAP = 0.7                                       # the gap between the pieces, left open and dark
-ROUND = BIT / 2                                 # the convex corners rounded to the bit, the knobs template-routed pieces have; 0 for the Spectre's own corners
+# Two masters for the same cage and stack. The curved tile needs a
+# ball-nose bit, which follows the arcs and leaves its own radius in the
+# inside corners, so the master carries those fillets and, for the knob
+# template-routed pieces have, every convex corner rounded to the bit
+# too (`round` 0 keeps the Spectre's corners). The straight tile is cut
+# with a square-end bit: every edge of it lies on the 30 degree grid,
+# so at one of the twelve indices it stands parallel to the bit or flat
+# to its floor, and the bit makes it exactly, sharp corners and all.
+MASTERS = {
+    "curved": dict(curve=CURVE, bulge=BULGE, bit=BIT, round=BIT / 2, shape="ball"),
+    "straight": dict(curve=CURVE, bulge=0.0, bit=0.0, round=0.0, shape="flat"),
+}
+SHORT = 0.5                                     # an edge shorter than this (the gap's rounding of a corner) a square-end bit leaves as a corner
 SCRAP = 40.0
 WOODS = [("Maple", 0.7), ("Walnut", 0.64), ("Cherry", 0.6), ("Ebony", 1.1)]
 # The stack: one laminate per piece, veneer glued to its own backer.
@@ -128,12 +140,34 @@ def indices(hx):
     return out
 
 
-def reach(outline, hx, bit):
-    """Which of the outline's edges a vertical ball-nose bit can cut at
-    some index: the edge does not face away from the bit, and with the
-    ball on the edge the column its shank sweeps on the way down from
-    above is clear of the profile and of the five panels still in place. Returns (fraction of the
-    perimeter reachable, length reachable per index, unreachable
+def column_clear(outline, panels, open_k, c, d, r, skip):
+    """Whether a bit of radius `r` standing at `c` can be drawn up
+    direction `d` out of the open window: the column its body sweeps,
+    its centre line and its two sides, started a hair off the surface so
+    a side ray does not graze the facet it is tangent to, meets neither
+    the profile nor a panel still in place."""
+    t = (d[1], -d[0])
+    for off in (0.1 - r, 0.0, r - 0.1):
+        o = (c[0] + off * t[0] + 0.05 * d[0], c[1] + off * t[1] + 0.05 * d[1])
+        if ray_hit(outline, o, d, skip=skip) is not None:
+            return False
+        for k, poly in enumerate(panels):
+            if k != open_k and ray_hit(poly, o, d) is not None:
+                return False
+    return True
+
+
+def reach(outline, hx, bit, shape):
+    """Which of the outline's edges a vertical bit can cut at some index.
+    A ball-nose bit cuts an edge that does not face away from it when,
+    with the ball on the edge, the column its shank sweeps up to the
+    window is clear of the profile and of the five panels still in
+    place. A square-end bit cuts only an edge parallel to it, with its
+    side, the same column beside the edge clear; or an edge square to
+    it facing up, with its floor, the column above it clear with the
+    bit anywhere over the edge; an edge shorter than `SHORT` (the gap's
+    rounding of a corner) it leaves as the corner. Returns (fraction of
+    the perimeter reachable, length reachable per index, unreachable
     edge midpoints)."""
     n = len(outline)
     r = bit / 2.0
@@ -149,30 +183,30 @@ def reach(outline, hx, bit):
         if length < 1e-9:
             continue
         m = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+        e = (ex / length, ey / length)
         ne = (ey / length, -ex / length)        # outward: the interior is left of a ccw edge
         total += length
-        ok = False
+        ok = shape == "flat" and length < SHORT
         for w, (d, open_k, _) in enumerate(idx):
-            if ne[0] * d[0] + ne[1] * d[1] < -0.02:
-                continue                        # an overhang from this direction
-            t = (d[1], -d[0])
-            c = (m[0] + r * ne[0], m[1] + r * ne[1])   # the bit's centre, touching the edge
-            # The column the bit's body sweeps: its centre line and its
-            # two sides, started a hair off the surface so a side ray
-            # does not graze the facet it is tangent to.
-            clear = True
-            for off in (0.1 - r, 0.0, r - 0.1):
-                o = (c[0] + off * t[0] + 0.05 * d[0], c[1] + off * t[1] + 0.05 * d[1])
-                if ray_hit(outline, o, d, skip=i) is not None:
-                    clear = False
-                    break
-                for k, poly in enumerate(panels):
-                    if k != open_k and ray_hit(poly, o, d) is not None:
-                        clear = False
-                        break
-                if not clear:
-                    break
-            if clear:
+            facing = ne[0] * d[0] + ne[1] * d[1]
+            along = abs(e[0] * d[0] + e[1] * d[1])
+            if shape == "ball":
+                if facing < -0.02:
+                    continue                    # an overhang from this direction
+                c = (m[0] + r * ne[0], m[1] + r * ne[1])   # the bit's centre, the ball on the edge
+                hit = column_clear(outline, panels, open_k, c, d, r, i)
+            elif along > 0.9999:
+                c = (m[0] + r * ne[0], m[1] + r * ne[1])   # the bit beside the wall
+                hit = column_clear(outline, panels, open_k, c, d, r, i)
+            elif facing > 0.9999:
+                t = (d[1], -d[0])
+                hit = any(
+                    column_clear(outline, panels, open_k, (m[0] + off * t[0], m[1] + off * t[1]), d, r, i)
+                    for off in (-r + 0.1, -r / 2, 0.0, r / 2, r - 0.1)
+                )
+            else:
+                continue
+            if hit:
                 ok = True
                 per[w] += length
         if ok:
@@ -302,6 +336,20 @@ def cradle(p, name, F_out, x0, kind="flat"):
     return subtract(p, body, [tool], name=name)
 
 
+def clock(outline0, hx, bit, shape):
+    """The turn of the profile in the hex at which the twelve indices
+    between them reach every edge of the outline with this bit."""
+    best = None
+    for phase in range(0, 30):
+        outline = [rot(q, phase) for q in outline0]
+        frac, per, missed = reach(outline, hx, bit, shape)
+        score = (frac, min(per))
+        if best is None or score > best[0]:
+            best = (score, phase, outline, per, missed)
+    (frac, _), phase, outline, per, missed = best
+    return phase, outline, frac, per, missed
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "spectre_cage.okpart")
@@ -309,29 +357,27 @@ def main():
         os.remove(path)
     mcp = Mcp(path)
     mcp.call("create_document", {"name": "spectre_cage"})
-    # -- the master: one tile as the pieces are routed -----------------
-    tile = json.loads(mcp.call("spectre_tile", {"edge": EDGE, "curve": CURVE, "bulge": BULGE, "bit": BIT, "gap": GAP, "round": ROUND}))
-    outline0 = [(q[0], q[1]) for q in tile["outline"]]
-    F = math.ceil((tile["across"] + 2 * MARGIN) / 2.0) * 2.0
+    # -- the masters: one tile each, as the pieces are routed -----------
+    tiles = {}
+    for name, cfg in MASTERS.items():
+        tile = json.loads(mcp.call("spectre_tile", {"edge": EDGE, "curve": cfg["curve"], "bulge": cfg["bulge"], "bit": cfg["bit"], "gap": GAP, "round": cfg["round"]}))
+        tiles[name] = tile
+        print(f"{name} master: {len(tile['outline'])} points, {tile['across']:.2f} across, {tile['area']:.0f} of the tile's {tile['tile_area']:.0f} mm2")
+    # One hex holds both, and the flanges and the masters' ends are a
+    # hex whose corners hold the rods and their nuts.
+    F = math.ceil((max(t["across"] for t in tiles.values()) + 2 * MARGIN) / 2.0) * 2.0
     hx = Hex(F)
-    # The flanges and the master's ends: a hex whose corners hold the
-    # rods and their nuts.
     F_out = math.ceil((rod_centre(hx, 0)[0] + NUT_AF / math.sqrt(3.0) + 1.0) * math.sqrt(3.0) / 2.0) * 2.0
-    print(f"master: {len(outline0)} points, {tile['across']:.2f} across, {tile['area']:.0f} of the tile's {tile['tile_area']:.0f} mm2")
     print(f"blank hex {F:.0f} across flats, side {hx.side:.2f}, window {hx.w:.2f}; rods at {rod_centre(hx, 0)[0]:.1f}; flange hex {F_out:.0f}")
-    # Clock the profile in the hex: the turn at which the six windows
-    # between them reach every edge of the outline with this bit.
-    best = None
-    for phase in range(0, 30):
-        outline = [rot(q, phase) for q in outline0]
-        frac, per, missed = reach(outline, hx, BIT)
-        score = (frac, min(per))
-        if best is None or score > best[0]:
-            best = (score, phase, outline, per, missed)
-    (frac, _), phase, outline, per, missed = best
-    print(f"clocked at {phase} degrees: {100 * frac:.1f}% of the outline reachable; per index " + ", ".join(f"{label} {x:.0f}" for (_, _, label), x in zip(indices(hx), per)) + " mm")
-    if missed:
-        print("unreachable at " + ", ".join(f"({y:.1f}, {z:.1f})" for y, z in missed))
+    # Clock each profile in the hex.
+    clocked = {}
+    for name, cfg in MASTERS.items():
+        outline0 = [(q[0], q[1]) for q in tiles[name]["outline"]]
+        phase, outline, frac, per, missed = clock(outline0, hx, BIT, cfg["shape"])
+        clocked[name] = (phase, outline, frac, per)
+        print(f"{name} clocked at {phase} degrees, {cfg['shape']} bit: {100 * frac:.1f}% of the outline reachable; per index " + ", ".join(f"{label} {x:.0f}" for (_, _, label), x in zip(indices(hx), per)) + " mm")
+        if missed:
+            print("  unreachable at " + ", ".join(f"({y:.1f}, {z:.1f})" for y, z in missed))
     # -- the top the pieces are for: how many, and of what -------------
     top = Part(mcp, 1, "Top")
     top.apply({"type": "rename_document", "name": "Spectre stack cage"}, {"type": "rename_tab", "tab": 1, "name": "Top"})
@@ -368,18 +414,39 @@ def main():
     print(f"top: {len(pieces)} pieces, " + ", ".join(f"{c} {w.lower()}" for w, c in counts.items()) + f"; stack of {N} with {SPARES} spares, {L:.0f} mm")
     # -- tabs ------------------------------------------------------------
     tabs = {}
-    for name in ("Master", "Cage", "Finned panels", "Cradles"):
+    names = ["Cage", "Cradles"] + [f"Master {n}" for n in MASTERS] + [f"Fins {n}" for n in MASTERS]
+    for name in names:
         text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": name}]})
         tabs[name] = int(re.search(r"tab (\d+)", text).group(1))
-    # The master: the profile over the stack's length, a hex end at each end.
-    m = Part(mcp, tabs["Master"], "Master")
-    body = prism(m, "Master", outline, 0.0, L)
-    ends = [prism(m, "Master end", hexagon(F_out), -MASTER_END, 0.0), prism(m, "Master end", hexagon(F_out), L, L + MASTER_END)]
-    union(m, body, ends, name="Master")
-    # The cage, loaded: rails, plugs, rods, five plain panels (the top
-    # window open), the stack inside, the cradles under the ends.
-    c = Part(mcp, tabs["Cage"], "Cage")
     x_panel = (-BOSS, L + BOSS)
+    parts = []
+    # Each master: the profile over the stack's length, a hex end at each
+    # end; and its six finned panels round it, at the same place.
+    fin_area = {}
+    for name in MASTERS:
+        outline = clocked[name][1]
+        m = Part(mcp, tabs[f"Master {name}"], f"Master {name}")
+        body = prism(m, "Master", outline, 0.0, L)
+        ends = [prism(m, "Master end", hexagon(F_out), -MASTER_END, 0.0), prism(m, "Master end", hexagon(F_out), L, L + MASTER_END)]
+        union(m, body, ends, name="Master")
+        f = Part(mcp, tabs[f"Fins {name}"], f"Fins {name}")
+        areas = []
+        for k in range(6):
+            panel = prism(f, f"Finned panel {k + 1}", panel_polygon(hx, k), *x_panel)
+            area, lobes = 0.0, []
+            for lobe in fin_lobes(outline, hx, k):
+                lobes.append(prism(f, f"Fin {k + 1}", lobe, 0.5, L - 0.5))
+                area += abs(sum(lobe[i][0] * lobe[(i + 1) % len(lobe)][1] - lobe[(i + 1) % len(lobe)][0] * lobe[i][1] for i in range(len(lobe)))) / 2
+            if lobes:
+                union(f, panel, lobes, name=f"Finned panel {k + 1}")
+            areas.append(area)
+        prism(f, "Master", outline, 0.0, L)
+        fin_area[name] = areas
+        print(f"{name} fins: " + ", ".join(f"{a:.0f}" for a in areas) + " mm2 of the window's sections")
+        parts += [m, f]
+    # The cage, loaded: plugs, rods, five plain panels (the top window
+    # open), the stack inside, the cradles under the flanges.
+    c = Part(mcp, tabs["Cage"], "Cage")
     rods = [rod_centre(hx, k) for k in range(6)]
     for k in range(6):
         if k == 1:
@@ -403,26 +470,12 @@ def main():
         prism(c, f"Laminate {i + 1} {wood.lower()}", hexagon(F - CLEAR), i * LAM, (i + 1) * LAM, material={"name": wood, "density": densities[wood]})
     cradle(c, "Cradle A", F_out, -BOSS - FLANGE - (CRADLE_L - FLANGE) / 2)
     cradle(c, "Cradle B", F_out, L + BOSS - (CRADLE_L - FLANGE) / 2)
-    # The finned panels around the master, at the same place.
-    f = Part(mcp, tabs["Finned panels"], "Finned panels")
-    fin_area = []
-    for k in range(6):
-        panel = prism(f, f"Finned panel {k + 1}", panel_polygon(hx, k), *x_panel)
-        area, lobes = 0.0, []
-        for lobe in fin_lobes(outline, hx, k):
-            lobes.append(prism(f, f"Fin {k + 1}", lobe, 0.5, L - 0.5))
-            area += abs(sum(lobe[i][0] * lobe[(i + 1) % len(lobe)][1] - lobe[(i + 1) % len(lobe)][0] * lobe[i][1] for i in range(len(lobe)))) / 2
-        if lobes:
-            union(f, panel, lobes, name=f"Finned panel {k + 1}")
-        fin_area.append(area)
-    prism(f, "Master", outline, 0.0, L)
-    # The two cradles on their own, to print: the master's ends and the
+    # The two cradles on their own, to print: the masters' ends and the
     # cage's flanges sit in either.
     cr = Part(mcp, tabs["Cradles"], "Cradles")
     cradle(cr, "Flat cradle", F_out, 0.0, "flat")
     cradle(cr, "V cradle", F_out, CRADLE_L + 20.0, "v")
-    print("fins: " + ", ".join(f"{a:.0f}" for a in fin_area) + " mm2 of the window's sections")
-    for part in (m, c, f, cr):
+    for part in parts + [c, cr]:
         r = part.report()
         bad = [(ft["name"], ft["error"]) for ft in r["features"] if ft.get("error")]
         if bad:
@@ -430,32 +483,37 @@ def main():
         print(f"{part.name}: {len(r['bodies'])} bodies")
     # -- pictures and files ----------------------------------------------
     shot = lambda tab, name, **kw: mcp.call("screenshot", {"tab": tab, "width": 1400, "height": 1000, "path": os.path.join(OUT, f"{name}.png"), **kw})
+    export = lambda tab, body, name: mcp.call("export", {"tab": tab, "format": "stl", "body": body, "path": os.path.join(OUT, f"{name}.stl")})
     shot(tabs["Cage"], "cage_iso", view="iso")
     shot(tabs["Cage"], "cage_end", view="right")
-    shot(tabs["Finned panels"], "fins_end", view="right")
-    shot(tabs["Finned panels"], "fins_iso", view="iso")
-    shot(tabs["Master"], "master_iso", view="iso")
     shot(tabs["Cradles"], "cradles", view="iso")
     shot(1, "top", view="top")
-    export = lambda tab, body, name: mcp.call("export", {"tab": tab, "format": "stl", "body": body, "path": os.path.join(OUT, f"{name}.stl")})
-    export(tabs["Master"], "Master", "master")
     export(tabs["Cage"], "Plug A", "plug")
     export(tabs["Cage"], "Panel 3", "panel")
     export(tabs["Cradles"], "Flat cradle", "cradle_flat")
     export(tabs["Cradles"], "V cradle", "cradle_v")
-    for k in range(6):
-        export(tabs["Finned panels"], f"Finned panel {k + 1}", f"finned_panel_{k + 1}")
-    print(mcp.call("export", {"tab": tabs["Finned panels"], "format": "pdf", "sheet": "A3", "views": ["right", "front", "iso"], "parts": False,
-                              "note": f"Spectre {EDGE:g} mm edge, {BIT:.2f} bit, hex {F:.0f}; fins {CLEAR} off the profile", "path": os.path.join(OUT, "fins.pdf")}))
+    for name, cfg in MASTERS.items():
+        shot(tabs[f"Fins {name}"], f"fins_{name}_end", view="right")
+        shot(tabs[f"Master {name}"], f"master_{name}_iso", view="iso")
+        export(tabs[f"Master {name}"], "Master", f"master_{name}")
+        for k in range(6):
+            export(tabs[f"Fins {name}"], f"Finned panel {k + 1}", f"finned_panel_{name}_{k + 1}")
+        print(mcp.call("export", {"tab": tabs[f"Fins {name}"], "format": "pdf", "sheet": "A3", "views": ["right", "front", "iso"], "parts": False,
+                                  "note": f"Spectre {EDGE:g} mm edge, {name}, {cfg['shape']} bit {BIT:.2f}, hex {F:.0f}; fins {CLEAR} off the profile",
+                                  "path": os.path.join(OUT, f"fins_{name}.pdf")}))
     with open(os.path.join(OUT, "stack.txt"), "w") as fh:
         fh.write(f"# {N} laminates of {LAM:g} mm ({VENEER:g} veneer on {BACKER:g} ply), hex {F:.0f} across flats, end A first\n")
         for i, wood in enumerate(stack):
             fh.write(f"{i + 1:3d}  {wood}\n")
     numbers = {
-        "edge": EDGE, "curve": CURVE, "bulge": BULGE, "bit": BIT, "gap": GAP, "round": ROUND,
+        "edge": EDGE, "bit": BIT, "gap": GAP,
         "F": F, "F_out": F_out, "panel_t": PANEL_T, "mitre_clear": MITRE_CLEAR, "clear": CLEAR, "rod": ROD, "rod_radius": rod_centre(hx, 0)[0],
-        "phase": phase, "laminate": LAM, "count": N, "length": L, "pieces": len(pieces), "counts": counts,
-        "reach": frac, "per_index": per, "indices": [label for _, _, label in indices(hx)], "fin_area": fin_area, "boss": BOSS, "flange": FLANGE, "master_end": MASTER_END,
+        "laminate": LAM, "count": N, "length": L, "pieces": len(pieces), "counts": counts,
+        "indices": [label for _, _, label in indices(hx)], "boss": BOSS, "flange": FLANGE, "master_end": MASTER_END, "short": SHORT,
+        "masters": {
+            name: {**cfg, "phase": clocked[name][0], "reach": clocked[name][2], "per_index": clocked[name][3], "fin_area": fin_area[name], "across": tiles[name]["across"]}
+            for name, cfg in MASTERS.items()
+        },
     }
     with open(os.path.join(OUT, "cage.json"), "w") as fh:
         json.dump(numbers, fh, indent=1)
