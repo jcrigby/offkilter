@@ -26,9 +26,15 @@ cargo test -p ok-render --test spectre_cage     # what CI runs
 - Asks the kernel for the master with `spectre_tile`: the spectre-box's
   tile (9 mm edge, arcs of sagitta 0.3) with its four inside corners
   filleted to the 3/16 in bit, eroded by half the 0.7 mm gap the top's
-  pieces will have between them, the convex corners left sharp. The
-  tile comes back centred on its smallest circle, 41.9 mm across, and
-  the blank hex is that plus a margin: 48 mm across flats.
+  pieces will have between them, and its ten convex corners rounded to
+  the bit as well (`ROUND`; 0 keeps the Spectre's own corners). A piece
+  routed to its template has the corners that seat in a neighbour's
+  fillet rounded and the rest sharp, which corners depending on where
+  the tile sits; one master cannot do that, so it rounds all of them,
+  which is the softer knob, at the cost of a sliver of resin where three
+  tiles meet, which a top with a gap has anyway. The tile comes back
+  centred on its smallest circle, 41.9 mm across, and the blank hex is
+  that plus a margin: 48 mm across flats.
 - Clocks the profile in the hex. The two cradles give twelve indices:
   on the flat one a panel's window faces straight up, on the V one the
   hex rests on a corner and the window either side of the top corner
