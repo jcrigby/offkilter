@@ -1316,6 +1316,47 @@ impl Server {
                     size.name()
                 ))
             }
+            "spectre_tile" => {
+                let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
+                let edge = args
+                    .get("edge")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("spectre_tile needs edge: the tile's edge length in mm")?;
+                let curve = match args
+                    .get("curve")
+                    .and_then(|c| c.as_str())
+                    .unwrap_or("cubic")
+                {
+                    "cubic" => ok_sketch::spectre::Curve::Cubic,
+                    "arc" => ok_sketch::spectre::Curve::Arc,
+                    other => return Err(format!("curve is cubic or arc, not {other}")),
+                };
+                let params = ok_sketch::spectre::Params {
+                    width: 1.0,
+                    height: 1.0,
+                    edge,
+                    gap: num("gap", 0.0),
+                    curve,
+                    bulge: num("bulge", ok_sketch::spectre::KAPLAN_BULGE),
+                    bit: num("bit", 0.0),
+                    shift: ok_math::Vec2::ZERO,
+                    angle: 0.0,
+                    scrap: 0.0,
+                    scheme: Default::default(),
+                    seed: 0,
+                    rips: Vec::new(),
+                };
+                let m = ok_sketch::spectre::master(&params, 10f64.to_radians())?;
+                let outline: Vec<[f64; 2]> = m.outline.iter().map(|q| [q.x, q.y]).collect();
+                Ok(json!({
+                    "outline": outline,
+                    "radius": m.radius,
+                    "across": 2.0 * m.radius,
+                    "area": m.area,
+                    "tile_area": ok_sketch::spectre::TILE_AREA * edge * edge,
+                })
+                .to_string())
+            }
             "list_documents" => {
                 let list = self.backend.list()?;
                 Ok(serde_json::to_string_pretty(&list).unwrap_or_default())
@@ -1886,6 +1927,11 @@ fn tool_list() -> Value {
             "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "body": { "type": "string" }, "bit": { "type": "number" }, "reach": { "type": "number" }, "shape": { "type": "string", "enum": ["flat", "ball"] }, "pitch": { "type": "number" }, "path": { "type": "string" } }, "required": ["bit"] }
         },
         {
+            "name": "spectre_tile",
+            "description": "One Spectre tile as the pieces of a top are routed, for a master to print and copy: the curved tile at `edge` mm (`curve` cubic or arc, `bulge` as add_spectre's), its four inside corners filleted to `bit` (the bit's diameter; the fillet is what a bit leaves in a notch), eroded by half of `gap`, the convex corners left sharp. Returns JSON: `outline` (counter-clockwise points, mm, centred on the smallest circle round the tile), `radius` and `across` (that circle: a blank has to be at least `across`), `area` and `tile_area`. No document is needed.",
+            "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["cubic", "arc"] }, "bulge": { "type": "number" }, "bit": { "type": "number" }, "gap": { "type": "number" } }, "required": ["edge"] }
+        },
+        {
             "name": "measuring_sheet",
             "description": "Writes the printable measuring sheet as a PDF: a light 10 mm grid with four bullseye marks in the corners (the origin's double-ringed, with dots beside it that encode the sheet size) and a 100 mm bar to check the print. Print it at 100 %, lay parts on it, photograph it straight down with all four marks in view, and measure_photo reads sizes off the picture.",
             "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Letter (default), A4, A3, A2 or Tabloid" } }, "required": ["path"] }
@@ -2175,6 +2221,42 @@ mod tests {
         );
         let unknown = call(&mut server, 9, "no/such", json!({}));
         assert_eq!(unknown["error"]["code"], -32601);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_spectre_tile_comes_back_centred_with_its_circle() {
+        let dir = std::env::temp_dir().join(format!("ok-mcp-tile-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut server = local_server(&dir);
+        let (err, text) = tool_text(
+            &mut server,
+            "spectre_tile",
+            json!({ "edge": 9.0, "curve": "arc", "bulge": 0.3, "bit": 4.7625, "gap": 0.7 }),
+        );
+        assert!(!err, "{text}");
+        let v: Value = serde_json::from_str(&text).unwrap();
+        let outline = v["outline"].as_array().unwrap();
+        assert!(outline.len() > 50, "{}", outline.len());
+        let radius = v["radius"].as_f64().unwrap();
+        assert!(radius > 20.0 && radius < 25.0, "{radius}");
+        assert!((v["across"].as_f64().unwrap() - 2.0 * radius).abs() < 1e-9);
+        let far = outline
+            .iter()
+            .map(|q| (q[0].as_f64().unwrap().powi(2) + q[1].as_f64().unwrap().powi(2)).sqrt())
+            .fold(0.0, f64::max);
+        assert!((far - radius).abs() < 1e-6, "{far} vs {radius}");
+        let area = v["area"].as_f64().unwrap();
+        let tile = v["tile_area"].as_f64().unwrap();
+        assert!(area > 0.9 * tile && area < tile, "{area} of {tile}");
+        let (err, text) = tool_text(
+            &mut server,
+            "spectre_tile",
+            json!({ "edge": 8.0, "bit": 4.7625 }),
+        );
+        assert!(err && text.contains("tightest radius"), "{text}");
+        let (err, text) = tool_text(&mut server, "spectre_tile", json!({ "curve": "arc" }));
+        assert!(err && text.contains("needs edge"), "{text}");
         let _ = std::fs::remove_dir_all(&dir);
     }
 
