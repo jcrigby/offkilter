@@ -37,6 +37,7 @@ SIDE, THICKNESS = 4.0 * IN, 3.0                 # the top: veneer on a backer, 3
 EDGE, CURVE, BULGE = 9.0, "arc", 0.3
 BIT = 3.0 / 16.0 * IN                           # the duplicator's ball-nose bit and pilot: the tile's inside corners are its fillets, and a ball follows the curves a flat bit would step
 GAP = 0.7                                       # the gap between the pieces, left open and dark
+ROUND = BIT / 2                                 # the convex corners rounded to the bit, the knobs template-routed pieces have; 0 for the Spectre's own corners
 SCRAP = 40.0
 WOODS = [("Maple", 0.7), ("Walnut", 0.64), ("Cherry", 0.6), ("Ebony", 1.1)]
 # The stack: one laminate per piece, veneer glued to its own backer.
@@ -309,7 +310,7 @@ def main():
     mcp = Mcp(path)
     mcp.call("create_document", {"name": "spectre_cage"})
     # -- the master: one tile as the pieces are routed -----------------
-    tile = json.loads(mcp.call("spectre_tile", {"edge": EDGE, "curve": CURVE, "bulge": BULGE, "bit": BIT, "gap": GAP}))
+    tile = json.loads(mcp.call("spectre_tile", {"edge": EDGE, "curve": CURVE, "bulge": BULGE, "bit": BIT, "gap": GAP, "round": ROUND}))
     outline0 = [(q[0], q[1]) for q in tile["outline"]]
     F = math.ceil((tile["across"] + 2 * MARGIN) / 2.0) * 2.0
     hx = Hex(F)
@@ -451,7 +452,7 @@ def main():
         for i, wood in enumerate(stack):
             fh.write(f"{i + 1:3d}  {wood}\n")
     numbers = {
-        "edge": EDGE, "curve": CURVE, "bulge": BULGE, "bit": BIT, "gap": GAP,
+        "edge": EDGE, "curve": CURVE, "bulge": BULGE, "bit": BIT, "gap": GAP, "round": ROUND,
         "F": F, "F_out": F_out, "panel_t": PANEL_T, "mitre_clear": MITRE_CLEAR, "clear": CLEAR, "rod": ROD, "rod_radius": rod_centre(hx, 0)[0],
         "phase": phase, "laminate": LAM, "count": N, "length": L, "pieces": len(pieces), "counts": counts,
         "reach": frac, "per_index": per, "indices": [label for _, _, label in indices(hx)], "fin_area": fin_area, "boss": BOSS, "flange": FLANGE, "master_end": MASTER_END,

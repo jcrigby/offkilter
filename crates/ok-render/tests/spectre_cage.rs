@@ -224,7 +224,7 @@ impl Scene<'_> {
 /// The profile of the master in the hex, clocked as the build chose.
 fn profile(doc: &Document, n: &serde_json::Value) -> (Vec<Vec2>, ok_sketch::spectre::Master) {
     let sf = spectre(doc, tab_named(doc, "Top"));
-    let m = ok_sketch::spectre::master(&sf.params(), 10f64.to_radians()).unwrap();
+    let m = ok_sketch::spectre::master(&sf.params(), num(n, "round"), 10f64.to_radians()).unwrap();
     let outline: Vec<Vec2> = m.outline.iter().map(|q| rot(*q, num(n, "phase"))).collect();
     (outline, m)
 }
@@ -252,6 +252,28 @@ fn the_master_is_the_tile_the_top_is_cut_from_centred_in_a_hex_that_holds_it() {
     assert!((sf.bit - num(&n, "bit")).abs() < 1e-9);
     let (outline, m) = profile(&doc, &n);
     let hx = hex_of(&n);
+    // The knobs are rounded to the bit: the master is a little under the
+    // same tile with its corners sharp, and no convex corner turns more
+    // than the facets.
+    let sharp = ok_sketch::spectre::master(&sf.params(), 0.0, 10f64.to_radians()).unwrap();
+    assert!(
+        num(&n, "round") > 0.0 && m.area < sharp.area && m.area > sharp.area - 20.0,
+        "{} vs {}",
+        m.area,
+        sharp.area
+    );
+    let count = outline.len();
+    let sharpest = (0..count)
+        .map(|i| {
+            let (a, b, c) = (
+                outline[(i + count - 1) % count],
+                outline[i],
+                outline[(i + 1) % count],
+            );
+            (b - a).cross(c - b).atan2((b - a).dot(c - b)).to_degrees()
+        })
+        .fold(0.0, f64::max);
+    assert!(sharpest < 25.0, "a convex turn of {sharpest} degrees");
     // The blank holds the master's circle with its margin, and every
     // point of the clocked outline is inside the hex by that margin.
     assert!(

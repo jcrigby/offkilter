@@ -955,27 +955,45 @@ pub struct Master {
 
 /// The master every piece of a top is cut from: the curve at `edge`, the
 /// four inside corners filleted to the bit (a bit coming round a corner
-/// leaves its own radius there), eroded by half the gap, the convex
-/// corners left sharp (a bit goes round them). In a tiling some convex
-/// corners are also rounded to seat in a mate's fillet; a top with a gap
-/// does not need that, and a stack routed as one prism cannot have it,
-/// so the master leaves it off. Centred on the smallest circle round it,
-/// so a hex blank across twice `radius` just holds it.
-pub fn master(p: &Params, facet: f64) -> Result<Master, String> {
+/// leaves its own radius there), eroded by half the gap, and the ten
+/// convex corners either left sharp (`round` zero: a bit goes round
+/// them) or all rounded to `round`, mm. In a tiling the convex corners
+/// at a vertex of two tiles are rounded to seat in a mate's fillet and
+/// the rest are sharp, which corners depending on the tile's place; a
+/// stack routed as one prism cannot have that, so the master rounds all
+/// or none. Rounded to the bit's radius they are the knobs the pieces
+/// routed to templates have, at the cost of a sliver of resin at each
+/// vertex of three tiles, which a top with a gap has anyway. Centred on
+/// the smallest circle round it, so a hex blank across twice `radius`
+/// just holds it.
+pub fn master(p: &Params, round: f64, facet: f64) -> Result<Master, String> {
     validate(p)?;
+    if !(round.is_finite() && round >= 0.0) {
+        return Err("round must be zero or a radius in mm".into());
+    }
     let facet = facet.max(10f64.to_radians());
     let per_edge = pieces_per_edge(p.curve, p.bulge, facet);
     let mut poly: Vec<Vec2> = curved_tile(p.curve, p.bulge, per_edge)
         .into_iter()
         .map(|q| q * p.edge)
         .collect();
+    let corner_at = |poly: &[Vec2], i: usize| {
+        let q = vertex(i) * p.edge;
+        (0..poly.len())
+            .min_by(|&a, &b| poly[a].distance(q).total_cmp(&poly[b].distance(q)))
+            .unwrap()
+    };
     if p.bit > 0.0 {
         for i in (0..14).filter(|&i| ANGLES[i] > 180) {
-            let q = vertex(i) * p.edge;
-            let at = (0..poly.len())
-                .min_by(|&a, &b| poly[a].distance(q).total_cmp(&poly[b].distance(q)))
-                .unwrap();
+            let at = corner_at(&poly, i);
             poly = round_corner(&poly, at, p.bit / 2.0, true, facet)?;
+        }
+    }
+    if round > 0.0 {
+        for i in (0..14).filter(|&i| ANGLES[i] < 180) {
+            let at = corner_at(&poly, i);
+            poly = round_corner(&poly, at, round, false, facet)
+                .map_err(|e| format!("rounding the convex corners: {e}"))?;
         }
     }
     let eroded = offset(&poly, p.gap / 2.0, facet);
@@ -1507,7 +1525,7 @@ mod tests {
     #[test]
     fn the_master_is_one_tile_centred_on_its_circle_with_the_bit_in_its_corners() {
         let straight = tile_params();
-        let m = master(&straight, 10f64.to_radians()).unwrap();
+        let m = master(&straight, 0.0, 10f64.to_radians()).unwrap();
         // The straight tile's smallest circle is 4.732 edges across.
         assert!(near(m.radius, 2.366 * 10.0, 0.01), "{}", m.radius);
         assert!(near(m.area, TILE_AREA * 100.0, 1e-6), "{}", m.area);
@@ -1521,7 +1539,7 @@ mod tests {
             gap: 0.7,
             ..tile_params()
         };
-        let m = master(&p, 10f64.to_radians()).unwrap();
+        let m = master(&p, 0.0, 10f64.to_radians()).unwrap();
         assert!(signed_area(&m.outline) > 0.0);
         let tile = TILE_AREA * 81.0;
         // Half a gap off all round and four fillets: a little under the tile.
@@ -1546,6 +1564,7 @@ mod tests {
                 bit: 0.0,
                 ..p.clone()
             },
+            0.0,
             10f64.to_radians(),
         )
         .unwrap();
@@ -1555,8 +1574,39 @@ mod tests {
             sharp.area,
             m.area
         );
-        let err = master(&Params { gap: 2.5, ..p }, 10f64.to_radians()).unwrap_err();
+        // Rounding the convex corners to the bit takes a little off each
+        // of the ten and leaves no corner sharper than the facets.
+        let knobs = master(&p, p.bit / 2.0, 10f64.to_radians()).unwrap();
+        assert!(
+            knobs.area < m.area && knobs.area > m.area - 20.0,
+            "{} vs {}",
+            knobs.area,
+            m.area
+        );
+        let n = knobs.outline.len();
+        let sharpest = (0..n)
+            .map(|i| {
+                let (a, b, c) = (
+                    knobs.outline[(i + n - 1) % n],
+                    knobs.outline[i],
+                    knobs.outline[(i + 1) % n],
+                );
+                (b - a).cross(c - b).atan2((b - a).dot(c - b)).to_degrees()
+            })
+            .fold(0.0, f64::max);
+        assert!(sharpest < 25.0, "a convex turn of {sharpest} degrees");
+        let err = master(
+            &Params {
+                gap: 2.5,
+                ..p.clone()
+            },
+            0.0,
+            10f64.to_radians(),
+        )
+        .unwrap_err();
         assert!(err.contains("quarter of the edge"), "{err}");
+        let err = master(&p, -1.0, 10f64.to_radians()).unwrap_err();
+        assert!(err.contains("round"), "{err}");
     }
 
     #[test]

@@ -1346,7 +1346,7 @@ impl Server {
                     seed: 0,
                     rips: Vec::new(),
                 };
-                let m = ok_sketch::spectre::master(&params, 10f64.to_radians())?;
+                let m = ok_sketch::spectre::master(&params, num("round", 0.0), 10f64.to_radians())?;
                 let outline: Vec<[f64; 2]> = m.outline.iter().map(|q| [q.x, q.y]).collect();
                 Ok(json!({
                     "outline": outline,
@@ -1928,8 +1928,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "spectre_tile",
-            "description": "One Spectre tile as the pieces of a top are routed, for a master to print and copy: the curved tile at `edge` mm (`curve` cubic or arc, `bulge` as add_spectre's), its four inside corners filleted to `bit` (the bit's diameter; the fillet is what a bit leaves in a notch), eroded by half of `gap`, the convex corners left sharp. Returns JSON: `outline` (counter-clockwise points, mm, centred on the smallest circle round the tile), `radius` and `across` (that circle: a blank has to be at least `across`), `area` and `tile_area`. No document is needed.",
-            "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["cubic", "arc"] }, "bulge": { "type": "number" }, "bit": { "type": "number" }, "gap": { "type": "number" } }, "required": ["edge"] }
+            "description": "One Spectre tile as the pieces of a top are routed, for a master to print and copy: the curved tile at `edge` mm (`curve` cubic or arc, `bulge` as add_spectre's), its four inside corners filleted to `bit` (the bit's diameter; the fillet is what a bit leaves in a notch), eroded by half of `gap`, the ten convex corners left sharp or, with `round` (a radius, mm; half the bit for the knobs template-routed pieces have), all rounded to it. Returns JSON: `outline` (counter-clockwise points, mm, centred on the smallest circle round the tile), `radius` and `across` (that circle: a blank has to be at least `across`), `area` and `tile_area`. No document is needed.",
+            "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["cubic", "arc"] }, "bulge": { "type": "number" }, "bit": { "type": "number" }, "gap": { "type": "number" }, "round": { "type": "number" } }, "required": ["edge"] }
         },
         {
             "name": "measuring_sheet",

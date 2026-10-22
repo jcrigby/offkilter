@@ -466,10 +466,13 @@ master from above shows the profile's curves as corners it cannot
 make, where a ball of the same radius follows them, the fillets being
 its own. The reach rule is the ball's: the ball on the edge, its
 shank's column swept to the window clear of everything. The master is
-one shape with sharp convex corners rather than the tiling's pieces
-with some corners rounded to seat in a mate's fillet: a stack routed
-as one prism can only be one shape, and a top with a gap does not need
-the rounding. Fins are kept to the hex's six sectors, so they never
+one shape rather than the tiling's pieces, which have the convex
+corners at a vertex of two tiles rounded to seat in a mate's fillet
+and the rest sharp: a stack routed as one prism can only be one
+shape, so `round` rounds all ten or none. All, to the bit's radius,
+is the softer knob the template-routed pieces show and costs a sliver
+of resin at each vertex of three tiles, which a top with a gap has
+anyway; none is the Spectre's own outline. The cage example rounds. Fins are kept to the hex's six sectors, so they never
 meet whatever the profile, and stop short of it sideways as well as
 down, since a sampled envelope with clearance taken only along the
 column cut into a vertical wall between samples, which the fin test
