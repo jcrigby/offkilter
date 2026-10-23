@@ -483,3 +483,37 @@ meet whatever the profile, and stop short of it sideways as well as
 down, since a sampled envelope with clearance taken only along the
 column cut into a vertical wall between samples, which the fin test
 found by boolean.
+
+## 2026-10 · The saw station's blank is a rectangle, its rabbets overshoot, and its offcuts are captured
+
+The table saw version of the straight Spectre stick
+(`examples/spectre-saw`) was going to start from the cage's hex blank
+and index it in a cradle at every 30°. Reading the tile's faces as a
+saw does changed both: six faces are through rips, eight end at an
+inside corner, none lies between two corners, and of the through
+faces two are parallel with a third square to them. A blank planed to
+that thickness and ripped to that width carries three faces from the
+start and the rest is ten rips, and since every cut is a printed
+cassette that holds the stick at its own angle, no cradle or index is
+needed at all; the hex, the rods and the twelve indices belong to the
+duplicator, where the bit has to come at the blank from outside it.
+The sequence is simulated with a polygon clipper rather than reasoned
+about, because the inside corners turned out to need it: a rabbet is
+two stopped cuts meeting at the corner, each kerf ending square to its
+own face, and a blade that stops short of the corner by any amount
+leaves a sliver of waste of that size in the corner, at the 90° ones
+as a square and at the 120° ones as a wedge, which a first guess at a
+kerf's worth of tolerance missed. A blade past the corner only nicks
+the far face, a kerf wide and the overshoot deep, under the gap the
+top has anyway, so the program aims past by the setup's error (`bias`)
+and the test holds the section to the tile less exactly those nicks.
+The kicker wedge behind the blade went the same way: the cassette's
+lid comes down to the stick's upper envelope on both sides of the
+blade, with a groove over the blade's sweep, so an offcut is held
+where it was cut until the lid comes off, which is safer than
+directing it anywhere. The cassette is the negative of the stick with
+its open kerfs filled in, since a rib into a kerf would be a kerf
+wide and hold nothing, and the stock after the first cut is already
+chiral, so from the second cassette a stack put in end for end, which
+would mirror every piece, does not fit; the first cassette cannot tell
+and the leading plug is marked instead.

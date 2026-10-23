@@ -20,6 +20,25 @@ use std::io::{BufRead, Write};
 const REFERENCE: &str = include_str!("../../../docs/OPS.md");
 const PROTOCOL: &str = "2024-11-05";
 
+/// Turns every `{x, y}` in a JSON tree into `[x, y]`, the form the
+/// tools give points in.
+fn points_as_pairs(v: &mut Value) {
+    match v {
+        Value::Object(m) => {
+            if m.len() == 2
+                && m.get("x").is_some_and(Value::is_number)
+                && m.get("y").is_some_and(Value::is_number)
+            {
+                *v = json!([m["x"], m["y"]]);
+            } else {
+                m.values_mut().for_each(points_as_pairs);
+            }
+        }
+        Value::Array(a) => a.iter_mut().for_each(points_as_pairs),
+        _ => {}
+    }
+}
+
 /// A sheet view name as the export tool takes it: lowercased, except
 /// the body names after "of" in a view of chosen bodies, which the
 /// sheet matches without regard to case and captions as given.
@@ -1357,6 +1376,26 @@ impl Server {
                 })
                 .to_string())
             }
+            "spectre_saw" => {
+                let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
+                let edge = args
+                    .get("edge")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("spectre_saw needs edge: the tile's edge length in mm")?;
+                let d = ok_sketch::spectre::saw::Settings::default();
+                let settings = ok_sketch::spectre::saw::Settings {
+                    edge,
+                    gap: num("gap", d.gap),
+                    kerf: num("kerf", d.kerf),
+                    margin: num("margin", d.margin),
+                    floor: num("floor", d.floor),
+                    bias: num("bias", d.bias),
+                };
+                let p = ok_sketch::spectre::saw::program(&settings)?;
+                let mut v = serde_json::to_value(&p).map_err(|e| e.to_string())?;
+                points_as_pairs(&mut v);
+                Ok(v.to_string())
+            }
             "list_documents" => {
                 let list = self.backend.list()?;
                 Ok(serde_json::to_string_pretty(&list).unwrap_or_default())
@@ -1932,6 +1971,11 @@ fn tool_list() -> Value {
             "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["cubic", "arc"] }, "bulge": { "type": "number" }, "bit": { "type": "number" }, "gap": { "type": "number" }, "round": { "type": "number" } }, "required": ["edge"] }
         },
         {
+            "name": "spectre_saw",
+            "description": "The straight Spectre as a stick on a table saw, for a stack of blanks cut to the tile as one prism: the tile at `edge` mm eroded by half of `gap`, in a blank planed to the tile's thickness between its two parallel faces and ripped to its width (three faces made), and the ten rips that make the rest, two through and four pairs of rabbets at the inside corners, simulated in order with the blade's `kerf`. Each cut is a cassette on a sled with the blade at one height: the stick turned so the face stands vertical with the open end down (`turn`, `shift`), the blade's near face at x 0, the floor (`bed`) putting the corner at the blade's top (`top`, the same for every cut, `height`), the stock `before` and `after`, the `offcuts`, and `held`, the stock with open kerfs filled, with its `lower` and `upper` envelopes the cassette's base and lid are the negatives of. `margin` is the blank past the notched end, `floor` the thinnest bed, `bias` how far past the corner a rabbet is aimed (short leaves a sliver; past nicks the far face a kerf wide under the gap). Returns JSON with the blank (`width`, `thickness`), `cuts`, `height`, and `left` and `nicked`, the tile's area the cuts leave or take. No document is needed. See `examples/spectre-saw/`.",
+            "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "gap": { "type": "number" }, "kerf": { "type": "number" }, "margin": { "type": "number" }, "floor": { "type": "number" }, "bias": { "type": "number" } }, "required": ["edge"] }
+        },
+        {
             "name": "measuring_sheet",
             "description": "Writes the printable measuring sheet as a PDF: a light 10 mm grid with four bullseye marks in the corners (the origin's double-ringed, with dots beside it that encode the sheet size) and a 100 mm bar to check the print. Print it at 100 %, lay parts on it, photograph it straight down with all four marks in view, and measure_photo reads sizes off the picture.",
             "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Letter (default), A4, A3, A2 or Tabloid" } }, "required": ["path"] }
@@ -2256,6 +2300,39 @@ mod tests {
         );
         assert!(err && text.contains("tightest radius"), "{text}");
         let (err, text) = tool_text(&mut server, "spectre_tile", json!({ "curve": "arc" }));
+        assert!(err && text.contains("needs edge"), "{text}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_spectre_saw_program_comes_back_with_its_ten_cuts() {
+        let dir = std::env::temp_dir().join(format!("ok-mcp-saw-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut server = local_server(&dir);
+        let (err, text) = tool_text(
+            &mut server,
+            "spectre_saw",
+            json!({ "edge": 9.0, "gap": 0.7, "kerf": 3.175 }),
+        );
+        assert!(!err, "{text}");
+        let v: Value = serde_json::from_str(&text).unwrap();
+        let cuts = v["cuts"].as_array().unwrap();
+        assert_eq!(cuts.len(), 10);
+        assert_eq!(cuts[0]["kind"], "through");
+        assert_eq!(cuts[2]["kind"], "rabbet");
+        assert_eq!(cuts[2]["corner"], 1);
+        assert!(cuts[0]["before"][0].is_array());
+        assert!(cuts[0]["shift"].is_array());
+        assert!(v["height"].as_f64().unwrap() > 40.0);
+        assert!(v["left"].as_f64().unwrap() < 1e-6);
+        assert!(v["thickness"].as_f64().unwrap() > 36.0);
+        let (err, text) = tool_text(
+            &mut server,
+            "spectre_saw",
+            json!({ "edge": 9.0, "bias": -1.0 }),
+        );
+        assert!(err && text.contains("bias"), "{text}");
+        let (err, text) = tool_text(&mut server, "spectre_saw", json!({}));
         assert!(err && text.contains("needs edge"), "{text}");
         let _ = std::fs::remove_dir_all(&dir);
     }
