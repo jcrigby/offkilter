@@ -5,10 +5,16 @@
 //! least the thinnest, and the section it leaves is the tile less the
 //! nicks past the corners and nothing else; the first cassette takes
 //! the blank either way round and no other does; each cassette in the
-//! document holds its stick and offcuts with nothing overlapping, the
-//! lid clear of the blade's sweep and the base in it only under the
-//! stick, where the blade cuts its slit; and the last stick is the tile.
-//! Every number prints (`--nocapture`).
+//! document is two halves, each one piece, standing on the plate with
+//! its tongue and cross key in the plate's grooves and only its own,
+//! holding its stick and offcuts with nothing overlapping, the lid and
+//! the wood clear of the blade's path and the halves in it only by the
+//! trim at their inner edges, each flange at the clamps' height where
+//! the clamps press; the station's bed and plate stay one piece each
+//! with the blade's path stopping short of their rear edges, the plate
+//! in the bed's pocket on the saw table, the clamps clear of everything
+//! and pressing on the flanges; and the last stick is the tile. Every
+//! number prints (`--nocapture`).
 
 use ok_brep::{BoolOp, Solid};
 use ok_math::{Plane, Vec2};
@@ -92,7 +98,8 @@ fn overlap(a: &Solid, b: &Solid) -> f64 {
 }
 
 /// A section in the station's frame (across the sled, up) extruded
-/// along the feed, as the build script makes every body.
+/// along the feed, as the build script makes every body: world y is
+/// across, z up, x along the feed.
 fn prism(pts: &[Vec2], x0: f64, x1: f64) -> Solid {
     let p = Profile {
         outer: Loop::polygon(pts.to_vec()),
@@ -215,63 +222,207 @@ fn the_program_is_ten_rips_that_leave_the_tile_and_nothing_else() {
     assert!(short.nicked < 1e-6 && short.left < 1e-6);
 }
 
+/// A box in the station's frame: across, up, along the feed.
+fn boxed(x: (f64, f64), y: (f64, f64), z: (f64, f64)) -> Solid {
+    prism(
+        &[
+            Vec2::new(x.0, y.0),
+            Vec2::new(x.1, y.0),
+            Vec2::new(x.1, y.1),
+            Vec2::new(x.0, y.1),
+        ],
+        z.0,
+        z.1,
+    )
+}
+
+fn pair(v: &serde_json::Value) -> (f64, f64) {
+    (v[0].as_f64().unwrap(), v[1].as_f64().unwrap())
+}
+
+/// The interface the build script lays out, read back from its numbers.
+struct Station {
+    trim: f64,
+    key_w: f64,
+    key_h: f64,
+    key_clear: f64,
+    cross_at: f64,
+    cross_w: f64,
+    cross_len: f64,
+    ledge_h: f64,
+    plate_t: f64,
+    blade_r: f64,
+    end: f64,
+    z: (f64, f64),
+    opening_z: (f64, f64),
+    tongue: [f64; 2],
+    pads: [Vec<[f64; 4]>; 2],
+    plate: [f64; 4],
+    bed: [f64; 4],
+}
+
+const SIDES: [&str; 2] = ["left", "right"];
+
+impl Station {
+    fn read(n: &serde_json::Value) -> Station {
+        let s = &n["station"];
+        let pads = |side: &str| {
+            s["pads"][side]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|p| {
+                    let v: Vec<f64> = p
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|q| q.as_f64().unwrap())
+                        .collect();
+                    [v[0], v[1], v[2], v[3]]
+                })
+                .collect::<Vec<_>>()
+        };
+        let four = |k: &str| {
+            let v: Vec<f64> = s[k]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|q| q.as_f64().unwrap())
+                .collect();
+            [v[0], v[1], v[2], v[3]]
+        };
+        let opening = four("opening");
+        Station {
+            trim: num(s, "trim"),
+            key_w: num(s, "key_w"),
+            key_h: num(s, "key_h"),
+            key_clear: num(s, "key_clear"),
+            cross_at: num(s, "cross_at"),
+            cross_w: num(s, "cross_w"),
+            cross_len: num(s, "cross_len"),
+            ledge_h: num(s, "ledge_h"),
+            plate_t: num(s, "plate_t"),
+            blade_r: num(s, "blade_d") / 2.0,
+            end: num(s, "end"),
+            z: pair(&s["z"]),
+            opening_z: (opening[2], opening[3]),
+            tongue: [num(&s["tongue"], "left"), num(&s["tongue"], "right")],
+            pads: [pads("left"), pads("right")],
+            plate: four("plate"),
+            bed: four("bed"),
+        }
+    }
+
+    /// The air of a side's grooves in the plate: the tongue's groove
+    /// along the opening, the cross key's at the front, with their
+    /// clearance and the 0.2 under the keys.
+    fn grooves(&self, side: usize) -> (Solid, Solid) {
+        let (t, o) = (self.tongue[side], if side == 0 { -1.0 } else { 1.0 });
+        let c = self.key_clear;
+        let y = (-self.key_h - 0.2, 0.0);
+        let tongue = boxed(
+            (t - self.key_w / 2.0 - c, t + self.key_w / 2.0 + c),
+            y,
+            self.opening_z,
+        );
+        let e = t + o * self.key_w / 2.0;
+        let (a, b) = (e - o * c, e + o * (self.cross_len + c));
+        let cross = boxed(
+            (a.min(b), a.max(b)),
+            y,
+            (
+                self.z.0 + self.cross_at - c,
+                self.z.0 + self.cross_at + self.cross_w + c,
+            ),
+        );
+        (tongue, cross)
+    }
+
+    /// The keys' own volume: the tongue along the half, the cross key.
+    fn key_volume(&self) -> f64 {
+        self.key_w * self.key_h * (self.z.1 - self.z.0) + self.cross_len * self.key_h * self.cross_w
+    }
+
+    /// The blade's path over the whole stroke: from far ahead to the
+    /// edge of its circle behind the top at the sled's stop, down to
+    /// the saw table, the kerf wide across.
+    fn blade_path(&self, kerf: f64, height: f64) -> Solid {
+        let r = self.blade_r;
+        let bottom = -self.plate_t;
+        let mut pts = vec![Vec2::new(-1000.0, bottom), Vec2::new(-1000.0, height)];
+        let mut y = height;
+        while y > bottom {
+            let c = (r * r - (y - (height - r)).powi(2)).max(0.0).sqrt();
+            pts.push(Vec2::new(self.end + c, y));
+            y -= 1.0;
+        }
+        let c = (r * r - (bottom - (height - r)).powi(2)).max(0.0).sqrt();
+        pts.push(Vec2::new(self.end + c, bottom));
+        // Anticlockwise, as a profile's outer loop goes.
+        pts.reverse();
+        assert!(signed_area(&pts) > 0.0);
+        let p = Profile {
+            outer: Loop::polygon(pts),
+            holes: Vec::new(),
+        };
+        // The front plane: x along the feed, y up, its normal -y across,
+        // so heights -kerf to 0 are y = 0 to kerf across the bed.
+        ok_brep::extrude(&p, &Plane::XZ, -kerf, 0.0, 1).unwrap()
+    }
+
+    /// How far the blade's path runs along the feed at the saw table.
+    fn path_end(&self, height: f64) -> f64 {
+        let r = self.blade_r;
+        self.end
+            + (r * r - (-self.plate_t - (height - r)).powi(2))
+                .max(0.0)
+                .sqrt()
+    }
+}
+
+fn axis(v: ok_math::Vec3, i: usize) -> f64 {
+    [v.x, v.y, v.z][i]
+}
+
 #[test]
-fn every_cassette_holds_its_stick_with_the_lid_clear_of_the_blade() {
+fn every_cassette_stands_keyed_on_the_plate_with_its_halves_clear_of_the_blade() {
     let mut doc = load();
     let n = numbers();
     let s = settings(&n);
     let p = program(&s).unwrap();
+    let st = Station::read(&n);
     let length = num(&n, "length");
-    let clear = num(&n, "clear");
-    let wall = num(&n, "wall");
-    let half = num(&n, "half_width");
     let heights = n["heights"].as_array().unwrap();
+    let key = st.key_volume();
+    let mut plate_volume = None;
     for (i, c) in p.cuts.iter().enumerate() {
         let name = format!("Cut {}", i + 1);
         let r = regen(&mut doc, &name);
-        let base = body(&r, "Base");
+        assert_eq!(r.bodies.len(), 5 + c.offcuts.len(), "{name}");
+        let halves = [body(&r, "Base left"), body(&r, "Base right")];
         let lid = body(&r, "Lid");
+        let plate = body(&r, "Plate");
         let stick = body(&r, "Stick");
         let offcuts: Vec<&Solid> = (1..=c.offcuts.len())
             .map(|k| body(&r, &format!("Offcut {k}")))
             .collect();
-        assert_eq!(r.bodies.len(), 3 + c.offcuts.len(), "{name}");
-        // The stick and the offcuts are the program's sections over the
-        // stick's length.
+        // The plate is the same in every tab.
+        let pv = plate.volume();
+        assert!(
+            (pv - *plate_volume.get_or_insert(pv)).abs() < 1e-6 * pv,
+            "{name}"
+        );
+        // The wood is the program's sections over the stick's length, on its bed.
         assert!(
             (stick.volume() - signed_area(&c.after) * length).abs() < 1e-6 * stick.volume(),
-            "{name}: {} vs {}",
-            stick.volume(),
-            signed_area(&c.after) * length
+            "{name}"
         );
         for (o, poly) in offcuts.iter().zip(&c.offcuts) {
             assert!(
                 (o.volume() - signed_area(poly) * length).abs() < 1e-6 * o.volume(),
-                "{name}: {} vs {}",
-                o.volume(),
-                signed_area(poly) * length
+                "{name}"
             );
         }
-        // The cassette's box.
-        let (lo, hi) = base.bounds().unwrap();
-        assert!(
-            (lo.y + half).abs() < 1e-6 && (hi.y - half).abs() < 1e-6,
-            "{name}"
-        );
-        assert!((lo.x + wall).abs() < 1e-6 && (hi.x - length - wall).abs() < 1e-6);
-        assert!((hi.z - heights[i].as_f64().unwrap()).abs() < 1e-6);
-        // Nothing overlaps: stick, offcuts, base, lid.
-        let mut wood = vec![stick];
-        wood.extend(offcuts.iter().copied());
-        for (k, w) in wood.iter().enumerate() {
-            assert!(overlap(w, base) < 1e-6, "{name}: wood {k} in the base");
-            assert!(overlap(w, lid) < 1e-6, "{name}: wood {k} in the lid");
-            for w2 in &wood[k + 1..] {
-                assert!(overlap(w, w2) < 1e-6, "{name}: the wood overlaps itself");
-            }
-        }
-        assert!(overlap(base, lid) < 1e-6, "{name}: the lid is in the base");
-        // The stick sits on the floor, the clearance over it.
         let (slo, _) = stick.bounds().unwrap();
         assert!(
             (slo.z - c.bed).abs() < 1e-6,
@@ -279,69 +430,123 @@ fn every_cassette_holds_its_stick_with_the_lid_clear_of_the_blade() {
             slo.z,
             c.bed
         );
-        // The blade's sweep over the stick's length: the kerf wide, from
-        // the plate to its top. It never meets the lid or the wood that
-        // stays, and meets the base only under the stick's lower envelope,
-        // the slit it cuts on the first pass.
-        let (x0, x1) = if c.waste_right {
-            (0.0, s.kerf)
-        } else {
-            (-s.kerf, 0.0)
-        };
-        let sweep = prism(
-            &[
-                Vec2::new(x0, 0.0),
-                Vec2::new(x1, 0.0),
-                Vec2::new(x1, p.height),
-                Vec2::new(x0, p.height),
-            ],
-            0.0,
-            length,
-        );
-        assert!(
-            overlap(&sweep, lid) < 1e-6,
-            "{name}: the blade meets the lid"
-        );
-        for w in &wood {
+        // Nothing overlaps anything.
+        let mut all: Vec<(&str, &Solid)> = vec![
+            ("left half", halves[0]),
+            ("right half", halves[1]),
+            ("lid", lid),
+            ("plate", plate),
+            ("stick", stick),
+        ];
+        all.extend(offcuts.iter().map(|o| ("offcut", *o)));
+        for (a, (an, asol)) in all.iter().enumerate() {
+            for (bn, bsol) in &all[a + 1..] {
+                assert!(
+                    overlap(asol, bsol) < 1e-6,
+                    "{name}: the {an} is in the {bn}"
+                );
+            }
+        }
+        for (k, h) in halves.iter().enumerate() {
+            let side = SIDES[k];
+            // One piece each: the blade only trims them.
+            assert_eq!(h.shells().len(), 1, "{name}: the {side} half is in pieces");
+            let (lo, hi) = h.bounds().unwrap();
+            // Standing on the plate's top on its keys, as tall as the cassette.
+            assert!((lo.z + st.key_h).abs() < 1e-6, "{name} {side}: {}", lo.z);
+            assert!((hi.z - heights[i].as_f64().unwrap()).abs() < 1e-6);
+            assert!((lo.x - st.z.0).abs() < 1e-6 && (hi.x - st.z.1).abs() < 1e-6);
+            // Its keys in its own grooves, filling the keys' volume, and
+            // nothing in the other side's.
+            let (tongue, cross) = st.grooves(k);
+            // The two grooves meet at the tongue's outer side; count that
+            // corner once.
+            let both = ok_brep::boolean(&tongue, &cross, BoolOp::Intersection)
+                .map(|b| overlap(h, &b))
+                .unwrap_or(0.0);
+            let mine = overlap(h, &tongue) + overlap(h, &cross) - both;
             assert!(
-                overlap(&sweep, w) < 1e-6,
-                "{name}: the blade meets what stays"
+                (mine - key).abs() < 1e-4 * key,
+                "{name} {side}: keys {mine} vs {key}"
+            );
+            let (t2, c2) = st.grooves(1 - k);
+            assert!(
+                overlap(h, &t2) + overlap(h, &c2) < 1e-6,
+                "{name}: the {side} half fits the other side"
+            );
+            // The flange's top at the clamps' height under every pad, and
+            // nothing over it there.
+            for pad in &st.pads[k] {
+                let slab = boxed(
+                    (pad[0], pad[1]),
+                    (st.ledge_h - 0.05, st.ledge_h),
+                    (pad[2], pad[3]),
+                );
+                let area = (pad[1] - pad[0]) * (pad[3] - pad[2]);
+                assert!(
+                    (overlap(h, &slab) - area * 0.05).abs() < 1e-3 * area * 0.05,
+                    "{name} {side}: no flange under the clamp"
+                );
+                let over = boxed(
+                    (pad[0], pad[1]),
+                    (st.ledge_h, st.ledge_h + 40.0),
+                    (pad[2], pad[3]),
+                );
+                assert!(
+                    overlap(h, &over) < 1e-6,
+                    "{name} {side}: the half stands over the flange"
+                );
+            }
+        }
+        // The blade's path: never in the lid, the wood or the plate past
+        // its slot, and in the halves only by the trim at their edges.
+        let path = st.blade_path(s.kerf, p.height);
+        let (plo, phi) = path.bounds().unwrap();
+        assert!(
+            plo.y.abs() < 1e-9 && (phi.y - s.kerf).abs() < 1e-9,
+            "{plo:?} {phi:?}"
+        );
+        assert!((phi.z - p.height).abs() < 1e-9 && (plo.z + st.plate_t).abs() < 1e-9);
+        assert!(
+            (path.volume() - s.kerf * (phi.x - plo.x) * (phi.z - plo.z)).abs()
+                < 0.2 * path.volume()
+        );
+        for (what, sol) in [("lid", lid), ("stick", stick), ("plate", plate)] {
+            assert!(
+                overlap(&path, sol) < 1e-6,
+                "{name}: the blade meets the {what}"
             );
         }
-        let slit = overlap(&sweep, base);
-        // The floor under the kerf: the lower envelope less the clearance,
-        // integrated across the kerf, capped at the blade's top.
-        let under = |x: f64| -> f64 {
-            let e = &c.lower;
-            if x <= e[0].x || x >= e[e.len() - 1].x {
-                return p.height;
-            }
-            let mut y = f64::INFINITY;
-            for w in e.windows(2) {
-                let (a, b) = (w[0], w[1]);
-                if (a.x - x) * (b.x - x) <= 0.0 && (b.x - a.x).abs() > 1e-9 {
-                    y = y.min(a.y + (b.y - a.y) * (x - a.x) / (b.x - a.x));
-                }
-            }
-            (y - clear).min(p.height)
-        };
-        let steps = 2000;
-        let dx = (x1 - x0) / steps as f64;
-        let expected: f64 = (0..steps)
-            .map(|k| under(x0 + (k as f64 + 0.5) * dx) * dx)
-            .sum::<f64>()
-            * length;
+        for o in &offcuts {
+            assert!(
+                overlap(&path, o) < 1e-6,
+                "{name}: the blade meets an offcut"
+            );
+        }
+        let z = (st.z.0 - 1.0, st.z.1 + 1.0);
+        let y = (-st.plate_t, p.height);
+        let (lt, rt) = (st.trim, s.kerf - st.trim);
+        assert!(
+            overlap(halves[0], &boxed((lt, s.kerf + 1.0), y, z)) < 1e-6,
+            "{name}: the left half past its trim"
+        );
+        assert!(
+            overlap(halves[1], &boxed((-1.0, rt), y, z)) < 1e-6,
+            "{name}: the right half past its trim"
+        );
+        let trimmed = [overlap(halves[0], &path), overlap(halves[1], &path)];
+        assert!(
+            trimmed.iter().all(|&v| v > 0.0),
+            "{name}: a half stands clear of the blade: no zero clearance"
+        );
+        let most = st.trim * p.height * (st.z.1 - st.z.0);
+        assert!(
+            trimmed.iter().all(|&v| v <= most + 1e-6),
+            "{name}: {trimmed:?}"
+        );
         println!(
-            "{name}: slit {slit:.1} mm3 of the base against {expected:.1} under the stick; bed {:.2}",
-            c.bed
-        );
-        assert!(
-            (slit - expected).abs() < 0.01 * expected + 1.0,
-            "{name}: {slit} vs {expected}"
-        );
-        assert!(
-            slit < s.kerf * p.height * length,
-            "{name}: the blade goes through the base"
+            "{name}: halves trimmed {:.0} and {:.0} mm3, keys {key:.0} mm3 each in their grooves",
+            trimmed[0], trimmed[1]
         );
     }
     // The last stick is the tile.
@@ -369,4 +574,99 @@ fn every_cassette_holds_its_stick_with_the_lid_clear_of_the_blade() {
             .count(),
         10
     );
+}
+
+#[test]
+fn the_station_holds_the_plate_in_the_bed_and_the_clamps_on_the_flanges() {
+    let mut doc = load();
+    let n = numbers();
+    let s = settings(&n);
+    let p = program(&s).unwrap();
+    let st = Station::read(&n);
+    let r = regen(&mut doc, "Station");
+    let bed = body(&r, "Bed");
+    let plate = body(&r, "Plate");
+    let halves = [body(&r, "Base left"), body(&r, "Base right")];
+    let clamps: Vec<(&str, &Solid)> = r
+        .bodies
+        .iter()
+        .filter(|b| b.name.starts_with("Clamp "))
+        .map(|b| (b.name.as_str(), &b.solid))
+        .collect();
+    assert_eq!(clamps.len(), 4);
+    // The bed and the plate stay one piece each: the blade's path stops
+    // short of their rear edges, by a bridge.
+    assert_eq!(bed.shells().len(), 1, "the bed is in pieces");
+    assert_eq!(plate.shells().len(), 1, "the plate is in pieces");
+    let reach = st.path_end(p.height);
+    let plate_bridge = st.plate[3] - reach;
+    let bed_bridge = st.bed[3] - reach;
+    println!(
+        "blade {:.1} over the table; its path ends {reach:.0} along the feed; bridges: plate {plate_bridge:.0}, bed {bed_bridge:.0}",
+        p.height + st.plate_t
+    );
+    assert!(plate_bridge >= 20.0 && bed_bridge >= 20.0);
+    // A 10 in saw raises its blade about 79 mm.
+    assert!(p.height + st.plate_t < 79.0);
+    let path = st.blade_path(s.kerf, p.height);
+    assert!(
+        overlap(&path, bed) < 1e-6,
+        "the blade meets the bed past its slot"
+    );
+    assert!(
+        overlap(&path, plate) < 1e-6,
+        "the blade meets the plate past its slot"
+    );
+    // The plate in the bed's pocket, on the saw table with it.
+    assert!(overlap(plate, bed) < 1e-6);
+    let (plo, phi) = plate.bounds().unwrap();
+    let (blo, bhi) = bed.bounds().unwrap();
+    assert!((plo.z - blo.z).abs() < 1e-6 && (plo.z + st.plate_t).abs() < 1e-6);
+    assert!(phi.z.abs() < 1e-6 && bhi.z > phi.z);
+    // Under the bed all round: the bed reaches past the plate both ways
+    // across and along the feed.
+    for i in 0..2 {
+        assert!(axis(plo, i) > axis(blo, i) && axis(phi, i) < axis(bhi, i));
+    }
+    // The clamps: clear of everything else and of the blade's path, each
+    // pad down on its flange.
+    let mut others: Vec<&Solid> = r
+        .bodies
+        .iter()
+        .filter(|b| !b.name.starts_with("Clamp "))
+        .map(|b| &b.solid)
+        .collect();
+    others.push(&path);
+    for (name, c) in &clamps {
+        for o in &others {
+            assert!(overlap(c, o) < 1e-6, "{name} meets something");
+        }
+    }
+    for (k, pads) in st.pads.iter().enumerate() {
+        for (j, pad) in pads.iter().enumerate() {
+            let name = format!("Clamp {} {}", SIDES[k], j + 1);
+            let c = clamps.iter().find(|(n, _)| *n == name).unwrap().1;
+            let area = (pad[1] - pad[0]) * (pad[3] - pad[2]);
+            let above = boxed(
+                (pad[0], pad[1]),
+                (st.ledge_h, st.ledge_h + 0.05),
+                (pad[2], pad[3]),
+            );
+            let below = boxed(
+                (pad[0], pad[1]),
+                (st.ledge_h - 0.05, st.ledge_h),
+                (pad[2], pad[3]),
+            );
+            assert!(
+                (overlap(c, &above) - area * 0.05).abs() < 1e-3 * area * 0.05,
+                "{name}: its pad is off the flange: {} vs {}",
+                overlap(c, &above),
+                area * 0.05
+            );
+            assert!(
+                (overlap(halves[k], &below) - area * 0.05).abs() < 1e-3 * area * 0.05,
+                "{name}: no flange under it"
+            );
+        }
+    }
 }

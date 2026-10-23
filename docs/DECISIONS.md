@@ -517,3 +517,33 @@ wide and hold nothing, and the stock after the first cut is already
 chiral, so from the second cassette a stack put in end for end, which
 would mirror every piece, does not fit; the first cassette cannot tell
 and the leading plug is marked instead.
+
+## 2026-10 · The saw's cassettes are keyed halves on a printed plate
+
+The first saw station (`examples/spectre-saw`) printed each cassette's
+base as one block and let the blade cut its own zero-clearance slit.
+Built, that slit runs the base's whole length from the plate to the
+blade's top, so after the first pass the two sides were joined only by
+the end walls above the blade, 6 by 7.5 mm on the through cuts'
+cassettes, and nothing held either side down near the blade. So each
+base is now two halves, a quarter millimetre into the blade's path
+each side so the first pass trims them to zero clearance without ever
+cutting one in two, and every half stands on one interface: a 6 mm
+plate printed once and screwed into a pocket in the underside of the
+3/4 in bed, flush with it on the saw table. Standing the halves on the
+plate rather than the ply takes 13 mm off the blade's height. Each
+half is located by exactly one feature per direction, so nothing
+fights: the plate's top down, a tongue along the feed in a groove
+across (the fit that places the face), a cross key at the front along
+the feed, and a toggle clamp on a flange at one height for every
+cassette holds it there. Walls round a square socket were the first
+idea; they cannot be put on the blade's side, where the half comes
+within a quarter millimetre of the kerf, and the tongue holds that
+side as well as the other, so the walls went. Tapered bosses were the
+second, and the thin plate has no depth for them. The tongues sit at
+unequal distances from the blade so a half fits its own side only, and
+the cross key at the front end keeps one from going in end for end.
+The model's blade path is the blade's circle at the sled's stop plus
+half a millimetre, since the blade cuts its own slot and the chords of
+a sampled arc fall inside the circle; the test traces the circle
+itself.
