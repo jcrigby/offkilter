@@ -50,6 +50,7 @@ const KEYS: [usize; 4] = [3, 5, 7, 11];
 /// Area of the tile with unit edges (the curves add and take away the
 /// same amount), `3 + 3√3`.
 pub mod rips;
+pub mod saw;
 
 pub const TILE_AREA: f64 = 8.196_152_422_706_632;
 

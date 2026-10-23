@@ -9,3 +9,4 @@ description = "2D parametric sketching with a geometric constraint solver"
 ok-math = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+i_overlay = "8.1"

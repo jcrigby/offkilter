@@ -64,7 +64,9 @@ works today, all in the browser:
   (`examples/spectre-top/`), the same for a 4 in box with every piece
   shaped for the router bit that cuts it (`examples/spectre-box/`),
   a cage for routing that box's pieces as one dry stack on the
-  duplicator (`examples/spectre-cage/`), a mini chop saw from an angle
+  duplicator (`examples/spectre-cage/`), a table saw sled with a
+  cassette per rip that cuts the same stack to the straight tile
+  (`examples/spectre-saw/`), a mini chop saw from an angle
   grinder (`examples/chop-saw/`) and a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`).
 - Measuring from a photo: print the measuring sheet

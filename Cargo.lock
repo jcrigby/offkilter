@@ -897,6 +897,7 @@ dependencies = [
 name = "ok-sketch"
 version = "0.1.0"
 dependencies = [
+ "i_overlay",
  "ok-math",
  "serde",
  "thiserror 1.0.69",
