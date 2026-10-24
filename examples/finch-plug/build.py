@@ -31,12 +31,12 @@ from okmcp import Mcp, Part, v2  # noqa: E402
 
 OUT = os.path.join(HERE, "out")
 # -- the ring, mm, as read off the photographs: confirm with calipers -----
-D_MOUTH = 48.5          # the ring's bore at the mouth
-D_TOP = 47.5            # the bore at the ring's top edge, inside the tube: a slight draft
+D_MOUTH = 59.5          # the ring's bore at the mouth: the first gauge (to 49.5) fell straight through, a rule says about 59
+D_TOP = 58.5            # the bore at the ring's top edge, inside the tube: a slight draft
 RING_T = 3.0            # the ring's thickness, mouth to its top face; the ears are the same
-D_MESH = 50.0           # inside the mesh tube just above the ring
-RING_OD = 64.0          # the ring's flange
-EAR_W, EAR_R = 16.0, 4.0   # the three ears: width across, and how far past the flange they reach
+D_MESH = 61.0           # inside the mesh tube just above the ring
+RING_OD = 70.0          # the ring's flange
+EAR_W, EAR_R = 17.0, 4.0   # the three ears: width across, and how far past the flange they reach
 EAR_AT = 60.0           # the ears' angles are EAR_AT + k * 120: where they sit locked under the hooks
 TUBE_H = 25.0           # how much of the mesh tube the model draws
 # -- the cap ----------------------------------------------------------------
@@ -53,7 +53,7 @@ RAMP = (0.6, 0.4, 0.2, 0.0)     # the lip's clearance over the ear, step by step
 STOP_T = 1.5            # the end stop's thickness, in mm of arc
 DRAIN_D, DRAINS = 1.0, 6   # drain holes in the plug, smaller than a nyjer seed
 # -- the gauge: a stepped tube to find the ring's bore by feel ---------------
-GAUGE_MIN, GAUGE_MAX, GAUGE_STEP, GAUGE_H, GAUGE_WALL = 46.5, 49.5, 0.25, 3.0, 1.5
+GAUGE_MIN, GAUGE_MAX, GAUGE_STEP, GAUGE_H, GAUGE_WALL = 56.0, 62.0, 0.25, 2.0, 1.5   # the second gauge; the first, 46.5 to 49.5, fell through
 
 R_EAR = RING_OD / 2 + EAR_R          # the ears' tips
 R_WALL0 = R_EAR + HOOK_GAP           # the hook wall's inside
