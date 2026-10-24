@@ -3,7 +3,10 @@
 //! instance, the hinge's bars pair their struts on the bolts outside
 //! the rails with the bands flat on them, the screws bite three inches
 //! of plywood, the fold clears itself from open to folded, and the
-//! open and folded packages measure what the brief says. Every number prints (`--nocapture`); inches
+//! open and folded packages measure what the brief says; and the lug
+//! hinge study beside it interleaves the two panels' knuckles across
+//! the width with room to spare, every bore on the one rod, clear
+//! through its own fold. Every number prints (`--nocapture`); inches
 //! throughout, converted from the document's millimetres.
 
 use ok_brep::{BoolOp, Solid, Surface};
@@ -105,8 +108,8 @@ fn every_part_regenerates_closed_and_the_panel_and_ramp_place_every_instance() {
     }
     assert_eq!(
         bodies,
-        43 + 4 + 4 + 5 + 2,
-        "shared, panel A, panel B, ramp parts and the two sheets"
+        43 + 4 + 4 + 5 + 2 + 45 + 1 + 1,
+        "shared, panel A, panel B, ramp parts, the two sheets, and the lug hinge study's hinge end, rod and template"
     );
     for (name, want) in [("panel A", 47), ("panel B", 47)] {
         let panel = tab_named(&doc, name);
@@ -769,4 +772,226 @@ fn the_cut_sheets_lay_every_ply_piece_flat_and_apart() {
         );
         assert!(yield_ < 0.95 && yield_ > 0.2, "{yield_}");
     }
+}
+
+/// The lug hinge study: each panel's hinge end a lamination of twenty
+/// 3/4 birch lugs and fillers of two strips of the skin stock, every
+/// lug a knuckle below the box bored for the one 1/2 rod. The turned
+/// panel's knuckles land in this one's slots with a kerf's worth of
+/// room, the rod runs through every bore and ends under the rails, the
+/// fold clears itself to 180 degrees with the bottoms 3 in apart and
+/// the knuckles a hair off the other bottom, and the printed template
+/// is the lug's outline.
+#[test]
+fn the_lug_hinge_study_interleaves_its_knuckles_and_clears_through_the_fold() {
+    let mut doc = load();
+    let tab = tab_named(&doc, "lug hinge");
+    let asm = doc.assembly(tab).unwrap();
+    let fold = asm.mates.iter().find(|m| m.name == "fold").unwrap();
+    let (id, angle0, offset) = (fold.id, fold.angle, fold.offset);
+    let r0 = doc.regenerate_assembly(tab).unwrap();
+    assert!(r0.instance_errors.is_empty() && r0.mate_errors.is_empty());
+    let (drop, knuckle, tongue, slot) = (1.5, 1.5 - 1.0 / 32.0, 18.0 / IN, 2.0 * 0.4375);
+    let bore = 17.0 / 32.0 / 2.0;
+    // The lugs are the bodies with the bore; twenty a side, every bore on
+    // the rod's axis, the joint plane 1-1/2 below the bottom skin.
+    let lugs = |r: &AssemblyResult, side: &str| -> Vec<(f64, f64)> {
+        let mut v: Vec<(f64, f64)> = r
+            .bodies
+            .iter()
+            .filter(|b| b.name.starts_with(side) && !cylinders(&b.solid, bore).is_empty())
+            .map(|b| {
+                let (lo, hi) = bounds(&b.solid);
+                (lo.x / IN, hi.x / IN)
+            })
+            .collect();
+        v.sort_by(|a, b| a.0.total_cmp(&b.0));
+        v
+    };
+    let (a, b) = (lugs(&r0, "A /"), lugs(&r0, "B /"));
+    assert_eq!((a.len(), b.len()), (20, 20), "twenty lugs a panel");
+    for body in &r0.bodies {
+        for (o, axis) in cylinders(&body.solid, bore) {
+            assert!(
+                o.y.abs() < 1e-6
+                    && (o.z + drop * IN).abs() < 1e-6
+                    && axis.y.abs() < 1e-9
+                    && axis.z.abs() < 1e-9,
+                "{}: bore off the axis at ({:.3}, {:.3})",
+                body.name,
+                o.y / IN,
+                o.z / IN
+            );
+        }
+    }
+    // Across the width the two panels' lugs alternate, each the tongue
+    // wide, with half the slot's spare on each side of it.
+    let mut all: Vec<(f64, f64, char)> = a.iter().map(|&(l, h)| (l, h, 'A')).collect();
+    all.extend(b.iter().map(|&(l, h)| (l, h, 'B')));
+    all.sort_by(|p, q| p.0.total_cmp(&q.0));
+    let room = (slot - tongue) / 2.0;
+    for (i, w) in all.windows(2).enumerate() {
+        assert_ne!(
+            w[0].2,
+            w[1].2,
+            "lugs {i} and {} are the same panel's",
+            i + 1
+        );
+        let gap = w[1].0 - w[0].1;
+        assert!(
+            (gap - room).abs() < 1e-6,
+            "gap {gap:.4} between lugs {i} and {}",
+            i + 1
+        );
+    }
+    for &(l, h, _) in &all {
+        assert!((h - l - tongue).abs() < 1e-6, "a lug {:.4} thick", h - l);
+    }
+    println!(
+        "{} knuckles across the width from {:.3} to {:.3}, {:.4} apart, tongues {:.4}, slots {:.4}",
+        all.len(),
+        all[0].0,
+        all[all.len() - 1].1,
+        room,
+        tongue,
+        slot
+    );
+    // The rod runs past every lug and ends under the rails.
+    let rod = named(&r0, "lug_rod")[0];
+    let (rl, rh) = bounds(&rod.solid);
+    assert!(
+        rl.x / IN < all[0].0 - 0.25 && rh.x / IN > all[all.len() - 1].1 + 0.25,
+        "the rod past the outer lugs"
+    );
+    assert!(
+        rl.x / IN >= -0.75 - 1e-6 && rh.x / IN <= W + 0.75 + 1e-6,
+        "the rod's ends under the rails"
+    );
+    let rods = cylinders(&rod.solid, 0.25);
+    assert!(
+        !rods.is_empty()
+            && rods
+                .iter()
+                .all(|(o, _)| o.y.abs() < 1e-6 && (o.z + drop * IN).abs() < 1e-6)
+    );
+    println!(
+        "rod {:.3} long, from {:.3} to {:.3}",
+        (rh.x - rl.x) / IN,
+        rl.x / IN,
+        rh.x / IN
+    );
+    // Which way is under: the turned end's free side drops.
+    let low = |r: &AssemblyResult| {
+        r.bodies
+            .iter()
+            .filter(|b| b.name.starts_with("B /"))
+            .map(|b| bounds(&b.solid).0.z)
+            .fold(f64::INFINITY, f64::min)
+    };
+    let r30 = doc
+        .preview_assembly_at(tab, &[(id, angle0 + 30.0, offset)])
+        .unwrap();
+    let sign = if low(&r30) < low(&r0) - IN { 1.0 } else { -1.0 };
+    // Nothing of one panel meets the other, or the rod, at any angle.
+    for deg in [0.0, 5.0, 10.0, 20.0, 45.0, 90.0, 135.0, 170.0, 180.0] {
+        let r = doc
+            .preview_assembly_at(tab, &[(id, angle0 + sign * deg, offset)])
+            .unwrap();
+        assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
+        let mut hits = Vec::new();
+        for i in 0..r.bodies.len() {
+            for j in i + 1..r.bodies.len() {
+                if r.placed[i] == r.placed[j] {
+                    continue;
+                }
+                match overlap(&r.bodies[i].solid, &r.bodies[j].solid) {
+                    Some(v) if v > 1e-3 => hits.push(format!(
+                        "{} x {}: {v:.1} mm3",
+                        r.bodies[i].name, r.bodies[j].name
+                    )),
+                    None => hits.push(format!(
+                        "{} x {}: boolean failed",
+                        r.bodies[i].name, r.bodies[j].name
+                    )),
+                    _ => {}
+                }
+            }
+        }
+        println!("{deg} degrees: {} collisions", hits.len());
+        assert!(hits.is_empty(), "{deg} degrees: {hits:?}");
+    }
+    // Folded: the bottoms twice the drop apart, and every knuckle of one
+    // panel the thirty-second short of the other's bottom skin.
+    let r = doc
+        .preview_assembly_at(tab, &[(id, angle0 + sign * 180.0, offset)])
+        .unwrap();
+    // The bottom skins: the full-width bodies a skin thick on the
+    // bottom when open, found by name there and followed to the fold.
+    let skin_name = |side: &str| -> String {
+        r0.bodies
+            .iter()
+            .find(|b| {
+                let (lo, hi) = bounds(&b.solid);
+                b.name.starts_with(side)
+                    && lo.z.abs() < 1e-6
+                    && (hi.z - 0.4375 * IN).abs() < 1e-6
+                    && (hi.x - lo.x - W * IN).abs() < 1e-6
+            })
+            .unwrap_or_else(|| panic!("no bottom skin on {side}"))
+            .name
+            .clone()
+    };
+    let (name_a, name_b) = (skin_name("A /"), skin_name("B /"));
+    let skin_a = r.bodies.iter().find(|b| b.name == name_a).unwrap();
+    let skin_b = r.bodies.iter().find(|b| b.name == name_b).unwrap();
+    let gap = (bounds(&skin_a.solid).0.z - bounds(&skin_b.solid).1.z) / IN;
+    assert!((gap - 2.0 * drop).abs() < 1e-6, "bottoms {gap:.4} apart");
+    let top_b = r
+        .bodies
+        .iter()
+        .filter(|b| b.name.starts_with("B /") && !cylinders(&b.solid, bore).is_empty())
+        .map(|b| bounds(&b.solid).1.z)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let clear = (bounds(&skin_a.solid).0.z - top_b) / IN;
+    assert!(
+        (clear - (drop - knuckle)).abs() < 1e-6,
+        "knuckles {clear:.4} off the other bottom"
+    );
+    println!("folded: bottoms {gap:.3} apart, knuckles {clear:.4} off the other panel's bottom");
+    // The template is the lug's outline, 12 mm thick.
+    let t = doc
+        .regenerate_studio(tab_named(&doc, "lug_template"), None)
+        .unwrap();
+    assert_eq!(t.bodies.len(), 1);
+    let (tl, th) = bounds(&t.bodies[0].solid);
+    assert!(
+        (th.x - tl.x - 12.0).abs() < 1e-6,
+        "{} mm thick",
+        th.x - tl.x
+    );
+    let lug = r0
+        .bodies
+        .iter()
+        .find(|b| b.name.starts_with("A /") && !cylinders(&b.solid, bore).is_empty())
+        .unwrap();
+    let (ll, lh) = bounds(&lug.solid);
+    for (ta, tb, la, lb, what) in [
+        (tl.y, th.y, ll.y, lh.y, "length"),
+        (tl.z, th.z, ll.z, lh.z, "height"),
+    ] {
+        assert!(
+            (ta - la).abs() < 1e-6 && (tb - lb).abs() < 1e-6,
+            "template {what} {:.3}..{:.3} vs the lug's {:.3}..{:.3}",
+            ta / IN,
+            tb / IN,
+            la / IN,
+            lb / IN
+        );
+    }
+    println!(
+        "template {:.3} x {:.3} in, {:.1} mm thick",
+        (th.y - tl.y) / IN,
+        (th.z - tl.z) / IN,
+        th.x - tl.x
+    );
 }
