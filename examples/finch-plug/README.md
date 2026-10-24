@@ -46,13 +46,14 @@ grid's pitch against the rule confirms 5 squares to the inch.
 |---|---|---|
 | bore at the mouth | 61 | inside jaws at the mouth, or the gauge (61 by rule) |
 | bore at the ring's top edge | 60 | inside jaws pushed in to the top edge, or the gauge |
-| ring thickness, and the ears' | 3 | outside jaws on the flange's edge and on an ear |
+| the sheet: flange and ears | 0.8 | outside jaws on an ear (stamped steel, under a millimetre) |
+| skirt, mouth to the ridge inside | 3 | depth gauge, or a rule in at the mouth to the ridge |
 | ring outside diameter | 71 | outside jaws between ears (71.5 and 72 traced, less the pencil) |
 | across the ears' tips | 79 | outside jaws over an ear and the ring opposite, less the ring's radius (4 proud, traced) |
 | an ear's width | 35 | outside jaws (54 degrees traced; 33 to 35 by rule) |
 | inside the mesh above the ring | 62.5 | not critical: the plug stops at the ring's top |
 
-The ones that set the lock are the ears: their thickness sets the
+The ones that set the lock are the ears: the sheet's thickness sets the
 lips' height, their tips set the hook walls, their width sets the gaps
 the ears pass through. The bore only sets the plug.
 
