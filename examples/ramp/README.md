@@ -330,7 +330,69 @@ the box.
 7. Prime (OSB primer, edges and chamfer too); paint; sand into the
    second top coat; a third thin coat over it.
 
-## 8. Open questions
+## 8. Lug hinge study
+
+The hinge is going back to plywood (2026-10-24), and `out/lug_hinge*`
+is the study of it beside the bar hinge the ramp still carries: each
+panel's hinge end as a lamination of 3/4 birch lugs and fillers, every
+lug a knuckle below the box round one 1/2 in rod, the two panels'
+knuckles alternating across the width like a box joint.
+
+![the box joint from below](out/lug_hinge_below.png)
+
+![cut through a lug of A, B's tongue in the next slot behind it](out/lug_hinge_section.png)
+
+![the same cut folded to 90 degrees](out/lug_hinge_section_90.png)
+
+![and to 180: bottoms 3 in apart, the knuckles a thirty-second off them](out/lug_hinge_section_180.png)
+
+- **The lug.** One piece of 3/4 birch (18 mm as it measures), 6 in into
+  the box at the core's 1-15/16, dropping at the joint end through the
+  skin line to a knuckle of radius 1-15/32 about the pivot, which stays
+  1-1/2 below the bottom skin; the knuckle's back quarter filled square
+  up to the skin line, so the piece is 5-3/8 tall at the joint. A 17/32
+  bore on the axis. The other panel's bottom skin is tangent to the
+  knuckle's circle at every angle of the fold, and at 180 degrees the
+  knuckles stop 1/32 short of it, the bottoms 3 in apart as now.
+- **The row.** Identical panels mean the turned one's lugs must land
+  in this one's slots, which fixes the layout: with 18 mm tongues and
+  7/8 slots the pitch is 1-19/32 and twenty lugs a panel fit the box
+  width, a 1/8 end filler one side and 15/16 the other, and the forty
+  knuckles sit 5/64 apart. Each carries about 150 lb at the 13,500 in·lb
+  peak, 420 psi on its bore.
+- **The lamination.** Lug, filler, lug, filler across the width, 6 in
+  deep, between the skins: the fillers are two strips of the 7/16 OSB,
+  which is what makes the slot a kerf wider than the tongue, and the
+  end fillers birch. It replaces the 2x4 joint block and the hinge
+  blocks; the bottom skin stops at the knuckles, the top skin runs to
+  the joint. Glued up on the rod with the other panel's tongues in the
+  slots, so the forty bores line up by construction.
+- **The rod.** 1/2 plated steel, 32-3/16 long, past the outer lugs by
+  5/16 each end for a hairpin clip, under the rails. It is bent only
+  between one panel's knuckle and the next of the other's, 3/4 apart:
+  about 4,600 psi. Pipe buys nothing here and its caps would stand past
+  the rails.
+- **The template.** `out/lug_template.stl`, the lug's outline 12 mm
+  thick with a 1/2 hole on the pivot: cut the blanks as 7-15/32 x
+  5-11/32 rectangles, bore them on the drill press, drop a stub of the
+  rod through the template into the bore, trace, jigsaw outside the
+  line and flush trim. The two inside corners keep the bit's radius;
+  the bottom skin's end gets a 1/4 chamfer on its top edge to suit.
+- **The sheet.** `out/lug_hinge.pdf`: a slice two pitches wide, cut
+  through a lug of A (B's tongue behind it in the next slot) and
+  through the filler beside it (B's tongue cut), and the slice's
+  knuckles end-on, hidden lines dashed; `out/lug_hinge_fold.png` the
+  fold at 0 to 180.
+
+What the test checks: twenty lugs a side with every bore on the rod's
+axis, the forty knuckles alternating A, B across the width each the
+tongue wide and 5/64 apart, the rod past the outer lugs and ending
+under the rails, no two parts of different instances meeting at nine
+angles from open to folded, the bottoms 3 in apart and the knuckles
+1/32 off the other bottom at 180, and the template the lug's outline
+at 12 mm.
+
+## 9. Open questions
 
 - A carrying handle: the pin used to be one pipe whose bare middle
   was the handle, and the bolted bars leave none. A webbing loop
@@ -348,7 +410,7 @@ the box.
 - OSB and water: the ground end sits on grass. If it lives wet, go
   back to CDX; the model only changes its material name.
 
-## 9. How it got here
+## 10. How it got here
 
 The brief (2026-10-04) was two identical 21 x 48 panels on one 3/4
 pipe, lugs laminated to 1-1/2 in the rails and inside, a 3/4 spacer
@@ -420,3 +482,10 @@ under one rail so the rail lugs could pass. What changed, and why:
   cross it clear of its end, and the band's near end was pulled back
   from the joint to the hinge block's start, since the 3-1/2 in ahead
   of it had nothing to screw into and carried nothing.
+- **Lug hinge study** (2026-10-24): the bar hinge is to give way to
+  3/4 birch lugs across the whole width, interleaving like a box
+  joint on one 1/2 rod with no bushings; section 8 and the study's
+  outputs are the design, drawn beside the ramp before the swap. The
+  fillers between the lugs are two strips of the OSB rather than
+  planed solid stock, which makes the slot a kerf wider than the
+  tongue from stock already in the cut list.

@@ -82,11 +82,46 @@ PLATE_L = 2.0                      # the end plates' ghost
 ANGLE_T, ANGLE_LEG = 0.125, 2.0    # the aluminium angle on the ground end: 2 in legs, so both screw rows clear the top skin and the shim
 ANGLE_SCREW_D, ANGLE_SCREW_Z = 0.1875, (1.1, 1.7)     # #10 clearance; the two rows below the top, both in the stubs' end grain under the shim
 
+# The lug hinge study (README section 10): the hinge-end block of each
+# panel as a lamination of 3/4 birch lugs and fillers of two strips of
+# the skin stock, every lug a knuckle below the box round one 1/2 rod,
+# the two panels' knuckles alternating across the width like a box
+# joint. Drawn beside the bar hinge, which the ramp still carries.
+LUG_T = 18.0 / IN                             # the birch as it measures
+LUG_FILL = 2 * SKIN                           # a filler is two strips of the skin stock, and the slot the other panel's tongue drops into
+LUG_P = LUG_T + LUG_FILL                      # the pitch on each panel, 1-19/32
+LUG_R = PIN_DROP - 1.0 / 32.0                 # the knuckle's radius: a hair under the drop, so it clears the other panel's bottom
+LUG_L = 6.0                                   # how far a lug runs into the box, glued between fillers
+ROD_D, LUG_HOLE_D = 0.5, 17.0 / 32.0          # the rod and the lugs' bore
+ROD_END = 0.3125                              # rod past the outer lugs each end, under the rails, for the clips
+TEMPLATE_T = 12.0 / IN                        # the printed routing template
+STUDY_L = LUG_L + 2.0                         # how much of the panels the study draws
+
+
+def lug_layout():
+    """Lug centres across the box, inches: the turned panel's lugs must
+    land in this one's slots, which for identical panels means
+    W = 2 c0 + P/2 + m P; the first lug's face at least 1/16 from the
+    rail. Returns the centres and the two end fillers' widths."""
+    n = int((W - LUG_P / 2) // LUG_P)
+    while True:
+        c0 = (W - LUG_P / 2 - n * LUG_P) / 2
+        if c0 >= LUG_T / 2 + 1.0 / 16.0:
+            break
+        n -= 1
+    centres = [c0 + k * LUG_P for k in range(n + 1)]
+    return centres, (centres[0] - LUG_T / 2, W - centres[-1] - LUG_T / 2)
+
+
+LUGS, LUG_ENDS = lug_layout()
+LUG_PROFILE = [(0.0, -PIN_DROP), (LUG_R, -PIN_DROP), (LUG_R, SKIN), (LUG_L, SKIN), (LUG_L, SKIN + RIB), (0.0, SKIN + RIB)]
+LUG_KNUCKLE = ((0.0, -PIN_DROP), LUG_R)
+
 # Panel B's placement in the ramp: 180 degrees about z, moved W in x:
 # its x runs 31-7/8 to 0, its y 0 to -48.
 PLACE_B = ((W * IN, 0.0, 0.0), (0.0, 0.0, 180.0))
 HINGE_CUT = -(BIRCH + 1.5 * BAR_T)  # the hinge section: through panel A's left strut
-MATERIALS = {"osb": ("7/16 OSB", 0.62), "birch": ("3/4 birch", 0.68), "steel": ("steel", 7.85), "aluminium": ("aluminium", 2.7)}
+MATERIALS = {"osb": ("7/16 OSB", 0.62), "birch": ("3/4 birch", 0.68), "steel": ("steel", 7.85), "aluminium": ("aluminium", 2.7), "pla": ("printed PLA", 1.24)}
 # The strut's frame: s along it from the pivot, t across it.
 STRUT_D = (math.cos(math.radians(STRUT_ANGLE)), math.sin(math.radians(STRUT_ANGLE)))
 STRUT_N = (-STRUT_D[1], STRUT_D[0])
@@ -357,6 +392,67 @@ PANEL_B = [("stub_ground", stubs(SKIN_END))]
 RAMP_PARTS = [("hinge_bolt", hinge_bolts), ("end_plate", end_plates), ("ground_angle", ground_angle)]
 
 
+# -- the lug hinge study -----------------------------------------------
+
+def lug_hinge_end(p):
+    """A panel's hinge end as the lug hinge would have it: the lugs,
+    each a 3/4 birch plate 6 in into the box with a knuckle below it
+    round the pivot, bored 17/32 on the axis; between them fillers of
+    two strips of the skin stock, so the slot the other panel's tongue
+    drops into is a kerf wider than the tongue; birch end fillers out to
+    the rails; the bottom skin stopping at the knuckles, the top skin
+    running to the joint; the rails as they are."""
+    for c in LUGS:
+        f = profile_x(p, "lug, 3/4 birch", c - LUG_T / 2, c + LUG_T / 2, LUG_PROFILE, circle=LUG_KNUCKLE)
+        part_is(p, f, f"lug {inch(LUG_L + LUG_R)} x {inch(SKIN + RIB + PIN_DROP + LUG_R)}", "birch")
+    bore_x(p, "lug bores, 17/32", LUGS[0] - LUG_T / 2, LUGS[-1] + LUG_T / 2, 0.0, -PIN_DROP, LUG_HOLE_D)
+    for a, b in zip(LUGS, LUGS[1:]):
+        f = box(p, "filler, two 7/16 OSB strips", (a + LUG_T / 2, b - LUG_T / 2), (0.0, LUG_L), (SKIN, SKIN + RIB), op="new")
+        part_is(p, f, f"filler 2 x {inch(RIB)} x {LUG_L:g}", "osb")
+    for x0, x1 in ((0.0, LUGS[0] - LUG_T / 2), (LUGS[-1] + LUG_T / 2, W)):
+        f = box(p, "end filler, birch", (x0, x1), (0.0, LUG_L), (SKIN, SKIN + RIB), op="new")
+        part_is(p, f, f"end filler {inch(x1 - x0)} x {inch(RIB)} x {LUG_L:g}", "birch")
+    f = box(p, "bottom skin, 7/16 OSB", (0.0, W), (LUG_R, STUDY_L), (0.0, SKIN), op="new")
+    part_is(p, f, "bottom skin, hinge end", "osb")
+    f = box(p, "top skin, 7/16 OSB", (0.0, W), (0.0, STUDY_L), (BOX - SKIN, BOX), op="new")
+    part_is(p, f, "top skin, hinge end", "osb")
+    for x0 in (-BIRCH, W):
+        f = box(p, "rail, 3/4 birch", (x0, x0 + BIRCH), (0.0, STUDY_L), (0.0, RAIL_H), op="new")
+        part_is(p, f, "rail, hinge end", "birch")
+
+
+def lug_rod_span():
+    """The rod's x range in the ramp's frame: past both panels' outer
+    lugs by the clip allowance."""
+    lo = min(LUGS[0] - LUG_T / 2, W - LUGS[-1] - LUG_T / 2)
+    hi = max(LUGS[-1] + LUG_T / 2, W - LUGS[0] + LUG_T / 2)
+    return lo - ROD_END, hi + ROD_END
+
+
+def lug_rod(p):
+    """The one pin: a 1/2 steel rod through every lug of both panels,
+    on the joint plane 1-1/2 below the bottom skins, its ends under
+    the rails for a hairpin clip each."""
+    x0, x1 = lug_rod_span()
+    s = p.sketch("right", x0 * IN, "rod")
+    p.circle(s, mm(0.0, -PIN_DROP), ROD_D / 2 * IN)
+    f = p.extrude(s, (x1 - x0) * IN, name="rod, 1/2 steel")
+    part_is(p, f, f"rod 1/2 x {inch(x1 - x0)}", "steel")
+
+
+def lug_template(p):
+    """The routing template for the lugs, to print: the lug's outline
+    12 mm thick with a 1/2 hole on the pivot for a stub of the rod, so
+    the template sits on the lug's own bore and the knuckle comes out
+    concentric with it."""
+    f = profile_x(p, "lug template", 0.0, TEMPLATE_T, LUG_PROFILE, circle=LUG_KNUCKLE)
+    part_is(p, f, "lug template, 12 mm", "pla")
+    bore_x(p, "pin hole, 1/2", 0.0, TEMPLATE_T, 0.0, -PIN_DROP, ROD_D + 0.012)
+
+
+STUDY = [("lug_hinge_end", lug_hinge_end), ("lug_rod", lug_rod), ("lug_template", lug_template)]
+
+
 def sheet(t, material, size):
     """A 4 x 8 sheet, its top at z = 0, for the cut sheets to lay the
     pieces on."""
@@ -605,7 +701,7 @@ def main():
     mcp.call("create_document", {"name": "ramp"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Folding torsion-box truck ramp"}]})
     tabs, bodies, reports = {}, {}, {}
-    for i, (title, fn) in enumerate(SHARED + PANEL_A + PANEL_B + RAMP_PARTS + SHEETS):
+    for i, (title, fn) in enumerate(SHARED + PANEL_A + PANEL_B + RAMP_PARTS + SHEETS + STUDY):
         if i == 0:
             mcp.call("apply", {"ops": [{"type": "rename_tab", "tab": 1, "name": title}]}); tab = 1
         else:
@@ -715,6 +811,63 @@ def main():
     positions = [{"fold": at(d), "label": f"{d:g} degrees" if d else "open"} for d in (0.0, 45.0, 90.0, 135.0, 180.0)]
     print(mcp.call("range_of_motion", {"tab": ramp, "positions": positions, "view": "right", "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "fold.pdf")}))
     mcp.call("range_of_motion", {"tab": ramp, "positions": positions, "view": "right", "width": 2000, "height": 500, "path": os.path.join(OUT, "fold.png")})
+    # -- the lug hinge study: both hinge ends on the rod, folded --------
+    text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": "lug hinge end"}]})
+    end_tab = int(re.search(r"tab (\d+)", text).group(1))
+    apply(mcp, instance_ops(tabs, bodies, ["lug_hinge_end"], True), end_tab)
+    end_ids = instance_ids(mcp, end_tab)
+    text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": "lug hinge"}]})
+    study = int(re.search(r"tab (\d+)", text).group(1))
+    ops = [{"type": "add_instance", "studio": end_tab, "body": 0, "name": "A", "fixed": True,
+            "placement": {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}},
+           {"type": "add_instance", "studio": end_tab, "body": 0, "name": "B", "fixed": False,
+            "placement": {"position": dict(zip("xyz", PLACE_B[0])), "rotation": dict(zip("xyz", PLACE_B[1]))}}]
+    ops += instance_ops(tabs, bodies, ["lug_rod"], True)
+    apply(mcp, ops, study)
+    sids = instance_ids(mcp, study)
+    ca, cb, ta, tb = coaxial(reports["lug_rod"][0], ROD_D / 2 * IN, IDENTITY, reports["lug_hinge_end"][0], LUG_HOLE_D / 2 * IN, PLACE_B)
+    offset, angle, flip = mate_parameters(ta, tb)
+    apply(mcp, [{"type": "add_mate", "kind": "revolute", "a": {"instance": sids["lug_rod"], "face": ca["reference"]},
+                 "b": {"instance": sids["B"], "sub": end_ids["lug_hinge_end 1"], "face": cb["reference"]},
+                 "offset": offset, "angle": angle, "flip": flip, "name": "fold"}], study)
+    rep = json.loads(mcp.call("report", {"tab": study, "detail": "full"}))
+    for m in rep["mates"] + rep["instances"]:
+        if m.get("error"):
+            raise RuntimeError(f"lug hinge {m['name']}: {m['error']}")
+    sfold = next(m for m in rep["mates"] if m["name"] == "fold")
+
+    def low_study(angle_):
+        apply(mcp, [{"type": "set_mate", "id": sfold["id"], "angle": angle_}], study)
+        r_ = json.loads(mcp.call("report", {"tab": study, "detail": "full"}))
+        return min(b["bounds"][0]["z"] for b in r_["bodies"] if b["name"].startswith("B /"))
+
+    ssign = 1.0 if low_study(sfold["angle"] + 30.0) < low_study(sfold["angle"]) - 1.0 else -1.0
+    sat = lambda deg: sfold["angle"] + ssign * deg
+    apply(mcp, [{"type": "set_mate", "id": sfold["id"], "angle": sat(0.0)}], study)
+    print(f"lug hinge tab {study}: {len(LUGS)} lugs a panel at {inch(LUG_P)} pitch, slots {inch(LUG_FILL)} for {LUG_T * IN:.0f} mm tongues, end fillers {inch(LUG_ENDS[0])} and {inch(LUG_ENDS[1])}, rod {inch(lug_rod_span()[1] - lug_rod_span()[0])}")
+    # The box joint from below, and the sections: through one of A's
+    # lugs (B's tongue in the next slot behind it) and through one of
+    # A's fillers, where B's tongue is cut.
+    window = ",".join(f"{v * IN:g}" for v in (-BIRCH - 1.0, -STUDY_L - 1.0, -PIN_DROP - LUG_R - 1.0, W + BIRCH + 1.0, STUDY_L + 1.0, BOX + 1.0))
+    mcp.call("screenshot", {"tab": study, "view": "0.4,-0.5,-0.75", "width": 1600, "height": 1000, "path": os.path.join(OUT, "lug_hinge_below.png")})
+    cut_lug, cut_fill = LUGS[len(LUGS) // 2], (LUGS[len(LUGS) // 2] + LUGS[len(LUGS) // 2 + 1]) / 2
+    side = ",".join(f"{v * IN:g}" for v in (cut_lug - 3.0, -STUDY_L - 1.0, -PIN_DROP - LUG_R - 1.0, cut_lug + 3.0, STUDY_L + 1.0, BOX + 1.0))
+    mcp.call("screenshot", {"tab": study, "view": "right", "section": f"x:{cut_lug * IN}:flip", "fit": side, "width": 1600, "height": 900, "path": os.path.join(OUT, "lug_hinge_section.png")})
+    for deg, stem in ((90.0, "lug_hinge_section_90"), (180.0, "lug_hinge_section_180")):
+        apply(mcp, [{"type": "set_mate", "id": sfold["id"], "angle": sat(deg)}], study)
+        mcp.call("screenshot", {"tab": study, "view": "right", "section": f"x:{cut_lug * IN}:flip", "fit": side, "width": 1600, "height": 900, "path": os.path.join(OUT, f"{stem}.png")})
+    apply(mcp, [{"type": "set_mate", "id": sfold["id"], "angle": sat(0.0)}], study)
+    # The sheet: a slice two pitches wide round the cut, so the sections
+    # draw large: through a lug of A, through the filler beside it where
+    # B's tongue is cut, and the slice's knuckles end-on from the joint.
+    slab = ",".join(f"{v * IN:g}" for v in (cut_lug - LUG_P, -STUDY_L - 0.5, -PIN_DROP - LUG_R - 0.5, cut_lug + LUG_P, STUDY_L + 0.5, BOX + 0.5))
+    print(mcp.call("export", {"tab": study, "format": "pdf", "sheet": "A3", "hidden": True, "window": slab, "parts": False,
+                              "views": [f"section-side@{cut_lug * IN:g}", f"section-side@{cut_fill * IN:g}", "front"],
+                              "note": f"lug hinge study, open, a slice two pitches wide: A-A through a lug of A at {cut_lug:.2f} in, B-B through the filler beside it, the knuckles end-on; {len(LUGS)} lugs a panel at {inch(LUG_P)}, 7/8 slots, 1/2 rod",
+                              "path": os.path.join(OUT, "lug_hinge.pdf")}))
+    positions = [{"fold": sat(d), "label": f"{d:g} degrees" if d else "open"} for d in (0.0, 45.0, 90.0, 135.0, 180.0)]
+    mcp.call("range_of_motion", {"tab": study, "positions": positions, "view": "right", "width": 2000, "height": 500, "path": os.path.join(OUT, "lug_hinge_fold.png")})
+    print(mcp.call("export", {"tab": tabs["lug_template"], "format": "stl", "path": os.path.join(OUT, "lug_template.stl")}))
     # Cut sheets: the plywood pieces, the real bodies, laid flat on a
     # 4 x 8 with a kerf between, each sheet an assembly drawn from the
     # top with its pieces numbered.
