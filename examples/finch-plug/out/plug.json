@@ -1,0 +1,40 @@
+{
+ "collar": {
+  "d_mouth": 48.5,
+  "d_rim_bore": 48.0,
+  "h_rim": 6.0,
+  "t_rim": 2.0,
+  "d_rim": 44.0,
+  "d_mesh": 48.0,
+  "od": 64.0,
+  "h": 10.0,
+  "ear_w": 16.0,
+  "ear_r": 3.0,
+  "ear_t": 3.0,
+  "tube_h": 25.0
+ },
+ "plug": {
+  "clear": 0.3,
+  "wall": 2.0,
+  "floor_t": 2.4,
+  "dome": 1.5,
+  "ext": 5.0,
+  "root": 2.5,
+  "tab_w": 10.0,
+  "tab_t": 1.2,
+  "slit": 0.8,
+  "tab_clear": 0.2,
+  "engage": 0.6,
+  "play": 0.15,
+  "lead": 0.5,
+  "drain_d": 1.0,
+  "drains": 6,
+  "tabs": 3,
+  "r_tab": 21.8,
+  "z_catch": 8.15,
+  "z_top": 9.450000000000001,
+  "length": 10.65,
+  "deflect": 0.8,
+  "strain": 0.012695893671890498
+ }
+}
