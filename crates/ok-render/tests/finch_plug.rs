@@ -132,7 +132,25 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
         (plate_r - od / 2.0).abs() < 1e-9,
         "the plate reaches the ring's edge"
     );
-    let hooks: Vec<f64> = (0..3).map(|k| ear_at + 120.0 * k as f64).collect();
+    let hooks: Vec<f64> = cap["hook_at"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_f64().unwrap())
+        .collect();
+    assert_eq!(hooks.len(), 3);
+    // Locked, each ear's leading edge rests a hair short of its hook's
+    // stop; offered up, the ears sit mid-gap.
+    let (ear_half, shift) = (num(cap, "ear_half"), num(cap, "hook_shift"));
+    assert!((hooks[0] - ear_at - shift).abs() < 1e-9);
+    assert!(
+        (ear_at + ear_half + 0.5 - (hooks[0] + hook_arc / 2.0)).abs() < 1e-9,
+        "the ear's edge against the stop"
+    );
+    assert!(
+        120.0 - hook_arc > 2.0 * ear_half + 10.0,
+        "the gap takes an ear with room"
+    );
     let near_hook = |v: &Vec3| {
         hooks.iter().any(|h| {
             ((angle_of(v) - h + 180.0).rem_euclid(360.0) - 180.0).abs() <= hook_arc / 2.0 + 2.5

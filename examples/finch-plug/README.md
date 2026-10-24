@@ -32,13 +32,13 @@ the constants at the top of `build.py` and run it again.
 
 | what | mm in the model | check |
 |---|---|---|
-| bore at the mouth | 59.5 | inside jaws at the mouth, or the gauge |
-| bore at the ring's top edge | 58.5 | inside jaws pushed in to the top edge, or the gauge |
+| bore at the mouth | 61 | inside jaws at the mouth, or the gauge (61 by rule) |
+| bore at the ring's top edge | 60 | inside jaws pushed in to the top edge, or the gauge |
 | ring thickness, and the ears' | 3 | outside jaws on the flange's edge and on an ear |
-| ring outside diameter | 70 | outside jaws between ears |
-| across the ears' tips | 78 | outside jaws over an ear and the ring opposite, less the ring's radius, or a rule |
-| an ear's width | 17 | outside jaws |
-| inside the mesh above the ring | 61 | not critical: the plug stops at the ring's top |
+| ring outside diameter | 69 | outside jaws between ears (69 by rule) |
+| across the ears' tips | 77 | outside jaws over an ear and the ring opposite, less the ring's radius, or a rule |
+| an ear's width | 34 | outside jaws (33 to 35 by rule) |
+| inside the mesh above the ring | 62.5 | not critical: the plug stops at the ring's top |
 
 The ones that set the lock are the ears: their thickness sets the
 lips' height, their tips set the hook walls, their width sets the gaps
@@ -67,8 +67,10 @@ ring is the bore at its top edge. Print it small end up, one wall.
   the far end. The lip's underside comes down along the arc in four
   steps, 0.6, 0.4, 0.2 and 0 over the ear, so the ear slides in free
   and wedges as it turns, as the tray's ramped hooks had it. The ears
-  pass between the hooks with 84 degrees of gap for a 26 degree ear;
-  the turn to lock is about 60 degrees, until the ear meets the stop.
+  pass between the hooks with 84 degrees of gap for a 51 degree ear.
+  The hooks sit 8 degrees ahead of where the ears' centres land, so
+  that locked, each ear's leading edge rests against its stop with the
+  hook over its leading half; the turn to lock is about 52 degrees.
   To take it off, turn it back.
 - **Nothing to stand on.** The plate is the ring's own size, and the
   hooks stand where the tray's did, 6 mm outside the ring at three

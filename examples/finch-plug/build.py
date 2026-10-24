@@ -31,12 +31,12 @@ from okmcp import Mcp, Part, v2  # noqa: E402
 
 OUT = os.path.join(HERE, "out")
 # -- the ring, mm, as read off the photographs: confirm with calipers -----
-D_MOUTH = 59.5          # the ring's bore at the mouth: the first gauge (to 49.5) fell straight through, a rule says about 59
-D_TOP = 58.5            # the bore at the ring's top edge, inside the tube: a slight draft
+D_MOUTH = 61.0          # the ring's bore at the mouth, by rule (the first gauge, to 49.5, fell straight through)
+D_TOP = 60.0            # the bore at the ring's top edge, inside the tube: a slight draft, guessed
 RING_T = 3.0            # the ring's thickness, mouth to its top face; the ears are the same
-D_MESH = 61.0           # inside the mesh tube just above the ring
-RING_OD = 70.0          # the ring's flange
-EAR_W, EAR_R = 17.0, 4.0   # the three ears: width across, and how far past the flange they reach
+D_MESH = 62.5           # inside the mesh tube just above the ring
+RING_OD = 69.0          # the ring's flange, by rule
+EAR_W, EAR_R = 34.0, 4.0   # the three ears: width across (33 to 35 by rule), and how far past the flange they reach
 EAR_AT = 60.0           # the ears' angles are EAR_AT + k * 120: where they sit locked under the hooks
 TUBE_H = 25.0           # how much of the mesh tube the model draws
 # -- the cap ----------------------------------------------------------------
@@ -61,6 +61,12 @@ R_WALL1 = R_WALL0 + HOOK_WALL        # and outside: the plate's lobes reach here
 R_LIP = R_EAR - LIP_OVER             # the lip's inner edge
 HOOK_H = RING_T + RAMP[0] + LIP_T    # the hook's height above the plate
 HOOKS = 3
+EAR_HALF = math.degrees(EAR_W / 2 / R_EAR)   # half an ear, in degrees at its tip
+# Locked, an ear's leading edge rests against the stop at the hook's far
+# end, so the hook sits ahead of the ear's centre by this much; offered
+# up, the cap is turned so the ears sit mid-gap between the hooks.
+HOOK_SHIFT = EAR_HALF + 0.5 - HOOK_ARC / 2
+OFFER = 180.0 / HOOKS - HOOK_SHIFT
 
 
 def r_bore(z):
@@ -106,7 +112,7 @@ def main():
     # underside comes down along the arc, and a stop at the far end.
     half = HOOK_ARC / 2
     for k in range(HOOKS):
-        a = EAR_AT + k * 360.0 / HOOKS
+        a = EAR_AT + HOOK_SHIFT + k * 360.0 / HOOKS
         s = p.sketch("top", -PLATE_T, f"lobe {k + 1}")
         sector(p, s, PLATE_R - 1.0, R_WALL1, a, half + 2.0)
         p.extrude(s, PLATE_T, op="add", name=f"lobe {k + 1}")
@@ -138,7 +144,8 @@ def main():
         raise RuntimeError(bad)
     cap = rep["bodies"][0]
     lo, hi = cap["bounds"]
-    print(f"cap: {len(rep['bodies'])} body, {hi['x'] - lo['x']:.1f} across, {lo['z']:.1f} to {hi['z']:.1f} tall, {cap['volume'] / 1000:.1f} cm3")
+    print(f"cap: {len(rep['bodies'])} body, {hi['x'] - lo['x']:.1f} across, {lo['z']:.1f} to {hi['z']:.1f} tall, {cap['volume'] / 1000:.1f} cm3; "
+          f"ears {2 * EAR_HALF:.1f} degrees wide, hooks {HOOK_ARC:g} shifted {HOOK_SHIFT:.1f} ahead, offered up at {OFFER:.1f}, gaps of {360.0 / HOOKS - HOOK_ARC:.0f}")
     # -- the gauge ------------------------------------------------------------
     text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "gauge"}]})
     gauge_tab = int(re.search(r"tab (\d+)", text).group(1))
@@ -178,7 +185,7 @@ def main():
     for k in range(HOOKS):
         a = EAR_AT + k * 360.0 / HOOKS
         s = c.sketch("top", 0.0, f"ear {k + 1}")
-        sector(c, s, RING_OD / 2 - 1.0, R_EAR, a, math.degrees(EAR_W / 2 / R_EAR))
+        sector(c, s, RING_OD / 2 - 1.0, R_EAR, a, EAR_HALF)
         c.extrude(s, RING_T, op="add", name=f"ear {k + 1}")
     crep = c.report()
     bad = [(f["name"], f["error"]) for f in crep["features"] if f.get("error")]
@@ -187,7 +194,7 @@ def main():
     # -- the cap on the ring, locked, and offered up before the turn --------
     place = lambda deg: {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": deg}}
     asms = {}
-    for name, deg in (("cap on collar", 0.0), ("cap offered up", 60.0)):
+    for name, deg in (("cap on collar", 0.0), ("cap offered up", OFFER)):
         text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": name}]})
         asms[name] = int(re.search(r"tab (\d+)", text).group(1))
         mcp.call("apply", {"tab": asms[name], "ops": [{"type": "add_instance", "studio": collar_tab, "body": 0, "name": "collar", "fixed": True, "placement": place(0.0)},
@@ -211,7 +218,8 @@ def main():
         "collar": {"d_mouth": D_MOUTH, "d_top": D_TOP, "ring_t": RING_T, "d_mesh": D_MESH, "od": RING_OD, "ear_w": EAR_W, "ear_r": EAR_R, "ear_at": EAR_AT, "tube_h": TUBE_H},
         "cap": {"clear": CLEAR, "plate_t": PLATE_T, "dome": DOME, "plate_r": PLATE_R, "hook_gap": HOOK_GAP, "hook_wall": HOOK_WALL, "hook_arc": HOOK_ARC,
                 "lip_t": LIP_T, "lip_over": LIP_OVER, "ramp": list(RAMP), "stop_t": STOP_T, "drain_d": DRAIN_D, "drains": DRAINS, "hooks": HOOKS,
-                "r_ear": R_EAR, "r_wall0": R_WALL0, "r_wall1": R_WALL1, "r_lip": R_LIP, "hook_h": HOOK_H, "offer": 60.0},
+                "r_ear": R_EAR, "r_wall0": R_WALL0, "r_wall1": R_WALL1, "r_lip": R_LIP, "hook_h": HOOK_H, "ear_half": EAR_HALF,
+                "hook_shift": HOOK_SHIFT, "hook_at": [EAR_AT + HOOK_SHIFT + k * 360.0 / HOOKS for k in range(HOOKS)], "offer": OFFER},
         "gauge": {"min": GAUGE_MIN, "max": GAUGE_MAX, "step": GAUGE_STEP, "h": GAUGE_H, "wall": GAUGE_WALL, "steps": steps},
     }
     with open(os.path.join(OUT, "plug.json"), "w") as fh:
