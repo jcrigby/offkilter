@@ -218,4 +218,51 @@ fn the_plug_fits_the_ring_with_its_tabs_over_it_and_nothing_outside_the_tube() {
         .unwrap();
     assert_eq!(asm.bodies.len(), 2);
     assert!(asm.instance_errors.is_empty());
+    // The gauge: a stepped tube, the smallest step at the top, every step
+    // a quarter millimetre bigger than the one above it, so the ring's
+    // bore can be found by feel before the plug is printed.
+    let gauge = &n["gauge"];
+    let gr = doc
+        .regenerate_studio(tab_named(&doc, "gauge"), None)
+        .unwrap();
+    assert_eq!(gr.bodies.len(), 1);
+    let gsolid = &gr.bodies[0].solid;
+    gsolid.validate().unwrap();
+    let steps: Vec<f64> = gauge["steps"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_f64().unwrap())
+        .collect();
+    let (step_h, gmin, gmax) = (num(gauge, "h"), num(gauge, "min"), num(gauge, "max"));
+    let (glo, ghi) = bounds(gsolid);
+    assert!((ghi.z - glo.z - step_h * steps.len() as f64).abs() < 1e-6);
+    for (i, d) in steps.iter().rev().enumerate() {
+        let z = (i as f64 + 0.5) * step_h;
+        let r = radius_where(gsolid, |zz| (zz - z).abs() < step_h / 2.0 - 0.8);
+        // The grooves cut into the whole-mm steps, so read a step's
+        // radius from its ungrooved band; the revolve's facets add a hair.
+        let got = if r > 0.0 {
+            r
+        } else {
+            radius_where(gsolid, |zz| (zz - (z - step_h / 2.0)).abs() < 0.05)
+        };
+        assert!(
+            (got - d / 2.0).abs() < 0.3,
+            "step {i} reads {:.3} for {d}",
+            got * 2.0
+        );
+    }
+    assert!((steps[0] - gmin).abs() < 1e-9 && (steps[steps.len() - 1] - gmax).abs() < 1e-9);
+    assert!(
+        gmin < d_top && gmax > d_mouth,
+        "the gauge brackets the bore as modelled"
+    );
+    println!(
+        "gauge: {} steps, {:.1} tall, {} to {}",
+        steps.len(),
+        ghi.z - glo.z,
+        gmin,
+        gmax
+    );
 }

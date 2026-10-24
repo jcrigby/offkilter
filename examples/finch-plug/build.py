@@ -53,6 +53,10 @@ ENGAGE = 0.6            # the catch reaches this far over the ring's top
 PLAY = 0.15             # between the catch and the ring's top
 LEAD = 0.5              # the catch's vertical band under its lead-in
 DRAIN_D, DRAINS = 1.0, 6   # drain holes in the floor, smaller than a nyjer seed
+# -- the gauge: a stepped tube to find the ring's bore by feel before the
+#    plug is printed: steps GAUGE_STEP apart from GAUGE_MIN at the top to
+#    GAUGE_MAX at the bottom, each GAUGE_H tall, a groove at the whole mm
+GAUGE_MIN, GAUGE_MAX, GAUGE_STEP, GAUGE_H, GAUGE_WALL = 46.5, 49.5, 0.25, 3.0, 1.5
 TABS = 3
 TAB_ANGLES = [k * 360.0 / TABS for k in range(TABS)]
 
@@ -143,6 +147,34 @@ def main():
     plug_body = rep["bodies"][0]
     lo, hi = plug_body["bounds"]
     print(f"plug: {len(rep['bodies'])} body, {hi['x'] - lo['x']:.2f} across, {lo['z']:.1f} to {hi['z']:.1f} tall, {plug_body['volume'] / 1000:.1f} cm3, {plug_body.get('mass', 0):.0f} g")
+    # -- the gauge ------------------------------------------------------------
+    text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "gauge"}]})
+    gauge_tab = int(re.search(r"tab (\d+)", text).group(1))
+    g = Part(mcp, gauge_tab, "gauge")
+    steps = [round(GAUGE_MIN + i * GAUGE_STEP, 3) for i in range(int(round((GAUGE_MAX - GAUGE_MIN) / GAUGE_STEP)) + 1)]
+    s = g.sketch("front", 0.0, "steps")
+    # The staircase: the smallest step at the top (z high), the largest at the bottom.
+    pts = [(GAUGE_MIN / 2 - GAUGE_WALL, 0.0), (GAUGE_MAX / 2, 0.0)]
+    z = 0.0
+    for d in reversed(steps):
+        pts += [(d / 2, z), (d / 2, z + GAUGE_H)]
+        z += GAUGE_H
+    pts += [(GAUGE_MIN / 2 - GAUGE_WALL, z)]
+    g.polygon(s, pts)
+    f = g.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "new", "name": "gauge"})
+    g.apply({"type": "rename_part", "source": f, "name": "gauge"}, {"type": "set_part_material", "source": f, "material": {"name": "PETG", "density": 1.27}})
+    # A groove round each whole-millimetre step, to count by.
+    for i, d in enumerate(reversed(steps)):
+        if abs(d - round(d)) < 1e-9:
+            s = g.sketch("front", 0.0, f"groove {d:g}")
+            z0 = i * GAUGE_H + GAUGE_H / 2 - 0.3
+            g.polygon(s, [(d / 2 - 0.4, z0), (d / 2 + 0.5, z0), (d / 2 + 0.5, z0 + 0.6), (d / 2 - 0.4, z0 + 0.6)])
+            g.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "remove", "name": f"groove {d:g}"})
+    grep = g.report()
+    bad = [(ft["name"], ft["error"]) for ft in grep["features"] if ft.get("error")]
+    if bad:
+        raise RuntimeError(bad)
+    print(f"gauge: {len(steps)} steps of {GAUGE_H:g} from {GAUGE_MIN:g} at the top to {GAUGE_MAX:g} at the bottom, {z:.0f} tall")
     # -- the ring it fits, from the photographs' numbers --------------------
     text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "collar"}]})
     collar_tab = int(re.search(r"tab (\d+)", text).group(1))
@@ -174,6 +206,8 @@ def main():
     shot(1, "plug_below", view="0.5,-0.6,-0.6")
     shot(asm, "plug_in_collar_section", view="front", section="y:0")
     print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "plug.stl")}))
+    print(mcp.call("export", {"tab": gauge_tab, "format": "stl", "path": os.path.join(OUT, "gauge.stl")}))
+    shot(gauge_tab, "gauge", view="iso")
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A4", "hidden": True, "parts": False, "views": ["section@0", "top", "iso"],
                               "note": f"plug in the ring: bore {D_MOUTH:g} at the mouth, {D_TOP:g} at the top, ring {RING_T:g} thick; tabs catch {ENGAGE:g} over it",
                               "path": os.path.join(OUT, "plug_in_collar.pdf")}))
@@ -189,6 +223,7 @@ def main():
                  "tab_w": TAB_W, "tab_t": TAB_T, "slit": SLIT,
                  "tab_clear": TAB_CLEAR, "engage": ENGAGE, "play": PLAY, "lead": LEAD, "drain_d": DRAIN_D, "drains": DRAINS, "tabs": TABS,
                  "r_tab": r_tab, "z_catch": z_catch, "z_top": z_top, "length": length, "deflect": deflect, "strain": strain},
+        "gauge": {"min": GAUGE_MIN, "max": GAUGE_MAX, "step": GAUGE_STEP, "h": GAUGE_H, "wall": GAUGE_WALL, "steps": steps},
     }
     with open(os.path.join(OUT, "plug.json"), "w") as fh:
         json.dump(numbers, fh, indent=1)

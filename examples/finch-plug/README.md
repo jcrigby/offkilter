@@ -43,6 +43,16 @@ ring's thickness: the tabs are a hair inside the first and the catches
 sit on the second. The mesh's inside diameter only has to clear the
 catches, which reach to 48.7.
 
+**The gauge.** `out/gauge.stl` finds the first two by feel before the
+plug is printed: a stepped tube, 46.5 at the top, every step 0.25
+bigger than the one above it, 3 mm a step, down to 49.5, with a groove
+round the whole-millimetre steps to count by. Push the small end up
+into the mouth. The last step that enters is the bore at the mouth; the
+last step that drops right through the ring, felt as it passes the top
+edge, is the bore at the top edge; and how the step just under each
+one feels is the clearance the plug will have. Print it small end up,
+one wall, no infill to speak of.
+
 ## The plug
 
 - **Cup.** The skirt runs 10 below the mouth, straight and flush with
@@ -75,4 +85,6 @@ the ring's underside; the skirt the clearance off the bore at the
 mouth; nothing above the ring's top reaching past its top edge but the
 catches, which reach over it by the engagement and sit above it; the
 tab strain under 2 %; six drain holes of 1 mm; the floor's edge level
-with the ring's top; and the plug home in the ring meeting it nowhere.
+with the ring's top; the plug home in the ring meeting it nowhere; and
+the gauge's steps reading their diameters from the smallest at the top
+and bracketing the bore as modelled.
