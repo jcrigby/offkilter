@@ -1,14 +1,14 @@
-//! The finch feeder plug (examples/finch-plug) as a regression suite:
-//! the plug is one closed body through the ring modelled from the
-//! photographs with nothing outside the tube but the flange hidden under
-//! the ring, its skirt the clearance off the bore, its floor level with
-//! the ring's top, its three tabs a hair inside the ring's top edge with
-//! catches that reach over it by the engagement and can bend past it at
-//! a strain PETG takes, its drain holes smaller than a seed; and the
-//! plug and the ring do not meet once the plug is home. Every number
-//! prints (`--nocapture`).
+//! The finch feeder cap (examples/finch-plug) as a regression suite:
+//! the cap is one closed body whose plug sits in the ring's bore the
+//! clearance off it with its top level with the ring's, whose plate
+//! reaches the ring's edge and no further but for the hook lobes, whose
+//! three hooks stand outside the ears' tips with lips that come down
+//! along the arc from the entry clearance to touching, and which meets
+//! the ring nowhere when locked or when offered up before the turn; the
+//! drain holes are smaller than a seed; and the gauge's steps read their
+//! diameters and bracket the bore. Every number prints (`--nocapture`).
 
-use ok_brep::{BoolOp, Solid, Surface};
+use ok_brep::{BoolOp, Solid, Surface, Transform};
 use ok_math::Vec3;
 use ok_model::{Document, TabId};
 use std::path::PathBuf;
@@ -67,160 +67,195 @@ fn vertices(s: &Solid) -> Vec<Vec3> {
         .collect()
 }
 
-/// The farthest any vertex of the body lies from the z axis, over the
-/// heights `keep` picks.
-fn radius_where(s: &Solid, keep: impl Fn(f64) -> bool) -> f64 {
+/// The farthest any vertex lies from the z axis, over the vertices
+/// `keep` picks.
+fn radius_where(s: &Solid, keep: impl Fn(&Vec3) -> bool) -> f64 {
     vertices(s)
         .iter()
-        .filter(|v| keep(v.z))
+        .filter(|v| keep(v))
         .map(|v| (v.x * v.x + v.y * v.y).sqrt())
         .fold(0.0, f64::max)
 }
 
+fn angle_of(v: &Vec3) -> f64 {
+    v.y.atan2(v.x).to_degrees().rem_euclid(360.0)
+}
+
 #[test]
-fn the_plug_fits_the_ring_with_its_tabs_over_it_and_nothing_outside_the_tube() {
+fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
     let mut doc = load();
     let n = numbers();
-    let (collar, plug) = (&n["collar"], &n["plug"]);
-    let r = doc
-        .regenerate_studio(tab_named(&doc, "plug"), None)
-        .unwrap();
+    let (collar, cap) = (&n["collar"], &n["cap"]);
+    let r = doc.regenerate_studio(tab_named(&doc, "cap"), None).unwrap();
     assert!(
         r.statuses.iter().all(|f| f.error.is_none()),
         "{:?}",
         r.statuses
     );
-    assert_eq!(r.bodies.len(), 1, "one plug");
+    assert_eq!(r.bodies.len(), 1, "one cap");
     let body = &r.bodies[0].solid;
     body.validate().unwrap();
     let (lo, hi) = bounds(body);
-    let (d_mouth, d_top, ring_t, od) = (
+    let (d_mouth, d_top, ring_t, od, ear_at) = (
         num(collar, "d_mouth"),
         num(collar, "d_top"),
         num(collar, "ring_t"),
         num(collar, "od"),
+        num(collar, "ear_at"),
     );
-    let (clear, ext, engage, tab_clear) = (
-        num(plug, "clear"),
-        num(plug, "ext"),
-        num(plug, "engage"),
-        num(plug, "tab_clear"),
+    let (clear, plate_t, plate_r) = (num(cap, "clear"), num(cap, "plate_t"), num(cap, "plate_r"));
+    let (r_ear, r_wall0, r_wall1, r_lip, hook_h, hook_arc) = (
+        num(cap, "r_ear"),
+        num(cap, "r_wall0"),
+        num(cap, "r_wall1"),
+        num(cap, "r_lip"),
+        num(cap, "hook_h"),
+        num(cap, "hook_arc"),
     );
-    let (flange_w, flange_t) = (num(plug, "flange_w"), num(plug, "flange_t"));
+    let ramp: Vec<f64> = cap["ramp"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_f64().unwrap())
+        .collect();
     println!(
-        "plug {:.2} across, z {:.1} to {:.1}, {:.1} cm3",
+        "cap {:.1} across, z {:.1} to {:.1}, {:.1} cm3",
         hi.x - lo.x,
         lo.z,
         hi.z,
         body.volume() / 1000.0
     );
-    // Nothing outside the tube but the flange, which is under the ring
-    // and well inside its outline; below the mouth there is the skirt
-    // alone, and above the flange nothing is wider than the bore.
+    // The plate: under the ring from its mouth down, to the ring's edge
+    // and no further but for the three lobes that carry the hooks.
+    assert!((lo.z + plate_t).abs() < 1e-6);
     assert!(
-        (hi.x - lo.x) <= d_mouth + 2.0 * flange_w + 1e-6,
-        "wider than the flange"
+        (plate_r - od / 2.0).abs() < 1e-9,
+        "the plate reaches the ring's edge"
     );
-    assert!((hi.x - lo.x) < od - 10.0, "the flange shows past the ring");
+    let hooks: Vec<f64> = (0..3).map(|k| ear_at + 120.0 * k as f64).collect();
+    let near_hook = |v: &Vec3| {
+        hooks.iter().any(|h| {
+            ((angle_of(v) - h + 180.0).rem_euclid(360.0) - 180.0).abs() <= hook_arc / 2.0 + 2.5
+        })
+    };
+    let plate_between = radius_where(body, |v| {
+        v.z < -1e-6 && v.z > -plate_t + 1e-6 && !near_hook(v)
+    });
     assert!(
-        (lo.z + ext).abs() < 1e-6,
-        "the skirt hangs {} below the mouth",
-        -lo.z
+        plate_between <= plate_r + 0.3,
+        "plate {plate_between:.2} between the hooks"
     );
-    let flange = radius_where(body, |z| (z + flange_t).abs() < 0.05);
     assert!(
-        (flange - (d_mouth / 2.0 + flange_w)).abs() < 0.3,
-        "flange {flange:.3}"
+        (hi.x - lo.x) <= 2.0 * r_wall1 + 1e-6,
+        "wider than the hook walls"
     );
-    let flange_top = vertices(body)
-        .iter()
-        .filter(|v| (v.x * v.x + v.y * v.y).sqrt() > d_mouth / 2.0 + flange_w - 0.6)
-        .map(|v| v.z)
-        .fold(f64::NEG_INFINITY, f64::max);
-    assert!(
-        flange_top.abs() < 1e-6,
-        "the flange's top at {flange_top:.3}, not the ring's underside"
-    );
-    // The skirt is the clearance off the bore at the mouth (read at its
-    // bottom edge, which is the same radius), and nothing of the plug
-    // above the ring's top reaches past the ring's top edge but the
-    // catches, which reach over it by the engagement.
-    // (the revolve's facets stand a hair outside the circle they stand for)
-    let at_mouth = radius_where(body, |z| (z - lo.z).abs() < 0.05);
+    // The plug: the clearance off the bore at the mouth and its top level
+    // with the ring's top at the edge, rising inside.
+    let at_mouth = radius_where(body, |v| {
+        v.z.abs() < 1e-6 && (v.x * v.x + v.y * v.y).sqrt() < od / 2.0 - 2.0
+    });
     assert!(
         (at_mouth - (d_mouth / 2.0 - clear)).abs() < 0.3,
-        "skirt {at_mouth:.3} at the mouth"
+        "plug {at_mouth:.3} at the mouth"
     );
-    let z_catch = num(plug, "z_catch");
-    let above_ring = radius_where(body, |z| z > ring_t + 0.05 && z < z_catch - 0.05);
-    assert!(
-        above_ring <= d_top / 2.0 - tab_clear + 0.05,
-        "{above_ring:.3} past the ring's top edge"
-    );
-    let catches = radius_where(body, |z| z > z_catch - 1e-6);
-    assert!(
-        (catches - (d_top / 2.0 + engage)).abs() < 0.05,
-        "catches reach {catches:.3}"
-    );
-    assert!(z_catch > ring_t, "the catch sits above the ring's top");
-    println!(
-        "skirt {:.2} at the mouth, flange {:.2}; catches to {:.2}, {:.2} over the ring's top edge at {:.1}, {:.2} above its top",
-        at_mouth * 2.0,
-        flange * 2.0,
-        catches * 2.0,
-        engage,
-        d_top,
-        z_catch - ring_t
-    );
-    // The tabs bend past the ring at a strain PETG takes more than once.
-    let strain = num(plug, "strain");
-    assert!(strain < 0.02, "{} strain", strain);
-    assert!(num(plug, "length") > 8.0, "tabs long enough to bend");
-    // Drain holes: six, smaller than a nyjer seed, through the floor.
-    let drains = cylinders(body, num(plug, "drain_d") / 2.0);
-    assert_eq!(
-        drains.len(),
-        num(plug, "drains") as usize,
-        "{} drains",
-        drains.len()
-    );
-    assert!(num(plug, "drain_d") <= 1.0);
-    // Home in the ring, nothing meets: the flange under it, the catches
-    // above it, the skirt off the bore, the tabs inside its top edge.
-    let c = doc
-        .regenerate_studio(tab_named(&doc, "collar"), None)
-        .unwrap();
-    assert_eq!(c.bodies.len(), 1);
-    let hit = overlap(body, &c.bodies[0].solid);
-    println!("plug in the collar: {hit:.3} mm3 overlap");
-    assert!(hit < 1e-3, "the plug meets the collar: {hit} mm3");
-    // The floor's top edge is level with the ring's top, so the lowest
-    // seed lies at the first row of mesh: the highest vertex at the
-    // floor's edge between two tabs, where the skirt's top meets the cone.
     let top_edge = vertices(body)
         .iter()
         .filter(|v| {
-            let r = (v.x * v.x + v.y * v.y).sqrt();
-            let a = v.y.atan2(v.x).to_degrees();
-            v.z > 0.0
-                && r > d_top / 2.0 - clear - 0.5
-                && r < d_top / 2.0 + 0.3
-                && (a - 60.0).abs() < 25.0
+            let rr = (v.x * v.x + v.y * v.y).sqrt();
+            v.z > 0.0 && rr > d_top / 2.0 - clear - 0.6 && rr < d_top / 2.0 + 0.3
         })
         .map(|v| v.z)
         .fold(f64::NEG_INFINITY, f64::max);
     assert!(
         (top_edge - ring_t).abs() < 1e-6,
-        "floor edge at {top_edge:.3} vs the ring's top at {ring_t}"
+        "plug's edge at {top_edge:.3} vs the ring's top at {ring_t}"
     );
-    let asm = doc
-        .regenerate_assembly(tab_named(&doc, "plug in collar"))
+    // The hooks: walls outside the ears' tips, lips reaching in over them,
+    // the underside of each step where the ramp says, down to touching.
+    for h in &hooks {
+        let in_hook = |v: &Vec3| {
+            ((angle_of(v) - h + 180.0).rem_euclid(360.0) - 180.0).abs() <= hook_arc / 2.0 + 0.1
+        };
+        let wall = radius_where(body, |v| in_hook(v) && v.z > ring_t + 0.1);
+        assert!(
+            (wall - r_wall1).abs() < 0.3,
+            "hook at {h}: wall to {wall:.2}"
+        );
+        let lip_in = vertices(body)
+            .iter()
+            .filter(|v| {
+                in_hook(v)
+                    && v.z > ring_t - 1e-6
+                    && v.z < hook_h - 1e-6
+                    && (v.x * v.x + v.y * v.y).sqrt() > od / 2.0 - 1.0
+            })
+            .map(|v| (v.x * v.x + v.y * v.y).sqrt())
+            .fold(f64::INFINITY, f64::min);
+        assert!(
+            (lip_in - r_lip).abs() < 0.3,
+            "hook at {h}: lip in to {lip_in:.2}, over the ear tip at {r_ear}"
+        );
+        assert!(r_wall0 > r_ear + 0.3, "the wall clears the ear's tip");
+        // The steps' undersides, lowest first toward the stop.
+        let mut undersides: Vec<f64> = vertices(body)
+            .iter()
+            .filter(|v| {
+                let rr = (v.x * v.x + v.y * v.y).sqrt();
+                in_hook(v)
+                    && rr > od / 2.0 - 1.0
+                    && rr < r_wall0 - 0.5
+                    && v.z > ring_t - 1e-6
+                    && v.z < ring_t + ramp[0] + 1e-6
+            })
+            .map(|v| (v.z * 1000.0).round() / 1000.0)
+            .collect();
+        undersides.sort_by(f64::total_cmp);
+        undersides.dedup();
+        let want: Vec<f64> = ramp
+            .iter()
+            .map(|c| ((ring_t + c) * 1000.0).round() / 1000.0)
+            .collect();
+        let mut want_sorted = want.clone();
+        want_sorted.sort_by(f64::total_cmp);
+        assert_eq!(undersides, want_sorted, "hook at {h}: lip steps");
+    }
+    assert!(
+        ramp.windows(2).all(|w| w[1] < w[0]) && ramp[ramp.len() - 1].abs() < 1e-9,
+        "the ramp comes down to touching"
+    );
+    // Drain holes, smaller than a nyjer seed.
+    let drains = cylinders(body, num(cap, "drain_d") / 2.0);
+    assert_eq!(drains.len(), num(cap, "drains") as usize);
+    assert!(num(cap, "drain_d") <= 1.0);
+    // On the ring, locked, nothing meets: the ears sit under the lips
+    // with the last step touching. Offered up, turned by the gap, the
+    // ears pass between the hooks.
+    let c = doc
+        .regenerate_studio(tab_named(&doc, "collar"), None)
         .unwrap();
-    assert_eq!(asm.bodies.len(), 2);
-    assert!(asm.instance_errors.is_empty());
+    assert_eq!(c.bodies.len(), 1);
+    let ring = &c.bodies[0].solid;
+    let hit = overlap(body, ring);
+    println!("locked: {hit:.3} mm3 overlap");
+    assert!(hit < 1e-3, "the cap meets the ring locked: {hit} mm3");
+    let offered = body.transformed(&Transform::rotation(
+        Vec3::ZERO,
+        Vec3::Z,
+        num(cap, "offer").to_radians(),
+    ));
+    let hit = overlap(&offered, ring);
+    println!("offered up: {hit:.3} mm3 overlap");
+    assert!(
+        hit < 1e-3,
+        "the ears do not pass between the hooks: {hit} mm3"
+    );
+    for name in ["cap on collar", "cap offered up"] {
+        let asm = doc.regenerate_assembly(tab_named(&doc, name)).unwrap();
+        assert_eq!(asm.bodies.len(), 2);
+        assert!(asm.instance_errors.is_empty());
+    }
     // The gauge: a stepped tube, the smallest step at the top, every step
-    // a quarter millimetre bigger than the one above it, so the ring's
-    // bore can be found by feel before the plug is printed.
+    // a quarter millimetre bigger than the one above it.
     let gauge = &n["gauge"];
     let gr = doc
         .regenerate_studio(tab_named(&doc, "gauge"), None)
@@ -239,13 +274,11 @@ fn the_plug_fits_the_ring_with_its_tabs_over_it_and_nothing_outside_the_tube() {
     assert!((ghi.z - glo.z - step_h * steps.len() as f64).abs() < 1e-6);
     for (i, d) in steps.iter().rev().enumerate() {
         let z = (i as f64 + 0.5) * step_h;
-        let r = radius_where(gsolid, |zz| (zz - z).abs() < step_h / 2.0 - 0.8);
-        // The grooves cut into the whole-mm steps, so read a step's
-        // radius from its ungrooved band; the revolve's facets add a hair.
+        let r = radius_where(gsolid, |v| (v.z - z).abs() < step_h / 2.0 - 0.8);
         let got = if r > 0.0 {
             r
         } else {
-            radius_where(gsolid, |zz| (zz - (z - step_h / 2.0)).abs() < 0.05)
+            radius_where(gsolid, |v| (v.z - (z - step_h / 2.0)).abs() < 0.05)
         };
         assert!(
             (got - d / 2.0).abs() < 0.3,

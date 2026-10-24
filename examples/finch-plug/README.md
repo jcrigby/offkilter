@@ -1,17 +1,15 @@
-# A snap-in plug for a mesh finch feeder
+# A bayonet cap for a mesh finch feeder
 
 The finch feeders' mesh tubes end in a thin plastic ring with three
 ears outside; the yellow tray twists onto the ears. The tray collects
 rain, the seed that falls into it turns to ick, and it perches birds
-that cannot cling, which the mesh never did. This is a plug in its
-place. The ring's bore is a hair narrower than the mesh above it, so
-its inner edge is a lip inside the tube: the plug is a cup through the
-bore with a flange under the ring and three snap tabs that pass the
-ring and catch over its top, so the ring is held between flange and
-catches. Its floor is level with the ring's top and domed so water runs
-to the mesh, and nothing stands outside the tube but the flange, hidden
-under the ring. Print it in PETG, press it in from below until the tabs
-click.
+that cannot cling, which the mesh never did. This keeps the tray's lock
+and drops the tray: a plate under the ring with a short plug up into
+the ring's bore, level with its top and domed so water runs to the
+mesh, and three hooks outside the ring that the ears twist under, each
+hook's lip stepped down along its arc so the ear wedges tight the way
+it did in the tray. Print it in PETG, offer it up with the ears
+between the hooks, and turn it until the ears stop.
 
 ```sh
 cargo build --release -p ok-mcp
@@ -19,72 +17,69 @@ python3 examples/finch-plug/build.py
 cargo test -p ok-render --test finch_plug      # what CI runs
 ```
 
-![the plug](out/plug_iso.png)
+![the cap](out/cap_iso.png)
 
-![in the ring, cut through a tab](out/plug_in_collar_section.png)
+![on the ring, locked, from below](out/cap_on_collar_below.png)
+
+![offered up before the turn: the ears between the hooks](out/cap_offered_up_below.png)
 
 ## The ring's numbers, to confirm
 
 The ring is modelled from photographs with a rule across it, so the
-plug can be checked against it; these are the numbers the plug follows
+cap can be checked against it; these are the numbers the cap follows
 and what to check them with. Calipers on the real ring, then change
 the constants at the top of `build.py` and run it again.
 
-| what | mm in the model | how read | check |
-|---|---|---|---|
-| bore at the mouth | 48.5 | rule across the opening | inside jaws at the mouth |
-| bore at the ring's top edge | 47.5 | the draft the photos show | inside jaws pushed in to the ring's top edge |
-| ring thickness | 3 | the flange's edge in the photos | outside jaws on the flange's edge, between ears |
-| inside the mesh above the ring | 50 | the mesh stands outside the ring's edge | inside jaws past the ring, opened to the mesh |
-| ring outside, ears | 64, three 16 x 3 | rule across the ring and an ear | only drawn, the plug does not touch them |
+| what | mm in the model | check |
+|---|---|---|
+| bore at the mouth | 48.5 | inside jaws at the mouth, or the gauge |
+| bore at the ring's top edge | 47.5 | inside jaws pushed in to the top edge, or the gauge |
+| ring thickness, and the ears' | 3 | outside jaws on the flange's edge and on an ear |
+| ring outside diameter | 64 | outside jaws between ears |
+| across the ears' tips | 72 | outside jaws over an ear and the ring opposite, less the ring's radius, or a rule |
+| an ear's width | 16 | outside jaws |
+| inside the mesh above the ring | 50 | not critical: the plug stops at the ring's top |
 
-The two that matter most are the bore at the ring's top edge and the
-ring's thickness: the tabs are a hair inside the first and the catches
-sit on the second. The mesh's inside diameter only has to clear the
-catches, which reach to 48.7.
+The ones that set the lock are the ears: their thickness sets the
+lips' height, their tips set the hook walls, their width sets the gaps
+the ears pass through. The bore only sets the plug.
 
-**The gauge.** `out/gauge.stl` finds the first two by feel before the
-plug is printed: a stepped tube, 46.5 at the top, every step 0.25
-bigger than the one above it, 3 mm a step, down to 49.5, with a groove
-round the whole-millimetre steps to count by. Push the small end up
-into the mouth. The last step that enters is the bore at the mouth; the
-last step that drops right through the ring, felt as it passes the top
-edge, is the bore at the top edge; and how the step just under each
-one feels is the clearance the plug will have. Print it small end up,
-one wall, no infill to speak of.
+**The gauge.** `out/gauge.stl` finds the bore by feel: a stepped
+tube, 46.5 at the top, every step 0.25 bigger than the one above it,
+3 mm a step, down to 49.5, with a groove round the whole-millimetre
+steps to count by. Push the small end up into the mouth: the last step
+that enters is the bore at the mouth, the last that drops through the
+ring is the bore at its top edge. Print it small end up, one wall.
 
-## The plug
+## The cap
 
-- **Cup.** The skirt runs 10 below the mouth, straight and flush with
-  the bore, carries a 2 x 1.5 flange just under the ring, and follows
-  the ring's draft through it 0.3 off; the floor 2.4 thick with its top
-  level with the ring's top at the edge and rising 1.5 to the centre,
-  so water runs out to the first row of mesh, and six 1 mm drain holes
-  near the edge, under a nyjer seed's size. The 10 mm below the mouth
-  is where the tabs get their length; nothing of it is a ledge, and
-  the flange sits under the ring's own flange, a quarter of its reach.
-- **Tabs.** Three, 10 wide and 1.2 thick, cut from the skirt by 0.8
-  slits from a 2.5 mm root band at the bottom, their faces 0.2 inside
-  the ring's top edge, standing 10.7 from the root to the catch. The
-  catch reaches 0.6 over the ring's top with 0.15 play, a 0.5 band under
-  a 45 degree lead-in. Pushing the plug home bends each tab 0.8 inward,
-  1.3 % strain, which PETG takes many times. The ring is then held
-  between the flange under it and the catches over it. To take the
-  plug out, press the three catches inward through the mesh with a
-  small screwdriver; a pull alone will not do it.
-- **Nothing to stand on.** Above the mouth the plug is inside the
-  tube; below it the skirt is flush with the bore and the flange is
-  under the ring.
+- **Plate and plug.** A 2.5 mm plate out to the ring's edge, with
+  three lobes out under the hooks; on it the plug, following the
+  ring's drafted bore 0.3 off it, its top level with the ring's top at
+  the edge and rising 1.5 to the centre so water runs out to the first
+  row of mesh, and six 1 mm drain holes, under a nyjer seed's size.
+  The lowest seed lies at the mesh, not in a tray.
+- **Hooks.** Three, centred where the ears sit once turned home. Each
+  is a wall 2 thick standing 0.4 outside the ears' tips over a 36
+  degree arc, a lip 2 thick reaching 3 in over the ear, and a stop at
+  the far end. The lip's underside comes down along the arc in four
+  steps, 0.6, 0.4, 0.2 and 0 over the ear, so the ear slides in free
+  and wedges as it turns, as the tray's ramped hooks had it. The ears
+  pass between the hooks with 84 degrees of gap for a 26 degree ear;
+  the turn to lock is about 60 degrees, until the ear meets the stop.
+  To take it off, turn it back.
+- **Nothing to stand on.** The plate is the ring's own size, and the
+  hooks stand where the tray's did, 6 mm outside the ring at three
+  places. If a finch finds those, the hook walls can lose their
+  outside corners.
 
 ## What the test checks
 
-`crates/ok-render/tests/finch_plug.rs` regenerates the plug as one
-closed body no wider than its flange and well inside the ring's
-outline, hanging below the mouth by the skirt only, the flange's top at
-the ring's underside; the skirt the clearance off the bore at the
-mouth; nothing above the ring's top reaching past its top edge but the
-catches, which reach over it by the engagement and sit above it; the
-tab strain under 2 %; six drain holes of 1 mm; the floor's edge level
-with the ring's top; the plug home in the ring meeting it nowhere; and
-the gauge's steps reading their diameters from the smallest at the top
-and bracketing the bore as modelled.
+`crates/ok-render/tests/finch_plug.rs` regenerates the cap as one
+closed body with its plate at the ring's edge between the hooks, its
+plug the clearance off the bore with its top level with the ring's,
+each hook's wall outside the ears' tips and its lip reaching in over
+them with the steps' undersides where the ramp says, down to touching;
+six 1 mm drains; the cap meeting the ring nowhere when locked and,
+turned by the gap, when offered up; and the gauge's steps reading their
+diameters from the smallest at the top and bracketing the bore.

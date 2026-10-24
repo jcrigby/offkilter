@@ -60,7 +60,7 @@ works today, all in the browser:
   parts; and small ones, such as a dummy PCIe card to print
   (`examples/pcie-dummy/`), a track saw edge gauge
   (`examples/track-gauge/`), a coat hook for a wire rack's rail
-  (`examples/rack-hook/`), a snap-in plug for a mesh finch feeder
+  (`examples/rack-hook/`), a bayonet cap for a mesh finch feeder
   (`examples/finch-plug/`), a puzzle top tiled with the Spectre
   (`examples/spectre-top/`), the same for a 4 in box with every piece
   shaped for the router bit that cuts it (`examples/spectre-box/`),
