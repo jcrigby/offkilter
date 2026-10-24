@@ -10,7 +10,7 @@ ears twist under, each hook's lip stepped down along its arc so the ear
 jams tight as the tray's did. The ring is modelled from the numbers
 below, read off photographs with a rule and to be confirmed with
 calipers (the README says which), so the cap can be checked against it;
-a stepped gauge finds the bore by feel.
+three rings find the bore by feel.
 
     cargo build --release -p ok-mcp
     python3 examples/finch-plug/build.py
@@ -35,12 +35,12 @@ D_MOUTH = 61.0          # the ring's bore at the mouth, by rule (the first gauge
 D_TOP = 60.0            # the bore at the ring's top edge, inside the tube: a slight draft, guessed
 RING_T = 3.0            # the ring's thickness, mouth to its top face; the ears are the same
 D_MESH = 62.5           # inside the mesh tube just above the ring
-RING_OD = 69.0          # the ring's flange, by rule
-EAR_W, EAR_R = 34.0, 4.0   # the three ears: width across (33 to 35 by rule), and how far past the flange they reach
+RING_OD = 71.5          # the ring's flange: 72.5 to the pencil's centre on the traced outline (trace/), less the lead
+EAR_W, EAR_R = 34.0, 4.0   # the three ears: width across (50 degrees, 34.5 mm at the tip, on the trace) and how far past the flange (3.5 to 4.2 on the trace)
 EAR_AT = 60.0           # the ears' angles are EAR_AT + k * 120: where they sit locked under the hooks
 TUBE_H = 25.0           # how much of the mesh tube the model draws
 # -- the cap ----------------------------------------------------------------
-CLEAR = 0.3             # the plug off the bore
+CLEAR = 0.5             # the plug off the bore: the bore is by rule, so room for half a millimetre of error
 PLATE_T = 2.5           # the plate under the ring
 DOME = 1.5              # the plug's top rises this much to the centre, so water runs to the mesh
 PLATE_R = RING_OD / 2   # the plate reaches the ring's edge, no further, but for the hook lobes
@@ -52,8 +52,9 @@ LIP_OVER = 3.0          # how far the lip reaches in over the ear's tip
 RAMP = (0.6, 0.4, 0.2, 0.0)     # the lip's clearance over the ear, step by step along the arc, down to touching: the ear wedges as it turns
 STOP_T = 1.5            # the end stop's thickness, in mm of arc
 DRAIN_D, DRAINS = 1.0, 6   # drain holes in the plug, smaller than a nyjer seed
-# -- the gauge: a stepped tube to find the ring's bore by feel ---------------
-GAUGE_MIN, GAUGE_MAX, GAUGE_STEP, GAUGE_H, GAUGE_WALL = 56.0, 62.0, 0.25, 2.0, 1.5   # the second gauge; the first, 46.5 to 49.5, fell through
+# -- the gauge: three rings to find the ring's bore by feel ------------------
+GAUGE_SIZES = (60.0, 61.0, 62.0)   # one too small, one right by rule, one too big; notched 1, 2, 3 on the rim
+GAUGE_H, GAUGE_WALL = 6.0, 1.2     # a thin wall and no bottom: a gauge, not a part
 
 R_EAR = RING_OD / 2 + EAR_R          # the ears' tips
 R_WALL0 = R_EAR + HOOK_GAP           # the hook wall's inside
@@ -146,32 +147,34 @@ def main():
     lo, hi = cap["bounds"]
     print(f"cap: {len(rep['bodies'])} body, {hi['x'] - lo['x']:.1f} across, {lo['z']:.1f} to {hi['z']:.1f} tall, {cap['volume'] / 1000:.1f} cm3; "
           f"ears {2 * EAR_HALF:.1f} degrees wide, hooks {HOOK_ARC:g} shifted {HOOK_SHIFT:.1f} ahead, offered up at {OFFER:.1f}, gaps of {360.0 / HOOKS - HOOK_ARC:.0f}")
-    # -- the gauge ------------------------------------------------------------
+    # -- the gauge: three rings in one print ----------------------------------
     text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "gauge"}]})
     gauge_tab = int(re.search(r"tab (\d+)", text).group(1))
     g = Part(mcp, gauge_tab, "gauge")
-    steps = [round(GAUGE_MIN + i * GAUGE_STEP, 3) for i in range(int(round((GAUGE_MAX - GAUGE_MIN) / GAUGE_STEP)) + 1)]
-    s = g.sketch("front", 0.0, "steps")
-    pts = [(GAUGE_MIN / 2 - GAUGE_WALL, 0.0), (GAUGE_MAX / 2, 0.0)]
-    z = 0.0
-    for d in reversed(steps):
-        pts += [(d / 2, z), (d / 2, z + GAUGE_H)]
-        z += GAUGE_H
-    pts += [(GAUGE_MIN / 2 - GAUGE_WALL, z)]
-    g.polygon(s, pts)
-    f = g.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "new", "name": "gauge"})
-    g.apply({"type": "rename_part", "source": f, "name": "gauge"}, {"type": "set_part_material", "source": f, "material": {"name": "PETG", "density": 1.27}})
-    for i, d in enumerate(reversed(steps)):
-        if abs(d - round(d)) < 1e-9:
-            s = g.sketch("front", 0.0, f"groove {d:g}")
-            z0 = i * GAUGE_H + GAUGE_H / 2 - 0.3
-            g.polygon(s, [(d / 2 - 0.4, z0), (d / 2 + 0.5, z0), (d / 2 + 0.5, z0 + 0.6), (d / 2 - 0.4, z0 + 0.6)])
-            g.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "remove", "name": f"groove {d:g}"})
+    pitch = max(GAUGE_SIZES) + 8.0
+    for j, d in enumerate(GAUGE_SIZES):
+        cx = (j - (len(GAUGE_SIZES) - 1) / 2) * pitch
+        s = g.sketch("top", 0.0, f"ring {d:g}")
+        g.circle(s, (cx, 0.0), d / 2)
+        f = g.extrude(s, GAUGE_H, op="new", name=f"ring {d:g}")
+        g.apply({"type": "rename_part", "source": f, "name": f"ring {d:g}"}, {"type": "set_part_material", "source": f, "material": {"name": "PLA", "density": 1.24}})
+        s = g.sketch("top", 0.0, f"bore {d:g}")
+        g.circle(s, (cx, 0.0), d / 2 - GAUGE_WALL)
+        g.extrude(s, GAUGE_H, op="remove", name=f"bore {d:g}")
+        # j + 1 notches in the rim, 2 wide and 1.5 deep, to tell the rings apart
+        s = g.sketch("top", GAUGE_H - 1.5, f"notches {d:g}")
+        for i in range(j + 1):
+            ang = 90.0 + (i - j / 2) * 12.0
+            u, t = rot(1.0, 0.0, ang), rot(0.0, 1.0, ang)
+            c = (cx + u[0] * (d / 2 - GAUGE_WALL / 2), u[1] * (d / 2 - GAUGE_WALL / 2))
+            g.polygon(s, [(c[0] + su * u[0] * (GAUGE_WALL / 2 + 0.5) + st * t[0], c[1] + su * u[1] * (GAUGE_WALL / 2 + 0.5) + st * t[1])
+                          for su, st in ((-1, -1), (1, -1), (1, 1), (-1, 1))])
+        g.extrude(s, 1.5, op="remove", name=f"notches {d:g}")
     grep = g.report()
     bad = [(ft["name"], ft["error"]) for ft in grep["features"] if ft.get("error")]
     if bad:
         raise RuntimeError(bad)
-    print(f"gauge: {len(steps)} steps of {GAUGE_H:g} from {GAUGE_MIN:g} at the top to {GAUGE_MAX:g} at the bottom, {z:.0f} tall")
+    print(f"gauge: rings of {', '.join(f'{d:g}' for d in GAUGE_SIZES)}, {GAUGE_H:g} tall, {GAUGE_WALL:g} wall, {len(grep['bodies'])} bodies")
     # -- the ring it fits, from the photographs' numbers --------------------
     text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "collar"}]})
     collar_tab = int(re.search(r"tab (\d+)", text).group(1))
@@ -220,7 +223,8 @@ def main():
                 "lip_t": LIP_T, "lip_over": LIP_OVER, "ramp": list(RAMP), "stop_t": STOP_T, "drain_d": DRAIN_D, "drains": DRAINS, "hooks": HOOKS,
                 "r_ear": R_EAR, "r_wall0": R_WALL0, "r_wall1": R_WALL1, "r_lip": R_LIP, "hook_h": HOOK_H, "ear_half": EAR_HALF,
                 "hook_shift": HOOK_SHIFT, "hook_at": [EAR_AT + HOOK_SHIFT + k * 360.0 / HOOKS for k in range(HOOKS)], "offer": OFFER},
-        "gauge": {"min": GAUGE_MIN, "max": GAUGE_MAX, "step": GAUGE_STEP, "h": GAUGE_H, "wall": GAUGE_WALL, "steps": steps},
+        "gauge": {"sizes": list(GAUGE_SIZES), "h": GAUGE_H, "wall": GAUGE_WALL, "pitch": pitch},
+        "trace": {"flange_od_pencil": 72.5, "ear_proud": [4.17, 3.50], "ear_deg": [50, 52], "ear_chord": [34.2, 34.8], "squares_per_inch": 5},
     }
     with open(os.path.join(OUT, "plug.json"), "w") as fh:
         json.dump(numbers, fh, indent=1)

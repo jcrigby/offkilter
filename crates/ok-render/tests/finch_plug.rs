@@ -5,8 +5,8 @@
 //! three hooks stand outside the ears' tips with lips that come down
 //! along the arc from the entry clearance to touching, and which meets
 //! the ring nowhere when locked or when offered up before the turn; the
-//! drain holes are smaller than a seed; and the gauge's steps read their
-//! diameters and bracket the bore. Every number prints (`--nocapture`).
+//! drain holes are smaller than a seed; and the gauge's three rings read
+//! their diameters and bracket the bore. Every number prints (`--nocapture`).
 
 use ok_brep::{BoolOp, Solid, Surface, Transform};
 use ok_math::Vec3;
@@ -272,48 +272,45 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
         assert_eq!(asm.bodies.len(), 2);
         assert!(asm.instance_errors.is_empty());
     }
-    // The gauge: a stepped tube, the smallest step at the top, every step
-    // a quarter millimetre bigger than the one above it.
+    // The gauge: three rings in one print, one under the bore by rule, one
+    // at it, one over, each a thin open ring of its diameter, notched to
+    // tell apart.
     let gauge = &n["gauge"];
     let gr = doc
         .regenerate_studio(tab_named(&doc, "gauge"), None)
         .unwrap();
-    assert_eq!(gr.bodies.len(), 1);
-    let gsolid = &gr.bodies[0].solid;
-    gsolid.validate().unwrap();
-    let steps: Vec<f64> = gauge["steps"]
+    let sizes: Vec<f64> = gauge["sizes"]
         .as_array()
         .unwrap()
         .iter()
         .map(|v| v.as_f64().unwrap())
         .collect();
-    let (step_h, gmin, gmax) = (num(gauge, "h"), num(gauge, "min"), num(gauge, "max"));
-    let (glo, ghi) = bounds(gsolid);
-    assert!((ghi.z - glo.z - step_h * steps.len() as f64).abs() < 1e-6);
-    for (i, d) in steps.iter().rev().enumerate() {
-        let z = (i as f64 + 0.5) * step_h;
-        let r = radius_where(gsolid, |v| (v.z - z).abs() < step_h / 2.0 - 0.8);
-        let got = if r > 0.0 {
-            r
-        } else {
-            radius_where(gsolid, |v| (v.z - (z - step_h / 2.0)).abs() < 0.05)
-        };
+    assert_eq!(gr.bodies.len(), sizes.len());
+    let (gh, gwall) = (num(gauge, "h"), num(gauge, "wall"));
+    let mut rings: Vec<(f64, f64, f64)> = gr
+        .bodies
+        .iter()
+        .map(|b| {
+            b.solid.validate().unwrap();
+            let (lo, hi) = bounds(&b.solid);
+            (hi.x - lo.x, hi.z - lo.z, b.solid.volume())
+        })
+        .collect();
+    rings.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    for ((d, h, vol), size) in rings.iter().zip(&sizes) {
+        assert!((d - size).abs() < 0.3, "ring reads {d:.2} for {size}");
+        assert!((h - gh).abs() < 1e-6);
+        let full =
+            std::f64::consts::PI * (size / 2.0 * size / 2.0 - (size / 2.0 - gwall).powi(2)) * gh;
         assert!(
-            (got - d / 2.0).abs() < 0.3,
-            "step {i} reads {:.3} for {d}",
-            got * 2.0
+            *vol < full && *vol > 0.9 * full,
+            "ring {size} volume {vol:.1} of {full:.1}: a thin open ring"
         );
     }
-    assert!((steps[0] - gmin).abs() < 1e-9 && (steps[steps.len() - 1] - gmax).abs() < 1e-9);
+    let (gmin, gmax) = (sizes[0], sizes[sizes.len() - 1]);
     assert!(
-        gmin < d_top && gmax > d_mouth,
+        gmin <= d_top && gmax > d_mouth,
         "the gauge brackets the bore as modelled"
     );
-    println!(
-        "gauge: {} steps, {:.1} tall, {} to {}",
-        steps.len(),
-        ghi.z - glo.z,
-        gmin,
-        gmax
-    );
+    println!("gauge: rings of {:?}, {gh} tall, {gwall} wall", sizes);
 }

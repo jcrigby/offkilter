@@ -25,39 +25,49 @@ cargo test -p ok-render --test finch_plug      # what CI runs
 
 ## The ring's numbers, to confirm
 
-The ring is modelled from photographs with a rule across it, so the
-cap can be checked against it; these are the numbers the cap follows
-and what to check them with. Calipers on the real ring, then change
-the constants at the top of `build.py` and run it again.
+The ring is modelled from a pencil tracing of its flange on
+engineering paper (5 squares to the inch) and a rule across its mouth,
+so the cap can be checked against it; these are the numbers the cap
+follows and what to check them with. Calipers on the real ring, then
+change the constants at the top of `build.py` and run it again.
+
+![the traced flange, squared up to millimetres: the base circle in red](out/flange_trace.png)
+
+The tracing (`trace/flange.jpg`, measured by the scripts in `trace/`)
+reads the flange at 72.5 to the pencil's centre, so 71.5 across the
+plastic; the ears 3.5 to 4.2 proud of it, 50 degrees wide (34.5 mm
+across the tips), 120 degrees apart. The third ear sits where the pad
+curls in the photograph's shadow and reads wide; the cap follows the
+two that read clean.
 
 | what | mm in the model | check |
 |---|---|---|
 | bore at the mouth | 61 | inside jaws at the mouth, or the gauge (61 by rule) |
 | bore at the ring's top edge | 60 | inside jaws pushed in to the top edge, or the gauge |
 | ring thickness, and the ears' | 3 | outside jaws on the flange's edge and on an ear |
-| ring outside diameter | 69 | outside jaws between ears (69 by rule) |
-| across the ears' tips | 77 | outside jaws over an ear and the ring opposite, less the ring's radius, or a rule |
-| an ear's width | 34 | outside jaws (33 to 35 by rule) |
+| ring outside diameter | 71.5 | outside jaws between ears (72.5 traced, less the pencil) |
+| across the ears' tips | 79.5 | outside jaws over an ear and the ring opposite, less the ring's radius (4 proud, traced) |
+| an ear's width | 34 | outside jaws (50 degrees traced; 33 to 35 by rule) |
 | inside the mesh above the ring | 62.5 | not critical: the plug stops at the ring's top |
 
 The ones that set the lock are the ears: their thickness sets the
 lips' height, their tips set the hook walls, their width sets the gaps
 the ears pass through. The bore only sets the plug.
 
-**The gauge.** `out/gauge.stl` finds the bore by feel: a stepped
-tube, 56 at the top, every step 0.25 bigger than the one above it,
-2 mm a step, down to 62, with a groove round the whole-millimetre
-steps to count by. (A first gauge, 46.5 to 49.5 from the first
-photographs' scale, fell straight through: the numbers above are the
-second reading, from a rule across the ring, and still estimates.) Push the small end up into the mouth: the last step
-that enters is the bore at the mouth, the last that drops through the
-ring is the bore at its top edge. Print it small end up, one wall.
+**The gauge.** `out/gauge.stl` finds the bore by feel: three open
+rings in one print, 60, 61 and 62 across, 6 mm tall with a 1.2 mm wall,
+notched once, twice and three times on the rim. The 61 is the bore by
+rule; one should drop in loose, one should not go, and the one that
+just enters is the bore at the mouth. Print them as they come, no
+supports; they are a gauge, not a part. (A first gauge, 46.5 to 49.5
+from the first photographs' scale, fell straight through, and a second,
+56 to 62 in quarter-millimetre steps, was more than was asked for.)
 
 ## The cap
 
 - **Plate and plug.** A 2.5 mm plate out to the ring's edge, with
   three lobes out under the hooks; on it the plug, following the
-  ring's drafted bore 0.3 off it, its top level with the ring's top at
+  ring's drafted bore 0.5 off it, its top level with the ring's top at
   the edge and rising 1.5 to the centre so water runs out to the first
   row of mesh, and six 1 mm drain holes, under a nyjer seed's size.
   The lowest seed lies at the mesh, not in a tray.
@@ -85,5 +95,5 @@ plug the clearance off the bore with its top level with the ring's,
 each hook's wall outside the ears' tips and its lip reaching in over
 them with the steps' undersides where the ramp says, down to touching;
 six 1 mm drains; the cap meeting the ring nowhere when locked and,
-turned by the gap, when offered up; and the gauge's steps reading their
-diameters from the smallest at the top and bracketing the bore.
+turned by the gap, when offered up; and the gauge's three rings reading
+their diameters and bracketing the bore.
