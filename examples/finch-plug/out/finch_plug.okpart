@@ -1,0 +1,5161 @@
+{
+  "name": "Finch feeder cap",
+  "tabs": [
+    {
+      "id": 1,
+      "kind": {
+        "type": "part_studio",
+        "name": "cap",
+        "features": [
+          {
+            "id": 1,
+            "name": "plate and plug",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -2.5
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.0,
+                      "y": -2.5
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.0,
+                      "y": -2.5
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.95,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.95,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.45,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.45,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.25,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 14,
+                    "type": "line",
+                    "start": 12,
+                    "end": 13
+                  },
+                  {
+                    "id": 15,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.25,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 16,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 4.5
+                    }
+                  },
+                  {
+                    "id": 17,
+                    "type": "line",
+                    "start": 15,
+                    "end": 16
+                  },
+                  {
+                    "id": 18,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 4.5
+                    }
+                  },
+                  {
+                    "id": 19,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -2.5
+                    }
+                  },
+                  {
+                    "id": 20,
+                    "type": "line",
+                    "start": 18,
+                    "end": 19
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 21,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "plate and plug",
+            "suppressed": false,
+            "kind": {
+              "type": "revolve",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "axis": {
+                "type": "y_axis"
+              },
+              "angle": 360.0,
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "lobe 1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -2.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.74737773668832,
+                      "y": 19.926415900282716
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 5.383093507674843,
+                      "y": 30.529040343378448
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 29.41610661576875,
+                      "y": 24.683044211963107
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.668090022410127,
+                      "y": 37.816617715668784
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.74737773668832,
+                      "y": 19.926415900282716
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 29.41610661576875,
+                      "y": 24.683044211963107
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 5.383093507674843,
+                      "y": 30.529040343378448
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.668090022410127,
+                      "y": 37.816617715668784
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "lobe 1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.5,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 5,
+            "name": "hook wall 1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.05047164737715,
+                      "y": 24.356354071462437
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.567985545766444,
+                      "y": 35.604572666710524
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 28.53676129833194,
+                      "y": 25.694615284180156
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.983808927401963,
+                      "y": 37.560867868178136
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.05047164737715,
+                      "y": 24.356354071462437
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 28.53676129833194,
+                      "y": 25.694615284180156
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.567985545766444,
+                      "y": 35.604572666710524
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.983808927401963,
+                      "y": 37.560867868178136
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "hook wall 1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 5.6,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 7,
+            "name": "lip 1.1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.6
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.52763278284418,
+                      "y": 22.077029466618633
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.763096548946457,
+                      "y": 25.649440962701853
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.062154837071407,
+                      "y": 24.358322511502557
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 22.90861652567092,
+                      "y": 28.299883195514376
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.52763278284418,
+                      "y": 22.077029466618633
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.062154837071407,
+                      "y": 24.358322511502557
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.763096548946457,
+                      "y": 25.649440962701853
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 22.90861652567092,
+                      "y": 28.299883195514376
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "lip 1.1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 1.9999999999999996,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 9,
+            "name": "lip 1.2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.4
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.77204862772637,
+                      "y": 25.642191712241974
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 16.49501180046431,
+                      "y": 28.581717682857043
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 22.918493652591422,
+                      "y": 28.291884855840312
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 18.19949635317896,
+                      "y": 31.535161843418937
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.77204862772637,
+                      "y": 25.642191712241974
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 22.918493652591422,
+                      "y": 28.291884855840312
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 16.49501180046431,
+                      "y": 28.581717682857043
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 18.19949635317896,
+                      "y": 31.535161843418937
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 10,
+            "name": "lip 1.2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 9,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.1999999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 11,
+            "name": "lip 1.3",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.2
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 16.50498769691695,
+                      "y": 28.57595809635471
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.820765117649158,
+                      "y": 30.810217656377713
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 18.21050309226503,
+                      "y": 31.528807099644695
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.042244179806236,
+                      "y": 33.99394014753674
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 16.50498769691695,
+                      "y": 28.57595809635471
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 18.21050309226503,
+                      "y": 31.528807099644695
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.820765117649158,
+                      "y": 30.810217656377713
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.042244179806236,
+                      "y": 33.99394014753674
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 12,
+            "name": "lip 1.3",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 11,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.3999999999999995,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 13,
+            "name": "lip 1.4",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.831519192095769,
+                      "y": 30.806089553967567
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.85545196676726,
+                      "y": 32.280067817948385
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.05410950861233,
+                      "y": 33.989385474544214
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.563848669999877,
+                      "y": 35.61567482580305
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.831519192095769,
+                      "y": 30.806089553967567
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.05410950861233,
+                      "y": 33.989385474544214
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.85545196676726,
+                      "y": 32.280067817948385
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.563848669999877,
+                      "y": 35.61567482580305
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 14,
+            "name": "lip 1.4",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 13,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.5999999999999996,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 15,
+            "name": "stop 1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.861085796986062,
+                      "y": 32.27887082421558
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 5.387282906956412,
+                      "y": 32.557290779185166
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.570064662674621,
+                      "y": 35.61435414271786
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 5.943968807341908,
+                      "y": 35.92154415970096
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.861085796986062,
+                      "y": 32.27887082421558
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.570064662674621,
+                      "y": 35.61435414271786
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 5.387282906956412,
+                      "y": 32.557290779185166
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 5.943968807341908,
+                      "y": 35.92154415970096
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 16,
+            "name": "stop 1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 15,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 5.6,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 17,
+            "name": "lobe 2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -2.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -29.130471244363157,
+                      "y": 10.602624443095737
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -29.13047124436316,
+                      "y": -10.602624443095728
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.08419663817888,
+                      "y": 13.133573503705684
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.08419663817888,
+                      "y": -13.133573503705676
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": -29.130471244363157,
+                      "y": 10.602624443095737
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.08419663817888,
+                      "y": 13.133573503705684
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": -29.13047124436316,
+                      "y": -10.602624443095728
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.08419663817888,
+                      "y": -13.133573503705676
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 18,
+            "name": "lobe 2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 17,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.5,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 19,
+            "name": "hook wall 2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.618457193143584,
+                      "y": 11.248218595248089
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.61845719314359,
+                      "y": -11.248218595248082
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.52057022573389,
+                      "y": 11.866252583997984
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.5205702257339,
+                      "y": -11.866252583997976
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.618457193143584,
+                      "y": 11.248218595248089
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.52057022573389,
+                      "y": 11.866252583997984
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.61845719314359,
+                      "y": -11.248218595248082
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.5205702257339,
+                      "y": -11.866252583997976
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 20,
+            "name": "hook wall 2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 19,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 5.6,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 21,
+            "name": "lip 2.1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.6
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -31.38308474961144,
+                      "y": 10.203038351329752
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.59461574104222,
+                      "y": 5.156648591265719
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.62600350707129,
+                      "y": 11.257352314300492
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.96272603428324,
+                      "y": 5.689502279029842
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": -31.38308474961144,
+                      "y": 10.203038351329752
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.62600350707129,
+                      "y": 11.257352314300492
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.59461574104222,
+                      "y": 5.156648591265719
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.96272603428324,
+                      "y": 5.689502279029842
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 22,
+            "name": "lip 2.1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 21,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 1.9999999999999996,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 23,
+            "name": "lip 2.2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.4
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.59281374537553,
+                      "y": 5.168025944135739
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.99999949738126,
+                      "y": -0.005759586502335715
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.96073783239766,
+                      "y": 5.702055291696431
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.40999944544399,
+                      "y": -0.006354743774243738
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.59281374537553,
+                      "y": 5.168025944135739
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.96073783239766,
+                      "y": 5.702055291696431
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.99999949738126,
+                      "y": -0.005759586502335715
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.40999944544399,
+                      "y": -0.006354743774243738
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 24,
+            "name": "lip 2.2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 23,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.1999999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 25,
+            "name": "lip 2.3",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.2
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.99999949738126,
+                      "y": 0.005759586502343797
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.59281374537553,
+                      "y": -5.168025944135731
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.40999944544399,
+                      "y": 0.006354743774252655
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.96073783239766,
+                      "y": -5.702055291696422
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.99999949738126,
+                      "y": 0.005759586502343797
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -36.40999944544399,
+                      "y": 0.006354743774252655
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.59281374537553,
+                      "y": -5.168025944135731
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.96073783239766,
+                      "y": -5.702055291696422
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 26,
+            "name": "lip 2.3",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 25,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.3999999999999995,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 27,
+            "name": "lip 2.4",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.59461574104222,
+                      "y": -5.15664859126571
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -31.383084749611445,
+                      "y": -10.203038351329743
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.96272603428324,
+                      "y": -5.689502279029833
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.62600350707129,
+                      "y": -11.257352314300483
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": -32.59461574104222,
+                      "y": -5.15664859126571
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.96272603428324,
+                      "y": -5.689502279029833
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": -31.383084749611445,
+                      "y": -10.203038351329743
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.62600350707129,
+                      "y": -11.257352314300483
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 28,
+            "name": "lip 2.4",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 27,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.5999999999999996,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 29,
+            "name": "stop 2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -31.38486503774007,
+                      "y": -10.19756081437326
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -30.88908234664942,
+                      "y": -11.61312153479465
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.62796775830654,
+                      "y": -11.25130876519183
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.08095418913653,
+                      "y": -12.813144093390097
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": -31.38486503774007,
+                      "y": -10.19756081437326
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.62796775830654,
+                      "y": -11.25130876519183
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": -30.88908234664942,
+                      "y": -11.61312153479465
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.08095418913653,
+                      "y": -12.813144093390097
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 30,
+            "name": "stop 2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 29,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 5.6,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 31,
+            "name": "lobe 3",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -2.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 5.383093507674829,
+                      "y": -30.52904034337845
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.74737773668831,
+                      "y": -19.926415900282727
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.6680900224101105,
+                      "y": -37.81661771566879
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 29.416106615768747,
+                      "y": -24.68304421196312
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 5.383093507674829,
+                      "y": -30.52904034337845
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.6680900224101105,
+                      "y": -37.81661771566879
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.74737773668831,
+                      "y": -19.926415900282727
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 29.416106615768747,
+                      "y": -24.68304421196312
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 32,
+            "name": "lobe 3",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 31,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.5,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 33,
+            "name": "hook wall 3",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.567985545766443,
+                      "y": -35.604572666710524
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.05047164737715,
+                      "y": -24.35635407146243
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.983808927401961,
+                      "y": -37.560867868178136
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 28.53676129833194,
+                      "y": -25.694615284180152
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.567985545766443,
+                      "y": -35.604572666710524
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.983808927401961,
+                      "y": -37.560867868178136
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.05047164737715,
+                      "y": -24.35635407146243
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 28.53676129833194,
+                      "y": -25.694615284180152
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 34,
+            "name": "hook wall 3",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 33,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 5.6,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 35,
+            "name": "lip 3.1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.6
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.855451966767267,
+                      "y": -32.28006781794838
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.831519192095763,
+                      "y": -30.806089553967567
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.563848669999884,
+                      "y": -35.61567482580305
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.054109508612328,
+                      "y": -33.989385474544214
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 6.855451966767267,
+                      "y": -32.28006781794838
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.563848669999884,
+                      "y": -35.61567482580305
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.831519192095763,
+                      "y": -30.806089553967567
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.054109508612328,
+                      "y": -33.989385474544214
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 36,
+            "name": "lip 3.1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 35,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 1.9999999999999996,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 37,
+            "name": "lip 3.2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.4
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.820765117649165,
+                      "y": -30.810217656377713
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 16.504987696916952,
+                      "y": -28.575958096354707
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.04224417980624,
+                      "y": -33.99394014753674
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 18.210503092265036,
+                      "y": -31.52880709964469
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.820765117649165,
+                      "y": -30.810217656377713
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.04224417980624,
+                      "y": -33.99394014753674
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 16.504987696916952,
+                      "y": -28.575958096354707
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 18.210503092265036,
+                      "y": -31.52880709964469
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 38,
+            "name": "lip 3.2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 37,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.1999999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 39,
+            "name": "lip 3.3",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.2
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 16.49501180046431,
+                      "y": -28.581717682857043
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.77204862772637,
+                      "y": -25.642191712241974
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 18.19949635317895,
+                      "y": -31.535161843418937
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 22.918493652591422,
+                      "y": -28.291884855840312
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 16.49501180046431,
+                      "y": -28.581717682857043
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 18.19949635317895,
+                      "y": -31.535161843418937
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.77204862772637,
+                      "y": -25.642191712241974
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 22.918493652591422,
+                      "y": -28.291884855840312
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 40,
+            "name": "lip 3.3",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 39,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.3999999999999995,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 41,
+            "name": "lip 3.4",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 3.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.76309654894646,
+                      "y": -25.64944096270185
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.527632782844183,
+                      "y": -22.077029466618633
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 22.90861652567093,
+                      "y": -28.299883195514372
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.06215483707141,
+                      "y": -24.358322511502557
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.76309654894646,
+                      "y": -25.64944096270185
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 22.90861652567093,
+                      "y": -28.299883195514372
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.527632782844183,
+                      "y": -22.077029466618633
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.06215483707141,
+                      "y": -24.358322511502557
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 42,
+            "name": "lip 3.4",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 41,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.5999999999999996,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 43,
+            "name": "stop 3",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.52377924075401,
+                      "y": -22.08131000984232
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.50179943969302,
+                      "y": -20.944169244390498
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.05790309563192,
+                      "y": -24.36304537752602
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 28.13698538179463,
+                      "y": -23.10840006631085
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.52377924075401,
+                      "y": -22.08131000984232
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 27.05790309563192,
+                      "y": -24.36304537752602
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.50179943969302,
+                      "y": -20.944169244390498
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 28.13698538179463,
+                      "y": -23.10840006631085
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 44,
+            "name": "stop 3",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 43,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 5.6,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 45,
+            "name": "drains",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 5.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 17.537014426634883,
+                      "y": 10.124999999999998
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 1.2399548841366951e-15,
+                      "y": 20.25
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -17.537014426634883,
+                      "y": 10.124999999999998
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": -17.537014426634883,
+                      "y": -10.125000000000002
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": -3.719864652410085e-15,
+                      "y": -20.25
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 17.537014426634876,
+                      "y": -10.125000000000009
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 6,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 46,
+            "name": "drain holes",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 45,
+              "diameter": 1.0,
+              "depth": 0.0,
+              "through_all": true,
+              "direction": "reverse",
+              "counterbore": null,
+              "countersink": null
+            }
+          }
+        ],
+        "next_id": 47,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "2": "cap"
+        },
+        "part_materials": {
+          "2": {
+            "name": "PETG",
+            "density": 1.27
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "kind": {
+        "type": "part_studio",
+        "name": "gauge",
+        "features": [
+          {
+            "id": 1,
+            "name": "steps",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 21.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.75,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.75,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.625,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.625,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.625,
+                      "y": 6.0
+                    }
+                  },
+                  {
+                    "id": 14,
+                    "type": "line",
+                    "start": 12,
+                    "end": 13
+                  },
+                  {
+                    "id": 15,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.625,
+                      "y": 6.0
+                    }
+                  },
+                  {
+                    "id": 16,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.5,
+                      "y": 6.0
+                    }
+                  },
+                  {
+                    "id": 17,
+                    "type": "line",
+                    "start": 15,
+                    "end": 16
+                  },
+                  {
+                    "id": 18,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.5,
+                      "y": 6.0
+                    }
+                  },
+                  {
+                    "id": 19,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.5,
+                      "y": 9.0
+                    }
+                  },
+                  {
+                    "id": 20,
+                    "type": "line",
+                    "start": 18,
+                    "end": 19
+                  },
+                  {
+                    "id": 21,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.5,
+                      "y": 9.0
+                    }
+                  },
+                  {
+                    "id": 22,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.375,
+                      "y": 9.0
+                    }
+                  },
+                  {
+                    "id": 23,
+                    "type": "line",
+                    "start": 21,
+                    "end": 22
+                  },
+                  {
+                    "id": 24,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.375,
+                      "y": 9.0
+                    }
+                  },
+                  {
+                    "id": 25,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.375,
+                      "y": 12.0
+                    }
+                  },
+                  {
+                    "id": 26,
+                    "type": "line",
+                    "start": 24,
+                    "end": 25
+                  },
+                  {
+                    "id": 27,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.375,
+                      "y": 12.0
+                    }
+                  },
+                  {
+                    "id": 28,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.25,
+                      "y": 12.0
+                    }
+                  },
+                  {
+                    "id": 29,
+                    "type": "line",
+                    "start": 27,
+                    "end": 28
+                  },
+                  {
+                    "id": 30,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.25,
+                      "y": 12.0
+                    }
+                  },
+                  {
+                    "id": 31,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.25,
+                      "y": 15.0
+                    }
+                  },
+                  {
+                    "id": 32,
+                    "type": "line",
+                    "start": 30,
+                    "end": 31
+                  },
+                  {
+                    "id": 33,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.25,
+                      "y": 15.0
+                    }
+                  },
+                  {
+                    "id": 34,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.125,
+                      "y": 15.0
+                    }
+                  },
+                  {
+                    "id": 35,
+                    "type": "line",
+                    "start": 33,
+                    "end": 34
+                  },
+                  {
+                    "id": 36,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.125,
+                      "y": 15.0
+                    }
+                  },
+                  {
+                    "id": 37,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.125,
+                      "y": 18.0
+                    }
+                  },
+                  {
+                    "id": 38,
+                    "type": "line",
+                    "start": 36,
+                    "end": 37
+                  },
+                  {
+                    "id": 39,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.125,
+                      "y": 18.0
+                    }
+                  },
+                  {
+                    "id": 40,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.0,
+                      "y": 18.0
+                    }
+                  },
+                  {
+                    "id": 41,
+                    "type": "line",
+                    "start": 39,
+                    "end": 40
+                  },
+                  {
+                    "id": 42,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.0,
+                      "y": 18.0
+                    }
+                  },
+                  {
+                    "id": 43,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.0,
+                      "y": 21.0
+                    }
+                  },
+                  {
+                    "id": 44,
+                    "type": "line",
+                    "start": 42,
+                    "end": 43
+                  },
+                  {
+                    "id": 45,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.0,
+                      "y": 21.0
+                    }
+                  },
+                  {
+                    "id": 46,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.875,
+                      "y": 21.0
+                    }
+                  },
+                  {
+                    "id": 47,
+                    "type": "line",
+                    "start": 45,
+                    "end": 46
+                  },
+                  {
+                    "id": 48,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.875,
+                      "y": 21.0
+                    }
+                  },
+                  {
+                    "id": 49,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.875,
+                      "y": 24.0
+                    }
+                  },
+                  {
+                    "id": 50,
+                    "type": "line",
+                    "start": 48,
+                    "end": 49
+                  },
+                  {
+                    "id": 51,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.875,
+                      "y": 24.0
+                    }
+                  },
+                  {
+                    "id": 52,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.75,
+                      "y": 24.0
+                    }
+                  },
+                  {
+                    "id": 53,
+                    "type": "line",
+                    "start": 51,
+                    "end": 52
+                  },
+                  {
+                    "id": 54,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.75,
+                      "y": 24.0
+                    }
+                  },
+                  {
+                    "id": 55,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.75,
+                      "y": 27.0
+                    }
+                  },
+                  {
+                    "id": 56,
+                    "type": "line",
+                    "start": 54,
+                    "end": 55
+                  },
+                  {
+                    "id": 57,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.75,
+                      "y": 27.0
+                    }
+                  },
+                  {
+                    "id": 58,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.625,
+                      "y": 27.0
+                    }
+                  },
+                  {
+                    "id": 59,
+                    "type": "line",
+                    "start": 57,
+                    "end": 58
+                  },
+                  {
+                    "id": 60,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.625,
+                      "y": 27.0
+                    }
+                  },
+                  {
+                    "id": 61,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.625,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 62,
+                    "type": "line",
+                    "start": 60,
+                    "end": 61
+                  },
+                  {
+                    "id": 63,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.625,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 64,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.5,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 65,
+                    "type": "line",
+                    "start": 63,
+                    "end": 64
+                  },
+                  {
+                    "id": 66,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.5,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 67,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.5,
+                      "y": 33.0
+                    }
+                  },
+                  {
+                    "id": 68,
+                    "type": "line",
+                    "start": 66,
+                    "end": 67
+                  },
+                  {
+                    "id": 69,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.5,
+                      "y": 33.0
+                    }
+                  },
+                  {
+                    "id": 70,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.375,
+                      "y": 33.0
+                    }
+                  },
+                  {
+                    "id": 71,
+                    "type": "line",
+                    "start": 69,
+                    "end": 70
+                  },
+                  {
+                    "id": 72,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.375,
+                      "y": 33.0
+                    }
+                  },
+                  {
+                    "id": 73,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.375,
+                      "y": 36.0
+                    }
+                  },
+                  {
+                    "id": 74,
+                    "type": "line",
+                    "start": 72,
+                    "end": 73
+                  },
+                  {
+                    "id": 75,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.375,
+                      "y": 36.0
+                    }
+                  },
+                  {
+                    "id": 76,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.25,
+                      "y": 36.0
+                    }
+                  },
+                  {
+                    "id": 77,
+                    "type": "line",
+                    "start": 75,
+                    "end": 76
+                  },
+                  {
+                    "id": 78,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.25,
+                      "y": 36.0
+                    }
+                  },
+                  {
+                    "id": 79,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.25,
+                      "y": 39.0
+                    }
+                  },
+                  {
+                    "id": 80,
+                    "type": "line",
+                    "start": 78,
+                    "end": 79
+                  },
+                  {
+                    "id": 81,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.25,
+                      "y": 39.0
+                    }
+                  },
+                  {
+                    "id": 82,
+                    "type": "point",
+                    "pos": {
+                      "x": 21.75,
+                      "y": 39.0
+                    }
+                  },
+                  {
+                    "id": 83,
+                    "type": "line",
+                    "start": 81,
+                    "end": 82
+                  },
+                  {
+                    "id": 84,
+                    "type": "point",
+                    "pos": {
+                      "x": 21.75,
+                      "y": 39.0
+                    }
+                  },
+                  {
+                    "id": 85,
+                    "type": "point",
+                    "pos": {
+                      "x": 21.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 86,
+                    "type": "line",
+                    "start": 84,
+                    "end": 85
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 87,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "gauge",
+            "suppressed": false,
+            "kind": {
+              "type": "revolve",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "axis": {
+                "type": "y_axis"
+              },
+              "angle": 360.0,
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "groove 49",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.1,
+                      "y": 7.2
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": 7.2
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": 7.2
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": 7.8
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": 7.8
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.1,
+                      "y": 7.8
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.1,
+                      "y": 7.8
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.1,
+                      "y": 7.2
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "groove 49",
+            "suppressed": false,
+            "kind": {
+              "type": "revolve",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "axis": {
+                "type": "y_axis"
+              },
+              "angle": 360.0,
+              "op": "remove"
+            }
+          },
+          {
+            "id": 5,
+            "name": "groove 48",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.6,
+                      "y": 19.2
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.5,
+                      "y": 19.2
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.5,
+                      "y": 19.2
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.5,
+                      "y": 19.8
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.5,
+                      "y": 19.8
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.6,
+                      "y": 19.8
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.6,
+                      "y": 19.8
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.6,
+                      "y": 19.2
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "groove 48",
+            "suppressed": false,
+            "kind": {
+              "type": "revolve",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "axis": {
+                "type": "y_axis"
+              },
+              "angle": 360.0,
+              "op": "remove"
+            }
+          },
+          {
+            "id": 7,
+            "name": "groove 47",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.1,
+                      "y": 31.2
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.0,
+                      "y": 31.2
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.0,
+                      "y": 31.2
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.0,
+                      "y": 31.8
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.0,
+                      "y": 31.8
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.1,
+                      "y": 31.8
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.1,
+                      "y": 31.8
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.1,
+                      "y": 31.2
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "groove 47",
+            "suppressed": false,
+            "kind": {
+              "type": "revolve",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "axis": {
+                "type": "y_axis"
+              },
+              "angle": 360.0,
+              "op": "remove"
+            }
+          }
+        ],
+        "next_id": 9,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "2": "gauge"
+        },
+        "part_materials": {
+          "2": {
+            "name": "PETG",
+            "density": 1.27
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "kind": {
+        "type": "part_studio",
+        "name": "collar",
+        "features": [
+          {
+            "id": 1,
+            "name": "ring",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.25,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.0,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 32.0,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.0,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.0,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.0,
+                      "y": 25.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.0,
+                      "y": 25.0
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": 25.0
+                    }
+                  },
+                  {
+                    "id": 14,
+                    "type": "line",
+                    "start": 12,
+                    "end": 13
+                  },
+                  {
+                    "id": 15,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": 25.0
+                    }
+                  },
+                  {
+                    "id": 16,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 17,
+                    "type": "line",
+                    "start": 15,
+                    "end": 16
+                  },
+                  {
+                    "id": 18,
+                    "type": "point",
+                    "pos": {
+                      "x": 25.0,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 19,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.75,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 20,
+                    "type": "line",
+                    "start": 18,
+                    "end": 19
+                  },
+                  {
+                    "id": 21,
+                    "type": "point",
+                    "pos": {
+                      "x": 23.75,
+                      "y": 3.0
+                    }
+                  },
+                  {
+                    "id": 22,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.25,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 23,
+                    "type": "line",
+                    "start": 21,
+                    "end": 22
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 24,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "ring",
+            "suppressed": false,
+            "kind": {
+              "type": "revolve",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "axis": {
+                "type": "y_axis"
+              },
+              "angle": 360.0,
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "ear 1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 21.035827711399225,
+                      "y": 22.770462281129216
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 9.201884935673649,
+                      "y": 29.602792328269008
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.42870314872168,
+                      "y": 26.44311748776296
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 10.68605992529843,
+                      "y": 34.377436252183365
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 21.035827711399225,
+                      "y": 22.770462281129216
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.42870314872168,
+                      "y": 26.44311748776296
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 9.201884935673649,
+                      "y": 29.602792328269008
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 10.68605992529843,
+                      "y": 34.377436252183365
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "ear 1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 3.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 5,
+            "name": "ear 2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -30.237712647072875,
+                      "y": 6.832330047139784
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -30.237712647072872,
+                      "y": -6.83233004713979
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.11476307402012,
+                      "y": 7.934318764420395
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.11476307402011,
+                      "y": -7.934318764420401
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": -30.237712647072875,
+                      "y": 6.832330047139784
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.11476307402012,
+                      "y": 7.934318764420395
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": -30.237712647072872,
+                      "y": -6.83233004713979
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.11476307402011,
+                      "y": -7.934318764420401
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "ear 2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 3.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 7,
+            "name": "ear 3",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 9.201884935673649,
+                      "y": -29.602792328269008
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 21.035827711399232,
+                      "y": -22.770462281129213
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "arc",
+                    "center": 0,
+                    "start": 1,
+                    "end": 2
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "point",
+                    "pos": {
+                      "x": 10.686059925298428,
+                      "y": -34.377436252183365
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.428703148721688,
+                      "y": -26.44311748776296
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "arc",
+                    "center": 4,
+                    "start": 5,
+                    "end": 6
+                  },
+                  {
+                    "id": 8,
+                    "type": "point",
+                    "pos": {
+                      "x": 9.201884935673649,
+                      "y": -29.602792328269008
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 10.686059925298428,
+                      "y": -34.377436252183365
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "line",
+                    "start": 8,
+                    "end": 9
+                  },
+                  {
+                    "id": 11,
+                    "type": "point",
+                    "pos": {
+                      "x": 21.035827711399232,
+                      "y": -22.770462281129213
+                    }
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 24.428703148721688,
+                      "y": -26.44311748776296
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "line",
+                    "start": 11,
+                    "end": 12
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 14,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "ear 3",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 3.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          }
+        ],
+        "next_id": 9,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "2": "collar"
+        },
+        "part_materials": {
+          "2": {
+            "name": "ABS",
+            "density": 1.05
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "kind": {
+        "type": "assembly",
+        "name": "cap on collar",
+        "instances": [
+          {
+            "id": 5,
+            "name": "collar",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "cap",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    },
+    {
+      "id": 7,
+      "kind": {
+        "type": "assembly",
+        "name": "cap offered up",
+        "instances": [
+          {
+            "id": 8,
+            "name": "collar",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "cap",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 60.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    }
+  ],
+  "next_id": 10
+}
