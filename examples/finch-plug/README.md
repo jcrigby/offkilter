@@ -33,21 +33,23 @@ change the constants at the top of `build.py` and run it again.
 
 ![the traced flange, squared up to millimetres: the base circle in red](out/flange_trace.png)
 
-The tracing (`trace/flange.jpg`, measured by the scripts in `trace/`)
-reads the flange at 72.5 to the pencil's centre, so 71.5 across the
-plastic; the ears 3.5 to 4.2 proud of it, 50 degrees wide (34.5 mm
-across the tips), 120 degrees apart. The third ear sits where the pad
-curls in the photograph's shadow and reads wide; the cap follows the
-two that read clean.
+![the second tracing, the rule's band left out](out/flange_trace_2.png)
+
+Two tracings (`trace/flange.jpg` and `trace/flange2.jpg`, the second
+with a rule across it, measured by the scripts in `trace/`) read the
+flange at 71.5 and 72.0 to the pencil's centre, so 71 across the
+plastic; the ears 4.0 to 4.4 proud of it, 54 degrees wide (36 mm
+across the tips to the pencil, 35 of plastic), 120 degrees apart. The
+grid's pitch against the rule confirms 5 squares to the inch.
 
 | what | mm in the model | check |
 |---|---|---|
 | bore at the mouth | 61 | inside jaws at the mouth, or the gauge (61 by rule) |
 | bore at the ring's top edge | 60 | inside jaws pushed in to the top edge, or the gauge |
 | ring thickness, and the ears' | 3 | outside jaws on the flange's edge and on an ear |
-| ring outside diameter | 71.5 | outside jaws between ears (72.5 traced, less the pencil) |
-| across the ears' tips | 79.5 | outside jaws over an ear and the ring opposite, less the ring's radius (4 proud, traced) |
-| an ear's width | 34 | outside jaws (50 degrees traced; 33 to 35 by rule) |
+| ring outside diameter | 71 | outside jaws between ears (71.5 and 72 traced, less the pencil) |
+| across the ears' tips | 79 | outside jaws over an ear and the ring opposite, less the ring's radius (4 proud, traced) |
+| an ear's width | 35 | outside jaws (54 degrees traced; 33 to 35 by rule) |
 | inside the mesh above the ring | 62.5 | not critical: the plug stops at the ring's top |
 
 The ones that set the lock are the ears: their thickness sets the

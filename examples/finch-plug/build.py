@@ -35,8 +35,8 @@ D_MOUTH = 61.0          # the ring's bore at the mouth, by rule (the first gauge
 D_TOP = 60.0            # the bore at the ring's top edge, inside the tube: a slight draft, guessed
 RING_T = 3.0            # the ring's thickness, mouth to its top face; the ears are the same
 D_MESH = 62.5           # inside the mesh tube just above the ring
-RING_OD = 71.5          # the ring's flange: 72.5 to the pencil's centre on the traced outline (trace/), less the lead
-EAR_W, EAR_R = 34.0, 4.0   # the three ears: width across (50 degrees, 34.5 mm at the tip, on the trace) and how far past the flange (3.5 to 4.2 on the trace)
+RING_OD = 71.0          # the ring's flange: 71.5 and 72.0 to the pencil's centre on the two traced outlines (trace/), less the lead
+EAR_W, EAR_R = 35.0, 4.0   # the three ears: width across (54 degrees, 36 mm at the tip to the pencil, on the traces) and how far past the flange (4.0 to 4.4 on the traces)
 EAR_AT = 60.0           # the ears' angles are EAR_AT + k * 120: where they sit locked under the hooks
 TUBE_H = 25.0           # how much of the mesh tube the model draws
 # -- the cap ----------------------------------------------------------------
@@ -224,7 +224,8 @@ def main():
                 "r_ear": R_EAR, "r_wall0": R_WALL0, "r_wall1": R_WALL1, "r_lip": R_LIP, "hook_h": HOOK_H, "ear_half": EAR_HALF,
                 "hook_shift": HOOK_SHIFT, "hook_at": [EAR_AT + HOOK_SHIFT + k * 360.0 / HOOKS for k in range(HOOKS)], "offer": OFFER},
         "gauge": {"sizes": list(GAUGE_SIZES), "h": GAUGE_H, "wall": GAUGE_WALL, "pitch": pitch},
-        "trace": {"flange_od_pencil": 72.5, "ear_proud": [4.17, 3.50], "ear_deg": [50, 52], "ear_chord": [34.2, 34.8], "squares_per_inch": 5},
+        "trace": {"flange_od_pencil": [71.5, 72.0], "ear_tip_r_pencil": [39.8, 39.8, 39.95, 40.35], "ear_proud": [4.0, 4.1, 4.2, 4.4], "ear_deg": [54, 54, 54, 52],
+                  "ear_chord_pencil": [36.2, 36.3, 35.4], "squares_per_inch": 5, "pencil": 0.5},
     }
     with open(os.path.join(OUT, "plug.json"), "w") as fh:
         json.dump(numbers, fh, indent=1)

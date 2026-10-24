@@ -15,8 +15,19 @@ import json, math, sys
 m = json.load(open(sys.argv[1])); W, H = m["W"], m["H"]; SQ = 25.4 / 5
 rows, cols = m["rows"], m["cols"]
 
-def clean(cs):
-    cs = sorted(cs); d = sorted(b - a for a, b in zip(cs, cs[1:]) if 40 < b - a < 100); pitch = d[len(d) // 2]
+def mode_pitch(scans):
+    """The grid pitch in pixels: the most common spacing between centres over every scan."""
+    from collections import Counter
+    cnt = Counter()
+    for _, cs in scans:
+        for a, b in zip(cs, cs[1:]):
+            if 30 < b - a < 150: cnt[round(b - a)] += 1
+    p = max(cnt, key=cnt.get)
+    near = [(k, n) for k, n in cnt.items() if abs(k - p) <= 4]
+    return sum(k * n for k, n in near) / sum(n for _, n in near)
+
+def clean(cs, pitch):
+    cs = sorted(cs)
     out = [(cs[0], 0)]
     for c in cs[1:]:
         gap = c - out[-1][0]
@@ -24,7 +35,7 @@ def clean(cs):
         k = round(gap / pitch)
         if abs(gap - k * pitch) > 0.3 * pitch: continue
         out.append((c, out[-1][1] + k))
-    return pitch, out
+    return out
 
 def lsq(pairs):
     """fit pos = a + b i + c i^2 by least squares."""
@@ -44,9 +55,17 @@ def lsq(pairs):
 
 def ev(mod, i): return mod[0] + mod[1] * i + mod[2] * i * i
 
-def fit_scans(scans, ref_index):
-    """Per scan a quadratic model pos(i); indices assigned from the neighbouring scan's model."""
-    pitch, ref = clean(scans[ref_index][1])
+def fit_scans(scans):
+    """Per scan a quadratic model pos(i); indices assigned from the neighbouring scan's model.
+    The reference scan is the one near the middle whose cleaned lines are most regular."""
+    pitch = mode_pitch(scans)
+    mid = len(scans) // 2
+    def score(j):
+        ref = clean(scans[j][1], pitch)
+        res = [abs((b - a) - (ib - ia) * pitch) for (a, ia), (b, ib) in zip(ref, ref[1:])]
+        return len(ref) - 2 * sum(res) / pitch
+    ref_index = max(range(max(0, mid - len(scans) // 4), min(len(scans), mid + len(scans) // 4)), key=score)
+    ref = clean(scans[ref_index][1], pitch)
     # choose the index origin so i=0 is near the middle
     mid = ref[len(ref) // 2][1]; ref = [(i - mid, x) for x, i in ref]
     models = {}
@@ -133,9 +152,7 @@ def coord_local(L, G, t, pos):
     for _ in range(3): i -= (ev(mod, i) - pos) / (mod[1] + 2 * mod[2] * i)
     return i
 
-ry = min(range(len(rows)), key=lambda i: abs(rows[i][0] - H * 0.55))
-cx = min(range(len(cols)), key=lambda i: abs(cols[i][0] - W * 0.5))
-pv, vmod = fit_scans(rows, ry); ph, hmod = fit_scans(cols, cx)
+pv, vmod = fit_scans(rows); ph, hmod = fit_scans(cols)
 GV = global_fit(rows, vmod, pv); GH = global_fit(cols, hmod, ph)
 LV = local_refit(rows, GV, pv); LH = local_refit(cols, GH, ph)
 print("pitch px", round(pv, 1), round(ph, 1))
