@@ -478,7 +478,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 5.6,
+              "depth": 3.4,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -495,7 +495,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.6
+                "offset": 1.4
               },
               "sketch": {
                 "entities": [
@@ -639,7 +639,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.4
+                "offset": 1.2000000000000002
               },
               "sketch": {
                 "entities": [
@@ -783,7 +783,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.2
+                "offset": 1.0
               },
               "sketch": {
                 "entities": [
@@ -927,7 +927,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.0
+                "offset": 0.8
               },
               "sketch": {
                 "entities": [
@@ -1198,7 +1198,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 5.6,
+              "depth": 3.4,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1486,7 +1486,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 5.6,
+              "depth": 3.4,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1503,7 +1503,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.6
+                "offset": 1.4
               },
               "sketch": {
                 "entities": [
@@ -1647,7 +1647,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.4
+                "offset": 1.2000000000000002
               },
               "sketch": {
                 "entities": [
@@ -1791,7 +1791,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.2
+                "offset": 1.0
               },
               "sketch": {
                 "entities": [
@@ -1935,7 +1935,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.0
+                "offset": 0.8
               },
               "sketch": {
                 "entities": [
@@ -2206,7 +2206,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 5.6,
+              "depth": 3.4,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2494,7 +2494,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 5.6,
+              "depth": 3.4,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2511,7 +2511,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.6
+                "offset": 1.4
               },
               "sketch": {
                 "entities": [
@@ -2655,7 +2655,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.4
+                "offset": 1.2000000000000002
               },
               "sketch": {
                 "entities": [
@@ -2799,7 +2799,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.2
+                "offset": 1.0
               },
               "sketch": {
                 "entities": [
@@ -2943,7 +2943,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 3.0
+                "offset": 0.8
               },
               "sketch": {
                 "entities": [
@@ -3214,7 +3214,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 5.6,
+              "depth": 3.4,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4361,7 +4361,7 @@
                     "type": "point",
                     "pos": {
                       "x": 35.5,
-                      "y": 3.0
+                      "y": 0.8
                     }
                   },
                   {
@@ -4375,15 +4375,15 @@
                     "type": "point",
                     "pos": {
                       "x": 35.5,
-                      "y": 3.0
+                      "y": 0.8
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 32.25,
-                      "y": 3.0
+                      "x": 31.3,
+                      "y": 0.8
                     }
                   },
                   {
@@ -4396,16 +4396,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 32.25,
-                      "y": 3.0
+                      "x": 31.3,
+                      "y": 0.8
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 32.25,
-                      "y": 25.0
+                      "x": 30.8,
+                      "y": 3.0
                     }
                   },
                   {
@@ -4418,16 +4418,16 @@
                     "id": 12,
                     "type": "point",
                     "pos": {
-                      "x": 32.25,
-                      "y": 25.0
+                      "x": 30.8,
+                      "y": 3.0
                     }
                   },
                   {
                     "id": 13,
                     "type": "point",
                     "pos": {
-                      "x": 31.25,
-                      "y": 25.0
+                      "x": 32.25,
+                      "y": 3.0
                     }
                   },
                   {
@@ -4440,16 +4440,16 @@
                     "id": 15,
                     "type": "point",
                     "pos": {
-                      "x": 31.25,
-                      "y": 25.0
+                      "x": 32.25,
+                      "y": 3.0
                     }
                   },
                   {
                     "id": 16,
                     "type": "point",
                     "pos": {
-                      "x": 31.25,
-                      "y": 3.0
+                      "x": 32.25,
+                      "y": 25.0
                     }
                   },
                   {
@@ -4462,16 +4462,16 @@
                     "id": 18,
                     "type": "point",
                     "pos": {
-                      "x": 31.25,
-                      "y": 3.0
+                      "x": 32.25,
+                      "y": 25.0
                     }
                   },
                   {
                     "id": 19,
                     "type": "point",
                     "pos": {
-                      "x": 30.0,
-                      "y": 3.0
+                      "x": 31.25,
+                      "y": 25.0
                     }
                   },
                   {
@@ -4484,16 +4484,16 @@
                     "id": 21,
                     "type": "point",
                     "pos": {
-                      "x": 30.0,
-                      "y": 3.0
+                      "x": 31.25,
+                      "y": 25.0
                     }
                   },
                   {
                     "id": 22,
                     "type": "point",
                     "pos": {
-                      "x": 30.5,
-                      "y": 0.0
+                      "x": 31.25,
+                      "y": 3.8
                     }
                   },
                   {
@@ -4501,10 +4501,54 @@
                     "type": "line",
                     "start": 21,
                     "end": 22
+                  },
+                  {
+                    "id": 24,
+                    "type": "point",
+                    "pos": {
+                      "x": 31.25,
+                      "y": 3.8
+                    }
+                  },
+                  {
+                    "id": 25,
+                    "type": "point",
+                    "pos": {
+                      "x": 30.0,
+                      "y": 3.8
+                    }
+                  },
+                  {
+                    "id": 26,
+                    "type": "line",
+                    "start": 24,
+                    "end": 25
+                  },
+                  {
+                    "id": 27,
+                    "type": "point",
+                    "pos": {
+                      "x": 30.0,
+                      "y": 3.8
+                    }
+                  },
+                  {
+                    "id": 28,
+                    "type": "point",
+                    "pos": {
+                      "x": 30.5,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 29,
+                    "type": "line",
+                    "start": 27,
+                    "end": 28
                   }
                 ],
                 "constraints": [],
-                "next_entity": 24,
+                "next_entity": 30,
                 "next_constraint": 0
               }
             }
@@ -4662,7 +4706,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 3.0,
+              "depth": 0.8,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4806,7 +4850,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 3.0,
+              "depth": 0.8,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4950,7 +4994,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 3.0,
+              "depth": 0.8,
               "direction": "normal",
               "end": {
                 "type": "blind"

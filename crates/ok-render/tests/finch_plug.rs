@@ -103,6 +103,7 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
         num(collar, "od"),
         num(collar, "ear_at"),
     );
+    let ear_t = num(collar, "ear_t");
     let (clear, plate_t, plate_r) = (num(cap, "clear"), num(cap, "plate_t"), num(cap, "plate_r"));
     let (r_ear, r_wall0, r_wall1, r_lip, hook_h, hook_arc) = (
         num(cap, "r_ear"),
@@ -194,7 +195,7 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
         let in_hook = |v: &Vec3| {
             ((angle_of(v) - h + 180.0).rem_euclid(360.0) - 180.0).abs() <= hook_arc / 2.0 + 0.1
         };
-        let wall = radius_where(body, |v| in_hook(v) && v.z > ring_t + 0.1);
+        let wall = radius_where(body, |v| in_hook(v) && v.z > ear_t + 0.1);
         assert!(
             (wall - r_wall1).abs() < 0.3,
             "hook at {h}: wall to {wall:.2}"
@@ -203,7 +204,7 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
             .iter()
             .filter(|v| {
                 in_hook(v)
-                    && v.z > ring_t - 1e-6
+                    && v.z > ear_t - 1e-6
                     && v.z < hook_h - 1e-6
                     && (v.x * v.x + v.y * v.y).sqrt() > od / 2.0 - 1.0
             })
@@ -222,8 +223,8 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
                 in_hook(v)
                     && rr > od / 2.0 - 1.0
                     && rr < r_wall0 - 0.5
-                    && v.z > ring_t - 1e-6
-                    && v.z < ring_t + ramp[0] + 1e-6
+                    && v.z > ear_t - 1e-6
+                    && v.z < ear_t + ramp[0] + 1e-6
             })
             .map(|v| (v.z * 1000.0).round() / 1000.0)
             .collect();
@@ -231,7 +232,7 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
         undersides.dedup();
         let want: Vec<f64> = ramp
             .iter()
-            .map(|c| ((ring_t + c) * 1000.0).round() / 1000.0)
+            .map(|c| ((ear_t + c) * 1000.0).round() / 1000.0)
             .collect();
         let mut want_sorted = want.clone();
         want_sorted.sort_by(f64::total_cmp);

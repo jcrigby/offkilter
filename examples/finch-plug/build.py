@@ -33,7 +33,8 @@ OUT = os.path.join(HERE, "out")
 # -- the ring, mm, as read off the photographs: confirm with calipers -----
 D_MOUTH = 61.0          # the ring's bore at the mouth, by rule (the first gauge, to 49.5, fell straight through)
 D_TOP = 60.0            # the bore at the ring's top edge, inside the tube: a slight draft, guessed
-RING_T = 3.0            # the ring's thickness, mouth to its top face; the ears are the same
+RING_T = 3.0            # the ring's skirt, mouth to the ridge it ends in inside the tube: the plug stops there
+EAR_T = 0.8             # the sheet the ring is stamped from, so the flange's and the ears' thickness: under a millimetre
 D_MESH = 62.5           # inside the mesh tube just above the ring
 RING_OD = 71.0          # the ring's flange: 71.5 and 72.0 to the pencil's centre on the two traced outlines (trace/), less the lead
 EAR_W, EAR_R = 35.0, 4.0   # the three ears: width across (54 degrees, 36 mm at the tip to the pencil, on the traces) and how far past the flange (4.0 to 4.4 on the traces)
@@ -60,7 +61,7 @@ R_EAR = RING_OD / 2 + EAR_R          # the ears' tips
 R_WALL0 = R_EAR + HOOK_GAP           # the hook wall's inside
 R_WALL1 = R_WALL0 + HOOK_WALL        # and outside: the plate's lobes reach here
 R_LIP = R_EAR - LIP_OVER             # the lip's inner edge
-HOOK_H = RING_T + RAMP[0] + LIP_T    # the hook's height above the plate
+HOOK_H = EAR_T + RAMP[0] + LIP_T     # the hook's height above the plate: the ear, the entry clearance, the lip
 HOOKS = 3
 EAR_HALF = math.degrees(EAR_W / 2 / R_EAR)   # half an ear, in degrees at its tip
 # Locked, an ear's leading edge rests against the stop at the hook's far
@@ -126,9 +127,9 @@ def main():
         for i, c in enumerate(RAMP):
             seg_half = half / n
             centre = a - half + (i + 0.5) * 2 * seg_half
-            s = p.sketch("top", RING_T + c, f"lip {k + 1}.{i + 1}")
+            s = p.sketch("top", EAR_T + c, f"lip {k + 1}.{i + 1}")
             sector(p, s, R_LIP, R_WALL0 + 0.01, centre, seg_half + 0.01)
-            p.extrude(s, HOOK_H - RING_T - c, op="add", name=f"lip {k + 1}.{i + 1}")
+            p.extrude(s, HOOK_H - EAR_T - c, op="add", name=f"lip {k + 1}.{i + 1}")
         s = p.sketch("top", 0.0, f"stop {k + 1}")
         stop_half = math.degrees(STOP_T / 2 / R_LIP)
         sector(p, s, R_LIP, R_WALL0 + 0.01, a + half + stop_half, stop_half)
@@ -180,8 +181,10 @@ def main():
     collar_tab = int(re.search(r"tab (\d+)", text).group(1))
     c = Part(mcp, collar_tab, "collar")
     s = c.sketch("front", 0.0, "ring")
-    collar = [(D_MOUTH / 2, 0.0), (RING_OD / 2, 0.0), (RING_OD / 2, RING_T), (D_MESH / 2 + 1.0, RING_T), (D_MESH / 2 + 1.0, TUBE_H), (D_MESH / 2, TUBE_H),
-              (D_MESH / 2, RING_T), (D_TOP / 2, RING_T)]
+    # Stamped sheet: a flange, a drafted skirt up into the tube, a ridge
+    # where the mesh starts, then the mesh tube.
+    collar = [(D_MOUTH / 2, 0.0), (RING_OD / 2, 0.0), (RING_OD / 2, EAR_T), (D_MOUTH / 2 + EAR_T, EAR_T), (D_TOP / 2 + EAR_T, RING_T),
+              (D_MESH / 2 + 1.0, RING_T), (D_MESH / 2 + 1.0, TUBE_H), (D_MESH / 2, TUBE_H), (D_MESH / 2, RING_T + EAR_T), (D_TOP / 2, RING_T + EAR_T)]
     c.polygon(s, collar)
     f = c.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "new", "name": "ring"})
     c.apply({"type": "rename_part", "source": f, "name": "collar"}, {"type": "set_part_material", "source": f, "material": {"name": "ABS", "density": 1.05}})
@@ -189,7 +192,7 @@ def main():
         a = EAR_AT + k * 360.0 / HOOKS
         s = c.sketch("top", 0.0, f"ear {k + 1}")
         sector(c, s, RING_OD / 2 - 1.0, R_EAR, a, EAR_HALF)
-        c.extrude(s, RING_T, op="add", name=f"ear {k + 1}")
+        c.extrude(s, EAR_T, op="add", name=f"ear {k + 1}")
     crep = c.report()
     bad = [(f["name"], f["error"]) for f in crep["features"] if f.get("error")]
     if bad:
@@ -215,10 +218,10 @@ def main():
     print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "cap.stl")}))
     print(mcp.call("export", {"tab": gauge_tab, "format": "stl", "path": os.path.join(OUT, "gauge.stl")}))
     print(mcp.call("export", {"tab": asms["cap on collar"], "format": "pdf", "sheet": "A4", "hidden": True, "parts": False, "views": ["section@0", "top", "iso"],
-                              "note": f"cap on the ring, locked: bore {D_MOUTH:g} at the mouth, {D_TOP:g} at the top, ring {RING_T:g} thick, ears to {2 * R_EAR:g}; the lip comes down from {RAMP[0]:g} to {RAMP[-1]:g} over the ear",
+                              "note": f"cap on the ring, locked: bore {D_MOUTH:g} at the mouth, {D_TOP:g} at the top, skirt {RING_T:g} deep, sheet {EAR_T:g}, ears to {2 * R_EAR:g}; the lip comes down from {RAMP[0]:g} to {RAMP[-1]:g} over the ear",
                               "path": os.path.join(OUT, "cap_on_collar.pdf")}))
     numbers = {
-        "collar": {"d_mouth": D_MOUTH, "d_top": D_TOP, "ring_t": RING_T, "d_mesh": D_MESH, "od": RING_OD, "ear_w": EAR_W, "ear_r": EAR_R, "ear_at": EAR_AT, "tube_h": TUBE_H},
+        "collar": {"d_mouth": D_MOUTH, "d_top": D_TOP, "ring_t": RING_T, "ear_t": EAR_T, "d_mesh": D_MESH, "od": RING_OD, "ear_w": EAR_W, "ear_r": EAR_R, "ear_at": EAR_AT, "tube_h": TUBE_H},
         "cap": {"clear": CLEAR, "plate_t": PLATE_T, "dome": DOME, "plate_r": PLATE_R, "hook_gap": HOOK_GAP, "hook_wall": HOOK_WALL, "hook_arc": HOOK_ARC,
                 "lip_t": LIP_T, "lip_over": LIP_OVER, "ramp": list(RAMP), "stop_t": STOP_T, "drain_d": DRAIN_D, "drains": DRAINS, "hooks": HOOKS,
                 "r_ear": R_EAR, "r_wall0": R_WALL0, "r_wall1": R_WALL1, "r_lip": R_LIP, "hook_h": HOOK_H, "ear_half": EAR_HALF,
