@@ -76,7 +76,10 @@ questions before the cap is printed: do the hooks land on the tabs,
 and does the ramp grip them at the end of the turn. If it goes on and
 bites, the cap will; if the tabs reach the stops loose, the sheet is
 thinner than assumed and `EAR_T` comes down; if they jam short of the
-stops, it is thicker and `EAR_T` goes up.
+stops, it is thicker and `EAR_T` goes up. The first print did go on
+and bite, with a thumb on each hook for the last 5 mm of turn and the
+ring bending to let it: the hooks land, the sheet is near 0.8, and the
+bite of 0.15 it was printed with was more than a stiff cap wants.
 
 ![the fit ring on the collar, from below](out/fit_ring_on_collar.png)
 
@@ -92,11 +95,13 @@ stops, it is thicker and `EAR_T` goes up.
   is a wall 2 thick standing 0.4 outside the ears' tips over a 36
   degree arc, a lip 2 thick reaching 3 in over the ear, and a stop at
   the far end. The lip's underside comes down along the arc in four
-  steps, 0.6, 0.4 and 0.2 over the ear and then 0.15 into it, so the
+  steps, 0.6, 0.4 and 0.2 over the ear and then 0.05 into it, so the
   ear slides in free and wedges as it turns, as the tray's ramped slots
   had it; the bite is there because a printed ramp cannot be squeezed
-  down later the way the tray's steel could, and it covers a sheet a
-  little thinner than the 0.8 assumed. The ears
+  down later the way the tray's steel could. (It was 0.15 on the fit
+  ring, which went on only with a thumb on each hook and distorted the
+  thin ring to do it; the cap's full plate will not give like that, so
+  the bite came down.) The ears
   pass between the hooks with 84 degrees of gap for a 51 degree ear.
   The hooks sit 8 degrees ahead of where the ears' centres land, so
   that locked, each ear's leading edge rests against its stop with the
