@@ -66,6 +66,20 @@ supports; they are a gauge, not a part. (A first gauge, 46.5 to 49.5
 from the first photographs' scale, fell straight through, and a second,
 56 to 62 in quarter-millimetre steps, was more than was asked for.)
 
+## Print the fit ring first
+
+`out/fit_ring.stl` is the three hooks on a bare ring of plate, 2 mm
+thick, reaching 3 mm in under the flange and no further: no plug, no
+dome, a sixth of the cap's material, printed flat with the hooks up
+(supports under the lips, as for the cap). It answers the two
+questions before the cap is printed: do the hooks land on the tabs,
+and does the ramp grip them at the end of the turn. If it goes on and
+bites, the cap will; if the tabs reach the stops loose, the sheet is
+thinner than assumed and `EAR_T` comes down; if they jam short of the
+stops, it is thicker and `EAR_T` goes up.
+
+![the fit ring on the collar, from below](out/fit_ring_on_collar.png)
+
 ## The cap
 
 - **Plate and plug.** A 2.5 mm plate out to the ring's edge, with
@@ -78,8 +92,11 @@ from the first photographs' scale, fell straight through, and a second,
   is a wall 2 thick standing 0.4 outside the ears' tips over a 36
   degree arc, a lip 2 thick reaching 3 in over the ear, and a stop at
   the far end. The lip's underside comes down along the arc in four
-  steps, 0.6, 0.4, 0.2 and 0 over the ear, so the ear slides in free
-  and wedges as it turns, as the tray's ramped hooks had it. The ears
+  steps, 0.6, 0.4 and 0.2 over the ear and then 0.15 into it, so the
+  ear slides in free and wedges as it turns, as the tray's ramped slots
+  had it; the bite is there because a printed ramp cannot be squeezed
+  down later the way the tray's steel could, and it covers a sheet a
+  little thinner than the 0.8 assumed. The ears
   pass between the hooks with 84 degrees of gap for a 51 degree ear.
   The hooks sit 8 degrees ahead of where the ears' centres land, so
   that locked, each ear's leading edge rests against its stop with the
@@ -96,7 +113,7 @@ from the first photographs' scale, fell straight through, and a second,
 closed body with its plate at the ring's edge between the hooks, its
 plug the clearance off the bore with its top level with the ring's,
 each hook's wall outside the ears' tips and its lip reaching in over
-them with the steps' undersides where the ramp says, down to touching;
+them with the steps' undersides where the ramp says, down to a bite;
 six 1 mm drains; the cap meeting the ring nowhere when locked and,
 turned by the gap, when offered up; and the gauge's three rings reading
 their diameters and bracketing the bore.

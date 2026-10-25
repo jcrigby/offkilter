@@ -223,7 +223,7 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
                 in_hook(v)
                     && rr > od / 2.0 - 1.0
                     && rr < r_wall0 - 0.5
-                    && v.z > ear_t - 1e-6
+                    && v.z > ear_t + ramp[ramp.len() - 1] - 1e-6
                     && v.z < ear_t + ramp[0] + 1e-6
             })
             .map(|v| (v.z * 1000.0).round() / 1000.0)
@@ -239,24 +239,39 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
         assert_eq!(undersides, want_sorted, "hook at {h}: lip steps");
     }
     assert!(
-        ramp.windows(2).all(|w| w[1] < w[0]) && ramp[ramp.len() - 1].abs() < 1e-9,
-        "the ramp comes down to touching"
+        ramp.windows(2).all(|w| w[1] < w[0])
+            && ramp[ramp.len() - 1] < 0.0
+            && ramp[ramp.len() - 1] > -0.3,
+        "the ramp comes down to a small bite"
     );
     // Drain holes, smaller than a nyjer seed.
     let drains = cylinders(body, num(cap, "drain_d") / 2.0);
     assert_eq!(drains.len(), num(cap, "drains") as usize);
     assert!(num(cap, "drain_d") <= 1.0);
-    // On the ring, locked, nothing meets: the ears sit under the lips
-    // with the last step touching. Offered up, turned by the gap, the
-    // ears pass between the hooks.
+    // On the ring, locked, the only meeting is the bite: the last steps'
+    // undersides reach into the ears by the ramp's final figure, over the
+    // part of each step the ear lies under, and nothing else touches.
+    // Offered up, turned by the gap, the ears pass between the hooks.
     let c = doc
         .regenerate_studio(tab_named(&doc, "collar"), None)
         .unwrap();
     assert_eq!(c.bodies.len(), 1);
     let ring = &c.bodies[0].solid;
+    let bite_max: f64 = ramp
+        .iter()
+        .filter(|c| **c < 0.0)
+        .map(|c| {
+            -c * (hook_arc / ramp.len() as f64).to_radians() / 2.0
+                * (r_ear * r_ear - r_lip * r_lip)
+                * hooks.len() as f64
+        })
+        .sum();
     let hit = overlap(body, ring);
-    println!("locked: {hit:.3} mm3 overlap");
-    assert!(hit < 1e-3, "the cap meets the ring locked: {hit} mm3");
+    println!("locked: {hit:.3} mm3 overlap, the bite at most {bite_max:.3}");
+    assert!(
+        hit > 0.3 * bite_max && hit < bite_max + 1e-3,
+        "the cap meets the ring locked other than by the bite: {hit} mm3 of at most {bite_max}"
+    );
     let offered = body.transformed(&Transform::rotation(
         Vec3::ZERO,
         Vec3::Z,
@@ -268,7 +283,45 @@ fn the_cap_plugs_the_ring_and_its_hooks_take_the_ears_with_room_to_offer_up() {
         hit < 1e-3,
         "the ears do not pass between the hooks: {hit} mm3"
     );
-    for name in ["cap on collar", "cap offered up"] {
+    // The fit ring: the same hooks on a bare ring, meeting the collar
+    // the same way, reaching in under the flange.
+    let fr = doc
+        .regenerate_studio(tab_named(&doc, "fit ring"), None)
+        .unwrap();
+    assert_eq!(fr.bodies.len(), 1);
+    let fit = &fr.bodies[0].solid;
+    fit.validate().unwrap();
+    let (flo, fhi) = bounds(fit);
+    assert!((fhi.z - hook_h).abs() < 1e-6 && (flo.z + num(cap, "fit_t")).abs() < 1e-6);
+    let fit_in = radius_where(fit, |v| {
+        v.z < -num(cap, "fit_t") + 1e-6 && v.z > -num(cap, "fit_t") - 1e-6
+    })
+    .min(
+        vertices(fit)
+            .iter()
+            .filter(|v| v.z < 0.0)
+            .map(|v| (v.x * v.x + v.y * v.y).sqrt())
+            .fold(f64::INFINITY, f64::min),
+    );
+    assert!(
+        (fit_in - num(cap, "fit_in")).abs() < 0.3,
+        "fit ring in to {fit_in:.2}"
+    );
+    assert!(
+        fit_in < od / 2.0 - 1.0,
+        "the fit ring reaches in under the flange"
+    );
+    let hit = overlap(fit, ring);
+    println!("fit ring locked: {hit:.3} mm3 overlap");
+    assert!(
+        hit > 0.3 * bite_max && hit < bite_max + 1e-3,
+        "the fit ring meets the ring other than by the bite: {hit}"
+    );
+    assert!(
+        fit.volume() < 0.6 * body.volume(),
+        "the fit ring is the quick print"
+    );
+    for name in ["cap on collar", "cap offered up", "fit ring on collar"] {
         let asm = doc.regenerate_assembly(tab_named(&doc, name)).unwrap();
         assert_eq!(asm.bodies.len(), 2);
         assert!(asm.instance_errors.is_empty());
