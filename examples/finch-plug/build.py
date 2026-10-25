@@ -16,7 +16,7 @@ three rings find the bore by feel.
     python3 examples/finch-plug/build.py
     cargo test -p ok-render --test finch_plug    # what CI runs
 
-Writes out/finch_plug.okpart, out/cap.stl and out/gauge.stl (the parts
+Writes out/finch_plug.okpart, out/cap.stl, out/fit_ring.stl and out/gauge.stl (the parts
 to print), a section of the cap on the ring, a sheet, and out/plug.json.
 """
 import json
@@ -50,7 +50,9 @@ HOOK_WALL = 2.0         # the hook's wall, outside the ears
 HOOK_ARC = 36.0         # degrees of arc a hook spans
 LIP_T = 2.0             # the lip over the ear
 LIP_OVER = 3.0          # how far the lip reaches in over the ear's tip
-RAMP = (0.6, 0.4, 0.2, 0.0)     # the lip's clearance over the ear, step by step along the arc, down to touching: the ear wedges as it turns
+RAMP = (0.6, 0.4, 0.2, -0.15)   # the lip's clearance over the ear, step by step along the arc, to a bite at the stop: the ear wedges as it turns
+FIT_T = 2.0             # the fit ring: the hooks on a bare ring of plate, to print first and try on the tube
+FIT_IN = RING_OD / 2 - 3.0   # its inner edge, 3 mm in under the flange
 STOP_T = 1.5            # the end stop's thickness, in mm of arc
 DRAIN_D, DRAINS = 1.0, 6   # drain holes in the plug, smaller than a nyjer seed
 # -- the gauge: three rings to find the ring's bore by feel ------------------
@@ -91,6 +93,34 @@ def sector(part, sk, r0, r1, a, half_deg):
         part.draw(sk, {"type": "add_line", "a": v2(*rot(r0, 0.0, ang)), "b": v2(*rot(r1, 0.0, ang))})
 
 
+def add_hooks(p, plate_r, plate_t):
+    """The hooks, centred where the ears sit once turned home: a lobe of
+    the plate out to the wall, the wall, the lip in steps whose
+    underside comes down along the arc, and a stop at the far end."""
+    half = HOOK_ARC / 2
+    for k in range(HOOKS):
+        a = EAR_AT + HOOK_SHIFT + k * 360.0 / HOOKS
+        s = p.sketch("top", -plate_t, f"lobe {k + 1}")
+        sector(p, s, plate_r - 1.0, R_WALL1, a, half + 2.0)
+        p.extrude(s, plate_t, op="add", name=f"lobe {k + 1}")
+        s = p.sketch("top", 0.0, f"hook wall {k + 1}")
+        sector(p, s, R_WALL0, R_WALL1, a, half)
+        p.extrude(s, HOOK_H, op="add", name=f"hook wall {k + 1}")
+        # The lip: the ear enters at the arc's start (a - half) and turns
+        # toward the stop at a + half; each step's underside is lower.
+        n = len(RAMP)
+        for i, c in enumerate(RAMP):
+            seg_half = half / n
+            centre = a - half + (i + 0.5) * 2 * seg_half
+            s = p.sketch("top", EAR_T + c, f"lip {k + 1}.{i + 1}")
+            sector(p, s, R_LIP, R_WALL0 + 0.01, centre, seg_half + 0.01)
+            p.extrude(s, HOOK_H - EAR_T - c, op="add", name=f"lip {k + 1}.{i + 1}")
+        s = p.sketch("top", 0.0, f"stop {k + 1}")
+        stop_half = math.degrees(STOP_T / 2 / R_LIP)
+        sector(p, s, R_LIP, R_WALL0 + 0.01, a + half + stop_half, stop_half)
+        p.extrude(s, HOOK_H, op="add", name=f"stop {k + 1}")
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "finch_plug.okpart")
@@ -109,31 +139,7 @@ def main():
     p.polygon(s, cup)
     body = p.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "new", "name": "plate and plug"})
     p.apply({"type": "rename_part", "source": body, "name": "cap"}, {"type": "set_part_material", "source": body, "material": {"name": "PETG", "density": 1.27}})
-    # The hooks, centred where the ears sit once turned home: a lobe of
-    # the plate out to the wall, the wall, the lip in steps whose
-    # underside comes down along the arc, and a stop at the far end.
-    half = HOOK_ARC / 2
-    for k in range(HOOKS):
-        a = EAR_AT + HOOK_SHIFT + k * 360.0 / HOOKS
-        s = p.sketch("top", -PLATE_T, f"lobe {k + 1}")
-        sector(p, s, PLATE_R - 1.0, R_WALL1, a, half + 2.0)
-        p.extrude(s, PLATE_T, op="add", name=f"lobe {k + 1}")
-        s = p.sketch("top", 0.0, f"hook wall {k + 1}")
-        sector(p, s, R_WALL0, R_WALL1, a, half)
-        p.extrude(s, HOOK_H, op="add", name=f"hook wall {k + 1}")
-        # The lip: the ear enters at the arc's start (a - half) and turns
-        # toward the stop at a + half; each step's underside is lower.
-        n = len(RAMP)
-        for i, c in enumerate(RAMP):
-            seg_half = half / n
-            centre = a - half + (i + 0.5) * 2 * seg_half
-            s = p.sketch("top", EAR_T + c, f"lip {k + 1}.{i + 1}")
-            sector(p, s, R_LIP, R_WALL0 + 0.01, centre, seg_half + 0.01)
-            p.extrude(s, HOOK_H - EAR_T - c, op="add", name=f"lip {k + 1}.{i + 1}")
-        s = p.sketch("top", 0.0, f"stop {k + 1}")
-        stop_half = math.degrees(STOP_T / 2 / R_LIP)
-        sector(p, s, R_LIP, R_WALL0 + 0.01, a + half + stop_half, stop_half)
-        p.extrude(s, HOOK_H, op="add", name=f"stop {k + 1}")
+    add_hooks(p, PLATE_R, PLATE_T)
     # Drain holes near the plug's edge, between the hooks.
     s = p.sketch("top", RING_T + DOME + 1.0, "drains")
     for i in range(DRAINS):
@@ -146,6 +152,20 @@ def main():
         raise RuntimeError(bad)
     cap = rep["bodies"][0]
     lo, hi = cap["bounds"]
+    # -- the fit ring: the hooks on a bare ring, to print first ---------------
+    text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "fit ring"}]})
+    fit_tab = int(re.search(r"tab (\d+)", text).group(1))
+    fr = Part(mcp, fit_tab, "fit ring")
+    s = fr.sketch("front", 0.0, "ring")
+    fr.polygon(s, [(FIT_IN, -FIT_T), (PLATE_R, -FIT_T), (PLATE_R, 0.0), (FIT_IN, 0.0)])
+    f = fr.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "new", "name": "ring"})
+    fr.apply({"type": "rename_part", "source": f, "name": "fit ring"}, {"type": "set_part_material", "source": f, "material": {"name": "PLA", "density": 1.24}})
+    add_hooks(fr, PLATE_R, FIT_T)
+    frep = fr.report()
+    bad = [(ft["name"], ft["error"]) for ft in frep["features"] if ft.get("error")]
+    if bad:
+        raise RuntimeError(bad)
+    print(f"fit ring: {len(frep['bodies'])} body, {frep['bodies'][0]['volume'] / 1000:.1f} cm3")
     print(f"cap: {len(rep['bodies'])} body, {hi['x'] - lo['x']:.1f} across, {lo['z']:.1f} to {hi['z']:.1f} tall, {cap['volume'] / 1000:.1f} cm3; "
           f"ears {2 * EAR_HALF:.1f} degrees wide, hooks {HOOK_ARC:g} shifted {HOOK_SHIFT:.1f} ahead, offered up at {OFFER:.1f}, gaps of {360.0 / HOOKS - HOOK_ARC:.0f}")
     # -- the gauge: three rings in one print ----------------------------------
@@ -200,11 +220,11 @@ def main():
     # -- the cap on the ring, locked, and offered up before the turn --------
     place = lambda deg: {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": deg}}
     asms = {}
-    for name, deg in (("cap on collar", 0.0), ("cap offered up", OFFER)):
+    for name, studio, deg in (("cap on collar", 1, 0.0), ("cap offered up", 1, OFFER), ("fit ring on collar", fit_tab, 0.0)):
         text = mcp.call("apply", {"ops": [{"type": "add_assembly", "name": name}]})
         asms[name] = int(re.search(r"tab (\d+)", text).group(1))
         mcp.call("apply", {"tab": asms[name], "ops": [{"type": "add_instance", "studio": collar_tab, "body": 0, "name": "collar", "fixed": True, "placement": place(0.0)},
-                                                      {"type": "add_instance", "studio": 1, "body": 0, "name": "cap", "fixed": True, "placement": place(deg)}]})
+                                                      {"type": "add_instance", "studio": studio, "body": 0, "name": "cap", "fixed": True, "placement": place(deg)}]})
     # -- pictures and files -----------------------------------------------
     shot = lambda tab, name, **kw: mcp.call("screenshot", {"tab": tab, "width": 1400, "height": 1000, "path": os.path.join(OUT, f"{name}.png"), **kw})
     shot(1, "cap_iso", view="iso")
@@ -214,18 +234,20 @@ def main():
     shot(asms["cap on collar"], "cap_on_collar_section", view="front", section="y:0")
     shot(asms["cap on collar"], "cap_on_collar_below", view="0.5,-0.6,-0.6")
     shot(asms["cap offered up"], "cap_offered_up_below", view="0,0,-1")
+    shot(asms["fit ring on collar"], "fit_ring_on_collar", view="0.5,-0.6,-0.6")
     shot(gauge_tab, "gauge", view="iso")
     print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "cap.stl")}))
     print(mcp.call("export", {"tab": gauge_tab, "format": "stl", "path": os.path.join(OUT, "gauge.stl")}))
+    print(mcp.call("export", {"tab": fit_tab, "format": "stl", "path": os.path.join(OUT, "fit_ring.stl")}))
     print(mcp.call("export", {"tab": asms["cap on collar"], "format": "pdf", "sheet": "A4", "hidden": True, "parts": False, "views": ["section@0", "top", "iso"],
-                              "note": f"cap on the ring, locked: bore {D_MOUTH:g} at the mouth, {D_TOP:g} at the top, skirt {RING_T:g} deep, sheet {EAR_T:g}, ears to {2 * R_EAR:g}; the lip comes down from {RAMP[0]:g} to {RAMP[-1]:g} over the ear",
+                              "note": f"cap on the ring, locked: bore {D_MOUTH:g} at the mouth, {D_TOP:g} at the top, skirt {RING_T:g} deep, sheet {EAR_T:g}, ears to {2 * R_EAR:g}; the lip comes down from {RAMP[0]:g} over the ear to {-RAMP[-1]:g} into it",
                               "path": os.path.join(OUT, "cap_on_collar.pdf")}))
     numbers = {
         "collar": {"d_mouth": D_MOUTH, "d_top": D_TOP, "ring_t": RING_T, "ear_t": EAR_T, "d_mesh": D_MESH, "od": RING_OD, "ear_w": EAR_W, "ear_r": EAR_R, "ear_at": EAR_AT, "tube_h": TUBE_H},
         "cap": {"clear": CLEAR, "plate_t": PLATE_T, "dome": DOME, "plate_r": PLATE_R, "hook_gap": HOOK_GAP, "hook_wall": HOOK_WALL, "hook_arc": HOOK_ARC,
                 "lip_t": LIP_T, "lip_over": LIP_OVER, "ramp": list(RAMP), "stop_t": STOP_T, "drain_d": DRAIN_D, "drains": DRAINS, "hooks": HOOKS,
                 "r_ear": R_EAR, "r_wall0": R_WALL0, "r_wall1": R_WALL1, "r_lip": R_LIP, "hook_h": HOOK_H, "ear_half": EAR_HALF,
-                "hook_shift": HOOK_SHIFT, "hook_at": [EAR_AT + HOOK_SHIFT + k * 360.0 / HOOKS for k in range(HOOKS)], "offer": OFFER},
+                "hook_shift": HOOK_SHIFT, "fit_t": FIT_T, "fit_in": FIT_IN, "hook_at": [EAR_AT + HOOK_SHIFT + k * 360.0 / HOOKS for k in range(HOOKS)], "offer": OFFER},
         "gauge": {"sizes": list(GAUGE_SIZES), "h": GAUGE_H, "wall": GAUGE_WALL, "pitch": pitch},
         "trace": {"flange_od_pencil": [71.5, 72.0], "ear_tip_r_pencil": [39.8, 39.8, 39.95, 40.35], "ear_proud": [4.0, 4.1, 4.2, 4.4], "ear_deg": [54, 54, 54, 52],
                   "ear_chord_pencil": [36.2, 36.3, 35.4], "squares_per_inch": 5, "pencil": 0.5},
