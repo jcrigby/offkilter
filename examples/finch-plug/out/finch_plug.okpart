@@ -927,7 +927,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 0.65
+                "offset": 0.75
               },
               "sketch": {
                 "entities": [
@@ -1054,7 +1054,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 2.7499999999999996,
+              "depth": 2.6499999999999995,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1935,7 +1935,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 0.65
+                "offset": 0.75
               },
               "sketch": {
                 "entities": [
@@ -2062,7 +2062,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 2.7499999999999996,
+              "depth": 2.6499999999999995,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2943,7 +2943,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 0.65
+                "offset": 0.75
               },
               "sketch": {
                 "entities": [
@@ -3070,7 +3070,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 2.7499999999999996,
+              "depth": 2.6499999999999995,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4181,7 +4181,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 0.65
+                "offset": 0.75
               },
               "sketch": {
                 "entities": [
@@ -4308,7 +4308,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 2.7499999999999996,
+              "depth": 2.6499999999999995,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -5189,7 +5189,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 0.65
+                "offset": 0.75
               },
               "sketch": {
                 "entities": [
@@ -5316,7 +5316,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 2.7499999999999996,
+              "depth": 2.6499999999999995,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -6197,7 +6197,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 0.65
+                "offset": 0.75
               },
               "sketch": {
                 "entities": [
@@ -6324,7 +6324,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 2.7499999999999996,
+              "depth": 2.6499999999999995,
               "direction": "normal",
               "end": {
                 "type": "blind"
