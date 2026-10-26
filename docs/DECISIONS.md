@@ -572,3 +572,40 @@ back as the example, because a phone's video is chroma subsampled and
 compressed, and the line that was crisp in the PNGs comes back blurred
 and dimmer on dark surfaces; that is what set the line detector's
 adaptive threshold and its continuity filter, not the clean frames.
+
+## A second scan is registered by what was done to the object, not by search
+
+A turntable scan sees nothing the camera cannot, and that is less
+than it looks: a camera 22 degrees above the table still sees a face
+leaning out over it by nearly 70 degrees, since a face at the side
+of the object faces the camera in azimuth even while it faces down,
+so a dodecahedron or a bucky ball on a face scans whole in one pass
+and so does the gourd's waist. What it never sees is a surface facing
+down, the underside of a cap or a lip, and there one scan bridges
+from the stem to the rim with a cone (the mushroom in the tests comes
+out 12 per cent over). The remedy is a second scan with the object
+turned over or rolled onto a side, and the two clouds registered. Registration is iterative closest point,
+point to plane (point to point snaps the two scans' sampling lattices
+together and stalls a few degrees short on anything with flat faces),
+and it is seeded by what the person did: a flip, a roll, a move, or
+nothing but the camera. A blind search over every rotation was the
+alternative, and it would find the wrong answer as happily as the
+right one on anything with symmetry, which is most of what gets
+scanned; the person always knows which way up they put the thing. The
+seeds are every 30 degrees of turn about the vertical (and of the
+axis rolled about), scored coarsely and the best few refined, since
+the ICP basin from a 15 degree miss is reliable and from 90 it is not.
+The fit and the overlap are reported so a wrong placement shows as a
+loose number rather than a quietly wrong model.
+
+The mesh is built about the cloud's own centre line rather than the
+turntable's axis. The single scan's profiles were first stitched
+frame by frame about the axis, which is right only for an object
+centred on the turntable: a tetrahedron set down by eye has its apex
+17 mm off the axis, and above the height where the section no longer
+holds the axis the profiles end. Sectors of azimuth about the mean of
+the points cost nothing on a centred object and hold the off-centre
+one, and they take a merged cloud the same way. What stays is the
+representation's limit, one radius per direction and height, so a
+torus or a cup with a handle is still not a thing this scanner
+returns whole.

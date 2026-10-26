@@ -1408,6 +1408,123 @@ impl Server {
                 })
                 .to_string())
             }
+            "merge_scans" => {
+                let out_dir = args
+                    .get("out")
+                    .and_then(|p| p.as_str())
+                    .ok_or("merge_scans needs out: a directory to write merged.stl, merged.ply and merged.json into")?;
+                let list = args
+                    .get("scans")
+                    .and_then(|v| v.as_array())
+                    .ok_or("merge_scans needs scans: a list of {dir, placed}, each dir holding a scan.ply from scan_turntable")?;
+                if list.len() < 2 {
+                    return Err("merge_scans needs two or more scans".into());
+                }
+                let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
+                let mut scans = Vec::new();
+                for (k, item) in list.iter().enumerate() {
+                    let dir = item
+                        .get("dir")
+                        .and_then(|v| v.as_str())
+                        .ok_or(format!("scans[{k}] needs dir"))?;
+                    let placed = match item.get("placed").and_then(|v| v.as_str()) {
+                        Some(p) => p,
+                        None if k == 0 => "same",
+                        None => return Err(format!("scans[{k}] needs placed: how the object was put down between this scan and the first: same (only the camera or laser moved), moved, upside down, or on its side")),
+                    };
+                    let placement = ok_photo::register::Placement::parse(placed)?;
+                    let path = std::path::Path::new(dir).join("scan.ply");
+                    let text = std::fs::read_to_string(&path)
+                        .map_err(|e| format!("could not read {}: {e}", path.display()))?;
+                    let points = ok_photo::scan::read_ply(&text)?;
+                    scans.push((points, placement));
+                }
+                let (cloud, regs) = ok_photo::register::merge(&scans)?;
+                let sectors = num("sectors", 36.0).max(3.0) as usize;
+                let m = ok_photo::scan::cloud_mesh(&cloud, sectors, 0.0, num("bin", 1.0))?;
+                std::fs::create_dir_all(out_dir)
+                    .map_err(|e| format!("could not make {out_dir}: {e}"))?;
+                let out = std::path::Path::new(out_dir);
+                let write = |name: &str, bytes: &[u8]| {
+                    std::fs::write(out.join(name), bytes)
+                        .map_err(|e| format!("could not write {}: {e}", out.join(name).display()))
+                };
+                let mut mesh = ok_mesh::TriMesh::new();
+                let v3 = |p: [f64; 3]| ok_math::Vec3::new(p[0], p[1], p[2]);
+                for t in &m.triangles {
+                    mesh.push_triangle(v3(t[0]), v3(t[1]), v3(t[2]));
+                }
+                write(
+                    "merged.stl",
+                    &ok_mesh::to_stl(&[mesh], "offkilter merged turntable scans"),
+                )?;
+                write("merged.ply", ok_photo::scan::ply(&cloud).as_bytes())?;
+                let mut bounds = [f64::MAX, f64::MAX, f64::MAX, f64::MIN, f64::MIN, f64::MIN];
+                for p in &cloud {
+                    for a in 0..3 {
+                        bounds[a] = bounds[a].min(p[a]);
+                        bounds[3 + a] = bounds[3 + a].max(p[a]);
+                    }
+                }
+                let mut warnings: Vec<String> = Vec::new();
+                for (k, r) in regs.iter().enumerate() {
+                    if r.residual > 1.0 {
+                        warnings.push(format!("scan {} registered to {:.1} mm, which is loose: the object may have been placed differently from `{}`, or changed shape", k + 1, r.residual, r.placement.name()));
+                    }
+                    if r.overlap < 0.3 {
+                        warnings.push(format!("scan {} shares only {:.0} % of its points with the rest: little overlap to register on", k + 1, 100.0 * r.overlap));
+                    }
+                }
+                let cells = m.measured.iter().map(|r| r.len()).sum::<usize>().max(1);
+                let filled =
+                    m.measured.iter().flatten().filter(|x| !**x).count() as f64 / cells as f64;
+                let report = serde_json::json!({
+                    "scans": list.len(),
+                    "centre": m.centre,
+                    "filled": filled,
+                    "registrations": regs,
+                    "point_count": cloud.len(),
+                    "triangle_count": m.triangles.len(),
+                    "sectors": sectors,
+                    "bounds": bounds,
+                    "volume": m.volume,
+                    "warnings": warnings,
+                });
+                write(
+                    "merged.json",
+                    serde_json::to_string_pretty(&report).unwrap().as_bytes(),
+                )?;
+                let mut text = format!(
+                    "Merged {} scans into {} points and {} triangles, {:.1} x {:.1} x {:.1} mm from ({:.1}, {:.1}, {:.1}), volume {:.1} cm3.",
+                    list.len(),
+                    cloud.len(),
+                    m.triangles.len(),
+                    bounds[3] - bounds[0],
+                    bounds[4] - bounds[1],
+                    bounds[5] - bounds[2],
+                    bounds[0],
+                    bounds[1],
+                    bounds[2],
+                    m.volume / 1000.0
+                );
+                for (k, r) in regs.iter().enumerate() {
+                    text.push_str(&format!(
+                        " Scan {} ({}) registered to {:.2} mm median with {:.0} % of its points on the rest, turned {:.1} degrees.",
+                        k + 1,
+                        r.placement.name(),
+                        r.residual,
+                        100.0 * r.overlap,
+                        r.transform.angle()
+                    ));
+                }
+                text.push_str(&format!(
+                    " Wrote merged.stl, merged.ply and merged.json to {out_dir}."
+                ));
+                for w in &warnings {
+                    text.push_str(&format!(" Warning: {w}."));
+                }
+                Ok(text)
+            }
             "scan_turntable" => {
                 let out_dir = args
                     .get("out")
@@ -1496,14 +1613,7 @@ impl Server {
                     "scan.stl",
                     &ok_mesh::to_stl(&[mesh], "offkilter turntable scan"),
                 )?;
-                let mut ply = format!(
-                    "ply\nformat ascii 1.0\nelement vertex {}\nproperty float x\nproperty float y\nproperty float z\nend_header\n",
-                    s.points.len()
-                );
-                for p in &s.points {
-                    ply.push_str(&format!("{:.3} {:.3} {:.3}\n", p[0], p[1], p[2]));
-                }
-                write("scan.ply", ply.as_bytes())?;
+                write("scan.ply", ok_photo::scan::ply(&s.points).as_bytes())?;
                 write(
                     "scan.json",
                     serde_json::to_string_pretty(&s).unwrap().as_bytes(),
@@ -2141,6 +2251,11 @@ fn tool_list() -> Value {
             "name": "scan_turntable",
             "description": "Scans an object on the measuring field turning on a lazy Susan under a phone and a line laser fixed to each other: from a video (`video`, frames taken with ffmpeg at `fps` per second, 2 by default) or a directory of frames (`frames`, PNG or JPEG in order, every `every`th used). Each frame's marks give the camera's pose; the green laser line on the paper, straight, with the turntable's axis the camera's centres circle about, gives the laser's plane; each pixel of the line on the object is a ray meeting that plane, put into the field's frame, which turns with the object. Writes scan.stl (profiles stitched into a mesh), scan.ply (the points), scan.json and scan-frame.png into `out`. Shoot it dim with the phone's exposure locked so the line is the brightest thing, the laser's vertical line aimed through the turntable's centre and 30 to 45 degrees round from the camera, the camera a little above the object's middle, and the field's marks in view all the way round. `laser_min` (12) is the least green a pixel is ever taken as the line at (the frame's own ridges set a higher bar), `bin` (1 mm) the profile resampling, `min_height` (1.5 mm) what counts as the table.",
             "inputSchema": { "type": "object", "properties": { "video": { "type": "string" }, "frames": { "type": "string" }, "out": { "type": "string" }, "fps": { "type": "number" }, "every": { "type": "integer" }, "laser_min": { "type": "number" }, "bin": { "type": "number" }, "min_height": { "type": "number" } }, "required": ["out"] }
+        },
+        {
+            "name": "merge_scans",
+            "description": "Merges turntable scans of one object taken in different poses into one point cloud and mesh. A scan sees nothing under an overhang steeper than the camera's height above the table (the underside of a lip, the waist under a bulge), so scan the object again upside down or on its side, or with the camera higher, and merge. `scans` is a list of {dir, placed}: each dir holds a scan.ply from scan_turntable, and `placed` says how the object was put down between that scan and the first: `same` (not touched; only the camera or laser moved), `moved` (set down again the same way up, anywhere, turned any amount), `upside down` (turned over, then set down anywhere), or `on its side` (rolled a quarter turn onto a side). Each scan after the first is registered onto the rest by iterative closest point from seeds the placement gives, and the answer says how closely (median mm) and what share of its points lie on the rest; a loose fit means the placement was not what was said. Writes merged.stl (the cloud meshed about its own centre line in `sectors` of azimuth, 36 by default, and `bin` mm height bins), merged.ply and merged.json into `out`. The mesh takes the object to be one a horizontal ray from its centre line leaves once at every height: anything convex, most things that stand; not a torus.",
+            "inputSchema": { "type": "object", "properties": { "scans": { "type": "array", "items": { "type": "object", "properties": { "dir": { "type": "string" }, "placed": { "type": "string", "description": "same, moved, upside down, or on its side" } }, "required": ["dir"] } }, "out": { "type": "string" }, "sectors": { "type": "number" }, "bin": { "type": "number" } }, "required": ["scans", "out"] }
         },
         {
             "name": "spectre_saw",

@@ -84,6 +84,9 @@ pub struct Scan {
     /// The turntable's axis in field millimetres, from the circle the
     /// camera's centres describe.
     pub axis: [f64; 2],
+    /// The object's centre line in field millimetres, the mean of the
+    /// points, which the mesh is built about.
+    pub centre: [f64; 2],
     /// How far the laser's line on the table passes from the axis, in
     /// millimetres: the laser is aimed through the axis, and the plane
     /// is taken to hold it.
@@ -92,6 +95,10 @@ pub struct Scan {
     #[serde(skip)]
     pub points: Vec<[f64; 3]>,
     pub point_count: usize,
+    /// For each point, the frame (its index in `frames`) and the pixel
+    /// it came from.
+    #[serde(skip)]
+    pub sources: Vec<(usize, [f64; 2])>,
     /// One profile per frame used, in azimuth order: points resampled
     /// into height bins.
     #[serde(skip)]
@@ -103,6 +110,9 @@ pub struct Scan {
     pub bounds: [f64; 6],
     /// The mesh's volume, in cubic millimetres.
     pub volume: f64,
+    /// The share of the mesh's profile points filled in from the
+    /// frames either side rather than seen.
+    pub filled: f64,
     pub warnings: Vec<String>,
     /// The first frame used, with the marks crossed in blue, the line's
     /// pixels on the paper in yellow and on the object in red.
@@ -149,6 +159,10 @@ fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
         a[0] * b[1] - a[1] * b[0],
     ]
 }
+fn dist3(a: [f64; 3], b: [f64; 3]) -> f64 {
+    ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
+}
+
 fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
@@ -516,6 +530,7 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
     }
     // Triangulate the rest: a ray through the pixel meets the plane.
     let mut points: Vec<[f64; 3]> = Vec::new();
+    let mut sources: Vec<(usize, [f64; 2])> = Vec::new();
     let mut per_frame: Vec<Vec<[f64; 3]>> = vec![Vec::new(); reads.len()];
     let mut paper_per_frame = vec![0usize; reads.len()];
     let mut kind: Vec<Vec<u8>> = Vec::new(); // 1 paper, 2 object, 0 neither
@@ -541,10 +556,44 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
             if p[2] < opts.min_height || p[2] > 1000.0 {
                 continue;
             }
-            points.push(p);
             per_frame[k].push(p);
             kinds[n] = 2;
         }
+        // Where the line jumps between surfaces at different depths
+        // (from a stem to the rim of the cap over it), the ridge in
+        // the rows between is a blend of the two, and its rays meet
+        // the plane along a chain strung between the surfaces. Along
+        // the line the points step a fraction of a millimetre; a point
+        // whose steps to both neighbours are many times that is on
+        // such a chain.
+        let frame_pts = &per_frame[k];
+        let mut steps: Vec<f64> = frame_pts.windows(2).map(|w| dist3(w[0], w[1])).collect();
+        steps.sort_by(f64::total_cmp);
+        let typical = steps.get(steps.len() / 2).copied().unwrap_or(0.0);
+        let far = (5.0 * typical).max(3.0);
+        let keep: Vec<bool> = (0..frame_pts.len())
+            .map(|i| {
+                let before = i > 0 && dist3(frame_pts[i - 1], frame_pts[i]) > far;
+                let after = i + 1 < frame_pts.len() && dist3(frame_pts[i], frame_pts[i + 1]) > far;
+                !(before && after)
+            })
+            .collect();
+        let mut i = 0;
+        let mut kept = Vec::with_capacity(frame_pts.len());
+        for (n, px) in r.line.iter().enumerate() {
+            if kinds[n] != 2 {
+                continue;
+            }
+            if keep[i] {
+                kept.push(frame_pts[i]);
+                points.push(frame_pts[i]);
+                sources.push((r.index, *px));
+            } else {
+                kinds[n] = 0;
+            }
+            i += 1;
+        }
+        per_frame[k] = kept;
         kind.push(kinds);
     }
     if points.is_empty() {
@@ -561,7 +610,11 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
     let reach = 1.25 * radii[radii.len() * 95 / 100] + 5.0;
     let keep = |p: &[f64; 3]| ((p[0] - axis[0]).powi(2) + (p[1] - axis[1]).powi(2)).sqrt() <= reach;
     let before = points.len();
-    points.retain(keep);
+    let kept: Vec<bool> = points.iter().map(keep).collect();
+    let mut it = kept.iter();
+    points.retain(|_| *it.next().unwrap());
+    let mut it = kept.iter();
+    sources.retain(|_| *it.next().unwrap());
     for f in per_frame.iter_mut() {
         f.retain(keep);
     }
@@ -583,227 +636,39 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
         f.marks = r.marks;
         f.fit = r.fit;
     }
-    // Profiles: each frame's points in height bins, every gap bridged
-    // by interpolation, then cut to the height range all the frames
-    // share, so that the mesh between consecutive frames round the
-    // turn closes, with one ring at the bottom and one at the top to
-    // fan the caps from.
-    let bin_of = |p: &[f64; 3]| (p[2] / opts.bin).floor() as i64;
-    let axis_r = |p: &[f64; 3]| ((p[0] - axis[0]).powi(2) + (p[1] - axis[1]).powi(2)).sqrt();
-    let means: Vec<std::collections::BTreeMap<i64, [f64; 3]>> = order
+    // The mesh: sectors centred on the frames' azimuths, one per frame
+    // that had the line on the object.
+    let with_points = per_frame.iter().filter(|f| !f.is_empty()).count();
+    let n = points.len() as f64;
+    let mean = points
         .iter()
+        .fold([0.0; 2], |c, p| [c[0] + p[0] / n, c[1] + p[1] / n]);
+    let phase = order
+        .iter()
+        .find(|&&k| !per_frame[k].is_empty())
         .map(|&k| {
-            let mut bins: std::collections::BTreeMap<i64, (usize, [f64; 3])> = Default::default();
-            for p in &per_frame[k] {
-                let e = bins.entry(bin_of(p)).or_insert((0, [0.0; 3]));
-                e.0 += 1;
-                for (sum, v) in e.1.iter_mut().zip(p) {
-                    *sum += v;
-                }
-            }
-            bins.iter()
-                .map(|(b, (n, s))| (*b, [s[0] / *n as f64, s[1] / *n as f64, s[2] / *n as f64]))
-                .collect()
+            let (sx, sy) = per_frame[k].iter().fold((0.0, 0.0), |(sx, sy), p| {
+                let a = (p[1] - mean[1]).atan2(p[0] - mean[0]);
+                (sx + a.cos(), sy + a.sin())
+            });
+            sy.atan2(sx).to_degrees()
         })
-        .collect();
-    // Gaps in a profile are bridged by interpolation between the bins
-    // either side.
-    let bridge = |bins: &[(i64, [f64; 3])]| -> Vec<(i64, [f64; 3])> {
-        let mut out = Vec::new();
-        for w in bins.windows(2) {
-            let ((b0, p0), (b1, p1)) = (w[0], w[1]);
-            out.push((b0, p0));
-            for g in 1..(b1 - b0) {
-                let t = g as f64 / (b1 - b0) as f64;
-                out.push((
-                    b0 + g,
-                    [
-                        p0[0] + (p1[0] - p0[0]) * t,
-                        p0[1] + (p1[1] - p0[1]) * t,
-                        p0[2] + (p1[2] - p0[2]) * t,
-                    ],
-                ));
-            }
-        }
-        if let Some(last) = bins.last() {
-            out.push(*last);
-        }
-        out
-    };
-    // A bin one frame has at a radius the frames round it do not is a
-    // stray that survived the reach test: a false ridge near the
-    // object's foot, where the line is smeared, put a few millimetres
-    // up and far out. Each frame's bins are held against the median
-    // of the bridged profiles of the two frames either side, where
-    // three or more of them reach that height: a bin further from it
-    // than 15 % and 3 mm goes. A feature on the object shows in the
-    // frames beside it too, so it stays.
-    let nf = means.len();
-    let bridged: Vec<std::collections::HashMap<i64, f64>> = means
-        .iter()
-        .map(|m| {
-            let bins: Vec<(i64, [f64; 3])> = m.iter().map(|(b, p)| (*b, *p)).collect();
-            bridge(&bins).iter().map(|(b, p)| (*b, axis_r(p))).collect()
-        })
-        .collect();
-    let raw: Vec<Vec<(i64, [f64; 3])>> = (0..nf)
-        .map(|k| {
-            let kept: Vec<(i64, [f64; 3])> = means[k]
-                .iter()
-                .filter(|(b, p)| {
-                    let mut near: Vec<f64> = (1..=2)
-                        .flat_map(|d| [(k + nf - d) % nf, (k + d) % nf])
-                        .filter(|&j| j != k)
-                        .filter_map(|j| bridged[j].get(b).copied())
-                        .collect();
-                    if near.len() < 3 {
-                        return true;
-                    }
-                    near.sort_by(f64::total_cmp);
-                    let m = near[near.len() / 2];
-                    (axis_r(p) - m).abs() <= 0.15 * m + 3.0
-                })
-                .map(|(b, p)| (*b, *p))
-                .collect();
-            bridge(&kept)
-        })
-        .filter(|prof| !prof.is_empty())
-        .collect();
-    if raw.len() < 3 {
-        return Err("fewer than three frames had the line on the object".into());
+        .unwrap_or(0.0);
+    let Mesh {
+        centre,
+        profiles,
+        measured,
+        triangles,
+        volume,
+    } = cloud_mesh(&points, with_points, phase, opts.bin)?;
+    let cells = measured.iter().map(|m| m.len()).sum::<usize>().max(1);
+    let filled = measured.iter().flatten().filter(|m| !**m).count() as f64 / cells as f64;
+    if filled > 0.25 {
+        warnings.push(format!(
+            "{:.0} % of the mesh is filled in from neighbouring frames rather than seen: the line was lost on much of the object, or faces turned from the camera while the laser lit them",
+            100.0 * filled
+        ));
     }
-    // The height range: the bins a third of the frames or more have.
-    // A frame missing a bin in that range (its line lost there, or in
-    // the laser's shadow) takes it from the nearest frames either side
-    // round the turn that have it, the radius about the axis
-    // interpolated at this frame's own azimuth.
-    let mut count: std::collections::BTreeMap<i64, usize> = Default::default();
-    for prof in &raw {
-        for (b, _) in prof {
-            *count.entry(*b).or_insert(0) += 1;
-        }
-    }
-    let enough = (raw.len() / 3).max(2);
-    let in_range: Vec<i64> = count
-        .iter()
-        .filter(|(_, n)| **n >= enough)
-        .map(|(b, _)| *b)
-        .collect();
-    let (lo, hi) = match (in_range.first(), in_range.last()) {
-        (Some(&lo), Some(&hi)) if hi > lo => (lo, hi),
-        _ => {
-            return Err(
-                "the frames' profiles share no height range; the object or the laser moved during the turn"
-                    .into(),
-            )
-        }
-    };
-    let nf = raw.len();
-    let polar = |p: [f64; 3]| {
-        let (dx, dy) = (p[0] - axis[0], p[1] - axis[1]);
-        ((dx * dx + dy * dy).sqrt(), dy.atan2(dx))
-    };
-    let azimuths: Vec<f64> = raw
-        .iter()
-        .map(|prof| {
-            let (mut sx, mut sy) = (0.0, 0.0);
-            for (_, p) in prof {
-                let (_, a) = polar(*p);
-                sx += a.cos();
-                sy += a.sin();
-            }
-            sy.atan2(sx)
-        })
-        .collect();
-    let own: Vec<std::collections::HashMap<i64, [f64; 3]>> = raw
-        .iter()
-        .map(|prof| prof.iter().copied().collect())
-        .collect();
-    let profiles: Vec<Vec<[f64; 3]>> = (0..nf)
-        .map(|k| {
-            (lo..=hi)
-                .map(|b| {
-                    if let Some(p) = own[k].get(&b) {
-                        return *p;
-                    }
-                    let find = |step: isize| -> Option<(usize, f64)> {
-                        for d in 1..nf as isize {
-                            let j = (k as isize + step * d).rem_euclid(nf as isize) as usize;
-                            if let Some(p) = own[j].get(&b) {
-                                return Some((d as usize, polar(*p).0));
-                            }
-                        }
-                        None
-                    };
-                    let r = match (find(-1), find(1)) {
-                        (Some((da, ra)), Some((db, rb))) => {
-                            (ra * db as f64 + rb * da as f64) / (da + db) as f64
-                        }
-                        (Some((_, r)), None) | (None, Some((_, r))) => r,
-                        (None, None) => 0.0,
-                    };
-                    let z = (b as f64 + 0.5) * opts.bin;
-                    [
-                        axis[0] + r * azimuths[k].cos(),
-                        axis[1] + r * azimuths[k].sin(),
-                        z,
-                    ]
-                })
-                .collect()
-        })
-        .collect();
-    let n_bins = (hi - lo + 1) as usize;
-    let mut triangles: Vec<[[f64; 3]; 3]> = Vec::new();
-    for a in 0..profiles.len() {
-        let b = (a + 1) % profiles.len();
-        let (pa, pb) = (&profiles[a], &profiles[b]);
-        for i in 0..n_bins - 1 {
-            let (p, q, p1, q1) = (pa[i], pb[i], pa[i + 1], pb[i + 1]);
-            triangles.push([p, q, q1]);
-            triangles.push([p, q1, p1]);
-        }
-    }
-    // The caps: fans from the axis to the bottom ring and the top ring.
-    let zb = profiles.iter().map(|p| p[0][2]).sum::<f64>() / profiles.len() as f64;
-    let zt = profiles.iter().map(|p| p[n_bins - 1][2]).sum::<f64>() / profiles.len() as f64;
-    let (zlo, zhi) = (zb, zt);
-    for a in 0..profiles.len() {
-        let b = (a + 1) % profiles.len();
-        triangles.push([[axis[0], axis[1], zb], profiles[b][0], profiles[a][0]]);
-        triangles.push([
-            [axis[0], axis[1], zt],
-            profiles[a][n_bins - 1],
-            profiles[b][n_bins - 1],
-        ]);
-    }
-    let _ = (zlo, zhi);
-    // The volume by slices: at each height bin, the polygon through the
-    // profiles that have it, in azimuth order, times the bin's height.
-    // A hole in the mesh does not reach it.
-    let mut all_bins: Vec<i64> = profiles.iter().flatten().map(bin_of).collect();
-    all_bins.sort_unstable();
-    all_bins.dedup();
-    let volume: f64 = all_bins
-        .iter()
-        .map(|&bin| {
-            let ring: Vec<[f64; 3]> = profiles
-                .iter()
-                .filter_map(|prof| prof.iter().find(|p| bin_of(p) == bin).copied())
-                .collect();
-            if ring.len() < 3 {
-                return 0.0;
-            }
-            let area = (0..ring.len())
-                .map(|i| {
-                    let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
-                    (a[0] - axis[0]) * (b[1] - axis[1]) - (b[0] - axis[0]) * (a[1] - axis[1])
-                })
-                .sum::<f64>()
-                .abs()
-                / 2.0;
-            area * opts.bin
-        })
-        .sum();
     let mut bounds = [f64::MAX, f64::MAX, f64::MAX, f64::MIN, f64::MIN, f64::MIN];
     for p in &points {
         for a in 0..3 {
@@ -844,14 +709,17 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
         laser_fit,
         laser_points: paper_count,
         axis,
+        centre,
         aim,
         points,
         point_count,
+        sources,
         profiles,
         triangles,
         triangle_count,
         bounds,
         volume,
+        filled,
         warnings,
         picture: ok_render::to_png(&picture),
     })
@@ -1137,4 +1005,414 @@ mod tests {
             }
         }
     }
+}
+
+/// A mesh from a point cloud: profiles round the axis, the triangles
+/// between them, and the volume by slices.
+#[derive(Debug, Clone)]
+pub struct Mesh {
+    /// The vertical line the profiles are taken about: the mean of the
+    /// points.
+    pub centre: [f64; 2],
+    /// One profile per sector in azimuth order, a point per height bin
+    /// over the range the sectors share.
+    pub profiles: Vec<Vec<[f64; 3]>>,
+    /// For each profile point, whether it came from points in its own
+    /// cell (true) or was filled from the sectors either side.
+    pub measured: Vec<Vec<bool>>,
+    pub triangles: Vec<[[f64; 3]; 3]>,
+    pub volume: f64,
+}
+
+/// The surface through a point cloud about the vertical line through
+/// the cloud's mean, for an object a horizontal ray from that line
+/// leaves once at every height (anything convex, and most things that
+/// stand on a turntable; not a torus). The points go into `sectors` of
+/// azimuth about it, the first centred at `phase` degrees, and bins
+/// `bin` tall; each sector's bins are a
+/// profile, a bin the sectors either side disagree with dropped as a
+/// stray, gaps bridged, the range cut to the bins a third of the
+/// sectors have, and the profiles stitched into quads round the turn
+/// with a fan at each end. The volume is by slices, which a hole in
+/// the mesh does not reach.
+pub fn cloud_mesh(
+    points: &[[f64; 3]],
+    sectors: usize,
+    phase: f64,
+    bin: f64,
+) -> Result<Mesh, String> {
+    if sectors < 3 {
+        return Err("fewer than three sectors have points on the object".into());
+    }
+    if points.is_empty() {
+        return Err("no points to mesh".into());
+    }
+    let n = points.len() as f64;
+    let axis = points
+        .iter()
+        .fold([0.0; 2], |c, p| [c[0] + p[0] / n, c[1] + p[1] / n]);
+    let bin_of = |p: &[f64; 3]| (p[2] / bin).floor() as i64;
+    let axis_r = |p: &[f64; 3]| ((p[0] - axis[0]).powi(2) + (p[1] - axis[1]).powi(2)).sqrt();
+    let width = 360.0 / sectors as f64;
+    let sector_of = |p: &[f64; 3]| -> usize {
+        let a = (p[1] - axis[1]).atan2(p[0] - axis[0]).to_degrees();
+        (((a - phase) / width + 0.5).floor() as i64).rem_euclid(sectors as i64) as usize
+    };
+    // One point per sector and bin: the mean of the cell's points. A
+    // scan's points lie on the laser's lines, one azimuth per frame,
+    // and a cell that holds lines at two azimuths (sectors not centred
+    // on the frames, or two scans merged) keeps only its fullest line,
+    // since the mean of points on two lines lies inside the surface
+    // by the chord between them, deepest at a corner.
+    let mut cells: Vec<std::collections::BTreeMap<i64, Vec<[f64; 3]>>> =
+        vec![Default::default(); sectors];
+    for p in points {
+        cells[sector_of(p)].entry(bin_of(p)).or_default().push(*p);
+    }
+    let az_of = |p: &[f64; 3]| (p[1] - axis[1]).atan2(p[0] - axis[0]).to_degrees();
+    let means: Vec<std::collections::BTreeMap<i64, [f64; 3]>> = cells
+        .iter()
+        .map(|bins| {
+            bins.iter()
+                .map(|(b, pts)| {
+                    let mut pts: Vec<(f64, [f64; 3])> =
+                        pts.iter().map(|p| (az_of(p), *p)).collect();
+                    pts.sort_by(|a, b| a.0.total_cmp(&b.0));
+                    // Lines: runs of points within a degree of each other.
+                    let mut best: Option<(usize, usize)> = None;
+                    let mut start = 0;
+                    for i in 1..=pts.len() {
+                        if i == pts.len() || pts[i].0 - pts[i - 1].0 > 1.0 {
+                            if best.is_none_or(|(a, b)| i - start > b - a) {
+                                best = Some((start, i));
+                            }
+                            start = i;
+                        }
+                    }
+                    let (lo, hi) = best.unwrap();
+                    let mut line: Vec<[f64; 3]> = pts[lo..hi].iter().map(|(_, p)| *p).collect();
+                    line.sort_by(|a, b| axis_r(a).total_cmp(&axis_r(b)));
+                    // A line that runs in and out over more than two
+                    // bins' worth of radius within one bin of height,
+                    // with its points spread along that run rather
+                    // than bunched at one end, is on a face near flat,
+                    // the top of a cube or the underside of a cap: the
+                    // slice there reaches the outermost point. Else the
+                    // point of median radius, which a few points off a
+                    // neighbouring face that strayed into the bin by
+                    // their height do not move.
+                    let (rmin, rmax) = (axis_r(&line[0]), axis_r(&line[line.len() - 1]));
+                    let beyond = line
+                        .iter()
+                        .filter(|p| axis_r(p) > (rmin + rmax) / 2.0)
+                        .count();
+                    if rmax - rmin > 2.0 * bin && beyond * 3 >= line.len() {
+                        return (*b, line[line.len() - 1]);
+                    }
+                    (*b, line[line.len() / 2])
+                })
+                .collect()
+        })
+        .collect();
+    // Short gaps in a profile (the line lost for a few rows) are
+    // bridged by interpolation between the bins either side. A long
+    // gap is a surface the camera could not see, the stem under a cap,
+    // and is left for the sectors that saw it to fill.
+    let bridge = |bins: &[(i64, [f64; 3])]| -> Vec<(i64, [f64; 3])> {
+        let mut out = Vec::new();
+        for w in bins.windows(2) {
+            let ((b0, p0), (b1, p1)) = (w[0], w[1]);
+            out.push((b0, p0));
+            if b1 - b0 > 4 {
+                continue;
+            }
+            for g in 1..(b1 - b0) {
+                let t = g as f64 / (b1 - b0) as f64;
+                out.push((
+                    b0 + g,
+                    [
+                        p0[0] + (p1[0] - p0[0]) * t,
+                        p0[1] + (p1[1] - p0[1]) * t,
+                        p0[2] + (p1[2] - p0[2]) * t,
+                    ],
+                ));
+            }
+        }
+        if let Some(last) = bins.last() {
+            out.push(*last);
+        }
+        out
+    };
+    // A bin one sector has at a radius the sectors round it do not,
+    // and its own sector does not a little higher and lower, is a
+    // stray that survived the reach test: a false ridge near the
+    // object's foot, where the line is smeared, put a few millimetres
+    // up and far out. Each sector's bins are held against the median
+    // of the bridged profiles of the two sectors either side, where
+    // three or more of them reach that height, and against the median
+    // of its own profile four to eight bins away on both sides: a bin
+    // further than 15 % and 3 mm from both goes. A feature on the
+    // object shows in the sectors beside it or runs up its own, so it
+    // stays; a corner of a cube is far from the faces either side but
+    // is the same corner all the way up.
+    let nf = sectors;
+    let bridged: Vec<std::collections::HashMap<i64, f64>> = means
+        .iter()
+        .map(|m| {
+            let bins: Vec<(i64, [f64; 3])> = m.iter().map(|(b, p)| (*b, *p)).collect();
+            bridge(&bins).iter().map(|(b, p)| (*b, axis_r(p))).collect()
+        })
+        .collect();
+    let mut seen: Vec<std::collections::HashSet<i64>> = vec![Default::default(); nf];
+    let raw: Vec<Vec<(i64, [f64; 3])>> = (0..nf)
+        .map(|k| {
+            let kept: Vec<(i64, [f64; 3])> = means[k]
+                .iter()
+                .filter(|(b, p)| {
+                    let mut near: Vec<f64> = (1..=2)
+                        .flat_map(|d| [(k + nf - d) % nf, (k + d) % nf])
+                        .filter(|&j| j != k)
+                        .filter_map(|j| bridged[j].get(b).copied())
+                        .collect();
+                    if near.len() < 3 {
+                        return true;
+                    }
+                    near.sort_by(f64::total_cmp);
+                    let m = near[near.len() / 2];
+                    let r = axis_r(p);
+                    if (r - m).abs() <= 0.15 * m + 3.0 {
+                        return true;
+                    }
+                    let mut own: Vec<f64> = (4..=8)
+                        .flat_map(|d| [**b - d, **b + d])
+                        .filter_map(|bb| bridged[k].get(&bb).copied())
+                        .collect();
+                    if own.len() < 3 {
+                        return false;
+                    }
+                    own.sort_by(f64::total_cmp);
+                    let om = own[own.len() / 2];
+                    (r - om).abs() <= 0.15 * om + 3.0
+                })
+                .map(|(b, p)| (*b, *p))
+                .collect();
+            seen[k] = kept.iter().map(|(b, _)| *b).collect();
+            bridge(&kept)
+        })
+        .collect();
+    if raw.iter().filter(|prof| !prof.is_empty()).count() < 3 {
+        return Err("fewer than three sectors have points on the object".into());
+    }
+    // The height range: the bins a third of the sectors or more have.
+    // A sector missing a bin in that range (its line lost there, or on
+    // a face the camera could not see) takes the point where its own
+    // azimuth crosses the chord between the nearest sectors either
+    // side that have it: on a flat face that chord lies in the face,
+    // and on a curve it is the same chord the mesh makes anyway.
+    let mut count: std::collections::BTreeMap<i64, usize> = Default::default();
+    for prof in &raw {
+        for (b, _) in prof {
+            *count.entry(*b).or_insert(0) += 1;
+        }
+    }
+    let enough = (nf / 3).max(2);
+    let in_range: Vec<i64> = count
+        .iter()
+        .filter(|(_, n)| **n >= enough)
+        .map(|(b, _)| *b)
+        .collect();
+    let (lo, hi) =
+        match (in_range.first(), in_range.last()) {
+            (Some(&lo), Some(&hi)) if hi > lo => (lo, hi),
+            _ => return Err(
+                "the profiles share no height range; the object or the laser moved during the turn"
+                    .into(),
+            ),
+        };
+    let polar = |p: [f64; 3]| {
+        let (dx, dy) = (p[0] - axis[0], p[1] - axis[1]);
+        ((dx * dx + dy * dy).sqrt(), dy.atan2(dx))
+    };
+    let azimuths: Vec<f64> = (0..nf)
+        .map(|k| (phase + k as f64 * width).to_radians())
+        .collect();
+    let own: Vec<std::collections::BTreeMap<i64, [f64; 3]>> = raw
+        .iter()
+        .map(|prof| prof.iter().copied().collect())
+        .collect();
+    let measured: Vec<Vec<bool>> = (0..nf)
+        .map(|k| (lo..=hi).map(|b| seen[k].contains(&b)).collect())
+        .collect();
+    let profiles: Vec<Vec<[f64; 3]>> = (0..nf)
+        .map(|k| {
+            (lo..=hi)
+                .map(|b| {
+                    if let Some(p) = own[k].get(&b) {
+                        return *p;
+                    }
+                    let find = |step: isize| -> Option<(usize, [f64; 3])> {
+                        for d in 1..nf as isize {
+                            let j = (k as isize + step * d).rem_euclid(nf as isize) as usize;
+                            if let Some(p) = own[j].get(&b) {
+                                return Some((d as usize, *p));
+                            }
+                        }
+                        None
+                    };
+                    let (ca, sa) = (azimuths[k].cos(), azimuths[k].sin());
+                    let r = match (find(-1), find(1)) {
+                        (Some((da, pa)), Some((db, pb))) => {
+                            // Across a short gap, the ray at this
+                            // azimuth meets the chord from pa to pb
+                            // (on a flat face that chord lies in the
+                            // face); across a long one, where a chord
+                            // would cut deep inside anything round, the
+                            // radii either side interpolated by distance.
+                            let (ax, ay) = (pa[0] - axis[0], pa[1] - axis[1]);
+                            let (bx, by) = (pb[0] - axis[0], pb[1] - axis[1]);
+                            let (ex, ey) = (bx - ax, by - ay);
+                            let det = ca * ey - sa * ex;
+                            let along = if da + db <= 4 && det.abs() > 1e-9 {
+                                let t = (ax * ey - ay * ex) / det;
+                                let u = (ax * sa - ay * ca) / det;
+                                (t > 0.0 && (-1e-9..=1.0 + 1e-9).contains(&u)).then_some(t)
+                            } else {
+                                None
+                            };
+                            along.unwrap_or_else(|| {
+                                (polar(pa).0 * db as f64 + polar(pb).0 * da as f64)
+                                    / (da + db) as f64
+                            })
+                        }
+                        (Some((_, p)), None) | (None, Some((_, p))) => polar(p).0,
+                        // No sector saw this height: bridge straight
+                        // between this sector's own nearest bins below
+                        // and above, the honest cone across what no
+                        // camera reached.
+                        (None, None) => {
+                            let below = own[k]
+                                .range(..b)
+                                .next_back()
+                                .map(|(bb, p)| (*bb, polar(*p).0));
+                            let above = own[k]
+                                .range(b + 1..)
+                                .next()
+                                .map(|(bb, p)| (*bb, polar(*p).0));
+                            match (below, above) {
+                                (Some((b0, r0)), Some((b1, r1))) => {
+                                    r0 + (r1 - r0) * (b - b0) as f64 / (b1 - b0) as f64
+                                }
+                                (Some((_, r)), None) | (None, Some((_, r))) => r,
+                                (None, None) => 0.0,
+                            }
+                        }
+                    };
+                    let z = (b as f64 + 0.5) * bin;
+                    [axis[0] + r * ca, axis[1] + r * sa, z]
+                })
+                .collect()
+        })
+        .collect();
+    let n_bins = (hi - lo + 1) as usize;
+    let mut triangles: Vec<[[f64; 3]; 3]> = Vec::new();
+    for a in 0..nf {
+        let b = (a + 1) % nf;
+        let (pa, pb) = (&profiles[a], &profiles[b]);
+        for i in 0..n_bins - 1 {
+            let (p, q, p1, q1) = (pa[i], pb[i], pa[i + 1], pb[i + 1]);
+            triangles.push([p, q, q1]);
+            triangles.push([p, q1, p1]);
+        }
+    }
+    // The caps: fans from the axis to the bottom ring and the top ring.
+    let zb = profiles.iter().map(|p| p[0][2]).sum::<f64>() / nf as f64;
+    let zt = profiles.iter().map(|p| p[n_bins - 1][2]).sum::<f64>() / nf as f64;
+    for a in 0..nf {
+        let b = (a + 1) % nf;
+        triangles.push([[axis[0], axis[1], zb], profiles[b][0], profiles[a][0]]);
+        triangles.push([
+            [axis[0], axis[1], zt],
+            profiles[a][n_bins - 1],
+            profiles[b][n_bins - 1],
+        ]);
+    }
+    // The volume by slices: at each height bin, the polygon through the
+    // profiles in azimuth order, integrated by the trapezoid rule over
+    // the rings' own mean heights (a ring on a flat rim sits at the
+    // rim's height, not the bin's middle), and half a bin of the end
+    // rings' area past each end.
+    let areas: Vec<f64> = (0..n_bins)
+        .map(|i| {
+            (0..nf)
+                .map(|k| {
+                    let (a, b) = (profiles[k][i], profiles[(k + 1) % nf][i]);
+                    (a[0] - axis[0]) * (b[1] - axis[1]) - (b[0] - axis[0]) * (a[1] - axis[1])
+                })
+                .sum::<f64>()
+                .abs()
+                / 2.0
+        })
+        .collect();
+    let heights: Vec<f64> = (0..n_bins)
+        .map(|i| profiles.iter().map(|p| p[i][2]).sum::<f64>() / nf as f64)
+        .collect();
+    let mut volume = 0.0;
+    for i in 0..n_bins - 1 {
+        volume += (areas[i] + areas[i + 1]) / 2.0 * (heights[i + 1] - heights[i]).max(0.0);
+    }
+    volume += areas[0] * (heights[0] - lo as f64 * bin).max(0.0);
+    volume += areas[n_bins - 1] * ((hi + 1) as f64 * bin - heights[n_bins - 1]).max(0.0);
+    Ok(Mesh {
+        centre: axis,
+        profiles,
+        measured,
+        triangles,
+        volume,
+    })
+}
+
+/// The points as an ASCII PLY file.
+pub fn ply(points: &[[f64; 3]]) -> String {
+    let mut out = format!(
+        "ply\nformat ascii 1.0\nelement vertex {}\nproperty float x\nproperty float y\nproperty float z\nend_header\n",
+        points.len()
+    );
+    for p in points {
+        out.push_str(&format!("{:.3} {:.3} {:.3}\n", p[0], p[1], p[2]));
+    }
+    out
+}
+
+/// The points of an ASCII PLY file (the first three properties of
+/// each vertex).
+pub fn read_ply(text: &str) -> Result<Vec<[f64; 3]>, String> {
+    let mut lines = text.lines();
+    if lines.next().map(str::trim) != Some("ply") {
+        return Err("not a PLY file".into());
+    }
+    let mut count = None;
+    for line in lines.by_ref() {
+        let line = line.trim();
+        if let Some(n) = line.strip_prefix("element vertex ") {
+            count = Some(n.trim().parse::<usize>().map_err(|e| e.to_string())?);
+        } else if line.starts_with("format") && !line.contains("ascii") {
+            return Err("only ASCII PLY is read".into());
+        } else if line == "end_header" {
+            break;
+        }
+    }
+    let count = count.ok_or("the PLY file has no vertex element")?;
+    let mut points = Vec::with_capacity(count);
+    for line in lines.take(count) {
+        let v: Vec<f64> = line
+            .split_whitespace()
+            .take(3)
+            .map(|s| s.parse::<f64>().map_err(|e| e.to_string()))
+            .collect::<Result<_, _>>()?;
+        if v.len() < 3 {
+            return Err("a vertex line has fewer than three numbers".into());
+        }
+        points.push([v[0], v[1], v[2]]);
+    }
+    Ok(points)
 }
