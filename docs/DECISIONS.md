@@ -538,3 +538,37 @@ phone), or marks far enough apart to be avoided (then too few are in
 view when a part covers the middle of the picture). The lattice and the
 codes were chosen together: four bits each way is sixteen columns and
 rows, three Letter tiles across and five up, more than a workbench.
+
+## The laser's plane comes from the line on the paper and the turntable's axis
+
+The scanner's one unknown beyond the camera is the laser's plane, and
+the obvious way to find it, fitting a plane to where the line's pixels
+land on the field, fails: on the paper every pixel lands on the table
+by construction, so the fit returns the table, and on the object the
+landing points are what the plane is needed to find. What the picture
+does know is which of the line's pixels are on the paper: there the
+line is straight in the picture, so the straight line most pixels lie
+on, found by RANSAC, separates them from the object's. Those pixels
+meet the field's plane at known points, which in the camera's frame
+(the rig is fixed; only the table turns) are the same line every
+frame, so they give the plane one direction. The other is the
+turntable's axis: the camera's centres over the turning field lie on a
+circle about it, and the laser is set up to be aimed through it, so
+the axis lies in the plane. The plane is fitted to the paper points
+and samples along the axis together, and the scan reports how far the
+line really passes from the axis, which is the one thing the setup can
+get wrong; a few millimetres off bends the whole profile, and a
+reported number beats a silent one. The alternative, a calibration
+object of known shape scanned first, would work without the aiming
+rule, but it is one more thing to print and keep, and the gourd
+scanned in the closed loop stands in for it in the tests.
+
+The scanner was written against its own simulation before any video
+existed. A rendered gourd of known shape costs a depth buffer, a shadow
+map and a shade of green, and in return every stage has a true value to
+be held against: the focal length, the axis, the laser's angle, each
+point's radius and the volume. The frames also go through ffmpeg and
+back as the example, because a phone's video is chroma subsampled and
+compressed, and the line that was crisp in the PNGs comes back blurred
+and dimmer on dark surfaces; that is what set the line detector's
+adaptive threshold and its continuity filter, not the clean frames.

@@ -75,6 +75,10 @@ works today, all in the browser:
   the print scale, photograph it, and the sizes, outlines and holes
   come back in millimetres, or as a sketch ready to extrude; a flatbed
   scan of parts with a rule needs no sheet at all.
+- Scanning on a turntable: an object on the measuring field on a lazy
+  Susan, turned under a phone and a line laser, comes back as a closed
+  mesh in millimetres (`examples/turntable-scan/`), the scanner built
+  and tested against a rendered gourd of known shape.
 - Agents: `ok-mcp` is a Model Context Protocol server that lets a
   language model build and edit documents through the same ops the
   client uses, live in your browser or on a local file, with a report

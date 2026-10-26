@@ -304,6 +304,48 @@ pub fn field_pdf(field: &Field) -> Vec<u8> {
     document(pages)
 }
 
+/// What is printed at (x, y) printed millimetres of the field: the
+/// grid, a mark's ink, or the paper (None).
+pub fn field_colour(field: &Field, x: f64, y: f64) -> Option<Rgb> {
+    let b = field.bounds();
+    if x < b[0] || x > b[2] || y < b[1] || y > b[3] {
+        return None;
+    }
+    let mut c = None;
+    if ((x / 10.0).round() * 10.0 - x).abs() < 0.12 || ((y / 10.0).round() * 10.0 - y).abs() < 0.12
+    {
+        c = Some(Rgb(200, 200, 200));
+    }
+    let (cols, rows) = (field.columns() as i64, field.rows() as i64);
+    let (i, j) = ((x / PITCH).round() as i64, (y / PITCH).round() as i64);
+    if (0..cols).contains(&i) && (0..rows).contains(&j) {
+        let (mx, my) = (i as f64 * PITCH, j as f64 * PITCH);
+        let r = ((x - mx).powi(2) + (y - my).powi(2)).sqrt();
+        let origin = i == 0 && j == 0;
+        let black = r <= DOT_R
+            || (RING_HOLE_R..=RING_R).contains(&r)
+            || (origin && (ORIGIN_RING_HOLE_R..=ORIGIN_RING_R).contains(&r));
+        let white =
+            (r < RING_HOLE_R && r > DOT_R) || (origin && r > RING_R && r < ORIGIN_RING_HOLE_R);
+        if black {
+            c = Some(Rgb(0, 0, 0));
+        } else if white {
+            c = Some(Rgb(255, 255, 255));
+        }
+        for upper in [false, true] {
+            let v = if upper { CODE_DY } else { -CODE_DY };
+            for k in 0..SLOTS {
+                if slot_set(i as usize, j as usize, upper, k)
+                    && ((x - mx - slot_u(k)).powi(2) + (y - my - v).powi(2)).sqrt() <= CODE_R
+                {
+                    c = Some(Rgb(0, 0, 0));
+                }
+            }
+        }
+    }
+    c
+}
+
 /// The taped field as a raster at `s` px per true mm, y down, as a
 /// scanner would see it, with the scene lying on it: the field's own
 /// features in printed millimetres (`scene.print`, `scene.stretch`),
@@ -316,45 +358,11 @@ pub fn field_image(field: &Field, s: f64, scene: &Scene) -> Image {
         ((b[3] - b[1]) * py * s) as usize,
     );
     let mut img = Image::new(pw, ph, Rgb(255, 255, 255));
-    let (cols, rows) = (field.columns() as i64, field.rows() as i64);
     for jj in 0..ph {
         for ii in 0..pw {
             let xt = b[0] * px + (ii as f64 + 0.5) / s;
             let yt = b[3] * py - (jj as f64 + 0.5) / s;
-            let (x, y) = (xt / px, yt / py);
-            let mut c = Rgb(255, 255, 255);
-            if ((x / 10.0).round() * 10.0 - x).abs() < 0.12
-                || ((y / 10.0).round() * 10.0 - y).abs() < 0.12
-            {
-                c = Rgb(200, 200, 200);
-            }
-            let (i, j) = ((x / PITCH).round() as i64, (y / PITCH).round() as i64);
-            if (0..cols).contains(&i) && (0..rows).contains(&j) {
-                let (mx, my) = (i as f64 * PITCH, j as f64 * PITCH);
-                let r = ((x - mx).powi(2) + (y - my).powi(2)).sqrt();
-                let origin = i == 0 && j == 0;
-                let black = r <= DOT_R
-                    || (RING_HOLE_R..=RING_R).contains(&r)
-                    || (origin && (ORIGIN_RING_HOLE_R..=ORIGIN_RING_R).contains(&r));
-                let white = (r < RING_HOLE_R && r > DOT_R)
-                    || (origin && r > RING_R && r < ORIGIN_RING_HOLE_R);
-                if black {
-                    c = Rgb(0, 0, 0);
-                } else if white {
-                    c = Rgb(255, 255, 255);
-                }
-                for upper in [false, true] {
-                    let v = if upper { CODE_DY } else { -CODE_DY };
-                    for k in 0..SLOTS {
-                        if slot_set(i as usize, j as usize, upper, k)
-                            && ((x - mx - slot_u(k)).powi(2) + (y - my - v).powi(2)).sqrt()
-                                <= CODE_R
-                        {
-                            c = Rgb(0, 0, 0);
-                        }
-                    }
-                }
-            }
+            let mut c = field_colour(field, xt / px, yt / py).unwrap_or(Rgb(255, 255, 255));
             if let Some(part) = scene_at(scene, xt, yt) {
                 c = part;
             }
@@ -408,25 +416,34 @@ pub(super) fn ink_elements(
     v
 }
 
+/// The second moment of the ring about its centre, per axis, in mm2:
+/// (R2² + R1²) / 4 for a uniform annulus. A ring seen as an ellipse
+/// has moments this times the square of the pixels per millimetre
+/// along each of its axes.
+const RING_VARIANCE: f64 = (RING_R * RING_R + RING_HOLE_R * RING_HOLE_R) / 4.0;
+
 /// Every mark in the thresholded picture whose code reads: a bullseye
 /// (a ring with a dot at its centre) with the lower code row's two
 /// anchor dots the right distance apart and the right way off the
-/// centre. The anchors and the centre give the mark's own frame,
-/// which perspective barely bends over 11 mm, and each nearby dot
-/// falls into a slot of it or is ignored. Two marks reading the same
-/// place are both dropped.
+/// centre. The ring is an ellipse in an oblique picture; its moments
+/// give the pixels per millimetre along its two axes, and every dot
+/// round it is unwarped by that back onto the circle, where the
+/// anchors and the centre give the mark's own frame (which perspective
+/// barely bends over 11 mm) and each dot falls into a slot of it or is
+/// ignored. Two marks reading the same place are both dropped.
 pub(super) fn find_marks(dark: &[bool], w: usize, h: usize) -> Vec<MarkPx> {
     let comps = components(dark, w, h);
     let is_ring = |c: &Comp| {
         c.area >= 40 && {
             let aspect = c.width() as f64 / c.height() as f64;
-            (0.6..=1.7).contains(&aspect) && (0.08..=0.8).contains(&c.fill())
+            (0.2..=5.0).contains(&aspect) && (0.08..=0.8).contains(&c.fill())
         }
     };
-    let is_dot = |c: &Comp| c.area >= 4 && c.fill() > 0.55;
+    let is_dot = |c: &Comp| c.area >= 4 && c.fill() > 0.5;
     let concentric = |a: &Comp, b: &Comp| {
         a.contains(b)
-            && ((a.cx - b.cx).powi(2) + (a.cy - b.cy).powi(2)).sqrt() < 0.2 * a.width() as f64
+            && ((a.cx - b.cx).powi(2) + (a.cy - b.cy).powi(2)).sqrt()
+                < 0.2 * a.width().max(a.height()) as f64
     };
     // Bullseyes as (ring, dot); the origin's outer ring would claim the
     // same dot, so the smallest ring round a dot is the one kept.
@@ -459,17 +476,30 @@ pub(super) fn find_marks(dark: &[bool], w: usize, h: usize) -> Vec<MarkPx> {
     for (ai, di) in bulls {
         let (ring, d) = (&comps[ai], &comps[di]);
         let c = [d.cx, d.cy];
-        // Pixels per millimetre here, from the ring's size.
-        let s = (ring.width() + ring.height()) as f64 / 2.0 / (2.0 * RING_R);
-        let dot_area = PI * (CODE_R * s).powi(2);
+        // The ring as an ellipse: pixels per millimetre along its major
+        // and minor axes, and the angle of the major one. Unwarping by
+        // that puts the mark's surroundings back on the circle, in
+        // millimetres, orientation kept (the map does not flip).
+        let (l1, l2, ang) = ring.axes();
+        let (sa, sb) = ((l1 / RING_VARIANCE).sqrt(), (l2 / RING_VARIANCE).sqrt());
+        if sb < 0.25 || sa < 0.25 {
+            continue;
+        }
+        let (ca, sn) = (ang.cos(), ang.sin());
+        let unwarp = |dx: f64, dy: f64| -> [f64; 2] {
+            [(dx * ca + dy * sn) / sa, (-dx * sn + dy * ca) / sb]
+        };
+        let dot_area = PI * CODE_R * CODE_R * sa * sb;
+        let at = |k: usize| unwarp(comps[k].cx - c[0], comps[k].cy - c[1]);
         let cands: Vec<usize> = comps
             .iter()
             .enumerate()
             .filter(|&(k, b)| {
-                k != di && k != ai && b.fill() > 0.45 && {
+                k != di && k != ai && b.fill() > 0.4 && {
                     let a = b.area as f64 / dot_area;
-                    let r = ((b.cx - c[0]).powi(2) + (b.cy - c[1]).powi(2)).sqrt();
-                    (0.25..=4.0).contains(&a) && r > 7.0 * s && r < 20.0 * s
+                    let [u, v] = unwarp(b.cx - c[0], b.cy - c[1]);
+                    let r = (u * u + v * v).sqrt();
+                    (0.2..=5.0).contains(&a) && r > 7.0 && r < 20.0
                 }
             })
             .map(|(k, _)| k)
@@ -479,16 +509,16 @@ pub(super) fn find_marks(dark: &[bool], w: usize, h: usize) -> Vec<MarkPx> {
         let mut best: Option<(f64, usize, usize)> = None;
         for p in 0..cands.len() {
             for q in p + 1..cands.len() {
-                let (a, b) = (&comps[cands[p]], &comps[cands[q]]);
-                let (dx, dy) = (b.cx - a.cx, b.cy - a.cy);
+                let (a, b) = (at(cands[p]), at(cands[q]));
+                let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
                 let dpq = (dx * dx + dy * dy).sqrt();
-                let e1 = (dpq / (span * s) - 1.0).abs();
+                let e1 = (dpq / span - 1.0).abs();
                 if e1 > 0.2 {
                     continue;
                 }
-                let off = [(a.cx + b.cx) / 2.0 - c[0], (a.cy + b.cy) / 2.0 - c[1]];
+                let off = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
                 let dm = (off[0] * off[0] + off[1] * off[1]).sqrt();
-                let e2 = (dm / (CODE_DY * s) - 1.0).abs();
+                let e2 = (dm / CODE_DY - 1.0).abs();
                 if e2 > 0.3 {
                     continue;
                 }
@@ -505,21 +535,22 @@ pub(super) fn find_marks(dark: &[bool], w: usize, h: usize) -> Vec<MarkPx> {
         let Some((_, p, q)) = best else {
             continue;
         };
-        // The mark's frame: `ex` per millimetre along the lower row,
-        // `ey` per millimetre from that row up through the centre. Seen
-        // from above, x to y turns clockwise in a picture (y down), which
-        // fixes which way along the row is +x.
-        let (pa, pb) = (&comps[p], &comps[q]);
-        let m = [(pa.cx + pb.cx) / 2.0, (pa.cy + pb.cy) / 2.0];
-        let mut ex = [(pb.cx - pa.cx) / span, (pb.cy - pa.cy) / span];
-        let ey = [(c[0] - m[0]) / CODE_DY, (c[1] - m[1]) / CODE_DY];
+        // The mark's frame on the unwarped circle: `ex` per millimetre
+        // along the lower row, `ey` per millimetre from that row up
+        // through the centre. Seen from above, x to y turns clockwise in
+        // a picture (y down), and the unwarp keeps that, which fixes
+        // which way along the row is +x.
+        let (pa, pb) = (at(p), at(q));
+        let m = [(pa[0] + pb[0]) / 2.0, (pa[1] + pb[1]) / 2.0];
+        let mut ex = [(pb[0] - pa[0]) / span, (pb[1] - pa[1]) / span];
+        let ey = [-m[0] / CODE_DY, -m[1] / CODE_DY];
         if ex[0] * ey[1] - ex[1] * ey[0] > 0.0 {
             ex = [-ex[0], -ex[1]];
         }
         let det = ex[0] * ey[1] - ex[1] * ey[0];
         let mut set = [[false; SLOTS]; 2];
         for &k in &cands {
-            let o = [comps[k].cx - c[0], comps[k].cy - c[1]];
+            let o = at(k);
             let u = (o[0] * ey[1] - o[1] * ey[0]) / det;
             let v = (ex[0] * o[1] - ex[1] * o[0]) / det;
             let row = if (v + CODE_DY).abs() < 2.0 {
@@ -539,6 +570,23 @@ pub(super) fn find_marks(dark: &[bool], w: usize, h: usize) -> Vec<MarkPx> {
             }
         }
         if !(set[0][0] && set[0][SLOTS - 1]) || set[1][0] || set[1][SLOTS - 1] {
+            continue;
+        }
+        // Every slot of both rows must lie inside the picture: a mark
+        // cut by its edge could be missing dots.
+        let inside = (0..SLOTS).all(|k| {
+            [-CODE_DY, CODE_DY].iter().all(|&v| {
+                let u = slot_u(k);
+                let o = [u * ex[0] + v * ey[0], u * ex[1] + v * ey[1]];
+                let (dx, dy) = (
+                    o[0] * sa * ca - o[1] * sb * sn,
+                    o[0] * sa * sn + o[1] * sb * ca,
+                );
+                let (px, py) = (c[0] + dx, c[1] + dy);
+                px > 2.0 && py > 2.0 && px < w as f64 - 3.0 && py < h as f64 - 3.0
+            })
+        });
+        if !inside {
             continue;
         }
         let value = |row: usize| (1..=CODE_BITS).fold(0, |v, k| (v << 1) | set[row][k] as usize);

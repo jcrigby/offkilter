@@ -127,17 +127,18 @@ fn a_photograph_of_part_of_the_field_with_marks_covered_still_measures() {
 fn too_few_marks_say_so() {
     let field = Field::new(SheetSize::Letter, 1, 1).unwrap();
     let sheet = field_image(&field, 5.0, &Scene::default());
-    // Only the strip along the bottom row of marks is in the picture.
+    // Only the strip along the bottom row of marks is in the picture,
+    // those marks whole with both their code rows.
     let scan = photograph(
         &sheet,
         [
-            [0.0, -1300.0],
-            [2000.0, -1300.0],
-            [2000.0, 250.0],
-            [0.0, 250.0],
+            [0.0, -1350.0],
+            [2000.0, -1350.0],
+            [2000.0, 480.0],
+            [0.0, 480.0],
         ],
         2000,
-        400,
+        500,
     );
     let err = measure_image(&scan, None, None).unwrap_err();
     assert!(err.contains("two columns and two rows"), "{err}");

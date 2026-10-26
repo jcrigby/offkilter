@@ -11,3 +11,6 @@ ok-render = { workspace = true }
 ok-sheet = { workspace = true }
 serde = { workspace = true }
 jpeg-decoder = { version = "0.3", default-features = false }
+
+[dev-dependencies]
+serde_json = { workspace = true }

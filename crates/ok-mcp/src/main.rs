@@ -1408,6 +1408,141 @@ impl Server {
                 })
                 .to_string())
             }
+            "scan_turntable" => {
+                let out_dir = args
+                    .get("out")
+                    .and_then(|p| p.as_str())
+                    .ok_or("scan_turntable needs out: a directory to write scan.stl, scan.ply, scan.json and scan-frame.png into")?;
+                std::fs::create_dir_all(out_dir)
+                    .map_err(|e| format!("could not make {out_dir}: {e}"))?;
+                let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
+                let frame_dir: std::path::PathBuf = match (
+                    args.get("video").and_then(|v| v.as_str()),
+                    args.get("frames").and_then(|v| v.as_str()),
+                ) {
+                    (Some(video), _) => {
+                        // Frames out of the video with ffmpeg, `fps` per second of it.
+                        let dir = std::path::Path::new(out_dir).join("frames");
+                        let _ = std::fs::remove_dir_all(&dir);
+                        std::fs::create_dir_all(&dir)
+                            .map_err(|e| format!("could not make {}: {e}", dir.display()))?;
+                        let fps = num("fps", 2.0);
+                        let status = std::process::Command::new("ffmpeg")
+                            .args([
+                                "-loglevel",
+                                "error",
+                                "-i",
+                                video,
+                                "-vf",
+                                &format!("fps={fps}"),
+                                &format!("{}/%04d.png", dir.display()),
+                            ])
+                            .status()
+                            .map_err(|e| format!("ffmpeg could not run ({e}): install it, or extract the frames yourself and pass them as `frames`, a directory of PNG or JPEG files"))?;
+                        if !status.success() {
+                            return Err(format!("ffmpeg could not read {video}"));
+                        }
+                        dir
+                    }
+                    (None, Some(frames)) => std::path::PathBuf::from(frames),
+                    (None, None) => {
+                        return Err("scan_turntable needs video (a file ffmpeg can read) or frames (a directory of PNG or JPEG files, in order)".into())
+                    }
+                };
+                let mut names: Vec<std::path::PathBuf> = std::fs::read_dir(&frame_dir)
+                    .map_err(|e| format!("could not read {}: {e}", frame_dir.display()))?
+                    .filter_map(|e| e.ok().map(|e| e.path()))
+                    .filter(|p| {
+                        matches!(
+                            p.extension()
+                                .and_then(|e| e.to_str())
+                                .map(|e| e.to_lowercase())
+                                .as_deref(),
+                            Some("png" | "jpg" | "jpeg")
+                        )
+                    })
+                    .collect();
+                names.sort();
+                let every = num("every", 1.0).max(1.0) as usize;
+                let mut frames = Vec::new();
+                for (k, name) in names.iter().enumerate() {
+                    if k % every != 0 {
+                        continue;
+                    }
+                    let bytes = std::fs::read(name)
+                        .map_err(|e| format!("could not read {}: {e}", name.display()))?;
+                    frames.push(ok_photo::decode(&bytes)?);
+                }
+                if frames.is_empty() {
+                    return Err(format!("no frames in {}", frame_dir.display()));
+                }
+                let opts = ok_photo::scan::ScanOptions {
+                    laser_min: num("laser_min", 12.0),
+                    min_height: num("min_height", 1.5),
+                    bin: num("bin", 1.0),
+                };
+                let s = ok_photo::scan::scan(&frames, &opts)?;
+                let mut mesh = ok_mesh::TriMesh::new();
+                let v3 = |p: [f64; 3]| ok_math::Vec3::new(p[0], p[1], p[2]);
+                for t in &s.triangles {
+                    mesh.push_triangle(v3(t[0]), v3(t[1]), v3(t[2]));
+                }
+                let out = std::path::Path::new(out_dir);
+                let write = |name: &str, bytes: &[u8]| {
+                    std::fs::write(out.join(name), bytes)
+                        .map_err(|e| format!("could not write {}: {e}", out.join(name).display()))
+                };
+                write(
+                    "scan.stl",
+                    &ok_mesh::to_stl(&[mesh], "offkilter turntable scan"),
+                )?;
+                let mut ply = format!(
+                    "ply\nformat ascii 1.0\nelement vertex {}\nproperty float x\nproperty float y\nproperty float z\nend_header\n",
+                    s.points.len()
+                );
+                for p in &s.points {
+                    ply.push_str(&format!("{:.3} {:.3} {:.3}\n", p[0], p[1], p[2]));
+                }
+                write("scan.ply", ply.as_bytes())?;
+                write(
+                    "scan.json",
+                    serde_json::to_string_pretty(&s).unwrap().as_bytes(),
+                )?;
+                write("scan-frame.png", &s.picture)?;
+                let mut text = format!(
+                    "Scanned {} of {} frames: focal length {:.0} px; the laser's plane {:.1} degrees off the camera's axis, fitted to the line on the paper to {:.2} mm rms over {} pixels, its line passing {:.1} mm from the turntable's axis at field ({:.1}, {:.1}). {} points, {} triangles, {:.1} x {:.1} x {:.1} mm from ({:.1}, {:.1}, {:.1}), volume {:.1} cm3. Wrote scan.stl (the mesh), scan.ply (the points), scan.json (the frames and figures) and scan-frame.png (the first frame, the line on the paper in yellow, on the object in red, the marks crossed) to {out_dir}. `import` the STL into a tab to measure against it.",
+                    s.frames_used,
+                    s.frames.len(),
+                    s.focal,
+                    s.laser_angle,
+                    s.laser_fit,
+                    s.laser_points,
+                    s.aim,
+                    s.axis[0],
+                    s.axis[1],
+                    s.point_count,
+                    s.triangle_count,
+                    s.bounds[3] - s.bounds[0],
+                    s.bounds[4] - s.bounds[1],
+                    s.bounds[5] - s.bounds[2],
+                    s.bounds[0],
+                    s.bounds[1],
+                    s.bounds[2],
+                    s.volume / 1000.0
+                );
+                for w in &s.warnings {
+                    text.push_str(&format!("\nWarning: {w}."));
+                }
+                let skipped: Vec<String> = s
+                    .frames
+                    .iter()
+                    .filter_map(|f| f.skipped.as_ref().map(|r| format!("{} ({r})", f.index)))
+                    .collect();
+                if !skipped.is_empty() {
+                    text.push_str(&format!("\nFrames left out: {}.", skipped.join(", ")));
+                }
+                Ok(text)
+            }
             "spectre_saw" => {
                 let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
                 let edge = args
@@ -2001,6 +2136,11 @@ fn tool_list() -> Value {
             "name": "spectre_tile",
             "description": "One Spectre tile as the pieces of a top are routed, for a master to print and copy: the curved tile at `edge` mm (`curve` cubic or arc, `bulge` as add_spectre's), its four inside corners filleted to `bit` (the bit's diameter; the fillet is what a bit leaves in a notch), eroded by half of `gap`, the ten convex corners left sharp or, with `round` (a radius, mm; half the bit for the knobs template-routed pieces have), all rounded to it. Returns JSON: `outline` (counter-clockwise points, mm, centred on the smallest circle round the tile), `radius` and `across` (that circle: a blank has to be at least `across`), `area` and `tile_area`. No document is needed.",
             "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["cubic", "arc"] }, "bulge": { "type": "number" }, "bit": { "type": "number" }, "gap": { "type": "number" }, "round": { "type": "number" } }, "required": ["edge"] }
+        },
+        {
+            "name": "scan_turntable",
+            "description": "Scans an object on the measuring field turning on a lazy Susan under a phone and a line laser fixed to each other: from a video (`video`, frames taken with ffmpeg at `fps` per second, 2 by default) or a directory of frames (`frames`, PNG or JPEG in order, every `every`th used). Each frame's marks give the camera's pose; the green laser line on the paper, straight, with the turntable's axis the camera's centres circle about, gives the laser's plane; each pixel of the line on the object is a ray meeting that plane, put into the field's frame, which turns with the object. Writes scan.stl (profiles stitched into a mesh), scan.ply (the points), scan.json and scan-frame.png into `out`. Shoot it dim with the phone's exposure locked so the line is the brightest thing, the laser's vertical line aimed through the turntable's centre and 30 to 45 degrees round from the camera, the camera a little above the object's middle, and the field's marks in view all the way round. `laser_min` (12) is the least green a pixel is ever taken as the line at (the frame's own ridges set a higher bar), `bin` (1 mm) the profile resampling, `min_height` (1.5 mm) what counts as the table.",
+            "inputSchema": { "type": "object", "properties": { "video": { "type": "string" }, "frames": { "type": "string" }, "out": { "type": "string" }, "fps": { "type": "number" }, "every": { "type": "integer" }, "laser_min": { "type": "number" }, "bin": { "type": "number" }, "min_height": { "type": "number" } }, "required": ["out"] }
         },
         {
             "name": "spectre_saw",
