@@ -5,18 +5,26 @@ phone and a line laser fixed to each other, scans into a point cloud
 and a mesh in the field's millimetres. Before any such video existed
 the scanner was built against a rendered one, and the loop stays
 closed: a lobed gourd of known shape is rendered going round, scanned,
-and held against the shape it was rendered from.
+and held against the shape it was rendered from; so are the five
+Platonic solids and a bucky ball; and a mushroom, whose cap hides
+its underside from any camera above the table, is scanned standing
+and on its side and the two scans merged.
 
 ```sh
-cargo test -p ok-photo --test scan          # renders the frames (git-ignored) and scans them; the closed-loop checks
+cargo test -p ok-photo --test scan --test merge --test solids   # renders the frames (git-ignored) and scans them; the closed-loop checks
 cargo build --release -p ok-mcp
-python3 examples/turntable-scan/build.py   # encodes the frames to a video with ffmpeg, scans it through the MCP server
-cargo test -p ok-photo --test example_scan  # what CI checks against the committed scan.json
+python3 examples/turntable-scan/build.py   # encodes the frames to videos with ffmpeg, scans and merges them through the MCP server
+cargo test -p ok-photo --test example_scan  # what CI checks against the committed scan.json files
 ```
 
 ![the first frame as the scanner saw it: the line on the paper in yellow, on the gourd in red, the marks crossed](out/scan-frame.jpg)
 
 ![the mesh, imported](out/scan-mesh.png)
+
+![the mushroom from one scan, the stem bridged to the rim, and from two](out/mushroom-mesh-front.png)
+![](out/merged-mesh-front.png)
+
+![the bucky ball from one scan](out/bucky-mesh.png)
 
 ## How it works
 
@@ -41,12 +49,25 @@ cargo test -p ok-photo --test example_scan  # what CI checks against the committ
    passes from the axis.
 4. **Points.** Each pixel of the line on the object is a ray meeting
    that plane; the pose takes the point into the field's frame.
-5. **Mesh.** Each frame's points are resampled into 1 mm height bins,
-   a bin the frames either side disagree with dropped as a stray,
-   gaps bridged, and consecutive frames round the turn are
+5. **Mesh.** The points go into sectors of azimuth about the cloud's
+   own centre line (one per frame for a single scan) and 1 mm height
+   bins, a bin the sectors either side disagree with dropped as a
+   stray, gaps bridged, and consecutive sectors round the turn are
    stitched quad by quad, capped at the top and bottom. The volume is
    taken by slices through the profiles, which a hole in the mesh does
-   not reach.
+   not reach. The mesh takes the object to be one a horizontal ray
+   from its centre line leaves once at every height: anything convex,
+   most things that stand; not a torus.
+6. **A second pose.** A camera 22 degrees above the table sees any
+   face leaning out over it by up to about 68 degrees, so a bucky
+   ball or a dodecahedron on a face scans whole in one pass; what it
+   cannot see is a surface facing down, the underside of a cap or a
+   lip, and one scan bridges across it. Scanned again upside down or
+   on its side, the second cloud is registered onto the first by
+   point-to-plane iterative closest point seeded by what was done to
+   the object (a flip, a roll, a move, or only the camera moved: a
+   cube looks the same from every side, so the search is told which),
+   and the merged cloud is meshed as above. `merge_scans` is the tool.
 
 ## The closed loop
 
@@ -67,10 +88,28 @@ gourd's over the heights scanned. It comes out at 0.14 mm median,
 0.38 mm at the 90th percentile, and 1.3 % on volume, the last mostly
 the chords between profiles 10 degrees apart across the lobes.
 
-`build.py` then pushes the same frames through a real video file:
+`tests/solids.rs` stands each Platonic solid and the bucky ball on a
+face (100 mm tall, 24 frames) and checks every point against the true
+surface (0.07 to 0.12 mm median) and the mesh's volume against the
+true shape sampled at the same azimuths and filled across the same
+gaps (within 0.3 % for all six; against the true volume they read 85
+to 98 %, the rest the chords a 24-gon cuts off a corner, a tetrahedron
+worst); then a tetrahedron rolled onto a side, an octahedron set down
+elsewhere, a dodecahedron and the bucky ball turned over, and a cube
+under a camera at 50 degrees, each registered onto the first scan to
+0.1 to 0.3 mm and merged, the merged points still on the surface.
+`tests/merge.rs` has the mushroom, whose one-scan volume is 117 % by
+the cone under the cap and whose merge with its side-on scan reads
+101 %, and the gourd upside down, registered to 0.18 mm and merged
+without harm.
+
+`build.py` then pushes the same frames through real video files:
 encoded at crf 18, frames pulled back out with ffmpeg by the MCP tool,
-and `out/scan.json` records what came through. `tests/example_scan.rs`
-checks that record in CI.
+the mushroom's two scans merged with `merge_scans`, and the
+`scan.json` and `merged.json` files under `out/` record what came
+through: the gourd at 340.7 cm³ against 340.4, the mushroom at 117 %
+from one scan and 102 % from two. `tests/example_scan.rs` checks those
+records in CI.
 
 ## Shooting a real one
 
@@ -88,6 +127,9 @@ checks that record in CI.
 - One slow turn, 20 to 40 seconds. Then
   `scan_turntable {video: "IMG_1234.MOV", out: "scan"}`.
 
-What the laser cannot reach from above stays a hole: the underside of
-an overhang. A second laser from the other side, or a second pass with
-the object on its side, fills it.
+What neither the camera nor the laser reaches from above stays
+bridged: the underside of a cap or a lip. Turn the object over or roll
+it onto its side, scan again, and
+`merge_scans {scans: [{dir: "scan"}, {dir: "scan2", placed: "on its side"}], out: "merged"}`.
+The answer says how closely the second scan registered; a loose
+number means the placement was not what was said.

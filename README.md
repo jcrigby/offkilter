@@ -78,7 +78,9 @@ works today, all in the browser:
 - Scanning on a turntable: an object on the measuring field on a lazy
   Susan, turned under a phone and a line laser, comes back as a closed
   mesh in millimetres (`examples/turntable-scan/`), the scanner built
-  and tested against a rendered gourd of known shape.
+  and tested against rendered shapes of known form (a gourd, the
+  Platonic solids, a bucky ball, a mushroom), and scans of the object
+  turned over or on its side merged into one.
 - Agents: `ok-mcp` is a Model Context Protocol server that lets a
   language model build and edit documents through the same ops the
   client uses, live in your browser or on a local file, with a report

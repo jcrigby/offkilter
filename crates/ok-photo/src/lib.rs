@@ -20,6 +20,7 @@ use serde::Serialize;
 use std::f64::consts::PI;
 
 mod field;
+pub mod register;
 pub mod scan;
 pub mod simulate;
 pub use field::{
