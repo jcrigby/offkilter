@@ -20,8 +20,11 @@ use serde::Serialize;
 use std::f64::consts::PI;
 
 mod field;
+pub mod scan;
+pub mod simulate;
 pub use field::{
-    field_image, field_pdf, homography_fit, Field, FieldRead, MarkRead, PITCH as FIELD_PITCH,
+    field_colour, field_image, field_pdf, homography_fit, Field, FieldRead, MarkRead,
+    PITCH as FIELD_PITCH,
 };
 
 /// Fiducial centres sit this far in from the page edges.
