@@ -1112,8 +1112,22 @@ impl Server {
                 .transpose()?;
             let bytes = std::fs::read(path).map_err(|e| format!("could not read {path}: {e}"))?;
             let m = ok_photo::measure(&bytes, size, reference.as_ref())?;
-            let mut caption = match m.sheet {
-                Some(size) => format!(
+            let mut caption = match (&m.field, m.sheet) {
+                (Some(fr), _) => format!(
+                    "Measuring field: {} of the {} marks that read fitted ({:.2} mm per photo pixel, fit {:.1} px rms), covering field millimetres ({:.0}, {:.0}) to ({:.0}, {:.0}). Rectified at {} px/mm, the field's origin at pixel ({:.0}, {:.0}) of the returned picture (which may lie outside it), x right, y up; the grid drawn is 10 mm, heavier every 50, read marks crossed in blue, marks not read in grey.\n",
+                    fr.marks_used,
+                    fr.marks_read,
+                    m.mm_per_pixel,
+                    m.residual,
+                    fr.bounds[0],
+                    fr.bounds[1],
+                    fr.bounds[2],
+                    fr.bounds[3],
+                    m.picture_scale,
+                    m.picture_origin[0],
+                    m.picture_origin[1]
+                ),
+                (None, Some(size)) => format!(
                     "{} sheet ({}): the four marks found ({:.2} mm per photo pixel, fit {:.1} px). Rectified at {} px/mm, the origin mark at pixel ({:.0}, {:.0}), x right, y up; the grid drawn is 10 mm, heavier every 50.\n",
                     size.name(),
                     if m.sheet_read {
@@ -1127,7 +1141,7 @@ impl Server {
                     m.picture_origin[0],
                     m.picture_origin[1]
                 ),
-                None => format!(
+                (None, None) => format!(
                     "No sheet marks: a flat scan, measured from the rule alone at {:.4} mm per pixel. The frame is the picture's own, origin at its bottom-left corner at pixel ({:.0}, {:.0}) of the returned picture, x right, y up; the grid drawn is 10 mm, heavier every 50.\n",
                     m.mm_per_pixel, m.picture_origin[0], m.picture_origin[1]
                 ),
@@ -1154,7 +1168,7 @@ impl Server {
                     c.nominal,
                     c.factor * 100.0
                 )),
-                None if m.sheet.is_some() => caption.push_str(
+                None if m.sheet.is_some() || m.field.is_some() => caption.push_str(
                     "No reference given: sizes trust the print being at 100 % (check the sheet's 100 mm bar), or name one with reference.\n",
                 ),
                 None => {}
@@ -1327,13 +1341,31 @@ impl Server {
                         .and_then(|s| s.as_str())
                         .unwrap_or("Letter"),
                 )?;
-                let pdf = ok_photo::sheet_pdf(size);
-                std::fs::write(path, &pdf).map_err(|e| format!("could not write {path}: {e}"))?;
-                let (lx, ly) = ok_photo::span(size);
-                Ok(format!(
+                if let Some(tiles) = args.get("tiles").and_then(|t| t.as_str()) {
+                    let field = ok_photo::Field::parse(size, tiles)?;
+                    let pdf = ok_photo::field_pdf(&field);
+                    std::fs::write(path, &pdf)
+                        .map_err(|e| format!("could not write {path}: {e}"))?;
+                    let b = field.bounds();
+                    Ok(format!(
+                        "wrote the {} measuring field to {path}: {} pages, one tile each. Print them at 100 % (the bar on each is 100 mm), cut each tile along its dashed lines and lay it over the tile to its left and the tile below with its marks on theirs, and tape: a sheet {:.0} x {:.0} mm with {} x {} marks 50 mm apart, each mark's dots saying where it is. Lay parts on it, photograph it with at least four marks in view in two columns and two rows (parts may cover marks; the corners need not be in the picture), then measure_photo. The double-ringed mark is the origin, x right, y up.",
+                        field.name(),
+                        field.nx * field.ny,
+                        b[2] - b[0],
+                        b[3] - b[1],
+                        field.columns(),
+                        field.rows()
+                    ))
+                } else {
+                    let pdf = ok_photo::sheet_pdf(size);
+                    std::fs::write(path, &pdf)
+                        .map_err(|e| format!("could not write {path}: {e}"))?;
+                    let (lx, ly) = ok_photo::span(size);
+                    Ok(format!(
                     "wrote the {} measuring sheet to {path}: print at 100 % (the bar on it is 100 mm), lay parts on the grid, photograph it straight down with all four corner marks in the picture, then measure_photo. The marks are {lx:.0} x {ly:.0} mm apart; the double-ringed one is the origin, and the dots beside it tell measure_photo which sheet this is.",
                     size.name()
                 ))
+                }
             }
             "spectre_tile" => {
                 let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
@@ -1977,12 +2009,12 @@ fn tool_list() -> Value {
         },
         {
             "name": "measuring_sheet",
-            "description": "Writes the printable measuring sheet as a PDF: a light 10 mm grid with four bullseye marks in the corners (the origin's double-ringed, with dots beside it that encode the sheet size) and a 100 mm bar to check the print. Print it at 100 %, lay parts on it, photograph it straight down with all four marks in view, and measure_photo reads sizes off the picture.",
-            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Letter (default), A4, A3, A2 or Tabloid" } }, "required": ["path"] }
+            "description": "Writes the printable measuring sheet as a PDF: a light 10 mm grid with four bullseye marks in the corners (the origin's double-ringed, with dots beside it that encode the sheet size) and a 100 mm bar to check the print. Print it at 100 %, lay parts on it, photograph it straight down with all four marks in view, and measure_photo reads sizes off the picture. With `tiles` (\"2x2\", \"1x1\", \"3x2\"), a measuring field instead: a page per tile that cut and tape into one big sheet carrying a lattice of marks 50 mm apart, each mark's dots saying where it is, so a photograph needs any four marks rather than the corners, and parts may lie across marks. Prefer the field for anything bigger than a hand, for a turntable, or when parts will cover the corners; \"1x1\" is a single page with the same marks.",
+            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Letter (default), A4, A3, A2 or Tabloid" }, "tiles": { "type": "string", "description": "Tiles across by up for a measuring field, like 2x2; absent for the single classic sheet" } }, "required": ["path"] }
         },
         {
             "name": "measure_photo",
-            "description": "Measures a photograph (JPEG or PNG) of parts lying on the printed measuring sheet: finds the four marks, squares the picture up onto the sheet's millimetres, and reports every dark shape on the grid as a part with its bounding box, area, centroid, outline and any holes (with their diameters), all in millimetres from the origin mark, x right, y up. Returns the squared-up picture with the grid and the parts drawn on it, so a feature can be named by where it sits; `out` also writes that picture. Good to a fraction of a millimetre on flat things photographed straight down; heights shift edges by parallax, so ask for a caliper reading for anything that matters and use the picture to say which. `sketch: true` adds a sketch on the current document's tab (doc, tab) with the outlines as lines and the holes as circles, ready to extrude. The sheet size is read from the dots by the origin mark; `sheet` is the fallback for a print without them. A print is rarely exactly 100 %: `reference` names a thing of known size on the sheet, and the print scale is read from it and every size corrected: 'rule' for a steel rule with millimetre graduations (its ticks are read; an inch edge is told apart), 'bars 10' for a forensic photo scale with alternating 10 mm black and white bars, 'disc 24.26' or a US coin by name (quarter, nickel, dime, penny) for a round object. A phone picture in which the sheet fills the frame resolves the ticks. With 'rule' the sheet is optional: a flatbed scan of parts and a rule, no sheet, is measured in the picture's own frame (origin bottom-left).",
+            "description": "Measures a photograph (JPEG or PNG) of parts lying on the printed measuring sheet or field: finds the marks (a field needs any four of its coded marks, in two columns and two rows; the classic sheet all four corners), squares the picture up onto the sheet's millimetres, and reports every dark shape on the grid as a part with its bounding box, area, centroid, outline and any holes (with their diameters), all in millimetres from the origin mark, x right, y up. Returns the squared-up picture with the grid and the parts drawn on it, so a feature can be named by where it sits; `out` also writes that picture. Good to a fraction of a millimetre on flat things photographed straight down; heights shift edges by parallax, so ask for a caliper reading for anything that matters and use the picture to say which. `sketch: true` adds a sketch on the current document's tab (doc, tab) with the outlines as lines and the holes as circles, ready to extrude. The sheet size is read from the dots by the origin mark; `sheet` is the fallback for a print without them. A print is rarely exactly 100 %: `reference` names a thing of known size on the sheet, and the print scale is read from it and every size corrected: 'rule' for a steel rule with millimetre graduations (its ticks are read; an inch edge is told apart), 'bars 10' for a forensic photo scale with alternating 10 mm black and white bars, 'disc 24.26' or a US coin by name (quarter, nickel, dime, penny) for a round object. A phone picture in which the sheet fills the frame resolves the ticks. With 'rule' the sheet is optional: a flatbed scan of parts and a rule, no sheet, is measured in the picture's own frame (origin bottom-left).",
             "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Fallback when the picture carries no size code: A4, A3, A2, Letter or Tabloid" }, "reference": { "type": "string", "description": "A known size in the picture: 'rule' (a steel rule's mm graduations; works without the sheet in a flat scan), 'bars <mm>' (a photo scale's alternating blocks), 'disc <mm>', or quarter, nickel, dime, penny" }, "out": { "type": "string" }, "sketch": { "type": "boolean" }, "doc": doc_prop, "tab": tab_prop }, "required": ["path"] }
         },
         {
@@ -2334,6 +2366,77 @@ mod tests {
         assert!(err && text.contains("bias"), "{text}");
         let (err, text) = tool_text(&mut server, "spectre_saw", json!({}));
         assert!(err && text.contains("needs edge"), "{text}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_measuring_field_is_printed_as_tiles_and_a_photograph_of_it_read() {
+        let dir = std::env::temp_dir().join(format!("ok-mcp-field-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut server = local_server(&dir);
+        let (err, created) = tool_text(&mut server, "create_document", json!({ "name": "Field" }));
+        assert!(!err, "{created}");
+        let pdf = dir.join("field.pdf");
+        let (err, text) = tool_text(
+            &mut server,
+            "measuring_sheet",
+            json!({ "path": pdf.display().to_string(), "tiles": "2x2" }),
+        );
+        assert!(
+            !err && text.contains("Letter 2x2 measuring field") && text.contains("4 pages"),
+            "{text}"
+        );
+        assert!(text.contains("467 x 354 mm with 9 x 7 marks"), "{text}");
+        let sheet = ok_sheet::pdf::inflated(&std::fs::read(&pdf).unwrap());
+        assert!(sheet.contains("/Count 4") && sheet.contains("tile 3 of 4, column 1 row 2"));
+        let (err, text) = tool_text(
+            &mut server,
+            "measuring_sheet",
+            json!({ "path": pdf.display().to_string(), "tiles": "4x1" }),
+        );
+        assert!(err && text.contains("count to 16"), "{text}");
+        // A photograph of the middle of the field with a plate across a mark.
+        let field = ok_photo::Field::new(ok_photo::SheetSize::Letter, 2, 2).unwrap();
+        let raster = ok_photo::field_image(
+            &field,
+            5.0,
+            &ok_photo::Scene {
+                rects: vec![[70.0, 85.0, 134.0, 123.0]],
+                discs: vec![[227.0, 172.0, 12.5]],
+                holes: vec![
+                    [77.0, 104.0, 3.25],
+                    [127.0, 104.0, 3.25],
+                    [227.0, 172.0, 5.0],
+                ],
+                ..ok_photo::Scene::default()
+            },
+        );
+        let scan = ok_photo::photograph(
+            &raster,
+            [
+                [-300.0, -500.0],
+                [2500.0, -300.0],
+                [2300.0, 1900.0],
+                [-100.0, 2100.0],
+            ],
+            2000,
+            1500,
+        );
+        let photo = dir.join("field-scan.png");
+        std::fs::write(&photo, ok_render::to_png(&scan)).unwrap();
+        let r = call(
+            &mut server,
+            3,
+            "tools/call",
+            json!({ "name": "measure_photo", "arguments": { "path": photo.display().to_string() } }),
+        );
+        assert_eq!(r["result"]["isError"], Value::Null, "{r}");
+        let content = r["result"]["content"].as_array().unwrap();
+        let caption = content[1]["text"].as_str().unwrap();
+        assert!(caption.starts_with("Measuring field: "), "{caption}");
+        assert!(caption.contains("marks that read fitted"), "{caption}");
+        assert!(caption.contains("Part 1: 64.0 x 38.0 mm"), "{caption}");
+        assert!(caption.contains("round, 25.0 mm across"), "{caption}");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

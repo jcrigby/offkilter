@@ -517,3 +517,24 @@ wide and hold nothing, and the stock after the first cut is already
 chiral, so from the second cassette a stack put in end for end, which
 would mirror every piece, does not fit; the first cassette cannot tell
 and the leading plug is marked instead.
+
+## The measuring field erases a mark's ink only where the paper round it shows
+
+A field's marks sit where parts will lie, so the measuring pass cannot
+keep clear of them the way it keeps clear of a sheet's four corners: a
+keep-out circle round every mark would punch holes in any part across
+one. The marks' ink is erased from the picture instead, ring by ring
+and dot by dot where the lattice says they are. Erasing blindly notches
+a part wherever a dot sits on its edge, and under a part there is no
+ink, only part, so each element is judged by a halo sampled just
+outside it: paper all round, erase; part all round, leave it, there is
+nothing to erase; a mixture, the element straddles an edge, so erase
+and close the notch locally. What is left is a part lying across a
+mark reading its true size to a few tenths, with at worst a rounded
+corner or a flat of a fraction of a millimetre where a dot sat on its
+very edge, and that is the price taken over the alternatives: a lighter
+ink the camera might not see (the marks must read at arm's length on a
+phone), or marks far enough apart to be avoided (then too few are in
+view when a part covers the middle of the picture). The lattice and the
+codes were chosen together: four bits each way is sixteen columns and
+rows, three Letter tiles across and five up, more than a workbench.

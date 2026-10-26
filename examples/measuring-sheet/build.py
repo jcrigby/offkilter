@@ -41,6 +41,10 @@ os.makedirs(OUT, exist_ok=True)
 m = Mcp(os.path.join(OUT, "scratch.okpart"))
 for size in ("Letter", "A4", "A3", "Tabloid"):
     print(m.tool("measuring_sheet", path=os.path.join(OUT, f"measuring-sheet-{size}.pdf"), sheet=size))
+# The measuring fields: a single page with the coded marks, and four
+# pages that tape into one sheet 443 x 354 mm.
+for tiles in ("1x1", "2x2"):
+    print(m.tool("measuring_sheet", path=os.path.join(OUT, f"measuring-field-Letter-{tiles}.pdf"), sheet="Letter", tiles=tiles))
 # scan.png is made by crates/ok-photo/tests/example.rs: a Letter sheet
 # printed at 97 % with a plate, a washer, a disc and a photo scale on it,
 # photographed askew. The sheet size comes from the dots by the origin
@@ -49,3 +53,6 @@ print(m.tool("measure_photo", path=os.path.join(HERE, "scan.png"), reference="ba
 # rule-scan.png is a flatbed scan with no sheet at all: the parts and a
 # steel rule on the glass. The rule's millimetre ticks give the scale.
 print(m.tool("measure_photo", path=os.path.join(HERE, "rule-scan.png"), reference="rule", out=os.path.join(OUT, "rule-measured.png")))
+# field-scan.png is the 2x2 field photographed with its corners out of
+# the picture and a plate lying across one of its marks.
+print(m.tool("measure_photo", path=os.path.join(HERE, "field-scan.png"), reference="bars 10", out=os.path.join(OUT, "field-measured.png")))
