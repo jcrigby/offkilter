@@ -2,9 +2,13 @@
 //! the Letter sheet with parts and a photo scale on it (`scan.png`, what a
 //! phone would take, askew, of a print that came out at 97 %), and the
 //! measurement of it (`out/measured.png`). Both are committed; this test
-//! regenerates them so they never go stale.
+//! regenerates them so they never go stale. The field scan beside them
+//! is the same idea on a 2x2 measuring field with marks under a part.
 
-use ok_photo::{measure_image, photograph, scan_image, sheet_image, Reference, Scene, SheetSize};
+use ok_photo::{
+    field_image, measure_image, photograph, scan_image, sheet_image, Field, Reference, Scene,
+    SheetSize,
+};
 
 fn example_dir() -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -128,4 +132,55 @@ fn the_example_rule_scan_measures_its_parts_from_the_rule() {
         "{:?}",
         washer.holes
     );
+}
+
+#[test]
+fn the_example_field_scan_measures_across_its_marks() {
+    // A 2x2 Letter field, taped, with a 64 x 38 plate lying across the
+    // mark at (100, 100), a washer, a disc and a photo scale, printed
+    // at 97 % and photographed askew with the field's corners outside
+    // the picture: `field-scan.png` and its measurement
+    // `out/field-measured.png` are committed too.
+    let dir = example_dir();
+    let field = Field::new(SheetSize::Letter, 2, 2).unwrap();
+    let scene = Scene {
+        rects: vec![[70.0, 85.0, 134.0, 123.0]],
+        discs: vec![[220.0, 160.0, 12.5], [160.0, 230.0, 9.0]],
+        holes: vec![
+            [77.0, 104.0, 3.25],
+            [127.0, 104.0, 3.25],
+            [220.0, 160.0, 5.0],
+        ],
+        print: 0.97,
+        ..Scene::default()
+    }
+    .bars(40.0, 180.0, 10.0, 5);
+    let sheet = field_image(&field, 5.0, &scene);
+    let scan = photograph(
+        &sheet,
+        [
+            [-300.0, -500.0],
+            [2500.0, -300.0],
+            [2300.0, 1900.0],
+            [-100.0, 2100.0],
+        ],
+        2000,
+        1500,
+    );
+    std::fs::write(dir.join("field-scan.png"), ok_render::to_png(&scan)).unwrap();
+    let m = measure_image(&scan, None, Some(&Reference::Bars(10.0))).unwrap();
+    std::fs::write(dir.join("out/field-measured.png"), &m.picture).unwrap();
+    let fr = m.field.as_ref().expect("a field");
+    assert!(
+        fr.marks_used >= 20 && m.residual < 1.5,
+        "{} marks, fit {}",
+        fr.marks_used,
+        m.residual
+    );
+    assert!((m.calibration.as_ref().unwrap().factor - 0.97).abs() < 0.01);
+    assert_eq!(m.parts.len(), 3);
+    for (got, want) in m.parts[0].bbox.iter().zip([70.0, 85.0, 134.0, 123.0]) {
+        assert!((got - want).abs() < 0.6, "plate {:?}", m.parts[0].bbox);
+    }
+    assert_eq!(m.parts[0].holes.len(), 2);
 }

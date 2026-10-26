@@ -19,6 +19,11 @@ pub use ok_sheet::SheetSize;
 use serde::Serialize;
 use std::f64::consts::PI;
 
+mod field;
+pub use field::{
+    field_image, field_pdf, homography_fit, Field, FieldRead, MarkRead, PITCH as FIELD_PITCH,
+};
+
 /// Fiducial centres sit this far in from the page edges.
 pub const INSET: f64 = 25.0;
 /// The bullseye: outer ring radius, its hole, the dot; the origin's
@@ -360,6 +365,10 @@ pub struct Measurement {
     /// The rule, when one was read: how many ticks over how many mm.
     pub rule: Option<RuleReading>,
     pub calibration: Option<Calibration>,
+    /// The field read, when the picture is of one: which marks read
+    /// and the field millimetres the picture covers. Then `sheet` is
+    /// None and `fiducials` are the corners of that cover.
+    pub field: Option<FieldRead>,
     /// Fiducial centres in the photograph's pixels: origin, x, xy, y.
     pub fiducials: [[f64; 2]; 4],
     /// Millimetres per photograph pixel at the sheet's middle.
@@ -529,105 +538,172 @@ pub fn measure_image_at(
         _ => None,
     };
     let f = factor as f64;
-    let (found, dots) = match find_fiducials(&dark, w, h) {
-        Ok(found) => found,
-        // No sheet: with a rule read, the picture is a flat scan
-        // measured in its own frame.
-        Err(_) if rule.is_some() => {
-            let r = rule.as_ref().unwrap();
-            let (pw, ph) = (photo.width as f64, photo.height as f64);
-            let corners = [[0.0, ph], [pw, ph], [pw, 0.0], [0.0, 0.0]];
-            let (lx, ly) = (pw / r.px_per_mm, ph / r.px_per_mm);
-            let bbox = [
-                r.bbox[0] / r.px_per_mm,
-                ly - r.bbox[3] / r.px_per_mm,
-                r.bbox[2] / r.px_per_mm,
-                ly - r.bbox[1] / r.px_per_mm,
+    let (pw, ph) = (photo.width as f64, photo.height as f64);
+    let mut sheet_size = None;
+    let mut sheet_read = false;
+    let mut field_read = None;
+    let fiducials;
+    // The frame at a print scale k: true millimetres per printed one.
+    let frame_at: Box<dyn Fn(f64) -> Result<Frame, String>>;
+    // A field first: its marks say where they are, so any four will do.
+    let marks = field::find_marks(&dark, w, h);
+    if marks.len() >= 4 {
+        let (h0, kept, rms) = field::fit_marks(&marks, f)?;
+        // The field millimetres the picture covers: its corners mapped,
+        // clipped to a margin beyond the marks that read.
+        let mut seen = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+        for m in &kept {
+            let [x, y] = Field::mark(m.column, m.row);
+            seen = [
+                seen[0].min(x),
+                seen[1].min(y),
+                seen[2].max(x),
+                seen[3].max(y),
             ];
-            let pass = rectify(photo, &corners, lx, ly, 0.0, Some((1.0, 1.0, bbox)))?;
-            if let Some(dpi) = dpi {
-                let file = dpi / 25.4;
-                if ((r.px_per_mm - file) / file).abs() > 0.02 {
-                    warnings.push(format!(
-                        "the file claims {dpi:.0} dpi ({file:.3} px/mm) but the rule reads {:.3} px/mm, {:.1} % apart; the rule is trusted, so check that it lay flat on the glass and that the scanner's resolution is what the file says",
-                        r.px_per_mm,
-                        ((r.px_per_mm - file) / file).abs() * 100.0
-                    ));
+        }
+        let mut cover = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+        for c in [[0.0, 0.0], [pw, 0.0], [pw, ph], [0.0, ph]] {
+            let [x, y] = apply(&h0, c);
+            cover = [
+                cover[0].min(x),
+                cover[1].min(y),
+                cover[2].max(x),
+                cover[3].max(y),
+            ];
+        }
+        let bounds = [
+            cover[0].max(seen[0] - 40.0).max(-30.0),
+            cover[1].max(seen[1] - 40.0).max(-30.0),
+            cover[2].min(seen[2] + 40.0),
+            cover[3].min(seen[3] + 40.0),
+        ];
+        if bounds[2] - bounds[0] < 20.0 || bounds[3] - bounds[1] < 20.0 {
+            return Err("the field's marks read but the picture covers too little of it".into());
+        }
+        let back = invert(&h0)?;
+        let corners = [
+            [bounds[0], bounds[1]],
+            [bounds[2], bounds[1]],
+            [bounds[2], bounds[3]],
+            [bounds[0], bounds[3]],
+        ];
+        fiducials = corners.map(|c| apply(&back, c));
+        let read_ids: Vec<(usize, usize)> = kept.iter().map(|m| (m.column, m.row)).collect();
+        field_read = Some(FieldRead {
+            pitch: FIELD_PITCH,
+            marks_read: marks.len(),
+            marks_used: kept.len(),
+            marks: kept,
+            bounds,
+        });
+        frame_at = Box::new(move |k: f64| {
+            let (i0, i1) = (
+                (bounds[0] / FIELD_PITCH).ceil().max(0.0) as usize,
+                (bounds[2] / FIELD_PITCH).floor().max(-1.0) as i64,
+            );
+            let (j0, j1) = (
+                (bounds[1] / FIELD_PITCH).ceil().max(0.0) as usize,
+                (bounds[3] / FIELD_PITCH).floor().max(-1.0) as i64,
+            );
+            let mut lattice = Vec::new();
+            for j in j0..=(j1.max(j0 as i64 - 1) as usize) {
+                for i in i0..=(i1.max(i0 as i64 - 1) as usize) {
+                    let [x, y] = Field::mark(i, j);
+                    lattice.push(LatticeMark {
+                        i,
+                        j,
+                        centre: [x * k, y * k],
+                        read: read_ids.contains(&(i, j)),
+                    });
                 }
             }
-            return Ok(Measurement {
-                sheet: None,
-                sheet_read: false,
-                rule,
-                calibration: None,
-                fiducials: corners,
-                mm_per_pixel: pass.mm_per_pixel,
-                residual: 0.0,
-                dpi,
-                warnings,
-                parts: pass.parts,
-                picture: ok_render::to_png(&pass.picture),
-                picture_scale: SCALE,
-                picture_origin: [BORDER * SCALE, (pass.ly + BORDER) * SCALE],
-            });
-        }
-        Err(e) => return Err(e),
-    };
-    let fiducials = [
-        [found[0].0 * f, found[0].1 * f],
-        [found[1].0 * f, found[1].1 * f],
-        [found[2].0 * f, found[2].1 * f],
-        [found[3].0 * f, found[3].1 * f],
-    ];
-    let coded = size_of_code(dots);
-    let (size, sheet_read) = match (coded, sheet) {
-        (Some(c), _) => (c, true),
-        (None, Some(s)) => (s, false),
-        (None, None) => {
-            return Err(format!(
-                "no size code by the origin mark ({dots} dots found where 1 to {} name the sheet); say which sheet it is",
-                CODED.len()
-            ))
-        }
-    };
-    let (lx, ly) = span(size);
-    let keep_out = (ORIGIN_RING_R + 3.0) * SCALE;
-    // A rule is read in the photograph; its pitch there against the
-    // marks' scale at the same spot gives the print scale directly.
-    let preset = |k: f64| -> Result<Option<(f64, f64, [f64; 4])>, String> {
-        let Some(r) = rule.as_ref() else {
-            return Ok(None);
+            Ok(Frame {
+                to_sheet: field::scaled(&h0, k),
+                bounds: [bounds[0] * k, bounds[1] * k, bounds[2] * k, bounds[3] * k],
+                residual: rms,
+                keep_out: Vec::new(),
+                lattice: Some((k, lattice)),
+            })
+        });
+    } else if !marks.is_empty() {
+        return Err(format!(
+            "only {} mark{} of the field read; four in at least two columns and two rows are needed, so bring more of the field into the picture or uncover some marks",
+            marks.len(),
+            if marks.len() == 1 { "" } else { "s" }
+        ));
+    } else {
+        let (found, dots) = match find_fiducials(&dark, w, h) {
+            Ok(found) => found,
+            // No sheet: with a rule read, the picture is a flat scan
+            // measured in its own frame.
+            Err(_) if rule.is_some() => {
+                let r = rule.as_ref().unwrap();
+                let corners = [[0.0, ph], [pw, ph], [pw, 0.0], [0.0, 0.0]];
+                let (lx, ly) = (pw / r.px_per_mm, ph / r.px_per_mm);
+                let bbox = [
+                    r.bbox[0] / r.px_per_mm,
+                    ly - r.bbox[3] / r.px_per_mm,
+                    r.bbox[2] / r.px_per_mm,
+                    ly - r.bbox[1] / r.px_per_mm,
+                ];
+                let frame = sheet_frame(&corners, lx, ly, 0.0)?;
+                let pass = rectify(photo, &frame, Some((1.0, 1.0, bbox)))?;
+                if let Some(dpi) = dpi {
+                    let file = dpi / 25.4;
+                    if ((r.px_per_mm - file) / file).abs() > 0.02 {
+                        warnings.push(format!(
+                            "the file claims {dpi:.0} dpi ({file:.3} px/mm) but the rule reads {:.3} px/mm, {:.1} % apart; the rule is trusted, so check that it lay flat on the glass and that the scanner's resolution is what the file says",
+                            r.px_per_mm,
+                            ((r.px_per_mm - file) / file).abs() * 100.0
+                        ));
+                    }
+                }
+                return Ok(Measurement {
+                    sheet: None,
+                    sheet_read: false,
+                    rule,
+                    calibration: None,
+                    field: None,
+                    fiducials: corners,
+                    mm_per_pixel: pass.mm_per_pixel,
+                    residual: 0.0,
+                    dpi,
+                    warnings,
+                    parts: pass.parts,
+                    picture: ok_render::to_png(&pass.picture),
+                    picture_scale: SCALE,
+                    picture_origin: [BORDER * SCALE, (pass.y1 + BORDER) * SCALE],
+                });
+            }
+            Err(e) => return Err(e),
         };
-        let sheet = [[0.0, 0.0], [lx * k, 0.0], [lx * k, ly * k], [0.0, ly * k]];
-        let to_sheet = homography(&fiducials, &sheet)?;
-        // One true millimetre of the rule, in the sheet's millimetres,
-        // taken along the rule: a tilted picture is foreshortened one
-        // way, and the rule's pitch was read along its own direction.
-        let at = apply(&to_sheet, r.centre);
-        let step = apply(
-            &to_sheet,
-            [
-                r.centre[0] + r.px_per_mm * r.direction[0],
-                r.centre[1] + r.px_per_mm * r.direction[1],
-            ],
-        );
-        let measured = dist2(at, step).sqrt();
-        let corners = [
-            apply(&to_sheet, [r.bbox[0], r.bbox[1]]),
-            apply(&to_sheet, [r.bbox[2], r.bbox[1]]),
-            apply(&to_sheet, [r.bbox[2], r.bbox[3]]),
-            apply(&to_sheet, [r.bbox[0], r.bbox[3]]),
+        fiducials = [
+            [found[0].0 * f, found[0].1 * f],
+            [found[1].0 * f, found[1].1 * f],
+            [found[2].0 * f, found[2].1 * f],
+            [found[3].0 * f, found[3].1 * f],
         ];
-        let mut bbox = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
-        for c in corners {
-            bbox[0] = bbox[0].min(c[0]);
-            bbox[1] = bbox[1].min(c[1]);
-            bbox[2] = bbox[2].max(c[0]);
-            bbox[3] = bbox[3].max(c[1]);
-        }
-        Ok(Some((measured, 1.0, bbox)))
-    };
-    let mut pass = rectify(photo, &fiducials, lx, ly, keep_out, preset(1.0)?)?;
+        let coded = size_of_code(dots);
+        let size = match (coded, sheet) {
+            (Some(c), _) => {
+                sheet_read = true;
+                c
+            }
+            (None, Some(s)) => s,
+            (None, None) => {
+                return Err(format!(
+                    "no size code by the origin mark ({dots} dots found where 1 to {} name the sheet); say which sheet it is",
+                    CODED.len()
+                ))
+            }
+        };
+        sheet_size = Some(size);
+        let (lx, ly) = span(size);
+        frame_at =
+            Box::new(move |k: f64| sheet_frame(&fiducials, lx * k, ly * k, ORIGIN_RING_R + 3.0));
+    }
+    let frame = frame_at(1.0)?;
+    let mut pass = rectify(photo, &frame, rule_preset(rule.as_ref(), &frame.to_sheet))?;
     if rule.is_none() {
         pass.reference = find_reference(reference, &pass);
     }
@@ -639,7 +715,8 @@ pub fn measure_image_at(
         let k = nominal / measured;
         // Measure again in true millimetres: the marks are k times
         // their nominal spacing apart.
-        pass = rectify(photo, &fiducials, lx * k, ly * k, keep_out, preset(k)?)?;
+        let frame = frame_at(k)?;
+        pass = rectify(photo, &frame, rule_preset(rule.as_ref(), &frame.to_sheet))?;
         if rule.is_none() {
             pass.reference = find_reference(reference, &pass);
         }
@@ -699,10 +776,11 @@ pub fn measure_image_at(
         }
     }
     Ok(Measurement {
-        sheet: Some(size),
+        sheet: sheet_size,
         sheet_read,
         rule,
         calibration,
+        field: field_read,
         fiducials,
         mm_per_pixel: pass.mm_per_pixel,
         residual: pass.residual,
@@ -711,16 +789,107 @@ pub fn measure_image_at(
         parts: pass.parts,
         picture: ok_render::to_png(&pass.picture),
         picture_scale: SCALE,
-        picture_origin: [BORDER * SCALE, (pass.ly + BORDER) * SCALE],
+        picture_origin: [(BORDER - pass.x0) * SCALE, (pass.y1 + BORDER) * SCALE],
     })
 }
 
-/// One rectification of the photograph onto a sheet frame whose marks
-/// are `lx` x `ly` mm apart.
-struct Pass {
-    #[allow(dead_code)]
+/// The frame a photograph is squared up into: the homography from
+/// picture pixels to millimetres, the millimetres to cover, how well
+/// the marks fitted it, and either the marks to keep parts clear of (a
+/// sheet's four corners) or the lattice whose marks' ink is erased
+/// before the parts are read (a field), at the print scale the frame
+/// is at (true millimetres per printed one).
+struct Frame {
+    to_sheet: H,
+    /// x0, y0, x1, y1.
+    bounds: [f64; 4],
+    residual: f64,
+    /// Centre and radius, in millimetres.
+    keep_out: Vec<([f64; 2], f64)>,
+    lattice: Option<(f64, Vec<LatticeMark>)>,
+}
+
+/// A field mark within a frame: its place on the lattice, its centre
+/// in the frame's millimetres, and whether its code read.
+struct LatticeMark {
+    i: usize,
+    j: usize,
+    centre: [f64; 2],
+    read: bool,
+}
+
+/// The classic sheet's frame: four fiducials at the corners of an
+/// `lx` x `ly` rectangle, kept clear of by `keep_out` mm.
+fn sheet_frame(
+    fiducials: &[[f64; 2]; 4],
     lx: f64,
     ly: f64,
+    keep_out: f64,
+) -> Result<Frame, String> {
+    let sheet = [[0.0, 0.0], [lx, 0.0], [lx, ly], [0.0, ly]];
+    let to_sheet = homography(fiducials, &sheet)?;
+    let to_photo = invert(&to_sheet)?;
+    let residual = {
+        let mut sum = 0.0;
+        for k in 0..4 {
+            let p = apply(&to_photo, sheet[k]);
+            sum += (p[0] - fiducials[k][0]).powi(2) + (p[1] - fiducials[k][1]).powi(2);
+        }
+        (sum / 4.0).sqrt()
+    };
+    Ok(Frame {
+        to_sheet,
+        bounds: [0.0, 0.0, lx, ly],
+        residual,
+        keep_out: if keep_out > 0.0 {
+            sheet.iter().map(|&c| (c, keep_out)).collect()
+        } else {
+            Vec::new()
+        },
+        lattice: None,
+    })
+}
+
+/// A rule read in the photograph, as a reference for a frame: one true
+/// millimetre of it in the frame's millimetres, taken along the rule
+/// (a tilted picture is foreshortened one way, and the rule's pitch
+/// was read along its own direction), its nominal 1, and its box.
+fn rule_preset(rule: Option<&RuleReading>, to_sheet: &H) -> Option<(f64, f64, [f64; 4])> {
+    let r = rule?;
+    let at = apply(to_sheet, r.centre);
+    let step = apply(
+        to_sheet,
+        [
+            r.centre[0] + r.px_per_mm * r.direction[0],
+            r.centre[1] + r.px_per_mm * r.direction[1],
+        ],
+    );
+    let measured = dist2(at, step).sqrt();
+    let corners = [
+        apply(to_sheet, [r.bbox[0], r.bbox[1]]),
+        apply(to_sheet, [r.bbox[2], r.bbox[1]]),
+        apply(to_sheet, [r.bbox[2], r.bbox[3]]),
+        apply(to_sheet, [r.bbox[0], r.bbox[3]]),
+    ];
+    let mut bbox = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+    for c in corners {
+        bbox[0] = bbox[0].min(c[0]);
+        bbox[1] = bbox[1].min(c[1]);
+        bbox[2] = bbox[2].max(c[0]);
+        bbox[3] = bbox[3].max(c[1]);
+    }
+    Some((measured, 1.0, bbox))
+}
+
+/// One rectification of the photograph onto a frame.
+struct Pass {
+    /// The millimetres covered: x0, y0, x1, y1.
+    x0: f64,
+    #[allow(dead_code)]
+    y0: f64,
+    #[allow(dead_code)]
+    x1: f64,
+    y1: f64,
     mm_per_pixel: f64,
     residual: f64,
     parts: Vec<Part>,
@@ -734,40 +903,32 @@ struct Pass {
 
 fn rectify(
     photo: &Image,
-    fiducials: &[[f64; 2]; 4],
-    lx: f64,
-    ly: f64,
-    keep_out: f64,
+    frame: &Frame,
     preset: Option<(f64, f64, [f64; 4])>,
 ) -> Result<Pass, String> {
-    let sheet = [[0.0, 0.0], [lx, 0.0], [lx, ly], [0.0, ly]];
-    let to_sheet = homography(fiducials, &sheet)?;
-    let to_photo = invert(&to_sheet)?;
-    let residual = {
-        let mut sum = 0.0;
-        for k in 0..4 {
-            let p = apply(&to_photo, sheet[k]);
-            sum += (p[0] - fiducials[k][0]).powi(2) + (p[1] - fiducials[k][1]).powi(2);
-        }
-        (sum / 4.0).sqrt()
-    };
+    let [x0, y0, x1, y1] = frame.bounds;
+    let to_photo = invert(&frame.to_sheet)?;
     let mm_per_pixel = {
-        let c = [lx / 2.0, ly / 2.0];
+        let c = [(x0 + x1) / 2.0, (y0 + y1) / 2.0];
         let a = apply(&to_photo, c);
         let b = apply(&to_photo, [c[0] + 1.0, c[1]]);
         1.0 / ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2)).sqrt()
     };
-    // Rectify: the sheet frame at SCALE px/mm, BORDER mm beyond the
-    // fiducials, y up on the sheet and down in the picture.
-    let pw = ((lx + 2.0 * BORDER) * SCALE).round() as usize;
-    let ph = ((ly + 2.0 * BORDER) * SCALE).round() as usize;
+    // Rectify: the frame at SCALE px/mm, BORDER mm beyond its bounds,
+    // y up in the frame and down in the picture.
+    let pw = ((x1 - x0 + 2.0 * BORDER) * SCALE).round() as usize;
+    let ph = ((y1 - y0 + 2.0 * BORDER) * SCALE).round() as usize;
     let mut picture = Image::new(pw, ph, Rgb(255, 255, 255));
     let mut rect_gray = vec![255u8; pw * ph];
+    let mm = |i: usize, j: usize| -> [f64; 2] {
+        [
+            x0 - BORDER + i as f64 / SCALE,
+            y1 + BORDER - j as f64 / SCALE,
+        ]
+    };
     for j in 0..ph {
         for i in 0..pw {
-            let x = -BORDER + i as f64 / SCALE;
-            let y = ly + BORDER - j as f64 / SCALE;
-            let p = apply(&to_photo, [x, y]);
+            let p = apply(&to_photo, mm(i, j));
             if let Some(c) = sample(photo, p[0], p[1]) {
                 picture.set(i, j, c);
                 rect_gray[j * pw + i] =
@@ -775,41 +936,166 @@ fn rectify(
             }
         }
     }
-    let px = |x: f64| ((x + BORDER) * SCALE) as isize;
-    let py = |y: f64| ((ly + BORDER - y) * SCALE) as isize;
-    // Segment the dark shapes on the grid, keeping clear of the
-    // fiducials and the margins.
+    let px = |x: f64| ((x - x0 + BORDER) * SCALE) as isize;
+    let py = |y: f64| ((y1 + BORDER - y) * SCALE) as isize;
+    // Segment the dark shapes on the grid, keeping clear of a sheet's
+    // fiducials and the margins, and erasing a field's marks: their
+    // ink is where the lattice says, within a little. An element of
+    // ink (a ring, a dot) is erased only when the paper round it shows,
+    // sampled on a halo just outside it; under a part there is nothing
+    // to erase, and at a part's edge the smaller harm is taken.
     let t2 = otsu(&rect_gray);
     let mut mask = vec![false; pw * ph];
+    let (lattice_k, lattice_pitch) = frame
+        .lattice
+        .as_ref()
+        .map_or((1.0, 0.0), |(k, _)| (*k, FIELD_PITCH * k));
+    let mut lattice_index = std::collections::HashMap::new();
+    let mut lattice_ink: Vec<Vec<[f64; 4]>> = Vec::new();
+    // Elements that straddle a part's edge, to close the notch erasing
+    // them leaves.
+    let mut straddling: Vec<[f64; 4]> = Vec::new();
+    if let Some((k, marks)) = &frame.lattice {
+        for (n, m) in marks.iter().enumerate() {
+            lattice_index.insert((m.i, m.j), n);
+            let elements = field::ink_elements(
+                m.centre[0] / k,
+                m.centre[1] / k,
+                m.i == 0 && m.j == 0,
+                m.read.then_some((m.i, m.j)),
+                0.7,
+            );
+            let mut kept = Vec::new();
+            for e in elements {
+                let e = [e[0] * k, e[1] * k, e[2] * k, e[3] * k];
+                let halo = e[3] + 1.0;
+                let dark = (0..24)
+                    .filter(|&t| {
+                        let a = t as f64 / 24.0 * 2.0 * PI;
+                        let (i, j) = (px(e[0] + halo * a.cos()), py(e[1] + halo * a.sin()));
+                        i >= 0
+                            && j >= 0
+                            && (i as usize) < pw
+                            && (j as usize) < ph
+                            && (rect_gray[j as usize * pw + i as usize] as u32) < t2
+                    })
+                    .count();
+                // Under a part (the halo nearly all dark) there is nothing
+                // to erase; on bare paper, erase; between, the element
+                // straddles a part's edge: erase, and close the notch.
+                if dark < 12 {
+                    kept.push(e);
+                    if dark >= 3 {
+                        straddling.push(e);
+                    }
+                }
+            }
+            lattice_ink.push(kept);
+        }
+    }
+    let nearest_mark = |x: f64, y: f64| -> Option<usize> {
+        if lattice_pitch <= 0.0 {
+            return None;
+        }
+        let (i, j) = ((x / lattice_pitch).round(), (y / lattice_pitch).round());
+        if i < 0.0 || j < 0.0 {
+            return None;
+        }
+        lattice_index.get(&(i as usize, j as usize)).copied()
+    };
     for j in 0..ph {
         for i in 0..pw {
-            let x = -BORDER + i as f64 / SCALE;
-            let y = ly + BORDER - j as f64 / SCALE;
-            if x < 0.0 || y < 0.0 || x > lx || y > ly {
+            let [x, y] = mm(i, j);
+            if x < x0 || y < y0 || x > x1 || y > y1 {
                 continue;
             }
-            let near_fiducial = sheet
+            if frame
+                .keep_out
                 .iter()
-                .any(|s| ((x - s[0]).powi(2) + (y - s[1]).powi(2)).sqrt() * SCALE < keep_out);
-            if near_fiducial {
+                .any(|(c, r)| ((x - c[0]).powi(2) + (y - c[1]).powi(2)).sqrt() < *r)
+            {
                 continue;
+            }
+            if let Some(n) = nearest_mark(x, y) {
+                let on_ink = lattice_ink[n].iter().any(|e| {
+                    let r = ((x - e[0]).powi(2) + (y - e[1]).powi(2)).sqrt();
+                    r >= e[2] && r <= e[3]
+                });
+                if on_ink {
+                    continue;
+                }
             }
             mask[j * pw + i] = (rect_gray[j * pw + i] as u32) < t2;
         }
     }
-    let mask = open(&mask, pw, ph, 2);
+    let mut mask = open(&mask, pw, ph, 2);
+    // Where an erased element straddled a part's edge, the part has a
+    // notch the element's size: close it, within a window round the
+    // element, by dilating and eroding there.
+    for e in &straddling {
+        let r = (e[3] * SCALE).ceil() as usize + 1;
+        let (cx, cy) = (px(e[0]), py(e[1]));
+        let reach = (e[3] * SCALE) as isize + 2 * r as isize + 2;
+        let (wx0, wy0) = ((cx - reach).max(0) as usize, (cy - reach).max(0) as usize);
+        let (wx1, wy1) = (
+            ((cx + reach) as usize).min(pw - 1),
+            ((cy + reach) as usize).min(ph - 1),
+        );
+        if wx1 <= wx0 || wy1 <= wy0 {
+            continue;
+        }
+        let (ww, wh) = (wx1 - wx0 + 1, wy1 - wy0 + 1);
+        let mut window = vec![false; ww * wh];
+        for j in 0..wh {
+            for i in 0..ww {
+                window[j * ww + i] = mask[(wy0 + j) * pw + wx0 + i];
+            }
+        }
+        let closed = erode(&dilate(&window, ww, wh, r), ww, wh, r);
+        // Only the element's own neighbourhood changes, not the window's rim.
+        for j in 0..wh {
+            for i in 0..ww {
+                let (x, y) = ((wx0 + i) as isize, (wy0 + j) as isize);
+                if ((x - cx).pow(2) + (y - cy).pow(2)) as f64 <= ((e[3] * SCALE) + 2.0).powi(2) {
+                    mask[(wy0 + j) * pw + wx0 + i] = closed[j * ww + i];
+                }
+            }
+        }
+    }
+    if frame.lattice.is_some() {
+        // A mark under a part leaves mark-shaped holes in it where its
+        // ink was erased: fill those back in. A real hole on a mark is
+        // the price.
+        let comps = components(&mask, pw, ph);
+        let light: Vec<bool> = mask.iter().map(|m| !m).collect();
+        let light_comps = components(&light, pw, ph);
+        for l in &light_comps {
+            let [lx, ly] = [x0 - BORDER + l.cx / SCALE, y1 + BORDER - l.cy / SCALE];
+            let on_mark = nearest_mark(lx, ly).is_some_and(|n| {
+                let m = frame.lattice.as_ref().unwrap().1[n].centre;
+                ((lx - m[0]).powi(2) + (ly - m[1]).powi(2)).sqrt() < 14.0 * lattice_k
+            });
+            if l.area < (140.0 * SCALE * SCALE) as usize
+                && on_mark
+                && comps.iter().any(|c| c.contains(l))
+            {
+                for (k, on) in l.labels_of(&light, pw).iter().enumerate() {
+                    if *on {
+                        mask[k] = true;
+                    }
+                }
+            }
+        }
+    }
     let comps = components(&mask, pw, ph);
     let light: Vec<bool> = mask.iter().map(|m| !m).collect();
     let light_comps = components(&light, pw, ph);
     let min_area = (20.0 * SCALE * SCALE) as usize;
-    let mm = |i: usize, j: usize| -> [f64; 2] {
-        [-BORDER + i as f64 / SCALE, ly + BORDER - j as f64 / SCALE]
-    };
     let mut parts = Vec::new();
     for c in comps.iter().filter(|c| c.area >= min_area) {
         let lo = mm(c.x0, c.y1 + 1);
         let hi = mm(c.x1 + 1, c.y0);
-        let centroid = [-BORDER + c.cx / SCALE, ly + BORDER - c.cy / SCALE];
+        let centroid = [x0 - BORDER + c.cx / SCALE, y1 + BORDER - c.cy / SCALE];
         let mut traced = trace(&c.labels_of(&mask, pw), pw, ph, c);
         // Counter-clockwise in the sheet frame (y up), whichever way the
         // tracer went round in the picture.
@@ -839,7 +1125,7 @@ fn rectify(
             let area = l.area as f64 / (SCALE * SCALE);
             let perimeter = l.perimeter as f64 / SCALE;
             holes.push(Hole {
-                centre: [-BORDER + l.cx / SCALE, ly + BORDER - l.cy / SCALE],
+                centre: [x0 - BORDER + l.cx / SCALE, y1 + BORDER - l.cy / SCALE],
                 diameter: 2.0 * (area / PI).sqrt(),
                 circularity: (4.0 * PI * area / (perimeter * perimeter)).min(1.0),
                 area,
@@ -874,15 +1160,15 @@ fn rectify(
             [lo[0], lo[1], hi[0], hi[1]]
         })
         .collect();
-    // The overlay: the grid, the fiducials, each part's box and holes.
-    let mut x = 0.0;
-    while x <= lx + 1e-9 {
+    // The overlay: the grid, the marks, each part's box and holes.
+    let mut x = (x0 / 10.0).ceil() * 10.0;
+    while x <= x1 + 1e-9 {
         let major = (x % 50.0).abs() < 1e-9;
         vline(
             &mut picture,
             px(x),
-            py(ly),
-            py(0.0),
+            py(y1),
+            py(y0),
             if major {
                 Rgb(90, 140, 220)
             } else {
@@ -891,13 +1177,13 @@ fn rectify(
         );
         x += 10.0;
     }
-    let mut y = 0.0;
-    while y <= ly + 1e-9 {
+    let mut y = (y0 / 10.0).ceil() * 10.0;
+    while y <= y1 + 1e-9 {
         let major = (y % 50.0).abs() < 1e-9;
         hline(
             &mut picture,
-            px(0.0),
-            px(lx),
+            px(x0),
+            px(x1),
             py(y),
             if major {
                 Rgb(90, 140, 220)
@@ -907,16 +1193,26 @@ fn rectify(
         );
         y += 10.0;
     }
-    if keep_out > 0.0 {
-        for s in &sheet {
-            cross(&mut picture, px(s[0]), py(s[1]), 8, Rgb(40, 90, 200));
+    for (c, _) in &frame.keep_out {
+        cross(&mut picture, px(c[0]), py(c[1]), 8, Rgb(40, 90, 200));
+    }
+    if let Some((_, lattice)) = &frame.lattice {
+        for m in lattice {
+            let c = m.centre;
+            if m.read {
+                cross(&mut picture, px(c[0]), py(c[1]), 8, Rgb(40, 90, 200));
+            } else {
+                cross(&mut picture, px(c[0]), py(c[1]), 4, Rgb(170, 170, 170));
+            }
         }
     }
     let mut pass = Pass {
-        lx,
-        ly,
+        x0,
+        y0,
+        x1,
+        y1,
         mm_per_pixel,
-        residual,
+        residual: frame.residual,
         parts,
         blocks,
         reference: preset,
@@ -991,9 +1287,9 @@ fn exclude_reference(pass: &mut Pass, bbox: [f64; 4]) {
             && p.centroid[1] > bbox[1] - margin
             && p.centroid[1] < bbox[3] + margin)
     });
-    let ly = pass.ly;
-    let px = |x: f64| ((x + BORDER) * SCALE) as isize;
-    let py = |y: f64| ((ly + BORDER - y) * SCALE) as isize;
+    let (x0, y1) = (pass.x0, pass.y1);
+    let px = |x: f64| ((x - x0 + BORDER) * SCALE) as isize;
+    let py = |y: f64| ((y1 + BORDER - y) * SCALE) as isize;
     let (x0, y0, x1, y1) = (
         px(bbox[0]) - 4,
         py(bbox[3]) - 4,
@@ -1008,9 +1304,9 @@ fn exclude_reference(pass: &mut Pass, bbox: [f64; 4]) {
 
 /// Boxes each part and crosses each hole on the picture.
 fn draw_parts(pass: &mut Pass) {
-    let ly = pass.ly;
-    let px = |x: f64| ((x + BORDER) * SCALE) as isize;
-    let py = |y: f64| ((ly + BORDER - y) * SCALE) as isize;
+    let (x0, y1) = (pass.x0, pass.y1);
+    let px = |x: f64| ((x - x0 + BORDER) * SCALE) as isize;
+    let py = |y: f64| ((y1 + BORDER - y) * SCALE) as isize;
     let picture = &mut pass.picture;
     for p in &pass.parts {
         let (x0, y0, x1, y1) = (px(p.bbox[0]), py(p.bbox[3]), px(p.bbox[2]), py(p.bbox[1]));

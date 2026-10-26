@@ -14,8 +14,10 @@ python3 examples/measuring-sheet/build.py       # writes the sheets and measures
 cargo test -p ok-photo --test example           # what CI runs; regenerates scan.png and out/measured.png
 ```
 
+- `out/measuring-field-Letter-2x2.pdf` and `-1x1.pdf`: the measuring
+  fields, the ones to print first (below).
 - `out/measuring-sheet-Letter.pdf`, `-A4.pdf`, `-A3.pdf`,
-  `-Tabloid.pdf`: the sheets. Print one at 100 % (no "fit to page") and
+  `-Tabloid.pdf`: the classic sheets. Print one at 100 % (no "fit to page") and
   check the bar at the bottom against a rule: it is 100 mm. A light
   10 mm grid, heavier every 50, and four bullseye marks in the corners,
   the double-ringed one at the origin, x to the right, y up. The row of
@@ -27,6 +29,9 @@ cargo test -p ok-photo --test example           # what CI runs; regenerates scan
   97 %. Synthetic, so the answer is known: the plate is 64 x 38 mm with
   two 6.5 mm holes 50 mm apart, the washer is 25 mm with a 10 mm bore,
   the disc is 18 mm, the scale's bars are 10 mm.
+- `field-scan.png` and `out/field-measured.png`: the 2x2 field
+  photographed with its corners out of the picture and a plate lying
+  across one of its marks, and what the tool makes of it.
 - `out/measured.png`: what `measure_photo` returns. The picture is
   squared up onto true millimetres at 4 px/mm, the grid drawn over it
   (it drifts from the printed grid, which is 3 % small), the scale boxed
@@ -34,10 +39,46 @@ cargo test -p ok-photo --test example           # what CI runs; regenerates scan
   hole in part 1" or "the hole at (37, 49)" names a feature without
   ambiguity.
 
+## The measuring field
+
+The classic sheet has one weakness: all four corner marks must be in
+the picture and uncovered, so a part bigger than a hand, or a round
+turntable, defeats it. The measuring field fixes that and grows past
+one page. It is a lattice of the same bullseye marks 50 mm apart, each
+with two short rows of dots that say which column and row it is: the
+lower row's end dots are always there and give the row's direction,
+its middle four are the column in binary, the upper row's middle four
+the row. A photograph needs any four marks in two columns and two
+rows; every mark that reads goes into one least-squares fit, a mark
+whose code misread is thrown out when it lands far from where its code
+says, and the marks under a part simply do not read. The marks' ink is
+erased from the picture before the parts are found, each ring and dot
+only where the paper round it shows, so a part lying across a mark
+keeps its shape, with at worst a small notch or bump where a dot sat
+on its very edge.
+
+![the 2x2 field photographed askew, its corners out of frame, a plate across a mark](out/field-measured.png)
+
+A field is printed as tiles, one page each (`tiles: "2x2"`; `"1x1"` is a
+single page with the same marks and is the better single sheet). Each
+tile prints the grid and marks out to the paper's edge, and a tile's
+first mark column and row are the previous tile's last, so the tiles
+share a column and a row of marks. Cut the tile to the right and the
+tile above along their dashed lines, lay each over its neighbour with
+its shared marks on the neighbour's, and tape. The marks register the
+tiles to a fraction of a millimetre, and whatever error is left is
+averaged by the fit rather than trusted. A 2x2 Letter field is 467 x
+354 mm with 9 x 7 marks; `3x2` is 667 x 354.
+
+`crates/ok-photo/tests/field.rs` makes a 2x2 field with a plate across
+a mark, photographs it with the corners out of frame, and checks the
+plate's size and holes, the washer, the disc, the print scale from the
+bars, and that the mark under the plate was not read nor any invented.
+
 ## From a chat
 
 ```
-measuring_sheet {path: "sheet.pdf"}                                # Letter unless told otherwise
+measuring_sheet {path: "field.pdf", tiles: "2x2"}                  # Letter unless told otherwise; no tiles for the classic sheet
 measure_photo {path: "IMG_2231.jpg", reference: "bars 10", sketch: true}
 ```
 

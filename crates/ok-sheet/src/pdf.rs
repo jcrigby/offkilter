@@ -1,5 +1,5 @@
-//! A small vector PDF writer: one page in millimetres with lines, filled
-//! polygons, circles and Helvetica text. Enough for a drawing sheet, with
+//! A small vector PDF writer: pages in millimetres with lines, filled
+//! polygons, circles and Helvetica text, one per file or several. Enough for a drawing sheet, with
 //! no embedded fonts (the standard 14 are assumed). The content stream
 //! is deflated, which makes a sheet a quarter of its size; [`inflated`]
 //! gives it back as text for anything that greps the file.
@@ -207,7 +207,27 @@ impl Page {
 
     /// The finished file: the content stream deflated.
     pub fn finish(self) -> Vec<u8> {
-        let content = format!("{} 0 0 {} 0 0 cm\n{}", num(PT), num(PT), self.ops);
+        document(vec![self])
+    }
+}
+
+/// Several pages as one file, in order: the content streams deflated,
+/// the two fonts shared.
+pub fn document(pages: Vec<Page>) -> Vec<u8> {
+    // Objects: 1 catalog, 2 pages, 3 and 4 the fonts, then a page and
+    // its content stream per page.
+    let n = pages.len();
+    let kids: Vec<String> = (0..n).map(|k| format!("{} 0 R", 5 + 2 * k)).collect();
+    let mut objects: Vec<Vec<u8>> = vec![
+        b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
+        format!("<< /Type /Pages /Kids [{}] /Count {} >>", kids.join(" "), n).into_bytes(),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"
+            .to_vec(),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
+            .to_vec(),
+    ];
+    for (k, page) in pages.into_iter().enumerate() {
+        let content = format!("{} 0 0 {} 0 0 cm\n{}", num(PT), num(PT), page.ops);
         let deflated = miniz_oxide::deflate::compress_to_vec_zlib(content.as_bytes(), 6);
         let mut stream = format!(
             "<< /Length {} /Filter /FlateDecode >>\nstream\n",
@@ -216,45 +236,41 @@ impl Page {
         .into_bytes();
         stream.extend_from_slice(&deflated);
         stream.extend_from_slice(b"\nendstream");
-        let objects: Vec<Vec<u8>> = vec![
-            b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
-            b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>".to_vec(),
+        objects.push(
             format!(
-                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>",
-                num(self.width * PT),
-                num(self.height * PT)
+                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Contents {} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>",
+                num(page.width * PT),
+                num(page.height * PT),
+                6 + 2 * k
             )
             .into_bytes(),
-            stream,
-            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>".to_vec(),
-            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
-                .to_vec(),
-        ];
-        let mut out: Vec<u8> = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n".to_vec();
-        let mut offsets = Vec::new();
-        for (i, body) in objects.iter().enumerate() {
-            offsets.push(out.len());
-            out.extend_from_slice(format!("{} 0 obj\n", i + 1).as_bytes());
-            out.extend_from_slice(body);
-            out.extend_from_slice(b"\nendobj\n");
-        }
-        let xref = out.len();
-        out.extend_from_slice(
-            format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1).as_bytes(),
         );
-        for o in &offsets {
-            out.extend_from_slice(format!("{:010} 00000 n \n", o).as_bytes());
-        }
-        out.extend_from_slice(
-            format!(
-                "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n",
-                objects.len() + 1,
-                xref
-            )
-            .as_bytes(),
-        );
-        out
+        objects.push(stream);
     }
+    let mut out: Vec<u8> = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n".to_vec();
+    let mut offsets = Vec::new();
+    for (i, body) in objects.iter().enumerate() {
+        offsets.push(out.len());
+        out.extend_from_slice(format!("{} 0 obj\n", i + 1).as_bytes());
+        out.extend_from_slice(body);
+        out.extend_from_slice(b"\nendobj\n");
+    }
+    let xref = out.len();
+    out.extend_from_slice(
+        format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1).as_bytes(),
+    );
+    for o in &offsets {
+        out.extend_from_slice(format!("{:010} 00000 n \n", o).as_bytes());
+    }
+    out.extend_from_slice(
+        format!(
+            "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF\n",
+            objects.len() + 1,
+            xref
+        )
+        .as_bytes(),
+    );
+    out
 }
 
 /// Where `needle` first occurs in `hay` at or after `from`.
