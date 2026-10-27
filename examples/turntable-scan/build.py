@@ -80,4 +80,18 @@ for tab, (stl, name) in enumerate([
     print(mcp.call("import", {"tab": tab, "path": stl, "name": name}))
     for view, suffix in (("iso", ""), ("front", "-front")):
         mcp.call("screenshot", {"tab": tab, "view": view, "width": 1000, "height": 800, "path": os.path.join(OUT, f"{name}{suffix}.png")})
+
+# The bucky ball's flat faces fitted and closed into a part: 31 scanned
+# planes and the table, one planar face each, with the edges and
+# corners where the planes meet. From the video, which at 1400 pixels
+# across with its colour at half that stands for a 1080p phone, and
+# from the frames straight, which stand for a 4K phone.
+print(mcp.call("fit_faces", {"scan": os.path.join(OUT, "bucky"), "out": os.path.join(OUT, "bucky")}))
+frames_out = os.path.join(OUT, "bucky-frames")
+print(mcp.call("scan_turntable", {"frames": os.path.join(HERE, "frames-bucky"), "out": frames_out}))
+shrink(os.path.join(frames_out, "scan-frame.png"), os.path.join(frames_out, "scan-frame.jpg"))
+mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "bucky-faces"}]})
+print(mcp.call("fit_faces", {"scan": frames_out, "out": frames_out, "tab": 5, "name": "bucky ball"}))
+for view, suffix in (("iso", ""), ("front", "-front")):
+    mcp.call("screenshot", {"tab": 5, "view": view, "width": 1000, "height": 800, "path": os.path.join(OUT, f"bucky-faces{suffix}.png")})
 mcp.close()

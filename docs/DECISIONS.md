@@ -609,3 +609,50 @@ one, and they take a merged cloud the same way. What stays is the
 representation's limit, one radius per direction and height, so a
 torus or a cup with a handle is still not a thing this scanner
 returns whole.
+
+## A scanned polyhedron is its planes, not a mesh
+
+The mesh the scanner stitches is a lattice of small triangles through
+points resampled on a cylinder, and on anything with flat faces it
+reads as what it is: every corner chamfered by the chord between two
+frames, every face a quilt of slightly jittered facets. The points are
+not the problem, they lie within a tenth of a millimetre of the face;
+the representation is. So the scan is also read for its planes, one
+at a time: from the unclaimed point whose neighbourhood lies most
+fully on its own plane, that plane claims every point lying on it
+whose normal agrees, is refitted and claims again, and keeps its
+points if there are enough and their normals do not fan out as a
+curve's would; each plane is least squares through hundreds of points
+(good to a few hundredths of a millimetre), and the planes bound a
+convex solid whose edges and corners are their intersections, sharper
+than any point.
+That solid goes into the document through the mesh op as a fan of
+triangles per face, and regeneration, which already merges coplanar
+facets, gives it back as one planar face per plane.
+
+Two things in that pipeline are there because of how a laser scan
+samples a surface. The points lie on lines, dense along each and a
+centimetre apart across, and one line is perfectly planar on its own:
+it lies in the laser's plane, bent or not. A normal estimated from a
+neighbourhood that holds one line crossing an edge is the laser
+plane's normal, and a patch grown from it runs down the line instead
+of across the face. So a point's normal is never taken from one line:
+it is the line's own tangent crossed with the step to the nearest
+point of a neighbouring line, one that runs parallel (the same line
+bent over an edge also offers points across the tangent, but their
+tangent has turned with the fold), refined on the neighbours within
+the tolerance of that first plane, the search widening until such a
+line appears, since lines lie further apart out at the rim and on a
+face struck at a slant. That keeps a point near an edge on its own
+face's normal instead of a blend, and lets a face holding two lines
+still be found. Region growing was tried first and dropped: it hangs
+on where it starts and how far it reaches, and a merged cloud, with
+a second scan's lines laid between or over the first's, broke every
+setting of it; claiming by plane is indifferent to both. The
+half-space intersection, rather than a general
+polyhedron from faces, is the honest choice for what the scanner can
+see: a turntable scan of a concave object is bridged across the
+concavity anyway, and a convex solid is what the planes of one
+determine. Corners where four or more planes meet fall out as a
+cluster with a sliver edge between, since fitted planes never meet at
+exactly one point, and are clustered to the point nearest all of them.

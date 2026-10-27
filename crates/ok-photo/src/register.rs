@@ -141,14 +141,14 @@ pub struct Registration {
 }
 
 /// A k-d tree over points for nearest neighbours.
-struct Tree {
-    pts: Vec<[f64; 3]>,
+pub(crate) struct Tree {
+    pub(crate) pts: Vec<[f64; 3]>,
     /// Node k splits `idx[lo..hi]` at its middle on axis `depth % 3`.
     idx: Vec<usize>,
 }
 
 impl Tree {
-    fn new(pts: &[[f64; 3]]) -> Tree {
+    pub(crate) fn new(pts: &[[f64; 3]]) -> Tree {
         let mut idx: Vec<usize> = (0..pts.len()).collect();
         fn build(pts: &[[f64; 3]], idx: &mut [usize], depth: usize) {
             if idx.len() <= 1 {
@@ -169,7 +169,7 @@ impl Tree {
     }
 
     /// The nearest point within `max` of `q`, as (distance, index).
-    fn nearest(&self, q: [f64; 3], max: f64) -> Option<(f64, usize)> {
+    pub(crate) fn nearest(&self, q: [f64; 3], max: f64) -> Option<(f64, usize)> {
         let mut best: Option<(f64, usize)> = None;
         let mut best_d2 = max * max;
         fn search(
@@ -211,7 +211,7 @@ impl Tree {
 
 impl Tree {
     /// The indices of the points within `r` of `q`.
-    fn within(&self, q: [f64; 3], r: f64) -> Vec<usize> {
+    pub(crate) fn within(&self, q: [f64; 3], r: f64) -> Vec<usize> {
         let mut out = Vec::new();
         fn search(
             t: &Tree,
@@ -246,7 +246,7 @@ impl Tree {
 
     /// The typical spacing: the median distance from a point to its
     /// nearest other point, over a sample.
-    fn spacing(&self) -> f64 {
+    pub(crate) fn spacing(&self) -> f64 {
         let step = (self.pts.len() / 500).max(1);
         let mut ds: Vec<f64> = self
             .pts
@@ -278,7 +278,7 @@ impl Tree {
     /// across, so the neighbourhood starts at a few spacings and
     /// grows until it spreads two ways, not just along one line; zero
     /// where it never does.
-    fn normals(&self) -> Vec<[f64; 3]> {
+    pub(crate) fn normals(&self) -> Vec<[f64; 3]> {
         let base = (4.0 * self.spacing()).max(1.0);
         self.pts
             .iter()
@@ -321,11 +321,312 @@ impl Tree {
             })
             .collect()
     }
+
+    /// Every point's line tangent: the longest spread of the points
+    /// within `close` of it, or None where there are too few.
+    pub(crate) fn tangents(&self, close: f64) -> Vec<Option<[f64; 3]>> {
+        self.pts
+            .iter()
+            .map(|p| {
+                // A line the camera sees at a slant is sparse along
+                // its length: look up to four times as far for the
+                // three points a tangent needs.
+                let mut near = self.within(*p, close);
+                let mut reach = close;
+                while near.len() < 3 && reach < 4.0 * close {
+                    reach *= 2.0;
+                    near = self.within(*p, reach);
+                }
+                if near.len() < 3 {
+                    return None;
+                }
+                let n = near.len() as f64;
+                let c = near.iter().fold([0.0; 3], |c, &i| {
+                    [
+                        c[0] + self.pts[i][0] / n,
+                        c[1] + self.pts[i][1] / n,
+                        c[2] + self.pts[i][2] / n,
+                    ]
+                });
+                let mut cov = [[0.0; 3]; 3];
+                for &i in &near {
+                    let d = [
+                        self.pts[i][0] - c[0],
+                        self.pts[i][1] - c[1],
+                        self.pts[i][2] - c[2],
+                    ];
+                    for (r, row) in cov.iter_mut().enumerate() {
+                        for (k, v) in row.iter_mut().enumerate() {
+                            *v += d[r] * d[k];
+                        }
+                    }
+                }
+                Some(eigen_full(cov).1[2])
+            })
+            .collect()
+    }
+
+    /// The noise along a scan's laser lines: the typical distance of a
+    /// point from the straight line through the points close along
+    /// its own, over a sample. Zero for a cloud without lines.
+    pub(crate) fn line_noise(&self) -> f64 {
+        let close = (3.0 * self.spacing()).max(1.5);
+        let step = (self.pts.len() / 500).max(1);
+        let mut ds: Vec<f64> = Vec::new();
+        for p in self.pts.iter().step_by(step) {
+            let near = self.within(*p, close);
+            if near.len() < 4 {
+                continue;
+            }
+            let n = near.len() as f64;
+            let c = near.iter().fold([0.0; 3], |c, &i| {
+                [
+                    c[0] + self.pts[i][0] / n,
+                    c[1] + self.pts[i][1] / n,
+                    c[2] + self.pts[i][2] / n,
+                ]
+            });
+            let mut cov = [[0.0; 3]; 3];
+            for &i in &near {
+                let d = [
+                    self.pts[i][0] - c[0],
+                    self.pts[i][1] - c[1],
+                    self.pts[i][2] - c[2],
+                ];
+                for (r, row) in cov.iter_mut().enumerate() {
+                    for (k, v) in row.iter_mut().enumerate() {
+                        *v += d[r] * d[k];
+                    }
+                }
+            }
+            let (values, vectors) = eigen_full(cov);
+            // Only where the neighbourhood is one line: where a second
+            // scan's line crosses, the spread is two-way and says
+            // nothing about the noise.
+            if values[1] > 0.05 * values[2] {
+                continue;
+            }
+            let t = vectors[2];
+            let d = [p[0] - c[0], p[1] - c[1], p[2] - c[2]];
+            let along = d[0] * t[0] + d[1] * t[1] + d[2] * t[2];
+            let off = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2] - along * along)
+                .max(0.0)
+                .sqrt();
+            ds.push(off);
+        }
+        ds.sort_by(f64::total_cmp);
+        ds.get(ds.len() / 2).copied().unwrap_or(0.0)
+    }
+
+    /// The pitch of a scan's laser lines: the typical distance from a
+    /// point to the nearest point of a line running parallel to its
+    /// own (the offset mostly across the local tangent, the tangents
+    /// alike), over a sample. A cloud without lines gives back zero.
+    pub(crate) fn line_pitch(&self, tangents: &[Option<[f64; 3]>], close: f64) -> f64 {
+        let step = (self.pts.len() / 300).max(1);
+        let mut pitches: Vec<f64> = Vec::new();
+        for (pi, p) in self.pts.iter().enumerate().step_by(step) {
+            let Some(t) = tangents[pi] else {
+                continue;
+            };
+            let across = self
+                .within(*p, 30.0_f64.max(10.0 * close))
+                .iter()
+                .filter_map(|&i| {
+                    let d = [
+                        self.pts[i][0] - p[0],
+                        self.pts[i][1] - p[1],
+                        self.pts[i][2] - p[2],
+                    ];
+                    let l = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
+                    let along = (d[0] * t[0] + d[1] * t[1] + d[2] * t[2]).abs();
+                    let parallel = tangents[i].is_some_and(|tq| {
+                        (tq[0] * t[0] + tq[1] * t[1] + tq[2] * t[2]).abs()
+                            > 25f64.to_radians().cos()
+                    });
+                    (l > close && along < 0.4 * l && parallel).then_some(l)
+                })
+                .fold(f64::INFINITY, f64::min);
+            if across.is_finite() {
+                pitches.push(across);
+            }
+        }
+        pitches.sort_by(f64::total_cmp);
+        pitches.get(pitches.len() / 2).copied().unwrap_or(0.0)
+    }
+
+    /// A unit normal at every point (zero where none could be taken):
+    /// the least-spread direction of the points round it, over a
+    /// neighbourhood that grows until it spreads two ways, since a
+    /// scan's points are dense along each laser line and sparse
+    /// across. Smooth across an edge, which suits registration.
+    ///
+    /// The normals for face fitting, with the radius each was taken
+    /// over and its support, the share of the neighbourhood lying on
+    /// its plane (an interior point's is high, an edge's low); a zero
+    /// normal carries the radius tried. A scan's points lie on laser lines,
+    /// and one line is perfectly planar on its own (it lies in the
+    /// laser's plane, bent or not), so a normal is never taken from one
+    /// line: it is the line's own tangent crossed with the step to the
+    /// nearest point of a neighbouring line, which lies in the surface,
+    /// then refined on the neighbours within `tol` of that first plane
+    /// so that a point near an edge keeps its own face's normal rather
+    /// than a blend. Where a neighbouring line lies either side, the
+    /// side with more points on its plane wins. A cloud without lines
+    /// falls back to the plane through the neighbourhood.
+    pub(crate) fn normals_lined(&self, tol: f64) -> Vec<([f64; 3], f64, f64)> {
+        let spacing = self.spacing();
+        let close = (3.0 * spacing).max(1.5);
+        let tangents = self.tangents(close);
+        let pitch = self.line_pitch(&tangents, close);
+        let lined = pitch > close;
+        let radius = if lined {
+            1.5 * pitch
+        } else {
+            (4.0 * spacing).max(1.0)
+        };
+        let fit = |idx: &[usize]| -> ([f64; 3], [f64; 3]) {
+            let n = idx.len() as f64;
+            let c = idx.iter().fold([0.0; 3], |c, &i| {
+                [
+                    c[0] + self.pts[i][0] / n,
+                    c[1] + self.pts[i][1] / n,
+                    c[2] + self.pts[i][2] / n,
+                ]
+            });
+            let mut cov = [[0.0; 3]; 3];
+            for &i in idx {
+                let d = [
+                    self.pts[i][0] - c[0],
+                    self.pts[i][1] - c[1],
+                    self.pts[i][2] - c[2],
+                ];
+                for (r, row) in cov.iter_mut().enumerate() {
+                    for (k, v) in row.iter_mut().enumerate() {
+                        *v += d[r] * d[k];
+                    }
+                }
+            }
+            let (_, vectors) = eigen_full(cov);
+            (vectors[0], vectors[2])
+        };
+        self.pts
+            .iter()
+            .enumerate()
+            .map(|(pi, p)| {
+                let near = self.within(*p, radius);
+                if near.len() < 6 {
+                    return ([0.0; 3], radius, 0.0);
+                }
+                if !lined {
+                    let (n, _) = fit(&near);
+                    let on = near
+                        .iter()
+                        .filter(|&&i| {
+                            let d = [
+                                self.pts[i][0] - p[0],
+                                self.pts[i][1] - p[1],
+                                self.pts[i][2] - p[2],
+                            ];
+                            (d[0] * n[0] + d[1] * n[1] + d[2] * n[2]).abs() <= tol
+                        })
+                        .count();
+                    return (n, radius, on as f64 / near.len() as f64);
+                }
+                let Some(t) = tangents[pi] else {
+                    return ([0.0; 3], radius, 0.0);
+                };
+                // The nearest point of a neighbouring line, on either
+                // side: offset across this line's tangent, and running
+                // parallel to it. The same line bent over an edge also
+                // offers points across the tangent, but their own
+                // tangent has turned with the fold.
+                let candidates = |idx: &[usize]| -> Vec<(f64, [f64; 3])> {
+                    let mut out: Vec<(f64, [f64; 3])> = idx
+                        .iter()
+                        .filter_map(|&i| {
+                            let d = [
+                                self.pts[i][0] - p[0],
+                                self.pts[i][1] - p[1],
+                                self.pts[i][2] - p[2],
+                            ];
+                            let l = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
+                            let a = d[0] * t[0] + d[1] * t[1] + d[2] * t[2];
+                            let parallel = tangents[i].is_some_and(|tq| {
+                                (tq[0] * t[0] + tq[1] * t[1] + tq[2] * t[2]).abs()
+                                    > 25f64.to_radians().cos()
+                            });
+                            (l > close && a.abs() < 0.4 * l && parallel).then_some((l, d))
+                        })
+                        .collect();
+                    out.sort_by(|a, b| a.0.total_cmp(&b.0));
+                    out
+                };
+                // Lines lie further apart out at the rim than in near
+                // the axis, and further still on a face the laser
+                // strikes at a slant, so the search widens, up to four
+                // times, until a neighbouring line appears.
+                let mut across = candidates(&near);
+                let mut near = near;
+                let mut reach = radius;
+                while across.is_empty() && reach < 4.0 * radius {
+                    reach *= 2.0;
+                    near = self.within(*p, reach);
+                    across = candidates(&near);
+                }
+                let Some(first) = across.first().copied() else {
+                    return ([0.0; 3], radius, 0.0);
+                };
+                let other = across
+                    .iter()
+                    .find(|(_, d)| d[0] * first.1[0] + d[1] * first.1[1] + d[2] * first.1[2] < 0.0);
+                let mut best: Option<(usize, [f64; 3])> = None;
+                for (_, d) in std::iter::once(&first).chain(other) {
+                    let n0 = [
+                        t[1] * d[2] - t[2] * d[1],
+                        t[2] * d[0] - t[0] * d[2],
+                        t[0] * d[1] - t[1] * d[0],
+                    ];
+                    let l = (n0[0] * n0[0] + n0[1] * n0[1] + n0[2] * n0[2]).sqrt();
+                    if l < 1e-12 {
+                        continue;
+                    }
+                    let n0 = [n0[0] / l, n0[1] / l, n0[2] / l];
+                    let inliers: Vec<usize> = near
+                        .iter()
+                        .copied()
+                        .filter(|&i| {
+                            let d = [
+                                self.pts[i][0] - p[0],
+                                self.pts[i][1] - p[1],
+                                self.pts[i][2] - p[2],
+                            ];
+                            (d[0] * n0[0] + d[1] * n0[1] + d[2] * n0[2]).abs() <= tol
+                        })
+                        .collect();
+                    if inliers.len() >= 6 && best.is_none_or(|(c, _)| inliers.len() > c) {
+                        let (n, _) = fit(&inliers);
+                        best = Some((inliers.len(), n));
+                    }
+                }
+                match best {
+                    Some((count, n)) => (n, radius, count as f64 / near.len() as f64),
+                    None => ([0.0; 3], radius, 0.0),
+                }
+            })
+            .collect()
+    }
 }
 
 /// The eigenvalues of a symmetric 3x3 matrix in ascending order and
 /// the unit eigenvector of the smallest, by Jacobi rotations.
-fn eigen(mut a: [[f64; 3]; 3]) -> ([f64; 3], [f64; 3]) {
+pub(crate) fn eigen(a: [[f64; 3]; 3]) -> ([f64; 3], [f64; 3]) {
+    let (values, vectors) = eigen_full(a);
+    (values, vectors[0])
+}
+
+/// The eigenvalues in ascending order with their unit eigenvectors.
+fn eigen_full(mut a: [[f64; 3]; 3]) -> ([f64; 3], [[f64; 3]; 3]) {
     let mut v = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
     for _ in 0..30 {
         let (mut p, mut q, mut big) = (0, 1, 0.0);
@@ -360,16 +661,21 @@ fn eigen(mut a: [[f64; 3]; 3]) -> ([f64; 3], [f64; 3]) {
             row[q] = s * vp + c * vq;
         }
     }
-    let k = (0..3).min_by(|&i, &j| a[i][i].total_cmp(&a[j][j])).unwrap();
-    let mut values = [a[0][0], a[1][1], a[2][2]];
-    values.sort_by(f64::total_cmp);
-    let n = [v[0][k], v[1][k], v[2][k]];
-    let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
-    if l < 1e-12 {
-        (values, [0.0; 3])
-    } else {
-        (values, [n[0] / l, n[1] / l, n[2] / l])
+    let mut order = [0usize, 1, 2];
+    order.sort_by(|&i, &j| a[i][i].total_cmp(&a[j][j]));
+    let mut values = [0.0; 3];
+    let mut vectors = [[0.0; 3]; 3];
+    for (slot, &k) in order.iter().enumerate() {
+        values[slot] = a[k][k];
+        let n = [v[0][k], v[1][k], v[2][k]];
+        let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
+        vectors[slot] = if l < 1e-12 {
+            [0.0; 3]
+        } else {
+            [n[0] / l, n[1] / l, n[2] / l]
+        };
     }
+    (values, vectors)
 }
 
 fn extent(pts: &[[f64; 3]]) -> ([f64; 3], [f64; 3]) {

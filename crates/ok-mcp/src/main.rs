@@ -1408,6 +1408,109 @@ impl Server {
                 })
                 .to_string())
             }
+            "fit_faces" => {
+                let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
+                let path: std::path::PathBuf = match (
+                    args.get("ply").and_then(|v| v.as_str()),
+                    args.get("scan").and_then(|v| v.as_str()),
+                ) {
+                    (Some(ply), _) => ply.into(),
+                    (None, Some(dir)) => {
+                        let d = std::path::Path::new(dir);
+                        if d.join("merged.ply").exists() {
+                            d.join("merged.ply")
+                        } else {
+                            d.join("scan.ply")
+                        }
+                    }
+                    (None, None) => {
+                        return Err("fit_faces needs scan (a directory from scan_turntable or merge_scans) or ply (a point cloud file)".into())
+                    }
+                };
+                let text = std::fs::read_to_string(&path)
+                    .map_err(|e| format!("could not read {}: {e}", path.display()))?;
+                let points = ok_photo::scan::read_ply(&text)?;
+                let opts = ok_photo::faces::FaceOptions {
+                    tol: num("tol", 0.5),
+                    angle: num("angle", 12.0),
+                    min_points: num("min_points", 15.0).max(4.0) as usize,
+                    table: args.get("table").and_then(|v| v.as_bool()).unwrap_or(true),
+                };
+                let fit = ok_photo::faces::fit_faces(&points, &opts);
+                if let Some(out_dir) = args.get("out").and_then(|p| p.as_str()) {
+                    std::fs::create_dir_all(out_dir)
+                        .map_err(|e| format!("could not make {out_dir}: {e}"))?;
+                    let out = std::path::Path::new(out_dir).join("faces.json");
+                    std::fs::write(&out, serde_json::to_string_pretty(&fit).unwrap())
+                        .map_err(|e| format!("could not write {}: {e}", out.display()))?;
+                }
+                let scanned = fit.planes.iter().filter(|p| !p.from_table).count();
+                let mut text =
+                    format!(
+                    "{} plane{} fitted ({scanned} scanned{}), {:.0} % of the {} points on them.",
+                    fit.planes.len(),
+                    if fit.planes.len() == 1 { "" } else { "s" },
+                    if fit.planes.len() > scanned { ", plus the table" } else { "" },
+                    100.0 * fit.planar,
+                    points.len()
+                );
+                for (k, p) in fit.planes.iter().enumerate() {
+                    text.push_str(&format!(
+                        " Plane {k}: normal ({:.3}, {:.3}, {:.3}), offset {:.2}, {} points, rms {:.3} mm{}.",
+                        p.normal[0], p.normal[1], p.normal[2], p.offset, p.points, p.rms,
+                        if p.from_table { ", the table" } else { "" }
+                    ));
+                }
+                match &fit.polyhedron {
+                    Some(poly) => {
+                        let mut ds: Vec<f64> = poly.edges.iter().map(|e| e.dihedral).collect();
+                        ds.sort_by(f64::total_cmp);
+                        let mut ls: Vec<f64> = poly.edges.iter().map(|e| e.length).collect();
+                        ls.sort_by(f64::total_cmp);
+                        text.push_str(&format!(
+                            " They close a solid: {} faces, {} edges, {} corners, volume {:.1} cm3, area {:.0} mm2; dihedral angles {:.1} to {:.1} degrees, edges {:.1} to {:.1} mm.",
+                            poly.faces.len(), poly.edges.len(), poly.vertices.len(), poly.volume / 1000.0, poly.area,
+                            ds[0], ds[ds.len() - 1], ls[0], ls[ls.len() - 1]
+                        ));
+                        if args.get("doc").is_some() || args.get("tab").is_some() || args.get("name").is_some() {
+                            let id = self.doc_id(args)?;
+                            let doc = self.backend.document(&id)?;
+                            let tab_id = pick_tab(&doc, tab)?;
+                            let name = args
+                                .get("name")
+                                .and_then(|n| n.as_str())
+                                .unwrap_or("Scanned faces");
+                            let (v, t) = poly.triangles();
+                            let ops = vec![json!({ "type": "studio", "tab": tab_id.0, "op": {
+                                "type": "add_mesh",
+                                "vertices": v.iter().map(|p| json!({ "x": p[0], "y": p[1], "z": p[2] })).collect::<Vec<_>>(),
+                                "triangles": t,
+                                "name": name,
+                            } })];
+                            let outcome = self.backend.apply(&id, ops)?;
+                            text.push_str(&format!(" Added `{name}` to tab {} as a body with one planar face per plane.", tab_id.0));
+                            if let Some(e) = outcome.get("error").and_then(|e| e.as_str()) {
+                                text.push_str(&format!("\nERROR: {e}"));
+                            }
+                            match self.backend.report(&id, Some(tab_id.0)) {
+                                Ok(r) => {
+                                    text.push('\n');
+                                    text.push_str(&summarize(&r));
+                                }
+                                Err(e) => text.push_str(&format!("\nreport failed: {e}\n")),
+                            }
+                        }
+                    }
+                    None => text.push_str(" They do not close a solid; the object is not a convex polyhedron, or faces are missing (scan it in another pose and merge)."),
+                }
+                for w in &fit.warnings {
+                    text.push_str(&format!(" Warning: {w}."));
+                }
+                if args.get("out").and_then(|p| p.as_str()).is_some() {
+                    text.push_str(" Wrote faces.json.");
+                }
+                Ok(text)
+            }
             "merge_scans" => {
                 let out_dir = args
                     .get("out")
@@ -2256,6 +2359,11 @@ fn tool_list() -> Value {
             "name": "merge_scans",
             "description": "Merges turntable scans of one object taken in different poses into one point cloud and mesh. A scan sees nothing under an overhang steeper than the camera's height above the table (the underside of a lip, the waist under a bulge), so scan the object again upside down or on its side, or with the camera higher, and merge. `scans` is a list of {dir, placed}: each dir holds a scan.ply from scan_turntable, and `placed` says how the object was put down between that scan and the first: `same` (not touched; only the camera or laser moved), `moved` (set down again the same way up, anywhere, turned any amount), `upside down` (turned over, then set down anywhere), or `on its side` (rolled a quarter turn onto a side). Each scan after the first is registered onto the rest by iterative closest point from seeds the placement gives, and the answer says how closely (median mm) and what share of its points lie on the rest; a loose fit means the placement was not what was said. Writes merged.stl (the cloud meshed about its own centre line in `sectors` of azimuth, 36 by default, and `bin` mm height bins), merged.ply and merged.json into `out`. The mesh takes the object to be one a horizontal ray from its centre line leaves once at every height: anything convex, most things that stand; not a torus.",
             "inputSchema": { "type": "object", "properties": { "scans": { "type": "array", "items": { "type": "object", "properties": { "dir": { "type": "string" }, "placed": { "type": "string", "description": "same, moved, upside down, or on its side" } }, "required": ["dir"] } }, "out": { "type": "string" }, "sectors": { "type": "number" }, "bin": { "type": "number" } }, "required": ["scans", "out"] }
+        },
+        {
+            "name": "fit_faces",
+            "description": "Fits flat faces to a turntable scan's point cloud and, where they close, builds the solid they bound: the cloud is segmented into planar patches by growing over points whose normals agree, each patch gets a least-squares plane (good to a few hundredths of a millimetre through hundreds of points), and the planes' half-spaces are intersected into a convex solid whose edges and corners are exact plane intersections. A scanned cube comes back as a cube with six faces, not a chamfered mesh. `scan` is a directory from scan_turntable or merge_scans (its scan.ply or merged.ply), or `ply` a point cloud file. The table the object stood on is never seen from above, so its plane (z = 0) is supplied when the cloud reaches it (`table: false` to leave it out, as for a cloud merged from two poses that saw the bottom). `tol` (0.5 mm) is how far a point may lie from a plane and belong, `angle` (12 degrees) how far its normal may lean, `min_points` (15) the smallest patch. Reports every plane (normal, offset, points, rms) and, when they close, the faces, edges with their dihedral angles and lengths, corners and volume; writes faces.json into `out` when given. With `doc`, `tab` or `name`, adds the solid to the tab as a body with one planar face per plane, which the report then names like any other part. Curved objects fit few or no planes and do not close; a convex polyhedron scanned in one pose closes with the table, and one scanned in two poses and merged closes on its own.",
+            "inputSchema": { "type": "object", "properties": { "scan": { "type": "string" }, "ply": { "type": "string" }, "out": { "type": "string" }, "tol": { "type": "number" }, "angle": { "type": "number" }, "min_points": { "type": "number" }, "table": { "type": "boolean" }, "doc": doc_prop, "tab": tab_prop, "name": { "type": "string" } } }
         },
         {
             "name": "spectre_saw",

@@ -19,6 +19,7 @@ pub use ok_sheet::SheetSize;
 use serde::Serialize;
 use std::f64::consts::PI;
 
+pub mod faces;
 mod field;
 pub mod register;
 pub mod scan;

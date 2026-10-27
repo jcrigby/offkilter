@@ -108,3 +108,58 @@ fn the_example_scan_of_the_bucky_ball_reads_it() {
         s["warnings"]
     );
 }
+
+#[test]
+fn the_example_bucky_ball_fits_thirty_two_faces() {
+    // Through the video (a 1080p phone's worth of colour resolution)
+    // most faces are found; from the frames straight (a 4K phone's),
+    // all of them, and they close into the solid.
+    let v = read("bucky/faces.json");
+    let found = v["planes"].as_array().unwrap().len();
+    assert!(found >= 20, "video: {found} planes");
+    let f = read("bucky-frames/faces.json");
+    let planes = f["planes"].as_array().unwrap();
+    assert_eq!(planes.len(), 32, "planes");
+    let p = &f["polyhedron"];
+    assert!(!p.is_null(), "the planes did not close: {}", f["warnings"]);
+    assert_eq!(p["faces"].as_array().unwrap().len(), 32);
+    assert_eq!(p["vertices"].as_array().unwrap().len(), 60);
+    let edges = p["edges"].as_array().unwrap();
+    assert_eq!(edges.len(), 90);
+    // Every edge the same length, every dihedral one of the two the
+    // truncated icosahedron has.
+    let truth = Solid::Bucky.standing(100.0, [210.0, 150.0], 13.0);
+    let mut corners: Vec<[f64; 3]> = Vec::new();
+    for q in truth.iter().flatten() {
+        if !corners
+            .iter()
+            .any(|c| (c[0] - q[0]).abs() + (c[1] - q[1]).abs() + (c[2] - q[2]).abs() < 1e-6)
+        {
+            corners.push(*q);
+        }
+    }
+    let edge = corners
+        .iter()
+        .enumerate()
+        .flat_map(|(i, a)| {
+            corners.iter().skip(i + 1).map(move |b| {
+                ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
+            })
+        })
+        .fold(f64::MAX, f64::min);
+    for e in edges {
+        let l = e["length"].as_f64().unwrap();
+        let d = e["dihedral"].as_f64().unwrap();
+        assert!((l - edge).abs() < 1.0, "edge {l} vs {edge}");
+        assert!(
+            (d - 138.19).abs() < 1.0 || (d - 142.62).abs() < 1.0,
+            "dihedral {d}"
+        );
+    }
+    let volume = p["volume"].as_f64().unwrap();
+    let true_volume = mesh_volume(&truth);
+    assert!(
+        (volume - true_volume).abs() / true_volume < 0.01,
+        "volume {volume} vs {true_volume}"
+    );
+}

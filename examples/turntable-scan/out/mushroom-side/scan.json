@@ -11,8 +11,8 @@
         298.48679617582513
       ],
       "azimuth": 0.000015873338601044696,
-      "line_pixels": 759,
-      "on_paper": 589,
+      "line_pixels": 902,
+      "on_paper": 732,
       "points": 170,
       "skipped": null
     },
@@ -27,8 +27,8 @@
         298.44137898417426
       ],
       "azimuth": 9.996030195209096,
-      "line_pixels": 783,
-      "on_paper": 598,
+      "line_pixels": 927,
+      "on_paper": 742,
       "points": 169,
       "skipped": null
     },
@@ -43,8 +43,8 @@
         298.51849844603817
       ],
       "azimuth": 20.0028014073592,
-      "line_pixels": 758,
-      "on_paper": 581,
+      "line_pixels": 930,
+      "on_paper": 753,
       "points": 168,
       "skipped": null
     },
@@ -59,8 +59,8 @@
         298.4911982804818
       ],
       "azimuth": 29.99580747482536,
-      "line_pixels": 760,
-      "on_paper": 581,
+      "line_pixels": 956,
+      "on_paper": 777,
       "points": 168,
       "skipped": null
     },
@@ -75,8 +75,8 @@
         298.3858166540483
       ],
       "azimuth": 39.977443606187094,
-      "line_pixels": 757,
-      "on_paper": 587,
+      "line_pixels": 959,
+      "on_paper": 789,
       "points": 170,
       "skipped": null
     },
@@ -91,8 +91,8 @@
         298.5668384517256
       ],
       "azimuth": 49.98272469578192,
-      "line_pixels": 761,
-      "on_paper": 596,
+      "line_pixels": 965,
+      "on_paper": 800,
       "points": 164,
       "skipped": null
     },
@@ -107,9 +107,9 @@
         298.3518347668627
       ],
       "azimuth": 60.01106610166914,
-      "line_pixels": 783,
-      "on_paper": 619,
-      "points": 160,
+      "line_pixels": 989,
+      "on_paper": 825,
+      "points": 159,
       "skipped": null
     },
     {
@@ -123,8 +123,8 @@
         298.56933598760037
       ],
       "azimuth": 69.9537133665315,
-      "line_pixels": 625,
-      "on_paper": 621,
+      "line_pixels": 826,
+      "on_paper": 822,
       "points": 0,
       "skipped": null
     },
@@ -139,8 +139,8 @@
         298.454275410301
       ],
       "azimuth": 80.02627952220365,
-      "line_pixels": 585,
-      "on_paper": 585,
+      "line_pixels": 774,
+      "on_paper": 773,
       "points": 0,
       "skipped": null
     },
@@ -155,9 +155,9 @@
         298.77735259100183
       ],
       "azimuth": 90.0007499302092,
-      "line_pixels": 589,
-      "on_paper": 588,
-      "points": 0,
+      "line_pixels": 775,
+      "on_paper": 770,
+      "points": 4,
       "skipped": null
     },
     {
@@ -171,9 +171,9 @@
         298.95052178723626
       ],
       "azimuth": 99.99276986887935,
-      "line_pixels": 631,
-      "on_paper": 567,
-      "points": 62,
+      "line_pixels": 788,
+      "on_paper": 720,
+      "points": 66,
       "skipped": null
     },
     {
@@ -187,8 +187,8 @@
         298.52419325600295
       ],
       "azimuth": 110.02261402729242,
-      "line_pixels": 678,
-      "on_paper": 584,
+      "line_pixels": 799,
+      "on_paper": 705,
       "points": 74,
       "skipped": null
     },
@@ -203,9 +203,9 @@
         298.6004328755638
       ],
       "azimuth": 119.98769301833002,
-      "line_pixels": 787,
-      "on_paper": 591,
-      "points": 185,
+      "line_pixels": 932,
+      "on_paper": 733,
+      "points": 188,
       "skipped": null
     },
     {
@@ -219,8 +219,8 @@
         298.4835683653457
       ],
       "azimuth": 129.9701517841642,
-      "line_pixels": 753,
-      "on_paper": 579,
+      "line_pixels": 910,
+      "on_paper": 736,
       "points": 173,
       "skipped": null
     },
@@ -235,9 +235,9 @@
         298.7147000197821
       ],
       "azimuth": 139.98970915356878,
-      "line_pixels": 758,
-      "on_paper": 579,
-      "points": 178,
+      "line_pixels": 919,
+      "on_paper": 738,
+      "points": 181,
       "skipped": null
     },
     {
@@ -251,9 +251,9 @@
         298.61846911894855
       ],
       "azimuth": 149.9867290915357,
-      "line_pixels": 740,
-      "on_paper": 570,
-      "points": 164,
+      "line_pixels": 901,
+      "on_paper": 730,
+      "points": 165,
       "skipped": null
     },
     {
@@ -267,9 +267,9 @@
         298.2529046004291
       ],
       "azimuth": 160.0081582582617,
-      "line_pixels": 727,
-      "on_paper": 578,
-      "points": 135,
+      "line_pixels": 920,
+      "on_paper": 732,
+      "points": 179,
       "skipped": null
     },
     {
@@ -283,9 +283,9 @@
         298.25865280697485
       ],
       "azimuth": 170.0030467326343,
-      "line_pixels": 760,
-      "on_paper": 610,
-      "points": 137,
+      "line_pixels": 930,
+      "on_paper": 748,
+      "points": 170,
       "skipped": null
     },
     {
@@ -299,9 +299,9 @@
         298.9355321005726
       ],
       "azimuth": 179.9962136702402,
-      "line_pixels": 711,
-      "on_paper": 591,
-      "points": 120,
+      "line_pixels": 849,
+      "on_paper": 711,
+      "points": 136,
       "skipped": null
     },
     {
@@ -315,9 +315,9 @@
         298.2555962470489
       ],
       "azimuth": 190.00837514558665,
-      "line_pixels": 687,
-      "on_paper": 595,
-      "points": 90,
+      "line_pixels": 841,
+      "on_paper": 739,
+      "points": 100,
       "skipped": null
     },
     {
@@ -331,9 +331,9 @@
         298.34449924003275
       ],
       "azimuth": 199.99881870492658,
-      "line_pixels": 687,
-      "on_paper": 589,
-      "points": 96,
+      "line_pixels": 867,
+      "on_paper": 765,
+      "points": 100,
       "skipped": null
     },
     {
@@ -347,9 +347,9 @@
         298.6416805002018
       ],
       "azimuth": 210.00809675591236,
-      "line_pixels": 701,
-      "on_paper": 593,
-      "points": 108,
+      "line_pixels": 892,
+      "on_paper": 780,
+      "points": 112,
       "skipped": null
     },
     {
@@ -363,9 +363,9 @@
         298.72266202710284
       ],
       "azimuth": 220.00004146362267,
-      "line_pixels": 720,
-      "on_paper": 590,
-      "points": 130,
+      "line_pixels": 925,
+      "on_paper": 793,
+      "points": 132,
       "skipped": null
     },
     {
@@ -379,9 +379,9 @@
         298.41719959987074
       ],
       "azimuth": 230.01833778115392,
-      "line_pixels": 781,
-      "on_paper": 610,
-      "points": 162,
+      "line_pixels": 982,
+      "on_paper": 807,
+      "points": 160,
       "skipped": null
     },
     {
@@ -395,9 +395,9 @@
         298.55514531654956
       ],
       "azimuth": 240.00802671933224,
-      "line_pixels": 787,
-      "on_paper": 599,
-      "points": 183,
+      "line_pixels": 991,
+      "on_paper": 801,
+      "points": 182,
       "skipped": null
     },
     {
@@ -411,9 +411,9 @@
         298.4777258191238
       ],
       "azimuth": 249.99371705905605,
-      "line_pixels": 727,
-      "on_paper": 651,
-      "points": 72,
+      "line_pixels": 930,
+      "on_paper": 852,
+      "points": 74,
       "skipped": null
     },
     {
@@ -427,8 +427,8 @@
         298.87688265221226
       ],
       "azimuth": 260.0055823076349,
-      "line_pixels": 778,
-      "on_paper": 599,
+      "line_pixels": 971,
+      "on_paper": 792,
       "points": 176,
       "skipped": null
     },
@@ -443,8 +443,8 @@
         298.80229892474665
       ],
       "azimuth": 270.0069934567447,
-      "line_pixels": 778,
-      "on_paper": 603,
+      "line_pixels": 962,
+      "on_paper": 787,
       "points": 175,
       "skipped": null
     },
@@ -459,9 +459,9 @@
         298.37539519386416
       ],
       "azimuth": 279.97691809504283,
-      "line_pixels": 750,
-      "on_paper": 582,
-      "points": 168,
+      "line_pixels": 888,
+      "on_paper": 718,
+      "points": 170,
       "skipped": null
     },
     {
@@ -475,8 +475,8 @@
         298.56482351488194
       ],
       "azimuth": 289.99550959834414,
-      "line_pixels": 715,
-      "on_paper": 542,
+      "line_pixels": 829,
+      "on_paper": 656,
       "points": 172,
       "skipped": null
     },
@@ -491,9 +491,9 @@
         298.13496702633915
       ],
       "azimuth": 299.99860183702316,
-      "line_pixels": 759,
-      "on_paper": 589,
-      "points": 159,
+      "line_pixels": 894,
+      "on_paper": 720,
+      "points": 163,
       "skipped": null
     },
     {
@@ -507,9 +507,9 @@
         298.55137389379325
       ],
       "azimuth": 310.00131880175354,
-      "line_pixels": 761,
-      "on_paper": 595,
-      "points": 162,
+      "line_pixels": 912,
+      "on_paper": 744,
+      "points": 164,
       "skipped": null
     },
     {
@@ -523,9 +523,9 @@
         298.29232187210937
       ],
       "azimuth": 320.01104888982627,
-      "line_pixels": 743,
-      "on_paper": 581,
-      "points": 162,
+      "line_pixels": 907,
+      "on_paper": 738,
+      "points": 168,
       "skipped": null
     },
     {
@@ -539,9 +539,9 @@
         298.36903787112067
       ],
       "azimuth": 330.01253258274636,
-      "line_pixels": 763,
-      "on_paper": 585,
-      "points": 169,
+      "line_pixels": 923,
+      "on_paper": 743,
+      "points": 171,
       "skipped": null
     },
     {
@@ -555,8 +555,8 @@
         298.50629078390983
       ],
       "azimuth": 339.9992648070555,
-      "line_pixels": 765,
-      "on_paper": 579,
+      "line_pixels": 921,
+      "on_paper": 733,
       "points": 171,
       "skipped": null
     },
@@ -571,8 +571,8 @@
         298.49748809803003
       ],
       "azimuth": 349.9995271320667,
-      "line_pixels": 758,
-      "on_paper": 586,
+      "line_pixels": 894,
+      "on_paper": 721,
       "points": 172,
       "skipped": null
     }
@@ -580,35 +580,35 @@
   "frames_used": 36,
   "focal": 1300.0135127149479,
   "laser_plane": [
-    0.8191544793748248,
-    -0.21476463020640416,
-    0.5318478095587743,
-    -345.70291058335533
+    0.8191389738013437,
+    -0.2148743160361101,
+    0.5318273873238339,
+    -345.70192722263874
   ],
-  "laser_angle": 32.130389095687185,
-  "laser_fit": 0.6793083705079912,
-  "laser_points": 21262,
+  "laser_angle": 32.12900737178035,
+  "laser_fit": 0.29931712880477446,
+  "laser_points": 27225,
   "axis": [
     210.00834408162706,
     149.99707010053567
   ],
   "centre": [
-    219.7536761689058,
-    150.29919963096492
+    218.98903098504815,
+    150.03642982298098
   ],
-  "aim": 0.02056800021566829,
-  "point_count": 4924,
-  "triangle_count": 5214,
+  "aim": 0.013456932565077295,
+  "point_count": 5066,
+  "triangle_count": 5372,
   "bounds": [
-    151.63981707194105,
-    93.39820738817151,
-    1.5013443795870387,
-    260.8982635576589,
-    200.95612292964216,
-    96.47302934916007
+    151.5363077895748,
+    93.41187225828092,
+    1.5831374609498,
+    260.8530443361489,
+    200.93807071325674,
+    96.46842763627302
   ],
-  "volume": 261013.3370362524,
-  "filled": 0.33908707326428844,
+  "volume": 263120.5108793637,
+  "filled": 0.34363365599404316,
   "warnings": [
     "34 % of the mesh is filled in from neighbouring frames rather than seen: the line was lost on much of the object, or faces turned from the camera while the laser lit them"
   ]

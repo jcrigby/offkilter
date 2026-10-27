@@ -255,14 +255,19 @@ fn pose_from(g: &H, f: f64, cx: f64, cy: f64) -> Pose {
 /// frame's typical ridge (the median over a first pass), so a line
 /// that compression or a dark surface has dimmed still reads, and
 /// then only where it continues through neighbouring rows: a line is
-/// a line, noise is a speck.
+/// a line, noise is a speck. A video carries its colour at half the
+/// resolution of its brightness, so where the line also stands out
+/// in brightness (on the object, not the paper), the centre is
+/// refined on the brightness over the same run.
 pub fn laser_line(img: &Image, floor: f64) -> Vec<[f64; 2]> {
     let (w, h) = (img.width, img.height);
     let mut green: Vec<f64> = vec![0.0; w * h];
+    let mut luma: Vec<f64> = vec![0.0; w * h];
     for v in 0..h {
         for u in 0..w {
             let c = img.pixel(u, v);
             green[v * w + u] = (c.1 as f64 - c.0.max(c.2) as f64).max(0.0);
+            luma[v * w + u] = 0.299 * c.0 as f64 + 0.587 * c.1 as f64 + 0.114 * c.2 as f64;
         }
     }
     // Ridges per row at a threshold: (row, centroid u, peak height).
@@ -287,7 +292,36 @@ pub fn laser_line(img: &Image, floor: f64) -> Vec<[f64; 2]> {
                             sum += (k as f64 + 0.5) * gk;
                             wsum += gk;
                         }
-                        out.push((sum / wsum, g[u]));
+                        let mut centre = sum / wsum;
+                        // The brightness over the run and a little past
+                        // it: a peak standing 25 or more over the ends
+                        // is the line itself, at full resolution.
+                        let y = &luma[v * w..(v + 1) * w];
+                        let (ya, yb) = (a.saturating_sub(3), (b + 3).min(w - 1));
+                        // The baseline runs straight between the ends,
+                        // since a shaded face brightens across the row.
+                        let base = |k: usize| {
+                            y[ya] + (y[yb] - y[ya]) * (k - ya) as f64 / (yb - ya).max(1) as f64
+                        };
+                        let peak = (ya..=yb).map(|k| y[k] - base(k)).fold(0.0, f64::max);
+                        // Not where the run straddles the object's
+                        // edge against the paper: the ends then differ
+                        // by more than the line stands out, and a
+                        // baseline between them would lean the centre.
+                        if peak >= 25.0 && (y[ya] - y[yb]).abs() < 0.3 * peak {
+                            let (mut sum, mut wsum) = (0.0, 0.0);
+                            for (k, &yk) in y.iter().enumerate().take(yb + 1).skip(ya) {
+                                let e = yk - base(k);
+                                if e > peak / 2.0 {
+                                    sum += (k as f64 + 0.5) * e;
+                                    wsum += e;
+                                }
+                            }
+                            if wsum > 0.0 {
+                                centre = sum / wsum;
+                            }
+                        }
+                        out.push((centre, g[u]));
                         u = b + 2;
                     } else {
                         u += 1;
