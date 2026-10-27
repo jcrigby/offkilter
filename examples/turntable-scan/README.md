@@ -126,8 +126,8 @@ half a millimetre, the volume within half a per cent.
 encoded at crf 18, frames pulled back out with ffmpeg by the MCP tool,
 the mushroom's two scans merged with `merge_scans`, and the
 `scan.json` and `merged.json` files under `out/` record what came
-through: the gourd at 340.7 cm³ against 340.4, the mushroom at 117 %
-from one scan and 102 % from two, and the bucky ball's faces fitted
+through: the gourd at 338.2 cm³ against 340.4, the mushroom at 117 %
+from one scan and 101 % from two, and the bucky ball's faces fitted
 from its video scan (`out/bucky/faces.json`), 32 of them.
 `tests/example_scan.rs` checks those records in CI.
 
