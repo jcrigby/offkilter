@@ -24,7 +24,9 @@ cargo test -p ok-photo --test example_scan  # what CI checks against the committ
 ![the mushroom from one scan, the stem bridged to the rim, and from two](out/mushroom-mesh-front.png)
 ![](out/merged-mesh-front.png)
 
-![the bucky ball from one scan](out/bucky-mesh.png)
+![the bucky ball from one scan, as the stitched mesh](out/bucky-mesh.png)
+
+![the same scan read for its flat faces: 31 planes and the table closed into a part with 32 faces, 90 edges and 60 corners](out/bucky-faces.png)
 
 ## How it works
 
@@ -58,7 +60,20 @@ cargo test -p ok-photo --test example_scan  # what CI checks against the committ
    not reach. The mesh takes the object to be one a horizontal ray
    from its centre line leaves once at every height: anything convex,
    most things that stand; not a torus.
-6. **A second pose.** A camera 22 degrees above the table sees any
+6. **Flat faces.** The mesh is a lattice of small triangles, so on
+   anything with flat faces every corner is chamfered by the chord
+   between two frames. The points are better than that, so the cloud
+   is also read for its planes, one at a time: the plane through the
+   best-supported point claims every point lying on it whose normal
+   agrees, is refitted, and keeps its points if their normals do not
+   fan out as a curve's would (a normal comes from the laser line's
+   tangent and the step to a parallel neighbouring line, never from
+   one line alone, since a line on its own lies in the laser's plane);
+   the planes close into a convex solid whose edges and corners are
+   their intersections. The table's plane stands in for the face the object
+   sits on. `fit_faces` is the tool; the solid goes into a tab as a
+   part with one planar face per plane.
+7. **A second pose.** A camera 22 degrees above the table sees any
    face leaning out over it by up to about 68 degrees, so a bucky
    ball or a dodecahedron on a face scans whole in one pass; what it
    cannot see is a surface facing down, the underside of a cap or a
@@ -101,15 +116,20 @@ under a camera at 50 degrees, each registered onto the first scan to
 `tests/merge.rs` has the mushroom, whose one-scan volume is 117 % by
 the cone under the cap and whose merge with its side-on scan reads
 101 %, and the gourd upside down, registered to 0.18 mm and merged
-without harm.
+without harm. The same solids, scanned once and merged from two poses,
+are then read for their flat faces and held to the textbook: the
+counts of faces, edges and corners exact, every dihedral angle within
+half a degree, every edge within half a per cent, every corner within
+half a millimetre, the volume within half a per cent.
 
 `build.py` then pushes the same frames through real video files:
 encoded at crf 18, frames pulled back out with ffmpeg by the MCP tool,
 the mushroom's two scans merged with `merge_scans`, and the
 `scan.json` and `merged.json` files under `out/` record what came
 through: the gourd at 340.7 cm³ against 340.4, the mushroom at 117 %
-from one scan and 102 % from two. `tests/example_scan.rs` checks those
-records in CI.
+from one scan and 102 % from two, and the bucky ball's faces fitted
+from its video scan (`out/bucky/faces.json`), 32 of them.
+`tests/example_scan.rs` checks those records in CI.
 
 ## Shooting a real one
 

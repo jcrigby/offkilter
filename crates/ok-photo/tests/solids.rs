@@ -9,6 +9,7 @@
 //! merges here check the registration, and `merge.rs` has the case a
 //! second pose is for.
 
+use ok_photo::faces::{fit_faces, FaceOptions};
 use ok_photo::register::{merge, Placement, Registration};
 use ok_photo::scan::{cloud_mesh, scan, Scan, ScanOptions};
 use ok_photo::simulate::{
@@ -40,9 +41,21 @@ fn rig(elevation: f64) -> Rig {
     }
 }
 
-fn render(tris: &[[[f64; 3]; 3]], elevation: f64) -> Vec<Image> {
+fn render(tris: &[[[f64; 3]; 3]], elevation: f64, frames: usize) -> Vec<Image> {
     let field = Field::new(SheetSize::Letter, 2, 2).unwrap();
-    turntable(&field, tris, &rig(elevation), FRAMES, Rgb(200, 160, 90))
+    turntable(&field, tris, &rig(elevation), frames, Rgb(200, 160, 90))
+}
+
+/// Frames per turn: the bucky ball, with thirty-two faces each 22 mm
+/// across, gets twice as many so each face holds enough laser lines
+/// for its plane to come out within half a degree, through the
+/// example's video too.
+fn frames_for(solid: Solid) -> usize {
+    if solid == Solid::Bucky {
+        48
+    } else {
+        FRAMES
+    }
 }
 
 /// The example's git-ignored frame directories, beside the gourd's.
@@ -111,18 +124,108 @@ fn fit(points: &[[f64; 3]], truth: &[[[f64; 3]; 3]], sectors: usize) -> Fit {
     }
 }
 
+/// The cloud's flat faces fitted and closed into a solid, held
+/// against the textbook: the counts of faces, edges and corners, every
+/// dihedral angle, every edge's length, every corner's position, and
+/// the volume. This is what "recognisable as a cube" means.
+fn faces_check(solid: Solid, tris: &[[[f64; 3]; 3]], points: &[[f64; 3]], label: &str) {
+    let (faces, edges, vertices, dihedrals): (usize, usize, usize, Vec<f64>) = match solid {
+        Solid::Tetrahedron => (4, 6, 4, vec![70.5288]),
+        Solid::Cube => (6, 12, 8, vec![90.0]),
+        Solid::Octahedron => (8, 12, 6, vec![109.4712]),
+        Solid::Dodecahedron => (12, 30, 20, vec![116.5651]),
+        Solid::Icosahedron => (20, 30, 12, vec![138.1897]),
+        Solid::Bucky => (32, 90, 60, vec![138.1897, 142.6226]),
+    };
+    // The true corners and edge length from the mesh.
+    let mut truth: Vec<[f64; 3]> = Vec::new();
+    for p in tris.iter().flatten() {
+        if !truth.iter().any(|q| dist(*q, *p) < 1e-6) {
+            truth.push(*p);
+        }
+    }
+    let edge = truth
+        .iter()
+        .enumerate()
+        .flat_map(|(i, a)| truth.iter().skip(i + 1).map(move |b| dist(*a, *b)))
+        .fold(f64::MAX, f64::min);
+    let f = fit_faces(points, &FaceOptions::default());
+    let scanned = f.planes.iter().filter(|p| !p.from_table).count();
+    let p = f.polyhedron.as_ref().unwrap_or_else(|| {
+        panic!(
+            "{label}: {} planes ({scanned} scanned) did not close: {:?}",
+            f.planes.len(),
+            f.warnings
+        )
+    });
+    let worst_rms = f.planes.iter().map(|p| p.rms).fold(0.0, f64::max);
+    let dihedral_err = p
+        .edges
+        .iter()
+        .map(|e| {
+            dihedrals
+                .iter()
+                .map(|d| (e.dihedral - d).abs())
+                .fold(f64::MAX, f64::min)
+        })
+        .fold(0.0, f64::max);
+    let edge_err = p
+        .edges
+        .iter()
+        .map(|e| (e.length - edge).abs())
+        .fold(0.0, f64::max);
+    let corner_err = p
+        .vertices
+        .iter()
+        .map(|v| truth.iter().map(|t| dist(*v, *t)).fold(f64::MAX, f64::min))
+        .fold(0.0, f64::max);
+    let true_volume = mesh_volume(tris);
+    eprintln!(
+        "{label} faces: {} planes ({scanned} scanned, {:.0} % of points on them, worst rms {worst_rms:.3} mm); {} faces, {} edges, {} corners; dihedral error {dihedral_err:.2} deg, edge error {edge_err:.2} mm on {edge:.1}, corner error {corner_err:.2} mm, volume {:.0} of {true_volume:.0} ({:+.2} %)",
+        f.planes.len(), 100.0 * f.planar, p.faces.len(), p.edges.len(), p.vertices.len(), p.volume, 100.0 * (p.volume - true_volume) / true_volume
+    );
+    assert_eq!(
+        (p.faces.len(), p.edges.len(), p.vertices.len()),
+        (faces, edges, vertices),
+        "{label}: counts"
+    );
+    // A plane's tilt error scales with the noise over the face's
+    // span: the bucky ball's faces are a fifth the size of the cube's.
+    let (angle_limit, length_limit) = if solid == Solid::Bucky {
+        (0.8, 0.8)
+    } else {
+        (0.5, (0.01 * edge).max(0.5))
+    };
+    assert!(
+        dihedral_err < angle_limit,
+        "{label}: dihedral error {dihedral_err}"
+    );
+    assert!(edge_err < length_limit, "{label}: edge error {edge_err}");
+    assert!(corner_err < 0.5, "{label}: corner error {corner_err}");
+    assert!(
+        (p.volume - true_volume).abs() / true_volume < 0.005,
+        "{label}: volume {} of {true_volume}",
+        p.volume
+    );
+    assert!(f.warnings.is_empty(), "{label}: {:?}", f.warnings);
+}
+
+fn dist(a: [f64; 3], b: [f64; 3]) -> f64 {
+    ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt()
+}
+
 /// A solid standing on a face, scanned once. The points lie on its
 /// surface to a tenth of a millimetre; the mesh is a polygon per
 /// slice through 24 frames, so it cuts the corners and its volume
 /// comes out a few per cent under.
 fn upright(solid: Solid) -> (Vec<[[f64; 3]; 3]>, Scan) {
     let tris = solid.standing(HEIGHT, AXIS, TURN);
-    let frames = render(&tris, 22.0);
+    let frames = render(&tris, 22.0, frames_for(solid));
     if solid == Solid::Bucky {
         save_frames("frames-bucky", &frames);
     }
     let s = scan(&frames, &ScanOptions::default()).unwrap();
-    let f = fit(&s.points, &tris, FRAMES);
+    let f = fit(&s.points, &tris, frames_for(solid));
     eprintln!(
         "{} upright: {} points, surface error median {:.3} p90 {:.3} mm, volume {:.0} of {:.0} ({:.1} %; {:.1} % of the shape sampled at the same azimuths), height covered {:.0} %, mesh filled {:.0} %, warnings {:?}",
         solid.name(), s.points.len(), f.median, f.p90, f.volume, f.true_volume, 100.0 * f.volume / f.true_volume, 100.0 * f.volume / f.sampled_volume, 100.0 * f.covered, 100.0 * s.filled, s.warnings
@@ -149,6 +252,12 @@ fn upright(solid: Solid) -> (Vec<[[f64; 3]; 3]>, Scan) {
         f.covered
     );
     assert!(s.warnings.is_empty(), "{}: {:?}", solid.name(), s.warnings);
+    faces_check(
+        solid,
+        &tris,
+        &s.points,
+        &format!("{} upright", solid.name()),
+    );
     (tris, s)
 }
 
@@ -163,7 +272,7 @@ fn merged(
     elevation: f64,
     placement: Placement,
 ) -> (Registration, Fit) {
-    let frames = render(other, elevation);
+    let frames = render(other, elevation, frames_for(solid));
     let again = scan(&frames, &ScanOptions::default()).unwrap();
     let (cloud, regs) = merge(&[
         (up.points.clone(), Placement::Same),
@@ -171,7 +280,7 @@ fn merged(
     ])
     .unwrap();
     let r = regs[0].clone();
-    let f = fit(&cloud, tris, FRAMES);
+    let f = fit(&cloud, tris, frames_for(solid));
     eprintln!(
         "{} merged with {}: residual {:.3} mm, overlap {:.2}, {} seeds; {} points, surface error median {:.3} p90 {:.3}, volume {:.0} of {:.0} ({:.1} %; {:.1} % sampled the same way)",
         solid.name(), placement.name(), r.residual, r.overlap, r.seeds, cloud.len(), f.median, f.p90, f.volume, f.true_volume, 100.0 * f.volume / f.true_volume, 100.0 * f.volume / f.sampled_volume
@@ -200,6 +309,12 @@ fn merged(
         f.volume,
         f.sampled_volume,
         f.true_volume
+    );
+    faces_check(
+        solid,
+        tris,
+        &cloud,
+        &format!("{} merged with {}", solid.name(), placement.name()),
     );
     (r, f)
 }
