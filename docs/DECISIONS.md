@@ -656,3 +656,31 @@ concavity anyway, and a convex solid is what the planes of one
 determine. Corners where four or more planes meet fall out as a
 cluster with a sliver edge between, since fitted planes never meet at
 exactly one point, and are clustered to the point nearest all of them.
+
+## The dove-proof perch is a gap, not a thin wire
+
+`examples/finch-perch` adds a perch ring to the finch feeder cap for
+the birds that cannot cling to the mesh, and has to keep the Eurasian
+collared doves off it. The obvious lever, a perch too thin for a dove,
+does not work: doves sit on telephone wires. The ring is still a
+pencil's thickness (6 mm, what finch feeders use for pegs), but what
+excludes the dove is where the ring stands: its inner edge 15.75 mm
+off the mesh tube, so a bird on it facing in has its chest at the
+tube. A finch is 25 to 30 mm through the body and feeds with its
+chest on the mesh anyway; a collared dove is 65 to 70 and cannot lean
+back to make the room. The cap above the ring stays the ring's own
+size with 12.5 mm of air to the perch, so there is no tray to land on
+instead. Rejected: a wider ring with a cage of bars over it (works,
+but it is a different feeder); pegs instead of a ring (fewer birds at
+a time, and a peg is a lever on a printed plate where a ring is a
+hoop); a ring hung on wires below the cap (nothing to print flat).
+
+It is a separate example rather than a flag on `finch-plug`: the plain
+cap is what is on the feeder, its outputs and its test stay as they
+are, and the perch builds through the original script's functions
+(`build_cap`, `build_collar`, `add_assembly`), so the two cannot
+drift apart. The spokes stand a millimetre proud of the plate because
+a spoke flush with it shares its top face with the hook wall's
+underside, overlapping it in part, and the kernel's union leaves open
+edges on a partial coplanar overlap of opposite faces; a spoke that
+ends inside the wall has no such face.
