@@ -684,3 +684,31 @@ a spoke flush with it shares its top face with the hook wall's
 underside, overlapping it in part, and the kernel's union leaves open
 edges on a partial coplanar overlap of opposite faces; a spoke that
 ends inside the wall has no such face.
+
+## The stylus adjusts to the bit, the router stays put
+
+The duplicator's pilot was a 2 mm rod in a keyless chuck clamped by
+its shank in a bore drilled beside the router's in one setup, and the
+puzzle got by on that: a stylus-to-bit error there shifts the whole
+copy and the slotted fence absorbs it. The Spectre cage does not: it
+turns the master and the stack through twelve indices about their own
+axes, so an error across the axis comes out doubled as a step between
+faces cut at opposite indices, against a 0.7 gap and fins 0.3 off the
+profile. So the pilot is now a stylus in a straight-shank ER11 collet
+chuck in a block that moves in a pocket through the tool plate on
+screws against springs, with a height screw over the shank, and the
+router is the reference. Rejected: adjusting the router instead (its
+clamp is a 66 mm bore in 38 mm of ply, and nothing about a trim router
+wants to move in tenths); bottoming the cutting bit in the router's
+collet to match the stylus (router makers say not to: the shank's
+fillet ends up in the collet's grip and the bit creeps, and the height
+screw makes the bit's length irrelevant anyway); opposed screws on
+every axis (the far side of the x axis is 150 mm of plate from the
+router's bore, so a spring there and one screw, then the head bolts
+for stiffness); a dial indicator (the cones do the job, and the cut on
+the spare blanks confirms it). The registration itself is two
+identical printed cones rather than a measured spacing: the master's
+cradles and the cage's are the same print, so a cone in each rim is
+the same off each axis to the printer's accuracy, and a ball dropped
+into one and the stylus into the other either sit the same way or do
+not.

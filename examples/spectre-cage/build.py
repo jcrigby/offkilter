@@ -69,6 +69,12 @@ ROD, ROD_HOLE, NUT_AF, NUT_T = 4.0, 4.3, 7.0, 3.2   # M4 rods in the V between t
 BOSS, FLANGE = 15.0, 10.0                       # the end plugs: a hex boss into the tube, a flange outside it the rods pull on
 MASTER_END = 25.0                               # the master's hex ends, the same hex as the flanges, for the same cradles
 CRADLE_L, CRADLE_FLOOR = 24.0, 10.0             # a cradle under each flange
+# Registration cones: a 90 degree cone let into each rim of every cradle
+# at its mid-length, where the duplicator's bit and stylus are dropped,
+# not turning, to set the stylus to the bit. The master's cradles and
+# the cage's are the same print, so the cones sit the same off each
+# trough's axis; a ball-nose tip or a flat-ended rod centres in a cone.
+CONE_D, CONE_ANGLE, CONE_HOLE = 8.0, 90.0, 1.0  # 8 across at the rim, a 1 mm hole at the bottom so the cone is cut, not a point
 CLEAR = 0.3                                     # fins stop this short of the profile, and of each other at the sector lines
 FIN_STEP = 0.25                                 # fins are sampled this far apart across the window
 FIN_MIN = 1.5                                   # a fin lobe thinner than this at its thickest is left off
@@ -333,7 +339,16 @@ def cradle(p, name, F_out, x0, kind="flat"):
     body = p.extrude(s, CRADLE_L, name=name)
     p.apply({"type": "rename_part", "source": body, "name": name})
     tool = prism(p, f"{name} trough", trough, x0 - 1.0, x0 + CRADLE_L + 1.0)
-    return subtract(p, body, [tool], name=name)
+    body = subtract(p, body, [tool], name=name)
+    # The registration cones, one in each rim at mid-length.
+    rim = -depth + (F_out / 2 if kind == "flat" else r / 2)
+    inner = r if kind == "flat" else c
+    s = p.sketch("top", rim, f"{name} cones")   # on the rim itself: the countersink's diameter is at the sketch plane
+    for sy in (-(inner + 6.0), inner + 6.0):
+        p.point(s, (x0 + CRADLE_L / 2, sy))
+    p.hole(s, CONE_HOLE, depth=CONE_D / 2 / math.tan(math.radians(CONE_ANGLE / 2)) + 1.5, direction="reverse",
+           countersink={"diameter": CONE_D, "angle": CONE_ANGLE}, name=f"{name} registration cones")
+    return body
 
 
 def clock(outline0, hx, bit, shape):

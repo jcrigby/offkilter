@@ -8,15 +8,21 @@ hanging in front of the deck's front edge, clear of it over the whole
 X travel, the Z slide on its front, and two work platforms, the blank
 on one and the printed puzzle pattern plate on the other.
 
-The router motor and the pilot sit side by side in split clamps through
-one 38 mm tool plate, both bores drilled in one setup, the slits to the
-front so tightening shifts each tool in y and never in the x spacing
-that calibration sets. Depth: an M8 stop screw on a stop block limits
+The router motor sits in a split clamp through one 38 mm tool plate,
+its slit to the front so tightening shifts it in y and never in x. The
+pilot is a stylus in a straight-shank ER11 collet chuck (a bit or a rod
+put in until it bottoms, so its stick-out repeats), the chuck clamped
+in a block that sits in a pocket through the plate beside the router
+with a millimetre of play each way: an M4 screw from the plate's right
+end and one from its front edge push the block against springs to set
+the stylus's x and y to the bit's, a screw over the chuck's shank sets
+its height, and two M6 bolts through the block's head clamp it to the
+plate. The router is the fixed reference; all the adjustment is on the
+stylus. Depth: an M8 stop screw on a stop block limits
 the early passes; the pilot bottoming in the pattern's groove limits
 the last. A spring balancer on the carriage plate carries all but half
 a kilogram of the Z slide, so the pilot rides the groove with a few
-newtons and its drag cannot bend it. The pilot is 2 mm drill rod in a keyless mini chuck whose
-3/8 in shank slides in its clamp to set the height.
+newtons and its drag cannot bend it.
 
     cargo build --release -p ok-mcp
     python3 examples/duplicator/build.py          # the document, pictures and sheets
@@ -82,8 +88,27 @@ TOOL_PLATE_Y = (TOOL_Y - 55.0, SUPPORT_Y[0])              # 110 deep: 22 mm of w
 TOOL_T = 2 * PLY
 TOOL_Z_BELOW = 65.0
 ROUTER_D, ROUTER_H, COLLET_D, COLLET_L, BIT_D, BIT_OUT = 65.0, 126.0, 22.0, 16.0, 2.0, 30.0
-PILOT_D, PILOT_OUT = 2.0, 18.0                             # 2 mm drill rod, 18 out of the chuck: the chuck clears the plate by 2
-CHUCK_D, CHUCK_L, SHANK_D, SHANK_L = 28.0, 30.0, 9.5, 42.0  # keyless mini chuck, 3/8 in shank
+PILOT_D, PILOT_OUT = 2.0, 18.0                             # the stylus: 2 mm drill rod (or the bit's twin, dulled), 18 out of the collet nut
+# The stylus chuck: a straight-shank ER11 collet chuck, C12-ER11A-100: a
+# 12 mm shank 100 long overall, the ER11 nut on its nose, solid behind the
+# collet pocket, so a shank put in until it stops has the same stick-out
+# every time. ER11 takes 1 to 7 mm: the 2 mm rod, a 3/16 and a 1/4 shank.
+SHANK_D, CHUCK_L, NUT_D, NUT_L = 12.0, 100.0, 19.0, 14.0
+# The stylus block: the chuck's shank in a split clamp through a block
+# of two plies (the tool plate's offcut) with a head of one more ply on
+# top; the block sits in a pocket through the tool plate with a millimetre
+# of play each way, the head overhanging the pocket and bolted down to
+# the plate by two M6 through 8 mm holes (the same play). An M4 screw
+# through an insert in the plate's right end and one through its front
+# edge push the block against a spring in the pocket's far wall each way;
+# a bridge over the chuck's shank carries an M4 screw its top is pushed
+# up to, so the stylus's height is set by that screw and repeats.
+BLOCK_W, BLOCK_PLAY = 60.0, 1.0                            # the block, 60 x 60 x 38; the pocket a millimetre bigger each way
+HEAD_X, HEAD_Y, HEAD_T = 96.0, 70.0, PLY                   # the head, one ply, over the pocket
+HEAD_BOLT_D, HEAD_BOLT_X = 6.0, 42.0                        # M6 at +/-42 from the bore, in 8 mm holes
+ADJ_D, SPRING_D, SPRING_L, SPRING_HOLE = 4.0, 6.0, 16.0, 15.0   # M4 x 0.7 screws (0.09 mm an eighth turn); 6 x 20 springs in 7 mm holes, drawn compressed to 16
+ADJ_X_Y, ADJ_Y_X = 15.0, -15.0                              # the x screw's line is 15 behind the bore, the y screw's 15 left of it
+BRIDGE_W, BRIDGE_L, FOOT_H = 30.0, 70.0, 20.0               # the bridge over the shank: a ply across two feet on the head
 SLIT_W, PILOT_SLIT_W = 2.0, 1.5                            # the split clamps' slits, to the front edge
 ROUTER_BOLT_D, PILOT_BOLT_D = 6.0, 4.0                     # M6 and M4 knob bolts across the slits
 FENCE_H, FENCE_W, FENCE_T = 10.0, 30.0, 12.0               # L fences: the blank's 30 wide and slotted, the pattern's 12 and fixed
@@ -95,7 +120,7 @@ EAR_Y = (SUPPORT_Y[1], PLATE_FACE_Y - 20.0)
 SCREW_D, SCREW_Y = 8.0, PLATE_FACE_Y - 30.0
 # The balancer: a retractable spring reel on a bracket at the top of the
 # carriage plate, its cable down to an eye on the tool support's ear,
-# set to carry all but half a kilogram or so of the 4.2 kg Z slide, so
+# set to carry all but half a kilogram or so of the 4.5 kg Z slide, so
 # the pilot rides the groove floor with a few newtons and its drag
 # cannot bend it. The reel hangs in front of the plate above the Z
 # supports, between the upper Z shaft supports, and the cable passes
@@ -282,27 +307,42 @@ def tool_support(p):
     s = p.sketch("top", zb + TOOL_T + 1.0, "router bore")
     p.point(s, (BIT_X, TOOL_Y))
     p.hole(s, ROUTER_D + 1.0, depth=TOOL_T + 2.0, direction="reverse", name="router clamp bore, 66")
-    s = p.sketch("top", zb + TOOL_T + 1.0, "pilot bore")
-    p.point(s, (PILOT_X, TOOL_Y))
-    p.hole(s, SHANK_D + 0.2, depth=TOOL_T + 2.0, direction="reverse", name="chuck shank bore, 9.7")
-    s = p.sketch("top", zb + TOOL_T + 1.0, "slits")
+    # The stylus block's pocket, the block's size and the play each way;
+    # 8 mm holes for the head's M6 bolts either side of it; the x screw's
+    # hole from the right end and the y screw's from the front edge, the
+    # spring holes in the far walls.
+    half = BLOCK_W / 2 + BLOCK_PLAY
+    s = p.sketch("top", zb + TOOL_T + 1.0, "stylus block pocket")
+    p.rect(s, (PILOT_X - half, TOOL_Y - half), (PILOT_X + half, TOOL_Y + half))
+    p.cut(s, TOOL_T + 2.0, direction="reverse", name="stylus block pocket, 62 x 62")
+    s = p.sketch("top", zb + TOOL_T + 1.0, "head bolts")
+    for sx in (-HEAD_BOLT_X, HEAD_BOLT_X):
+        p.point(s, (PILOT_X + sx, TOOL_Y))
+    p.hole(s, HEAD_BOLT_D + 2 * BLOCK_PLAY, depth=TOOL_T + 2.0, direction="reverse", name="head bolt holes, 8")
+    s = p.sketch("right", PILOT_X + 66.0, "x screw")
+    p.point(s, (TOOL_Y + ADJ_X_Y, zm))
+    p.hole(s, ADJ_D, depth=66.0 - half + 1.0, direction="reverse", name="x adjustment screw, M4 insert")
+    s = p.sketch("right", PILOT_X - half + 1.0, "x spring")
+    p.point(s, (TOOL_Y + ADJ_X_Y, zm))
+    p.hole(s, SPRING_D + 1.0, depth=SPRING_HOLE + 1.0, direction="reverse", name="x spring hole, 7")
+    s = p.sketch("front", -(front - 1.0), "y screw")
+    p.point(s, (PILOT_X + ADJ_Y_X, zm))
+    p.hole(s, ADJ_D, depth=TOOL_Y - half - front + 1.0, direction="reverse", name="y adjustment screw, M4 insert")
+    s = p.sketch("front", -(TOOL_Y + half - 1.0), "y spring")
+    p.point(s, (PILOT_X + ADJ_Y_X, zm))
+    p.hole(s, SPRING_D + 1.0, depth=SPRING_HOLE + 1.0, direction="reverse", name="y spring hole, 7")
+    s = p.sketch("top", zb + TOOL_T + 1.0, "slit")
     p.rect(s, (BIT_X - SLIT_W / 2, front - 1.0), (BIT_X + SLIT_W / 2, TOOL_Y))
-    p.rect(s, (PILOT_X - PILOT_SLIT_W / 2, front - 1.0), (PILOT_X + PILOT_SLIT_W / 2, TOOL_Y))
-    p.cut(s, TOOL_T + 2.0, direction="reverse", name="clamp slits, to the front")
-    # The knob bolts run along x through the front wall: the router's from the
-    # plate's left end, the pilot's from its right end, each into a nut pocket
-    # just past its slit.
+    p.cut(s, TOOL_T + 2.0, direction="reverse", name="router clamp slit, to the front")
+    # The router's knob bolt runs along x through the front wall from the
+    # plate's left end into a nut pocket just past the slit.
     wall_y = front + (TOOL_Y - ROUTER_D / 2 - 1.0 - front) / 2  # mid front wall at the router: -324
     s = p.sketch("right", BIT_X - 66.0, "router bolt")
     p.point(s, (wall_y, zm))
     p.hole(s, ROUTER_BOLT_D + 0.5, depth=66.0 + 32.0, direction="normal", name="M6 clearance")
-    s = p.sketch("right", PILOT_X + 66.0, "pilot bolt")
-    p.point(s, (wall_y, zm))
-    p.hole(s, PILOT_BOLT_D + 0.5, depth=66.0 + 20.0, direction="reverse", name="M4 clearance")
-    s = p.sketch("top", zb + TOOL_T + 1.0, "nut pockets")
+    s = p.sketch("top", zb + TOOL_T + 1.0, "nut pocket")
     p.rect(s, (BIT_X + 26.0, wall_y - 5.0), (BIT_X + 32.0, wall_y + 5.0))
-    p.rect(s, (PILOT_X - 20.0, wall_y - 3.5), (PILOT_X - 16.0, wall_y + 3.5))
-    p.cut(s, TOOL_T / 2 + 1.0 + 5.0, direction="reverse", name="nut pockets, from the top")
+    p.cut(s, TOOL_T / 2 + 1.0 + 5.0, direction="reverse", name="nut pocket, from the top")
     s = p.sketch("top", ZC + 10.0, "screw hole")
     p.point(s, (0.0, SCREW_Y))
     p.hole(s, SCREW_D, depth=21.0, direction="reverse", name="M8 tapped")
@@ -313,8 +353,59 @@ def clamp_bolts(p):
     wall_y = TOOL_PLATE_Y[0] + (TOOL_Y - ROUTER_D / 2 - 1.0 - TOOL_PLATE_Y[0]) / 2
     xcyl(p, "M6 x 100 knob bolt", BIT_X - 77.0, BIT_X + 30.0, wall_y, zm, ROUTER_BOLT_D)
     xcyl(p, "knob", BIT_X - 77.0, BIT_X - 65.0, wall_y, zm, 25.0, op="add")
-    xcyl(p, "M4 x 90 knob bolt", PILOT_X - 18.0, PILOT_X + 75.0, wall_y, zm, PILOT_BOLT_D, op="new")
-    xcyl(p, "knob", PILOT_X + 65.0, PILOT_X + 75.0, wall_y, zm, 18.0, op="add")
+
+
+def stylus_block(p):
+    """The block the stylus chuck clamps in, in the tool plate's pocket:
+    two plies through the plate with a bore for the chuck's 12 mm shank
+    and a slit to the front, a head of one ply on top overhanging the
+    pocket, an M4 knob bolt across the slit through the head, and a
+    bridge on two feet over the shank with the height screw through it.
+    Then the screws that set it: the z screw in the bridge, the x screw
+    through the plate's right end and the y screw through its front
+    edge, with the spring each pushes the block against."""
+    zb = ZC - TOOL_Z_BELOW
+    zm = zb + TOOL_T / 2
+    hw = BLOCK_W / 2
+    box(p, "stylus block, two plies", (PILOT_X - hw, PILOT_X + hw), (TOOL_Y - hw, TOOL_Y + hw), (zb, zb + TOOL_T))
+    box(p, "head, one ply", (PILOT_X - HEAD_X / 2, PILOT_X + HEAD_X / 2), (TOOL_Y - HEAD_Y / 2, TOOL_Y + HEAD_Y / 2), (zb + TOOL_T, zb + TOOL_T + HEAD_T), op="add")
+    top = zb + TOOL_T + HEAD_T
+    for sx in (-BRIDGE_L / 2, BRIDGE_L / 2 - PLY):
+        box(p, "bridge foot", (PILOT_X + sx, PILOT_X + sx + PLY), (TOOL_Y - BRIDGE_W / 2, TOOL_Y + BRIDGE_W / 2), (top, top + FOOT_H), op="add")
+    box(p, "bridge, one ply", (PILOT_X - BRIDGE_L / 2, PILOT_X + BRIDGE_L / 2), (TOOL_Y - BRIDGE_W / 2, TOOL_Y + BRIDGE_W / 2), (top + FOOT_H, top + FOOT_H + PLY), op="add")
+    s = p.sketch("top", top + 1.0, "shank bore")
+    p.point(s, (PILOT_X, TOOL_Y))
+    p.hole(s, SHANK_D + 0.1, depth=TOOL_T + HEAD_T + 2.0, direction="reverse", name="chuck shank bore, 12.1")
+    s = p.sketch("top", top + 1.0, "slit")
+    p.rect(s, (PILOT_X - PILOT_SLIT_W / 2, TOOL_Y - HEAD_Y / 2 - 1.0), (PILOT_X + PILOT_SLIT_W / 2, TOOL_Y))
+    p.cut(s, TOOL_T + HEAD_T + 2.0, direction="reverse", name="clamp slit, to the front")
+    s = p.sketch("top", top + 1.0, "head bolt holes")
+    for sx in (-HEAD_BOLT_X, HEAD_BOLT_X):
+        p.point(s, (PILOT_X + sx, TOOL_Y))
+    p.hole(s, HEAD_BOLT_D + 2 * BLOCK_PLAY, depth=HEAD_T + 2.0, direction="reverse", name="head bolt holes, 8")
+    # The clamp bolt across the slit, along x through the head's front wall.
+    bolt_y, bolt_z = TOOL_Y - HEAD_Y / 2 + 10.0, top - HEAD_T / 2
+    s = p.sketch("right", PILOT_X + HEAD_X / 2 + 1.0, "clamp bolt")
+    p.point(s, (bolt_y, bolt_z))
+    p.hole(s, PILOT_BOLT_D + 0.5, depth=HEAD_X + 2.0, direction="reverse", name="M4 clearance")
+    s = p.sketch("top", top + 1.0, "nut pocket")
+    p.rect(s, (PILOT_X - 12.0, bolt_y - 3.5), (PILOT_X - 8.0, bolt_y + 3.5))
+    p.cut(s, HEAD_T / 2 + 1.0 + 4.0, direction="reverse", name="nut pocket, from the top")
+    s = p.sketch("top", top + FOOT_H + PLY + 1.0, "z screw hole")
+    p.point(s, (PILOT_X, TOOL_Y))
+    p.hole(s, ADJ_D, depth=PLY + 2.0, direction="reverse", name="z screw, M4 T-nut from above")
+    # The screws and springs. The chuck's shank top sits under the z screw.
+    shank_top = ZC - TIP_BELOW + PILOT_OUT + CHUCK_L
+    vcyl(p, "M4 x 35 z screw", PILOT_X, TOOL_Y, shank_top, top + FOOT_H + PLY + 8.0, ADJ_D, op="new")
+    vcyl(p, "knob", PILOT_X, TOOL_Y, top + FOOT_H + PLY + 8.0, top + FOOT_H + PLY + 16.0, 16.0, op="add")
+    xcyl(p, "M4 x 50 x screw", PILOT_X + hw, PILOT_X + 65.0 + 8.0, TOOL_Y + ADJ_X_Y, zm, ADJ_D, op="new")
+    xcyl(p, "knob", PILOT_X + 65.0 + 8.0, PILOT_X + 65.0 + 16.0, TOOL_Y + ADJ_X_Y, zm, 16.0, op="add")
+    xcyl(p, "x spring, 6 x 20", PILOT_X - hw - SPRING_L, PILOT_X - hw, TOOL_Y + ADJ_X_Y, zm, SPRING_D, op="new")
+    ycyl(p, "M4 x 50 y screw", TOOL_PLATE_Y[0] - 16.0, TOOL_Y - hw, PILOT_X + ADJ_Y_X, zm, ADJ_D, op="new")
+    ycyl(p, "knob", TOOL_PLATE_Y[0] - 16.0, TOOL_PLATE_Y[0] - 8.0, PILOT_X + ADJ_Y_X, zm, 16.0, op="add")
+    ycyl(p, "y spring, 6 x 20", TOOL_Y + hw, TOOL_Y + hw + SPRING_L, PILOT_X + ADJ_Y_X, zm, SPRING_D, op="new")
+    xcyl(p, "M4 x 50 clamp knob bolt", PILOT_X - 10.0, PILOT_X + HEAD_X / 2 + 8.0, bolt_y, bolt_z, PILOT_BOLT_D, op="new")
+    xcyl(p, "knob", PILOT_X + HEAD_X / 2 + 8.0, PILOT_X + HEAD_X / 2 + 16.0, bolt_y, bolt_z, 16.0, op="add")
 
 
 def balancer_bracket(p):
@@ -357,12 +448,13 @@ def router(p):
 
 
 def pilot(p):
-    """A 2 mm pilot in a keyless mini chuck; its 3/8 in shank slides in the
-    tool plate's split clamp to set the pilot's height."""
+    """The stylus in the ER11 collet chuck: the rod bottomed in the chuck,
+    the nut on its nose, the 12 mm shank up through the stylus block to
+    the height screw."""
     tip = ZC - TIP_BELOW
-    vcyl(p, "2 mm pilot", PILOT_X, TOOL_Y, tip, tip + PILOT_OUT + 5.0, PILOT_D)
-    vcyl(p, "keyless chuck", PILOT_X, TOOL_Y, tip + PILOT_OUT, tip + PILOT_OUT + CHUCK_L, CHUCK_D, op="add")
-    vcyl(p, "3/8 shank", PILOT_X, TOOL_Y, tip + PILOT_OUT + CHUCK_L, tip + PILOT_OUT + CHUCK_L + SHANK_L, SHANK_D, op="add")
+    vcyl(p, "2 mm stylus", PILOT_X, TOOL_Y, tip, tip + PILOT_OUT + 5.0, PILOT_D)
+    vcyl(p, "ER11 nut", PILOT_X, TOOL_Y, tip + PILOT_OUT, tip + PILOT_OUT + NUT_L, NUT_D, op="add")
+    vcyl(p, "collet chuck C12-ER11A-100", PILOT_X, TOOL_Y, tip + PILOT_OUT + NUT_L, tip + PILOT_OUT + CHUCK_L, SHANK_D, op="add")
 
 
 def stop_screw(p):
@@ -433,7 +525,7 @@ PARTS = [
     ("Base", base), ("Battens", battens), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Deck", deck), ("Wall", wall), ("Gussets", gussets),
     ("X supports SK20", x_supports), ("X shafts", x_shafts), ("X blocks SC20UU", x_blocks),
     ("Z carriage plate", carriage_plate), ("Z supports SK20", z_supports), ("Z shafts", z_shafts), ("Z blocks SC20UU", z_blocks), ("Balancer bracket", balancer_bracket), ("Balancer reel", balancer_reel),
-    ("Tool support", tool_support), ("Tool support webs", tool_support_webs), ("Clamp bolts", clamp_bolts), ("Router", router), ("Pilot", pilot), ("Stop screw", stop_screw),
+    ("Tool support", tool_support), ("Tool support webs", tool_support_webs), ("Clamp bolts", clamp_bolts), ("Router", router), ("Stylus block", stylus_block), ("Pilot", pilot), ("Stop screw", stop_screw),
     ("Platforms", platforms), ("Fences", fences), ("Blank", blank), ("Pattern plate", pattern),
 ]
 
@@ -452,8 +544,8 @@ MOTION = [
      "deck and wall, one ply each, an angle with a gusset in each corner; X shafts 760 at z = 160 and 310, SK20s 740 apart"),
     ("x_slide", "X slide", ["X blocks SC20UU", "Z carriage plate", "Z supports SK20", "Z shafts", "Balancer bracket", "Balancer reel"],
      "carriage plate 220 x 314, one ply, X blocks on its back; Z shafts 250 at x = +/-60, SK20s 210 apart; spring balancer on a bracket"),
-    ("z_slide", "Z slide", ["Z blocks SC20UU", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Pilot"],
-     "tool plate 480 x 110 x 38; split clamps 66 (router) and 9.7 (chuck shank), slits to the front"),
+    ("z_slide", "Z slide", ["Z blocks SC20UU", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Stylus block", "Pilot"],
+     "tool plate 480 x 110 x 38; router in a 66 split clamp, slit to the front; stylus chuck in a block in a 62 pocket, +/-1 each way on M4 screws against springs, its height on a screw over the shank"),
 ]
 FIXED = ["Base", "Battens", "Y supports SK20", "Y shafts", "Platforms", "Fences", "Blank", "Pattern plate"]
 # (name, placed side, moving side, radius on each): "Sub/part" names a member of a sub-assembly.
@@ -479,7 +571,14 @@ HARDWARE = [
     ("4 X blocks on the carriage plate's back, from its front face", "M5 x 30 (or M6) into the block", 16),
     ("4 Z blocks on the support plate's back, from its front face; the lower pair countersunk, before the tool plate goes on", "M5 x 30 (or M6) into the block", 16),
     ("Router clamp", "M6 x 100 knob bolt, hex nut in the pocket", 1),
-    ("Pilot clamp", "M4 x 90 knob bolt, hex nut in the pocket", 1),
+    ("Stylus chuck", "C12-ER11A-100 straight-shank collet chuck with ER11 collets: 2 mm, 3/16 in, 1/4 in", 1),
+    ("Stylus clamp, across the head's slit", "M4 x 50 knob bolt, hex nut in the pocket", 1),
+    ("Stylus block head to the tool plate, through 8 mm holes", "M6 x 70 bolt and washer into a T-nut from the plate's underside", 2),
+    ("Stylus x and y adjustment, through the plate's right end and front edge", "M4 x 50 knob screw in an M4 threaded insert", 2),
+    ("Springs opposite them, in 7 mm holes in the pocket's far walls", "6 x 20 compression spring", 2),
+    ("Stylus height, through the bridge", "M4 x 35 knob screw through an M4 T-nut set into the bridge's top", 1),
+    ("Bridge feet to the head, bridge to its feet", "no. 8 x 32 wood screw, glued", 4),
+    ("Stylus block's plies and head laminated", "no. 8 x 32 wood screw, countersunk from below, clear of the bore", 4),
     ("Stop screw", "M8 x 90 with a knob, through an M8 T-nut set into the top of the ear, an M8 jam nut above the ear", 1),
     ("Blank's slotted fence", "M5 x 25 bolt and washer into a T-nut set into the platform from below, before the platform is screwed down", 6),
     ("Balancer bracket leg to the carriage plate", "M6 x 40 bolt and T-nut", 2),

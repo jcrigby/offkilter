@@ -4,8 +4,9 @@ The Woodsmith carving duplicator (plan SN12918) rebuilt on the 20 mm
 round rail already bought for the router lift: SFC20 shafts, SK20
 supports and SC20UU blocks in place of the plan's conduit and rollers.
 A trim router and a pilot the size of its bit sit side by side on one
-tool plate; the pilot traces a pattern on one platform while the bit
-cuts the same path in a blank on the other. The first use is the puzzle
+tool plate, the pilot in a collet chuck in a block that adjusts to the
+bit; the pilot traces a pattern on one platform while the bit cuts the
+same path in a blank on the other. The first use is the puzzle
 top: the printed pattern plate from `examples/puzzle-top` has the gap
 lattice as grooves, a 2 mm pilot rides them, and a 2 mm bit cuts every
 piece out of one board, the kerf being the resin gap. After that, any
@@ -71,19 +72,35 @@ reference hole, at the centre, and at the back-right corner).
   rides them on four blocks: a support plate with the tool plate hung
   on three webs in front of it.
 - **Tools.** The tool plate is two plies (38 mm) with a 66 mm bore for
-  the router motor's barrel and a 9.7 mm bore for the pilot chuck's
-  3/8 in shank, both drilled in one setup. Each bore has a slit to the
-  plate's front edge and a knob bolt across it (M6 and M4), the slits
-  to the front so tightening shifts a tool in y, never in the x spacing
-  calibration sets. The pilot is 2 mm drill rod in a keyless mini chuck;
-  its height is set by sliding the shank in its clamp.
+  the router motor's barrel, a slit from it to the plate's front edge
+  and an M6 knob bolt across the slit, the slit to the front so
+  tightening shifts the router in y and never in x. The router is the
+  fixed reference; the pilot is what adjusts.
+- **The stylus block.** The pilot is a stylus in a straight-shank ER11
+  collet chuck (C12-ER11A-100: a 12 mm shank 100 long, the nut on its
+  nose, solid behind the collet pocket), so a rod or a bit put in until
+  it stops has the same stick-out every time, and ER11 takes the 2 mm
+  rod, a 3/16 and a 1/4 shank with about 0.01 mm of runout where a
+  keyless chuck has 0.05 to 0.1. The chuck clamps in a block of two
+  plies with a head of one more on top, the block through a 62 mm
+  pocket in the tool plate beside the router with a millimetre of play
+  each way, the head overhanging the pocket and bolted to the plate by
+  two M6 through 8 mm holes. An M4 screw through an insert in the
+  plate's right end and one through its front edge push the block
+  against a 6 mm spring in the pocket's far wall each way, 0.09 mm an
+  eighth of a turn; a bridge on two feet over the chuck's shank carries
+  a third M4 screw the shank's top is pushed up to before its clamp is
+  tightened, so the stylus's height is that screw's and repeats when
+  the chuck comes out. The router's own collet is left alone: bits are
+  not meant to bottom on the motor shaft, and whatever length a bit
+  goes in to, the height screw takes up.
 - **Depth.** An M8 stop screw through an ear on the tool support lands
   on a stop block on the carriage plate: set for a 4 mm first pass, it
   backs off 13 turns for the last, where the pilot bottoming in the
   12.5 mm groove is the limit.
-- **Balance.** The Z slide weighs about 4.2 kg (1.6 of ply in the tool
-  support, 0.75 in its four blocks, 1.5 for the Colt, the rest chuck,
-  pilot and knobs). Left to gravity the pilot would ride the groove
+- **Balance.** The Z slide weighs about 4.5 kg (1.6 of ply in the tool
+  support, 0.75 in its four blocks, 1.5 for the Colt, 0.3 for the
+  stylus block and its chuck, the rest knobs and screws). Left to gravity the pilot would ride the groove
   floor under 41 N, and its 12 N of drag would bend a 2 mm rod 18 mm
   out of the chuck by 0.15 mm, a tenth of the gap, reversing with
   every stroke. A retractable spring balancer (the 1 to 3 kg kind)
@@ -95,12 +112,35 @@ reference hole, at the centre, and at the back-right corner).
   reel sits between the upper Z shaft supports, above the support
   plate by 59 mm at the raised pose, and the cable passes 8 mm in
   front of the stop screw's knob; the sweep checks all of it.
-- **Calibration.** An L fence on each platform, the blank's 30 mm wide
-  with slots across its legs. The pattern plate has a 2 mm reference
-  hole 5 mm inside its front-left corner, outside the board's outline:
-  pilot in the hole, bit plunged into the blank platform, the mark
-  should sit 5 mm outside the blank's corner both ways, and the slotted
-  fence moves by the difference.
+- **Calibration for the puzzle.** An L fence on each platform, the
+  blank's 30 mm wide with slots across its legs. The pattern plate has
+  a 2 mm reference hole 5 mm inside its front-left corner, outside the
+  board's outline: pilot in the hole, bit plunged into the blank
+  platform, the mark should sit 5 mm outside the blank's corner both
+  ways, and the slotted fence moves by the difference. A stylus-to-bit
+  error only shifts the whole copy here, and the fence absorbs it.
+- **Registration for the cage.** The Spectre cage
+  (`examples/spectre-cage`) turns the master and the stack through
+  twelve indices about their own axes, so an error across the axis
+  between the stylus and the bit comes out as twice that error as a
+  step between faces cut at opposite indices; with a 0.7 gap and fins
+  0.3 off the profile, the stylus wants setting to the bit within about
+  0.05 mm across the axis. Depth is benign by comparison: with the axis
+  horizontal it is radial at every index, so it makes every piece
+  uniformly fat or thin, which the stop screw trims. The cage's cradles
+  carry a 90 degree cone in each rim at mid-length, 8 mm across, and
+  the master's cradles and the cage's are the same print, so the cones
+  sit the same off each trough's axis. To register: loosen the block's
+  head bolts, drop the bit (not turning) and the stylus into the two
+  cones, and turn the x and y screws until the stylus's ball sits in
+  its cone the way the bit's does, no wall touching; for z, lay a 20 mm
+  shaft offcut across both cradles and touch each tool to it at the
+  same stop-screw setting (a continuity tester between the shank and
+  the shaft reads the touch to a few hundredths), turning the height
+  screw until the stylus touches where the bit did; tighten the head
+  bolts, then the clamp. Confirm with one cut on the stack's spare
+  blanks: cut index 0 and index 6, measure the step with calipers, and
+  move the screw by half of it.
 
 The pattern plate is also the example of the duplicator check, the
 `duplicator_check` tool and `ok_brep::duplicate_check`: a body meant to
@@ -139,7 +179,14 @@ schedule to `out/hardware.csv`.
 | 4 X blocks on the carriage plate's back, from its front face | M5 x 30 (or M6) into the block | 16 |
 | 4 Z blocks on the support plate's back, from its front face | M5 x 30 (or M6) into the block; the lower pair countersunk, before the tool plate goes on | 16 |
 | Router clamp | M6 x 100 knob bolt, hex nut in the pocket | 1 |
-| Pilot clamp | M4 x 90 knob bolt, hex nut in the pocket | 1 |
+| Stylus chuck | C12-ER11A-100 straight-shank collet chuck, ER11 collets 2 mm, 3/16 in, 1/4 in | 1 |
+| Stylus clamp, across the head's slit | M4 x 50 knob bolt, hex nut in the pocket | 1 |
+| Stylus block head to the tool plate, through 8 mm holes | M6 x 70 bolt and washer into a T-nut from the plate's underside | 2 |
+| Stylus x and y adjustment, through the plate's right end and front edge | M4 x 50 knob screw in an M4 threaded insert | 2 |
+| Springs opposite them, in 7 mm holes in the pocket's far walls | 6 x 20 compression spring | 2 |
+| Stylus height, through the bridge | M4 x 35 knob screw through an M4 T-nut set into the bridge's top | 1 |
+| Bridge feet to the head, bridge to its feet | no. 8 x 32, glued | 4 |
+| Stylus block's plies and head laminated | no. 8 x 32, countersunk from below, clear of the bore | 4 |
 | Stop screw | M8 x 90 with a knob, through an M8 T-nut set into the top of the ear so the load presses it into the wood, an M8 jam nut above the ear to lock the setting | 1 |
 | Blank's slotted fence | M5 x 25 bolt and washer into a T-nut set into the platform from below, before the platform is screwed down | 6 |
 | Balancer bracket leg to the carriage plate | M6 x 40 bolt and T-nut (the arm's 50 mm overhang turns the reel's 40 N into a prying load) | 2 |
@@ -172,7 +219,8 @@ plate goes on.
 | Gantry | deck on all four Y blocks, wall on the deck full width, deck 45 above the blank and behind the carriage plate |
 | Reach | bit over the 304 x 260 blank, pilot over the 304 x 260 lattice |
 | Depth | tips 40 above the board raised; first pass 4 mm; last pass 12.5 mm, 52.5 of the 62.5 mm of travel |
-| Clearance at the last pass | chuck 5.5 mm above the plate; tool plate 36 mm above the blank |
+| Clearance at the last pass | collet nut 5.5 mm above the plate; tool plate 36 mm above the blank |
+| Stylus block | moves 1 mm each way in x and y in its pocket before it meets the plate, and not 1.3; the height screw's tip on the chuck's shank top |
 | Shafts | X 760 x 2, Y 700 x 2, Z 250 x 2: the four 1000 mm shafts cut 760 + 240 and 700 + 300, Z from the 300s |
 
 Every bought-part size (SK20, SC20UU, the router barrel, the chuck) is

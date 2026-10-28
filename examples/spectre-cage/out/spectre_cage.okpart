@@ -9207,6 +9207,60 @@
           },
           {
             "id": 140,
+            "name": "Cradle A cones",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -20.0,
+                      "y": -44.1051177665153
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -20.0,
+                      "y": 44.1051177665153
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 141,
+            "name": "Cradle A registration cones",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 140,
+              "diameter": 1.0,
+              "depth": 5.500000000000001,
+              "through_all": false,
+              "direction": "reverse",
+              "counterbore": null,
+              "countersink": {
+                "diameter": 8.0,
+                "angle": 90.0
+              }
+            }
+          },
+          {
+            "id": 142,
             "name": "Cradle B",
             "suppressed": false,
             "kind": {
@@ -9359,12 +9413,12 @@
             }
           },
           {
-            "id": 141,
+            "id": 143,
             "name": "Cradle B",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 140,
+              "sketch": 142,
               "profiles": {
                 "type": "all"
               },
@@ -9377,7 +9431,7 @@
             }
           },
           {
-            "id": 142,
+            "id": 144,
             "name": "Cradle B trough",
             "suppressed": false,
             "kind": {
@@ -9529,12 +9583,12 @@
             }
           },
           {
-            "id": 143,
+            "id": 145,
             "name": "Cradle B trough",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 142,
+              "sketch": 144,
               "profiles": {
                 "type": "all"
               },
@@ -9547,23 +9601,77 @@
             }
           },
           {
-            "id": 144,
+            "id": 146,
             "name": "Cradle B",
             "suppressed": false,
             "kind": {
               "type": "boolean",
               "op": "subtract",
               "targets": [
-                141
+                143
               ],
               "tools": [
-                143
+                145
               ],
               "keep_tools": false
             }
+          },
+          {
+            "id": 147,
+            "name": "Cradle B cones",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 98.0,
+                      "y": -44.1051177665153
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 98.0,
+                      "y": 44.1051177665153
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 148,
+            "name": "Cradle B registration cones",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 147,
+              "diameter": 1.0,
+              "depth": 5.500000000000001,
+              "through_all": false,
+              "direction": "reverse",
+              "counterbore": null,
+              "countersink": {
+                "diameter": 8.0,
+                "angle": 90.0
+              }
+            }
           }
         ],
-        "next_id": 145,
+        "next_id": 149,
         "settings": {
           "facet_angle": 5.0
         },
@@ -9635,8 +9743,8 @@
           "134": "Laminate 26 ebony",
           "136": "Cradle A",
           "138": "Cradle A trough",
-          "141": "Cradle B",
-          "143": "Cradle B trough"
+          "143": "Cradle B",
+          "145": "Cradle B trough"
         },
         "part_materials": {
           "84": {
@@ -10111,6 +10219,60 @@
           },
           {
             "id": 6,
+            "name": "Flat cradle cones",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.0,
+                      "y": -44.1051177665153
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.0,
+                      "y": 44.1051177665153
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "Flat cradle registration cones",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 6,
+              "diameter": 1.0,
+              "depth": 5.500000000000001,
+              "through_all": false,
+              "direction": "reverse",
+              "counterbore": null,
+              "countersink": {
+                "diameter": 8.0,
+                "angle": 90.0
+              }
+            }
+          },
+          {
+            "id": 8,
             "name": "V cradle",
             "suppressed": false,
             "kind": {
@@ -10263,12 +10425,12 @@
             }
           },
           {
-            "id": 7,
+            "id": 9,
             "name": "V cradle",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 6,
+              "sketch": 8,
               "profiles": {
                 "type": "all"
               },
@@ -10281,7 +10443,7 @@
             }
           },
           {
-            "id": 8,
+            "id": 10,
             "name": "V cradle trough",
             "suppressed": false,
             "kind": {
@@ -10411,12 +10573,12 @@
             }
           },
           {
-            "id": 9,
+            "id": 11,
             "name": "V cradle trough",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 8,
+              "sketch": 10,
               "profiles": {
                 "type": "all"
               },
@@ -10429,31 +10591,85 @@
             }
           },
           {
-            "id": 10,
+            "id": 12,
             "name": "V cradle",
             "suppressed": false,
             "kind": {
               "type": "boolean",
               "op": "subtract",
               "targets": [
-                7
+                9
               ],
               "tools": [
-                9
+                11
               ],
               "keep_tools": false
             }
+          },
+          {
+            "id": 13,
+            "name": "V cradle cones",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -19.05255888325765
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 56.0,
+                      "y": -39.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 56.0,
+                      "y": 39.0
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 14,
+            "name": "V cradle registration cones",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 13,
+              "diameter": 1.0,
+              "depth": 5.500000000000001,
+              "through_all": false,
+              "direction": "reverse",
+              "counterbore": null,
+              "countersink": {
+                "diameter": 8.0,
+                "angle": 90.0
+              }
+            }
           }
         ],
-        "next_id": 11,
+        "next_id": 15,
         "settings": {
           "facet_angle": 5.0
         },
         "part_names": {
           "2": "Flat cradle",
           "4": "Flat cradle trough",
-          "7": "V cradle",
-          "9": "V cradle trough"
+          "9": "V cradle",
+          "11": "V cradle trough"
         }
       }
     },

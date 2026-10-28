@@ -83,7 +83,7 @@ cargo test -p ok-render --test spectre_cage     # what CI runs
 | rods | M4, in the V between two panels' outer faces at each corner, nuts outside the flanges |
 | plugs | a hex boss 15 deep into the tube, a 10 mm flange outside it, 66 across flats |
 | masters | the profile over 78 mm, a 25 mm hex end each side, 66 across flats; one curved, one straight |
-| cradles | a flat socket (the lower half of the 66 hex) and a 120 degree V, 24 long |
+| cradles | a flat socket (the lower half of the 66 hex) and a 120 degree V, 24 long; a 90 degree registration cone, 8 across, in each rim at mid-length |
 | fins | a set per master, 0.3 mm off the profile every way, and off each other at the sector lines |
 
 ## The sequence
@@ -111,8 +111,11 @@ own; that every finned panel clears its master and the other five fins
 and fills its sector's column to within the clearance; and that the
 loaded cage reads back as the stack with its woods, the rods clear of
 the panels, the stack and the plugs, the flanges the masters' hex,
-resting on the cradles' floors, and the two cradles' troughs half a
-hex and a corner.
+resting on the cradles' floors, the two cradles' troughs half a
+hex and a corner, and every cradle's two cones 90 degrees, at
+mid-length, mirrored about the axis, the same on both flat cradles,
+deep enough to seat the 3/16 ball below the rim and clear of the
+flange's corners.
 
 ## Notes
 
@@ -127,3 +130,11 @@ hex and a corner.
   would fillet them.
 - Fins thinner than 1.5 mm at their thickest are left off; they would
   not print and would not support anything.
+- The cones in the cradles' rims are where the duplicator's stylus is
+  set to its bit (`examples/duplicator`, "Registration for the cage"):
+  the master's cradles and the cage's are the same print, so a bit
+  dropped into a cone on one and the stylus into the same cone on the
+  other are the axis-to-axis offset apart when the stylus block is
+  right. An error across the axis shows twice over as a step between
+  faces cut at opposite indices, which is why the stylus block has its
+  screws.

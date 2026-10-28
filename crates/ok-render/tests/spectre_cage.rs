@@ -797,4 +797,81 @@ fn the_loaded_cage_holds_the_stack_with_the_rods_clear_and_sits_in_the_cradles()
         flat.volume(),
         vee.volume()
     );
+    // Registration cones: two 90 degree cones in every cradle, one in
+    // each rim at mid-length, mirrored about the trough's axis and the
+    // same on the two cradles of a kind, so the duplicator's stylus and
+    // bit dropped into the master's cradle and the cage's register the
+    // stylus to the bit; a 3/16 ball seats below the rim, clear of the
+    // flange's corners.
+    let bit = num(&n, "bit");
+    let cones = |s: &Solid| -> Vec<(Vec3, f64)> {
+        s.surfaces
+            .iter()
+            .filter_map(|sf| match sf {
+                ok_brep::Surface::Cone {
+                    apex, half_angle, ..
+                } => Some((*apex, *half_angle)),
+                _ => None,
+            })
+            .collect()
+    };
+    let mut flat_cones = None;
+    for (name, c) in [
+        ("Flat cradle", flat),
+        ("V cradle", vee),
+        ("Cradle A", body(&r, "Cradle A")),
+        ("Cradle B", body(&r, "Cradle B")),
+    ] {
+        let mut cs = cones(c);
+        cs.sort_by(|a, b| a.0.y.partial_cmp(&b.0.y).unwrap());
+        assert_eq!(cs.len(), 2, "{name}: {} cones", cs.len());
+        let (lo, hi) = bounds(c);
+        for (apex, half) in &cs {
+            assert!(
+                (half - 45f64.to_radians()).abs() < 1e-9,
+                "{name}: a 90 degree cone"
+            );
+            assert!(
+                (apex.x - (lo.x + hi.x) / 2.0).abs() < 1e-6,
+                "{name}: the cone at mid-length"
+            );
+            let seat = hi.z - apex.z;
+            assert!(
+                seat > bit / 2.0 * 2f64.sqrt() + 0.5,
+                "{name}: the apex {seat} below the rim seats a {bit} ball"
+            );
+            // The rim's inner edge at its top: the trough's edge, where the
+            // hex's corner (flat cradle) or side (V cradle) comes up to.
+            let edge = c
+                .polygons()
+                .iter()
+                .flat_map(|p| p.loops.iter().flatten())
+                .filter(|v| (v.z - hi.z).abs() < 1e-6 && (v.y.abs() - apex.y.abs()).abs() > 4.5)
+                .map(|v| v.y.abs())
+                .fold(f64::INFINITY, f64::min);
+            assert!(
+                apex.y.abs() - 4.0 > edge + 1.0,
+                "{name}: the cone's mouth at {} clears the trough's edge at {edge}",
+                apex.y.abs() - 4.0
+            );
+        }
+        assert!(
+            (cs[0].0.y + cs[1].0.y).abs() < 1e-6,
+            "{name}: mirrored about the axis"
+        );
+        if name.ends_with("cradle") && name.starts_with("Flat") || name.starts_with("Cradle") {
+            match flat_cones {
+                None => flat_cones = Some((cs[0].0.y, hi.z - cs[0].0.z)),
+                Some((y, d)) => assert!(
+                    (cs[0].0.y - y).abs() < 1e-6 && (hi.z - cs[0].0.z - d).abs() < 1e-6,
+                    "{name}: the cones sit where the other flat cradle's do"
+                ),
+            }
+        }
+        eprintln!(
+            "{name}: cones at y {:.1}, apex {:.2} below the rim",
+            cs[1].0.y,
+            hi.z - cs[1].0.z
+        );
+    }
 }

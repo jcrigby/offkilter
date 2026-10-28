@@ -7,7 +7,7 @@
 //! bottoming in the groove limiting the last) within the Z travel.
 //! Every number prints (`--nocapture`).
 
-use ok_brep::{BoolOp, Solid};
+use ok_brep::{BoolOp, Solid, Transform};
 use ok_math::Vec3;
 use ok_model::{AssemblyResult, Document, MateId, TabId};
 use std::path::PathBuf;
@@ -158,7 +158,7 @@ fn every_part_regenerates_closed_and_the_machine_places_every_body() {
         .map(|t| (t.id, t.name().to_string(), t.kind_name().to_string()))
         .collect();
     let studios = tabs.iter().filter(|t| t.2 == "part_studio").count();
-    assert_eq!(studios, 27, "{studios} part studios");
+    assert_eq!(studios, 28, "{studios} part studios");
     let mut placed = 0;
     for (id, name, kind) in &tabs {
         if kind == "part_studio" {
@@ -176,13 +176,13 @@ fn every_part_regenerates_closed_and_the_machine_places_every_body() {
             placed += r.bodies.len();
         }
     }
-    assert_eq!(placed, 57);
+    assert_eq!(placed, 63);
     let machine = tab_named(&doc, "Duplicator");
     let r = doc.regenerate_assembly(machine).unwrap();
-    assert_eq!(r.bodies.len(), 57);
+    assert_eq!(r.bodies.len(), 63);
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
     // The three motion sub-assemblies, each with its own sheet.
-    for (name, want) in [("Gantry", 14), ("X slide", 14), ("Z slide", 12)] {
+    for (name, want) in [("Gantry", 14), ("X slide", 14), ("Z slide", 18)] {
         let sub = tab_named(&doc, name);
         let r = doc.regenerate_assembly(sub).unwrap();
         assert_eq!(r.bodies.len(), want, "{name}");
@@ -370,6 +370,8 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
     for (a, b) in [
         ("Router", "Tool support"),
         ("Pilot", "Tool support"),
+        ("Pilot", "Stylus block 1"),
+        ("Stylus block 1", "Tool support"),
         ("Tool support", "Z carriage plate"),
         ("Wall", "Z carriage plate"),
         ("Deck", "Blank"),
@@ -380,6 +382,51 @@ fn the_tools_reach_over_the_work_and_the_depth_sequence_fits_the_z_travel() {
         let v = overlap(body(&r, a), body(&r, b)).unwrap_or_else(|| panic!("{a} x {b}"));
         assert!(v < 1e-6, "{a} x {b}: {v} mm3");
     }
+
+    // The stylus block adjusts: it moves a millimetre each way in x and
+    // in y in the tool plate's pocket before it meets the plate, and not
+    // much more (the head's bolt holes have the same play), which covers
+    // the half millimetre the plate's bores are drilled to. Its chuck's
+    // shank goes up through the block to the height screw in the bridge,
+    // and the stylus's tip is level with the bit's, as the test above
+    // says, so z is the screw's.
+    let block = body(&r, "Stylus block 1");
+    let support = body(&r, "Tool support");
+    let play = 1.0;
+    for (dx, dy) in [(play, 0.0), (-play, 0.0), (0.0, play), (0.0, -play)] {
+        let moved = block.transformed(&Transform::translation(Vec3::new(dx, dy, 0.0)));
+        let v = overlap(&moved, support).unwrap_or_else(|| panic!("block moved {dx},{dy}"));
+        assert!(
+            v < 1e-6,
+            "the block moved ({dx}, {dy}) meets the plate: {v} mm3"
+        );
+    }
+    for (dx, dy) in [(play + 0.3, 0.0), (0.0, -(play + 0.3))] {
+        let moved = block.transformed(&Transform::translation(Vec3::new(dx, dy, 0.0)));
+        let v = overlap(&moved, support).unwrap_or_else(|| panic!("block moved {dx},{dy}"));
+        assert!(
+            v > 1.0,
+            "the block moved ({dx}, {dy}) is still free: the pocket is bigger than the play"
+        );
+    }
+    let screw = body(&r, "Stylus block 2");
+    let (slo, shi) = bounds(screw);
+    let (plo, phi) = bounds(body(&r, "Pilot"));
+    assert!(
+        (slo.z - phi.z).abs() < 1e-6 && ((slo.x + shi.x) - (plo.x + phi.x)).abs() < 1e-6,
+        "the height screw's tip is on the chuck's shank top: screw {} over shank {}",
+        slo.z,
+        phi.z
+    );
+    assert!(
+        shi.z > bounds(block).1.z,
+        "the height screw's knob is above the bridge"
+    );
+    println!(
+        "stylus block: {} square in the pocket, play {play} each way, chuck shank {} tall under the height screw",
+        bounds(block).1.x - bounds(block).0.x - 36.0,
+        phi.z - plo.z
+    );
 }
 
 /// The tools in the work are the point: the bit in the blank (and, on
