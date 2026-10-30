@@ -8,7 +8,7 @@ printed link hung from a tab on a printed replacement for the router's
 left handle, which plunges the motor and raises the bit. The jack is cranked by a
 socket extension through a slot in the front, with a ratchet or a drill.
 
-The lever is 2 to 1: the jack moves 108 mm for the router's 54 mm of
+The lever is 2 to 1: the jack moves 120 mm for the router's 60 mm of
 plunge, so a turn of the crank moves the bit half as far as it moves
 the saddle. Hanging the jack from the top with the lever beside the
 router keeps the table no taller than the router: a jack under the
@@ -46,8 +46,8 @@ IN = 25.4
 # retracted (posts extended, bit lowest).
 # ---------------------------------------------------------------------
 PLUNGE_CAPACITY = 65.0            # (S: the manual, 0-65 mm)
-PLUNGE = 54.0                     # the travel used: the router's depth stop set here, since at more the handles (the
-                                  # wide end up, beside the base) reach the table's underside
+PLUNGE = 60.0                     # the travel used: the router's depth stop set here, since at more the handles
+                                  # (beside the base, under the table) come within 5 mm of the table's underside
 ROUTER_H = 287.0                  # base face to the motor's end (S: overall height)
 BASE_D, BASE_T = 160.0, 18.0      # base casting, clear sub-base off (S: 160 wide; G: thickness)
 BASE_HOLE = 50.0                  # the base's centre opening (G)
@@ -58,11 +58,14 @@ YOKE_X, YOKE_Y = 85.0, 25.0       # its half-width and half-depth (G)
 MOTOR_D = 100.0                   # motor housing below the carriage (G)
 LUG_L = 17.0                      # the handle lugs: how far each stands out from the housing (G: from the photo of its side; must be more than POCKET)
 BOSS_X = YOKE_X + LUG_L           # the lugs' end faces from the axis: with a 33 mm handle, 276 across the handles (S)
-BOSS_Z = 89.0                     # the lug's centre below the base face, retracted (M: 89 up from the bench, the router standing on its base)
+SUB_BASE = 9.25                   # the clear sub-base, which comes off under the table (M: calipers)
+BOSS_Z = 89.0 - SUB_BASE          # the lug's centre below the base face, retracted (M: 89 up from the bench, on the sub-base)
 HANDLE_T = 50.0 - 16.37           # handles: outer face to the socket's floor, the lug's end (M: 50 overall less the 16.37 socket)
 HANDLE_H = 91.0                   # tall, along the router's axis (M: calipers)
 HANDLE_W = (48.0, 39.0)           # front to back at its wide and narrow ends (M: calipers)
 HANDLE_CHAMFER = 8.0              # the profile's corners, a polygon for its rounding (G)
+PRINT_ABOVE = 12.0                # the printed handles stop this far above the lug's centre (toward the base): the
+                                  # originals' wide ends reach 30 mm past it and would meet the table
 HANDLE_WIDE_DOWN = False          # the wide end is toward the base, up under the table (M: the photo of the router standing)
 HANDLE_OFFSET = 16.0              # the stub sits this far from the handle's middle toward its wide end (M: by eye on the sheet)
 LUG_W = (26.34, 22.8)             # the lug across (the long side), at the line by the housing and the line by its end (M: calipers)
@@ -349,8 +352,8 @@ def tapered(p, name, x_near, x_far, size_near, size_far, zc, op):
 
 
 def router_motor(p):
-    """The carriage on the posts with the motor below it; the right
-    handle stays on; the left one is the printed one, its own part."""
+    """The carriage on the posts with the motor below it and a lug each
+    side; the printed handles are their own parts."""
     z = lambda d: TOP_U - d
     f = block(p, "carriage", (-YOKE_X, YOKE_X), (-YOKE_Y, YOKE_Y), (z(YOKE[1]), z(YOKE[0])))
     for k, x in enumerate((-POST_X, POST_X)):
@@ -361,9 +364,9 @@ def router_motor(p):
         tapered(p, name, sx * YOKE_X, sx * BOSS_X, lug_size(LUG_L), lug_size(0.0), zs, "add")
     py = -SCREW_SIDE * PIN_SPACING / 2
     cyl_x(p, "left roll pin", -BOSS_X - ROLL_PIN[1], -BOSS_X, py, zs, ROLL_PIN[0], op="add")
-    profile_x(p, "right handle", BOSS_X, BOSS_X + HANDLE_T, handle_profile(), op="add")
+    cyl_x(p, "right roll pin", BOSS_X, BOSS_X + ROLL_PIN[1], py, zs, ROLL_PIN[0], op="add")
     cyl_z(p, "collet nut", z(YOKE[0]), z(NUT[0]), 0.0, 0.0, NUT_D, op="add")
-    part_is(p, f, "router motor (Makita 3612BR), right handle on", "aluminium")
+    part_is(p, f, "router motor (Makita 3612BR)", "aluminium")
 
 
 def bit(p):
@@ -371,16 +374,26 @@ def bit(p):
     part_is(p, f, "bit, 1/2 in straight", "steel")
 
 
-def handle_profile():
-    """A handle's outline across the boss's axis, (y, z) in the world:
-    a tapered block with its corners cut, its middle HANDLE_OFFSET from
-    the screw toward the narrow end."""
+def handle_profile(printed=False):
+    """A handle's outline across the lug's axis, (y, z) in the world: a
+    tapered block with its corners cut, its middle HANDLE_OFFSET from
+    the screw toward the narrow end. `printed` cuts it off PRINT_ABOVE
+    past the lug's centre at the wide end."""
     zc = TOP_U - HANDLE_MID
     h, c = HANDLE_H / 2, HANDLE_CHAMFER
     lo_w, hi_w = (HANDLE_W[0], HANDLE_W[1]) if HANDLE_WIDE_DOWN else (HANDLE_W[1], HANDLE_W[0])
     lo_w, hi_w = lo_w / 2, hi_w / 2
-    return [(-lo_w + c, zc - h), (lo_w - c, zc - h), (lo_w, zc - h + c), (hi_w, zc + h - c),
-            (hi_w - c, zc + h), (-hi_w + c, zc + h), (-hi_w, zc + h - c), (-lo_w, zc - h + c)]
+    if not printed:
+        return [(-lo_w + c, zc - h), (lo_w - c, zc - h), (lo_w, zc - h + c), (hi_w, zc + h - c),
+                (hi_w - c, zc + h), (-hi_w + c, zc + h), (-hi_w, zc + h - c), (-lo_w, zc - h + c)]
+    sgn = -1.0 if HANDLE_WIDE_DOWN else 1.0          # world direction from the lug toward the wide end
+    zcut = TOP_U - BOSS_Z + sgn * PRINT_ABOVE
+    z0 = zc - sgn * h                                # the narrow end, kept
+    w = lambda z: lo_w + (hi_w - lo_w) * (z - (zc - h)) / (2 * h)
+    a, b = z0, zcut
+    k = c * sgn
+    pts = [(-w(a) + c, a), (w(a) - c, a), (w(a + k), a + k), (w(b - k), b - k), (w(b) - c, b), (-w(b) + c, b), (-w(b - k), b - k), (-w(a + k), a + k)]
+    return pts if sgn > 0 else pts[::-1]
 
 
 def stub_outline():
@@ -389,23 +402,32 @@ def stub_outline():
     return (-mw / 2 - e, -mh / 2 - e), (mw / 2 + e, mh / 2 + e)
 
 
-def stub(p):
-    """The hollow stub over the lug: its floor is the face at -BOSS_X,
-    its pocket following the lug's taper with CLEAR a side."""
+def stub(p, sx=-1.0):
+    """The hollow stub over the lug on side sx: its floor is the face at
+    sx * BOSS_X, its pocket following the lug's taper with CLEAR a side."""
     zs = TOP_U - BOSS_Z
     (a0, b0), (a1, b1) = stub_outline()
-    s = p.sketch("right", -BOSS_X, "stub")
+    s = p.sketch("right", -BOSS_X if sx < 0 else BOSS_X - POCKET, "stub")
     p.rect(s, (a0, zs + b0), (a1, zs + b1))
     p.extrude(s, POCKET, op="add", name="stub")
     grow = lambda wh: (wh[0] + 2 * CLEAR, wh[1] + 2 * CLEAR)
     # Run a millimetre past the mouth so the cut is clean.
-    tapered(p, "stub pocket", -BOSS_X, -BOSS_X + POCKET + 1.0, grow(lug_size(0.0)), grow(lug_size(POCKET + 1.0)), zs, "remove")
+    tapered(p, "stub pocket", sx * BOSS_X, sx * (BOSS_X - POCKET - 1.0), grow(lug_size(0.0)), grow(lug_size(POCKET + 1.0)), zs, "remove")
 
 
-def pin_hole(p):
-    s = p.sketch("right", -BOSS_X, "roll pin hole")
+def pin_hole(p, sx=-1.0):
+    s = p.sketch("right", sx * BOSS_X, "roll pin hole")
     p.point(s, (-SCREW_SIDE * PIN_SPACING / 2, TOP_U - BOSS_Z))
-    p.hole(s, ROLL_PIN[0] + 0.6, depth=ROLL_PIN[1] + 2.0, direction="reverse", name="roll pin hole")
+    p.hole(s, ROLL_PIN[0] + 0.6, depth=ROLL_PIN[1] + 2.0, direction="reverse" if sx < 0 else "normal", name="roll pin hole")
+
+
+def screw_hole(p, sx=-1.0):
+    """From the outer face, counterbored, leaving SCREW_HEAD[1] of
+    plastic under the head as the original does."""
+    s = p.sketch("right", sx * (BOSS_X + HANDLE_T), "handle screw")
+    p.point(s, (SCREW_SIDE * PIN_SPACING / 2, TOP_U - BOSS_Z))
+    p.hole(s, HANDLE_SCREW, depth=HANDLE_T + 1.0, direction="normal" if sx < 0 else "reverse",
+           counterbore={"diameter": SCREW_HEAD[0], "depth": HANDLE_T - SCREW_HEAD[1]}, name="handle screw")
 
 
 FIT_FLOOR = 10.0
@@ -424,13 +446,13 @@ def fit_test(p):
 
 
 def handle(p):
-    """The printed left handle: the original's outline with its hollow
-    stub over the router's lug, the screw through the stub's floor into
-    the lug and a hole for the lug's roll pin beside it, and a tab off
-    its lower end carrying the bolt the link hangs on."""
+    """The printed left handle: the original's outline cut off above
+    the lug, its hollow stub over the router's lug, the screw through
+    the stub's floor into the lug and a hole for the lug's roll pin
+    beside it, and a tab off its lower end carrying the bolt the link
+    hangs on."""
     x = (-BOSS_X - HANDLE_T, -BOSS_X)
-    zs = TOP_U - BOSS_Z
-    f = profile_x(p, "handle", x[0], x[1], handle_profile())
+    f = profile_x(p, "handle", x[0], x[1], handle_profile(printed=True))
     stub(p)
     tx, tz = tab_point(0.0)
     bottom = TOP_U - HANDLE_MID - HANDLE_H / 2
@@ -438,14 +460,20 @@ def handle(p):
     p.polygon(s, [(tx - TAB_W / 2, tz), (tx + TAB_W / 2, tz), (tx + TAB_W / 2, bottom + 20.0), (tx - TAB_W / 2, bottom + 20.0)])
     p.extrude(s, TAB_T, op="add", name="tab")
     cyl_y(p, "tab end", TAB_Y[0], TAB_Y[1], tx, tz, TAB_W, op="add")
-    s = p.sketch("right", x[0], "handle screw")
-    p.point(s, (SCREW_SIDE * PIN_SPACING / 2, zs))
-    p.hole(s, HANDLE_SCREW, depth=HANDLE_T + 1.0, direction="normal",
-           counterbore={"diameter": SCREW_HEAD[0], "depth": HANDLE_T - SCREW_HEAD[1]}, name="handle screw")
+    screw_hole(p)
     pin_hole(p)
     cyl_y(p, "tab bolt", LINK_Y[0], TAB_Y[1], tx, tz, PIN_D, op="add")
     cyl_y(p, "tab bolt head", TAB_Y[1], TAB_Y[1] + 6.0, tx, tz, 14.3, op="add")
-    part_is(p, f, "left handle, printed (PETG), with a tab and a 3/8 bolt for the link", "petg")
+    part_is(p, f, "left handle, printed (PETG), short, with a tab and a 3/8 bolt for the link", "petg")
+
+
+def right_handle(p):
+    """The printed right handle: the left one's mirror, without the tab."""
+    f = profile_x(p, "right handle", BOSS_X, BOSS_X + HANDLE_T, handle_profile(printed=True))
+    stub(p, 1.0)
+    screw_hole(p, 1.0)
+    pin_hole(p, 1.0)
+    part_is(p, f, "right handle, printed (PETG), short", "petg")
 
 
 def link(p):
@@ -708,7 +736,7 @@ JACK_MATES = [
 BOX = [("top", top), ("left side", side("left side", LEFT_X)), ("right side", side("right side", RIGHT_X)),
        ("back", back), ("front", front), ("left cheek", cheek("left cheek", -1.0)), ("right cheek", cheek("right cheek", 1.0)),
        ("hanger spacer", spacer), ("pivot bolt", pivot_bolt), ("router base", router_base), ("jack foot", jack_foot)]
-MOTOR = [("router motor", router_motor), ("bit", bit), ("handle", handle)]
+MOTOR = [("router motor", router_motor), ("bit", bit), ("handle", handle), ("right handle", right_handle)]
 MOVING = [("lever", lever), ("link", link), ("upper front arm", None), ("upper rear arm", None), ("lower front arm", None),
           ("lower rear arm", None), ("saddle", saddle), ("screw", screw), ("nut trunnion", nut_trunnion)]
 
@@ -925,7 +953,7 @@ def main():
     fit = new_tab(mcp, {"type": "add_part_studio", "name": "fit test"})
     fit_test(Part(mcp, fit, "fit test"))
     tabs["fit test"] = fit
-    for name in ("handle", "link", "fit test"):
+    for name in ("handle", "right handle", "link", "fit test"):
         Part(mcp, tabs[name], name).export(os.path.join(OUT, f"{name.replace(' ', '_')}.stl"))
     mcp.call("screenshot", {"tab": fit, "view": "1,-0.5,0.4", "width": 900, "height": 700, "path": os.path.join(OUT, "fit_test.png")})
     mcp.call("screenshot", {"tab": tabs["handle"], "view": "-0.8,-0.6,-0.35", "width": 900, "height": 700,

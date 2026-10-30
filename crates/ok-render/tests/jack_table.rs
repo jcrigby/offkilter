@@ -1,5 +1,5 @@
 //! The scissor-jack router table (examples/jack-table): the router
-//! plunged from retracted to its working 54 mm through the lever, at the
+//! plunged from retracted to its working 60 mm through the lever, at the
 //! five poses the build writes to `out/poses.json`. At each one the jack
 //! must close on itself, the link from the printed handle's tab must
 //! land on the lever's pin, the lever must touch the saddle without
@@ -248,27 +248,22 @@ fn the_lever_plunges_the_router_through_its_travel() {
             format!("{tag}: the lever is on the saddle"),
         );
 
-        // The printed handle fits over the lug and its roll pin: rigid
-        // with the motor, so the general check skips the pair.
-        let fit = overlap(
-            body(&r, "router motor / handle"),
-            body(&r, "router motor / router motor"),
-        );
-        must(
-            fit <= 1e-3,
-            format!("{tag}: the printed handle sits over the lug and the roll pin ({fit:.4} mm3 of overlap)"),
-        );
-
-        // The handles stay under the table: beside the base, nothing
-        // stops them but the top. The right one mirrors the printed one.
-        let handle = hi(body(&r, "router motor / handle")).z;
-        must(
-            top_under - handle >= 5.0,
-            format!(
-                "{tag}: the handles are {:.1} mm under the table",
-                top_under - handle
-            ),
-        );
+        // Each printed handle fits over its lug and roll pin, and stays
+        // under the table: beside the base, nothing stops them but the
+        // top. Rigid with the motor, so the general check skips them.
+        for side in ["handle", "right handle"] {
+            let h = body(&r, &format!("router motor / {side}"));
+            let fit = overlap(h, body(&r, "router motor / router motor"));
+            must(
+                fit <= 1e-3,
+                format!("{tag}: the printed {side} sits over its lug and roll pin ({fit:.4} mm3 of overlap)"),
+            );
+            let gap = top_under - hi(h).z;
+            must(
+                gap >= 5.0,
+                format!("{tag}: the printed {side} is {gap:.1} mm under the table"),
+            );
+        }
 
         // Nothing else touches.
         let bad = hits(&r);
