@@ -23,6 +23,11 @@ cargo test -p ok-render --test finch_plug      # what CI runs
 
 ![offered up before the turn: the ears between the hooks](out/cap_offered_up_below.png)
 
+A second example, `examples/finch-perch`, adds a perch ring to this
+cap for the birds that cannot cling; its README has the field note on
+how that went (the birds preferred the tray, which went back on with
+its drain holes drilled out).
+
 ## The ring's numbers, to confirm
 
 The ring is modelled from a pencil tracing of its flange on
