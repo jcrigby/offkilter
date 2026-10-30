@@ -5151,7 +5151,7 @@
               "direction": "normal",
               "counterbore": {
                 "diameter": 11.0,
-                "depth": 21.0
+                "depth": 5.899999999999999
               },
               "countersink": null
             }
