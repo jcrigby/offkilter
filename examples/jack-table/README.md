@@ -42,21 +42,25 @@ cargo test -p ok-render --test jack_table    # what CI runs
   the arms stay between 14 and 38 degrees.
 - **The router end is linked; the jack end is not.**
   - **Router end.** The printed handle has a tab below it, and a 3/8
-    bolt in the tab carries a 37 mm printed link. The link's other end
+    bolt in the tab carries a 59 mm printed link. The link's other end
     is on a 3/8 bolt through the lever. Both bolts turn freely, so the
     router is held both ways and can't bounce off the lever. The link
-    takes up the lever end's sideways drift as it swings, about 7
-    degrees either side.
+    takes up the lever end's sideways drift as it swings, about 5
+    degrees.
   - **Jack end.** The saddle's groove straddles the lever, and its lips
     sit on the ends of a 3/8 bolt across it. The router's weight
     (5.5 kg) and its plunge springs hold the lever up against the
     saddle. The pin slides about 10 mm under the saddle as the lever
     turns, and the groove keeps the lever in line.
-- **Why a printed handle.** It keeps the original's outline, its square
-  stub into the housing and its screw, so it goes on exactly as the
-  original does. The load goes through the stub and the screw, as it
-  does in your hand. The tab is the only addition. Keep the original
-  handle to put back for freehand work.
+- **Why a printed handle.** The router's handle mount is a lug cast on
+  the housing: a rectangular block standing out from it, with a
+  threaded hole and a roll pin in its end. The original handle's
+  rectangular stub is hollow. It slips over the lug, and its floor has
+  a hole for the screw and one for the pin. The printed handle copies
+  that, so it goes on exactly as the original does. The load goes
+  through the lug, the pin and the screw, as it does in your hand. The
+  tab is the only addition. Keep the original handle to put back for
+  freehand work.
 - **The crank moves.** The screw sits at the scissor's knuckles, halfway
   between the foot and the saddle, so it drops half as far as the
   saddle: 65 mm over the travel. It also moves 34 mm back as the
@@ -78,11 +82,11 @@ These are from the build's printout and the test:
 
 | plunge | bit over the table | jack (foot to saddle) | arms | bit per crank turn |
 |---|---|---|---|---|
-| 0 | −24 mm | 141 mm (5.54 in) | 13.7° | 4.1 mm |
+| 0 | −24 mm | 140 mm (5.53 in) | 13.7° | 4.1 mm |
 | 16 | −8 | 172 (6.79) | 19.3° | 2.9 |
 | 32.5 | 8 | 205 (8.07) | 25.2° | 2.1 |
 | 49 | 25 | 238 (9.35) | 31.5° | 1.6 |
-| 65 | 41 | 271 (10.66) | 38.3° | 1.3 |
+| 65 | 41 | 270 (10.65) | 38.2° | 1.3 |
 
 - Going from retracted to fully plunged takes about 32 turns, with a
   2 mm screw pitch guessed.
@@ -125,15 +129,22 @@ These are from the build's printout and the test:
   The jack pin is a 3/8 x 2 bolt with a nut. The router pin is a 3/8 x
   1-1/4 bolt, its head on the lever's back face, through the lever and
   the link, with a nylock.
-- **Printed handle** (`out/handle.stl`, PETG). It is the original's
-  outline with its square stub and a counterbored hole for the original
-  screw. A 10 mm tab comes down 12 mm below the handle's end, on the
-  lever's side, and takes a 3/8 x 1-1/4 bolt for the link. Print it
-  lying on its outer face, with 4 walls and 40 % infill.
-- **Link** (`out/link.stl`, PETG): 10 mm thick, 20 wide, with 3/8 holes
-  37 mm apart. Print it flat.
+- **Printed handle** (`out/handle.stl`, PETG). It has:
+  - the original's outline;
+  - a hollow stub that fits over the lug, with 0.3 mm of clearance a
+    side;
+  - in the stub's floor, a counterbored hole for the original screw and
+    a hole for the roll pin;
+  - a 10 mm tab 12 mm below the handle's wide end, on the lever's side,
+    for a 3/8 x 1-1/4 bolt to the link.
 
-![The printed handle](out/handle.png)
+  Print it lying on its outer face, with 4 walls and 40 % infill.
+- **Link** (`out/link.stl`, PETG): 10 mm thick, 20 wide, with 3/8 holes
+  59 mm apart. Print it flat.
+
+| Outer face | Inner face, over the lug |
+|---|---|
+| ![The printed handle](out/handle.png) | ![Its stub, screw and pin holes](out/handle_inner.png) |
 
 `out/jack_table.pdf` is the A3 sheet. `out/lift.pdf` (and `lift.png`)
 shows the table from the front at retracted, half plunged and fully
@@ -168,14 +179,18 @@ guesses that matter:
 | plunge | 65 mm | S: the manual | the jack's travel, at 2 to 1 |
 | base face to motor end | 287 mm | S: overall height | the table's height |
 | across the handles | 276 mm | S | where the link goes |
-| handle boss face from the axis | 98 mm | G | the lever's position |
+| the lug: how far it stands out, and its end from the axis | 20 mm, 105 mm | G: from the photo of its side; 105 + 33 is half the 276 across the handles | the lever's position |
+| the lug's end, across and along the axis | 35.4 x 15.4 | G: the stub's inside | the stub's pocket |
+| screw to roll pin, centre to centre | 15 mm | M: by eye on the handle | the two holes in the stub's floor |
+| which side the screw is on | the front | G | the two holes |
+| roll pin: diameter, out from the lug | 5 mm, 8 mm | G: by eye in the photos | the pin's hole |
 | handle outline | 95 tall, 54 wide tapering to 38 | M: 95 x 54 on the measuring sheet, by eye; G: the narrow end | the printed handle |
 | handle thickness, out from the housing | 33 mm | M: by eye on the sheet | the printed handle |
-| the square stub | 41 x 21, 20 long | M: 41 x 21 by eye; G: its length | whether the printed handle fits the housing |
+| the hollow stub, outside | 41 x 21, 20 long | M: 41 x 21 by eye; G: its length | the printed handle |
 | the screw | M6, 13 mm head | G | the printed handle's hole and counterbore |
-| the handle's middle from its screw | 16 mm toward the wide end | M: by eye | where the tab is |
+| the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
 | which end of the handle is toward the motor | the wide end | G | where the tab is |
-| handle screw below the base face, retracted | 130 mm | G: at 105, the handles came up into the table at full plunge | the link's length (37 mm now) |
+| the lug's centre below the base face, retracted | 140 mm | G: higher, and the handles come up into the table at full plunge (11.5 mm under it now) | the link's length (59 mm now) |
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
 | jack arm, pin to pin | 170 mm | G: from 17 in long, 15-1/8 high | turns per mm, the slot |
 | foot and saddle pins from their faces | 30 mm | G | the jack's heights |
@@ -185,13 +200,16 @@ guesses that matter:
 To measure on the router, have it retracted (posts fully out) and the
 base on a flat surface:
 
-1. The height of the handle screw's centre above the base's face, and
-   which end of the handle (wide or narrow) is toward the base.
-2. With calipers on the original handle: its height, its width at both
-   ends, its thickness, the square stub (across, along, and how far it
-   sticks out), and the screw's size and head.
-3. The distance across from one handle boss's face to the other.
-4. The plunge from fully out to fully in.
+1. The height of the lug's centre above the base's face, and which end
+   of the handle (wide or narrow) is toward the base.
+2. With calipers on the lug: across and along its end, how far it
+   stands out from the housing, screw to pin centre to centre, the
+   pin's diameter and how far it sticks out, and the screw's thread and
+   head.
+3. With calipers on the original handle: its height, its width at both
+   ends, its thickness, and the stub's outside.
+4. The distance across from one lug's end to the other.
+5. The plunge from fully out to fully in.
 
 On the jack:
 
@@ -209,8 +227,7 @@ On the jack:
       If the motor cocks and binds on the posts, print a second handle
       for the right side and fork the lever's router end into a yoke
       under both.
-- [ ] **Print a fit test first:** just the stub and the screw's
-      counterbore, 25 mm of the handle, to check it in the housing
-      before the full print.
+- [ ] **Print a fit test first:** just the stub with its floor and two
+      holes, to check it on the lug before the full print.
 - [ ] **A depth stop for repeat setups:** the router's own turret stop
       still works upside down.

@@ -248,6 +248,28 @@ fn the_lever_plunges_the_router_through_its_travel() {
             format!("{tag}: the lever is on the saddle"),
         );
 
+        // The printed handle fits over the lug and its roll pin: rigid
+        // with the motor, so the general check skips the pair.
+        let fit = overlap(
+            body(&r, "router motor / handle"),
+            body(&r, "router motor / router motor"),
+        );
+        must(
+            fit <= 1e-3,
+            format!("{tag}: the printed handle sits over the lug and the roll pin ({fit:.4} mm3 of overlap)"),
+        );
+
+        // The handles stay under the table: beside the base, nothing
+        // stops them but the top. The right one mirrors the printed one.
+        let handle = hi(body(&r, "router motor / handle")).z;
+        must(
+            top_under - handle >= 5.0,
+            format!(
+                "{tag}: the handles are {:.1} mm under the table",
+                top_under - handle
+            ),
+        );
+
         // Nothing else touches.
         let bad = hits(&r);
         must(bad.is_empty(), format!("{tag}: no interference: {bad:?}"));
