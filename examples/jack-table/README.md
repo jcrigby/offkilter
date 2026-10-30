@@ -10,9 +10,9 @@ through a lever:
    hardwood lever.
 2. The lever turns on a bolt through a hanger under the top, so its
    other end comes **up**.
-3. That end pushes up on a **drop arm** screwed to the router's left
-   handle boss in place of the handle. This plunges the motor and
-   raises the bit.
+3. That end pushes up on a **drop arm**: a plywood clamp with the
+   router's left handle's outline cut through it, slid over the handle.
+   The handle stays on. The push plunges the motor and raises the bit.
 
 The crank is a 6 in socket extension that comes out through a slot in
 the front. Turn it with a ratchet or a cordless drill.
@@ -65,6 +65,7 @@ cargo test -p ok-render --test jack_table    # what CI runs
 |---|---|
 | ![Through the lever, retracted](out/section_retracted.png) | ![Through the lever, plunged](out/section_plunged.png) |
 | ![Through the jack, retracted](out/jack_retracted.png) | ![Through the jack, plunged](out/jack_plunged.png) |
+| ![Through the clamp, retracted](out/clamp_retracted.png) | ![Through the clamp, plunged](out/clamp_plunged.png) |
 
 ## What the numbers give
 
@@ -117,9 +118,19 @@ These are from the build's printout and the test:
   - 220 mm the other way, the jack pin.
 
   Each pin is a 3/8 x 2 bolt with a nut.
-- **Drop arm:** hardwood, 1-1/2 square x 6. It replaces the left handle
-  on the handle's own screw (or one 3/4 in longer). Its foot has a 7/8
-  wide, 1-1/2 deep slot up it for the lever.
+- **Drop arm:** two plies of 3/4 ply glued to 1-1/2, about 4 x 6-1/2. To make it:
+  1. Trace the left handle's outline (the face you see looking at the
+     handle end-on, about 95 x 54 mm) 8 mm below the top.
+  2. Cut the outline out with a jigsaw and fit it snug.
+  3. Cut a 7/8 wide, 1-1/2 deep slot up the foot for the lever.
+
+  It slides over the handle against the housing. The lever pushes the
+  handle up through the cutout's lower edge, so the handle's own screw
+  and its square stub in the housing take the load, as they do in your
+  hand. A strip of 1/4 ply screwed across the outer face, overlapping
+  the cutout's edge, keeps it from sliding off. The handle (about 33 mm)
+  is thinner than the two plies (38 mm), so it does not stand proud of
+  the clamp.
 
 `out/jack_table.pdf` is the A3 sheet. `out/lift.pdf` (and `lift.png`)
 shows the table from the front at retracted, half plunged and fully
@@ -153,8 +164,10 @@ guesses that matter:
 | base face to motor end | 287 mm | S: overall height | the table's height |
 | across the handles | 276 mm | S | where the drop arm goes |
 | handle boss face from the axis | 98 mm | G | the lever's position |
-| handle screw below the base face, retracted | 105 mm | G | the drop arm's length |
-| handle screw thread | ? | | the drop arm's screw |
+| handle outline | 95 tall, 54 wide tapering to 38 | M: 95 x 54 on the measuring sheet, by eye; G: the narrow end | the cutout |
+| handle thickness, out from the housing | 33 mm | M: by eye on the sheet | the clamp's thickness |
+| which end of the handle is toward the motor | the wide end | G | which way the cutout goes |
+| handle centre below the base face, retracted | 130 mm | G: at 105, the handles came up into the table at full plunge | the drop arm's length, and whether the clamp clears the table at full plunge (5 mm now) |
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
 | jack arm, pin to pin | 170 mm | G: from 17 in long, 15-1/8 high | turns per mm, the slot |
 | foot and saddle pins from their faces | 30 mm | G | the jack's heights |
@@ -164,7 +177,8 @@ guesses that matter:
 To measure on the router, have it retracted (posts fully out) and the
 base on a flat surface:
 
-1. The height of the handle screw's centre above the base's face.
+1. The height of the handle screw's centre above the base's face, and
+   which end of the handle (wide or narrow) is toward the base.
 2. The distance across from one handle boss's face to the other.
 3. The plunge from fully out to fully in.
 
@@ -180,9 +194,9 @@ On the jack:
       across it, or it is narrower than 7/8 in, bolt a hardwood shoe with
       a 7/8 slot across it under the saddle. Two hose clamps round the
       saddle's lips will hold it.
-- [ ] **One-sided push.** The drop arm pushes on one handle boss, beside
-      one post. If the motor cocks and binds on the posts, fork the
-      lever's router end into a yoke under both bosses. That needs the
-      right handle off too.
+- [ ] **One-sided push.** The drop arm pushes on one handle, beside one
+      post. If the motor cocks and binds on the posts, make a second
+      clamp for the right handle and fork the lever's router end into a
+      yoke under both.
 - [ ] **A depth stop for repeat setups:** the router's own turret stop
       still works upside down.

@@ -56,8 +56,12 @@ YOKE = (85.0, 125.0)              # the motor carriage round the posts, retracte
 YOKE_X, YOKE_Y = 85.0, 25.0       # its half-width and half-depth (G)
 MOTOR_D = 100.0                   # motor housing below the carriage (G)
 BOSS_X = 98.0                     # handle boss faces from the axis (G: 276 across the handles, S, less a 40 mm handle)
-BOSS_Z = 105.0                    # handle screw's depth (G)
-HANDLE = (40.0, 38.0, 40.0)       # the right handle, kept: out from the boss, front to back, tall (G)
+BOSS_Z = 130.0                    # handle screw's depth: low enough that a handle plunged 65 stays below the base face (G)
+HANDLE_T = 33.0                   # handles: out from the boss face (M: about 33 on the sheet, by eye)
+HANDLE_H = 95.0                   # tall, along the router's axis (M: 95 on the sheet)
+HANDLE_W = (54.0, 38.0)           # front to back at its wide and narrow ends (M: 54; G: 38)
+HANDLE_CHAMFER = 8.0              # the profile's corners, a polygon for its rounding (G)
+HANDLE_WIDE_DOWN = True           # which end of the handle is toward the motor end (G)
 NUT_D, NUT = 24.0, (55.0, 85.0)   # collet nut, up from the carriage (G)
 BIT_D, BIT_L = 12.7, 50.0         # 1/2 in straight bit, out of the nut
 ROUTER_KG = 5.5                   # (S)
@@ -112,7 +116,8 @@ PIN_LEN = 50.0                    # contact pins, across the lever
 
 # The drop arm: 1-1/2 x 1-1/2 hardwood in place of the left handle,
 # its foot forked over the lever with the tines on the router's pin.
-DROP = (38.0, 38.0)               # x (out from the boss), y
+DROP = (38.0, 100.0)              # x (out from the boss: two plies of 3/4), y
+DROP_ABOVE = 8.0                  # ply bridging over the handle
 FORK = (22.0, 40.0)               # slot width (y), height
 
 # Hanger: two 3/4 ply cheeks 2-1/2 wide either side of the lever, a
@@ -280,7 +285,7 @@ def router_base(p):
 
 def router_motor(p):
     """The carriage on the posts with the motor below it; the right
-    handle stays on."""
+    handle stays on, and the left one carries the drop arm."""
     z = lambda d: TOP_U - d
     f = block(p, "carriage", (-YOKE_X, YOKE_X), (-YOKE_Y, YOKE_Y), (z(YOKE[1]), z(YOKE[0])))
     for k, x in enumerate((-POST_X, POST_X)):
@@ -289,10 +294,10 @@ def router_motor(p):
     for name, sx in (("left boss", -1.0), ("right boss", 1.0)):
         x = (YOKE_X, BOSS_X) if sx > 0 else (-BOSS_X, -YOKE_X)
         block(p, name, x, (-15.0, 15.0), (z(BOSS_Z + 15.0), z(BOSS_Z - 15.0)), op="add")
-    block(p, "right handle", (BOSS_X, BOSS_X + HANDLE[0]), (-HANDLE[1] / 2, HANDLE[1] / 2),
-          (z(BOSS_Z + HANDLE[2] / 2), z(BOSS_Z - HANDLE[2] / 2)), op="add")
+    for name, x in (("right handle", (BOSS_X, BOSS_X + HANDLE_T)), ("left handle", (-BOSS_X - HANDLE_T, -BOSS_X))):
+        profile_x(p, name, x[0], x[1], handle_profile(), op="add")
     cyl_z(p, "collet nut", z(YOKE[0]), z(NUT[0]), 0.0, 0.0, NUT_D, op="add")
-    part_is(p, f, "router motor (Makita 3612BR), right handle on", "aluminium")
+    part_is(p, f, "router motor (Makita 3612BR), both handles on", "aluminium")
 
 
 def bit(p):
@@ -300,18 +305,34 @@ def bit(p):
     part_is(p, f, "bit, 1/2 in straight", "steel")
 
 
+def handle_profile(grow=0.0):
+    """A handle's outline across the boss's axis, (y, z) in the world:
+    a tapered block with its corners cut. `grow` opens it on the sides
+    and the end away from the motor but not on the motor side, where
+    the clamp bears."""
+    zc = TOP_U - BOSS_Z
+    h, c = HANDLE_H / 2, HANDLE_CHAMFER
+    lo_w, hi_w = (HANDLE_W[0], HANDLE_W[1]) if HANDLE_WIDE_DOWN else (HANDLE_W[1], HANDLE_W[0])
+    lo_w, hi_w = lo_w / 2 + grow, hi_w / 2 + grow
+    return [(-lo_w + c, zc - h), (lo_w - c, zc - h), (lo_w, zc - h + c), (hi_w, zc + h - c + grow),
+            (hi_w - c, zc + h + grow), (-hi_w + c, zc + h + grow), (-hi_w, zc + h - c + grow), (-lo_w, zc - h + c)]
+
+
 def drop_arm(p):
-    """In place of the left handle, on its screw: hardwood down beside
-    the motor to a fork over the lever."""
+    """A plywood clamp over the left handle: two plies of 3/4 with the
+    handle's outline cut through them, slid over the handle against the
+    housing, down beside the motor to a fork over the lever. The lever
+    pushes the handle up through the cutout's lower edge."""
     x = (-BOSS_X - DROP[0], -BOSS_X)
     y = (-DROP[1] / 2, DROP[1] / 2)
-    top_z, foot_z = TOP_U - (BOSS_Z - HANDLE[2] / 2), TOP_U - DROP_FOOT
+    top_z, foot_z = TOP_U - BOSS_Z + HANDLE_H / 2 + DROP_ABOVE, TOP_U - DROP_FOOT
     w, h = FORK
-    pts = [(y[0], foot_z), (-w / 2, foot_z), (-w / 2, foot_z + h), (w / 2, foot_z + h), (w / 2, foot_z),
-           (y[1], foot_z), (y[1], top_z), (y[0], top_z)]
-    f = profile_x(p, "drop arm", x[0], x[1], pts)
-    bore_x(p, "handle screw", x[0], x[1], 0.0, TOP_U - BOSS_Z, 6.5)
-    part_is(p, f, f"drop arm, hardwood {DROP[0] / IN:.1f} x {DROP[1] / IN:.1f} x {(top_z - foot_z) / IN:.2f}, forked foot", "hardwood")
+    s = p.sketch("right", x[0], "drop arm")
+    p.polygon(s, [(y[0], foot_z), (-w / 2, foot_z), (-w / 2, foot_z + h), (w / 2, foot_z + h), (w / 2, foot_z),
+                  (y[1], foot_z), (y[1], top_z), (y[0], top_z)])
+    p.polygon(s, handle_profile(0.5))
+    f = p.extrude(s, x[1] - x[0], profiles="largest", name="drop arm")
+    part_is(p, f, f"drop arm, 2 x 3/4 ply {DROP[1] / IN:.2f} x {(top_z - foot_z) / IN:.2f}, the handle's outline through it, forked foot", "birch")
 
 
 # -- the lever and its hanger -------------------------------------------------
@@ -583,7 +604,6 @@ HARDWARE = [
     ("extension", "3/8 drive x 6 in", 1, "from the adapter out through the crank slot; a ratchet or a drill on its end"),
     ("pivot bolt", "3/8-16 x 2-1/2 hex bolt, nylock, 2 washers", 1, "through the cheeks and the lever, a washer each side of the lever; snug, not tight"),
     ("contact pins", "3/8-16 x 2 hex bolts, nuts", 2, "across the lever 110 mm and 220 mm either side of the pivot, on its centre line; the drop arm's fork and the saddle's lips ride on their ends"),
-    ("drop arm screw", "the handle's own screw, or one 3/4 in longer of the same thread", 1, "through the drop arm into the left handle boss"),
     ("router screws", "the sub-base screws, longer, flat head", 3, "through the top, countersunk, into the base where the clear sub-base was"),
 ]
 
@@ -595,7 +615,8 @@ CUTLIST = [
     ("cheek", f"3/4 ply, {CHEEK_W / IN:g} x {(TOP_U - PIVOT_Z + CHEEK_W / 2) / IN:.2f}, round end", 2, "the hanger, screwed down through the top with the spacer between them; 3/8 hole at the round's centre"),
     ("hanger spacer", "hardwood, 2-1/2 x 1-1/2 x 7/8 (the lever's thickness and two washers)", 1, "between the cheeks at the top"),
     ("lever", f"hardwood, 3/4 x 1-1/2 x {(ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST) / IN:.2f}", 1, "3/8 holes on the centre line: the pivot, the router pin 110 mm one way, the jack pin 220 mm the other"),
-    ("drop arm", f"hardwood, 1-1/2 x 1-1/2 x {(DROP_FOOT - BOSS_Z + HANDLE[2] / 2) / IN:.2f}", 1, f"a hole for the handle screw {HANDLE[2] / 2:.0f} mm from the top; a 7/8 wide, 1-1/2 deep slot up the foot for the lever"),
+    ("drop arm", f"3/4 ply, {DROP[1] / IN:.2f} x {(DROP_FOOT - BOSS_Z + HANDLE_H / 2 + DROP_ABOVE) / IN:.2f}", 2, f"glued to 1-1/2; the handle's outline traced and cut through {DROP_ABOVE:.0f} mm from the top, a snug fit; a 7/8 wide, 1-1/2 deep slot up the foot for the lever"),
+    ("keeper", "1/4 ply or hardboard, the drop arm's width x 2-1/2", 1, "screwed across the drop arm's outer face below the handle's screw, overlapping the cutout so the clamp cannot slide off the handle"),
 ]
 
 
@@ -745,6 +766,7 @@ def main():
         set_mates(pose(p))
         shot(f"section_{tag}", view="0,-1,0.0001", section="y:0")
         shot(f"jack_{tag}", view="-1,0,0.0001", section=f"x:{JACK_X:.1f}", fit=f"{JACK_X - 60:.0f},-320,0,{JACK_X + 60:.0f},320,{TOP_S + 10:.0f}")
+        shot(f"clamp_{tag}", view="-1,0,0.0001", section=f"x:{ROUTER_X:.1f}", fit=f"{ROUTER_X - 30:.0f},-110,40,{ROUTER_X + 30:.0f},110,{TOP_S + 5:.0f}")
     shot("iso_plunged", view="-0.55,-0.75,0.5")
     set_mates(pose(0.0))
     rom = [{**{n: {"angle": v["angle"], "offset": v["offset"]} for n, v in p["mates"].items()},
