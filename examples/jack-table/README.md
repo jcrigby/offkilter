@@ -131,8 +131,10 @@ These are from the build's printout and the test:
   the link, with a nylock.
 - **Printed handle** (`out/handle.stl`, PETG). It has:
   - the original's outline;
-  - a hollow stub that fits over the lug, with 0.3 mm of clearance a
-    side;
+  - a hollow stub that fits over the lug. The lug tapers, so the
+    stub's pocket tapers to match, with 0.3 mm of clearance a side. The
+    pocket is 12.5 mm deep, shorter than the lug, so its floor seats on
+    the lug's end and its rim stays clear of the housing;
   - in the stub's floor, a counterbored hole for the original screw and
     a hole for the roll pin;
   - a 10 mm tab 12 mm below the handle's wide end, on the lever's side,
@@ -142,9 +144,16 @@ These are from the build's printout and the test:
 - **Link** (`out/link.stl`, PETG): 10 mm thick, 20 wide, with 3/8 holes
   59 mm apart. Print it flat.
 
-| Outer face | Inner face, over the lug |
-|---|---|
-| ![The printed handle](out/handle.png) | ![Its stub, screw and pin holes](out/handle_inner.png) |
+- **Fit test** (`out/fit_test.stl`, PETG): the stub alone on a 10 mm
+  floor, with the screw hole and the pin hole. Print it first and try
+  it on the lug. It should slide on with a little play and seat on the
+  lug's end, with the pin in its hole and the screw hole over the
+  threaded one. If it's tight or loose, change `CLEAR` in `build.py`;
+  if the holes don't line up, change `PIN_SPACING` or `SCREW_SIDE`.
+
+| Outer face | Inner face, over the lug | Fit test |
+|---|---|---|
+| ![The printed handle](out/handle.png) | ![Its stub, screw and pin holes](out/handle_inner.png) | ![The fit test](out/fit_test.png) |
 
 `out/jack_table.pdf` is the A3 sheet. `out/lift.pdf` (and `lift.png`)
 shows the table from the front at retracted, half plunged and fully
@@ -179,14 +188,16 @@ guesses that matter:
 | plunge | 65 mm | S: the manual | the jack's travel, at 2 to 1 |
 | base face to motor end | 287 mm | S: overall height | the table's height |
 | across the handles | 276 mm | S | where the link goes |
-| the lug: how far it stands out, and its end from the axis | 20 mm, 105 mm | G: from the photo of its side; 105 + 33 is half the 276 across the handles | the lever's position |
-| the lug's end, across and along the axis | 35.4 x 15.4 | G: the stub's inside | the stub's pocket |
-| screw to roll pin, centre to centre | 15 mm | M: by eye on the handle | the two holes in the stub's floor |
+| the lug across (long side) | 26.34 by the housing, 22.8 by the end, 13.4 apart | M: calipers, at two marker lines | the stub's pocket |
+| the lug along the router's axis (short side) | 12.9 by the housing, 11.5 by the end | M: calipers, at the same lines | the stub's pocket |
+| the end line from the lug's end | 2.8 mm | G: from the photo of its side | the pocket's floor size |
+| how far the lug stands out | 17 mm | G: from the photo of its side | the lever's position; must be more than the 12.5 pocket |
+| screw to roll pin, centre to centre | 14.1 mm | M: the photo of the lug's end, scaled by the 22.8 | the two holes in the stub's floor |
 | which side the screw is on | the front | G | the two holes |
-| roll pin: diameter, out from the lug | 5 mm, 8 mm | G: by eye in the photos | the pin's hole |
+| roll pin: diameter, out from the lug | 4 mm, 7.2 mm | G: diameter; M: protrusion from the side photo, scaled by the 13.4 | the pin's hole |
 | handle outline | 95 tall, 54 wide tapering to 38 | M: 95 x 54 on the measuring sheet, by eye; G: the narrow end | the printed handle |
 | handle thickness, out from the housing | 33 mm | M: by eye on the sheet | the printed handle |
-| the hollow stub, outside | 41 x 21, 20 long | M: 41 x 21 by eye; G: its length | the printed handle |
+| the hollow stub, outside | 32 x 18.5 | the pocket's mouth and a 3 mm wall (the earlier 41 x 21 by eye was too big for this lug) | the printed handle |
 | the screw | M6, 13 mm head | G | the printed handle's hole and counterbore |
 | the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
 | which end of the handle is toward the motor | the wide end | G | where the tab is |
@@ -202,10 +213,9 @@ base on a flat surface:
 
 1. The height of the lug's centre above the base's face, and which end
    of the handle (wide or narrow) is toward the base.
-2. With calipers on the lug: across and along its end, how far it
-   stands out from the housing, screw to pin centre to centre, the
-   pin's diameter and how far it sticks out, and the screw's thread and
-   head.
+2. With calipers on the lug (the taper is done): how far it stands out
+   from the housing, screw to pin centre to centre, the pin's diameter,
+   and the screw's thread and head. Or print the fit test and see.
 3. With calipers on the original handle: its height, its width at both
    ends, its thickness, and the stub's outside.
 4. The distance across from one lug's end to the other.
@@ -227,7 +237,7 @@ On the jack:
       If the motor cocks and binds on the posts, print a second handle
       for the right side and fork the lever's router end into a yoke
       under both.
-- [ ] **Print a fit test first:** just the stub with its floor and two
-      holes, to check it on the lug before the full print.
+- [ ] **Print the fit test** (`out/fit_test.stl`) and try it on the lug
+      before the full handle.
 - [ ] **A depth stop for repeat setups:** the router's own turret stop
       still works upside down.

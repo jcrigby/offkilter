@@ -54,7 +54,7 @@ POST_END = 150.0                  # posts' free ends (G)
 YOKE = (85.0, 125.0)              # the motor carriage round the posts, retracted (G)
 YOKE_X, YOKE_Y = 85.0, 25.0       # its half-width and half-depth (G)
 MOTOR_D = 100.0                   # motor housing below the carriage (G)
-LUG_L = 20.0                      # the handle lugs: how far each stands out from the housing (G: from the photo of its side)
+LUG_L = 17.0                      # the handle lugs: how far each stands out from the housing (G: from the photo of its side)
 BOSS_X = YOKE_X + LUG_L           # the lugs' end faces from the axis: with a 33 mm handle, 276 across the handles (S)
 BOSS_Z = 140.0                    # the lug's centre (the handle screw's depth): low enough that a handle plunged 65 stays under the table (G)
 HANDLE_T = 33.0                   # handles: out from the boss face (M: about 33 on the sheet, by eye)
@@ -63,11 +63,16 @@ HANDLE_W = (54.0, 38.0)           # front to back at its wide and narrow ends (M
 HANDLE_CHAMFER = 8.0              # the profile's corners, a polygon for its rounding (G)
 HANDLE_WIDE_DOWN = True           # which end of the handle is toward the motor end (G)
 HANDLE_OFFSET = 16.0              # the stub sits this far from the handle's middle toward its wide end (M: by eye on the sheet)
-STUB = (41.0, 21.0)               # the handle's hollow stub over the lug: outside, across and along the axis (M: by eye)
-LUG = (35.4, 15.4)                # the lug: across and along the axis (G: the stub's inside less 0.3 a side)
-PIN_SPACING = 15.0                # screw hole to roll pin, centre to centre, across the lug (M: by eye on the handle)
+LUG_W = (26.34, 22.8)             # the lug across (the long side), at the line by the housing and the line by its end (M: calipers)
+LUG_H = (12.9, 11.5)              # along the router's axis (the short side), at the same two lines (M: calipers)
+LUG_LINES = 13.4                  # between the two lines (M: calipers)
+LUG_END_LINE = 2.8                # the end line from the lug's end (G: from the photo of its side)
+POCKET = 12.5                     # the stub's pocket depth: short of the lug, so its floor seats on the lug's end
+CLEAR = 0.3                       # the pocket's clearance a side
+STUB_WALL = 3.0                   # the stub's wall at its mouth
+PIN_SPACING = 14.1                # screw hole to roll pin, centre to centre (M: the photo of the lug's end, scaled by the 22.8)
 SCREW_SIDE = -1.0                 # the screw toward -y (the front), the pin toward +y (G)
-ROLL_PIN = (5.0, 8.0)             # the lug's roll pin: diameter, out from the lug's end (G: by eye in the photos)
+ROLL_PIN = (4.0, 7.2)             # the lug's roll pin: diameter (G), out from the lug's end (M: the side photo, scaled by the 13.4)
 HANDLE_SCREW = 6.5                # the screw's clearance hole (G: an M6)
 SCREW_HEAD = (13.0, 12.0)         # its counterbore's diameter, and the plastic left under the head (G)
 NUT_D, NUT = 24.0, (55.0, 85.0)   # collet nut, up from the carriage (G)
@@ -323,6 +328,24 @@ def router_base(p):
     part_is(p, f, "router base and posts (Makita 3612BR)", "aluminium")
 
 
+def lug_size(d):
+    """The lug's (across, along the axis) at d from its end: the two
+    caliper readings, straight between and beyond."""
+    t = (d - LUG_END_LINE) / LUG_LINES
+    return (LUG_W[1] + (LUG_W[0] - LUG_W[1]) * t, LUG_H[1] + (LUG_H[0] - LUG_H[1]) * t)
+
+
+def tapered(p, name, x_near, x_far, size_near, size_far, zc, op):
+    """A rectangle at x_near lofted to another at x_far, centred on
+    (0, zc) across the lug's axis."""
+    ss = []
+    for k, (x, (w, h)) in enumerate(((x_near, size_near), (x_far, size_far))):
+        s = p.sketch("right", x, f"{name} {k + 1}")
+        p.rect(s, (-w / 2, zc - h / 2), (w / 2, zc + h / 2))
+        ss.append(s)
+    return p.feature({"type": "add_loft", "sketch": ss[0], "sketch_b": ss[1], "op": op, "name": name})
+
+
 def router_motor(p):
     """The carriage on the posts with the motor below it; the right
     handle stays on; the left one is the printed one, its own part."""
@@ -333,8 +356,7 @@ def router_motor(p):
     cyl_z(p, "motor", z(ROUTER_H), z(YOKE[1]), 0.0, 0.0, MOTOR_D, op="add")
     zs = z(BOSS_Z)
     for name, sx in (("left lug", -1.0), ("right lug", 1.0)):
-        x = (YOKE_X, BOSS_X) if sx > 0 else (-BOSS_X, -YOKE_X)
-        block(p, name, x, (-LUG[0] / 2, LUG[0] / 2), (zs - LUG[1] / 2, zs + LUG[1] / 2), op="add")
+        tapered(p, name, sx * YOKE_X, sx * BOSS_X, lug_size(LUG_L), lug_size(0.0), zs, "add")
     py = -SCREW_SIDE * PIN_SPACING / 2
     cyl_x(p, "left roll pin", -BOSS_X - ROLL_PIN[1], -BOSS_X, py, zs, ROLL_PIN[0], op="add")
     profile_x(p, "right handle", BOSS_X, BOSS_X + HANDLE_T, handle_profile(), op="add")
@@ -359,6 +381,46 @@ def handle_profile():
             (hi_w - c, zc + h), (-hi_w + c, zc + h), (-hi_w, zc + h - c), (-lo_w, zc - h + c)]
 
 
+def stub_outline():
+    mw, mh = lug_size(POCKET)
+    e = CLEAR + STUB_WALL
+    return (-mw / 2 - e, -mh / 2 - e), (mw / 2 + e, mh / 2 + e)
+
+
+def stub(p):
+    """The hollow stub over the lug: its floor is the face at -BOSS_X,
+    its pocket following the lug's taper with CLEAR a side."""
+    zs = TOP_U - BOSS_Z
+    (a0, b0), (a1, b1) = stub_outline()
+    s = p.sketch("right", -BOSS_X, "stub")
+    p.rect(s, (a0, zs + b0), (a1, zs + b1))
+    p.extrude(s, POCKET, op="add", name="stub")
+    grow = lambda wh: (wh[0] + 2 * CLEAR, wh[1] + 2 * CLEAR)
+    # Run a millimetre past the mouth so the cut is clean.
+    tapered(p, "stub pocket", -BOSS_X, -BOSS_X + POCKET + 1.0, grow(lug_size(0.0)), grow(lug_size(POCKET + 1.0)), zs, "remove")
+
+
+def pin_hole(p):
+    s = p.sketch("right", -BOSS_X, "roll pin hole")
+    p.point(s, (-SCREW_SIDE * PIN_SPACING / 2, TOP_U - BOSS_Z))
+    p.hole(s, ROLL_PIN[0] + 0.6, depth=ROLL_PIN[1] + 2.0, direction="reverse", name="roll pin hole")
+
+
+FIT_FLOOR = 10.0
+
+
+def fit_test(p):
+    """The handle's stub alone on a 10 mm floor, with the screw and pin
+    holes: a quick print to try on the lug before the handle."""
+    zs = TOP_U - BOSS_Z
+    (a0, b0), (a1, b1) = stub_outline()
+    f = block(p, "fit test floor", (-BOSS_X - FIT_FLOOR, -BOSS_X), (a0, a1), (zs + b0, zs + b1))
+    stub(p)
+    bore_x(p, "screw hole", -BOSS_X - FIT_FLOOR, -BOSS_X, SCREW_SIDE * PIN_SPACING / 2, zs, HANDLE_SCREW)
+    pin_hole(p)
+    part_is(p, f, "fit test: the printed handle's stub and floor", "petg")
+
+
 def handle(p):
     """The printed left handle: the original's outline with its hollow
     stub over the router's lug, the screw through the stub's floor into
@@ -367,12 +429,7 @@ def handle(p):
     x = (-BOSS_X - HANDLE_T, -BOSS_X)
     zs = TOP_U - BOSS_Z
     f = profile_x(p, "handle", x[0], x[1], handle_profile())
-    s = p.sketch("right", -BOSS_X, "stub")
-    p.rect(s, (-STUB[0] / 2, zs - STUB[1] / 2), (STUB[0] / 2, zs + STUB[1] / 2))
-    p.extrude(s, LUG_L, op="add", name="stub")
-    s = p.sketch("right", -BOSS_X, "stub pocket")
-    p.rect(s, (-LUG[0] / 2 - 0.3, zs - LUG[1] / 2 - 0.3), (LUG[0] / 2 + 0.3, zs + LUG[1] / 2 + 0.3))
-    p.cut(s, LUG_L + 1.0, name="stub pocket")
+    stub(p)
     tx, tz = tab_point(0.0)
     bottom = TOP_U - HANDLE_MID - HANDLE_H / 2
     s = p.sketch("front", -TAB_Y[1], "tab")
@@ -383,9 +440,7 @@ def handle(p):
     p.point(s, (SCREW_SIDE * PIN_SPACING / 2, zs))
     p.hole(s, HANDLE_SCREW, depth=HANDLE_T + 1.0, direction="normal",
            counterbore={"diameter": SCREW_HEAD[0], "depth": HANDLE_T - SCREW_HEAD[1]}, name="handle screw")
-    s = p.sketch("right", -BOSS_X, "roll pin hole")
-    p.point(s, (-SCREW_SIDE * PIN_SPACING / 2, zs))
-    p.hole(s, ROLL_PIN[0] + 0.6, depth=ROLL_PIN[1] + 2.0, direction="reverse", name="roll pin hole")
+    pin_hole(p)
     cyl_y(p, "tab bolt", LINK_Y[0], TAB_Y[1], tx, tz, PIN_D, op="add")
     cyl_y(p, "tab bolt head", TAB_Y[1], TAB_Y[1] + 6.0, tx, tz, 14.3, op="add")
     part_is(p, f, "left handle, printed (PETG), with a tab and a 3/8 bolt for the link", "petg")
@@ -865,8 +920,12 @@ def main():
         for kind, rows in (("wood", CUTLIST), ("hardware", HARDWARE)):
             for item, size, qty, note in rows:
                 f.write(f'{kind},"{item}","{size}",{qty},"{note}"\n')
-    for name in ("handle", "link"):
-        Part(mcp, tabs[name], name).export(os.path.join(OUT, f"{name}.stl"))
+    fit = new_tab(mcp, {"type": "add_part_studio", "name": "fit test"})
+    fit_test(Part(mcp, fit, "fit test"))
+    tabs["fit test"] = fit
+    for name in ("handle", "link", "fit test"):
+        Part(mcp, tabs[name], name).export(os.path.join(OUT, f"{name.replace(' ', '_')}.stl"))
+    mcp.call("screenshot", {"tab": fit, "view": "1,-0.5,0.4", "width": 900, "height": 700, "path": os.path.join(OUT, "fit_test.png")})
     mcp.call("screenshot", {"tab": tabs["handle"], "view": "-0.8,-0.6,-0.35", "width": 900, "height": 700,
                             "path": os.path.join(OUT, "handle.png")})
     mcp.call("screenshot", {"tab": tabs["handle"], "view": "1,-0.4,0.3", "width": 900, "height": 700,
