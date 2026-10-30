@@ -8,7 +8,7 @@ printed link hung from a tab on a printed replacement for the router's
 left handle, which plunges the motor and raises the bit. The jack is cranked by a
 socket extension through a slot in the front, with a ratchet or a drill.
 
-The lever is 2 to 1: the jack moves 130 mm for the router's 65 mm of
+The lever is 2 to 1: the jack moves 108 mm for the router's 54 mm of
 plunge, so a turn of the crank moves the bit half as far as it moves
 the saddle. Hanging the jack from the top with the lever beside the
 router keeps the table no taller than the router: a jack under the
@@ -45,7 +45,9 @@ IN = 25.4
 # the base's mounting face (the top's underside), with the motor fully
 # retracted (posts extended, bit lowest).
 # ---------------------------------------------------------------------
-PLUNGE = 65.0                     # plunge capacity (S: the manual, 0-65 mm)
+PLUNGE_CAPACITY = 65.0            # (S: the manual, 0-65 mm)
+PLUNGE = 54.0                     # the travel used: the router's depth stop set here, since at more the handles (the
+                                  # wide end up, beside the base) reach the table's underside
 ROUTER_H = 287.0                  # base face to the motor's end (S: overall height)
 BASE_D, BASE_T = 160.0, 18.0      # base casting, clear sub-base off (S: 160 wide; G: thickness)
 BASE_HOLE = 50.0                  # the base's centre opening (G)
@@ -56,7 +58,7 @@ YOKE_X, YOKE_Y = 85.0, 25.0       # its half-width and half-depth (G)
 MOTOR_D = 100.0                   # motor housing below the carriage (G)
 LUG_L = 17.0                      # the handle lugs: how far each stands out from the housing (G: from the photo of its side; must be more than POCKET)
 BOSS_X = YOKE_X + LUG_L           # the lugs' end faces from the axis: with a 33 mm handle, 276 across the handles (S)
-BOSS_Z = 140.0                    # the lug's centre (the handle screw's depth): low enough that a handle plunged 65 stays under the table (G)
+BOSS_Z = 89.0                     # the lug's centre below the base face, retracted (M: 89 up from the bench, the router standing on its base)
 HANDLE_T = 50.0 - 16.37           # handles: outer face to the socket's floor, the lug's end (M: 50 overall less the 16.37 socket)
 HANDLE_H = 91.0                   # tall, along the router's axis (M: calipers)
 HANDLE_W = (48.0, 39.0)           # front to back at its wide and narrow ends (M: calipers)

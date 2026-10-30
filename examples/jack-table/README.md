@@ -33,16 +33,16 @@ cargo test -p ok-render --test jack_table    # what CI runs
   1-3/4 in off the bench when it is retracted.
 - **The lever is 2 to 1.** The pin under the saddle is 220 mm from the
   pivot and the link's bolt is 110 mm. The jack therefore
-  moves 130 mm for the router's whole 65 mm of plunge, and each turn
+  moves 108 mm for the router's 54 mm of travel, and each turn
   moves the bit half as far as it moves the saddle.
 - **The jack works in its middle.** A scissor jack is fast and coarse
   when nearly closed and slow when open. Its rise per turn is the
   screw's pitch times the cotangent of the arms' angle. This table
-  runs the jack from 5.5 to 10.6 in (its range is 3-3/8 to 15-1/8), so
-  the arms stay between 14 and 38 degrees.
+  runs the jack from 5.5 to 9.8 in (its range is 3-3/8 to 15-1/8), so
+  the arms stay between 14 and 34 degrees.
 - **The router end is linked; the jack end is not.**
   - **Router end.** The printed handle has a tab below it, and a 3/8
-    bolt in the tab carries a 29 mm printed link. The link's other end
+    bolt in the tab carries a 63 mm printed link. The link's other end
     is on a 3/8 bolt through the lever. Both bolts turn freely, so the
     router is held both ways and can't bounce off the lever. The link
     takes up the lever end's sideways drift as it swings, about 5
@@ -63,8 +63,8 @@ cargo test -p ok-render --test jack_table    # what CI runs
   freehand work.
 - **The crank moves.** The screw sits at the scissor's knuckles, halfway
   between the foot and the saddle, so it drops half as far as the
-  saddle: 65 mm over the travel. It also moves 34 mm back as the
-  knuckles close. The front's slot is vertical and 65 mm long, plus the
+  saddle: 54 mm over the travel. It also moves 34 mm back as the
+  knuckles close. The front's slot is vertical and 54 mm long, plus the
   extension's width, and the extension simply slides with the screw.
 - **The front stops at the hanger.** The router's half of the box is
   open at the front for the switch, the plunge lock, the cord, and your
@@ -82,19 +82,26 @@ These are from the build's printout and the test:
 
 | plunge | bit over the table | jack (foot to saddle) | arms | bit per crank turn |
 |---|---|---|---|---|
-| 0 | −24 mm | 140 mm (5.53 in) | 13.7° | 4.1 mm |
-| 16 | −8 | 172 (6.79) | 19.3° | 2.9 |
-| 32.5 | 8 | 205 (8.07) | 25.2° | 2.1 |
-| 49 | 25 | 238 (9.35) | 31.5° | 1.6 |
-| 65 | 41 | 270 (10.65) | 38.2° | 1.3 |
+| 0 | −24 mm | 140 mm (5.52 in) | 13.6° | 4.1 mm |
+| 13.5 | −11 | 167 (6.58) | 18.3° | 3.0 |
+| 27 | 3 | 194 (7.64) | 23.2° | 2.3 |
+| 40.5 | 16 | 221 (8.70) | 28.3° | 1.9 |
+| 54 | 30 | 248 (9.77) | 33.6° | 1.5 |
 
-- Going from retracted to fully plunged takes about 32 turns, with a
+- Going from retracted to fully plunged takes about 24 turns, with a
   2 mm screw pitch guessed.
 - Where bits are usually set (around the table's surface), one turn
   moves the bit about 2 mm. A quarter turn of a ratchet is half a
   millimetre.
 - The router's own plunge lock holds the height. Crank to height, then
   lock it; the lever only has to hold while you set it.
+- **Set the router's depth stop to 54 mm of plunge.** Under the table
+  the handles' wide ends are up, beside the base, 60 mm under the
+  table with the router retracted. Past about 59 mm of plunge they
+  would hit the table's underside before the router reached its 65.
+  Stopped at 54 they stay 5.5 mm clear, and the bit still comes 30 mm
+  above the table. The full 65 would need pockets routed in the top's
+  underside over both handles.
 
 ## The parts
 
@@ -110,7 +117,7 @@ These are from the build's printout and the test:
 - **Router:** take off the clear sub-base and screw the base under the
   top through its own sub-base holes, with longer flat-head screws
   countersunk from above. The bit comes up through the 2 in hole; the
-  collet nut's top reaches 9 mm under the surface at full plunge.
+  collet nut's top reaches 20 mm under the surface at the top of the travel.
 - **Jack:** upside down, its foot bolted under the top with two 5/16
   flat-head bolts through holes drilled in the foot's flat. On the eye,
   fit a scissor-jack drill adapter (a socket with a slot and a cross pin
@@ -142,7 +149,7 @@ These are from the build's printout and the test:
 
   Print it lying on its outer face, with 4 walls and 40 % infill.
 - **Link** (`out/link.stl`, PETG): 10 mm thick, 20 wide, with 3/8 holes
-  29 mm apart. Print it flat.
+  63 mm apart. Print it flat.
 
 - **Fit test** (`out/fit_test.stl`, PETG): the stub alone on a 10 mm
   floor, with the screw hole and the pin hole. Print it first and try
@@ -185,7 +192,7 @@ guesses that matter:
 
 | | value | from | what it moves |
 |---|---|---|---|
-| plunge | 65 mm | S: the manual | the jack's travel, at 2 to 1 |
+| plunge | 65 mm, 54 used | S: the manual | the jack's travel, at 2 to 1 |
 | base face to motor end | 287 mm | S: overall height | the table's height |
 | across the handles | 276 mm | S | where the link goes |
 | the lug across (long side) | 26.34 by the housing, 22.8 by the end, 13.4 apart | M: calipers, at two marker lines | the stub's pocket |
@@ -202,7 +209,7 @@ guesses that matter:
 | the screw | M6 x 39.7, 10.26 head, 12.6 into the lug | M: calipers | the printed handle's hole (6.5), counterbore (11) and the 27.1 mm of plastic under the head, as the original |
 | the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
 | which end of the handle is toward the base | the wide end, with the lug | M: photo | where the tab is: off the narrow end, toward the motor |
-| the lug's centre below the base face, retracted | 140 mm | G: higher, and the handles come up into the table at full plunge (45.5 mm under it now) | the link's length (29 mm now) |
+| the lug's centre above the base face, retracted | 89 mm | M: from the bench, the router on its base | the link's length (63 mm now); and the travel: at more than 54 the handles reach the table |
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
 | jack arm, pin to pin | 170 mm | G: from 17 in long, 15-1/8 high | turns per mm, the slot |
 | foot and saddle pins from their faces | 30 mm | G | the jack's heights |

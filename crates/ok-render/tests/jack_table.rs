@@ -1,5 +1,5 @@
 //! The scissor-jack router table (examples/jack-table): the router
-//! plunged from retracted to its full 65 mm through the lever, at the
+//! plunged from retracted to its working 54 mm through the lever, at the
 //! five poses the build writes to `out/poses.json`. At each one the jack
 //! must close on itself, the link from the printed handle's tab must
 //! land on the lever's pin, the lever must touch the saddle without
@@ -300,10 +300,11 @@ fn the_lever_plunges_the_router_through_its_travel() {
     }
     let first = positions[0]["jack"].as_f64().unwrap();
     let last = positions[4]["jack"].as_f64().unwrap();
+    let travel = positions[4]["plunge"].as_f64().unwrap();
     must(
-        ((last - first) / 65.0 - 2.0).abs() < 0.02,
+        ((last - first) / travel - 2.0).abs() < 0.02,
         format!(
-            "the jack moves {:.1} mm for the router's 65: 2 to 1 within 1 %",
+            "the jack moves {:.1} mm for the router's {travel}: 2 to 1 within 1 %",
             last - first
         ),
     );
