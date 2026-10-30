@@ -21,6 +21,21 @@ cargo test -p ok-render --test finch_perch     # what CI runs
 
 ![the section: the ring's D, the spokes, the hooks' bite](out/perch_on_collar_section.png)
 
+## Field note, late October
+
+The cap with the perch went on the feeders in place of the trays and
+the birds that cannot cling did use it. The number of birds feeding
+dropped, though, and dropped for the clingers too: whatever the tray
+gave them, they wanted it back. The caps came off after a short trial
+and the original trays went back on with their drain holes drilled out
+to 1/4 in, so rain drains and more seed falls through to the ground
+for the birds that forage there. If the numbers do not recover with
+the trays back, the cause was the season or something else and not the
+cap; a changed feeder also takes a week or two to be accepted, and the
+trial was shorter than that. So this example stands as the design
+exercise it was, with the result recorded: the geometry was right and
+the birds preferred the tray.
+
 ## The perch
 
 - **A pencil of a perch.** 6 mm wide and 6 tall, a D in section: a
