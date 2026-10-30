@@ -133,7 +133,7 @@ These are from the build's printout and the test:
   - the original's outline;
   - a hollow stub that fits over the lug. The lug tapers, so the
     stub's pocket tapers to match, with 0.3 mm of clearance a side. The
-    pocket is 12.5 mm deep, shorter than the lug, so its floor seats on
+    pocket is 18 mm deep, 3.5 mm shorter than the lug, so its floor seats on
     the lug's end and its rim stays clear of the housing;
   - in the stub's floor, a counterbored hole for the original screw and
     a hole for the roll pin;
@@ -191,7 +191,7 @@ guesses that matter:
 | the lug across (long side) | 26.34 by the housing, 22.8 by the end, 13.4 apart | M: calipers, at two marker lines | the stub's pocket |
 | the lug along the router's axis (short side) | 12.9 by the housing, 11.5 by the end | M: calipers, at the same lines | the stub's pocket |
 | the end line from the lug's end | 2.8 mm | G: from the photo of its side | the pocket's floor size |
-| how far the lug stands out | 17 mm | G: from the photo of its side | the lever's position; must be more than the 12.5 pocket |
+| how far the lug stands out | 21.5 mm | M: calipers | the lever's position; the pocket is 18 |
 | screw to roll pin, centre to centre | 14.1 mm | M: the photo of the lug's end, scaled by the 22.8 | the two holes in the stub's floor |
 | which side the screw is on | the front | G | the two holes |
 | roll pin: diameter, out from the lug | 5.05 mm, 9.9 mm | M: calipers | the pin's hole (5.65, 11.9 deep) |
@@ -213,9 +213,9 @@ base on a flat surface:
 
 1. The height of the lug's centre above the base's face, and which end
    of the handle (wide or narrow) is toward the base.
-2. With calipers on the lug (the taper is done): how far it stands out
-   from the housing, screw to pin centre to centre, the pin's diameter (done),
-   and the screw's thread and head. Or print the fit test and see.
+2. With calipers on the lug (its taper, length and pin are done):
+   screw to pin centre to centre, and the screw's thread and head. Or
+   print the fit test and see.
 3. With calipers on the original handle: its height, its width at both
    ends, its thickness, and the stub's outside.
 4. The distance across from one lug's end to the other.
