@@ -558,15 +558,19 @@ MATES = [
 
 
 # ---------------------------------------------------------------------
-# Hardware. Bought parts bolt through the ply into T-nuts, never into
-# wood screws, since the rail supports are aligned by loosening and
-# sliding. Ply joints are glued, the screws clamps and insurance:
+# Hardware. Bought parts bolt through the ply into T-nuts (where the far
+# face is open: four-prong, prongs piloted, pulled in, epoxied) or M6
+# threaded inserts (where it is not, or the part comes off and on: the
+# Z supports), never into wood screws, since the rail supports are
+# aligned by loosening and sliding. Ply joints are glued, the screws
+# clamps and insurance:
 # number 8, 32 mm into face grain, 50 mm into an edge. The SK20's slots
 # and the SC20UU's tapped holes are what they usually are; measure the
 # kit before buying.
 # ---------------------------------------------------------------------
 HARDWARE = [
-    ("12 SK20 supports: 4 Y on the base, 4 X on the wall, 4 Z on the carriage plate", "M6 x 40 hex bolt, washer, pronged T-nut from the far face", 24),
+    ("8 SK20 supports: 4 Y on the base, 4 X on the wall", "M6 x 40 hex bolt, washer, four-prong T-nut from the far face, prongs piloted, epoxied", 16),
+    ("4 Z SK20 supports on the carriage plate's face", "M6 x 30 hex bolt, washer, M6 hex-drive threaded insert in the plate's face, torqued to 3 N m", 8),
     ("4 Y blocks under the deck, from above", "M5 x 30 (or M6, as the block is tapped) into the block", 16),
     ("4 X blocks on the carriage plate's back, from its front face", "M5 x 30 (or M6) into the block", 16),
     ("4 Z blocks on the support plate's back, from its front face; the lower pair countersunk, before the tool plate goes on", "M5 x 30 (or M6) into the block", 16),

@@ -1,5 +1,6 @@
 joint,fastener,count
-"12 SK20 supports: 4 Y on the base, 4 X on the wall, 4 Z on the carriage plate","M6 x 40 hex bolt, washer, pronged T-nut from the far face",24
+"8 SK20 supports: 4 Y on the base, 4 X on the wall","M6 x 40 hex bolt, washer, four-prong T-nut from the far face, prongs piloted, epoxied",16
+"4 Z SK20 supports on the carriage plate's face","M6 x 30 hex bolt, washer, M6 hex-drive threaded insert in the plate's face, torqued to 3 N m",8
 "4 Y blocks under the deck, from above","M5 x 30 (or M6, as the block is tapped) into the block",16
 "4 X blocks on the carriage plate's back, from its front face","M5 x 30 (or M6) into the block",16
 "4 Z blocks on the support plate's back, from its front face; the lower pair countersunk, before the tool plate goes on","M5 x 30 (or M6) into the block",16
