@@ -199,7 +199,7 @@ guesses that matter:
 | handle outline | 95 tall, 54 wide tapering to 38 | M: 95 x 54 on the measuring sheet, by eye; G: the narrow end | the printed handle |
 | handle thickness, out from the housing | 33 mm | M: by eye on the sheet | the printed handle |
 | the hollow stub, outside | 32 x 18.5 | the pocket's mouth and a 3 mm wall (the earlier 41 x 21 by eye was too big for this lug) | the printed handle |
-| the screw | M6, 13 mm head | G | the printed handle's hole and counterbore |
+| the screw | M6, 10.26 head | M: calipers | the printed handle's hole (6.5) and counterbore (11) |
 | the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
 | which end of the handle is toward the motor | the wide end | G | where the tab is |
 | the lug's centre below the base face, retracted | 140 mm | G: higher, and the handles come up into the table at full plunge (11.5 mm under it now) | the link's length (59 mm now) |
@@ -214,8 +214,8 @@ base on a flat surface:
 
 1. The height of the lug's centre above the base's face, and which end
    of the handle (wide or narrow) is toward the base.
-2. The screw's thread and head (the lug's taper, the pin, the socket
-   depth and the hole spacing are done). Or print the fit test and see.
+2. The screw's length under its head (the lug's taper, the pin, the
+   socket depth, the hole spacing and the screw's size are done).
 3. With calipers on the original handle: its height, its width at both
    ends, its thickness, and the stub's outside.
 4. The distance across from one lug's end to the other.

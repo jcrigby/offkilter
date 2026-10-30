@@ -5150,7 +5150,7 @@
               "through_all": false,
               "direction": "normal",
               "counterbore": {
-                "diameter": 13.0,
+                "diameter": 11.0,
                 "depth": 21.0
               },
               "countersink": null
