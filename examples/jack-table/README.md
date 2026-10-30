@@ -42,7 +42,7 @@ cargo test -p ok-render --test jack_table    # what CI runs
   the arms stay between 14 and 38 degrees.
 - **The router end is linked; the jack end is not.**
   - **Router end.** The printed handle has a tab below it, and a 3/8
-    bolt in the tab carries a 59 mm printed link. The link's other end
+    bolt in the tab carries a 29 mm printed link. The link's other end
     is on a 3/8 bolt through the lever. Both bolts turn freely, so the
     router is held both ways and can't bounce off the lever. The link
     takes up the lever end's sideways drift as it swings, about 5
@@ -137,12 +137,12 @@ These are from the build's printout and the test:
     the lug's end and its rim stays clear of the housing;
   - in the stub's floor, a counterbored hole for the original screw and
     a hole for the roll pin;
-  - a 10 mm tab 12 mm below the handle's wide end, on the lever's side,
+  - a 10 mm tab 12 mm past the handle's narrow end (toward the motor), on the lever's side,
     for a 3/8 x 1-1/4 bolt to the link.
 
   Print it lying on its outer face, with 4 walls and 40 % infill.
 - **Link** (`out/link.stl`, PETG): 10 mm thick, 20 wide, with 3/8 holes
-  59 mm apart. Print it flat.
+  29 mm apart. Print it flat.
 
 - **Fit test** (`out/fit_test.stl`, PETG): the stub alone on a 10 mm
   floor, with the screw hole and the pin hole. Print it first and try
@@ -201,8 +201,8 @@ guesses that matter:
 | the hollow stub, outside | 32 x 18.5 | the pocket's mouth and a 3 mm wall (the earlier 41 x 21 by eye was too big for this lug) | the printed handle |
 | the screw | M6 x 39.7, 10.26 head, 12.6 into the lug | M: calipers | the printed handle's hole (6.5), counterbore (11) and the 27.1 mm of plastic under the head, as the original |
 | the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
-| which end of the handle is toward the motor | the wide end | G | where the tab is |
-| the lug's centre below the base face, retracted | 140 mm | G: higher, and the handles come up into the table at full plunge (11.5 mm under it now) | the link's length (59 mm now) |
+| which end of the handle is toward the base | the wide end, with the lug | M: photo | where the tab is: off the narrow end, toward the motor |
+| the lug's centre below the base face, retracted | 140 mm | G: higher, and the handles come up into the table at full plunge (45.5 mm under it now) | the link's length (29 mm now) |
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
 | jack arm, pin to pin | 170 mm | G: from 17 in long, 15-1/8 high | turns per mm, the slot |
 | foot and saddle pins from their faces | 30 mm | G | the jack's heights |
