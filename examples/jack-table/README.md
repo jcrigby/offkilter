@@ -10,9 +10,9 @@ through a lever:
    hardwood lever.
 2. The lever turns on a bolt through a hanger under the top, so its
    other end comes **up**.
-3. That end pushes up on a **drop arm**: a plywood clamp with the
-   router's left handle's outline cut through it, slid over the handle.
-   The handle stays on. The push plunges the motor and raises the bit.
+3. That end pulls up a short **link** hung from a tab on a **printed
+   replacement for the router's left handle**. This plunges the motor
+   and raises the bit.
 
 The crank is a 6 in socket extension that comes out through a slot in
 the front. Turn it with a ratchet or a cordless drill.
@@ -32,7 +32,7 @@ cargo test -p ok-render --test jack_table    # what CI runs
   the table is 13-3/4 in tall, set by the router: the motor's end is
   1-3/4 in off the bench when it is retracted.
 - **The lever is 2 to 1.** The pin under the saddle is 220 mm from the
-  pivot and the pin under the drop arm is 110 mm. The jack therefore
+  pivot and the link's bolt is 110 mm. The jack therefore
   moves 130 mm for the router's whole 65 mm of plunge, and each turn
   moves the bit half as far as it moves the saddle.
 - **The jack works in its middle.** A scissor jack is fast and coarse
@@ -40,18 +40,23 @@ cargo test -p ok-render --test jack_table    # what CI runs
   screw's pitch times the cotangent of the arms' angle. This table
   runs the jack from 5.5 to 10.6 in (its range is 3-3/8 to 15-1/8), so
   the arms stay between 14 and 38 degrees.
-- **Nothing is linked.** Each end of the lever has a 3/8 bolt across
-  it:
-  - At the router end, the drop arm's forked foot straddles the lever
-    and its two tines sit on that bolt's ends.
-  - At the jack end, the saddle's groove straddles the lever and its
-    lips sit on that bolt's ends.
-
-  The router's weight (5.5 kg) and its plunge springs push the motor
-  down. That holds the drop arm on the lever, and the lever's other end
-  up against the saddle. Both contacts are flat on round, so the pins
-  can slide a few millimetres as the lever turns (5 at the router, 10
-  at the jack). The fork and the groove keep the lever in line.
+- **The router end is linked; the jack end is not.**
+  - **Router end.** The printed handle has a tab below it, and a 3/8
+    bolt in the tab carries a 37 mm printed link. The link's other end
+    is on a 3/8 bolt through the lever. Both bolts turn freely, so the
+    router is held both ways and can't bounce off the lever. The link
+    takes up the lever end's sideways drift as it swings, about 7
+    degrees either side.
+  - **Jack end.** The saddle's groove straddles the lever, and its lips
+    sit on the ends of a 3/8 bolt across it. The router's weight
+    (5.5 kg) and its plunge springs hold the lever up against the
+    saddle. The pin slides about 10 mm under the saddle as the lever
+    turns, and the groove keeps the lever in line.
+- **Why a printed handle.** It keeps the original's outline, its square
+  stub into the housing and its screw, so it goes on exactly as the
+  original does. The load goes through the stub and the screw, as it
+  does in your hand. The tab is the only addition. Keep the original
+  handle to put back for freehand work.
 - **The crank moves.** The screw sits at the scissor's knuckles, halfway
   between the foot and the saddle, so it drops half as far as the
   saddle: 65 mm over the travel. It also moves 34 mm back as the
@@ -65,7 +70,7 @@ cargo test -p ok-render --test jack_table    # what CI runs
 |---|---|
 | ![Through the lever, retracted](out/section_retracted.png) | ![Through the lever, plunged](out/section_plunged.png) |
 | ![Through the jack, retracted](out/jack_retracted.png) | ![Through the jack, plunged](out/jack_plunged.png) |
-| ![Through the clamp, retracted](out/clamp_retracted.png) | ![Through the clamp, plunged](out/clamp_plunged.png) |
+| ![Through the link, retracted](out/link_retracted.png) | ![Through the link, plunged](out/link_plunged.png) |
 
 ## What the numbers give
 
@@ -73,11 +78,11 @@ These are from the build's printout and the test:
 
 | plunge | bit over the table | jack (foot to saddle) | arms | bit per crank turn |
 |---|---|---|---|---|
-| 0 | −24 mm | 140 mm (5.51 in) | 13.6° | 4.1 mm |
+| 0 | −24 mm | 141 mm (5.54 in) | 13.7° | 4.1 mm |
 | 16 | −8 | 172 (6.79) | 19.3° | 2.9 |
 | 32.5 | 8 | 205 (8.07) | 25.2° | 2.1 |
 | 49 | 25 | 238 (9.35) | 31.5° | 1.6 |
-| 65 | 41 | 270 (10.63) | 38.1° | 1.3 |
+| 65 | 41 | 271 (10.66) | 38.3° | 1.3 |
 
 - Going from retracted to fully plunged takes about 32 turns, with a
   2 mm screw pitch guessed.
@@ -117,20 +122,18 @@ These are from the build's printout and the test:
   - 110 mm one way, the router pin;
   - 220 mm the other way, the jack pin.
 
-  Each pin is a 3/8 x 2 bolt with a nut.
-- **Drop arm:** two plies of 3/4 ply glued to 1-1/2, about 4 x 6-1/2. To make it:
-  1. Trace the left handle's outline (the face you see looking at the
-     handle end-on, about 95 x 54 mm) 8 mm below the top.
-  2. Cut the outline out with a jigsaw and fit it snug.
-  3. Cut a 7/8 wide, 1-1/2 deep slot up the foot for the lever.
+  The jack pin is a 3/8 x 2 bolt with a nut. The router pin is a 3/8 x
+  1-1/4 bolt, its head on the lever's back face, through the lever and
+  the link, with a nylock.
+- **Printed handle** (`out/handle.stl`, PETG). It is the original's
+  outline with its square stub and a counterbored hole for the original
+  screw. A 10 mm tab comes down 12 mm below the handle's end, on the
+  lever's side, and takes a 3/8 x 1-1/4 bolt for the link. Print it
+  lying on its outer face, with 4 walls and 40 % infill.
+- **Link** (`out/link.stl`, PETG): 10 mm thick, 20 wide, with 3/8 holes
+  37 mm apart. Print it flat.
 
-  It slides over the handle against the housing. The lever pushes the
-  handle up through the cutout's lower edge, so the handle's own screw
-  and its square stub in the housing take the load, as they do in your
-  hand. A strip of 1/4 ply screwed across the outer face, overlapping
-  the cutout's edge, keeps it from sliding off. The handle (about 33 mm)
-  is thinner than the two plies (38 mm), so it does not stand proud of
-  the clamp.
+![The printed handle](out/handle.png)
 
 `out/jack_table.pdf` is the A3 sheet. `out/lift.pdf` (and `lift.png`)
 shows the table from the front at retracted, half plunged and fully
@@ -138,17 +141,19 @@ plunged. The front panel hides the jack there; the sections above show
 it. `out/jack_table.okpart` is the document. It has:
 
 - one part studio per part;
-- the router motor, bit and drop arm as a sub-assembly on a slider
+- the router motor, bit and printed handle as a sub-assembly on a slider
   (`plunge`) along a post;
+- the link on a revolute (`link`) about the handle's tab bolt;
 - the lever on a revolute (`lever`) about the pivot bolt;
 - the jack's arms, saddle, screw and nut trunnion on revolutes about
   their pins, chained from the foot.
 
 `out/poses.json` holds every mate's value at five plunge positions. The
-script computes them from the lever and the scissor geometry, and the
-test sets them and checks that the parts agree: the rear arms meet,
-the screw stays level, and the lever touches both feet without passing
-into them.
+script computes them from the link, the lever and the scissor geometry.
+The test sets them and checks that the parts agree:
+- the link's lower hole lands on the lever's pin;
+- the rear arms meet and the screw stays level;
+- the lever touches the saddle without passing into it.
 
 ## What is measured and what is guessed
 
@@ -162,12 +167,15 @@ guesses that matter:
 |---|---|---|---|
 | plunge | 65 mm | S: the manual | the jack's travel, at 2 to 1 |
 | base face to motor end | 287 mm | S: overall height | the table's height |
-| across the handles | 276 mm | S | where the drop arm goes |
+| across the handles | 276 mm | S | where the link goes |
 | handle boss face from the axis | 98 mm | G | the lever's position |
-| handle outline | 95 tall, 54 wide tapering to 38 | M: 95 x 54 on the measuring sheet, by eye; G: the narrow end | the cutout |
-| handle thickness, out from the housing | 33 mm | M: by eye on the sheet | the clamp's thickness |
-| which end of the handle is toward the motor | the wide end | G | which way the cutout goes |
-| handle centre below the base face, retracted | 130 mm | G: at 105, the handles came up into the table at full plunge | the drop arm's length, and whether the clamp clears the table at full plunge (5 mm now) |
+| handle outline | 95 tall, 54 wide tapering to 38 | M: 95 x 54 on the measuring sheet, by eye; G: the narrow end | the printed handle |
+| handle thickness, out from the housing | 33 mm | M: by eye on the sheet | the printed handle |
+| the square stub | 41 x 21, 20 long | M: 41 x 21 by eye; G: its length | whether the printed handle fits the housing |
+| the screw | M6, 13 mm head | G | the printed handle's hole and counterbore |
+| the handle's middle from its screw | 16 mm toward the wide end | M: by eye | where the tab is |
+| which end of the handle is toward the motor | the wide end | G | where the tab is |
+| handle screw below the base face, retracted | 130 mm | G: at 105, the handles came up into the table at full plunge | the link's length (37 mm now) |
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
 | jack arm, pin to pin | 170 mm | G: from 17 in long, 15-1/8 high | turns per mm, the slot |
 | foot and saddle pins from their faces | 30 mm | G | the jack's heights |
@@ -179,8 +187,11 @@ base on a flat surface:
 
 1. The height of the handle screw's centre above the base's face, and
    which end of the handle (wide or narrow) is toward the base.
-2. The distance across from one handle boss's face to the other.
-3. The plunge from fully out to fully in.
+2. With calipers on the original handle: its height, its width at both
+   ends, its thickness, the square stub (across, along, and how far it
+   sticks out), and the screw's size and head.
+3. The distance across from one handle boss's face to the other.
+4. The plunge from fully out to fully in.
 
 On the jack:
 
@@ -194,9 +205,12 @@ On the jack:
       across it, or it is narrower than 7/8 in, bolt a hardwood shoe with
       a 7/8 slot across it under the saddle. Two hose clamps round the
       saddle's lips will hold it.
-- [ ] **One-sided push.** The drop arm pushes on one handle, beside one
-      post. If the motor cocks and binds on the posts, make a second
-      clamp for the right handle and fork the lever's router end into a
-      yoke under both.
+- [ ] **One-sided push.** The link pulls on one handle, beside one post.
+      If the motor cocks and binds on the posts, print a second handle
+      for the right side and fork the lever's router end into a yoke
+      under both.
+- [ ] **Print a fit test first:** just the stub and the screw's
+      counterbore, 25 mm of the handle, to check it in the housing
+      before the full print.
 - [ ] **A depth stop for repeat setups:** the router's own turret stop
       still works upside down.

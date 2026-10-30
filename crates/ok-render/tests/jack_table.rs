@@ -1,8 +1,9 @@
 //! The scissor-jack router table (examples/jack-table): the router
 //! plunged from retracted to its full 65 mm through the lever, at the
 //! five poses the build writes to `out/poses.json`. At each one the jack
-//! must close on itself, the lever must touch the drop arm and the
-//! saddle without running into them, nothing else may touch, and the
+//! must close on itself, the link from the printed handle's tab must
+//! land on the lever's pin, the lever must touch the saddle without
+//! running into it, nothing else may touch, and the
 //! crank's extension must run in its slot. Every number prints
 //! (`--nocapture`); NOTE lines are findings, the requirements are asserted.
 
@@ -140,6 +141,16 @@ fn the_lever_plunges_the_router_through_its_travel() {
     };
     let upper_rear = instance(&doc, table, "upper rear arm");
     let lower_rear = instance(&doc, table, "lower rear arm");
+    let link = instance(&doc, table, "link");
+    let lever_id = instance(&doc, table, "lever");
+    let link_lower = {
+        let v = poses["link_lower"].as_array().unwrap();
+        Vec3::new(
+            v[0].as_f64().unwrap(),
+            v[1].as_f64().unwrap(),
+            v[2].as_f64().unwrap(),
+        )
+    };
     let positions = poses["positions"].as_array().unwrap();
     assert_eq!(positions.len(), 5);
 
@@ -216,16 +227,26 @@ fn the_lever_plunges_the_router_through_its_travel() {
             format!("{tag}: the jack is inside its 3-3/8 to 15-1/8 in range"),
         );
 
-        // The lever touches the drop arm's fork and the saddle's lips
-        // (their pins): within 0.3 mm, and not into them.
+        // The link's lower hole, carried by the link from the handle's
+        // tab, lands on the lever's pin, carried by the lever: the loop
+        // the mates leave open closes.
+        let a = r.transforms[&link].apply_point(link_lower);
+        let b = r.transforms[&lever_id].apply_point(link_lower);
+        must(
+            (a - b).length() < 0.05,
+            format!(
+                "{tag}: the link's lower hole is on the lever's pin ({:.3} mm apart)",
+                (a - b).length()
+            ),
+        );
+
+        // The lever touches the saddle's lips (its pin): within 0.3 mm,
+        // and not into them.
         let lever = body(&r, "lever");
-        for (name, s) in [
-            ("drop arm", body(&r, "router motor / drop arm")),
-            ("saddle", saddle),
-        ] {
-            let touching = overlap(&shifted(s, -0.3), lever) > 1e-3;
-            must(touching, format!("{tag}: the lever is on the {name}"));
-        }
+        must(
+            overlap(&shifted(saddle, -0.3), lever) > 1e-3,
+            format!("{tag}: the lever is on the saddle"),
+        );
 
         // Nothing else touches.
         let bad = hits(&r);
@@ -258,9 +279,9 @@ fn the_lever_plunges_the_router_through_its_travel() {
     let first = positions[0]["jack"].as_f64().unwrap();
     let last = positions[4]["jack"].as_f64().unwrap();
     must(
-        ((last - first) / 65.0 - 2.0).abs() < 1e-6,
+        ((last - first) / 65.0 - 2.0).abs() < 0.02,
         format!(
-            "the jack moves {:.1} mm for the router's 65: 2 to 1",
+            "the jack moves {:.1} mm for the router's 65: 2 to 1 within 1 %",
             last - first
         ),
     );

@@ -3,19 +3,18 @@ two sides, a back and a front across half of it) with the Makita
 3612BR plunge router screwed under the top and a 1-1/2 ton Haul-Master
 scissor jack bolted upside down beside it. Cranking the jack pushes its
 saddle down on one end of a hardwood lever; the lever turns on a bolt
-through a hanger under the top, and its other end pushes up on a drop
-arm screwed to the router's left handle boss in place of the handle,
-which plunges the motor and raises the bit. The jack is cranked by a
+through a hanger under the top, and its other end pulls up a short
+printed link hung from a tab on a printed replacement for the router's
+left handle, which plunges the motor and raises the bit. The jack is cranked by a
 socket extension through a slot in the front, with a ratchet or a drill.
 
 The lever is 2 to 1: the jack moves 130 mm for the router's 65 mm of
 plunge, so a turn of the crank moves the bit half as far as it moves
 the saddle. Hanging the jack from the top with the lever beside the
 router keeps the table no taller than the router: a jack under the
-router would add its own height. Both ends of the lever are pins (3/8
-bolts across it) under flat feet, so nothing is linked: the router's
-weight and its plunge springs hold it down on the lever and the lever
-up against the saddle.
+router would add its own height. The router end is pinned through the
+link; the jack end is a 3/8 bolt across the lever under the saddle's
+lips, held up against it by the router's weight and plunge springs.
 
     cargo build --release -p ok-mcp
     python3 examples/jack-table/build.py         # the document, pictures, sheets, parts list and poses
@@ -62,6 +61,10 @@ HANDLE_H = 95.0                   # tall, along the router's axis (M: 95 on the 
 HANDLE_W = (54.0, 38.0)           # front to back at its wide and narrow ends (M: 54; G: 38)
 HANDLE_CHAMFER = 8.0              # the profile's corners, a polygon for its rounding (G)
 HANDLE_WIDE_DOWN = True           # which end of the handle is toward the motor end (G)
+HANDLE_OFFSET = 16.0              # the handle's middle from its screw, toward the wide end (M: by eye on the sheet)
+STUB = (41.0, 21.0, 20.0)         # the square stub into the housing: across, along the axis, long (M: by eye; G: long)
+HANDLE_SCREW = 6.5                # the screw's clearance hole (G: an M6)
+SCREW_HEAD = (13.0, 12.0)         # its counterbore's diameter, and the plastic left under the head (G)
 NUT_D, NUT = 24.0, (55.0, 85.0)   # collet nut, up from the carriage (G)
 BIT_D, BIT_L = 12.7, 50.0         # 1/2 in straight bit, out of the nut
 ROUTER_KG = 5.5                   # (S)
@@ -88,7 +91,7 @@ HOLE_R = 6.0                      # every pivot hole in the jack's parts
 # band keeps the arms between 14 and 38 degrees, where a turn moves the
 # saddle 2.5 to 8 mm and the bit half that.
 RATIO = 2.0
-JACK_USE = (140.0, 140.0 + RATIO * PLUNGE)
+JACK_USE = (140.0, 140.0 + RATIO * PLUNGE)        # with the link, the ends come out a little off these (main() prints them)
 
 # The drive: a scissor-jack drill adapter on the eye, a 3/8 drive
 # extension out through the front.
@@ -114,11 +117,14 @@ PIVOT_BORE = 10.0
 ROUTER_ARM = 110.0                # pivot to the router's pin
 PIN_LEN = 50.0                    # contact pins, across the lever
 
-# The drop arm: 1-1/2 x 1-1/2 hardwood in place of the left handle,
-# its foot forked over the lever with the tines on the router's pin.
-DROP = (38.0, 100.0)              # x (out from the boss: two plies of 3/4), y
-DROP_ABOVE = 8.0                  # ply bridging over the handle
-FORK = (22.0, 40.0)               # slot width (y), height
+# The printed left handle's tab and the link from it to the lever: the
+# link beside the lever on its +y face, the tab beside the link.
+TAB_BELOW = 12.0                  # the tab's bolt below the handle's end
+TAB_T, TAB_W = 10.0, 26.0         # the tab's thickness (y) and width (x)
+LINK_T, LINK_W = 10.0, 20.0       # the link: printed, thickness (y) and width
+LINK_Y = (LEVER_T / 2 + 0.5, LEVER_T / 2 + 0.5 + LINK_T)
+TAB_Y = (LINK_Y[1], LINK_Y[1] + TAB_T)
+LINK_BORE = 10.0
 
 # Hanger: two 3/4 ply cheeks 2-1/2 wide either side of the lever, a
 # spacer between them at the top.
@@ -133,20 +139,49 @@ TOP_S = TOP_U + PLY * IN                          # the table
 H_MID = (JACK_USE[0] + JACK_USE[1]) / 2
 CONTACT_MID = TOP_U - H_MID                       # both contacts with the lever level
 PIVOT_Z = CONTACT_MID - PIN_R
-DROP_FOOT = H_MID + PLUNGE / 2                    # drop arm's foot depth, retracted
-ROUTER_X = -(BOSS_X + DROP[0] / 2)                # drop arm centre
+ROUTER_X = -(BOSS_X + HANDLE_T / 2)              # the handle's middle, the tab's bolt over the lever's pin
+HANDLE_MID = BOSS_Z + (HANDLE_OFFSET if HANDLE_WIDE_DOWN else -HANDLE_OFFSET)   # depth of the handle's middle
+TAB_D = HANDLE_MID + HANDLE_H / 2 + TAB_BELOW     # depth of the tab's bolt, retracted
+LINK_L = (TOP_U - TAB_D + PLUNGE / 2) - PIVOT_Z  # vertical, with the lever level at mid-plunge
 PIVOT_X = ROUTER_X - ROUTER_ARM
 JACK_ARM = RATIO * ROUTER_ARM
 JACK_X = PIVOT_X - JACK_ARM
 FOOT_PIN_Z = TOP_U - FOOT_PIN
 
 MATERIALS = {"birch": ("3/4 birch ply", 0.68), "hardwood": ("oak", 0.75), "steel": ("steel", 7.85),
-             "aluminium": ("aluminium", 2.70)}
+             "aluminium": ("aluminium", 2.70), "petg": ("PETG", 1.27)}
+
+
+def tab_point(plunge):
+    """The tab's bolt (x, z) with the router plunged this far."""
+    return (ROUTER_X, TOP_U - TAB_D + plunge)
+
+
+def lever_angle(plunge):
+    """The lever's rise toward the router (radians) that puts its router
+    pin one link length below the tab's bolt."""
+    tx, tz = tab_point(plunge)
+
+    def gap(a):
+        rx, rz = PIVOT_X + ROUTER_ARM * math.cos(a), PIVOT_Z + ROUTER_ARM * math.sin(a)
+        return math.hypot(tx - rx, tz - rz) - LINK_L
+
+    lo, hi = -0.8, 0.8              # gap falls as the pin rises toward the tab
+    for _ in range(80):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if gap(mid) > 0.0 else (lo, mid)
+    return (lo + hi) / 2
 
 
 def lever_sin(plunge):
-    """The lever's rise toward the router (sin of its angle) at a plunge."""
-    return (plunge - PLUNGE / 2) / ROUTER_ARM
+    return math.sin(lever_angle(plunge))
+
+
+def link_angle(plunge):
+    """The link's direction, tab to lever pin, in the x-z plane."""
+    tx, tz = tab_point(plunge)
+    _, (rx, rz), _ = lever_points(lever_sin(plunge))
+    return math.atan2(rz - tz, rx - tx)
 
 
 def jack_height(plunge):
@@ -285,7 +320,7 @@ def router_base(p):
 
 def router_motor(p):
     """The carriage on the posts with the motor below it; the right
-    handle stays on, and the left one carries the drop arm."""
+    handle stays on; the left one is the printed one, its own part."""
     z = lambda d: TOP_U - d
     f = block(p, "carriage", (-YOKE_X, YOKE_X), (-YOKE_Y, YOKE_Y), (z(YOKE[1]), z(YOKE[0])))
     for k, x in enumerate((-POST_X, POST_X)):
@@ -294,10 +329,9 @@ def router_motor(p):
     for name, sx in (("left boss", -1.0), ("right boss", 1.0)):
         x = (YOKE_X, BOSS_X) if sx > 0 else (-BOSS_X, -YOKE_X)
         block(p, name, x, (-15.0, 15.0), (z(BOSS_Z + 15.0), z(BOSS_Z - 15.0)), op="add")
-    for name, x in (("right handle", (BOSS_X, BOSS_X + HANDLE_T)), ("left handle", (-BOSS_X - HANDLE_T, -BOSS_X))):
-        profile_x(p, name, x[0], x[1], handle_profile(), op="add")
+    profile_x(p, "right handle", BOSS_X, BOSS_X + HANDLE_T, handle_profile(), op="add")
     cyl_z(p, "collet nut", z(YOKE[0]), z(NUT[0]), 0.0, 0.0, NUT_D, op="add")
-    part_is(p, f, "router motor (Makita 3612BR), both handles on", "aluminium")
+    part_is(p, f, "router motor (Makita 3612BR), right handle on", "aluminium")
 
 
 def bit(p):
@@ -305,34 +339,50 @@ def bit(p):
     part_is(p, f, "bit, 1/2 in straight", "steel")
 
 
-def handle_profile(grow=0.0):
+def handle_profile():
     """A handle's outline across the boss's axis, (y, z) in the world:
-    a tapered block with its corners cut. `grow` opens it on the sides
-    and the end away from the motor but not on the motor side, where
-    the clamp bears."""
-    zc = TOP_U - BOSS_Z
+    a tapered block with its corners cut, its middle HANDLE_OFFSET from
+    the screw toward the wide end."""
+    zc = TOP_U - HANDLE_MID
     h, c = HANDLE_H / 2, HANDLE_CHAMFER
     lo_w, hi_w = (HANDLE_W[0], HANDLE_W[1]) if HANDLE_WIDE_DOWN else (HANDLE_W[1], HANDLE_W[0])
-    lo_w, hi_w = lo_w / 2 + grow, hi_w / 2 + grow
-    return [(-lo_w + c, zc - h), (lo_w - c, zc - h), (lo_w, zc - h + c), (hi_w, zc + h - c + grow),
-            (hi_w - c, zc + h + grow), (-hi_w + c, zc + h + grow), (-hi_w, zc + h - c + grow), (-lo_w, zc - h + c)]
+    lo_w, hi_w = lo_w / 2, hi_w / 2
+    return [(-lo_w + c, zc - h), (lo_w - c, zc - h), (lo_w, zc - h + c), (hi_w, zc + h - c),
+            (hi_w - c, zc + h), (-hi_w + c, zc + h), (-hi_w, zc + h - c), (-lo_w, zc - h + c)]
 
 
-def drop_arm(p):
-    """A plywood clamp over the left handle: two plies of 3/4 with the
-    handle's outline cut through them, slid over the handle against the
-    housing, down beside the motor to a fork over the lever. The lever
-    pushes the handle up through the cutout's lower edge."""
-    x = (-BOSS_X - DROP[0], -BOSS_X)
-    y = (-DROP[1] / 2, DROP[1] / 2)
-    top_z, foot_z = TOP_U - BOSS_Z + HANDLE_H / 2 + DROP_ABOVE, TOP_U - DROP_FOOT
-    w, h = FORK
-    s = p.sketch("right", x[0], "drop arm")
-    p.polygon(s, [(y[0], foot_z), (-w / 2, foot_z), (-w / 2, foot_z + h), (w / 2, foot_z + h), (w / 2, foot_z),
-                  (y[1], foot_z), (y[1], top_z), (y[0], top_z)])
-    p.polygon(s, handle_profile(0.5))
-    f = p.extrude(s, x[1] - x[0], profiles="largest", name="drop arm")
-    part_is(p, f, f"drop arm, 2 x 3/4 ply {DROP[1] / IN:.2f} x {(top_z - foot_z) / IN:.2f}, the handle's outline through it, forked foot", "birch")
+def handle(p):
+    """The printed left handle: the original's outline and its square
+    stub into the housing, the screw through both, and a tab off its
+    lower end carrying the bolt the link hangs on."""
+    x = (-BOSS_X - HANDLE_T, -BOSS_X)
+    zs = TOP_U - BOSS_Z
+    f = profile_x(p, "handle", x[0], x[1], handle_profile())
+    block(p, "stub", (-BOSS_X, -BOSS_X + STUB[2]), (-STUB[0] / 2, STUB[0] / 2), (zs - STUB[1] / 2, zs + STUB[1] / 2), op="add")
+    tx, tz = tab_point(0.0)
+    bottom = TOP_U - HANDLE_MID - HANDLE_H / 2
+    s = p.sketch("front", -TAB_Y[1], "tab")
+    p.polygon(s, [(tx - TAB_W / 2, tz), (tx + TAB_W / 2, tz), (tx + TAB_W / 2, bottom + 20.0), (tx - TAB_W / 2, bottom + 20.0)])
+    p.extrude(s, TAB_T, op="add", name="tab")
+    cyl_y(p, "tab end", TAB_Y[0], TAB_Y[1], tx, tz, TAB_W, op="add")
+    s = p.sketch("right", x[0], "handle screw")
+    p.point(s, (0.0, zs))
+    p.hole(s, HANDLE_SCREW, depth=HANDLE_T + STUB[2] + 1.0, direction="normal",
+           counterbore={"diameter": SCREW_HEAD[0], "depth": HANDLE_T + STUB[2] - SCREW_HEAD[1]}, name="handle screw")
+    cyl_y(p, "tab bolt", LINK_Y[0], TAB_Y[1], tx, tz, PIN_D, op="add")
+    cyl_y(p, "tab bolt head", TAB_Y[1], TAB_Y[1] + 6.0, tx, tz, 14.3, op="add")
+    part_is(p, f, "left handle, printed (PETG), with a tab and a 3/8 bolt for the link", "petg")
+
+
+def link(p):
+    """Tab bolt to the lever's router pin, beside the lever."""
+    t = tab_point(0.0)
+    _, r, _ = lever_points(lever_sin(0.0))
+    f = profile_y(p, "link", LINK_Y[0], LINK_Y[1], bar(t, r, LINK_W / 2))
+    for k, c in enumerate((t, r)):
+        cyl_y(p, f"link end {k + 1}", LINK_Y[0], LINK_Y[1], c[0], c[1], LINK_W, op="add")
+        bore_y(p, f"link hole {k + 1}", LINK_Y[0], LINK_Y[1], c[0], c[1], LINK_BORE)
+    part_is(p, f, f"link, printed (PETG), {LINK_L:.1f} mm between 3/8 holes", "petg")
 
 
 # -- the lever and its hanger -------------------------------------------------
@@ -355,10 +405,11 @@ def lever(p):
     b = (rp[0] + ux * LEVER_PAST, rp[1] + uz * LEVER_PAST)
     f = profile_y(p, "lever", -LEVER_T / 2, LEVER_T / 2, bar(a, b, LEVER_H / 2))
     bore_y(p, "pivot bore", -LEVER_T / 2, LEVER_T / 2, piv[0], piv[1], PIVOT_BORE)
-    for name, c in (("router pin", rp), ("jack pin", jp)):
-        cyl_y(p, name, -PIN_LEN / 2, PIN_LEN / 2, c[0], c[1], PIN_D, op="add")
+    cyl_y(p, "jack pin", -PIN_LEN / 2, PIN_LEN / 2, jp[0], jp[1], PIN_D, op="add")
+    cyl_y(p, "router pin", -LEVER_T / 2, LINK_Y[1], rp[0], rp[1], PIN_D, op="add")
+    cyl_y(p, "router pin head", -LEVER_T / 2 - 6.0, -LEVER_T / 2, rp[0], rp[1], 14.3, op="add")
     length = ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST
-    part_is(p, f, f"lever, hardwood 3/4 x 1-1/2 x {length / IN:.2f}, two 3/8 x 2 bolts", "hardwood")
+    part_is(p, f, f"lever, hardwood 3/4 x 1-1/2 x {length / IN:.2f}, two 3/8 bolts", "hardwood")
 
 
 CHEEK_Y = LEVER_T / 2 + WASHER_T      # cheeks' inner faces
@@ -583,8 +634,8 @@ JACK_MATES = [
 BOX = [("top", top), ("left side", side("left side", LEFT_X)), ("right side", side("right side", RIGHT_X)),
        ("back", back), ("front", front), ("left cheek", cheek("left cheek", -1.0)), ("right cheek", cheek("right cheek", 1.0)),
        ("hanger spacer", spacer), ("pivot bolt", pivot_bolt), ("router base", router_base), ("jack foot", jack_foot)]
-MOTOR = [("router motor", router_motor), ("bit", bit), ("drop arm", drop_arm)]
-MOVING = [("lever", lever), ("upper front arm", None), ("upper rear arm", None), ("lower front arm", None),
+MOTOR = [("router motor", router_motor), ("bit", bit), ("handle", handle)]
+MOVING = [("lever", lever), ("link", link), ("upper front arm", None), ("upper rear arm", None), ("lower front arm", None),
           ("lower rear arm", None), ("saddle", saddle), ("screw", screw), ("nut trunnion", nut_trunnion)]
 
 
@@ -603,7 +654,10 @@ HARDWARE = [
     ("drill adapter", "scissor-jack drill adapter for the eye, 3/8 drive or 1/2 hex", 1, "on the jack's eye"),
     ("extension", "3/8 drive x 6 in", 1, "from the adapter out through the crank slot; a ratchet or a drill on its end"),
     ("pivot bolt", "3/8-16 x 2-1/2 hex bolt, nylock, 2 washers", 1, "through the cheeks and the lever, a washer each side of the lever; snug, not tight"),
-    ("contact pins", "3/8-16 x 2 hex bolts, nuts", 2, "across the lever 110 mm and 220 mm either side of the pivot, on its centre line; the drop arm's fork and the saddle's lips ride on their ends"),
+    ("jack pin", "3/8-16 x 2 hex bolt, nut", 1, "across the lever 220 mm from the pivot, on its centre line; the saddle's lips ride on its ends"),
+    ("link bolts", "3/8-16 x 1-1/4 hex bolts, nylocks, washers", 2, "one through the lever 110 mm from the pivot and the link's lower hole; one through the handle's tab and the link's upper hole; snug, free to turn"),
+    ("printed handle", "PETG, from out/handle.stl", 1, "in place of the left handle, on the old handle's screw; print it on its outer face, 4 walls, 40 % infill"),
+    ("printed link", "PETG, from out/link.stl", 1, "flat, 4 walls, 40 % infill"),
     ("router screws", "the sub-base screws, longer, flat head", 3, "through the top, countersunk, into the base where the clear sub-base was"),
 ]
 
@@ -615,8 +669,6 @@ CUTLIST = [
     ("cheek", f"3/4 ply, {CHEEK_W / IN:g} x {(TOP_U - PIVOT_Z + CHEEK_W / 2) / IN:.2f}, round end", 2, "the hanger, screwed down through the top with the spacer between them; 3/8 hole at the round's centre"),
     ("hanger spacer", "hardwood, 2-1/2 x 1-1/2 x 7/8 (the lever's thickness and two washers)", 1, "between the cheeks at the top"),
     ("lever", f"hardwood, 3/4 x 1-1/2 x {(ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST) / IN:.2f}", 1, "3/8 holes on the centre line: the pivot, the router pin 110 mm one way, the jack pin 220 mm the other"),
-    ("drop arm", f"3/4 ply, {DROP[1] / IN:.2f} x {(DROP_FOOT - BOSS_Z + HANDLE_H / 2 + DROP_ABOVE) / IN:.2f}", 2, f"glued to 1-1/2; the handle's outline traced and cut through {DROP_ABOVE:.0f} mm from the top, a snug fit; a 7/8 wide, 1-1/2 deep slot up the foot for the lever"),
-    ("keeper", "1/4 ply or hardboard, the drop arm's width x 2-1/2", 1, "screwed across the drop arm's outer face below the handle's screw, overlapping the cutout so the clamp cannot slide off the handle"),
 ]
 
 
@@ -626,7 +678,7 @@ def main():
     # The screw's axis drops by half the saddle's travel: the slot spans it.
     k_lo, k_hi = knuckle(jack_theta(jack_height(PLUNGE)), -1.0)[1], knuckle(THETA0, -1.0)[1]
     SLOT = (k_lo, k_hi)
-    for h in JACK_USE:
+    for h in (jack_height(0.0), jack_height(PLUNGE)):
         if not JACK_MIN < h < JACK_MAX:
             raise RuntimeError(f"jack height {h} outside {JACK_MIN}-{JACK_MAX}")
 
@@ -677,6 +729,15 @@ def main():
     mate("slider", "plunge", "router base", "router motor", POST_D / 2, (POST_D + 1.0) / 2, (-POST_X, 0.0, TOP_U - YOKE[0]),
          sub="router motor")
     mate("revolute", "lever", "pivot bolt", "lever", PIN_R, PIVOT_BORE / 2, (PIVOT_X, 0.0, PIVOT_Z))
+    # The link hangs on the handle's tab bolt; its lower hole on the
+    # lever's pin closes the loop, which the poses satisfy and the test checks.
+    tx, tz = tab_point(0.0)
+    ca, fa = cylinder(bodies["handle"][0], PIN_R, (tx, 0.0, tz))
+    cb, fb = cylinder(bodies["link"][0], LINK_BORE / 2, (tx, 0.0, tz))
+    offset, angle, flip = mate_parameters(fa, fb)
+    apply(mcp, [{"type": "add_mate", "kind": "revolute", "name": "link",
+                 "a": {"instance": ids["router motor"], "sub": motor_ids["handle"], "face": ca["reference"]},
+                 "b": {"instance": ids["link"], "face": cb["reference"]}, "offset": offset, "angle": angle, "flip": flip}], table)
     for name, a, b, pin in JACK_MATES:
         y, z = pin(THETA0)
         mate("revolute", name, a, b, HOLE_R, HOLE_R, (JACK_X, y, z))
@@ -704,9 +765,9 @@ def main():
         if name == "plunge":
             set_mates({name: (a, o + 1.0)})
             sign[name] = 1.0 if placed(full(mcp, table), "router motor")["position"]["z"] > 0.0 else -1.0
-        elif name == "lever":
+        elif name in ("lever", "link"):
             set_mates({name: (a + 1.0, o)})
-            sign[name] = 1.0 if placed(full(mcp, table), "lever")["rotation"]["y"] < 0.0 else -1.0
+            sign[name] = 1.0 if placed(full(mcp, table), name)["rotation"]["y"] < 0.0 else -1.0
         else:
             child = next(b for n, _, b, _ in JACK_MATES if n == name)
             set_mates({name: (a + 1.0, o)})
@@ -718,7 +779,8 @@ def main():
         rise = math.degrees(math.asin(lever_sin(plunge)) - math.asin(lever_sin(0.0)))
         w = jack_turns(jack_theta(jack_height(plunge)))
         out = {"plunge": (rest["plunge"][0], rest["plunge"][1] + sign["plunge"] * plunge),
-               "lever": (rest["lever"][0] + sign["lever"] * rise, rest["lever"][1])}
+               "lever": (rest["lever"][0] + sign["lever"] * rise, rest["lever"][1]),
+               "link": (rest["link"][0] + sign["link"] * math.degrees(link_angle(plunge) - link_angle(0.0)), rest["link"][1])}
         for name, parent, child, _ in JACK_MATES:
             rel = w[child] - w.get(parent, 0.0)
             out[name] = (rest[name][0] + sign[name] * math.degrees(rel), rest[name][1])
@@ -740,10 +802,12 @@ def main():
     total_turns = 0.0
     steps = 200
     for k in range(steps):
-        h = JACK_USE[0] + (JACK_USE[1] - JACK_USE[0]) * (k + 0.5) / steps
-        total_turns += turns_per_mm(h) * (JACK_USE[1] - JACK_USE[0]) / steps
+        h0, h1 = jack_height(PLUNGE * k / steps), jack_height(PLUNGE * (k + 1) / steps)
+        total_turns += turns_per_mm((h0 + h1) / 2) * (h1 - h0)
     with open(os.path.join(OUT, "poses.json"), "w") as f:
+        _, r0, _ = lever_points(lever_sin(0.0))
         json.dump({"positions": poses, "ratio": RATIO, "pin_r": PIN_R, "total_turns": total_turns,
+                   "link_lower": [r0[0], (LINK_Y[0] + LINK_Y[1]) / 2, r0[1]], "link_length": LINK_L,
                    "screw_pitch": SCREW_PITCH}, f, indent=1)
 
     print(f"table {TOP_S / IN:.2f} in high; top underside z {TOP_U:.1f}; pivot ({PIVOT_X:.1f}, {PIVOT_Z:.1f}); "
@@ -766,7 +830,7 @@ def main():
         set_mates(pose(p))
         shot(f"section_{tag}", view="0,-1,0.0001", section="y:0")
         shot(f"jack_{tag}", view="-1,0,0.0001", section=f"x:{JACK_X:.1f}", fit=f"{JACK_X - 60:.0f},-320,0,{JACK_X + 60:.0f},320,{TOP_S + 10:.0f}")
-        shot(f"clamp_{tag}", view="-1,0,0.0001", section=f"x:{ROUTER_X:.1f}", fit=f"{ROUTER_X - 30:.0f},-110,40,{ROUTER_X + 30:.0f},110,{TOP_S + 5:.0f}")
+        shot(f"link_{tag}", view="0,-1,0.0001", section=f"y:{LINK_Y[0] + 1.0:.1f}", fit=f"{PIVOT_X - 40:.0f},0,40,{ROUTER_X + 60:.0f},100,{TOP_S + 5:.0f}")
     shot("iso_plunged", view="-0.55,-0.75,0.5")
     set_mates(pose(0.0))
     rom = [{**{n: {"angle": v["angle"], "offset": v["offset"]} for n, v in p["mates"].items()},
@@ -784,6 +848,10 @@ def main():
         for kind, rows in (("wood", CUTLIST), ("hardware", HARDWARE)):
             for item, size, qty, note in rows:
                 f.write(f'{kind},"{item}","{size}",{qty},"{note}"\n')
+    for name in ("handle", "link"):
+        Part(mcp, tabs[name], name).export(os.path.join(OUT, f"{name}.stl"))
+    mcp.call("screenshot", {"tab": tabs["handle"], "view": "-0.8,-0.6,-0.35", "width": 900, "height": 700,
+                            "path": os.path.join(OUT, "handle.png")})
     mcp.close()
 
 
