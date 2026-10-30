@@ -163,18 +163,39 @@ the fence beside it; both are ply and both are meant to be marked.
 
 ## Hardware
 
-Bought parts bolt through the ply into T-nuts, never into wood screws:
-the rail supports are aligned by loosening and sliding, and ply will
-not take a wood screw loosened and retightened more than a couple of
-times. Ply joints are glued, the screws clamps and insurance: number 8,
-32 mm into face grain, 50 mm into an edge. The SK20's slots (6.6 mm,
-for M6) and the SC20UU's tapped holes (M5 or M6 by maker) are what they
-usually are; measure the kit before buying. `build.py` writes the same
+Bought parts bolt through the ply into T-nuts or threaded inserts,
+never into wood screws: the rail supports are aligned by loosening and
+sliding, and ply will not take a wood screw loosened and retightened
+more than a couple of times. The loads on the rail hardware are tens
+of newtons, so either fastening is far stronger than it needs to be;
+the choice is access. Where the far face is open (the base's
+underside, the wall's back) a T-nut goes there: M6 four-prong, the
+flange thicker and wider than the three-prong kind, set in an 8 mm
+hole with a 1.5 mm pilot drilled for each prong (mark them by tapping
+the nut in place) so they do not split the face veneer, drawn home
+with a bolt and a big washer rather than hammered, and a smear of
+epoxy under the flange so the nut cannot push out or spin the one time
+a bolt comes right out. Where the far face is not open, or a part will
+be taken off and refitted more than a few times (the Z supports on the
+carriage plate, whose far face is where the X blocks sit), an M6
+hex-drive steel threaded insert goes into the face grain: a 9 mm hole,
+driven with a hex key a millimetre below the surface so the support
+sits on wood, a drop of epoxy on its threads, at least 15 mm from any
+edge, and the bolt torqued to about 3 N m, the insert's limit in ply
+and ten times what the rail needs. Inserts in ply edge grain are
+unreliable in tension; the only ones here, the stylus block's M4
+adjustment screws in the tool plate's end and front edge, are pushed
+against springs and never pulled. Ply joints are glued, the screws
+clamps and insurance: number 8, 32 mm into face grain, 50 mm into an
+edge. The SK20's slots (6.6 mm, for M6) and the SC20UU's tapped holes
+(M5 or M6 by maker) are what they usually are; measure the kit before
+buying. `build.py` writes the same
 schedule to `out/hardware.csv`.
 
 | Joint | Fastener | Count |
 |---|---|---|
-| 12 SK20 supports: 4 Y on the base, 4 X on the wall, 4 Z on the carriage plate | M6 x 40 hex bolt, washer, pronged T-nut from the far face | 24 |
+| 8 SK20 supports: 4 Y on the base, 4 X on the wall | M6 x 40 hex bolt, washer, four-prong T-nut from the far face, prongs piloted, epoxied | 16 |
+| 4 Z SK20 supports on the carriage plate's face | M6 x 30 hex bolt, washer, M6 hex-drive threaded insert in the plate's face, 3 N m | 8 |
 | 4 Y blocks under the deck, from above | M5 x 30 (or M6) into the block | 16 |
 | 4 X blocks on the carriage plate's back, from its front face | M5 x 30 (or M6) into the block | 16 |
 | 4 Z blocks on the support plate's back, from its front face | M5 x 30 (or M6) into the block; the lower pair countersunk, before the tool plate goes on | 16 |
@@ -203,12 +224,12 @@ schedule to `out/hardware.csv`.
 | Platforms to the base, countersunk flush | no. 8 x 32 | 12 |
 | Pattern plate's L fence | no. 6 x 25 | 6 |
 
-Two order-of-assembly catches. The Z supports' T-nuts go into the back
-of the carriage plate at heights 41 to 61 and 251 to 271, which clears
-the X blocks behind it. The lower Z blocks' bolt heads land on the
-support plate's front face inside the band the tool plate glues over,
-so those two blocks are bolted with countersunk heads before the tool
-plate goes on.
+One order-of-assembly catch. The lower Z blocks' bolt heads land on
+the support plate's front face inside the band the tool plate glues
+over, so those two blocks are bolted with countersunk heads before the
+tool plate goes on. (The Z supports used to need T-nuts in the back of
+the carriage plate between the X blocks; the inserts in its face took
+that catch away.)
 
 ## The numbers the test checks
 
