@@ -70,8 +70,10 @@ works today, all in the browser:
   duplicator (`examples/spectre-cage/`), a table saw sled with a
   cassette per rip that cuts the same stack to the straight tile
   (`examples/spectre-saw/`), a mini chop saw from an angle
-  grinder (`examples/chop-saw/`) and a sliding cutoff grinder adapted
-  from a published plan (`examples/cutoff-grinder/`).
+  grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
+  from a published plan (`examples/cutoff-grinder/`) and a minimal
+  router table lifted by a scissor jack through a lever
+  (`examples/jack-table/`).
 - Measuring from a photo: print the measuring sheet
   (`examples/measuring-sheet/`), lay parts on it with a steel rule for
   the print scale, photograph it, and the sizes, outlines and holes
