@@ -3825,7 +3825,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -109.2
+                "offset": -111.9
               },
               "sketch": {
                 "entities": [
@@ -3841,7 +3841,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 2.0
+                    "radius": 2.525
                   }
                 ],
                 "constraints": [],
@@ -3860,7 +3860,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 7.200000000000003,
+              "depth": 9.900000000000006,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -5191,8 +5191,8 @@
             "kind": {
               "type": "hole",
               "sketch": 14,
-              "diameter": 4.6,
-              "depth": 9.2,
+              "diameter": 5.6499999999999995,
+              "depth": 11.9,
               "through_all": false,
               "direction": "reverse",
               "counterbore": null,
@@ -9782,8 +9782,8 @@
             "kind": {
               "type": "hole",
               "sketch": 10,
-              "diameter": 4.6,
-              "depth": 9.2,
+              "diameter": 5.6499999999999995,
+              "depth": 11.9,
               "through_all": false,
               "direction": "reverse",
               "counterbore": null,

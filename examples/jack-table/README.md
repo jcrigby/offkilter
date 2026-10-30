@@ -194,7 +194,7 @@ guesses that matter:
 | how far the lug stands out | 17 mm | G: from the photo of its side | the lever's position; must be more than the 12.5 pocket |
 | screw to roll pin, centre to centre | 14.1 mm | M: the photo of the lug's end, scaled by the 22.8 | the two holes in the stub's floor |
 | which side the screw is on | the front | G | the two holes |
-| roll pin: diameter, out from the lug | 4 mm, 7.2 mm | G: diameter; M: protrusion from the side photo, scaled by the 13.4 | the pin's hole |
+| roll pin: diameter, out from the lug | 5.05 mm, 9.9 mm | M: calipers | the pin's hole (5.65, 11.9 deep) |
 | handle outline | 95 tall, 54 wide tapering to 38 | M: 95 x 54 on the measuring sheet, by eye; G: the narrow end | the printed handle |
 | handle thickness, out from the housing | 33 mm | M: by eye on the sheet | the printed handle |
 | the hollow stub, outside | 32 x 18.5 | the pocket's mouth and a 3 mm wall (the earlier 41 x 21 by eye was too big for this lug) | the printed handle |
@@ -214,7 +214,7 @@ base on a flat surface:
 1. The height of the lug's centre above the base's face, and which end
    of the handle (wide or narrow) is toward the base.
 2. With calipers on the lug (the taper is done): how far it stands out
-   from the housing, screw to pin centre to centre, the pin's diameter,
+   from the housing, screw to pin centre to centre, the pin's diameter (done),
    and the screw's thread and head. Or print the fit test and see.
 3. With calipers on the original handle: its height, its width at both
    ends, its thickness, and the stub's outside.
