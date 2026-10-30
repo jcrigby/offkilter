@@ -197,7 +197,7 @@ guesses that matter:
 | which side the screw is on | the front | G | the two holes |
 | roll pin: diameter, out from the lug | 5.05 mm, 9.9 mm | M: calipers | the pin's hole (5.65, 11.9 deep) |
 | handle outline | 95 tall, 54 wide tapering to 38 | M: 95 x 54 on the measuring sheet, by eye; G: the narrow end | the printed handle |
-| handle thickness, out from the housing | 33 mm | M: by eye on the sheet | the printed handle |
+| handle thickness | 50 overall, 33.63 outer face to socket floor | M: calipers | the printed handle |
 | the hollow stub, outside | 32 x 18.5 | the pocket's mouth and a 3 mm wall (the earlier 41 x 21 by eye was too big for this lug) | the printed handle |
 | the screw | M6 x 39.7, 10.26 head, 12.6 into the lug | M: calipers | the printed handle's hole (6.5), counterbore (11) and the 27.1 mm of plastic under the head, as the original |
 | the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
@@ -214,8 +214,9 @@ base on a flat surface:
 
 1. The height of the lug's centre above the base's face, and which end
    of the handle (wide or narrow) is toward the base.
-2. The original handle's whole thickness, outer face to the socket's
-   rim (the lug, the pin, the socket and the screw are done).
+2. The original handle's outline: its height, and its width at each
+   end (the lug, the pin, the socket, the screw and the thickness are
+   done).
 3. With calipers on the original handle: its height, its width at both
    ends, its thickness, and the stub's outside.
 4. The distance across from one lug's end to the other.
