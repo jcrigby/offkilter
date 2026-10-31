@@ -1,4 +1,4 @@
-//! The scissor-jack router table (examples/jack-table): the router
+//! The Edwardian Lift, the scissor-jack router table (examples/jack-table): the router
 //! plunged from retracted to its full 50 mm through the lever, at the
 //! five poses the build writes to `out/poses.json`. At each one the jack
 //! must close on itself, the link from the printed handle's tab must

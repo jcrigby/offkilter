@@ -1,7 +1,7 @@
 <svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'>
 <defs><marker id='arr' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='7' markerHeight='7' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#1f2328'/></marker></defs>
 <rect width='1200' height='800' fill='#ffffff'/>
-<text x='40.0' y='36.0' font-family='Helvetica, Arial, sans-serif' font-size='20' fill='#1f2328' text-anchor='start' font-weight='bold'>Router table lift: the mechanism, side view</text>
+<text x='40.0' y='36.0' font-family='Helvetica, Arial, sans-serif' font-size='20' fill='#1f2328' text-anchor='start' font-weight='bold'>The Edwardian Lift: the mechanism, side view</text>
 <text x='40.0' y='58.0' font-family='Helvetica, Arial, sans-serif' font-size='13' fill='#6e7781' text-anchor='start' font-weight='normal'>Drawn from build.py's geometry. Three poses: </text>
 <text x='322.0' y='58.0' font-family='Helvetica, Arial, sans-serif' font-size='13' fill='#2f81f7' text-anchor='start' font-weight='bold'>retracted (0 mm)</text>
 <text x='472.0' y='58.0' font-family='Helvetica, Arial, sans-serif' font-size='13' fill='#1f2328' text-anchor='start' font-weight='bold'>mid (25 mm)</text>

@@ -1,4 +1,10 @@
-# A minimal router table with a scissor-jack lift
+# The Edwardian Lift
+
+A minimal router table with a scissor-jack lift, named for Ed Lane, who
+first suggested lifting the router on a scissor jack (he had a lab jack
+in mind; the Harbor Freight one won on price). The lever that lets the
+jack hang beside the router, so the table stays no taller than the
+router, is the author's own.
 
 Preliminary. A plywood box (top, two sides, a back, and a front across
 half of it) with the old Makita 3612BR plunge router screwed under the

@@ -1,4 +1,5 @@
-"""A minimal router table with a scissor-jack lift: a plywood box (top,
+"""The Edwardian Lift, a minimal router table with a scissor-jack lift
+(named for Ed Lane, who suggested the jack): a plywood box (top,
 two sides, a back and a front across half of it) with the Makita
 3612BR plunge router screwed under the top and a 1-1/2 ton Haul-Master
 scissor jack bolted upside down beside it. Cranking the jack pushes its
@@ -739,7 +740,7 @@ def main():
         os.remove(path)
     mcp = Mcp(path)
     mcp.call("create_document", {"name": "jack_table"})
-    mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Router table, scissor-jack lift"}]})
+    mcp.call("apply", {"ops": [{"type": "rename_document", "name": "The Edwardian Lift"}]})
     arms = jack_arm_builders()
     tabs, bodies = {}, {}
     for i, (title, fn) in enumerate(BOX + MOTOR + MOVING):
@@ -887,12 +888,12 @@ def main():
     rom = [{**{n: {"angle": v["angle"], "offset": v["offset"]} for n, v in p["mates"].items()},
             "label": f"plunged {p['plunge']:g} mm, jack {p['jack'] / IN:.2f} in"} for p in poses[::2]]
     print(mcp.call("range_of_motion", {"tab": table, "positions": rom, "view": "front", "format": "pdf", "sheet": "A3",
-                                       "note": "section at the lever: the jack's saddle down, the lever's far end up, the router plunged",
+                                       "note": "The Edwardian Lift: the jack's saddle down, the lever's far end up, the router plunged",
                                        "path": os.path.join(OUT, "lift.pdf")}))
     mcp.call("range_of_motion", {"tab": table, "positions": rom, "view": "front", "width": 900, "height": 700,
                                  "path": os.path.join(OUT, "lift.png")})
     print(mcp.call("export", {"tab": table, "format": "pdf", "sheet": "A3", "views": ["front", "top", "right", "iso", "section@0"],
-                              "note": "preliminary: router and jack dimensions partly guessed, see README",
+                              "note": "The Edwardian Lift. Preliminary: some router and jack dimensions guessed, see README",
                               "path": os.path.join(OUT, "jack_table.pdf")}))
     with open(os.path.join(OUT, "parts.csv"), "w") as f:
         f.write("kind,item,size,qty,note\n")

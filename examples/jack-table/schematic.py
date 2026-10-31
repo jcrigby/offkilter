@@ -218,7 +218,7 @@ def main():
            "<defs><marker id='arr' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='7' markerHeight='7' orient='auto-start-reverse'>"
            f"<path d='M0,0 L10,5 L0,10 z' fill='{INK}'/></marker></defs>",
            f"<rect width='{W}' height='{H}' fill='#ffffff'/>",
-           text(40, 36, "Router table lift: the mechanism, side view", 20, INK, "start", "bold"),
+           text(40, 36, "The Edwardian Lift: the mechanism, side view", 20, INK, "start", "bold"),
            text(40, 58, "Drawn from build.py's geometry. Three poses: ", 13, MUTED)]
     x = 40 + 282
     for p, color, label in POSES:
