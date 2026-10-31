@@ -78,7 +78,7 @@ SCREW_SIDE = -1.0                 # the screw toward -y (the front, the label's 
 ROLL_PIN = (5.05, 9.9)            # the lug's roll pin: diameter, out from the lug's end (M: calipers)
 HANDLE_SCREW = 6.5                # the screw's clearance hole (M: an M6, 6.0 across the threads)
 SCREW_HEAD = (11.0, 39.7 - 12.6)  # its counterbore's diameter (M: a 10.26 head), and the plastic under the head: the 39.7 screw less the 12.6 it stands past the original's socket floor (M)
-NUT_D, NUT = 24.0, (55.0, 85.0)   # collet nut, up from the carriage (G)
+NUT_D, NUT = 24.0, (73.0 - SUB_BASE, 85.0)   # collet nut: its end below the base face, retracted (M: 73 from the sub-base's face), to the carriage (G)
 BIT_D, BIT_L = 12.7, 50.0         # 1/2 in straight bit, out of the nut
 ROUTER_KG = 5.5                   # (S)
 

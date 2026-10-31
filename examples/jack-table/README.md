@@ -82,14 +82,20 @@ These are from the build's printout and the test:
 
 | plunge | bit over the table | jack (foot to saddle) | arms | bit per crank turn |
 |---|---|---|---|---|
-| 0 | −24 mm | 140 mm (5.52 in) | 13.6° | 4.1 mm |
-| 12.5 | −12 | 165 (6.50) | 18.0° | 3.1 |
-| 25 | 1 | 190 (7.48) | 22.5° | 2.4 |
-| 37.5 | 13 | 215 (8.46) | 27.1° | 2.0 |
-| 50 | 26 | 240 (9.45) | 32.0° | 1.6 |
+| 0 | −33 mm | 140 mm (5.52 in) | 13.6° | 4.1 mm |
+| 12.5 | −20 | 165 (6.50) | 18.0° | 3.1 |
+| 25 | −8 | 190 (7.48) | 22.5° | 2.4 |
+| 37.5 | 5 | 215 (8.46) | 27.1° | 2.0 |
+| 50 | 17 | 240 (9.45) | 32.0° | 1.6 |
 
-The bit's heights rest on a guess of where the collet sits; see the
-table of guesses below.
+The bit's heights are for a bit standing 50 mm out of the collet nut.
+
+- **The bit reaches only 17 mm above the table.** The collet nut sits
+  64 mm up inside the base, the plunge is 50 and the 3/4 ply top eats
+  19 more. A bit pulled further out of the collet (keeping at least
+  3/4 in of shank in it) gains some. More needs a thinner top over the
+  router: a 1/4 in plate (aluminium or acrylic) let into a rabbet in
+  the top would gain 13 mm. That is not in the model yet.
 
 - Going from retracted to fully plunged takes about 21 turns, with a
   2 mm screw pitch guessed.
@@ -122,7 +128,8 @@ table of guesses below.
 - **Router:** take off the clear sub-base and screw the base under the
   top through its own sub-base holes, with longer flat-head screws
   countersunk from above. The bit comes up through the 2 in hole; the
-  collet nut's top reaches 24 mm under the surface at full plunge.
+  collet nut's end stays 14 mm up inside the base at full plunge, so
+  bits are changed from below.
 - **Jack:** upside down, its foot bolted under the top with two 5/16
   flat-head bolts through holes drilled in the foot's flat. On the eye,
   fit a scissor-jack drill adapter (a socket with a slot and a cross pin
@@ -202,6 +209,7 @@ guesses that matter:
 | | value | from | what it moves |
 |---|---|---|---|
 | plunge | 50 mm | M: on this router (the manual says 65) | the jack's travel, at 2 to 1, and how high the bit comes |
+| collet nut's end above the base face, retracted | 63.75 mm | M: 73 from the sub-base's face, less its 9.25 | how high the bit comes |
 | base face to motor end | 287 mm | S: overall height | the table's height |
 | across the handles | 276 mm | S | where the link goes |
 | the lug across (long side) | 26.34 by the housing, 22.8 by the end, 13.4 apart | M: calipers, at two marker lines | the stub's pocket |
@@ -229,13 +237,8 @@ guesses that matter:
 To measure on the router, have it retracted (posts fully out) and the
 base on a flat surface:
 
-1. The height of the lug's centre above the base's face, and which end
-   of the handle (wide or narrow) is toward the base.
-2. (The lug, the pin, the socket, the screw and the handle's size are
-   all measured.)
-3. With calipers on the original handle: its height, its width at both
-   ends, its thickness, and the stub's outside.
-4. With the router retracted, how far the collet nut's end is inside the base, up from the base's face.
+1. The router's overall height, sub-base face to the motor's top.
+   (The lugs, the handles, the plunge and the collet are measured.)
 
 On the jack:
 
