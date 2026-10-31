@@ -1,4 +1,4 @@
-"""A kinematic schematic of the lift: the router and the jack's saddle on
+"""A kinematic schematic of the lift: the router and the jack's head on
 straight guides, the lever on its pivot, the link between, drawn from
 build.py's own geometry at the bottom, middle and top of the travel,
 with two insets magnifying the drift at each end of the lever and what
@@ -98,22 +98,22 @@ def main_view(out):
     out.append(text(*v(B.JACK_X - 35, B.TOP_U + 8), "table underside (fixed)", 12, MUTED))
     out.append(line(v, (piv[0], B.TOP_U), (piv[0], piv[1] + 8), MUTED, 6))
     out.append(text(v(piv[0], 0)[0] + 10, v(0, B.TOP_U - 40)[1], "hanger", 12, MUTED))
-    # Straight paths: the router (its tab bolt) and the saddle, on rails.
+    # Straight paths: the router (its tab bolt) and the jack's head, on rails.
     tx = mid["t"][0]
     out.append(guide(v, tx, ps[0]["t"][1] - 15, ps[2]["t"][1] + 25))
     gx, gy = v(tx, ps[2]["t"][1] + 25)
     out.append(text(gx + 14, gy + 8, "router on its posts", 12, MUTED))
     out.append(text(gx + 14, gy + 23, "goes straight", 12, MUTED))
-    jx = B.JACK_X
+    jx = B.SLOT_X
     out.append(guide(v, jx, ps[2]["face"] - 15, ps[0]["face"] + 50, 22))
     gx, gy = v(jx, ps[0]["face"] + 50)
-    out.append(text(gx + 28, gy + 8, "jack saddle", 12, MUTED))
+    out.append(text(gx + 28, gy + 8, "jack head", 12, MUTED))
     out.append(text(gx + 28, gy + 23, "goes straight", 12, MUTED))
     # Arcs the lever's pins swing on.
     a0, a1 = ps[0]["a"], ps[2]["a"]
     out.append(arc(v, piv, B.ROUTER_ARM, a0 - 0.08, a1 + 0.08))
     out.append(arc(v, piv, B.JACK_ARM, math.pi - a0 + 0.05, math.pi - a1 - 0.05))
-    # The three poses: lever, link, router tab, saddle face.
+    # The three poses: lever, link, router tab, the head's slot.
     for (p, color, label), q in zip(POSES, ps):
         w = 3.0 if label == "mid" else 2.0
         op = "" if label == "mid" else " opacity='0.8'"
@@ -122,9 +122,9 @@ def main_view(out):
         out.append(line(v, q["t"], q["r"], color, w))
         x, y = v(*q["t"])
         out.append(f"<rect x='{x - 11:.1f}' y='{y - 20:.1f}' width='22' height='14' fill='{color}' fill-opacity='0.15' stroke='{color}' stroke-width='1.5'/>")
-        fx0, fy = v(jx - 16, q["face"])
-        fx1, _ = v(jx + 16, q["face"])
-        out.append(f"<rect x='{fx0:.1f}' y='{fy - 14:.1f}' width='{fx1 - fx0:.1f}' height='14' fill='{color}' fill-opacity='0.15' stroke='{color}' stroke-width='1.5'/>")
+        fx0, fy = v(jx - B.SLOT_L / 2, q["face"])
+        fx1, fy1 = v(jx + B.SLOT_L / 2, q["face"] - B.SLOT_H)
+        out.append(f"<rect x='{fx0:.1f}' y='{fy:.1f}' width='{fx1 - fx0:.1f}' height='{fy1 - fy:.1f}' fill='none' stroke='{color}' stroke-width='1.5'/>")
         out.append(pin(v, q["t"], 4, color))
         out.append(pin(v, q["r"], 4, color))
         out.append(pin(v, q["j"], 4, color))
@@ -133,7 +133,7 @@ def main_view(out):
     out.append(ground(v, (piv[0] - 14, piv[1] - 9), (piv[0] + 14, piv[1] - 9)))
     # Labels.
     lx, ly = v(*ps[2]["j"])
-    out.append(text(lx - 8, ly + 30, "jack pin under the saddle's flat lips:", 13, INK, "start", "bold"))
+    out.append(text(lx - 8, ly + 30, "jack pin in the head's slot:", 13, INK, "start", "bold"))
     d = drift()
     out.append(text(lx - 8, ly + 46, f"slides {d['j']:.1f} mm — a Scotch yoke", 12, MUTED))
     rx, ry = v(*mid["r"])
@@ -142,7 +142,7 @@ def main_view(out):
     px, py = v(*piv)
     out.append(text(px, py + 32, "pivot", 13, INK, "middle", "bold"))
     out.append(text(px, py + 48, f"lever 2 : 1 ({B.JACK_ARM:.0f} : {B.ROUTER_ARM:.0f} mm), tilts ±{math.degrees(a1):.0f}°", 12, MUTED, "middle"))
-    out.append(text(50, 540, "Dashed arcs: where the lever's pins swing. Rails: where the router and the saddle must go.", 12, MUTED))
+    out.append(text(50, 540, "Dashed arcs: where the lever's pins swing. Rails: where the router and the jack's head must go.", 12, MUTED))
     out.append(text(50, 556, "Where an arc meets a rail, something has to give: the link leans, the pin slides.", 12, MUTED))
 
 
@@ -189,18 +189,18 @@ def inset_router(out, ox, oy):
 
 
 def inset_jack(out, ox, oy):
-    """The jack end: the pin's arc under the saddle's flat, sliding along it."""
+    """The jack end: the pin's arc inside the head's slot, sliding along its top."""
     ps = [pose(p) for p, _, _ in POSES]
-    panel(out, ox, oy, "Jack end, sideways ×9: the pin slides on the flat")
+    panel(out, ox, oy, "Jack end, sideways ×9: the pin slides in the slot")
     mid = ps[1]
     v = Stretch(mid["j"][0] + 6, mid["j"][1], 9.0, 1.6, ox + 240, oy + 170)
     piv = mid["piv"]
     out.append(arc(v, piv, B.JACK_ARM, math.pi - ps[0]["a"] + 0.01, math.pi - ps[2]["a"] - 0.01, MUTED, 1.5))
-    out.append(line(v, (B.JACK_X, ps[2]["face"] - 10), (B.JACK_X, ps[0]["face"] + 10), MUTED, 1.5, "3 3"))
+    out.append(line(v, (B.SLOT_X, ps[2]["face"] - 10), (B.SLOT_X, ps[0]["face"] + 10), MUTED, 1.5, "3 3"))
     for (p, color, label), q in zip(POSES, ps):
-        x0, y = v(B.JACK_X - 16, q["face"])
-        x1, _ = v(B.JACK_X + 16, q["face"])
-        out.append(f"<rect x='{x0:.1f}' y='{y - 10:.1f}' width='{x1 - x0:.1f}' height='10' fill='{color}' fill-opacity='0.18' stroke='{color}' stroke-width='1.5'/>")
+        x0, y = v(B.SLOT_X - B.SLOT_L / 2, q["face"])
+        x1, y1 = v(B.SLOT_X + B.SLOT_L / 2, q["face"] - B.SLOT_H)
+        out.append(f"<rect x='{x0:.1f}' y='{y:.1f}' width='{x1 - x0:.1f}' height='{y1 - y:.1f}' fill='{color}' fill-opacity='0.12' stroke='{color}' stroke-width='1.5'/>")
         out.append(pin(v, q["j"], B.PIN_R * 1.6, color))
         out.append(text(x1 + 8, y - 1, label, 11, color))
     xa, ya = v(*ps[0]["j"])
@@ -208,9 +208,9 @@ def inset_jack(out, ox, oy):
     out.append(f"<line x1='{xb:.1f}' y1='{ya - 22:.1f}' x2='{xa:.1f}' y2='{ya - 22:.1f}' stroke='{INK}' stroke-width='1.2' marker-start='url(#arr)' marker-end='url(#arr)'/>")
     d = drift()
     out.append(text((xa + xb) / 2, ya - 28, f"{d['j']:.1f} mm", 13, INK, "middle", "bold"))
-    out.append(text(ox + 16, oy + 284, "The saddle (its flat lips, shaded) goes straight down the dotted line; the pin", 12, MUTED))
-    out.append(text(ox + 16, oy + 300, f"swings on its arc and slides {d['j']:.1f} mm along the lips. The lips are square to the", 12, MUTED))
-    out.append(text(ox + 16, oy + 316, f"motion, so the saddle's height is exactly {B.JACK_ARM:.0f} mm × sin(tilt): the 2 : 1 holds.", 12, MUTED))
+    out.append(text(ox + 16, oy + 284, "The head's slot (outlined) goes straight down the dotted line; the pin swings on", 12, MUTED))
+    out.append(text(ox + 16, oy + 300, f"its arc and slides {d['j']:.1f} mm along the slot's top. The slot is square to the", 12, MUTED))
+    out.append(text(ox + 16, oy + 316, f"motion, so the head's height is exactly {B.JACK_ARM:.0f} mm × sin(tilt): the 2 : 1 holds.", 12, MUTED))
 
 
 def main():
@@ -241,7 +241,7 @@ def main():
     out.append(text(kx + 28, ky + 85, "fixed to the table", 12, MUTED))
     out.append(f"<path d='M{kx},{ky + 106} q10,-8 20,0' fill='none' stroke='{MUTED}' stroke-width='1.5' stroke-dasharray='5 4'/>")
     out.append(text(kx + 28, ky + 110, "arc a pin swings on", 12, MUTED))
-    out.append(text(40, H - 24, "Crank → jack screw → saddle (straight) → lever (arc, 2 : 1) → link → router (straight).", 13, INK, "start", "bold"))
+    out.append(text(40, H - 24, "Crank → jack screw → head (straight) → lever (arc, 2 : 1) → link → router (straight).", 13, INK, "start", "bold"))
     out.append("</svg>")
     path = os.path.join(HERE, "out", "schematic.svg")
     with open(path, "w") as f:

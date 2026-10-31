@@ -2,8 +2,9 @@
 //! plunged from retracted to its full 50 mm through the lever, at the
 //! five poses the build writes to `out/poses.json`. At each one the jack
 //! must close on itself, the link from the printed handle's tab must
-//! land on the lever's pin, the lever must touch the saddle without
-//! running into it, nothing else may touch, and the
+//! land on the lever's pin, the jack's printed head must bear on the
+//! lever's other pin inside its slot with the keeper under it, nothing
+//! else may touch, and the
 //! crank's extension must run in its slot. Every number prints
 //! (`--nocapture`); NOTE lines are findings, the requirements are asserted.
 
@@ -72,15 +73,18 @@ fn shifted(s: &Solid, dz: f64) -> Solid {
 }
 
 /// The jack's own parts ride on each other's pins and overlap at the
-/// knuckles as nested channels do; the router motor's parts are one
-/// rigid sub-assembly.
-const JACK: [&str; 8] = [
+/// knuckles as nested channels do, and the printed head and keeper are
+/// bolted to the seat; the router motor's parts are one rigid
+/// sub-assembly.
+const JACK: [&str; 10] = [
     "jack foot",
     "upper front arm",
     "upper rear arm",
     "lower front arm",
     "lower rear arm",
-    "saddle",
+    "head seat",
+    "jack head",
+    "keeper",
     "screw",
     "nut trunnion",
 ];
@@ -143,6 +147,7 @@ fn the_lever_plunges_the_router_through_its_travel() {
     let lower_rear = instance(&doc, table, "lower rear arm");
     let link = instance(&doc, table, "link");
     let lever_id = instance(&doc, table, "lever");
+    let keeper_gap = poses["keeper_gap"].as_f64().unwrap();
     let link_lower = {
         let v = poses["link_lower"].as_array().unwrap();
         Vec3::new(
@@ -196,7 +201,8 @@ fn the_lever_plunges_the_router_through_its_travel() {
         );
 
         // The jack closes: both rear arms reach the same knuckle, the
-        // screw stays level, the saddle hangs the jack's height down.
+        // screw stays level, the head seat hangs where the jack's height
+        // puts it.
         let pu = r.transforms[&upper_rear].apply_point(knuckle);
         let pl = r.transforms[&lower_rear].apply_point(knuckle);
         must(
@@ -213,12 +219,14 @@ fn the_lever_plunges_the_router_through_its_travel() {
             format!("{tag}: the screw stays level"),
         );
         screw_h = Some(h);
-        let saddle = body(&r, "saddle");
+        let seat = body(&r, "head seat");
+        let seat_depth = pose["seat_depth"].as_f64().unwrap();
         must(
-            (top_under - lo(saddle).z - jack).abs() < 0.05,
+            (top_under - lo(seat).z - seat_depth).abs() < 0.05,
             format!(
-                "{tag}: the jack stands {:.1} mm ({:.2} in) from foot to saddle",
-                top_under - lo(saddle).z,
+                "{tag}: the seat's face is {:.1} mm down, the jack {:.1} mm ({:.2} in) foot to where its saddle was",
+                top_under - lo(seat).z,
+                jack,
                 jack / 25.4
             ),
         );
@@ -240,12 +248,19 @@ fn the_lever_plunges_the_router_through_its_travel() {
             ),
         );
 
-        // The lever touches the saddle's lips (its pin): within 0.3 mm,
-        // and not into them.
+        // The printed head bears on the lever's jack pin (the slot's top
+        // within 0.3 mm of it, not into it), and the keeper is under the
+        // pin within the slot's spare height: the pin is captured.
         let lever = body(&r, "lever");
+        let head = body(&r, "jack head");
+        let keeper = body(&r, "keeper");
         must(
-            overlap(&shifted(saddle, -0.3), lever) > 1e-3,
-            format!("{tag}: the lever is on the saddle"),
+            overlap(&shifted(head, -0.3), lever) > 1e-3,
+            format!("{tag}: the jack head bears on the lever's pin"),
+        );
+        must(
+            overlap(&shifted(keeper, keeper_gap + 0.3), lever) > 1e-3,
+            format!("{tag}: the keeper is within {keeper_gap:.1} mm under the pin"),
         );
 
         // Each printed handle fits over its lug and roll pin, and stays
@@ -272,7 +287,7 @@ fn the_lever_plunges_the_router_through_its_travel() {
         // Above the bench, and the crank out through the front.
         let low = [
             ("lever", lo(lever).z),
-            ("saddle", lo(saddle).z),
+            ("keeper", lo(keeper).z),
             ("router", lo(body(&r, "router motor / router motor")).z),
         ];
         for (n, z) in low {
