@@ -33,16 +33,16 @@ cargo test -p ok-render --test jack_table    # what CI runs
   1-3/4 in off the bench when it is retracted.
 - **The lever is 2 to 1.** The pin under the saddle is 220 mm from the
   pivot and the link's bolt is 110 mm. The jack therefore
-  moves 120 mm for the router's 60 mm of travel, and each turn
+  moves 100 mm for the router's 50 mm of plunge, and each turn
   moves the bit half as far as it moves the saddle.
 - **The jack works in its middle.** A scissor jack is fast and coarse
   when nearly closed and slow when open. Its rise per turn is the
   screw's pitch times the cotangent of the arms' angle. This table
-  runs the jack from 5.5 to 10.2 in (its range is 3-3/8 to 15-1/8), so
-  the arms stay between 14 and 36 degrees.
+  runs the jack from 5.5 to 9.5 in (its range is 3-3/8 to 15-1/8), so
+  the arms stay between 14 and 32 degrees.
 - **The router end is linked; the jack end is not.**
   - **Router end.** The printed handle has a tab below it, and a 3/8
-    bolt in the tab carries an 82 mm printed link. The link's other end
+    bolt in the tab carries a 67 mm printed link. The link's other end
     is on a 3/8 bolt through the lever. Both bolts turn freely, so the
     router is held both ways and can't bounce off the lever. The link
     takes up the lever end's sideways drift as it swings, about 5
@@ -63,8 +63,8 @@ cargo test -p ok-render --test jack_table    # what CI runs
   freehand work.
 - **The crank moves.** The screw sits at the scissor's knuckles, halfway
   between the foot and the saddle, so it drops half as far as the
-  saddle: 60 mm over the travel. It also moves 34 mm back as the
-  knuckles close. The front's slot is vertical and 60 mm long, plus the
+  saddle: 50 mm over the travel. It also moves 34 mm back as the
+  knuckles close. The front's slot is vertical and 50 mm long, plus the
   extension's width, and the extension simply slides with the screw.
 - **The front stops at the hanger.** The router's half of the box is
   open at the front for the switch, the plunge lock, the cord, and your
@@ -83,27 +83,30 @@ These are from the build's printout and the test:
 | plunge | bit over the table | jack (foot to saddle) | arms | bit per crank turn |
 |---|---|---|---|---|
 | 0 | −24 mm | 140 mm (5.52 in) | 13.6° | 4.1 mm |
-| 15 | −9 | 170 (6.69) | 18.9° | 2.9 |
-| 30 | 6 | 200 (7.87) | 24.3° | 2.2 |
-| 45 | 21 | 230 (9.06) | 30.0° | 1.7 |
-| 60 | 36 | 260 (10.24) | 36.1° | 1.4 |
+| 12.5 | −12 | 165 (6.50) | 18.0° | 3.1 |
+| 25 | 1 | 190 (7.48) | 22.5° | 2.4 |
+| 37.5 | 13 | 215 (8.46) | 27.1° | 2.0 |
+| 50 | 26 | 240 (9.45) | 32.0° | 1.6 |
 
-- Going from retracted to fully plunged takes about 28 turns, with a
+The bit's heights rest on a guess of where the collet sits; see the
+table of guesses below.
+
+- Going from retracted to fully plunged takes about 21 turns, with a
   2 mm screw pitch guessed.
 - Where bits are usually set (around the table's surface), one turn
   moves the bit about 2 mm. A quarter turn of a ratchet is half a
   millimetre.
 - The router's own plunge lock holds the height. Crank to height, then
   lock it; the lever only has to hold while you set it.
-- **Both handles are printed short, and the depth stop is set at
-  60 mm.** Under the table the handles stand beside the base with
-  their wide ends up. The lug is 79.75 mm below the base face (89 on
-  the bench, less the 9.25 sub-base that comes off), and the originals'
-  wide ends reach about 30 mm above it. So the originals would hit
-  the table's underside at about 50 mm of plunge. The printed handles
-  stop 12 mm above the lug's centre: enough to close the stub over the
-  lug. At the 60 mm stop they stay 7.8 mm clear, and the bit comes
-  36 mm above the table. Keep the originals for freehand work.
+- **Both handles are printed short.** Under the table the handles
+  stand beside the base with their wide ends up. The lug is 79.75 mm
+  below the base face (89 on the bench, less the 9.25 sub-base that
+  comes off), and the originals' wide ends reach about 30 mm above it.
+  At the router's full 50 mm of plunge the originals would be a
+  quarter of a millimetre from the table's underside. The printed
+  handles stop 12 mm above the lug's centre, enough to close the stub
+  over the lug, and stay 17.8 mm clear at full plunge. No depth stop
+  is needed. Keep the originals for freehand work.
 
 ## The parts
 
@@ -119,7 +122,7 @@ These are from the build's printout and the test:
 - **Router:** take off the clear sub-base and screw the base under the
   top through its own sub-base holes, with longer flat-head screws
   countersunk from above. The bit comes up through the 2 in hole; the
-  collet nut's top reaches 14 mm under the surface at the top of the travel.
+  collet nut's top reaches 24 mm under the surface at full plunge.
 - **Jack:** upside down, its foot bolted under the top with two 5/16
   flat-head bolts through holes drilled in the foot's flat. On the eye,
   fit a scissor-jack drill adapter (a socket with a slot and a cross pin
@@ -155,7 +158,7 @@ These are from the build's printout and the test:
   one's mirror without the tab. On both lugs the screw is toward the
   front (the label's side) and the pin behind it, so the holes match.
 - **Link** (`out/link.stl`, PETG): 10 mm thick, 20 wide, with 3/8 holes
-  82 mm apart. Print it flat.
+  67 mm apart. Print it flat.
 
 - **Fit test** (`out/fit_test.stl`, PETG): the stub alone on a 10 mm
   floor, with the screw hole and the pin hole. Print it first and try
@@ -198,7 +201,7 @@ guesses that matter:
 
 | | value | from | what it moves |
 |---|---|---|---|
-| plunge | 65 mm, 60 used | S: the manual | the jack's travel, at 2 to 1 |
+| plunge | 50 mm | M: on this router (the manual says 65) | the jack's travel, at 2 to 1, and how high the bit comes |
 | base face to motor end | 287 mm | S: overall height | the table's height |
 | across the handles | 276 mm | S | where the link goes |
 | the lug across (long side) | 26.34 by the housing, 22.8 by the end, 13.4 apart | M: calipers, at two marker lines | the stub's pocket |
@@ -216,7 +219,7 @@ guesses that matter:
 | the screw | M6 x 39.7, 10.26 head, 12.6 into the lug | M: calipers | the printed handle's hole (6.5), counterbore (11) and the 27.1 mm of plastic under the head, as the original |
 | the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
 | which end of the handle is toward the base | the wide end, with the lug | M: photo | where the tab is: off the narrow end, toward the motor |
-| the lug's centre above the base face, retracted | 79.75 mm | M: 89 from the bench on the 9.25 sub-base, which comes off | the link's length (82 mm now), and the travel: 60, with the handles printed short |
+| the lug's centre above the base face, retracted | 79.75 mm | M: 89 from the bench on the 9.25 sub-base, which comes off | the link's length (67 mm now), and the handles' clearance under the table |
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
 | jack arm, pin to pin | 170 mm | G: from 17 in long, 15-1/8 high | turns per mm, the slot |
 | foot and saddle pins from their faces | 30 mm | G | the jack's heights |
@@ -232,7 +235,7 @@ base on a flat surface:
    all measured.)
 3. With calipers on the original handle: its height, its width at both
    ends, its thickness, and the stub's outside.
-4. The plunge from fully out to fully in.
+4. With the router retracted, how far the collet nut's end is inside the base, up from the base's face.
 
 On the jack:
 

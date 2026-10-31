@@ -8,7 +8,7 @@ printed link hung from a tab on a printed replacement for the router's
 left handle, which plunges the motor and raises the bit. The jack is cranked by a
 socket extension through a slot in the front, with a ratchet or a drill.
 
-The lever is 2 to 1: the jack moves 120 mm for the router's 60 mm of
+The lever is 2 to 1: the jack moves 100 mm for the router's 50 mm of
 plunge, so a turn of the crank moves the bit half as far as it moves
 the saddle. Hanging the jack from the top with the lever beside the
 router keeps the table no taller than the router: a jack under the
@@ -45,9 +45,7 @@ IN = 25.4
 # the base's mounting face (the top's underside), with the motor fully
 # retracted (posts extended, bit lowest).
 # ---------------------------------------------------------------------
-PLUNGE_CAPACITY = 65.0            # (S: the manual, 0-65 mm)
-PLUNGE = 60.0                     # the travel used: the router's depth stop set here, since at more the handles
-                                  # (beside the base, under the table) come within 5 mm of the table's underside
+PLUNGE = 50.0                     # the full plunge (M: 50 on this router; the manual says 65)
 ROUTER_H = 287.0                  # base face to the motor's end (S: overall height)
 BASE_D, BASE_T = 160.0, 18.0      # base casting, clear sub-base off (S: 160 wide; G: thickness)
 BASE_HOLE = 50.0                  # the base's centre opening (G)

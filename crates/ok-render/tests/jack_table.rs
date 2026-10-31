@@ -1,5 +1,5 @@
 //! The scissor-jack router table (examples/jack-table): the router
-//! plunged from retracted to its working 60 mm through the lever, at the
+//! plunged from retracted to its full 50 mm through the lever, at the
 //! five poses the build writes to `out/poses.json`. At each one the jack
 //! must close on itself, the link from the printed handle's tab must
 //! land on the lever's pin, the lever must touch the saddle without
