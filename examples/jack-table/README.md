@@ -49,6 +49,10 @@ cargo test -p ok-render --test jack_table    # what CI runs
     sit on the ends of a 3/8 bolt across it. The router's weight
     (5.5 kg) and its plunge springs hold the lever up against the
     saddle, and the groove keeps the lever in line.
+![The mechanism: where the arcs meet the straight paths](out/schematic.svg)
+
+(`python3 examples/jack-table/schematic.py` redraws it from `build.py`'s geometry.)
+
 - **Straight paths, round lever.** The router and the saddle move
   straight up and down, but the lever's pins swing on arcs about the
   pivot, so each pin also moves sideways, in toward the pivot, as the
