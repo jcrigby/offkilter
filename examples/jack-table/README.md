@@ -237,7 +237,7 @@ guesses that matter:
 | jack arm, pin to pin | 170 mm | G: from 17 in long, 15-1/8 high | turns per mm, the slot |
 | foot and saddle pins from their faces | 30 mm | G | the jack's heights |
 | jack screw pitch | 2 mm | G | turns per mm only |
-| saddle groove across the screw, 22 wide x 25 deep | | G | whether the lever fits between the lips |
+| saddle groove: 22 wide x 25 deep, turned along the lever | | M: the saddle swivels; G: its size | whether the lever fits between the lips |
 
 The router is fully measured.
 
@@ -245,13 +245,13 @@ On the jack:
 
 1. The distance between the arm pins.
 2. The number of crank turns to go from 5-1/2 in to 9-1/2 in.
-3. Which way the saddle's groove runs, and how wide and deep it is.
+3. How wide and deep the saddle's groove is.
 
 ## Open
 
-- [ ] **The saddle.** If the groove runs along the screw rather than
-      across it, or it is narrower than 7/8 in, bolt a hardwood shoe with
-      a 7/8 slot across it under the saddle. Two hose clamps round the
+- [ ] **The saddle.** It swivels, so turn its groove to run along the
+      lever. If the groove is narrower than 7/8 in, bolt a hardwood shoe
+      with a 7/8 slot under the saddle. Two hose clamps round the
       saddle's lips will hold it.
 - [ ] **One-sided push.** The link pulls on one handle, beside one post.
       If the motor cocks and binds on the posts, print a second handle

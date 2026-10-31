@@ -100,7 +100,7 @@ SCREW_D, SCREW_PITCH = 14.0, 2.0  # (G) the lift screw; per turn the knuckles cl
 SCREW_L = 400.0                   # from the front knuckle to its tail (G)
 EYE = 50.0                        # front knuckle to the eye's front (G)
 SADDLE = (50.0, 60.0, 40.0)       # x, y, z (G)
-GROOVE = (22.0, 25.0)             # the saddle's groove (along x, across the screw): wide, deep (G)
+GROOVE = (22.0, 25.0)             # the saddle's groove, turned to run along the lever (M: the saddle swivels): wide, deep (G)
 HOLE_R = 6.0                      # every pivot hole in the jack's parts
 
 # What this table uses of it: the jack from 140 to 270 mm (the router
