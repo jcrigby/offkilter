@@ -290,15 +290,13 @@ guesses that matter:
 | jack arm (fork), rivet to the nut's pivot | 160 mm | M | turns per mm, the slot |
 | foot and head rivets from the foot's face and where the saddle's was | 42 mm | G: with 160 arms, 15-1/8 high needs about 84 between them | the jack's heights |
 | jack screw | the knuckles close 1.42 mm a turn | M: fitted to 37 turns from 7 to 11 in | turns per mm only |
-| the head seat's face | 32 along the lever x 54 across | G: the saddle's footprint; measure once the saddle is off | the printed head's skirt |
+| the head seat's face | 43 along the lever x 50 across, along the screw | M: calipers, the saddle off | the printed head's skirt |
 | the seat's face from its rivets to the forks | 25 mm | G: measure once the saddle is off | where the lever and the jack's working band sit |
 | the seat's rivet hole | 8.5 mm, drilled out for 5/16 | G | the head bolt |
 
-The router and the lever are measured. The seat under the saddle is
-not, since the saddle is still on: its face's size, how far the face is
-from its rivets, and the hole. Those three set the printed head's skirt
-and bolt, and the second one moves the lever's heights; measure them
-with the saddle off and rebuild before printing the head.
+The router, the lever and the seat's face are measured. Still guessed
+on the seat: how far its face is from its rivets, which moves the
+lever's heights, and the hole, which sets the head bolt.
 
 ## Open
 
