@@ -152,9 +152,8 @@ These are from the build's printout and the test:
 
   Print it lying on its outer face, with 4 walls and 40 % infill.
 - **Printed right handle** (`out/right_handle.stl`, PETG): the left
-  one's mirror without the tab. The screw and pin holes are on the
-  same side (front or back) as the left's. Check that with the fit test
-  on the right lug before printing it.
+  one's mirror without the tab. On both lugs the screw is toward the
+  front (the label's side) and the pin behind it, so the holes match.
 - **Link** (`out/link.stl`, PETG): 10 mm thick, 20 wide, with 3/8 holes
   82 mm apart. Print it flat.
 
@@ -208,7 +207,7 @@ guesses that matter:
 | how far the lug stands out | 17 mm | G: from the photo of its side; it must be more than the original's 16.37 socket | the lever's position |
 | the original handle's socket depth | 16.37 mm | M: calipers | the printed handle's pocket |
 | screw to roll pin, centre to centre | 13.0 mm | M: calipers, in the original handle's socket | the two holes in the stub's floor |
-| which side the screw is on | the front | G | the two holes |
+| which side the screw is on | the front (the label's side), the pin behind it, on both lugs | M: photos | the two holes |
 | roll pin: diameter, out from the lug | 5.05 mm, 9.9 mm | M: calipers | the pin's hole (5.65, 11.9 deep) |
 | handle outline | 91 tall, 48 wide tapering to 39 | M: calipers | the printed handle |
 | handle thickness | 50 overall, 33.63 outer face to socket floor | M: calipers | the printed handle |
