@@ -38,11 +38,11 @@ cargo test -p ok-render --test jack_table    # what CI runs
 - **The jack works in its middle.** A scissor jack is fast and coarse
   when nearly closed and slow when open. Its rise per turn is the
   screw's pitch times the cotangent of the arms' angle. This table
-  runs the jack from 5.5 to 9.5 in (its range is 3-3/4 to 15-1/8), so
-  the arms stay between 14 and 32 degrees.
+  runs the jack from 7.1 to 11.0 in (its range is 3-3/4 to 15-1/8), so
+  the arms stay between 17 and 38 degrees.
 - **The router end is linked; the jack end is not.**
   - **Router end.** The printed handle has a tab below it, and a 3/8
-    bolt in the tab carries a 67 mm printed link. The link's other end
+    bolt in the tab carries a 107 mm printed link. The link's other end
     is on a 3/8 bolt through the lever. Both bolts turn freely, so the
     router is held both ways and can't bounce off the lever. The link
     takes up the lever end's sideways drift as it swings, about 5
@@ -82,11 +82,11 @@ These are from the build's printout and the test:
 
 | plunge | bit over the table | jack (foot to saddle) | arms | bit per crank turn |
 |---|---|---|---|---|
-| 0 | 24 mm | 140 mm (5.52 in) | 13.6° | 4.1 mm |
-| 12.5 | 37 | 165 (6.50) | 18.0° | 3.1 |
-| 25 | 49 | 190 (7.48) | 22.5° | 2.4 |
-| 37.5 | 62 | 215 (8.46) | 27.1° | 2.0 |
-| 50 | 74 | 240 (9.45) | 32.0° | 1.6 |
+| 0 | 24 mm | 180 mm (7.09 in) | 17.5° | 3.2 mm |
+| 12.5 | 37 | 205 (8.07) | 22.2° | 2.5 |
+| 25 | 49 | 230 (9.06) | 27.1° | 2.0 |
+| 37.5 | 62 | 255 (10.04) | 32.3° | 1.6 |
+| 50 | 74 | 280 (11.03) | 37.8° | 1.3 |
 
 The bit's heights are for a bit standing 50 mm out of the Yakamoz
 2-1/4 in collet extension.
@@ -101,7 +101,7 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   the extension's own nut stands above the table, so bits change from
   on top, with a wrench through the 2 in hole.
 
-- Going from retracted to fully plunged takes about 21 turns, with a
+- Going from retracted to fully plunged takes about 26 turns, with a
   2 mm screw pitch guessed.
 - Where bits are usually set (around the table's surface), one turn
   moves the bit about 2 mm. A quarter turn of a ratchet is half a
@@ -169,7 +169,7 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   one's mirror without the tab. On both lugs the screw is toward the
   front (the label's side) and the pin behind it, so the holes match.
 - **Link** (`out/link.stl`, PETG): 10 mm thick, 20 wide, with 3/8 holes
-  67 mm apart. Print it flat.
+  107 mm apart. Print it flat.
 
 - **Fit test** (`out/fit_test.stl`, PETG): the stub alone on a 10 mm
   floor, with the screw hole and the pin hole. Print it first and try
@@ -232,10 +232,10 @@ guesses that matter:
 | the screw | M6 x 39.7, 10.26 head, 12.6 into the lug | M: calipers | the printed handle's hole (6.5), counterbore (11) and the 27.1 mm of plastic under the head, as the original |
 | the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
 | which end of the handle is toward the base | the wide end, with the lug | M: photo | where the tab is: off the narrow end, toward the motor |
-| the lug's centre above the base face, retracted | 79.75 mm | M: 89 from the bench on the 9.25 sub-base, which comes off | the link's length (67 mm now), and the handles' clearance under the table |
+| the lug's centre above the base face, retracted | 79.75 mm | M: 89 from the bench on the 9.25 sub-base, which comes off | the link's length (107 mm now), and the handles' clearance under the table |
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
-| jack arm, pin to pin | 170 mm | G: from 17 in long, 15-1/8 high | turns per mm, the slot |
-| foot and saddle pins from their faces | 30 mm | G | the jack's heights |
+| jack arm (fork), rivet to the nut's pivot | 160 mm | M | turns per mm, the slot |
+| foot and saddle rivets from their faces | 42 mm | G: with 160 arms, 15-1/8 high needs about 84 between them | the jack's heights |
 | jack screw pitch | 2 mm | G | turns per mm only |
 | saddle groove: 22 wide x 25 deep, turned along the lever | | M: the saddle swivels; G: its size | whether the lever fits between the lips |
 
@@ -243,9 +243,8 @@ The router is fully measured.
 
 On the jack:
 
-1. The distance between the arm pins.
-2. The number of crank turns to go from 5-1/2 in to 9-1/2 in.
-3. How wide and deep the saddle's groove is.
+1. The number of crank turns to go from 7 in to 11 in.
+2. How wide and deep the saddle's groove is.
 
 ## Open
 

@@ -90,9 +90,9 @@ ROUTER_KG = 5.5                   # (S)
 # The jack, millimetres (Haul-Master 1-1/2 ton, Harbor Freight 66907):
 # 3-3/4 to 15-1/8 in over the saddle (S: the manual, item 66907; the website says 3-3/8), 17 in long, 3-3/4 wide (S).
 # ---------------------------------------------------------------------
-ARM_L = 170.0                     # scissor arm, pin to pin (G: from 17 in long and 15-1/8 high)
-FOOT_PIN = 30.0                   # foot face to its pins (G)
-SADDLE_PIN = 30.0                 # saddle face to its pins (G)
+ARM_L = 160.0                     # scissor arm (fork), rivet to the nut's or axle's pivot (M)
+FOOT_PIN = 42.0                   # foot face to its rivets (G: with 160 arms, 15-1/8 high needs about 84 between the two)
+SADDLE_PIN = 42.0                 # saddle face to its rivets (G: as the foot)
 PIN_Y = 22.0                      # foot and saddle pins either side of the centre (G)
 JACK_W = 95.0                     # across the arms (S: 3-3/4)
 JACK_MIN, JACK_MAX = 3.75 * IN, 15.125 * IN
@@ -108,7 +108,7 @@ HOLE_R = 6.0                      # every pivot hole in the jack's parts
 # band keeps the arms between 14 and 38 degrees, where a turn moves the
 # saddle 2.5 to 8 mm and the bit half that.
 RATIO = 2.0
-JACK_USE = (140.0, 140.0 + RATIO * PLUNGE)        # with the link, the ends come out a little off these (main() prints them)
+JACK_USE = (180.0, 180.0 + RATIO * PLUNGE)        # with the link, the ends come out a little off these (main() prints them)
 
 # The drive: a scissor-jack drill adapter on the eye, a 3/8 drive
 # extension out through the front.
