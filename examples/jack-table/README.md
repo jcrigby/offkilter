@@ -28,7 +28,7 @@ cargo test -p ok-render --test jack_table    # what CI runs
 ## Why it is laid out this way
 
 - **The jack hangs from the top, beside the router.** A jack under the
-  router would add its own height (3-3/8 in at least) to the table. Here
+  router would add its own height (3-3/4 in at least) to the table. Here
   the table is 13-3/4 in tall, set by the router: the motor's end is
   1-3/4 in off the bench when it is retracted.
 - **The lever is 2 to 1.** The pin under the saddle is 220 mm from the
@@ -38,7 +38,7 @@ cargo test -p ok-render --test jack_table    # what CI runs
 - **The jack works in its middle.** A scissor jack is fast and coarse
   when nearly closed and slow when open. Its rise per turn is the
   screw's pitch times the cotangent of the arms' angle. This table
-  runs the jack from 5.5 to 9.5 in (its range is 3-3/8 to 15-1/8), so
+  runs the jack from 5.5 to 9.5 in (its range is 3-3/4 to 15-1/8), so
   the arms stay between 14 and 32 degrees.
 - **The router end is linked; the jack end is not.**
   - **Router end.** The printed handle has a tab below it, and a 3/8
@@ -135,7 +135,7 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   collet extension passes through the 2 in hole, and at full plunge its
   nut stands above the table for bit changes.
 - **Jack:** upside down, its foot bolted under the top with two 5/16
-  flat-head bolts through holes drilled in the foot's flat. On the eye,
+  flat-head bolts through holes drilled in the foot's flat. On the eye (the manual's rocker head),
   fit a scissor-jack drill adapter (a socket with a slot and a cross pin
   for the eye; any auto parts store has one), and on the adapter a 3/8
   drive 6 in extension.

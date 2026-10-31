@@ -223,8 +223,8 @@ fn the_lever_plunges_the_router_through_its_travel() {
             ),
         );
         must(
-            (3.375 * 25.4 + 10.0..15.125 * 25.4 - 10.0).contains(&jack),
-            format!("{tag}: the jack is inside its 3-3/8 to 15-1/8 in range"),
+            (3.75 * 25.4 + 10.0..15.125 * 25.4 - 10.0).contains(&jack),
+            format!("{tag}: the jack is inside its 3-3/4 to 15-1/8 in range"),
         );
 
         // The link's lower hole, carried by the link from the handle's

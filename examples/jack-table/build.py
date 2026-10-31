@@ -87,15 +87,15 @@ COLLET_EXT = [(6.0, 12.7), (16.0, 20.0), (13.0, 25.0), (2.25 * IN - 35.0, 36.0)]
 ROUTER_KG = 5.5                   # (S)
 
 # ---------------------------------------------------------------------
-# The jack, millimetres (Haul-Master 1-1/2 ton, Harbor Freight 64521):
-# 3-3/8 to 15-1/8 in over the saddle (S), 17 in long, 3-3/4 wide (S).
+# The jack, millimetres (Haul-Master 1-1/2 ton, Harbor Freight 66907):
+# 3-3/4 to 15-1/8 in over the saddle (S: the manual, item 66907; the website says 3-3/8), 17 in long, 3-3/4 wide (S).
 # ---------------------------------------------------------------------
 ARM_L = 170.0                     # scissor arm, pin to pin (G: from 17 in long and 15-1/8 high)
 FOOT_PIN = 30.0                   # foot face to its pins (G)
 SADDLE_PIN = 30.0                 # saddle face to its pins (G)
 PIN_Y = 22.0                      # foot and saddle pins either side of the centre (G)
 JACK_W = 95.0                     # across the arms (S: 3-3/4)
-JACK_MIN, JACK_MAX = 3.375 * IN, 15.125 * IN
+JACK_MIN, JACK_MAX = 3.75 * IN, 15.125 * IN
 SCREW_D, SCREW_PITCH = 14.0, 2.0  # (G) the lift screw; per turn the knuckles close by one pitch
 SCREW_L = 400.0                   # from the front knuckle to its tail (G)
 EYE = 50.0                        # front knuckle to the eye's front (G)
@@ -761,7 +761,7 @@ def jack_arm_builders():
 
 
 HARDWARE = [
-    ("scissor jack", "Haul-Master 1-1/2 ton (Harbor Freight 64521)", 1, "upside down, its foot bolted under the top through two 5/16 holes drilled in the foot's flat; its own crank stays in the drawer"),
+    ("scissor jack", "Haul-Master 1-1/2 ton (Harbor Freight 66907)", 1, "upside down, its foot bolted under the top through two 5/16 holes drilled in the foot's flat; its own crank stays in the drawer"),
     ("jack bolts", "5/16-18 x 1-1/2 flat head, washers, nylocks", 2, "countersunk flush in the table, nuts under the jack's foot"),
     ("drill adapter", "scissor-jack drill adapter for the eye, 3/8 drive or 1/2 hex", 1, "on the jack's eye"),
     ("extension", "3/8 drive x 6 in", 1, "from the adapter out through the crank slot; a ratchet or a drill on its end"),
