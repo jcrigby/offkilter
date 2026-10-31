@@ -99,8 +99,8 @@ JACK_MIN, JACK_MAX = 3.75 * IN, 15.125 * IN
 SCREW_D, SCREW_PITCH = 14.0, 1.42  # the lift screw (G); per turn the knuckles close by this (M: fitted to 37 turns from 7 to 11 in)
 SCREW_L = 400.0                   # from the front knuckle to its tail (G)
 EYE = 50.0                        # front knuckle to the eye's front (G)
-SADDLE = (50.0, 60.0, 40.0)       # x, y, z (G)
-GROOVE = (22.0, 25.0)             # the saddle's groove, turned to run along the lever (M: the saddle swivels): wide, deep (G)
+SADDLE = (32.0, 54.0, 40.0)       # x (along its groove, the lever), y (across), z (M: 32 x 54 by rule; G: z)
+GROOVE = (19.0, 13.4)             # the saddle's wide groove, turned to run along the lever (it swivels): wide, deep (M: by rule)
 HOLE_R = 6.0                      # every pivot hole in the jack's parts
 
 # What this table uses of it: the jack from 140 to 270 mm (the router
@@ -126,8 +126,9 @@ BACK_Y, FRONT_Y = (TOP_Y[1] - PLY, TOP_Y[1]), (TOP_Y[0], TOP_Y[0] + PLY)
 FRONT_X = (LEFT_X[1], -10.0)      # the partial front: across the jack's bay only
 BIT_HOLE = 2.0                    # the top's opening
 
-# The lever: 3/4 x 1-1/2 hardwood, pins on its centre line.
-LEVER_T, LEVER_H = 0.75 * IN, 1.5 * IN
+# The lever: 5/8 x 1 hardwood, pins on its centre line: the most that runs in the saddle's
+# 19 x 13.4 groove with 1.5 mm a side and its top edge clear of the groove's floor as it tilts.
+LEVER_T, LEVER_H = 0.625 * IN, 1.0 * IN
 PIN_D = 0.375 * IN                # 3/8 bolts
 PIN_R = PIN_D / 2
 PIVOT_BORE = 10.0
@@ -521,7 +522,7 @@ def lever(p):
     cyl_y(p, "router pin", -LEVER_T / 2, LINK_Y[1], rp[0], rp[1], PIN_D, op="add")
     cyl_y(p, "router pin head", -LEVER_T / 2 - 6.0, -LEVER_T / 2, rp[0], rp[1], 14.3, op="add")
     length = ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST
-    part_is(p, f, f"lever, hardwood 3/4 x 1-1/2 x {length / IN:.2f}, two 3/8 bolts", "hardwood")
+    part_is(p, f, f"lever, hardwood 5/8 x 1 x {length / IN:.2f}, two 3/8 bolts", "hardwood")
 
 
 CHEEK_Y = LEVER_T / 2 + WASHER_T      # cheeks' inner faces
@@ -779,8 +780,8 @@ CUTLIST = [
     ("back", f"3/4 ply, {RIGHT_X[0] - LEFT_X[1]:g} x {SIDE_H:g}", 1, "between the sides"),
     ("front", f"3/4 ply, {FRONT_X[1] - FRONT_X[0]:g} x {SIDE_H:g}", 1, "across the jack's bay from the left side; the crank slot in it; the router's bay stays open for the switch, the plunge lock and the cord"),
     ("cheek", f"3/4 ply, {CHEEK_W / IN:g} x {(TOP_U - PIVOT_Z + CHEEK_W / 2) / IN:.2f}, round end", 2, "the hanger, screwed down through the top with the spacer between them; 3/8 hole at the round's centre"),
-    ("hanger spacer", "hardwood, 2-1/2 x 1-1/2 x 7/8 (the lever's thickness and two washers)", 1, "between the cheeks at the top"),
-    ("lever", f"hardwood, 3/4 x 1-1/2 x {(ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST) / IN:.2f}", 1, "3/8 holes on the centre line: the pivot, the router pin 110 mm one way, the jack pin 220 mm the other"),
+    ("hanger spacer", "hardwood, 2-1/2 x 1-1/2 x 3/4 (the lever's 5/8 and two washers)", 1, "between the cheeks at the top"),
+    ("lever", f"hardwood (oak), 5/8 x 1 x {(ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST) / IN:.2f}", 1, "3/8 holes on the centre line: the pivot, the router pin 110 mm one way, the jack pin 220 mm the other"),
 ]
 
 

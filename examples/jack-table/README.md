@@ -142,7 +142,9 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   between them at the top, screwed down through the top. The pivot is
   a 3/8 bolt with a washer each side of the lever, about 8-1/4 in below the
   top.
-- **Lever:** hardwood, 3/4 x 1-1/2 x 14-3/4. It has three 3/8 holes on
+- **Lever:** oak, 5/8 x 1 x 14-3/4. That is the most the saddle's groove
+  (19 wide, 13.4 deep) takes: 1.5 mm a side, and its top edge clear of
+  the groove's floor as it tilts. It has three 3/8 holes on
   its centre line:
   - the pivot;
   - 110 mm one way, the router pin;
@@ -236,20 +238,16 @@ guesses that matter:
 | jack arm (fork), rivet to the nut's pivot | 160 mm | M | turns per mm, the slot |
 | foot and saddle rivets from their faces | 42 mm | G: with 160 arms, 15-1/8 high needs about 84 between them | the jack's heights |
 | jack screw | the knuckles close 1.42 mm a turn | M: fitted to 37 turns from 7 to 11 in | turns per mm only |
-| saddle groove: 22 wide x 25 deep, turned along the lever | | M: the saddle swivels; G: its size | whether the lever fits between the lips |
+| saddle head and groove | 54 across, 32 along the groove; the groove 19 wide, 13.4 deep, turned along the lever (the narrow 7.5 mm one runs across) | M: by rule; the saddle swivels | the lever's size: 5/8 x 1 |
 
-The router is fully measured.
-
-On the jack:
-
-1. How wide and deep the saddle's groove is.
+Everything that matters is now measured. What is left to guesses moves
+only clearances, or, for the jack's rivets (42 mm from the foot and
+head faces, worked back from its 15-1/8 in height), the turns per mm.
 
 ## Open
 
-- [ ] **The saddle.** It swivels, so turn its groove to run along the
-      lever. If the groove is narrower than 7/8 in, bolt a hardwood shoe
-      with a 7/8 slot under the saddle. Two hose clamps round the
-      saddle's lips will hold it.
+- [ ] **The saddle.** It swivels: turn its wide (19 mm) groove to run
+      along the lever before bolting the jack up.
 - [ ] **One-sided push.** The link pulls on one handle, beside one post.
       If the motor cocks and binds on the posts, print a second handle
       for the right side and fork the lever's router end into a yoke
