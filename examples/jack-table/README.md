@@ -82,20 +82,24 @@ These are from the build's printout and the test:
 
 | plunge | bit over the table | jack (foot to saddle) | arms | bit per crank turn |
 |---|---|---|---|---|
-| 0 | −33 mm | 140 mm (5.52 in) | 13.6° | 4.1 mm |
-| 12.5 | −20 | 165 (6.50) | 18.0° | 3.1 |
-| 25 | −8 | 190 (7.48) | 22.5° | 2.4 |
-| 37.5 | 5 | 215 (8.46) | 27.1° | 2.0 |
-| 50 | 17 | 240 (9.45) | 32.0° | 1.6 |
+| 0 | 24 mm | 140 mm (5.52 in) | 13.6° | 4.1 mm |
+| 12.5 | 37 | 165 (6.50) | 18.0° | 3.1 |
+| 25 | 49 | 190 (7.48) | 22.5° | 2.4 |
+| 37.5 | 62 | 215 (8.46) | 27.1° | 2.0 |
+| 50 | 74 | 240 (9.45) | 32.0° | 1.6 |
 
-The bit's heights are for a bit standing 50 mm out of the collet nut.
+The bit's heights are for a bit standing 50 mm out of the Yakamoz
+2-1/4 in collet extension.
 
-- **The bit reaches only 17 mm above the table.** The collet nut sits
-  64 mm up inside the base, the plunge is 50 and the 3/4 ply top eats
-  19 more. A bit pulled further out of the collet (keeping at least
-  3/4 in of shank in it) gains some. More needs a thinner top over the
-  router: a 1/4 in plate (aluminium or acrylic) let into a rabbet in
-  the top would gain 13 mm. That is not in the model yet.
+- **Use the collet extension.** Without it the bit reaches only 17 mm
+  above the table: the collet nut sits 64 mm up inside the base, the
+  plunge is 50 and the 3/4 ply top takes 19 more. The extension adds
+  57 mm, so the travel is 50 mm wherever you want it: set how far the
+  bit stands out of the extension so the cut you need falls inside
+  it. With 50 mm out, the bit goes from 24 to 74 mm above the table;
+  with 25 out, from just under the surface to 49 above. At full plunge
+  the extension's own nut stands above the table, so bits change from
+  on top, with a wrench through the 2 in hole.
 
 - Going from retracted to fully plunged takes about 21 turns, with a
   2 mm screw pitch guessed.
@@ -128,8 +132,8 @@ The bit's heights are for a bit standing 50 mm out of the collet nut.
 - **Router:** take off the clear sub-base and screw the base under the
   top through its own sub-base holes, with longer flat-head screws
   countersunk from above. The bit comes up through the 2 in hole; the
-  collet nut's end stays 14 mm up inside the base at full plunge, so
-  bits are changed from below.
+  collet extension passes through the 2 in hole, and at full plunge its
+  nut stands above the table for bit changes.
 - **Jack:** upside down, its foot bolted under the top with two 5/16
   flat-head bolts through holes drilled in the foot's flat. On the eye,
   fit a scissor-jack drill adapter (a socket with a slot and a cross pin
@@ -210,6 +214,7 @@ guesses that matter:
 |---|---|---|---|
 | plunge | 50 mm | M: on this router (the manual says 65) | the jack's travel, at 2 to 1, and how high the bit comes |
 | collet nut's end above the base face, retracted | 63.75 mm | M: 73 from the sub-base's face, less its 9.25 | how high the bit comes |
+| collet extension | 57 mm (2-1/4 in) longer, 28 mm across | M: the listing; G: its diameter | how high the bit comes; it must pass the 2 in hole |
 | base face to motor end | 283.75 mm | M: 293 on the sub-base, less its 9.25 | the table's height |
 | across the handles | 276 mm | S | where the link goes |
 | the lug across (long side) | 26.34 by the housing, 22.8 by the end, 13.4 apart | M: calipers, at two marker lines | the stub's pocket |

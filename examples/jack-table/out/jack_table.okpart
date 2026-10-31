@@ -3996,7 +3996,7 @@
         "features": [
           {
             "id": 1,
-            "name": "bit",
+            "name": "collet extension",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -4004,6 +4004,58 @@
                 "type": "standard",
                 "base": "top",
                 "offset": 266.45
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 14.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "collet extension",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 57.14999999999998,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "bit",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 323.59999999999997
               },
               "sketch": {
                 "entities": [
@@ -4029,12 +4081,12 @@
             }
           },
           {
-            "id": 2,
+            "id": 4,
             "name": "bit",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 1,
+              "sketch": 3,
               "profiles": {
                 "type": "all"
               },
@@ -4043,16 +4095,16 @@
               "end": {
                 "type": "blind"
               },
-              "op": "new"
+              "op": "add"
             }
           }
         ],
-        "next_id": 3,
+        "next_id": 5,
         "settings": {
           "facet_angle": 5.0
         },
         "part_names": {
-          "2": "bit, 1/2 in straight"
+          "2": "bit, 1/2 in straight, in a 2-1/4 in collet extension"
         },
         "part_materials": {
           "2": {
