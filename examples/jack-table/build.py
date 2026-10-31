@@ -111,8 +111,8 @@ HOLE_R = 6.0                      # every pivot hole in the jack's parts
 # the manual's range applies; the seat's face is SEAT_FACE from its
 # rivets, SADDLE_PIN - SEAT_FACE nearer the foot than the saddle's was.
 SEAT = (43.0, 50.0)               # the seat's face: along the lever (x) and across, along the screw (y) (M: calipers, the saddle off)
-SEAT_FACE = 25.0                  # the seat's face from its rivets to the forks (G: measure)
-SEAT_HOLE = 8.5                   # the rivet's hole, drilled out for a 5/16 bolt (G)
+SEAT_FACE = 23.0                  # the seat's face from its rivets to the forks (M: calipers)
+SEAT_HOLE = 8.9                   # the rivet's hole as drilled out, centred on the face (M); a 5/16 bolt has 1 mm of room
 JACK_Y = 16.0                     # the jack's centre plane behind the lever's, so the head's bolt and nut pocket clear the tongue
 HEAD_PLATE = 12.0                 # the printed head's plate under the seat's face
 HEAD_SKIRT = (3.0, 6.0)           # the skirt round the seat's edges, so one bolt cannot let the head turn: wall, deep

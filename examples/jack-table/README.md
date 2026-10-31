@@ -51,7 +51,7 @@ cargo test -p ok-render --test jack_table    # what CI runs
   1/2 in baltic birch glued up, the middle strip shorter, so each end
   is a fork.
   - **Router end.** The printed handle has a tab below it, and a 3/8
-    bolt in the tab carries a 122 mm printed link. The link's other end
+    bolt in the tab carries a 120 mm printed link. The link's other end
     sits in the lever's fork on a 3/8 bolt through both tines. Both
     bolts turn freely, so the router is held both ways and can't bounce
     off the lever.
@@ -176,7 +176,7 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   one), and on the adapter a 3/8 drive 6 in extension.
 - **Hanger:** two 3/4 ply cheeks, 2-1/2 wide, with a hardwood spacer
   between them at the top, screwed down through the top. The pivot is
-  a 3/8 x 3-1/2 bolt with a washer each side of the lever, 9-7/8 in
+  a 3/8 x 3-1/2 bolt with a washer each side of the lever, 9-3/4 in
   below the top (the cheeks in `parts.csv` are cut to suit).
 - **Lever:** 1/2 in baltic birch, three strips 1-1/2 wide glued up to
   1-1/2 square: two 14.65 in long and one 10.95 in the middle, set in
@@ -208,7 +208,7 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   one's mirror without the tab. On both lugs the screw is toward the
   front (the label's side) and the pin behind it, so the holes match.
 - **Link** (`out/link.stl`, PETG): 11 mm thick, to run in the lever's
-  12 mm fork, 20 wide, with 3/8 holes 122 mm apart. Print it flat.
+  12 mm fork, 20 wide, with 3/8 holes 120 mm apart. Print it flat.
 - **Jack head** (`out/jack_head.stl`, PETG). A 12 mm plate the seat's
   face sits on, with a 6 mm skirt round the seat's edges (0.3 mm
   clearance a side) and a hex pocket under it for the head bolt's nut;
@@ -285,24 +285,25 @@ guesses that matter:
 | the screw | M6 x 39.7, 10.26 head, 12.6 into the lug | M: calipers | the printed handle's hole (6.5), counterbore (11) and the 27.1 mm of plastic under the head, as the original |
 | the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
 | which end of the handle is toward the base | the wide end, with the lug | M: photo | where the tab is: off the narrow end, toward the motor |
-| the lug's centre above the base face, retracted | 79.75 mm | M: 89 from the bench on the 9.25 sub-base, which comes off | the link's length (122 mm now), and the handles' clearance under the table |
+| the lug's centre above the base face, retracted | 79.75 mm | M: 89 from the bench on the 9.25 sub-base, which comes off | the link's length (120 mm now), and the handles' clearance under the table |
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
 | jack arm (fork), rivet to the nut's pivot | 160 mm | M | turns per mm, the slot |
 | foot and head rivets from the foot's face and where the saddle's was | 42 mm | G: with 160 arms, 15-1/8 high needs about 84 between them | the jack's heights |
 | jack screw | the knuckles close 1.42 mm a turn | M: fitted to 37 turns from 7 to 11 in | turns per mm only |
 | the head seat's face | 43 along the lever x 50 across, along the screw | M: calipers, the saddle off | the printed head's skirt |
-| the seat's face from its rivets to the forks | 25 mm | G: measure once the saddle is off | where the lever and the jack's working band sit |
-| the seat's rivet hole | 8.5 mm, drilled out for 5/16 | G | the head bolt |
+| the seat's face from its rivets to the forks | 23 mm | M: calipers | where the lever and the jack's working band sit |
+| the seat's rivet hole | 8.9 mm as drilled out, centred on the face | M | the head bolt, 5/16 with 1 mm of room |
 
-The router, the lever and the seat's face are measured. Still guessed
-on the seat: how far its face is from its rivets, which moves the
-lever's heights, and the hole, which sets the head bolt.
+The router, the lever and the seat are measured. What is left to
+guesses moves only clearances, or, for the jack's rivets (42 mm from the
+foot's face and from where the saddle's was, worked back from its 15-1/8
+in height), the turns per mm.
 
 ## Open
 
-- [ ] **The seat.** Drill out the saddle's rivet, lift the saddle off,
-      measure the seat (above), rebuild, print the head, and try its
-      skirt on the seat before building the rest.
+- [ ] **The jack head.** Print it and try its skirt on the seat before
+      building the rest; if it is tight, raise `HEAD_CLEAR` in
+      `build.py`.
 - [ ] **One-sided push.** The link pulls on one handle, beside one post.
       If the motor cocks and binds on the posts, print a second handle
       for the right side and fork the lever's router end into a yoke
