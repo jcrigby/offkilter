@@ -44,14 +44,23 @@ cargo test -p ok-render --test jack_table    # what CI runs
   - **Router end.** The printed handle has a tab below it, and a 3/8
     bolt in the tab carries a 107 mm printed link. The link's other end
     is on a 3/8 bolt through the lever. Both bolts turn freely, so the
-    router is held both ways and can't bounce off the lever. The link
-    takes up the lever end's sideways drift as it swings, about 5
-    degrees.
+    router is held both ways and can't bounce off the lever.
   - **Jack end.** The saddle's groove straddles the lever, and its lips
     sit on the ends of a 3/8 bolt across it. The router's weight
     (5.5 kg) and its plunge springs hold the lever up against the
-    saddle. The pin slides about 10 mm under the saddle as the lever
-    turns, and the groove keeps the lever in line.
+    saddle, and the groove keeps the lever in line.
+- **Straight paths, round lever.** The router and the saddle move
+  straight up and down, but the lever's pins swing on arcs about the
+  pivot, so each pin also moves sideways, in toward the pivot, as the
+  lever tilts away from level. The lever is level at mid-travel, which
+  keeps that drift as small as it can be and the same at both ends: it
+  tilts 13 degrees each way, so the router pin comes in 2.9 mm and the
+  jack pin 5.8 mm. The router end takes it up by the link leaning,
+  1.5 degrees at most; the jack end by the pin sliding along the
+  saddle's flat lips. Neither changes the 2 to 1: the saddle's lips are
+  flat, so the jack end's height is exactly 220 mm times the sine of
+  the tilt and the router end's 110 mm times it, less what the link's
+  lean costs, under 0.04 % at its worst.
 - **Why a printed handle.** The router's handle mount is a lug cast on
   the housing: a rectangular block standing out from it, with a
   threaded hole and a roll pin in its end. The original handle's
