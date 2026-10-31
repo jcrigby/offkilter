@@ -70,6 +70,8 @@ HANDLE_WIDE_DOWN = False          # the wide end is toward the base, up under th
 HANDLE_OFFSET = 16.0              # the stub sits this far from the handle's middle toward its wide end (M: by eye on the sheet)
 LUG_W = (26.34, 22.8)             # the lug across (the long side), at the line by the housing and the line by its end (M: calipers)
 LUG_H = (12.9, 11.5)              # along the router's axis (the short side), at the same two lines (M: calipers)
+LUG_DRAFT_TOP = 0.0               # the share of the short side's taper on the lug's top face (toward the motor's top): it is
+                                  # nearly flat, the draft is on the face toward the base (M: by eye)
 LUG_LINES = 13.4                  # between the two lines (M: calipers)
 LUG_END_LINE = 2.8                # the end line from the lug's end (G: from the photo of its side)
 POCKET = 16.37                    # the stub's pocket depth, as the original handle's socket (M: calipers)
@@ -376,13 +378,26 @@ def lug_size(d):
     return (LUG_W[1] + (LUG_W[0] - LUG_W[1]) * t, LUG_H[1] + (LUG_H[0] - LUG_H[1]) * t)
 
 
-def tapered(p, name, x_near, x_far, size_near, size_far, zc, op):
-    """A rectangle at x_near lofted to another at x_far, centred on
-    (0, zc) across the lug's axis."""
+def lug_z(h, zc, grow=0.0):
+    """The lug's section is centred on the axis zc across (y) but not
+    along the router's axis (z): the end face is, and toward the housing
+    the section grows by LUG_DRAFT_TOP of the extra on the face toward
+    the motor's top (-z under the table) and the rest toward the base.
+    Returns the section's (z low, z high) for a height h, opened by
+    `grow` at each face."""
+    extra = h - LUG_H[1]
+    lo = zc - LUG_H[1] / 2 - LUG_DRAFT_TOP * extra - grow
+    return lo, lo + h + 2 * grow
+
+
+def tapered(p, name, x_near, x_far, size_near, size_far, zc, op, grow=0.0):
+    """A rectangle at x_near lofted to another at x_far: the lug's
+    section, or the pocket for it `grow` larger at each face."""
     ss = []
     for k, (x, (w, h)) in enumerate(((x_near, size_near), (x_far, size_far))):
+        z0, z1 = lug_z(h, zc, grow)
         s = p.sketch("right", x, f"{name} {k + 1}")
-        p.rect(s, (-w / 2, zc - h / 2), (w / 2, zc + h / 2))
+        p.rect(s, (-w / 2 - grow, z0), (w / 2 + grow, z1))
         ss.append(s)
     return p.feature({"type": "add_loft", "sketch": ss[0], "sketch_b": ss[1], "op": op, "name": name})
 
@@ -441,9 +456,11 @@ def handle_profile(printed=False):
 
 
 def stub_outline():
+    """The stub's outside, (y, z) corners about (0, zs): the pocket's
+    mouth and a wall."""
     mw, mh = lug_size(POCKET)
-    e = CLEAR + STUB_WALL
-    return (-mw / 2 - e, -mh / 2 - e), (mw / 2 + e, mh / 2 + e)
+    z0, z1 = lug_z(mh, 0.0, CLEAR + STUB_WALL)
+    return (-mw / 2 - CLEAR - STUB_WALL, z0), (mw / 2 + CLEAR + STUB_WALL, z1)
 
 
 def stub(p, sx=-1.0):
@@ -454,9 +471,8 @@ def stub(p, sx=-1.0):
     s = p.sketch("right", -BOSS_X if sx < 0 else BOSS_X - POCKET, "stub")
     p.rect(s, (a0, zs + b0), (a1, zs + b1))
     p.extrude(s, POCKET, op="add", name="stub")
-    grow = lambda wh: (wh[0] + 2 * CLEAR, wh[1] + 2 * CLEAR)
     # Run a millimetre past the mouth so the cut is clean.
-    tapered(p, "stub pocket", sx * BOSS_X, sx * (BOSS_X - POCKET - 1.0), grow(lug_size(0.0)), grow(lug_size(POCKET + 1.0)), zs, "remove")
+    tapered(p, "stub pocket", sx * BOSS_X, sx * (BOSS_X - POCKET - 1.0), lug_size(0.0), lug_size(POCKET + 1.0), zs, "remove", grow=CLEAR)
 
 
 def pin_hole(p, sx=-1.0):

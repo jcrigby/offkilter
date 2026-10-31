@@ -194,7 +194,9 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   - the original's outline, cut off 12 mm above the lug's centre at
     the wide end;
   - a hollow stub that fits over the lug. The lug tapers, so the
-    stub's pocket tapers to match, with 0.3 mm of clearance a side. The
+    stub's pocket tapers to match, with 0.3 mm of clearance a side: on
+    its long sides evenly, and along the router's axis all on the face
+    toward the base, since the lug's other face is flat. The
     pocket is 16.37 mm deep, as the original handle's socket, so its floor seats on
     the lug's end and its rim stays clear of the housing;
   - in the stub's floor, a counterbored hole for the original screw and
@@ -224,7 +226,8 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
 
 - **Fit test** (`out/fit_test.stl`, PETG): the stub alone on a 10 mm
   floor, with the screw hole and the pin hole. Print it first and try
-  it on the lug. It should slide on with a little play and seat on the
+  it on the left lug (the pocket is handed by the lug's one-sided
+  taper). It should slide on with a little play and seat on the
   lug's end, with the pin in its hole and the screw hole over the
   threaded one. If it's tight or loose, change `CLEAR` in `build.py`;
   if the holes don't line up, change `PIN_SPACING` or `SCREW_SIDE`.
@@ -271,7 +274,7 @@ guesses that matter:
 | base face to motor end | 283.75 mm | M: 293 on the sub-base, less its 9.25 | the table's height |
 | across the handles | 276 mm | S | where the link goes |
 | the lug across (long side) | 26.34 by the housing, 22.8 by the end, 13.4 apart | M: calipers, at two marker lines | the stub's pocket |
-| the lug along the router's axis (short side) | 12.9 by the housing, 11.5 by the end | M: calipers, at the same lines | the stub's pocket |
+| the lug along the router's axis (short side) | 12.9 by the housing, 11.5 by the end; the face toward the motor's top flat, the taper all on the face toward the base | M: calipers, at the same lines; the flat by eye | the stub's pocket, which is offset the same way |
 | the end line from the lug's end | 2.8 mm | G: from the photo of its side | the pocket's floor size |
 | how far the lug stands out | 17 mm | G: from the photo of its side; it must be more than the original's 16.37 socket | the lever's position |
 | lug end face to lug end face | 200 mm | M | where the handles sit, and the lever, hanger and jack with them |
