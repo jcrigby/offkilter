@@ -50,7 +50,7 @@
 <text x='92.4' y='474.1' font-family='Helvetica, Arial, sans-serif' font-size='13' fill='#1f2328' text-anchor='start' font-weight='bold'>jack pin under the saddle's flat lips:</text>
 <text x='92.4' y='490.1' font-family='Helvetica, Arial, sans-serif' font-size='12' fill='#6e7781' text-anchor='start' font-weight='normal'>slides 5.8 mm — a Scotch yoke</text>
 <text x='475.0' y='433.0' font-family='Helvetica, Arial, sans-serif' font-size='13' fill='#1f2328' text-anchor='start' font-weight='bold'>link, pinned both ends:</text>
-<text x='475.0' y='449.0' font-family='Helvetica, Arial, sans-serif' font-size='12' fill='#6e7781' text-anchor='start' font-weight='normal'>leans 1.5° — a slider-crank</text>
+<text x='475.0' y='449.0' font-family='Helvetica, Arial, sans-serif' font-size='12' fill='#6e7781' text-anchor='start' font-weight='normal'>leans 1.6° — a slider-crank</text>
 <text x='336.0' y='421.0' font-family='Helvetica, Arial, sans-serif' font-size='13' fill='#1f2328' text-anchor='middle' font-weight='bold'>pivot</text>
 <text x='336.0' y='437.0' font-family='Helvetica, Arial, sans-serif' font-size='12' fill='#6e7781' text-anchor='middle' font-weight='normal'>lever 2 : 1 (220 : 110 mm), tilts ±13°</text>
 <text x='50.0' y='540.0' font-family='Helvetica, Arial, sans-serif' font-size='12' fill='#6e7781' text-anchor='start' font-weight='normal'>Dashed arcs: where the lever's pins swing. Rails: where the router and the saddle must go.</text>
@@ -73,7 +73,7 @@
 <text x='1002.0' y='182.5' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#6e7781' text-anchor='start' font-weight='normal'>router's tab (straight, dotted)</text>
 <text x='1002.0' y='314.0' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#6e7781' text-anchor='start' font-weight='normal'>lever pin (on its arc, dashed)</text>
 <text x='706.0' y='380.0' font-family='Helvetica, Arial, sans-serif' font-size='12' fill='#6e7781' text-anchor='start' font-weight='normal'>At both ends of the travel the pin comes 2.9 mm toward the pivot.</text>
-<text x='706.0' y='396.0' font-family='Helvetica, Arial, sans-serif' font-size='12' fill='#6e7781' text-anchor='start' font-weight='normal'>The link, 107 mm long, leans 1.5° to follow it; the router stays on its posts.</text>
+<text x='706.0' y='396.0' font-family='Helvetica, Arial, sans-serif' font-size='12' fill='#6e7781' text-anchor='start' font-weight='normal'>The link, 107 mm long, leans 1.6° to follow it; the router stays on its posts.</text>
 <rect x='690' y='430' width='480' height='330' rx='10' fill='#f6f8fa' stroke='#d0d7de'/>
 <text x='706.0' y='456.0' font-family='Helvetica, Arial, sans-serif' font-size='15' fill='#1f2328' text-anchor='start' font-weight='bold'>Jack end, sideways ×9: the pin slides on the flat</text>
 <path d='M932.2,683.3 L926.8,679.2 L921.6,675.1 L916.7,671.0 L912.0,666.8 L907.7,662.7 L903.6,658.6 L899.8,654.4 L896.3,650.2 L893.0,646.1 L890.1,641.9 L887.4,637.7 L885.0,633.5 L882.9,629.3 L881.0,625.1 L879.5,620.9 L878.2,616.7 L877.2,612.5 L876.5,608.3 L876.1,604.1 L876.0,599.9 L876.2,595.7 L876.6,591.5 L877.3,587.2 L878.3,583.0 L879.6,578.8 L881.2,574.6 L883.0,570.4 L885.1,566.2 L887.5,562.0 L890.2,557.9 L893.2,553.7 L896.5,549.5 L900.0,545.3 L903.8,541.2 L907.9,537.0 L912.3,532.9 L917.0,528.8 L921.9,524.7 L927.1,520.5 L932.6,516.5' fill='none' stroke='#6e7781' stroke-width='1.5' stroke-dasharray='5 4'/>

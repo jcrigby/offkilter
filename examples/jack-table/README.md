@@ -60,7 +60,7 @@ cargo test -p ok-render --test jack_table    # what CI runs
   keeps that drift as small as it can be and the same at both ends: it
   tilts 13 degrees each way, so the router pin comes in 2.9 mm and the
   jack pin 5.8 mm. The router end takes it up by the link leaning,
-  1.5 degrees at most; the jack end by the pin sliding along the
+  1.6 degrees at most; the jack end by the pin sliding along the
   saddle's flat lips. Neither changes the 2 to 1: the saddle's lips are
   flat, so the jack end's height is exactly 220 mm times the sine of
   the tilt and the router end's 110 mm times it, less what the link's
@@ -76,7 +76,7 @@ cargo test -p ok-render --test jack_table    # what CI runs
   freehand work.
 - **The crank moves.** The screw sits at the scissor's knuckles, halfway
   between the foot and the saddle, so it drops half as far as the
-  saddle: 50 mm over the travel. It also moves 34 mm back as the
+  saddle: 50 mm over the travel. It also moves 26 mm back as the
   knuckles close. The front's slot is vertical and 50 mm long, plus the
   extension's width, and the extension simply slides with the screw.
 - **The front stops at the hanger.** The router's half of the box is
@@ -153,8 +153,8 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   drive 6 in extension.
 - **Hanger:** two 3/4 ply cheeks, 2-1/2 wide, with a hardwood spacer
   between them at the top, screwed down through the top. The pivot is
-  a 3/8 bolt with a washer each side of the lever, about 8-1/4 in below the
-  top.
+  a 3/8 bolt with a washer each side of the lever, 9-1/4 in below the
+  top (the cheeks in `parts.csv` are cut to suit).
 - **Lever:** oak, 5/8 x 1 x 14-3/4. That is the most the saddle's groove
   (19 wide, 13.4 deep) takes: 1.5 mm a side, and its top edge clear of
   the groove's floor as it tilts. A relief 3 mm deep and 36 mm long in
@@ -177,8 +177,11 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
     the lug's end and its rim stays clear of the housing;
   - in the stub's floor, a counterbored hole for the original screw and
     a hole for the roll pin;
-  - a 10 mm tab 12 mm past the handle's narrow end (toward the motor), on the lever's side,
-    for a 3/8 x 1-1/4 bolt to the link.
+  - a 10 mm tab 12 mm past the handle's narrow end (toward the motor),
+    on the lever's side, for a 3/8 x 1-1/4 bolt to the link. The tab
+    stands beside the handle, past the link, so a web the tab's width
+    runs from the handle's middle out to the tab's far face and 20 mm
+    up into the handle to carry it.
 
   Print it lying on its outer face, with 4 walls and 40 % infill.
 - **Printed right handle** (`out/right_handle.stl`, PETG): the left

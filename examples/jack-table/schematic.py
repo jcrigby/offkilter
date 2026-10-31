@@ -21,6 +21,15 @@ POSES = [(0.0, "#2f81f7", "retracted"), (B.PLUNGE / 2, INK, "mid"), (B.PLUNGE, "
 FONT = "font-family='Helvetica, Arial, sans-serif'"
 
 
+def drift():
+    """What the build's geometry gives: how far each pin comes in toward
+    the pivot at the ends of the travel, and how far the link leans."""
+    tilt = max(abs(B.lever_angle(0.0)), abs(B.lever_angle(B.PLUNGE)))
+    lean = max(abs(math.degrees(B.link_angle(p) + math.pi / 2)) for p in (0.0, B.PLUNGE))
+    return {"tilt": math.degrees(tilt), "r": B.ROUTER_ARM * (1 - math.cos(tilt)),
+            "j": B.JACK_ARM * (1 - math.cos(tilt)), "lean": lean, "link": B.LINK_L}
+
+
 def pose(p):
     a = B.lever_angle(p)
     piv, r, j = B.lever_points(math.sin(a))
@@ -125,10 +134,11 @@ def main_view(out):
     # Labels.
     lx, ly = v(*ps[2]["j"])
     out.append(text(lx - 8, ly + 30, "jack pin under the saddle's flat lips:", 13, INK, "start", "bold"))
-    out.append(text(lx - 8, ly + 46, "slides 5.8 mm — a Scotch yoke", 12, MUTED))
+    d = drift()
+    out.append(text(lx - 8, ly + 46, f"slides {d['j']:.1f} mm — a Scotch yoke", 12, MUTED))
     rx, ry = v(*mid["r"])
     out.append(text(rx + 18, ry + 44, "link, pinned both ends:", 13, INK, "start", "bold"))
-    out.append(text(rx + 18, ry + 60, "leans 1.5° — a slider-crank", 12, MUTED))
+    out.append(text(rx + 18, ry + 60, f"leans {d['lean']:.1f}° — a slider-crank", 12, MUTED))
     px, py = v(*piv)
     out.append(text(px, py + 32, "pivot", 13, INK, "middle", "bold"))
     out.append(text(px, py + 48, f"lever 2 : 1 ({B.JACK_ARM:.0f} : {B.ROUTER_ARM:.0f} mm), tilts ±{math.degrees(a1):.0f}°", 12, MUTED, "middle"))
@@ -168,13 +178,14 @@ def inset_router(out, ox, oy):
     xa, ya = v(*ps[0]["r"])
     xb, _ = v(mid["r"][0], ps[0]["r"][1])
     out.append(f"<line x1='{xa:.1f}' y1='{ya + 16:.1f}' x2='{xb:.1f}' y2='{ya + 16:.1f}' stroke='{INK}' stroke-width='1.2' marker-start='url(#arr)' marker-end='url(#arr)'/>")
-    out.append(text(xb + 10, ya + 21, "2.9 mm", 13, INK, "start", "bold"))
+    d = drift()
+    out.append(text(xb + 10, ya + 21, f"{d['r']:.1f} mm", 13, INK, "start", "bold"))
     tx, ty = v(*ps[2]["t"])
     out.append(text(tx + 12, ty + 4, "router's tab (straight, dotted)", 11, MUTED))
     rx, ry = v(*ps[1]["r"])
     out.append(text(rx + 12, ry + 4, "lever pin (on its arc, dashed)", 11, MUTED))
-    out.append(text(ox + 16, oy + 300, "At both ends of the travel the pin comes 2.9 mm toward the pivot.", 12, MUTED))
-    out.append(text(ox + 16, oy + 316, "The link, 107 mm long, leans 1.5° to follow it; the router stays on its posts.", 12, MUTED))
+    out.append(text(ox + 16, oy + 300, f"At both ends of the travel the pin comes {d['r']:.1f} mm toward the pivot.", 12, MUTED))
+    out.append(text(ox + 16, oy + 316, f"The link, {d['link']:.0f} mm long, leans {d['lean']:.1f}° to follow it; the router stays on its posts.", 12, MUTED))
 
 
 def inset_jack(out, ox, oy):
@@ -195,10 +206,11 @@ def inset_jack(out, ox, oy):
     xa, ya = v(*ps[0]["j"])
     xb, _ = v(mid["j"][0], 0)
     out.append(f"<line x1='{xb:.1f}' y1='{ya - 22:.1f}' x2='{xa:.1f}' y2='{ya - 22:.1f}' stroke='{INK}' stroke-width='1.2' marker-start='url(#arr)' marker-end='url(#arr)'/>")
-    out.append(text((xa + xb) / 2, ya - 28, "5.8 mm", 13, INK, "middle", "bold"))
+    d = drift()
+    out.append(text((xa + xb) / 2, ya - 28, f"{d['j']:.1f} mm", 13, INK, "middle", "bold"))
     out.append(text(ox + 16, oy + 284, "The saddle (its flat lips, shaded) goes straight down the dotted line; the pin", 12, MUTED))
-    out.append(text(ox + 16, oy + 300, "swings on its arc and slides 5.8 mm along the lips. The lips are square to the", 12, MUTED))
-    out.append(text(ox + 16, oy + 316, "motion, so the saddle's height is exactly 220 mm × sin(tilt): the 2 : 1 holds.", 12, MUTED))
+    out.append(text(ox + 16, oy + 300, f"swings on its arc and slides {d['j']:.1f} mm along the lips. The lips are square to the", 12, MUTED))
+    out.append(text(ox + 16, oy + 316, f"motion, so the saddle's height is exactly {B.JACK_ARM:.0f} mm × sin(tilt): the 2 : 1 holds.", 12, MUTED))
 
 
 def main():

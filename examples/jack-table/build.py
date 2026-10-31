@@ -30,12 +30,11 @@ guessed from the photos (G). README.md here has the table of which.
 import json
 import math
 import os
-import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
-from okmcp import Mcp, Part  # noqa: E402
+from okmcp import IDENTITY, Mcp, Part, apply, cylinder, full, mate_parameters, new_tab  # noqa: E402
 
 OUT = os.path.join(HERE, "out")
 IN = 25.4
@@ -104,12 +103,14 @@ GROOVE = (19.0, 13.4)             # the saddle's wide groove, turned to run alon
 RIVET_HEAD = (15.44, 4.65)        # the jacking-head rivet's head on the groove's floor: across, tall with the saddle pushed home (M: calipers)
 HOLE_R = 6.0                      # every pivot hole in the jack's parts
 
-# What this table uses of it: the jack from 140 to 270 mm (the router
-# retracted to fully plunged). Above about 90 the jack crawls; this
-# band keeps the arms between 14 and 38 degrees, where a turn moves the
-# saddle 2.5 to 8 mm and the bit half that.
+# What this table uses of it: JACK_USE[0] at the router retracted to
+# JACK_USE[1] at full plunge, RATIO times the plunge apart. Nearly closed
+# a scissor jack is fast and coarse (a turn moves the saddle by the pitch
+# over the tangent of the arms' angle); the band starts well up from the
+# bottom for finer control. main() prints the heights, angles and mm per
+# turn the band gives; with the link they come out a hair off these ends.
 RATIO = 2.0
-JACK_USE = (180.0, 180.0 + RATIO * PLUNGE)        # with the link, the ends come out a little off these (main() prints them)
+JACK_USE = (180.0, 180.0 + RATIO * PLUNGE)
 
 # The drive: a scissor-jack drill adapter on the eye, a 3/8 drive
 # extension out through the front.
@@ -186,6 +187,9 @@ def lever_angle(plunge):
         return math.hypot(tx - rx, tz - rz) - LINK_L
 
     lo, hi = -0.8, 0.8              # gap falls as the pin rises toward the tab
+    if not (gap(lo) > 0.0 > gap(hi)):
+        raise RuntimeError(f"the link ({LINK_L:.1f} mm) cannot reach from the tab to the lever's pin at plunge {plunge:g} within +/-46 degrees of lever: "
+                           "TAB_BELOW, HANDLE_OFFSET, BOSS_Z or ROUTER_ARM are out of step")
     for _ in range(80):
         mid = (lo + hi) / 2
         lo, hi = (mid, hi) if gap(mid) > 0.0 else (lo, mid)
@@ -461,8 +465,8 @@ def handle(p):
     """The printed left handle: the original's outline cut off above
     the lug, its hollow stub over the router's lug, the screw through
     the stub's floor into the lug and a hole for the lug's roll pin
-    beside it, and a tab off its lower end carrying the bolt the link
-    hangs on."""
+    beside it, and a tab off its lower end, webbed to it, carrying the
+    bolt the link hangs on."""
     x = (-BOSS_X - HANDLE_T, -BOSS_X)
     f = profile_x(p, "handle", x[0], x[1], handle_profile(printed=True))
     stub(p)
@@ -472,6 +476,13 @@ def handle(p):
     p.polygon(s, [(tx - TAB_W / 2, tz), (tx + TAB_W / 2, tz), (tx + TAB_W / 2, bottom + 20.0), (tx - TAB_W / 2, bottom + 20.0)])
     p.extrude(s, TAB_T, op="add", name="tab")
     cyl_y(p, "tab end", TAB_Y[0], TAB_Y[1], tx, tz, TAB_W, op="add")
+    # The tab slab stands beside the handle's side face, past the link, and
+    # would meet the handle only along a sliver: a web from the handle's
+    # centre plane out to the tab's far face, the tab's width, ties them
+    # through the handle's lower end. It stops above the link's upper end,
+    # which turns on the tab's bolt.
+    web_z0 = tz + LINK_W / 2 + 2.0
+    block(p, "tab web", (tx - TAB_W / 2, tx + TAB_W / 2), (0.0, TAB_Y[1]), (web_z0, bottom + 20.0), op="add")
     screw_hole(p)
     pin_hole(p)
     cyl_y(p, "tab bolt", LINK_Y[0], TAB_Y[1], tx, tz, PIN_D, op="add")
@@ -521,8 +532,8 @@ def lever(p):
     # The outline in the lever's own frame, s along it from the jack end, t across (up +), then placed.
     h, (nl, nd) = LEVER_H / 2, LEVER_NOTCH
     length = ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST
-    s0, s1 = LEVER_PAST - nl / 2, LEVER_PAST + nl / 2
-    local = [(0.0, -h), (length, -h), (length, h), (s1, h), (s1, h - nd), (s0, h - nd), (s0, h), (0.0, h)]
+    n0, n1 = LEVER_PAST - nl / 2, LEVER_PAST + nl / 2
+    local = [(0.0, -h), (length, -h), (length, h), (n1, h), (n1, h - nd), (n0, h - nd), (n0, h), (0.0, h)]
     f = profile_y(p, "lever", -LEVER_T / 2, LEVER_T / 2, [(a[0] + ux * u - uz * t, a[1] + uz * u + ux * t) for u, t in local])
     bore_y(p, "pivot bore", -LEVER_T / 2, LEVER_T / 2, piv[0], piv[1], PIVOT_BORE)
     cyl_y(p, "jack pin", -PIN_LEN / 2, PIN_LEN / 2, jp[0], jp[1], PIN_D, op="add")
@@ -637,86 +648,6 @@ def nut_trunnion(p):
     part_is(p, f, "jack nut trunnion", "steel")
 
 
-# -- mates ---------------------------------------------------------------------
-
-def _v(d):
-    return (d["x"], d["y"], d["z"])
-
-
-def _sub(a, b):
-    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
-
-
-def _dot(a, b):
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-
-
-def _cross(a, b):
-    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
-
-
-def _norm(a):
-    k = 1.0 / math.sqrt(_dot(a, a))
-    return (a[0] * k, a[1] * k, a[2] * k)
-
-
-def _frame(cyl, face):
-    """A cylindrical face's connector frame as the kernel builds it."""
-    o, z = _v(cyl["origin"]), _norm(_v(cyl["axis"]))
-    c = _v(face["centroid"])
-    t = _dot(_sub(c, o), z)
-    origin = (o[0] + z[0] * t, o[1] + z[1] * t, o[2] + z[2] * t)
-    hint = (1.0, 0.0, 0.0) if abs(z[0]) < 0.9 else (0.0, 1.0, 0.0)
-    y = _norm(_cross(z, hint))
-    return origin, _cross(y, z), y, z
-
-
-def cylinder(body, r, near):
-    """The cylinder of radius r on a body whose axis passes nearest the
-    world point `near`, with its frame (bodies are built in place)."""
-    faces = {json.dumps(f["reference"], sort_keys=True): f for f in body["faces"]}
-    best = None
-    for c in body["cylinders"]:
-        if abs(c["radius"] - r) > 1e-6:
-            continue
-        o, z = _v(c["origin"]), _norm(_v(c["axis"]))
-        d = _sub(near, o)
-        t = _dot(d, z)
-        off = _sub(d, (z[0] * t, z[1] * t, z[2] * t))
-        dist = math.sqrt(_dot(off, off))
-        if best is None or dist < best[0]:
-            best = (dist, c)
-    if best is None or best[0] > 1.0:
-        raise RuntimeError(f"{body['name']}: no cylinder of radius {r} near {near}")
-    c = best[1]
-    return c, _frame(c, faces[json.dumps(c["reference"], sort_keys=True)])
-
-
-def mate_parameters(target, moving):
-    ot, xt, _, zt = target
-    om, xm, _, zm = moving
-    flip = _dot(zt, zm) > 0.0
-    z = zt if flip else tuple(-c for c in zt)
-    return _dot(_sub(om, ot), zt), math.degrees(math.atan2(_dot(_cross(xt, xm), z), _dot(xt, xm))), flip
-
-
-def apply(mcp, ops, tab):
-    text = mcp.call("apply", {"ops": ops, "tab": tab})
-    if "ERROR:" in text:
-        raise RuntimeError(text.split("ERROR:", 1)[1].splitlines()[0])
-    return text
-
-
-def new_tab(mcp, op):
-    text = mcp.call("apply", {"ops": [op]})
-    return int(re.search(r"tab (\d+)", text).group(1))
-
-
-def full(mcp, tab):
-    return json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))
-
-
-IDENTITY = {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}
 
 
 def direction(a, b):
@@ -774,8 +705,8 @@ HARDWARE = [
     ("drill adapter", "scissor-jack drill adapter for the eye, 3/8 drive or 1/2 hex", 1, "on the jack's eye"),
     ("extension", "3/8 drive x 6 in", 1, "from the adapter out through the crank slot; a ratchet or a drill on its end"),
     ("pivot bolt", "3/8-16 x 2-1/2 hex bolt, nylock, 2 washers", 1, "through the cheeks and the lever, a washer each side of the lever; snug, not tight"),
-    ("jack pin", "3/8-16 x 2 hex bolt, nut", 1, "across the lever 220 mm from the pivot, on its centre line; the saddle's lips ride on its ends"),
-    ("link bolts", "3/8-16 x 1-1/4 hex bolts, nylocks, washers", 2, "one through the lever 110 mm from the pivot and the link's lower hole; one through the handle's tab and the link's upper hole; snug, free to turn"),
+    ("jack pin", "3/8-16 x 2 hex bolt, nut", 1, f"across the lever {JACK_ARM:.0f} mm from the pivot, on its centre line; the saddle's lips ride on its ends"),
+    ("link bolts", "3/8-16 x 1-1/4 hex bolts, nylocks, washers", 2, f"one through the lever {ROUTER_ARM:.0f} mm from the pivot and the link's lower hole; one through the handle's tab and the link's upper hole; snug, free to turn"),
     ("printed handle", "PETG, from out/handle.stl", 1, "in place of the left handle, on the old handle's screw; print it on its outer face, 4 walls, 40 % infill"),
     ("printed link", "PETG, from out/link.stl", 1, "flat, 4 walls, 40 % infill"),
     ("router screws", "the sub-base screws, longer, flat head", 3, "through the top, countersunk, into the base where the clear sub-base was"),
@@ -788,7 +719,7 @@ CUTLIST = [
     ("front", f"3/4 ply, {FRONT_X[1] - FRONT_X[0]:g} x {SIDE_H:g}", 1, "across the jack's bay from the left side; the crank slot in it; the router's bay stays open for the switch, the plunge lock and the cord"),
     ("cheek", f"3/4 ply, {CHEEK_W / IN:g} x {(TOP_U - PIVOT_Z + CHEEK_W / 2) / IN:.2f}, round end", 2, "the hanger, screwed down through the top with the spacer between them; 3/8 hole at the round's centre"),
     ("hanger spacer", "hardwood, 2-1/2 x 1-1/2 x 3/4 (the lever's 5/8 and two washers)", 1, "between the cheeks at the top"),
-    ("lever", f"hardwood (oak), 5/8 x 1 x {(ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST) / IN:.2f}", 1, "3/8 holes on the centre line: the pivot, the router pin 110 mm one way, the jack pin 220 mm the other; a 3 mm deep, 36 mm long relief in the top edge centred over the jack pin, for the saddle's rivet head"),
+    ("lever", f"hardwood (oak), 5/8 x 1 x {(ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST) / IN:.2f}", 1, f"3/8 holes on the centre line: the pivot, the router pin {ROUTER_ARM:.0f} mm one way, the jack pin {JACK_ARM:.0f} mm the other; a {LEVER_NOTCH[1]:g} mm deep, {LEVER_NOTCH[0]:g} mm long relief in the top edge centred over the jack pin, for the saddle's rivet head"),
 ]
 
 
@@ -837,7 +768,7 @@ def main():
 
     def mate(kind, name, a, b, r_a, r_b, near, sub=None):
         ca, fa = cylinder(bodies[a][0], r_a, near)
-        bb = bodies["router motor"][0] if sub else bodies[b][0]
+        bb = bodies[sub][0] if sub else bodies[b][0]
         cb, fb = cylinder(bb, r_b, near)
         offset, angle, flip = mate_parameters(fa, fb)
         conn_b = {"instance": ids[b], "face": cb["reference"]}
