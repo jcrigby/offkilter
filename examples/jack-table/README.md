@@ -214,7 +214,7 @@ guesses that matter:
 |---|---|---|---|
 | plunge | 50 mm | M: on this router (the manual says 65) | the jack's travel, at 2 to 1, and how high the bit comes |
 | collet nut's end above the base face, retracted | 63.75 mm | M: 73 from the sub-base's face, less its 9.25 | how high the bit comes |
-| collet extension | 57 mm (2-1/4 in) longer, 28 mm across | M: the listing; G: its diameter | how high the bit comes; it must pass the 2 in hole |
+| collet extension | 3-1/4 overall, 1 in of shank in the collet, so 2-1/4 (57 mm) longer; 20, 25 and 36 mm across in steps | M: the listing; G: the diameters, from its photo | how high the bit comes; its 36 mm nut must pass the 2 in hole |
 | base face to motor end | 283.75 mm | M: 293 on the sub-base, less its 9.25 | the table's height |
 | across the handles | 276 mm | S | where the link goes |
 | the lug across (long side) | 26.34 by the housing, 22.8 by the end, 13.4 apart | M: calipers, at two marker lines | the stub's pocket |

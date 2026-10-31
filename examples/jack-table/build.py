@@ -80,7 +80,10 @@ HANDLE_SCREW = 6.5                # the screw's clearance hole (M: an M6, 6.0 ac
 SCREW_HEAD = (11.0, 39.7 - 12.6)  # its counterbore's diameter (M: a 10.26 head), and the plastic under the head: the 39.7 screw less the 12.6 it stands past the original's socket floor (M)
 NUT_D, NUT = 24.0, (73.0 - SUB_BASE, 85.0)   # collet nut: its end below the base face, retracted (M: 73 from the sub-base's face), to the carriage (G)
 BIT_D, BIT_L = 12.7, 50.0         # 1/2 in straight bit, out of the nut (or the extension)
-COLLET_EXT = (2.25 * IN, 28.0)    # Yakamoz 1/2 in collet extension: adds 2-1/4 (M: the listing), its body (G); length 0 for none
+# Yakamoz 1/2 in collet extension: 3-1/4 overall, 1 in of shank in the router's
+# collet, so it adds 2-1/4 (M: the listing). Its steps above the router's nut,
+# (length, diameter), from the listing's photo scaled by the 1/2 shank (G); [] for none.
+COLLET_EXT = [(6.0, 12.7), (16.0, 20.0), (13.0, 25.0), (2.25 * IN - 35.0, 36.0)]
 ROUTER_KG = 5.5                   # (S)
 
 # ---------------------------------------------------------------------
@@ -370,15 +373,15 @@ def router_motor(p):
 
 def bit(p):
     """The bit, in the collet extension when there is one."""
-    z0 = TOP_U - NUT[0]
-    ext, ext_d = COLLET_EXT
-    if ext > 0:
-        f = cyl_z(p, "collet extension", z0, z0 + ext, 0.0, 0.0, ext_d)
-        cyl_z(p, "bit", z0 + ext, z0 + ext + BIT_L, 0.0, 0.0, BIT_D, op="add")
-        part_is(p, f, "bit, 1/2 in straight, in a 2-1/4 in collet extension", "steel")
-    else:
-        f = cyl_z(p, "bit", z0, z0 + BIT_L, 0.0, 0.0, BIT_D)
-        part_is(p, f, "bit, 1/2 in straight", "steel")
+    z = TOP_U - NUT[0]
+    f = None
+    for k, (length, d) in enumerate(COLLET_EXT):
+        g = cyl_z(p, f"collet extension {k + 1}", z, z + length, 0.0, 0.0, d, op="new" if f is None else "add")
+        f = f or g
+        z += length
+    g = cyl_z(p, "bit", z, z + BIT_L, 0.0, 0.0, BIT_D, op="new" if f is None else "add")
+    f = f or g
+    part_is(p, f, "bit, 1/2 in straight" + (", in a 2-1/4 in collet extension" if COLLET_EXT else ""), "steel")
 
 
 def handle_profile(printed=False):

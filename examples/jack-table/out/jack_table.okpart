@@ -3996,7 +3996,7 @@
         "features": [
           {
             "id": 1,
-            "name": "collet extension",
+            "name": "collet extension 1",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -4019,7 +4019,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 14.0
+                    "radius": 6.35
                   }
                 ],
                 "constraints": [],
@@ -4030,7 +4030,7 @@
           },
           {
             "id": 2,
-            "name": "collet extension",
+            "name": "collet extension 1",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -4038,7 +4038,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 57.14999999999998,
+              "depth": 6.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4048,6 +4048,162 @@
           },
           {
             "id": 3,
+            "name": "collet extension 2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 272.45
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 10.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "collet extension 2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 16.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 5,
+            "name": "collet extension 3",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 288.45
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 12.5
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "collet extension 3",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 13.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 7,
+            "name": "collet extension 4",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 301.45
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 18.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "collet extension 4",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 22.149999999999977,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 9,
             "name": "bit",
             "suppressed": false,
             "kind": {
@@ -4081,12 +4237,12 @@
             }
           },
           {
-            "id": 4,
+            "id": 10,
             "name": "bit",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 3,
+              "sketch": 9,
               "profiles": {
                 "type": "all"
               },
@@ -4099,7 +4255,7 @@
             }
           }
         ],
-        "next_id": 5,
+        "next_id": 11,
         "settings": {
           "facet_angle": 5.0
         },
