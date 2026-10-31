@@ -101,6 +101,7 @@ SCREW_L = 400.0                   # from the front knuckle to its tail (G)
 EYE = 50.0                        # front knuckle to the eye's front (G)
 SADDLE = (32.0, 54.0, 40.0)       # x (along its groove, the lever), y (across), z (M: 32 x 54 by rule; G: z)
 GROOVE = (19.0, 13.4)             # the saddle's wide groove, turned to run along the lever (it swivels): wide, deep (M: by rule)
+RIVET_HEAD = (15.44, 4.65)        # the jacking-head rivet's head on the groove's floor: across, tall with the saddle pushed home (M: calipers)
 HOLE_R = 6.0                      # every pivot hole in the jack's parts
 
 # What this table uses of it: the jack from 140 to 270 mm (the router
@@ -508,6 +509,7 @@ def lever_points(s):
 
 
 LEVER_PAST = 22.0     # lever past each pin
+LEVER_NOTCH = (36.0, 3.0)   # relief in the top edge over the jack pin, under the saddle's rivet head: long, deep
 
 
 def lever(p):
@@ -516,13 +518,17 @@ def lever(p):
     ux, uz = (rp[0] - jp[0]) / (ROUTER_ARM + JACK_ARM), (rp[1] - jp[1]) / (ROUTER_ARM + JACK_ARM)
     a = (jp[0] - ux * LEVER_PAST, jp[1] - uz * LEVER_PAST)
     b = (rp[0] + ux * LEVER_PAST, rp[1] + uz * LEVER_PAST)
-    f = profile_y(p, "lever", -LEVER_T / 2, LEVER_T / 2, bar(a, b, LEVER_H / 2))
+    # The outline in the lever's own frame, s along it from the jack end, t across (up +), then placed.
+    h, (nl, nd) = LEVER_H / 2, LEVER_NOTCH
+    length = ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST
+    s0, s1 = LEVER_PAST - nl / 2, LEVER_PAST + nl / 2
+    local = [(0.0, -h), (length, -h), (length, h), (s1, h), (s1, h - nd), (s0, h - nd), (s0, h), (0.0, h)]
+    f = profile_y(p, "lever", -LEVER_T / 2, LEVER_T / 2, [(a[0] + ux * u - uz * t, a[1] + uz * u + ux * t) for u, t in local])
     bore_y(p, "pivot bore", -LEVER_T / 2, LEVER_T / 2, piv[0], piv[1], PIVOT_BORE)
     cyl_y(p, "jack pin", -PIN_LEN / 2, PIN_LEN / 2, jp[0], jp[1], PIN_D, op="add")
     cyl_y(p, "router pin", -LEVER_T / 2, LINK_Y[1], rp[0], rp[1], PIN_D, op="add")
     cyl_y(p, "router pin head", -LEVER_T / 2 - 6.0, -LEVER_T / 2, rp[0], rp[1], 14.3, op="add")
-    length = ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST
-    part_is(p, f, f"lever, hardwood 5/8 x 1 x {length / IN:.2f}, two 3/8 bolts", "hardwood")
+    part_is(p, f, f"lever, hardwood 5/8 x 1 x {length / IN:.2f}, two 3/8 bolts, notched under the saddle", "hardwood")
 
 
 CHEEK_Y = LEVER_T / 2 + WASHER_T      # cheeks' inner faces
@@ -603,6 +609,7 @@ def saddle(p):
     pts = [(-y, face), (-w / 2, face), (-w / 2, face + d), (w / 2, face + d), (w / 2, face), (y, face),
            (y, face + SADDLE[2]), (-y, face + SADDLE[2])]
     f = profile_x(p, "saddle", x[0], x[1], pts)
+    cyl_z(p, "rivet head", face + d - RIVET_HEAD[1], face + d, JACK_X, 0.0, RIVET_HEAD[0], op="add")
     for k, sy in enumerate((-1.0, 1.0)):
         bore_x(p, f"saddle pin {k + 1}", x[0], x[1], sy * PIN_Y, sp[1], 2 * HOLE_R)
     part_is(p, f, "jack saddle", "steel")
@@ -781,7 +788,7 @@ CUTLIST = [
     ("front", f"3/4 ply, {FRONT_X[1] - FRONT_X[0]:g} x {SIDE_H:g}", 1, "across the jack's bay from the left side; the crank slot in it; the router's bay stays open for the switch, the plunge lock and the cord"),
     ("cheek", f"3/4 ply, {CHEEK_W / IN:g} x {(TOP_U - PIVOT_Z + CHEEK_W / 2) / IN:.2f}, round end", 2, "the hanger, screwed down through the top with the spacer between them; 3/8 hole at the round's centre"),
     ("hanger spacer", "hardwood, 2-1/2 x 1-1/2 x 3/4 (the lever's 5/8 and two washers)", 1, "between the cheeks at the top"),
-    ("lever", f"hardwood (oak), 5/8 x 1 x {(ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST) / IN:.2f}", 1, "3/8 holes on the centre line: the pivot, the router pin 110 mm one way, the jack pin 220 mm the other"),
+    ("lever", f"hardwood (oak), 5/8 x 1 x {(ROUTER_ARM + JACK_ARM + 2 * LEVER_PAST) / IN:.2f}", 1, "3/8 holes on the centre line: the pivot, the router pin 110 mm one way, the jack pin 220 mm the other; a 3 mm deep, 36 mm long relief in the top edge centred over the jack pin, for the saddle's rivet head"),
 ]
 
 

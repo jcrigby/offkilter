@@ -144,7 +144,9 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   top.
 - **Lever:** oak, 5/8 x 1 x 14-3/4. That is the most the saddle's groove
   (19 wide, 13.4 deep) takes: 1.5 mm a side, and its top edge clear of
-  the groove's floor as it tilts. It has three 3/8 holes on
+  the groove's floor as it tilts. A relief 3 mm deep and 36 mm long in
+  its top edge, centred on the jack pin, clears the rivet head on the
+  groove's floor (15.44 across, 4.65 tall). It has three 3/8 holes on
   its centre line:
   - the pivot;
   - 110 mm one way, the router pin;
@@ -239,6 +241,7 @@ guesses that matter:
 | foot and saddle rivets from their faces | 42 mm | G: with 160 arms, 15-1/8 high needs about 84 between them | the jack's heights |
 | jack screw | the knuckles close 1.42 mm a turn | M: fitted to 37 turns from 7 to 11 in | turns per mm only |
 | saddle head and groove | 54 across, 32 along the groove; the groove 19 wide, 13.4 deep, turned along the lever (the narrow 7.5 mm one runs across) | M: by rule; the saddle swivels | the lever's size: 5/8 x 1 |
+| the saddle's rivet head, on the groove's floor | 15.44 across, 4.65 tall (3.87 with the saddle pulled out; under load it is pushed home) | M: calipers | the relief in the lever's top edge |
 
 Everything that matters is now measured. What is left to guesses moves
 only clearances, or, for the jack's rivets (42 mm from the foot and
