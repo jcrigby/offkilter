@@ -46,7 +46,8 @@ IN = 25.4
 # retracted (posts extended, bit lowest).
 # ---------------------------------------------------------------------
 PLUNGE = 50.0                     # the full plunge (M: 50 on this router; the manual says 65)
-ROUTER_H = 287.0                  # base face to the motor's end (S: overall height)
+SUB_BASE = 9.25                   # the clear sub-base, which comes off under the table (M: calipers)
+ROUTER_H = 293.0 - SUB_BASE       # base face to the motor's end (M: 293 on the sub-base)
 BASE_D, BASE_T = 160.0, 18.0      # base casting, clear sub-base off (S: 160 wide; G: thickness)
 BASE_HOLE = 50.0                  # the base's centre opening (G)
 POST_X, POST_D = 64.0, 20.0       # plunge posts either side of the axis (G)
@@ -56,7 +57,6 @@ MOTOR_D = 100.0                   # motor housing below the carriage (G)
 LUG_L = 17.0                      # the handle lugs: how far each stands out from the housing (G: from the photo of its side; must be more than POCKET)
 BOSS_X = 200.0 / 2                # the lugs' end faces from the axis (M: 200 lug face to lug face)
 YOKE_X, YOKE_Y = BOSS_X - LUG_L, 25.0   # the carriage's half-width, where the lugs start, and half-depth (G)
-SUB_BASE = 9.25                   # the clear sub-base, which comes off under the table (M: calipers)
 BOSS_Z = 89.0 - SUB_BASE          # the lug's centre below the base face, retracted (M: 89 up from the bench, on the sub-base)
 HANDLE_T = 50.0 - 16.37           # handles: outer face to the socket's floor, the lug's end (M: 50 overall less the 16.37 socket)
 HANDLE_H = 91.0                   # tall, along the router's axis (M: calipers)

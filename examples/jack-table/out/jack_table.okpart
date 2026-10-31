@@ -3139,7 +3139,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 43.19999999999999
+                "offset": 46.44999999999999
               },
               "sketch": {
                 "entities": [
@@ -3174,7 +3174,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 162.0,
+              "depth": 158.75,
               "direction": "normal",
               "end": {
                 "type": "blind"
