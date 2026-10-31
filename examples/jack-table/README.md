@@ -82,11 +82,11 @@ These are from the build's printout and the test:
 
 | plunge | bit over the table | jack (foot to saddle) | arms | bit per crank turn |
 |---|---|---|---|---|
-| 0 | 24 mm | 180 mm (7.09 in) | 17.5° | 3.2 mm |
-| 12.5 | 37 | 205 (8.07) | 22.2° | 2.5 |
-| 25 | 49 | 230 (9.06) | 27.1° | 2.0 |
-| 37.5 | 62 | 255 (10.04) | 32.3° | 1.6 |
-| 50 | 74 | 280 (11.03) | 37.8° | 1.3 |
+| 0 | 24 mm | 180 mm (7.09 in) | 17.5° | 2.3 mm |
+| 12.5 | 37 | 205 (8.07) | 22.2° | 1.7 |
+| 25 | 49 | 230 (9.06) | 27.1° | 1.4 |
+| 37.5 | 62 | 255 (10.04) | 32.3° | 1.1 |
+| 50 | 74 | 280 (11.03) | 37.8° | 0.9 |
 
 The bit's heights are for a bit standing 50 mm out of the Yakamoz
 2-1/4 in collet extension.
@@ -101,11 +101,10 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   the extension's own nut stands above the table, so bits change from
   on top, with a wrench through the 2 in hole.
 
-- Going from retracted to fully plunged takes about 26 turns, with a
-  2 mm screw pitch guessed.
-- Where bits are usually set (around the table's surface), one turn
-  moves the bit about 2 mm. A quarter turn of a ratchet is half a
-  millimetre.
+- Going from retracted to fully plunged takes 37 turns: measured, from 7 to 11 in.
+- One turn moves the bit 2.3 mm at the bottom of the travel and
+  0.9 mm at the top; a quarter turn of a ratchet is a quarter to half
+  a millimetre.
 - The router's own plunge lock holds the height. Crank to height, then
   lock it; the lever only has to hold while you set it.
 - **Both handles are printed short.** Under the table the handles
@@ -236,15 +235,14 @@ guesses that matter:
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
 | jack arm (fork), rivet to the nut's pivot | 160 mm | M | turns per mm, the slot |
 | foot and saddle rivets from their faces | 42 mm | G: with 160 arms, 15-1/8 high needs about 84 between them | the jack's heights |
-| jack screw pitch | 2 mm | G | turns per mm only |
+| jack screw | the knuckles close 1.42 mm a turn | M: fitted to 37 turns from 7 to 11 in | turns per mm only |
 | saddle groove: 22 wide x 25 deep, turned along the lever | | M: the saddle swivels; G: its size | whether the lever fits between the lips |
 
 The router is fully measured.
 
 On the jack:
 
-1. The number of crank turns to go from 7 in to 11 in.
-2. How wide and deep the saddle's groove is.
+1. How wide and deep the saddle's groove is.
 
 ## Open
 
