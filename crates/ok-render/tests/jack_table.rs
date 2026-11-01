@@ -266,19 +266,17 @@ fn the_lever_plunges_the_router_through_its_travel() {
         // The printed cap fits over its lug and roll pin, and stays
         // under the table: beside the base, nothing stops it but the
         // top. Rigid with the motor, so the general check skips it.
-        for side in ["cap"] {
-            let h = body(&r, &format!("router motor / {side}"));
-            let fit = overlap(h, body(&r, "router motor / router motor"));
-            must(
-                fit <= 1e-3,
-                format!("{tag}: the printed {side} sits over its lug and roll pin ({fit:.4} mm3 of overlap)"),
-            );
-            let gap = top_under - hi(h).z;
-            must(
-                gap >= 5.0,
-                format!("{tag}: the printed {side} is {gap:.1} mm under the table"),
-            );
-        }
+        let cap = body(&r, "router motor / cap");
+        let fit = overlap(cap, body(&r, "router motor / router motor"));
+        must(
+            fit <= 1e-3,
+            format!("{tag}: the cap sits over its lug and roll pin ({fit:.4} mm3 of overlap)"),
+        );
+        let gap = top_under - hi(cap).z;
+        must(
+            gap >= 5.0,
+            format!("{tag}: the cap is {gap:.1} mm under the table"),
+        );
 
         // Nothing else touches.
         let bad = hits(&r);

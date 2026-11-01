@@ -276,7 +276,7 @@ guesses that matter:
 | the end line from the lug's end | 2.8 mm | G: from the photo of its side | the pocket's floor size |
 | how far the lug stands out | 17 mm | G: from the photo of its side; it must be more than the original's 16.37 socket | the lever's position |
 | lug end face to lug end face | 200 mm | M | where the handles sit, and the lever, hanger and jack with them |
-| the original handle's socket depth | 16.37 mm | M: calipers | the printed handle's pocket |
+| the original handle's socket depth | 16.37 mm | M: calipers | the cap's pocket |
 | screw to roll pin, centre to centre | 13.0 mm | M: calipers, in the original handle's socket | the two holes in the stub's floor |
 | which side the screw is on | the front (the label's side), the pin behind it, on both lugs | M: photos | the two holes |
 | roll pin: diameter, out from the lug | 5.05 mm, 9.9 mm | M: calipers | the pin's hole (5.65, 11.9 deep) |
