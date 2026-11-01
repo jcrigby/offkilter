@@ -1,0 +1,996 @@
+"""The Edwardian Lift, a minimal router table with a scissor-jack lift
+(named for Ed Lane, who suggested the jack): a plywood box (top,
+two sides, a back and a front across half of it) with the Makita
+3612BR plunge router screwed under the top and a 1-1/2 ton Haul-Master
+scissor jack bolted upside down beside it. Cranking the jack pushes its
+saddle down on one end of a hardwood lever; the lever turns on a bolt
+through a hanger under the top, and its other end pulls up a short
+printed link hung from a tab on a printed cap over the router's left
+handle lug (both handles off), which plunges the motor and raises the
+bit. The jack's
+saddle comes off (its rivet drilled out) and a printed head bolts to
+the seat it sat on, carrying the lever's jack-end pin in a slot. The jack is cranked by a
+socket extension through a slot in the front, with a ratchet or a drill.
+
+The lever is 2 to 1: the jack moves 100 mm for the router's 50 mm of
+plunge, so a turn of the crank moves the bit half as far as it moves
+the saddle. Hanging the jack from the top with the lever beside the
+router keeps the table no taller than the router: a jack under the
+router would add its own height. The router end is pinned through the
+link; the jack end is a 3/8 bolt across the lever's fork, running in the
+printed head's slot: a Scotch yoke, closed by a keeper.
+
+    cargo build --release -p ok-mcp
+    python3 examples/jack-table/build.py         # the document, pictures, sheets, parts list and poses
+    cargo test -p ok-render --test jack_table    # what CI runs
+
+Frame: x left to right from the operator (the bit at x = 0, the jack's
+bay to the left), y from the front (-y) to the back, z up from the
+bench. The drawn pose is the router fully retracted (bit below the
+table). Wood is in inches like the shop; the router and the jack are in
+millimetres, from the makers' specifications (S), measured (M) or
+guessed from the photos (G). README.md here has the table of which.
+"""
+import json
+import math
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))
+from okmcp import IDENTITY, Mcp, Part, apply, cylinder, full, mate_parameters, new_tab  # noqa: E402
+
+OUT = os.path.join(HERE, "out")
+IN = 25.4
+
+# ---------------------------------------------------------------------
+# The router, millimetres, upside down under the top. Depths are below
+# the base's mounting face (the top's underside), with the motor fully
+# retracted (posts extended, bit lowest).
+# ---------------------------------------------------------------------
+PLUNGE = 50.0                     # the full plunge (M: 50 on this router; the manual says 65)
+SUB_BASE = 9.25                   # the clear sub-base, which comes off under the table (M: calipers)
+ROUTER_H = 293.0 - SUB_BASE       # base face to the motor's end (M: 293 on the sub-base)
+BASE_D, BASE_T = 160.0, 18.0      # base casting, clear sub-base off (S: 160 wide; G: thickness)
+BASE_HOLE = 50.0                  # the base's centre opening (G)
+POST_X, POST_D = 64.0, 20.0       # plunge posts either side of the axis (G)
+POST_END = 150.0                  # posts' free ends (G)
+YOKE = (85.0, 125.0)              # the motor carriage round the posts, retracted (G)
+MOTOR_D = 100.0                   # motor housing below the carriage (G)
+LUG_L = 17.0                      # the handle lugs: how far each stands out from the housing (G: from the photo of its side; must be more than POCKET)
+BOSS_X = 200.0 / 2                # the lugs' end faces from the axis (M: 200 lug face to lug face)
+YOKE_X, YOKE_Y = BOSS_X - LUG_L, 25.0   # the carriage's half-width, where the lugs start, and half-depth (G)
+BOSS_Z = 89.0 - SUB_BASE          # the lug's centre below the base face, retracted (M: 89 up from the bench, on the sub-base)
+# Both handles come off: the originals' wide ends would meet the table's
+# underside at full plunge, and only the left lug does any work. It gets
+# a printed cap; the right lug stays bare with its screw left in.
+CAP_T = 50.0 - 16.37              # the cap beyond the lug's end: the original handle's outer face to its socket's floor (M: 50
+                                  # overall less the 16.37 socket), so the original screw fits with the same counterbore
+LUG_W = (26.34, 22.8)             # the lug across (the long side), at the line by the housing and the line by its end (M: calipers)
+LUG_H = (12.9, 11.5)              # along the router's axis (the short side), at the same two lines (M: calipers)
+LUG_DRAFT_TOP = 0.0               # the share of the short side's taper on the lug's top face (toward the motor's top): it is
+                                  # nearly flat, the draft is on the face toward the base (M: by eye)
+LUG_LINES = 13.4                  # between the two lines (M: calipers)
+LUG_END_LINE = 2.8                # the end line from the lug's end (G: from the photo of its side)
+POCKET = 16.37                    # the stub's pocket depth, as the original handle's socket (M: calipers)
+CLEAR = 0.3                       # the pocket's clearance a side
+STUB_WALL = 3.0                   # the stub's wall at its mouth
+PIN_SPACING = 13.0                # screw hole to roll pin, centre to centre (M: calipers, edge to matching edge in the original's socket)
+SCREW_SIDE = -1.0                 # the screw toward -y (the front, the label's side), the pin toward +y, on both lugs (M: photos)
+ROLL_PIN = (5.05, 9.9)            # the lug's roll pin: diameter, out from the lug's end (M: calipers)
+HANDLE_SCREW = 6.5                # the screw's clearance hole (M: an M6, 6.0 across the threads)
+SCREW_HEAD = (11.0, 39.7 - 12.6)  # its counterbore's diameter (M: a 10.26 head), and the plastic under the head: the 39.7 screw less the 12.6 it stands past the original's socket floor (M)
+NUT_D, NUT = 24.0, (73.0 - SUB_BASE, 85.0)   # collet nut: its end below the base face, retracted (M: 73 from the sub-base's face), to the carriage (G)
+BIT_D, BIT_L = 12.7, 50.0         # 1/2 in straight bit, out of the nut (or the extension)
+# Yakamoz 1/2 in collet extension: 3-1/4 overall, 1 in of shank in the router's
+# collet, so it adds 2-1/4 (M: the listing). Its steps above the router's nut,
+# (length, diameter), from the listing's photo scaled by the 1/2 shank (G); [] for none.
+COLLET_EXT = [(6.0, 12.7), (16.0, 20.0), (13.0, 25.0), (2.25 * IN - 35.0, 36.0)]
+ROUTER_KG = 5.5                   # (S)
+
+# ---------------------------------------------------------------------
+# The jack, millimetres (Haul-Master 1-1/2 ton, Harbor Freight 66907):
+# 3-3/4 to 15-1/8 in over the saddle (S: the manual, item 66907; the website says 3-3/8), 17 in long, 3-3/4 wide (S).
+# ---------------------------------------------------------------------
+ARM_L = 160.0                     # scissor arm (fork), rivet to the nut's or axle's pivot (M)
+FOOT_PIN = 42.0                   # foot face to its rivets (G: with 160 arms, 15-1/8 high needs about 84 between the two)
+SADDLE_PIN = 42.0                 # saddle face to its rivets (G: as the foot)
+PIN_Y = 22.0                      # foot and saddle pins either side of the centre (G)
+JACK_W = 95.0                     # across the arms (S: 3-3/4)
+JACK_MIN, JACK_MAX = 3.75 * IN, 15.125 * IN
+SCREW_D, SCREW_PITCH = 14.0, 1.42  # the lift screw (G); per turn the knuckles close by this (M: fitted to 37 turns from 7 to 11 in)
+SCREW_L = 400.0                   # from the front knuckle to its tail (G)
+EYE = 50.0                        # front knuckle to the eye's front (G)
+HOLE_R = 6.0                      # every pivot hole in the jack's parts
+
+# The saddle (the jacking head) comes off: its rivet drilled out, it lifts
+# away, and the head seat, the channel riveted to the upper forks, is
+# left with the rivet's hole through its face. A printed head bolts to
+# the seat through that hole and carries the lever's pin in a slot.
+# Jack heights are still quoted foot to where the saddle's face was, so
+# the manual's range applies; the seat's face is SEAT_FACE from its
+# rivets, SADDLE_PIN - SEAT_FACE nearer the foot than the saddle's was.
+SEAT = (43.0, 50.0)               # the seat's face: along the lever (x) and across, along the screw (y) (M: calipers, the saddle off)
+SEAT_FACE = 23.0                  # the seat's face from its rivets to the forks (M: calipers)
+SEAT_HOLE = 8.9                   # the rivet's hole as drilled out, centred on the face (M); a 5/16 bolt has 1 mm of room
+JACK_Y = 16.0                     # the jack's centre plane behind the lever's, so the head's bolt and nut pocket clear the tongue
+HEAD_PLATE = 12.0                 # the printed head's plate under the seat's face
+HEAD_SKIRT = (3.0, 6.0)           # the skirt round the seat's edges, so one bolt cannot let the head turn: wall, deep
+HEAD_CLEAR = 0.3                  # the skirt's clearance round the seat, a side
+NUT_POCKET = (13.4, 7.0)          # under the plate, for the head bolt's 5/16 (or M8) hex nut: across flats, deep
+TONGUE_L = 44.0                   # the tongue down between the lever's tines: long (x); its thickness is the middle strip less 1
+SLOT_L = 20.0                     # the slot the pin runs in: long (x), the pin's drift and 5 mm; its height is the pin and 1
+SLOT_TOP = 32.0                   # the slot's top below the seat's face: the tines' top corners must clear the plate as the lever tilts
+KEEPER_T = 6.0                    # the keeper that closes the slot's mouth under the pin
+KEEPER_SCREW = (3.3, 4.5, 16.0)   # M4: tap hole in the tongue, clearance in the keeper, either side of the slot's centre (x)
+
+# What this table uses of it: JACK_USE[0] at the router retracted to
+# JACK_USE[1] at full plunge, RATIO times the plunge apart. Nearly closed
+# a scissor jack is fast and coarse (a turn moves the saddle by the pitch
+# over the tangent of the arms' angle); the band starts well up from the
+# bottom for finer control. main() prints the heights, angles and mm per
+# turn the band gives; with the link they come out a hair off these ends.
+RATIO = 2.0
+JACK_USE = (180.0, 180.0 + RATIO * PLUNGE)
+
+# The drive: a scissor-jack drill adapter on the eye, a 3/8 drive
+# extension out through the front.
+ADAPTER = (30.0, 40.0)            # diameter, length (G)
+EXT_D, EXT_L = 16.0, 6.0 * IN     # 6 in extension
+
+# ---------------------------------------------------------------------
+# The box, inches: 3/4 ply.
+# ---------------------------------------------------------------------
+PLY = 0.75
+SIDE_H = 13.5                     # sides' height: the top's underside above the bench; the lever's jack end swings to 20 mm off the bench at full plunge
+TOP_X, TOP_Y = (-21.0, 7.0), (-12.0, 12.0)   # 28 x 24
+LEFT_X, RIGHT_X = (TOP_X[0], TOP_X[0] + PLY), (TOP_X[1] - PLY, TOP_X[1])
+BACK_Y, FRONT_Y = (TOP_Y[1] - PLY, TOP_Y[1]), (TOP_Y[0], TOP_Y[0] + PLY)
+FRONT_X = (LEFT_X[1], -10.0)      # the partial front: across the jack's bay only
+BIT_HOLE = 2.0                    # the top's opening
+
+# The lever: three strips of 1/2 in baltic birch glued up, 1-1/2 tall,
+# the pins on its centre line. The middle strip is shorter at both ends,
+# so the outer two make a fork at each end: round the jack head's tongue
+# at one, round the link at the other.
+LEVER_PLY = 12.0
+LEVER_T, LEVER_H = 3 * LEVER_PLY, 1.5 * IN
+PIN_D = 0.375 * IN                # 3/8 bolts
+PIN_R = PIN_D / 2
+PIVOT_BORE = 10.0
+ROUTER_ARM = 110.0                # pivot to the router's pin
+LEVER_PAST = (20.0, 22.0)         # the strips past the jack pin, past the router pin
+FORK = (52.0, 42.0)               # the middle strip set in from the jack end (the tongue and its swing) and the router end (the link's)
+
+# The printed left handle's tab and the link from it to the lever: the
+# link in the lever's fork, on its centre plane; the tab beside the link,
+# under the handle.
+TAB_BELOW = 12.0                  # the tab's bolt below the cap's underside
+TAB_T, TAB_W = 10.0, 26.0         # the tab's thickness (y) and width (x)
+LINK_T, LINK_W = LEVER_PLY - 1.0, 20.0   # the link: printed, thickness (y, the fork less 1) and width
+LINK_Y = (-LINK_T / 2, LINK_T / 2)
+TAB_Y = (LINK_Y[1] + 0.5, LINK_Y[1] + 0.5 + TAB_T)
+LINK_BORE = 10.0
+
+# Hanger: two 3/4 ply cheeks 2-1/2 wide either side of the lever, a
+# spacer between them at the top.
+CHEEK_W = 2.5 * IN
+WASHER_T = 1.6
+
+# ---------------------------------------------------------------------
+# Derived, millimetres.
+# ---------------------------------------------------------------------
+TOP_U = SIDE_H * IN                               # top's underside
+TOP_S = TOP_U + PLY * IN                          # the table
+H_MID = (JACK_USE[0] + JACK_USE[1]) / 2
+TONGUE_T = LEVER_PLY - 1.0
+SLOT_H = PIN_D + 1.0
+PIN_MID = H_MID - SADDLE_PIN + SEAT_FACE + SLOT_TOP + PIN_R   # the jack pin's centre below the top, lever level
+PIVOT_Z = TOP_U - PIN_MID
+ROUTER_X = -(BOSS_X + CAP_T / 2)                 # the cap's middle, the tab's bolt over the lever's pin
+# The cap's underside (toward the motor) is the pocket's flat face at the
+# mouth, the clearance and the wall below the lug's end-face centre.
+CAP_UNDER = LUG_H[1] / 2 + LUG_DRAFT_TOP * (LUG_H[0] - LUG_H[1]) * (POCKET - LUG_END_LINE) / LUG_LINES + CLEAR + STUB_WALL
+TAB_D = BOSS_Z + CAP_UNDER + TAB_BELOW            # depth of the tab's bolt, retracted
+LINK_L = (TOP_U - TAB_D + PLUNGE / 2) - PIVOT_Z  # vertical, with the lever level at mid-plunge
+PIVOT_X = ROUTER_X - ROUTER_ARM
+JACK_ARM = RATIO * ROUTER_ARM
+JACK_X = PIVOT_X - JACK_ARM
+FOOT_PIN_Z = TOP_U - FOOT_PIN
+
+MATERIALS = {"birch": ("3/4 birch ply", 0.68), "hardwood": ("oak", 0.75), "steel": ("steel", 7.85),
+             "aluminium": ("aluminium", 2.70), "petg": ("PETG", 1.27)}
+
+
+def tab_point(plunge):
+    """The tab's bolt (x, z) with the router plunged this far."""
+    return (ROUTER_X, TOP_U - TAB_D + plunge)
+
+
+def lever_angle(plunge):
+    """The lever's rise toward the router (radians) that puts its router
+    pin one link length below the tab's bolt."""
+    tx, tz = tab_point(plunge)
+
+    def gap(a):
+        rx, rz = PIVOT_X + ROUTER_ARM * math.cos(a), PIVOT_Z + ROUTER_ARM * math.sin(a)
+        return math.hypot(tx - rx, tz - rz) - LINK_L
+
+    lo, hi = -0.8, 0.8              # gap falls as the pin rises toward the tab
+    if not (gap(lo) > 0.0 > gap(hi)):
+        raise RuntimeError(f"the link ({LINK_L:.1f} mm) cannot reach from the tab to the lever's pin at plunge {plunge:g} within +/-46 degrees of lever: "
+                           "TAB_BELOW, HANDLE_OFFSET, BOSS_Z or ROUTER_ARM are out of step")
+    for _ in range(80):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if gap(mid) > 0.0 else (lo, mid)
+    return (lo + hi) / 2
+
+
+def lever_sin(plunge):
+    return math.sin(lever_angle(plunge))
+
+
+def link_angle(plunge):
+    """The link's direction, tab to lever pin, in the x-z plane."""
+    tx, tz = tab_point(plunge)
+    _, (rx, rz), _ = lever_points(lever_sin(plunge))
+    return math.atan2(rz - tz, rx - tx)
+
+
+def jack_height(plunge):
+    return H_MID + JACK_ARM * lever_sin(plunge)
+
+
+def jack_theta(h):
+    """The arms' angle from the screw at a jack height (foot face to saddle face)."""
+    return math.asin((h - FOOT_PIN - SADDLE_PIN) / (2.0 * ARM_L))
+
+
+def turns_per_mm(h):
+    """Crank turns per millimetre of saddle travel at a jack height."""
+    return math.tan(jack_theta(h)) / SCREW_PITCH
+
+
+def mm(*v):
+    return tuple(c * IN for c in v)
+
+
+def part_is(p, f, name, material=None):
+    ops = [{"type": "rename_part", "source": f, "name": name}]
+    if material:
+        m, d = MATERIALS[material]
+        ops.append({"type": "set_part_material", "source": f, "material": {"name": m, "density": d}})
+    p.apply(*ops)
+
+
+def block(p, name, x, y, z, op="new"):
+    s = p.sketch("top", z[0], name)
+    p.rect(s, (x[0], y[0]), (x[1], y[1]))
+    return p.extrude(s, z[1] - z[0], op=op, name=name)
+
+
+def cyl_x(p, name, x0, x1, y, z, d, op="new"):
+    s = p.sketch("right", x0, name)
+    p.circle(s, (y, z), d / 2)
+    return p.extrude(s, x1 - x0, op=op, name=name)
+
+
+def cyl_y(p, name, y0, y1, x, z, d, op="new"):
+    """A cylinder along y from y0 to y1 (y0 < y1)."""
+    s = p.sketch("front", -y1, name)       # the front plane's normal is -y
+    p.circle(s, (x, z), d / 2)
+    return p.extrude(s, y1 - y0, op=op, name=name)
+
+
+def cyl_z(p, name, z0, z1, x, y, d, op="new"):
+    s = p.sketch("top", z0, name)
+    p.circle(s, (x, y), d / 2)
+    return p.extrude(s, z1 - z0, op=op, name=name)
+
+
+def bore_x(p, name, x0, x1, y, z, d):
+    s = p.sketch("right", x0 - 1.0, name)
+    p.point(s, (y, z))
+    p.hole(s, d, depth=x1 - x0 + 2.0, direction="normal", name=name)
+
+
+def bore_y(p, name, y0, y1, x, z, d):
+    s = p.sketch("front", -(y1 + 1.0), name)
+    p.point(s, (x, z))
+    p.hole(s, d, depth=y1 - y0 + 2.0, direction="normal", name=name)
+
+
+def bore_z(p, name, z0, z1, x, y, d):
+    s = p.sketch("top", z0 - 1.0, name)
+    p.point(s, (x, y))
+    p.hole(s, d, depth=z1 - z0 + 2.0, direction="normal", name=name)
+
+
+def profile_x(p, name, x0, x1, pts, op="new"):
+    """A polygon in the y-z plane extruded from x0 to x1."""
+    s = p.sketch("right", x0, name)
+    p.polygon(s, pts)
+    return p.extrude(s, x1 - x0, op=op, name=name)
+
+
+def profile_y(p, name, y0, y1, pts, op="new"):
+    """A polygon in the x-z plane extruded from y0 to y1 (y0 < y1)."""
+    s = p.sketch("front", -y1, name)
+    p.polygon(s, pts)
+    return p.extrude(s, y1 - y0, op=op, name=name)
+
+
+def bar(a, b, half):
+    """The rectangle of half-width `half` along a to b (2D)."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    n = math.hypot(dx, dy)
+    nx, ny = -dy / n * half, dx / n * half
+    return [(a[0] + nx, a[1] + ny), (b[0] + nx, b[1] + ny), (b[0] - nx, b[1] - ny), (a[0] - nx, a[1] - ny)]
+
+
+# -- the box --------------------------------------------------------------
+
+def top(p):
+    f = block(p, "top", mm(*TOP_X), mm(*TOP_Y), (TOP_U, TOP_S))
+    bore_z(p, "bit hole", TOP_U, TOP_S, 0.0, 0.0, BIT_HOLE * IN)
+    part_is(p, f, f"top, 3/4 ply {TOP_X[1] - TOP_X[0]:g} x {TOP_Y[1] - TOP_Y[0]:g}", "birch")
+
+
+def side(name, xs):
+    def build(p):
+        f = block(p, name, mm(*xs), mm(*TOP_Y), (0.0, TOP_U))
+        part_is(p, f, f"{name}, 3/4 ply {TOP_Y[1] - TOP_Y[0]:g} x {SIDE_H:g}", "birch")
+    return build
+
+
+def back(p):
+    f = block(p, "back", (LEFT_X[1] * IN, RIGHT_X[0] * IN), mm(*BACK_Y), (0.0, TOP_U))
+    part_is(p, f, f"back, 3/4 ply {RIGHT_X[0] - LEFT_X[1]:g} x {SIDE_H:g}", "birch")
+
+
+SLOT = None   # the crank slot in the front: (z low, z high), set from the screw's travel in main()
+
+
+def front(p):
+    f = block(p, "front", mm(*FRONT_X), mm(*FRONT_Y), (0.0, TOP_U))
+    lo, hi = SLOT
+    s = p.sketch("front", -FRONT_Y[1] * IN - 1.0, "crank slot")
+    p.slot(s, (JACK_X, lo), (JACK_X, hi), EXT_D + 8.0)
+    p.cut(s, PLY * IN + 2.0, name="crank slot")
+    part_is(p, f, f"front, 3/4 ply {FRONT_X[1] - FRONT_X[0]:g} x {SIDE_H:g}, crank slot", "birch")
+
+
+# -- the router --------------------------------------------------------------
+
+def router_base(p):
+    """Base casting and the two posts, screwed under the top."""
+    f = cyl_z(p, "router base", TOP_U - BASE_T, TOP_U, 0.0, 0.0, BASE_D)
+    bore_z(p, "base opening", TOP_U - BASE_T, TOP_U, 0.0, 0.0, BASE_HOLE)
+    for k, x in enumerate((-POST_X, POST_X)):
+        cyl_z(p, f"post {k + 1}", TOP_U - POST_END, TOP_U - BASE_T, x, 0.0, POST_D, op="add")
+    part_is(p, f, "router base and posts (Makita 3612BR)", "aluminium")
+
+
+def lug_size(d):
+    """The lug's (across, along the axis) at d from its end: the two
+    caliper readings, straight between and beyond."""
+    t = (d - LUG_END_LINE) / LUG_LINES
+    return (LUG_W[1] + (LUG_W[0] - LUG_W[1]) * t, LUG_H[1] + (LUG_H[0] - LUG_H[1]) * t)
+
+
+def lug_z(h, zc, grow=0.0):
+    """The lug's section is centred on the axis zc across (y) but not
+    along the router's axis (z): the end face is, and toward the housing
+    the section grows by LUG_DRAFT_TOP of the extra on the face toward
+    the motor's top (-z under the table) and the rest toward the base.
+    Returns the section's (z low, z high) for a height h, opened by
+    `grow` at each face."""
+    extra = h - LUG_H[1]
+    lo = zc - LUG_H[1] / 2 - LUG_DRAFT_TOP * extra - grow
+    return lo, lo + h + 2 * grow
+
+
+def tapered(p, name, x_near, x_far, size_near, size_far, zc, op, grow=0.0):
+    """A rectangle at x_near lofted to another at x_far: the lug's
+    section, or the pocket for it `grow` larger at each face."""
+    ss = []
+    for k, (x, (w, h)) in enumerate(((x_near, size_near), (x_far, size_far))):
+        z0, z1 = lug_z(h, zc, grow)
+        s = p.sketch("right", x, f"{name} {k + 1}")
+        p.rect(s, (-w / 2 - grow, z0), (w / 2 + grow, z1))
+        ss.append(s)
+    return p.feature({"type": "add_loft", "sketch": ss[0], "sketch_b": ss[1], "op": op, "name": name})
+
+
+def router_motor(p):
+    """The carriage on the posts with the motor below it and a lug each
+    side, both handles off; the printed cap is its own part."""
+    z = lambda d: TOP_U - d
+    f = block(p, "carriage", (-YOKE_X, YOKE_X), (-YOKE_Y, YOKE_Y), (z(YOKE[1]), z(YOKE[0])))
+    for k, x in enumerate((-POST_X, POST_X)):
+        bore_z(p, f"post bore {k + 1}", z(YOKE[1]), z(YOKE[0]), x, 0.0, POST_D + 1.0)
+    cyl_z(p, "motor", z(ROUTER_H), z(YOKE[1]), 0.0, 0.0, MOTOR_D, op="add")
+    zs = z(BOSS_Z)
+    for name, sx in (("left lug", -1.0), ("right lug", 1.0)):
+        tapered(p, name, sx * YOKE_X, sx * BOSS_X, lug_size(LUG_L), lug_size(0.0), zs, "add")
+    py = -SCREW_SIDE * PIN_SPACING / 2
+    cyl_x(p, "left roll pin", -BOSS_X - ROLL_PIN[1], -BOSS_X, py, zs, ROLL_PIN[0], op="add")
+    cyl_x(p, "right roll pin", BOSS_X, BOSS_X + ROLL_PIN[1], py, zs, ROLL_PIN[0], op="add")
+    cyl_z(p, "collet nut", z(YOKE[0]), z(NUT[0]), 0.0, 0.0, NUT_D, op="add")
+    part_is(p, f, "router motor (Makita 3612BR)", "aluminium")
+
+
+def bit(p):
+    """The bit, in the collet extension when there is one."""
+    z = TOP_U - NUT[0]
+    f = None
+    for k, (length, d) in enumerate(COLLET_EXT):
+        g = cyl_z(p, f"collet extension {k + 1}", z, z + length, 0.0, 0.0, d, op="new" if f is None else "add")
+        f = f or g
+        z += length
+    g = cyl_z(p, "bit", z, z + BIT_L, 0.0, 0.0, BIT_D, op="new" if f is None else "add")
+    f = f or g
+    part_is(p, f, "bit, 1/2 in straight" + (", in a 2-1/4 in collet extension" if COLLET_EXT else ""), "steel")
+
+
+def stub_outline():
+    """The stub's outside, (y, z) corners about (0, zs): the pocket's
+    mouth and a wall."""
+    mw, mh = lug_size(POCKET)
+    z0, z1 = lug_z(mh, 0.0, CLEAR + STUB_WALL)
+    return (-mw / 2 - CLEAR - STUB_WALL, z0), (mw / 2 + CLEAR + STUB_WALL, z1)
+
+
+def stub(p, sx=-1.0):
+    """The hollow stub over the lug on side sx: its floor is the face at
+    sx * BOSS_X, its pocket following the lug's taper with CLEAR a side."""
+    zs = TOP_U - BOSS_Z
+    (a0, b0), (a1, b1) = stub_outline()
+    s = p.sketch("right", -BOSS_X if sx < 0 else BOSS_X - POCKET, "stub")
+    p.rect(s, (a0, zs + b0), (a1, zs + b1))
+    p.extrude(s, POCKET, op="add", name="stub")
+    # Run a millimetre past the mouth so the cut is clean.
+    tapered(p, "stub pocket", sx * BOSS_X, sx * (BOSS_X - POCKET - 1.0), lug_size(0.0), lug_size(POCKET + 1.0), zs, "remove", grow=CLEAR)
+
+
+def pin_hole(p, sx=-1.0):
+    s = p.sketch("right", sx * BOSS_X, "roll pin hole")
+    p.point(s, (-SCREW_SIDE * PIN_SPACING / 2, TOP_U - BOSS_Z))
+    p.hole(s, ROLL_PIN[0] + 0.6, depth=ROLL_PIN[1] + 2.0, direction="reverse" if sx < 0 else "normal", name="roll pin hole")
+
+
+def screw_hole(p, sx=-1.0):
+    """From the outer face, counterbored, leaving SCREW_HEAD[1] of
+    plastic under the head as the original does."""
+    s = p.sketch("right", sx * (BOSS_X + CAP_T), "handle screw")
+    p.point(s, (SCREW_SIDE * PIN_SPACING / 2, TOP_U - BOSS_Z))
+    p.hole(s, HANDLE_SCREW, depth=CAP_T + 1.0, direction="normal" if sx < 0 else "reverse",
+           counterbore={"diameter": SCREW_HEAD[0], "depth": CAP_T - SCREW_HEAD[1]}, name="handle screw")
+
+
+FIT_FLOOR = 10.0
+
+
+def fit_test(p):
+    """The handle's stub alone on a 10 mm floor, with the screw and pin
+    holes: a quick print to try on the lug before the handle."""
+    zs = TOP_U - BOSS_Z
+    (a0, b0), (a1, b1) = stub_outline()
+    f = block(p, "fit test floor", (-BOSS_X - FIT_FLOOR, -BOSS_X), (a0, a1), (zs + b0, zs + b1))
+    stub(p)
+    bore_x(p, "screw hole", -BOSS_X - FIT_FLOOR, -BOSS_X, SCREW_SIDE * PIN_SPACING / 2, zs, HANDLE_SCREW)
+    pin_hole(p)
+    part_is(p, f, "fit test: the cap's stub and floor", "petg")
+
+
+def cap(p):
+    """The printed cap on the left lug: the hollow stub over the lug
+    with a wall beyond its floor the original handle's thickness, so the
+    lug's own screw goes through it, counterbored, into the lug, and the
+    roll pin into its hole; and a tab under it, beside the link,
+    carrying the bolt the link hangs on."""
+    zs = TOP_U - BOSS_Z
+    (a0, b0), (a1, b1) = stub_outline()
+    f = block(p, "cap", (-BOSS_X - CAP_T, -BOSS_X), (a0, a1), (zs + b0, zs + b1))
+    stub(p)
+    tx, tz = tab_point(0.0)
+    bottom = zs + b0
+    s = p.sketch("front", -TAB_Y[1], "tab")
+    p.polygon(s, [(tx - TAB_W / 2, tz), (tx + TAB_W / 2, tz), (tx + TAB_W / 2, bottom + 15.0), (tx - TAB_W / 2, bottom + 15.0)])
+    p.extrude(s, TAB_T, op="add", name="tab")
+    cyl_y(p, "tab end", TAB_Y[0], TAB_Y[1], tx, tz, TAB_W, op="add")
+    screw_hole(p)
+    pin_hole(p)
+    cyl_y(p, "tab bolt", LINK_Y[0], TAB_Y[1], tx, tz, PIN_D, op="add")
+    cyl_y(p, "tab bolt head", LINK_Y[0] - 6.0, LINK_Y[0], tx, tz, 14.3, op="add")
+    cyl_y(p, "tab bolt nut", TAB_Y[1], TAB_Y[1] + 8.0, tx, tz, 14.3, op="add")
+    part_is(p, f, "lug cap, printed (PETG), with a tab and a 3/8 bolt for the link", "petg")
+
+
+def link(p):
+    """Tab bolt to the lever's router pin, in the lever's fork."""
+    t = tab_point(0.0)
+    _, r, _ = lever_points(lever_sin(0.0))
+    f = profile_y(p, "link", LINK_Y[0], LINK_Y[1], bar(t, r, LINK_W / 2))
+    for k, c in enumerate((t, r)):
+        cyl_y(p, f"link end {k + 1}", LINK_Y[0], LINK_Y[1], c[0], c[1], LINK_W, op="add")
+        bore_y(p, f"link hole {k + 1}", LINK_Y[0], LINK_Y[1], c[0], c[1], LINK_BORE)
+    part_is(p, f, f"link, printed (PETG), {LINK_L:.1f} mm between 3/8 holes", "petg")
+
+
+# -- the lever and its hanger -------------------------------------------------
+
+def lever_points(s):
+    """Pivot, router pin and jack pin (x, z) with the lever at sin s."""
+    c = math.sqrt(1.0 - s * s)
+    return ((PIVOT_X, PIVOT_Z), (PIVOT_X + ROUTER_ARM * c, PIVOT_Z + ROUTER_ARM * s),
+            (PIVOT_X - JACK_ARM * c, PIVOT_Z - JACK_ARM * s))
+
+
+def jack_pin_x(plunge):
+    return lever_points(lever_sin(plunge))[2][0]
+
+
+# The slot in the printed head is centred on the jack pin's run: at the
+# jack pin's x with the lever level, toward the pivot as it tilts.
+SLOT_X = (min(jack_pin_x(p) for p in (0.0, PLUNGE / 2, PLUNGE)) + max(jack_pin_x(p) for p in (0.0, PLUNGE / 2, PLUNGE))) / 2
+
+
+def lever(p):
+    """Three strips, the middle one shorter: a fork at each end. The two
+    pins are 3/8 bolts through all three with their heads and nuts."""
+    piv, rp, jp = lever_points(lever_sin(0.0))
+    span = ROUTER_ARM + JACK_ARM
+    ux, uz = (rp[0] - jp[0]) / span, (rp[1] - jp[1]) / span
+    a = (jp[0] - ux * LEVER_PAST[0], jp[1] - uz * LEVER_PAST[0])     # the jack end, on the centre line
+    length = span + LEVER_PAST[0] + LEVER_PAST[1]
+    h = LEVER_H / 2
+
+    def strip(name, y0, y1, u0, u1, op):
+        pts = [(a[0] + ux * u - uz * t, a[1] + uz * u + ux * t) for u, t in ((u0, -h), (u1, -h), (u1, h), (u0, h))]
+        return profile_y(p, name, y0, y1, pts, op=op)
+
+    f = strip("outer strip 1", -LEVER_T / 2, -LEVER_T / 2 + LEVER_PLY, 0.0, length, "new")
+    strip("middle strip", -LEVER_PLY / 2, LEVER_PLY / 2, FORK[0], length - FORK[1], "add")
+    strip("outer strip 2", LEVER_T / 2 - LEVER_PLY, LEVER_T / 2, 0.0, length, "add")
+    bore_y(p, "pivot bore", -LEVER_T / 2, LEVER_T / 2, piv[0], piv[1], PIVOT_BORE)
+    for name, c in (("jack pin", jp), ("router pin", rp)):
+        cyl_y(p, name, -LEVER_T / 2, LEVER_T / 2 + 8.0, c[0], c[1], PIN_D, op="add")
+        cyl_y(p, f"{name} head", -LEVER_T / 2 - 6.0, -LEVER_T / 2, c[0], c[1], 14.3, op="add")
+        cyl_y(p, f"{name} nut", LEVER_T / 2, LEVER_T / 2 + 8.0, c[0], c[1], 14.3, op="add")
+    part_is(p, f, f"lever, 3 x 1/2 baltic birch, 1-1/2 x {length / IN:.2f}, forked both ends, two 3/8 bolts", "birch")
+
+
+CHEEK_Y = LEVER_T / 2 + WASHER_T      # cheeks' inner faces
+
+
+def cheek(name, sy):
+    def build(p):
+        y = (CHEEK_Y, CHEEK_Y + PLY * IN) if sy > 0 else (-CHEEK_Y - PLY * IN, -CHEEK_Y)
+        x = (PIVOT_X - CHEEK_W / 2, PIVOT_X + CHEEK_W / 2)
+        f = block(p, name, x, y, (PIVOT_Z, TOP_U))
+        cyl_y(p, f"{name} round", y[0], y[1], PIVOT_X, PIVOT_Z, CHEEK_W, op="add")
+        bore_y(p, f"{name} bore", y[0], y[1], PIVOT_X, PIVOT_Z, PIVOT_BORE)
+        part_is(p, f, f"{name}, 3/4 ply {CHEEK_W / IN:g} x {(TOP_U - PIVOT_Z + CHEEK_W / 2) / IN:.2f}, round end", "birch")
+    return build
+
+
+def spacer(p):
+    f = block(p, "hanger spacer", (PIVOT_X - CHEEK_W / 2, PIVOT_X + CHEEK_W / 2), (-CHEEK_Y, CHEEK_Y), (TOP_U - 1.5 * IN, TOP_U))
+    part_is(p, f, "hanger spacer, hardwood 2-1/2 x 1-1/2", "hardwood")
+
+
+def pivot_bolt(p):
+    y = CHEEK_Y + PLY * IN
+    f = cyl_y(p, "pivot bolt", -y - 2.0, y + 8.0, PIVOT_X, PIVOT_Z, PIN_D)
+    cyl_y(p, "pivot bolt head", -y - 8.0, -y - 2.0, PIVOT_X, PIVOT_Z, 14.3, op="add")
+    cyl_y(p, "pivot nut", y + 2.0, y + 8.0, PIVOT_X, PIVOT_Z, 14.3, op="add")
+    part_is(p, f, "pivot bolt, 3/8-16 x 2-1/2 hex, nylock", "steel")
+
+
+# -- the jack, upside down: foot on the top, the head hanging --------------
+
+def knuckle(theta, sy):
+    return (JACK_Y + sy * (PIN_Y + ARM_L * math.cos(theta)), FOOT_PIN_Z - ARM_L * math.sin(theta))
+
+
+def foot_pin(sy):
+    return (JACK_Y + sy * PIN_Y, FOOT_PIN_Z)
+
+
+def seat_pin(theta, sy):
+    return (JACK_Y + sy * PIN_Y, FOOT_PIN_Z - 2.0 * ARM_L * math.sin(theta))
+
+
+THETA0 = None   # set in main(): the arms' angle in the drawn pose
+
+
+def jack_foot(p):
+    x = (JACK_X - 30.0, JACK_X + 30.0)
+    f = block(p, "jack foot", x, (JACK_Y - 60.0, JACK_Y + 60.0), (TOP_U - 8.0, TOP_U))
+    e = PIN_Y + 12.0
+    profile_x(p, "foot ears", x[0], x[1], [(JACK_Y - e, TOP_U - 8.0), (JACK_Y + e, TOP_U - 8.0),
+                                            (JACK_Y + e, FOOT_PIN_Z - 12.0), (JACK_Y - e, FOOT_PIN_Z - 12.0)], op="add")
+    for k, sy in enumerate((-1.0, 1.0)):
+        bore_x(p, f"foot pin {k + 1}", x[0], x[1], JACK_Y + sy * PIN_Y, FOOT_PIN_Z, 2 * HOLE_R)
+    for k, sy in enumerate((-1.0, 1.0)):
+        bore_z(p, f"foot bolt {k + 1}", TOP_U - 8.0, TOP_U, JACK_X, JACK_Y + sy * 48.0, 8.5)
+    part_is(p, f, "jack foot (Haul-Master 1-1/2 ton)", "steel")
+
+
+def jack_arm(name, a_end, b_end, width):
+    """A scissor arm between two pins (y, z) in the drawn pose."""
+    def build(p):
+        a, b = a_end(THETA0), b_end(THETA0)
+        x = (JACK_X - width / 2, JACK_X + width / 2)
+        f = profile_x(p, name, x[0], x[1], bar(a, b, 10.0))
+        for k, c in enumerate((a, b)):
+            cyl_x(p, f"{name} end {k + 1}", x[0], x[1], c[0], c[1], 20.0, op="add")
+            bore_x(p, f"{name} hole {k + 1}", x[0], x[1], c[0], c[1], 2 * HOLE_R)
+        part_is(p, f, f"jack {name}", "steel")
+    return build
+
+
+def seat_face():
+    """The seat's face toward the lever, in the drawn pose."""
+    return seat_pin(THETA0, 1.0)[1] - SEAT_FACE
+
+
+def head_seat(p):
+    """What stays of the jacking head once the saddle is off: the channel
+    riveted to the upper forks, its face toward the lever, the rivet's
+    hole through it."""
+    sp = seat_pin(THETA0, 1.0)
+    face = sp[1] - SEAT_FACE
+    x = (JACK_X - SEAT[0] / 2, JACK_X + SEAT[0] / 2)
+    f = block(p, "head seat", x, (JACK_Y - SEAT[1] / 2, JACK_Y + SEAT[1] / 2), (face, sp[1] + 10.0))
+    for k, sy in enumerate((-1.0, 1.0)):
+        bore_x(p, f"seat rivet {k + 1}", x[0], x[1], JACK_Y + sy * PIN_Y, sp[1], 2 * HOLE_R)
+    bore_z(p, "head bolt hole", face, sp[1] + 10.0, JACK_X, JACK_Y, SEAT_HOLE)
+    part_is(p, f, "jack head seat, the saddle off", "steel")
+
+
+def jack_head(p):
+    """Printed: a plate under the seat's face with a skirt round the
+    seat's edges (one bolt holds it; the skirt keeps it from turning)
+    and a pocket for the bolt's nut, and a tongue down between the
+    lever's tines carrying the jack pin in a slot that is open at the
+    bottom until the keeper closes it. The pin bears on the slot's top
+    and slides along it as the lever tilts: a Scotch yoke."""
+    face = seat_face()
+    wall, deep = HEAD_SKIRT
+    inner = ((JACK_X - SEAT[0] / 2 - HEAD_CLEAR, JACK_X + SEAT[0] / 2 + HEAD_CLEAR),
+             (JACK_Y - SEAT[1] / 2 - HEAD_CLEAR, JACK_Y + SEAT[1] / 2 + HEAD_CLEAR))
+    outer = ((inner[0][0] - wall, inner[0][1] + wall), (inner[1][0] - wall, inner[1][1] + wall))
+    f = block(p, "head plate", outer[0], outer[1], (face - HEAD_PLATE, face))
+    block(p, "skirt", outer[0], outer[1], (face, face + deep), op="add")
+    block(p, "skirt pocket", inner[0], inner[1], (face, face + deep + 1.0), op="remove")
+    mouth = face - SLOT_TOP - SLOT_H
+    block(p, "tongue", (SLOT_X - TONGUE_L / 2, SLOT_X + TONGUE_L / 2), (-TONGUE_T / 2, TONGUE_T / 2), (mouth, face - HEAD_PLATE), op="add")
+    s = p.sketch("front", -(TONGUE_T / 2 + 1.0), "slot")
+    p.rect(s, (SLOT_X - SLOT_L / 2, mouth - 1.0), (SLOT_X + SLOT_L / 2, face - SLOT_TOP))
+    p.cut(s, TONGUE_T + 2.0, name="slot")
+    bore_z(p, "head bolt", face - HEAD_PLATE, face, JACK_X, JACK_Y, SEAT_HOLE)
+    s = p.sketch("top", face - HEAD_PLATE - 1.0, "nut pocket")
+    p.hexagon(s, (JACK_X, JACK_Y), NUT_POCKET[0] / math.sqrt(3.0))
+    p.cut(s, NUT_POCKET[1] + 1.0, name="nut pocket")
+    for k, sx in enumerate((-1.0, 1.0)):
+        bore_z(p, f"keeper screw hole {k + 1}", mouth, mouth + 12.0, SLOT_X + sx * KEEPER_SCREW[2], 0.0, KEEPER_SCREW[0])
+    part_is(p, f, "jack head, printed (PETG): bolted to the seat, the jack pin in its slot", "petg")
+
+
+def keeper(p):
+    """Printed: closes the slot's mouth under the pin, two M4 screws up
+    into the tongue."""
+    mouth = seat_face() - SLOT_TOP - SLOT_H
+    f = block(p, "keeper", (SLOT_X - TONGUE_L / 2, SLOT_X + TONGUE_L / 2), (-TONGUE_T / 2, TONGUE_T / 2), (mouth - KEEPER_T, mouth))
+    for k, sx in enumerate((-1.0, 1.0)):
+        bore_z(p, f"keeper screw {k + 1}", mouth - KEEPER_T, mouth, SLOT_X + sx * KEEPER_SCREW[2], 0.0, KEEPER_SCREW[1])
+    part_is(p, f, "keeper, printed (PETG): closes the jack head's slot under the pin", "petg")
+
+
+def screw(p):
+    """The lift screw with its front trunnion, the eye, the drill
+    adapter and the extension out through the front."""
+    ky, kz = knuckle(THETA0, -1.0)
+    x = (JACK_X - 20.0, JACK_X + 20.0)
+    f = cyl_x(p, "front trunnion", x[0], x[1], ky, kz, 26.0)
+    bore_x(p, "front trunnion hole", x[0], x[1], ky, kz, 2 * HOLE_R)
+    cyl_y(p, "lift screw", ky + 10.0, ky + SCREW_L, JACK_X, kz, SCREW_D, op="add")
+    cyl_y(p, "eye", ky - EYE, ky - 10.0, JACK_X, kz, 22.0, op="add")
+    cyl_y(p, "drill adapter", ky - EYE - ADAPTER[1], ky - EYE, JACK_X, kz, ADAPTER[0], op="add")
+    cyl_y(p, "extension", ky - EYE - ADAPTER[1] - EXT_L, ky - EYE - ADAPTER[1], JACK_X, kz, EXT_D, op="add")
+    part_is(p, f, "jack screw, eye, drill adapter and 3/8 x 6 extension", "steel")
+
+
+def nut_trunnion(p):
+    ky, kz = knuckle(THETA0, 1.0)
+    x = (JACK_X - 20.0, JACK_X + 20.0)
+    f = cyl_x(p, "rear trunnion", x[0], x[1], ky, kz, 26.0)
+    bore_x(p, "rear trunnion hole", x[0], x[1], ky, kz, 2 * HOLE_R)
+    part_is(p, f, "jack nut trunnion", "steel")
+
+
+
+
+def direction(a, b):
+    return math.atan2(b[1] - a[1], b[0] - a[0])
+
+
+def jack_turns(theta):
+    """World rotations about +x (radians, from the drawn pose) of the
+    jack's moving parts at arm angle theta, in the y-z plane."""
+    def arms(t):
+        return {
+            "upper front arm": direction(foot_pin(-1.0), knuckle(t, -1.0)),
+            "upper rear arm": direction(foot_pin(1.0), knuckle(t, 1.0)),
+            "lower front arm": direction(knuckle(t, -1.0), seat_pin(t, -1.0)),
+            "lower rear arm": direction(seat_pin(t, 1.0), knuckle(t, 1.0)),
+        }
+    now, then = arms(theta), arms(THETA0)
+    w = {k: now[k] - then[k] for k in now}
+    w["head seat"] = w["screw"] = w["nut trunnion"] = 0.0
+    return w
+
+
+# mate name: (parent instance, moving instance, the pin both share as a
+# function of theta, or None for mates set otherwise)
+JACK_MATES = [
+    ("upper front", "jack foot", "upper front arm", lambda t: foot_pin(-1.0)),
+    ("upper rear", "jack foot", "upper rear arm", lambda t: foot_pin(1.0)),
+    ("lower front", "upper front arm", "lower front arm", lambda t: knuckle(t, -1.0)),
+    ("seat", "lower front arm", "head seat", lambda t: seat_pin(t, -1.0)),
+    ("lower rear", "head seat", "lower rear arm", lambda t: seat_pin(t, 1.0)),
+    ("screw", "upper front arm", "screw", lambda t: knuckle(t, -1.0)),
+    ("nut", "upper rear arm", "nut trunnion", lambda t: knuckle(t, 1.0)),
+]
+
+BOX = [("top", top), ("left side", side("left side", LEFT_X)), ("right side", side("right side", RIGHT_X)),
+       ("back", back), ("front", front), ("left cheek", cheek("left cheek", -1.0)), ("right cheek", cheek("right cheek", 1.0)),
+       ("hanger spacer", spacer), ("pivot bolt", pivot_bolt), ("router base", router_base), ("jack foot", jack_foot)]
+MOTOR = [("router motor", router_motor), ("bit", bit), ("cap", cap)]
+MOVING = [("lever", lever), ("link", link), ("upper front arm", None), ("upper rear arm", None), ("lower front arm", None),
+          ("lower rear arm", None), ("head seat", head_seat), ("jack head", jack_head), ("keeper", keeper),
+          ("screw", screw), ("nut trunnion", nut_trunnion)]
+
+
+def jack_arm_builders():
+    return {
+        "upper front arm": jack_arm("upper front arm", lambda t: foot_pin(-1.0), lambda t: knuckle(t, -1.0), JACK_W - 10.0),
+        "upper rear arm": jack_arm("upper rear arm", lambda t: foot_pin(1.0), lambda t: knuckle(t, 1.0), JACK_W - 10.0),
+        "lower front arm": jack_arm("lower front arm", lambda t: knuckle(t, -1.0), lambda t: seat_pin(t, -1.0), JACK_W - 30.0),
+        "lower rear arm": jack_arm("lower rear arm", lambda t: seat_pin(t, 1.0), lambda t: knuckle(t, 1.0), JACK_W - 30.0),
+    }
+
+
+HARDWARE = [
+    ("scissor jack", "Haul-Master 1-1/2 ton (Harbor Freight 66907)", 1, "upside down, its foot bolted under the top through two 5/16 holes drilled in the foot's flat; its own crank stays in the drawer"),
+    ("jack bolts", "5/16-18 x 1-1/2 flat head, washers, nylocks", 2, "countersunk flush in the table, nuts under the jack's foot"),
+    ("drill adapter", "scissor-jack drill adapter for the eye, 3/8 drive or 1/2 hex", 1, "on the jack's eye"),
+    ("extension", "3/8 drive x 6 in", 1, "from the adapter out through the crank slot; a ratchet or a drill on its end"),
+    ("pivot bolt", f"3/8-16 x {math.ceil((2 * PLY * IN + LEVER_T + 2 * WASHER_T + 10.0) / 12.7) / 2:g} hex bolt, nylock, 2 washers", 1, "through the cheeks and the lever, a washer each side of the lever; snug, not tight"),
+    ("lever bolts", "3/8-16 x 2 hex bolts, nylocks", 2, f"through all three strips on the centre line: the jack pin {JACK_ARM:.0f} mm from the pivot, through the head's slot; the router pin {ROUTER_ARM:.0f} mm the other way, through the link's lower hole; snug, free to turn"),
+    ("tab bolt", "3/8-16 x 1-1/4 hex bolt, nylock", 1, "through the link's upper hole and the handle's tab; snug, free to turn"),
+    ("head bolt", "5/16-18 x 1 hex bolt, hex nut", 1, "the nut in the pocket under the printed head's plate; the bolt down through the seat's rivet hole (drilled to 5/16) from inside the channel"),
+    ("keeper screws", "M4 x 16 machine screws", 2, "up through the keeper into the tongue's 3.3 mm holes; they cut their own thread in PETG"),
+    ("printed cap", "PETG, from out/cap.stl", 1, "on the left lug in place of the handle, on the handle's own screw; print it pocket up, 4 walls, 40 % infill. Both handles come off; the right lug stays bare with its screw in"),
+    ("printed link", "PETG, from out/link.stl", 1, "flat, 4 walls, 40 % infill"),
+    ("printed jack head", "PETG, from out/jack_head.stl", 1, "plate down on the bed, the tongue up; 4 walls, 40 % infill; try the skirt on the seat before the whole build"),
+    ("printed keeper", "PETG, from out/keeper.stl", 1, "flat"),
+    ("router screws", "the sub-base screws, longer, flat head", 3, "through the top, countersunk, into the base where the clear sub-base was"),
+]
+
+CUTLIST = [
+    ("top", f"3/4 ply, {TOP_X[1] - TOP_X[0]:g} x {TOP_Y[1] - TOP_Y[0]:g}", 1, f"{BIT_HOLE:g} in hole over the bit, 7 in from the right edge; three countersunk holes for the router's base; two for the jack's foot"),
+    ("side", f"3/4 ply, {TOP_Y[1] - TOP_Y[0]:g} x {SIDE_H:g}", 2, "under the top's ends, glued and screwed"),
+    ("back", f"3/4 ply, {RIGHT_X[0] - LEFT_X[1]:g} x {SIDE_H:g}", 1, "between the sides"),
+    ("front", f"3/4 ply, {FRONT_X[1] - FRONT_X[0]:g} x {SIDE_H:g}", 1, "across the jack's bay from the left side; the crank slot in it; the router's bay stays open for the switch, the plunge lock and the cord"),
+    ("cheek", f"3/4 ply, {CHEEK_W / IN:g} x {(TOP_U - PIVOT_Z + CHEEK_W / 2) / IN:.2f}, round end", 2, "the hanger, screwed down through the top with the spacer between them; 3/8 hole at the round's centre"),
+    ("hanger spacer", f"hardwood, 2-1/2 x 1-1/2 x {2 * CHEEK_Y / IN:.2f} (the lever's {LEVER_T / IN:.2f} and two washers)", 1, "between the cheeks at the top"),
+    ("lever", f"1/2 in baltic birch, 1-1/2 wide: two strips {(ROUTER_ARM + JACK_ARM + sum(LEVER_PAST)) / IN:.2f} long, one {(ROUTER_ARM + JACK_ARM + sum(LEVER_PAST) - sum(FORK)) / IN:.2f}", 1, f"glued up to 1-1/2 square with the short strip in the middle, set in {FORK[0]:.0f} mm from the jack end and {FORK[1]:.0f} from the router end, so each end is a fork; 3/8 holes through all three on the centre line: the pivot, the router pin {ROUTER_ARM:.0f} mm one way, the jack pin {JACK_ARM:.0f} mm the other"),
+]
+
+
+def main():
+    global THETA0, SLOT
+    THETA0 = jack_theta(jack_height(0.0))
+    # The screw's axis drops by half the saddle's travel: the slot spans it.
+    k_lo, k_hi = knuckle(jack_theta(jack_height(PLUNGE)), -1.0)[1], knuckle(THETA0, -1.0)[1]
+    SLOT = (k_lo, k_hi)
+    for h in (jack_height(0.0), jack_height(PLUNGE)):
+        if not JACK_MIN < h < JACK_MAX:
+            raise RuntimeError(f"jack height {h} outside {JACK_MIN}-{JACK_MAX}")
+
+    os.makedirs(OUT, exist_ok=True)
+    path = os.path.join(OUT, "jack_table.okpart")
+    if os.path.exists(path):
+        os.remove(path)
+    mcp = Mcp(path)
+    mcp.call("create_document", {"name": "jack_table"})
+    mcp.call("apply", {"ops": [{"type": "rename_document", "name": "The Edwardian Lift"}]})
+    arms = jack_arm_builders()
+    tabs, bodies = {}, {}
+    for i, (title, fn) in enumerate(BOX + MOTOR + MOVING):
+        fn = fn or arms[title]
+        tab = 1 if i == 0 else new_tab(mcp, {"type": "add_part_studio", "name": title})
+        if i == 0:
+            mcp.call("apply", {"ops": [{"type": "rename_tab", "tab": 1, "name": title}]})
+        fn(Part(mcp, tab, title))
+        tabs[title] = tab
+        bodies[title] = full(mcp, tab)["bodies"]
+        print(f"{title:<16} tab {tab:>2}: {', '.join(b['name'] for b in bodies[title])}")
+
+    def instances(parts, fixed):
+        return [{"type": "add_instance", "studio": tabs[t], "body": 0, "name": t, "fixed": fixed, "placement": IDENTITY}
+                for t, _ in parts]
+
+    motor_asm = new_tab(mcp, {"type": "add_assembly", "name": "router motor assembly"})
+    apply(mcp, instances(MOTOR, True), motor_asm)
+    motor_ids = {i["name"]: i["id"] for i in full(mcp, motor_asm)["instances"]}
+
+    table = new_tab(mcp, {"type": "add_assembly", "name": "router table"})
+    ops = instances(BOX, True) + instances(MOVING, False)
+    ops.append({"type": "add_instance", "studio": motor_asm, "body": 0, "name": "router motor", "fixed": False, "placement": IDENTITY})
+    apply(mcp, ops, table)
+    ids = {i["name"]: i["id"] for i in full(mcp, table)["instances"]}
+
+    def mate(kind, name, a, b, r_a, r_b, near, sub=None):
+        ca, fa = cylinder(bodies[a][0], r_a, near)
+        bb = bodies[sub][0] if sub else bodies[b][0]
+        cb, fb = cylinder(bb, r_b, near)
+        offset, angle, flip = mate_parameters(fa, fb)
+        conn_b = {"instance": ids[b], "face": cb["reference"]}
+        if sub:
+            conn_b["sub"] = motor_ids[sub]
+        apply(mcp, [{"type": "add_mate", "kind": kind, "a": {"instance": ids[a], "face": ca["reference"]}, "b": conn_b,
+                     "offset": offset, "angle": angle, "flip": flip, "name": name}], table)
+
+    mate("slider", "plunge", "router base", "router motor", POST_D / 2, (POST_D + 1.0) / 2, (-POST_X, 0.0, TOP_U - YOKE[0]),
+         sub="router motor")
+    mate("revolute", "lever", "pivot bolt", "lever", PIN_R, PIVOT_BORE / 2, (PIVOT_X, 0.0, PIVOT_Z))
+    # The link hangs on the handle's tab bolt; its lower hole on the
+    # lever's pin closes the loop, which the poses satisfy and the test checks.
+    tx, tz = tab_point(0.0)
+    ca, fa = cylinder(bodies["cap"][0], PIN_R, (tx, 0.0, tz))
+    cb, fb = cylinder(bodies["link"][0], LINK_BORE / 2, (tx, 0.0, tz))
+    offset, angle, flip = mate_parameters(fa, fb)
+    apply(mcp, [{"type": "add_mate", "kind": "revolute", "name": "link",
+                 "a": {"instance": ids["router motor"], "sub": motor_ids["cap"], "face": ca["reference"]},
+                 "b": {"instance": ids["link"], "face": cb["reference"]}, "offset": offset, "angle": angle, "flip": flip}], table)
+    for name, a, b, pin in JACK_MATES:
+        y, z = pin(THETA0)
+        mate("revolute", name, a, b, HOLE_R, HOLE_R, (JACK_X, y, z))
+    # The printed head on the seat, the keeper on the head: fastened.
+    mouth = seat_face() - SLOT_TOP - SLOT_H
+    mate("fastened", "head", "head seat", "jack head", SEAT_HOLE / 2, SEAT_HOLE / 2, (JACK_X, JACK_Y, seat_face()))
+    mate("fastened", "keeper", "jack head", "keeper", KEEPER_SCREW[0] / 2, KEEPER_SCREW[1] / 2, (SLOT_X + KEEPER_SCREW[2], 0.0, mouth))
+    report = full(mcp, table)
+    for k in ("mates", "instances"):
+        for m in report[k]:
+            if m.get("error"):
+                raise RuntimeError(f"{k} {m['name']}: {m['error']}")
+    mates = {m["name"]: m for m in report["mates"]}
+
+    def placed(rep, name):
+        return next(i for i in rep["instances"] if i["name"] == name)["placed"]
+
+    def set_mates(values):
+        apply(mcp, [{"type": "set_mate", "id": mates[n]["id"], "angle": a, "offset": o} for n, (a, o) in values.items()], table)
+
+    # Which way each mate's value turns or moves its part: probe each one
+    # by a small step and read the moving instance's pose. The jack's
+    # parts turn about x; the lever about y, where raising its router
+    # end (+x toward +z) is a negative turn.
+    rest = {n: (m["angle"], m["offset"]) for n, m in mates.items()}
+    sign = {}
+    for name in mates:
+        if name in ("head", "keeper"):      # fastened: nothing to probe
+            continue
+        a, o = rest[name]
+        if name == "plunge":
+            set_mates({name: (a, o + 1.0)})
+            sign[name] = 1.0 if placed(full(mcp, table), "router motor")["position"]["z"] > 0.0 else -1.0
+        elif name in ("lever", "link"):
+            set_mates({name: (a + 1.0, o)})
+            sign[name] = 1.0 if placed(full(mcp, table), name)["rotation"]["y"] < 0.0 else -1.0
+        else:
+            child = next(b for n, _, b, _ in JACK_MATES if n == name)
+            set_mates({name: (a + 1.0, o)})
+            sign[name] = 1.0 if placed(full(mcp, table), child)["rotation"]["x"] > 0.0 else -1.0
+        set_mates({name: rest[name]})
+
+    def pose(plunge):
+        """Every mate's (angle, offset) with the router plunged this far."""
+        rise = math.degrees(math.asin(lever_sin(plunge)) - math.asin(lever_sin(0.0)))
+        w = jack_turns(jack_theta(jack_height(plunge)))
+        out = {"plunge": (rest["plunge"][0], rest["plunge"][1] + sign["plunge"] * plunge),
+               "lever": (rest["lever"][0] + sign["lever"] * rise, rest["lever"][1]),
+               "link": (rest["link"][0] + sign["link"] * math.degrees(link_angle(plunge) - link_angle(0.0)), rest["link"][1])}
+        for name, parent, child, _ in JACK_MATES:
+            rel = w[child] - w.get(parent, 0.0)
+            out[name] = (rest[name][0] + sign[name] * math.degrees(rel), rest[name][1])
+        for name in ("head", "keeper"):     # fastened: as placed
+            out[name] = rest[name]
+        return out
+
+    positions = [0.0, PLUNGE / 4, PLUNGE / 2, 3 * PLUNGE / 4, PLUNGE]
+    poses = []
+    for p in positions:
+        values = pose(p)
+        h = jack_height(p)
+        poses.append({"plunge": p, "jack": h, "seat_depth": h - SADDLE_PIN + SEAT_FACE, "theta": math.degrees(jack_theta(h)),
+                      "turns_per_mm_bit": RATIO * turns_per_mm(h), "mates": {n: {"angle": a, "offset": o} for n, (a, o) in values.items()}})
+    set_mates(pose(0.0))
+    report = full(mcp, table)
+    for m in report["mates"]:
+        if m.get("error"):
+            raise RuntimeError(f"mate {m['name']}: {m['error']}")
+
+    total_turns = 0.0
+    steps = 200
+    for k in range(steps):
+        h0, h1 = jack_height(PLUNGE * k / steps), jack_height(PLUNGE * (k + 1) / steps)
+        total_turns += turns_per_mm((h0 + h1) / 2) * (h1 - h0)
+    with open(os.path.join(OUT, "poses.json"), "w") as f:
+        _, r0, _ = lever_points(lever_sin(0.0))
+        json.dump({"positions": poses, "ratio": RATIO, "pin_r": PIN_R, "total_turns": total_turns,
+                   "link_lower": [r0[0], (LINK_Y[0] + LINK_Y[1]) / 2, r0[1]], "link_length": LINK_L,
+                   "keeper_gap": SLOT_H - PIN_D,
+                   "screw_pitch": SCREW_PITCH}, f, indent=1)
+
+    print(f"tabs: motor assembly {motor_asm}, table {table}")
+    print(f"table {TOP_S / IN:.2f} in high; top underside z {TOP_U:.1f}; pivot ({PIVOT_X:.1f}, {PIVOT_Z:.1f}); "
+          f"router pin x {ROUTER_X:.1f}, jack x {JACK_X:.1f}")
+    for p in poses:
+        print(f"plunge {p['plunge']:5.1f}: jack {p['jack']:5.1f} mm ({p['jack'] / IN:.2f} in), arms {p['theta']:4.1f} deg, "
+              f"{p['turns_per_mm_bit']:.2f} turns per mm of bit ({1.0 / p['turns_per_mm_bit']:.2f} mm a turn)")
+    print(f"{total_turns:.0f} turns of the crank from retracted to fully plunged; crank slot z {SLOT[0]:.1f} to {SLOT[1]:.1f}")
+
+    # Pictures.
+    shot = lambda name, **kw: mcp.call("screenshot", {"tab": table, "width": 1600, "height": 1100,
+                                                      "path": os.path.join(OUT, f"{name}.png"), **kw})
+    shot("iso", view="-0.55,-0.75,0.5")
+    shot("iso_under", view="-0.5,-0.8,-0.25")
+    shot("front", view="front")
+    shot("top", view="top")
+    # Through the lever (y = 0) and through the jack (x at its centre),
+    # retracted and fully plunged.
+    for tag, p in (("retracted", 0.0), ("plunged", PLUNGE)):
+        set_mates(pose(p))
+        shot(f"section_{tag}", view="0,-1,0.0001", section="y:0")
+        shot(f"jack_{tag}", view="-1,0,0.0001", section=f"x:{JACK_X:.1f}", fit=f"{JACK_X - 60:.0f},-320,0,{JACK_X + 60:.0f},320,{TOP_S + 10:.0f}")
+        shot(f"link_{tag}", view="0,-1,0.0001", section=f"y:{LINK_Y[0] + 1.0:.1f}", fit=f"{PIVOT_X - 40:.0f},0,40,{ROUTER_X + 60:.0f},100,{TOP_S + 5:.0f}")
+    shot("iso_plunged", view="-0.55,-0.75,0.5")
+    set_mates(pose(0.0))
+    rom = [{**{n: {"angle": v["angle"], "offset": v["offset"]} for n, v in p["mates"].items()},
+            "label": f"plunged {p['plunge']:g} mm, jack {p['jack'] / IN:.2f} in"} for p in poses[::2]]
+    print(mcp.call("range_of_motion", {"tab": table, "positions": rom, "view": "front", "format": "pdf", "sheet": "A3",
+                                       "note": "The Edwardian Lift: the jack's saddle down, the lever's far end up, the router plunged",
+                                       "path": os.path.join(OUT, "lift.pdf")}))
+    mcp.call("range_of_motion", {"tab": table, "positions": rom, "view": "front", "width": 900, "height": 700,
+                                 "path": os.path.join(OUT, "lift.png")})
+    print(mcp.call("export", {"tab": table, "format": "pdf", "sheet": "A3", "views": ["front", "top", "right", "iso", "section@0"],
+                              "note": "The Edwardian Lift. Preliminary: some router and jack dimensions guessed, see README",
+                              "path": os.path.join(OUT, "jack_table.pdf")}))
+    with open(os.path.join(OUT, "parts.csv"), "w") as f:
+        f.write("kind,item,size,qty,note\n")
+        for kind, rows in (("wood", CUTLIST), ("hardware", HARDWARE)):
+            for item, size, qty, note in rows:
+                f.write(f'{kind},"{item}","{size}",{qty},"{note}"\n')
+    fit = new_tab(mcp, {"type": "add_part_studio", "name": "fit test"})
+    fit_test(Part(mcp, fit, "fit test"))
+    tabs["fit test"] = fit
+    for name in ("cap", "link", "jack head", "keeper", "fit test"):
+        Part(mcp, tabs[name], name).export(os.path.join(OUT, f"{name.replace(' ', '_')}.stl"))
+    mcp.call("screenshot", {"tab": fit, "view": "1,-0.5,0.4", "width": 900, "height": 700, "path": os.path.join(OUT, "fit_test.png")})
+    mcp.call("screenshot", {"tab": tabs["jack head"], "view": "-0.6,-0.7,-0.4", "width": 900, "height": 700,
+                            "path": os.path.join(OUT, "jack_head.png")})
+    mcp.call("screenshot", {"tab": tabs["cap"], "view": "-0.8,-0.6,-0.35", "width": 900, "height": 700,
+                            "path": os.path.join(OUT, "cap.png")})
+    mcp.call("screenshot", {"tab": tabs["cap"], "view": "1,-0.4,0.3", "width": 900, "height": 700,
+                            "path": os.path.join(OUT, "cap_inner.png")})
+    mcp.close()
+
+
+if __name__ == "__main__":
+    main()

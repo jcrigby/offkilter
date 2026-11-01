@@ -6,6 +6,7 @@ ops into method calls and parses the ids out of the `apply` text.
     from okmcp import Mcp, Part, v2
 """
 import json
+import math
 import os
 import re
 import subprocess
@@ -262,3 +263,100 @@ class Part:
             args["view"] = view
             args["hidden"] = hidden
         self.mcp.call("export", args)
+
+
+# -- assemblies ---------------------------------------------------------
+# What a build script needs to place bodies and mate them: the ops that
+# go round `Part` (new tabs, assembly ops, the full report), and the
+# connector frame of a cylindrical face as the kernel builds it (see
+# docs/OPS.md, "A connector is a frame on its face"), so a mate's
+# offset, angle and flip can be read off two bodies built in place.
+
+IDENTITY = {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}
+
+
+def apply(mcp, ops, tab):
+    """Ops on a tab (an assembly's, usually); raises on the first error."""
+    text = mcp.call("apply", {"ops": ops, "tab": tab})
+    if "ERROR:" in text:
+        raise RuntimeError(text.split("ERROR:", 1)[1].splitlines()[0])
+    return text
+
+
+def new_tab(mcp, op):
+    """Adds a tab (add_part_studio, add_assembly) and returns its id."""
+    text = mcp.call("apply", {"ops": [op]})
+    return int(re.search(r"tab (\d+)", text).group(1))
+
+
+def full(mcp, tab):
+    return json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))
+
+
+def _v(d):
+    return (d["x"], d["y"], d["z"])
+
+
+def _sub(a, b):
+    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+
+def _dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def _cross(a, b):
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+
+
+def _norm(a):
+    k = 1.0 / math.sqrt(_dot(a, a))
+    return (a[0] * k, a[1] * k, a[2] * k)
+
+
+def _frame(cyl, face):
+    """A cylindrical face's connector frame as the kernel builds it."""
+    o, z = _v(cyl["origin"]), _norm(_v(cyl["axis"]))
+    c = _v(face["centroid"])
+    t = _dot(_sub(c, o), z)
+    origin = (o[0] + z[0] * t, o[1] + z[1] * t, o[2] + z[2] * t)
+    hint = (1.0, 0.0, 0.0) if abs(z[0]) < 0.9 else (0.0, 1.0, 0.0)
+    y = _norm(_cross(z, hint))
+    return origin, _cross(y, z), y, z
+
+
+def cylinder(body, r, near=None):
+    """The cylinder of radius r on a body (from a full report), with its
+    frame. With `near`, a world point, the one whose axis passes nearest
+    it, within a millimetre; without, the first of that radius. Bodies
+    are built in place, so the frame is the world one."""
+    faces = {json.dumps(f["reference"], sort_keys=True): f for f in body["faces"]}
+    best = None
+    for c in body["cylinders"]:
+        if abs(c["radius"] - r) > 1e-6:
+            continue
+        if near is None:
+            best = (0.0, c)
+            break
+        o, z = _v(c["origin"]), _norm(_v(c["axis"]))
+        d = _sub(near, o)
+        t = _dot(d, z)
+        off = _sub(d, (z[0] * t, z[1] * t, z[2] * t))
+        dist = math.sqrt(_dot(off, off))
+        if best is None or dist < best[0]:
+            best = (dist, c)
+    if best is None or best[0] > 1.0:
+        where = f" near {near}" if near is not None else ""
+        raise RuntimeError(f"{body['name']}: no cylinder of radius {r}{where}")
+    c = best[1]
+    return c, _frame(c, faces[json.dumps(c["reference"], sort_keys=True)])
+
+
+def mate_parameters(target, moving):
+    """offset, angle (degrees) and flip for a mate that puts the moving
+    frame where it is now relative to the target frame."""
+    ot, xt, _, zt = target
+    om, xm, _, zm = moving
+    flip = _dot(zt, zm) > 0.0
+    z = zt if flip else tuple(-c for c in zt)
+    return _dot(_sub(om, ot), zt), math.degrees(math.atan2(_dot(_cross(xt, xm), z), _dot(xt, xm))), flip
