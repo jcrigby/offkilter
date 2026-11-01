@@ -1,7 +1,7 @@
 //! The Edwardian Lift, the scissor-jack router table (examples/jack-table): the router
 //! plunged from retracted to its full 50 mm through the lever, at the
 //! five poses the build writes to `out/poses.json`. At each one the jack
-//! must close on itself, the link from the printed handle's tab must
+//! must close on itself, the link from the printed cap's tab must
 //! land on the lever's pin, the jack's printed head must bear on the
 //! lever's other pin inside its slot with the keeper under it, nothing
 //! else may touch, and the
@@ -263,10 +263,10 @@ fn the_lever_plunges_the_router_through_its_travel() {
             format!("{tag}: the keeper is within {keeper_gap:.1} mm under the pin"),
         );
 
-        // Each printed handle fits over its lug and roll pin, and stays
-        // under the table: beside the base, nothing stops them but the
-        // top. Rigid with the motor, so the general check skips them.
-        for side in ["handle", "right handle"] {
+        // The printed cap fits over its lug and roll pin, and stays
+        // under the table: beside the base, nothing stops it but the
+        // top. Rigid with the motor, so the general check skips it.
+        for side in ["cap"] {
             let h = body(&r, &format!("router motor / {side}"));
             let fit = overlap(h, body(&r, "router motor / router motor"));
             must(

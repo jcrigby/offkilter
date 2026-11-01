@@ -1011,7 +1011,7 @@
                     "type": "point",
                     "pos": {
                       "x": -458.815,
-                      "y": 202.86513188465355
+                      "y": 202.8758106555396
                     }
                   },
                   {
@@ -1019,7 +1019,7 @@
                     "type": "point",
                     "pos": {
                       "x": -458.815,
-                      "y": 252.86552181615545
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -1033,7 +1033,7 @@
                     "type": "point",
                     "pos": {
                       "x": -446.815,
-                      "y": 252.86552181615545
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -1041,7 +1041,7 @@
                     "type": "point",
                     "pos": {
                       "x": -434.815,
-                      "y": 252.86552181615545
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -1049,7 +1049,7 @@
                     "type": "point",
                     "pos": {
                       "x": -458.815,
-                      "y": 252.86552181615545
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -1064,7 +1064,7 @@
                     "type": "point",
                     "pos": {
                       "x": -434.815,
-                      "y": 252.86552181615545
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -1072,7 +1072,7 @@
                     "type": "point",
                     "pos": {
                       "x": -434.815,
-                      "y": 202.86513188465355
+                      "y": 202.8758106555396
                     }
                   },
                   {
@@ -1086,7 +1086,7 @@
                     "type": "point",
                     "pos": {
                       "x": -446.815,
-                      "y": 202.86513188465355
+                      "y": 202.8758106555396
                     }
                   },
                   {
@@ -1094,7 +1094,7 @@
                     "type": "point",
                     "pos": {
                       "x": -458.815,
-                      "y": 202.86513188465355
+                      "y": 202.8758106555396
                     }
                   },
                   {
@@ -1102,7 +1102,7 @@
                     "type": "point",
                     "pos": {
                       "x": -434.815,
-                      "y": 202.86513188465355
+                      "y": 202.8758106555396
                     }
                   },
                   {
@@ -4274,18 +4274,18 @@
       "id": 14,
       "kind": {
         "type": "part_studio",
-        "name": "handle",
+        "name": "cap",
         "features": [
           {
             "id": 1,
-            "name": "handle",
+            "name": "cap",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
-                "base": "right",
-                "offset": -133.63
+                "base": "top",
+                "offset": 254.09999999999997
               },
               "sketch": {
                 "entities": [
@@ -4293,16 +4293,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -11.5,
-                      "y": 201.65
+                      "x": -133.63,
+                      "y": -16.492455223880597
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 11.5,
-                      "y": 201.65
+                      "x": -100.0,
+                      "y": -16.492455223880597
                     }
                   },
                   {
@@ -4315,16 +4315,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 11.5,
-                      "y": 201.65
+                      "x": -100.0,
+                      "y": -16.492455223880597
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 19.89560439560439,
-                      "y": 209.65
+                      "x": -100.0,
+                      "y": 16.492455223880597
                     }
                   },
                   {
@@ -4337,16 +4337,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 19.89560439560439,
-                      "y": 209.65
+                      "x": -100.0,
+                      "y": 16.492455223880597
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 22.73901098901099,
-                      "y": 267.15
+                      "x": -133.63,
+                      "y": 16.492455223880597
                     }
                   },
                   {
@@ -4359,16 +4359,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 22.73901098901099,
-                      "y": 267.15
+                      "x": -133.63,
+                      "y": 16.492455223880597
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 15.134615384615383,
-                      "y": 275.15
+                      "x": -133.63,
+                      "y": -16.492455223880597
                     }
                   },
                   {
@@ -4376,105 +4376,62 @@
                     "type": "line",
                     "start": 9,
                     "end": 10
-                  },
-                  {
-                    "id": 12,
-                    "type": "point",
-                    "pos": {
-                      "x": 15.134615384615383,
-                      "y": 275.15
-                    }
-                  },
-                  {
-                    "id": 13,
-                    "type": "point",
-                    "pos": {
-                      "x": -15.134615384615383,
-                      "y": 275.15
-                    }
-                  },
-                  {
-                    "id": 14,
-                    "type": "line",
-                    "start": 12,
-                    "end": 13
-                  },
-                  {
-                    "id": 15,
-                    "type": "point",
-                    "pos": {
-                      "x": -15.134615384615383,
-                      "y": 275.15
-                    }
-                  },
-                  {
-                    "id": 16,
-                    "type": "point",
-                    "pos": {
-                      "x": -22.73901098901099,
-                      "y": 267.15
-                    }
-                  },
-                  {
-                    "id": 17,
-                    "type": "line",
-                    "start": 15,
-                    "end": 16
-                  },
-                  {
-                    "id": 18,
-                    "type": "point",
-                    "pos": {
-                      "x": -22.73901098901099,
-                      "y": 267.15
-                    }
-                  },
-                  {
-                    "id": 19,
-                    "type": "point",
-                    "pos": {
-                      "x": -19.89560439560439,
-                      "y": 209.65
-                    }
-                  },
-                  {
-                    "id": 20,
-                    "type": "line",
-                    "start": 18,
-                    "end": 19
-                  },
-                  {
-                    "id": 21,
-                    "type": "point",
-                    "pos": {
-                      "x": -19.89560439560439,
-                      "y": 209.65
-                    }
-                  },
-                  {
-                    "id": 22,
-                    "type": "point",
-                    "pos": {
-                      "x": -11.5,
-                      "y": 201.65
-                    }
-                  },
-                  {
-                    "id": 23,
-                    "type": "line",
-                    "start": 21,
-                    "end": 22
                   }
                 ],
-                "constraints": [],
-                "next_entity": 24,
-                "next_constraint": 0
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
               }
             }
           },
           {
             "id": 2,
-            "name": "handle",
+            "name": "cap",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -4482,7 +4439,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 33.629999999999995,
+              "depth": 19.517761194029845,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4996,7 +4953,7 @@
                     "type": "point",
                     "pos": {
                       "x": -129.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   },
                   {
@@ -5004,7 +4961,7 @@
                     "type": "point",
                     "pos": {
                       "x": -103.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   },
                   {
@@ -5018,7 +4975,7 @@
                     "type": "point",
                     "pos": {
                       "x": -103.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   },
                   {
@@ -5026,7 +4983,7 @@
                     "type": "point",
                     "pos": {
                       "x": -103.815,
-                      "y": 221.65
+                      "y": 269.09999999999997
                     }
                   },
                   {
@@ -5040,7 +4997,7 @@
                     "type": "point",
                     "pos": {
                       "x": -103.815,
-                      "y": 221.65
+                      "y": 269.09999999999997
                     }
                   },
                   {
@@ -5048,7 +5005,7 @@
                     "type": "point",
                     "pos": {
                       "x": -129.815,
-                      "y": 221.65
+                      "y": 269.09999999999997
                     }
                   },
                   {
@@ -5062,7 +5019,7 @@
                     "type": "point",
                     "pos": {
                       "x": -129.815,
-                      "y": 221.65
+                      "y": 269.09999999999997
                     }
                   },
                   {
@@ -5070,7 +5027,7 @@
                     "type": "point",
                     "pos": {
                       "x": -129.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   },
                   {
@@ -5122,7 +5079,7 @@
                     "type": "point",
                     "pos": {
                       "x": -116.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   },
                   {
@@ -5263,7 +5220,7 @@
                     "type": "point",
                     "pos": {
                       "x": -116.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   },
                   {
@@ -5315,7 +5272,7 @@
                     "type": "point",
                     "pos": {
                       "x": -116.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   },
                   {
@@ -5367,7 +5324,7 @@
                     "type": "point",
                     "pos": {
                       "x": -116.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   },
                   {
@@ -5407,7 +5364,7 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "2": "left handle, printed (PETG), short, with a tab and a 3/8 bolt for the link"
+          "2": "lug cap, printed (PETG), with a tab and a 3/8 bolt for the link"
         },
         "part_materials": {
           "2": {
@@ -5419,819 +5376,6 @@
     },
     {
       "id": 15,
-      "kind": {
-        "type": "part_studio",
-        "name": "right handle",
-        "features": [
-          {
-            "id": 1,
-            "name": "right handle",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 100.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -11.5,
-                      "y": 201.65
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 11.5,
-                      "y": 201.65
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 11.5,
-                      "y": 201.65
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 19.89560439560439,
-                      "y": 209.65
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 19.89560439560439,
-                      "y": 209.65
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 22.73901098901099,
-                      "y": 267.15
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 22.73901098901099,
-                      "y": 267.15
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 15.134615384615383,
-                      "y": 275.15
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  },
-                  {
-                    "id": 12,
-                    "type": "point",
-                    "pos": {
-                      "x": 15.134615384615383,
-                      "y": 275.15
-                    }
-                  },
-                  {
-                    "id": 13,
-                    "type": "point",
-                    "pos": {
-                      "x": -15.134615384615383,
-                      "y": 275.15
-                    }
-                  },
-                  {
-                    "id": 14,
-                    "type": "line",
-                    "start": 12,
-                    "end": 13
-                  },
-                  {
-                    "id": 15,
-                    "type": "point",
-                    "pos": {
-                      "x": -15.134615384615383,
-                      "y": 275.15
-                    }
-                  },
-                  {
-                    "id": 16,
-                    "type": "point",
-                    "pos": {
-                      "x": -22.73901098901099,
-                      "y": 267.15
-                    }
-                  },
-                  {
-                    "id": 17,
-                    "type": "line",
-                    "start": 15,
-                    "end": 16
-                  },
-                  {
-                    "id": 18,
-                    "type": "point",
-                    "pos": {
-                      "x": -22.73901098901099,
-                      "y": 267.15
-                    }
-                  },
-                  {
-                    "id": 19,
-                    "type": "point",
-                    "pos": {
-                      "x": -19.89560439560439,
-                      "y": 209.65
-                    }
-                  },
-                  {
-                    "id": 20,
-                    "type": "line",
-                    "start": 18,
-                    "end": 19
-                  },
-                  {
-                    "id": 21,
-                    "type": "point",
-                    "pos": {
-                      "x": -19.89560439560439,
-                      "y": 209.65
-                    }
-                  },
-                  {
-                    "id": 22,
-                    "type": "point",
-                    "pos": {
-                      "x": -11.5,
-                      "y": 201.65
-                    }
-                  },
-                  {
-                    "id": 23,
-                    "type": "line",
-                    "start": 21,
-                    "end": 22
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 24,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "right handle",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 33.629999999999995,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "stub",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 83.63
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -16.492455223880597,
-                      "y": 254.09999999999997
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 16.492455223880597,
-                      "y": 254.09999999999997
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 16.492455223880597,
-                      "y": 254.09999999999997
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 16.492455223880597,
-                      "y": 273.6177611940298
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 16.492455223880597,
-                      "y": 273.6177611940298
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -16.492455223880597,
-                      "y": 273.6177611940298
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -16.492455223880597,
-                      "y": 273.6177611940298
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -16.492455223880597,
-                      "y": 254.09999999999997
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "stub",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 16.37,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 5,
-            "name": "stub pocket 1",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 100.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -11.330149253731344,
-                      "y": 257.09999999999997
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 11.330149253731344,
-                      "y": 257.09999999999997
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 11.330149253731344,
-                      "y": 257.09999999999997
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 11.330149253731344,
-                      "y": 268.90746268656716
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 11.330149253731344,
-                      "y": 268.90746268656716
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -11.330149253731344,
-                      "y": 268.90746268656716
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -11.330149253731344,
-                      "y": 268.90746268656716
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -11.330149253731344,
-                      "y": 257.09999999999997
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "stub pocket 2",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 82.63
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -13.624544776119404,
-                      "y": 257.09999999999997
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 13.624544776119404,
-                      "y": 257.09999999999997
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 13.624544776119404,
-                      "y": 257.09999999999997
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 13.624544776119404,
-                      "y": 270.72223880597016
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 13.624544776119404,
-                      "y": 270.72223880597016
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -13.624544776119404,
-                      "y": 270.72223880597016
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -13.624544776119404,
-                      "y": 270.72223880597016
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -13.624544776119404,
-                      "y": 257.09999999999997
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 7,
-            "name": "stub pocket",
-            "suppressed": false,
-            "kind": {
-              "type": "loft",
-              "sketch": 5,
-              "sketch_b": 6,
-              "op": "remove"
-            }
-          },
-          {
-            "id": 8,
-            "name": "handle screw",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 133.63
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -6.5,
-                      "y": 263.15
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 9,
-            "name": "handle screw",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 8,
-              "diameter": 6.5,
-              "depth": 34.629999999999995,
-              "through_all": false,
-              "direction": "reverse",
-              "counterbore": {
-                "diameter": 11.0,
-                "depth": 6.529999999999994
-              },
-              "countersink": null
-            }
-          },
-          {
-            "id": 10,
-            "name": "roll pin hole",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 100.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 6.5,
-                      "y": 263.15
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 11,
-            "name": "roll pin hole",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 10,
-              "diameter": 5.6499999999999995,
-              "depth": 11.9,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          }
-        ],
-        "next_id": 12,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_names": {
-          "2": "right handle, printed (PETG), short"
-        },
-        "part_materials": {
-          "2": {
-            "name": "PETG",
-            "density": 1.27
-          }
-        }
-      }
-    },
-    {
-      "id": 16,
       "kind": {
         "type": "part_studio",
         "name": "lever",
@@ -6253,16 +5397,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -464.8755935802982,
-                      "y": 131.05485352439118
+                      "x": -464.87207972802094,
+                      "y": 131.0781356561299
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -102.58321394380444,
-                      "y": 46.625997927938165
+                      "x": -102.58795895824105,
+                      "y": 46.61384830302724
                     }
                   },
                   {
@@ -6275,16 +5419,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -102.58321394380444,
-                      "y": 46.625997927938165
+                      "x": -102.58795895824105,
+                      "y": 46.61384830302724
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -93.93606502384516,
-                      "y": 83.73174971328874
+                      "x": -93.93718114062489,
+                      "y": 83.71875422057728
                     }
                   },
                   {
@@ -6297,16 +5441,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -93.93606502384516,
-                      "y": 83.73174971328874
+                      "x": -93.93718114062489,
+                      "y": 83.71875422057728
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -456.2284446603389,
-                      "y": 168.16060530974173
+                      "x": -456.2213019104048,
+                      "y": 168.1830415736799
                     }
                   },
                   {
@@ -6319,16 +5463,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -456.2284446603389,
-                      "y": 168.16060530974173
+                      "x": -456.2213019104048,
+                      "y": 168.1830415736799
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -464.8755935802982,
-                      "y": 131.05485352439118
+                      "x": -464.87207972802094,
+                      "y": 131.0781356561299
                     }
                   },
                   {
@@ -6379,16 +5523,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -414.2325727708958,
-                      "y": 119.25297048402678
+                      "x": -414.23021338385814,
+                      "y": 119.27129978956717
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -143.4871922898602,
-                      "y": 56.158288075924794
+                      "x": -143.49100485160324,
+                      "y": 56.15013881063561
                     }
                   },
                   {
@@ -6401,16 +5545,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -143.4871922898602,
-                      "y": 56.158288075924794
+                      "x": -143.49100485160324,
+                      "y": 56.15013881063561
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -134.84004336990088,
-                      "y": 93.26403986127536
+                      "x": -134.8402270339871,
+                      "y": 93.25504472818564
                     }
                   },
                   {
@@ -6423,16 +5567,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -134.84004336990088,
-                      "y": 93.26403986127536
+                      "x": -134.8402270339871,
+                      "y": 93.25504472818564
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -405.58542385093654,
-                      "y": 156.35872226937732
+                      "x": -405.579435566242,
+                      "y": 156.37620570711718
                     }
                   },
                   {
@@ -6445,16 +5589,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -405.58542385093654,
-                      "y": 156.35872226937732
+                      "x": -405.579435566242,
+                      "y": 156.37620570711718
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -414.2325727708958,
-                      "y": 119.25297048402678
+                      "x": -414.23021338385814,
+                      "y": 119.27129978956717
                     }
                   },
                   {
@@ -6505,16 +5649,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -464.8755935802982,
-                      "y": 131.05485352439118
+                      "x": -464.87207972802094,
+                      "y": 131.0781356561299
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -102.58321394380444,
-                      "y": 46.625997927938165
+                      "x": -102.58795895824105,
+                      "y": 46.61384830302724
                     }
                   },
                   {
@@ -6527,16 +5671,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -102.58321394380444,
-                      "y": 46.625997927938165
+                      "x": -102.58795895824105,
+                      "y": 46.61384830302724
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -93.93606502384516,
-                      "y": 83.73174971328874
+                      "x": -93.93718114062489,
+                      "y": 83.71875422057728
                     }
                   },
                   {
@@ -6549,16 +5693,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -93.93606502384516,
-                      "y": 83.73174971328874
+                      "x": -93.93718114062489,
+                      "y": 83.71875422057728
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -456.2284446603389,
-                      "y": 168.16060530974173
+                      "x": -456.2213019104048,
+                      "y": 168.1830415736799
                     }
                   },
                   {
@@ -6571,16 +5715,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -456.2284446603389,
-                      "y": 168.16060530974173
+                      "x": -456.2213019104048,
+                      "y": 168.1830415736799
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -464.8755935802982,
-                      "y": 131.05485352439118
+                      "x": -464.87207972802094,
+                      "y": 131.0781356561299
                     }
                   },
                   {
@@ -6674,8 +5818,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -441.0739341936253,
-                      "y": 145.0685436323109
+                      "x": -441.0690499176118,
+                      "y": 145.08949789699616
                     }
                   },
                   {
@@ -6726,8 +5870,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -441.0739341936253,
-                      "y": 145.0685436323109
+                      "x": -441.0690499176118,
+                      "y": 145.08949789699616
                     }
                   },
                   {
@@ -6778,8 +5922,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -441.0739341936253,
-                      "y": 145.0685436323109
+                      "x": -441.0690499176118,
+                      "y": 145.08949789699616
                     }
                   },
                   {
@@ -6830,8 +5974,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -119.68553290318734,
-                      "y": 70.17197818384453
+                      "x": -119.6879750411941,
+                      "y": 70.1615010515019
                     }
                   },
                   {
@@ -6882,8 +6026,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -119.68553290318734,
-                      "y": 70.17197818384453
+                      "x": -119.6879750411941,
+                      "y": 70.1615010515019
                     }
                   },
                   {
@@ -6934,8 +6078,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -119.68553290318734,
-                      "y": 70.17197818384453
+                      "x": -119.6879750411941,
+                      "y": 70.1615010515019
                     }
                   },
                   {
@@ -6986,7 +6130,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 16,
       "kind": {
         "type": "part_studio",
         "name": "link",
@@ -7008,16 +6152,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -106.817884901901,
-                      "y": 189.4098131657201
+                      "x": -106.8163957142692,
+                      "y": 241.93293014225807
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -109.68841780508836,
-                      "y": 69.93179134956466
+                      "x": -109.6893707554633,
+                      "y": 69.99443119376001
                     }
                   },
                   {
@@ -7030,16 +6174,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -109.68841780508836,
-                      "y": 69.93179134956466
+                      "x": -109.6893707554633,
+                      "y": 69.99443119376001
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -129.6826480012863,
-                      "y": 70.4121650181244
+                      "x": -129.68657932692489,
+                      "y": 70.3285709092438
                     }
                   },
                   {
@@ -7052,16 +6196,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -129.6826480012863,
-                      "y": 70.4121650181244
+                      "x": -129.68657932692489,
+                      "y": 70.3285709092438
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -126.812115098099,
-                      "y": 189.89018683427983
+                      "x": -126.8136042857308,
+                      "y": 242.26706985774183
                     }
                   },
                   {
@@ -7074,16 +6218,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -126.812115098099,
-                      "y": 189.89018683427983
+                      "x": -126.8136042857308,
+                      "y": 242.26706985774183
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -106.817884901901,
-                      "y": 189.4098131657201
+                      "x": -106.8163957142692,
+                      "y": 241.93293014225807
                     }
                   },
                   {
@@ -7135,7 +6279,7 @@
                     "type": "point",
                     "pos": {
                       "x": -116.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   },
                   {
@@ -7187,7 +6331,7 @@
                     "type": "point",
                     "pos": {
                       "x": -116.815,
-                      "y": 189.65
+                      "y": 242.09999999999997
                     }
                   }
                 ],
@@ -7229,8 +6373,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -119.68553290318734,
-                      "y": 70.17197818384453
+                      "x": -119.6879750411941,
+                      "y": 70.1615010515019
                     }
                   },
                   {
@@ -7281,8 +6425,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -119.68553290318734,
-                      "y": 70.17197818384453
+                      "x": -119.6879750411941,
+                      "y": 70.1615010515019
                     }
                   }
                 ],
@@ -7313,7 +6457,7 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "2": "link, printed (PETG), 119.5 mm between 3/8 holes"
+          "2": "link, printed (PETG), 172.0 mm between 3/8 holes"
         },
         "part_materials": {
           "2": {
@@ -7324,7 +6468,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 17,
       "kind": {
         "type": "part_studio",
         "name": "upper front arm",
@@ -7346,16 +6490,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -2.9978451135097153,
-                      "y": 291.361285933758
+                      "x": -2.9984999342811314,
+                      "y": 291.3610798642881
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -155.6172701733813,
-                      "y": 243.32680774991343
+                      "x": -155.62122210567128,
+                      "y": 243.3370788127862
                     }
                   },
                   {
@@ -7368,16 +6512,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -155.6172701733813,
-                      "y": 243.32680774991343
+                      "x": -155.62122210567128,
+                      "y": 243.3370788127862
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -161.62157994636186,
-                      "y": 262.4042358823974
+                      "x": -161.624222237109,
+                      "y": 262.41491908420994
                     }
                   },
                   {
@@ -7390,16 +6534,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -161.62157994636186,
-                      "y": 262.4042358823974
+                      "x": -161.624222237109,
+                      "y": 262.41491908420994
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -9.002154886490285,
-                      "y": 310.43871406624197
+                      "x": -9.001500065718869,
+                      "y": 310.43892013571184
                     }
                   },
                   {
@@ -7412,16 +6556,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -9.002154886490285,
-                      "y": 310.43871406624197
+                      "x": -9.001500065718869,
+                      "y": 310.43892013571184
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -2.9978451135097153,
-                      "y": 291.361285933758
+                      "x": -2.9984999342811314,
+                      "y": 291.3610798642881
                     }
                   },
                   {
@@ -7567,8 +6711,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -158.6194250598716,
-                      "y": 252.86552181615545
+                      "x": -158.62272217139014,
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -7619,8 +6763,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -158.6194250598716,
-                      "y": 252.86552181615545
+                      "x": -158.62272217139014,
+                      "y": 252.87599894849808
                     }
                   }
                 ],
@@ -7662,7 +6806,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 18,
       "kind": {
         "type": "part_studio",
         "name": "upper rear arm",
@@ -7684,16 +6828,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 41.00215488649029,
-                      "y": 310.43871406624197
+                      "x": 41.00150006571887,
+                      "y": 310.43892013571184
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 193.62157994636183,
-                      "y": 262.4042358823974
+                      "x": 193.624222237109,
+                      "y": 262.41491908420994
                     }
                   },
                   {
@@ -7706,16 +6850,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 193.62157994636183,
-                      "y": 262.4042358823974
+                      "x": 193.624222237109,
+                      "y": 262.41491908420994
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 187.6172701733813,
-                      "y": 243.32680774991343
+                      "x": 187.62122210567128,
+                      "y": 243.3370788127862
                     }
                   },
                   {
@@ -7728,16 +6872,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 187.6172701733813,
-                      "y": 243.32680774991343
+                      "x": 187.62122210567128,
+                      "y": 243.3370788127862
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 34.99784511350971,
-                      "y": 291.361285933758
+                      "x": 34.99849993428113,
+                      "y": 291.3610798642881
                     }
                   },
                   {
@@ -7750,16 +6894,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 34.99784511350971,
-                      "y": 291.361285933758
+                      "x": 34.99849993428113,
+                      "y": 291.3610798642881
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 41.00215488649029,
-                      "y": 310.43871406624197
+                      "x": 41.00150006571887,
+                      "y": 310.43892013571184
                     }
                   },
                   {
@@ -7905,8 +7049,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 190.6194250598716,
-                      "y": 252.86552181615545
+                      "x": 190.62272217139017,
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -7957,8 +7101,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 190.6194250598716,
-                      "y": 252.86552181615545
+                      "x": 190.62272217139017,
+                      "y": 252.87599894849808
                     }
                   }
                 ],
@@ -8000,7 +7144,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 19,
       "kind": {
         "type": "part_studio",
         "name": "lower front arm",
@@ -8022,16 +7166,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -155.6172701733813,
-                      "y": 262.4042358823974
+                      "x": -155.62122210567128,
+                      "y": 262.41491908420994
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -2.997845113509717,
-                      "y": 214.3697576985529
+                      "x": -2.9984999342811296,
+                      "y": 214.39091803270804
                     }
                   },
                   {
@@ -8044,16 +7188,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -2.997845113509717,
-                      "y": 214.3697576985529
+                      "x": -2.9984999342811296,
+                      "y": 214.39091803270804
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -9.002154886490283,
-                      "y": 195.29232956606893
+                      "x": -9.00150006571887,
+                      "y": 195.31307776128423
                     }
                   },
                   {
@@ -8066,16 +7210,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -9.002154886490283,
-                      "y": 195.29232956606893
+                      "x": -9.00150006571887,
+                      "y": 195.31307776128423
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -161.62157994636186,
-                      "y": 243.32680774991343
+                      "x": -161.624222237109,
+                      "y": 243.3370788127862
                     }
                   },
                   {
@@ -8088,16 +7232,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -161.62157994636186,
-                      "y": 243.32680774991343
+                      "x": -161.624222237109,
+                      "y": 243.3370788127862
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -155.6172701733813,
-                      "y": 262.4042358823974
+                      "x": -155.62122210567128,
+                      "y": 262.41491908420994
                     }
                   },
                   {
@@ -8148,8 +7292,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -158.6194250598716,
-                      "y": 252.86552181615545
+                      "x": -158.62272217139014,
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -8200,8 +7344,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -158.6194250598716,
-                      "y": 252.86552181615545
+                      "x": -158.62272217139014,
+                      "y": 252.87599894849808
                     }
                   }
                 ],
@@ -8244,7 +7388,7 @@
                     "type": "point",
                     "pos": {
                       "x": -6.0,
-                      "y": 204.8310436323109
+                      "y": 204.85199789699615
                     }
                   },
                   {
@@ -8296,7 +7440,7 @@
                     "type": "point",
                     "pos": {
                       "x": -6.0,
-                      "y": 204.8310436323109
+                      "y": 204.85199789699615
                     }
                   }
                 ],
@@ -8338,7 +7482,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 20,
       "kind": {
         "type": "part_studio",
         "name": "lower rear arm",
@@ -8360,16 +7504,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 34.99784511350972,
-                      "y": 214.3697576985529
+                      "x": 34.99849993428113,
+                      "y": 214.39091803270804
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 187.6172701733813,
-                      "y": 262.4042358823974
+                      "x": 187.62122210567128,
+                      "y": 262.41491908420994
                     }
                   },
                   {
@@ -8382,16 +7526,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 187.6172701733813,
-                      "y": 262.4042358823974
+                      "x": 187.62122210567128,
+                      "y": 262.41491908420994
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 193.62157994636183,
-                      "y": 243.32680774991343
+                      "x": 193.624222237109,
+                      "y": 243.3370788127862
                     }
                   },
                   {
@@ -8404,16 +7548,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 193.62157994636183,
-                      "y": 243.32680774991343
+                      "x": 193.624222237109,
+                      "y": 243.3370788127862
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 41.00215488649028,
-                      "y": 195.29232956606893
+                      "x": 41.00150006571887,
+                      "y": 195.31307776128423
                     }
                   },
                   {
@@ -8426,16 +7570,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 41.00215488649028,
-                      "y": 195.29232956606893
+                      "x": 41.00150006571887,
+                      "y": 195.31307776128423
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 34.99784511350972,
-                      "y": 214.3697576985529
+                      "x": 34.99849993428113,
+                      "y": 214.39091803270804
                     }
                   },
                   {
@@ -8487,7 +7631,7 @@
                     "type": "point",
                     "pos": {
                       "x": 38.0,
-                      "y": 204.8310436323109
+                      "y": 204.85199789699615
                     }
                   },
                   {
@@ -8539,7 +7683,7 @@
                     "type": "point",
                     "pos": {
                       "x": 38.0,
-                      "y": 204.8310436323109
+                      "y": 204.85199789699615
                     }
                   }
                 ],
@@ -8581,8 +7725,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 190.6194250598716,
-                      "y": 252.86552181615545
+                      "x": 190.62272217139017,
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -8633,8 +7777,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 190.6194250598716,
-                      "y": 252.86552181615545
+                      "x": 190.62272217139017,
+                      "y": 252.87599894849808
                     }
                   }
                 ],
@@ -8676,7 +7820,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 21,
       "kind": {
         "type": "part_studio",
         "name": "head seat",
@@ -8690,7 +7834,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 181.8310436323109
+                "offset": 181.85199789699615
               },
               "sketch": {
                 "entities": [
@@ -8870,7 +8014,7 @@
                     "type": "point",
                     "pos": {
                       "x": -6.0,
-                      "y": 204.8310436323109
+                      "y": 204.85199789699615
                     }
                   }
                 ],
@@ -8913,7 +8057,7 @@
                     "type": "point",
                     "pos": {
                       "x": 38.0,
-                      "y": 204.8310436323109
+                      "y": 204.85199789699615
                     }
                   }
                 ],
@@ -8947,7 +8091,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 180.8310436323109
+                "offset": 180.85199789699615
               },
               "sketch": {
                 "entities": [
@@ -8998,7 +8142,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 22,
       "kind": {
         "type": "part_studio",
         "name": "jack head",
@@ -9012,7 +8156,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 169.8310436323109
+                "offset": 169.85199789699615
               },
               "sketch": {
                 "entities": [
@@ -9183,7 +8327,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 181.8310436323109
+                "offset": 181.85199789699615
               },
               "sketch": {
                 "entities": [
@@ -9354,7 +8498,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 181.8310436323109
+                "offset": 181.85199789699615
               },
               "sketch": {
                 "entities": [
@@ -9525,7 +8669,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 139.3060436323109
+                "offset": 139.32699789699615
               },
               "sketch": {
                 "entities": [
@@ -9533,7 +8677,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -465.92828292255456,
+                      "x": -465.93077823856106,
                       "y": -5.5
                     }
                   },
@@ -9541,7 +8685,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -421.92828292255456,
+                      "x": -421.93077823856106,
                       "y": -5.5
                     }
                   },
@@ -9555,7 +8699,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -421.92828292255456,
+                      "x": -421.93077823856106,
                       "y": -5.5
                     }
                   },
@@ -9563,7 +8707,7 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -421.92828292255456,
+                      "x": -421.93077823856106,
                       "y": 5.5
                     }
                   },
@@ -9577,7 +8721,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -421.92828292255456,
+                      "x": -421.93077823856106,
                       "y": 5.5
                     }
                   },
@@ -9585,7 +8729,7 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -465.92828292255456,
+                      "x": -465.93077823856106,
                       "y": 5.5
                     }
                   },
@@ -9599,7 +8743,7 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -465.92828292255456,
+                      "x": -465.93077823856106,
                       "y": 5.5
                     }
                   },
@@ -9607,7 +8751,7 @@
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -465.92828292255456,
+                      "x": -465.93077823856106,
                       "y": -5.5
                     }
                   },
@@ -9704,16 +8848,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -453.92828292255456,
-                      "y": 138.3060436323109
+                      "x": -453.93077823856106,
+                      "y": 138.32699789699615
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -433.92828292255456,
-                      "y": 138.3060436323109
+                      "x": -433.93077823856106,
+                      "y": 138.32699789699615
                     }
                   },
                   {
@@ -9726,16 +8870,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -433.92828292255456,
-                      "y": 138.3060436323109
+                      "x": -433.93077823856106,
+                      "y": 138.32699789699615
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -433.92828292255456,
-                      "y": 149.8310436323109
+                      "x": -433.93077823856106,
+                      "y": 149.85199789699615
                     }
                   },
                   {
@@ -9748,16 +8892,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -433.92828292255456,
-                      "y": 149.8310436323109
+                      "x": -433.93077823856106,
+                      "y": 149.85199789699615
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -453.92828292255456,
-                      "y": 149.8310436323109
+                      "x": -453.93077823856106,
+                      "y": 149.85199789699615
                     }
                   },
                   {
@@ -9770,16 +8914,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -453.92828292255456,
-                      "y": 149.8310436323109
+                      "x": -453.93077823856106,
+                      "y": 149.85199789699615
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -453.92828292255456,
-                      "y": 138.3060436323109
+                      "x": -453.93077823856106,
+                      "y": 138.32699789699615
                     }
                   },
                   {
@@ -9867,7 +9011,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 168.8310436323109
+                "offset": 168.85199789699615
               },
               "sketch": {
                 "entities": [
@@ -9910,7 +9054,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 168.8310436323109
+                "offset": 168.85199789699615
               },
               "sketch": {
                 "entities": [
@@ -10168,7 +9312,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 138.3060436323109
+                "offset": 138.32699789699615
               },
               "sketch": {
                 "entities": [
@@ -10176,7 +9320,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -459.92828292255456,
+                      "x": -459.93077823856106,
                       "y": 0.0
                     }
                   }
@@ -10211,7 +9355,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 138.3060436323109
+                "offset": 138.32699789699615
               },
               "sketch": {
                 "entities": [
@@ -10219,7 +9363,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -427.92828292255456,
+                      "x": -427.93077823856106,
                       "y": 0.0
                     }
                   }
@@ -10262,7 +9406,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 23,
       "kind": {
         "type": "part_studio",
         "name": "keeper",
@@ -10276,7 +9420,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 133.3060436323109
+                "offset": 133.32699789699615
               },
               "sketch": {
                 "entities": [
@@ -10284,7 +9428,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -465.92828292255456,
+                      "x": -465.93077823856106,
                       "y": -5.5
                     }
                   },
@@ -10292,7 +9436,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -421.92828292255456,
+                      "x": -421.93077823856106,
                       "y": -5.5
                     }
                   },
@@ -10306,7 +9450,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -421.92828292255456,
+                      "x": -421.93077823856106,
                       "y": -5.5
                     }
                   },
@@ -10314,7 +9458,7 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -421.92828292255456,
+                      "x": -421.93077823856106,
                       "y": 5.5
                     }
                   },
@@ -10328,7 +9472,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -421.92828292255456,
+                      "x": -421.93077823856106,
                       "y": 5.5
                     }
                   },
@@ -10336,7 +9480,7 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -465.92828292255456,
+                      "x": -465.93077823856106,
                       "y": 5.5
                     }
                   },
@@ -10350,7 +9494,7 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -465.92828292255456,
+                      "x": -465.93077823856106,
                       "y": 5.5
                     }
                   },
@@ -10358,7 +9502,7 @@
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -465.92828292255456,
+                      "x": -465.93077823856106,
                       "y": -5.5
                     }
                   },
@@ -10447,7 +9591,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 132.3060436323109
+                "offset": 132.32699789699615
               },
               "sketch": {
                 "entities": [
@@ -10455,7 +9599,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -459.92828292255456,
+                      "x": -459.93077823856106,
                       "y": 0.0
                     }
                   }
@@ -10490,7 +9634,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 132.3060436323109
+                "offset": 132.32699789699615
               },
               "sketch": {
                 "entities": [
@@ -10498,7 +9642,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -427.92828292255456,
+                      "x": -427.93077823856106,
                       "y": 0.0
                     }
                   }
@@ -10541,7 +9685,7 @@
       }
     },
     {
-      "id": 25,
+      "id": 24,
       "kind": {
         "type": "part_studio",
         "name": "screw",
@@ -10563,8 +9707,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -158.6194250598716,
-                      "y": 252.86552181615545
+                      "x": -158.62272217139014,
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -10615,8 +9759,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -158.6194250598716,
-                      "y": 252.86552181615545
+                      "x": -158.62272217139014,
+                      "y": 252.87599894849808
                     }
                   }
                 ],
@@ -10650,7 +9794,7 @@
               "plane": {
                 "type": "standard",
                 "base": "front",
-                "offset": -241.3805749401284
+                "offset": -241.37727782860983
               },
               "sketch": {
                 "entities": [
@@ -10659,7 +9803,7 @@
                     "type": "point",
                     "pos": {
                       "x": -446.815,
-                      "y": 252.86552181615545
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -10702,7 +9846,7 @@
               "plane": {
                 "type": "standard",
                 "base": "front",
-                "offset": 168.6194250598716
+                "offset": 168.62272217139014
               },
               "sketch": {
                 "entities": [
@@ -10711,7 +9855,7 @@
                     "type": "point",
                     "pos": {
                       "x": -446.815,
-                      "y": 252.86552181615545
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -10754,7 +9898,7 @@
               "plane": {
                 "type": "standard",
                 "base": "front",
-                "offset": 208.6194250598716
+                "offset": 208.62272217139017
               },
               "sketch": {
                 "entities": [
@@ -10763,7 +9907,7 @@
                     "type": "point",
                     "pos": {
                       "x": -446.815,
-                      "y": 252.86552181615545
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -10806,7 +9950,7 @@
               "plane": {
                 "type": "standard",
                 "base": "front",
-                "offset": 248.6194250598716
+                "offset": 248.62272217139017
               },
               "sketch": {
                 "entities": [
@@ -10815,7 +9959,7 @@
                     "type": "point",
                     "pos": {
                       "x": -446.815,
-                      "y": 252.86552181615545
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -10841,7 +9985,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 152.39999999999995,
+              "depth": 152.39999999999998,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -10866,7 +10010,7 @@
       }
     },
     {
-      "id": 26,
+      "id": 25,
       "kind": {
         "type": "part_studio",
         "name": "nut trunnion",
@@ -10888,8 +10032,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 190.6194250598716,
-                      "y": 252.86552181615545
+                      "x": 190.62272217139017,
+                      "y": 252.87599894849808
                     }
                   },
                   {
@@ -10940,8 +10084,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 190.6194250598716,
-                      "y": 252.86552181615545
+                      "x": 190.62272217139017,
+                      "y": 252.87599894849808
                     }
                   }
                 ],
@@ -10983,13 +10127,13 @@
       }
     },
     {
-      "id": 27,
+      "id": 26,
       "kind": {
         "type": "assembly",
         "name": "router motor assembly",
         "instances": [
           {
-            "id": 28,
+            "id": 27,
             "name": "router motor",
             "studio": 12,
             "body": 0,
@@ -11008,7 +10152,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 28,
             "name": "bit",
             "studio": 13,
             "body": 0,
@@ -11027,28 +10171,9 @@
             }
           },
           {
-            "id": 30,
-            "name": "handle",
+            "id": 29,
+            "name": "cap",
             "studio": 14,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 31,
-            "name": "right handle",
-            "studio": 15,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -11069,13 +10194,13 @@
       }
     },
     {
-      "id": 32,
+      "id": 30,
       "kind": {
         "type": "assembly",
         "name": "router table",
         "instances": [
           {
-            "id": 33,
+            "id": 31,
             "name": "top",
             "studio": 1,
             "body": 0,
@@ -11094,7 +10219,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 32,
             "name": "left side",
             "studio": 2,
             "body": 0,
@@ -11113,7 +10238,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 33,
             "name": "right side",
             "studio": 3,
             "body": 0,
@@ -11132,7 +10257,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 34,
             "name": "back",
             "studio": 4,
             "body": 0,
@@ -11151,7 +10276,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 35,
             "name": "front",
             "studio": 5,
             "body": 0,
@@ -11170,7 +10295,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 36,
             "name": "left cheek",
             "studio": 6,
             "body": 0,
@@ -11189,7 +10314,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 37,
             "name": "right cheek",
             "studio": 7,
             "body": 0,
@@ -11208,7 +10333,7 @@
             }
           },
           {
-            "id": 40,
+            "id": 38,
             "name": "hanger spacer",
             "studio": 8,
             "body": 0,
@@ -11227,7 +10352,7 @@
             }
           },
           {
-            "id": 41,
+            "id": 39,
             "name": "pivot bolt",
             "studio": 9,
             "body": 0,
@@ -11246,7 +10371,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 40,
             "name": "router base",
             "studio": 10,
             "body": 0,
@@ -11265,7 +10390,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 41,
             "name": "jack foot",
             "studio": 11,
             "body": 0,
@@ -11284,8 +10409,27 @@
             }
           },
           {
-            "id": 44,
+            "id": 42,
             "name": "lever",
+            "studio": 15,
+            "body": 0,
+            "fixed": false,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 43,
+            "name": "link",
             "studio": 16,
             "body": 0,
             "fixed": false,
@@ -11303,8 +10447,8 @@
             }
           },
           {
-            "id": 45,
-            "name": "link",
+            "id": 44,
+            "name": "upper front arm",
             "studio": 17,
             "body": 0,
             "fixed": false,
@@ -11322,8 +10466,8 @@
             }
           },
           {
-            "id": 46,
-            "name": "upper front arm",
+            "id": 45,
+            "name": "upper rear arm",
             "studio": 18,
             "body": 0,
             "fixed": false,
@@ -11341,8 +10485,8 @@
             }
           },
           {
-            "id": 47,
-            "name": "upper rear arm",
+            "id": 46,
+            "name": "lower front arm",
             "studio": 19,
             "body": 0,
             "fixed": false,
@@ -11360,8 +10504,8 @@
             }
           },
           {
-            "id": 48,
-            "name": "lower front arm",
+            "id": 47,
+            "name": "lower rear arm",
             "studio": 20,
             "body": 0,
             "fixed": false,
@@ -11379,8 +10523,8 @@
             }
           },
           {
-            "id": 49,
-            "name": "lower rear arm",
+            "id": 48,
+            "name": "head seat",
             "studio": 21,
             "body": 0,
             "fixed": false,
@@ -11398,8 +10542,8 @@
             }
           },
           {
-            "id": 50,
-            "name": "head seat",
+            "id": 49,
+            "name": "jack head",
             "studio": 22,
             "body": 0,
             "fixed": false,
@@ -11417,8 +10561,8 @@
             }
           },
           {
-            "id": 51,
-            "name": "jack head",
+            "id": 50,
+            "name": "keeper",
             "studio": 23,
             "body": 0,
             "fixed": false,
@@ -11436,8 +10580,8 @@
             }
           },
           {
-            "id": 52,
-            "name": "keeper",
+            "id": 51,
+            "name": "screw",
             "studio": 24,
             "body": 0,
             "fixed": false,
@@ -11455,8 +10599,8 @@
             }
           },
           {
-            "id": 53,
-            "name": "screw",
+            "id": 52,
+            "name": "nut trunnion",
             "studio": 25,
             "body": 0,
             "fixed": false,
@@ -11474,28 +10618,9 @@
             }
           },
           {
-            "id": 54,
-            "name": "nut trunnion",
-            "studio": 26,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 55,
+            "id": 53,
             "name": "router motor",
-            "studio": 27,
+            "studio": 26,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -11514,11 +10639,11 @@
         ],
         "mates": [
           {
-            "id": 56,
+            "id": 54,
             "name": "plunge",
             "kind": "slider",
             "a": {
-              "instance": 42,
+              "instance": 40,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -11536,8 +10661,8 @@
               }
             },
             "b": {
-              "instance": 55,
-              "sub": 28,
+              "instance": 53,
+              "sub": 27,
               "face": {
                 "feature": 4,
                 "local": 2,
@@ -11559,11 +10684,11 @@
             "flip": true
           },
           {
-            "id": 57,
+            "id": 55,
             "name": "lever",
             "kind": "revolute",
             "a": {
-              "instance": 41,
+              "instance": 39,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -11581,7 +10706,7 @@
               }
             },
             "b": {
-              "instance": 44,
+              "instance": 42,
               "face": {
                 "feature": 8,
                 "local": 2,
@@ -11603,12 +10728,12 @@
             "flip": true
           },
           {
-            "id": 58,
+            "id": 56,
             "name": "link",
             "kind": "revolute",
             "a": {
-              "instance": 55,
-              "sub": 30,
+              "instance": 53,
+              "sub": 29,
               "face": {
                 "feature": 17,
                 "local": 2,
@@ -11618,6 +10743,94 @@
                   3189732383,
                   3930223230,
                   4139539199,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 43,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  573667395,
+                  1013877695,
+                  1159760287,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 0.25,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 57,
+            "name": "upper front",
+            "kind": "revolute",
+            "a": {
+              "instance": 41,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  26416479,
+                  573667395,
+                  2027755391,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 44,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  573667395,
+                  1013877695,
+                  1159760287,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 1.1368683772161605e-13,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 58,
+            "name": "upper rear",
+            "kind": "revolute",
+            "a": {
+              "instance": 41,
+              "face": {
+                "feature": 8,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  26416479,
+                  1724311043,
+                  2027755391,
+                  2589346590,
                   0,
                   0,
                   0,
@@ -11643,25 +10856,25 @@
                 ]
               }
             },
-            "offset": 0.25,
+            "offset": -5.684341886080804e-14,
             "angle": 0.0,
             "flip": true
           },
           {
             "id": 59,
-            "name": "upper front",
+            "name": "lower front",
             "kind": "revolute",
             "a": {
-              "instance": 43,
+              "instance": 44,
               "face": {
-                "feature": 6,
+                "feature": 10,
                 "local": 2,
                 "part": 0,
                 "near": [
-                  26416479,
-                  573667395,
-                  2027755391,
-                  3735147870,
+                  1013877695,
+                  1159760287,
+                  1170667870,
+                  3109442627,
                   0,
                   0,
                   0,
@@ -11671,6 +10884,94 @@
             },
             "b": {
               "instance": 46,
+              "face": {
+                "feature": 6,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  573667395,
+                  1013877695,
+                  1159760287,
+                  3735147870,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 1.1368683772161605e-13,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 60,
+            "name": "seat",
+            "kind": "revolute",
+            "a": {
+              "instance": 46,
+              "face": {
+                "feature": 10,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1159760287,
+                  1170667870,
+                  3109442627,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 48,
+              "face": {
+                "feature": 4,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  322007710,
+                  1468198494,
+                  1659127064,
+                  4020363139,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": -1.1368683772161605e-13,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 61,
+            "name": "lower rear",
+            "kind": "revolute",
+            "a": {
+              "instance": 48,
+              "face": {
+                "feature": 6,
+                "local": 14,
+                "part": 0,
+                "near": [
+                  1468198494,
+                  1659127064,
+                  2933046427,
+                  3646210877,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 47,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -11692,187 +10993,11 @@
             "flip": true
           },
           {
-            "id": 60,
-            "name": "upper rear",
-            "kind": "revolute",
-            "a": {
-              "instance": 43,
-              "face": {
-                "feature": 8,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  26416479,
-                  1724311043,
-                  2027755391,
-                  2589346590,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 47,
-              "face": {
-                "feature": 6,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  573667395,
-                  1013877695,
-                  1159760287,
-                  3735147870,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": -5.115907697472721e-13,
-            "angle": 0.0,
-            "flip": true
-          },
-          {
-            "id": 61,
-            "name": "lower front",
-            "kind": "revolute",
-            "a": {
-              "instance": 46,
-              "face": {
-                "feature": 10,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  1013877695,
-                  1159760287,
-                  1170667870,
-                  3109442627,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 48,
-              "face": {
-                "feature": 6,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  573667395,
-                  1013877695,
-                  1159760287,
-                  3735147870,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": -5.115907697472721e-13,
-            "angle": 0.0,
-            "flip": true
-          },
-          {
             "id": 62,
-            "name": "seat",
-            "kind": "revolute",
-            "a": {
-              "instance": 48,
-              "face": {
-                "feature": 10,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  1013877695,
-                  1159760287,
-                  1170667870,
-                  3109442627,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 50,
-              "face": {
-                "feature": 4,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  322007710,
-                  1468198494,
-                  1659127064,
-                  4020363139,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": 3.979039320256561e-13,
-            "angle": 0.0,
-            "flip": true
-          },
-          {
-            "id": 63,
-            "name": "lower rear",
-            "kind": "revolute",
-            "a": {
-              "instance": 50,
-              "face": {
-                "feature": 6,
-                "local": 14,
-                "part": 0,
-                "near": [
-                  1468198494,
-                  1659127064,
-                  2933046427,
-                  3646210877,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 49,
-              "face": {
-                "feature": 6,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  573667395,
-                  1013877695,
-                  1159760287,
-                  3735147870,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": -1.1368683772161605e-13,
-            "angle": 0.0,
-            "flip": true
-          },
-          {
-            "id": 64,
             "name": "screw",
             "kind": "revolute",
             "a": {
-              "instance": 46,
+              "instance": 44,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -11882,94 +11007,6 @@
                   1159760287,
                   1170667870,
                   3109442627,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 53,
-              "face": {
-                "feature": 4,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  322007710,
-                  1013877695,
-                  1159760287,
-                  4020363139,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": -3.979039320256561e-13,
-            "angle": 0.0,
-            "flip": true
-          },
-          {
-            "id": 65,
-            "name": "nut",
-            "kind": "revolute",
-            "a": {
-              "instance": 47,
-              "face": {
-                "feature": 10,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  1013877695,
-                  1159760287,
-                  1170667870,
-                  3109442627,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 54,
-              "face": {
-                "feature": 4,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  322007710,
-                  1013877695,
-                  1159760287,
-                  4020363139,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": -5.684341886080804e-14,
-            "angle": 0.0,
-            "flip": true
-          },
-          {
-            "id": 66,
-            "name": "head",
-            "kind": "fastened",
-            "a": {
-              "instance": 50,
-              "face": {
-                "feature": 8,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  1013877695,
-                  1159760287,
-                  1724311043,
-                  2589346590,
                   0,
                   0,
                   0,
@@ -11979,6 +11016,94 @@
             },
             "b": {
               "instance": 51,
+              "face": {
+                "feature": 4,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  322007710,
+                  1013877695,
+                  1159760287,
+                  4020363139,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 0.0,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 63,
+            "name": "nut",
+            "kind": "revolute",
+            "a": {
+              "instance": 45,
+              "face": {
+                "feature": 10,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1159760287,
+                  1170667870,
+                  3109442627,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 52,
+              "face": {
+                "feature": 4,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  322007710,
+                  1013877695,
+                  1159760287,
+                  4020363139,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "offset": 5.684341886080804e-14,
+            "angle": 0.0,
+            "flip": true
+          },
+          {
+            "id": 64,
+            "name": "head",
+            "kind": "fastened",
+            "a": {
+              "instance": 48,
+              "face": {
+                "feature": 8,
+                "local": 2,
+                "part": 0,
+                "near": [
+                  1013877695,
+                  1159760287,
+                  1724311043,
+                  2589346590,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "b": {
+              "instance": 49,
               "face": {
                 "feature": 12,
                 "local": 2,
@@ -11995,16 +11120,16 @@
                 ]
               }
             },
-            "offset": -18.99999999999997,
+            "offset": -18.999999999999773,
             "angle": 0.0,
             "flip": true
           },
           {
-            "id": 67,
+            "id": 65,
             "name": "keeper",
             "kind": "fastened",
             "a": {
-              "instance": 51,
+              "instance": 49,
               "face": {
                 "feature": 18,
                 "local": 2,
@@ -12022,7 +11147,7 @@
               }
             },
             "b": {
-              "instance": 52,
+              "instance": 50,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -12039,7 +11164,7 @@
                 ]
               }
             },
-            "offset": -9.500000000000083,
+            "offset": -9.500000000000028,
             "angle": 0.0,
             "flip": true
           }
@@ -12047,7 +11172,7 @@
       }
     },
     {
-      "id": 68,
+      "id": 66,
       "kind": {
         "type": "part_studio",
         "name": "fit test",
@@ -12803,7 +11928,7 @@
           "facet_angle": 5.0
         },
         "part_names": {
-          "2": "fit test: the printed handle's stub and floor"
+          "2": "fit test: the cap's stub and floor"
         },
         "part_materials": {
           "2": {
@@ -12814,5 +11939,5 @@
       }
     }
   ],
-  "next_id": 69
+  "next_id": 67
 }

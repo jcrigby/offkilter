@@ -17,9 +17,9 @@ through a lever:
    birch-ply lever by a pin running in a slot.
 2. The lever turns on a bolt through a hanger under the top, so its
    other end comes **up**.
-3. That end pulls up a short **link** hung from a tab on a **printed
-   replacement for the router's left handle**. This plunges the motor
-   and raises the bit.
+3. That end pushes up a **link** hung from a tab on a **printed cap**
+   over the router's left handle lug (both handles come off). This
+   plunges the motor and raises the bit.
 
 The crank is a 6 in socket extension that comes out through a slot in
 the front. Turn it with a ratchet or a cordless drill.
@@ -50,8 +50,8 @@ cargo test -p ok-render --test jack_table    # what CI runs
 - **Both ends of the lever are captured.** The lever is three strips of
   1/2 in baltic birch glued up, the middle strip shorter, so each end
   is a fork.
-  - **Router end.** The printed handle has a tab below it, and a 3/8
-    bolt in the tab carries a 120 mm printed link. The link's other end
+  - **Router end.** The printed cap has a tab below it, and a 3/8
+    bolt in the tab carries a 172 mm printed link. The link's other end
     sits in the lever's fork on a 3/8 bolt through both tines. Both
     bolts turn freely, so the router is held both ways and can't bounce
     off the lever.
@@ -84,15 +84,21 @@ cargo test -p ok-render --test jack_table    # what CI runs
   the link's lean costs, under 0.04 % at its worst. The slot is 20 mm
   long, the pin's 5.8 mm of drift and a few to spare, and sits 2.9 mm
   toward the pivot from where the pin is with the lever level.
-- **Why a printed handle.** The router's handle mount is a lug cast on
-  the housing: a rectangular block standing out from it, with a
+- **Why a printed cap.** The router's handle mount is a lug cast on
+  the carriage: a rectangular block standing out from it, with a
   threaded hole and a roll pin in its end. The original handle's
   rectangular stub is hollow. It slips over the lug, and its floor has
-  a hole for the screw and one for the pin. The printed handle copies
-  that, so it goes on exactly as the original does. The load goes
-  through the lug, the pin and the screw, as it does in your hand. The
-  tab is the only addition. Keep the original handle to put back for
-  freehand work.
+  a hole for the screw and one for the pin. The cap is that stub and
+  nothing else: a block over the lug on the handle's own screw, with a
+  tab under it for the link. The load goes through the lug, the pin and
+  the screw, as it does in your hand. Both handles come off (below) and
+  go back on for freehand work; the right lug stays bare with its screw
+  left in.
+- **One lug does the pushing.** A yoke to both lugs would not change
+  what the carriage feels: the router is pushed where the lever pushes,
+  and a yoke only shares that between the lugs. Pushing on one handle
+  is how a plunge router is used all day, and its two posts with their
+  long bushings are what keep it from cocking. Good enough.
 - **The crank moves.** The screw sits at the scissor's knuckles, halfway
   between the foot and the head, so it drops half as far as the
   head: 50 mm over the travel. It also moves 26 mm back as the
@@ -139,15 +145,13 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   a millimetre.
 - The router's own plunge lock holds the height. Crank to height, then
   lock it; the lever only has to hold while you set it.
-- **Both handles are printed short.** Under the table the handles
-  stand beside the base with their wide ends up. The lug is 79.75 mm
-  below the base face (89 on the bench, less the 9.25 sub-base that
-  comes off), and the originals' wide ends reach about 30 mm above it.
-  At the router's full 50 mm of plunge the originals would be a
-  quarter of a millimetre from the table's underside. The printed
-  handles stop 12 mm above the lug's centre, enough to close the stub
-  over the lug, and stay 17.8 mm clear at full plunge. No depth stop
-  is needed. Keep the originals for freehand work.
+- **Both handles come off.** Under the table the handles would stand
+  beside the base with their wide ends up. The lug is 79.75 mm below
+  the base face (89 on the bench, less the 9.25 sub-base that comes
+  off), and the handles' wide ends reach about 30 mm above it: at the
+  router's full 50 mm of plunge they would be a quarter of a millimetre
+  from the table's underside. The cap is 20 mm tall and stays 19 mm
+  clear at full plunge. No depth stop is needed.
 
 ## The parts
 
@@ -190,9 +194,7 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   - 220 mm the other way, the jack pin, through the head's slot.
 
   Both pins are 3/8 x 2 bolts with nylocks, snug but free to turn.
-- **Printed left handle** (`out/handle.stl`, PETG). It has:
-  - the original's outline, cut off 12 mm above the lug's centre at
-    the wide end;
+- **Printed cap** (`out/cap.stl`, PETG). It has:
   - a hollow stub that fits over the lug. The lug tapers, so the
     stub's pocket tapers to match, with 0.3 mm of clearance a side: on
     its long sides evenly, and along the router's axis all on the face
@@ -201,16 +203,12 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
     the lug's end and its rim stays clear of the housing;
   - in the stub's floor, a counterbored hole for the original screw and
     a hole for the roll pin;
-  - a 10 mm tab 12 mm past the handle's narrow end (toward the motor),
-    hanging under the handle just off its centre, for a 3/8 x 1-1/4
-    bolt to the link beside it.
+  - a 10 mm tab hanging 12 mm under the cap, just off its centre, for a
+    3/8 x 1-1/4 bolt to the link beside it.
 
-  Print it lying on its outer face, with 4 walls and 40 % infill.
-- **Printed right handle** (`out/right_handle.stl`, PETG): the left
-  one's mirror without the tab. On both lugs the screw is toward the
-  front (the label's side) and the pin behind it, so the holes match.
+  Print it pocket up, with 4 walls and 40 % infill.
 - **Link** (`out/link.stl`, PETG): 11 mm thick, to run in the lever's
-  12 mm fork, 20 wide, with 3/8 holes 120 mm apart. Print it flat.
+  12 mm fork, 20 wide, with 3/8 holes 172 mm apart. Print it flat.
 - **Jack head** (`out/jack_head.stl`, PETG). A 12 mm plate the seat's
   face sits on, with a 6 mm skirt round the seat's edges (0.3 mm
   clearance a side) and a hex pocket under it for the head bolt's nut;
@@ -232,9 +230,9 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   threaded one. If it's tight or loose, change `CLEAR` in `build.py`;
   if the holes don't line up, change `PIN_SPACING` or `SCREW_SIDE`.
 
-| Outer face | Inner face, over the lug | Fit test | Jack head |
+| The cap | Its pocket, screw and pin holes | Fit test | Jack head |
 |---|---|---|---|
-| ![The printed handle](out/handle.png) | ![Its stub, screw and pin holes](out/handle_inner.png) | ![The fit test](out/fit_test.png) | ![The jack head](out/jack_head.png) |
+| ![The cap](out/cap.png) | ![Its pocket](out/cap_inner.png) | ![The fit test](out/fit_test.png) | ![The jack head](out/jack_head.png) |
 
 `out/jack_table.pdf` is the A3 sheet. `out/lift.pdf` (and `lift.png`)
 shows the table from the front at retracted, half plunged and fully
@@ -242,9 +240,9 @@ plunged. The front panel hides the jack there; the sections above show
 it. `out/jack_table.okpart` is the document. It has:
 
 - one part studio per part;
-- the router motor, bit and printed handle as a sub-assembly on a slider
+- the router motor, bit and printed cap as a sub-assembly on a slider
   (`plunge`) along a post;
-- the link on a revolute (`link`) about the handle's tab bolt;
+- the link on a revolute (`link`) about the cap's tab bolt;
 - the lever on a revolute (`lever`) about the pivot bolt;
 - the jack's arms, head seat, screw and nut trunnion on revolutes about
   their pins, chained from the foot, with the printed head fastened to
@@ -282,13 +280,11 @@ guesses that matter:
 | screw to roll pin, centre to centre | 13.0 mm | M: calipers, in the original handle's socket | the two holes in the stub's floor |
 | which side the screw is on | the front (the label's side), the pin behind it, on both lugs | M: photos | the two holes |
 | roll pin: diameter, out from the lug | 5.05 mm, 9.9 mm | M: calipers | the pin's hole (5.65, 11.9 deep) |
-| handle outline | 91 tall, 48 wide tapering to 39 | M: calipers | the printed handle |
-| handle thickness | 50 overall, 33.63 outer face to socket floor | M: calipers | the printed handle |
-| the hollow stub, outside | 32 x 18.5 | the pocket's mouth and a 3 mm wall (the earlier 41 x 21 by eye was too big for this lug) | the printed handle |
-| the screw | M6 x 39.7, 10.26 head, 12.6 into the lug | M: calipers | the printed handle's hole (6.5), counterbore (11) and the 27.1 mm of plastic under the head, as the original |
-| the stub from the handle's middle | 16 mm toward the wide end | M: by eye | where the tab is |
-| which end of the handle is toward the base | the wide end, with the lug | M: photo | where the tab is: off the narrow end, toward the motor |
-| the lug's centre above the base face, retracted | 79.75 mm | M: 89 from the bench on the 9.25 sub-base, which comes off | the link's length (120 mm now), and the handles' clearance under the table |
+| handle outline | 91 tall, 48 wide tapering to 39; the wide end toward the base | M: calipers, photo | the original handle, for the record; why it comes off |
+| handle thickness | 50 overall, 33.63 outer face to socket floor | M: calipers | the cap's thickness beyond the lug, so the original screw fits |
+| the hollow stub, outside | 33 x 19.5 | the pocket's mouth and a 3 mm wall | the cap |
+| the screw | M6 x 39.7, 10.26 head, 12.6 into the lug | M: calipers | the cap's hole (6.5), counterbore (11) and the 27.1 mm of plastic under the head, as the original |
+| the lug's centre above the base face, retracted | 79.75 mm | M: 89 from the bench on the 9.25 sub-base, which comes off | the link's length (172 mm now), and the cap's clearance under the table |
 | motor diameter, posts | 100 mm, 20 mm at ±64 | G | clearances only |
 | jack arm (fork), rivet to the nut's pivot | 160 mm | M | turns per mm, the slot |
 | foot and head rivets from the foot's face and where the saddle's was | 42 mm | G: with 160 arms, 15-1/8 high needs about 84 between them | the jack's heights |
@@ -307,11 +303,7 @@ in height), the turns per mm.
 - [ ] **The jack head.** Print it and try its skirt on the seat before
       building the rest; if it is tight, raise `HEAD_CLEAR` in
       `build.py`.
-- [ ] **One-sided push.** The link pulls on one handle, beside one post.
-      If the motor cocks and binds on the posts, print a second handle
-      for the right side and fork the lever's router end into a yoke
-      under both.
-- [ ] **Print the fit test** (`out/fit_test.stl`) and try it on the lug
-      before the full handle.
+- [ ] **Print the fit test** (`out/fit_test.stl`) and try it on the left
+      lug before the cap.
 - [ ] **A depth stop for repeat setups:** the router's own turret stop
       still works upside down.
