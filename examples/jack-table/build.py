@@ -68,8 +68,9 @@ CAP_T = 50.0 - 16.37              # the cap beyond the lug's end: the original h
                                   # overall less the 16.37 socket), so the original screw fits with the same counterbore
 LUG_W = (26.34, 22.8)             # the lug across (the long side), at the line by the housing and the line by its end (M: calipers)
 LUG_H = (12.9, 11.5)              # along the router's axis (the short side), at the same two lines (M: calipers)
-LUG_DRAFT_TOP = 0.0               # the share of the short side's taper on the lug's top face (toward the motor's top): it is
-                                  # nearly flat, the draft is on the face toward the base (M: by eye)
+LUG_DRAFT_TOP = 1.0 / 3.0         # the share of the short side's taper on the lug's top face (toward the motor's top), the rest on
+                                  # the face toward the base (M: the first fit test, with it all on the base side, drooped at its
+                                  # outer end: slack at the lug's root on that side; a third moved over)
 LUG_LINES = 13.4                  # between the two lines (M: calipers)
 LUG_END_LINE = 2.8                # the end line from the lug's end (G: from the photo of its side)
 POCKET = 16.37                    # the stub's pocket depth, as the original handle's socket (M: calipers)
@@ -77,6 +78,9 @@ CLEAR = 0.3                       # the pocket's clearance a side
 STUB_WALL = 3.0                   # the stub's wall at its mouth
 PIN_SPACING = 13.0                # screw hole to roll pin, centre to centre (M: calipers, edge to matching edge in the original's socket)
 SCREW_SIDE = -1.0                 # the screw toward -y (the front, the label's side), the pin toward +y, on both lugs (M: photos)
+SCREW_SHIFT = 0.5                 # the screw's hole nearer the pin's than the spacing puts it (M: the first fit test; the pin's hole fitted)
+SCREW_Y = SCREW_SIDE * (PIN_SPACING / 2 - SCREW_SHIFT)
+PIN_HOLE_Y = -SCREW_SIDE * PIN_SPACING / 2
 ROLL_PIN = (5.05, 9.9)            # the lug's roll pin: diameter, out from the lug's end (M: calipers)
 HANDLE_SCREW = 6.5                # the screw's clearance hole (M: an M6, 6.0 across the threads)
 SCREW_HEAD = (11.0, 39.7 - 12.6)  # its counterbore's diameter (M: a 10.26 head), and the plastic under the head: the 39.7 screw less the 12.6 it stands past the original's socket floor (M)
@@ -413,7 +417,7 @@ def router_motor(p):
     zs = z(BOSS_Z)
     for name, sx in (("left lug", -1.0), ("right lug", 1.0)):
         tapered(p, name, sx * YOKE_X, sx * BOSS_X, lug_size(LUG_L), lug_size(0.0), zs, "add")
-    py = -SCREW_SIDE * PIN_SPACING / 2
+    py = PIN_HOLE_Y
     cyl_x(p, "left roll pin", -BOSS_X - ROLL_PIN[1], -BOSS_X, py, zs, ROLL_PIN[0], op="add")
     cyl_x(p, "right roll pin", BOSS_X, BOSS_X + ROLL_PIN[1], py, zs, ROLL_PIN[0], op="add")
     cyl_z(p, "collet nut", z(YOKE[0]), z(NUT[0]), 0.0, 0.0, NUT_D, op="add")
@@ -455,7 +459,7 @@ def stub(p, sx=-1.0):
 
 def pin_hole(p, sx=-1.0):
     s = p.sketch("right", sx * BOSS_X, "roll pin hole")
-    p.point(s, (-SCREW_SIDE * PIN_SPACING / 2, TOP_U - BOSS_Z))
+    p.point(s, (PIN_HOLE_Y, TOP_U - BOSS_Z))
     p.hole(s, ROLL_PIN[0] + 0.6, depth=ROLL_PIN[1] + 2.0, direction="reverse" if sx < 0 else "normal", name="roll pin hole")
 
 
@@ -463,7 +467,7 @@ def screw_hole(p, sx=-1.0):
     """From the outer face, counterbored, leaving SCREW_HEAD[1] of
     plastic under the head as the original does."""
     s = p.sketch("right", sx * (BOSS_X + CAP_T), "handle screw")
-    p.point(s, (SCREW_SIDE * PIN_SPACING / 2, TOP_U - BOSS_Z))
+    p.point(s, (SCREW_Y, TOP_U - BOSS_Z))
     p.hole(s, HANDLE_SCREW, depth=CAP_T + 1.0, direction="normal" if sx < 0 else "reverse",
            counterbore={"diameter": SCREW_HEAD[0], "depth": CAP_T - SCREW_HEAD[1]}, name="handle screw")
 
@@ -478,7 +482,7 @@ def fit_test(p):
     (a0, b0), (a1, b1) = stub_outline()
     f = block(p, "fit test floor", (-BOSS_X - FIT_FLOOR, -BOSS_X), (a0, a1), (zs + b0, zs + b1))
     stub(p)
-    bore_x(p, "screw hole", -BOSS_X - FIT_FLOOR, -BOSS_X, SCREW_SIDE * PIN_SPACING / 2, zs, HANDLE_SCREW)
+    bore_x(p, "screw hole", -BOSS_X - FIT_FLOOR, -BOSS_X, SCREW_Y, zs, HANDLE_SCREW)
     pin_hole(p)
     part_is(p, f, "fit test: the cap's stub and floor", "petg")
 

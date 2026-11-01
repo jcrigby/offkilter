@@ -272,12 +272,12 @@ guesses that matter:
 | base face to motor end | 283.75 mm | M: 293 on the sub-base, less its 9.25 | the table's height |
 | across the handles | 276 mm | S | where the link goes |
 | the lug across (long side) | 26.34 by the housing, 22.8 by the end, 13.4 apart | M: calipers, at two marker lines | the stub's pocket |
-| the lug along the router's axis (short side) | 12.9 by the housing, 11.5 by the end; the face toward the motor's top flat, the taper all on the face toward the base | M: calipers, at the same lines; the flat by eye | the stub's pocket, which is offset the same way |
+| the lug along the router's axis (short side) | 12.9 by the housing, 11.5 by the end; a third of the taper on the face toward the motor's top, two thirds on the face toward the base | M: calipers, at the same lines; the split from the first fit test, which drooped with it all on the base side | the stub's pocket, which is offset the same way |
 | the end line from the lug's end | 2.8 mm | G: from the photo of its side | the pocket's floor size |
 | how far the lug stands out | 17 mm | G: from the photo of its side; it must be more than the original's 16.37 socket | the lever's position |
 | lug end face to lug end face | 200 mm | M | where the handles sit, and the lever, hanger and jack with them |
 | the original handle's socket depth | 16.37 mm | M: calipers | the cap's pocket |
-| screw to roll pin, centre to centre | 13.0 mm | M: calipers, in the original handle's socket | the two holes in the stub's floor |
+| screw to roll pin, centre to centre | 13.0 mm by calipers in the original's socket; the screw's hole cut 12.5 from the pin's | M: the first fit test wanted the screw 0.5 nearer | the two holes in the stub's floor |
 | which side the screw is on | the front (the label's side), the pin behind it, on both lugs | M: photos | the two holes |
 | roll pin: diameter, out from the lug | 5.05 mm, 9.9 mm | M: calipers | the pin's hole (5.65, 11.9 deep) |
 | handle outline | 91 tall, 48 wide tapering to 39; the wide end toward the base | M: calipers, photo | the original handle, for the record; why it comes off |
