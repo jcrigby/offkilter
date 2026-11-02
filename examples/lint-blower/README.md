@@ -71,7 +71,7 @@ toward the user, z up with the slot's lip at zero.
 
 | part | size | what it does |
 |------|------|--------------|
-| blade | 288 × 17 outside, 2 mm walls, 180 below the lip and 19 up the sleeve, two ribs face to face, bottom corners R 5 | the dummy filter: blanks the grille, carries the air down, open at the top and the bottom edge only |
+| blade | 288 × 17 outside, 2 mm walls, 180 below the lip and 19 up the sleeve, two ribs face to face, square corners | the dummy filter: blanks the grille, carries the air down, open at the top and the bottom edge only |
 | sleeve | 292.4 × 21.4 outside, 20 tall, standing on the lip | the blade slides up into it 0.2 a side and glues |
 | flange | 3 thick, 8 past the sleeve at the front and both ends, flush at the back | rests on the lip's ends, where the filter's ears do |
 | wedge | a loft, 90 tall, from the sleeve's section to the socket's 90 × 100 | the Samsung part's wedge, drawn longer so the front leans 41° and the ends 48° instead of 59°; the walls are inset 2.7 and 3.0 in the plane so they are 2 through |
@@ -96,8 +96,11 @@ that way, which puts nothing inside the ducts.
 sleeve's foot with a brim; the wedge leans 41° at the front and 48° at
 the ends, no support; the cone widens upward at 19°; one bridge to
 support, the underside of the socket's front block over the wedge, and
-the flange lip. **The blade** (`out/blade.stl`, 288 × 199 × 17) lies
-on a face, 17 mm tall, no support, open ends. PETG, 0.2 mm layers,
+the flange lip. **The blade** (`out/blade.stl`, 288 × 199 × 17) stands
+on its bottom edge too, as exported, so nothing bridges: both faces,
+the rails, the ribs and the halves' lap strips are vertical and start
+on the bed. Lying on a face would make the upper face a bridge the
+width of a bay. PETG, 0.2 mm layers,
 three perimeters, which makes the 2 mm walls solid. About 217 and
 249 cm³, 280 and 320 g in PETG.
 
@@ -107,7 +110,7 @@ three perimeters, which makes the 2 mm walls solid. About 217 and
 |---|---|---|
 | `out/middle.stl` | 110 × 100 × 163 | the socket, whole, the wedge's middle and the sleeve's, with four tabs |
 | `out/left_wing.stl`, `out/right_wing.stl` | 109 × 100 × 110 | the wedge's ends, the sleeve's and the flange's |
-| `out/left_blade.stl`, `out/right_blade.stl` | 144 and 152 × 17 × 199 | the blade halves, the right one with two lap strips |
+| `out/left_blade.stl`, `out/right_blade.stl` | 144 and 152 × 17 × 199 | the blade halves, standing, the right one with two lap strips |
 
 The wedge's cuts are at the socket box's ends. The middle piece
 carries four 2 mm tabs down its back and front inner walls, fused

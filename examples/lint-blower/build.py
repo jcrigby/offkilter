@@ -46,7 +46,7 @@ GRILLE_D = 152.0        # how far below the lip's ends the grille's last holes r
 CLEAR_W = 1.0           # the blade off the frame's width, each side
 CLEAR_T = 0.5           # and off its thickness, each face
 BLADE_D = 180.0         # the blade below the ears' level: the grille and 40 to spare, well above the frame's corners
-BLADE_R = 5.0           # its bottom corners
+BLADE_R = 0.0           # its bottom corners: square, since a round's underside overhangs when the blade prints standing
 RIBS = 2                # ribs inside, face to face, down the blade
 WALL = 2.0              # every wall, as the Samsung part's
 # -- the sleeve under the wedge, and the wedge ---------------------------------
@@ -195,8 +195,10 @@ def build_tabs(p, side):
 def blade_outline(inset=0.0):
     """The blade's outline in the front plane's coordinates (x, z):
     straight sides and top, the bottom corners rounded."""
-    hw, r = BLADE_W / 2 - inset, BLADE_R - inset
+    hw, r = BLADE_W / 2 - inset, max(BLADE_R - inset, 0.0)
     z0, z1 = Z_BLADE_BOT + inset, Z_BLADE_TOP - inset
+    if r <= 0.0:
+        return [(-hw, z1), (hw, z1), (hw, z0), (-hw, z0)]
     pts = [(-hw, z1), (hw, z1), (hw, z0 + r)]
     for k in range(1, 7):
         a = -k / 6 * math.pi / 2
@@ -225,7 +227,7 @@ def build_blade(p):
     p.polygon(s, [(x, z + (WALL + 1.0 if z > Z_BLADE_TOP - WALL - 0.01 else 0.0)) for x, z in pts])
     p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="remove", name="blade hollow")
     s = p.sketch("front", -(y0 + WALL), "blade mouth")
-    hw = BLADE_W / 2 - BLADE_R - 1.0
+    hw = BLADE_W / 2 - max(BLADE_R, WALL) - 1.0
     p.rect(s, (-hw, Z_BLADE_BOT - 1.0), (hw, Z_BLADE_BOT + WALL + 0.5))
     p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="remove", name="blade mouth")
     for k in range(RIBS):
@@ -257,14 +259,15 @@ def build_piece(p, which):
         # The laps: a strip inside each face, reaching LAP_W past the
         # joint under the left half's plate, standing on the right's
         # plate and rooted a millimetre into it over the joint only, so
-        # the halves glue face to face along the joint.
+        # the halves glue face to face along the joint. They run from
+        # the bottom edge, so they print from the bed, not as cantilevers.
         y0 = WALL + SLEEVE_FIT
         for name, y, root in (("drum", y0 + WALL, -1.0), ("duct", y0 + BLADE_T - WALL - LAP_T, LAP_T)):
             s = p.sketch("front", -y, f"lap {name}")
-            p.rect(s, (-LAP_W, Z_BLADE_BOT + 5.0), (1.0, Z_BLADE_TOP - 5.0))
+            p.rect(s, (-LAP_W, Z_BLADE_BOT), (1.0, Z_BLADE_TOP - 5.0))
             p.extrude(s, LAP_T, direction="reverse", op="add", name=f"lap {name}")
             s = p.sketch("front", -(y + root), f"lap {name} root")
-            p.rect(s, (0.0, Z_BLADE_BOT + 5.0), (1.0, Z_BLADE_TOP - 5.0))
+            p.rect(s, (0.0, Z_BLADE_BOT), (1.0, Z_BLADE_TOP - 5.0))
             p.extrude(s, 1.0, direction="reverse", op="add", name=f"lap {name} root")
 
 

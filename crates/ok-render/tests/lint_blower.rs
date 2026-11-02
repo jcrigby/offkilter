@@ -308,7 +308,7 @@ fn the_blade_is_the_filter_less_clearance_open_only_top_and_bottom_and_goes_up_t
         Vec3::new(x1, y0 + t - wall - 0.2, hi.z + 1.0),
     );
     assert!(overlap(&blade, &top) < 1e-6, "open at the top");
-    let x0b = lo.x + r + 2.0;
+    let x0b = lo.x + r.max(wall) + 1.0;
     let bottom = slab(
         Vec3::new(x0b, y0 + wall + 0.2, lo.z - 1.0),
         Vec3::new(x1, y0 + t - wall - 0.2, lo.z + 3.0),
