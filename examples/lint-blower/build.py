@@ -41,7 +41,7 @@ FRAME_W = 290.0         # the frame's width, rim to rim, down its straight sides
 EARS_W = 306.0          # across the ears at the top corners (the field photo; LG publishes 11-15/16 in)
 FRAME_H = 287.0         # the bottom edge to the ears' tops (the field photo; parallax adds a few mm)
 LIP_DIP = 47.0          # the top edge's arc, flush with the lip, dips this far below the ears at the centre (R 218)
-GRILLE_D = 140.0        # how far below the ears the housing's grille reaches (the cover guide's photo, to confirm)
+GRILLE_D = 152.0        # how far below the lip's ends the grille's last holes reach: 6 in by the owner's eye, 130 to 135 on the cover guide's photo
 # -- the blade: the dummy filter -------------------------------------------
 CLEAR_W = 1.0           # the blade off the frame's width, each side
 CLEAR_T = 0.5           # and off its thickness, each face

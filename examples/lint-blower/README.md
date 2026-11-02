@@ -11,7 +11,7 @@ blower and vent hose. An LG dryer's filter (ADQ56656401) is a
 near-square frame 18 mm thick standing in a straight slot at the
 bottom of the door opening, so this keeps the socket and redraws the
 end for that slot: a blade the frame's width and thickness less
-clearance, 180 deep, enough to blank the grille, a closed box open
+clearance, 180 deep, an inch past the grille's last holes, a closed box open
 only at its top and its bottom edge so it goes in either way round,
 up into a sleeve under the wedge. Two printed parts, `out/adapter.stl`
 and `out/blade.stl`, or the same in five for a 256 mm bed.
@@ -46,7 +46,7 @@ blade are solid, so there is no wrong way to put it in.
 | `EARS_W`, across the ears at the top corners | 306 | the field photograph; LG publishes 11-15/16 in |
 | `FRAME_H`, bottom edge to the ears | 287 | the field photograph |
 | `LIP_DIP`, how far the top edge's arc dips below the ears at the centre | 47 (R 218) | the field photograph; the lip is that arc |
-| `GRILLE_D`, how far below the lip the grille reaches | 140 at the ends, less in the middle | the cover guide's supplier photo on its inch grid: confirm with a rule down the slot |
+| `GRILLE_D`, how far below the lip's ends the grille's last holes reach | 152 | 6 in by the owner's eye; 130 to 135 at the arc's centre on the cover guide's supplier photo on its inch grid, less at the ends |
 | the frame's bottom corners | R 80, starting 80 above the bottom edge | the field photograph; the blade ends 100 above them, so they do not figure |
 
 The field photograph is the filter on the 2x2 measuring field
