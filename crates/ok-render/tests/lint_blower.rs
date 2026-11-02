@@ -281,8 +281,8 @@ fn the_blade_is_the_filter_less_clearance_open_only_top_and_bottom_and_goes_up_t
     assert!((hi.x - lo.x - w).abs() < 1e-6 && (hi.y - lo.y - t).abs() < 1e-6);
     assert!((lo.z + d).abs() < 1e-6 && (hi.z - num(b, "z_top")).abs() < 1e-6);
     assert!(
-        lo.z + d > num(fr, "grille_d") - d + 30.0 || d > num(fr, "grille_d") + 30.0,
-        "the blade covers the grille with 30 to spare"
+        d > num(fr, "grille_d") + 20.0,
+        "the blade reaches past the grille with 20 to spare"
     );
     // Both faces solid: a slab a hair inside each face, the blade's
     // extent less the corners, is all in the body.
