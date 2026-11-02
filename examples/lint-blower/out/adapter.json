@@ -1,0 +1,53 @@
+{
+ "slot": {
+  "l": 303.0,
+  "w": 28.6,
+  "filter_w": 303.0,
+  "filter_t": 28.6
+ },
+ "adapter": {
+  "stub_l": 301.0,
+  "stub_t": 26.6,
+  "stub_d": 60.0,
+  "clear": 1.0,
+  "wall": 2.0,
+  "flange_t": 3.0,
+  "flange_out": 8.0,
+  "loft_h": 90.0,
+  "z_socket": 93.0,
+  "z_top": 146.0,
+  "socket_w": 90.0,
+  "socket_d": 100.0,
+  "socket_back": 53.0,
+  "socket_front": 18.0,
+  "mouth_tilt": 19.290046219188735,
+  "throat_d": 65.0,
+  "cone_half": 19.0,
+  "r_cone_max": 43.0,
+  "h_cone": 30.494214215596138,
+  "axis_y": 50.0,
+  "back_open": true,
+  "in_front": 2.5807989958131423,
+  "in_end": 3.0816261540112913,
+  "volume": 276388.6733527992
+ },
+ "gauge": {
+  "teeth": [
+   10.0,
+   12.0,
+   14.0,
+   16.0,
+   18.0,
+   20.0,
+   22.0,
+   24.0,
+   26.0,
+   28.0,
+   30.0
+  ],
+  "tooth_w": 8.0,
+  "tooth_gap": 4.0,
+  "tooth_d": 20.0,
+  "spine_t": 5.0
+ }
+}

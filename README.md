@@ -62,7 +62,9 @@ works today, all in the browser:
   (`examples/track-gauge/`), a coat hook for a wire rack's rail
   (`examples/rack-hook/`), a bayonet cap for a mesh finch feeder
   (`examples/finch-plug/`) and the same cap with a perch ring sized
-  for finches and not for doves (`examples/finch-perch/`), a puzzle
+  for finches and not for doves (`examples/finch-perch/`), a leaf
+  blower adapter for an LG dryer's lint slot redrawn from a Samsung
+  one's STL (`examples/lint-blower/`), a puzzle
   top tiled with the Spectre
   (`examples/spectre-top/`), the same for a 4 in box with every piece
   shaped for the router bit that cuts it (`examples/spectre-box/`),
