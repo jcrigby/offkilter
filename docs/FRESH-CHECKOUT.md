@@ -84,7 +84,7 @@ empty.
 
 ## 5. A checklist for adding an example
 
-- [ ] **What went wrong.** The conventions are consistent but learned
+- [x] **What went wrong.** The conventions are consistent but learned
   by reading three examples: the constants at the top of `build.py`
   with a "measure these first" table in the README, `out/` committed
   (STL, PNG, PDF, `.okpart`, a numbers JSON), the Rust test in

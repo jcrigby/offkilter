@@ -6,6 +6,8 @@ kernel, `docs/ROADMAP.md` to see what is planned and what is next, and
 `docs/DECISIONS.md` before changing something that looks odd: it records
 why, and which alternative lost. Add to it when you make such a choice.
 `docs/HISTORY.md` is the project's timeline in wall-clock hours.
+`examples/README.md` is the checklist for adding an example and a
+summary of the `okmcp.py` client the build scripts use.
 
 To print a part on the owner's 3D printer, open a GitHub issue as
 `docs/PRINTING.md` describes; ask the owner whether the plate is clear
