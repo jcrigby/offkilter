@@ -228,7 +228,8 @@ The bit's heights are for a bit standing 50 mm out of the Yakamoz
   taper). It should slide on with a little play and seat on the
   lug's end, with the pin in its hole and the screw hole over the
   threaded one. If it's tight or loose, change `CLEAR` in `build.py`;
-  if the holes don't line up, change `PIN_SPACING` or `SCREW_SIDE`.
+  if the holes don't line up, change `SCREW_SHIFT` or `SCREW_SIDE`. The
+  second print, with the screw hole moved and the draft split, fits.
 
 | The cap | Its pocket, screw and pin holes | Fit test | Jack head |
 |---|---|---|---|
@@ -303,7 +304,7 @@ in height), the turns per mm.
 - [ ] **The jack head.** Print it and try its skirt on the seat before
       building the rest; if it is tight, raise `HEAD_CLEAR` in
       `build.py`.
-- [ ] **Print the fit test** (`out/fit_test.stl`) and try it on the left
-      lug before the cap.
+- [x] **Print the fit test** (`out/fit_test.stl`) and try it on the left
+      lug before the cap. The second one fits.
 - [ ] **A depth stop for repeat setups:** the router's own turret stop
       still works upside down.
