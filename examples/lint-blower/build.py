@@ -71,6 +71,7 @@ TAB_IN, TAB_OUT = 10.0, 10.0   # how far a tab runs back into the middle piece a
 TAB_CLEAR = 0.2         # the tab off the wing's inner wall, for the glue
 LAP_W, LAP_T = 8.0, 1.2    # the blade halves' lap strip along their joint, on the right half
 FIT_TEST_H, FIT_GAP = 20.0, 12.0   # the fit test: the halves' bottom slices, standing this far apart
+FIT_SHIFT = 144.0                   # the left slice moved along to lie over the right one, so the file fits a 256 mm plate
 RIGHT_HALF_W = 144.0       # the right half as printed, joint to outer rail: the left half makes up the rest of BLADE_W, so a
                            # narrower frame than measured is met by reprinting the left half alone, the joint off centre
 
@@ -200,11 +201,11 @@ def build_tabs(p, side):
         p.extrude(s, depth, direction=direction, op="add", name=f"front tab {name} {side:+d}")
 
 
-def blade_outline(inset=0.0):
+def blade_outline(inset=0.0, x_shift=0.0):
     """The blade's outline in the front plane's coordinates (x, z):
     straight sides and top, the bottom corners rounded, between
-    BLADE_X0 and BLADE_X1."""
-    x0, x1, r = BLADE_X0 + inset, BLADE_X1 - inset, max(BLADE_R - inset, 0.0)
+    BLADE_X0 and BLADE_X1, moved along by `x_shift`."""
+    x0, x1, r = BLADE_X0 + inset + x_shift, BLADE_X1 - inset + x_shift, max(BLADE_R - inset, 0.0)
     z0, z1 = Z_BLADE_BOT + inset, Z_BLADE_TOP - inset
     if r <= 0.0:
         return [(x0, z1), (x1, z1), (x1, z0), (x0, z0)]
@@ -218,30 +219,31 @@ def blade_outline(inset=0.0):
     return pts
 
 
-def build_blade(p, y_shift=0.0):
+def build_blade(p, y_shift=0.0, x_shift=0.0):
     """The dummy filter: a slab the blade's outline hollowed between its
     faces, open at the top edge, where the wedge's air comes in, and at
     the bottom edge, where it leaves below the grille; both faces
     solid, so either face can be the drum side; ribs face to face. It
-    reaches up the sleeve to just under the wedge. `y_shift` builds it
-    that much further forward, for a second one beside the first."""
+    reaches up the sleeve to just under the wedge. `y_shift` and
+    `x_shift` build it that much further forward and along, for a
+    second one beside the first."""
     y0 = WALL + SLEEVE_FIT + y_shift
     s = p.sketch("front", -y0, "blade")
-    p.polygon(s, blade_outline())
+    p.polygon(s, blade_outline(0.0, x_shift))
     p.extrude(s, BLADE_T, direction="reverse", name="blade")   # the front plane's normal is -Y: reverse goes +Y
     # The hollow follows the outline a wall inside it, out through the
     # top, and the bottom opens along the straight edge between the
     # corners, so the rails run round the corners.
     s = p.sketch("front", -(y0 + WALL), "blade hollow")
-    pts = blade_outline(WALL)
+    pts = blade_outline(WALL, x_shift)
     p.polygon(s, [(x, z + (WALL + 1.0 if z > Z_BLADE_TOP - WALL - 0.01 else 0.0)) for x, z in pts])
     p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="remove", name="blade hollow")
     s = p.sketch("front", -(y0 + WALL), "blade mouth")
     m = max(BLADE_R, WALL) + 1.0
-    p.rect(s, (BLADE_X0 + m, Z_BLADE_BOT - 1.0), (BLADE_X1 - m, Z_BLADE_BOT + WALL + 0.5))
+    p.rect(s, (BLADE_X0 + m + x_shift, Z_BLADE_BOT - 1.0), (BLADE_X1 - m + x_shift, Z_BLADE_BOT + WALL + 0.5))
     p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="remove", name="blade mouth")
     for k in range(RIBS):
-        x = BLADE_X0 + (k + 1) * BLADE_W / (RIBS + 1)
+        x = BLADE_X0 + (k + 1) * BLADE_W / (RIBS + 1) + x_shift
         s = p.sketch("front", -(y0 + WALL), f"rib {k + 1}")
         # The ribs stop under the sleeve, which holds the top on its own.
         p.rect(s, (x - WALL / 2, Z_BLADE_BOT), (x + WALL / 2, -2.0))
@@ -265,18 +267,23 @@ def build_laps(p, y0):
 
 def build_fit_test(p):
     """The bottom FIT_TEST_H of both halves, the left one built FIT_GAP
-    further forward so the two stand apart on the plate: slid together
-    on the laps they try the slot's width and thickness in a short print."""
+    further forward and moved along to lie over the right, so the two
+    stand apart on a 256 mm plate: slid together on the laps they try
+    the slot's width and thickness in a short print."""
     big = 400.0
+    y1 = WALL + SLEEVE_FIT + BLADE_T + 1.0
     build_blade(p)
+    s = p.sketch("top", -big, "keep the right half")
+    p.rect(s, (0.0, -1.0), (big, y1))
+    p.extrude(s, 2 * big, op="intersect", name="keep the right half")
     build_laps(p, WALL + SLEEVE_FIT)
     s = p.sketch("top", -big, "keep the right slice")
-    p.rect(s, (-LAP_W - 1.0, -1.0), (big, WALL + SLEEVE_FIT + BLADE_T + 1.0))
+    p.rect(s, (-LAP_W - 1.0, -1.0), (big, y1))
     p.extrude(s, big + Z_BLADE_BOT + FIT_TEST_H, op="intersect", name="keep the right slice")
     dy = BLADE_T + FIT_GAP
-    build_blade(p, dy)
+    build_blade(p, dy, FIT_SHIFT)
     s = p.sketch("top", -big, "keep the left slice")
-    p.rect(s, (-big, dy + 1.0), (0.0, dy + WALL + SLEEVE_FIT + BLADE_T + 1.0))
+    p.rect(s, (-big, dy + 1.0), (FIT_SHIFT, dy + WALL + SLEEVE_FIT + BLADE_T + 1.0))
     p.extrude(s, big + Z_BLADE_BOT + FIT_TEST_H, op="intersect", name="keep the left slice")
 
 
@@ -367,7 +374,7 @@ def main():
                     "mouth_tilt": MOUTH_TILT, "throat_d": THROAT_D, "cone_half": CONE_HALF, "r_cone_max": R_CONE_MAX,
                     "h_cone": H_CONE, "axis_y": AXIS_Y, "back_open": BACK_OPEN, "in_front": IN_FRONT, "in_end": IN_END,
                     "volume": bodies[0][1]},
-        "pieces": {"fit_test_h": FIT_TEST_H, "fit_gap": FIT_GAP, "x_cut": X_CUT, "tab_t": TAB_T, "tab_in": TAB_IN, "tab_out": TAB_OUT, "tab_clear": TAB_CLEAR,
+        "pieces": {"fit_test_h": FIT_TEST_H, "fit_gap": FIT_GAP, "fit_shift": FIT_SHIFT, "x_cut": X_CUT, "tab_t": TAB_T, "tab_in": TAB_IN, "tab_out": TAB_OUT, "tab_clear": TAB_CLEAR,
                    "tab_z0": TAB_Z0, "tab_z1": TAB_Z1, "z_step": Z_STEP,
                    "volumes": {k: v for k, (_, v) in pieces.items()}},
     }

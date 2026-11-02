@@ -549,10 +549,15 @@ fn the_fit_test_is_the_halves_bottom_slices_standing_apart() {
     }
     let (rlo, rhi) = right.bounds().unwrap();
     let (llo, lhi) = left.bounds().unwrap();
+    let shift = num(pc, "fit_shift");
     assert!(
         (rhi.x - num(b, "x1")).abs() < 1e-6
-            && (llo.x - num(b, "x0")).abs() < 1e-6
-            && lhi.x.abs() < 1e-6
+            && (llo.x - num(b, "x0") - shift).abs() < 1e-6
+            && (lhi.x - shift).abs() < 1e-6
+    );
+    assert!(
+        rhi.x - rlo.x.min(llo.x) < 256.0 && lhi.y - rlo.y < 256.0,
+        "the file fits the plate"
     );
     assert!(
         (llo.y - rhi.y - gap).abs() < 1e-6,

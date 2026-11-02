@@ -59,6 +59,7 @@
  "pieces": {
   "fit_test_h": 20.0,
   "fit_gap": 12.0,
+  "fit_shift": 144.0,
   "x_cut": 45.0,
   "tab_t": 2.0,
   "tab_in": 10.0,
