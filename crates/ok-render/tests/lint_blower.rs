@@ -303,6 +303,7 @@ fn the_blade_is_the_filter_less_clearance_open_only_top_and_bottom_and_goes_up_t
     let bay = w / (ribs as f64 + 1.0);
     let x0 = lo.x + wall + 1.0;
     let x1 = lo.x + bay - wall / 2.0 - 1.0;
+    assert!((lo.x - num(b, "x0")).abs() < 1e-6 && (hi.x - num(b, "x1")).abs() < 1e-6);
     let top = slab(
         Vec3::new(x0, y0 + wall + 0.2, hi.z - 3.0),
         Vec3::new(x1, y0 + t - wall - 0.2, hi.z + 1.0),
@@ -355,8 +356,11 @@ fn the_blade_is_the_filter_less_clearance_open_only_top_and_bottom_and_goes_up_t
         (blo.y - wall - fit).abs() < 1e-6 && (num(a, "stub_t") - wall - fit - bhi.y).abs() < 1e-6,
         "the fit each face"
     );
+    // The blade sits in the bore with at least the fit each end: the right
+    // rail where the printed half put it, the left wherever the width leaves it.
     assert!(
-        (blo.x + num(a, "bore_l") / 2.0 - fit).abs() < 1e-6,
+        blo.x + num(a, "bore_l") / 2.0 >= fit - 1e-6
+            && num(a, "bore_l") / 2.0 - bhi.x >= fit - 1e-6,
         "the fit each end"
     );
     assert!(
@@ -475,7 +479,15 @@ fn the_five_pieces_fit_a_256_bed_meet_nowhere_and_leave_their_glue_gaps() {
     // meeting nowhere and adding up to the blade plus the laps.
     let (lap_w, lap_t, y0, t) = (num(b, "lap_w"), num(b, "lap_t"), num(b, "y0"), num(b, "t"));
     let (lo, hi) = lblade.bounds().unwrap();
-    assert!(hi.x.abs() < 1e-6 && (lo.x + num(b, "w") / 2.0).abs() < 1e-6);
+    assert!(
+        hi.x.abs() < 1e-6 && (lo.x - num(b, "x0")).abs() < 1e-6,
+        "the left half from the joint to the blade's left rail"
+    );
+    let (_, rhi) = rblade.bounds().unwrap();
+    assert!(
+        (rhi.x - num(b, "x1")).abs() < 1e-6,
+        "the right half to the blade's right rail"
+    );
     let (lo, _) = rblade.bounds().unwrap();
     assert!(
         (lo.x + lap_w).abs() < 1e-6,

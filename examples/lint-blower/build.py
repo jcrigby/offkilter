@@ -70,9 +70,13 @@ TAB_T = 2.0             # a tab's thickness, the wall's
 TAB_IN, TAB_OUT = 10.0, 10.0   # how far a tab runs back into the middle piece and out into the wing
 TAB_CLEAR = 0.2         # the tab off the wing's inner wall, for the glue
 LAP_W, LAP_T = 8.0, 1.2    # the blade halves' lap strip along their joint, on the right half
+RIGHT_HALF_W = 144.0       # the right half as printed, joint to outer rail: the left half makes up the rest of BLADE_W, so a
+                           # narrower frame than measured is met by reprinting the left half alone, the joint off centre
 
 BLADE_T = FRAME_T - 2 * CLEAR_T
 BLADE_W = FRAME_W - 2 * CLEAR_W
+BLADE_X1 = RIGHT_HALF_W            # the blade's outer rails: the right one where the printed half puts it
+BLADE_X0 = RIGHT_HALF_W - BLADE_W
 STUB_T = BLADE_T + 2 * SLEEVE_FIT + 2 * WALL   # the sleeve outside: it is the stub the wedge starts from
 STUB_L = BLADE_W + 2 * SLEEVE_FIT + 2 * WALL
 STUB_D = SLEEVE_D
@@ -194,18 +198,19 @@ def build_tabs(p, side):
 
 def blade_outline(inset=0.0):
     """The blade's outline in the front plane's coordinates (x, z):
-    straight sides and top, the bottom corners rounded."""
-    hw, r = BLADE_W / 2 - inset, max(BLADE_R - inset, 0.0)
+    straight sides and top, the bottom corners rounded, between
+    BLADE_X0 and BLADE_X1."""
+    x0, x1, r = BLADE_X0 + inset, BLADE_X1 - inset, max(BLADE_R - inset, 0.0)
     z0, z1 = Z_BLADE_BOT + inset, Z_BLADE_TOP - inset
     if r <= 0.0:
-        return [(-hw, z1), (hw, z1), (hw, z0), (-hw, z0)]
-    pts = [(-hw, z1), (hw, z1), (hw, z0 + r)]
+        return [(x0, z1), (x1, z1), (x1, z0), (x0, z0)]
+    pts = [(x0, z1), (x1, z1), (x1, z0 + r)]
     for k in range(1, 7):
         a = -k / 6 * math.pi / 2
-        pts.append((hw - r + r * math.cos(a), z0 + r + r * math.sin(a)))
+        pts.append((x1 - r + r * math.cos(a), z0 + r + r * math.sin(a)))
     for k in range(0, 7):
         a = -math.pi / 2 - k / 6 * math.pi / 2
-        pts.append((-hw + r + r * math.cos(a), z0 + r + r * math.sin(a)))
+        pts.append((x0 + r + r * math.cos(a), z0 + r + r * math.sin(a)))
     return pts
 
 
@@ -227,11 +232,11 @@ def build_blade(p):
     p.polygon(s, [(x, z + (WALL + 1.0 if z > Z_BLADE_TOP - WALL - 0.01 else 0.0)) for x, z in pts])
     p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="remove", name="blade hollow")
     s = p.sketch("front", -(y0 + WALL), "blade mouth")
-    hw = BLADE_W / 2 - max(BLADE_R, WALL) - 1.0
-    p.rect(s, (-hw, Z_BLADE_BOT - 1.0), (hw, Z_BLADE_BOT + WALL + 0.5))
+    m = max(BLADE_R, WALL) + 1.0
+    p.rect(s, (BLADE_X0 + m, Z_BLADE_BOT - 1.0), (BLADE_X1 - m, Z_BLADE_BOT + WALL + 0.5))
     p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="remove", name="blade mouth")
     for k in range(RIBS):
-        x = -BLADE_W / 2 + (k + 1) * BLADE_W / (RIBS + 1)
+        x = BLADE_X0 + (k + 1) * BLADE_W / (RIBS + 1)
         s = p.sketch("front", -(y0 + WALL), f"rib {k + 1}")
         # The ribs stop under the sleeve, which holds the top on its own.
         p.rect(s, (x - WALL / 2, Z_BLADE_BOT), (x + WALL / 2, -2.0))
@@ -321,7 +326,7 @@ def main():
                               "path": os.path.join(OUT, "adapter.pdf")}))
     numbers = {
         "frame": {"t": FRAME_T, "w": FRAME_W, "ears_w": EARS_W, "h": FRAME_H, "lip_dip": LIP_DIP, "grille_d": GRILLE_D},
-        "blade": {"t": BLADE_T, "w": BLADE_W, "d": BLADE_D, "r": BLADE_R, "ribs": RIBS, "clear_w": CLEAR_W, "clear_t": CLEAR_T,
+        "blade": {"t": BLADE_T, "w": BLADE_W, "d": BLADE_D, "r": BLADE_R, "ribs": RIBS, "clear_w": CLEAR_W, "x0": BLADE_X0, "x1": BLADE_X1, "clear_t": CLEAR_T,
                   "z_top": Z_BLADE_TOP, "z_bot": Z_BLADE_BOT, "y0": WALL + SLEEVE_FIT, "volume": blade_bodies[0][1],
                   "lap_w": LAP_W, "lap_t": LAP_T},
         "adapter": {"stub_l": STUB_L, "stub_t": STUB_T, "stub_d": STUB_D, "bore_l": BORE_L, "bore_t": BORE_T, "sleeve_fit": SLEEVE_FIT, "wall": WALL,
