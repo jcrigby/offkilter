@@ -34,7 +34,7 @@ empty.
 
 ## 2. Install rustfmt and clippy with the toolchain
 
-- [ ] **What went wrong.** The lint command in `CLAUDE.md` failed
+- [x] **What went wrong.** The lint command in `CLAUDE.md` failed
   twice: `cargo fmt` and `cargo clippy` were not installed, because
   `rust-toolchain.toml` pins the channel and the wasm target but not
   the components.
