@@ -1,12 +1,13 @@
 //! The LG lint duct blower adapter (examples/lint-blower) as a
-//! regression suite: the adapter is one closed body whose stub is the
-//! slot's size less the clearance with walls of the thickness asked,
-//! whose flange reaches past the stub at the front and the ends and
-//! stays flush at the back, whose wedge keeps the wall through its
-//! leaning faces, whose socket is the Samsung part's cone (the throat,
-//! the half angle, the hollow behind the axis) under a mouth tilted
-//! toward the user; and the gauge is one comb whose teeth read their
-//! thicknesses. Every number prints (`--nocapture`).
+//! regression suite: the adapter is one closed body whose sleeve stands
+//! on the lip with the flange round its foot, whose wedge keeps the
+//! wall through its leaning faces, whose socket is the Samsung part's
+//! cone (the throat, the half angle, the hollow behind the axis) under a
+//! mouth tilted toward the user; the blade is the filter's width and
+//! thickness less the clearances, a box open at its top and its bottom
+//! edge and nowhere else, that goes up the sleeve the glue gap inside
+//! it; and the five pieces fit a 256 mm bed, meet nowhere, and leave
+//! their glue gaps. Every number prints (`--nocapture`).
 
 use ok_brep::{BoolOp, Solid, Surface};
 use ok_math::{Plane, Vec2, Vec3};
@@ -39,17 +40,23 @@ fn tab_named(doc: &Document, name: &str) -> TabId {
         .id
 }
 
-fn body_of(doc: &mut Document, tab: &str) -> Solid {
+fn bodies_of(doc: &mut Document, tab: &str, n: usize) -> Vec<Solid> {
     let r = doc.regenerate_studio(tab_named(doc, tab), None).unwrap();
     assert!(
         r.statuses.iter().all(|f| f.error.is_none()),
         "{:?}",
         r.statuses
     );
-    assert_eq!(r.bodies.len(), 1, "one body in {tab}");
-    let body = r.bodies[0].solid.clone();
-    body.validate().unwrap();
-    body
+    assert_eq!(r.bodies.len(), n, "{n} bodies in {tab}");
+    let out: Vec<Solid> = r.bodies.iter().map(|b| b.solid.clone()).collect();
+    for b in &out {
+        b.validate().unwrap();
+    }
+    out
+}
+
+fn body_of(doc: &mut Document, tab: &str) -> Solid {
+    bodies_of(doc, tab, 1).remove(0)
 }
 
 fn overlap(a: &Solid, b: &Solid) -> f64 {
@@ -90,17 +97,18 @@ fn post(x: f64, y: f64, r: f64, z0: f64, z1: f64) -> Solid {
 }
 
 #[test]
-fn the_adapter_fits_the_slot_and_keeps_the_samsung_socket() {
+fn the_adapter_stands_on_the_lip_and_keeps_the_samsung_socket() {
     let mut doc = load();
     let n = numbers();
-    let (slot, a) = (&n["slot"], &n["adapter"]);
+    let a = &n["adapter"];
     let body = body_of(&mut doc, "adapter");
     let (lo, hi) = body.bounds().unwrap();
-    let (stub_l, stub_t, stub_d, clear, wall) = (
+    let (stub_l, stub_t, stub_d, bore_l, bore_t, wall) = (
         num(a, "stub_l"),
         num(a, "stub_t"),
         num(a, "stub_d"),
-        num(a, "clear"),
+        num(a, "bore_l"),
+        num(a, "bore_t"),
         num(a, "wall"),
     );
     let (flange_t, flange_out) = (num(a, "flange_t"), num(a, "flange_out"));
@@ -126,32 +134,28 @@ fn the_adapter_fits_the_slot_and_keeps_the_samsung_socket() {
         hi.z,
         body.volume() / 1000.0
     );
-    // The stub is the slot less the clearance each side, and reaches
-    // down the slot; the back face is the datum and the socket box sets
-    // the depth; the flange sets the length.
-    assert!((stub_l - (num(slot, "l") - 2.0 * clear)).abs() < 1e-9);
-    assert!((stub_t - (num(slot, "w") - 2.0 * clear)).abs() < 1e-9);
+    // The sleeve stands on the lip, z = 0, and is a wall each side
+    // bigger than its bore; the back face is the datum and the socket box
+    // sets the depth; the flange sets the length.
     assert!(
-        (lo.z + stub_d).abs() < 1e-6,
-        "the stub reaches {} down",
-        -lo.z
+        (stub_l - bore_l - 2.0 * wall).abs() < 1e-9 && (stub_t - bore_t - 2.0 * wall).abs() < 1e-9
     );
+    assert!(lo.z.abs() < 1e-6, "the adapter stands on the lip");
     assert!((hi.z - z_top).abs() < 1e-6);
     assert!(lo.y.abs() < 1e-6 && (hi.y - socket_d).abs() < 1e-6);
     assert!((hi.x - (stub_l / 2.0 + flange_out)).abs() < 1e-6 && (lo.x + hi.x).abs() < 1e-6);
-    // Through the stub: a ring of wall round the slot's section.
-    let z = -stub_d / 2.0;
+    // Through the sleeve above the flange: a ring of wall round the bore.
+    let z = flange_t + (stub_d - flange_t) / 2.0;
     let cut = slab(Vec3::new(-200.0, -1.0, z), Vec3::new(200.0, 200.0, z + 1.0));
-    let ring = stub_l * stub_t - (stub_l - 2.0 * wall) * (stub_t - 2.0 * wall);
+    let ring = stub_l * stub_t - bore_l * bore_t;
     let got = overlap(&body, &cut);
-    println!("stub section {got:.1} mm2, walls of {wall} want {ring:.1}");
+    println!("sleeve section {got:.1} mm2, walls of {wall} want {ring:.1}");
     assert!((got - ring).abs() < 1.0);
-    // Through the flange: the plate past the stub at the front and the
+    // Through the flange: the plate past the sleeve at the front and the
     // ends, flush at the back, round the same bore.
     let z = flange_t / 2.0;
     let cut = slab(Vec3::new(-200.0, -1.0, z), Vec3::new(200.0, 200.0, z + 1.0));
-    let plate = (stub_l + 2.0 * flange_out) * (stub_t + flange_out)
-        - (stub_l - 2.0 * wall) * (stub_t - 2.0 * wall);
+    let plate = (stub_l + 2.0 * flange_out) * (stub_t + flange_out) - bore_l * bore_t;
     let got = overlap(&body, &cut);
     println!("flange section {got:.1} mm2, want {plate:.1}");
     assert!((got - plate).abs() < 1.0);
@@ -162,12 +166,13 @@ fn the_adapter_fits_the_slot_and_keeps_the_samsung_socket() {
     assert!(overlap(&body, &back) < 1e-6, "nothing behind the back face");
     // Through the wedge, halfway up: the wall through the leaning faces
     // is `wall` measured square to them, so more in the plane of the cut.
-    let z = flange_t + (z_socket - flange_t) / 2.0;
+    let z_loft = stub_d;
+    let z = z_loft + (z_socket - z_loft) / 2.0;
     let cut = slab(Vec3::new(-200.0, -1.0, z), Vec3::new(200.0, 200.0, z + 1.0));
     let (in_front, in_end) = (num(a, "in_front"), num(a, "in_end"));
     // The section changes with height, so the slab's volume is the ring
     // at its middle, half a millimetre up.
-    let f = (z + 0.5 - flange_t) / (z_socket - flange_t);
+    let f = (z + 0.5 - z_loft) / (z_socket - z_loft);
     let w_out = stub_l + (socket_w - stub_l) * f;
     let d_out = stub_t + (socket_d - stub_t) * f;
     let want = w_out * d_out - (w_out - 2.0 * in_end) * (d_out - wall - in_front);
@@ -248,61 +253,123 @@ fn the_adapter_fits_the_slot_and_keeps_the_samsung_socket() {
 }
 
 #[test]
-fn the_gauge_is_one_comb_whose_teeth_read_their_thicknesses() {
+fn the_blade_is_the_filter_less_clearance_open_only_top_and_bottom_and_goes_up_the_sleeve() {
     let mut doc = load();
     let n = numbers();
-    let g = &n["gauge"];
-    let teeth: Vec<f64> = g["teeth"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|v| v.as_f64().unwrap())
-        .collect();
-    let (tooth_w, tooth_gap, tooth_d, spine_t) = (
-        num(g, "tooth_w"),
-        num(g, "tooth_gap"),
-        num(g, "tooth_d"),
-        num(g, "spine_t"),
+    let (fr, b, a) = (&n["frame"], &n["blade"], &n["adapter"]);
+    let blade = body_of(&mut doc, "blade");
+    let (lo, hi) = blade.bounds().unwrap();
+    let (t, w, d, r, y0, wall) = (
+        num(b, "t"),
+        num(b, "w"),
+        num(b, "d"),
+        num(b, "r"),
+        num(b, "y0"),
+        num(a, "wall"),
     );
-    let comb = body_of(&mut doc, "slot gauge");
-    let (lo, hi) = comb.bounds().unwrap();
     println!(
-        "comb {:.0} long, {:.0} across, teeth {:.0} down, {:.1} cm3",
+        "blade {:.1} x {:.1}, z {:.1} to {:.1}, {:.1} cm3",
         hi.x - lo.x,
         hi.y - lo.y,
-        -lo.z,
-        comb.volume() / 1000.0
+        lo.z,
+        hi.z,
+        blade.volume() / 1000.0
     );
-    assert!((lo.z + tooth_d).abs() < 1e-6 && (hi.z - spine_t).abs() < 1e-6);
-    let thickest = teeth.iter().cloned().fold(0.0, f64::max);
+    // The filter less the clearances, each way, and BLADE_D below the lip.
+    assert!((w - (num(fr, "w") - 2.0 * num(b, "clear_w"))).abs() < 1e-9);
+    assert!((t - (num(fr, "t") - 2.0 * num(b, "clear_t"))).abs() < 1e-9);
+    assert!((hi.x - lo.x - w).abs() < 1e-6 && (hi.y - lo.y - t).abs() < 1e-6);
+    assert!((lo.z + d).abs() < 1e-6 && (hi.z - num(b, "z_top")).abs() < 1e-6);
     assert!(
-        (hi.y - lo.y - (thickest + 2.0)).abs() < 1e-6,
-        "the spine clears the thickest tooth"
+        lo.z + d > num(fr, "grille_d") - d + 30.0 || d > num(fr, "grille_d") + 30.0,
+        "the blade covers the grille with 30 to spare"
     );
-    let mut last = 0.0;
-    for (k, t) in teeth.iter().enumerate() {
-        let x = k as f64 * (tooth_w + tooth_gap);
-        let cut = slab(
-            Vec3::new(x - 1.0, -1.0, -tooth_d / 2.0),
-            Vec3::new(x + tooth_w + 1.0, hi.y + 1.0, -tooth_d / 2.0 + 1.0),
+    // Both faces solid: a slab a hair inside each face, the blade's
+    // extent less the corners, is all in the body.
+    for y in [y0 + 0.5, y0 + t - 0.5] {
+        let probe = slab(
+            Vec3::new(lo.x + r + 1.0, y - 0.2, lo.z + r + 1.0),
+            Vec3::new(hi.x - r - 1.0, y + 0.2, hi.z - 1.0),
         );
-        let (tl, th) = ok_brep::boolean(&comb, &cut, BoolOp::Intersection)
-            .unwrap()
-            .bounds()
-            .unwrap();
-        let read = th.y - tl.y;
-        println!("tooth {} at x {x:.0}: {read:.2} thick", k + 1);
-        assert!((read - t).abs() < 1e-6);
-        assert!(*t > last, "teeth thicken along the comb");
-        last = *t;
+        let got = overlap(&blade, &probe);
+        println!("face at y {y:.1}: {got:.0} of {:.0} mm3", probe.volume());
+        assert!((got - probe.volume()).abs() < 1.0, "a face is solid");
     }
+    // Open at the top: a post the hollow's size through the top edge
+    // meets nothing; and at the bottom: the same through the bottom edge
+    // between the corners and the ribs; closed down the sides: a slab
+    // just inside each side rail is all body.
+    let ribs = num(b, "ribs") as usize;
+    let bay = w / (ribs as f64 + 1.0);
+    let x0 = lo.x + wall + 1.0;
+    let x1 = lo.x + bay - wall / 2.0 - 1.0;
+    let top = slab(
+        Vec3::new(x0, y0 + wall + 0.2, hi.z - 3.0),
+        Vec3::new(x1, y0 + t - wall - 0.2, hi.z + 1.0),
+    );
+    assert!(overlap(&blade, &top) < 1e-6, "open at the top");
+    let x0b = lo.x + r + 2.0;
+    let bottom = slab(
+        Vec3::new(x0b, y0 + wall + 0.2, lo.z - 1.0),
+        Vec3::new(x1, y0 + t - wall - 0.2, lo.z + 3.0),
+    );
+    assert!(
+        overlap(&blade, &bottom) < 1e-6,
+        "open at the bottom between the corners"
+    );
+    for x in [lo.x + wall / 2.0, hi.x - wall / 2.0] {
+        let rail = slab(
+            Vec3::new(x - 0.2, y0 + 0.5, lo.z + r + 1.0),
+            Vec3::new(x + 0.2, y0 + t - 0.5, hi.z - 1.0),
+        );
+        assert!(
+            (overlap(&blade, &rail) - rail.volume()).abs() < 1.0,
+            "a side rail is solid"
+        );
+    }
+    // The ribs: face to face, down the blade, one per bay boundary.
+    for k in 1..=ribs {
+        let x = lo.x + k as f64 * bay;
+        let rib = slab(
+            Vec3::new(x - 0.2, y0 + wall + 0.2, lo.z + wall + 1.0),
+            Vec3::new(x + 0.2, y0 + t - wall - 0.2, -3.0),
+        );
+        assert!(
+            (overlap(&blade, &rib) - rib.volume()).abs() < 1.0,
+            "rib {k} runs face to face"
+        );
+    }
+    // Up the sleeve: both together, the blade meets the adapter nowhere,
+    // and the gap round it is the fit each side.
+    let both = bodies_of(&mut doc, "adapter with blade", 2);
+    // The blade is the one that hangs below the lip.
+    let (ad, bl) = if both[0].bounds().unwrap().0.z < -1.0 {
+        (&both[1], &both[0])
+    } else {
+        (&both[0], &both[1])
+    };
+    assert!(overlap(ad, bl) < 1e-6, "the blade meets the sleeve nowhere");
+    let fit = num(a, "sleeve_fit");
+    let (blo, bhi) = bl.bounds().unwrap();
+    assert!(
+        (blo.y - wall - fit).abs() < 1e-6 && (num(a, "stub_t") - wall - fit - bhi.y).abs() < 1e-6,
+        "the fit each face"
+    );
+    assert!(
+        (blo.x + num(a, "bore_l") / 2.0 - fit).abs() < 1e-6,
+        "the fit each end"
+    );
+    assert!(
+        bhi.z > num(a, "stub_d") - 2.0 && bhi.z < num(a, "stub_d"),
+        "the blade reaches up the sleeve to just under the wedge"
+    );
 }
 
 #[test]
-fn the_three_pieces_fit_a_256_bed_and_their_tabs_leave_the_glue_gap() {
+fn the_five_pieces_fit_a_256_bed_meet_nowhere_and_leave_their_glue_gaps() {
     let mut doc = load();
     let n = numbers();
-    let (a, pc) = (&n["adapter"], &n["pieces"]);
+    let (a, b, pc) = (&n["adapter"], &n["blade"], &n["pieces"]);
     let (x_cut, tab_t, tab_in, tab_out, clear) = (
         num(pc, "x_cut"),
         num(pc, "tab_t"),
@@ -312,14 +379,19 @@ fn the_three_pieces_fit_a_256_bed_and_their_tabs_leave_the_glue_gap() {
     );
     let (tab_z0, tab_z1, wall) = (num(pc, "tab_z0"), num(pc, "tab_z1"), num(a, "wall"));
     let whole = body_of(&mut doc, "adapter");
+    let blade = body_of(&mut doc, "blade");
     let middle = body_of(&mut doc, "middle");
     let right = body_of(&mut doc, "right wing");
     let left = body_of(&mut doc, "left wing");
+    let rblade = body_of(&mut doc, "right blade");
+    let lblade = body_of(&mut doc, "left blade");
     let bed = 256.0;
     for (name, p) in [
         ("middle", &middle),
         ("right wing", &right),
         ("left wing", &left),
+        ("right blade", &rblade),
+        ("left blade", &lblade),
     ] {
         let (lo, hi) = p.bounds().unwrap();
         let (dx, dy, dz) = (hi.x - lo.x, hi.y - lo.y, hi.z - lo.z);
@@ -327,14 +399,11 @@ fn the_three_pieces_fit_a_256_bed_and_their_tabs_leave_the_glue_gap() {
             "{name}: {dx:.0} x {dy:.0} x {dz:.0}, {:.1} cm3",
             p.volume() / 1000.0
         );
-        assert!(
-            dx < bed && dy < bed && dz < bed,
-            "{name} fits the bed standing"
-        );
+        assert!(dx < bed && dy < bed && dz < bed, "{name} fits the bed");
     }
-    // The cuts are at the socket box's ends: the wings stop where the
-    // socket starts, the middle reaches past the cuts only by its tabs,
-    // and the three add up to the whole plus the tabs.
+    // The wedge's cuts are at the socket box's ends: the wings stop where
+    // the socket starts, the middle reaches past the cuts only by its
+    // tabs, and the three add up to the whole plus the tabs.
     let (lo, hi) = right.bounds().unwrap();
     assert!((lo.x - x_cut).abs() < 1e-6 && (hi.z - num(a, "z_socket")).abs() < 1e-6);
     let (lo, hi) = middle.bounds().unwrap();
@@ -371,8 +440,6 @@ fn the_three_pieces_fit_a_256_bed_and_their_tabs_leave_the_glue_gap() {
         overlap(&middle, &more) > 1.0,
         "the back tab is just past the gap"
     );
-    // The tabs run tab_in into the middle, fused to its walls, and tab_out
-    // past the cut, with the wall's thickness.
     let inside = slab(
         Vec3::new(x_cut - tab_in + 1.0, wall + clear + tab_t - 0.5, zmid),
         Vec3::new(x_cut - 1.0, wall + clear + tab_t + 0.5, zmid + 1.0),
@@ -403,4 +470,33 @@ fn the_three_pieces_fit_a_256_bed_and_their_tabs_leave_the_glue_gap() {
             && (lo.z - tab_z0).abs() < 1e-6
             && (hi.z - tab_z1).abs() < 1e-6
     );
+    // The blade's halves: cut at the middle, the right half reaching past
+    // the joint by its lap strips, one inside each face, the halves
+    // meeting nowhere and adding up to the blade plus the laps.
+    let (lap_w, lap_t, y0, t) = (num(b, "lap_w"), num(b, "lap_t"), num(b, "y0"), num(b, "t"));
+    let (lo, hi) = lblade.bounds().unwrap();
+    assert!(hi.x.abs() < 1e-6 && (lo.x + num(b, "w") / 2.0).abs() < 1e-6);
+    let (lo, _) = rblade.bounds().unwrap();
+    assert!(
+        (lo.x + lap_w).abs() < 1e-6,
+        "the laps reach {lap_w} past the joint"
+    );
+    assert!(overlap(&rblade, &lblade) < 1e-6, "the halves meet nowhere");
+    let laps = rblade.volume() + lblade.volume() - blade.volume();
+    println!("laps add {:.1} cm3", laps / 1000.0);
+    assert!(laps > 0.0 && laps < 10_000.0);
+    for y in [y0 + wall, y0 + t - wall - lap_t] {
+        let strip = slab(
+            Vec3::new(-lap_w + 0.5, y + 0.1, -100.0),
+            Vec3::new(-0.5, y + lap_t - 0.1, -50.0),
+        );
+        assert!(
+            (overlap(&rblade, &strip) - strip.volume()).abs() < 1.0,
+            "a lap strip under the left plate at y {y}"
+        );
+        assert!(
+            overlap(&lblade, &strip) < 1e-6,
+            "the left half leaves the lap room"
+        );
+    }
 }

@@ -2,25 +2,28 @@
 """A leaf blower adapter for an LG dryer's lint duct, built through the
 MCP server. The starting point is Xypher2000's Samsung adapter on
 Thingiverse (thing 7021003): a tapered socket the blower's nozzle jams
-into, a thin-walled wedge that spreads the air to a half-moon end the
-size of the Samsung filter, which goes down the filter's slot and blows
-the lint out through the dryer's own blower and vent. An LG filter
-(ADQ56656401) is a near-square frame that drops into a straight slot at
-the bottom of the door opening, so the end is redrawn: a rectangular
-stub the slot's size, open at the bottom, with a flange that rests on
-the slot's lip, and the wedge lofts from it up to the socket, which is
-the Samsung part's, measured off its STL. The LG numbers are the
-published ones for the filter; the slot itself is to be measured, and
-a comb of teeth from 10 to 30 mm thick prints first to find its width.
+into, a thin-walled wedge, and a half-moon end the size of the Samsung
+filter that goes down the filter's slot. That end is the part that
+matters: its full plate blanks the housing's grille, so the air has no
+way back into the drum and goes down the duct, out through the dryer's
+own blower and vent. An LG filter (ADQ56656401) is a near-square frame
+18 mm thick standing in a straight slot at the bottom of the door
+opening, on a guide at the bottom, its top edge an arc flush with the
+lip. So the end is a blade the frame's width and thickness less
+clearance, deep enough to blank the grille, a closed box open only at
+its top into a sleeve under the wedge and at its bottom edge, below
+the grille, so it goes in either way round; the socket is the Samsung
+part's, measured off its STL. The frame's numbers come off a photograph of it on the 2x2
+measuring field and a caliper; the README says which.
 
     cargo build --release -p ok-mcp
     python3 examples/lint-blower/build.py
     cargo test -p ok-render --test lint_blower    # what CI runs
 
-Writes out/lint_blower.okpart, out/adapter.stl (one piece, for a bed
-over 320), out/middle.stl, out/left_wing.stl and out/right_wing.stl
-(the same in three for a 256 bed), out/slot_gauge.stl, pictures, a
-sheet and out/adapter.json.
+Writes out/lint_blower.okpart; out/adapter.stl and out/blade.stl (two
+pieces, for a bed over 320); out/middle.stl, out/left_wing.stl,
+out/right_wing.stl, out/left_blade.stl and out/right_blade.stl (the
+same in five for a 256 bed); pictures, a sheet and out/adapter.json.
 """
 import json
 import math
@@ -32,18 +35,26 @@ sys.path.insert(0, os.path.dirname(HERE))
 from okmcp import Mcp, Part, new_tab  # noqa: E402
 
 OUT = os.path.join(HERE, "out")
-# -- the LG side, mm: the published filter, the slot to be measured ---------
-FILTER_W = 303.0        # 11-15/16 in across the filter's top bar (ADQ56656401); older LG filters are 11.24 in (285.5)
-FILTER_T = 28.6         # 1-1/8 in through the top bar
-SLOT_L = FILTER_W       # the slot with the filter out, along the door opening: measure it
-SLOT_W = FILTER_T       # across the slot: measure it, or read it off the gauge
-STUB_CLEAR = 1.0        # the stub off the slot, each side, each way
-STUB_D = 60.0           # how far the stub goes down the slot
-# -- the duct ---------------------------------------------------------------
+# -- the LG filter, mm: measured, see the README ---------------------------
+FRAME_T = 18.0          # the frame's thickness, the same everywhere (caliper)
+FRAME_W = 290.0         # the frame's width, rim to rim, down its straight sides (the field photo: 288 to 294)
+EARS_W = 306.0          # across the ears at the top corners (the field photo; LG publishes 11-15/16 in)
+FRAME_H = 287.0         # the bottom edge to the ears' tops (the field photo; parallax adds a few mm)
+LIP_DIP = 47.0          # the top edge's arc, flush with the lip, dips this far below the ears at the centre (R 218)
+GRILLE_D = 140.0        # how far below the ears the housing's grille reaches (the cover guide's photo, to confirm)
+# -- the blade: the dummy filter -------------------------------------------
+CLEAR_W = 1.0           # the blade off the frame's width, each side
+CLEAR_T = 0.5           # and off its thickness, each face
+BLADE_D = 180.0         # the blade below the ears' level: the grille and 40 to spare, well above the frame's corners
+BLADE_R = 5.0           # its bottom corners
+RIBS = 2                # ribs inside, face to face, down the blade
 WALL = 2.0              # every wall, as the Samsung part's
-FLANGE_T = 3.0          # the flange that stops on the slot's lip
-FLANGE_OUT = 8.0        # how far it reaches past the stub, at the front and the ends; the back stays flush
-LOFT_H = 90.0           # the wedge, slot to socket (the Samsung's is 65 and steeper)
+# -- the sleeve under the wedge, and the wedge ---------------------------------
+SLEEVE_D = 20.0         # how far the blade goes up into the sleeve
+SLEEVE_FIT = 0.2        # the sleeve off the blade, each side, for the glue
+FLANGE_T = 3.0          # the flange that rests on the lip's ends, where the filter's ears do
+FLANGE_OUT = 8.0        # how far it reaches past the sleeve, at the front and the ends; the back stays flush
+LOFT_H = 90.0           # the wedge, sleeve to socket (the Samsung's is 65 and steeper)
 # -- the blower socket, read off the Samsung STL ---------------------------
 SOCKET_W = 90.0         # the box along the slot (z 110..200 in the STL)
 SOCKET_D = 100.0        # and across, back face included (y -50..50)
@@ -53,22 +64,23 @@ THROAT_D = 65.0         # the cone where it meets the duct (r 32.5 at x -74)
 CONE_HALF = 19.0        # the cone's half angle (r 32.5 to 38.4 over 17 mm)
 AXIS_Y = 50.0           # the bore's axis from the back face (y 0, z 155 in the STL)
 BACK_OPEN = True        # the STL's socket is hollow behind the axis: a box, not a cone, on that side
-# -- three pieces for a 256 mm bed (a Bambu P1S): the socket whole in the
-# middle, the wings cut off at its ends, tabs on the middle's inner walls
-# reaching into the wings for the glue ------------------------------------
-X_CUT = SOCKET_W / 2    # the cuts, at the socket box's end walls
+# -- pieces for a 256 mm bed (a Bambu P1S) ----------------------------------
+X_CUT = SOCKET_W / 2    # the wedge's cuts, at the socket box's end walls
 TAB_T = 2.0             # a tab's thickness, the wall's
 TAB_IN, TAB_OUT = 10.0, 10.0   # how far a tab runs back into the middle piece and out into the wing
 TAB_CLEAR = 0.2         # the tab off the wing's inner wall, for the glue
-TAB_Z0 = -STUB_D + 5.0  # the tabs run from near the stub's bottom edge
-# -- the gauge: teeth to drop in the slot -----------------------------------
-TEETH = [10.0 + 2.0 * k for k in range(11)]   # 10 to 30 mm thick
-TOOTH_W, TOOTH_GAP, TOOTH_D = 8.0, 4.0, 20.0
-SPINE_T = 5.0
+LAP_W, LAP_T = 8.0, 1.2    # the blade halves' lap strip along their joint, on the right half
 
-STUB_L = SLOT_L - 2 * STUB_CLEAR
-STUB_T = SLOT_W - 2 * STUB_CLEAR
-Z_LOFT = FLANGE_T                 # the wedge starts on the flange
+BLADE_T = FRAME_T - 2 * CLEAR_T
+BLADE_W = FRAME_W - 2 * CLEAR_W
+STUB_T = BLADE_T + 2 * SLEEVE_FIT + 2 * WALL   # the sleeve outside: it is the stub the wedge starts from
+STUB_L = BLADE_W + 2 * SLEEVE_FIT + 2 * WALL
+STUB_D = SLEEVE_D
+BORE_T = BLADE_T + 2 * SLEEVE_FIT              # the sleeve inside
+BORE_L = BLADE_W + 2 * SLEEVE_FIT
+# The lip is the datum, z = 0: the flange rests on it, the sleeve stands
+# on it (it is thicker than the slot) and the wedge starts on the sleeve.
+Z_LOFT = STUB_D
 Z_SOCKET = Z_LOFT + LOFT_H        # and the socket box on the wedge
 Z_TOP = Z_SOCKET + SOCKET_BACK
 MOUTH_TILT = math.degrees(math.atan((SOCKET_BACK - SOCKET_FRONT) / SOCKET_D))
@@ -81,20 +93,24 @@ IN_END = WALL / math.cos(LEAN_END)
 R_THROAT = THROAT_D / 2
 R_CONE_MAX = SOCKET_W / 2 - WALL  # the cone stops at the box's end walls
 H_CONE = (R_CONE_MAX - R_THROAT) / math.tan(math.radians(CONE_HALF))
-# The wedge's inner end wall comes in to X_CUT + TAB_OUT at this height,
-# so the tabs stop 5 below it.
+# The blade reaches up the sleeve to just under the wedge and BLADE_D
+# below the lip.
+Z_BLADE_TOP = SLEEVE_D - 1.0
+Z_BLADE_BOT = -BLADE_D
+# The tabs: from near the sleeve's mouth to just under where the wedge's
+# inner end wall comes in to X_CUT + TAB_OUT.
+TAB_Z0 = 5.0
 X_IN0, X_IN1 = STUB_L / 2 - IN_END, SOCKET_W / 2 - IN_END
 TAB_Z1 = Z_LOFT + (X_IN0 - (X_CUT + TAB_OUT + 1.0)) / (X_IN0 - X_IN1) * LOFT_H - 5.0
-Y_IN0 = STUB_T - WALL            # the stub bore's front
+Y_IN0 = STUB_T - WALL            # the sleeve bore's front (inside the back wall at WALL)
 Y_IN_LOFT0 = STUB_T - IN_FRONT   # the wedge bore's front where it starts, a little inside that
 Y_IN_LOFT1 = SOCKET_D - IN_FRONT
-Z_STEP = Z_LOFT + 0.01           # the stub bore ends here and the wedge bore, a little inside it, takes over
+Z_STEP = Z_LOFT + 0.01           # the sleeve bore ends here and the wedge bore takes over
 
 
 def y_front_in(z):
     """The duct's inner front face at height z on the cut planes: the
-    stub bore's up to Z_STEP, the wedge bore's above, which steps in
-    by IN_FRONT - WALL there and leans out from it."""
+    sleeve bore's up to Z_STEP, the wedge bore's above."""
     if z <= Z_STEP:
         return Y_IN0
     return Y_IN_LOFT0 + (z - Z_LOFT) / LOFT_H * (Y_IN_LOFT1 - Y_IN_LOFT0)
@@ -107,15 +123,16 @@ def checked(part):
 
 
 def build_adapter(p):
-    """The stub, the flange, the wedge and the socket as one solid, then
-    the duct through them and the socket's bore."""
-    s = p.sketch("top", -STUB_D, "stub")
+    """The sleeve, the flange, the wedge and the socket as one solid,
+    then the duct through them and the socket's bore. The back face,
+    y = 0, is the drum side."""
+    s = p.sketch("top", 0.0, "sleeve")
     p.rect(s, (-STUB_L / 2, 0.0), (STUB_L / 2, STUB_T))
-    p.extrude(s, STUB_D, name="stub")
+    p.extrude(s, STUB_D, name="sleeve")
     s = p.sketch("top", 0.0, "flange")
     p.rect(s, (-STUB_L / 2 - FLANGE_OUT, 0.0), (STUB_L / 2 + FLANGE_OUT, STUB_T + FLANGE_OUT))
     p.extrude(s, FLANGE_T, op="add", name="flange")
-    a = p.sketch("top", Z_LOFT, "wedge at the slot")
+    a = p.sketch("top", Z_LOFT, "wedge at the sleeve")
     p.rect(a, (-STUB_L / 2, 0.0), (STUB_L / 2, STUB_T))
     b = p.sketch("top", Z_SOCKET, "wedge at the socket")
     p.rect(b, (-SOCKET_W / 2, 0.0), (SOCKET_W / 2, SOCKET_D))
@@ -130,12 +147,12 @@ def build_adapter(p):
     slope = (zf - zb) / SOCKET_D
     p.polygon(s, [(-1.0, zb - slope), (SOCKET_D + 1.0, zf + slope), (SOCKET_D + 1.0, zb + 10.0), (-1.0, zb + 10.0)])
     p.cut(s, SOCKET_W + 2.0, name="mouth")
-    # The duct: the stub's bore up through the flange, the wedge's bore
+    # The duct: the sleeve's bore up through the flange, the wedge's bore
     # lofted to the socket, and the socket's hollow behind the axis.
-    s = p.sketch("top", -STUB_D - 1.0, "stub bore")
-    p.rect(s, (-STUB_L / 2 + WALL, WALL), (STUB_L / 2 - WALL, STUB_T - WALL))
-    p.cut(s, STUB_D + 1.0 + Z_LOFT + 0.01, name="stub bore")
-    a = p.sketch("top", Z_LOFT, "wedge bore at the slot")
+    s = p.sketch("top", -1.0, "sleeve bore")
+    p.rect(s, (-BORE_L / 2, WALL), (BORE_L / 2, WALL + BORE_T))
+    p.cut(s, 1.0 + STUB_D + 0.01, name="sleeve bore")
+    a = p.sketch("top", Z_LOFT, "wedge bore at the sleeve")
     p.rect(a, (-STUB_L / 2 + IN_END, WALL), (STUB_L / 2 - IN_END, STUB_T - IN_FRONT))
     b = p.sketch("top", Z_SOCKET + 0.01, "wedge bore at the socket")
     p.rect(b, (-SOCKET_W / 2 + IN_END, WALL), (SOCKET_W / 2 - IN_END, SOCKET_D - IN_FRONT))
@@ -158,7 +175,7 @@ def build_tabs(p, side):
     piece, fused into its wall, and TAB_OUT past the cut a glue gap
     inside the wing's wall."""
     x_cut = side * X_CUT
-    for name, run, x0, depth, c in (("in", "normal", x_cut - side * TAB_IN, TAB_IN, -1.0), ("out", "normal", x_cut, TAB_OUT, TAB_CLEAR)):
+    for name, x0, depth, c in (("in", x_cut - side * TAB_IN, TAB_IN, -1.0), ("out", x_cut, TAB_OUT, TAB_CLEAR)):
         direction = "normal" if side > 0 else "reverse"
         s = p.sketch("right", x0, f"back tab {name} {side:+d}")
         # Inside the piece the strip overlaps the wall by a millimetre (c = -1);
@@ -175,37 +192,80 @@ def build_tabs(p, side):
         p.extrude(s, depth, direction=direction, op="add", name=f"front tab {name} {side:+d}")
 
 
+def blade_outline(inset=0.0):
+    """The blade's outline in the front plane's coordinates (x, z):
+    straight sides and top, the bottom corners rounded."""
+    hw, r = BLADE_W / 2 - inset, BLADE_R - inset
+    z0, z1 = Z_BLADE_BOT + inset, Z_BLADE_TOP - inset
+    pts = [(-hw, z1), (hw, z1), (hw, z0 + r)]
+    for k in range(1, 7):
+        a = -k / 6 * math.pi / 2
+        pts.append((hw - r + r * math.cos(a), z0 + r + r * math.sin(a)))
+    for k in range(0, 7):
+        a = -math.pi / 2 - k / 6 * math.pi / 2
+        pts.append((-hw + r + r * math.cos(a), z0 + r + r * math.sin(a)))
+    return pts
+
+
+def build_blade(p):
+    """The dummy filter: a slab the blade's outline hollowed between its
+    faces, open at the top edge, where the wedge's air comes in, and at
+    the bottom edge, where it leaves below the grille; both faces
+    solid, so either face can be the drum side; ribs face to face. It
+    reaches up the sleeve to just under the wedge."""
+    y0 = WALL + SLEEVE_FIT
+    s = p.sketch("front", -y0, "blade")
+    p.polygon(s, blade_outline())
+    p.extrude(s, BLADE_T, direction="reverse", name="blade")   # the front plane's normal is -Y: reverse goes +Y
+    # The hollow follows the outline a wall inside it, out through the
+    # top, and the bottom opens along the straight edge between the
+    # corners, so the rails run round the corners.
+    s = p.sketch("front", -(y0 + WALL), "blade hollow")
+    pts = blade_outline(WALL)
+    p.polygon(s, [(x, z + (WALL + 1.0 if z > Z_BLADE_TOP - WALL - 0.01 else 0.0)) for x, z in pts])
+    p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="remove", name="blade hollow")
+    s = p.sketch("front", -(y0 + WALL), "blade mouth")
+    hw = BLADE_W / 2 - BLADE_R - 1.0
+    p.rect(s, (-hw, Z_BLADE_BOT - 1.0), (hw, Z_BLADE_BOT + WALL + 0.5))
+    p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="remove", name="blade mouth")
+    for k in range(RIBS):
+        x = -BLADE_W / 2 + (k + 1) * BLADE_W / (RIBS + 1)
+        s = p.sketch("front", -(y0 + WALL), f"rib {k + 1}")
+        # The ribs stop under the sleeve, which holds the top on its own.
+        p.rect(s, (x - WALL / 2, Z_BLADE_BOT), (x + WALL / 2, -2.0))
+        p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="add", name=f"rib {k + 1}")
+
+
 def build_piece(p, which):
-    """The adapter again, kept only between the cuts: the middle with
-    the socket and the tabs, or a wing."""
-    build_adapter(p)
+    """The adapter or the blade again, kept only between the cuts: the
+    middle with the socket and the tabs, a wing, or half the blade,
+    the right half with the lap strip its mate glues to."""
     big = 400.0
-    x0, x1 = {"middle": (-X_CUT, X_CUT), "right wing": (X_CUT, big), "left wing": (-big, -X_CUT)}[which]
+    if which in ("middle", "right wing", "left wing"):
+        build_adapter(p)
+        x0, x1 = {"middle": (-X_CUT, X_CUT), "right wing": (X_CUT, big), "left wing": (-big, -X_CUT)}[which]
+    else:
+        build_blade(p)
+        x0, x1 = {"right blade": (0.0, big), "left blade": (-big, 0.0)}[which]
     s = p.sketch("top", -big, f"keep {which}")
     p.rect(s, (x0, -big), (x1, big))
     p.extrude(s, 2 * big, op="intersect", name=f"keep {which}")
     if which == "middle":
         build_tabs(p, 1)
         build_tabs(p, -1)
-
-
-def build_gauge(g):
-    """A comb: a spine with a tooth per thickness hanging under it, the
-    thinnest first, the thickest that drops into the slot being its width."""
-    length = len(TEETH) * TOOTH_W + (len(TEETH) - 1) * TOOTH_GAP
-    spine_w = max(TEETH) + 2.0
-    s = g.sketch("top", 0.0, "spine")
-    g.rect(s, (0.0, 0.0), (length, spine_w))
-    g.extrude(s, SPINE_T, name="spine")
-    for k, t in enumerate(TEETH):
-        x = k * (TOOTH_W + TOOTH_GAP)
-        s = g.sketch("top", -TOOTH_D, f"tooth {t:g}")
-        g.rect(s, (x, (spine_w - t) / 2), (x + TOOTH_W, (spine_w + t) / 2))
-        g.extrude(s, TOOTH_D, op="add", name=f"tooth {t:g}")
-    # A notch over the thinnest tooth, to read the comb from that end.
-    s = g.sketch("top", SPINE_T, "notch")
-    g.rect(s, (TOOTH_W / 2 - 1.0, -1.0), (TOOTH_W / 2 + 1.0, spine_w + 1.0))
-    g.cut(s, 1.5, direction="reverse", name="notch")
+    if which == "right blade":
+        # The laps: a strip inside each face, reaching LAP_W past the
+        # joint under the left half's plate, standing on the right's
+        # plate and rooted a millimetre into it over the joint only, so
+        # the halves glue face to face along the joint.
+        y0 = WALL + SLEEVE_FIT
+        for name, y, root in (("drum", y0 + WALL, -1.0), ("duct", y0 + BLADE_T - WALL - LAP_T, LAP_T)):
+            s = p.sketch("front", -y, f"lap {name}")
+            p.rect(s, (-LAP_W, Z_BLADE_BOT + 5.0), (1.0, Z_BLADE_TOP - 5.0))
+            p.extrude(s, LAP_T, direction="reverse", op="add", name=f"lap {name}")
+            s = p.sketch("front", -(y + root), f"lap {name} root")
+            p.rect(s, (0.0, Z_BLADE_BOT + 5.0), (1.0, Z_BLADE_TOP - 5.0))
+            p.extrude(s, 1.0, direction="reverse", op="add", name=f"lap {name} root")
 
 
 def main():
@@ -220,39 +280,48 @@ def main():
     build_adapter(adapter)
     bodies = checked(adapter)
     assert len(bodies) == 1, bodies
+    blade_tab = new_tab(mcp, {"type": "add_part_studio", "name": "blade"})
+    blade = Part(mcp, blade_tab, "blade")
+    build_blade(blade)
+    blade_bodies = checked(blade)
+    assert len(blade_bodies) == 1, blade_bodies
+    # Both together, as they go into the dryer: the blade up the sleeve.
+    both_tab = new_tab(mcp, {"type": "add_part_studio", "name": "adapter with blade"})
+    both = Part(mcp, both_tab, "adapter with blade")
+    build_adapter(both)
+    build_blade(both)
+    assert len(checked(both)) == 2
     pieces = {}
-    for which in ("middle", "right wing", "left wing"):
+    for which in ("middle", "right wing", "left wing", "right blade", "left blade"):
         tab = new_tab(mcp, {"type": "add_part_studio", "name": which})
         piece = Part(mcp, tab, which)
         build_piece(piece, which)
         got = checked(piece)
         assert len(got) == 1, got
         pieces[which] = (tab, got[0][1])
-    gauge_tab = new_tab(mcp, {"type": "add_part_studio", "name": "slot gauge"})
-    gauge = Part(mcp, gauge_tab, "slot gauge")
-    build_gauge(gauge)
-    assert len(checked(gauge)) == 1
 
     shot = lambda tab, name, **kw: mcp.call("screenshot", {"tab": tab, "width": 1400, "height": 1000, "path": os.path.join(OUT, f"{name}.png"), **kw})
-    shot(1, "adapter_iso")
-    shot(1, "adapter_front", view="front")
-    shot(1, "adapter_section", view="front", section=f"y:{AXIS_Y}")
+    shot(both_tab, "adapter_iso", view="0.5,-1,0.35")
+    shot(both_tab, "adapter_duct_side", view="-0.5,1,0.35")
+    shot(both_tab, "adapter_front", view="front")
+    shot(both_tab, "adapter_section", view="right", section="x:0")
     shot(1, "adapter_section_iso", view="-1,-1,0.8", section=f"y:{AXIS_Y}")
-    shot(1, "adapter_mouth", view="0.6,0.5,1")
-    shot(gauge_tab, "slot_gauge")
     shot(pieces["middle"][0], "middle_iso", view="1,-0.8,0.5")
-    shot(pieces["middle"][0], "middle_tabs", view="1,-0.6,0.3", fit="30,-10,-70,70,110,100")
     shot(pieces["right wing"][0], "right_wing_iso", view="-1,-0.8,0.5")
+    shot(pieces["right blade"][0], "right_blade_iso", view="-0.6,1,0.5")
+    print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "adapter.stl")}))
+    print(mcp.call("export", {"tab": blade_tab, "format": "stl", "path": os.path.join(OUT, "blade.stl")}))
     for which, (tab, _) in pieces.items():
         print(mcp.call("export", {"tab": tab, "format": "stl", "path": os.path.join(OUT, which.replace(" ", "_") + ".stl")}))
-    print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "adapter.stl")}))
-    print(mcp.call("export", {"tab": gauge_tab, "format": "stl", "path": os.path.join(OUT, "slot_gauge.stl")}))
-    print(mcp.call("export", {"tab": 1, "format": "pdf", "sheet": "A4", "hidden": True, "views": ["front", f"section@{AXIS_Y}", "top", "iso"],
-                              "note": f"stub {STUB_L:g} x {STUB_T:g} for a slot {SLOT_L:g} x {SLOT_W:g}, {STUB_D:g} deep; socket {THROAT_D:g} at the throat, {CONE_HALF:g} deg",
+    print(mcp.call("export", {"tab": both_tab, "format": "pdf", "sheet": "A4", "hidden": True, "views": ["front", "section-side@0", "top", "iso"],
+                              "note": f"blade {BLADE_W:g} x {BLADE_T:g}, {BLADE_D:g} below the ears, for a frame {FRAME_W:g} x {FRAME_T:g}; socket {THROAT_D:g} at the throat, {CONE_HALF:g} deg",
                               "path": os.path.join(OUT, "adapter.pdf")}))
     numbers = {
-        "slot": {"l": SLOT_L, "w": SLOT_W, "filter_w": FILTER_W, "filter_t": FILTER_T},
-        "adapter": {"stub_l": STUB_L, "stub_t": STUB_T, "stub_d": STUB_D, "clear": STUB_CLEAR, "wall": WALL,
+        "frame": {"t": FRAME_T, "w": FRAME_W, "ears_w": EARS_W, "h": FRAME_H, "lip_dip": LIP_DIP, "grille_d": GRILLE_D},
+        "blade": {"t": BLADE_T, "w": BLADE_W, "d": BLADE_D, "r": BLADE_R, "ribs": RIBS, "clear_w": CLEAR_W, "clear_t": CLEAR_T,
+                  "z_top": Z_BLADE_TOP, "z_bot": Z_BLADE_BOT, "y0": WALL + SLEEVE_FIT, "volume": blade_bodies[0][1],
+                  "lap_w": LAP_W, "lap_t": LAP_T},
+        "adapter": {"stub_l": STUB_L, "stub_t": STUB_T, "stub_d": STUB_D, "bore_l": BORE_L, "bore_t": BORE_T, "sleeve_fit": SLEEVE_FIT, "wall": WALL,
                     "flange_t": FLANGE_T, "flange_out": FLANGE_OUT, "loft_h": LOFT_H, "z_socket": Z_SOCKET, "z_top": Z_TOP,
                     "socket_w": SOCKET_W, "socket_d": SOCKET_D, "socket_back": SOCKET_BACK, "socket_front": SOCKET_FRONT,
                     "mouth_tilt": MOUTH_TILT, "throat_d": THROAT_D, "cone_half": CONE_HALF, "r_cone_max": R_CONE_MAX,
@@ -261,12 +330,13 @@ def main():
         "pieces": {"x_cut": X_CUT, "tab_t": TAB_T, "tab_in": TAB_IN, "tab_out": TAB_OUT, "tab_clear": TAB_CLEAR,
                    "tab_z0": TAB_Z0, "tab_z1": TAB_Z1, "z_step": Z_STEP,
                    "volumes": {k: v for k, (_, v) in pieces.items()}},
-        "gauge": {"teeth": TEETH, "tooth_w": TOOTH_W, "tooth_gap": TOOTH_GAP, "tooth_d": TOOTH_D, "spine_t": SPINE_T},
     }
     with open(os.path.join(OUT, "adapter.json"), "w") as fh:
         json.dump(numbers, fh, indent=1)
     mcp.close()
-    print(f"stub {STUB_L:g} x {STUB_T:g}, {STUB_D:g} deep; wedge {LOFT_H:g} tall leaning {math.degrees(LEAN_FRONT):.0f} deg at the front and {math.degrees(LEAN_END):.0f} at the ends; mouth tilted {MOUTH_TILT:.0f} deg; cone {THROAT_D:g} to {2 * R_CONE_MAX:g} over {H_CONE:.0f}")
+    print(f"blade {BLADE_W:g} x {BLADE_T:g}, {BLADE_D:g} deep; sleeve {STUB_L:g} x {STUB_T:g}, {STUB_D:g} deep; "
+          f"wedge {LOFT_H:g} tall leaning {math.degrees(LEAN_FRONT):.0f} deg at the front and {math.degrees(LEAN_END):.0f} at the ends; "
+          f"mouth tilted {MOUTH_TILT:.0f} deg; cone {THROAT_D:g} to {2 * R_CONE_MAX:g} over {H_CONE:.0f}")
 
 
 if __name__ == "__main__":
