@@ -790,3 +790,29 @@ What changed and which alternative lost:
   +x, +y, +z; `ok_render::View::Iso` is +X, −Y, +Z, which is why a `y`
   section shows its cut faces and `x` and `z` sections need `:flip`.
   `docs/MCP.md` has the picture.
+
+## 2026-11 · The test binaries run in parallel; the slow tests stay
+
+The chain's test step took 13 minutes warm with `cargo test --workspace`,
+and the question was what to cache or prebuild to make a session start
+faster. Nothing: the compile is 4 of the 22 cold minutes and the tests
+themselves 13, because cargo runs the 54 test binaries one after
+another and the two long ones (ok-photo's turntable merge and solids,
+three and five minutes with two and six tests each) hold one core while
+three idle. `cargo-nextest` schedules every test across the cores: 381
+tests in 283 s, the whole chain 10 minutes warm instead of 18, and
+`--quick` 90 s instead of 4 minutes. The floor is now the longest single
+test, the mushroom merged from two scans, at 169 s.
+
+Rejected: a Docker image or prebuilt binaries on a registry (they cache
+the compile, which is the small part, and a cloud session runs a fixed
+base container plus `scripts/setup.sh`, not an image; `Dockerfile.dev`
+stays for local machines); Flatpak (packaging for end users, not a dev
+loop where the kernel changes every pull request); marking the scan and
+robustness corpora `#[ignore]` for a nightly job (they are the tests
+that catch the kernel's real failures, and in parallel they cost what
+the longest one costs, not their sum). Splitting the two long tests
+into more, smaller ones would lower the floor further and is open.
+Doc tests are not nextest's, so `cargo test --workspace --doc` runs
+beside it, 4 s.
+
