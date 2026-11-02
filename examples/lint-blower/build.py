@@ -77,6 +77,9 @@ BLADE_T = FRAME_T - 2 * CLEAR_T
 BLADE_W = FRAME_W - 2 * CLEAR_W
 BLADE_X1 = RIGHT_HALF_W            # the blade's outer rails: the right one where the printed half puts it
 BLADE_X0 = RIGHT_HALF_W - BLADE_W
+# The sleeve sits round the blade, so it is off centre by as much as the blade is.
+BORE_X0, BORE_X1 = BLADE_X0 - SLEEVE_FIT, BLADE_X1 + SLEEVE_FIT
+STUB_X0, STUB_X1 = BORE_X0 - WALL, BORE_X1 + WALL
 STUB_T = BLADE_T + 2 * SLEEVE_FIT + 2 * WALL   # the sleeve outside: it is the stub the wedge starts from
 STUB_L = BLADE_W + 2 * SLEEVE_FIT + 2 * WALL
 STUB_D = SLEEVE_D
@@ -131,13 +134,13 @@ def build_adapter(p):
     then the duct through them and the socket's bore. The back face,
     y = 0, is the drum side."""
     s = p.sketch("top", 0.0, "sleeve")
-    p.rect(s, (-STUB_L / 2, 0.0), (STUB_L / 2, STUB_T))
+    p.rect(s, (STUB_X0, 0.0), (STUB_X1, STUB_T))
     p.extrude(s, STUB_D, name="sleeve")
     s = p.sketch("top", 0.0, "flange")
-    p.rect(s, (-STUB_L / 2 - FLANGE_OUT, 0.0), (STUB_L / 2 + FLANGE_OUT, STUB_T + FLANGE_OUT))
+    p.rect(s, (STUB_X0 - FLANGE_OUT, 0.0), (STUB_X1 + FLANGE_OUT, STUB_T + FLANGE_OUT))
     p.extrude(s, FLANGE_T, op="add", name="flange")
     a = p.sketch("top", Z_LOFT, "wedge at the sleeve")
-    p.rect(a, (-STUB_L / 2, 0.0), (STUB_L / 2, STUB_T))
+    p.rect(a, (STUB_X0, 0.0), (STUB_X1, STUB_T))
     b = p.sketch("top", Z_SOCKET, "wedge at the socket")
     p.rect(b, (-SOCKET_W / 2, 0.0), (SOCKET_W / 2, SOCKET_D))
     p.feature({"type": "add_loft", "sketch": a, "sketch_b": b, "op": "add", "name": "wedge"})
@@ -154,10 +157,10 @@ def build_adapter(p):
     # The duct: the sleeve's bore up through the flange, the wedge's bore
     # lofted to the socket, and the socket's hollow behind the axis.
     s = p.sketch("top", -1.0, "sleeve bore")
-    p.rect(s, (-BORE_L / 2, WALL), (BORE_L / 2, WALL + BORE_T))
+    p.rect(s, (BORE_X0, WALL), (BORE_X1, WALL + BORE_T))
     p.cut(s, 1.0 + STUB_D + 0.01, name="sleeve bore")
     a = p.sketch("top", Z_LOFT, "wedge bore at the sleeve")
-    p.rect(a, (-STUB_L / 2 + IN_END, WALL), (STUB_L / 2 - IN_END, STUB_T - IN_FRONT))
+    p.rect(a, (STUB_X0 + IN_END, WALL), (STUB_X1 - IN_END, STUB_T - IN_FRONT))
     b = p.sketch("top", Z_SOCKET + 0.01, "wedge bore at the socket")
     p.rect(b, (-SOCKET_W / 2 + IN_END, WALL), (SOCKET_W / 2 - IN_END, SOCKET_D - IN_FRONT))
     p.feature({"type": "add_loft", "sketch": a, "sketch_b": b, "op": "remove", "name": "wedge bore"})
@@ -330,6 +333,7 @@ def main():
                   "z_top": Z_BLADE_TOP, "z_bot": Z_BLADE_BOT, "y0": WALL + SLEEVE_FIT, "volume": blade_bodies[0][1],
                   "lap_w": LAP_W, "lap_t": LAP_T},
         "adapter": {"stub_l": STUB_L, "stub_t": STUB_T, "stub_d": STUB_D, "bore_l": BORE_L, "bore_t": BORE_T, "sleeve_fit": SLEEVE_FIT, "wall": WALL,
+                    "stub_x0": STUB_X0, "stub_x1": STUB_X1, "bore_x0": BORE_X0, "bore_x1": BORE_X1,
                     "flange_t": FLANGE_T, "flange_out": FLANGE_OUT, "loft_h": LOFT_H, "z_socket": Z_SOCKET, "z_top": Z_TOP,
                     "socket_w": SOCKET_W, "socket_d": SOCKET_D, "socket_back": SOCKET_BACK, "socket_front": SOCKET_FRONT,
                     "mouth_tilt": MOUTH_TILT, "throat_d": THROAT_D, "cone_half": CONE_HALF, "r_cone_max": R_CONE_MAX,

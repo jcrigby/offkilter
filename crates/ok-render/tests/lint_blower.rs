@@ -143,7 +143,10 @@ fn the_adapter_stands_on_the_lip_and_keeps_the_samsung_socket() {
     assert!(lo.z.abs() < 1e-6, "the adapter stands on the lip");
     assert!((hi.z - z_top).abs() < 1e-6);
     assert!(lo.y.abs() < 1e-6 && (hi.y - socket_d).abs() < 1e-6);
-    assert!((hi.x - (stub_l / 2.0 + flange_out)).abs() < 1e-6 && (lo.x + hi.x).abs() < 1e-6);
+    assert!(
+        (hi.x - (num(a, "stub_x1") + flange_out)).abs() < 1e-6
+            && (lo.x - (num(a, "stub_x0") - flange_out)).abs() < 1e-6
+    );
     // Through the sleeve above the flange: a ring of wall round the bore.
     let z = flange_t + (stub_d - flange_t) / 2.0;
     let cut = slab(Vec3::new(-200.0, -1.0, z), Vec3::new(200.0, 200.0, z + 1.0));
@@ -359,8 +362,8 @@ fn the_blade_is_the_filter_less_clearance_open_only_top_and_bottom_and_goes_up_t
     // The blade sits in the bore with at least the fit each end: the right
     // rail where the printed half put it, the left wherever the width leaves it.
     assert!(
-        blo.x + num(a, "bore_l") / 2.0 >= fit - 1e-6
-            && num(a, "bore_l") / 2.0 - bhi.x >= fit - 1e-6,
+        (blo.x - num(a, "bore_x0") - fit).abs() < 1e-6
+            && (num(a, "bore_x1") - fit - bhi.x).abs() < 1e-6,
         "the fit each end"
     );
     assert!(
