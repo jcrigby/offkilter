@@ -17,8 +17,10 @@ a comb of teeth from 10 to 30 mm thick prints first to find its width.
     python3 examples/lint-blower/build.py
     cargo test -p ok-render --test lint_blower    # what CI runs
 
-Writes out/lint_blower.okpart, out/adapter.stl and out/slot_gauge.stl
-(the parts to print), pictures, a sheet and out/adapter.json.
+Writes out/lint_blower.okpart, out/adapter.stl (one piece, for a bed
+over 320), out/middle.stl, out/left_wing.stl and out/right_wing.stl
+(the same in three for a 256 bed), out/slot_gauge.stl, pictures, a
+sheet and out/adapter.json.
 """
 import json
 import math
@@ -51,6 +53,14 @@ THROAT_D = 65.0         # the cone where it meets the duct (r 32.5 at x -74)
 CONE_HALF = 19.0        # the cone's half angle (r 32.5 to 38.4 over 17 mm)
 AXIS_Y = 50.0           # the bore's axis from the back face (y 0, z 155 in the STL)
 BACK_OPEN = True        # the STL's socket is hollow behind the axis: a box, not a cone, on that side
+# -- three pieces for a 256 mm bed (a Bambu P1S): the socket whole in the
+# middle, the wings cut off at its ends, tabs on the middle's inner walls
+# reaching into the wings for the glue ------------------------------------
+X_CUT = SOCKET_W / 2    # the cuts, at the socket box's end walls
+TAB_T = 2.0             # a tab's thickness, the wall's
+TAB_IN, TAB_OUT = 10.0, 10.0   # how far a tab runs back into the middle piece and out into the wing
+TAB_CLEAR = 0.2         # the tab off the wing's inner wall, for the glue
+TAB_Z0 = -STUB_D + 5.0  # the tabs run from near the stub's bottom edge
 # -- the gauge: teeth to drop in the slot -----------------------------------
 TEETH = [10.0 + 2.0 * k for k in range(11)]   # 10 to 30 mm thick
 TOOTH_W, TOOTH_GAP, TOOTH_D = 8.0, 4.0, 20.0
@@ -71,6 +81,23 @@ IN_END = WALL / math.cos(LEAN_END)
 R_THROAT = THROAT_D / 2
 R_CONE_MAX = SOCKET_W / 2 - WALL  # the cone stops at the box's end walls
 H_CONE = (R_CONE_MAX - R_THROAT) / math.tan(math.radians(CONE_HALF))
+# The wedge's inner end wall comes in to X_CUT + TAB_OUT at this height,
+# so the tabs stop 5 below it.
+X_IN0, X_IN1 = STUB_L / 2 - IN_END, SOCKET_W / 2 - IN_END
+TAB_Z1 = Z_LOFT + (X_IN0 - (X_CUT + TAB_OUT + 1.0)) / (X_IN0 - X_IN1) * LOFT_H - 5.0
+Y_IN0 = STUB_T - WALL            # the stub bore's front
+Y_IN_LOFT0 = STUB_T - IN_FRONT   # the wedge bore's front where it starts, a little inside that
+Y_IN_LOFT1 = SOCKET_D - IN_FRONT
+Z_STEP = Z_LOFT + 0.01           # the stub bore ends here and the wedge bore, a little inside it, takes over
+
+
+def y_front_in(z):
+    """The duct's inner front face at height z on the cut planes: the
+    stub bore's up to Z_STEP, the wedge bore's above, which steps in
+    by IN_FRONT - WALL there and leans out from it."""
+    if z <= Z_STEP:
+        return Y_IN0
+    return Y_IN_LOFT0 + (z - Z_LOFT) / LOFT_H * (Y_IN_LOFT1 - Y_IN_LOFT0)
 
 
 def checked(part):
@@ -125,6 +152,43 @@ def build_adapter(p):
     p.revolve_cut(s, name="cone")
 
 
+def build_tabs(p, side):
+    """The two tabs on one end of the middle piece: a strip 2 thick down
+    the back wall and one down the front, each run TAB_IN into the
+    piece, fused into its wall, and TAB_OUT past the cut a glue gap
+    inside the wing's wall."""
+    x_cut = side * X_CUT
+    for name, run, x0, depth, c in (("in", "normal", x_cut - side * TAB_IN, TAB_IN, -1.0), ("out", "normal", x_cut, TAB_OUT, TAB_CLEAR)):
+        direction = "normal" if side > 0 else "reverse"
+        s = p.sketch("right", x0, f"back tab {name} {side:+d}")
+        # Inside the piece the strip overlaps the wall by a millimetre (c = -1);
+        # past the cut it stands the clearance off it. Its inner face is one plane.
+        p.rect(s, (WALL + c, TAB_Z0), (WALL + TAB_CLEAR + TAB_T, TAB_Z1))
+        p.extrude(s, depth, direction=direction, op="add", name=f"back tab {name} {side:+d}")
+        s = p.sketch("right", x0, f"front tab {name} {side:+d}")
+        # The outline follows the inner face, the step at Z_STEP included,
+        # c off it; the inner edge is TAB_CLEAR + TAB_T inside the face.
+        face = [(Y_IN0, TAB_Z0), (Y_IN0, Z_STEP), (y_front_in(Z_STEP + 1e-9), Z_STEP), (y_front_in(TAB_Z1), TAB_Z1)]
+        outer = [(y - c, z) for y, z in face]
+        inner = [(y - TAB_CLEAR - TAB_T, z) for y, z in reversed(face)]
+        p.polygon(s, outer + inner)
+        p.extrude(s, depth, direction=direction, op="add", name=f"front tab {name} {side:+d}")
+
+
+def build_piece(p, which):
+    """The adapter again, kept only between the cuts: the middle with
+    the socket and the tabs, or a wing."""
+    build_adapter(p)
+    big = 400.0
+    x0, x1 = {"middle": (-X_CUT, X_CUT), "right wing": (X_CUT, big), "left wing": (-big, -X_CUT)}[which]
+    s = p.sketch("top", -big, f"keep {which}")
+    p.rect(s, (x0, -big), (x1, big))
+    p.extrude(s, 2 * big, op="intersect", name=f"keep {which}")
+    if which == "middle":
+        build_tabs(p, 1)
+        build_tabs(p, -1)
+
+
 def build_gauge(g):
     """A comb: a spine with a tooth per thickness hanging under it, the
     thinnest first, the thickest that drops into the slot being its width."""
@@ -156,6 +220,14 @@ def main():
     build_adapter(adapter)
     bodies = checked(adapter)
     assert len(bodies) == 1, bodies
+    pieces = {}
+    for which in ("middle", "right wing", "left wing"):
+        tab = new_tab(mcp, {"type": "add_part_studio", "name": which})
+        piece = Part(mcp, tab, which)
+        build_piece(piece, which)
+        got = checked(piece)
+        assert len(got) == 1, got
+        pieces[which] = (tab, got[0][1])
     gauge_tab = new_tab(mcp, {"type": "add_part_studio", "name": "slot gauge"})
     gauge = Part(mcp, gauge_tab, "slot gauge")
     build_gauge(gauge)
@@ -168,6 +240,11 @@ def main():
     shot(1, "adapter_section_iso", view="-1,-1,0.8", section=f"y:{AXIS_Y}")
     shot(1, "adapter_mouth", view="0.6,0.5,1")
     shot(gauge_tab, "slot_gauge")
+    shot(pieces["middle"][0], "middle_iso", view="1,-0.8,0.5")
+    shot(pieces["middle"][0], "middle_tabs", view="1,-0.6,0.3", fit="30,-10,-70,70,110,100")
+    shot(pieces["right wing"][0], "right_wing_iso", view="-1,-0.8,0.5")
+    for which, (tab, _) in pieces.items():
+        print(mcp.call("export", {"tab": tab, "format": "stl", "path": os.path.join(OUT, which.replace(" ", "_") + ".stl")}))
     print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "adapter.stl")}))
     print(mcp.call("export", {"tab": gauge_tab, "format": "stl", "path": os.path.join(OUT, "slot_gauge.stl")}))
     print(mcp.call("export", {"tab": 1, "format": "pdf", "sheet": "A4", "hidden": True, "views": ["front", f"section@{AXIS_Y}", "top", "iso"],
@@ -181,6 +258,9 @@ def main():
                     "mouth_tilt": MOUTH_TILT, "throat_d": THROAT_D, "cone_half": CONE_HALF, "r_cone_max": R_CONE_MAX,
                     "h_cone": H_CONE, "axis_y": AXIS_Y, "back_open": BACK_OPEN, "in_front": IN_FRONT, "in_end": IN_END,
                     "volume": bodies[0][1]},
+        "pieces": {"x_cut": X_CUT, "tab_t": TAB_T, "tab_in": TAB_IN, "tab_out": TAB_OUT, "tab_clear": TAB_CLEAR,
+                   "tab_z0": TAB_Z0, "tab_z1": TAB_Z1, "z_step": Z_STEP,
+                   "volumes": {k: v for k, (_, v) in pieces.items()}},
         "gauge": {"teeth": TEETH, "tooth_w": TOOTH_W, "tooth_gap": TOOTH_GAP, "tooth_d": TOOTH_D, "spine_t": SPINE_T},
     }
     with open(os.path.join(OUT, "adapter.json"), "w") as fh:

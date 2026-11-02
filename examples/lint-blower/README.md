@@ -11,8 +11,9 @@ of the door opening, so this redraws the end for that slot and keeps
 the socket: a rectangular stub the slot's size with 2 mm walls, open at
 the bottom, a flange that stops on the slot's lip, and the wedge
 lofting from it up to the Samsung part's socket, measured off its STL.
-One printed part, `out/adapter.stl`, and a comb of teeth,
-`out/slot_gauge.stl`, that prints first to find the slot's width.
+One printed part, `out/adapter.stl`, or the same in three for a 256 mm
+bed, and a comb of teeth, `out/slot_gauge.stl`, that prints first to
+find the slot's width.
 
 ```sh
 cargo build --release -p ok-mcp
@@ -90,16 +91,32 @@ the housing below the slot, which the stub's open bottom does here.
 
 ## Printing
 
-Lay it on its back: the flat face from the stub to the socket on the
-bed, 317 × 206. The wedge's front then leans 51° off the bed and
-needs no support; the bore is a horizontal hole 65 to 86 across and
-the hollow behind the axis a bridge of 86, so supports there, as the
-Samsung part was printed (tree supports and a raft). PETG, 0.2 mm
-layers, three perimeters, which makes the 2 mm walls solid. It is
-276 cm³, about 350 g in PETG.
+The parts are modelled standing as they sit in the dryer, stub down,
+and print that way: the stub's open end on the bed with a brim, the
+wedge leaning 39° at the front and 50° at the ends, which prints
+without support, the cone widening upward at 19°, and one bridge to
+support, the underside of the socket's front block over the wedge
+(86 by 48) and the 8 mm flange lip. Nothing goes inside the duct, so
+nothing has to come out of it. PETG, 0.2 mm layers, three perimeters,
+which makes the 2 mm walls solid.
 
-A 317 mm part wants a 320 mm bed. On a 256 or 250 mm bed, split it at
-`x = 0` in the slicer and glue, or print the socket end and the stub
-end separately; a splitting feature with a key is the obvious next
-step if the slot measures out and the one-piece print is the only
-obstacle.
+**One piece** (`out/adapter.stl`) is 317 wide, so it wants a bed over
+320 mm, lying on its back if the printer is low; 276 cm³, about 350 g
+in PETG.
+
+**Three pieces** (`out/middle.stl`, `out/left_wing.stl`,
+`out/right_wing.stl`) for a 256 mm bed such as a Bambu P1S: the cuts
+are at the socket box's ends, so the socket, the part the nozzle jams
+into, stays whole in the middle piece (110 × 100, 206 tall) and the
+wings (114 × 100, 153 tall) are only wedge, flange and stub. The
+middle piece carries four tabs, 2 mm thick, down its back and front
+inner walls, fused 10 mm into its own walls and reaching 10 mm into
+the wings 0.2 mm inside theirs, so the wings slide on, line up on
+their own, and glue along four strips of 130 mm. The tabs stop below
+the wedge's end walls and above the stub's bottom edge. Standing, the
+tabs are vertical sheets and need no support. Glue with CA or epoxy
+and let it cure before the first blow. The three together are 298 cm³.
+
+![the middle piece with its tabs](out/middle_iso.png)
+
+![a wing](out/right_wing_iso.png)

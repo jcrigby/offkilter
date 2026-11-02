@@ -297,3 +297,110 @@ fn the_gauge_is_one_comb_whose_teeth_read_their_thicknesses() {
         last = *t;
     }
 }
+
+#[test]
+fn the_three_pieces_fit_a_256_bed_and_their_tabs_leave_the_glue_gap() {
+    let mut doc = load();
+    let n = numbers();
+    let (a, pc) = (&n["adapter"], &n["pieces"]);
+    let (x_cut, tab_t, tab_in, tab_out, clear) = (
+        num(pc, "x_cut"),
+        num(pc, "tab_t"),
+        num(pc, "tab_in"),
+        num(pc, "tab_out"),
+        num(pc, "tab_clear"),
+    );
+    let (tab_z0, tab_z1, wall) = (num(pc, "tab_z0"), num(pc, "tab_z1"), num(a, "wall"));
+    let whole = body_of(&mut doc, "adapter");
+    let middle = body_of(&mut doc, "middle");
+    let right = body_of(&mut doc, "right wing");
+    let left = body_of(&mut doc, "left wing");
+    let bed = 256.0;
+    for (name, p) in [
+        ("middle", &middle),
+        ("right wing", &right),
+        ("left wing", &left),
+    ] {
+        let (lo, hi) = p.bounds().unwrap();
+        let (dx, dy, dz) = (hi.x - lo.x, hi.y - lo.y, hi.z - lo.z);
+        println!(
+            "{name}: {dx:.0} x {dy:.0} x {dz:.0}, {:.1} cm3",
+            p.volume() / 1000.0
+        );
+        assert!(
+            dx < bed && dy < bed && dz < bed,
+            "{name} fits the bed standing"
+        );
+    }
+    // The cuts are at the socket box's ends: the wings stop where the
+    // socket starts, the middle reaches past the cuts only by its tabs,
+    // and the three add up to the whole plus the tabs.
+    let (lo, hi) = right.bounds().unwrap();
+    assert!((lo.x - x_cut).abs() < 1e-6 && (hi.z - num(a, "z_socket")).abs() < 1e-6);
+    let (lo, hi) = middle.bounds().unwrap();
+    assert!((hi.x - (x_cut + tab_out)).abs() < 1e-6 && (lo.x + hi.x).abs() < 1e-6);
+    let extra = middle.volume() + right.volume() + left.volume() - whole.volume();
+    println!("tabs add {:.1} cm3", extra / 1000.0);
+    assert!(extra > 0.0 && extra < 30_000.0);
+    // No piece meets another, and the tabs stand the clearance off the
+    // wing's walls: a box the clearance thick between tab and wall is
+    // empty, one a hair thicker touches the tab.
+    for (name, wing) in [("right", &right), ("left", &left)] {
+        let hit = ok_brep::boolean(&middle, wing, BoolOp::Intersection).unwrap();
+        println!(
+            "middle against the {name} wing: {:.3} mm3 at {:?}",
+            hit.volume().abs(),
+            hit.bounds()
+        );
+    }
+    assert!(overlap(&middle, &right) < 1e-6 && overlap(&middle, &left) < 1e-6);
+    let zmid = (tab_z0 + tab_z1) / 2.0;
+    let gap = slab(
+        Vec3::new(x_cut + 1.0, wall + 1e-3, zmid),
+        Vec3::new(x_cut + tab_out - 1.0, wall + clear - 1e-3, zmid + 1.0),
+    );
+    let more = slab(
+        Vec3::new(x_cut + 1.0, wall + 1e-3, zmid),
+        Vec3::new(x_cut + tab_out - 1.0, wall + clear + 0.5, zmid + 1.0),
+    );
+    assert!(
+        overlap(&middle, &gap) < 1e-6 && overlap(&right, &gap) < 1e-6,
+        "the glue gap behind the back tab is empty"
+    );
+    assert!(
+        overlap(&middle, &more) > 1.0,
+        "the back tab is just past the gap"
+    );
+    // The tabs run tab_in into the middle, fused to its walls, and tab_out
+    // past the cut, with the wall's thickness.
+    let inside = slab(
+        Vec3::new(x_cut - tab_in + 1.0, wall + clear + tab_t - 0.5, zmid),
+        Vec3::new(x_cut - 1.0, wall + clear + tab_t + 0.5, zmid + 1.0),
+    );
+    let got = overlap(&middle, &inside);
+    println!(
+        "back tab through the middle's wall: {got:.2} mm3 of {:.2}",
+        (tab_in - 2.0) * 0.5
+    );
+    assert!((got - (tab_in - 2.0) * 0.5).abs() < 0.05);
+    let (lo, hi) = ok_brep::boolean(
+        &middle,
+        &slab(
+            Vec3::new(x_cut + 0.5, -1.0, -100.0),
+            Vec3::new(x_cut + tab_out + 1.0, 200.0, 200.0),
+        ),
+        BoolOp::Intersection,
+    )
+    .unwrap()
+    .bounds()
+    .unwrap();
+    println!(
+        "tabs past the cut: y {:.2} to {:.2}, z {:.1} to {:.1}",
+        lo.y, hi.y, lo.z, hi.z
+    );
+    assert!(
+        (lo.y - (wall + clear)).abs() < 1e-6
+            && (lo.z - tab_z0).abs() < 1e-6
+            && (hi.z - tab_z1).abs() < 1e-6
+    );
+}
