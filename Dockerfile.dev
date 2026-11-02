@@ -13,9 +13,12 @@
 #     -p 8080:8080 -p 5173:5173 \
 #     offkilter-dev
 #
-# Inside: `claude` (mounting ~/.claude carries the login), or any of
-# the commands in CLAUDE.md. The cargo and target volumes keep builds
-# warm between runs; drop them to start clean.
+# Inside, `scripts/setup.sh` finishes the job against the mounted
+# checkout (npm packages into apps/web/node_modules, the release ok-mcp
+# into the target volume; the tools below it finds already installed),
+# then `claude` (mounting ~/.claude carries the login), or any of the
+# commands in CLAUDE.md. The cargo and target volumes keep builds warm
+# between runs; drop them to start clean.
 
 ARG RUST_VERSION=1.94.1
 FROM rust:${RUST_VERSION}-bookworm
@@ -31,6 +34,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
+# The Rust side of scripts/setup.sh, from the pins alone: the script
+# itself wants the checkout, which is mounted at run time, so the image
+# runs the same steps here and the script finds them done.
 RUN rustup component add rustfmt clippy \
     && rustup target add wasm32-unknown-unknown \
     && cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked

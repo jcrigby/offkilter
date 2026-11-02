@@ -30,22 +30,30 @@ why, and which alternative lost. Add to it when you make such a choice.
 
 ## Setting up a fresh machine
 
-`rust-toolchain.toml` pins the compiler and the wasm target; rustup
-installs both on the first `cargo` command. Everything else:
-
 ```sh
-cargo install wasm-bindgen-cli --version 0.2.128 --locked   # must match crates/ok-wasm/Cargo.toml
-cd apps/web && npm ci && npx playwright install --with-deps chromium && cd ../..
-cargo build --release -p ok-mcp        # the MCP server .mcp.json points at
+scripts/setup.sh
 ```
 
-Or skip the installs: `Dockerfile.dev` builds an image with all of the
-above pinned, and its header comment has the `docker run` line that
-mounts the checkout, the cargo cache and `~/.claude`.
+It installs, in order and skipping what is already there: rustfmt and
+clippy for the pinned toolchain (`rust-toolchain.toml` pins the
+compiler and the wasm target, which rustup installs on the first
+`cargo` command), `wasm-bindgen-cli` at the version
+`crates/ok-wasm/Cargo.toml` pins, the web app's npm packages and
+Playwright's Chromium, and the release `ok-mcp` binary that `.mcp.json`
+points at. It prints each step and how long it took. A cloud
+environment's setup script is that one line too, and `Dockerfile.dev`
+builds an image that has run it (its header comment has the
+`docker run` line that mounts the checkout, the cargo cache and
+`~/.claude`).
 
 `.claude/settings.json` (checked in) allows the build, test and git
-commands above without prompting and installs a Stop hook that refuses
-to end a turn while the checkout has uncommitted or unpushed work.
+commands above without prompting and installs two hooks: a SessionStart
+hook that builds `target/release/ok-mcp` when it is missing or older
+than `crates/ok-mcp` and `crates/ok-model`, so the MCP server connects
+on the first prompt (if a session still opens with "offkilter failed to
+connect", `/mcp` reconnects it once the build is done), and a Stop hook
+that refuses to end a turn while the checkout has uncommitted or
+unpushed work.
 
 Node 22 and Python 3 are assumed. The MCP server in `.mcp.json` talks to
 a document server at `$OFFKILTER_URL` (default `http://localhost:8080`);
