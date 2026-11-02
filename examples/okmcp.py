@@ -3,7 +3,20 @@ way a language model drives it, and a `Part` that turns a part studio's
 ops into method calls and parses the ids out of the `apply` text.
 
     sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-    from okmcp import Mcp, Part, v2
+    from okmcp import Mcp, Part, new_tab, v2
+
+`Part` is one tab; `new_tab(mcp, {"type": "add_part_studio", "name":
+...})` (or `add_assembly`) adds another and returns its id, parsed from
+the `tab N` in the reply, for a second `Part` or the assembly helpers
+at the end of this file. `examples/README.md` has the ten-line tour.
+
+Needs only Python's standard library and the release `ok-mcp` binary
+(`cargo build --release -p ok-mcp`, or `OK_MCP=/path/to/ok-mcp`). The
+photo tooling is the same: `measuring-sheet/build.py` and
+`finch-plug/trace/trace.py` are standard library too; the Node scripts
+beside the latter want Playwright's Chromium, which `apps/web`'s `npm
+ci` installs (`NODE_PATH=apps/web/node_modules node grab.js ...`), and
+`turntable-scan/build.py` wants `ffmpeg` on the path.
 """
 import json
 import math
