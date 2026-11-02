@@ -103,7 +103,7 @@ empty.
 
 ## 6. A recipe for reading a reference STL
 
-- [ ] **What went wrong.** The photo tooling measures only the
+- [x] **What went wrong.** The photo tooling measures only the
   project's own sheet, and nothing points at `import` for a foreign
   mesh. The Samsung adapter's socket, wedge and end were read with
   trimesh sections and matplotlib plots.

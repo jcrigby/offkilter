@@ -93,6 +93,38 @@ over. You can open the document URL at any point, drag a dimension, add
 a feature, or finish the last ten yards yourself; the model's next
 `report` shows your changes, and its next `apply` builds on them.
 
+## Reading a reference mesh
+
+A part that has to fit something already made, or that redraws a
+published STL, starts from a mesh, and the tools above read one without
+leaving offkilter (the lint blower example's socket was measured off a
+Thingiverse STL; `examples/lint-blower/README.md` says which numbers):
+
+1. `import {path, name}` into a part studio of its own (a new tab, so
+   the reference never mixes with the model), as a mesh body.
+2. `report` for the body's bounds, volume and area, and the planar
+   faces the mesh has: each with its normal, centre and area, which is
+   how a box's size, a flange's thickness or a wall's are read (two
+   parallel faces a wall apart have centres that far apart along the
+   normal; a face's area over its length is its width).
+3. `screenshot` with `section` at a few offsets along each axis
+   (`y:50` keeps y ≥ 50, `y:50:flip` the other side; cut faces are
+   hatched) to see the walls, the bores and what is hollow; `view`
+   `front`, `top` or `right` with a section gives a true-scale cut to
+   read against the bounds, and `fit` frames one detail.
+4. `export {format: "dxf", view}` for the outline seen from a standard
+   view, at 1:1 in millimetres, with `hidden: true` for the edges behind;
+   a profile to measure or to trace in a sketch.
+
+A mesh has no curved faces to the report: a cone or a bore comes as
+its facets, each listed as a small plane, and the body's `cylinders`
+list is empty, so a bore's axis and diameter are read from the facets'
+centres or off a picture. Nothing gives a section as numbers either:
+the area inside a cut, a wall's thickness through a leaning face and a
+bore's diameter at a height all still come off the screenshot. A
+`section` tool that returns the loops a plane cuts, as polylines with
+their areas, is on the roadmap for that.
+
 ## Limits
 
 Ops are the whole surface, so anything the web client can do, a model
