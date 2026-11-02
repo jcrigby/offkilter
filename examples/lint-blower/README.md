@@ -41,6 +41,14 @@ again.
 | `FLANGE_OUT`, the flange past the stub at the front and the ends | 8 | that the lip round the slot is flat that far; the back stays flush with the stub |
 | the blower's nozzle | 65 at the throat opening to 86, 19° half angle | the nozzle's diameter where it should seat; it is the Samsung part's socket, so a nozzle that fits that fits this |
 
+The filter's outline comes off a photograph: the filter is bigger than
+a Letter sheet and covers its marks, so print `out/measuring_field_2x2.pdf`
+(four pages at 100 %, cut on the dashed lines, overlapped and taped
+into one 467 × 354 mm field), lay the filter on it, photograph it
+straight down with marks showing round it, and `measure_photo` gives
+the outline in millimetres. Its thickness is 18 mm everywhere, by
+caliper.
+
 The slot's width is the number that matters and the one a photograph
 cannot give. The three parts photographed on the supplier's inch grid
 (the cover guide with the grille, the filter and the filter guide)
