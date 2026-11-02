@@ -68,7 +68,7 @@ empty.
 
 ## 4. Document the sketch planes' frames
 
-- [ ] **What went wrong.** `docs/OPS.md` names the three standard
+- [x] **What went wrong.** `docs/OPS.md` names the three standard
   planes and their normals but not their sketch axes or which way
   `offset` goes. The session wrote a probe script to learn that a
   front sketch at offset `o` lies at world y = −o with sketch x along
