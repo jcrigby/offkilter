@@ -5,7 +5,7 @@
 # ran and how long the rest will take.
 #
 #   scripts/check.sh            the whole chain
-#   scripts/check.sh --quick    fmt, clippy and `cargo test -p ok-render`
+#   scripts/check.sh --quick    fmt, clippy and the ok-render tests
 #                               only: enough for a change confined to
 #                               examples/ and crates/ok-render/tests/,
 #                               which cannot affect the web app (see
@@ -81,9 +81,13 @@ e2e() {
 run "fmt" fmt_in_place
 run "clippy" cargo clippy --workspace --all-targets -- -D warnings
 if [ "$QUICK" = 1 ]; then
-  run "test $QUICK_CRATE" cargo test -p "$QUICK_CRATE"
+  run "test $QUICK_CRATE" cargo nextest run -p "$QUICK_CRATE"
 else
-  run "test workspace" cargo test --workspace
+  # nextest runs every test binary's tests in parallel across the cores;
+  # cargo test runs the binaries one after another. Doc tests are not
+  # nextest's, so cargo test runs those.
+  run "test workspace" cargo nextest run --workspace
+  run "doc tests" cargo test --workspace --doc
   run "wasm" ./scripts/build-wasm.sh
   run "typecheck" npm --prefix apps/web run typecheck
   run "web build" npm --prefix apps/web run build

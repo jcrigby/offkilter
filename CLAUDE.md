@@ -15,7 +15,10 @@ first, every time.
 
 ## Commands
 
-- Kernel tests: `cargo test --workspace`
+- Kernel tests: `cargo nextest run --workspace` (the test binaries in
+  parallel; `cargo test --workspace` gives the same answer in twice the
+  time, one binary after another), plus `cargo test --workspace --doc`
+  for the doc tests, which nextest does not run
 - Lint: `cargo fmt --all && cargo clippy --workspace --all-targets -- -D warnings`
 - Build wasm into the web app: `./scripts/build-wasm.sh` (needs
   `wasm-bindgen-cli` 0.2.128 and the `wasm32-unknown-unknown` target)
