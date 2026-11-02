@@ -37,7 +37,7 @@ from okmcp import Mcp, Part, new_tab  # noqa: E402
 OUT = os.path.join(HERE, "out")
 # -- the LG filter, mm: measured, see the README ---------------------------
 FRAME_T = 18.0          # the frame's thickness, the same everywhere (caliper)
-FRAME_W = 286.0         # the frame's width, rim to rim, down its straight sides (a rule across it, read off photographs: 285 to 286; the field photo read 288 to 294, the camera's parallax on an 18 mm frame)
+FRAME_W = 285.0         # the frame's width, rim to rim, down its straight sides: the fit test's two slices at 284 together were a little wider than the frame, so a millimetre off the 286 a rule gave (the field photo read 288 to 294, the camera's parallax on an 18 mm frame)
 EARS_W = 306.0          # across the ears at the top corners (the field photo; LG publishes 11-15/16 in)
 FRAME_H = 287.0         # the bottom edge to the ears' tops (the field photo; parallax adds a few mm)
 LIP_DIP = 47.0          # the top edge's arc, flush with the lip, dips this far below the ears at the centre (R 218)

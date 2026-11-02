@@ -42,7 +42,7 @@ blade are solid, so there is no wrong way to put it in.
 | what | mm | from |
 |---|---|---|
 | `FRAME_T`, the frame's thickness | 18, the same everywhere | caliper |
-| `FRAME_W`, the frame's width, rim to rim | 286 | a steel rule across it, read off photographs, 285 to 286; the field photograph had read 288 to 294, the frame's 18 mm height adding parallax the tool does not know about |
+| `FRAME_W`, the frame's width, rim to rim | 285 | a steel rule across it, read off photographs, gave 285 to 286; the fit test's two slices at 284 together were a little wider than the frame, so 285; the field photograph had read 288 to 294, the frame's 18 mm height adding parallax the tool does not know about |
 | `EARS_W`, across the ears at the top corners | 306 | the field photograph; LG publishes 11-15/16 in |
 | `FRAME_H`, bottom edge to the ears | 287 | the field photograph |
 | `LIP_DIP`, how far the top edge's arc dips below the ears at the centre | 47 (R 218) | the field photograph; the lip is that arc |
@@ -62,7 +62,7 @@ The first right half was printed at 144 from the joint, from the
 field photograph's 290, and laid on the frame it showed the frame to
 be narrower; a rule put the frame at 286. So the blade's right rail is
 pinned where that half put it (`RIGHT_HALF_W`) and the frame's width
-sets the left half alone, the joint 2 mm off centre.
+sets the left half alone, the joint 2.5 mm off centre.
 
 The blade is drawn 1 mm inside the frame's width each side and 0.5
 inside its thickness each face: the frame is what fits the slot, so
@@ -77,7 +77,7 @@ toward the user, z up with the slot's lip at zero.
 
 | part | size | what it does |
 |------|------|--------------|
-| blade | 284 × 17 outside, 2 mm walls, 180 below the lip and 19 up the sleeve, two ribs face to face, square corners | the dummy filter: blanks the grille, carries the air down, open at the top and the bottom edge only |
+| blade | 283 × 17 outside, 2 mm walls, 180 below the lip and 19 up the sleeve, two ribs face to face, square corners | the dummy filter: blanks the grille, carries the air down, open at the top and the bottom edge only |
 | sleeve | 292.4 × 21.4 outside, 20 tall, standing on the lip | the blade slides up into it 0.2 a side and glues |
 | flange | 3 thick, 8 past the sleeve at the front and both ends, flush at the back | rests on the lip's ends, where the filter's ears do |
 | wedge | a loft, 90 tall, from the sleeve's section to the socket's 90 × 100 | the Samsung part's wedge, drawn longer so the front leans 41° and the ends 48° instead of 59°; the walls are inset 2.7 and 3.0 in the plane so they are 2 through |
@@ -102,7 +102,7 @@ that way, which puts nothing inside the ducts.
 sleeve's foot with a brim; the wedge leans 41° at the front and 48° at
 the ends, no support; the cone widens upward at 19°; one bridge to
 support, the underside of the socket's front block over the wedge, and
-the flange lip. **The blade** (`out/blade.stl`, 284 × 199 × 17) stands
+the flange lip. **The blade** (`out/blade.stl`, 283 × 199 × 17) stands
 on its bottom edge too, as exported, so nothing bridges: both faces,
 the rails, the ribs and the halves' lap strips are vertical and start
 on the bed. Lying on a face would make the upper face a bridge the
@@ -116,7 +116,7 @@ three perimeters, which makes the 2 mm walls solid. About 217 and
 |---|---|---|
 | `out/middle.stl` | 110 × 100 × 163 | the socket, whole, the wedge's middle and the sleeve's, with four tabs |
 | `out/left_wing.stl`, `out/right_wing.stl` | 109 × 100 × 110 | the wedge's ends, the sleeve's and the flange's |
-| `out/left_blade.stl`, `out/right_blade.stl` | 140 and 152 × 17 × 199 | the blade halves, standing, the right one with two lap strips |
+| `out/left_blade.stl`, `out/right_blade.stl` | 139 and 152 × 17 × 199 | the blade halves, standing, the right one with two lap strips |
 
 The wedge's cuts are at the socket box's ends. The middle piece
 carries four 2 mm tabs down its back and front inner walls, fused
