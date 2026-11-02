@@ -61,6 +61,34 @@ assembly op's result has `instance` or `mate`.
   `{ "type": "face", "face": FaceRef, "offset": 0 }` (a planar face of a body), or
   `{ "type": "rotated", "base": "top", "axis": "x" | "y" | "z", "angle": 30, "offset": 0 }`.
   Top is the XY plane (normal +Z), Front is XZ (normal −Y), Right is YZ (normal +X).
+  `offset` moves the plane along its normal, so a front sketch at offset `o` lies
+  at world y = −o. The sketch frames (sketch x right, sketch y up, in the plane):
+
+  | plane | the plane at `offset` o | sketch x | sketch y | normal |
+  |-------|-------------------------|----------|----------|--------|
+  | `top` | z = o | +X | +Y | +Z |
+  | `front` | y = −o | +X | +Z | −Y |
+  | `right` | x = o | +Y | +Z | +X |
+
+  A sketch point (u, v) is at world `origin + u·x + v·y`; the sketch's y axis
+  (the line u = 0, what `add_revolve`'s `y_axis` turns about) is the world line
+  {x = 0, y = −o} on a front sketch and {x = o, y = 0} on a right one, vertical
+  in both; so a revolve-cut about a vertical axis at world (x₀, y₀) is drawn on
+  `front` at offset −y₀ about a construction line at u = x₀ (or on `right` at
+  offset x₀ about u = y₀), the profile's heights being sketch y = world z.
+  `rotated` turns the base plane's whole frame about the world `axis` through the
+  origin by `angle` degrees, right-handed (counter-clockwise seen from the axis's
+  positive end), then applies `offset` along the turned normal: `top` about `x` by θ
+  keeps sketch x = +X and has sketch y = (0, cos θ, sin θ), normal (0, −sin θ, cos θ);
+  `top` about `x` by −90 is a vertical plane facing +Y (sketch x = +X, sketch y =
+  −Z), the front plane's mirror. A `face` plane's frame is canonical (the report's `sketches[].plane` gives it):
+  origin at the world origin's projection onto the face, sketch y = normal × X
+  (normal × Y when the normal is within about 25° of X), sketch x completing a
+  right-handed frame; for the six axis-aligned faces that is x, y = (+X, +Y) at
+  normal +Z, (+X, −Y) at −Z, (+X, +Z) at −Y, (+X, −Z) at +Y, (+Y, +Z) at +X and
+  (+Y, −Z) at −X: a face plane that looks the way a standard plane does has that
+  plane's frame. `examples/okmcp.py`'s `Part.plane_point(sketch, world_point)`
+  converts a world point into any sketch's coordinates from the report's frame.
 - `FaceRef`: `{ "feature": 2, "local": 1, "part": 0, "near": [...] }`, copied from a
   report. `local` 0 and 1 of an extrude are its start and end caps; the sides follow.
   `part` numbers the pieces when a later feature splits a face, and `near` (hashes of
