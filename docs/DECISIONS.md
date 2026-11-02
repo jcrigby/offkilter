@@ -712,3 +712,81 @@ cradles and the cage's are the same print, so a cone in each rim is
 the same off each axis to the printer's accuracy, and a ball dropped
 into one and the stylus into the other either sit the same way or do
 not.
+
+## 2026-11 · A fresh checkout sets itself up, and the pre-push chain says what it costs
+
+A cloud session that started from a bare clone to build the lint
+blower spent its first hour on setup: the MCP server failed to connect
+because nothing had built `target/release/ok-mcp`, `cargo fmt` and
+`cargo clippy` were not installed, the pre-push chain ran for half an
+hour cold with no warning, and three conventions (the sketch planes'
+frames, how an example is laid out, how to read a reference STL) had
+to be rediscovered by probing. It wrote the list `docs/FRESH-CHECKOUT.md`
+and the next session worked through it, one pull request per item
+(#124, #122, #127, #123, #125, #126, #128, in the list's order), then
+deleted the list; this entry is its record.
+
+What changed and which alternative lost:
+
+- **One setup script**, `scripts/setup.sh`, installs rustfmt and
+  clippy, `wasm-bindgen-cli` at the version read from
+  `crates/ok-wasm/Cargo.toml` (one pin, not two), the web app's npm
+  packages and Playwright's Chromium, and the release `ok-mcp`, each
+  step skipped when done and timed (219 s cold, 1 s warm). Rejected:
+  leaving the three commands in `CLAUDE.md` (a session reads them
+  after the server has already failed to connect) and relying on
+  `Dockerfile.dev` alone (the cloud container is not that image; the
+  image now runs the same steps and the script finds them done).
+- **`rust-toolchain.toml` names the components** as well as the
+  channel and the wasm target, so rustup installs them on the first
+  `cargo` command, whether or not the script ran.
+- **A synchronous SessionStart hook** builds `ok-mcp` when the binary
+  is missing or older than `crates/ok-mcp`, `crates/ok-model` or
+  `Cargo.lock`. Rejected: an asynchronous hook (the first prompt could
+  still find no binary, which is the failure being fixed) and no hook
+  (the environment's setup script is the right place, but a hook costs
+  a stat when the binary is current and two minutes once when it is
+  not). If a session still opens disconnected, `/mcp` reconnects.
+- **`scripts/check.sh` is the chain**, in CI's order, printing seconds
+  per step and running on after a failure so one run reports
+  everything. Measured: 22 minutes cold, 18 warm, the tests themselves
+  13 of that and the browser suite 3. Rejected: failing fast (on a
+  20-minute chain a second run to find the next failure is the
+  expensive part) and `cargo fmt --check` (CLAUDE.md's chain formats in
+  place; the step fails when it changed a file, so the push carries it).
+- **An example and its regression test may push after `--quick`**
+  (fmt, clippy, `cargo test -p ok-render`, 4 minutes), the web and
+  browser jobs left to CI, because files under `examples/` and
+  `crates/ok-render/tests/` cannot reach the kernel, the wasm or the
+  web app. Everything else runs the whole chain. Rejected: the whole
+  chain every time (18 minutes to confirm what the file list already
+  says; the session that could not wait pushed first and fixed up
+  after, which is worse than a stated shortcut). The maintainer can
+  reverse this by replacing one bullet in `CLAUDE.md`.
+- **The sketch planes' frames are a table in `docs/OPS.md`** (plane,
+  position at `offset`, sketch x, sketch y, normal; the sign of
+  `rotated`; the canonical frame of a face plane). Rejected: a tool
+  that answers the question (the report already carries each sketch's
+  frame, and `Part.plane_point` reads it; what was missing was the
+  convention written down).
+- **`examples/README.md` is the checklist** for a new example, the
+  `okmcp.py` client in ten lines and the shape of a regression test.
+  Rejected: leaving it to be learned from three examples, which is
+  what every fresh session had done.
+- **A reference mesh is read with the tools that exist**: `import`
+  into its own part studio, `report` for the planar faces (normal,
+  centre, area, which give walls and thicknesses), section screenshots,
+  a DXF of a view. The report gives no cylinders and no section as
+  numbers for a mesh, so a `section` tool returning the loops a plane
+  cuts went on the roadmap rather than into this work; the list was
+  about setup, and the recipe covers the lint blower's numbers without
+  it.
+- **No `requirements.txt`**: the photo tooling is standard-library
+  Python; the trace scripts want Node's Playwright from
+  `apps/web/node_modules` and the turntable scan wants `ffmpeg`, which
+  `okmcp.py`'s header now says. Rejected: an empty requirements file,
+  which answers the wrong question.
+- **The `screenshot` tool's description** said the iso eye looks from
+  +x, +y, +z; `ok_render::View::Iso` is +X, −Y, +Z, which is why a `y`
+  section shows its cut faces and `x` and `z` sections need `:flip`.
+  `docs/MCP.md` has the picture.
