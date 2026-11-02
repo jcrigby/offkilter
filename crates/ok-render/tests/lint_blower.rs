@@ -515,3 +515,49 @@ fn the_five_pieces_fit_a_256_bed_meet_nowhere_and_leave_their_glue_gaps() {
         );
     }
 }
+
+#[test]
+fn the_fit_test_is_the_halves_bottom_slices_standing_apart() {
+    let mut doc = load();
+    let n = numbers();
+    let (b, pc) = (&n["blade"], &n["pieces"]);
+    let (h, gap, t) = (num(pc, "fit_test_h"), num(pc, "fit_gap"), num(b, "t"));
+    let slices = bodies_of(&mut doc, "fit test", 2);
+    let (right, left) = if slices[0].bounds().unwrap().1.x > 1.0 {
+        (&slices[0], &slices[1])
+    } else {
+        (&slices[1], &slices[0])
+    };
+    for (name, s) in [("right", right), ("left", left)] {
+        let (lo, hi) = s.bounds().unwrap();
+        println!(
+            "{name} slice x {:.1} to {:.1}, y {:.1} to {:.1}, {:.0} tall",
+            lo.x,
+            hi.x,
+            lo.y,
+            hi.y,
+            hi.z - lo.z
+        );
+        assert!(
+            (lo.z - num(b, "z_bot")).abs() < 1e-6 && (hi.z - lo.z - h).abs() < 1e-6,
+            "{name} slice is the bottom {h}"
+        );
+        assert!(
+            (hi.y - lo.y - t).abs() < 1e-6,
+            "{name} slice is the blade's thickness"
+        );
+    }
+    let (rlo, rhi) = right.bounds().unwrap();
+    let (llo, lhi) = left.bounds().unwrap();
+    assert!(
+        (rhi.x - num(b, "x1")).abs() < 1e-6
+            && (llo.x - num(b, "x0")).abs() < 1e-6
+            && lhi.x.abs() < 1e-6
+    );
+    assert!(
+        (llo.y - rhi.y - gap).abs() < 1e-6,
+        "the slices stand the gap apart"
+    );
+    assert!(rlo.x < -1.0, "the right slice carries the laps");
+    assert!(overlap(right, left) < 1e-6);
+}

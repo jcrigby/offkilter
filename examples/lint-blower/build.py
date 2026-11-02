@@ -70,6 +70,7 @@ TAB_T = 2.0             # a tab's thickness, the wall's
 TAB_IN, TAB_OUT = 10.0, 10.0   # how far a tab runs back into the middle piece and out into the wing
 TAB_CLEAR = 0.2         # the tab off the wing's inner wall, for the glue
 LAP_W, LAP_T = 8.0, 1.2    # the blade halves' lap strip along their joint, on the right half
+FIT_TEST_H, FIT_GAP = 20.0, 12.0   # the fit test: the halves' bottom slices, standing this far apart
 RIGHT_HALF_W = 144.0       # the right half as printed, joint to outer rail: the left half makes up the rest of BLADE_W, so a
                            # narrower frame than measured is met by reprinting the left half alone, the joint off centre
 
@@ -217,13 +218,14 @@ def blade_outline(inset=0.0):
     return pts
 
 
-def build_blade(p):
+def build_blade(p, y_shift=0.0):
     """The dummy filter: a slab the blade's outline hollowed between its
     faces, open at the top edge, where the wedge's air comes in, and at
     the bottom edge, where it leaves below the grille; both faces
     solid, so either face can be the drum side; ribs face to face. It
-    reaches up the sleeve to just under the wedge."""
-    y0 = WALL + SLEEVE_FIT
+    reaches up the sleeve to just under the wedge. `y_shift` builds it
+    that much further forward, for a second one beside the first."""
+    y0 = WALL + SLEEVE_FIT + y_shift
     s = p.sketch("front", -y0, "blade")
     p.polygon(s, blade_outline())
     p.extrude(s, BLADE_T, direction="reverse", name="blade")   # the front plane's normal is -Y: reverse goes +Y
@@ -246,6 +248,38 @@ def build_blade(p):
         p.extrude(s, BLADE_T - 2 * WALL, direction="reverse", op="add", name=f"rib {k + 1}")
 
 
+def build_laps(p, y0):
+    """The laps on the right half: a strip inside each face, reaching
+    LAP_W past the joint under the left half's plate, standing on the
+    right's plate and rooted a millimetre into it over the joint only,
+    so the halves glue face to face along the joint. They run from the
+    bottom edge, so they print from the bed, not as cantilevers."""
+    for name, y, root in (("drum", y0 + WALL, -1.0), ("duct", y0 + BLADE_T - WALL - LAP_T, LAP_T)):
+        s = p.sketch("front", -y, f"lap {name}")
+        p.rect(s, (-LAP_W, Z_BLADE_BOT), (1.0, Z_BLADE_TOP - 5.0))
+        p.extrude(s, LAP_T, direction="reverse", op="add", name=f"lap {name}")
+        s = p.sketch("front", -(y + root), f"lap {name} root")
+        p.rect(s, (0.0, Z_BLADE_BOT), (1.0, Z_BLADE_TOP - 5.0))
+        p.extrude(s, 1.0, direction="reverse", op="add", name=f"lap {name} root")
+
+
+def build_fit_test(p):
+    """The bottom FIT_TEST_H of both halves, the left one built FIT_GAP
+    further forward so the two stand apart on the plate: slid together
+    on the laps they try the slot's width and thickness in a short print."""
+    big = 400.0
+    build_blade(p)
+    build_laps(p, WALL + SLEEVE_FIT)
+    s = p.sketch("top", -big, "keep the right slice")
+    p.rect(s, (-LAP_W - 1.0, -1.0), (big, WALL + SLEEVE_FIT + BLADE_T + 1.0))
+    p.extrude(s, big + Z_BLADE_BOT + FIT_TEST_H, op="intersect", name="keep the right slice")
+    dy = BLADE_T + FIT_GAP
+    build_blade(p, dy)
+    s = p.sketch("top", -big, "keep the left slice")
+    p.rect(s, (-big, dy + 1.0), (0.0, dy + WALL + SLEEVE_FIT + BLADE_T + 1.0))
+    p.extrude(s, big + Z_BLADE_BOT + FIT_TEST_H, op="intersect", name="keep the left slice")
+
+
 def build_piece(p, which):
     """The adapter or the blade again, kept only between the cuts: the
     middle with the socket and the tabs, a wing, or half the blade,
@@ -264,19 +298,7 @@ def build_piece(p, which):
         build_tabs(p, 1)
         build_tabs(p, -1)
     if which == "right blade":
-        # The laps: a strip inside each face, reaching LAP_W past the
-        # joint under the left half's plate, standing on the right's
-        # plate and rooted a millimetre into it over the joint only, so
-        # the halves glue face to face along the joint. They run from
-        # the bottom edge, so they print from the bed, not as cantilevers.
-        y0 = WALL + SLEEVE_FIT
-        for name, y, root in (("drum", y0 + WALL, -1.0), ("duct", y0 + BLADE_T - WALL - LAP_T, LAP_T)):
-            s = p.sketch("front", -y, f"lap {name}")
-            p.rect(s, (-LAP_W, Z_BLADE_BOT), (1.0, Z_BLADE_TOP - 5.0))
-            p.extrude(s, LAP_T, direction="reverse", op="add", name=f"lap {name}")
-            s = p.sketch("front", -(y + root), f"lap {name} root")
-            p.rect(s, (0.0, Z_BLADE_BOT), (1.0, Z_BLADE_TOP - 5.0))
-            p.extrude(s, 1.0, direction="reverse", op="add", name=f"lap {name} root")
+        build_laps(p, WALL + SLEEVE_FIT)
 
 
 def main():
@@ -302,6 +324,10 @@ def main():
     build_adapter(both)
     build_blade(both)
     assert len(checked(both)) == 2
+    fit_tab = new_tab(mcp, {"type": "add_part_studio", "name": "fit test"})
+    fit = Part(mcp, fit_tab, "fit test")
+    build_fit_test(fit)
+    assert len(checked(fit)) == 2
     pieces = {}
     for which in ("middle", "right wing", "left wing", "right blade", "left blade"):
         tab = new_tab(mcp, {"type": "add_part_studio", "name": which})
@@ -320,6 +346,8 @@ def main():
     shot(pieces["middle"][0], "middle_iso", view="1,-0.8,0.5")
     shot(pieces["right wing"][0], "right_wing_iso", view="-1,-0.8,0.5")
     shot(pieces["right blade"][0], "right_blade_iso", view="-0.6,1,0.5")
+    shot(fit_tab, "fit_test", view="-0.6,-1,0.7")
+    print(mcp.call("export", {"tab": fit_tab, "format": "stl", "path": os.path.join(OUT, "fit_test.stl")}))
     print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "adapter.stl")}))
     print(mcp.call("export", {"tab": blade_tab, "format": "stl", "path": os.path.join(OUT, "blade.stl")}))
     for which, (tab, _) in pieces.items():
@@ -339,7 +367,7 @@ def main():
                     "mouth_tilt": MOUTH_TILT, "throat_d": THROAT_D, "cone_half": CONE_HALF, "r_cone_max": R_CONE_MAX,
                     "h_cone": H_CONE, "axis_y": AXIS_Y, "back_open": BACK_OPEN, "in_front": IN_FRONT, "in_end": IN_END,
                     "volume": bodies[0][1]},
-        "pieces": {"x_cut": X_CUT, "tab_t": TAB_T, "tab_in": TAB_IN, "tab_out": TAB_OUT, "tab_clear": TAB_CLEAR,
+        "pieces": {"fit_test_h": FIT_TEST_H, "fit_gap": FIT_GAP, "x_cut": X_CUT, "tab_t": TAB_T, "tab_in": TAB_IN, "tab_out": TAB_OUT, "tab_clear": TAB_CLEAR,
                    "tab_z0": TAB_Z0, "tab_z1": TAB_Z1, "z_step": Z_STEP,
                    "volumes": {k: v for k, (_, v) in pieces.items()}},
     }

@@ -128,6 +128,13 @@ glue, and the sleeve holds both halves at the top. Glue with CA or
 epoxy, the blade's halves first, then the wings to the middle, then
 the blade up the sleeve, and let it cure before the first blow.
 
+**Fit test first.** `out/fit_test.stl` is the bottom 20 mm of both
+halves, standing 12 mm apart on the plate, 25 g and under half an
+hour: slide them together on the laps, drop them in the slot, and the
+width and the thickness are tried before the halves are printed.
+
+![the fit test](out/fit_test.png)
+
 ![the middle piece with its tabs](out/middle_iso.png)
 
 ![the right half of the blade with its laps](out/right_blade_iso.png)
