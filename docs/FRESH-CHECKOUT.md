@@ -10,7 +10,7 @@ empty.
 
 ## 1. Build the MCP server before the session needs it
 
-- [ ] **What went wrong.** The session opened with "offkilter failed
+- [x] **What went wrong.** The session opened with "offkilter failed
   to connect": `.mcp.json` points at `target/release/ok-mcp`, which a
   fresh clone does not have. The `import` tool (an STL as mesh bodies,
   then `report` and `screenshot` with a section) would have read the
