@@ -7,6 +7,10 @@ kernel, `docs/ROADMAP.md` to see what is planned and what is next, and
 why, and which alternative lost. Add to it when you make such a choice.
 `docs/HISTORY.md` is the project's timeline in wall-clock hours.
 
+To print a part on the owner's 3D printer, open a GitHub issue as
+`docs/PRINTING.md` describes; ask the owner whether the plate is clear
+first, every time.
+
 ## Commands
 
 - Kernel tests: `cargo test --workspace`
