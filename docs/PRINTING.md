@@ -92,6 +92,7 @@ estimated finish time.
 
 The watcher and its tools are not in this repo; they live on the print
 computer in `~/fun/autoprint` (`watch.py`, `slice.py`, `gui.sh`,
-`driver_prompt.md`, `templates/`). It needs that computer on, logged in
-with the screen unlocked, and Bambu Studio without unsaved work open.
-Screenshots of every run stay there under `state/shots/`.
+`driver_prompt.md`, `templates/`). Studio runs there on its own virtual
+display (Xvfb), so the desktop's screen lock and windows do not matter;
+the computer just has to be on. Screenshots of every run stay there
+under `state/shots/`.
