@@ -119,13 +119,16 @@ empty.
 
 ## 7. Smaller things noticed on the way
 
-- [ ] `okmcp.Part.apply` parses `tab N)` out of `add_part_studio`'s
+- [x] `okmcp.Part.apply` parses `tab N)` out of `add_part_studio`'s
   text; `new_tab` exists for it but the build scripts' docstrings do
   not mention it. Say so in `okmcp.py`'s header.
-- [ ] The `screenshot` tool's `section` keeps the side at or above
+- [x] The `screenshot` tool's `section` keeps the side at or above
   the offset and `:flip` the other; the first guess was the other way.
   One example in `docs/MCP.md` with a picture would settle it.
-- [ ] Python packages for the examples that measure from photos
+- [x] Python packages for the examples that measure from photos
   (`examples/finch-plug/trace/`, `examples/measuring-sheet/`) are not
   listed anywhere; a `requirements.txt` next to them, or a line in
-  `scripts/setup.sh`.
+  `scripts/setup.sh`. (There are none: both are standard-library
+  Python; the trace directory's Node scripts need Playwright from
+  `apps/web/node_modules`, and the turntable scan needs `ffmpeg`.
+  `okmcp.py`'s header says so.)

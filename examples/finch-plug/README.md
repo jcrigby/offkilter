@@ -41,7 +41,9 @@ change the constants at the top of `build.py` and run it again.
 ![the second tracing, the rule's band left out](out/flange_trace_2.png)
 
 Two tracings (`trace/flange.jpg` and `trace/flange2.jpg`, the second
-with a rule across it, measured by the scripts in `trace/`) read the
+with a rule across it, measured by the scripts in `trace/`: Node with
+Playwright from `apps/web/node_modules`, so `NODE_PATH=apps/web/node_modules
+node grab.js ...`, and standard-library Python) read the
 flange at 71.5 and 72.0 to the pencil's centre, so 71 across the
 plastic; the ears 4.0 to 4.4 proud of it, 54 degrees wide (36 mm
 across the tips to the pencil, 35 of plastic), 120 degrees apart. The
