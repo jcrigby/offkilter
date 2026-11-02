@@ -59,12 +59,30 @@ start one with `cargo run -p ok-server -- --static apps/web/dist --data
 - One increment per branch off `main`, one pull request per branch,
   merged once the three CI jobs (Kernel, Web, End-to-end) are green.
   Commit messages say what changed and why, not which model wrote them.
-- Before pushing, run the whole chain, not just the tests that changed:
-  `cargo fmt --all && cargo clippy --workspace --all-targets -- -D warnings`,
-  `cargo test --workspace`, `./scripts/build-wasm.sh`, then in `apps/web`
-  `npm run typecheck && npm run build`, and the browser suite against a
-  debug server (`cargo build -p ok-server`, start it as above on port
-  8080, `PW_CHROMIUM=<chromium> npx playwright test`).
+- Before pushing, run `scripts/check.sh`: the whole chain the three CI
+  jobs run, in one command with a table of seconds per step. It is
+  `cargo fmt --all` (a file it changes fails the step: commit it),
+  `cargo clippy --workspace --all-targets -- -D warnings`,
+  `cargo test --workspace`, `./scripts/build-wasm.sh`, `npm run typecheck`
+  and `npm run build` in `apps/web`, then `cargo build -p ok-server`, a
+  debug server it starts itself on port 8080, and the browser suite
+  (`PW_CHROMIUM=<chromium>` to use an installed browser). Measured on a
+  4-core cloud container: 22 minutes cold (a fresh clone after
+  `scripts/setup.sh`: the workspace tests 14, the wasm build 3.5, the
+  browser suite 3.4), and still 18 minutes warm, because the tests
+  themselves run for 13 minutes and the browser suite for 3. Start it
+  before writing the commit message, not after. The Stop hook holds the
+  turn until the push lands, which is a reason to start the chain
+  early, not to push first and fix up after.
+- The one change that may stop early: an example and its regression
+  test (files under `examples/` and `crates/ok-render/tests/` only)
+  cannot affect the kernel, the wasm, the web app or the browser suite,
+  so it may push after `scripts/check.sh --quick` (fmt, clippy and
+  `cargo test -p ok-render`; 4 minutes warm), leaving the web and
+  browser jobs to CI. The measuring sheet and the turntable scan are
+  tested from `ok-photo` and the cart's parts list from `ok-model`:
+  `--quick=ok-photo`. Anything else under `crates/` or `apps/web` runs
+  the whole chain.
 - Kernel, wasm or MCP changes that alter what the examples produce mean
   regenerating them: `cargo build --release -p ok-mcp`, then
   `python3 examples/router-lift/build.py` and

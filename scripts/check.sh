@@ -10,6 +10,12 @@
 #                               examples/ and crates/ok-render/tests/,
 #                               which cannot affect the web app (see
 #                               CLAUDE.md, "How work lands")
+#   scripts/check.sh --quick=ok-photo
+#                               the same with another crate's tests, for
+#                               an example tested from elsewhere (the
+#                               measuring sheet and the turntable scan
+#                               from ok-photo, the cart's parts list
+#                               from ok-model)
 #   scripts/check.sh --no-browser
 #                               everything but the browser suite
 #
@@ -21,12 +27,14 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 QUICK=0
+QUICK_CRATE=ok-render
 BROWSER=1
 for arg in "$@"; do
   case "$arg" in
     --quick) QUICK=1 ;;
+    --quick=*) QUICK=1; QUICK_CRATE=${arg#--quick=} ;;
     --no-browser) BROWSER=0 ;;
-    *) echo "usage: scripts/check.sh [--quick | --no-browser]" >&2; exit 2 ;;
+    *) echo "usage: scripts/check.sh [--quick[=crate] | --no-browser]" >&2; exit 2 ;;
   esac
 done
 
@@ -73,7 +81,7 @@ e2e() {
 run "fmt" fmt_in_place
 run "clippy" cargo clippy --workspace --all-targets -- -D warnings
 if [ "$QUICK" = 1 ]; then
-  run "test ok-render" cargo test -p ok-render
+  run "test $QUICK_CRATE" cargo test -p "$QUICK_CRATE"
 else
   run "test workspace" cargo test --workspace
   run "wasm" ./scripts/build-wasm.sh

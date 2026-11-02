@@ -46,7 +46,7 @@ empty.
 
 ## 3. Say how long the pre-push chain takes and what a small change may skip
 
-- [ ] **What went wrong.** `cargo test --workspace` on a cold target
+- [x] **What went wrong.** `cargo test --workspace` on a cold target
   directory ran for over half an hour, and the Stop hook refuses to end
   a turn until the push lands, so the session pushed before clippy and
   the tests finished (a fix commit was the fallback). Nothing in
