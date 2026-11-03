@@ -1,9 +1,8 @@
 //! The LG lint duct blower adapter (examples/lint-blower) as a
 //! regression suite: the adapter is one closed body whose sleeve stands
 //! on the lip with the flange round its foot, whose wedge keeps the
-//! wall through its leaning faces, whose socket is the Samsung part's
-//! cone (the throat, the half angle, the hollow behind the axis) under a
-//! mouth tilted toward the user; the blade is the filter's width and
+//! wall through its leaning faces, which ends in a square that rounds to
+//! a spigot the leaf vac hose's cuff slides over, with a bead; the blade is the filter's width and
 //! thickness less the clearances, a box open at its top and its bottom
 //! edge and nowhere else, that goes up the sleeve the glue gap inside
 //! it; and the five pieces fit a 256 mm bed, meet nowhere, and leave
@@ -97,7 +96,7 @@ fn post(x: f64, y: f64, r: f64, z0: f64, z1: f64) -> Solid {
 }
 
 #[test]
-fn the_adapter_stands_on_the_lip_and_keeps_the_samsung_socket() {
+fn the_adapter_stands_on_the_lip_and_ends_in_the_spigot() {
     let mut doc = load();
     let n = numbers();
     let a = &n["adapter"];
@@ -112,17 +111,17 @@ fn the_adapter_stands_on_the_lip_and_keeps_the_samsung_socket() {
         num(a, "wall"),
     );
     let (flange_t, flange_out) = (num(a, "flange_t"), num(a, "flange_out"));
-    let (z_socket, z_top, socket_w, socket_d) = (
-        num(a, "z_socket"),
+    let (z_square, z_spigot, z_top, r_out) = (
+        num(a, "z_square"),
+        num(a, "z_spigot"),
         num(a, "z_top"),
-        num(a, "socket_w"),
-        num(a, "socket_d"),
+        num(a, "r_out"),
     );
-    let (socket_front, throat_d, cone_half, axis_y) = (
-        num(a, "socket_front"),
-        num(a, "throat_d"),
-        num(a, "cone_half"),
+    let (spigot_od, r_bore, axis_y, bead) = (
+        num(a, "spigot_od"),
+        num(a, "r_bore"),
         num(a, "axis_y"),
+        num(a, "bead"),
     );
     println!(
         "adapter x {:.1} to {:.1}, y {:.1} to {:.1}, z {:.1} to {:.1}, {:.1} cm3",
@@ -142,7 +141,7 @@ fn the_adapter_stands_on_the_lip_and_keeps_the_samsung_socket() {
     );
     assert!(lo.z.abs() < 1e-6, "the adapter stands on the lip");
     assert!((hi.z - z_top).abs() < 1e-6);
-    assert!(lo.y.abs() < 1e-6 && (hi.y - socket_d).abs() < 1e-6);
+    assert!(lo.y.abs() < 1e-6 && (hi.y - 2.0 * r_out).abs() < 1e-6);
     assert!(
         (hi.x - (num(a, "stub_x1") + flange_out)).abs() < 1e-6
             && (lo.x - (num(a, "stub_x0") - flange_out)).abs() < 1e-6
@@ -170,14 +169,14 @@ fn the_adapter_stands_on_the_lip_and_keeps_the_samsung_socket() {
     // Through the wedge, halfway up: the wall through the leaning faces
     // is `wall` measured square to them, so more in the plane of the cut.
     let z_loft = stub_d;
-    let z = z_loft + (z_socket - z_loft) / 2.0;
+    let z = z_loft + (z_square - z_loft) / 2.0;
     let cut = slab(Vec3::new(-200.0, -1.0, z), Vec3::new(200.0, 200.0, z + 1.0));
     let (in_front, in_end) = (num(a, "in_front"), num(a, "in_end"));
     // The section changes with height, so the slab's volume is the ring
     // at its middle, half a millimetre up.
-    let f = (z + 0.5 - z_loft) / (z_socket - z_loft);
-    let w_out = stub_l + (socket_w - stub_l) * f;
-    let d_out = stub_t + (socket_d - stub_t) * f;
+    let f = (z + 0.5 - z_loft) / (z_square - z_loft);
+    let w_out = stub_l + (2.0 * r_out - stub_l) * f;
+    let d_out = stub_t + (2.0 * r_out - stub_t) * f;
     let want = w_out * d_out - (w_out - 2.0 * in_end) * (d_out - wall - in_front);
     let got = overlap(&body, &cut);
     println!(
@@ -185,74 +184,59 @@ fn the_adapter_stands_on_the_lip_and_keeps_the_samsung_socket() {
     );
     assert!((got - want).abs() < 2.0);
     assert!(in_front > wall && in_end > wall);
-    // The socket: the cone's throat where the box meets the wedge, a
-    // post just inside it passing clean, one past it meeting the front
-    // half; the cone's surface at the half angle on the axis; and the
-    // hollow behind the axis, a box, when the STL's is kept.
-    let r = throat_d / 2.0;
-    let free = post(0.0, axis_y, r - 0.3, z_socket + 0.5, z_socket + 4.0);
-    let tight = post(0.0, axis_y, r + 1.5, z_socket + 0.5, z_socket + 4.0);
+    // The spigot: a tube of the cuff's size on the axis, its bore clear
+    // out of the top, a post just inside the bore passing clean and one
+    // past it meeting the wall; the tube and the bore as cylinders; the
+    // bead a ring BEAD proud below the top and no wider than that below it.
+    let free = post(0.0, axis_y, r_bore - 0.3, z_spigot + 1.0, z_top + 1.0);
+    let tight = post(0.0, axis_y, r_bore + 1.5, z_top - 3.0, z_top - 1.0);
     println!(
-        "throat: a post of {:.1} overlaps {:.2}, one of {:.1} overlaps {:.1}",
-        2.0 * (r - 0.3),
+        "spigot: a post of {:.1} overlaps {:.2} out the top, one of {:.1} overlaps {:.1}",
+        2.0 * (r_bore - 0.3),
         overlap(&body, &free),
-        2.0 * (r + 1.5),
+        2.0 * (r_bore + 1.5),
         overlap(&body, &tight)
     );
     assert!(overlap(&body, &free) < 1e-6);
     assert!(overlap(&body, &tight) > 50.0);
-    let cones: Vec<(Vec3, Vec3, f64)> = body
+    let mut radii: Vec<f64> = body
         .surfaces
         .iter()
         .filter_map(|s| match s {
-            Surface::Cone {
-                apex,
+            Surface::Cylinder {
+                origin,
                 axis,
-                half_angle,
-            } => Some((*apex, *axis, half_angle.to_degrees())),
+                radius,
+            } if axis.z.abs() > 1.0 - 1e-9
+                && origin.x.abs() < 1e-6
+                && (origin.y - axis_y).abs() < 1e-6 =>
+            {
+                Some(*radius)
+            }
             _ => None,
         })
         .collect();
-    println!("cones {cones:?}");
-    assert_eq!(cones.len(), 1, "one cone");
-    let (apex, axis, half) = cones[0];
-    assert!((half - cone_half).abs() < 1e-6);
-    assert!(axis.z.abs() > 1.0 - 1e-9 && apex.x.abs() < 1e-6 && (apex.y - axis_y).abs() < 1e-6);
-    let apex_z = z_socket - r / cone_half.to_radians().tan();
+    radii.sort_by(|p, q| p.partial_cmp(q).unwrap());
+    radii.dedup_by(|p, q| (*p - *q).abs() < 1e-6);
+    println!("cylinders on the axis: {radii:?}");
     assert!(
-        (apex.z - apex_z).abs() < 1e-6,
-        "apex at {} wants {apex_z}",
-        apex.z
+        radii.iter().any(|r| (r - spigot_od / 2.0).abs() < 1e-6),
+        "the tube"
     );
-    if a["back_open"].as_bool().unwrap() {
-        let hollow = slab(
-            Vec3::new(-socket_w / 2.0 + wall + 0.3, wall + 0.3, z_socket + 0.5),
-            Vec3::new(
-                socket_w / 2.0 - wall - 0.3,
-                axis_y - 0.3,
-                z_socket + socket_front - 0.5,
-            ),
-        );
-        assert!(overlap(&body, &hollow) < 1e-6, "hollow behind the axis");
-    }
-    // The mouth: the back edge is the top of the part, the front edge
-    // `socket_front` above the wedge.
-    let front_lip = slab(
-        Vec3::new(-200.0, socket_d - 1.0, -100.0),
-        Vec3::new(200.0, socket_d + 1.0, 200.0),
-    );
-    let (_, lip_hi) = ok_brep::boolean(&body, &front_lip, BoolOp::Intersection)
-        .unwrap()
-        .bounds()
-        .unwrap();
-    println!(
-        "mouth: {:.1} at the front, {:.1} at the back, tilted {:.1} deg",
-        lip_hi.z - z_socket,
-        z_top - z_socket,
-        num(a, "mouth_tilt")
-    );
-    assert!((lip_hi.z - (z_socket + socket_front)).abs() < 0.5);
-    assert!(z_top > lip_hi.z + 10.0);
+    assert!(radii.iter().any(|r| (r - r_bore).abs() < 1e-6), "the bore");
+    let at = |z0: f64, z1: f64| {
+        let cut = slab(Vec3::new(-200.0, -1.0, z0), Vec3::new(200.0, 200.0, z1));
+        let (lo, hi) = ok_brep::boolean(&body, &cut, BoolOp::Intersection)
+            .unwrap()
+            .bounds()
+            .unwrap();
+        hi.x - lo.x
+    };
+    let (bead_w, bead_down) = (num(a, "bead_w"), num(a, "bead_down"));
+    let on_bead = at(z_top - bead_down - bead_w + 0.2, z_top - bead_down - 0.2);
+    let under = at(z_spigot + 1.0, z_spigot + 3.0);
+    println!("across the spigot: {under:.1} on the tube, {on_bead:.1} on the bead");
+    assert!((under - spigot_od).abs() < 1e-6 && (on_bead - spigot_od - 2.0 * bead).abs() < 1e-6);
 }
 
 #[test]
@@ -412,7 +396,7 @@ fn the_five_pieces_fit_a_256_bed_meet_nowhere_and_leave_their_glue_gaps() {
     // the socket starts, the middle reaches past the cuts only by its
     // tabs, and the three add up to the whole plus the tabs.
     let (lo, hi) = right.bounds().unwrap();
-    assert!((lo.x - x_cut).abs() < 1e-6 && (hi.z - num(a, "z_socket")).abs() < 1e-6);
+    assert!((lo.x - x_cut).abs() < 1e-6 && (hi.z - num(a, "z_square")).abs() < 1e-6);
     let (lo, hi) = middle.bounds().unwrap();
     assert!((hi.x - (x_cut + tab_out)).abs() < 1e-6 && (lo.x + hi.x).abs() < 1e-6);
     let extra = middle.volume() + right.volume() + left.volume() - whole.volume();

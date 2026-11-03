@@ -54,18 +54,21 @@ SLEEVE_D = 20.0         # how far the blade goes up into the sleeve
 SLEEVE_FIT = 0.2        # the sleeve off the blade, each side, for the glue
 FLANGE_T = 3.0          # the flange that rests on the lip's ends, where the filter's ears do
 FLANGE_OUT = 8.0        # how far it reaches past the sleeve, at the front and the ends; the back stays flush
-LOFT_H = 90.0           # the wedge, sleeve to socket (the Samsung's is 65 and steeper)
-# -- the blower socket, read off the Samsung STL ---------------------------
-SOCKET_W = 90.0         # the box along the slot (z 110..200 in the STL)
-SOCKET_D = 100.0        # and across, back face included (y -50..50)
-SOCKET_BACK = 53.0      # the box's length at the back (x -126.5 to -73)
-SOCKET_FRONT = 18.0     # and at the front (x -91 to -73): the mouth tilts toward the user
-THROAT_D = 65.0         # the cone where it meets the duct (r 32.5 at x -74)
-CONE_HALF = 19.0        # the cone's half angle (r 32.5 to 38.4 over 17 mm)
-AXIS_Y = 50.0           # the bore's axis from the back face (y 0, z 155 in the STL)
-BACK_OPEN = True        # the STL's socket is hollow behind the axis: a box, not a cone, on that side
+LOFT_H = 100.0          # the wedge, sleeve to a square the spigot's size: long enough that its ends lean under 45°
+LOFT2_H = 30.0          # the square to the spigot's circle, above it: the corners come in 21 over this
+# -- the spigot the leaf vac hose's cuff slides over ----------------------
+# The hose is a wire-coil flexible tube, 100 across the coil, ending in a
+# smooth cuff that slips over a round outlet; measure the cuff inside and
+# how deep its smooth part is.
+CUFF_ID = 100.0         # the cuff's inside diameter: to measure
+CUFF_DEPTH = 40.0       # the cuff's smooth part, the length it slides on: to measure
+SPIGOT_OD = CUFF_ID     # the spigot as big as the cuff: a flexible cuff grips a snug tube
+SPIGOT_WALL = 2.5       # the tube's wall, handled every time the hose goes on
+SPIGOT_H = CUFF_DEPTH + 5.0   # the tube stands this much above the wedge
+BEAD = 1.0              # a ring this proud near the top, the cuff snaps over it
+BEAD_W, BEAD_DOWN = 3.0, 6.0  # the ring's width and how far below the top it sits
 # -- pieces for a 256 mm bed (a Bambu P1S) ----------------------------------
-X_CUT = SOCKET_W / 2    # the wedge's cuts, at the socket box's end walls
+X_CUT = SPIGOT_OD / 2 + WALL   # the wedge's cuts, at the spigot's sides
 TAB_T = 2.0             # a tab's thickness, the wall's
 TAB_IN, TAB_OUT = 10.0, 10.0   # how far a tab runs back into the middle piece and out into the wing
 TAB_CLEAR = 0.2         # the tab off the wing's inner wall, for the glue
@@ -90,30 +93,30 @@ BORE_L = BLADE_W + 2 * SLEEVE_FIT
 # The lip is the datum, z = 0: the flange rests on it, the sleeve stands
 # on it (it is thicker than the slot) and the wedge starts on the sleeve.
 Z_LOFT = STUB_D
-Z_SOCKET = Z_LOFT + LOFT_H        # and the socket box on the wedge
-Z_TOP = Z_SOCKET + SOCKET_BACK
-MOUTH_TILT = math.degrees(math.atan((SOCKET_BACK - SOCKET_FRONT) / SOCKET_D))
+Z_SQUARE = Z_LOFT + LOFT_H        # the wedge ends in a square the spigot's size
+Z_SPIGOT = Z_SQUARE + LOFT2_H     # which rounds to the spigot's circle
+Z_TOP = Z_SPIGOT + SPIGOT_H
+R_OUT = SPIGOT_OD / 2 + WALL      # the square's half side and the circle's radius, a wall outside the spigot's bore
+R_BORE = SPIGOT_OD / 2 - SPIGOT_WALL
+AXIS_Y = R_OUT                    # the spigot's axis: the square and the circle sit on the back face
 # The wedge's walls lean, so the in-plane inset that leaves WALL through
-# them is WALL over the cosine of the lean.
-LEAN_FRONT = math.atan((SOCKET_D - STUB_T) / LOFT_H)
-LEAN_END = math.atan((STUB_L - SOCKET_W) / 2 / LOFT_H)
+# them is WALL over the cosine of the lean, taken at the front and the ends.
+LEAN_FRONT = math.atan((2 * R_OUT - STUB_T) / LOFT_H)
+LEAN_END = math.atan((STUB_L / 2 - R_OUT) / LOFT_H)
 IN_FRONT = WALL / math.cos(LEAN_FRONT)
 IN_END = WALL / math.cos(LEAN_END)
-R_THROAT = THROAT_D / 2
-R_CONE_MAX = SOCKET_W / 2 - WALL  # the cone stops at the box's end walls
-H_CONE = (R_CONE_MAX - R_THROAT) / math.tan(math.radians(CONE_HALF))
 # The blade reaches up the sleeve to just under the wedge and BLADE_D
 # below the lip.
 Z_BLADE_TOP = SLEEVE_D - 1.0
 Z_BLADE_BOT = -BLADE_D
-# The tabs: from near the sleeve's mouth to just under where the wedge's
+# The tabs: from the sleeve's foot, on the bed when the piece prints, to
 # inner end wall comes in to X_CUT + TAB_OUT.
-TAB_Z0 = 5.0
-X_IN0, X_IN1 = STUB_L / 2 - IN_END, SOCKET_W / 2 - IN_END
-TAB_Z1 = Z_LOFT + (X_IN0 - (X_CUT + TAB_OUT + 1.0)) / (X_IN0 - X_IN1) * LOFT_H - 5.0
+TAB_Z0 = 0.0
+X_IN0, X_IN1 = STUB_L / 2 - IN_END, R_OUT - IN_END
+TAB_Z1 = Z_LOFT + (X_IN0 - (X_CUT + TAB_OUT + 1.0)) / (X_IN0 - X_IN1) * LOFT_H - 8.0
 Y_IN0 = STUB_T - WALL            # the sleeve bore's front (inside the back wall at WALL)
 Y_IN_LOFT0 = STUB_T - IN_FRONT   # the wedge bore's front where it starts, a little inside that
-Y_IN_LOFT1 = SOCKET_D - IN_FRONT
+Y_IN_LOFT1 = 2 * R_OUT - IN_FRONT
 Z_STEP = Z_LOFT + 0.01           # the sleeve bore ends here and the wedge bore takes over
 
 
@@ -132,9 +135,9 @@ def checked(part):
 
 
 def build_adapter(p):
-    """The sleeve, the flange, the wedge and the socket as one solid,
-    then the duct through them and the socket's bore. The back face,
-    y = 0, is the drum side."""
+    """The sleeve, the flange, the wedge and the spigot as one solid,
+    then the duct through them. The back face, y = 0, is the drum side;
+    the spigot's circle is tangent to it."""
     s = p.sketch("top", 0.0, "sleeve")
     p.rect(s, (STUB_X0, 0.0), (STUB_X1, STUB_T))
     p.extrude(s, STUB_D, name="sleeve")
@@ -143,39 +146,47 @@ def build_adapter(p):
     p.extrude(s, FLANGE_T, op="add", name="flange")
     a = p.sketch("top", Z_LOFT, "wedge at the sleeve")
     p.rect(a, (STUB_X0, 0.0), (STUB_X1, STUB_T))
-    b = p.sketch("top", Z_SOCKET, "wedge at the socket")
-    p.rect(b, (-SOCKET_W / 2, 0.0), (SOCKET_W / 2, SOCKET_D))
+    b = p.sketch("top", Z_SQUARE, "wedge at the square")
+    p.rect(b, (-R_OUT, 0.0), (R_OUT, 2 * R_OUT))
     p.feature({"type": "add_loft", "sketch": a, "sketch_b": b, "op": "add", "name": "wedge"})
-    s = p.sketch("top", Z_SOCKET, "socket")
-    p.rect(s, (-SOCKET_W / 2, 0.0), (SOCKET_W / 2, SOCKET_D))
-    p.extrude(s, SOCKET_BACK, op="add", name="socket")
-    # The mouth: a plane from the back's top edge down to the front's,
-    # cut away as a prism along the slot.
-    s = p.sketch("right", -SOCKET_W / 2 - 1.0, "mouth")
-    zb, zf = Z_TOP, Z_SOCKET + SOCKET_FRONT
-    slope = (zf - zb) / SOCKET_D
-    p.polygon(s, [(-1.0, zb - slope), (SOCKET_D + 1.0, zf + slope), (SOCKET_D + 1.0, zb + 10.0), (-1.0, zb + 10.0)])
-    p.cut(s, SOCKET_W + 2.0, name="mouth")
+    c = p.sketch("top", Z_SPIGOT, "round at the spigot")
+    p.circle(c, (0.0, AXIS_Y), R_OUT)
+    p.feature({"type": "add_loft", "sketch": b, "sketch_b": c, "op": "add", "name": "square to round"})
+    s = p.sketch("top", Z_SPIGOT, "spigot")
+    p.circle(s, (0.0, AXIS_Y), SPIGOT_OD / 2)
+    p.extrude(s, SPIGOT_H, op="add", name="spigot")
+    # The bead: a 45° cone up to it from the tube, so nothing under it
+    # overhangs when the piece prints standing, then the ring.
+    s = p.sketch("top", Z_TOP - BEAD_DOWN - BEAD_W - BEAD, "bead cone foot")
+    p.circle(s, (0.0, AXIS_Y), SPIGOT_OD / 2)
+    s2 = p.sketch("top", Z_TOP - BEAD_DOWN - BEAD_W, "bead cone top")
+    p.circle(s2, (0.0, AXIS_Y), SPIGOT_OD / 2 + BEAD)
+    p.feature({"type": "add_loft", "sketch": s, "sketch_b": s2, "op": "add", "name": "bead cone"})
+    s = p.sketch("top", Z_TOP - BEAD_DOWN - BEAD_W, "bead")
+    p.circle(s, (0.0, AXIS_Y), SPIGOT_OD / 2 + BEAD)
+    p.extrude(s, BEAD_W, op="add", name="bead")
     # The duct: the sleeve's bore up through the flange, the wedge's bore
-    # lofted to the socket, and the socket's hollow behind the axis.
+    # lofted to the spigot's, and the spigot's bore out the top.
     s = p.sketch("top", -1.0, "sleeve bore")
     p.rect(s, (BORE_X0, WALL), (BORE_X1, WALL + BORE_T))
     p.cut(s, 1.0 + STUB_D + 0.01, name="sleeve bore")
     a = p.sketch("top", Z_LOFT, "wedge bore at the sleeve")
     p.rect(a, (STUB_X0 + IN_END, WALL), (STUB_X1 - IN_END, STUB_T - IN_FRONT))
-    b = p.sketch("top", Z_SOCKET + 0.01, "wedge bore at the socket")
-    p.rect(b, (-SOCKET_W / 2 + IN_END, WALL), (SOCKET_W / 2 - IN_END, SOCKET_D - IN_FRONT))
+    b = p.sketch("top", Z_SQUARE + 0.01, "wedge bore at the square")
+    p.rect(b, (-R_OUT + IN_END, WALL), (R_OUT - IN_END, 2 * R_OUT - IN_FRONT))
     p.feature({"type": "add_loft", "sketch": a, "sketch_b": b, "op": "remove", "name": "wedge bore"})
-    if BACK_OPEN:
-        s = p.sketch("top", Z_SOCKET - 0.01, "socket hollow")
-        p.rect(s, (-SOCKET_W / 2 + WALL, WALL), (SOCKET_W / 2 - WALL, AXIS_Y))
-        p.cut(s, SOCKET_BACK + 1.0, name="socket hollow")
-    # The cone: its half profile on the plane through the axis, turned
-    # about it; past the end walls it runs on as a cylinder.
-    s = p.sketch("front", -AXIS_Y, "cone")
-    p.polygon(s, [(0.0, Z_SOCKET - 0.5), (R_THROAT, Z_SOCKET - 0.5), (R_THROAT, Z_SOCKET), (R_CONE_MAX, Z_SOCKET + H_CONE),
-                  (R_CONE_MAX, Z_TOP + 1.0), (0.0, Z_TOP + 1.0)])
-    p.revolve_cut(s, name="cone")
+    # A rectangle lofted to a circle has to share its centre, or the loft
+    # does not close (docs/ROADMAP.md), so this one is a wall inside the
+    # square all round, centred on the spigot's axis, a hair inside the
+    # wedge bore's top so no face of it lies in a face of that void.
+    b2 = p.sketch("top", Z_SQUARE - 0.01, "round bore at the square")
+    p.rect(b2, (-R_OUT + WALL + 0.02, WALL + 0.02), (R_OUT - WALL - 0.02, 2 * R_OUT - WALL - 0.02))
+    c = p.sketch("top", Z_SPIGOT + 0.01, "round bore at the spigot")
+    p.circle(c, (0.0, AXIS_Y), R_BORE)
+    p.feature({"type": "add_loft", "sketch": b2, "sketch_b": c, "op": "remove", "name": "round bore"})
+    s = p.sketch("top", Z_SPIGOT - 0.01, "spigot bore")
+    p.circle(s, (0.0, AXIS_Y), R_BORE)
+    p.cut(s, SPIGOT_H + 1.0, name="spigot bore")
 
 
 def build_tabs(p, side):
@@ -349,7 +360,7 @@ def main():
     shot(both_tab, "adapter_duct_side", view="-0.5,1,0.35")
     shot(both_tab, "adapter_front", view="front")
     shot(both_tab, "adapter_section", view="right", section="x:0")
-    shot(1, "adapter_section_iso", view="-1,-1,0.8", section=f"y:{AXIS_Y}")
+    shot(1, "adapter_section_iso", view="-1,-1,0.8", section=f"y:{AXIS_Y:g}")
     shot(pieces["middle"][0], "middle_iso", view="1,-0.8,0.5")
     shot(pieces["right wing"][0], "right_wing_iso", view="-1,-0.8,0.5")
     shot(pieces["right blade"][0], "right_blade_iso", view="-0.6,1,0.5")
@@ -360,7 +371,7 @@ def main():
     for which, (tab, _) in pieces.items():
         print(mcp.call("export", {"tab": tab, "format": "stl", "path": os.path.join(OUT, which.replace(" ", "_") + ".stl")}))
     print(mcp.call("export", {"tab": both_tab, "format": "pdf", "sheet": "A4", "hidden": True, "views": ["front", "section-side@0", "top", "iso"],
-                              "note": f"blade {BLADE_W:g} x {BLADE_T:g}, {BLADE_D:g} below the ears, for a frame {FRAME_W:g} x {FRAME_T:g}; socket {THROAT_D:g} at the throat, {CONE_HALF:g} deg",
+                              "note": f"blade {BLADE_W:g} x {BLADE_T:g}, {BLADE_D:g} below the lip, for a frame {FRAME_W:g} x {FRAME_T:g}; spigot {SPIGOT_OD:g} for a cuff of {CUFF_ID:g}",
                               "path": os.path.join(OUT, "adapter.pdf")}))
     numbers = {
         "frame": {"t": FRAME_T, "w": FRAME_W, "ears_w": EARS_W, "h": FRAME_H, "lip_dip": LIP_DIP, "grille_d": GRILLE_D},
@@ -369,10 +380,10 @@ def main():
                   "lap_w": LAP_W, "lap_t": LAP_T},
         "adapter": {"stub_l": STUB_L, "stub_t": STUB_T, "stub_d": STUB_D, "bore_l": BORE_L, "bore_t": BORE_T, "sleeve_fit": SLEEVE_FIT, "wall": WALL,
                     "stub_x0": STUB_X0, "stub_x1": STUB_X1, "bore_x0": BORE_X0, "bore_x1": BORE_X1,
-                    "flange_t": FLANGE_T, "flange_out": FLANGE_OUT, "loft_h": LOFT_H, "z_socket": Z_SOCKET, "z_top": Z_TOP,
-                    "socket_w": SOCKET_W, "socket_d": SOCKET_D, "socket_back": SOCKET_BACK, "socket_front": SOCKET_FRONT,
-                    "mouth_tilt": MOUTH_TILT, "throat_d": THROAT_D, "cone_half": CONE_HALF, "r_cone_max": R_CONE_MAX,
-                    "h_cone": H_CONE, "axis_y": AXIS_Y, "back_open": BACK_OPEN, "in_front": IN_FRONT, "in_end": IN_END,
+                    "flange_t": FLANGE_T, "flange_out": FLANGE_OUT, "loft_h": LOFT_H, "loft2_h": LOFT2_H, "z_square": Z_SQUARE, "z_spigot": Z_SPIGOT, "z_top": Z_TOP,
+                    "r_out": R_OUT, "axis_y": AXIS_Y, "spigot_od": SPIGOT_OD, "spigot_wall": SPIGOT_WALL, "r_bore": R_BORE, "spigot_h": SPIGOT_H,
+                    "bead": BEAD, "bead_w": BEAD_W, "bead_down": BEAD_DOWN, "cuff_id": CUFF_ID, "cuff_depth": CUFF_DEPTH,
+                    "lean_front": math.degrees(LEAN_FRONT), "lean_end": math.degrees(LEAN_END), "in_front": IN_FRONT, "in_end": IN_END,
                     "volume": bodies[0][1]},
         "pieces": {"fit_test_h": FIT_TEST_H, "fit_gap": FIT_GAP, "fit_shift": FIT_SHIFT, "x_cut": X_CUT, "tab_t": TAB_T, "tab_in": TAB_IN, "tab_out": TAB_OUT, "tab_clear": TAB_CLEAR,
                    "tab_z0": TAB_Z0, "tab_z1": TAB_Z1, "z_step": Z_STEP,
@@ -383,7 +394,7 @@ def main():
     mcp.close()
     print(f"blade {BLADE_W:g} x {BLADE_T:g}, {BLADE_D:g} deep; sleeve {STUB_L:g} x {STUB_T:g}, {STUB_D:g} deep; "
           f"wedge {LOFT_H:g} tall leaning {math.degrees(LEAN_FRONT):.0f} deg at the front and {math.degrees(LEAN_END):.0f} at the ends; "
-          f"mouth tilted {MOUTH_TILT:.0f} deg; cone {THROAT_D:g} to {2 * R_CONE_MAX:g} over {H_CONE:.0f}")
+          f"spigot {SPIGOT_OD:g} outside, {2 * R_BORE:g} bore, {SPIGOT_H:g} tall, bead {BEAD:g} proud")
 
 
 if __name__ == "__main__":
