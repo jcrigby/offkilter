@@ -64,6 +64,12 @@ be narrower; a rule put the frame at 286. So the blade's right rail is
 pinned where that half put it (`RIGHT_HALF_W`) and the frame's width
 sets the left half alone, the joint 2.5 mm off centre.
 
+Tried in the dryer, the two halves at 283 together go down the slot
+and stop where the housing's left corner begins to turn, which on this
+dryer is higher than the right one, so 180 is the depth to keep: the
+blade seats on the housing's own corner, with the flange on the lip
+above it.
+
 The blade is drawn 1 mm inside the frame's width each side and 0.5
 inside its thickness each face: the frame is what fits the slot, so
 the blade copies it with room for a print's error. If the blade binds,
