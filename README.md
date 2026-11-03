@@ -60,7 +60,8 @@ works today, all in the browser:
   parts; and small ones, such as a dummy PCIe card to print
   (`examples/pcie-dummy/`), a track saw edge gauge
   (`examples/track-gauge/`), a coat hook for a wire rack's rail
-  (`examples/rack-hook/`), a bayonet cap for a mesh finch feeder
+  (`examples/rack-hook/`), blocks to stand an object on for a
+  turntable scan (`examples/scan-supports/`), a bayonet cap for a mesh finch feeder
   (`examples/finch-plug/`) and the same cap with a perch ring sized
   for finches and not for doves (`examples/finch-perch/`), a leaf
   blower adapter for an LG dryer's lint slot redrawn from a Samsung
