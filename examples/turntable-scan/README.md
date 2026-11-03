@@ -133,19 +133,44 @@ from its video scan (`out/bucky/faces.json`), 32 of them.
 
 ## Shooting a real one
 
+The first real video, a pumpkin under a phone and a red line laser
+held in the hand, taught the scanner four things (the marks against
+their surroundings rather than one grey level for the frame, and
+without the laser's channel; a red line; a misread mark dropped; a
+laser that moved) and did not scan, because of three choices in the
+shooting that the scanner cannot undo. So:
+
 - The 2x2 field taped flat to the turntable's disc, the object near
   its centre, held so it cannot rock.
 - The phone on something steady, a little above the object's middle,
-  close enough that the marks' dots resolve (the field filling most of
-  the frame), and the whole field in view all the way round.
-- The laser's vertical line through the turntable's centre, 30 to 45
-  degrees round from the phone, fixed to the same thing the phone is
-  fixed to. The scan takes the laser's plane to hold the axis, and says
+  at its main lens, not a telephoto: a 3x lens close in saw three or
+  four marks, which is one short of a pose in most frames and leaves
+  the focal length loose (the frames disagreed by 94 %). With the
+  main lens from further back the field fills the frame and ten or
+  more marks read; the dots of the code must still resolve, so not so
+  far that a mark is under 40 px across. If the lens is known, give
+  `focal` (a lens of e mm 35 mm-equivalent is e/36 times the frame's
+  long side in pixels); the marks then only need to give the pose.
+- The laser fixed to the same thing the phone is fixed to, its
+  vertical line through the turntable's centre, 30 to 45 degrees
+  round from the phone. Held in the hand its plane differs in every
+  frame; the scan notices and takes each frame's plane from its own
+  line on the paper, but that is coarser and needs the line to cross
+  a good run of paper in every frame. Within 15 degrees of the camera
+  the triangulation angle is too thin for depth at all. The scan says
   how far off the aim was.
+- Green or red: `laser: red` reads a red line, an orange object
+  included.
 - A dim room and the exposure locked on the line, so the line is the
-  brightest thing in the frame and the paper comes out grey.
-- One slow turn, 20 to 40 seconds. Then
-  `scan_turntable {video: "IMG_1234.MOV", out: "scan"}`.
+  brightest thing in the frame and the paper comes out grey. The
+  pumpkin was shot in daylight and still read, since the line's own
+  channel saturates; locking helps the marks more than the line.
+- One slow turn, 20 to 40 seconds, the table already turning when the
+  recording starts (five seconds of a still table are five seconds of
+  one azimuth). Then
+  `scan_turntable {video: "IMG_1234.MOV", out: "scan", laser: "red"}`.
+  The answer says how many frames read, how many were dropped for a
+  misread mark, and whether the laser moved.
 
 What neither the camera nor the laser reaches from above stays
 bridged: the underside of a cap or a lip. Turn the object over or roll

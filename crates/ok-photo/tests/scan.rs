@@ -172,3 +172,163 @@ fn a_gourd_scans_to_its_shape() {
     );
     assert!(s.warnings.is_empty(), "{:?}", s.warnings);
 }
+
+/// The gourd's radial error and volume over the scanned heights, for
+/// the variants below.
+fn held_against(s: &ok_photo::scan::Scan, gourd: &Gourd) -> (f64, f64) {
+    let mut errs: Vec<f64> = s
+        .points
+        .iter()
+        .map(|p| {
+            let (dx, dy) = (p[0] - gourd.base[0], p[1] - gourd.base[1]);
+            let r = (dx * dx + dy * dy).sqrt();
+            (r - gourd.radius(p[2].min(gourd.height), dy.atan2(dx))).abs()
+        })
+        .collect();
+    errs.sort_by(f64::total_cmp);
+    let median = errs[errs.len() / 2];
+    let (z0, z1) = (s.bounds[2], s.bounds[5]);
+    let (nz, nphi) = (200, 180);
+    let mut partial = 0.0;
+    for iz in 0..nz {
+        let z = z0 + (z1 - z0) * (iz as f64 + 0.5) / nz as f64;
+        for ip in 0..nphi {
+            let phi = 2.0 * std::f64::consts::PI * (ip as f64 + 0.5) / nphi as f64;
+            partial += 0.5
+                * gourd.radius(z, phi).powi(2)
+                * (2.0 * std::f64::consts::PI / nphi as f64)
+                * ((z1 - z0) / nz as f64);
+        }
+    }
+    (median, s.volume / partial)
+}
+
+fn gourd_and_rig() -> (Field, Gourd, Rig) {
+    let field = Field::new(SheetSize::Letter, 2, 2).unwrap();
+    let gourd = Gourd {
+        base: [210.0, 150.0],
+        height: 120.0,
+        lobes: 5,
+        lobe: 0.06,
+    };
+    let rig = Rig {
+        focal: 1300.0,
+        width: 1400,
+        height: 1050,
+        distance: 650.0,
+        elevation: 22.0,
+        laser_azimuth: 35.0,
+        laser_distance: 650.0,
+        laser_elevation: 30.0,
+        axis: [210.0, 150.0],
+        look_height: 55.0,
+    };
+    (field, gourd, rig)
+}
+
+/// A red laser on an orange gourd: the line is a ridge of red on a
+/// surface that is itself red over green and blue, and the marks are
+/// read without the red channel, which the line's glow lifts.
+#[test]
+fn a_red_laser_on_an_orange_gourd_scans_as_well() {
+    use ok_photo::scan::LaserColour;
+    use ok_photo::simulate::turntable_with;
+    let (field, gourd, rig) = gourd_and_rig();
+    let tris = gourd.mesh(60, 72);
+    let frames = turntable_with(
+        &field,
+        &tris,
+        &rig,
+        24,
+        Rgb(235, 120, 30),
+        LaserColour::Red,
+        0.0,
+    );
+    let opts = ScanOptions {
+        laser: LaserColour::Red,
+        ..ScanOptions::default()
+    };
+    let s = scan(&frames, &opts).unwrap();
+    let (median, ratio) = held_against(&s, &gourd);
+    eprintln!(
+        "red laser: frames {} of 24, focal {:.0}, radial median {median:.3} mm, volume ratio {ratio:.3}, warnings {:?}",
+        s.frames_used, s.focal, s.warnings
+    );
+    for f in s.frames.iter().filter(|f| f.skipped.is_some()) {
+        eprintln!("  frame {} skipped: {:?}", f.index, f.skipped);
+    }
+    assert!(s.frames_used >= 22, "frames used {}", s.frames_used);
+    assert!(!s.laser_moved, "the laser was fixed");
+    assert!(median < 0.3, "radial error median {median} mm");
+    // 24 frames leave 15 degree chords between profiles, which cut
+    // more off the lobes than the 36-frame scan's 10 degree ones.
+    assert!((ratio - 1.0).abs() < 0.06, "volume ratio {ratio}");
+}
+
+/// A laser held in the hand: its plane swings 6 degrees either way
+/// from frame to frame. The scan notices, triangulates each frame
+/// against its own line on the paper, and still has the gourd.
+#[test]
+fn a_laser_waved_by_hand_is_noticed_and_scanned_frame_by_frame() {
+    use ok_photo::scan::LaserColour;
+    use ok_photo::simulate::turntable_with;
+    let (field, gourd, rig) = gourd_and_rig();
+    let tris = gourd.mesh(60, 72);
+    let frames = turntable_with(
+        &field,
+        &tris,
+        &rig,
+        24,
+        Rgb(215, 150, 70),
+        LaserColour::Green,
+        6.0,
+    );
+    let s = scan(&frames, &ScanOptions::default()).unwrap();
+    let (median, ratio) = held_against(&s, &gourd);
+    eprintln!(
+        "waved laser: frames {} of 24, motion {:.1} degrees, fit {:.2} mm, radial median {median:.3} mm, volume ratio {ratio:.3}, warnings {:?}",
+        s.frames_used, s.laser_motion, s.laser_fit, s.warnings
+    );
+    assert!(
+        s.laser_moved,
+        "the laser's motion ({:.1} degrees) went unnoticed",
+        s.laser_motion
+    );
+    assert!(
+        (s.laser_motion - 6.0).abs() < 1.5,
+        "motion {} degrees, waved 6",
+        s.laser_motion
+    );
+    assert!(
+        s.warnings.iter().any(|w| w.contains("laser moved")),
+        "{:?}",
+        s.warnings
+    );
+    assert!(median < 0.6, "radial error median {median} mm");
+    // The line lands 6 degrees either side of the frames' sectors in
+    // turn, so the mesh has more to bridge than a still laser leaves
+    // it; the points themselves are on the gourd.
+    assert!((ratio - 1.0).abs() < 0.1, "volume ratio {ratio}");
+}
+
+/// The same frames, the laser held still, scanned with the focal
+/// length given instead of taken from the marks.
+#[test]
+fn a_given_focal_length_is_used_as_given() {
+    let (field, gourd, rig) = gourd_and_rig();
+    let tris = gourd.mesh(60, 72);
+    let frames = turntable(&field, &tris, &rig, 12, Rgb(215, 150, 70));
+    let opts = ScanOptions {
+        focal: Some(1300.0),
+        ..ScanOptions::default()
+    };
+    let s = scan(&frames, &opts).unwrap();
+    let (median, _) = held_against(&s, &gourd);
+    assert_eq!(s.focal, 1300.0);
+    assert!(median < 0.3, "radial error median {median} mm");
+    assert!(
+        !s.warnings.iter().any(|w| w.contains("focal")),
+        "{:?}",
+        s.warnings
+    );
+}

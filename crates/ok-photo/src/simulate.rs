@@ -9,6 +9,7 @@
 //! rendered from the laser's own point of view.
 
 use super::field::{field_colour, Field};
+use super::scan::LaserColour;
 use ok_render::{Image, Rgb};
 use std::f64::consts::PI;
 
@@ -375,6 +376,33 @@ pub fn render(
     paper: u8,
     seed: u64,
 ) -> Image {
+    render_with(
+        field,
+        tris,
+        cam,
+        laser,
+        laser_normal,
+        colour,
+        paper,
+        seed,
+        LaserColour::Green,
+    )
+}
+
+/// `render` with the laser's colour said: a red line is mixed in as
+/// red over the others the way the green one is.
+#[allow(clippy::too_many_arguments)]
+pub fn render_with(
+    field: &Field,
+    tris: &[[[f64; 3]; 3]],
+    cam: &Camera,
+    laser: [f64; 3],
+    laser_normal: [f64; 3],
+    colour: Rgb,
+    paper: u8,
+    seed: u64,
+    line: LaserColour,
+) -> Image {
     let (w, h) = (cam.cx as usize * 2, cam.cy as usize * 2);
     let depth = rasterise(cam, tris, w, h);
     // The shadow map: the scene from the laser, looking at the axis.
@@ -461,7 +489,13 @@ pub fn render(
                 if intensity > 0.02 && lit(p) {
                     let mix =
                         |a: u8, b: u8| (a as f64 * (1.0 - intensity) + b as f64 * intensity) as u8;
-                    c = Rgb(mix(c.0, 90), mix(c.1, 255), mix(c.2, 110));
+                    c = match line {
+                        LaserColour::Green => Rgb(mix(c.0, 90), mix(c.1, 255), mix(c.2, 110)),
+                        // A red module's line saturates the red channel
+                        // and leaves the others near nothing, as the
+                        // first real video showed (255, 0, 0 at its core).
+                        LaserColour::Red => Rgb(mix(c.0, 255), mix(c.1, 20), mix(c.2, 30)),
+                    };
                 }
             }
             // A little sensor noise.
@@ -484,11 +518,41 @@ pub fn turntable(
     frames: usize,
     colour: Rgb,
 ) -> Vec<Image> {
+    turntable_with(field, tris, rig, frames, colour, LaserColour::Green, 0.0)
+}
+
+/// `turntable` with the laser's colour said, and the laser waved: in
+/// each frame it stands `wave` degrees further round or back from its
+/// place on the rig, alternately, as a laser held in the hand would,
+/// its plane still through the axis.
+pub fn turntable_with(
+    field: &Field,
+    tris: &[[[f64; 3]; 3]],
+    rig: &Rig,
+    frames: usize,
+    colour: Rgb,
+    line: LaserColour,
+    wave: f64,
+) -> Vec<Image> {
     (0..frames)
         .map(|k| {
             let theta = 360.0 * k as f64 / frames as f64;
-            let (cam, laser, normal) = rig_at(rig, theta);
-            render(field, tris, &cam, laser, normal, colour, 185, k as u64 + 1)
+            let waved = Rig {
+                laser_azimuth: rig.laser_azimuth + if k % 2 == 0 { wave } else { -wave },
+                ..*rig
+            };
+            let (cam, laser, normal) = rig_at(&waved, theta);
+            render_with(
+                field,
+                tris,
+                &cam,
+                laser,
+                normal,
+                colour,
+                185,
+                k as u64 + 1,
+                line,
+            )
         })
         .collect()
 }

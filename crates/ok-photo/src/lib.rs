@@ -1873,6 +1873,42 @@ fn luma(img: &Image) -> Vec<u8> {
         .collect()
 }
 
+/// Ink against its own surroundings: a pixel is dark when it is under
+/// 0.55 of the mean grey over the box `radius` pixels round it, and
+/// at least 8 levels under. A global threshold fails on a frame that
+/// is not all paper: with a dark room behind the object, Otsu's level
+/// falls between the room and the paper, and the far half of the
+/// field, lit less and seen at a slant, goes under it whole. The
+/// ratio sits between the field's grid lines, which a phone sees at
+/// about two thirds of the paper's grey and which would otherwise
+/// join a mark's ring to its neighbours and spoil its moments, and
+/// the ink, at a third or less. The box is a sum table, so the cost
+/// is one pass.
+fn local_dark(gray: &[u8], w: usize, h: usize, radius: usize) -> Vec<bool> {
+    let mut sum = vec![0u64; (w + 1) * (h + 1)];
+    for j in 0..h {
+        let mut row = 0u64;
+        for i in 0..w {
+            row += gray[j * w + i] as u64;
+            sum[(j + 1) * (w + 1) + i + 1] = sum[j * (w + 1) + i + 1] + row;
+        }
+    }
+    let mut out = vec![false; w * h];
+    for j in 0..h {
+        let (y0, y1) = (j.saturating_sub(radius), (j + radius + 1).min(h));
+        for i in 0..w {
+            let (x0, x1) = (i.saturating_sub(radius), (i + radius + 1).min(w));
+            let total = sum[y1 * (w + 1) + x1] + sum[y0 * (w + 1) + x0]
+                - sum[y0 * (w + 1) + x1]
+                - sum[y1 * (w + 1) + x0];
+            let n = ((y1 - y0) * (x1 - x0)) as u64;
+            let g = gray[j * w + i] as u64;
+            out[j * w + i] = 20 * g * n < 11 * total && g * n + 8 * n <= total;
+        }
+    }
+    out
+}
+
 /// Otsu's threshold: the grey level that best splits the histogram.
 fn otsu(gray: &[u8]) -> u32 {
     let mut hist = [0u64; 256];

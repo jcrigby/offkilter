@@ -816,3 +816,112 @@ into more, smaller ones would lower the floor further and is open.
 Doc tests are not nextest's, so `cargo test --workspace --doc` runs
 beside it, 4 s.
 
+
+## 2026-11 · The first real turntable video reads the marks against their surroundings, and a laser in the hand is noticed, not assumed
+
+The scanner was written against its own simulation, and the first
+real video (a pumpkin on the 2x2 field, a red line laser held in the
+hand, the phone's 3x lens low over the table, daylight) broke four
+assumptions the simulation never tested. Each became a change in the
+kernel rather than a note in the README, because the next video will
+break some of them again.
+
+The marks were thresholded at Otsu's level over the whole frame,
+which is right when the field fills the frame and wrong when a dark
+room is behind the object: the level fell between the room and the
+paper, and the far half of the field, lit less and seen at a slant,
+went under it whole, so most frames read two or three marks of the
+seven in view. They are now ink against their own surroundings: under
+0.55 of the mean grey over a box a twentieth of the frame across. The
+ratio was chosen from the frame, not by taste: the field's 10 mm grid
+lines photograph at about two thirds of the paper's grey and at three
+quarters they passed, joined a ring to its neighbours, and spoiled the
+moments the unwarp depends on; the ink sits at a third or less. The
+grey is taken without the laser's channel, because the line's glow on
+the paper round it lifts that channel on dots and paper alike and the
+luma contrast between them collapsed under it; green and blue see the
+ink as before. The line itself is black in those two
+channels, and erasing it from the mask (every pixel saturated with
+the laser's colour) was tried and dropped: the code dots under the
+line's glow are strongly red too, and any bar low enough to catch the
+line's edges erased some of them and flipped bits of their codes,
+which cost the pumpkin's video a third of its frames. The bullseye
+check below catches what the black line had passed off as marks.
+Rejected: a stricter global level (the far paper is darker than the near ink),
+and an opening to cut the grid lines (the far code dots are three
+pixels tall at the scanner's working size and go with them). The
+photo measuring path keeps Otsu, since a photo or a scan of the sheet
+is all paper.
+
+The local threshold also makes specks: noise in the dark room along
+the field's edge, and an orange object seen without the red channel
+is a dark blob with creases, as is the laser's line. A cluster of
+specks round a speck, the blob round a crease, or a piece of the line
+with a speck inside, passed the ring's shape tests (area, aspect,
+fill, a smaller dark thing inside) and with two more specks at
+anchor distance read as a mark with some code, which four marks in a
+block cannot vote out. So a bullseye is now also checked for what
+it is: sampled round its unwarped circle, the hole between dot and
+ring is mostly light and the ring mostly dark. The simulation's
+24-frame red scan lost a frame to a false mark before that and loses
+none after; the check applies to the photo path too, which only
+gains by it.
+
+The line was green by definition. A red laser is what the maintainer
+had, on an orange pumpkin, and it reads as the same ridge of one
+channel over the other two: the pumpkin's skin is a plateau of red
+over green and blue, the line a ridge on it, and a ridge detector does
+not see plateaus. `laser` names the colour; the simulation renders
+either (its red line saturating red and leaving the other channels
+near nothing, as the video's did) and the orange gourd under a red
+line scans to the same figures as the green one. Getting there
+changed what a ridge is. It was a peak measured from zero, with its
+half-height run taken from zero too, which is right on paper and
+wrong on a surface of the line's own colour: the run spread over the
+whole plateau, and the shading across the gourd, a hump the width of
+the object, read as a ridge of its own at the object's middle. A
+ridge is now measured from the floor beside it, the higher of the two
+sides' medians over twice the width a line may have (the higher, so a
+line near the object's edge is measured from the object and not the
+paper; the median, so a dark crease does not lower it), and a ridge
+whose half-height run is wider than 3 % of the frame is not a line.
+The brightness refinement of the centre, which used the luma peak
+where the line stands out in brightness, is now applied only where
+the colour's own centre is bright: a saturated red line is darker in
+luma than the glow either side of it, and the refinement had pulled
+every centre to one edge of the glow.
+
+Four marks in a block fit any homography exactly, so a mark whose
+4-bit code read one bit wrong (its dots were tiny; the camera was far
+and the lens long) moved the frame's field by 50 mm with a residual of
+zero and gave a camera on the table or under it. The one check left
+is the homography's own: its first two columns at the focal length
+must be images of orthonormal directions, and a frame whose are not
+(20 % of skew or 30 % of stretch) is dropped for a misread, saying so.
+Half the pumpkin's frames went that way, which is the honest count.
+The focal length can also be given, since four marks 50 mm apart fix
+it loosely (the frames disagreed by 94 %); the scanner still estimates
+it when it is not, and the warning now says what to do.
+
+The laser's plane was one plane for the whole turn, fitted over every
+frame's line on the paper and the axis, which is right for a laser
+fixed to the phone and nonsense for one in the hand: the fit over all
+the frames lay between them and fitted none (99 mm rms). Each frame's
+plane is now also fitted from its own line and the axis through its
+own pose, and the frames are taken one by one when their planes differ
+by degrees (the mean angle to the plane nearest all the others, a
+medoid so a few wild frames do not move it) and the one plane fits the
+paper clearly worse than each frame's own. Both conditions, because a
+fixed laser with a short run of line on the paper gives noisy
+per-frame planes too, and the better fit must win. The scan warns
+rather than silently coping, since a hand-held laser is also one whose
+angle to the camera drifts, and the pumpkin's sat within 14 degrees
+of the camera's axis, too thin a triangle for depth whatever the
+plane. The simulation waves its laser 6 degrees either way and the
+gourd still comes back within 0.6 mm.
+
+What the video did not get fixed in the kernel is written in the
+example's README instead: the main lens from further back so ten
+marks read, the laser on the phone's mount and 30 to 45 degrees round,
+and the table turning before the recording starts. Those are the
+rig's to change.

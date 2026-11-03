@@ -489,6 +489,37 @@ pub(super) fn find_marks(dark: &[bool], w: usize, h: usize) -> Vec<MarkPx> {
         let unwarp = |dx: f64, dy: f64| -> [f64; 2] {
             [(dx * ca + dy * sn) / sa, (-dx * sn + dy * ca) / sb]
         };
+        // A bullseye has paper between its dot and its ring and ink
+        // all round the ring: sampled on the unwarped circle, the
+        // hole is mostly light and the ring mostly dark. A cluster of
+        // specks round a speck, or a dark object with a crease in it,
+        // passes the shape tests above and fails this one.
+        let dark_round = |radius: f64| -> f64 {
+            let n = 24;
+            let hits = (0..n)
+                .filter(|&k| {
+                    let t = 2.0 * PI * k as f64 / n as f64;
+                    let (u, v) = (radius * t.cos(), radius * t.sin());
+                    let (dx, dy) = (u * sa * ca - v * sb * sn, u * sa * sn + v * sb * ca);
+                    let (px, py) = ((c[0] + dx).floor(), (c[1] + dy).floor());
+                    px >= 0.0
+                        && py >= 0.0
+                        && px < w as f64
+                        && py < h as f64
+                        && dark[py as usize * w + px as usize]
+                })
+                .count();
+            hits as f64 / n as f64
+        };
+        // The hole is only judged where it is resolved: seen at a
+        // slant from far off it is a pixel or two tall and the dot
+        // and ring blur into it.
+        let hole_resolved = sb * (RING_HOLE_R - DOT_R) >= 3.0;
+        if (hole_resolved && dark_round((DOT_R + RING_HOLE_R) / 2.0) > 0.25)
+            || dark_round((RING_HOLE_R + RING_R) / 2.0) < 0.6
+        {
+            continue;
+        }
         let dot_area = PI * CODE_R * CODE_R * sa * sb;
         let at = |k: usize| unwarp(comps[k].cx - c[0], comps[k].cy - c[1]);
         let cands: Vec<usize> = comps

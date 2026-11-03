@@ -1696,8 +1696,14 @@ impl Server {
                 if frames.is_empty() {
                     return Err(format!("no frames in {}", frame_dir.display()));
                 }
+                let laser = match args.get("laser").and_then(|v| v.as_str()) {
+                    Some(name) => ok_photo::scan::LaserColour::parse(name)?,
+                    None => ok_photo::scan::LaserColour::Green,
+                };
                 let opts = ok_photo::scan::ScanOptions {
+                    laser,
                     laser_min: num("laser_min", 12.0),
+                    focal: args.get("focal").and_then(|v| v.as_f64()),
                     min_height: num("min_height", 1.5),
                     bin: num("bin", 1.0),
                 };
@@ -2352,8 +2358,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "scan_turntable",
-            "description": "Scans an object on the measuring field turning on a lazy Susan under a phone and a line laser fixed to each other: from a video (`video`, frames taken with ffmpeg at `fps` per second, 2 by default) or a directory of frames (`frames`, PNG or JPEG in order, every `every`th used). Each frame's marks give the camera's pose; the green laser line on the paper, straight, with the turntable's axis the camera's centres circle about, gives the laser's plane; each pixel of the line on the object is a ray meeting that plane, put into the field's frame, which turns with the object. Writes scan.stl (profiles stitched into a mesh), scan.ply (the points), scan.json and scan-frame.png into `out`. Shoot it dim with the phone's exposure locked so the line is the brightest thing, the laser's vertical line aimed through the turntable's centre and 30 to 45 degrees round from the camera, the camera a little above the object's middle, and the field's marks in view all the way round. `laser_min` (12) is the least green a pixel is ever taken as the line at (the frame's own ridges set a higher bar), `bin` (1 mm) the profile resampling, `min_height` (1.5 mm) what counts as the table.",
-            "inputSchema": { "type": "object", "properties": { "video": { "type": "string" }, "frames": { "type": "string" }, "out": { "type": "string" }, "fps": { "type": "number" }, "every": { "type": "integer" }, "laser_min": { "type": "number" }, "bin": { "type": "number" }, "min_height": { "type": "number" } }, "required": ["out"] }
+            "description": "Scans an object on the measuring field turning on a lazy Susan under a phone and a line laser fixed to each other: from a video (`video`, frames taken with ffmpeg at `fps` per second, 2 by default) or a directory of frames (`frames`, PNG or JPEG in order, every `every`th used). Each frame's marks give the camera's pose; the laser line on the paper, straight, with the turntable's axis the camera's centres circle about, gives the laser's plane; each pixel of the line on the object is a ray meeting that plane, put into the field's frame, which turns with the object. Writes scan.stl (profiles stitched into a mesh), scan.ply (the points), scan.json and scan-frame.png into `out`. Shoot it dim with the phone's exposure locked so the line is the brightest thing, the laser's vertical line aimed through the turntable's centre and 30 to 45 degrees round from the camera, the camera a little above the object's middle, and the field's marks in view all the way round. `laser` is the line's colour, `green` (the default) or `red`, read as that channel's ridge over the other two; `laser_min` (12) is the least excess of it a pixel is ever taken as the line at (the frame's own ridges set a higher bar); `focal` the camera's focal length in pixels when known (a lens of e mm 35 mm-equivalent is e/36 times the frame's long side), otherwise taken from the frames, which needs marks spread over the picture; `bin` (1 mm) the profile resampling, `min_height` (1.5 mm) what counts as the table. The answer says whether the laser moved between frames (then held by hand, and each frame triangulated against its own line on the paper).",
+            "inputSchema": { "type": "object", "properties": { "video": { "type": "string" }, "frames": { "type": "string" }, "out": { "type": "string" }, "fps": { "type": "number" }, "every": { "type": "integer" }, "laser": { "type": "string", "enum": ["green", "red"] }, "laser_min": { "type": "number" }, "focal": { "type": "number" }, "bin": { "type": "number" }, "min_height": { "type": "number" } }, "required": ["out"] }
         },
         {
             "name": "merge_scans",

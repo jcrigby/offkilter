@@ -19,16 +19,72 @@
 //! profiles stitch into a mesh.
 
 use super::field;
-use super::{apply, cross, invert, luma, otsu, put, shrink, H};
+use super::{apply, cross, invert, local_dark, put, shrink, H};
 use ok_render::{Image, Rgb};
 use serde::Serialize;
 
+/// The laser's colour: the line is the ridge of that channel over the
+/// larger of the other two, so a red line reads on an orange surface
+/// (the surface's red is a plateau, the line a ridge on it) and a
+/// green one on paper.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LaserColour {
+    Green,
+    Red,
+}
+
+impl LaserColour {
+    pub fn parse(name: &str) -> Result<LaserColour, String> {
+        match name {
+            "green" => Ok(LaserColour::Green),
+            "red" => Ok(LaserColour::Red),
+            _ => Err(format!("laser is green or red, not {name:?}")),
+        }
+    }
+    pub fn name(self) -> &'static str {
+        match self {
+            LaserColour::Green => "green",
+            LaserColour::Red => "red",
+        }
+    }
+    /// The picture in grey without the laser's channel, for reading
+    /// the marks: the line's glow on the paper round it lifts that
+    /// channel on ink and paper alike and flattens the contrast between
+    /// them, while the other two see the ink as before.
+    pub(super) fn grey_without(self, img: &Image) -> Vec<u8> {
+        img.data
+            .chunks(3)
+            .map(|c| match self {
+                LaserColour::Green => ((c[0] as u32 + c[2] as u32) / 2) as u8,
+                LaserColour::Red => ((c[1] as u32 + c[2] as u32) / 2) as u8,
+            })
+            .collect()
+    }
+    /// How much of this colour a pixel has over the other two.
+    fn excess(self, c: Rgb) -> f64 {
+        let (own, others) = match self {
+            LaserColour::Green => (c.1, c.0.max(c.2)),
+            LaserColour::Red => (c.0, c.1.max(c.2)),
+        };
+        (own as f64 - others as f64).max(0.0)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ScanOptions {
-    /// The least green (green over the larger of red and blue, 0 to
+    /// The laser's colour, green unless said.
+    pub laser: LaserColour,
+    /// The least excess of the laser's colour over the other two (0 to
     /// 255) a pixel is ever taken as the laser line at; the frame's own
     /// ridges set a higher bar when the line is strong.
     pub laser_min: f64,
+    /// The camera's focal length in pixels, when known; otherwise it is
+    /// taken from the frames' homographies, which needs the marks
+    /// spread over the picture (four in a block 50 mm square leave it
+    /// loose). A phone lens of `e` mm 35 mm-equivalent is `e / 36`
+    /// times the frame's long side.
+    pub focal: Option<f64>,
     /// Points this close to the table (field z) are the table.
     pub min_height: f64,
     /// Profiles are resampled to bins this tall for meshing.
@@ -38,7 +94,9 @@ pub struct ScanOptions {
 impl Default for ScanOptions {
     fn default() -> ScanOptions {
         ScanOptions {
+            laser: LaserColour::Green,
             laser_min: 12.0,
+            focal: None,
             min_height: 1.5,
             bin: 1.0,
         }
@@ -81,6 +139,14 @@ pub struct Scan {
     /// how many of its pixels did.
     pub laser_fit: f64,
     pub laser_points: usize,
+    /// How much the laser's plane turns from frame to frame, in
+    /// degrees (the mean angle between each frame's own plane and the
+    /// one nearest all of them): about a degree for a laser fixed to
+    /// the camera. When it is more and the one plane fitted over all
+    /// the frames fits the paper clearly worse than each frame's own,
+    /// the laser moved, and each frame is triangulated against its own.
+    pub laser_motion: f64,
+    pub laser_moved: bool,
     /// The turntable's axis in field millimetres, from the circle the
     /// camera's centres describe.
     pub axis: [f64; 2],
@@ -248,8 +314,8 @@ fn pose_from(g: &H, f: f64, cx: f64, cy: f64) -> Pose {
     }
 }
 
-/// The laser line's pixels: in each row, every ridge of green (green
-/// over the larger of red and blue), located to a fraction of a pixel
+/// The laser line's pixels: in each row, every ridge of the laser's
+/// colour (over the larger of the other two), located to a fraction of a pixel
 /// by its centroid over the half-height run. A ridge counts when it is
 /// at least `floor` high and at least three tenths as high as the
 /// frame's typical ridge (the median over a first pass), so a line
@@ -259,17 +325,19 @@ fn pose_from(g: &H, f: f64, cx: f64, cy: f64) -> Pose {
 /// resolution of its brightness, so where the line also stands out
 /// in brightness (on the object, not the paper), the centre is
 /// refined on the brightness over the same run.
-pub fn laser_line(img: &Image, floor: f64) -> Vec<[f64; 2]> {
+pub fn laser_line(img: &Image, floor: f64, colour: LaserColour) -> Vec<[f64; 2]> {
     let (w, h) = (img.width, img.height);
     let mut green: Vec<f64> = vec![0.0; w * h];
     let mut luma: Vec<f64> = vec![0.0; w * h];
     for v in 0..h {
         for u in 0..w {
             let c = img.pixel(u, v);
-            green[v * w + u] = (c.1 as f64 - c.0.max(c.2) as f64).max(0.0);
+            green[v * w + u] = colour.excess(c);
             luma[v * w + u] = 0.299 * c.0 as f64 + 0.587 * c.1 as f64 + 0.114 * c.2 as f64;
         }
     }
+    // The widest a line's half-height run may be: 3 % of the width.
+    let limit = (w as f64 * 0.03).ceil() as usize;
     // Ridges per row at a threshold: (row, centroid u, peak height).
     let ridges = |min: f64| -> Vec<Vec<(f64, f64)>> {
         (0..h)
@@ -278,8 +346,30 @@ pub fn laser_line(img: &Image, floor: f64) -> Vec<[f64; 2]> {
                 let mut out = Vec::new();
                 let mut u = 1;
                 while u + 1 < w {
-                    if g[u] >= min && g[u] >= g[u - 1] && g[u] >= g[u + 1] {
-                        let half = (g[u] / 2.0).max(min / 2.0);
+                    // A ridge is measured from the floor round it, not
+                    // from zero: a red line on an orange surface stands
+                    // on a plateau of red over green and blue, and its
+                    // half height taken from zero would run out over
+                    // the whole surface.
+                    // The floor is the higher of the two sides' median
+                    // values, so a line near the object's edge against
+                    // the paper is measured from the object's plateau,
+                    // not from the paper's zero, and a dark crease in
+                    // the plateau does not lower it either.
+                    if g[u] < min || g[u] < g[u - 1] || g[u] < g[u + 1] {
+                        u += 1;
+                        continue;
+                    }
+                    let side = |r: std::ops::Range<usize>| {
+                        let mut v: Vec<f64> = g[r].to_vec();
+                        v.sort_by(f64::total_cmp);
+                        v[v.len() / 2]
+                    };
+                    let lo = side(u.saturating_sub(2 * limit)..u + 1)
+                        .max(side(u..(u + 2 * limit + 1).min(w)));
+                    let prominence = g[u] - lo;
+                    if prominence >= min {
+                        let half = lo + (prominence / 2.0).max(min / 2.0);
                         let (mut a, mut b) = (u, u);
                         while a > 0 && g[a - 1] >= half {
                             a -= 1;
@@ -287,10 +377,18 @@ pub fn laser_line(img: &Image, floor: f64) -> Vec<[f64; 2]> {
                         while b + 1 < w && g[b + 1] >= half {
                             b += 1;
                         }
+                        // A line is narrow. The shading across a curved
+                        // surface of the laser's own colour is a hump
+                        // the width of the object, with a ridge at its
+                        // top; it is not the line.
+                        if b - a + 1 > limit {
+                            u += 1;
+                            continue;
+                        }
                         let (mut sum, mut wsum) = (0.0, 0.0);
                         for (k, &gk) in g.iter().enumerate().take(b + 1).skip(a) {
-                            sum += (k as f64 + 0.5) * gk;
-                            wsum += gk;
+                            sum += (k as f64 + 0.5) * (gk - lo);
+                            wsum += gk - lo;
                         }
                         let mut centre = sum / wsum;
                         // The brightness over the run and a little past
@@ -308,7 +406,19 @@ pub fn laser_line(img: &Image, floor: f64) -> Vec<[f64; 2]> {
                         // edge against the paper: the ends then differ
                         // by more than the line stands out, and a
                         // baseline between them would lean the centre.
-                        if peak >= 25.0 && (y[ya] - y[yb]).abs() < 0.3 * peak {
+                        // And only where the colour's centre is itself
+                        // bright: a red line that saturates the sensor
+                        // is darker in luma than the glow either side
+                        // of it, and the brightness would pull the
+                        // centre to one edge of the glow.
+                        let at_centre = {
+                            let k = (centre as usize).clamp(ya, yb);
+                            y[k] - base(k)
+                        };
+                        if peak >= 25.0
+                            && (y[ya] - y[yb]).abs() < 0.3 * peak
+                            && at_centre >= 0.5 * peak
+                        {
                             let (mut sum, mut wsum) = (0.0, 0.0);
                             for (k, &yk) in y.iter().enumerate().take(yb + 1).skip(ya) {
                                 let e = yk - base(k);
@@ -321,7 +431,7 @@ pub fn laser_line(img: &Image, floor: f64) -> Vec<[f64; 2]> {
                                 centre = sum / wsum;
                             }
                         }
-                        out.push((centre, g[u]));
+                        out.push((centre, prominence));
                         u = b + 2;
                     } else {
                         u += 1;
@@ -437,9 +547,12 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
         }
         let factor = (img.width.max(img.height) as f64 / 1800.0).ceil().max(1.0) as usize;
         let small = shrink(img, factor);
-        let gray = luma(&small);
-        let threshold = otsu(&gray);
-        let dark: Vec<bool> = gray.iter().map(|&g| (g as u32) < threshold).collect();
+        let gray = opts.laser.grey_without(&small);
+        // Against the surroundings, not a global level: the room behind
+        // the object is dark and the far side of the field dim.
+        let radius = small.width.max(small.height) / 20;
+        let dark = local_dark(&gray, small.width, small.height, radius);
+        let line = laser_line(img, opts.laser_min, opts.laser);
         let marks = field::find_marks(&dark, small.width, small.height);
         let mut f = blank(index);
         let fitted = if marks.len() >= 4 {
@@ -453,7 +566,6 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
                 f.marks = kept.len();
                 f.fit = rms;
                 f.focal = focal_from(&to_image, cx, cy);
-                let line = laser_line(img, opts.laser_min);
                 f.line_pixels = line.len();
                 reads.push(Read {
                     index,
@@ -478,18 +590,54 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
         ));
     }
     let mut warnings = Vec::new();
-    // The focal length: the median of what the frames imply.
+    // The focal length: as given, or the median of what the frames imply.
     let mut focals: Vec<f64> = reads.iter().filter_map(|r| r.focal).collect();
-    if focals.is_empty() {
-        return Err("no frame gave a focal length: the camera looked straight down on the field, which leaves the focal length undetermined; tilt it".into());
-    }
     focals.sort_by(f64::total_cmp);
-    let focal = focals[focals.len() / 2];
-    let spread = (focals[focals.len() * 9 / 10] - focals[focals.len() / 10]) / focal;
-    if spread > 0.1 {
-        warnings.push(format!(
-            "the frames disagree on the focal length by {:.0} %; a zoom that changed, or the field not flat",
-            spread * 100.0
+    let focal = match opts.focal {
+        Some(f) if f > 0.0 => f,
+        _ => {
+            if focals.is_empty() {
+                return Err("no frame gave a focal length: the camera looked straight down on the field, which leaves the focal length undetermined; tilt it, or give focal".into());
+            }
+            focals[focals.len() / 2]
+        }
+    };
+    if !focals.is_empty() {
+        let spread = (focals[focals.len() * 9 / 10] - focals[focals.len() / 10]) / focal;
+        if spread > 0.1 && opts.focal.is_none() {
+            warnings.push(format!(
+                "the frames disagree on the focal length by {:.0} %; a zoom that changed, the field not flat, or too few marks in view to fix it (give focal, or get more of the field in the picture)",
+                spread * 100.0
+            ));
+        }
+    }
+    // A frame whose homography is no image of a flat field at this
+    // focal length (its first two columns far from orthonormal) read a
+    // mark's code wrong: four marks fit any homography exactly, so a
+    // misread shows nowhere else. Such frames go.
+    let mut dropped = Vec::new();
+    for r in &reads {
+        let [a, b, _] = columns(&r.to_image, cx, cy);
+        let a = [a[0] / focal, a[1] / focal, a[2]];
+        let b = [b[0] / focal, b[1] / focal, b[2]];
+        let (la, lb) = (dot3(a, a).sqrt(), dot3(b, b).sqrt());
+        let skew = dot3(a, b).abs() / (la * lb).max(1e-12);
+        let stretch = (la - lb).abs() / ((la + lb) / 2.0).max(1e-12);
+        if skew > 0.2 || stretch > 0.3 {
+            report[r.index].skipped = Some(format!(
+                "the marks' positions do not fit a flat field at a focal length of {focal:.0} px (axes {:.0} degrees apart, lengths differ by {:.0} %): a mark's code misread, or the focal length wrong",
+                skew.min(1.0).acos().to_degrees(),
+                stretch * 100.0
+            ));
+            dropped.push(r.index);
+        }
+    }
+    reads.retain(|r| !dropped.contains(&r.index));
+    if reads.len() < 3 {
+        return Err(format!(
+            "only {} frames read the field consistently; {} were dropped for marks that do not fit a flat field (a code misread)",
+            reads.len(),
+            dropped.len()
         ));
     }
     let poses: Vec<Pose> = reads
@@ -510,18 +658,22 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
     // the laser's pixels lie on in the picture; the rest are the
     // object. Each paper pixel is a point on the field's plane.
     let mut paper_cam: Vec<[f64; 3]> = Vec::new();
+    let mut paper_by_frame: Vec<Vec<[f64; 3]>> = Vec::new();
     let mut aims: Vec<f64> = Vec::new();
     let mut on_paper: Vec<Vec<bool>> = Vec::new();
     for (k, r) in reads.iter().enumerate() {
         let inliers = straight_line_inliers(&r.line, 1.5);
         let mut field_pts: Vec<[f64; 2]> = Vec::new();
+        let mut cam_pts: Vec<[f64; 3]> = Vec::new();
         for (px, &on) in r.line.iter().zip(&inliers) {
             if on {
                 let [x, y] = apply(&r.to_field, *px);
                 field_pts.push([x, y]);
-                paper_cam.push(poses[k].to_camera([x, y, 0.0]));
+                cam_pts.push(poses[k].to_camera([x, y, 0.0]));
             }
         }
+        paper_cam.extend_from_slice(&cam_pts);
+        paper_by_frame.push(cam_pts);
         if let Some(d) = line_distance(&field_pts, axis) {
             aims.push(d);
         }
@@ -529,8 +681,9 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
     }
     if paper_cam.len() < 100 {
         return Err(format!(
-            "only {} laser pixels lie on the paper over the frames; the line is not green enough, laser_min ({}) is too high, or the line does not cross the field",
+            "only {} laser pixels lie on the paper over the frames; the line is not {} enough (laser says its colour), laser_min ({}) is too high, or the line does not cross the field",
             paper_cam.len(),
+            opts.laser.name(),
             opts.laser_min
         ));
     }
@@ -554,8 +707,80 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
     let plane = fit_plane(&plane_pts)?;
     let dist = |p: [f64; 3]| (dot3([plane[0], plane[1], plane[2]], p) + plane[3]).abs();
     let paper_count = paper_cam.len();
-    let laser_fit =
+    let mut laser_fit =
         (paper_cam.iter().map(|p| dist(*p).powi(2)).sum::<f64>() / paper_count as f64).sqrt();
+    // The same plane frame by frame, from that frame's line on the
+    // paper and the axis through its own pose. A laser fixed to the
+    // camera gives the same plane every time and the fit over all the
+    // frames, which has more points, is the one to use; a laser held
+    // in the hand gives a different plane in every frame, the fit over
+    // all of them lies between and fits none, and each frame then
+    // triangulates against its own.
+    let axis_samples = |pose: &Pose, n: usize| -> Vec<[f64; 3]> {
+        (0..n)
+            .map(|i| {
+                let z = 250.0 * i as f64 / (n - 1).max(1) as f64;
+                pose.to_camera([axis[0], axis[1], z])
+            })
+            .collect()
+    };
+    let frame_planes: Vec<Option<[f64; 4]>> = paper_by_frame
+        .iter()
+        .zip(&poses)
+        .map(|(pts, pose)| {
+            if pts.len() < 30 {
+                return None;
+            }
+            let mut all = pts.clone();
+            all.extend(axis_samples(pose, (pts.len() / 5).max(4)));
+            fit_plane(&all).ok()
+        })
+        .collect();
+    // How much the frames' planes differ: the mean angle to the one
+    // nearest all the others (a medoid, so a few wild frames do not
+    // move the measure). The frames are taken one by one only when
+    // the planes differ by degrees and the one plane over all of them
+    // fits the paper worse by a clear margin than each frame's own:
+    // a fixed laser with short lines on the paper gives noisy
+    // per-frame planes too, and keeps the better fit.
+    let normals: Vec<[f64; 3]> = frame_planes
+        .iter()
+        .flatten()
+        .map(|q| [q[0], q[1], q[2]])
+        .collect();
+    let angle = |a: [f64; 3], b: [f64; 3]| dot3(a, b).abs().min(1.0).acos().to_degrees();
+    let laser_motion = normals
+        .iter()
+        .map(|n| normals.iter().map(|m| angle(*n, *m)).sum::<f64>() / normals.len() as f64)
+        .fold(f64::INFINITY, f64::min);
+    let laser_motion = if laser_motion.is_finite() {
+        laser_motion
+    } else {
+        0.0
+    };
+    let mut fits = Vec::new();
+    for (pts, q) in paper_by_frame.iter().zip(&frame_planes) {
+        if let Some(q) = q {
+            for p in pts {
+                fits.push((dot3([q[0], q[1], q[2]], *p) + q[3]).powi(2));
+            }
+        }
+    }
+    let per_frame_fit = (fits.iter().sum::<f64>() / fits.len().max(1) as f64).sqrt();
+    let laser_moved =
+        laser_motion > 2.0 && normals.len() * 2 >= reads.len() && laser_fit > 2.0 * per_frame_fit;
+    if laser_moved {
+        laser_fit = per_frame_fit;
+        warnings.push(format!(
+            "the laser moved between frames (its plane turns {laser_motion:.1} degrees from frame to frame): it was not fixed to the camera, so each frame is triangulated against its own line on the paper, which is coarser; fix the laser to the phone"
+        ));
+    }
+    let plane_for = |k: usize| -> [f64; 4] {
+        match (laser_moved, frame_planes[k]) {
+            (true, Some(q)) => q,
+            _ => plane,
+        }
+    };
     let laser_angle = plane[2].abs().asin().to_degrees();
     if laser_angle < 10.0 {
         warnings.push(format!(
@@ -578,6 +803,7 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
             }
             let [u, v] = *px;
             let d = [(u - cx) / focal, (v - cy) / focal, 1.0];
+            let plane = plane_for(k);
             let nd = dot3([plane[0], plane[1], plane[2]], d);
             if nd.abs() < 1e-9 {
                 continue;
@@ -742,6 +968,8 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
         laser_angle,
         laser_fit,
         laser_points: paper_count,
+        laser_motion,
+        laser_moved,
         axis,
         centre,
         aim,
