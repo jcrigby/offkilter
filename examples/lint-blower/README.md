@@ -9,12 +9,15 @@ its full plate blanks the housing's grille, so the air has no way back
 into the drum and goes down the duct, out through the dryer's own
 blower and vent hose. An LG dryer's filter (ADQ56656401) is a
 near-square frame 18 mm thick standing in a straight slot at the
-bottom of the door opening, so this keeps the socket and redraws the
-end for that slot: a blade the frame's width and thickness less
-clearance, 180 deep, an inch past the grille's last holes, a closed box open
-only at its top and its bottom edge so it goes in either way round,
-up into a sleeve under the wedge. Two printed parts, `out/adapter.stl`
-and `out/blade.stl`, or the same in five for a 256 mm bed.
+bottom of the door opening, so this redraws the end for that slot: a
+blade the frame's width and thickness less clearance, 180 deep, an
+inch past the grille's last holes, a closed box open only at its top
+and its bottom edge so it goes in either way round, up into a sleeve
+under the wedge. And since the owner connects the blower through a
+length of leaf vac hose, not by its nozzle, the Samsung part's funnel
+becomes a round spigot the hose's cuff slides over, with a bead. Two
+printed parts, `out/adapter.stl` and `out/blade.stl`, or the same in
+five for a 256 mm bed.
 
 ```sh
 cargo build --release -p ok-mcp
@@ -46,6 +49,8 @@ blade are solid, so there is no wrong way to put it in.
 | `EARS_W`, across the ears at the top corners | 306 | the field photograph; LG publishes 11-15/16 in |
 | `FRAME_H`, bottom edge to the ears | 287 | the field photograph |
 | `LIP_DIP`, how far the top edge's arc dips below the ears at the centre | 47 (R 218) | the field photograph; the lip is that arc |
+| `CUFF_ID`, the hose cuff's inside diameter | 100, the hose's size across its wire coil: to measure | a rule across the smooth cuff's mouth, inside |
+| `CUFF_DEPTH`, how far the cuff slides on | 40: to measure | the cuff's smooth length before the corrugations start |
 | `GRILLE_D`, how far below the lip's ends the grille's last holes reach | 152 | 6 in by the owner's eye; 130 to 135 at the arc's centre on the cover guide's supplier photo on its inch grid, less at the ends |
 | the frame's bottom corners | R 80, starting 80 above the bottom edge | the field photograph; the blade ends 100 above them, so they do not figure |
 
@@ -86,29 +91,30 @@ toward the user, z up with the slot's lip at zero.
 | blade | 283 × 17 outside, 2 mm walls, 180 below the lip and 19 up the sleeve, two ribs face to face, square corners | the dummy filter: blanks the grille, carries the air down, open at the top and the bottom edge only |
 | sleeve | 292.4 × 21.4 outside, 20 tall, standing on the lip | the blade slides up into it 0.2 a side and glues |
 | flange | 3 thick, 8 past the sleeve at the front and both ends, flush at the back | rests on the lip's ends, where the filter's ears do |
-| wedge | a loft, 90 tall, from the sleeve's section to the socket's 90 × 100 | the Samsung part's wedge, drawn longer so the front leans 41° and the ends 48° instead of 59°; the walls are inset 2.7 and 3.0 in the plane so they are 2 through |
-| socket | a box 90 along the slot by 100, 53 tall at the back and 18 at the front | the Samsung part's: the mouth tilts 19° toward the user, and behind the axis the box is hollow, as in the STL (`BACK_OPEN`) |
-| cone | 65 where it meets the wedge, 19° half angle, to 86 at the end walls | the Samsung part's funnel: a nozzle between 65 and 86 across jams in it |
+| wedge | a loft, 100 tall, from the sleeve's section to a 104 square, the spigot's size | the Samsung part's wedge, drawn longer so the front leans 40° and the ends 43°, under the 45° a print without support allows; the walls are inset 2.6 and 2.8 in the plane so they are 2 through |
+| square to round | a loft, 30 tall, from the square to a circle of 104 | the corners come in 21 mm over 30, 36° |
+| spigot | a tube 100 outside, 2.5 wall, 45 tall, a bead 1 proud and 3 wide 6 below its top, a 45° cone up to the bead | the hose's cuff slides over it to the bead and past; the bead is what the cuff holds on |
 
 The Samsung STL (1108 facets, 253 × 100 × 310 mm, 293 cm³) sectioned
-every millimetre with `trimesh` gave the socket: the box z 110..200
-by y −50..50, x −126.5..−73 at the back and −91..−73 at the front; the
-bore radius 32.5 at x −74 growing 0.345 per mm, 19°, to 38.4 at x −91;
-the back half of the box hollow; the back face one flat plate. Its end
-is a D 310 across and 134 deep, the Samsung filter's outline, a plate
+every millimetre with `trimesh` gave its socket, which the first
+drafts kept: a box z 110..200 by y −50..50, x −126.5..−73 at the back
+and −91..−73 at the front; a bore of radius 32.5 at x −74 growing
+0.345 per mm, 19°, to 38.4 at x −91, a funnel a nozzle jams into; the
+back half of the box hollow; the back face one flat plate. Its end is
+a D 310 across and 134 deep, the Samsung filter's outline, a plate
 behind and a shorter skin in front, open round the arc: the plate is
-what blanks that dryer's grille.
+what blanks that dryer's grille, and the blade here does its job.
 
 ## Printing
 
 The parts are modelled as they sit in the dryer and print standing
 that way, which puts nothing inside the ducts.
 
-**The adapter** (`out/adapter.stl`, 308 wide, 163 tall) stands on the
-sleeve's foot with a brim; the wedge leans 41° at the front and 48° at
-the ends, no support; the cone widens upward at 19°; one bridge to
-support, the underside of the socket's front block over the wedge, and
-the flange lip. **The blade** (`out/blade.stl`, 283 × 199 × 17) stands
+**The adapter** (`out/adapter.stl`, 303 wide, 195 tall) stands on the
+sleeve's foot with a brim; the wedge leans 40° at the front and 43° at
+the ends, the square rounds to the spigot at 36°, the bead has a 45°
+cone under it, and the tabs start on the bed: nothing needs support
+but the flange lip, 8 mm out at 3 mm up. **The blade** (`out/blade.stl`, 283 × 199 × 17) stands
 on its bottom edge too, as exported, so nothing bridges: both faces,
 the rails, the ribs and the halves' lap strips are vertical and start
 on the bed. Lying on a face would make the upper face a bridge the
@@ -120,11 +126,11 @@ three perimeters, which makes the 2 mm walls solid. About 217 and
 
 | piece | size | |
 |---|---|---|
-| `out/middle.stl` | 110 × 100 × 163 | the socket, whole, the wedge's middle and the sleeve's, with four tabs |
-| `out/left_wing.stl`, `out/right_wing.stl` | 109 × 100 × 110 | the wedge's ends, the sleeve's and the flange's |
+| `out/middle.stl` | 124 × 104 × 195 | the spigot, the square and the wedge's middle and the sleeve's, with four tabs |
+| `out/left_wing.stl`, `out/right_wing.stl` | 97 and 102 × 104 × 120 | the wedge's ends, the sleeve's and the flange's |
 | `out/left_blade.stl`, `out/right_blade.stl` | 139 and 152 × 17 × 199 | the blade halves, standing, the right one with two lap strips |
 
-The wedge's cuts are at the socket box's ends. The middle piece
+The wedge's cuts are at the square's sides, under the spigot. The middle piece
 carries four 2 mm tabs down its back and front inner walls, fused
 10 mm into its own walls and reaching 10 mm into the wings 0.2 inside
 theirs, so the wings slide on and glue along four strips. The blade's

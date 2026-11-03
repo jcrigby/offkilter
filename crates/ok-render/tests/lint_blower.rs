@@ -134,7 +134,7 @@ fn the_adapter_stands_on_the_lip_and_ends_in_the_spigot() {
         body.volume() / 1000.0
     );
     // The sleeve stands on the lip, z = 0, and is a wall each side
-    // bigger than its bore; the back face is the datum and the socket box
+    // bigger than its bore; the back face is the datum and the spigot
     // sets the depth; the flange sets the length.
     assert!(
         (stub_l - bore_l - 2.0 * wall).abs() < 1e-9 && (stub_t - bore_t - 2.0 * wall).abs() < 1e-9
@@ -392,8 +392,8 @@ fn the_five_pieces_fit_a_256_bed_meet_nowhere_and_leave_their_glue_gaps() {
         );
         assert!(dx < bed && dy < bed && dz < bed, "{name} fits the bed");
     }
-    // The wedge's cuts are at the socket box's ends: the wings stop where
-    // the socket starts, the middle reaches past the cuts only by its
+    // The wedge's cuts are at the square's sides: the wings stop where
+    // the square starts, the middle reaches past the cuts only by its
     // tabs, and the three add up to the whole plus the tabs.
     let (lo, hi) = right.bounds().unwrap();
     assert!((lo.x - x_cut).abs() < 1e-6 && (hi.z - num(a, "z_square")).abs() < 1e-6);
