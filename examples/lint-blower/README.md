@@ -104,6 +104,55 @@ a D 310 across and 134 deep, the Samsung filter's outline, a plate
 behind and a shorter skin in front, open round the arc: the plate is
 what blanks that dryer's grille, and the blade here does its job.
 
+## In sheet, with printed joints
+
+`build_sheet.py` is the same adapter made from 3 mm ABS sheet (12 ×
+16 in pieces, six to a pack) with only the joints printed, an exercise
+in how much printing flat stock saves after the all-printed middle
+piece, 200 mm tall on a 2 mm-wall foot, fell over on the plate.
+
+```sh
+python3 examples/lint-blower/build_sheet.py
+cargo test -p ok-render --test lint_blower_sheet
+```
+
+![in sheet: the back, the front bent at the lip, the ends, the bars and the cap](out/sheet_iso.png)
+
+![the four panels and two ribs on three sheets](out/panels.png)
+
+**Sheet, from three of the six pieces** (`out/panels.dxf` is 1:1,
+`out/panels.pdf` the overview):
+
+| piece | edges | sheet |
+|---|---|---|
+| back | 283 along the bottom, 180 up the blade, 133.5 up the wedge's corner, 106 across the top: one piece, vertical, no bend | 1 |
+| front | the same below the lip, 160.5 up the wedge's corner above it: one piece, bent 42° at the lip on the scored line, with a heat gun over a straightedge | 2 |
+| two ends | 11 at the bottom, 100 at the top, 133.5 up the back corner and 160.5 up the front one: the left is the right flipped, so cut it face down; they nest | 3 |
+| two ribs | 11 × 180 strips | 3 |
+
+The front is one piece because the sheet heat-forms and a bend is the
+best joint there: a printed fold bar for a 138° fold presents one leg
+at a 48° overhang whichever way it lies on the plate, so there is none.
+The ends sit between the back and the front, inside their faces, and
+glue to them along the corners with CA or acetone; tape as well if you
+like.
+
+**Printed:** four bars 10 × 11 × 180 (`out/bar.stl`, print four) that
+the faces glue to, two at the blade's ends and two as ribs a third of
+the way in, which set the blade's 17 mm; and the cap (`out/cap.stl`),
+a skirt round the panels' tops with a 3.2 × 6 groove in its underside
+they go up into, leaning as the panels lean, the square rounding to
+the spigot's circle and the tapered spigot above, 121 × 110 × 88,
+standing on its skirt. About 20 cm³ a bar and 130 for the cap, against
+560 for the all-printed adapter and blade.
+
+![the cap from below: the groove the panels go up into](out/cap_below.png)
+
+Glue the bars to one face first, the ribs a third of the way in, then
+the other face on; bend the front before the bars go on. Panels into
+the cap's groove with the glue, the corners last. Nothing stops on the
+lip but the blade's own corner, as the fit test found.
+
 ## Printing
 
 The parts are modelled as they sit in the dryer and print standing
