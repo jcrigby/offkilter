@@ -2,7 +2,7 @@
 //! regression suite: the adapter is one closed body whose sleeve stands
 //! on the lip with the flange round its foot, whose wedge keeps the
 //! wall through its leaning faces, which ends in a square that rounds to
-//! a spigot the leaf vac hose's cuff slides over, with a bead; the blade is the filter's width and
+//! a tapered spigot the leaf vac hose jams onto; the blade is the filter's width and
 //! thickness less the clearances, a box open at its top and its bottom
 //! edge and nowhere else, that goes up the sleeve the glue gap inside
 //! it; and the five pieces fit a 256 mm bed, meet nowhere, and leave
@@ -117,11 +117,11 @@ fn the_adapter_stands_on_the_lip_and_ends_in_the_spigot() {
         num(a, "z_top"),
         num(a, "r_out"),
     );
-    let (spigot_od, r_bore, axis_y, bead) = (
-        num(a, "spigot_od"),
+    let (spigot_tip, spigot_foot, r_bore, axis_y) = (
+        num(a, "spigot_tip"),
+        num(a, "spigot_foot"),
         num(a, "r_bore"),
         num(a, "axis_y"),
-        num(a, "bead"),
     );
     println!(
         "adapter x {:.1} to {:.1}, y {:.1} to {:.1}, z {:.1} to {:.1}, {:.1} cm3",
@@ -184,22 +184,23 @@ fn the_adapter_stands_on_the_lip_and_ends_in_the_spigot() {
     );
     assert!((got - want).abs() < 2.0);
     assert!(in_front > wall && in_end > wall);
-    // The spigot: a tube of the cuff's size on the axis, its bore clear
-    // out of the top, a post just inside the bore passing clean and one
-    // past it meeting the wall; the tube and the bore as cylinders; the
-    // bead a ring BEAD proud below the top and no wider than that below it.
+    // The spigot: a cone on the axis from the foot's circle to the tip's,
+    // its bore straight and clear out of the top, a post just inside the
+    // bore passing clean and one past it meeting the wall; the bore a
+    // cylinder and the outside a cone of the taper asked; the tip under
+    // the hose and the foot over it.
     let free = post(0.0, axis_y, r_bore - 0.3, z_spigot + 1.0, z_top + 1.0);
-    let tight = post(0.0, axis_y, r_bore + 1.5, z_top - 3.0, z_top - 1.0);
+    let tight = post(0.0, axis_y, r_bore + 1.0, z_top - 3.0, z_top - 1.0);
     println!(
         "spigot: a post of {:.1} overlaps {:.2} out the top, one of {:.1} overlaps {:.1}",
         2.0 * (r_bore - 0.3),
         overlap(&body, &free),
-        2.0 * (r_bore + 1.5),
+        2.0 * (r_bore + 1.0),
         overlap(&body, &tight)
     );
     assert!(overlap(&body, &free) < 1e-6);
     assert!(overlap(&body, &tight) > 50.0);
-    let mut radii: Vec<f64> = body
+    let bores: Vec<f64> = body
         .surfaces
         .iter()
         .filter_map(|s| match s {
@@ -216,14 +217,37 @@ fn the_adapter_stands_on_the_lip_and_ends_in_the_spigot() {
             _ => None,
         })
         .collect();
-    radii.sort_by(|p, q| p.partial_cmp(q).unwrap());
-    radii.dedup_by(|p, q| (*p - *q).abs() < 1e-6);
-    println!("cylinders on the axis: {radii:?}");
     assert!(
-        radii.iter().any(|r| (r - spigot_od / 2.0).abs() < 1e-6),
-        "the tube"
+        bores.iter().any(|r| (r - r_bore).abs() < 1e-6),
+        "the bore is a cylinder: {bores:?}"
     );
-    assert!(radii.iter().any(|r| (r - r_bore).abs() < 1e-6), "the bore");
+    let tapers: Vec<f64> = body
+        .surfaces
+        .iter()
+        .filter_map(|s| match s {
+            Surface::Cone {
+                apex,
+                axis,
+                half_angle,
+            } if axis.z.abs() > 1.0 - 1e-9
+                && apex.x.abs() < 1e-6
+                && (apex.y - axis_y).abs() < 1e-6 =>
+            {
+                Some(half_angle.to_degrees())
+            }
+            _ => None,
+        })
+        .collect();
+    println!(
+        "cones on the axis: {tapers:?}, want {:.2}",
+        num(a, "spigot_taper")
+    );
+    assert!(
+        tapers
+            .iter()
+            .any(|t| (t - num(a, "spigot_taper")).abs() < 1e-6),
+        "the outside is the taper"
+    );
     let at = |z0: f64, z1: f64| {
         let cut = slab(Vec3::new(-200.0, -1.0, z0), Vec3::new(200.0, 200.0, z1));
         let (lo, hi) = ok_brep::boolean(&body, &cut, BoolOp::Intersection)
@@ -232,11 +256,24 @@ fn the_adapter_stands_on_the_lip_and_ends_in_the_spigot() {
             .unwrap();
         hi.x - lo.x
     };
-    let (bead_w, bead_down) = (num(a, "bead_w"), num(a, "bead_down"));
-    let on_bead = at(z_top - bead_down - bead_w + 0.2, z_top - bead_down - 0.2);
-    let under = at(z_spigot + 1.0, z_spigot + 3.0);
-    println!("across the spigot: {under:.1} on the tube, {on_bead:.1} on the bead");
-    assert!((under - spigot_od).abs() < 1e-6 && (on_bead - spigot_od - 2.0 * bead).abs() < 1e-6);
+    let (foot, tip, hose) = (
+        at(z_spigot + 0.5, z_spigot + 1.5),
+        at(z_top - 1.5, z_top - 0.5),
+        num(a, "hose_id"),
+    );
+    println!(
+        "across the spigot: {foot:.1} at the foot, {tip:.1} at the tip, the hose {hose:.0} inside"
+    );
+    assert!(
+        foot < spigot_foot + 1e-6
+            && foot > spigot_foot - 0.1
+            && tip > spigot_tip - 1e-6
+            && tip < spigot_tip + 0.1
+    );
+    assert!(
+        spigot_tip < hose && spigot_foot > hose,
+        "the hose wedges between the tip and the foot"
+    );
 }
 
 #[test]

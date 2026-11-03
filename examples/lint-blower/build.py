@@ -12,9 +12,11 @@ opening, on a guide at the bottom, its top edge an arc flush with the
 lip. So the end is a blade the frame's width and thickness less
 clearance, deep enough to blank the grille, a closed box open only at
 its top into a sleeve under the wedge and at its bottom edge, below
-the grille, so it goes in either way round; the socket is the Samsung
-part's, measured off its STL. The frame's numbers come off a photograph of it on the 2x2
-measuring field and a caliper; the README says which.
+the grille, so it goes in either way round; above the wedge a tapered
+round spigot the owner's leaf vac hose jams onto, in place of the
+Samsung part's funnel for the blower's nozzle. The frame's numbers
+come off a photograph of it on the 2x2 measuring field, a rule and a
+caliper; the README says which.
 
     cargo build --release -p ok-mcp
     python3 examples/lint-blower/build.py
@@ -56,19 +58,18 @@ FLANGE_T = 3.0          # the flange that rests on the lip's ends, where the fil
 FLANGE_OUT = 8.0        # how far it reaches past the sleeve, at the front and the ends; the back stays flush
 LOFT_H = 100.0          # the wedge, sleeve to a square the spigot's size: long enough that its ends lean under 45°
 LOFT2_H = 30.0          # the square to the spigot's circle, above it: the corners come in 21 over this
-# -- the spigot the leaf vac hose's cuff slides over ----------------------
-# The hose is a wire-coil flexible tube, 100 across the coil, ending in a
-# smooth cuff that slips over a round outlet; measure the cuff inside and
-# how deep its smooth part is.
-CUFF_ID = 100.0         # the cuff's inside diameter: to measure
-CUFF_DEPTH = 40.0       # the cuff's smooth part, the length it slides on: to measure
-SPIGOT_OD = CUFF_ID     # the spigot as big as the cuff: a flexible cuff grips a snug tube
-SPIGOT_WALL = 2.5       # the tube's wall, handled every time the hose goes on
-SPIGOT_H = CUFF_DEPTH + 5.0   # the tube stands this much above the wedge
-BEAD = 1.0              # a ring this proud near the top, the cuff snaps over it
-BEAD_W, BEAD_DOWN = 3.0, 6.0  # the ring's width and how far below the top it sits
+# -- the spigot the leaf vac hose jams onto --------------------------------
+# The hose is a wire-coil corrugated tube, 100 inside, corrugated to its
+# end, so there is no cuff to grip a bead: the spigot tapers, a little
+# under the hose at the tip to start it and a little over at the foot,
+# and the hose screws on a few ribs and wedges tight against the shoulder.
+HOSE_ID = 100.0         # the hose's inside diameter (a rule across the end)
+SPIGOT_TIP = HOSE_ID - 1.0    # the spigot at its tip: starts in the hose freely
+SPIGOT_FOOT = HOSE_ID + 2.0   # and at its foot: the hose wedges before it gets here
+SPIGOT_H = 50.0         # the spigot's height: four or so ribs of hose on it
+SPIGOT_WALL = 2.0       # the tube's wall at the tip; thicker toward the foot, the bore being straight
 # -- pieces for a 256 mm bed (a Bambu P1S) ----------------------------------
-X_CUT = SPIGOT_OD / 2 + WALL   # the wedge's cuts, at the spigot's sides
+X_CUT = SPIGOT_FOOT / 2 + WALL   # the wedge's cuts, at the square's sides under the spigot
 TAB_T = 2.0             # a tab's thickness, the wall's
 TAB_IN, TAB_OUT = 10.0, 10.0   # how far a tab runs back into the middle piece and out into the wing
 TAB_CLEAR = 0.2         # the tab off the wing's inner wall, for the glue
@@ -96,8 +97,9 @@ Z_LOFT = STUB_D
 Z_SQUARE = Z_LOFT + LOFT_H        # the wedge ends in a square the spigot's size
 Z_SPIGOT = Z_SQUARE + LOFT2_H     # which rounds to the spigot's circle
 Z_TOP = Z_SPIGOT + SPIGOT_H
-R_OUT = SPIGOT_OD / 2 + WALL      # the square's half side and the circle's radius, a wall outside the spigot's bore
-R_BORE = SPIGOT_OD / 2 - SPIGOT_WALL
+R_OUT = SPIGOT_FOOT / 2 + WALL    # the square's half side and the circle's radius: a wall outside the spigot's foot
+R_BORE = SPIGOT_TIP / 2 - SPIGOT_WALL
+SPIGOT_TAPER = math.degrees(math.atan((SPIGOT_FOOT - SPIGOT_TIP) / 2 / SPIGOT_H))
 AXIS_Y = R_OUT                    # the spigot's axis: the square and the circle sit on the back face
 # The wedge's walls lean, so the in-plane inset that leaves WALL through
 # them is WALL over the cosine of the lean, taken at the front and the ends.
@@ -152,19 +154,11 @@ def build_adapter(p):
     c = p.sketch("top", Z_SPIGOT, "round at the spigot")
     p.circle(c, (0.0, AXIS_Y), R_OUT)
     p.feature({"type": "add_loft", "sketch": b, "sketch_b": c, "op": "add", "name": "square to round"})
-    s = p.sketch("top", Z_SPIGOT, "spigot")
-    p.circle(s, (0.0, AXIS_Y), SPIGOT_OD / 2)
-    p.extrude(s, SPIGOT_H, op="add", name="spigot")
-    # The bead: a 45° cone up to it from the tube, so nothing under it
-    # overhangs when the piece prints standing, then the ring.
-    s = p.sketch("top", Z_TOP - BEAD_DOWN - BEAD_W - BEAD, "bead cone foot")
-    p.circle(s, (0.0, AXIS_Y), SPIGOT_OD / 2)
-    s2 = p.sketch("top", Z_TOP - BEAD_DOWN - BEAD_W, "bead cone top")
-    p.circle(s2, (0.0, AXIS_Y), SPIGOT_OD / 2 + BEAD)
-    p.feature({"type": "add_loft", "sketch": s, "sketch_b": s2, "op": "add", "name": "bead cone"})
-    s = p.sketch("top", Z_TOP - BEAD_DOWN - BEAD_W, "bead")
-    p.circle(s, (0.0, AXIS_Y), SPIGOT_OD / 2 + BEAD)
-    p.extrude(s, BEAD_W, op="add", name="bead")
+    # The spigot: its half profile on the plane through the axis, turned
+    # about it, so the outside is a true cone from the foot to the tip.
+    s = p.sketch("front", -AXIS_Y, "spigot")
+    p.polygon(s, [(0.0, Z_SPIGOT), (SPIGOT_FOOT / 2, Z_SPIGOT), (SPIGOT_TIP / 2, Z_TOP), (0.0, Z_TOP)])
+    p.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "y_axis"}, "angle": 360, "op": "add", "name": "spigot"})
     # The duct: the sleeve's bore up through the flange, the wedge's bore
     # lofted to the spigot's, and the spigot's bore out the top.
     s = p.sketch("top", -1.0, "sleeve bore")
@@ -371,7 +365,7 @@ def main():
     for which, (tab, _) in pieces.items():
         print(mcp.call("export", {"tab": tab, "format": "stl", "path": os.path.join(OUT, which.replace(" ", "_") + ".stl")}))
     print(mcp.call("export", {"tab": both_tab, "format": "pdf", "sheet": "A4", "hidden": True, "views": ["front", "section-side@0", "top", "iso"],
-                              "note": f"blade {BLADE_W:g} x {BLADE_T:g}, {BLADE_D:g} below the lip, for a frame {FRAME_W:g} x {FRAME_T:g}; spigot {SPIGOT_OD:g} for a cuff of {CUFF_ID:g}",
+                              "note": f"blade {BLADE_W:g} x {BLADE_T:g}, {BLADE_D:g} below the lip, for a frame {FRAME_W:g} x {FRAME_T:g}; spigot {SPIGOT_TIP:g} to {SPIGOT_FOOT:g} for a hose of {HOSE_ID:g} inside",
                               "path": os.path.join(OUT, "adapter.pdf")}))
     numbers = {
         "frame": {"t": FRAME_T, "w": FRAME_W, "ears_w": EARS_W, "h": FRAME_H, "lip_dip": LIP_DIP, "grille_d": GRILLE_D},
@@ -381,8 +375,8 @@ def main():
         "adapter": {"stub_l": STUB_L, "stub_t": STUB_T, "stub_d": STUB_D, "bore_l": BORE_L, "bore_t": BORE_T, "sleeve_fit": SLEEVE_FIT, "wall": WALL,
                     "stub_x0": STUB_X0, "stub_x1": STUB_X1, "bore_x0": BORE_X0, "bore_x1": BORE_X1,
                     "flange_t": FLANGE_T, "flange_out": FLANGE_OUT, "loft_h": LOFT_H, "loft2_h": LOFT2_H, "z_square": Z_SQUARE, "z_spigot": Z_SPIGOT, "z_top": Z_TOP,
-                    "r_out": R_OUT, "axis_y": AXIS_Y, "spigot_od": SPIGOT_OD, "spigot_wall": SPIGOT_WALL, "r_bore": R_BORE, "spigot_h": SPIGOT_H,
-                    "bead": BEAD, "bead_w": BEAD_W, "bead_down": BEAD_DOWN, "cuff_id": CUFF_ID, "cuff_depth": CUFF_DEPTH,
+                    "r_out": R_OUT, "axis_y": AXIS_Y, "spigot_tip": SPIGOT_TIP, "spigot_foot": SPIGOT_FOOT, "spigot_taper": SPIGOT_TAPER,
+                    "spigot_wall": SPIGOT_WALL, "r_bore": R_BORE, "spigot_h": SPIGOT_H, "hose_id": HOSE_ID,
                     "lean_front": math.degrees(LEAN_FRONT), "lean_end": math.degrees(LEAN_END), "in_front": IN_FRONT, "in_end": IN_END,
                     "volume": bodies[0][1]},
         "pieces": {"fit_test_h": FIT_TEST_H, "fit_gap": FIT_GAP, "fit_shift": FIT_SHIFT, "x_cut": X_CUT, "tab_t": TAB_T, "tab_in": TAB_IN, "tab_out": TAB_OUT, "tab_clear": TAB_CLEAR,
@@ -394,7 +388,7 @@ def main():
     mcp.close()
     print(f"blade {BLADE_W:g} x {BLADE_T:g}, {BLADE_D:g} deep; sleeve {STUB_L:g} x {STUB_T:g}, {STUB_D:g} deep; "
           f"wedge {LOFT_H:g} tall leaning {math.degrees(LEAN_FRONT):.0f} deg at the front and {math.degrees(LEAN_END):.0f} at the ends; "
-          f"spigot {SPIGOT_OD:g} outside, {2 * R_BORE:g} bore, {SPIGOT_H:g} tall, bead {BEAD:g} proud")
+          f"spigot {SPIGOT_TIP:g} at the tip to {SPIGOT_FOOT:g} at the foot over {SPIGOT_H:g} ({SPIGOT_TAPER:.1f} deg), {2 * R_BORE:g} bore")
 
 
 if __name__ == "__main__":

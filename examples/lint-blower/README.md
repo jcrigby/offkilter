@@ -15,7 +15,7 @@ inch past the grille's last holes, a closed box open only at its top
 and its bottom edge so it goes in either way round, up into a sleeve
 under the wedge. And since the owner connects the blower through a
 length of leaf vac hose, not by its nozzle, the Samsung part's funnel
-becomes a round spigot the hose's cuff slides over, with a bead. Two
+becomes a tapered round spigot the hose jams onto. Two
 printed parts, `out/adapter.stl` and `out/blade.stl`, or the same in
 five for a 256 mm bed.
 
@@ -49,8 +49,7 @@ blade are solid, so there is no wrong way to put it in.
 | `EARS_W`, across the ears at the top corners | 306 | the field photograph; LG publishes 11-15/16 in |
 | `FRAME_H`, bottom edge to the ears | 287 | the field photograph |
 | `LIP_DIP`, how far the top edge's arc dips below the ears at the centre | 47 (R 218) | the field photograph; the lip is that arc |
-| `CUFF_ID`, the hose cuff's inside diameter | 100, the hose's size across its wire coil: to measure | a rule across the smooth cuff's mouth, inside |
-| `CUFF_DEPTH`, how far the cuff slides on | 40: to measure | the cuff's smooth length before the corrugations start |
+| `HOSE_ID`, the hose's inside diameter | 100 | a rule across its end; it is corrugated to the end, no cuff |
 | `GRILLE_D`, how far below the lip's ends the grille's last holes reach | 152 | 6 in by the owner's eye; 130 to 135 at the arc's centre on the cover guide's supplier photo on its inch grid, less at the ends |
 | the frame's bottom corners | R 80, starting 80 above the bottom edge | the field photograph; the blade ends 100 above them, so they do not figure |
 
@@ -91,9 +90,9 @@ toward the user, z up with the slot's lip at zero.
 | blade | 283 × 17 outside, 2 mm walls, 180 below the lip and 19 up the sleeve, two ribs face to face, square corners | the dummy filter: blanks the grille, carries the air down, open at the top and the bottom edge only |
 | sleeve | 292.4 × 21.4 outside, 20 tall, standing on the lip | the blade slides up into it 0.2 a side and glues |
 | flange | 3 thick, 8 past the sleeve at the front and both ends, flush at the back | rests on the lip's ends, where the filter's ears do |
-| wedge | a loft, 100 tall, from the sleeve's section to a 104 square, the spigot's size | the Samsung part's wedge, drawn longer so the front leans 40° and the ends 43°, under the 45° a print without support allows; the walls are inset 2.6 and 2.8 in the plane so they are 2 through |
-| square to round | a loft, 30 tall, from the square to a circle of 104 | the corners come in 21 mm over 30, 36° |
-| spigot | a tube 100 outside, 2.5 wall, 45 tall, a bead 1 proud and 3 wide 6 below its top, a 45° cone up to the bead | the hose's cuff slides over it to the bead and past; the bead is what the cuff holds on |
+| wedge | a loft, 100 tall, from the sleeve's section to a 106 square, the spigot's foot and a wall | the Samsung part's wedge, drawn longer so the front leans 40° and the ends 43°, under the 45° a print without support allows; the walls are inset 2.6 and 2.8 in the plane so they are 2 through |
+| square to round | a loft, 30 tall, from the square to a circle of 106 | the corners come in 22 mm over 30, 36° |
+| spigot | a cone 50 tall, 99 across at the tip and 102 at the foot (1.7°), 2 mm wall at the tip over a straight 95 bore | the 100 hose starts over the tip freely, screws on a few ribs and wedges before the foot, the square's shoulder the stop |
 
 The Samsung STL (1108 facets, 253 × 100 × 310 mm, 293 cm³) sectioned
 every millimetre with `trimesh` gave its socket, which the first
@@ -112,8 +111,8 @@ that way, which puts nothing inside the ducts.
 
 **The adapter** (`out/adapter.stl`, 303 wide, 195 tall) stands on the
 sleeve's foot with a brim; the wedge leans 40° at the front and 43° at
-the ends, the square rounds to the spigot at 36°, the bead has a 45°
-cone under it, and the tabs start on the bed: nothing needs support
+the ends, the square rounds to the spigot at 36°, the spigot widens
+downward at under 2°, and the tabs start on the bed: nothing needs support
 but the flange lip, 8 mm out at 3 mm up. **The blade** (`out/blade.stl`, 283 × 199 × 17) stands
 on its bottom edge too, as exported, so nothing bridges: both faces,
 the rails, the ribs and the halves' lap strips are vertical and start
