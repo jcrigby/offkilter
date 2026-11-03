@@ -8,7 +8,9 @@
 #      installs the compiler and the wasm target on the first cargo call)
 #   2. wasm-bindgen-cli at the version crates/ok-wasm/Cargo.toml pins
 #   3. the web app's npm packages and Playwright's Chromium
-#   4. the release ok-mcp binary that .mcp.json points at, so the MCP
+#   4. cargo-nextest, which runs the workspace's test binaries in
+#      parallel (CLAUDE.md, "Commands")
+#   5. the release ok-mcp binary that .mcp.json points at, so the MCP
 #      server connects in the first session
 #
 # Prints what it is doing and how long each step took. `--no-browser`
@@ -82,6 +84,14 @@ if [ "$WEB" = 1 ]; then
       done_step "installed (system libraries not installed: no root or sudo; run 'npx playwright install-deps chromium' as root if the browser suite fails to launch)"
     fi
   fi
+fi
+
+step "cargo-nextest (runs the test binaries in parallel)"
+if cargo nextest --version >/dev/null 2>&1; then
+  done_step "already installed"
+else
+  cargo install cargo-nextest --locked
+  done_step "installed"
 fi
 
 step "the release ok-mcp binary (.mcp.json points at target/release/ok-mcp)"

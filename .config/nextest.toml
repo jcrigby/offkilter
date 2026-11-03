@@ -1,0 +1,7 @@
+# cargo-nextest: run every test even after one fails, so one run of the
+# chain reports everything (scripts/check.sh relies on it), and only
+# flag a test as slow after two minutes, since the scan and robustness
+# corpora legitimately run that long.
+[profile.default]
+fail-fast = false
+slow-timeout = { period = "120s" }
