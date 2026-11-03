@@ -925,3 +925,77 @@ example's README instead: the main lens from further back so ten
 marks read, the laser on the phone's mount and 30 to 45 degrees round,
 and the table turning before the recording starts. Those are the
 rig's to change.
+
+## 2026-11 · The second video reads whole, and its mesh says the laser's plane is the next question
+
+The second pumpkin video was shot as the first one's notes asked: the
+main lens from further back with the whole field in view, the laser on
+a mount aimed through the turntable's centre, and it reads every one
+of its 151 frames, 8 to 15 marks each, the focal length agreed to a
+per cent, the laser's plane 37 degrees off the camera and turning
+under a degree between frames, its line a millimetre from the axis.
+Getting there took six more changes, each from looking at what the
+scanner had made of a frame, and they are kernel changes because the
+next video will have the same things in it.
+
+The marks' fit removed its worst residual while that stood over three
+times the median, which is right for one bad mark among twenty and
+wrong for one bad mark among eight: a mark the object cuts or lights
+loses a row of dots and reads as column or row zero, hundreds of
+pixels from its place, and one such bends a least-squares homography
+until every residual is of a size and nothing stands out. The fit now
+starts from the four marks most of the others agree with, every four
+when there are up to sixteen and a few hundred at random beyond that,
+and refines from there. Forty-three frames of the video had been
+dropped for a misread; none are now.
+
+The ridge finder read rows, which finds a line that runs up the
+picture and misses one that runs across it, where a row sees a long
+run and no ridge. A laser from the side lays its line on the paper
+nearly across the picture. The picture is read turned on its side as
+well and the two readings joined. That reading found the paper's edge
+against the board, a longer straight run than the line, and took it
+for the line on the paper: the line on the paper is now looked for
+only among pixels that map onto the field's paper, within half a pitch
+of the marks that read. Within the paper the line on a flat face of
+the object is as straight, and in a frame where the object hides most
+of the paper's line it is longer, which took the simulated
+tetrahedron's face for the paper in a third of its frames. A laser
+fixed to the camera draws the same line in the picture in every
+frame and the object's faces turn, so the line on the paper is the
+straight run the pooled frames share, used in each frame that has a
+fair run of it (half of what its own best straight run has); a frame
+without one, as every frame of a laser held in the hand, takes its
+own, and the motion measure then says the laser moved. It also found the object's silhouette, a step
+from paper to the object's colour with a bright rim on it: a ridge is
+rejected where the floors either side of it differ by more than half
+its height. What the finder returns that is none of these, the edge
+of the table, a tool in the background, is its own run of pixels away
+from the line, and triangulated it lands anywhere; a run is kept only
+when it joins the line on the paper or its points land over the
+field. Two more filters were tried and dropped. Pixels beside the
+line on the paper but not on it were made neither paper nor object,
+for the streaks they make along the line's direction; that also took
+the object's own line where it continues the paper's at the base of a
+face, and the simulated dodecahedron's dihedral angles went from a
+quarter of a degree to three quarters. And a filter by height: a point at over
+1.6 times its 5 mm band's median radius went, which cut the hand that
+pushed the turntable through the laser's plane and the rim where the
+line grazed the object's limb, and also the far side of a simulated
+octahedron set down 50 mm off the axis, whose radii about the axis
+run from nothing to twice the median at every height. `max_height`
+cuts what stands higher than the object, and the report now lists
+every mark each frame read and how far each frame's points reach,
+which is how the hand frames were found; the hand itself is the
+shooting's to keep out.
+
+What the video did not give is the pumpkin. Its mesh is a cone with a
+skirt, and the line on the paper fits its plane to 2.6 mm rms where
+the simulation fits to 0.2, with the laser fixed and aimed. A plane
+tilted about its line on the paper turns a sphere into a cone, so the
+plane is wrong, not moving, and the three suspects (the sideways
+reading centring on the glow, the taped field not flat, the axis from
+a camera that moved a little) are on the roadmap with the thing to
+try first: a calibration object of known shape beside the part, which
+settles the plane in one frame and was rejected before only because
+nothing real had been scanned yet.

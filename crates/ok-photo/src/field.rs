@@ -763,6 +763,72 @@ pub struct MarkRead {
 /// their residuals, and the fit's root mean square residual.
 pub(super) fn fit_marks(marks: &[MarkPx], f: f64) -> Result<(H, Vec<MarkRead>, f64), String> {
     let mut used: Vec<usize> = (0..marks.len()).collect();
+    // The consensus first: a mark whose code read wrong (one next to
+    // the object, cut or lit by it, loses a row of dots and reads as
+    // column or row 0) lands hundreds of pixels from its place, and
+    // one such mark bends a least-squares homography until every
+    // residual is of the same size and nothing stands out to drop.
+    // So the homography is taken from the four marks that most of the
+    // others agree with, every four when there are few, a random few
+    // hundred otherwise, and the refinement below starts from those.
+    let n = marks.len();
+    if n >= 5 {
+        let pixel = |k: usize| [marks[k].x * f, marks[k].y * f];
+        let place = |k: usize| Field::mark(marks[k].i, marks[k].j);
+        let within = 3.0 * f;
+        let mut best: Vec<usize> = Vec::new();
+        let mut samples: Vec<[usize; 4]> = Vec::new();
+        if n <= 16 {
+            for a in 0..n {
+                for b in a + 1..n {
+                    for c in b + 1..n {
+                        for d in c + 1..n {
+                            samples.push([a, b, c, d]);
+                        }
+                    }
+                }
+            }
+        } else {
+            let mut rng = 0x9E37_79B9_7F4A_7C15u64;
+            let mut next = || {
+                rng ^= rng << 13;
+                rng ^= rng >> 7;
+                rng ^= rng << 17;
+                (rng % n as u64) as usize
+            };
+            while samples.len() < 400 {
+                let s = [next(), next(), next(), next()];
+                let mut sorted = s;
+                sorted.sort_unstable();
+                if sorted.windows(2).all(|w| w[0] != w[1]) {
+                    samples.push(s);
+                }
+            }
+        }
+        for s in samples {
+            let from: Vec<[f64; 2]> = s.iter().map(|&k| pixel(k)).collect();
+            let to: Vec<[f64; 2]> = s.iter().map(|&k| place(k)).collect();
+            let Ok(h) = homography_fit(&from, &to) else {
+                continue;
+            };
+            let Ok(back) = invert(&h) else {
+                continue;
+            };
+            let inliers: Vec<usize> = (0..n)
+                .filter(|&k| {
+                    let q = apply(&back, place(k));
+                    let p = pixel(k);
+                    ((q[0] - p[0]).powi(2) + (q[1] - p[1]).powi(2)).sqrt() < within
+                })
+                .collect();
+            if inliers.len() > best.len() {
+                best = inliers;
+            }
+        }
+        if best.len() >= 4 {
+            used = best;
+        }
+    }
     loop {
         let from: Vec<[f64; 2]> = used
             .iter()

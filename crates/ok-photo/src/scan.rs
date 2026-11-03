@@ -87,6 +87,10 @@ pub struct ScanOptions {
     pub focal: Option<f64>,
     /// Points this close to the table (field z) are the table.
     pub min_height: f64,
+    /// Points higher than this over the table are not the object: a
+    /// hand that pushed the turntable through the laser's plane, or
+    /// the stand the laser is on.
+    pub max_height: f64,
     /// Profiles are resampled to bins this tall for meshing.
     pub bin: f64,
 }
@@ -98,6 +102,7 @@ impl Default for ScanOptions {
             laser_min: 12.0,
             focal: None,
             min_height: 1.5,
+            max_height: 1000.0,
             bin: 1.0,
         }
     }
@@ -110,6 +115,10 @@ pub struct FrameScan {
     /// Marks read and used, and how well they fitted (photo pixels, rms).
     pub marks: usize,
     pub fit: f64,
+    /// Every mark read in the frame, used or not: column, row, and
+    /// the pixel of its centre, for looking into a frame that would
+    /// not fit.
+    pub marks_read: Vec<[f64; 4]>,
     /// The focal length this frame's homography alone implies.
     pub focal: Option<f64>,
     /// The camera's centre in field millimetres, and its azimuth about
@@ -119,6 +128,10 @@ pub struct FrameScan {
     pub line_pixels: usize,
     pub on_paper: usize,
     pub points: usize,
+    /// How far from the axis the frame's points reach (the 90th
+    /// percentile of their distance, mm): a frame whose reach stands
+    /// out had something else in the laser's plane, a hand or a stand.
+    pub reach: f64,
     /// Why the frame was left out, if it was.
     pub skipped: Option<String>,
 }
@@ -326,6 +339,35 @@ fn pose_from(g: &H, f: f64, cx: f64, cy: f64) -> Pose {
 /// in brightness (on the object, not the paper), the centre is
 /// refined on the brightness over the same run.
 pub fn laser_line(img: &Image, floor: f64, colour: LaserColour) -> Vec<[f64; 2]> {
+    // Ridges are found across rows, which reads a line that runs up
+    // the picture and misses one that runs across it (in a row it is
+    // a long run, not a ridge). A laser from the side lays its line on
+    // the paper nearly across the picture, so the picture is read
+    // turned on its side as well and the two readings joined, a point
+    // of the second kept where the first found none within 4 px.
+    let mut out = ridge_line(img, floor, colour);
+    let mut turned = Image::new(img.height, img.width, Rgb(0, 0, 0));
+    for v in 0..img.height {
+        for u in 0..img.width {
+            turned.set(v, u, img.pixel(u, v));
+        }
+    }
+    let across = ridge_line(&turned, floor, colour);
+    let key = |p: [f64; 2]| (p[0].round() as i64, p[1].round() as i64);
+    let seen: std::collections::HashSet<(i64, i64)> = out.iter().map(|p| key(*p)).collect();
+    for p in across {
+        let p = [p[1], p[0]];
+        let (ku, kv) = key(p);
+        let near = (-4..=4).any(|du| (-4..=4).any(|dv| seen.contains(&(ku + du, kv + dv))));
+        if !near {
+            out.push(p);
+        }
+    }
+    out.sort_by(|a, b| a[1].total_cmp(&b[1]).then(a[0].total_cmp(&b[0])));
+    out
+}
+
+fn ridge_line(img: &Image, floor: f64, colour: LaserColour) -> Vec<[f64; 2]> {
     let (w, h) = (img.width, img.height);
     let mut green: Vec<f64> = vec![0.0; w * h];
     let mut luma: Vec<f64> = vec![0.0; w * h];
@@ -356,7 +398,18 @@ pub fn laser_line(img: &Image, floor: f64, colour: LaserColour) -> Vec<[f64; 2]>
                     // the paper is measured from the object's plateau,
                     // not from the paper's zero, and a dark crease in
                     // the plateau does not lower it either.
+                    // Cheaply first: a ridge stands over the pixels
+                    // half a line's width either side of it by half the
+                    // floor at least. Sensor noise on a surface of the
+                    // laser's colour makes a local maximum every few
+                    // pixels, and the medians below are not for all of
+                    // them.
                     if g[u] < min || g[u] < g[u - 1] || g[u] < g[u + 1] {
+                        u += 1;
+                        continue;
+                    }
+                    let (l, r) = (u.saturating_sub(limit / 2), (u + limit / 2).min(w - 1));
+                    if g[u] - g[l].max(g[r]) < min / 2.0 {
                         u += 1;
                         continue;
                     }
@@ -365,10 +418,19 @@ pub fn laser_line(img: &Image, floor: f64, colour: LaserColour) -> Vec<[f64; 2]>
                         v.sort_by(f64::total_cmp);
                         v[v.len() / 2]
                     };
-                    let lo = side(u.saturating_sub(2 * limit)..u + 1)
-                        .max(side(u..(u + 2 * limit + 1).min(w)));
+                    let (lo_l, lo_r) = (
+                        side(u.saturating_sub(2 * limit)..u + 1),
+                        side(u..(u + 2 * limit + 1).min(w)),
+                    );
+                    let lo = lo_l.max(lo_r);
                     let prominence = g[u] - lo;
-                    if prominence >= min {
+                    // A ridge stands on much the same floor either
+                    // side. The object's silhouette against the paper
+                    // is a step, paper on one side and the object's own
+                    // colour on the other, with a bright rim on top of
+                    // it, and reads as a ridge of its own otherwise.
+                    let step = (lo_l - lo_r).abs();
+                    if prominence >= min && step <= 0.5 * prominence {
                         let half = lo + (prominence / 2.0).max(min / 2.0);
                         let (mut a, mut b) = (u, u);
                         while a > 0 && g[a - 1] >= half {
@@ -530,6 +592,8 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
         index,
         marks: 0,
         fit: 0.0,
+        marks_read: Vec::new(),
+        reach: 0.0,
         focal: None,
         camera: [0.0; 3],
         azimuth: 0.0,
@@ -555,6 +619,17 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
         let line = laser_line(img, opts.laser_min, opts.laser);
         let marks = field::find_marks(&dark, small.width, small.height);
         let mut f = blank(index);
+        f.marks_read = marks
+            .iter()
+            .map(|m| {
+                [
+                    m.i as f64,
+                    m.j as f64,
+                    m.x * factor as f64,
+                    m.y * factor as f64,
+                ]
+            })
+            .collect();
         let fitted = if marks.len() >= 4 {
             field::fit_marks(&marks, factor as f64)
         } else {
@@ -661,8 +736,85 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
     let mut paper_by_frame: Vec<Vec<[f64; 3]>> = Vec::new();
     let mut aims: Vec<f64> = Vec::new();
     let mut on_paper: Vec<Vec<bool>> = Vec::new();
+    let mut runs_by_frame: Vec<Vec<usize>> = Vec::new();
+    let mut box_by_frame: Vec<[f64; 4]> = Vec::new();
+    // Only pixels that land on the field's paper can be the line on
+    // the paper: within half a pitch of the marks that read. The edge
+    // of the paper against a board, or anything straight and of the
+    // laser's colour beyond it, is a longer straight run than the line
+    // itself in a wide view, and would be taken for it.
+    let field_box = |r: &Read| {
+        let mut box_ = [f64::MAX, f64::MAX, f64::MIN, f64::MIN];
+        for m in &r.marks_px {
+            let [x, y] = apply(&r.to_field, *m);
+            box_ = [
+                box_[0].min(x),
+                box_[1].min(y),
+                box_[2].max(x),
+                box_[3].max(y),
+            ];
+        }
+        box_
+    };
+    let on_field = |r: &Read, box_: &[f64; 4], p: [f64; 2]| {
+        let margin = field::PITCH / 2.0;
+        let [x, y] = apply(&r.to_field, p);
+        x > box_[0] - margin && x < box_[2] + margin && y > box_[1] - margin && y < box_[3] + margin
+    };
+    // Every frame's pixels on the paper, pooled and thinned, give the
+    // straight line the frames share.
+    let shared_line = {
+        let mut pool: Vec<[f64; 2]> = Vec::new();
+        for r in &reads {
+            let box_ = field_box(r);
+            let step = (r.line.len() / 400).max(1);
+            pool.extend(
+                r.line
+                    .iter()
+                    .step_by(step)
+                    .filter(|p| on_field(r, &box_, **p))
+                    .copied(),
+            );
+        }
+        straight_line(&pool, 1.5, &|_| true)
+    };
     for (k, r) in reads.iter().enumerate() {
-        let inliers = straight_line_inliers(&r.line, 1.5);
+        let box_ = field_box(r);
+        let eligible: Vec<usize> = (0..r.line.len())
+            .filter(|&n| on_field(r, &box_, r.line[n]))
+            .collect();
+        let subset: Vec<[f64; 2]> = eligible.iter().map(|&n| r.line[n]).collect();
+        // The line on the paper is the straight run most of the
+        // frames share: a laser fixed to the camera draws the same
+        // line in the picture every frame, while the line on a flat
+        // face of the object, as straight and in some frames longer
+        // than what is left of the paper's, turns with the object.
+        // The shared line is used where a frame has a fair run of it
+        // (half of what its own best straight run has); a frame that
+        // has not, as every frame of a laser held in the hand, takes
+        // its own.
+        let own = straight_line(&subset, 1.5, &|_| true);
+        let inliers_of = |line: &Line| {
+            subset
+                .iter()
+                .filter(|p| (line.0[0] * p[0] + line.0[1] * p[1] + line.1).abs() < 1.5)
+                .count()
+        };
+        let paper_line = match (shared_line, own) {
+            (Some(shared), Some(own)) if 2 * inliers_of(&shared) >= inliers_of(&own) => {
+                Some(shared)
+            }
+            (shared, own) => own.or(shared),
+        };
+        let dist = |p: [f64; 2]| {
+            paper_line.map_or(f64::INFINITY, |l| {
+                (l.0[0] * p[0] + l.0[1] * p[1] + l.1).abs()
+            })
+        };
+        let mut inliers = vec![false; r.line.len()];
+        for &n in &eligible {
+            inliers[n] = dist(r.line[n]) < 1.5;
+        }
         let mut field_pts: Vec<[f64; 2]> = Vec::new();
         let mut cam_pts: Vec<[f64; 3]> = Vec::new();
         for (px, &on) in r.line.iter().zip(&inliers) {
@@ -677,6 +829,10 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
         if let Some(d) = line_distance(&field_pts, axis) {
             aims.push(d);
         }
+        // The line's pixels in runs, points linked within 6 px, for
+        // the filter below.
+        runs_by_frame.push(runs(&r.line, 6.0));
+        box_by_frame.push(box_);
         on_paper.push(inliers);
     }
     if paper_cam.len() < 100 {
@@ -813,11 +969,67 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
                 continue;
             }
             let p = poses[k].to_world([d[0] * s, d[1] * s, d[2] * s]);
-            if p[2] < opts.min_height || p[2] > 1000.0 {
+            if p[2] < opts.min_height || p[2] > opts.max_height {
                 continue;
             }
             per_frame[k].push(p);
             kinds[n] = 2;
+        }
+        // The laser's line is one curve: along the paper, up the object
+        // and down again. Anything else the ridge finder returns, the
+        // edge of the paper against a board or a straight shadow, is
+        // its own run of points away from it, and triangulated against
+        // the laser's plane it lands anywhere. A run is kept when it
+        // joins the line on the paper, or when the points it makes lie
+        // over the field (its median within half a pitch of the marks'
+        // box); a run that does neither is not the laser's line.
+        {
+            let labels = &runs_by_frame[k];
+            let nruns = labels.iter().copied().max().map_or(0, |m| m + 1);
+            let mut seeded = vec![false; nruns];
+            let mut xs: Vec<Vec<f64>> = vec![Vec::new(); nruns];
+            let mut ys: Vec<Vec<f64>> = vec![Vec::new(); nruns];
+            let mut i = 0;
+            for (n, &kind) in kinds.iter().enumerate() {
+                if kind == 1 {
+                    seeded[labels[n]] = true;
+                } else if kind == 2 {
+                    xs[labels[n]].push(per_frame[k][i][0]);
+                    ys[labels[n]].push(per_frame[k][i][1]);
+                    i += 1;
+                }
+            }
+            let b = box_by_frame[k];
+            let margin = field::PITCH / 2.0;
+            let median = |v: &mut Vec<f64>| {
+                v.sort_by(f64::total_cmp);
+                v[v.len() / 2]
+            };
+            let keep_run: Vec<bool> = (0..nruns)
+                .map(|id| {
+                    seeded[id]
+                        || (!xs[id].is_empty() && {
+                            let (x, y) = (median(&mut xs[id]), median(&mut ys[id]));
+                            x > b[0] - margin
+                                && x < b[2] + margin
+                                && y > b[1] - margin
+                                && y < b[3] + margin
+                        })
+                })
+                .collect();
+            let mut i = 0;
+            let mut kept = Vec::with_capacity(per_frame[k].len());
+            for n in 0..kinds.len() {
+                if kinds[n] == 2 {
+                    if keep_run[labels[n]] {
+                        kept.push(per_frame[k][i]);
+                    } else {
+                        kinds[n] = 0;
+                    }
+                    i += 1;
+                }
+            }
+            per_frame[k] = kept;
         }
         // Where the line jumps between surfaces at different depths
         // (from a stem to the rim of the cap over it), the ridge in
@@ -893,6 +1105,12 @@ pub fn scan(frames: &[Image], opts: &ScanOptions) -> Result<Scan, String> {
         f.azimuth = azimuth(centres[k]);
         f.on_paper = paper_per_frame[k];
         f.points = per_frame[k].len();
+        let mut radii: Vec<f64> = per_frame[k]
+            .iter()
+            .map(|p| ((p[0] - axis[0]).powi(2) + (p[1] - axis[1]).powi(2)).sqrt())
+            .collect();
+        radii.sort_by(f64::total_cmp);
+        f.reach = radii.get(radii.len() * 9 / 10).copied().unwrap_or(0.0);
         f.marks = r.marks;
         f.fit = r.fit;
     }
@@ -1065,10 +1283,57 @@ fn fit_plane(points: &[[f64; 3]]) -> Result<[f64; 4], String> {
 /// Which of the points lie within `tol` of the straight line most of
 /// them lie on: pairs sampled, the line with the most points near it,
 /// refined by least squares on those.
-fn straight_line_inliers(pts: &[[f64; 2]], tol: f64) -> Vec<bool> {
+/// The run each of `pts` belongs to: points linked within `reach` px
+/// of one another share a label.
+fn runs(pts: &[[f64; 2]], reach: f64) -> Vec<usize> {
+    let n = pts.len();
+    let mut label = vec![usize::MAX; n];
+    let cell = |p: [f64; 2]| ((p[0] / reach).floor() as i64, (p[1] / reach).floor() as i64);
+    let mut grid: std::collections::HashMap<(i64, i64), Vec<usize>> =
+        std::collections::HashMap::new();
+    for (i, p) in pts.iter().enumerate() {
+        grid.entry(cell(*p)).or_default().push(i);
+    }
+    let mut next = 0;
+    for start in 0..n {
+        if label[start] != usize::MAX {
+            continue;
+        }
+        let id = next;
+        next += 1;
+        let mut stack = vec![start];
+        label[start] = id;
+        while let Some(i) = stack.pop() {
+            let (cx, cy) = cell(pts[i]);
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    if let Some(bucket) = grid.get(&(cx + dx, cy + dy)) {
+                        for &j in bucket {
+                            if label[j] == usize::MAX
+                                && (pts[j][0] - pts[i][0]).powi(2) + (pts[j][1] - pts[i][1]).powi(2)
+                                    <= reach * reach
+                            {
+                                label[j] = id;
+                                stack.push(j);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    label
+}
+
+/// A line in the picture as (unit normal, offset): n·p + d = 0.
+type Line = ([f64; 2], f64);
+
+/// The straight line most of `pts` lie within `tol` of, as (unit
+/// normal, offset): RANSAC over pairs, refitted on the inliers.
+fn straight_line(pts: &[[f64; 2]], tol: f64, valid: &dyn Fn(&Line) -> bool) -> Option<Line> {
     let n = pts.len();
     if n < 2 {
-        return vec![false; n];
+        return None;
     }
     let mut rng: u64 = 0x2545F4914F6CDD1D;
     let mut next = move || {
@@ -1077,7 +1342,7 @@ fn straight_line_inliers(pts: &[[f64; 2]], tol: f64) -> Vec<bool> {
         rng ^= rng << 17;
         (rng % n as u64) as usize
     };
-    let line_of = |a: [f64; 2], b: [f64; 2]| -> Option<([f64; 2], f64)> {
+    let line_of = |a: [f64; 2], b: [f64; 2]| -> Option<Line> {
         let d = [b[0] - a[0], b[1] - a[1]];
         let l = (d[0] * d[0] + d[1] * d[1]).sqrt();
         (l > 1e-9).then(|| {
@@ -1085,23 +1350,24 @@ fn straight_line_inliers(pts: &[[f64; 2]], tol: f64) -> Vec<bool> {
             (nrm, -(nrm[0] * a[0] + nrm[1] * a[1]))
         })
     };
-    let count = |line: &([f64; 2], f64)| {
+    let count = |line: &Line| {
         pts.iter()
             .filter(|p| (line.0[0] * p[0] + line.0[1] * p[1] + line.1).abs() < tol)
             .count()
     };
-    let mut best: Option<(([f64; 2], f64), usize)> = None;
+    let mut best: Option<(Line, usize)> = None;
     for _ in 0..120 {
         if let Some(line) = line_of(pts[next()], pts[next()]) {
+            if !valid(&line) {
+                continue;
+            }
             let k = count(&line);
             if best.is_none_or(|(_, bk)| k > bk) {
                 best = Some((line, k));
             }
         }
     }
-    let Some((mut line, _)) = best else {
-        return vec![false; n];
-    };
+    let (mut line, _) = best?;
     // Refit on the inliers: the direction from the spread.
     for _ in 0..2 {
         let inl: Vec<[f64; 2]> = pts
@@ -1128,9 +1394,7 @@ fn straight_line_inliers(pts: &[[f64; 2]], tol: f64) -> Vec<bool> {
         let nrm = [-dir[1], dir[0]];
         line = (nrm, -(nrm[0] * cx + nrm[1] * cy));
     }
-    pts.iter()
-        .map(|p| (line.0[0] * p[0] + line.0[1] * p[1] + line.1).abs() < tol)
-        .collect()
+    Some(line)
 }
 
 /// How far a point lies from the straight line through points, by the

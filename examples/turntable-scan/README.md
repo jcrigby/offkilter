@@ -167,10 +167,26 @@ shooting that the scanner cannot undo. So:
   channel saturates; locking helps the marks more than the line.
 - One slow turn, 20 to 40 seconds, the table already turning when the
   recording starts (five seconds of a still table are five seconds of
-  one azimuth). Then
+  one azimuth), and nothing but the object in the laser's plane: a
+  hand that pushes the turntable round passes through it and comes
+  back as points above and beside the object (`max_height` cuts what
+  stands higher than the object, and each frame's `reach` in
+  `scan.json` says which frames had something far out). Spin the
+  table from the side away from the laser, or let it coast. Then
   `scan_turntable {video: "IMG_1234.MOV", out: "scan", laser: "red"}`.
   The answer says how many frames read, how many were dropped for a
   misread mark, and whether the laser moved.
+
+The second video (the same pumpkin, the main lens from further back,
+the laser on a mount aimed through the centre, the table pushed round
+by hand) reads every frame: 8 to 15 marks each, the focal length
+agreed to a per cent, the laser's plane 37 degrees off the camera and
+turning under a degree between frames, its line 1 mm from the axis.
+Its mesh is still not the pumpkin: the line on the paper fits its
+plane to 2.6 mm rms where the simulation fits to 0.2, and the body
+comes out as a cone with a skirt, which is what a plane tilted about
+its line on the paper does to a sphere. Finding why is the next step
+(`docs/ROADMAP.md`).
 
 What neither the camera nor the laser reaches from above stays
 bridged: the underside of a cap or a lip. Turn the object over or roll
