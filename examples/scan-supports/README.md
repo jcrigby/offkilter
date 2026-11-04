@@ -24,13 +24,14 @@ is a block of known height at a known place.
   `placed: "upside down"` joins the two. A pumpkin turned over rests
   on its shoulders with the stem down, and stems run to 35 mm, so the
   posts are 40 mm; `min_height` is then 42.
-- **The check on the laser's plane.** A block centred on a mark has
-  its top face at exactly 20 (or 40) mm at a place the field knows to
-  the millimetre, and its vertical faces 10 mm each way from the
-  mark's centre. The laser's line on that top face, triangulated,
-  should come out at that height; where it does not, the plane is off,
-  which the line on the paper alone cannot say. This is the
-  calibration object the scanner's roadmap asks for.
+- **The check on the laser's plane.** Every point of a block's top
+  face is at 20 (or 40) mm wherever the block stands. The laser's line
+  on that face, triangulated, should come out at that height; where it
+  does not, the plane is off, which the line on the paper alone cannot
+  say. The line on the top face and the line on the paper together fix
+  the plane outright, with no need for the block's position or for the
+  aim through the axis. This is the calibration object the scanner's
+  roadmap asks for.
 
 ## What it is
 
@@ -51,11 +52,17 @@ each, `out/cube20.stl` and `out/post40.stl`.
 Pick the three marks nearest the turntable's centre that form a
 triangle inside the object's outline, say the marks printed
 `200, 150`, `250, 150` and `200, 200` (every mark's coordinates are
-printed beside it), which spread the supports 50 and 71 mm apart.
-Centre each block on its bullseye by eye: the dot is 5 mm across and
-the block 20, so the ring shows round all four sides when it is
-centred, which is within a millimetre. Tell the scan which marks the
-blocks stand on.
+printed beside it), which spread the supports 50 and 71 mm apart. A
+block covers its mark whole: the bullseye's ring is 16 mm across and
+the block 20, so only the code dots peek out beyond two of its edges.
+Centre it by the grid instead: the field prints a 10 mm grid and every
+mark sits on a grid crossing, so a centred block has all four edges on
+grid lines. It need not be exact. The check on the laser's plane uses
+only the block's height, which is the same wherever it stands, and the
+scanner can take the block's footprint from its base edges in the
+picture; the three marks under the blocks are lost to the pose, which
+has the eight to fifteen others. Tell the scan which marks the blocks
+stand on.
 
 ## Measure these first
 
