@@ -3,8 +3,9 @@
 Parts are printed on a Bambu Lab P1S at the owner's house. A session
 cannot reach the printer; it asks for a print by opening a GitHub issue
 on this repo. A watcher on the print computer picks the issue up,
-slices the STL with a fixed template, and starts the print from Bambu
-Studio, reporting back as comments on the issue.
+slices the STL with a fixed template, and starts the print through
+Bambu Studio's networking plugin, reporting back as comments on the
+issue.
 
 ## Asking for a print
 
@@ -31,7 +32,7 @@ Studio, reporting back as comments on the issue.
    | `copies` | default 1 | 1 to 16, arranged on one plate |
    | `flip` | optional | `yes` turns the part upside down (180° about X) before slicing |
    | `plate_clear` | required | `yes`, from the owner, see above |
-   | `dry_run` | optional | `yes` does everything but press Send |
+   | `dry_run` | optional | `yes` slices and stops; nothing is sent |
    | `template` | default `default` | slicer settings on the print computer; `default` is the only one |
 
    The title is free text; say what the part is.
@@ -47,11 +48,14 @@ Labels track it: `print` (queued) → `printing` (taken) → `printed`
 stopped; the issue stays open).
 
 Within a minute or two the watcher comments "Picked up" with the part's
-size and the sliced time and grams. Studio is then driven by a
-headless Claude that checks the screen at every step and stops at
-anything unexpected rather than guessing; its result is the second
-comment. No comment after five minutes means the print computer's
-watcher is not running, or the issue's author or label is wrong.
+size and the sliced time and grams. The sliced file then goes to the
+printer by `bambu-send`, a small program on the print computer that
+loads the networking plugin Bambu Studio itself uses, so the print
+command is signed the way Studio's Print button signs it and the
+printer accepts it in cloud mode; it refuses to send while the printer
+reports a job running. Its result is the second comment. No comment
+after five minutes means the print computer's watcher is not running,
+or the issue's author or label is wrong.
 
 `print-stuck` means nothing was printed, or the printer was found busy.
 Read the comment, fix the cause (often a new STL pushed, or a key
@@ -91,8 +95,12 @@ estimated finish time.
 ## The print computer
 
 The watcher and its tools are not in this repo; they live on the print
-computer in `~/fun/autoprint` (`watch.py`, `slice.py`, `gui.sh`,
-`driver_prompt.md`, `templates/`). Studio runs there on its own virtual
-display (Xvfb), so the desktop's screen lock and windows do not matter;
-the computer just has to be on. Screenshots of every run stay there
-under `state/shots/`.
+computer in `~/fun/autoprint` (`watch.py`, `slice.py`, `send/bambu-send`
+with its README, `templates/`, and `printer.py`, which follows the
+printer over Bambu's cloud and comments when a print finishes or
+fails). Slicing is Bambu Studio's command line; sending is the plugin,
+so nothing needs a screen and the computer just has to be on. The
+earlier path, a headless Claude driving the Studio GUI on a virtual
+display through `gui.sh` and `driver_prompt.md`, is kept as a fallback
+(`AUTOPRINT_SENDER=gui`) in case a plugin update stops signing for a
+host that is not Studio. Each job's log stays under `state/issue-N/`.
