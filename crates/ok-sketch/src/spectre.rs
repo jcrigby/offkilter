@@ -475,14 +475,19 @@ pub fn curved_tile(curve: Curve, bulge: f64, per_edge: usize) -> Vec<Vec2> {
                 // off the edge's middle, swept the short way.
                 let radius = (0.25 + bulge * bulge) / (2.0 * bulge);
                 let centre = (a + b) * 0.5 - v.perp() * (sign * (radius - bulge));
+                // Swept through the apex: the short way, except that a
+                // semicircle's ends are opposite about its centre and
+                // the short way is either, so the apex says which.
+                let apex = (a + b) * 0.5 + v.perp() * (sign * bulge);
                 let a0 = (a - centre).angle();
-                let mut sweep = (b - centre).angle() - a0;
-                while sweep > std::f64::consts::PI {
-                    sweep -= std::f64::consts::TAU;
+                let mut half = (apex - centre).angle() - a0;
+                while half > std::f64::consts::PI {
+                    half -= std::f64::consts::TAU;
                 }
-                while sweep < -std::f64::consts::PI {
-                    sweep += std::f64::consts::TAU;
+                while half < -std::f64::consts::PI {
+                    half += std::f64::consts::TAU;
                 }
+                let sweep = 2.0 * half;
                 for k in 1..=n {
                     let t = k as f64 / n as f64;
                     out.push(centre + Vec2::from_angle(a0 + sweep * t) * radius);
@@ -573,19 +578,41 @@ fn nearest_on(pts: &[Vec2], p: Vec2) -> (f64, usize, f64) {
 }
 
 /// The point `s` along a polyline from its start, and the unit
-/// direction of the piece it lies on.
+/// direction of the curve there: the piece's own direction blended
+/// towards the bisectors at its ends, so that walking along the
+/// polyline turns the direction smoothly instead of by the whole facet
+/// angle at each vertex. A circle carried along at a fixed distance on
+/// that direction's normal then moves continuously, which the corner
+/// rounding's bisection needs: on the piece's own normal the circle
+/// jumps at every vertex, and a bisection that ends on a jump instead
+/// of a root leaves the arc's end off the curve by most of the jump.
 fn along_polyline(pts: &[Vec2], s: f64) -> (Vec2, Vec2) {
+    let n = pts.len();
+    let piece = |i: usize| (pts[i + 1] - pts[i]).normalized().unwrap_or(Vec2::X);
+    // The direction at a vertex: the bisector of its two pieces.
+    let at_vertex = |k: usize| {
+        if k == 0 {
+            piece(0)
+        } else if k + 1 == n {
+            piece(n - 2)
+        } else {
+            (piece(k - 1) + piece(k)).normalized().unwrap_or(piece(k))
+        }
+    };
     let mut left = s;
-    for i in 0..pts.len() - 1 {
+    for i in 0..n - 1 {
         let d = pts[i + 1] - pts[i];
         let len = d.length();
-        if left <= len || i + 2 == pts.len() {
+        if left <= len || i + 2 == n {
             let t = if len > 0.0 {
                 (left / len).min(1.0)
             } else {
                 0.0
             };
-            return (pts[i] + d * t, d.normalized().unwrap_or(Vec2::X));
+            let dir = (at_vertex(i) * (1.0 - t) + at_vertex(i + 1) * t)
+                .normalized()
+                .unwrap_or(piece(i));
+            return (pts[i] + d * t, dir);
         }
         left -= len;
     }
@@ -636,10 +663,31 @@ fn round_corner(
         }
     }
     let s = 0.5 * (lo + hi);
-    let (a, c) = centre(s);
+    let (carried, c) = centre(s);
     let (_, j, t) = nearest_on(&fwd, c);
+    // A cut at the far end of its piece is the start of the next, or
+    // the piece's end would be kept as well as the arc's point there.
+    let (j, t) = if t > 1.0 - 1e-9 && j + 2 < fwd.len() {
+        (j + 1, 0.0)
+    } else {
+        (j, t)
+    };
     let b = fwd[j] + (fwd[j + 1] - fwd[j]) * t;
-    let (_, i, u) = nearest_on(&back, a);
+    // The arc starts where the circle touches the incoming curve: the
+    // foot of its centre on the carried point's piece or a neighbour,
+    // a little along from the carried point when the blended direction
+    // leans off the piece's own.
+    let (_, near, _) = nearest_on(&back, carried);
+    let lo_seg = near.saturating_sub(1);
+    let hi_seg = (near + 1).min(back.len() - 2);
+    let (_, mut i, u) = nearest_on(&back[lo_seg..=hi_seg + 1], c);
+    i += lo_seg;
+    let (i, u) = if u > 1.0 - 1e-9 && i + 2 < back.len() {
+        (i + 1, 0.0)
+    } else {
+        (i, u)
+    };
+    let a = back[i] + (back[i + 1] - back[i]) * u;
     // The arc from a to b about c, the short way.
     let a0 = (a - c).angle();
     let mut sweep = (b - c).angle() - a0;
@@ -653,7 +701,6 @@ fn round_corner(
     let mut out: Vec<Vec2> = Vec::with_capacity(n + steps);
     // Up to the cut on the incoming curve: `a` lies between back[i + 1]
     // and back[i], which are p[at - i - 1] and p[at - i].
-    let _ = u;
     out.extend_from_slice(&p[..at - i]);
     for k in 0..=steps {
         out.push(c + Vec2::from_angle(a0 + sweep * k as f64 / steps as f64) * r);
@@ -692,9 +739,12 @@ pub fn offset(poly: &[Vec2], d: f64, facet: f64) -> Vec<Vec2> {
         // Inward normals (the interior is on the left of a ccw edge).
         let (n0, n1) = (e0.perp(), e1.perp());
         let turn = e0.cross(e1);
-        if turn * d >= 0.0 {
-            // Convex and shrinking, or reflex and growing: the offset
-            // edges cross at the mitre point.
+        // A point along a straight run turns by a rounding error either
+        // way; taken as reflex it would get an arc of no angle, two
+        // points a hair apart and sometimes a hair backwards.
+        if turn.abs() < 1e-9 || turn * d >= 0.0 {
+            // Straight, convex and shrinking, or reflex and growing: the
+            // offset edges cross at the mitre point.
             let bis = n0 + n1;
             let denom = 1.0 + n0.dot(n1);
             if denom > 1e-9 {
@@ -714,7 +764,22 @@ pub fn offset(poly: &[Vec2], d: f64, facet: f64) -> Vec<Vec2> {
             }
         }
     }
-    out
+    dedup(out)
+}
+
+/// The polygon without consecutive points a rounding error apart, the
+/// last against the first too.
+fn dedup(poly: Vec<Vec2>) -> Vec<Vec2> {
+    let mut clean: Vec<Vec2> = Vec::with_capacity(poly.len());
+    for q in poly {
+        if clean.last().is_none_or(|l| l.distance(q) > 1e-9) {
+            clean.push(q);
+        }
+    }
+    while clean.len() > 3 && clean[0].distance(*clean.last().unwrap()) <= 1e-9 {
+        clean.pop();
+    }
+    clean
 }
 
 fn segments_cross(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> bool {
@@ -1713,6 +1778,157 @@ mod tests {
             "{} vs {expect}",
             signed_area(&inner)
         );
+    }
+
+    #[test]
+    fn offsets_take_a_straight_run_as_one_edge_and_leave_no_doubled_points() {
+        // A square sampled at four points an edge, the way the straight
+        // tile's edges are: the points along each side turn by a
+        // rounding error, which must not become an arc of no angle.
+        let corners = [
+            Vec2::ZERO,
+            Vec2::new(10.0, 0.0),
+            Vec2::new(10.0, 10.0),
+            Vec2::new(0.0, 10.0),
+        ];
+        let mut sq = Vec::new();
+        for i in 0..4 {
+            let (a, b) = (corners[i], corners[(i + 1) % 4]);
+            for k in 0..4 {
+                sq.push(a + (b - a) * (k as f64 / 4.0));
+            }
+        }
+        for d in [1.0, -1.0] {
+            let off = offset(&sq, d, 10f64.to_radians());
+            let n = off.len();
+            for i in 0..n {
+                let step = off[i].distance(off[(i + 1) % n]);
+                assert!(step > 1e-6, "d {d}: points {i} and next {step} apart");
+            }
+            let turned: f64 = (0..n)
+                .map(|i| {
+                    let (a, b, c) = (off[(i + n - 1) % n], off[i], off[(i + 1) % n]);
+                    (b - a).cross(c - b).atan2((b - a).dot(c - b))
+                })
+                .sum();
+            assert!(near(turned, std::f64::consts::TAU, 1e-9), "d {d}: {turned}");
+        }
+        assert_eq!(offset(&sq, 1.0, 10f64.to_radians()).len(), 16);
+        // The straight master, eroded: the same, over fourteen edges.
+        let mut p = tile_params();
+        p.edge = 9.0;
+        p.gap = 0.7;
+        let m = master(&p, 0.0, 10f64.to_radians()).unwrap();
+        let n = m.outline.len();
+        let mut turned = 0.0;
+        for i in 0..n {
+            let (a, b, c) = (
+                m.outline[(i + n - 1) % n],
+                m.outline[i],
+                m.outline[(i + 1) % n],
+            );
+            assert!(b.distance(c) > 1e-6, "points {i} and next doubled");
+            turned += (b - a).cross(c - b).atan2((b - a).dot(c - b));
+        }
+        assert!(near(turned, std::f64::consts::TAU, 1e-9), "{turned}");
+    }
+
+    #[test]
+    fn a_semicircle_arc_goes_round_its_own_side() {
+        // At a sagitta of half the edge the arc's ends are opposite
+        // about its centre, so the short way round is either way: the
+        // apex decides, and the tile stays one simple outline with the
+        // straight tile's area, like every other bulge.
+        for bulge in [0.3, 0.49, 0.5] {
+            let curved = curved_tile(Curve::Arc, bulge, 18);
+            assert!(!self_intersects(&curved), "bulge {bulge}");
+            let turned: f64 = (0..curved.len())
+                .map(|i| {
+                    let n = curved.len();
+                    let (a, b, c) = (curved[(i + n - 1) % n], curved[i], curved[(i + 1) % n]);
+                    (b - a).cross(c - b).atan2((b - a).dot(c - b))
+                })
+                .sum();
+            assert!(
+                near(turned, std::f64::consts::TAU, 1e-9),
+                "bulge {bulge}: {turned}"
+            );
+            assert!(
+                near(signed_area(&curved), TILE_AREA, 1e-3),
+                "bulge {bulge}: {}",
+                signed_area(&curved)
+            );
+        }
+        let mut p = tile_params();
+        p.bulge = 0.5;
+        let m = master(&p, 0.0, 10f64.to_radians()).unwrap();
+        assert!(!self_intersects(&m.outline));
+    }
+
+    #[test]
+    fn rounded_corners_meet_the_curves_without_a_step_at_any_radius() {
+        // The rounding circle is carried back along the incoming curve
+        // until it touches the outgoing one. Carried on each facet's
+        // own normal it jumped at every facet, and a radius whose
+        // touching point fell on a jump got an arc ending up to 0.3 mm
+        // off the curve, a 25 degree kink on the knob; so no turn in a
+        // rounded outline may exceed the facet angle by more than the
+        // half-facet each join can add, at any radius.
+        let facet = 10f64.to_radians();
+        let mut p = tile_params();
+        p.edge = 9.0;
+        p.bulge = 0.3;
+        for tenths in 5..=40 {
+            let r = tenths as f64 / 10.0;
+            let m = master(&p, r, facet).unwrap();
+            let n = m.outline.len();
+            for i in 0..n {
+                let (a, b, c) = (
+                    m.outline[(i + n - 1) % n],
+                    m.outline[i],
+                    m.outline[(i + 1) % n],
+                );
+                let turn = (b - a).cross(c - b).atan2((b - a).dot(c - b)).to_degrees();
+                // The four inside corners are left sharp.
+                if turn < -30.0 {
+                    continue;
+                }
+                assert!(
+                    turn.abs() < 15.5,
+                    "round {r}: a turn of {turn} at point {i}"
+                );
+            }
+            // The arcs' chords say the knobs are round at r: a step of
+            // the facet angle or a little under, the sweep being cut
+            // into whole steps, on a circle of radius r.
+            let chord = 2.0 * r * (facet / 2.0).sin();
+            let on_arc = (0..n)
+                .filter(|&i| {
+                    let step = m.outline[i].distance(m.outline[(i + 1) % n]);
+                    step > 0.7 * chord && step < chord + 1e-9
+                })
+                .count();
+            assert!(on_arc >= 10 * 5, "round {r}: {on_arc} arc chords");
+        }
+        // The same with the bit's fillets in first, as the cage has it.
+        p.bit = 4.7625;
+        for tenths in 5..=40 {
+            let r = tenths as f64 / 10.0;
+            let m = master(&p, r, facet).unwrap();
+            let n = m.outline.len();
+            for i in 0..n {
+                let (a, b, c) = (
+                    m.outline[(i + n - 1) % n],
+                    m.outline[i],
+                    m.outline[(i + 1) % n],
+                );
+                let turn = (b - a).cross(c - b).atan2((b - a).dot(c - b)).to_degrees();
+                assert!(
+                    turn.abs() < 15.5,
+                    "bit and round {r}: a turn of {turn} at point {i}"
+                );
+            }
+        }
     }
 
     #[test]

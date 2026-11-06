@@ -816,3 +816,40 @@ into more, smaller ones would lower the floor further and is open.
 Doc tests are not nextest's, so `cargo test --workspace --doc` runs
 beside it, 4 s.
 
+## 2026-11 · The rounding circle rides a blended normal, and a straight run is not a corner
+
+Looking again at `spectre_tile` with the cage's numbers and others
+turned up three faults in the kernel's Spectre module, none of them
+in the tool itself. The straight tile, eroded by the gap, came back
+with ten doubled points and four 180° spikes: `offset` decided mitre
+or arc from the sign of a cross product, and the points along a
+straight edge (four per edge, from the tile sampler) turn by a
+rounding error either way, so a slightly negative one got an arc of
+no angle, two points a hair apart and sometimes a hair backwards.
+The clip tolerance hid it in the top's pieces; the master's outline
+goes out raw. Now a turn under 1e-9 is a straight run and the output
+is deduplicated. An arc of sagitta exactly half the edge, which the
+check allows, is a semicircle, and the short way round between its
+ends is either way, so some edges went the wrong way and the tile
+crossed itself; the sweep is now taken through the apex, which is
+never ambiguous. The third was the one that matters for a routed
+master: `round_corner` carries the rounding circle back along the
+incoming curve on the normal of whichever facet the carried point is
+on, so the circle's centre jumped by `r` times the facet angle at
+every facet vertex, and a bisection that ended on one of those jumps
+rather than a root left the arc's end up to 0.3 mm off the curve
+with a 25° kink on the knob. Which radii hit a jump was luck: the
+cage's 2.38 mm did not, a 2 mm round at the same tile did, and a
+rounding-error change elsewhere moved one corner's answer by 0.27 mm.
+The direction is now blended from the facet's end bisectors, so the
+centre moves continuously and every sign change is a root; the arc
+starts at the circle's foot on the carried facet or a neighbour, and
+a cut landing on a facet vertex is the start of the next facet, not
+the end of this one, so the vertex is not emitted twice. A test
+rounds the tile at every radius from 0.5 to 4 mm, with and without
+the bit's fillets, and allows no turn beyond the facet plus the half
+facet a join can add. Rejected: a finer facet to shrink the jumps
+(they shrink with the facet but never go, and the chord test on the
+output would still flap); solving the tangency analytically between
+circular arcs (right for `arc` edges, not for the cubic, and the
+polyline is what every later step sees anyway).

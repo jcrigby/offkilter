@@ -30,10 +30,13 @@
                 "x": -3.0,
                 "y": 2.0
               },
+              "angle": 0.0,
               "scrap": 40.0,
               "web": 0.0,
               "groove": 0.0,
               "show": "design",
+              "scheme": "mystics",
+              "seed": 0,
               "light": {
                 "name": "Maple",
                 "density": 0.7

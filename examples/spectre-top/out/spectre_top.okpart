@@ -23,15 +23,20 @@
               "edge": 12.7,
               "thickness": 12.0,
               "gap": 1.5,
+              "curve": "cubic",
               "bulge": 0.6,
+              "bit": 0.0,
               "shift": {
                 "x": 4.0,
                 "y": 0.0
               },
+              "angle": 0.0,
               "scrap": 150.0,
               "web": 5.0,
               "groove": 12.5,
               "show": "design",
+              "scheme": "mystics",
+              "seed": 0,
               "light": {
                 "name": "Maple",
                 "density": 0.7
