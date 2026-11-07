@@ -1,0 +1,13 @@
+bom_type,count,definition,description,item,part_number,revision
+normal,1,Base,,1,,
+normal,1,Battens,,2,,
+normal,1,Blank,,3,,
+normal,1,Fences,,4,,
+normal,1,Gantry,,5,,
+normal,1,Pattern plate,,6,,
+normal,1,Platforms,,7,,
+normal,1,Stop screw,,8,,
+normal,1,X slide,,9,,
+normal,1,Y shafts,,10,,
+normal,1,Y supports SK20,,11,,
+normal,1,Z slide,,12,,

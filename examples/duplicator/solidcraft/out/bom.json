@@ -1,0 +1,167 @@
+{
+ "component": 0,
+ "group_by": [
+  "part_number"
+ ],
+ "group_children": false,
+ "levels": "top",
+ "rows": [
+  {
+   "bom_type": "normal",
+   "components": [
+    8
+   ],
+   "count": 1,
+   "definition": "Base",
+   "description": "",
+   "item": 1,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    14
+   ],
+   "count": 1,
+   "definition": "Battens",
+   "description": "",
+   "item": 2,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    250
+   ],
+   "count": 1,
+   "definition": "Blank",
+   "description": "",
+   "item": 3,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    245
+   ],
+   "count": 1,
+   "definition": "Fences",
+   "description": "",
+   "item": 4,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    1
+   ],
+   "count": 1,
+   "definition": "Gantry",
+   "description": "",
+   "item": 5,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    271
+   ],
+   "count": 1,
+   "definition": "Pattern plate",
+   "description": "",
+   "item": 6,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    226
+   ],
+   "count": 1,
+   "definition": "Platforms",
+   "description": "",
+   "item": 7,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    221
+   ],
+   "count": 1,
+   "definition": "Stop screw",
+   "description": "",
+   "item": 8,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    3
+   ],
+   "count": 1,
+   "definition": "X slide",
+   "description": "",
+   "item": 9,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    34
+   ],
+   "count": 1,
+   "definition": "Y shafts",
+   "description": "",
+   "item": 10,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    29
+   ],
+   "count": 1,
+   "definition": "Y supports SK20",
+   "description": "",
+   "item": 11,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  },
+  {
+   "bom_type": "normal",
+   "components": [
+    5
+   ],
+   "count": 1,
+   "definition": "Z slide",
+   "description": "",
+   "item": 12,
+   "part_number": "",
+   "properties": {},
+   "revision": ""
+  }
+ ],
+ "total_occurrences": 12
+}

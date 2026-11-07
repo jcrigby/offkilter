@@ -1,0 +1,239 @@
+{
+ "parts": {
+  "Base": {
+   "bodies": 1,
+   "steps": 3,
+   "seconds": 0.01
+  },
+  "Battens": {
+   "bodies": 1,
+   "steps": 5,
+   "seconds": 0.04
+  },
+  "Y supports SK20": {
+   "bodies": 1,
+   "steps": 14,
+   "seconds": 0.95
+  },
+  "Y shafts": {
+   "bodies": 1,
+   "steps": 4,
+   "seconds": 0.11
+  },
+  "Y blocks SC20UU": {
+   "bodies": 1,
+   "steps": 10,
+   "seconds": 0.51
+  },
+  "Deck": {
+   "bodies": 1,
+   "steps": 3,
+   "seconds": 0.01
+  },
+  "Wall": {
+   "bodies": 1,
+   "steps": 3,
+   "seconds": 0.01
+  },
+  "Gussets": {
+   "bodies": 1,
+   "steps": 10,
+   "seconds": 0.02
+  },
+  "X supports SK20": {
+   "bodies": 1,
+   "steps": 14,
+   "seconds": 1.04
+  },
+  "X shafts": {
+   "bodies": 1,
+   "steps": 4,
+   "seconds": 0.14
+  },
+  "X blocks SC20UU": {
+   "bodies": 1,
+   "steps": 10,
+   "seconds": 0.57
+  },
+  "Z carriage plate": {
+   "bodies": 1,
+   "steps": 4,
+   "seconds": 0.02
+  },
+  "Z supports SK20": {
+   "bodies": 1,
+   "steps": 14,
+   "seconds": 0.68
+  },
+  "Z shafts": {
+   "bodies": 1,
+   "steps": 4,
+   "seconds": 0.17
+  },
+  "Balancer bracket": {
+   "bodies": 2,
+   "steps": 6,
+   "seconds": 0.11
+  },
+  "Balancer reel": {
+   "bodies": 1,
+   "steps": 4,
+   "seconds": 0.2
+  },
+  "Z blocks SC20UU": {
+   "bodies": 1,
+   "steps": 8,
+   "seconds": 0.39
+  },
+  "Tool support": {
+   "bodies": 1,
+   "steps": 18,
+   "seconds": 2.81
+  },
+  "Tool support webs": {
+   "bodies": 3,
+   "steps": 14,
+   "seconds": 0.03
+  },
+  "Clamp bolts": {
+   "bodies": 1,
+   "steps": 4,
+   "seconds": 0.15
+  },
+  "Router": {
+   "bodies": 1,
+   "steps": 5,
+   "seconds": 0.26
+  },
+  "Stylus block": {
+   "bodies": 7,
+   "steps": 24,
+   "seconds": 1.56
+  },
+  "Pilot": {
+   "bodies": 1,
+   "steps": 5,
+   "seconds": 0.28
+  },
+  "Stop screw": {
+   "bodies": 1,
+   "steps": 4,
+   "seconds": 0.15
+  },
+  "Platforms": {
+   "bodies": 1,
+   "steps": 4,
+   "seconds": 0.03
+  },
+  "Fences": {
+   "bodies": 2,
+   "steps": 18,
+   "seconds": 1.16
+  },
+  "Blank": {
+   "bodies": 1,
+   "steps": 3,
+   "seconds": 0.01
+  },
+  "Pattern plate": {
+   "bodies": 1,
+   "steps": 20,
+   "seconds": 3.0
+  }
+ },
+ "timings": {
+  "parts": 14.4,
+  "poses": 4.6,
+  "files": 0.5,
+  "total": 130.3
+ },
+ "joints": {
+  "dof": {
+   "0": 0,
+   "2": 1,
+   "4": 2,
+   "6": 3,
+   "9": 0,
+   "15": 0,
+   "30": 0,
+   "35": 0,
+   "46": 6,
+   "50": 6,
+   "54": 6,
+   "61": 6,
+   "76": 6,
+   "81": 6,
+   "92": 6,
+   "97": 6,
+   "112": 6,
+   "117": 6,
+   "124": 6,
+   "130": 6,
+   "139": 6,
+   "158": 6,
+   "167": 6,
+   "174": 6,
+   "180": 6,
+   "205": 6,
+   "217": 6,
+   "222": 4,
+   "227": 0,
+   "246": 0,
+   "251": 0,
+   "272": 0
+  },
+  "fixed": [
+   0,
+   9,
+   15,
+   30,
+   35,
+   227,
+   246,
+   251,
+   272
+  ],
+  "seconds": 0.3
+ },
+ "renderer": "cpu",
+ "depth": {
+  "raised": 39.999999999999986,
+  "first_pass": 3.999999999999986,
+  "last_pass": 12.5,
+  "drop": 52.499999999999986,
+  "z_travel_down": 62.5
+ },
+ "sweep": {
+  "poses": 72,
+  "pairs_intersected": 3790,
+  "hits": [],
+  "tool_in_work_overlaps": 88,
+  "seconds": 110.4,
+  "interference_seconds": 109.3
+ },
+ "view_dxf": "ok",
+ "calls": 363,
+ "seconds_in_calls": 130.2,
+ "bodies": 38,
+ "sizes": {
+  "bom.csv": 357,
+  "bom.json": 2627,
+  "duplicator.sc": 1747587,
+  "duplicator.step": 1335000,
+  "front.dxf": 95486,
+  "front.png": 54983,
+  "hardware.csv": 2824,
+  "iso.png": 298267,
+  "mcp.stderr": 275,
+  "motion_xy_1.png": 44055,
+  "motion_xy_2.png": 45690,
+  "motion_xy_3.png": 45634,
+  "motion_z_1.png": 37320,
+  "motion_z_2.png": 37486,
+  "motion_z_3.png": 37058,
+  "right.png": 56156,
+  "section_carriage.png": 123823,
+  "section_tools.png": 48059,
+  "top.png": 67663
+ }
+}
