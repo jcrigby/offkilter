@@ -785,6 +785,15 @@ impl SpectreFeature {
         }
     }
 
+    /// The pieces as the design layout lays them, in the feature's plane:
+    /// what regenerates into the bodies, piece `k` being body `k`.
+    pub fn patch(
+        &self,
+        opts: &ok_sketch::ProfileOptions,
+    ) -> Result<ok_sketch::spectre::Patch, String> {
+        ok_sketch::spectre::build(&self.params(), opts.arc_segment_angle)
+    }
+
     /// The rectangle a glue-up of whole tiles is trimmed to: the board,
     /// in the feature's plane, where the design layout puts it; none
     /// unless the tiles are kept whole in that layout.
@@ -792,9 +801,7 @@ impl SpectreFeature {
         if !self.whole || self.show != SpectreLayout::Design {
             return None;
         }
-        ok_sketch::spectre::build(&self.params(), opts.arc_segment_angle)
-            .ok()
-            .map(|p| p.board)
+        self.patch(opts).ok().map(|p| p.board)
     }
 
     /// The wood of a slot the scheme hands out: light, dark, third, fourth.

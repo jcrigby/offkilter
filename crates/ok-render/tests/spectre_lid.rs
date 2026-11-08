@@ -232,20 +232,51 @@ fn the_sample_is_one_tile_to_print() {
         .unwrap();
     }
     let r = doc.regenerate_studio(tab, None).unwrap();
-    assert!(r.errors().next().is_none());
+    assert!(
+        r.errors().next().is_none(),
+        "{:?}",
+        r.errors().collect::<Vec<_>>()
+    );
     assert_eq!(r.bodies.len(), 1);
     let b = &r.bodies[0];
     assert_eq!(b.name, "Sample piece");
     b.solid.validate().unwrap();
-    let a = area(b, sf.thickness);
-    let tile = ok_sketch::spectre::TILE_AREA * sf.edge * sf.edge;
-    assert!((a - n["sample_area"].as_f64().unwrap()).abs() < 0.5, "{a}");
-    // Half the gap off a perimeter of 14 edges, near enough.
-    assert!(
-        a < tile && a > tile - 14.0 * sf.edge * sf.gap,
-        "{a} of {tile}"
-    );
+    // Three millimetres thick whatever the lid is, with the glue lines
+    // engraved in the top, so it is less than the eroded tile's prism.
     let (lo, hi) = b.solid.bounds().unwrap();
+    assert!(
+        lo.z.abs() < 1e-9 && (hi.z - ok_model::SAMPLE_THICKNESS).abs() < 1e-9,
+        "{lo:?} {hi:?}"
+    );
+    let volume = b.solid.volume();
+    assert!(
+        (volume - n["sample_volume"].as_f64().unwrap()).abs() < 1.0,
+        "{volume}"
+    );
+    let master = ok_sketch::spectre::master(&sf.params(), 0.0, 10f64.to_radians()).unwrap();
+    let full = master.area * ok_model::SAMPLE_THICKNESS;
+    let tile = ok_sketch::spectre::TILE_AREA * sf.edge * sf.edge;
+    assert!(
+        master.area < tile && master.area > tile - 14.0 * sf.edge * sf.gap,
+        "{} of {tile}",
+        master.area
+    );
+    // Four grooves 0.6 wide and 0.5 deep across a 41 mm tile take tens
+    // of cubic millimetres, not hundreds.
+    let (w, d) = ok_model::SAMPLE_GROOVE;
+    let cut = full - volume;
+    assert!(
+        cut > 4.0 * 8.0 * w * d && cut < 4.0 * 45.0 * w * d,
+        "grooves took {cut} of {full}"
+    );
+    // The top has more faces than a plain extrusion's one: the grooves' floors.
+    let tops = b
+        .solid
+        .faces
+        .iter()
+        .filter(|f| f.plane.normal.z > 0.99)
+        .count();
+    assert!(tops > sf.prisms.len(), "{tops} upward faces");
     let centre = ok_math::Vec3::new(sf.width / 2.0, sf.height / 2.0, 0.0);
     assert!(
         lo.x < centre.x && centre.x < hi.x && lo.y < centre.y && centre.y < hi.y,
@@ -256,4 +287,53 @@ fn the_sample_is_one_tile_to_print() {
         "{lo:?} {hi:?}"
     );
     assert_eq!(b.material.as_ref().map(|m| m.name.as_str()), Some("Maple"));
+}
+
+/// The sheet at 1:1 draws the trim line and fills every piece in its
+/// tile's gray with its prism's white stripes; the pieces of one tile
+/// share a colour in the renderer and differ by their stripes' angle.
+#[test]
+fn the_sheet_fills_the_prisms_and_the_render_colours_by_tile() {
+    let mut doc = load();
+    let tab = doc.tabs[0].id;
+    let r = doc.regenerate_studio(tab, None).unwrap();
+    let mut by_tile = std::collections::BTreeMap::<u32, Vec<Option<f64>>>::new();
+    for b in &r.bodies {
+        let s = b.shade.expect("a piece has a shade");
+        by_tile.entry(s.tile).or_default().push(s.stripes);
+    }
+    for (tile, stripes) in &by_tile {
+        let mut angles: Vec<i64> = stripes.iter().map(|a| a.unwrap().round() as i64).collect();
+        angles.sort();
+        assert_eq!(angles, vec![0, 36, 72, 108, 144], "tile {tile}");
+    }
+    let colours: std::collections::BTreeSet<_> = r
+        .bodies
+        .iter()
+        .enumerate()
+        .map(|(i, b)| {
+            (
+                b.shade.unwrap().tile,
+                format!("{:?}", ok_render::colour_of(b, i)),
+            )
+        })
+        .collect();
+    assert_eq!(colours.len(), by_tile.len(), "one colour per tile");
+    let opts = ok_sheet::Options {
+        views: vec!["top".into()],
+        sheet: ok_sheet::SheetSize::parse("A3").unwrap(),
+        parts: false,
+        scale: Some(1.0),
+        ..ok_sheet::Options::default()
+    };
+    let pdf = ok_sheet::drawing_pdf(&mut doc, tab, &opts).unwrap();
+    let text = ok_sheet::pdf::inflated(&pdf);
+    assert!(text.contains("TRIM"));
+    let fills = text.matches(" h f").count();
+    assert!(
+        fills >= r.bodies.len(),
+        "{fills} filled regions for {} pieces",
+        r.bodies.len()
+    );
+    assert!(text.contains("1 G 1 g"), "white stripes");
 }

@@ -32,15 +32,19 @@ cargo test -p ok-render --test spectre_lid     # what CI runs
   whole-tiles box and the prism planner with the glue lines on their
   grid.
 - `out/lid.pdf`: the glue-up at 1:1 on A3 (it overflows A4), every
-  piece outline with its glue lines, the board drawn on it as the
-  dashed TRIM rectangle. Print at 100 % and lay the pieces out on it.
+  piece outline with its glue lines, each tile one shade of gray
+  (walnut darker) and each prism within it striped at its own angle,
+  the board drawn on it as the dashed TRIM rectangle. Print at 100 %
+  and lay the pieces out on it.
 - `out/templates.dxf`: every piece outline at 1:1.
 - `out/prisms.dxf`: the five stick profiles at 1:1, one layer each,
   with half the gap off their outside faces and the glue faces full:
   what to rip and rout each stick to.
 - `out/sample_piece.stl`: one whole tile as the pieces come off the
-  stick, 0.35 mm inside the tile all round. Print it, and a second,
-  and see how they sit against each other before any stick is glued.
+  stick, 0.35 mm inside the tile all round, 3 mm thick (enough to be
+  stiff, quick to print) with the four glue lines engraved in its
+  top. Print it, and a second, and see how they sit against each
+  other before any stick is glued.
 - `out/lid.json`: the numbers the test reads.
 
 ## The numbers
@@ -51,7 +55,7 @@ cargo test -p ok-render --test spectre_lid     # what CI runs
 | Tile edge | 10.56 mm; a tile is 914 mm², about 41 x 34 |
 | Curve | arcs of sagitta 0.2673 edge: radius 6.35 mm (1/4 in), 112.5° of circle |
 | Bits | 1/4 in bullnose (or a 1/2 in bullnose by diameter) and a 1/2 in core box |
-| Gap | 0.7 mm; the sample piece is 853 mm² of the tile's 914 |
+| Gap | 0.7 mm; the sample piece is 853 mm² of the tile's 914, 3 mm thick |
 | Prisms | 5 per tile from 4 glue lines, 5 shapes, 142 to 228 mm² |
 | Tiles | 21 whole: 14 maple, 7 walnut (the mystic pairs) |
 | Pieces | 105; 192 cm² of tiles for a 103 cm² lid, the rest past the trim line |

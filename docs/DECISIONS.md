@@ -939,3 +939,22 @@ gap, printed, is the fit check before any stick is glued. The
 explorer page the decomposition was found on stays as a scratch tool;
 the same planner is in the web panel, where the cuts land on the
 feature.
+
+The prisms also retire the carving duplicator for the puzzle boxes:
+the first box goes ahead with the table saw and the router table the
+owner has, and the duplicator's other jobs (a printed master copied
+to wood) wait for a CNC, which would do everything the duplicator was
+built for. Its models, the stylus block, the portal variant and their
+tests stay in the tree as built; nothing further is planned on it.
+
+Drawing the prisms: on the sheet every prism of a tile is the same
+gray and the prisms are told apart by thin white stripes at the
+prism's own angle (the half turn shared out among them), and the
+renderer does the same with one colour per tile and lighter stripes,
+because colouring prisms differently made every tile look like five
+pieces of five woods, when the tile is one piece of one wood with
+glue lines in it. Rejected: drawing the glue lines heavier (the
+pieces' outlines are already the gap, and a second line weight
+clutters a 1:1 sheet); a gray per prism shape (a shape repeats in
+every tile, so it says nothing the stripes do not, and makes the
+tiles vanish).

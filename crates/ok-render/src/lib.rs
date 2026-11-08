@@ -183,6 +183,10 @@ pub struct Item {
     pub edges: Vec<DisplayEdge>,
     pub colour: Rgb,
     pub cap: TriMesh,
+    /// Thin light stripes across the body at this angle in the model's
+    /// xy plane, degrees: a prism of a Spectre tile is told from the next
+    /// by its stripes' direction, the tile's colour being shared.
+    pub stripes: Option<f64>,
 }
 
 impl Default for Rgb {
@@ -201,13 +205,23 @@ pub const PALETTE: [Rgb; 6] = [
     Rgb(0x9c, 0xb8, 0xc0),
 ];
 
+/// The colour a body is drawn in: its tile's, when it is a piece of one,
+/// else the next of the palette.
+pub fn colour_of(body: &Body, index: usize) -> Rgb {
+    match &body.shade {
+        Some(s) => PALETTE[s.tile as usize % PALETTE.len()],
+        None => PALETTE[index % PALETTE.len()],
+    }
+}
+
 /// The body as drawn whole.
 pub fn item_of(body: &Body, index: usize) -> Item {
     Item {
         mesh: body.mesh.clone(),
         edges: body.edges.clone(),
-        colour: PALETTE[index % PALETTE.len()],
+        colour: colour_of(body, index),
         cap: TriMesh::new(),
+        stripes: body.shade.as_ref().and_then(|s| s.stripes),
     }
 }
 
@@ -279,8 +293,9 @@ pub fn cut_item(body: &Body, index: usize, section: &Section) -> Option<Item> {
     Some(Item {
         mesh: body_mesh,
         edges: ok_brep::display_edges(&half),
-        colour: PALETTE[index % PALETTE.len()],
+        colour: colour_of(body, index),
         cap,
+        stripes: body.shade.as_ref().and_then(|s| s.stripes),
     })
 }
 
@@ -620,6 +635,7 @@ mod tests {
             edges,
             colour: PALETTE[1],
             cap: TriMesh::new(),
+            stripes: None,
         }];
         let mut o = opts(View::Iso);
         o.edges = true;

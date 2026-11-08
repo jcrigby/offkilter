@@ -13,7 +13,20 @@ impl Rgb {
         let f = |c: u8| ((c as f64) * k).round().clamp(0.0, 255.0) as u8;
         Rgb(f(self.0), f(self.1), f(self.2))
     }
+
+    /// Mixed towards white by `t` (1 is white).
+    fn lightened(self, t: f64) -> Rgb {
+        let f = |c: u8| {
+            (c as f64 + (255.0 - c as f64) * t)
+                .round()
+                .clamp(0.0, 255.0) as u8
+        };
+        Rgb(f(self.0), f(self.1), f(self.2))
+    }
 }
+
+/// The stripes' pitch and width in model millimetres.
+const STRIPE: (f64, f64) = (2.0, 0.5);
 
 pub const BACKGROUND: Rgb = Rgb(0xff, 0xff, 0xff);
 const EDGE: Rgb = Rgb(0x2c, 0x30, 0x3a);
@@ -180,6 +193,7 @@ pub(crate) fn render(items: &[Item], options: &Options) -> Image {
             &item.mesh,
             item.colour,
             false,
+            item.stripes,
             index as u32 + 1,
             light,
             options,
@@ -190,6 +204,7 @@ pub(crate) fn render(items: &[Item], options: &Options) -> Image {
             &item.cap,
             item.colour,
             true,
+            None,
             index as u32 + 1,
             light,
             options,
@@ -225,7 +240,9 @@ fn vertex(mesh: &ok_mesh::TriMesh, i: u32) -> (Vec3, Vec3) {
 }
 
 /// Rasterises one mesh. A `hatched` mesh (the caps of a section) is
-/// drawn in diagonal stripes of two tones so the cut reads as a cut.
+/// drawn in diagonal stripes of two tones so the cut reads as a cut; a
+/// mesh with `stripes` gets thin light stripes across it at that angle
+/// in the model's xy plane, STRIPE apart.
 #[allow(clippy::too_many_arguments)]
 fn shade_mesh(
     buf: &mut Buffers,
@@ -233,11 +250,17 @@ fn shade_mesh(
     mesh: &ok_mesh::TriMesh,
     colour: Rgb,
     hatched: bool,
+    stripes: Option<f64>,
     owner: u32,
     light: Vec3,
     options: &Options,
 ) {
     let (w, h) = (buf.image.width, buf.image.height);
+    let stripe_dir = stripes.map(|deg| {
+        let (s, c) = deg.to_radians().sin_cos();
+        // Across the stripes: the normal to their direction.
+        Vec3::new(-s, c, 0.0)
+    });
     for tri in mesh.indices.chunks_exact(3) {
         let (pa, na) = vertex(mesh, tri[0]);
         let (pb, nb) = vertex(mesh, tri[1]);
@@ -305,9 +328,16 @@ fn shade_mesh(
                 if hatched {
                     intensity = if (px + py) / 4 % 2 == 0 { 0.55 } else { 0.85 };
                 }
+                let mut c = colour.scaled(intensity);
+                if let Some(across) = stripe_dir {
+                    let p = pa * wa + pb * wb + pc * wc;
+                    if p.dot(across).rem_euclid(STRIPE.0) < STRIPE.1 {
+                        c = c.lightened(0.55);
+                    }
+                }
                 buf.depth[i] = depth;
                 buf.owner[i] = owner;
-                buf.image.set(px, py, colour.scaled(intensity));
+                buf.image.set(px, py, c);
             }
         }
     }

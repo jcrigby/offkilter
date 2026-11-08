@@ -38,8 +38,8 @@ pub use feature::{
 pub use merge::Merge;
 pub use ops::{Op, OpResult, SketchOp};
 pub use regen::{
-    faces_of_ref, piece_near, piece_neighbours, Body, FeatureStatus, RegenResult, SketchCurve,
-    SketchResult,
+    faces_of_ref, piece_near, piece_neighbours, stripe_angle, Body, FeatureStatus, RegenResult,
+    Shade, SketchCurve, SketchResult, SAMPLE_GROOVE, SAMPLE_THICKNESS,
 };
 
 use serde::{Deserialize, Serialize};

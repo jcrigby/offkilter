@@ -136,11 +136,12 @@ def main():
     # gap off their outside faces, the glue faces full.
     dxf(os.path.join(OUT, "prisms.dxf"), [(f"prism-{p['index']}-shape-{p['shape']}", poly) for p in prisms["prisms"] for poly in p["profile"]])
     # The sample piece: one whole tile as the pieces come off the stick,
-    # eroded by half the gap, to print and try against its neighbours.
+    # eroded by half the gap, 3 mm thick with the glue lines engraved in
+    # its top, to print and try against its neighbours.
     top.apply({"type": "set_spectre", "id": feature, "show": "sample"})
     sample = top.report()["bodies"]
     assert [b["name"] for b in sample] == ["Sample piece"], sample
-    print(f"sample piece: {sample[0]['volume'] / THICKNESS:.0f} mm2 of the tile's {prisms['tile_area']:.0f}")
+    print(f"sample piece: {sample[0]['volume']:.0f} mm3, 3 mm thick with the glue lines engraved; the tile is {prisms['tile_area']:.0f} mm2")
     mcp.call("screenshot", {"tab": 1, "view": "iso", "width": 800, "height": 600, "path": os.path.join(OUT, "sample_piece.png")})
     print(mcp.call("export", {"tab": 1, "format": "stl", "body": "Sample piece", "path": os.path.join(OUT, "sample_piece.stl")}))
     top.apply({"type": "set_spectre", "id": feature, "show": "design"})
@@ -162,7 +163,7 @@ def main():
                 "pieces": len(pieces),
                 "light": len(light),
                 "dark": len(dark),
-                "sample_area": sample[0]["volume"] / THICKNESS,
+                "sample_volume": sample[0]["volume"],
                 "tile_area": prisms["tile_area"],
             },
             f,

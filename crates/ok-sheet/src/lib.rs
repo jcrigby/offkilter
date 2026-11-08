@@ -106,6 +106,30 @@ pub struct Options {
     /// down to. `drawing_pdf` fills it in from such a feature when it
     /// is not given.
     pub trim: Option<[Vec3; 4]>,
+    /// Regions to fill under the top view's lines: the pieces of a
+    /// Spectre top made of prisms, each in its tile's gray with its
+    /// prism's stripes. `drawing_pdf` fills them in from such a feature
+    /// when none are given.
+    pub fills: Vec<Fill>,
+}
+
+/// A filled region on the top view: a closed outline in model
+/// millimetres, its gray (0 black to 1 white) and, when it is one prism
+/// of several, thin white stripes across it at this angle (degrees from
+/// the model's x axis) that tell it from its neighbours of the same gray.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Fill {
+    pub outline: Vec<Vec3>,
+    pub gray: f64,
+    pub stripes: Option<f64>,
+}
+
+/// The gray a Spectre piece is filled in: the light wood's pieces pale,
+/// the dark wood's darker, and three steps within each so neighbouring
+/// tiles of one wood still part.
+pub fn piece_gray(wood: u8, tile: u32) -> f64 {
+    let base = if matches!(wood, 1 | 3) { 0.58 } else { 0.82 };
+    base + 0.05 * ((tile % 3) as f64 - 1.0)
 }
 
 impl Default for Options {
@@ -124,6 +148,7 @@ impl Default for Options {
             window: None,
             scale: None,
             trim: None,
+            fills: Vec::new(),
         }
     }
 }
@@ -436,23 +461,27 @@ fn arc_chords(a: &ViewArc) -> Vec<[Vec2; 2]> {
     out
 }
 
-/// Hatch lines at 45 degrees, `spacing` apart, filling the polygons by
-/// the even-odd rule (a face with holes comes as several loops), in
-/// the polygons' own coordinates.
-fn hatch(loops: &[Vec<(f64, f64)>], spacing: f64) -> Vec<[(f64, f64); 2]> {
-    // Lines x - y = c; along a line, t = x + y.
+/// Hatch lines at `angle` degrees from the x axis, `spacing` apart,
+/// filling the polygons by the even-odd rule (a face with holes comes
+/// as several loops), in the polygons' own coordinates.
+fn hatch(loops: &[Vec<(f64, f64)>], spacing: f64, angle: f64) -> Vec<[(f64, f64); 2]> {
+    // Lines n·p = c, with n across the stripes; along a line, t = d·p.
+    let (s, co) = angle.to_radians().sin_cos();
+    let (d, nrm) = ((co, s), (-s, co));
+    let across = |p: (f64, f64)| p.0 * nrm.0 + p.1 * nrm.1;
+    let along = |p: (f64, f64)| p.0 * d.0 + p.1 * d.1;
     let mut out = Vec::new();
     let (mut cmin, mut cmax) = (f64::INFINITY, f64::NEG_INFINITY);
     for l in loops {
-        for &(x, y) in l {
-            cmin = cmin.min(x - y);
-            cmax = cmax.max(x - y);
+        for &p in l {
+            cmin = cmin.min(across(p));
+            cmax = cmax.max(across(p));
         }
     }
     if !cmin.is_finite() {
         return out;
     }
-    let step = spacing * std::f64::consts::SQRT_2;
+    let step = spacing;
     let mut c = (cmin / step).floor() * step + step / 2.0;
     while c < cmax {
         let mut ts: Vec<f64> = Vec::new();
@@ -460,20 +489,20 @@ fn hatch(loops: &[Vec<(f64, f64)>], spacing: f64) -> Vec<[(f64, f64); 2]> {
             let n = l.len();
             for i in 0..n {
                 let (p, q) = (l[i], l[(i + 1) % n]);
-                let (cp, cq) = (p.0 - p.1 - c, q.0 - q.1 - c);
+                let (cp, cq) = (across(p) - c, across(q) - c);
                 if (cp < 0.0) == (cq < 0.0) {
                     continue; // both sides equal, or both on: no crossing
                 }
                 let f = cp / (cp - cq);
                 let x = p.0 + (q.0 - p.0) * f;
                 let y = p.1 + (q.1 - p.1) * f;
-                ts.push(x + y);
+                ts.push(along((x, y)));
             }
         }
         ts.sort_by(f64::total_cmp);
         for pair in ts.chunks(2) {
             if pair.len() == 2 && pair[1] - pair[0] > 1e-6 {
-                let at = |t: f64| ((t + c) / 2.0, (t - c) / 2.0);
+                let at = |t: f64| (d.0 * t + nrm.0 * c, d.1 * t + nrm.1 * c);
                 out.push([at(pair[0]), at(pair[1])]);
             }
         }
@@ -625,6 +654,8 @@ pub struct Sheet {
     hidden: bool,
     /// The trim rectangle in the top view's coordinates.
     trim: Option<Vec<Vec2>>,
+    /// The fills in the top view's coordinates, with gray and stripes.
+    fills: Vec<(Vec<Vec2>, f64, Option<f64>)>,
 }
 
 /// Places the views (third angle, the rest to the right of the
@@ -1211,6 +1242,22 @@ impl Sheet {
                     .map(|p| Vec2::new(p.dot(u), p.dot(v)))
                     .collect()
             }),
+            fills: {
+                let (u, v) = frame(standard_view("top").unwrap());
+                opts.fills
+                    .iter()
+                    .map(|f| {
+                        (
+                            f.outline
+                                .iter()
+                                .map(|p| Vec2::new(p.dot(u), p.dot(v)))
+                                .collect(),
+                            f.gray,
+                            f.stripes,
+                        )
+                    })
+                    .collect()
+            },
         })
     }
 
@@ -1244,6 +1291,24 @@ impl Sheet {
                     (sx(b.x + p.dx), sy(b.y + p.dy)),
                 ]
             };
+            if p.name == "top" && !self.fills.is_empty() {
+                // The fills under the lines: each region in its gray,
+                // its stripes thin white lines across it, a constant
+                // pitch on the paper whatever the scale.
+                for (outline, gray, stripes) in &self.fills {
+                    let pts: Vec<(f64, f64)> = outline
+                        .iter()
+                        .map(|q| (sx(q.x + p.dx), sy(q.y + p.dy)))
+                        .collect();
+                    page.gray(*gray);
+                    page.polygon(&pts);
+                    if let Some(angle) = stripes {
+                        page.gray(1.0);
+                        page.lines(&hatch(&[pts], 1.5, *angle), 0.3, None);
+                    }
+                }
+                page.gray(0.0);
+            }
             let hidden: Vec<[(f64, f64); 2]> = p
                 .lines
                 .hidden
@@ -1308,7 +1373,7 @@ impl Sheet {
                     .iter()
                     .map(|l| l.iter().map(|q| (sx(q.x + p.dx), sy(q.y + p.dy))).collect())
                     .collect();
-                let mut hatching = hatch(&loops, 2.5);
+                let mut hatching = hatch(&loops, 2.5, 45.0);
                 if let Some(w) = &p.window {
                     let w = Bounds {
                         minx: sx(w.minx + p.dx),
@@ -1916,8 +1981,10 @@ pub fn motion_pdf(
 pub fn drawing_pdf(doc: &mut Document, tab: TabId, opts: &Options) -> Result<Vec<u8>, String> {
     let parts = parts_of(doc, tab)?;
     let mut opts = opts.clone();
-    if opts.trim.is_none() {
-        opts.trim = spectre_trim(doc, tab);
+    if opts.trim.is_none() && opts.fills.is_empty() {
+        let (trim, fills) = spectre_overlay(doc, tab);
+        opts.trim = trim;
+        opts.fills = fills;
     }
     if opts.title.is_empty() {
         let tab_name = doc
@@ -1939,29 +2006,70 @@ pub fn drawing_pdf(doc: &mut Document, tab: TabId, opts: &Options) -> Result<Vec
     Ok(Sheet::layout(&refs, &opts)?.to_pdf())
 }
 
-/// The rectangle a glue-up of whole Spectre tiles is trimmed to: the
-/// board of the tab's first unsuppressed Spectre feature that keeps its
-/// tiles whole in the design layout, as corners on the feature's plane.
-fn spectre_trim(doc: &mut Document, tab: TabId) -> Option<[Vec3; 4]> {
-    let (sf, opts) = match &doc.tab(tab)?.kind {
-        ok_model::TabKind::PartStudio(ps) => (
-            ps.features().iter().find_map(|f| match &f.kind {
+/// What a Spectre top adds to its sheet: the rectangle a glue-up of
+/// whole tiles is trimmed to (the board, when the tab's first
+/// unsuppressed Spectre feature keeps its tiles whole in the design
+/// layout), and, when the tiles are split into prisms, every piece
+/// filled in its tile's gray with its prism's stripes, both as the
+/// feature's plane places them.
+fn spectre_overlay(doc: &mut Document, tab: TabId) -> (Option<[Vec3; 4]>, Vec<Fill>) {
+    let Some(t) = doc.tab(tab) else {
+        return (None, Vec::new());
+    };
+    let (sf, opts) = match &t.kind {
+        ok_model::TabKind::PartStudio(ps) => {
+            let sf = ps.features().iter().find_map(|f| match &f.kind {
                 ok_model::FeatureKind::Spectre(s) if !f.suppressed => Some(s.clone()),
                 _ => None,
-            })?,
-            ps.settings.profile_options(),
-        ),
-        _ => return None,
+            });
+            match sf {
+                Some(sf) => (sf, ps.settings.profile_options()),
+                None => return (None, Vec::new()),
+            }
+        }
+        _ => return (None, Vec::new()),
     };
-    let (lo, hi) = sf.trim(&opts)?;
-    let r = doc.regenerate_studio(tab, None).ok()?;
-    let plane = r.resolve_plane(&sf.plane).ok()?;
-    Some([
-        plane.to_world(lo),
-        plane.to_world(Vec2::new(hi.x, lo.y)),
-        plane.to_world(hi),
-        plane.to_world(Vec2::new(lo.x, hi.y)),
-    ])
+    if sf.show != ok_model::SpectreLayout::Design || (!sf.whole && sf.prisms.is_empty()) {
+        return (None, Vec::new());
+    }
+    let Ok(patch) = sf.patch(&opts) else {
+        return (None, Vec::new());
+    };
+    let Ok(r) = doc.regenerate_studio(tab, None) else {
+        return (None, Vec::new());
+    };
+    let Ok(plane) = r.resolve_plane(&sf.plane) else {
+        return (None, Vec::new());
+    };
+    let trim = sf.whole.then(|| {
+        let (lo, hi) = patch.board;
+        [
+            plane.to_world(lo),
+            plane.to_world(Vec2::new(hi.x, lo.y)),
+            plane.to_world(hi),
+            plane.to_world(Vec2::new(lo.x, hi.y)),
+        ]
+    });
+    let fills = if sf.prisms.is_empty() {
+        Vec::new()
+    } else {
+        let prisms = patch
+            .pieces
+            .iter()
+            .filter_map(|p| p.prism)
+            .max()
+            .map_or(0, |j| j as usize + 1);
+        patch
+            .pieces
+            .iter()
+            .map(|p| Fill {
+                outline: p.outline.iter().map(|q| plane.to_world(*q)).collect(),
+                gray: piece_gray(p.wood, p.tile),
+                stripes: p.prism.map(|j| ok_model::stripe_angle(j, prisms)),
+            })
+            .collect()
+    };
+    (trim, fills)
 }
 
 #[cfg(test)]
@@ -2173,7 +2281,7 @@ mod tests {
             .iter()
             .map(|l| l.iter().map(|p| (p.x, p.y)).collect())
             .collect();
-        let lines = hatch(&loops, 2.5);
+        let lines = hatch(&loops, 2.5, 45.0);
         assert!(lines.len() > 10, "{}", lines.len());
         for [(x0, _), (x1, _)] in &lines {
             assert!(

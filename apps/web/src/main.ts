@@ -2855,7 +2855,8 @@ class App implements SketchHost {
       const faces = p.faces.map((fc) => (fc.kind === "glue" ? `${(fc.len * k.edge).toFixed(1)} glue` : `${fc.kind}${fc.whole ? "" : "½"}`)).join(", ");
       lines.push(`Shape ${j + 1} × ${members.length} (${members.map((i) => String.fromCharCode(65 + i)).join(", ")}): ${p.outline.length} sides, ${(p.area * k.edge * k.edge).toFixed(0)} mm²; ${faces}; ${verdict(p)}`);
     });
-    kit.innerHTML = lines.map((l, i) => `<div${i && !l.endsWith("clean") && !l.endsWith("a cut") ? ' class="bad"' : ""}>${l}</div>`).join("");
+    if (bad && cuts.length) lines.push("These cuts were drawn for another curve, or by hand: Fewest prisms for this curve finds a set that satisfies this one.");
+    kit.innerHTML = lines.map((l, i) => `<div${i && !l.endsWith("clean") && !l.endsWith("a cut") && !l.endsWith("this one.") ? ' class="bad"' : ""}>${l}</div>`).join("");
     wrap.appendChild(kit);
     const hint = document.createElement("p");
     hint.className = "note";

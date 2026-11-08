@@ -26,7 +26,38 @@ pub struct Body {
     /// The part's material, when one is assigned.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub material: Option<crate::Material>,
+    /// How a renderer tells this body from its neighbours when it is one
+    /// of many alike: a Spectre piece's tile and wood, and the stripes of
+    /// its prism.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shade: Option<Shade>,
 }
+
+/// A drawing hint for a body that is one of a family: pieces of one tile
+/// take one colour (or one gray), and a prism within the tile is told
+/// from the next by thin stripes at its own angle.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct Shade {
+    /// The tile the piece belongs to; pieces of one tile share a colour.
+    pub tile: u32,
+    /// The wood slot the scheme gave the tile (0 light, 1 dark, ...).
+    pub wood: u8,
+    /// Thin stripes across the piece at this angle, degrees from the
+    /// plane's x axis: the prism's own, so the prisms of a tile differ
+    /// in orientation and not in colour. None for no stripes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stripes: Option<f64>,
+}
+
+/// The stripe angle of prism `j` of `n`: the prisms share the half turn.
+pub fn stripe_angle(j: u8, n: usize) -> f64 {
+    180.0 * j as f64 / n.max(1) as f64
+}
+
+/// The sample piece's thickness: enough to be stiff, no more to print.
+pub const SAMPLE_THICKNESS: f64 = 3.0;
+/// The sample's engraved glue lines: width and depth, mm.
+pub const SAMPLE_GROOVE: (f64, f64) = (0.6, 0.5);
 
 /// The neighbour hashes a reference to each face's piece records (see
 /// `FaceRef::near`): a sample of `piece_neighbours`.
@@ -129,6 +160,7 @@ impl Body {
             triangle_faces,
             edges,
             material: None,
+            shade: None,
         }
     }
 
@@ -993,38 +1025,87 @@ impl PartStudio {
             return Some("a pattern plate needs a gap: its grooves are the gaps".into());
         }
         if sf.show == crate::SpectreLayout::Sample {
-            // One whole tile as the pieces are cut, at the board's centre.
+            // One whole tile as the pieces are cut, at the board's centre,
+            // SAMPLE_THICKNESS thick (a fit check, not a piece), its glue
+            // lines engraved in the top.
             let master = match ok_sketch::spectre::master(&sf.params(), 0.0, opts.arc_segment_angle)
             {
                 Ok(m) => m,
                 Err(e) => return Some(e),
             };
             let centre = ok_math::Vec2::new(sf.width, sf.height) * 0.5;
-            let piece = ok_sketch::spectre::Piece {
+            let outline_of = |outline: Vec<Vec2>| ok_sketch::spectre::Piece {
                 tile: 0,
                 mystic: false,
                 wood: 0,
                 profile: None,
                 prism: None,
-                outline: master.outline.iter().map(|q| *q + centre).collect(),
+                outline,
             };
+            let piece = outline_of(master.outline.iter().map(|q| *q + centre).collect());
             let profile = match ok_sketch::spectre::piece_profile(&piece, opts) {
                 Ok(p) => p,
                 Err(e) => return Some(e),
             };
-            return match ok_brep::extrude(&profile, &plane, 0.0, sf.thickness, id.0) {
-                Ok(mut solid) => {
-                    for f in &mut solid.faces {
-                        f.origin.local += PIECE_LOCALS;
-                    }
-                    result.next_part += 1;
-                    let mut body = Body::new("Sample piece".into(), id, solid);
-                    body.material = sf.wood(0);
-                    result.bodies.push(body);
-                    None
-                }
-                Err(e) => Some(format!("sample piece: {e}")),
+            let mut solid = match ok_brep::extrude(&profile, &plane, 0.0, SAMPLE_THICKNESS, id.0) {
+                Ok(s) => s,
+                Err(e) => return Some(format!("sample piece: {e}")),
             };
+            // Each glue line as a groove: run out past the tile's edge
+            // where the line ends on it, met at the other groove where it
+            // stops inside.
+            let tile = ok_sketch::spectre::prisms::tile();
+            let on_edge = |q: Vec2| {
+                (0..tile.len()).any(|i| {
+                    let (a, b) = (tile[i], tile[(i + 1) % tile.len()]);
+                    let (u, v) = (b - a, q - a);
+                    u.cross(v).abs() < 1e-6 && v.dot(u) > -1e-6 && v.dot(u) < u.dot(u) + 1e-6
+                })
+            };
+            let (groove_w, groove_d) = SAMPLE_GROOVE;
+            for cut in &sf.prisms {
+                let place = |q: Vec2| q * sf.edge - master.centre + centre;
+                let (a, b) = (place(cut[0]), place(cut[1]));
+                let Some(d) = (b - a).normalized() else {
+                    continue;
+                };
+                let ext = |q: Vec2| {
+                    if on_edge(q) {
+                        1.0 + sf.gap
+                    } else {
+                        groove_w / 2.0
+                    }
+                };
+                let (a, b) = (a - d * ext(cut[0]), b + d * ext(cut[1]));
+                let n = d.perp() * (groove_w / 2.0);
+                let slot = outline_of(vec![a - n, b - n, b + n, a + n]);
+                let profile = match ok_sketch::spectre::piece_profile(&slot, opts) {
+                    Ok(p) => p,
+                    Err(e) => return Some(format!("sample groove: {e}")),
+                };
+                let tool = match ok_brep::extrude(
+                    &profile,
+                    &plane,
+                    SAMPLE_THICKNESS - groove_d,
+                    SAMPLE_THICKNESS + 0.5,
+                    id.0,
+                ) {
+                    Ok(s) => s,
+                    Err(e) => return Some(format!("sample groove: {e}")),
+                };
+                solid = match boolean(&solid, &tool, BoolOp::Difference) {
+                    Ok(s) => s,
+                    Err(e) => return Some(format!("sample groove: {e}")),
+                };
+            }
+            for f in &mut solid.faces {
+                f.origin.local += PIECE_LOCALS;
+            }
+            result.next_part += 1;
+            let mut body = Body::new("Sample piece".into(), id, solid);
+            body.material = sf.wood(0);
+            result.bodies.push(body);
+            return None;
         }
         let patch = match ok_sketch::spectre::build(&sf.params(), opts.arc_segment_angle) {
             Ok(p) => p,
@@ -1060,7 +1141,13 @@ impl PartStudio {
                 Err(e) => Some(format!("pattern plate: {e}")),
             };
         }
-        let mut bodies: Vec<(String, Solid, Option<crate::Material>)> = Vec::new();
+        let mut bodies: Vec<(String, Solid, Option<crate::Material>, Option<Shade>)> = Vec::new();
+        let prisms = patch
+            .pieces
+            .iter()
+            .filter_map(|p| p.prism)
+            .max()
+            .map_or(0, |j| j as usize + 1);
         for (k, piece) in patch.pieces.iter().enumerate() {
             let profile = match ok_sketch::spectre::piece_profile(piece, opts) {
                 Ok(p) => p,
@@ -1081,6 +1168,11 @@ impl PartStudio {
                 ),
                 solid,
                 sf.wood(piece.wood),
+                Some(Shade {
+                    tile: piece.tile,
+                    wood: piece.wood,
+                    stripes: piece.prism.map(|j| stripe_angle(j, prisms)),
+                }),
             ));
         }
         if sf.web > 0.0 && sf.gap > 0.0 {
@@ -1092,17 +1184,18 @@ impl PartStudio {
                         for f in &mut solid.faces {
                             f.origin.local += (patch.pieces.len() as u32 + 1) * PIECE_LOCALS;
                         }
-                        bodies.push(("Alignment web".into(), solid, None));
+                        bodies.push(("Alignment web".into(), solid, None, None));
                     }
                     Err(e) => return Some(format!("alignment web: {e}")),
                 },
                 Err(e) => return Some(format!("alignment web: {e}")),
             }
         }
-        for (name, solid, material) in bodies {
+        for (name, solid, material, shade) in bodies {
             result.next_part += 1;
             let mut body = Body::new(name, id, solid);
             body.material = material;
+            body.shade = shade;
             result.bodies.push(body);
         }
         None
