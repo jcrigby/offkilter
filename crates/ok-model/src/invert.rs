@@ -252,6 +252,8 @@ impl PartStudio {
                 third,
                 fourth,
                 rips,
+                whole,
+                prisms,
             } => match before.kind() {
                 Some(FeatureKind::Spectre(s)) => vec![Op::SetSpectre {
                     id,
@@ -277,6 +279,8 @@ impl PartStudio {
                     third: third.map(|_| s.third.clone()),
                     fourth: fourth.map(|_| s.fourth.clone()),
                     rips: rips.map(|_| s.rips.clone()),
+                    whole: whole.map(|_| s.whole),
+                    prisms: prisms.map(|_| s.prisms.clone()),
                 }],
                 _ => Vec::new(),
             },
@@ -504,6 +508,7 @@ impl PartStudio {
 }
 
 /// What an op may change, captured before it is applied.
+#[allow(clippy::large_enum_variant)]
 enum Before {
     None,
     Feature {

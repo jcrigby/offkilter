@@ -744,6 +744,15 @@ pub struct SpectreFeature {
     /// glued up from ripped stock; only with the bulge at 0.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rips: Vec<[Vec2; 2]>,
+    /// Keep every tile the board reaches whole, for a glue-up trimmed
+    /// to the board afterwards; the bodies then sit in the box of the
+    /// whole tiles, with the board inside it.
+    #[serde(default)]
+    pub whole: bool,
+    /// Prism cuts across the tile (tile units) that split every piece
+    /// into the convex prisms a tile stick is glued up from.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub prisms: Vec<[Vec2; 2]>,
 }
 
 fn kaplan_bulge() -> f64 {
@@ -771,7 +780,21 @@ impl SpectreFeature {
             scheme: self.scheme,
             seed: self.seed,
             rips: self.rips.clone(),
+            whole: self.whole,
+            prisms: self.prisms.clone(),
         }
+    }
+
+    /// The rectangle a glue-up of whole tiles is trimmed to: the board,
+    /// in the feature's plane, where the design layout puts it; none
+    /// unless the tiles are kept whole in that layout.
+    pub fn trim(&self, opts: &ok_sketch::ProfileOptions) -> Option<(Vec2, Vec2)> {
+        if !self.whole || self.show != SpectreLayout::Design {
+            return None;
+        }
+        ok_sketch::spectre::build(&self.params(), opts.arc_segment_angle)
+            .ok()
+            .map(|p| p.board)
     }
 
     /// The wood of a slot the scheme hands out: light, dark, third, fourth.
@@ -795,6 +818,9 @@ pub enum SpectreLayout {
     /// The assembled top: every piece and the web.
     #[default]
     Design,
+    /// One whole tile as the pieces are cut, eroded by half the gap and
+    /// filleted to the bit, at the board's centre: a sample to print.
+    Sample,
     /// The printable pattern plate alone: the gaps as grooves `groove`
     /// deep in a slab, for cutting the top from one board with a pilot
     /// and a bit the size of the gap.

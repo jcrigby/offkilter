@@ -5,7 +5,7 @@ import { arcChords, detailView, dimensionOffsetFor, drawingFrame, snapDrawingPoi
 type HiddenLines = "auto" | "on" | "off";
 import { parseObj, parseStl } from "./stl";
 import { parseDxf } from "./dxf";
-import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, SpectreLayout, SpectreCurve, SpectreScheme, RipFound, RipSearch, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
+import type { Axis, BlendKind, BodyOp, BooleanOp, Connector, Material, Constraint, CopyOp, Placement, DocOp, DocOpResult, EdgeRef, ExtrudeDirection, ExtrudeEnd, FaceRef, FeatureSummary, Grain, InstanceSummary, MateKind, PuzzleLayout, SpectreLayout, SpectreCurve, SpectreScheme, Prism, RipFound, RipSearch, MateSummary, Op, OpResult, PatternKind, PlaneRef, ProfileSelection, ProjectionSource, RevolveAxis, SketchData, SketchOp, StandardPlane, Summary, Vec2, Vec3 } from "./kernel";
 import { Viewer } from "./viewer";
 import type { EdgePick, FacePick, Label } from "./viewer";
 import { Sketcher } from "./sketcher";
@@ -102,6 +102,7 @@ class App implements SketchHost {
   ripPending: Vec2 | null = null;
   ripSearch: RipSearch | null = null;
   ripMode: keyof RipSearch = "kit";
+  prismPending: Vec2 | null = null;
   sketcher = new Sketcher(this);
   sync = new Sync(
     {
@@ -1473,7 +1474,7 @@ class App implements SketchHost {
   }
 
   /** Which views the drawing sheet shows (all but the side section by default), where the sections cut (null: see `drawingSectionView`), its sheet size, and whether the parts list and balloons are drawn. */
-  drawingOptions: { views: Set<string>; sectionAt: { section: number | null; "section-side": number | null }; sheet: SheetSize; parts: boolean; hidden: HiddenLines; explode: boolean; /** The range-of-motion strip of an assembly: which mate steps through `positions` (see `motionPositions`), the view drawn, and whether the interference check runs at each. */ motion: { mate: number | null; positions: string; view: string; check: boolean } } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sectionAt: { section: null, "section-side": null }, sheet: "A4", parts: true, hidden: "auto", explode: false, motion: { mate: null, positions: "", view: "front", check: true } };
+  drawingOptions: { views: Set<string>; sectionAt: { section: number | null; "section-side": number | null }; sheet: SheetSize; parts: boolean; /** Force the PDF's drawing scale to 1:1 (a template to print at 100 %). */ scale1: boolean; hidden: HiddenLines; explode: boolean; /** The range-of-motion strip of an assembly: which mate steps through `positions` (see `motionPositions`), the view drawn, and whether the interference check runs at each. */ motion: { mate: number | null; positions: string; view: string; check: boolean } } = { views: new Set(["front", "top", "right", "iso", "section", "detail"]), sectionAt: { section: null, "section-side": null }, sheet: "A4", parts: true, scale1: false, hidden: "auto", explode: false, motion: { mate: null, positions: "", view: "front", check: true } };
 
   /** The sections as the PDF sheet names them: `section@<mm>` where the cut is placed explicitly, the bare name when it goes through the middle. */
   pdfSectionNames(): string[] {
@@ -2471,11 +2472,11 @@ class App implements SketchHost {
     const gap = this.exprInput(f, "gap", k.gap, (v) => set({ gap: v }));
     gap.title = "Between pieces, for a resin fill; a quarter of the edge at most";
     body.appendChild(field("Gap", gap));
-    const curve = select(["cubic", "arc"], k.curve, (v) => set({ curve: v as SpectreCurve }));
-    curve.title = "Kaplan's cubic, tightest at its apex (0.28 of the edge at 0.6), or a circular arc, one radius all along (0.57 of the edge at 0.3) and kinder to a router bit";
+    const curve = select(["cubic", "arc", "ogee"], k.curve, (v) => set({ curve: v as SpectreCurve, ...(v === "ogee" && k.bulge > 0.25 ? { bulge: 0.1036 } : {}) }));
+    curve.title = "Kaplan's cubic, tightest at its apex (0.28 of the edge at 0.6); a circular arc, one radius all along (0.57 of the edge at 0.3, a quarter circle at 0.2071) and kinder to a router bit; or an ogee, an S of two arcs on every edge (quarter circles at 0.1036), which one ogee bit cuts and a mirrored tile cannot mate";
     body.appendChild(field("Curve", curve));
     const bulge = this.exprInput(f, "bulge", k.bulge, (v) => set({ bulge: v }));
-    bulge.title = "How far each edge's curve stands off the straight edge, as a fraction of it: the cubic's control offset (0.6 is Kaplan's) or the arc's sagitta (0.3 matches Kaplan's corners); 0 is the straight-sided tile";
+    bulge.title = "How far each edge's curve stands off the straight edge, as a fraction of it: the cubic's control offset (0.6 is Kaplan's), the arc's sagitta (0.3 matches Kaplan's corners, 0.2071 is a quarter circle, 0.2673 five sixteenths of one) or the S's half-arcs' (at most 0.25); 0 is the straight-sided tile";
     body.appendChild(field("Bulge", bulge));
     const bit = this.exprInput(f, "bit", k.bit, (v) => set({ bit: Math.max(0, v) }));
     bit.title = "Diameter of the router bit each piece is cut with: the four inside corners are filleted to its radius and the convex corners meeting them rounded to match, so the pieces still nest; a curve tighter than the bit is refused. 0 for sharp corners.";
@@ -2488,9 +2489,12 @@ class App implements SketchHost {
     const scrap = this.exprInput(f, "scrap", k.scrap, (v) => set({ scrap: Math.max(0, v) }));
     scrap.title = "Pieces smaller than this area (mm²), the slivers the board's edge cuts off outer tiles, are left to the resin";
     body.appendChild(field("Scrap under", scrap));
-    const show = select(["design", "pattern"], k.show, (v) => set({ show: v as SpectreLayout }));
-    show.title = "The assembled design, or the printable pattern plate with the gaps as grooves";
+    const show = select(["design", "sample", "pattern"], k.show, (v) => set({ show: v as SpectreLayout }));
+    show.title = "The assembled design; one whole tile as the pieces are cut, at the board's centre, a sample to export and print; or the printable pattern plate with the gaps as grooves";
     body.appendChild(field("Show", show));
+    const whole = checkbox(k.whole, (v) => set({ whole: v }));
+    whole.title = "Keep every tile the board reaches whole, for a glue-up trimmed to the board afterwards: the pieces then sit in the whole tiles' box and the plan draws the board inside it";
+    body.appendChild(field("Whole tiles", whole));
     const wood = (label: string, current: Material | undefined, onChange: (m: Material | null) => void) => {
       const sel = select(["", ...MATERIALS.map((m) => m.name)], current?.name ?? "", (v) => onChange(MATERIALS.find((m) => m.name === v) ?? null));
       if (current && !MATERIALS.some((m) => m.name === current.name)) {
@@ -2512,6 +2516,7 @@ class App implements SketchHost {
       ["four_map", "four woods, neighbours apart"],
       ["mix", "four woods, light favoured"],
       ["profiles", "by strip profile (rips)"],
+      ["prisms", "by prism shape"],
     ];
     const scheme = document.createElement("select");
     for (const [value, label] of SCHEMES) {
@@ -2524,7 +2529,7 @@ class App implements SketchHost {
     scheme.addEventListener("change", () => set({ scheme: scheme.value as SpectreScheme }));
     scheme.title = "How the pieces get their woods: the pairs standing in for a ninth supertile (the mystics) dark and the rest light; all light; two or three woods at random; light and dark by the tile's turn (only a mystic's partner sits at an odd turn, so one of each pair is dark); or four woods with no two neighbours alike, spread evenly or with the light wood favoured and the fourth rare";
     body.appendChild(field("Woods", scheme));
-    const woodsUsed = { mystics: 2, one: 1, two_random: 2, two_turn: 2, three_random: 3, four_map: 4, mix: 4, profiles: 4 }[k.scheme];
+    const woodsUsed = { mystics: 2, one: 1, two_random: 2, two_turn: 2, three_random: 3, four_map: 4, mix: 4, profiles: 4, prisms: 4 }[k.scheme];
     wood("Light wood", k.light, (m) => set({ light: m }));
     if (woodsUsed >= 2) wood(k.scheme === "mystics" ? "Dark wood (mystics)" : "Dark wood", k.dark, (m) => set({ dark: m }));
     if (woodsUsed >= 3) wood("Third wood", k.third, (m) => set({ third: m }));
@@ -2539,6 +2544,7 @@ class App implements SketchHost {
     groove.title = "A printable pattern plate with the gaps as grooves this deep: a pilot the size of the gap rides in them while a bit of that size cuts the pieces apart from one board, the kerf being the gap; the board's thickness and a little. 0 for none.";
     body.appendChild(field("Pattern groove", groove));
     body.appendChild(this.spectrePlanSvg(f));
+    body.appendChild(this.spectrePrismsSvg(f));
     body.appendChild(this.spectreRipsSvg(f));
     const note = document.createElement("p");
     note.className = "note";
@@ -2638,11 +2644,13 @@ class App implements SketchHost {
       g.appendChild(path);
     }
     const board = document.createElementNS(ns, "rect");
-    board.setAttribute("x", "0");
-    board.setAttribute("y", "0");
-    board.setAttribute("width", String(plan.width));
-    board.setAttribute("height", String(plan.height));
+    const [bx0, by0, bx1, by1] = plan.board ?? [0, 0, plan.width, plan.height];
+    board.setAttribute("x", String(bx0));
+    board.setAttribute("y", String(by0));
+    board.setAttribute("width", String(bx1 - bx0));
+    board.setAttribute("height", String(by1 - by0));
     board.setAttribute("class", "board");
+    board.appendChild(document.createElementNS(ns, "title")).textContent = k.whole ? `The board, ${(bx1 - bx0).toFixed(1)} × ${(by1 - by0).toFixed(1)} mm, to trim the ${plan.width.toFixed(0)} × ${plan.height.toFixed(0)} glue-up to` : "The board";
     g.appendChild(board);
     // Drag slides the tiling with the pointer; the wheel scales the edge
     // about the pointer, the shift scaling with it so the tiling stays put
@@ -2720,6 +2728,138 @@ class App implements SketchHost {
     const hint = document.createElement("p");
     hint.className = "note";
     hint.textContent = "Drag the plan to slide the tiling under the board; scroll over it to scale the tile about the pointer. Every change regenerates the top.";
+    wrap.appendChild(hint);
+    return wrap;
+  }
+
+  /** The tile as convex prisms: the straight tile on its 30° grid with the curves on, cut by the feature's prism cuts; click two grid points to add a cut, undo or clear them, or take the fewest prisms the search finds for this curve. Each prism is read for its faces, convexity and the shoulder rule, and the prisms are gathered by shape. */
+  spectrePrismsSvg(f: FeatureSummary): HTMLElement {
+    const wrap = document.createElement("div");
+    wrap.className = "prisms-plan";
+    if (f.kind.type !== "spectre") return wrap;
+    const k = f.kind;
+    const cuts: [Vec2, Vec2][] = k.prisms ?? [];
+    const head = document.createElement("h4");
+    head.textContent = "Prisms";
+    wrap.appendChild(head);
+    let pr;
+    try {
+      pr = this.kernel.spectrePrisms(k.curve, k.bulge, cuts);
+    } catch (e) {
+      wrap.appendChild(Object.assign(document.createElement("p"), { className: "error", textContent: String(e) }));
+      return wrap;
+    }
+    const dec = pr.decomposition;
+    const setCuts = (next: [Vec2, Vec2][]) => this.apply({ type: "set_spectre", id: f.id, prisms: next });
+    const row = document.createElement("div");
+    row.className = "row";
+    row.append(
+      button("Undo glue line", () => setCuts(cuts.slice(0, -1))),
+      button("Clear glue lines", () => setCuts([])),
+      button("Fewest prisms for this curve", () => {
+        try {
+          setCuts(this.kernel.spectrePrismsSearch(k.curve, k.bulge));
+        } catch (e) {
+          window.alert(String(e));
+        }
+      }),
+    );
+    wrap.appendChild(row);
+    const ns = "http://www.w3.org/2000/svg";
+    const xs = pr.tile.map((p) => p.x);
+    const ys = pr.tile.map((p) => p.y);
+    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    const m = 0.5;
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", `${x0 - m} ${-(y1 + m)} ${x1 - x0 + 2 * m} ${y1 - y0 + 2 * m}`);
+    svg.setAttribute("class", "prisms-svg");
+    const g = document.createElementNS(ns, "g");
+    g.setAttribute("transform", "scale(1 -1)");
+    svg.appendChild(g);
+    const pt = (p: Vec2) => `${p.x.toFixed(4)} ${p.y.toFixed(4)}`;
+    const el = (name: string, attrs: Record<string, string>) => {
+      const e = document.createElementNS(ns, name);
+      for (const [a, v] of Object.entries(attrs)) e.setAttribute(a, v);
+      return e;
+    };
+    for (const l of pr.lines) {
+      const a = { x: l.p.x - 20 * l.d.x, y: l.p.y - 20 * l.d.y };
+      const b = { x: l.p.x + 20 * l.d.x, y: l.p.y + 20 * l.d.y };
+      g.appendChild(el("line", { x1: String(a.x), y1: String(a.y), x2: String(b.x), y2: String(b.y), class: "grid" }));
+    }
+    const verdict = (p: Prism) => (!p.convex ? "not convex" : p.bump_split ? "a bump split by a cut" : !p.shoulders ? `a corner over ${dec.limit.toFixed(0)}° where a bump ends` : p.flute_split ? "clean; a flute shared across a cut" : "clean");
+    dec.prisms.forEach((p, i) => {
+      const path = el("path", { d: p.curved.map((q, j) => `${j ? "L" : "M"} ${pt(q)}`).join(" ") + " Z", class: `piece p${p.shape % 8}${p.convex && p.shoulders && !p.bump_split ? "" : " bad"}` });
+      path.appendChild(document.createElementNS(ns, "title")).textContent = `Prism ${String.fromCharCode(65 + i)}, shape ${p.shape + 1}: ${(p.area * k.edge * k.edge).toFixed(0)} mm²; ${verdict(p)}`;
+      g.appendChild(path);
+    });
+    g.appendChild(el("path", { d: pr.tile.map((p, j) => `${j ? "L" : "M"} ${pt(p)}`).join(" ") + " Z", class: "outline" }));
+    for (const [a, b] of cuts) g.appendChild(el("line", { x1: String(a.x), y1: String(a.y), x2: String(b.x), y2: String(b.y), class: "cut" }));
+    // Grid points: the first click picks one, the second a point it can cut to, inside the tile.
+    const same = (a: Vec2, b: Vec2) => Math.hypot(a.x - b.x, a.y - b.y) < 1e-6;
+    const inTile = (p: Vec2) => {
+      const t = pr.tile;
+      let inside = false;
+      for (let i = 0, j = t.length - 1; i < t.length; j = i++) {
+        const [a, b] = [t[i]!, t[j]!];
+        if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+      }
+      return inside;
+    };
+    const onEdge = (p: Vec2) => {
+      const t = pr.tile;
+      for (let i = 0; i < t.length; i++) {
+        const [a, b] = [t[i]!, t[(i + 1) % t.length]!];
+        const d = { x: b.x - a.x, y: b.y - a.y };
+        const s = ((p.x - a.x) * d.x + (p.y - a.y) * d.y) / (d.x * d.x + d.y * d.y);
+        if (s > -1e-9 && s < 1 + 1e-9 && Math.abs(d.x * (p.y - a.y) - d.y * (p.x - a.x)) / Math.hypot(d.x, d.y) < 1e-6) return true;
+      }
+      return false;
+    };
+    const cutOk = (a: Vec2, b: Vec2) => {
+      if (same(a, b)) return false;
+      for (let i = 1; i < 48; i++) {
+        const p = { x: a.x + ((b.x - a.x) * i) / 48, y: a.y + ((b.y - a.y) * i) / 48 };
+        if (!inTile(p) || onEdge(p)) return false;
+      }
+      return true;
+    };
+    const pending = this.prismPending;
+    for (const n of pr.grid) {
+      const eligible = pending !== null && cutOk(pending, n);
+      const c = el("circle", { cx: String(n.x), cy: String(n.y), r: eligible || (pending && same(pending, n)) ? "0.07" : "0.035", class: `node${pending && same(pending, n) ? " pending" : ""}${eligible ? " eligible" : ""}` });
+      c.addEventListener("click", () => {
+        if (pending === null) {
+          this.prismPending = n;
+          this.renderDetail();
+        } else if (cutOk(pending, n)) {
+          this.prismPending = null;
+          setCuts([...cuts, [pending, n]]);
+        } else {
+          this.prismPending = same(pending, n) ? null : n;
+          this.renderDetail();
+        }
+      });
+      g.appendChild(c);
+    }
+    wrap.appendChild(svg);
+    // The reading: the rule, the bits, and the prisms by shape.
+    const kit = document.createElement("div");
+    kit.className = "prisms-kit";
+    const r = dec.radius * k.edge;
+    const bits = k.curve === "ogee" ? `one ogee bit of radius ${r.toFixed(2)} mm` : Math.abs(dec.theta - 45) < 0.5 ? `a ${r.toFixed(2)} mm roundover on a 45° gable (or a Ø ${(2 * r).toFixed(1)} bullnose) and a Ø ${(2 * r).toFixed(1)} mm core box` : `a Ø ${(2 * r).toFixed(1)} mm bullnose and core box`;
+    const bad = dec.prisms.filter((p) => !(p.convex && p.shoulders && !p.bump_split)).length;
+    const lines: string[] = [`${cuts.length} cut${cuts.length === 1 ? "" : "s"}, ${dec.prisms.length} prism${dec.prisms.length === 1 ? "" : "s"} in ${dec.shapes.length} shape${dec.shapes.length === 1 ? "" : "s"}: ${bad ? `${bad} not clean` : "all clean"}; arcs meet the chord at ${dec.theta.toFixed(0)}°, so a corner where a bump ends is ${dec.limit.toFixed(0)}° at most; ${bits}`];
+    dec.shapes.forEach((members, j) => {
+      const p = dec.prisms[members[0]!]!;
+      const faces = p.faces.map((fc) => (fc.kind === "glue" ? `${(fc.len * k.edge).toFixed(1)} glue` : `${fc.kind}${fc.whole ? "" : "½"}`)).join(", ");
+      lines.push(`Shape ${j + 1} × ${members.length} (${members.map((i) => String.fromCharCode(65 + i)).join(", ")}): ${p.outline.length} sides, ${(p.area * k.edge * k.edge).toFixed(0)} mm²; ${faces}; ${verdict(p)}`);
+    });
+    kit.innerHTML = lines.map((l, i) => `<div${i && !l.endsWith("clean") && !l.endsWith("a cut") ? ' class="bad"' : ""}>${l}</div>`).join("");
+    wrap.appendChild(kit);
+    const hint = document.createElement("p");
+    hint.className = "note";
+    hint.textContent = "The tile with its curves on, cut into the convex prisms a tile stick is glued up from: click a grid point, then one of the ringed points it can cut to. Every straight face of a convex prism is a through rip; a flute is one pass of a core box bit of the arc's radius and a bump one of a bullnose (at the quarter circle, a 45° gable rounded over). A cutter's shoulder leaves the arc's end tangent to it, so the prism's corner where a bump ends must be no wider than 180° less the arc's end angle, or the shoulder takes the next face; that is the rule the search satisfies with the fewest cuts. Mirror images are one shape, since a stick turns end for end. With cuts set, every piece of the top splits by them and the prisms scheme colours by shape.";
     wrap.appendChild(hint);
     return wrap;
   }
@@ -4153,7 +4293,7 @@ async function main(): Promise<void> {
       if ([...mateSel.options].some((o) => o.value === was)) mateSel.value = was;
     }
     const motion = { mate: mateSel.value === "" ? null : Number(mateSel.value), positions: ($("#dv-motion-positions") as HTMLInputElement).value, view: ($("#dv-motion-view") as HTMLSelectElement).value, check: ($("#dv-motion-check") as HTMLInputElement).checked };
-    app.drawingOptions = { views: new Set(views), sectionAt: { section: at("#dv-section-at"), "section-side": at("#dv-section-side-at") }, sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked, hidden: ($("#dv-hidden") as HTMLSelectElement).value as HiddenLines, explode: ($("#dv-explode") as HTMLInputElement).checked, motion };
+    app.drawingOptions = { views: new Set(views), sectionAt: { section: at("#dv-section-at"), "section-side": at("#dv-section-side-at") }, sheet: ($("#dv-sheet") as HTMLSelectElement).value as SheetSize, parts: ($("#dv-parts") as HTMLInputElement).checked, scale1: ($("#dv-scale1") as HTMLInputElement).checked, hidden: ($("#dv-hidden") as HTMLSelectElement).value as HiddenLines, explode: ($("#dv-explode") as HTMLInputElement).checked, motion };
     let chosen: DrawingView[];
     try {
       chosen = app.chosenDrawingViews();
@@ -4235,6 +4375,7 @@ async function main(): Promise<void> {
   for (const n of ["section", "section-side"]) ($(`#dv-${n}-at`) as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-sheet") as HTMLSelectElement).onchange = renderDrawingPreview;
   ($("#dv-parts") as HTMLInputElement).onchange = renderDrawingPreview;
+  ($("#dv-scale1") as HTMLInputElement).onchange = renderDrawingPreview;
   ($("#dv-hidden") as HTMLSelectElement).onchange = renderDrawingPreview;
   ($("#dv-explode") as HTMLInputElement).onchange = renderDrawingPreview;
   for (const id of ["#dv-motion-mate", "#dv-motion-positions", "#dv-motion-view", "#dv-motion-check"]) ($(id) as HTMLInputElement).onchange = renderDrawingPreview;
@@ -4254,7 +4395,7 @@ async function main(): Promise<void> {
     try {
       const hidden = app.drawingOptions.hidden === "auto" ? undefined : app.drawingOptions.hidden === "on";
       const explode = app.drawingOptions.explode ? app.viewer.explodeFactor() : 0;
-      const pdf = app.kernel.drawingPdf(app.summary.tab, { views, sheet: app.drawingOptions.sheet, parts: app.drawingOptions.parts, hidden, explode, title: `${app.summary.name} · ${app.summary.tab_name}` });
+      const pdf = app.kernel.drawingPdf(app.summary.tab, { views, sheet: app.drawingOptions.sheet, parts: app.drawingOptions.parts, hidden, explode, scale: app.drawingOptions.scale1 ? 1 : undefined, title: `${app.summary.name} · ${app.summary.tab_name}` });
       app.download(new Blob([pdf as BlobPart], { type: "application/pdf" }), "pdf", `${app.summary.name}-drawing`);
     } catch (err) {
       app.setStatus(`error: ${String(err)}`);

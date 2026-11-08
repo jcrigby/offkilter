@@ -1,0 +1,102 @@
+{
+  "name": "Spectre lid",
+  "tabs": [
+    {
+      "id": 1,
+      "kind": {
+        "type": "part_studio",
+        "name": "Lid",
+        "features": [
+          {
+            "id": 1,
+            "name": "Spectre lid",
+            "suppressed": false,
+            "kind": {
+              "type": "spectre",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "width": 101.6,
+              "height": 101.6,
+              "edge": 10.56,
+              "thickness": 12.0,
+              "gap": 0.7,
+              "curve": "arc",
+              "bulge": 0.2673,
+              "bit": 0.0,
+              "shift": {
+                "x": 2.0,
+                "y": 5.0
+              },
+              "angle": 0.0,
+              "scrap": 100.0,
+              "web": 0.0,
+              "groove": 0.0,
+              "show": "design",
+              "scheme": "mystics",
+              "seed": 0,
+              "light": {
+                "name": "Maple",
+                "density": 0.7
+              },
+              "dark": {
+                "name": "Walnut",
+                "density": 0.64
+              },
+              "whole": true,
+              "prisms": [
+                [
+                  {
+                    "x": 2.366025403784439,
+                    "y": 0.6339745962155614
+                  },
+                  {
+                    "x": 2.133974596215561,
+                    "y": 1.5
+                  }
+                ],
+                [
+                  {
+                    "x": 1.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 2.133974596215561,
+                    "y": 1.5
+                  }
+                ],
+                [
+                  {
+                    "x": 1.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 0.6339745962155614,
+                    "y": 2.3660254037844393
+                  }
+                ],
+                [
+                  {
+                    "x": 0.0,
+                    "y": 1.0
+                  },
+                  {
+                    "x": 0.666666666666667,
+                    "y": 2.1547005383792515
+                  }
+                ]
+              ]
+            }
+          }
+        ],
+        "next_id": 2,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    }
+  ],
+  "next_id": 2
+}

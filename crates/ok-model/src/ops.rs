@@ -626,6 +626,10 @@ pub enum Op {
         fourth: Option<Material>,
         #[serde(default)]
         rips: Vec<[Vec2; 2]>,
+        #[serde(default)]
+        whole: bool,
+        #[serde(default)]
+        prisms: Vec<[Vec2; 2]>,
         name: Option<String>,
     },
     SetSpectre {
@@ -676,6 +680,10 @@ pub enum Op {
         /// The whole list; an empty one clears the rips.
         #[serde(default)]
         rips: Option<Vec<[Vec2; 2]>>,
+        #[serde(default)]
+        whole: Option<bool>,
+        #[serde(default)]
+        prisms: Option<Vec<[Vec2; 2]>>,
     },
     SetDraft {
         id: FeatureId,
@@ -1820,6 +1828,8 @@ impl PartStudio {
                 third,
                 fourth,
                 rips,
+                whole,
+                prisms,
                 name,
             } => {
                 out.feature = Some(self.push_feature(
@@ -1846,6 +1856,8 @@ impl PartStudio {
                         third,
                         fourth,
                         rips,
+                        whole,
+                        prisms,
                     }),
                     name,
                 ));
@@ -1874,8 +1886,16 @@ impl PartStudio {
                 third,
                 fourth,
                 rips,
+                whole,
+                prisms,
             } => match &mut self.feature_mut(id)?.kind {
                 FeatureKind::Spectre(s) => {
+                    if let Some(v) = whole {
+                        s.whole = v;
+                    }
+                    if let Some(v) = prisms {
+                        s.prisms = v;
+                    }
                     if let Some(v) = plane {
                         s.plane = v;
                     }

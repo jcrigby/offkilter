@@ -71,7 +71,9 @@ works today, all in the browser:
   a cage for routing that box's pieces as one dry stack on the
   duplicator (`examples/spectre-cage/`), a table saw sled with a
   cassette per rip that cuts the same stack to the straight tile
-  (`examples/spectre-saw/`), a mini chop saw from an angle
+  (`examples/spectre-saw/`), the same lid as a glue-up of five
+  prisms per tile that a bullnose and a core box curve, whole tiles
+  all round and a trim line (`examples/spectre-lid/`), a mini chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`) and the Edwardian
   Lift, a minimal router table lifted by a scissor jack through a

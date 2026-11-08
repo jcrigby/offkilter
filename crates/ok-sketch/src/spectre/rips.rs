@@ -239,11 +239,18 @@ pub fn cut_ok(a: Vec2, b: Vec2) -> bool {
 
 // -- the pieces the cuts make -----------------------------------------------------
 
-/// The faces of the outline plus the cuts: a small planar subdivision,
+/// The faces of the tile plus the cuts: a small planar subdivision,
 /// the bounded faces counter-clockwise.
 pub fn pieces(cuts: &[Cut]) -> Vec<Vec<Vec2>> {
-    let t = tile();
-    let mut segs: Vec<[Vec2; 2]> = (0..14).map(|i| [t[i], t[(i + 1) % 14]]).collect();
+    faces_of(&tile(), cuts)
+}
+
+/// The faces of any outline plus a set of segments: segments may cross
+/// each other, end on each other or on the outline, or reach outside
+/// it (the parts outside bound no face).
+pub fn faces_of(outline: &[Vec2], cuts: &[Cut]) -> Vec<Vec<Vec2>> {
+    let n = outline.len();
+    let mut segs: Vec<[Vec2; 2]> = (0..n).map(|i| [outline[i], outline[(i + 1) % n]]).collect();
     segs.extend(cuts.iter().copied());
     let mut pts: Vec<Vec2> = Vec::new();
     let mut pid = |p: Vec2| -> usize {

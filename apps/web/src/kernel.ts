@@ -91,17 +91,17 @@ export type FeatureKind =
   | { type: "split"; plane: PlaneRef; bodies?: number[] }
   | { type: "puzzle"; plane: PlaneRef; cols: number; rows: number; pitch: number; thickness: number; gap: number; bit: number; lock: number; grain: Grain; web: number; seed: number; jitter: number; fixture: number; /** Groove depth of the printable pattern plate (the gap lattice as grooves); 0 for none. */ groove: number; show: PuzzleLayout; spread: number; light?: Material; dark?: Material; tabs: PuzzleTab[]; corners: Vec2[] }
   /** A Spectre puzzle: the curved aperiodic monotile under a board of `width` by `height`, tiles of edge `edge`, every tile the board reaches a piece eroded by half the `gap`; `bulge` is how far each edge's curve stands off the straight edge (0.6 is Kaplan's), `shift` slides the tiling under the board, the mystic pairs are the `dark` pieces. */
-  | { type: "spectre"; plane: PlaneRef; width: number; height: number; edge: number; thickness: number; gap: number; /** The edge curve: Kaplan's cubic, or a circular arc. */ curve: SpectreCurve; bulge: number; /** Router bit diameter: inside corners filleted to its radius and their mates rounded to match; 0 for sharp. */ bit: number; shift: Vec2; /** Turns the tiling under the board, degrees anticlockwise about the patch's centre. */ angle: number; /** Pieces smaller than this area, mm², are left to the resin. */ scrap: number; web: number; /** Groove depth of the printable pattern plate; 0 for none. */ groove: number; show: SpectreLayout; /** How the pieces get their woods. */ scheme: SpectreScheme; /** Seed of the random schemes. */ seed: number; light?: Material; dark?: Material; third?: Material; fourth?: Material; /** Cuts across the straight tile, tile units, each along a 30° line, splitting every piece into strip profiles; only with the bulge at 0. */ rips?: [Vec2, Vec2][] }
+  | { type: "spectre"; plane: PlaneRef; width: number; height: number; edge: number; thickness: number; gap: number; /** The edge curve: Kaplan's cubic, or a circular arc. */ curve: SpectreCurve; bulge: number; /** Router bit diameter: inside corners filleted to its radius and their mates rounded to match; 0 for sharp. */ bit: number; shift: Vec2; /** Turns the tiling under the board, degrees anticlockwise about the patch's centre. */ angle: number; /** Pieces smaller than this area, mm², are left to the resin. */ scrap: number; web: number; /** Groove depth of the printable pattern plate; 0 for none. */ groove: number; show: SpectreLayout; /** How the pieces get their woods. */ scheme: SpectreScheme; /** Seed of the random schemes. */ seed: number; light?: Material; dark?: Material; third?: Material; fourth?: Material; /** Cuts across the straight tile, tile units, each along a 30° line, splitting every piece into strip profiles; only with the bulge at 0. */ rips?: [Vec2, Vec2][]; /** Keep every tile the board reaches whole, for a glue-up trimmed to the board after: the bodies then sit in the whole tiles' box with the board inside it. */ whole: boolean; /** Prism cuts across the tile (tile units) that split every piece into the convex prisms a tile stick is glued up from. */ prisms?: [Vec2, Vec2][] }
   /** An involute spur gear: external with a `bore`, or internal (teeth inside a ring of outer diameter `rim`) when `rim` is set; `angle` turns the first tooth's centreline from the plane's x axis, `backlash` thins the teeth at the pitch circle, `shift` is the profile shift in modules (external only), `fillet` the root fillet radius. */
   | { type: "gear"; plane: PlaneRef; center: Vec2; module: number; teeth: number; pressure_angle: number; width: number; direction: ExtrudeDirection; bore: number; rim: number; angle: number; backlash: number; shift: number; fillet: number; /** Pitch cone half-angle in degrees of a bevel gear; 0 for a spur gear. */ cone: number; op: BodyOp };
 /** What a puzzle regenerates: the assembled design, or one colour's pieces laid out for its board with the rows spread a bit apart. */
 export type PuzzleLayout = "design" | "light" | "dark" | "pattern";
-/** What a Spectre puzzle regenerates: the assembled design, or the printable pattern plate alone. */
-export type SpectreLayout = "design" | "pattern";
-/** The shape of a Spectre edge's curve. */
-export type SpectreCurve = "cubic" | "arc";
-/** How a Spectre top's pieces get their woods: the mystic pairs dark; all light; two or three at random; two by the tile's turn; four with no two neighbours alike, spread evenly or the light wood favoured. */
-export type SpectreScheme = "mystics" | "one" | "two_random" | "two_turn" | "three_random" | "four_map" | "mix" | "profiles";
+/** What a Spectre puzzle regenerates: the assembled design, one whole tile as a sample to print, or the printable pattern plate alone. */
+export type SpectreLayout = "design" | "sample" | "pattern";
+/** The shape of a Spectre edge's curve: Kaplan's cubic, a circular arc, or an S of two arcs (one ogee bit cuts every edge). */
+export type SpectreCurve = "cubic" | "arc" | "ogee";
+/** How a Spectre top's pieces get their woods: the mystic pairs dark; all light; two or three at random; two by the tile's turn; four with no two neighbours alike, spread evenly or the light wood favoured; by strip profile; by prism shape. */
+export type SpectreScheme = "mystics" | "one" | "two_random" | "two_turn" | "three_random" | "four_map" | "mix" | "profiles" | "prisms";
 /** One interlocking tab: `out` bulges towards the higher-index piece; `size` scales the tab, `width` the neck, `shift` places it along the edge (0..1). */
 export type PuzzleTab = { out: boolean; size: number; width: number; shift: number };
 export type Grain = "x" | "y";
@@ -110,7 +110,7 @@ export type PuzzleSeg = { type: "line"; a: Vec2; b: Vec2 } | { type: "arc"; cent
 /** The plan of a puzzle: outlines (the gap taken off), each tab's head centre and direction in edge order, each movable corner in node order, and the rules the design breaks. */
 export type PuzzlePlan = { pieces: { col: number; row: number; light: boolean; outline: PuzzleSeg[] }[]; width: number; height: number; tab_heads: { at: Vec2; out: boolean }[]; nodes: Vec2[]; problems: string[]; notes: string[] };
 /** A Spectre feature laid flat: every piece's outline in board millimetres with its tile, mystic flag and wood slot; the patch's depth and tile count; the curve's tightest radius (mm) against the bit; piece counts per wood slot; the smallest piece's area. */
-export type SpectrePlan = { width: number; height: number; depth: number; tiles: number; edge: number; bit: number; /** Null for the straight tile. */ tightest: number | null; pieces: { tile: number; mystic: boolean; wood: number; area: number; outline: Vec2[] }[]; counts: number[]; smallest: number };
+export type SpectrePlan = { width: number; height: number; /** The board's rectangle in the plan's frame, x0, y0, x1, y1: the whole frame unless the tiles are kept whole. */ board: [number, number, number, number]; depth: number; tiles: number; edge: number; bit: number; /** Null for the straight tile. */ tightest: number | null; pieces: { tile: number; mystic: boolean; wood: number; area: number; outline: Vec2[] }[]; counts: number[]; smallest: number };
 /** What the saw thinks of a strip profile: how each face is cut (through rip, rabbet, dado, or not at all), the worst of them, the blade tilt it needs, its thinnest width, its area and corner angles. */
 export type RipSaw = { convex: boolean; faces: { deg: number; kind: "through" | "rabbet" | "dado" | "no"; tilt: number }[]; face_dirs: number[]; worst: "through" | "rabbet" | "dado" | "no"; why: string; max_tilt: number; rabbets: number; dados: number; width: number; area: number; angles: number[] };
 /** The straight Spectre ripped: the tile and its corner angles, the 30° grid's lines and points, the pieces the cuts make with their profile index and saw reading, and the kit of distinct profiles (largest first) with their counts. */
@@ -118,6 +118,12 @@ export type SpectreRips = { tile: Vec2[]; angles: number[]; lines: { p: Vec2; d:
 /** A decomposition the rip search found: its cuts, piece count, worst face kind (0 through, 1 rabbet, 2 dado), rabbet and dado counts, thinnest piece (edges), blade tilt, the pieces' shares of the tile (percent, largest first) and distinct profiles. */
 export type RipFound = { cuts: [Vec2, Vec2][]; pieces: number; worst: number; rabbets: number; dados: number; minw: number; tilt: number; shares: number[]; kinds: number };
 export type RipSearch = { kit: RipFound[]; through: RipFound[]; rabbet: RipFound[] };
+/** A face of a prism: its length in edge units, what it is once the curves are on (a bump bulging out, a flute bulging in, a whole S, or a glue face at a cut), and whether a bit makes it in one pass (the whole tile edge or exactly half an S). */
+export type PrismFace = { len: number; kind: "bump" | "flute" | "ogee" | "glue"; whole: boolean };
+/** One convex prism of the tile: its straight and curved outlines (tile units), faces, interior angles, convexity, the shoulder rule, split curves, area and congruence class. */
+export type Prism = { outline: Vec2[]; curved: Vec2[]; faces: PrismFace[]; corners: number[]; convex: boolean; shoulders: boolean; bump_split: boolean; flute_split: boolean; area: number; shape: number };
+/** The tile as convex prisms: the tile and the grid points cuts snap to, the 30° lines, and the decomposition the cuts make: the prisms, the prisms of each shape class, the arc's end angle `theta`, the widest corner a bump may end at (`limit`, 180 - theta), the arc radius in edge units, and whether every prism is convex, within the rule and without a split bump. */
+export type SpectrePrisms = { tile: Vec2[]; grid: Vec2[]; lines: { p: Vec2; d: Vec2; deg: number }[]; decomposition: { cuts: [Vec2, Vec2][]; prisms: Prism[]; shapes: number[][]; theta: number; limit: number; radius: number; clean: boolean } };
 export type BooleanOp = "union" | "subtract" | "intersect";
 export type Counterbore = { diameter: number; depth: number };
 /** A conical entry: its diameter at the face and its included angle in degrees (90 for metric flat heads). */
@@ -284,8 +290,8 @@ export type Op =
   | { type: "set_puzzle"; id: number; cols?: number; rows?: number; pitch?: number; thickness?: number; gap?: number; bit?: number; lock?: number; grain?: Grain; web?: number; seed?: number; jitter?: number; fixture?: number; groove?: number; show?: PuzzleLayout; spread?: number; light?: Material | null; dark?: Material | null; tabs?: PuzzleTab[]; corners?: Vec2[] }
   | { type: "set_puzzle_tab"; id: number; edge: number; out?: boolean; size?: number; width?: number; shift?: number }
   | { type: "set_puzzle_corner"; id: number; node: number; offset: Vec2 }
-  | { type: "add_spectre"; plane: PlaneRef; width: number; height: number; edge: number; thickness: number; gap?: number; curve?: SpectreCurve; bulge?: number; bit?: number; shift?: Vec2; angle?: number; scrap?: number; web?: number; groove?: number; show?: SpectreLayout; scheme?: SpectreScheme; seed?: number; light?: Material; dark?: Material; third?: Material; fourth?: Material; rips?: [Vec2, Vec2][]; name: string | null }
-  | { type: "set_spectre"; id: number; plane?: PlaneRef; width?: number; height?: number; edge?: number; thickness?: number; gap?: number; curve?: SpectreCurve; bulge?: number; bit?: number; shift?: Vec2; angle?: number; scrap?: number; web?: number; groove?: number; show?: SpectreLayout; scheme?: SpectreScheme; seed?: number; light?: Material | null; dark?: Material | null; third?: Material | null; fourth?: Material | null; rips?: [Vec2, Vec2][] }
+  | { type: "add_spectre"; plane: PlaneRef; width: number; height: number; edge: number; thickness: number; gap?: number; curve?: SpectreCurve; bulge?: number; bit?: number; shift?: Vec2; angle?: number; scrap?: number; web?: number; groove?: number; show?: SpectreLayout; scheme?: SpectreScheme; seed?: number; light?: Material; dark?: Material; third?: Material; fourth?: Material; rips?: [Vec2, Vec2][]; whole?: boolean; prisms?: [Vec2, Vec2][]; name: string | null }
+  | { type: "set_spectre"; id: number; plane?: PlaneRef; width?: number; height?: number; edge?: number; thickness?: number; gap?: number; curve?: SpectreCurve; bulge?: number; bit?: number; shift?: Vec2; angle?: number; scrap?: number; web?: number; groove?: number; show?: SpectreLayout; scheme?: SpectreScheme; seed?: number; light?: Material | null; dark?: Material | null; third?: Material | null; fourth?: Material | null; rips?: [Vec2, Vec2][]; whole?: boolean; prisms?: [Vec2, Vec2][] }
   | { type: "add_gear"; plane: PlaneRef; center?: Vec2; module: number; teeth: number; pressure_angle?: number; width: number; direction?: ExtrudeDirection; bore?: number; rim?: number; angle?: number; backlash?: number; shift?: number; fillet?: number; cone?: number; op?: BodyOp; name: string | null }
   | { type: "set_gear"; id: number; plane?: PlaneRef | null; center?: Vec2 | null; module?: number | null; teeth?: number | null; pressure_angle?: number | null; width?: number | null; direction?: ExtrudeDirection | null; bore?: number | null; rim?: number | null; angle?: number | null; backlash?: number | null; shift?: number | null; fillet?: number | null; cone?: number | null; op?: BodyOp | null }
   | { type: "set_hole"; id: number; diameter?: number | null; depth?: number | null; through_all?: boolean | null; direction?: ExtrudeDirection | null; counterbore?: Counterbore | null; countersink?: Countersink | null }
@@ -445,6 +451,20 @@ export class Kernel {
     return JSON.parse(this.studio.spectre_rips_search()) as RipSearch;
   }
 
+  /** The tile as convex prisms under these cuts (see `SpectrePrisms`); throws on a cut outside the tile. */
+  spectrePrisms(curve: SpectreCurve, bulge: number, cuts: [Vec2, Vec2][]): SpectrePrisms {
+    const r = JSON.parse(this.studio.spectre_prisms(curve, bulge, JSON.stringify(cuts))) as SpectrePrisms & { error?: string };
+    if (r.error) throw new Error(r.error);
+    return r;
+  }
+
+  /** The fewest convex prisms for this curve: the cuts to set, or throws when no arrangement satisfies the rule. */
+  spectrePrismsSearch(curve: SpectreCurve, bulge: number): [Vec2, Vec2][] {
+    const r = JSON.parse(this.studio.spectre_prisms_search(curve, bulge)) as { cuts: [Vec2, Vec2][]; error?: string };
+    if (r.error) throw new Error(r.error);
+    return r.cuts;
+  }
+
   /** A Spectre feature's plan (see `SpectrePlan`), or null when it cannot be laid. */
   spectrePlan(tab: number, feature: number): SpectrePlan | null {
     const r = JSON.parse(this.studio.spectre_plan(tab, feature)) as SpectrePlan & { error?: string };
@@ -466,7 +486,7 @@ export class Kernel {
 
   /** A shop drawing sheet of a tab as a PDF, laid out by the kernel: standard views, dimensions, callouts, balloons and a parts list. */
   /** `window` is "x0,y0,z0,x1,y1,z1" in millimetres: a detail window every view is clipped to and framed by. */
-  drawingPdf(tab: number, opts: { views?: string[]; sheet?: string; parts?: boolean; title?: string; note?: string; hidden?: boolean; explode?: number; window?: string }): Uint8Array {
+  drawingPdf(tab: number, opts: { views?: string[]; sheet?: string; parts?: boolean; title?: string; note?: string; hidden?: boolean; explode?: number; window?: string; /** A forced drawing scale: 1 for a template to print at 100 %; refused when the views do not fit the sheet. */ scale?: number }): Uint8Array {
     return this.studio.drawing_pdf(tab, JSON.stringify(opts));
   }
 

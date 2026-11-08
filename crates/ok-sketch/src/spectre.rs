@@ -49,6 +49,7 @@ const SPECTRE: [(f64, f64); 14] = [
 const KEYS: [usize; 4] = [3, 5, 7, 11];
 /// Area of the tile with unit edges (the curves add and take away the
 /// same amount), `3 + 3√3`.
+pub mod prisms;
 pub mod rips;
 pub mod saw;
 
@@ -96,6 +97,15 @@ pub struct Params {
     /// 30° line, that split every tile into strip profiles (see
     /// `rips`); only with the straight tile (`bulge` 0).
     pub rips: Vec<rips::Cut>,
+    /// Keep every tile the board reaches whole instead of clipping it to
+    /// the board's edges: the glue-up blank, trimmed to the board after.
+    /// The patch's frame is then the pieces' box and `Patch::board` says
+    /// where the board sits in it.
+    pub whole: bool,
+    /// Prism cuts: straight cuts across the tile, in tile units (see
+    /// `prisms`), that split every piece into the convex prisms a tile
+    /// stick is glued up from; with any curve.
+    pub prisms: Vec<prisms::Cut>,
 }
 
 /// How the pieces get their woods: a wood slot (0 to 3, light, dark,
@@ -127,6 +137,10 @@ pub enum Scheme {
     /// first): a piece of the first profile light, the second dark, and
     /// so on. Without rips, every piece light.
     Profiles,
+    /// By the prism's shape, in the order the shapes first appear in the
+    /// tile, the fourth wood for every shape past the third. Without
+    /// prism cuts, every piece light.
+    Prisms,
 }
 
 /// The shape of an edge's curve.
@@ -140,6 +154,14 @@ pub enum Curve {
     /// A circular arc of sagitta `bulge` edge lengths: one radius all
     /// along, `(1/4 + bulge²) / (2 bulge)` edges, kinder to a router bit.
     Arc,
+    /// An S on every edge: two equal arcs, the convex half first going
+    /// round the tile, each standing `bulge` edge lengths off the edge,
+    /// radius `(1/16 + bulge²) / (2 bulge)` edges. The S is its own
+    /// partner seen from the neighbouring tile, so one ogee bit makes
+    /// every edge, and it has no mirror symmetry, so a mirrored tile
+    /// cannot mate: the curve the Spectre's chirality argument wants.
+    /// At most 0.25, where the halves are semicircles.
+    Ogee,
 }
 
 /// One piece: a tile (or the part of one the board's edge leaves)
@@ -158,6 +180,9 @@ pub struct Piece {
     /// With rips, which strip profile of the kit this piece is cut from.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub profile: Option<u8>,
+    /// With prism cuts, which prism of the tile this piece is.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prism: Option<u8>,
     /// Counter-clockwise outline, the gap taken off and the board's
     /// edges applied.
     pub outline: Vec<Vec2>,
@@ -174,6 +199,10 @@ pub struct Patch {
     /// Tiles the board reaches (a tile the board's edge cuts in two is
     /// one tile, two pieces).
     pub tiles: usize,
+    /// Where the board sits in the patch's frame: all of it, unless the
+    /// tiles are kept whole, when the frame is the pieces' box and the
+    /// board is the rectangle to trim the glue-up to.
+    pub board: (Vec2, Vec2),
 }
 
 // -- affine transforms, as Kaplan's [a b tx c d ty] ----------------------
@@ -498,6 +527,35 @@ pub fn curved_tile(curve: Curve, bulge: f64, per_edge: usize) -> Vec<Vec2> {
                     out.push(a + v * (k as f64 / n as f64));
                 }
             }
+            Curve::Ogee => {
+                // Two arcs on the edge's halves, the convex one first:
+                // the same S from both sides, so no sign to alternate.
+                let m = (a + b) * 0.5;
+                let half = n / 2;
+                for (p, q, s) in [(a, m, -1.0), (m, b, 1.0)] {
+                    if bulge.abs() < 1e-9 {
+                        for k in 1..=half {
+                            out.push(p + (q - p) * (k as f64 / half as f64));
+                        }
+                        continue;
+                    }
+                    let radius = (1.0 / 16.0 + bulge * bulge) / (2.0 * bulge);
+                    let apex = (p + q) * 0.5 + v.perp() * (s * bulge);
+                    let centre = apex - v.perp() * (s * radius);
+                    let a0 = (p - centre).angle();
+                    let mut sweep = (apex - centre).angle() - a0;
+                    while sweep > std::f64::consts::PI {
+                        sweep -= std::f64::consts::TAU;
+                    }
+                    while sweep < -std::f64::consts::PI {
+                        sweep += std::f64::consts::TAU;
+                    }
+                    for k in 1..=half {
+                        let t = k as f64 / half as f64;
+                        out.push(centre + Vec2::from_angle(a0 + 2.0 * sweep * t) * radius);
+                    }
+                }
+            }
         }
         sign = -sign;
     }
@@ -512,8 +570,14 @@ pub fn pieces_per_edge(curve: Curve, bulge: f64, facet: f64) -> usize {
     let end_angle = match curve {
         Curve::Cubic => bulge.abs().atan2(0.33),
         Curve::Arc => 2.0 * (2.0 * bulge.abs()).atan(),
+        Curve::Ogee => 2.0 * (4.0 * bulge.abs()).atan(),
     };
-    ((2.0 * end_angle / facet.max(1e-3)).ceil() as usize).clamp(4, 64)
+    let n = ((2.0 * end_angle / facet.max(1e-3)).ceil() as usize).clamp(4, 64);
+    match curve {
+        // Two arcs, each turning through twice its end angle, in an even count.
+        Curve::Ogee => (2 * n).clamp(4, 64) & !1,
+        _ => n,
+    }
 }
 
 /// The tightest radius along an edge's curve, in edge lengths: what a
@@ -524,6 +588,7 @@ pub fn tightest_radius(curve: Curve, bulge: f64) -> f64 {
     }
     match curve {
         Curve::Arc => (0.25 + bulge * bulge) / (2.0 * bulge),
+        Curve::Ogee => (1.0 / 16.0 + bulge * bulge) / (2.0 * bulge),
         Curve::Cubic => {
             // One edge from (0, 0) to (1, 0), sampled finely: the apex
             // at t = 1/2 is the tightest.
@@ -967,6 +1032,18 @@ fn validate(p: &Params) -> Result<(), String> {
     if p.curve == Curve::Arc && p.bulge > 0.5 {
         return Err("an arc's sagitta must be at most half the edge (a semicircle)".into());
     }
+    if p.curve == Curve::Ogee && p.bulge > 0.25 {
+        return Err(
+            "an S's halves are semicircles at a quarter of the edge: the bulge is at most 0.25"
+                .into(),
+        );
+    }
+    if let Some(c) = p.prisms.iter().find(|c| !prisms::cut_ok(c[0], c[1])) {
+        return Err(format!(
+            "prism cut from ({:.3}, {:.3}) to ({:.3}, {:.3}) does not lie in the tile",
+            c[0].x, c[0].y, c[1].x, c[1].y
+        ));
+    }
     if !(p.bit.is_finite() && p.bit >= 0.0) {
         return Err("bit must be zero or positive".into());
     }
@@ -1017,6 +1094,10 @@ pub struct Master {
     /// blank has to be across.
     pub radius: f64,
     pub area: f64,
+    /// Where that circle's centre was in the tile's own frame (the tile
+    /// at `edge` with vertex 0 at the origin): `outline` is the eroded
+    /// tile less this.
+    pub centre: Vec2,
 }
 
 /// The master every piece of a top is cut from: the curve at `edge`, the
@@ -1073,6 +1154,7 @@ pub fn master(p: &Params, round: f64, facet: f64) -> Result<Master, String> {
         outline,
         radius,
         area,
+        centre,
     })
 }
 
@@ -1311,18 +1393,40 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
             ));
         }
         let mut kept = false;
-        for outline in clip_polygon(&eroded, p.width, p.height, &opts) {
-            if signed_area(&outline) < p.scrap {
-                continue;
+        if p.whole {
+            // Every tile the board reaches, whole: the glue-up blank is
+            // trimmed to the board afterwards, so a sliver of a tile on
+            // the board means the whole tile in the blank.
+            let reach: f64 = clip_polygon(&eroded, p.width, p.height, &opts)
+                .iter()
+                .map(|o| signed_area(o))
+                .sum();
+            if reach > 1e-6 {
+                kept = true;
+                pieces.push(Piece {
+                    tile: k as u32,
+                    mystic: *mystic,
+                    wood: woods[k],
+                    profile: None,
+                    prism: None,
+                    outline: eroded,
+                });
             }
-            kept = true;
-            pieces.push(Piece {
-                tile: k as u32,
-                mystic: *mystic,
-                wood: woods[k],
-                profile: None,
-                outline,
-            });
+        } else {
+            for outline in clip_polygon(&eroded, p.width, p.height, &opts) {
+                if signed_area(&outline) < p.scrap {
+                    continue;
+                }
+                kept = true;
+                pieces.push(Piece {
+                    tile: k as u32,
+                    mystic: *mystic,
+                    wood: woods[k],
+                    profile: None,
+                    prism: None,
+                    outline,
+                });
+            }
         }
         touched += kept as usize;
     }
@@ -1349,6 +1453,48 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
                         piece.wood
                     },
                     profile: Some(profiles[j]),
+                    prism: None,
+                    outline,
+                });
+            }
+        }
+        pieces = split;
+    }
+    if !p.prisms.is_empty() {
+        // Every piece splits by the prism cuts, mapped through its
+        // tile's placement: the cuts are glue lines of the tile stick,
+        // and a piece of a prism takes the shape's wood under the prisms
+        // scheme. Which prism a part is comes from a point just inside
+        // it against the prisms' curved outlines.
+        let dec = prisms::decompose(p.curve, p.bulge, &p.prisms, facet)?;
+        let curved: Vec<Vec<Vec2>> = dec.prisms.iter().map(|pr| pr.curved.clone()).collect();
+        let mut split = Vec::new();
+        for piece in pieces {
+            let xf = &all[piece.tile as usize].1;
+            let to_board = |q: Vec2| place(apply(xf, q));
+            let segs: Vec<[Vec2; 2]> = p
+                .prisms
+                .iter()
+                .map(|c| [to_board(c[0]), to_board(c[1])])
+                .collect();
+            let placed: Vec<Vec<Vec2>> = curved
+                .iter()
+                .map(|c| c.iter().map(|q| to_board(*q)).collect())
+                .collect();
+            for (j, outline) in prisms::split_piece(&piece.outline, &segs, &placed) {
+                if !p.whole && signed_area(&outline) < p.scrap {
+                    continue;
+                }
+                split.push(Piece {
+                    tile: piece.tile,
+                    mystic: piece.mystic,
+                    wood: if p.scheme == Scheme::Prisms {
+                        (dec.prisms[j].shape as u8).min(3)
+                    } else {
+                        piece.wood
+                    },
+                    profile: piece.profile,
+                    prism: Some(j as u8),
                     outline,
                 });
             }
@@ -1358,12 +1504,35 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
     if pieces.is_empty() {
         return Err("no tile reaches the board".into());
     }
+    let mut board = (Vec2::ZERO, Vec2::new(p.width, p.height));
+    let (mut width, mut height) = (p.width, p.height);
+    if p.whole {
+        // The frame is the pieces' box; the board sits inside it.
+        let (mut lo, mut hi) = (
+            Vec2::new(f64::INFINITY, f64::INFINITY),
+            Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY),
+        );
+        for piece in &pieces {
+            let (a, b) = bbox(&piece.outline);
+            lo = Vec2::new(lo.x.min(a.x), lo.y.min(a.y));
+            hi = Vec2::new(hi.x.max(b.x), hi.y.max(b.y));
+        }
+        for piece in &mut pieces {
+            for q in &mut piece.outline {
+                *q -= lo;
+            }
+        }
+        board = (Vec2::ZERO - lo, Vec2::new(p.width, p.height) - lo);
+        width = hi.x - lo.x;
+        height = hi.y - lo.y;
+    }
     Ok(Patch {
         pieces,
-        width: p.width,
-        height: p.height,
+        width,
+        height,
         depth,
         tiles: touched,
+        board,
     })
 }
 
@@ -1380,7 +1549,7 @@ pub fn colour(all: &[(bool, Xf)], scheme: Scheme, seed: u32) -> Vec<u8> {
     };
     match scheme {
         Scheme::Mystics => all.iter().map(|(m, _)| *m as u8).collect(),
-        Scheme::One | Scheme::Profiles => vec![0; n],
+        Scheme::One | Scheme::Profiles | Scheme::Prisms => vec![0; n],
         Scheme::TwoRandom => (0..n).map(|_| (rng.next() % 2) as u8).collect(),
         Scheme::TwoTurn => all.iter().map(|(_, xf)| turn_odd(xf) as u8).collect(),
         Scheme::ThreeRandom => (0..n).map(|_| (rng.next() % 3) as u8).collect(),
@@ -1585,6 +1754,8 @@ mod tests {
             scheme: Scheme::Mystics,
             seed: 0,
             rips: Vec::new(),
+            whole: false,
+            prisms: Vec::new(),
         }
     }
 
@@ -1987,6 +2158,8 @@ mod tests {
             scheme: Scheme::Mystics,
             seed: 0,
             rips: Vec::new(),
+            whole: false,
+            prisms: Vec::new(),
         };
         let facet = 5f64.to_radians();
         let patch = build(&params, facet).unwrap();
@@ -2131,6 +2304,8 @@ mod tests {
             scheme: Scheme::Mystics,
             seed: 0,
             rips: Vec::new(),
+            whole: false,
+            prisms: Vec::new(),
         };
         let patch = build(&params, facet).unwrap();
         let area = params.width * params.height;
@@ -2306,6 +2481,8 @@ mod tests {
                 scheme: Scheme::FourMap,
                 seed: 1,
                 rips: Vec::new(),
+                whole: false,
+                prisms: Vec::new(),
             },
             5f64.to_radians(),
         )
@@ -2330,6 +2507,8 @@ mod tests {
             scheme: Scheme::Profiles,
             seed: 0,
             rips: Vec::new(),
+            whole: false,
+            prisms: Vec::new(),
         };
         let facet = 10f64.to_radians();
         let whole = build(&plain, facet).unwrap();

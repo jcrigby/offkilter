@@ -894,3 +894,48 @@ no racking question, but the pilot's reference and both fences move
 with the table, and the owner's sketch was the moving gantry). The
 original gantry stays as the default: both build from one script, one
 test file sweeps both, and the README has the comparison.
+
+## 2026-11 · The curvy tile is a glue-up of prisms, and the lid is whole tiles trimmed after
+
+Thirty boxes want thirty lids of a hundred curvy pieces each, and
+routing every piece to a template, or a dry stack of them on the
+duplicator, is a piece at a time. The owner's idea was to make the
+curve with a pair of matched bits instead: a symmetric arc on every
+edge, out on the bumps and in on the flutes, is a bullnose and a core
+box of one diameter (a quarter circle is also a roundover on a 45°
+gable), so a straight stick with that section run past the bits is a
+long prism with the curve already on it, and a glued-up stick of such
+prisms, sliced like a loaf, is pieces by the dozen. The tile is split
+into prisms along the 30° grid through its vertices, with three rules
+the shop sets: every prism convex, or the stick cannot be ripped; no
+bump split by a glue line, since a bit cuts a bump whole or not at
+all (a split flute is two core box passes that have to register, so
+it is penalised, not refused); and at every corner where a convex arc
+ends, the prism no wider than 180° less the arc's end angle, because
+the bullnose's shoulder leaves the arc tangent to the stick's next
+face, which must therefore lie at or outside that tangent. The search
+is over vertex diagonals and grid rays from the vertices that need a
+cut, fewest cuts first, then no shared flutes, the biggest smallest
+prism and the fewest shapes: four prisms at the quarter circle, five
+at five sixteenths of a circle, nine at the semicircle. The owner
+settled on five sixteenths at a 10.56 mm edge, which puts the pair at
+1/4 in bits, over the quarter circle's 8.98 mm, which is a smaller
+tile for the same bits and one prism fewer, because the five looked
+better. Rejected: decomposing into right triangles or squares (the
+tile's corners are multiples of 30°, so no such tiling exists);
+Kaplan's cubic (no one radius, so no bit); ripping only (the saw
+station cuts the straight tile, and the curves then still want
+routing); a die or molding planes (a cutter per profile, sharpened
+by hand, for thirty boxes).
+
+The lid is laid out with every tile the board reaches kept whole and
+the board drawn as a trim line, rather than clipped at the board's
+edge as the earlier tops were, because a glue-up of sticks cannot
+produce a part tile: the pieces come off the stick whole, the
+glue-up is made a tile larger all round, and the square is cut from
+it after. That is also why the PDF has a forced 1:1 scale and the
+trim rectangle, and why the sample layout exists: one tile at the
+gap, printed, is the fit check before any stick is glued. The
+explorer page the decomposition was found on stays as a scratch tool;
+the same planner is in the web panel, where the cuts land on the
+feature.

@@ -992,6 +992,40 @@ impl PartStudio {
         if sf.groove > 0.0 && sf.gap <= 0.0 {
             return Some("a pattern plate needs a gap: its grooves are the gaps".into());
         }
+        if sf.show == crate::SpectreLayout::Sample {
+            // One whole tile as the pieces are cut, at the board's centre.
+            let master = match ok_sketch::spectre::master(&sf.params(), 0.0, opts.arc_segment_angle)
+            {
+                Ok(m) => m,
+                Err(e) => return Some(e),
+            };
+            let centre = ok_math::Vec2::new(sf.width, sf.height) * 0.5;
+            let piece = ok_sketch::spectre::Piece {
+                tile: 0,
+                mystic: false,
+                wood: 0,
+                profile: None,
+                prism: None,
+                outline: master.outline.iter().map(|q| *q + centre).collect(),
+            };
+            let profile = match ok_sketch::spectre::piece_profile(&piece, opts) {
+                Ok(p) => p,
+                Err(e) => return Some(e),
+            };
+            return match ok_brep::extrude(&profile, &plane, 0.0, sf.thickness, id.0) {
+                Ok(mut solid) => {
+                    for f in &mut solid.faces {
+                        f.origin.local += PIECE_LOCALS;
+                    }
+                    result.next_part += 1;
+                    let mut body = Body::new("Sample piece".into(), id, solid);
+                    body.material = sf.wood(0);
+                    result.bodies.push(body);
+                    None
+                }
+                Err(e) => Some(format!("sample piece: {e}")),
+            };
+        }
         let patch = match ok_sketch::spectre::build(&sf.params(), opts.arc_segment_angle) {
             Ok(p) => p,
             Err(e) => return Some(e),
@@ -3655,6 +3689,8 @@ mod tests {
                 third: None,
                 fourth: None,
                 rips: Vec::new(),
+                whole: false,
+                prisms: Vec::new(),
                 name: None,
             })
             .unwrap()
@@ -3752,6 +3788,8 @@ mod tests {
                 third: None,
                 fourth: None,
                 rips: None,
+                whole: None,
+                prisms: None,
             })
             .unwrap();
         };
@@ -3788,6 +3826,8 @@ mod tests {
                 density: 0.75,
             })),
             rips: None,
+            whole: None,
+            prisms: None,
         })
         .unwrap();
         let r = ps.regenerate();

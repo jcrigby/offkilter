@@ -1380,7 +1380,8 @@ impl Server {
                 {
                     "cubic" => ok_sketch::spectre::Curve::Cubic,
                     "arc" => ok_sketch::spectre::Curve::Arc,
-                    other => return Err(format!("curve is cubic or arc, not {other}")),
+                    "ogee" => ok_sketch::spectre::Curve::Ogee,
+                    other => return Err(format!("curve is cubic, arc or ogee, not {other}")),
                 };
                 let params = ok_sketch::spectre::Params {
                     width: 1.0,
@@ -1396,6 +1397,8 @@ impl Server {
                     scheme: Default::default(),
                     seed: 0,
                     rips: Vec::new(),
+                    whole: false,
+                    prisms: Vec::new(),
                 };
                 let m = ok_sketch::spectre::master(&params, num("round", 0.0), 10f64.to_radians())?;
                 let outline: Vec<[f64; 2]> = m.outline.iter().map(|q| [q.x, q.y]).collect();
@@ -1405,6 +1408,118 @@ impl Server {
                     "across": 2.0 * m.radius,
                     "area": m.area,
                     "tile_area": ok_sketch::spectre::TILE_AREA * edge * edge,
+                })
+                .to_string())
+            }
+            "spectre_prisms" => {
+                let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
+                let edge = args
+                    .get("edge")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("spectre_prisms needs edge: the tile's edge length in mm")?;
+                let curve = match args.get("curve").and_then(|c| c.as_str()).unwrap_or("arc") {
+                    "cubic" => ok_sketch::spectre::Curve::Cubic,
+                    "arc" => ok_sketch::spectre::Curve::Arc,
+                    "ogee" => ok_sketch::spectre::Curve::Ogee,
+                    other => return Err(format!("curve is cubic, arc or ogee, not {other}")),
+                };
+                let bulge = num(
+                    "bulge",
+                    match curve {
+                        ok_sketch::spectre::Curve::Ogee => 0.103_553,
+                        ok_sketch::spectre::Curve::Cubic => ok_sketch::spectre::KAPLAN_BULGE,
+                        _ => 0.207_107,
+                    },
+                );
+                let facet = 10f64.to_radians();
+                use ok_sketch::spectre::prisms;
+                let cuts: Vec<prisms::Cut> = match args.get("cuts") {
+                    Some(v) => serde_json::from_value(v.clone())
+                        .map_err(|e| format!("cuts: {e}; pairs of [x, y] points in tile units"))?,
+                    None => Vec::new(),
+                };
+                let dec = if cuts.is_empty() {
+                    prisms::search(curve, bulge, facet)?
+                } else {
+                    prisms::decompose(curve, bulge, &cuts, facet)?
+                };
+                let params = ok_sketch::spectre::Params {
+                    width: 1.0,
+                    height: 1.0,
+                    edge,
+                    gap: num("gap", 0.0),
+                    curve,
+                    bulge,
+                    bit: num("bit", 0.0),
+                    shift: ok_math::Vec2::ZERO,
+                    angle: 0.0,
+                    scrap: 0.0,
+                    scheme: Default::default(),
+                    seed: 0,
+                    rips: Vec::new(),
+                    whole: false,
+                    prisms: Vec::new(),
+                };
+                // The eroded tile in the master's frame, split along the
+                // glue lines: the stick profiles, the gap taken off the
+                // outside faces only.
+                let m = ok_sketch::spectre::master(&params, 0.0, facet)?;
+                let to_m = |q: ok_math::Vec2| q * edge - m.centre;
+                let segs: Vec<prisms::Cut> =
+                    dec.cuts.iter().map(|c| [to_m(c[0]), to_m(c[1])]).collect();
+                let placed: Vec<Vec<ok_math::Vec2>> = dec
+                    .prisms
+                    .iter()
+                    .map(|p| p.curved.iter().map(|q| to_m(*q)).collect())
+                    .collect();
+                let parts = prisms::split_piece(&m.outline, &segs, &placed);
+                let pts = |v: &[ok_math::Vec2]| -> Vec<[f64; 2]> {
+                    v.iter().map(|q| [q.x, q.y]).collect()
+                };
+                let prisms_json: Vec<Value> = dec
+                    .prisms
+                    .iter()
+                    .enumerate()
+                    .map(|(i, p)| {
+                        let profile: Vec<Vec<[f64; 2]>> = parts.iter().filter(|(j, _)| *j == i).map(|(_, o)| pts(o)).collect();
+                        json!({
+                            "index": i,
+                            "shape": p.shape,
+                            "outline": pts(&p.outline.iter().map(|q| to_m(*q)).collect::<Vec<_>>()),
+                            "curved": pts(&p.curved.iter().map(|q| to_m(*q)).collect::<Vec<_>>()),
+                            "profile": profile,
+                            "faces": p.faces.iter().map(|f| json!({ "length": f.len * edge, "kind": f.kind, "whole": f.whole })).collect::<Vec<_>>(),
+                            "corners": p.corners,
+                            "convex": p.convex,
+                            "shoulders": p.shoulders,
+                            "bump_split": p.bump_split,
+                            "flute_split": p.flute_split,
+                            "area": p.area * edge * edge,
+                        })
+                    })
+                    .collect();
+                let r = dec.radius * edge;
+                let bits = match curve {
+                    ok_sketch::spectre::Curve::Ogee => format!("one ogee bit of radius {r:.2} mm, two tangent arcs and no flats, cuts every edge"),
+                    _ if (dec.theta - 45.0).abs() < 0.5 => format!("a roundover of radius {r:.2} mm on a 45 degree gable, or a bullnose of diameter {:.2}, and a core box of diameter {:.2} mm", 2.0 * r, 2.0 * r),
+                    _ => format!("a bullnose and a core box of diameter {:.2} mm", 2.0 * r),
+                };
+                Ok(json!({
+                    "edge": edge,
+                    "curve": curve,
+                    "bulge": bulge,
+                    "gap": params.gap,
+                    "theta": dec.theta,
+                    "limit": dec.limit,
+                    "radius": r,
+                    "bits": bits,
+                    "clean": dec.clean,
+                    "cuts": dec.cuts.iter().map(|c| [[c[0].x, c[0].y], [c[1].x, c[1].y]]).collect::<Vec<_>>(),
+                    "prisms": prisms_json,
+                    "shapes": dec.shapes,
+                    "tile_area": ok_sketch::spectre::TILE_AREA * edge * edge,
+                    "master_area": m.area,
+                    "across": 2.0 * m.radius,
                 })
                 .to_string())
             }
@@ -2033,6 +2148,10 @@ impl Server {
                         "" => None,
                         w => Some(ok_sheet::parse_box(w)?),
                     },
+                    scale: args
+                        .get("scale")
+                        .and_then(|s| s.as_f64())
+                        .filter(|s| *s > 0.0),
                     ..ok_sheet::Options::default()
                 };
                 match args.get("views") {
@@ -2347,8 +2466,13 @@ fn tool_list() -> Value {
         },
         {
             "name": "spectre_tile",
-            "description": "One Spectre tile as the pieces of a top are routed, for a master to print and copy: the curved tile at `edge` mm (`curve` cubic or arc, `bulge` as add_spectre's), its four inside corners filleted to `bit` (the bit's diameter; the fillet is what a bit leaves in a notch), eroded by half of `gap`, the ten convex corners left sharp or, with `round` (a radius, mm; half the bit for the knobs template-routed pieces have), all rounded to it. Returns JSON: `outline` (counter-clockwise points, mm, centred on the smallest circle round the tile), `radius` and `across` (that circle: a blank has to be at least `across`), `area` and `tile_area`. No document is needed.",
-            "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["cubic", "arc"] }, "bulge": { "type": "number" }, "bit": { "type": "number" }, "gap": { "type": "number" }, "round": { "type": "number" } }, "required": ["edge"] }
+            "description": "One Spectre tile as the pieces of a top are routed, for a master to print and copy, or a sample piece: the curved tile at `edge` mm (`curve` cubic, arc or ogee, `bulge` as add_spectre's), its four inside corners filleted to `bit` (the bit's diameter; the fillet is what a bit leaves in a notch), eroded by half of `gap`, the ten convex corners left sharp or, with `round` (a radius, mm; half the bit for the knobs template-routed pieces have), all rounded to it. Returns JSON: `outline` (counter-clockwise points, mm, centred on the smallest circle round the tile), `radius` and `across` (that circle: a blank has to be at least `across`), `area` and `tile_area`. No document is needed.",
+            "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["cubic", "arc", "ogee"] }, "bulge": { "type": "number" }, "bit": { "type": "number" }, "gap": { "type": "number" }, "round": { "type": "number" } }, "required": ["edge"] }
+        },
+        {
+            "name": "spectre_prisms",
+            "description": "The curvy Spectre as convex prisms, for a tile stick glued up from sticks a table saw rips and a router table curves, then sliced into pieces. The straight tile is cut by `cuts` (pairs of [x, y] in tile units, vertex 0 at the origin, vertex 1 at [1, 0]; the web app's panel draws the grid they snap to), or, without `cuts`, by the fewest cuts that satisfy the curve: every prism convex, and at every corner where a convex arc ends the prism no wider than 180 less the arc's end angle, or the bullnose's (or the gable's roundover's) shoulder would take the next face; a flute, cut by a core box bit, asks nothing. `curve` arc (default; `bulge` 0.2071 is the quarter circle, a 1/4 in roundover and 1/2 in core box at an 8.98 mm edge; 0.2673 is five sixteenths of a circle, a 1/4 in pair at 10.56 mm) or ogee (an S of two arcs on every edge, one bit for all, `bulge` 0.1036 for quarter circles). Returns JSON: `theta`, `limit`, `radius` (mm), `bits`, `clean`, `cuts`, and `prisms`, each with its straight `outline` and `curved` outline (mm, in the same frame as spectre_tile's outline), its `profile` (the eroded tile split along the glue lines: the stick's section with half of `gap` off its outside faces), `faces` (length mm, kind bump/flute/ogee/glue, whole), `corners`, `convex`, `shoulders`, `bump_split`, `flute_split`, `area` and `shape` (congruence class, mirror images alike); `shapes` lists the prisms of each class. No document is needed.",
+            "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["cubic", "arc", "ogee"] }, "bulge": { "type": "number" }, "gap": { "type": "number" }, "bit": { "type": "number" }, "cuts": { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } } } }, "required": ["edge"] }
         },
         {
             "name": "scan_turntable",
@@ -2382,8 +2506,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "export",
-            "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF: a shop drawing sheet with the `views` (front, top, right, iso by default; also section, a cut parallel to the front view, and section-side, parallel to the right view, each taking @<mm> for where the cut goes, through the middle otherwise: cut faces hatched, SECTION A-A captioned, the cutting plane traced with arrows on the top view; and '<view> of <names>', e.g. 'right of lug' or 'front of rib 1; rib 2': a standard view of only the bodies whose names contain one of the ;-separated texts, drawn alone and captioned) laid out third angle on `sheet` (A4 by default; A3, A2, Letter, Tabloid) at the largest standard scale that fits, overall dimensions, and on a sheet of one part hidden lines dashed and diameter callouts for holes seen end-on; on an assembly a balloon per item (on the isometric view, or the sheet's only standard view when it has no isometric) and a parts list (`parts: false` to leave them off), where a sub-assembly instance is one item with its own sheet on its own tab; `hidden` forces hidden lines on or off (on, a section also shows what lies behind its cut, dashed); `window` 'x0,y0,z0,x1,y1,z1' (mm) is a detail window: every view is clipped to that box and framed by it, so one corner of a large assembly comes out at a scale that reads; `note` goes on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
-            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf", "pdf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" }, "views": { "type": "array", "items": { "type": "string" } }, "sheet": { "type": "string" }, "parts": { "type": "boolean" }, "note": { "type": "string" }, "explode": { "type": "number" }, "window": { "type": "string" } }, "required": ["format", "path"] }
+            "description": "Writes a tab's bodies as STL or STEP to a file path; or as DXF: the bodies' visible edges seen from `view` (top by default; the same names as screenshot) at 1:1 in millimetres, a template to print or a profile to cut, `hidden: true` adding hidden lines dashed on their own layer; or as PDF (`scale` forces the drawing scale, 1 for a template to print at 100 %, refused when the views do not fit the sheet): a shop drawing sheet with the `views` (front, top, right, iso by default; also section, a cut parallel to the front view, and section-side, parallel to the right view, each taking @<mm> for where the cut goes, through the middle otherwise: cut faces hatched, SECTION A-A captioned, the cutting plane traced with arrows on the top view; and '<view> of <names>', e.g. 'right of lug' or 'front of rib 1; rib 2': a standard view of only the bodies whose names contain one of the ;-separated texts, drawn alone and captioned) laid out third angle on `sheet` (A4 by default; A3, A2, Letter, Tabloid) at the largest standard scale that fits, overall dimensions, and on a sheet of one part hidden lines dashed and diameter callouts for holes seen end-on; on an assembly a balloon per item (on the isometric view, or the sheet's only standard view when it has no isometric) and a parts list (`parts: false` to leave them off), where a sub-assembly instance is one item with its own sheet on its own tab; `hidden` forces hidden lines on or off (on, a section also shows what lies behind its cut, dashed); `window` 'x0,y0,z0,x1,y1,z1' (mm) is a detail window: every view is clipped to that box and framed by it, so one corner of a large assembly comes out at a scale that reads; `note` goes on the title block. `body` (a body's name or index from the report) writes that one body alone to STL or STEP, for a part to print.",
+            "inputSchema": { "type": "object", "properties": { "doc": doc_prop, "tab": tab_prop, "format": { "type": "string", "enum": ["stl", "step", "dxf", "pdf"] }, "path": { "type": "string" }, "view": { "type": "string" }, "hidden": { "type": "boolean" }, "body": { "type": "string" }, "views": { "type": "array", "items": { "type": "string" } }, "sheet": { "type": "string" }, "scale": { "type": "number" }, "parts": { "type": "boolean" }, "note": { "type": "string" }, "explode": { "type": "number" }, "window": { "type": "string" } }, "required": ["format", "path"] }
         },
         {
             "name": "document_url",
@@ -2696,6 +2820,74 @@ mod tests {
         assert!(err && text.contains("tightest radius"), "{text}");
         let (err, text) = tool_text(&mut server, "spectre_tile", json!({ "curve": "arc" }));
         assert!(err && text.contains("needs edge"), "{text}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_spectre_prisms_tool_finds_the_five_prisms_of_five_sixteenths_of_a_circle() {
+        let dir = std::env::temp_dir().join(format!("ok-mcp-prisms-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut server = local_server(&dir);
+        let (err, text) = tool_text(
+            &mut server,
+            "spectre_prisms",
+            json!({ "edge": 10.56, "curve": "arc", "bulge": 0.2673, "gap": 0.7 }),
+        );
+        assert!(!err, "{text}");
+        let v: Value = serde_json::from_str(&text).unwrap();
+        let prisms = v["prisms"].as_array().unwrap();
+        assert_eq!(prisms.len(), 5);
+        assert_eq!(v["clean"], true);
+        assert!(
+            (v["radius"].as_f64().unwrap() - 6.35).abs() < 0.02,
+            "{}",
+            v["radius"]
+        );
+        assert!((v["limit"].as_f64().unwrap() - 124.0).abs() < 0.5);
+        // the stick profiles together are the eroded tile
+        let area = |pts: &[Value]| -> f64 {
+            let n = pts.len();
+            (0..n)
+                .map(|i| {
+                    let (a, b) = (&pts[i], &pts[(i + 1) % n]);
+                    a[0].as_f64().unwrap() * b[1].as_f64().unwrap()
+                        - b[0].as_f64().unwrap() * a[1].as_f64().unwrap()
+                })
+                .sum::<f64>()
+                / 2.0
+        };
+        let profiles: f64 = prisms
+            .iter()
+            .flat_map(|p| p["profile"].as_array().unwrap().iter())
+            .map(|o| area(o.as_array().unwrap()).abs())
+            .sum();
+        assert!(
+            (profiles - v["master_area"].as_f64().unwrap()).abs() < 0.5,
+            "{profiles} vs {}",
+            v["master_area"]
+        );
+        assert!(prisms
+            .iter()
+            .all(|p| p["shoulders"] == true && p["convex"] == true));
+        // the same cuts given back read the same
+        let (err, text) = tool_text(
+            &mut server,
+            "spectre_prisms",
+            json!({ "edge": 10.56, "bulge": 0.2673, "cuts": v["cuts"] }),
+        );
+        assert!(!err, "{text}");
+        let w: Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(w["prisms"].as_array().unwrap().len(), 5);
+        // the ogee's quarter-circle S
+        let (err, text) = tool_text(
+            &mut server,
+            "spectre_prisms",
+            json!({ "edge": 11.3, "curve": "ogee" }),
+        );
+        assert!(!err, "{text}");
+        let o: Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(o["prisms"].as_array().unwrap().len(), 5);
+        assert!(o["bits"].as_str().unwrap().contains("ogee"));
         let _ = std::fs::remove_dir_all(&dir);
     }
 

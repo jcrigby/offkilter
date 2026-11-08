@@ -137,6 +137,26 @@ button.active { background: rgba(78, 161, 255, 0.25); border-color: var(--accent
 .rips-list { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
 .rips-list button { text-align: left; font-family: var(--mono, ui-monospace, monospace); font-size: 11.5px; }
 .rips-list button.on { outline: 2px solid #2c7be5; }
+.prisms-plan { margin: 8px 0; }
+.prisms-svg { width: 100%; display: block; background: #777; border-radius: 4px; cursor: crosshair; touch-action: none; }
+.prisms-svg .grid { stroke: #999; stroke-width: 0.012; stroke-dasharray: 0.05 0.06; }
+.prisms-svg .piece { stroke: #333; stroke-width: 0.02; }
+.prisms-svg .piece.p0 { fill: #e9d9b4; }
+.prisms-svg .piece.p1 { fill: #c9dcc0; }
+.prisms-svg .piece.p2 { fill: #a9c7e8; }
+.prisms-svg .piece.p3 { fill: #f0c8bc; }
+.prisms-svg .piece.p4 { fill: #e2d0ee; }
+.prisms-svg .piece.p5 { fill: #f3e2a6; }
+.prisms-svg .piece.p6 { fill: #c3e0e2; }
+.prisms-svg .piece.p7 { fill: #eacfb8; }
+.prisms-svg .piece.bad { stroke: #e55; stroke-width: 0.05; }
+.prisms-svg .outline { fill: none; stroke: #111; stroke-width: 0.025; stroke-dasharray: 0.08 0.05; }
+.prisms-svg .cut { stroke: #2c7be5; stroke-width: 0.04; }
+.prisms-svg .node { fill: #8a6d3b; stroke: none; cursor: pointer; }
+.prisms-svg .node.pending { fill: #2c7be5; }
+.prisms-svg .node.eligible { fill: none; stroke: #2c7be5; stroke-width: 0.025; }
+.prisms-kit { font-family: var(--mono, ui-monospace, monospace); font-size: 12px; margin: 4px 0; }
+.prisms-kit .bad { color: var(--danger, #e55); }
 .rips-kit { font-family: var(--mono, ui-monospace, monospace); font-size: 12px; margin: 4px 0; }
 .rips-kit .bad { color: var(--danger, #e55); }
 .puzzle-problems { color: var(--danger, #e55); font-size: 12px; padding-left: 16px; margin: 6px 0; }

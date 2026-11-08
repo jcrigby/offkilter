@@ -195,6 +195,8 @@ fn the_pattern_plate_grooves_every_gap() {
             third: None,
             fourth: None,
             rips: None,
+            whole: None,
+            prisms: None,
         })
         .unwrap();
     }

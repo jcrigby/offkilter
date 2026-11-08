@@ -461,6 +461,57 @@ test("spectre feature: the plan under the board slides and scales", async ({ pag
   expect(await page.locator(".spectre-svg .piece").count()).toBeGreaterThan(scaled.pieces * 0.6);
 });
 
+test("spectre feature: prisms, whole tiles and a sample piece", async ({ page }) => {
+  page.on("dialog", (d) => d.accept(d.defaultValue()));
+  await page.goto("/");
+  await ready(page);
+  await page.click("#btn-new");
+  await page.waitForTimeout(200);
+  await page.click("#btn-add-spectre");
+  await page.waitForTimeout(500);
+  const state = () =>
+    page.evaluate(() => {
+      const app = (window as unknown as { offkilter: any }).offkilter;
+      const k = app.summary.features[0].kind;
+      return { pieces: app.summary.bodies.filter((b: any) => b.name.startsWith("Piece")).length, bodies: app.summary.bodies.map((b: any) => b.name as string), errors: app.summary.features.filter((f: any) => f.error).length, prisms: (k.prisms ?? []).length as number, whole: k.whole as boolean, width: app.summary.bodies.length };
+    });
+  // The quarter circle: four prisms from three cuts, all clean.
+  await page.locator("#detail-body select").filter({ hasText: "cubic" }).first().selectOption("arc");
+  await page.waitForTimeout(800);
+  const bulge = page.locator("#detail-body .field", { hasText: "Bulge" }).locator("input");
+  await bulge.fill("0.2071");
+  await bulge.press("Enter");
+  await page.waitForTimeout(1200);
+  const before = await state();
+  await page.getByRole("button", { name: "Fewest prisms for this curve" }).click();
+  await page.waitForTimeout(2500);
+  const cut = await state();
+  expect(cut.prisms).toBe(3);
+  expect(cut.errors).toBe(0);
+  await expect(page.locator(".prisms-svg .piece")).toHaveCount(4);
+  expect(await page.locator(".prisms-svg .piece.bad").count()).toBe(0);
+  await expect(page.locator(".prisms-kit")).toContainText("4 prisms in 4 shapes: all clean");
+  // Every piece of the top split into its prisms: about four times as many bodies.
+  expect(cut.pieces).toBeGreaterThan(before.pieces * 3);
+  // Whole tiles: every tile the board reaches, uncut by its edge, so fewer, larger pieces than the clipped top had.
+  await page.getByRole("button", { name: "Clear glue lines" }).click();
+  await page.waitForTimeout(1200);
+  await page.locator("#detail-body .field", { hasText: "Whole tiles" }).locator("input").check();
+  await page.waitForTimeout(2500);
+  const whole = await state();
+  expect(whole.whole).toBe(true);
+  expect(whole.errors).toBe(0);
+  expect(whole.pieces).toBeGreaterThan(before.pieces * 0.5);
+  expect(whole.pieces).toBeLessThan(before.pieces * 1.5);
+  await expect(page.locator(".spectre-svg .board")).toHaveCount(1);
+  // A sample piece: one body.
+  await page.locator("#detail-body select").filter({ hasText: "design" }).first().selectOption("sample");
+  await page.waitForTimeout(1500);
+  const sample = await state();
+  expect(sample.errors).toBe(0);
+  expect(sample.bodies).toEqual(["Sample piece"]);
+});
+
 test("spectre feature: rips split the straight tile into a kit of profiles", async ({ page }) => {
   page.on("dialog", (d) => d.accept(d.defaultValue()));
   await page.goto("/");

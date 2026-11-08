@@ -96,6 +96,16 @@ pub struct Options {
     /// view and the view framed by the box, so a corner of a large
     /// assembly comes out at a scale that reads.
     pub window: Option<(Vec3, Vec3)>,
+    /// A scale to draw at instead of the largest standard one that fits:
+    /// 1 for a template to print at 100 %. Refused when the views do
+    /// not fit the sheet at it.
+    pub scale: Option<f64>,
+    /// A rectangle to trim the work to after it is made, four corners
+    /// in model millimetres, drawn on the top view as a chain line
+    /// marked TRIM: the board a glue-up of whole Spectre tiles is cut
+    /// down to. `drawing_pdf` fills it in from such a feature when it
+    /// is not given.
+    pub trim: Option<[Vec3; 4]>,
 }
 
 impl Default for Options {
@@ -112,6 +122,8 @@ impl Default for Options {
             hidden: None,
             explode: 0.0,
             window: None,
+            scale: None,
+            trim: None,
         }
     }
 }
@@ -611,6 +623,8 @@ pub struct Sheet {
     title: String,
     note: String,
     hidden: bool,
+    /// The trim rectangle in the top view's coordinates.
+    trim: Option<Vec<Vec2>>,
 }
 
 /// Places the views (third angle, the rest to the right of the
@@ -624,7 +638,8 @@ fn arrange(
     rows: &[Row],
     sheet: SheetSize,
     below: bool,
-) -> (Vec<Placed>, Vec<Dimension>, f64, f64, f64) {
+    forced: Option<f64>,
+) -> (Vec<Placed>, Vec<Dimension>, f64, f64, f64, bool) {
     // Third-angle layout in model millimetres: front at the origin, top
     // above it, right to its right, the rest to the right of those.
     let gap = 15.0;
@@ -777,7 +792,11 @@ fn arrange(
     };
     let iso = views.iter().position(|v| v.name == "iso");
     let mut fit = None;
-    'scales: for &s in &STANDARD_SCALES {
+    let scales: Vec<f64> = match forced {
+        Some(s) => vec![s],
+        None => STANDARD_SCALES.to_vec(),
+    };
+    'scales: for &s in &scales {
         if extent_w * s > avail_w || extent_h * s > avail_h {
             continue;
         }
@@ -808,15 +827,16 @@ fn arrange(
             }
         }
     }
+    let fits = fit.is_some();
     let (scale, ox, oy, lift) = fit.unwrap_or_else(|| {
-        let s = STANDARD_SCALES[STANDARD_SCALES.len() - 1];
+        let s = forced.unwrap_or(STANDARD_SCALES[STANDARD_SCALES.len() - 1]);
         let (ox, oy) = top_left(s);
         (s, ox, oy, 0.0)
     });
     if let Some(k) = iso {
         views[k].dy += lift;
     }
-    (views, dims, scale, ox, oy)
+    (views, dims, scale, ox, oy, fits)
 }
 
 impl Sheet {
@@ -1155,10 +1175,10 @@ impl Sheet {
             .iter()
             .filter(|v| !matches!(v.name.as_str(), "front" | "top" | "right"))
             .count();
-        let right = arrange(views.clone(), &rows, opts.sheet, false);
-        let (views, dims, scale, ox, oy) = if rest > 0 {
-            let below = arrange(views, &rows, opts.sheet, true);
-            if below.2 > right.2 {
+        let right = arrange(views.clone(), &rows, opts.sheet, false, opts.scale);
+        let (views, dims, scale, ox, oy, fits) = if rest > 0 {
+            let below = arrange(views, &rows, opts.sheet, true, opts.scale);
+            if below.2 > right.2 || (below.5 && !right.5) {
                 below
             } else {
                 right
@@ -1166,6 +1186,13 @@ impl Sheet {
         } else {
             right
         };
+        if let (Some(s), false) = (opts.scale, fits) {
+            return Err(format!(
+                "the views do not fit the {} sheet at {}: use a bigger sheet or fewer views",
+                opts.sheet.name(),
+                scale_label(s)
+            ));
+        }
         Ok(Sheet {
             size: opts.sheet,
             placed: views,
@@ -1177,6 +1204,13 @@ impl Sheet {
             title: opts.title.clone(),
             note: opts.note.clone(),
             hidden,
+            trim: opts.trim.map(|corners| {
+                let (u, v) = frame(standard_view("top").unwrap());
+                corners
+                    .iter()
+                    .map(|p| Vec2::new(p.dot(u), p.dot(v)))
+                    .collect()
+            }),
         })
     }
 
@@ -1240,6 +1274,21 @@ impl Sheet {
                 )
                 .collect();
             page.lines(&visible, 0.5, None);
+            if let (true, Some(trim)) = (p.name == "top", &self.trim) {
+                // The trim rectangle: a chain line over the top view,
+                // the word at its top-left corner.
+                let pts: Vec<(f64, f64)> = trim
+                    .iter()
+                    .map(|q| (sx(q.x + p.dx), sy(q.y + p.dy)))
+                    .collect();
+                let segs: Vec<[(f64, f64); 2]> = (0..pts.len())
+                    .map(|i| [pts[i], pts[(i + 1) % pts.len()]])
+                    .collect();
+                page.lines(&segs, 0.35, Some((6.0, 1.5)));
+                let left = pts.iter().map(|q| q.0).fold(f64::INFINITY, f64::min);
+                let top = pts.iter().map(|q| q.1).fold(f64::NEG_INFINITY, f64::max);
+                page.text(left, top + 1.5, 3.0, "TRIM", Anchor::Left, 0.0, false);
+            }
             if let Some(caption) = &p.caption {
                 page.text(
                     sx((p.b.minx + p.b.maxx) / 2.0 + p.dx),
@@ -1867,6 +1916,9 @@ pub fn motion_pdf(
 pub fn drawing_pdf(doc: &mut Document, tab: TabId, opts: &Options) -> Result<Vec<u8>, String> {
     let parts = parts_of(doc, tab)?;
     let mut opts = opts.clone();
+    if opts.trim.is_none() {
+        opts.trim = spectre_trim(doc, tab);
+    }
     if opts.title.is_empty() {
         let tab_name = doc
             .tab(tab)
@@ -1885,6 +1937,31 @@ pub fn drawing_pdf(doc: &mut Document, tab: TabId, opts: &Options) -> Result<Vec
         })
         .collect();
     Ok(Sheet::layout(&refs, &opts)?.to_pdf())
+}
+
+/// The rectangle a glue-up of whole Spectre tiles is trimmed to: the
+/// board of the tab's first unsuppressed Spectre feature that keeps its
+/// tiles whole in the design layout, as corners on the feature's plane.
+fn spectre_trim(doc: &mut Document, tab: TabId) -> Option<[Vec3; 4]> {
+    let (sf, opts) = match &doc.tab(tab)?.kind {
+        ok_model::TabKind::PartStudio(ps) => (
+            ps.features().iter().find_map(|f| match &f.kind {
+                ok_model::FeatureKind::Spectre(s) if !f.suppressed => Some(s.clone()),
+                _ => None,
+            })?,
+            ps.settings.profile_options(),
+        ),
+        _ => return None,
+    };
+    let (lo, hi) = sf.trim(&opts)?;
+    let r = doc.regenerate_studio(tab, None).ok()?;
+    let plane = r.resolve_plane(&sf.plane).ok()?;
+    Some([
+        plane.to_world(lo),
+        plane.to_world(Vec2::new(hi.x, lo.y)),
+        plane.to_world(hi),
+        plane.to_world(Vec2::new(lo.x, hi.y)),
+    ])
 }
 
 #[cfg(test)]

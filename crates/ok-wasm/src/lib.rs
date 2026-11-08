@@ -727,6 +727,7 @@ impl Doc {
                 serde_json::json!({
                     "width": patch.width,
                     "height": patch.height,
+                    "board": [patch.board.0.x, patch.board.0.y, patch.board.1.x, patch.board.1.y],
                     "depth": patch.depth,
                     "tiles": patch.tiles,
                     "edge": params.edge,
@@ -793,6 +794,53 @@ impl Doc {
         serde_json::to_string(ok_sketch::spectre::rips::ranked()).unwrap_or_default()
     }
 
+    /// The curvy Spectre as convex prisms (see `ok_sketch::spectre::prisms`):
+    /// the tile and the grid points cuts snap to, and the decomposition
+    /// `cuts_json` (pairs of {x, y} in tile units) makes with this curve
+    /// (`cubic`, `arc` or `ogee`) and bulge: the prisms with their faces,
+    /// corners, convexity and the shoulder rule, and the shape classes.
+    pub fn spectre_prisms(&self, curve: &str, bulge: f64, cuts_json: &str) -> String {
+        let error = |e: String| serde_json::json!({ "error": e }).to_string();
+        let curve = match curve {
+            "cubic" => ok_sketch::spectre::Curve::Cubic,
+            "arc" => ok_sketch::spectre::Curve::Arc,
+            "ogee" => ok_sketch::spectre::Curve::Ogee,
+            other => return error(format!("curve is cubic, arc or ogee, not {other}")),
+        };
+        let cuts: Vec<[ok_math::Vec2; 2]> = match serde_json::from_str(cuts_json) {
+            Ok(c) => c,
+            Err(e) => return error(e.to_string()),
+        };
+        use ok_sketch::spectre::prisms;
+        match prisms::decompose(curve, bulge, &cuts, 10f64.to_radians()) {
+            Ok(d) => serde_json::json!({
+                "tile": prisms::tile(),
+                "grid": prisms::grid(),
+                "lines": ok_sketch::spectre::rips::lines(),
+                "decomposition": d,
+            })
+            .to_string(),
+            Err(e) => error(e),
+        }
+    }
+
+    /// The fewest convex prisms for this curve and bulge: the cuts, as
+    /// `spectre_prisms` takes them, or an error when no arrangement of
+    /// vertex diagonals and grid rays satisfies the rule.
+    pub fn spectre_prisms_search(&self, curve: &str, bulge: f64) -> String {
+        let error = |e: String| serde_json::json!({ "error": e }).to_string();
+        let curve = match curve {
+            "cubic" => ok_sketch::spectre::Curve::Cubic,
+            "arc" => ok_sketch::spectre::Curve::Arc,
+            "ogee" => ok_sketch::spectre::Curve::Ogee,
+            other => return error(format!("curve is cubic, arc or ogee, not {other}")),
+        };
+        match ok_sketch::spectre::prisms::search(curve, bulge, 10f64.to_radians()) {
+            Ok(d) => serde_json::json!({ "cuts": d.cuts }).to_string(),
+            Err(e) => error(e),
+        }
+    }
+
     /// A shop drawing sheet of a tab as a PDF: `opts_json` is
     /// `{"views":["front","top","right","iso"],"sheet":"A4","parts":true,
     /// "title":"...","note":"..."}`, every field optional.
@@ -808,6 +856,7 @@ impl Doc {
             hidden: Option<bool>,
             explode: Option<f64>,
             window: Option<String>,
+            scale: Option<f64>,
         }
         let spec: Spec =
             serde_json::from_str(opts_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -829,6 +878,7 @@ impl Doc {
         };
         opts.title = spec.title.unwrap_or_default();
         opts.note = spec.note.unwrap_or_default();
+        opts.scale = spec.scale.filter(|s| *s > 0.0);
         ok_sheet::drawing_pdf(&mut self.inner, TabId(tab), &opts).map_err(|e| JsValue::from_str(&e))
     }
 
