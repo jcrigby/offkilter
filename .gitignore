@@ -23,3 +23,4 @@ examples/turntable-scan/out/**/*.ply
 examples/turntable-scan/out/*.okpart
 examples/turntable-scan/out/**/scan-frame.png
 examples/turntable-scan/out/scan-frame-test.png
+examples/spectre-sticks/out/*.stl

@@ -54,7 +54,7 @@ cargo test -p ok-render --test spectre_lid     # what CI runs
 | Board | 101.6 x 101.6 x 12 mm, trimmed from a 173 x 171 glue-up |
 | Tile edge | 10.56 mm; a tile is 914 mm², about 41 x 34 |
 | Curve | arcs of sagitta 0.2673 edge: radius 6.35 mm (1/4 in), 112.5° of circle |
-| Bits | 1/4 in bullnose (or a 1/2 in bullnose by diameter) and a 1/2 in core box |
+| Bits | 1/4 in roundover, two passes on a 56° gable, and a 1/2 in core box; see `examples/spectre-sticks/` |
 | Gap | 0.7 mm; the sample piece is 853 mm² of the tile's 914, 3 mm thick |
 | Prisms | 5 per tile from 4 glue lines, 5 shapes, 132 to 228 mm² |
 | Tiles | 21 whole: 14 maple, 7 walnut (the mystic pairs) |
@@ -80,11 +80,13 @@ cargo test -p ok-render --test spectre_lid     # what CI runs
   same 1/4 in bits on a 10.56 mm edge, a bigger tile, and the five
   looked better. A 3/8 in pair on a 9 mm edge needs eight prisms and a
   semicircle nine.
-- **The shoulder rule.** A bullnose leaves its arc tangent to the
-  cutter's shoulder, so at every corner where a bump ends the prism
-  can be no wider than 180° less the arc's end angle, 123.7° here, or
-  the shoulder would take the next face off. A flute, cut by the core
-  box, asks nothing of its corners. No glue line may land part way
+- **The shoulder rule.** The roundover's bearing rides the gable
+  flat that is tangent to the arc at its end, so at every corner where
+  a bump ends the face next door has to lean away from the bearing:
+  the prism can be no wider there than 180° less the arc's end angle,
+  123.7° here. A flute, cut by the core box, asks nothing of its
+  corners. (A half-round bullnose would not do: its body past the arc
+  bites a 120° corner; `examples/spectre-sticks/` has the cuts.) No glue line may land part way
   along a bump, since no bit cuts half a bump; a flute shared across
   a glue line is two core box passes that have to register, and the
   search avoids it when it can. `spectre_prisms` reports all of this

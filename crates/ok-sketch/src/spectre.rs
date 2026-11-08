@@ -52,6 +52,7 @@ const KEYS: [usize; 4] = [3, 5, 7, 11];
 pub mod prisms;
 pub mod rips;
 pub mod saw;
+pub mod sticks;
 
 pub const TILE_AREA: f64 = 8.196_152_422_706_632;
 

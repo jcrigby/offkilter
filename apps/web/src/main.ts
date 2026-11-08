@@ -2848,7 +2848,8 @@ class App implements SketchHost {
     const kit = document.createElement("div");
     kit.className = "prisms-kit";
     const r = dec.radius * k.edge;
-    const bits = k.curve === "ogee" ? `one ogee bit of radius ${r.toFixed(2)} mm` : Math.abs(dec.theta - 45) < 0.5 ? `a ${r.toFixed(2)} mm roundover on a 45° gable (or a Ø ${(2 * r).toFixed(1)} bullnose) and a Ø ${(2 * r).toFixed(1)} mm core box` : `a Ø ${(2 * r).toFixed(1)} mm bullnose and core box`;
+    // A bump is a roundover of the arc's radius on a gable at θ, two passes from each flat (one at the quarter circle); a half-round bullnose's body past the arc would bite a 120° corner.
+    const bits = k.curve === "ogee" ? `one ogee bit of radius ${r.toFixed(2)} mm` : Math.abs(dec.theta - 45) < 0.5 ? `a ${r.toFixed(2)} mm roundover in one pass on a 45° gable and a Ø ${(2 * r).toFixed(1)} mm core box` : dec.theta > 45 && dec.theta <= 90 ? `a ${r.toFixed(2)} mm roundover in two passes on a ${dec.theta.toFixed(0)}° gable and a Ø ${(2 * r).toFixed(1)} mm core box (not a bullnose)` : `a cutter ground to the arc: under 45° a roundover runs past the arc's far end`;
     const bad = dec.prisms.filter((p) => !(p.convex && p.shoulders && !p.bump_split)).length;
     const lines: string[] = [`${cuts.length} cut${cuts.length === 1 ? "" : "s"}, ${dec.prisms.length} prism${dec.prisms.length === 1 ? "" : "s"} in ${dec.shapes.length} shape${dec.shapes.length === 1 ? "" : "s"}: ${bad ? `${bad} not clean` : "all clean"}; arcs meet the chord at ${dec.theta.toFixed(0)}°, so a corner where a bump ends is ${dec.limit.toFixed(0)}° at most; ${bits}`];
     dec.shapes.forEach((members, j) => {

@@ -949,6 +949,31 @@ to wood) wait for a CNC, which would do everything the duplicator was
 built for. Its models, the stylus block, the portal variant and their
 tests stay in the tree as built; nothing further is planned on it.
 
+Cutting the sticks: the blade stands at 90° for good and the
+cradles do the angling, because a convex section has every face as a
+through rip, the offcut falling away on the far side, so a one-sided
+sled with a printed cassette per cut (the saw station's idea again)
+needs nothing set at the saw but which cassette is in. The bumps are
+not cut with a bullnose after all. A half-round bit of the arc's
+radius has a body that continues the semicircle past the arc's ends,
+and where a bump ends at one of the tile's 120° corners that body
+cuts 1.7 mm into the face next door: the corner would have to be
+under 107°, which the decomposition does not give. A roundover of
+the same radius does it in two passes on the gable the saw leaves:
+with a gable flat against the fence and the bit's arc starting at the
+flat's foot, where the arc is tangent to it, the roundover sweeps a
+quarter circle, 90° − θ past the apex onto the other half of the same
+circle, its shoulder flat slits the ridge off, and the pass from the
+other flat finishes the arc. That works for any arc from the quarter
+circle (one pass) to the semicircle; under 45° the quarter circle
+would run past the arc's far end, and the cutter would have to be
+ground to the arc. The shoulder rule stands as it was, since the
+face next door still has to lean away from the bearing. Rejected: a
+bullnose on sticks whose bump corners are under 107° (five more
+prisms); straddling the blade (nothing needs it); setting the blade
+to each face's angle (a cassette's nest is the angle, and a printed
+one does not drift).
+
 Drawing the prisms: on the sheet every prism of a tile is the same
 gray and the prisms are told apart by thin white stripes at the
 prism's own angle (the half turn shared out among them), and the

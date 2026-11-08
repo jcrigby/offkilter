@@ -159,14 +159,14 @@ pub struct SettingsOut {
 }
 
 type Contour = Vec<[f64; 2]>;
-const TOL: f64 = 1e-6;
+pub(super) const TOL: f64 = 1e-6;
 
 fn to_contour(p: &[Vec2]) -> Contour {
     p.iter().map(|q| [q.x, q.y]).collect()
 }
 
 /// Drops repeated and collinear points.
-fn clean(p: &[Vec2]) -> Vec<Vec2> {
+pub(super) fn clean(p: &[Vec2]) -> Vec<Vec2> {
     let mut q: Vec<Vec2> = Vec::new();
     for &v in p {
         if q.last().is_none_or(|l| l.distance(v) > TOL) {
@@ -211,17 +211,17 @@ fn clip(subject: &[Vec2], clip: &[Vec2], rule: OverlayRule) -> Vec<Vec<Vec2>> {
     out
 }
 
-fn difference(subject: &[Vec2], tool: &[Vec2]) -> Vec<Vec<Vec2>> {
+pub(super) fn difference(subject: &[Vec2], tool: &[Vec2]) -> Vec<Vec<Vec2>> {
     clip(subject, tool, OverlayRule::Difference)
 }
 
-fn intersection(subject: &[Vec2], tool: &[Vec2]) -> Vec<Vec<Vec2>> {
+pub(super) fn intersection(subject: &[Vec2], tool: &[Vec2]) -> Vec<Vec<Vec2>> {
     clip(subject, tool, OverlayRule::Intersect)
 }
 
 /// The union of the loops, as one outer loop if they join (they always
 /// do here: a kerf is filled back into the stock it was cut from).
-fn union(loops: &[Vec<Vec2>]) -> Vec<Vec<Vec2>> {
+pub(super) fn union(loops: &[Vec<Vec2>]) -> Vec<Vec<Vec2>> {
     let mut acc: Vec<Contour> = vec![to_contour(&loops[0])];
     for l in &loops[1..] {
         let shapes =
@@ -246,12 +246,12 @@ fn intersection_area(a: &[Vec2], b: &[Vec2]) -> f64 {
     intersection(a, b).iter().map(|p| signed_area(p)).sum()
 }
 
-fn rotate(p: Vec2, deg: f64) -> Vec2 {
+pub(super) fn rotate(p: Vec2, deg: f64) -> Vec2 {
     let (s, c) = deg.to_radians().sin_cos();
     Vec2::new(p.x * c - p.y * s, p.x * s + p.y * c)
 }
 
-fn transform(poly: &[Vec2], deg: f64, shift: Vec2) -> Vec<Vec2> {
+pub(super) fn transform(poly: &[Vec2], deg: f64, shift: Vec2) -> Vec<Vec2> {
     poly.iter().map(|&q| rotate(q, deg) + shift).collect()
 }
 
@@ -295,7 +295,7 @@ fn blank_tile(s: &Settings) -> (Vec<Vec2>, f64, f64, Vec2) {
 
 /// The lower (`-1`) or upper (`1`) envelope of a polygon, left to right,
 /// with the vertical steps in it.
-fn envelope(poly: &[Vec2], side: f64) -> Vec<Vec2> {
+pub(super) fn envelope(poly: &[Vec2], side: f64) -> Vec<Vec2> {
     let n = poly.len();
     let mut xs: Vec<f64> = poly.iter().map(|q| q.x).collect();
     xs.sort_by(f64::total_cmp);
@@ -337,7 +337,7 @@ fn envelope(poly: &[Vec2], side: f64) -> Vec<Vec2> {
 }
 
 /// The least extent of a polygon over the directions at 5° steps.
-fn least_width(p: &[Vec2]) -> f64 {
+pub(super) fn least_width(p: &[Vec2]) -> f64 {
     (0..36)
         .map(|k| {
             let d = Vec2::from_angle((k as f64 * 5.0).to_radians());
@@ -381,7 +381,7 @@ fn cycle_keys(p: &[Vec2], mirror: bool) -> Vec<String> {
 }
 
 /// Whether a polygon can be turned onto its own mirror image.
-fn mirror_symmetric(p: &[Vec2]) -> bool {
+pub(super) fn mirror_symmetric(p: &[Vec2]) -> bool {
     let p = clean(p);
     let keys = cycle_keys(&p, false);
     let mirrored = cycle_keys(&p, true);

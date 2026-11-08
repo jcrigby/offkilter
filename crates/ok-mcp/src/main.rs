@@ -1499,10 +1499,15 @@ impl Server {
                     })
                     .collect();
                 let r = dec.radius * edge;
+                // A bump is a roundover of the arc's radius on a gable at
+                // theta, in two passes from 45 to 90 degrees (one pass at
+                // the quarter circle); a half-round bullnose's body past
+                // the arc would bite a 120 degree corner.
                 let bits = match curve {
                     ok_sketch::spectre::Curve::Ogee => format!("one ogee bit of radius {r:.2} mm, two tangent arcs and no flats, cuts every edge"),
-                    _ if (dec.theta - 45.0).abs() < 0.5 => format!("a roundover of radius {r:.2} mm on a 45 degree gable, or a bullnose of diameter {:.2}, and a core box of diameter {:.2} mm", 2.0 * r, 2.0 * r),
-                    _ => format!("a bullnose and a core box of diameter {:.2} mm", 2.0 * r),
+                    _ if (dec.theta - 45.0).abs() < 0.5 => format!("a roundover of radius {r:.2} mm in one pass on a 45 degree gable, and a core box of diameter {:.2} mm", 2.0 * r),
+                    _ if dec.theta > 45.0 && dec.theta <= 90.0 + 1e-6 => format!("a roundover of radius {r:.2} mm in two passes on a {:.1} degree gable, and a core box of diameter {:.2} mm (not a bullnose: its body past the arc bites a corner over {:.0} degrees)", dec.theta, 2.0 * r, 180.0 - (2.0f64.sqrt() * (dec.theta.to_radians() / 2.0).tan()).atan().to_degrees()),
+                    _ => format!("a cutter ground to the arc: a roundover of radius {r:.2} mm would run past the arc's far end under 45 degrees"),
                 };
                 Ok(json!({
                     "edge": edge,
@@ -1870,6 +1875,36 @@ impl Server {
                     text.push_str(&format!("\nFrames left out: {}.", skipped.join(", ")));
                 }
                 Ok(text)
+            }
+            "spectre_sticks" => {
+                let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
+                let d = ok_sketch::spectre::sticks::Settings::default();
+                let curve = match args.get("curve").and_then(|c| c.as_str()).unwrap_or("arc") {
+                    "cubic" => ok_sketch::spectre::Curve::Cubic,
+                    "arc" => ok_sketch::spectre::Curve::Arc,
+                    "ogee" => ok_sketch::spectre::Curve::Ogee,
+                    other => return Err(format!("curve is cubic, arc or ogee, not {other}")),
+                };
+                let cuts: Vec<ok_sketch::spectre::prisms::Cut> = match args.get("cuts") {
+                    Some(v) => serde_json::from_value(v.clone())
+                        .map_err(|e| format!("cuts: {e}; pairs of [x, y] points in tile units"))?,
+                    None => Vec::new(),
+                };
+                let settings = ok_sketch::spectre::sticks::Settings {
+                    curve,
+                    bulge: num("bulge", d.bulge),
+                    cuts,
+                    edge: num("edge", d.edge),
+                    gap: num("gap", d.gap),
+                    kerf: num("kerf", d.kerf),
+                    floor: num("floor", d.floor),
+                    margin: num("margin", d.margin),
+                    shoulder: num("shoulder", d.shoulder),
+                };
+                let p = ok_sketch::spectre::sticks::plan(&settings)?;
+                let mut v = serde_json::to_value(&p).map_err(|e| e.to_string())?;
+                points_as_pairs(&mut v);
+                Ok(v.to_string())
             }
             "spectre_saw" => {
                 let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
@@ -2490,6 +2525,11 @@ fn tool_list() -> Value {
             "inputSchema": { "type": "object", "properties": { "scan": { "type": "string" }, "ply": { "type": "string" }, "out": { "type": "string" }, "tol": { "type": "number" }, "angle": { "type": "number" }, "min_points": { "type": "number" }, "table": { "type": "boolean" }, "doc": doc_prop, "tab": tab_prop, "name": { "type": "string" } } }
         },
         {
+            "name": "spectre_sticks",
+            "description": "How the curvy Spectre's prisms are cut as sticks, one per prism: a plan for a table saw whose blade stands at 90 degrees for good, with a cradle per cut on a one-sided sled, and for a router table with a cradle per pass. The tile's bumps and flutes are arcs of one radius, so a flute is one pass of a core box bit of that radius and a bump two passes of a roundover of it on a gable (two flats at the arc's end angle theta to the chord, tangent to the arc at its ends, meeting at a ridge over the apex): with a gable face standing against the fence and the bit's arc starting at the face's foot, the roundover sweeps a quarter circle past the apex, its shoulder slits off the ridge, and the second pass from the other flat finishes the arc. That wants theta between 45 (the quarter circle, one pass) and 90 degrees; a half-round bullnose will not do, its body past the arc bites a 120 degree corner. Takes `edge` (mm), `curve` (arc), `bulge` (0.2673, five sixteenths of a circle), `cuts` (the glue lines in tile units, else the fewest the search finds), `gap` (0.2: the flutes are cut this much deeper than the bumps stand, the clearance between pieces, since bits of one radius mate tight), `kerf` (3.175), `floor` (4, the thinnest cassette floor), `margin` (2, blank past the section) and `shoulder` (3, the roundover's flat past its arc). Every stick is sawn first, every face a through rip (the section is convex): the blank's datum is the prism's longest glue line, and each other face is a cut with the stick turned so the face stands vertical on the blade's near side (`turn`, `shift`, `bed`, `top`: the blade at one `height` over the plate for every cut of every stick), the stock `before` and `after`, the `offcuts`, and the `lower` and `upper` envelopes a cassette's base and lid are the negatives of. Then the router passes: a flute with the chord down over the bit's axis (`height` the depth), a bump with the gable face in x 0, the bit on its left, its foot at the top where the roundover's arc starts under the bearing (`height`), the second pass with the stick end for end (`mirrored`), each with its `before`, `after`, `offcuts` and envelopes for the cradle. Returns JSON: `theta`, `radius`, `sagitta`, `flute_depth`, `ridge`, `bits`, `height` and `sticks`, each with its `prism`, `shape`, `datum`, sawn `section` and `faces` (glue, chord, gable), `blank`, `saw`, `router`, `finished`, `target` (the prism's curved outline) and `off` (how far the finished section is from it, mm2). No document is needed. See `examples/spectre-sticks/`.",
+            "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["arc"] }, "bulge": { "type": "number" }, "cuts": { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } } }, "gap": { "type": "number" }, "kerf": { "type": "number" }, "floor": { "type": "number" }, "margin": { "type": "number" }, "shoulder": { "type": "number" } } }
+        },
+        {
             "name": "spectre_saw",
             "description": "The straight Spectre as a stick on a table saw, for a stack of blanks cut to the tile as one prism: the tile at `edge` mm eroded by half of `gap`, in a blank planed to the tile's thickness between its two parallel faces and ripped to its width (three faces made), and the ten rips that make the rest, two through and four pairs of rabbets at the inside corners, simulated in order with the blade's `kerf`. Each cut is a cassette on a sled with the blade at one height: the stick turned so the face stands vertical with the open end down (`turn`, `shift`), the blade's near face at x 0, the floor (`bed`) putting the corner at the blade's top (`top`, the same for every cut, `height`), the stock `before` and `after`, the `offcuts`, and `held`, the stock with open kerfs filled, with its `lower` and `upper` envelopes the cassette's base and lid are the negatives of. `margin` is the blank past the notched end, `floor` the thinnest bed, `bias` how far past the corner a rabbet is aimed (short leaves a sliver; past nicks the far face a kerf wide under the gap). Returns JSON with the blank (`width`, `thickness`), `cuts`, `height`, and `left` and `nicked`, the tile's area the cuts leave or take. No document is needed. See `examples/spectre-saw/`.",
             "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "gap": { "type": "number" }, "kerf": { "type": "number" }, "margin": { "type": "number" }, "floor": { "type": "number" }, "bias": { "type": "number" } }, "required": ["edge"] }
@@ -2888,6 +2928,27 @@ mod tests {
         let o: Value = serde_json::from_str(&text).unwrap();
         assert_eq!(o["prisms"].as_array().unwrap().len(), 5);
         assert!(o["bits"].as_str().unwrap().contains("ogee"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_spectre_sticks_plan_comes_back_with_five_sticks() {
+        let dir = std::env::temp_dir().join(format!("ok-mcp-sticks-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut server = local_server(&dir);
+        let (err, text) = tool_text(&mut server, "spectre_sticks", json!({}));
+        assert!(!err, "{text}");
+        let v: Value = serde_json::from_str(&text).unwrap();
+        let sticks = v["sticks"].as_array().unwrap();
+        assert_eq!(sticks.len(), 5);
+        assert!((v["radius"].as_f64().unwrap() - 6.35).abs() < 0.02);
+        assert!(v["bits"].as_str().unwrap().contains("roundover"));
+        let first = &sticks[0];
+        assert!(first["saw"].as_array().unwrap().len() >= 3);
+        assert!(first["saw"][0]["before"][0].is_array());
+        assert_eq!(first["router"][0]["kind"], "flute");
+        let (err, text) = tool_text(&mut server, "spectre_sticks", json!({ "bulge": 0.15 }));
+        assert!(err && text.contains("45"), "{text}");
         let _ = std::fs::remove_dir_all(&dir);
     }
 

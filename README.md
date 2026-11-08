@@ -72,8 +72,10 @@ works today, all in the browser:
   duplicator (`examples/spectre-cage/`), a table saw sled with a
   cassette per rip that cuts the same stack to the straight tile
   (`examples/spectre-saw/`), the same lid as a glue-up of five
-  prisms per tile that a bullnose and a core box curve, whole tiles
-  all round and a trim line (`examples/spectre-lid/`), a mini chop saw from an angle
+  prisms per tile that a roundover and a core box curve, whole tiles
+  all round and a trim line (`examples/spectre-lid/`), and the saw
+  cassettes and router cradles that cut those five sticks with the
+  blade at 90° (`examples/spectre-sticks/`), a mini chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`) and the Edwardian
   Lift, a minimal router table lifted by a scissor jack through a
