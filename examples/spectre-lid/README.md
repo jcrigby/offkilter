@@ -56,7 +56,7 @@ cargo test -p ok-render --test spectre_lid     # what CI runs
 | Curve | arcs of sagitta 0.2673 edge: radius 6.35 mm (1/4 in), 112.5° of circle |
 | Bits | 1/4 in bullnose (or a 1/2 in bullnose by diameter) and a 1/2 in core box |
 | Gap | 0.7 mm; the sample piece is 853 mm² of the tile's 914, 3 mm thick |
-| Prisms | 5 per tile from 4 glue lines, 5 shapes, 142 to 228 mm² |
+| Prisms | 5 per tile from 4 glue lines, 5 shapes, 132 to 228 mm² |
 | Tiles | 21 whole: 14 maple, 7 walnut (the mystic pairs) |
 | Pieces | 105; 192 cm² of tiles for a 103 cm² lid, the rest past the trim line |
 
@@ -111,7 +111,12 @@ cargo test -p ok-render --test spectre_lid     # what CI runs
 - The glue-up of whole tiles around a 4 in square is 173 x 171 mm,
   which does not fit A4 at 1:1 with the sheet's frame, so the sheet
   is A3. The script tries A4 first and takes the refusal.
-- The search's fifth prism has a 2.3 mm glue face where a grid ray
-  from vertex 13 stops on the diagonal from vertex 1. It is a real
-  face, a sliver of stick two millimetres wide, and the planner in
-  the panel lets a different fifth cut be tried by hand.
+- The first search left a 2.3 mm glue face on the fifth prism: a grid
+  ray from vertex 13 stopped on the diagonal from vertex 1 a hair
+  short of vertex 10, and the search kept it because its smallest
+  prism was 10 mm² bigger than with the cut run to the vertex. A
+  flat two millimetres wide on a stick is not a face anyone rips, so
+  the search now counts glue faces under 0.3 edge as slivers and
+  ranks them out before it looks at the smallest prism; the fifth
+  prism is a clean bump-flute-bump triangle with one 15.9 mm glue
+  face.

@@ -468,6 +468,10 @@ fn read(
     )
 }
 
+/// A glue face shorter than this, in edge units, is a sliver the search
+/// avoids: a ray that stopped a hair short of a vertex.
+pub const SLIVER: f64 = 0.3;
+
 /// The prisms a cut set makes of the tile with this curve.
 pub fn decompose(
     curve: Curve,
@@ -777,7 +781,9 @@ pub fn search(curve: Curve, bulge: f64, facet: f64) -> Result<Decomposition, Str
     // Build each: diagonals whole, rays stopped at the first cut they
     // meet; keep the valid ones; fewest prisms, then no shared flutes,
     // then the biggest smallest prism, then the fewest shapes.
-    let mut best: Option<(Decomposition, (usize, usize, i64, usize))> = None;
+    // Prisms, shared flutes, sliver glue faces, minus the smallest area, shapes: less is better.
+    type Score = (usize, usize, usize, i64, usize);
+    let mut best: Option<(Decomposition, Score)> = None;
     for (ds, rs) in &sols {
         let mut cuts: Vec<Cut> = ds
             .iter()
@@ -806,9 +812,20 @@ pub fn search(curve: Curve, bulge: f64, facet: f64) -> Result<Decomposition, Str
             .iter()
             .map(|p| p.area)
             .fold(f64::INFINITY, f64::min);
+        // A glue face shorter than SLIVER is a stub where a ray stopped
+        // just short of a vertex: a flat a millimetre or two wide on a
+        // stick, which no one wants to rip. Fewer of those before a
+        // bigger smallest prism.
+        let slivers = d
+            .prisms
+            .iter()
+            .flat_map(|p| p.faces.iter())
+            .filter(|f| f.kind == FaceKind::Glue && f.len < SLIVER)
+            .count();
         let score = (
             d.prisms.len(),
             d.prisms.iter().filter(|p| p.flute_split).count(),
+            slivers,
             -(smallest * 1e6) as i64,
             d.shapes.len(),
         );
@@ -881,14 +898,23 @@ mod tests {
         // the semicircle's nine share one flute across a cut; the others share none
         let semi = search(Curve::Arc, 0.5, FACET).unwrap();
         assert_eq!(semi.prisms.iter().filter(|p| p.flute_split).count(), 2);
+        // five sixteenths: no stub of a glue face (the ray from vertex 13
+        // once stopped 0.2 edge short of vertex 10 for a bigger smallest
+        // prism; the diagonal to the vertex is preferred), no prism under
+        // a square edge
         let five = search(Curve::Arc, FIVE_SIXTEENTHS, FACET).unwrap();
         assert!(five.prisms.iter().all(|p| !p.flute_split));
+        for p in &five.prisms {
+            for f in &p.faces {
+                assert!(f.kind != FaceKind::Glue || f.len >= SLIVER, "{:?}", p.faces);
+            }
+        }
         assert!(
             five.prisms
                 .iter()
                 .map(|p| p.area)
                 .fold(f64::INFINITY, f64::min)
-                > 1.2
+                > 1.1
         );
     }
 

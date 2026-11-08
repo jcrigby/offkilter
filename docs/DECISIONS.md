@@ -915,8 +915,10 @@ ends, the prism no wider than 180° less the arc's end angle, because
 the bullnose's shoulder leaves the arc tangent to the stick's next
 face, which must therefore lie at or outside that tangent. The search
 is over vertex diagonals and grid rays from the vertices that need a
-cut, fewest cuts first, then no shared flutes, the biggest smallest
-prism and the fewest shapes: four prisms at the quarter circle, five
+cut, fewest cuts first, then no shared flutes, no glue face under 0.3
+edge (a ray that stops a hair short of a vertex leaves a flat two
+millimetres wide that no one rips), the biggest smallest prism and
+the fewest shapes: four prisms at the quarter circle, five
 at five sixteenths of a circle, nine at the semicircle. The owner
 settled on five sixteenths at a 10.56 mm edge, which puts the pair at
 1/4 in bits, over the quarter circle's 8.98 mm, which is a smaller
