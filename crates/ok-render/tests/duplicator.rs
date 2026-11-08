@@ -16,9 +16,19 @@ fn example_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/duplicator")
 }
 
-fn load() -> Document {
-    let json = std::fs::read_to_string(example_dir().join("out/duplicator.okpart")).unwrap();
+fn load_at(rel: &str) -> Document {
+    let json = std::fs::read_to_string(example_dir().join(rel)).unwrap();
     Document::from_json(&json).unwrap()
+}
+
+fn load() -> Document {
+    load_at("out/duplicator.okpart")
+}
+
+/// The portal variant (`build.py --portal`): the Y blocks under the
+/// tools, a leg each side, the base without its back third.
+fn load_portal() -> Document {
+    load_at("out/portal/duplicator.okpart")
 }
 
 fn tab_named(doc: &Document, name: &str) -> TabId {
@@ -149,9 +159,7 @@ fn stop_landing(r: &AssemblyResult) -> f64 {
     screw_lo.z - top
 }
 
-#[test]
-fn every_part_regenerates_closed_and_the_machine_places_every_body() {
-    let mut doc = load();
+fn every_part_regenerates_closed_and_the_machine_places_every_body_in(mut doc: Document) {
     let tabs: Vec<(TabId, String, String)> = doc
         .tabs
         .iter()
@@ -187,6 +195,16 @@ fn every_part_regenerates_closed_and_the_machine_places_every_body() {
         let r = doc.regenerate_assembly(sub).unwrap();
         assert_eq!(r.bodies.len(), want, "{name}");
     }
+}
+
+#[test]
+fn every_part_regenerates_closed_and_the_machine_places_every_body() {
+    every_part_regenerates_closed_and_the_machine_places_every_body_in(load());
+}
+
+#[test]
+fn every_part_of_the_portal_regenerates_closed_and_the_machine_places_every_body() {
+    every_part_regenerates_closed_and_the_machine_places_every_body_in(load_portal());
 }
 
 #[test]
@@ -492,9 +510,7 @@ fn sliders(
 /// only moving parts against fixed ones once let a notch in the deck
 /// round the carriage plate through, which would have pinned the X
 /// travel to the notch.
-#[test]
-fn the_machine_clears_itself_over_the_work() {
-    let mut doc = load();
+fn the_machine_clears_itself_over_the_work_in(mut doc: Document) {
     let machine = tab_named(&doc, "Duplicator");
     let sliders = sliders(&mut doc, machine);
     let r = doc.regenerate_assembly(machine).unwrap();
@@ -571,6 +587,187 @@ fn the_machine_clears_itself_over_the_work() {
         println!("{h}");
     }
     assert!(hits.is_empty(), "{} collisions", hits.len());
+}
+
+#[test]
+fn the_machine_clears_itself_over_the_work() {
+    the_machine_clears_itself_over_the_work_in(load());
+}
+
+#[test]
+fn the_portal_clears_itself_over_the_work() {
+    the_machine_clears_itself_over_the_work_in(load_portal());
+}
+
+/// The portal: the Y rails run to the base's front edge and the gantry's
+/// blocks sit just behind the tools, so the gantry's body no longer parks
+/// behind the work and the base is 640 deep instead of 855. Each side is a
+/// leg, a foot on the rail's two blocks with a cheek standing on it in
+/// front of the wall; between the cheeks a deck strip 150 deep behind
+/// the wall keeps the shear plate. The tools still reach the blank and
+/// the lattice, and the machine's own sweep is the test above.
+#[test]
+fn the_portal_is_a_third_shorter_with_its_blocks_under_the_tools() {
+    let mut gantry = load();
+    let mut doc = load_portal();
+    let g = gantry
+        .regenerate_assembly(tab_named(&gantry, "Duplicator"))
+        .unwrap();
+    let r = doc
+        .regenerate_assembly(tab_named(&doc, "Duplicator"))
+        .unwrap();
+    let (blo, bhi) = bounds(body(&r, "Base"));
+    let (glo, ghi) = bounds(body(&g, "Base"));
+    let (depth, width) = (bhi.y - blo.y, bhi.x - blo.x);
+    println!(
+        "portal base {width} x {depth} against the gantry's {} x {}",
+        ghi.x - glo.x,
+        ghi.y - glo.y
+    );
+    assert!(depth < 0.76 * (ghi.y - glo.y), "depth {depth}");
+    assert!(width < 1.1 * (ghi.x - glo.x), "width {width}");
+    assert!(depth * width < 0.85 * (ghi.y - glo.y) * (ghi.x - glo.x));
+    // The same work at the same place, the same tools, the same travel in
+    // X and Z: nothing in front of the wall changed.
+    for name in [
+        "Blank",
+        "Pattern plate",
+        "Router",
+        "Pilot",
+        "Z carriage plate",
+        "Wall",
+    ] {
+        let (a, b) = (bounds(body(&r, name)), bounds(body(&g, name)));
+        let same = |p: Vec3, q: Vec3| (p.y - q.y).abs() < 1e-6 && (p.z - q.z).abs() < 1e-6;
+        assert!(same(a.0, b.0) && same(a.1, b.1), "{name} moved in y or z");
+    }
+    // The blocks just behind the tools, the rails from the base's front
+    // edge, and the travel still covers the work.
+    let (bit_lo, bit_hi) = bounds(body(&r, "Router"));
+    let bit = Vec3::new(
+        (bit_lo.x + bit_hi.x) / 2.0,
+        (bit_lo.y + bit_hi.y) / 2.0,
+        bit_lo.z,
+    );
+    let blocks = group(&r, "Y blocks SC20UU");
+    let front = blocks
+        .iter()
+        .map(|b| bounds(b).0.y)
+        .fold(f64::INFINITY, f64::min);
+    println!("the tools {} ahead of the front Y blocks", front - bit.y);
+    assert!(
+        front - bit.y < 60.0,
+        "the blocks are under the tools, not behind them"
+    );
+    let supports = group(&r, "Y supports SK20");
+    let support_front = supports
+        .iter()
+        .map(|s| bounds(s).0.y)
+        .fold(f64::INFINITY, f64::min);
+    assert!(
+        (support_front - blo.y).abs() < 1e-6,
+        "the front supports stand at the base's front edge"
+    );
+    let (y_minus, y_plus) = travel(&supports, &blocks, |v| v.y);
+    println!("y travel -{y_minus} +{y_plus}");
+    let (blank_lo, blank_hi) = bounds(body(&r, "Blank"));
+    let (plate_lo, plate_hi) = bounds(body(&r, "Pattern plate"));
+    assert!(
+        bit.y - y_minus <= plate_lo.y + 5.0 - 10.0,
+        "the pilot reaches the reference hole with 10 to spare"
+    );
+    assert!(
+        bit.y + y_plus >= blank_hi.y + 10.0,
+        "the bit reaches the blank's back edge with 10 to spare"
+    );
+    assert!(bit.y - y_minus <= blank_lo.y && bit.y + y_plus >= blank_hi.y);
+    assert!(bit.y - y_minus <= plate_lo.y + 10.0 && bit.y + y_plus >= plate_hi.y - 10.0);
+    // The legs: a foot on each rail's blocks and a cheek on it, outboard
+    // of everything the X slide sweeps; the deck strip on the back blocks
+    // behind the wall; every block under a foot or the deck.
+    let legs = group(&r, "Legs");
+    assert_eq!(legs.len(), 2);
+    let deck = body(&r, "Deck");
+    let (deck_lo, deck_hi) = bounds(deck);
+    println!(
+        "deck strip {} deep, {} above the blank",
+        deck_hi.y - deck_lo.y,
+        deck_lo.z - blank_hi.z
+    );
+    assert!(deck_hi.y - deck_lo.y < 160.0 && deck_lo.z - blank_hi.z > 40.0);
+    let wall = body(&r, "Wall");
+    let (wall_lo, wall_hi) = bounds(wall);
+    assert!(
+        (wall_lo.y - deck_lo.y).abs() < 1e-6,
+        "the wall stands on the deck strip's front edge"
+    );
+    assert!((wall_lo.z - deck_hi.z).abs() < 1e-6);
+    for leg in &legs {
+        let (lo, hi) = bounds(leg);
+        assert!(
+            (lo.z - deck_lo.z).abs() < 1e-6,
+            "the foot is at the blocks' tops, the deck's height"
+        );
+        assert!(
+            (hi.z - wall_hi.z).abs() < 1e-6,
+            "the cheek is the wall's height"
+        );
+        assert!(
+            lo.y < bit.y + 30.0,
+            "the foot starts within 30 of the tools"
+        );
+        // The cheek butts the wall's end: the wall spans exactly between the cheeks.
+        let inner = if lo.x > 0.0 { lo.x } else { hi.x };
+        let cheek_inner = if lo.x > 0.0 { hi.x - 19.0 } else { lo.x + 19.0 };
+        assert!(
+            (cheek_inner - if lo.x > 0.0 { wall_hi.x } else { wall_lo.x }).abs() < 1e-6,
+            "wall to cheek"
+        );
+        assert!(
+            inner.abs() > 400.0,
+            "the foot is outboard of the X slide's sweep"
+        );
+    }
+    for b in &blocks {
+        let (lo, hi) = bounds(b);
+        let under_deck = (hi.z - deck_lo.z).abs() < 1e-6
+            && deck_lo.y <= lo.y
+            && hi.y <= deck_hi.y
+            && deck_lo.x <= lo.x
+            && hi.x <= deck_hi.x;
+        let under_foot = legs.iter().any(|l| {
+            let (flo, fhi) = bounds(l);
+            (hi.z - flo.z).abs() < 1e-6
+                && flo.y <= lo.y
+                && hi.y <= fhi.y
+                && flo.x <= lo.x
+                && hi.x <= fhi.x
+        });
+        assert!(under_deck || under_foot, "a Y block with nothing on it");
+    }
+    // The gantry passes over the Y supports at any pose: its lowest parts
+    // are the feet and the deck, both above the supports.
+    for s in &supports {
+        assert!(bounds(s).1.z < deck_lo.z);
+    }
+    // The X slide's widest part is the tool plate with the stylus's x
+    // knob past its end: at the blank's right edge it stops short of the
+    // right foot (the sweep test says so at every pose; this says by
+    // how much).
+    let knob = group(&r, "Stylus block")
+        .iter()
+        .map(|b| bounds(b).1.x)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let right_foot = legs
+        .iter()
+        .map(|l| bounds(l).0.x)
+        .filter(|&x| x > 0.0)
+        .fold(f64::INFINITY, f64::min);
+    let reach = knob + (blank_hi.x - bit.x);
+    println!(
+        "the x knob reaches {reach} at the blank's right edge, the foot starts at {right_foot}"
+    );
+    assert!(reach < right_foot - 5.0);
 }
 
 /// The pattern plate as a master for the duplicator itself: its grooves

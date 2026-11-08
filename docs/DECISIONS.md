@@ -853,3 +853,44 @@ facet a join can add. Rejected: a finer facet to shrink the jumps
 output would still flap); solving the tangency analytically between
 circular arcs (right for `arc` edges, not for the cubic, and the
 polyline is what every later step sees anyway).
+
+## 2026-11 · The duplicator's portal: feet under the tools, cheeks in front of the wall
+
+Looking at the duplicator from above with the carriage forward, the
+back half of the 855 mm base is bare, and at full rearward travel the
+deck's back edge is 33 mm from the base's. The depth is the gantry's
+body: the tools hang 210 mm ahead of the front Y blocks and 325 ahead
+of the back ones (200 of deck behind the blocks' centre line, 35 to
+the wall, 245 of X and Z stack in front of it), and
+all of that has to park behind the work with base under its blocks.
+The owner's proposal was the rails to the front, the gantry an
+inverted U on them, and the gussets smaller and in front. Drawn as a
+variant (`examples/duplicator/build.py --portal`), with the blocks 50
+behind the tools: the base is 980 x 640, a quarter less area. Three
+things decided its shape. A plain U connects the legs only through the
+wall, 300 mm up, which resists one side running ahead of the other by
+bending out of its plane, hundreds of times softer than the deck's
+in-plane shear; so a deck strip 150 deep stays behind the wall, on the
+back blocks, and the gussets become a full cheek each side standing on
+the foot in front of the wall, the triangle the owner asked for with
+its hypotenuse filled in. The legs cannot stand in the X slide's
+sweep: the carriage plate reaches ±387 at full mechanical travel and
+the tool plate ±517, so the cheeks stand behind the tool plate's
+110 mm of Y and outboard of everything else, and the feet, which are
+in that Y band, are outboard of the plate's working reach; the stylus
+block's x knob, not the plate, sets it, at 408 with the bit at the
+blank's right edge, which is why the rails went out 25 a side and the
+base gained 80 of width. The tools are not between the blocks in Y:
+the front support stands at the base's front edge, and at full
+forward travel the front block has to stop short of it, which puts
+the block's centre 50 behind the tool at the pose drawn; 210 was the
+number being cut, and the remaining 50 is the price of a support at
+the edge rather than a base extending past the work. Rejected: rails
+out to ±560 so the legs could stand anywhere in Y (the width given
+back would be a third of the depth saved); a narrower tool plate (its
+width is the two tools' spacing plus the clamps); a fixed bridge with
+the platforms on the Y rails instead (it also saves the depth, with
+no racking question, but the pilot's reference and both fences move
+with the table, and the owner's sketch was the moving gantry). The
+original gantry stays as the default: both build from one script, one
+test file sweeps both, and the README has the comparison.

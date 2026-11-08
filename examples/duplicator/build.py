@@ -131,6 +131,37 @@ BAL_LEG_Z, BAL_ARM_Z = (290.0, 419.0), (400.0, 419.0)   # the leg on the plate's
 REEL_D, REEL_W, REEL_Z = 70.0, 36.0, 345.0               # a 1 to 3 kg spring balancer's drum, hung from the arm
 HOOK_H, CABLE_D, EYE_D, EYE_H = 20.0, 1.5, 6.0, 8.0
 STOP_PROTRUDE = 49.0                                    # below the ear: set for the first pass, 4 mm deep; backed off past 32.5 for the pilot's pass
+WALL_X = DECK_X                                         # the wall's half width: the deck's, or between the portal's cheeks
+# ---------------------------------------------------------------------
+# The portal variant (`--portal`): the Y rails run to the base's front
+# edge and the gantry's front blocks sit 50 mm behind the tools instead
+# of 210, so the gantry's body no longer parks behind the work
+# and the base loses its back third. Each side is a leg: a foot of one
+# ply on the rail's two blocks, and a cheek standing on the foot's
+# outer edge in front of the wall, the brace that used to be a gusset
+# behind it. Between the cheeks the deck is a strip 150 deep behind the
+# wall, which keeps the shear plate racking is resisted by. Nothing in
+# front of the wall changes: the X and Z slides, the tools and the
+# platforms are the same parts at the same places. The rails move out
+# 25 mm a side because the stylus block's x knob reaches x = 408 at the
+# blank's right edge and the feet have to clear it; the base is 980 x
+# 640 instead of 900 x 855.
+# ---------------------------------------------------------------------
+PORTAL = "--portal" in sys.argv
+if PORTAL:
+    OUT = os.path.join(HERE, "out", "portal")
+    Y_RAIL_X = 440.0                                    # the feet's inner edges 7 clear of the x knob at the blank's right edge
+    Y_BLOCK_Y = (-230.0, 0.0)                           # 50 behind the tools, not 210
+    Y_SK_Y = (-420.0, 190.0)                            # the front support at the base's front edge: travel +/-157.5, 20 past the reference hole, 25 past the blank's back edge
+    Y_SHAFT = (-425.0, 205.0)                           # 630: cut from the 700
+    BASE = dict(x=(-490.0, 490.0), y=(-430.0, 210.0), z=(-PLY, 0.0))
+    BATTEN_Y = ((-370.0, -330.0), (-100.0, -60.0), (140.0, 180.0))   # clear of the Y supports' T-nuts at y -420 and 190
+    DECK_X, DECK_FRONT, DECK_BACK = 485.0, POST_FACE_Y, POST_FACE_Y + 150.0   # the strip behind the wall, on the back blocks
+    FOOT_X = (Y_RAIL_X - 25.0, Y_RAIL_X + 45.0)         # 70 wide over the 50 block, the cheek on its outer 19
+    FOOT_Y = (Y_BLOCK_Y[0] - 25.0, DECK_FRONT)          # from ahead of the front block to the deck strip's front edge
+    CHEEK_X = (Y_RAIL_X + 26.0, Y_RAIL_X + 45.0)
+    CHEEK_FRONT = SUPPORT_Y[0] + 10.0                   # 10 behind the tool plate's sweep, at any X
+    WALL_X = CHEEK_X[0]                                 # the wall between the cheeks
 
 
 def box(p, name, x, y, z, op="new"):
@@ -159,7 +190,7 @@ def ycyl(p, name, y0, y1, cx, cz, d, op="new"):
 
 
 def base(p):
-    box(p, "base, 900 x 855 ply", BASE["x"], BASE["y"], BASE["z"])
+    box(p, f"base, {BASE['x'][1] - BASE['x'][0]:.0f} x {BASE['y'][1] - BASE['y'][0]:.0f} ply", BASE["x"], BASE["y"], BASE["z"])
 
 
 def battens(p):
@@ -181,7 +212,7 @@ def deck(p):
 def wall(p):
     """One ply standing on the deck, full width, the X supports on its
     front face: with the deck it is an angle."""
-    box(p, "wall, ply", (-DECK_X, DECK_X), (POST_FACE_Y, POST_FACE_Y + WALL_T), (Y_BED_Z + PLY, PLATE_TOP + 20.0))
+    box(p, "wall, ply", (-WALL_X, WALL_X), (POST_FACE_Y, POST_FACE_Y + WALL_T), (Y_BED_Z + PLY, PLATE_TOP + 20.0))
 
 
 def gussets(p):
@@ -190,6 +221,21 @@ def gussets(p):
         s = p.sketch("right", sx - PLY / 2, "gusset")
         p.polygon(s, [(POST_FACE_Y + WALL_T, Y_BED_Z + PLY), (YC + DECK_BACK - 5.0, Y_BED_Z + PLY), (POST_FACE_Y + WALL_T, PLATE_TOP)])
         p.extrude(s, PLY, op="new" if i == 0 else "add", name="gusset, ply")
+
+
+def legs(p):
+    """The portal's leg each side: a foot of one ply on the rail's two
+    blocks, from ahead of the front block to the deck strip's front
+    edge, and a cheek of one ply standing on the foot's outer edge and
+    on the deck strip's end, from behind the tool plate's sweep to the
+    deck's back edge, the wall's height, glued to the wall's end: the
+    triangle that braced the wall to the deck's back is now in front,
+    tying the wall to the foot under the tools."""
+    for i, sgn in enumerate((-1.0, 1.0)):
+        fx = sorted((sgn * FOOT_X[0], sgn * FOOT_X[1]))
+        cx = sorted((sgn * CHEEK_X[0], sgn * CHEEK_X[1]))
+        box(p, "foot, ply", fx, (YC + FOOT_Y[0], YC + FOOT_Y[1]), (Y_BED_Z, Y_BED_Z + PLY), op="new" if i == 0 else "add")
+        box(p, "cheek, ply", cx, (YC + CHEEK_FRONT, YC + DECK_BACK), (Y_BED_Z + PLY, PLATE_TOP + 20.0), op="add")
 
 
 def y_supports(p):
@@ -209,7 +255,7 @@ def y_supports(p):
 
 def y_shafts(p):
     for i, sx in enumerate((-Y_RAIL_X, Y_RAIL_X)):
-        ycyl(p, "20 mm shaft, Y, 700", Y_SHAFT[0], Y_SHAFT[1], sx, Y_AXIS_Z, SHAFT_D, op="new" if i == 0 else "add")
+        ycyl(p, f"20 mm shaft, Y, {Y_SHAFT[1] - Y_SHAFT[0]:.0f}", Y_SHAFT[0], Y_SHAFT[1], sx, Y_AXIS_Z, SHAFT_D, op="new" if i == 0 else "add")
 
 
 def y_blocks(p):
@@ -522,7 +568,7 @@ def pattern(p):
 
 
 PARTS = [
-    ("Base", base), ("Battens", battens), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Deck", deck), ("Wall", wall), ("Gussets", gussets),
+    ("Base", base), ("Battens", battens), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Deck", deck), ("Wall", wall), ("Legs", legs) if PORTAL else ("Gussets", gussets),
     ("X supports SK20", x_supports), ("X shafts", x_shafts), ("X blocks SC20UU", x_blocks),
     ("Z carriage plate", carriage_plate), ("Z supports SK20", z_supports), ("Z shafts", z_shafts), ("Z blocks SC20UU", z_blocks), ("Balancer bracket", balancer_bracket), ("Balancer reel", balancer_reel),
     ("Tool support", tool_support), ("Tool support webs", tool_support_webs), ("Clamp bolts", clamp_bolts), ("Router", router), ("Stylus block", stylus_block), ("Pilot", pilot), ("Stop screw", stop_screw),
@@ -540,7 +586,8 @@ PARTS = [
 # and the range-of-motion sheets then move the mates.
 # ---------------------------------------------------------------------
 MOTION = [
-    ("gantry", "Gantry", ["Y blocks SC20UU", "Deck", "Wall", "Gussets", "X supports SK20", "X shafts"],
+    ("gantry", "Gantry", ["Y blocks SC20UU", "Deck", "Wall", "Legs" if PORTAL else "Gussets", "X supports SK20", "X shafts"],
+     "a deck strip 150 deep behind the wall, one ply each; a foot on each rail's two blocks under the tools and a cheek in front of the wall tying it to the foot; X shafts 760 at z = 160 and 310, SK20s 740 apart" if PORTAL else
      "deck and wall, one ply each, an angle with a gusset in each corner; X shafts 760 at z = 160 and 310, SK20s 740 apart"),
     ("x_slide", "X slide", ["X blocks SC20UU", "Z carriage plate", "Z supports SK20", "Z shafts", "Balancer bracket", "Balancer reel"],
      "carriage plate 220 x 314, one ply, X blocks on its back; Z shafts 250 at x = +/-60, SK20s 210 apart; spring balancer on a bracket"),
@@ -599,6 +646,14 @@ HARDWARE = [
     ("Platforms to the base, countersunk flush", "no. 8 x 32 wood screw", 12),
     ("Pattern plate's L fence", "no. 6 x 25 wood screw", 6),
 ]
+if PORTAL:
+    HARDWARE = [
+        ("4 Y blocks: the front pair under the feet, the back pair under the deck strip, from above", f, n) if j.startswith("4 Y blocks") else
+        ("Wall onto the deck strip's front edge, from below through the deck", f, n) if j.startswith("Wall onto") else
+        ("Cheeks to the wall's ends and the deck strip's ends from outside, and down into the feet", "no. 8 x 50 wood screw, 4 each way, glued", 24) if j.startswith("Gussets") else
+        (j, f, n)
+        for j, f, n in HARDWARE
+    ]
 
 
 def _v(d):
@@ -694,7 +749,7 @@ def main():
         os.remove(path)
     mcp = Mcp(path)
     mcp.call("create_document", {"name": "duplicator"})
-    mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Carving duplicator on round rail"}]})
+    mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Carving duplicator on round rail, portal gantry" if PORTAL else "Carving duplicator on round rail"}]})
     tabs, bodies, reports = {}, {}, {}
     for i, (title, fn) in enumerate(PARTS):
         if i == 0:
@@ -781,7 +836,7 @@ def main():
         mcp.call("screenshot", {"tab": asm, "view": view, "width": 1600, "height": 1100, "path": os.path.join(OUT, f"{name}.png")})
     mcp.call("screenshot", {"tab": asm, "view": "front", "section": f"y:{TOOL_Y + 0.5}:flip", "width": 1600, "height": 1100, "path": os.path.join(OUT, "section_tools.png")})
     mcp.call("screenshot", {"tab": asm, "view": "right", "section": "x:0", "width": 1600, "height": 1100, "path": os.path.join(OUT, "section_carriage.png")})
-    print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A2", "note": "round rail duplicator, puzzle size: X 760 stacked, Y 700, Z 250 shafts; one-piece gantry on the Y blocks", "path": os.path.join(OUT, "duplicator.pdf")}))
+    print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A2", "note": f"round rail duplicator, puzzle size: X 760 stacked, Y {Y_SHAFT[1] - Y_SHAFT[0]:.0f}, Z 250 shafts; " + ("portal gantry: feet on the Y blocks under the tools, cheeks in front of the wall, a deck strip behind it" if PORTAL else "one-piece gantry on the Y blocks"), "path": os.path.join(OUT, "duplicator.pdf")}))
     for file, title, _, note in MOTION:
         mcp.call("screenshot", {"tab": sub_tabs[title], "view": "-0.55,-0.75,0.45", "width": 1600, "height": 1100, "path": os.path.join(OUT, f"{file}_iso.png")})
         print(mcp.call("export", {"tab": sub_tabs[title], "format": "pdf", "sheet": "A3", "note": note, "path": os.path.join(OUT, f"{file}.pdf")}))
@@ -815,6 +870,7 @@ def main():
     # bit the size of the gap follows them and the next size up does not.
     for d, stem in ((BIT_D, "check_2mm"), (3.175, "check_3mm")):
         print(mcp.call("duplicator_check", {"tab": tabs["Pattern plate"], "bit": d, "reach": GROOVE_D + 2.0, "pitch": 0.5, "path": os.path.join(OUT, f"{stem}.png")}))
+    print(f"base {BASE['x'][1] - BASE['x'][0]:.0f} x {BASE['y'][1] - BASE['y'][0]:.0f}, Y shafts {Y_SHAFT[1] - Y_SHAFT[0]:.0f}, the front Y blocks {Y_BLOCK_Y[0] - TOOL_Y:.0f} behind the tools")
     mcp.close()
 
 

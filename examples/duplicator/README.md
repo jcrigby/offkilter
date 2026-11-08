@@ -161,6 +161,53 @@ The last pass cuts half a millimetre into the platform under the
 blank and, where the pattern runs to the blank's edge, a half kerf into
 the fence beside it; both are ply and both are meant to be marked.
 
+## The portal variant
+
+```sh
+python3 examples/duplicator/build.py --portal   # the same outputs under out/portal/
+```
+
+![The portal from above](out/portal/top.png)
+
+Seen from above at the front of its travel, the gantry parks its whole
+body behind the work: the tools hang 210 mm ahead of the front Y
+blocks and 325 ahead of the back ones, so the base has to carry the
+deck, the wall and the blocks that far behind the blank's back edge,
+480 mm of the 855. The portal turns that
+round. The Y rails run to the base's front edge, and the gantry's
+front blocks sit 50 mm behind the tools instead of 210. Each side is a leg:
+a foot of one ply on the rail's two blocks, and a cheek of one ply
+standing on the foot's outer edge in front of the wall, the wall's
+height, glued to the wall's end and to the end of a deck strip 150 mm
+deep behind the wall. The cheek is the gusset that used to brace the
+wall to the deck's back, moved in front where it ties the wall to the
+foot under the tools; the strip keeps the shear plate that stops one
+side running ahead of the other. Nothing in front of the wall changes:
+the X and Z slides, the tools, the platforms and the pattern are the
+same parts at the same places, and so are the X and Z travel.
+
+| | gantry | portal |
+|---|---|---|
+| base | 900 x 855 | 980 x 640 |
+| Y shafts | 700 | 630 |
+| Y travel | ±192.5 | ±157.5 (20 past the reference hole, 25 past the blank's back edge) |
+| front Y blocks behind the tools | 210 | 50 |
+| deck | 300 deep | a strip 150 deep |
+
+The 80 mm of width is the one cost. The stylus block's x knob stands
+16 mm past the tool plate's right end, at x = 408 with the bit at the
+blank's right edge, and the feet have to clear it, so the rails are at
+±440 instead of ±415. The gantry's body still overhangs the base: its
+cheeks reach to 35 mm past the back edge at full rearward travel, over
+nothing, and at full forward travel the wall sits over the blank's back
+half. The test regenerates the portal's document, places its 63
+bodies, checks the base against the gantry's, the blocks against the
+tools, the legs against the blocks, the wall between the cheeks, the
+reach over the blank and the lattice, the x knob short of the right
+foot, and runs the same sweep over the work as the gantry's: no two
+bodies of different instances meet at any pose but the tools in the
+work.
+
 ## Hardware
 
 Bought parts bolt through the ply into T-nuts or threaded inserts,
