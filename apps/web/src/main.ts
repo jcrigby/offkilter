@@ -2472,7 +2472,8 @@ class App implements SketchHost {
     const gap = this.exprInput(f, "gap", k.gap, (v) => set({ gap: v }));
     gap.title = "Between pieces, for a resin fill; a quarter of the edge at most";
     body.appendChild(field("Gap", gap));
-    const curve = select(["cubic", "arc", "ogee"], k.curve, (v) => set({ curve: v as SpectreCurve, ...(v === "ogee" && k.bulge > 0.25 ? { bulge: 0.1036 } : {}) }));
+    // Each curve starts at its router-bit bulge when the one it inherits is another curve's: the arc at five sixteenths of a circle, the S at quarter circles.
+    const curve = select(["cubic", "arc", "ogee"], k.curve, (v) => set({ curve: v as SpectreCurve, ...(v === "ogee" && k.bulge > 0.25 ? { bulge: 0.1036 } : v === "arc" && k.curve === "cubic" ? { bulge: 0.2673 } : {}) }));
     curve.title = "Kaplan's cubic, tightest at its apex (0.28 of the edge at 0.6); a circular arc, one radius all along (0.57 of the edge at 0.3, a quarter circle at 0.2071) and kinder to a router bit; or an ogee, an S of two arcs on every edge (quarter circles at 0.1036), which one ogee bit cuts and a mirrored tile cannot mate";
     body.appendChild(field("Curve", curve));
     const bulge = this.exprInput(f, "bulge", k.bulge, (v) => set({ bulge: v }));
