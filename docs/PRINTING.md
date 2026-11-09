@@ -35,7 +35,10 @@ issue.
    | `dry_run` | optional | `yes` slices and stops; nothing is sent |
    | `template` | default `default` | slicer settings on the print computer; `default` is the only one |
 
-   The title is free text; say what the part is.
+   The title is free text; say what the part is. For `copies` above 1,
+   send a `dry_run: yes` issue first: its comment reports the time and
+   grams for the whole plate, so you can see whether the job fits the
+   limits below before asking the owner to clear the plate.
 4. The issue has to be opened by **jcrigby**. Issues by any other
    account are ignored without a comment. If the session cannot open
    issues as jcrigby (or at all), write the issue out for the owner to
