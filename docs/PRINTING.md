@@ -31,14 +31,15 @@ issue.
    | `ref` | if not on `main` | branch, tag or commit the file is on |
    | `copies` | default 1 | 1 to 16, arranged on one plate |
    | `flip` | optional | `yes` turns the part upside down (180° about X) before slicing |
-   | `plate_clear` | required | `yes`, from the owner, see above |
-   | `dry_run` | optional | `yes` slices and stops; nothing is sent |
+   | `plate_clear` | required unless `dry_run` | `yes`, from the owner, see above |
+   | `dry_run` | optional | `yes` slices and stops; nothing is sent, so no plate check is needed |
    | `template` | default `default` | slicer settings on the print computer; `default` is the only one |
 
    The title is free text; say what the part is. For `copies` above 1,
    send a `dry_run: yes` issue first: its comment reports the time and
    grams for the whole plate, so you can see whether the job fits the
-   limits below before asking the owner to clear the plate.
+   limits below before asking the owner to clear the plate. A dry run
+   needs nothing from the owner, so a session can run one on its own.
 4. The issue has to be opened by **jcrigby**. Issues by any other
    account are ignored without a comment. If the session cannot open
    issues as jcrigby (or at all), write the issue out for the owner to
