@@ -50,8 +50,9 @@ Labels track it: `print` (queued) → `printing` (taken) → `printed`
 (the print **started**; the issue is closed) or `print-stuck` (it
 stopped; the issue stays open).
 
-Within a minute or two the watcher comments "Picked up" with the part's
-size and the sliced time and grams. The sliced file then goes to the
+The watcher hears about the label at once, through a GitHub webhook,
+and polls every minute as well in case a delivery is lost. It comments
+"Picked up" with the part's size and the sliced time and grams. The sliced file then goes to the
 printer by `bambu-send`, a small program on the print computer that
 loads the networking plugin Bambu Studio itself uses, so the print
 command is signed the way Studio's Print button signs it and the
@@ -98,10 +99,17 @@ estimated finish time.
 ## The print computer
 
 The watcher and its tools are not in this repo; they live on the print
-computer in `~/fun/autoprint` (`watch.py`, `slice.py`, `send/bambu-send`
-with its README, `templates/`, and `printer.py`, which follows the
-printer over Bambu's cloud and comments when a print finishes or
-fails). Slicing is Bambu Studio's command line; sending is the plugin,
+computer in `~/fun/autoprint` (`watch.py`, `hook.py`, `slice.py`,
+`send/bambu-send` with its README, `templates/`, and `printer.py`, which
+follows the printer over Bambu's cloud and comments when a print
+finishes or fails). `hook.py` is the webhook end: it listens on
+localhost, and Tailscale Funnel publishes it at
+`https://erasmus.<tailnet>.ts.net/github` without a port opened on the
+router. Deliveries are checked against the webhook secret before
+anything is read from them, and only an `issues` event about a `print`
+issue by the owner wakes the poll loop; the rest are answered and
+dropped. The Funnel configuration persists in tailscaled across
+reboots. Slicing is Bambu Studio's command line; sending is the plugin,
 so nothing needs a screen and the computer just has to be on. The
 earlier path, a headless Claude driving the Studio GUI on a virtual
 display through `gui.sh` and `driver_prompt.md`, is kept as a fallback
