@@ -238,6 +238,10 @@ pub struct Plan {
     /// The blade's top over the sled's plate: one height for every cut
     /// of every stick.
     pub height: f64,
+    /// The roundover's arc start (its bearing's underside) over the
+    /// router table: one height for every bump pass of every stick, the
+    /// cradles' beds making up the difference.
+    pub bump_height: f64,
     pub sticks: Vec<Stick>,
 }
 
@@ -663,6 +667,34 @@ pub fn plan(s: &Settings) -> Result<Plan, String> {
             c.top = height;
         }
     }
+    // The roundover's one height: the tallest foot over its stick's
+    // lowest point, with the flat clear of the table; every other bump
+    // pass sits on a bed that brings its foot up to it.
+    let mut bump_height = r + 1.0;
+    for st in &sticks {
+        for q in st.router.iter().filter(|q| q.kind == PassKind::Bump) {
+            bump_height = bump_height.max(q.height - q.bed);
+        }
+    }
+    for st in sticks.iter_mut() {
+        for q in st.router.iter_mut().filter(|q| q.kind == PassKind::Bump) {
+            let bed = bump_height - (q.height - q.bed);
+            let lift = Vec2::new(0.0, bed - q.bed);
+            q.bed = bed;
+            q.height = bump_height;
+            q.shift += lift;
+            for poly in [&mut q.before, &mut q.after, &mut q.lower, &mut q.upper] {
+                for v in poly.iter_mut() {
+                    *v += lift;
+                }
+            }
+            for o in q.offcuts.iter_mut() {
+                for v in o.iter_mut() {
+                    *v += lift;
+                }
+            }
+        }
+    }
     let bits = format!(
         "a roundover of radius {r:.2} mm ({:.3} in) in two passes on a {theta:.1}° gable, and a core box of diameter {:.2} mm up {flute_depth:.2}",
         r / 25.4,
@@ -683,6 +715,7 @@ pub fn plan(s: &Settings) -> Result<Plan, String> {
         ridge,
         bits,
         height,
+        bump_height,
         sticks,
     })
 }
@@ -803,6 +836,19 @@ mod tests {
             "{}",
             p.height
         );
+    }
+
+    #[test]
+    fn every_bump_pass_shares_one_roundover_height() {
+        let p = plan(&Settings::default()).unwrap();
+        for st in &p.sticks {
+            for q in st.router.iter().filter(|q| q.kind == PassKind::Bump) {
+                assert!((q.height - p.bump_height).abs() < 1e-9 && q.bed >= -1e-9);
+                let lowest = q.before.iter().map(|v| v.y).fold(f64::INFINITY, f64::min);
+                assert!((lowest - q.bed).abs() < 1e-9, "the stick sits on its bed");
+                assert!(q.height > p.radius, "the flat clears the table");
+            }
+        }
     }
 
     #[test]

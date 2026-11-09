@@ -76,6 +76,10 @@ fn the_plan_saws_every_face_through_and_rounds_the_bumps_from_their_gables() {
                 ok_sketch::spectre::sticks::PassKind::Bump => {
                     b += 1;
                     assert_eq!(q.mirrored, q.side == Some(1));
+                    assert!(
+                        (q.height - p.bump_height).abs() < 1e-9,
+                        "one roundover height"
+                    );
                     assert!(q.height > p.radius, "the flat clears the table");
                 }
                 ok_sketch::spectre::sticks::PassKind::Flute => {

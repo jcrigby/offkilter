@@ -66,8 +66,16 @@ each stick stands on (its datum) is the longest. Each cut turns the
 stick to stand its face at the blade, as it is or end for end (nine of
 the twenty-four go end for end), whichever puts the offcut above the
 kept stock; the cassette's nest holds it so, and the numbers in
-`sticks.json` are for reading, not setting. The blade is 46.6 mm over
+`sticks.json` are for reading, not setting. The blade is 45.1 mm over
 the sled's plate for every cut.
+
+Every saw cassette has the one footprint, 35 mm from the blade's near
+face by 252 long and 53 tall, so the sled has one pocket and the
+hold-down clamps one setting; every router cradle fits one pocket, 64
+by 240 with the bit's axis 26 mm in from the near wall, so the router
+fence never moves either. The core box is set once, 3.02 mm up, and the
+roundover once, its bearing's underside 9.51 mm up: a bump pass whose
+foot sits lower rides on a thicker bed in its cradle instead.
 
 | Stick | Faces | Blank (mm) | Saw cuts | Router passes |
 |---|---|---|---|---|
@@ -91,9 +99,10 @@ fixtures serve both.
 | Arc | 56.3° at each end, radius 6.35 mm (1/4 in), sagitta 2.82 |
 | Gable | flats at 56.3° to the chord, ridge 7.89 mm over it |
 | Flute | 1/2 in core box up 3.02 mm: the sagitta plus the 0.2 gap |
-| Bump | 1/4 in roundover, bearing underside 9.51 mm over the table on the first pass, 7.35 (the stick raised 1 mm so the flat clears) on the second |
-| Blade | 46.6 mm over the plate, kerf 3.175 |
-| Fixtures | 240 long, 0.15 mm clearance off the stick, 6 mm walls |
+| Bump | 1/4 in roundover, bearing underside 9.51 mm over the table for every pass; the second pass of each bump sits on a 2.2 mm bed |
+| Blade | 45.1 mm over the plate, kerf 3.175 |
+| Saw cassettes | one footprint: 35 from the blade x 252 long x 53 tall; 0.15 mm clearance off the stick, 6 mm walls |
+| Router cradles | one pocket: 64 x 240 x 36 tall, the bit's axis 26 in from the near wall; a channel over the roundover's sweep |
 | Finished sections | within 2.6 to 4.8 mm² of the tile's prisms: the flutes' extra depth and the arcs' facets |
 
 ## What the gap is here
