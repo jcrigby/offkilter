@@ -56,7 +56,7 @@ cargo test -p ok-render --test spectre_lid     # what CI runs
 | Curve | arcs of sagitta 0.2673 edge: radius 6.35 mm (1/4 in), 112.5° of circle |
 | Bits | 1/4 in roundover, two passes on a 56° gable, and a 1/2 in core box; see `examples/spectre-sticks/` |
 | Gap | 0.7 mm; the sample piece is 853 mm² of the tile's 914, 3 mm thick |
-| Prisms | 5 per tile from 4 glue lines, 5 shapes, 132 to 228 mm² |
+| Prisms | 5 per tile from 4 glue lines, 5 shapes, 124 to 228 mm², no corner under 45° |
 | Tiles | 21 whole: 14 maple, 7 walnut (the mystic pairs) |
 | Pieces | 105; 192 cm² of tiles for a 103 cm² lid, the rest past the trim line |
 
@@ -119,6 +119,8 @@ cargo test -p ok-render --test spectre_lid     # what CI runs
   prism was 10 mm² bigger than with the cut run to the vertex. A
   flat two millimetres wide on a stick is not a face anyone rips, so
   the search now counts glue faces under 0.3 edge as slivers and
-  ranks them out before it looks at the smallest prism; the fifth
-  prism is a clean bump-flute-bump triangle with one 15.9 mm glue
-  face.
+  ranks them out before it looks at the smallest prism. A second
+  look, with the sticks' cassettes drawn, found a 34° point on one
+  prism: a fragile edge on the stick and a nest that pinches it. The
+  search ranks corners under 45° out too, and the five prisms it
+  gives now have nothing sharper than 46°.

@@ -63,31 +63,33 @@ cargo test -p ok-render --test spectre_sticks     # what CI runs
 
 Faces are read anticlockwise round the prism's section; the glue line
 each stick stands on (its datum) is the longest. Each cut turns the
-stick to stand its face at the blade, as it is or end for end (nine of
-the twenty-four go end for end), whichever puts the offcut above the
+stick to stand its face at the blade, as it is or end for end (ten of
+the twenty-five go end for end), whichever puts the offcut above the
 kept stock; the cassette's nest holds it so, and the numbers in
-`sticks.json` are for reading, not setting. The blade is 45.1 mm over
+`sticks.json` are for reading, not setting. The blade is 44.0 mm over
 the sled's plate for every cut.
 
 Every saw cassette has the one footprint, 35 mm from the blade's near
-face by 252 long and 53 tall, so the sled has one pocket and the
-hold-down clamps one setting; every router cradle fits one pocket, 64
-by 240 with the bit's axis 26 mm in from the near wall, so the router
+face by 252 long and 51 tall, so the sled has one pocket and the
+hold-down clamps one setting; every router cradle fits one pocket, 58
+by 240 with the bit's axis 20 mm in from the near wall, so the router
 fence never moves either. The core box is set once, 3.02 mm up, and the
 roundover once, its bearing's underside 9.51 mm up: a bump pass whose
 foot sits lower rides on a thicker bed in its cradle instead.
 
 | Stick | Faces | Blank (mm) | Saw cuts | Router passes |
 |---|---|---|---|---|
-| 1 | bump, glue 25.3, glue 15.9, flute | 36.3 x 12.4 on the 25.3 glue line | glue, chord, gable, gable | flute; bump from each flat |
+| 1 | bump, glue 15.5, glue 9.5, flute | 26.5 x 12.4 on the 15.5 glue line | glue, chord, gable, gable | flute; bump from each flat |
 | 2 | flute, bump, flute, glue 9.5, glue 19.9 | 28.0 x 21.1 on the 19.9 | chord, gable, gable, chord, glue | flute; bump x 2; flute |
 | 3 | glue 19.9, bump, flute, glue 25.3 | 29.3 x 21.7 on the 25.3 | glue, gable, gable, chord | bump x 2; flute |
 | 4 | bump, flute, bump, flute, glue 9.5 | 27.1 x 21.5 on the 9.5 | gable x 2, chord, gable x 2, chord | bump x 2; flute; bump x 2; flute |
-| 5 | bump, flute, bump, glue 15.9 | 32.3 x 12.5 on the 15.9 | gable x 2, chord, gable x 2 | bump x 2; flute; bump x 2 |
+| 5 | bump, flute, bump, glue 9.5, glue 9.8 | 28.7 x 19.9 on the 9.8 | gable x 2, chord, gable x 2, glue | bump x 2; flute; bump x 2 |
 
-Twenty-four saw cuts and twenty-one router passes for the five
-sticks, so forty-five fixtures; a cut whose offcut is under a kerf
-wide is all blade and leaves nothing loose. The sticks are 240 mm, a
+Twenty-five saw cuts and twenty-one router passes for the five
+sticks, so forty-six fixtures; a cut whose offcut is under a kerf
+wide is all blade and leaves nothing loose. No corner on any stick is
+under 46°: the search ranks sharp points out, since a point is a
+fragile edge and a nest that pinches it. The sticks are 240 mm, a
 printer's bed, which is sixteen 12 mm pieces at a 3.175 kerf; the lid
 wants 21 pieces of each prism, so two sticks per prism, and the same
 fixtures serve both.
@@ -100,9 +102,9 @@ fixtures serve both.
 | Gable | flats at 56.3° to the chord, ridge 7.89 mm over it |
 | Flute | 1/2 in core box up 3.02 mm: the sagitta plus the 0.2 gap |
 | Bump | 1/4 in roundover, bearing underside 9.51 mm over the table for every pass; the second pass of each bump sits on a 2.2 mm bed |
-| Blade | 45.1 mm over the plate, kerf 3.175 |
-| Saw cassettes | one footprint: 35 from the blade x 252 long x 53 tall; 0.15 mm clearance off the stick, 6 mm walls |
-| Router cradles | one pocket: 64 x 240 x 36 tall, the bit's axis 26 in from the near wall; a channel over the roundover's sweep |
+| Blade | 44.0 mm over the plate, kerf 3.175 |
+| Saw cassettes | one footprint: 35 from the blade x 252 long x 51 tall; 0.15 mm clearance off the stick, 6 mm walls |
+| Router cradles | one pocket: 58 x 240 x 36 tall, the bit's axis 20 in from the near wall; a bump's cradle starts behind the gable flat and registers on the far wall |
 | Finished sections | within 2.6 to 4.8 mm² of the tile's prisms: the flutes' extra depth and the arcs' facets |
 
 ## What the gap is here
@@ -124,12 +126,17 @@ example's gap is 0.2; set it on the feature and in `build.py` alike.
   not of a half-round bullnose, whose body goes on round to 90°. The
   tile's bump corners are 120°, so the bullnose would have bitten
   every one of them.
+- Drawing the cassettes showed a 34° point on one prism, which the
+  search had taken for a bigger smallest prism. A point like that is
+  a fragile edge on the stick and a nest that pinches rather than
+  holds, so the search ranks corners under 45° out; the split it gives
+  now has one more saw cut and nothing sharper than 46°.
 - The two roundover passes overlap by 2 × (90° − 56°) about the apex,
   cutting the same circle, and each pass's shoulder flat lands on
   material the other pass removes, so neither scores the finished
   arc. At the quarter circle the two passes become one, the flat
   landing exactly on the other gable face.
-- Nine of the twenty-four saw cuts take off less than a kerf, so the
+- Ten of the twenty-five saw cuts take off less than a kerf, so the
   blade eats the offcut and nothing falls. The rest leave an offcut
   past the blade, above the stock, with nothing under it: it drops
   onto the table clear of the sled, which is why the stick's

@@ -724,6 +724,18 @@ pub fn plan(s: &Settings) -> Result<Plan, String> {
 mod tests {
     use super::*;
 
+    /// The least interior angle of a polygon, degrees.
+    fn dec_corner_min(p: &[Vec2]) -> f64 {
+        let n = p.len();
+        (0..n)
+            .map(|i| {
+                let (a, b, c) = (p[(i + n - 1) % n], p[i], p[(i + 1) % n]);
+                let (u, v) = (a - b, c - b);
+                u.cross(v).atan2(u.dot(v)).abs().to_degrees()
+            })
+            .fold(180.0, f64::min)
+    }
+
     #[test]
     fn five_sticks_are_sawn_through_and_routed_to_the_prisms() {
         let s = Settings::default();
@@ -743,9 +755,10 @@ mod tests {
             assert!(st.section.iter().all(|q| q.y > -1e-9));
             // a cut per face but the datum, each through with one offcut
             assert_eq!(st.saw.len(), n - 1, "prism {}", st.prism);
+            let sharpest = dec_corner_min(&st.section);
             println!(
-                "prism {} shape {} datum face {}: blank {:.1} to {:.1} by {:.1}, {} cuts, {} passes, off {:.2}",
-                st.prism, st.shape, st.datum, st.blank.0, st.blank.1, st.blank.2, st.saw.len(), st.router.len(), st.off
+                "prism {} shape {} datum face {}: blank {:.1} to {:.1} by {:.1}, {} cuts, {} passes, off {:.2}, sharpest corner {:.1}",
+                st.prism, st.shape, st.datum, st.blank.0, st.blank.1, st.blank.2, st.saw.len(), st.router.len(), st.off, sharpest
             );
             for c in &st.saw {
                 println!(

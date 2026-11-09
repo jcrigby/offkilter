@@ -471,6 +471,9 @@ fn read(
 /// A glue face shorter than this, in edge units, is a sliver the search
 /// avoids: a ray that stopped a hair short of a vertex.
 pub const SLIVER: f64 = 0.3;
+/// A prism corner under this many degrees is a sharp point the search
+/// avoids: a fragile edge on a stick, and a nest that pinches it.
+pub const SHARP: f64 = 45.0;
 
 /// The prisms a cut set makes of the tile with this curve.
 pub fn decompose(
@@ -781,8 +784,8 @@ pub fn search(curve: Curve, bulge: f64, facet: f64) -> Result<Decomposition, Str
     // Build each: diagonals whole, rays stopped at the first cut they
     // meet; keep the valid ones; fewest prisms, then no shared flutes,
     // then the biggest smallest prism, then the fewest shapes.
-    // Prisms, shared flutes, sliver glue faces, minus the smallest area, shapes: less is better.
-    type Score = (usize, usize, usize, i64, usize);
+    // Prisms, shared flutes, sliver glue faces, sharp corners, minus the smallest area, shapes: less is better.
+    type Score = (usize, usize, usize, usize, i64, usize);
     let mut best: Option<(Decomposition, Score)> = None;
     for (ds, rs) in &sols {
         let mut cuts: Vec<Cut> = ds
@@ -822,10 +825,19 @@ pub fn search(curve: Curve, bulge: f64, facet: f64) -> Result<Decomposition, Str
             .flat_map(|p| p.faces.iter())
             .filter(|f| f.kind == FaceKind::Glue && f.len < SLIVER)
             .count();
+        // A corner under SHARP degrees is a fragile edge on the stick
+        // and a nest that pinches it: fewer of those too.
+        let sharp = d
+            .prisms
+            .iter()
+            .flat_map(|p| p.corners.iter())
+            .filter(|&&c| c < SHARP)
+            .count();
         let score = (
             d.prisms.len(),
             d.prisms.iter().filter(|p| p.flute_split).count(),
             slivers,
+            sharp,
             -(smallest * 1e6) as i64,
             d.shapes.len(),
         );
@@ -866,15 +878,36 @@ mod tests {
 
     #[test]
     fn the_fewest_prisms_step_with_the_bulge() {
+        // Shapes repeat less than they might: a split with no corner
+        // under 45 degrees is taken before one with fewer shapes.
         for (bulge, prisms, shapes_at_most) in [
             (QUARTER, 4, 4),
             (FIVE_SIXTEENTHS, 5, 5),
-            (0.357, 8, 6),
-            (0.5, 9, 7),
+            (0.357, 8, 8),
+            (0.5, 9, 9),
         ] {
             let d = search(Curve::Arc, bulge, FACET).unwrap();
+            let sharpest = d
+                .prisms
+                .iter()
+                .flat_map(|p| p.corners.iter().copied())
+                .fold(180.0, f64::min);
+            println!(
+                "bulge {bulge}: {} prisms in {} shapes {:?}, sharpest corner {sharpest:.1}, cuts {}",
+                d.prisms.len(),
+                d.shapes.len(),
+                d.shapes.iter().map(|s| s.len()).collect::<Vec<_>>(),
+                d.cuts.len()
+            );
             assert_eq!(d.prisms.len(), prisms, "bulge {bulge}");
             assert!(d.clean);
+            // the semicircle has no split without a 30 degree point
+            if bulge < 0.5 {
+                assert!(
+                    sharpest >= SHARP - 1e-6,
+                    "bulge {bulge}: a {sharpest:.1} degree point"
+                );
+            }
             assert!(
                 d.shapes.len() <= shapes_at_most,
                 "bulge {bulge}: {} shapes",
@@ -987,12 +1020,15 @@ mod tests {
             tri.faces.iter().any(|f| f.kind == FaceKind::Bump)
                 && tri.faces.iter().any(|f| f.kind == FaceKind::Flute)
         );
-        // the search's answer for that pair keeps at least three of them
+        // the search's answer for that pair has eight prisms and none of
+        // the triangles: it ranks a split without a corner under 45
+        // degrees above one that repeats a shape, and the triangles'
+        // corners are 30
         let s = search(Curve::Arc, 0.357, FACET).unwrap();
-        assert!(
-            s.shapes.iter().map(|s| s.len()).max().unwrap() >= 3,
-            "{:?}",
-            s.shapes
-        );
+        assert_eq!(s.prisms.len(), 8);
+        assert!(s
+            .prisms
+            .iter()
+            .all(|p| p.corners.iter().all(|&c| c >= SHARP - 1e-6)));
     }
 }
