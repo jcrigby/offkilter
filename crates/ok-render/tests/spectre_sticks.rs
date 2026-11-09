@@ -36,10 +36,21 @@ fn the_plan_saws_every_face_through_and_rounds_the_bumps_from_their_gables() {
         "{bits}"
     );
     // the same plan from the kernel, for the shapes the json does not carry
+    let cuts: Vec<[ok_math::Vec2; 2]> = plan["cuts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| {
+            let p =
+                |i: usize| ok_math::Vec2::new(c[i][0].as_f64().unwrap(), c[i][1].as_f64().unwrap());
+            [p(0), p(1)]
+        })
+        .collect();
     let s = ok_sketch::spectre::sticks::Settings {
         edge: plan["edge"].as_f64().unwrap(),
         gap: plan["gap"].as_f64().unwrap(),
         kerf: plan["kerf"].as_f64().unwrap(),
+        cuts,
         ..ok_sketch::spectre::sticks::Settings::default()
     };
     let p = ok_sketch::spectre::sticks::plan(&s).unwrap();

@@ -112,6 +112,57 @@ pub fn grid() -> Vec<Vec2> {
     rips::nodes()
 }
 
+/// How far off a point may be and still mean a vertex, a grid node or a
+/// point on another cut, edge units: the explorer and a hand write six
+/// decimals, and a face a millionth off a tile edge would read as glue.
+const SNAP: f64 = 1e-4;
+
+/// The cuts with every end snapped to the tile vertex or grid node it
+/// is within SNAP of, and otherwise onto any other cut it is within SNAP
+/// of (a ray that stops on a diagonal).
+pub fn snap(cuts: &[Cut]) -> Vec<Cut> {
+    let nodes: Vec<Vec2> = tile().into_iter().chain(grid()).collect();
+    let mut out: Vec<Cut> = cuts
+        .iter()
+        .map(|c| {
+            let fix = |q: Vec2| {
+                nodes
+                    .iter()
+                    .copied()
+                    .find(|n| n.distance(q) < SNAP)
+                    .unwrap_or(q)
+            };
+            [fix(c[0]), fix(c[1])]
+        })
+        .collect();
+    for i in 0..out.len() {
+        for end in 0..2 {
+            let q = out[i][end];
+            if nodes.iter().any(|n| n.distance(q) < SNAP) {
+                continue;
+            }
+            for j in 0..out.len() {
+                if i == j {
+                    continue;
+                }
+                let (a, b) = (out[j][0], out[j][1]);
+                let d = b - a;
+                let len2 = d.dot(d);
+                if len2 < 1e-18 {
+                    continue;
+                }
+                let t = ((q - a).dot(d) / len2).clamp(0.0, 1.0);
+                let foot = a + d * t;
+                if foot.distance(q) < SNAP {
+                    out[i][end] = foot;
+                    break;
+                }
+            }
+        }
+    }
+    out
+}
+
 /// Whether `a`–`b` is a cut: distinct points, every point between them
 /// strictly inside the tile (so a cut neither runs along the boundary
 /// nor passes through a vertex, as a line from vertex 2 through vertex
@@ -482,6 +533,7 @@ pub fn decompose(
     cuts: &[Cut],
     facet: f64,
 ) -> Result<Decomposition, String> {
+    let cuts = &snap(cuts);
     if let Some(c) = cuts.iter().find(|c| !cut_ok(c[0], c[1])) {
         return Err(format!(
             "cut from ({:.3}, {:.3}) to ({:.3}, {:.3}) does not lie in the tile",
@@ -1001,6 +1053,44 @@ mod tests {
         assert!(d.prisms.iter().all(|p| p.curved.len() > p.outline.len()));
         // a cut outside the tile is refused
         assert!(decompose(Curve::Arc, QUARTER, &[[t[0], Vec2::new(5.0, -3.0)]], FACET).is_err());
+    }
+
+    #[test]
+    fn cuts_written_to_six_decimals_read_as_the_exact_ones() {
+        let exact = search(Curve::Arc, FIVE_SIXTEENTHS, FACET).unwrap();
+        let rounded: Vec<Cut> = exact
+            .cuts
+            .iter()
+            .map(|c| {
+                let r = |v: f64| (v * 1e6).round() / 1e6;
+                [
+                    Vec2::new(r(c[0].x), r(c[0].y)),
+                    Vec2::new(r(c[1].x), r(c[1].y)),
+                ]
+            })
+            .collect();
+        let d = decompose(Curve::Arc, FIVE_SIXTEENTHS, &rounded, FACET).unwrap();
+        assert_eq!(d.prisms.len(), exact.prisms.len());
+        assert!(d.clean);
+        let kinds = |dec: &Decomposition| -> Vec<String> {
+            let mut k: Vec<String> = dec
+                .prisms
+                .iter()
+                .map(|p| {
+                    p.faces
+                        .iter()
+                        .map(|f| format!("{:?}", f.kind))
+                        .collect::<Vec<_>>()
+                        .join(",")
+                })
+                .collect();
+            k.sort();
+            k
+        };
+        assert_eq!(kinds(&d), kinds(&exact));
+        for (a, b) in d.cuts.iter().zip(&exact.cuts) {
+            assert!(a[0].distance(b[0]) < 1e-5 && a[1].distance(b[1]) < 1e-5);
+        }
     }
 
     #[test]

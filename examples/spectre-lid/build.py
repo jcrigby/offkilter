@@ -33,6 +33,10 @@ EDGE = 10.56                                    # the tile's edge: five sixteent
 CURVE, BULGE = "arc", 0.2673                    # circular arcs of sagitta 0.2673 edge: 112.6 degrees of a 6.35 mm circle
 GAP = 0.7                                       # between pieces, for the glue line or a resin fill; one number, change it here
 BIT = 0.0                                       # no flush trim bit: the prisms' faces are the router table's and the saw's
+# The glue lines, in tile units, as the owner chose them in the explorer
+# (its Copy cuts, six decimals; the kernel snaps them to the grid). They
+# are the search's own answer for this curve; None takes the search.
+CUTS = [[[2.366025, 0.633975], [2.133975, 1.5]], [[1, 0], [2.133975, 1.5]], [[1, 0], [0.633975, 2.366025]], [[0, 1], [0.775991, 1.448018]]]
 LIGHT = {"name": "Maple", "density": 0.7}       # g/cm3: the parts list names the species
 DARK = {"name": "Walnut", "density": 0.64}      # the mystic pairs
 SHEETS = ["A4", "A3"]                           # the lid at 1:1: whole tiles around a 4 in square overflow A4, so A3 (or tile the A4 print)
@@ -66,7 +70,7 @@ def main():
     mcp = Mcp(path)
     # The tile's prisms first: the fewest glue lines that leave every
     # prism convex and every bullnose shoulder clear.
-    prisms = json.loads(mcp.call("spectre_prisms", {"edge": EDGE, "curve": CURVE, "bulge": BULGE, "gap": GAP}))
+    prisms = json.loads(mcp.call("spectre_prisms", {"edge": EDGE, "curve": CURVE, "bulge": BULGE, "gap": GAP, **({"cuts": CUTS} if CUTS else {})}))
     cuts = prisms["cuts"]
     print(f"{len(prisms['prisms'])} prisms in {len(prisms['shapes'])} shapes from {len(cuts)} glue lines; "
           f"arc {prisms['theta']:.1f} degrees, corners under {prisms['limit']:.1f}; {prisms['bits']}")

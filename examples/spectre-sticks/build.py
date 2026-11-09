@@ -35,6 +35,10 @@ OUT = os.path.join(HERE, "out")
 # 1/4 in roundover and 1/2 in core box; the glue lines are the search's.
 EDGE, CURVE, BULGE = 10.56, "arc", 0.2673
 GAP = 0.2                                       # the flutes this much deeper than the bumps stand: glue clearance
+# The glue lines, in tile units, as the owner chose them in the explorer
+# (its Copy cuts, six decimals; the kernel snaps them to the grid). They
+# are the search's own answer for this curve; None takes the search.
+CUTS = [[[2.366025, 0.633975], [2.133975, 1.5]], [[1, 0], [2.133975, 1.5]], [[1, 0], [0.633975, 2.366025]], [[0, 1], [0.775991, 1.448018]]]
 KERF = 3.175                                    # a full-kerf 10 in blade
 FLOOR = 4.0                                     # the thinnest cassette floor
 MARGIN = 2.0                                    # blank past the section, every side but the datum
@@ -204,7 +208,7 @@ def main():
         os.remove(path)
     mcp = Mcp(path)
     mcp.call("create_document", {"name": "spectre_sticks"})
-    plan = json.loads(mcp.call("spectre_sticks", {"edge": EDGE, "curve": CURVE, "bulge": BULGE, "gap": GAP, "kerf": KERF, "floor": FLOOR, "margin": MARGIN, "shoulder": SHOULDER}))
+    plan = json.loads(mcp.call("spectre_sticks", {"edge": EDGE, "curve": CURVE, "bulge": BULGE, "gap": GAP, "kerf": KERF, "floor": FLOOR, "margin": MARGIN, "shoulder": SHOULDER, **({"cuts": CUTS} if CUTS else {})}))
     print(f"arc {plan['theta']:.1f} degrees, radius {plan['radius']:.2f} mm, sagitta {plan['sagitta']:.2f}, flute {plan['flute_depth']:.2f} deep, ridge {plan['ridge']:.2f}; blade {plan['height']:.1f} over the plate")
     print(f"bits: {plan['bits']}")
     per_stick = int((STICK - 2 * WALL) // (THICK + KERF))

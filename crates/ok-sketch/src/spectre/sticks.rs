@@ -242,6 +242,8 @@ pub struct Plan {
     /// router table: one height for every bump pass of every stick, the
     /// cradles' beds making up the difference.
     pub bump_height: f64,
+    /// The glue lines the sticks were cut by, tile units, snapped.
+    pub cuts: Vec<prisms::Cut>,
     pub sticks: Vec<Stick>,
 }
 
@@ -716,6 +718,7 @@ pub fn plan(s: &Settings) -> Result<Plan, String> {
         bits,
         height,
         bump_height,
+        cuts: dec.cuts.clone(),
         sticks,
     })
 }
