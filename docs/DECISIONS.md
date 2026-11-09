@@ -953,7 +953,11 @@ Cutting the sticks: the blade stands at 90° for good and the
 cradles do the angling, because a convex section has every face as a
 through rip, the offcut falling away on the far side, so a one-sided
 sled with a printed cassette per cut (the saw station's idea again)
-needs nothing set at the saw but which cassette is in. The bumps are
+needs nothing set at the saw but which cassette is in. The sled
+holds nothing past the blade, so the offcut is loose the moment it
+is free, and each cut turns the stick as it is or end for end,
+whichever puts the offcut above the kept stock, where it falls clear
+instead of wedging under the stock against the blade. The bumps are
 not cut with a bullnose after all. A half-round bit of the arc's
 radius has a body that continues the semicircle past the arc's ends,
 and where a bump ends at one of the tile's 120° corners that body

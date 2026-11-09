@@ -98,23 +98,42 @@ def lid_over(upper, z_top, xl=None, xr=None):
     return [(xl, upper[0][1] + CLEAR)] + shifted(upper, 0.0, CLEAR) + [(xr, upper[-1][1] + CLEAR), (xr, z_top), (xl, z_top)]
 
 
+def clip_right(env, xr):
+    """An envelope up to x = xr, the last segment cut there."""
+    out = []
+    for i, q in enumerate(env):
+        if q[0] <= xr + 1e-9:
+            out.append(q)
+        else:
+            if out and i > 0:
+                a, b = env[i - 1], q
+                t = (xr - a[0]) / (b[0] - a[0])
+                out.append((xr, a[1] + (b[1] - a[1]) * t))
+            break
+    return out
+
+
 def saw_cassette(t, c, plan, dy, label):
-    """A saw cut's cassette: a base the stick drops into with walls, a lid
-    down to the stick less a groove over the blade (the kerf is on the
-    right of x = 0), the stick after the cut and its offcut in place."""
+    """A saw cut's cassette, all on the sled's side of the blade: a base
+    the kept stock drops into, its nest under the stock's lower envelope
+    up to the blade's near face (the blade trims the base's edge on the
+    first pass: zero clearance), a lid down to the stock stopping a
+    groove's width short of the blade, the stock after the cut, and the
+    offcut where it was, hanging past the blade with nothing under it."""
     lower, upper = c["lower"], c["upper"]
-    xl, xr = lower[0][0] - CLEAR - WALL, lower[-1][0] + CLEAR + WALL
+    xl = lower[0][0] - CLEAR - WALL
     H = plan["height"]
     Z = math.ceil(max(max(q[1] for q in upper) + CLEAR, H + GROOVE) + CAP)
-    base = prism(t, f"{label} base", shifted([(xl, 0.0), (xr, 0.0), (xr, Z), (xl, Z)], dy, 0), -WALL, STICK + WALL)
-    subtract(t, base, [prism(t, f"{label} base nest", shifted(nest_below(lower, Z + 1.0), dy, 0), 0.0, STICK)], name=f"{label} base")
-    lid = prism(t, f"{label} lid", shifted(lid_over(upper, Z, lower[0][0], lower[-1][0]), dy, 0), CLEAR, STICK - CLEAR)
-    groove = [(-GROOVE, -1.0), (KERF + GROOVE, -1.0), (KERF + GROOVE, H + GROOVE), (-GROOVE, H + GROOVE)]
-    subtract(t, lid, [prism(t, f"{label} lid groove", shifted(groove, dy, 0), CLEAR - 1.0, STICK - CLEAR + 1.0)], name=f"{label} lid")
+    kept_low = clip_right(lower, 0.0)
+    base = prism(t, f"{label} base", shifted([(xl, 0.0), (0.0, 0.0), (0.0, Z), (xl, Z)], dy, 0), -WALL, STICK + WALL)
+    nest = [(kept_low[0][0] - CLEAR, Z + 1.0), (kept_low[0][0] - CLEAR, kept_low[0][1] - CLEAR)] + shifted(kept_low, 0.0, -CLEAR) + [(1.0, kept_low[-1][1] - CLEAR), (1.0, Z + 1.0)]
+    subtract(t, base, [prism(t, f"{label} base nest", shifted(nest, dy, 0), 0.0, STICK)], name=f"{label} base")
+    kept_up = clip_right(upper, -GROOVE)
+    lid = prism(t, f"{label} lid", shifted(lid_over(kept_up, Z, kept_low[0][0], -GROOVE), dy, 0), CLEAR, STICK - CLEAR)
     prism(t, f"{label} stick", shifted(c["after"], dy, 0), 0.0, STICK, material={"name": "Maple", "density": 0.7})
     for k, o in enumerate(c["offcuts"]):
         prism(t, f"{label} offcut {k + 1}", shifted(o, dy, 0), 0.0, STICK, material={"name": "Maple", "density": 0.7})
-    return {"xl": xl, "xr": xr, "height": Z}
+    return {"xl": xl, "xr": 0.0, "height": Z}
 
 
 def router_cradle(t, q, plan, dy, label):
@@ -172,7 +191,7 @@ def main():
         faces = " ".join(f"{f['kind']}{'' if f['side'] is None else f['side']} {f['len']:.1f}" for f in st["faces"])
         print(f"stick {st['prism'] + 1} (shape {st['shape']}): blank {st['blank'][1] - st['blank'][0]:.1f} x {st['blank'][2]:.1f} on glue line {st['datum']}; faces {faces}")
         for c in st["saw"]:
-            print(f"   saw  {c['kind']:5s} face {c['face']}: turn {c['turn']:5.1f}, offcut {len(c['offcuts'])}" + (f" {c['thin']:.1f} thin" if c["offcuts"] else ""))
+            print(f"   saw  {c['kind']:5s} face {c['face']}: turn {c['turn']:5.1f}" + (" end for end" if c["mirrored"] else "") + f", offcut {len(c['offcuts'])}" + (f" {c['thin']:.1f} thin, above" if c["offcuts"] else ""))
         for q in st["router"]:
             print(f"   rout {q['kind']:5s} face {q['face']}: turn {q['turn']:5.1f}" + (" end for end" if q["mirrored"] else "") + f", bit {q['height']:.2f} up" + (f", bed {q['bed']:.1f}" if q["bed"] else ""))
         print(f"   off the tile's prism by {st['off']:.2f} mm2 (the flutes {GAP} deeper)")
@@ -189,7 +208,7 @@ def main():
         dz = -j * 60.0
         stages = [(f"Stick {j + 1} blank", [(st["blank"][0], 0.0), (st["blank"][1], 0.0), (st["blank"][1], st["blank"][2]), (st["blank"][0], st["blank"][2])])]
         for c in st["saw"]:
-            back = lambda q, c=c: rot(q, -c["turn"], c["shift"])
+            back = lambda q, c=c: rot(q, -c["turn"], c["shift"], c["mirrored"])
             stages.append((f"Stick {j + 1} after saw {c['face']}", [back(q) for q in c["after"]]))
         stages.append((f"Stick {j + 1} routed", st["finished"]))
         for i, (name, poly) in enumerate(stages):
@@ -242,9 +261,11 @@ def main():
     print(f"wrote {path}")
 
 
-def rot(q, deg, shift):
-    """Back from a station frame: unshift, then turn."""
+def rot(q, deg, shift, mirrored=False):
+    """Back from a station frame: unshift, unmirror, then turn."""
     x, y = q[0] - shift[0], q[1] - shift[1]
+    if mirrored:
+        x = -x
     a = math.radians(deg)
     return (x * math.cos(a) - y * math.sin(a), x * math.sin(a) + y * math.cos(a))
 

@@ -8,7 +8,10 @@
 //! the sled never straddles the blade. A flute is sawn at its chord; a
 //! bump is sawn as a gable, two flats at the arc's end angle θ to the
 //! chord meeting at a ridge over the apex, each tangent to the arc at
-//! its end.
+//! its end. The sled carries nothing past the blade, so the kept stock
+//! is the part on the near side, resting in its cassette, and the stick
+//! goes through as it is or end for end, whichever leaves the offcut
+//! above the kept stock, to fall away rather than wedge under it.
 //!
 //! On the router table a flute is one pass of a core box bit of the
 //! arc's radius, the stick lying chord down over the bit, the bit up
@@ -104,7 +107,8 @@ pub struct SawnFace {
 }
 
 /// One rip: the station's frame has the blade's near face at x = 0, the
-/// stick on its left, y up from the sled's plate.
+/// stick on its left, y up from the sled's plate. The sled is on the
+/// left too: nothing holds the offcut.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct SawCut {
     /// The sawn section's face this makes.
@@ -113,6 +117,10 @@ pub struct SawCut {
     /// Degrees the stick is turned anticlockwise from the blank's frame
     /// (datum down) to stand the face vertical.
     pub turn: f64,
+    /// The section is mirrored after the turn: the stick goes through
+    /// end for end. Chosen, cut by cut, so the offcut is above the kept
+    /// stock.
+    pub mirrored: bool,
     /// The cradle's tilt: the datum's angle from the plate after the
     /// turn, degrees, positive rising to the right.
     pub tilt: f64,
@@ -372,61 +380,104 @@ pub fn plan(s: &Settings) -> Result<Plan, String> {
         for k in 1..m {
             let (a, b) = (section[k], section[(k + 1) % m]);
             let u = (b - a).normalized().unwrap();
-            let turn = (90.0 - u.angle().to_degrees()).rem_euclid(360.0);
-            let turned = transform(&stock, turn, Vec2::ZERO);
-            let a_t = rotate(a, turn);
-            let ymin = turned.iter().map(|q| q.y).fold(f64::INFINITY, f64::min);
-            let shift = Vec2::new(-a_t.x, s.floor - ymin);
-            let before = transform(&stock, turn, shift);
-            let slot = vec![
-                Vec2::new(0.0, -big),
-                Vec2::new(s.kerf, -big),
-                Vec2::new(s.kerf, big),
-                Vec2::new(0.0, big),
-            ];
-            let inside_t = rotate(inside, turn) + shift;
-            let pieces = difference(&before, &slot);
-            let keep = pieces
-                .iter()
-                .position(|q| point_in_polygon(inside_t, q))
-                .ok_or_else(|| format!("prism {j}, face {k}: the cut took the stick with it"))?;
-            let after = pieces[keep].clone();
-            let offcuts: Vec<Vec<Vec2>> = pieces
-                .iter()
-                .enumerate()
-                .filter(|(i, _)| *i != keep)
-                .map(|(_, q)| q.clone())
-                .collect();
-            if signed_area(&before)
-                - signed_area(&after)
-                - offcuts.iter().map(|q| signed_area(q)).sum::<f64>()
+            // Two ways to stand the face vertical with the stick on the
+            // left: as it is, the face pointing up, or end for end (the
+            // section mirrored), the face pointing down. Both are tried
+            // and the one with the offcut higher is kept.
+            let mut best: Option<(f64, SawCut, Vec<Vec2>)> = None;
+            for mirrored in [false, true] {
+                let target = if mirrored { -90.0 } else { 90.0 };
+                let turn = (target - u.angle().to_degrees()).rem_euclid(360.0);
+                let place = |q: Vec2| {
+                    let t = rotate(q, turn);
+                    if mirrored {
+                        Vec2::new(-t.x, t.y)
+                    } else {
+                        t
+                    }
+                };
+                let unplace = |q: Vec2| {
+                    let t = if mirrored { Vec2::new(-q.x, q.y) } else { q };
+                    rotate(t, -turn)
+                };
+                let placed: Vec<Vec2> = stock.iter().map(|&q| place(q)).collect();
+                let a_t = place(a);
+                let ymin = placed.iter().map(|q| q.y).fold(f64::INFINITY, f64::min);
+                let shift = Vec2::new(-a_t.x, s.floor - ymin);
+                let mut before: Vec<Vec2> = placed.iter().map(|&q| q + shift).collect();
+                if signed_area(&before) < 0.0 {
+                    before.reverse();
+                }
+                let slot = vec![
+                    Vec2::new(0.0, -big),
+                    Vec2::new(s.kerf, -big),
+                    Vec2::new(s.kerf, big),
+                    Vec2::new(0.0, big),
+                ];
+                let inside_t = place(inside) + shift;
+                let pieces = difference(&before, &slot);
+                let Some(keep) = pieces.iter().position(|q| point_in_polygon(inside_t, q)) else {
+                    return Err(format!(
+                        "prism {j}, face {k}: the cut took the stick with it"
+                    ));
+                };
+                let after = pieces[keep].clone();
+                let offcuts: Vec<Vec<Vec2>> = pieces
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, _)| *i != keep)
+                    .map(|(_, q)| q.clone())
+                    .collect();
+                let centroid = |poly: &[Vec2]| -> f64 {
+                    let n = poly.len() as f64;
+                    poly.iter().map(|q| q.y).sum::<f64>() / n
+                };
+                // The offcut's height over the kept stock; with nothing
+                // loose, the stock's own top as low as it goes.
+                let rise = match offcuts.first() {
+                    Some(o) => centroid(o) - centroid(&after),
+                    None => -before.iter().map(|q| q.y).fold(0.0, f64::max),
+                };
+                let next: Vec<Vec2> = after.iter().map(|&q| unplace(q - shift)).collect();
+                let thin = offcuts
+                    .iter()
+                    .map(|q| least_width(q))
+                    .fold(f64::INFINITY, f64::min);
+                let cut = SawCut {
+                    face: k,
+                    kind: faces[k].kind,
+                    turn,
+                    mirrored,
+                    tilt: turn,
+                    shift,
+                    bed: s.floor,
+                    top: 0.0,
+                    lower: envelope(&before, -1.0),
+                    upper: envelope(&before, 1.0),
+                    symmetric: mirror_symmetric(&before),
+                    before,
+                    after,
+                    offcuts,
+                    thin,
+                };
+                if best.as_ref().is_none_or(|(r, _, _)| rise > *r) {
+                    best = Some((rise, cut, next));
+                }
+            }
+            let (_, cut, next) = best.unwrap();
+            if signed_area(&cut.before)
+                - signed_area(&cut.after)
+                - cut.offcuts.iter().map(|q| signed_area(q)).sum::<f64>()
                 < TOL
             {
                 continue;
             }
-            // The kerf's far side is also waste: it is cut away in the
-            // simulation so the stock is what is left attached.
-            stock = after.iter().map(|&q| rotate(q - shift, -turn)).collect();
-            let thin = offcuts
-                .iter()
-                .map(|q| least_width(q))
-                .fold(f64::INFINITY, f64::min);
-            saw.push(SawCut {
-                face: k,
-                kind: faces[k].kind,
-                turn,
-                tilt: turn.rem_euclid(360.0),
-                shift,
-                bed: s.floor,
-                top: 0.0,
-                lower: envelope(&before, -1.0),
-                upper: envelope(&before, 1.0),
-                symmetric: mirror_symmetric(&before),
-                before,
-                after,
-                offcuts,
-                thin,
-            });
+            let mut next = next;
+            if signed_area(&next) < 0.0 {
+                next.reverse();
+            }
+            stock = next;
+            saw.push(cut);
         }
         // The router: the stock is the sawn section now.
         let mut router: Vec<Pass> = Vec::new();
@@ -665,13 +716,24 @@ mod tests {
             );
             for c in &st.saw {
                 println!(
-                    "   saw face {} {:?} tilt {:6.1} offcuts {} thin {:.1}",
+                    "   saw face {} {:?} tilt {:6.1} end for end {} offcuts {} thin {:.1}",
                     c.face,
                     c.kind,
                     c.tilt,
+                    c.mirrored,
                     c.offcuts.len(),
                     c.thin
                 );
+                // the offcut rides above the kept stock, to fall away
+                if let Some(o) = c.offcuts.first() {
+                    let mid = |p: &[Vec2]| p.iter().map(|q| q.y).sum::<f64>() / p.len() as f64;
+                    assert!(
+                        mid(o) > mid(&c.after) - 1e-9,
+                        "prism {} face {}: the offcut is under the stock",
+                        st.prism,
+                        c.face
+                    );
+                }
                 // at most one offcut: a sliver under a kerf wide is all blade
                 assert!(c.offcuts.len() <= 1, "prism {} face {}", st.prism, c.face);
                 let taken = signed_area(&c.before)

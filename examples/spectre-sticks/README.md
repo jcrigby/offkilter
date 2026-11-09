@@ -9,10 +9,13 @@ example is how each stick is cut, and the fixtures that cut it.
 The blade stands at 90° for good. A prism is convex, so every one of
 its faces is a plane the whole section lies on one side of: a through
 rip, with the stick tilted so the face stands vertical and the offcut
-falling away on the far side of the blade. The sled is one-sided and
-carries a printed cassette per cut, the negative of the stick as the
-earlier cuts left it, so the stick only fits the way the cut wants it
-and nothing is set at the saw. The bumps are sawn as gables, two flats
+falling away on the far side of the blade. The sled is one-sided: it
+carries nothing past the blade, and a printed cassette per cut, the
+negative of the stick as the earlier cuts left it, so the stick only
+fits the way the cut wants it and nothing is set at the saw. The kept
+stock is the part on the sled's side, down in its nest; the stick goes
+through as it is or end for end, whichever leaves the offcut above the
+kept stock, so it falls away rather than wedging under it. The bumps are sawn as gables, two flats
 at the arc's end angle (56°) to the chord, each tangent to the arc at
 its end, meeting at a ridge 7.9 mm over the chord; the flutes are
 sawn at their chords.
@@ -37,7 +40,7 @@ cargo test -p ok-render --test spectre_sticks     # what CI runs
 
 ![Each stick after every cut, a row per stick](out/sequence.png)
 
-![Stick 1's first cut in its cassette: the stick tilted so the glue face stands vertical, the kerf on the far side, the offcut beyond it](out/stick_1_saw_1.png)
+![Stick 1's first cut in its cassette: the blank end for end, down in the nest with the glue face standing at the blade, the offcut above it and past the blade with nothing under it](out/stick_1_saw_1.png)
 
 ![Stick 1's flute: chord down in the hold-down, the core box up through the plate](out/stick_1_flute.png)
 
@@ -45,8 +48,10 @@ cargo test -p ok-render --test spectre_sticks     # what CI runs
 
 - `build.py`: `spectre_sticks` for the plan (the lid's curve and glue
   lines, gap 0.2, a 3.175 mm kerf), then a tab per stick with a
-  cassette per saw cut (a base the stick drops into, a lid with a
-  groove over the blade) and a cradle per router pass (a hold-down for
+  cassette per saw cut (a base the kept stock drops into, up to the
+  blade's near face, which trims its edge on the first pass; a lid down
+  to the stock stopping a millimetre short of the blade) and a cradle
+  per router pass (a hold-down for
   a flute, a base and hold-down for a bump), each with the stick and
   its offcut in place and the bit drawn where it cuts; a Sequence tab
   with every stick after every cut; the pictures, a sequence PDF, the
@@ -57,10 +62,12 @@ cargo test -p ok-render --test spectre_sticks     # what CI runs
 ## The sticks
 
 Faces are read anticlockwise round the prism's section; the glue line
-each stick stands on (its datum) is the longest. Turn is how far the
-stick is turned anticlockwise from datum-down to make the cut; the
-cassette's nest holds it at that angle, so the number is for reading,
-not setting. The blade is 46.6 mm over the sled's plate for every cut.
+each stick stands on (its datum) is the longest. Each cut turns the
+stick to stand its face at the blade, as it is or end for end (nine of
+the twenty-four go end for end), whichever puts the offcut above the
+kept stock; the cassette's nest holds it so, and the numbers in
+`sticks.json` are for reading, not setting. The blade is 46.6 mm over
+the sled's plate for every cut.
 
 | Stick | Faces | Blank (mm) | Saw cuts | Router passes |
 |---|---|---|---|---|
@@ -113,5 +120,8 @@ example's gap is 0.2; set it on the feature and in `build.py` alike.
   material the other pass removes, so neither scores the finished
   arc. At the quarter circle the two passes become one, the flat
   landing exactly on the other gable face.
-- Four of the twenty-four saw cuts take off less than a kerf, so the
-  blade eats the offcut; the cassette has no loose piece after them.
+- Nine of the twenty-four saw cuts take off less than a kerf, so the
+  blade eats the offcut and nothing falls. The rest leave an offcut
+  past the blade, above the stock, with nothing under it: it drops
+  onto the table clear of the sled, which is why the stick's
+  orientation is chosen cut by cut.
