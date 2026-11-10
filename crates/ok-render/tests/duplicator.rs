@@ -31,6 +31,12 @@ fn load_portal() -> Document {
     load_at("out/portal/duplicator.okpart")
 }
 
+/// The arm variant (`build.py --arm`): the Woodsmith's arc, the arm
+/// swinging and sliding on one X shaft, the head on its own pivot.
+fn load_arm() -> Document {
+    load_at("out/arm/duplicator.okpart")
+}
+
 fn tab_named(doc: &Document, name: &str) -> TabId {
     doc.tabs
         .iter()
@@ -159,14 +165,19 @@ fn stop_landing(r: &AssemblyResult) -> f64 {
     screw_lo.z - top
 }
 
-fn every_part_regenerates_closed_and_the_machine_places_every_body_in(mut doc: Document) {
+fn every_part_regenerates_closed_and_the_machine_places_every_body_in(
+    mut doc: Document,
+    want_studios: usize,
+    want_bodies: usize,
+    subs: &[(&str, usize)],
+) {
     let tabs: Vec<(TabId, String, String)> = doc
         .tabs
         .iter()
         .map(|t| (t.id, t.name().to_string(), t.kind_name().to_string()))
         .collect();
     let studios = tabs.iter().filter(|t| t.2 == "part_studio").count();
-    assert_eq!(studios, 28, "{studios} part studios");
+    assert_eq!(studios, want_studios, "{studios} part studios");
     let mut placed = 0;
     for (id, name, kind) in &tabs {
         if kind == "part_studio" {
@@ -184,27 +195,44 @@ fn every_part_regenerates_closed_and_the_machine_places_every_body_in(mut doc: D
             placed += r.bodies.len();
         }
     }
-    assert_eq!(placed, 63);
+    assert_eq!(placed, want_bodies);
     let machine = tab_named(&doc, "Duplicator");
     let r = doc.regenerate_assembly(machine).unwrap();
-    assert_eq!(r.bodies.len(), 63);
+    assert_eq!(r.bodies.len(), want_bodies);
     assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
     // The three motion sub-assemblies, each with its own sheet.
-    for (name, want) in [("Gantry", 14), ("X slide", 14), ("Z slide", 18)] {
+    for &(name, want) in subs {
         let sub = tab_named(&doc, name);
         let r = doc.regenerate_assembly(sub).unwrap();
         assert_eq!(r.bodies.len(), want, "{name}");
     }
 }
 
+const SUBS: [(&str, usize); 3] = [("Gantry", 14), ("X slide", 14), ("Z slide", 18)];
+
 #[test]
 fn every_part_regenerates_closed_and_the_machine_places_every_body() {
-    every_part_regenerates_closed_and_the_machine_places_every_body_in(load());
+    every_part_regenerates_closed_and_the_machine_places_every_body_in(load(), 28, 63, &SUBS);
 }
 
 #[test]
 fn every_part_of_the_portal_regenerates_closed_and_the_machine_places_every_body() {
-    every_part_regenerates_closed_and_the_machine_places_every_body_in(load_portal());
+    every_part_regenerates_closed_and_the_machine_places_every_body_in(
+        load_portal(),
+        28,
+        63,
+        &SUBS,
+    );
+}
+
+#[test]
+fn every_part_of_the_arm_regenerates_closed_and_the_machine_places_every_body() {
+    every_part_regenerates_closed_and_the_machine_places_every_body_in(
+        load_arm(),
+        29,
+        55,
+        &[("Gantry", 10), ("Arm", 10), ("Head", 18)],
+    );
 }
 
 #[test]
@@ -510,6 +538,43 @@ fn sliders(
 /// only moving parts against fixed ones once let a notch in the deck
 /// round the carriage plate through, which would have pinned the X
 /// travel to the notch.
+/// The arm's shafts and the blocks that turn on them.
+fn turns_in(shaft: &str, block: &str) -> bool {
+    (shaft == "X shafts" && block.starts_with("X blocks SC20UU"))
+        || (shaft == "Head pivot shaft" && block.starts_with("Head blocks SC20UU"))
+}
+
+/// Every pair of bodies that move differently, intersected: a touch is
+/// allowed, an overlap that is not a tool in the work is a collision,
+/// and a tool more than 100 mm3 into the work is one too.
+fn collisions(r: &AssemblyResult, pose: &str) -> Vec<String> {
+    let mut hits = Vec::new();
+    for i in 0..r.bodies.len() {
+        for j in i + 1..r.bodies.len() {
+            if r.placed[i] == r.placed[j] {
+                continue; // one rigid group
+            }
+            let (a, b) = (member(&r.bodies[i].name), member(&r.bodies[j].name));
+            let in_work = tool_in_work(a, b) || tool_in_work(b, a);
+            // A shaft turned in a block's bore: two faceted cylinders
+            // whose facets no longer line up overlap by a cubic
+            // millimetre or two at every pose but the drawn one.
+            let bearing = turns_in(a, b) || turns_in(b, a);
+            match overlap(&r.bodies[i].solid, &r.bodies[j].solid) {
+                Some(v) if v > 1e-3 && !in_work && !(bearing && v < 5.0) => {
+                    hits.push(format!("{a} x {b} at {pose}: {v:.1} mm3"))
+                }
+                Some(v) if v > 100.0 => hits.push(format!(
+                    "{a} x {b} at {pose}: {v:.1} mm3 of tool in the work"
+                )),
+                None => hits.push(format!("{a} x {b} at {pose}: boolean failed")),
+                _ => {}
+            }
+        }
+    }
+    hits
+}
+
 fn the_machine_clears_itself_over_the_work_in(mut doc: Document) {
     let machine = tab_named(&doc, "Duplicator");
     let sliders = sliders(&mut doc, machine);
@@ -559,26 +624,7 @@ fn the_machine_clears_itself_over_the_work_in(mut doc: Document) {
                     )
                     .unwrap();
                 assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
-                for i in 0..r.bodies.len() {
-                    for j in i + 1..r.bodies.len() {
-                        if r.placed[i] == r.placed[j] {
-                            continue; // one rigid group
-                        }
-                        let (a, b) = (member(&r.bodies[i].name), member(&r.bodies[j].name));
-                        let in_work = tool_in_work(a, b) || tool_in_work(b, a);
-                        match overlap(&r.bodies[i].solid, &r.bodies[j].solid) {
-                            Some(v) if v > 1e-3 && !in_work => {
-                                hits.push(format!("{a} x {b} at ({dx}, {dy}, {dz}): {v:.1} mm3"))
-                            }
-                            Some(v) if v > 100.0 => hits.push(format!(
-                                "{a} x {b} at ({dx}, {dy}, {dz}): {v:.1} mm3 of tool in the work"
-                            )),
-                            None => hits
-                                .push(format!("{a} x {b} at ({dx}, {dy}, {dz}): boolean failed")),
-                            _ => {}
-                        }
-                    }
-                }
+                hits.extend(collisions(&r, &format!("({dx}, {dy}, {dz})")));
             }
         }
     }
@@ -814,4 +860,384 @@ fn the_pattern_plate_is_a_master_for_a_bit_the_size_of_the_gap_and_not_for_a_big
         coarse.residual_area
     );
     assert!((coarse.residual_max - groove).abs() < 0.1);
+}
+
+// ---------------------------------------------------------------------
+// The arm variant: the Woodsmith's own motion. The arm frame rides one
+// X shaft on two blocks that slide for X and turn for depth; the head
+// hangs on a second shaft across the arm's front on two more blocks, a
+// swivel locked by a split clamp; a sand box at the tail balances it.
+// ---------------------------------------------------------------------
+
+/// One of the arm's mates: as drawn, and the sign of each parameter
+/// that moves its part the positive way (offset: +x, +y or up; angle:
+/// the arm's nose down, the head's tips back).
+#[derive(Clone, Copy)]
+struct ArmMate {
+    id: MateId,
+    angle: f64,
+    offset: f64,
+    sign_offset: f64,
+    sign_angle: f64,
+}
+
+fn arm_mates(doc: &mut Document, tab: TabId) -> std::collections::BTreeMap<String, ArmMate> {
+    let asm = doc.assembly(tab).unwrap();
+    let mates: Vec<(MateId, String, f64, f64)> = asm
+        .mates
+        .iter()
+        .map(|m| (m.id, m.name.clone(), m.angle, m.offset))
+        .collect();
+    assert_eq!(mates.len(), 4, "four mates");
+    let r0 = doc.regenerate_assembly(tab).unwrap();
+    let tip0 = bounds(body(&r0, "Router")).0;
+    let mut out = std::collections::BTreeMap::new();
+    for (id, name, angle, offset) in mates {
+        let (part, axis): (&str, fn(Vec3) -> f64) = match name.as_str() {
+            "Y travel" => ("Deck", |v| v.y),
+            "arm" => ("Arm frame", |v| v.x),
+            "tilt" => ("Tool support", |v| v.x),
+            "stop screw" => ("Stop screw", |v| v.z),
+            other => panic!("unexpected mate {other}"),
+        };
+        let mut m = ArmMate {
+            id,
+            angle,
+            offset,
+            sign_offset: 0.0,
+            sign_angle: 0.0,
+        };
+        if name != "tilt" {
+            let r1 = doc
+                .preview_assembly_at(tab, &[(id, angle, offset + 10.0)])
+                .unwrap();
+            let moved = axis(bounds(body(&r1, part)).0) - axis(bounds(body(&r0, part)).0);
+            assert!(
+                (moved.abs() - 10.0).abs() < 1e-6,
+                "{name} moves {part} by {moved}"
+            );
+            m.sign_offset = moved.signum();
+        }
+        if name == "arm" || name == "tilt" {
+            let r1 = doc
+                .preview_assembly_at(tab, &[(id, angle + 5.0, offset)])
+                .unwrap();
+            let dz = bounds(body(&r1, "Router")).0.z - tip0.z;
+            assert!(dz.abs() > 1.0, "{name} turns the router by {dz}");
+            // The arm's nose down lowers the tips; the head's tips back
+            // (its top toward the operator) lowers them too, the tips
+            // hanging ahead of the head pivot.
+            m.sign_angle = -dz.signum();
+        }
+        out.insert(name, m);
+    }
+    out
+}
+
+/// The arm's angle, degrees nose-down from the drawn pose, at which
+/// `f` of the resolved assembly crosses zero (bisection on the kernel).
+fn arm_angle_where(
+    doc: &mut Document,
+    tab: TabId,
+    mates: &std::collections::BTreeMap<String, ArmMate>,
+    extra: &[(MateId, f64, f64)],
+    f: impl Fn(&AssemblyResult) -> f64,
+) -> f64 {
+    let arm = mates["arm"];
+    let at = |a: f64| (arm.id, arm.angle + arm.sign_angle * a, arm.offset);
+    let (mut lo, mut hi) = (0.0, 20.0);
+    for _ in 0..40 {
+        let mid = (lo + hi) / 2.0;
+        let mut tweaks = vec![at(mid)];
+        tweaks.extend_from_slice(extra);
+        let r = doc.preview_assembly_at(tab, &tweaks).unwrap();
+        if f(&r) > 0.0 {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    (lo + hi) / 2.0
+}
+
+/// The arm swings the tools to depth on an arc about the X shaft, 366
+/// mm behind the head pivot: the last pass (the pilot on the groove's
+/// floor) is 6.4 degrees down, the bit tilted by as much and the tips
+/// 9.8 mm back, the bit and the pilot alike since they are one body;
+/// the stop screw through the bed lands on the deck at the first
+/// pass, 4 mm into the blank, and backs off 3.5 for the last; the X
+/// and Y travel reach the blank's edges and the reference hole; and
+/// the sand in the tail box balances everything that swings to half a
+/// kilogram nose-down at the tool tips, read off the parts' densities.
+#[test]
+fn the_arm_swings_the_tools_to_depth_on_the_woodsmith_arc_and_balances() {
+    let mut doc = load_arm();
+    let machine = tab_named(&doc, "Duplicator");
+    let mates = arm_mates(&mut doc, machine);
+    let r = doc.regenerate_assembly(machine).unwrap();
+    let (blank_lo, blank_hi) = bounds(body(&r, "Blank"));
+    let (plate_lo, plate_hi) = bounds(body(&r, "Pattern plate"));
+    let (bit_lo, bit_hi) = bounds(body(&r, "Router"));
+    let bit_x = (bit_lo.x + bit_hi.x) / 2.0;
+    let bit_y = (bit_lo.y + bit_hi.y) / 2.0;
+    let tip = Vec3::new(bit_x, bit_y, bit_lo.z);
+    // Travel: the supports against the blocks, and the bed against the posts.
+    let (xm, xp) = travel(
+        &group(&r, "X supports SK20"),
+        &group(&r, "X blocks SC20UU"),
+        |v| v.x,
+    );
+    let (bed_lo, bed_hi) = bounds(body(&r, "Arm frame"));
+    let post_in = group(&r, "Posts")
+        .iter()
+        .map(|p| {
+            let (lo, hi) = bounds(p);
+            lo.x.abs().min(hi.x.abs())
+        })
+        .fold(f64::INFINITY, f64::min);
+    let (xm, xp) = (xm.min(post_in + bed_lo.x), xp.min(post_in - bed_hi.x));
+    let (ym, yp) = travel(
+        &group(&r, "Y supports SK20"),
+        &group(&r, "Y blocks SC20UU"),
+        |v| v.y,
+    );
+    println!(
+        "X travel -{xm} +{xp} (the bed {} from the posts), Y travel -{ym} +{yp}",
+        post_in - bed_hi.x
+    );
+    assert!(
+        xm >= bit_x - blank_lo.x && xp >= blank_hi.x - bit_x,
+        "X reach"
+    );
+    assert!(
+        ym >= bit_y - (plate_lo.y + 5.0) && yp >= blank_hi.y - bit_y,
+        "Y reach"
+    );
+    // The arc. The last pass: the tips on the groove's floor, 12.5 below the plate's top.
+    let last = arm_angle_where(&mut doc, machine, &mates, &[], |r| {
+        bounds(body(r, "Router")).0.z - (plate_hi.z - 12.5)
+    });
+    let arm = mates["arm"];
+    let r_last = doc
+        .preview_assembly_at(
+            machine,
+            &[(arm.id, arm.angle + arm.sign_angle * last, arm.offset)],
+        )
+        .unwrap();
+    let i = r_last
+        .bodies
+        .iter()
+        .position(|b| member(&b.name) == "Router")
+        .unwrap();
+    let axis = r_last.transforms[&r_last.placed[i]].apply_vector(Vec3::new(0.0, 0.0, 1.0));
+    let tilt = axis.z.clamp(-1.0, 1.0).acos().to_degrees();
+    let placed_tip = r_last.transforms[&r_last.placed[i]].apply_point(tip);
+    let shift = placed_tip.y - tip.y;
+    println!(
+        "last pass {last:.2} degrees down, the bit tilted {tilt:.2}, the tips {shift:.2} back"
+    );
+    assert!((5.5..7.0).contains(&last), "last pass {last}");
+    assert!((tilt - last).abs() < 1e-6, "the bit tilts with the arm");
+    // Ahead of the pivot by 480 they come in 480 (1 - cos), and 115
+    // below it they swing back 115 sin: both back, 15.7 together.
+    assert!((14.0..18.0).contains(&shift), "the tips move back {shift}");
+    // The pilot is the same rigid body as the bit: the same transform.
+    let j = r_last
+        .bodies
+        .iter()
+        .position(|b| member(&b.name) == "Pilot")
+        .unwrap();
+    assert_eq!(r_last.placed[i], r_last.placed[j]);
+    // The stop screw as drawn lands on the deck at the first pass, 4 mm in.
+    let deck_top = bounds(body(&r, "Deck")).1.z;
+    let landing = arm_angle_where(&mut doc, machine, &mates, &[], |r| {
+        bounds(body(r, "Stop screw")).0.z - deck_top
+    });
+    let r_first = doc
+        .preview_assembly_at(
+            machine,
+            &[(arm.id, arm.angle + arm.sign_angle * landing, arm.offset)],
+        )
+        .unwrap();
+    let depth = blank_hi.z - bounds(body(&r_first, "Router")).0.z;
+    println!("the screw lands at {landing:.2} degrees, the bit {depth:.2} into the blank");
+    // The screw is tilted with the arm, so the rim of its flat tip lands
+    // 0.4 mm before its axis would, which is 0.8 at the tools; the
+    // operator sets the screw by trial anyway.
+    assert!((depth - 4.0).abs() < 1.0, "first pass {depth}");
+    // For the last pass it has to back off: how far its tip would be in the deck.
+    let into_deck = deck_top - bounds(body(&r_last, "Stop screw")).0.z;
+    println!("backed off {into_deck:.2} for the last pass");
+    assert!((2.0..6.0).contains(&into_deck), "back off {into_deck}");
+    // The balance, about the X shaft's axis, of everything that swings.
+    let shaft = bounds(body(&r, "X shafts"));
+    let pivot_y = (shaft.0.y + shaft.1.y) / 2.0;
+    let (mut moment, mut mass) = (0.0, 0.0);
+    for b in r.bodies.iter() {
+        let swings =
+            b.name.starts_with("Arm / ") || b.name.starts_with("Head / ") || b.name == "Stop screw";
+        if !swings {
+            continue;
+        }
+        let m = b
+            .material
+            .as_ref()
+            .unwrap_or_else(|| panic!("{} has no material", b.name))
+            .mass_g(b.solid.volume());
+        let c = b.solid.centroid().unwrap();
+        moment += m * (c.y - pivot_y);
+        mass += m;
+    }
+    let at_tips = moment / (bit_y - pivot_y); // nose-heavy: both negative
+    println!(
+        "{:.2} kg swings on the pivot, {at_tips:.0} g nose-down at the tool tips",
+        mass / 1000.0
+    );
+    assert!((450.0..550.0).contains(&at_tips), "{at_tips} g at the tips");
+    assert!(mass > 15_000.0 && mass < 22_000.0, "{mass} g");
+}
+
+/// The arm swept over the work as the other variants are: the bit at
+/// the blank's edges and middle, every 25 mm in Y, at the first and the
+/// last pass with the screw backed off for the last; then the head
+/// tilted 20 degrees each way at the centre with the arm raised or
+/// lowered to keep the tips at the drawn height. No two bodies that
+/// move differently meet but the tools in the work.
+#[test]
+fn the_arm_clears_itself_over_the_work_and_at_full_tilt() {
+    let mut doc = load_arm();
+    let machine = tab_named(&doc, "Duplicator");
+    let mates = arm_mates(&mut doc, machine);
+    let r = doc.regenerate_assembly(machine).unwrap();
+    let (bit_lo, bit_hi) = bounds(body(&r, "Router"));
+    let bit = Vec3::new(
+        (bit_lo.x + bit_hi.x) / 2.0,
+        (bit_lo.y + bit_hi.y) / 2.0,
+        bit_lo.z,
+    );
+    let (blank_lo, blank_hi) = bounds(body(&r, "Blank"));
+    let (plate_lo, plate_hi) = bounds(body(&r, "Pattern plate"));
+    let deck_top = bounds(body(&r, "Deck")).1.z;
+    let xs = [blank_lo.x - bit.x, 0.0, blank_hi.x - bit.x];
+    let (y0, y1) = (
+        (plate_lo.y + 5.0 - bit.y).min(blank_lo.y - bit.y),
+        blank_hi.y - bit.y,
+    );
+    let steps = ((y1 - y0) / 25.0).ceil() as usize;
+    let ys: Vec<f64> = (0..=steps)
+        .map(|i| y0 + (y1 - y0) * i as f64 / steps as f64)
+        .collect();
+    let first = arm_angle_where(&mut doc, machine, &mates, &[], |r| {
+        bounds(body(r, "Stop screw")).0.z - deck_top
+    });
+    let last = arm_angle_where(&mut doc, machine, &mates, &[], |r| {
+        bounds(body(r, "Router")).0.z - (plate_hi.z - 12.5)
+    });
+    let (arm, y, tilt, screw) = (
+        mates["arm"],
+        mates["Y travel"],
+        mates["tilt"],
+        mates["stop screw"],
+    );
+    let r_last = doc
+        .preview_assembly_at(
+            machine,
+            &[(arm.id, arm.angle + arm.sign_angle * last, arm.offset)],
+        )
+        .unwrap();
+    let back_off = deck_top - bounds(body(&r_last, "Stop screw")).0.z + 0.5;
+    let mut hits = Vec::new();
+    let mut poses = 0;
+    for &dx in &xs {
+        for &dy in &ys {
+            for &(a, off) in &[(first, 0.0), (last, back_off)] {
+                poses += 1;
+                let r = doc
+                    .preview_assembly_at(
+                        machine,
+                        &[
+                            (
+                                arm.id,
+                                arm.angle + arm.sign_angle * a,
+                                arm.offset + arm.sign_offset * dx,
+                            ),
+                            (y.id, y.angle, y.offset + y.sign_offset * dy),
+                            (
+                                screw.id,
+                                screw.angle,
+                                screw.offset + screw.sign_offset * off,
+                            ),
+                        ],
+                    )
+                    .unwrap();
+                assert!(r.instance_errors.is_empty() && r.mate_errors.is_empty());
+                hits.extend(collisions(&r, &format!("({dx}, {dy}, {a:.1} degrees)")));
+            }
+        }
+    }
+    // The tilt: the tips back and forward 20 degrees, the arm swung so
+    // the bit's tip stays where it was drawn, 40 above the board.
+    for t in [-20.0, 20.0] {
+        poses += 1;
+        let tilted = [(tilt.id, tilt.angle + tilt.sign_angle * t, tilt.offset)];
+        let r_t = doc.preview_assembly_at(machine, &tilted).unwrap();
+        let drop = bit.z - bounds(body(&r_t, "Router")).0.z;
+        // Nose up (negative) when the tilt lowered the tips: bisection
+        // on a signed angle, by trying the arm each way.
+        let a = if drop > 0.0 {
+            -arm_angle_up(&mut doc, machine, &mates, &tilted, bit.z)
+        } else {
+            arm_angle_where(&mut doc, machine, &mates, &tilted, |r| {
+                bounds(body(r, "Router")).0.z - bit.z
+            })
+        };
+        let r = doc
+            .preview_assembly_at(
+                machine,
+                &[
+                    (arm.id, arm.angle + arm.sign_angle * a, arm.offset),
+                    tilted[0],
+                ],
+            )
+            .unwrap();
+        let tip_z = bounds(body(&r, "Router")).0.z;
+        println!(
+            "tilt {t}: the arm {a:.2} degrees, the tip at {tip_z:.2} (drawn {:.2})",
+            bit.z
+        );
+        assert!(
+            (tip_z - bit.z).abs() < 0.01,
+            "the arm takes up the tilt's drop"
+        );
+        hits.extend(collisions(&r, &format!("tilt {t}")));
+    }
+    println!("{poses} poses");
+    for h in &hits {
+        println!("{h}");
+    }
+    assert!(hits.is_empty(), "{} collisions", hits.len());
+}
+
+/// The arm's angle nose-up that brings the bit's tip back to `z`.
+fn arm_angle_up(
+    doc: &mut Document,
+    tab: TabId,
+    mates: &std::collections::BTreeMap<String, ArmMate>,
+    extra: &[(MateId, f64, f64)],
+    z: f64,
+) -> f64 {
+    let arm = mates["arm"];
+    let (mut lo, mut hi) = (0.0, 20.0);
+    for _ in 0..40 {
+        let mid = (lo + hi) / 2.0;
+        let mut tweaks = vec![(arm.id, arm.angle - arm.sign_angle * mid, arm.offset)];
+        tweaks.extend_from_slice(extra);
+        let r = doc.preview_assembly_at(tab, &tweaks).unwrap();
+        if bounds(body(&r, "Router")).0.z < z {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    (lo + hi) / 2.0
 }
