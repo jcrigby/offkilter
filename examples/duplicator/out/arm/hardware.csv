@@ -1,14 +1,15 @@
 joint,fastener,count
 "4 Y SK20 supports on the base","M6 x 40 hex bolt, washer, four-prong T-nut from the far face, prongs piloted, epoxied",8
 "2 X SK20 supports on the posts' front faces, the main pivot","M6 x 40 hex bolt, washer, T-nut from the post's back",4
+"2 tie SK20 supports on the feet","M6 x 40 hex bolt, washer, T-nut from under the foot",4
 "2 head SK20 supports on the crossbar's front face","M6 x 40 hex bolt, washer, T-nut from the crossbar's back",4
-"4 Y blocks under the deck, from above","M5 x 30 (or M6, as the block is tapped) into the block",16
-"2 arm blocks under the bed, from above","M5 x 30 (or M6) into the block",8
+"4 Y blocks under the feet, from above","M5 x 30 (or M6, as the block is tapped) into the block",16
+"2 arm blocks under the saddle, from above","M5 x 30 (or M6) into the block",8
 "2 head blocks on the support plate's back, from its front face, before the tool plate goes on","M5 x 30 (or M6) into the block",8
 "Shaft collars either side of the head's blocks, snug","20 mm bore set-screw collar, 32 x 12",2
 "Tilt clamp to the support plate's back, from the plate's front face","no. 8 x 50 wood screw, glued",4
 "Tilt clamp's knob bolt, down through it behind the shaft, across the slit","M6 x 80 knob bolt through an M6 T-nut in the clamp's underside",1
-"Stop screw","M8 x 130 with a knob, through an M8 T-nut set into the bed's top, an M8 jam nut above the bed",1
+"Stop screw","M8 x 90 with a knob, through an M8 T-nut set into the stop bar's top, an M8 jam nut above the bar",1
 "Router clamp","M6 x 100 knob bolt, hex nut in the pocket",1
 "Stylus chuck","C12-ER11A-100 straight-shank collet chuck with ER11 collets: 2 mm, 3/16 in, 1/4 in",1
 "Stylus clamp, across the head's slit","M4 x 50 knob bolt, hex nut in the pocket",1
@@ -25,8 +26,8 @@ joint,fastener,count
 "Battens under the base","no. 8 x 32 wood screw from above, countersunk, every 150 mm, glued",18
 "Platforms to the base, countersunk flush","no. 8 x 32 wood screw",12
 "Pattern plate's L fence","no. 6 x 25 wood screw",6
-"Posts to the deck, from below through the deck","no. 8 x 50 wood screw, glued",6
-"Gussets to the posts' outer edges and down into the deck","no. 8 x 50 wood screw, 3 each way, glued",12
+"Posts to the feet, from below through the foot","no. 8 x 50 wood screw, glued",6
+"Gussets to the posts' outer edges and down into the feet","no. 8 x 50 wood screw, 3 each way, glued",12
 "Arms onto the saddle, the stop bar and the box floor, from below","no. 8 x 50 wood screw, 3 each per arm, glued",18
 "Crossbar to the arms' front ends","no. 8 x 50 wood screw, 3 each, glued",6
 "Sand box walls to the floor and the arms","no. 8 x 50 wood screw, 2 each way, glued",12

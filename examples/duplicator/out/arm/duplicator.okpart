@@ -3320,11 +3320,11 @@
       "id": 6,
       "kind": {
         "type": "part_studio",
-        "name": "Deck",
+        "name": "Feet",
         "features": [
           {
             "id": 1,
-            "name": "deck, ply",
+            "name": "foot, ply",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -3339,16 +3339,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -455.0,
-                      "y": -80.0
+                      "x": -470.0,
+                      "y": -75.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 455.0,
-                      "y": -80.0
+                      "x": -400.0,
+                      "y": -75.0
                     }
                   },
                   {
@@ -3361,16 +3361,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 455.0,
-                      "y": -80.0
+                      "x": -400.0,
+                      "y": -75.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 455.0,
-                      "y": 300.0
+                      "x": -400.0,
+                      "y": 220.0
                     }
                   },
                   {
@@ -3383,16 +3383,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 455.0,
-                      "y": 300.0
+                      "x": -400.0,
+                      "y": 220.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -455.0,
-                      "y": 300.0
+                      "x": -470.0,
+                      "y": 220.0
                     }
                   },
                   {
@@ -3405,16 +3405,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -455.0,
-                      "y": 300.0
+                      "x": -470.0,
+                      "y": 220.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -455.0,
-                      "y": -80.0
+                      "x": -470.0,
+                      "y": -75.0
                     }
                   },
                   {
@@ -3477,7 +3477,7 @@
           },
           {
             "id": 2,
-            "name": "deck, ply",
+            "name": "foot, ply",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -3492,14 +3492,189 @@
               },
               "op": "new"
             }
+          },
+          {
+            "id": 3,
+            "name": "foot, ply",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 76.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 400.0,
+                      "y": -75.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 470.0,
+                      "y": -75.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 470.0,
+                      "y": -75.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 470.0,
+                      "y": 220.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 470.0,
+                      "y": 220.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 400.0,
+                      "y": 220.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 400.0,
+                      "y": 220.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 400.0,
+                      "y": -75.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "foot, ply",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
           }
         ],
-        "next_id": 3,
+        "next_id": 5,
         "settings": {
           "facet_angle": 5.0
         },
         "part_materials": {
           "2": {
+            "name": "ply",
+            "density": 0.65
+          },
+          "4": {
             "name": "ply",
             "density": 0.65
           }
@@ -3529,8 +3704,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -399.0,
-                      "y": 251.0
+                      "x": -470.0,
+                      "y": 201.0
                     }
                   },
                   {
@@ -3538,7 +3713,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -3552,7 +3727,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -3560,7 +3735,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 270.0
+                      "y": 220.0
                     }
                   },
                   {
@@ -3574,15 +3749,15 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 270.0
+                      "y": 220.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -399.0,
-                      "y": 270.0
+                      "x": -470.0,
+                      "y": 220.0
                     }
                   },
                   {
@@ -3595,16 +3770,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -399.0,
-                      "y": 270.0
+                      "x": -470.0,
+                      "y": 220.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -399.0,
-                      "y": 251.0
+                      "x": -470.0,
+                      "y": 201.0
                     }
                   },
                   {
@@ -3692,7 +3867,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -399.0
+                "offset": -470.0
               },
               "sketch": {
                 "entities": [
@@ -3700,7 +3875,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 251.0,
+                      "x": 201.0,
                       "y": 95.0
                     }
                   },
@@ -3708,7 +3883,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 131.0,
+                      "x": 81.0,
                       "y": 95.0
                     }
                   },
@@ -3722,7 +3897,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 131.0,
+                      "x": 81.0,
                       "y": 95.0
                     }
                   },
@@ -3730,7 +3905,7 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 251.0,
+                      "x": 201.0,
                       "y": 250.0
                     }
                   },
@@ -3744,7 +3919,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 251.0,
+                      "x": 201.0,
                       "y": 250.0
                     }
                   },
@@ -3752,7 +3927,7 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 251.0,
+                      "x": 201.0,
                       "y": 95.0
                     }
                   },
@@ -3805,15 +3980,15 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 399.0,
-                      "y": 251.0
+                      "x": 470.0,
+                      "y": 201.0
                     }
                   },
                   {
@@ -3826,16 +4001,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 399.0,
-                      "y": 251.0
+                      "x": 470.0,
+                      "y": 201.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 399.0,
-                      "y": 270.0
+                      "x": 470.0,
+                      "y": 220.0
                     }
                   },
                   {
@@ -3848,8 +4023,8 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 399.0,
-                      "y": 270.0
+                      "x": 470.0,
+                      "y": 220.0
                     }
                   },
                   {
@@ -3857,7 +4032,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 270.0
+                      "y": 220.0
                     }
                   },
                   {
@@ -3871,7 +4046,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 270.0
+                      "y": 220.0
                     }
                   },
                   {
@@ -3879,7 +4054,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -3967,7 +4142,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 380.0
+                "offset": 451.0
               },
               "sketch": {
                 "entities": [
@@ -3975,7 +4150,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 251.0,
+                      "x": 201.0,
                       "y": 95.0
                     }
                   },
@@ -3983,7 +4158,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 131.0,
+                      "x": 81.0,
                       "y": 95.0
                     }
                   },
@@ -3997,7 +4172,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 131.0,
+                      "x": 81.0,
                       "y": 95.0
                     }
                   },
@@ -4005,7 +4180,7 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 251.0,
+                      "x": 201.0,
                       "y": 250.0
                     }
                   },
@@ -4019,7 +4194,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 251.0,
+                      "x": 201.0,
                       "y": 250.0
                     }
                   },
@@ -4027,7 +4202,7 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 251.0,
+                      "x": 201.0,
                       "y": 95.0
                     }
                   },
@@ -4103,7 +4278,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 239.0
+                      "y": 189.0
                     }
                   },
                   {
@@ -4111,7 +4286,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 239.0
+                      "y": 189.0
                     }
                   },
                   {
@@ -4125,7 +4300,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 239.0
+                      "y": 189.0
                     }
                   },
                   {
@@ -4133,7 +4308,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4147,7 +4322,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4155,7 +4330,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4169,7 +4344,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4177,7 +4352,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 239.0
+                      "y": 189.0
                     }
                   },
                   {
@@ -4274,7 +4449,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 181.0
+                      "y": 131.0
                     }
                   },
                   {
@@ -4282,7 +4457,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 181.0
+                      "y": 131.0
                     }
                   },
                   {
@@ -4296,7 +4471,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 181.0
+                      "y": 131.0
                     }
                   },
                   {
@@ -4304,7 +4479,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4318,7 +4493,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4326,7 +4501,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4340,7 +4515,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4348,7 +4523,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 181.0
+                      "y": 131.0
                     }
                   },
                   {
@@ -4445,7 +4620,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 239.0
+                      "y": 189.0
                     }
                   },
                   {
@@ -4453,7 +4628,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 239.0
+                      "y": 189.0
                     }
                   },
                   {
@@ -4467,7 +4642,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 239.0
+                      "y": 189.0
                     }
                   },
                   {
@@ -4475,7 +4650,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4489,7 +4664,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4497,7 +4672,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4511,7 +4686,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4519,7 +4694,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 239.0
+                      "y": 189.0
                     }
                   },
                   {
@@ -4616,7 +4791,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 181.0
+                      "y": 131.0
                     }
                   },
                   {
@@ -4624,7 +4799,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 181.0
+                      "y": 131.0
                     }
                   },
                   {
@@ -4638,7 +4813,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 181.0
+                      "y": 131.0
                     }
                   },
                   {
@@ -4646,7 +4821,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4660,7 +4835,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4668,7 +4843,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4682,7 +4857,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 251.0
+                      "y": 201.0
                     }
                   },
                   {
@@ -4690,7 +4865,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 181.0
+                      "y": 131.0
                     }
                   },
                   {
@@ -4786,7 +4961,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 200.0,
+                      "x": 150.0,
                       "y": 186.0
                     }
                   }
@@ -4829,7 +5004,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 200.0,
+                      "x": 150.0,
                       "y": 186.0
                     }
                   }
@@ -4895,7 +5070,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 200.0,
+                      "x": 150.0,
                       "y": 186.0
                     }
                   },
@@ -4947,6 +5122,870 @@
       "id": 10,
       "kind": {
         "type": "part_studio",
+        "name": "Tie supports SK20",
+        "features": [
+          {
+            "id": 1,
+            "name": "base",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 95.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -445.0,
+                      "y": -30.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -425.0,
+                      "y": -30.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": -425.0,
+                      "y": -30.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": -425.0,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -425.0,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -445.0,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -445.0,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -445.0,
+                      "y": -30.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "base",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 12.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "body",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 95.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -445.0,
+                      "y": -16.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -425.0,
+                      "y": -16.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": -425.0,
+                      "y": -16.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": -425.0,
+                      "y": 16.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -425.0,
+                      "y": 16.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -445.0,
+                      "y": 16.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -445.0,
+                      "y": 16.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -445.0,
+                      "y": -16.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "body",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 70.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 5,
+            "name": "base",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 95.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 425.0,
+                      "y": -30.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 445.0,
+                      "y": -30.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 445.0,
+                      "y": -30.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 445.0,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 445.0,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 425.0,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 425.0,
+                      "y": 30.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 425.0,
+                      "y": -30.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "base",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 12.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 7,
+            "name": "body",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 95.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 425.0,
+                      "y": -16.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 445.0,
+                      "y": -16.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 445.0,
+                      "y": -16.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 445.0,
+                      "y": 16.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 445.0,
+                      "y": 16.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 425.0,
+                      "y": 16.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 425.0,
+                      "y": 16.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 425.0,
+                      "y": -16.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "body",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 70.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 9,
+            "name": "bore",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -446.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 146.0
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 10,
+            "name": "shaft bore",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 9,
+              "diameter": 20.0,
+              "depth": 22.0,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 11,
+            "name": "bore",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 424.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 146.0
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 1,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 12,
+            "name": "shaft bore",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 11,
+              "diameter": 20.0,
+              "depth": 22.0,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          }
+        ],
+        "next_id": 13,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_materials": {
+          "2": {
+            "name": "aluminium",
+            "density": 2.7
+          },
+          "6": {
+            "name": "aluminium",
+            "density": 2.7
+          }
+        }
+      }
+    },
+    {
+      "id": 11,
+      "kind": {
+        "type": "part_studio",
+        "name": "Tie shaft",
+        "features": [
+          {
+            "id": 1,
+            "name": "20 mm shaft, tie, 1000 (uncut)",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -500.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 146.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 10.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "20 mm shaft, tie, 1000 (uncut)",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 1000.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 3,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_materials": {
+          "2": {
+            "name": "steel",
+            "density": 7.85
+          }
+        }
+      }
+    },
+    {
+      "id": 12,
+      "kind": {
+        "type": "part_studio",
         "name": "X blocks SC20UU",
         "features": [
           {
@@ -4967,7 +6006,7 @@
                     "type": "point",
                     "pos": {
                       "x": -172.5,
-                      "y": 175.0
+                      "y": 125.0
                     }
                   },
                   {
@@ -4975,7 +6014,7 @@
                     "type": "point",
                     "pos": {
                       "x": -127.5,
-                      "y": 175.0
+                      "y": 125.0
                     }
                   },
                   {
@@ -4989,7 +6028,7 @@
                     "type": "point",
                     "pos": {
                       "x": -127.5,
-                      "y": 175.0
+                      "y": 125.0
                     }
                   },
                   {
@@ -4997,7 +6036,7 @@
                     "type": "point",
                     "pos": {
                       "x": -127.5,
-                      "y": 225.0
+                      "y": 175.0
                     }
                   },
                   {
@@ -5011,7 +6050,7 @@
                     "type": "point",
                     "pos": {
                       "x": -127.5,
-                      "y": 225.0
+                      "y": 175.0
                     }
                   },
                   {
@@ -5019,7 +6058,7 @@
                     "type": "point",
                     "pos": {
                       "x": -172.5,
-                      "y": 225.0
+                      "y": 175.0
                     }
                   },
                   {
@@ -5033,7 +6072,7 @@
                     "type": "point",
                     "pos": {
                       "x": -172.5,
-                      "y": 225.0
+                      "y": 175.0
                     }
                   },
                   {
@@ -5041,7 +6080,7 @@
                     "type": "point",
                     "pos": {
                       "x": -172.5,
-                      "y": 175.0
+                      "y": 125.0
                     }
                   },
                   {
@@ -5138,7 +6177,7 @@
                     "type": "point",
                     "pos": {
                       "x": 127.5,
-                      "y": 175.0
+                      "y": 125.0
                     }
                   },
                   {
@@ -5146,7 +6185,7 @@
                     "type": "point",
                     "pos": {
                       "x": 172.5,
-                      "y": 175.0
+                      "y": 125.0
                     }
                   },
                   {
@@ -5160,7 +6199,7 @@
                     "type": "point",
                     "pos": {
                       "x": 172.5,
-                      "y": 175.0
+                      "y": 125.0
                     }
                   },
                   {
@@ -5168,7 +6207,7 @@
                     "type": "point",
                     "pos": {
                       "x": 172.5,
-                      "y": 225.0
+                      "y": 175.0
                     }
                   },
                   {
@@ -5182,7 +6221,7 @@
                     "type": "point",
                     "pos": {
                       "x": 172.5,
-                      "y": 225.0
+                      "y": 175.0
                     }
                   },
                   {
@@ -5190,7 +6229,7 @@
                     "type": "point",
                     "pos": {
                       "x": 127.5,
-                      "y": 225.0
+                      "y": 175.0
                     }
                   },
                   {
@@ -5204,7 +6243,7 @@
                     "type": "point",
                     "pos": {
                       "x": 127.5,
-                      "y": 225.0
+                      "y": 175.0
                     }
                   },
                   {
@@ -5212,7 +6251,7 @@
                     "type": "point",
                     "pos": {
                       "x": 127.5,
-                      "y": 175.0
+                      "y": 125.0
                     }
                   },
                   {
@@ -5308,7 +6347,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 200.0,
+                      "x": 150.0,
                       "y": 186.0
                     }
                   }
@@ -5351,7 +6390,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 200.0,
+                      "x": 150.0,
                       "y": 186.0
                     }
                   }
@@ -5395,7 +6434,7 @@
       }
     },
     {
-      "id": 11,
+      "id": 13,
       "kind": {
         "type": "part_studio",
         "name": "Arm frame",
@@ -5418,7 +6457,7 @@
                     "type": "point",
                     "pos": {
                       "x": -175.0,
-                      "y": 140.0
+                      "y": 90.0
                     }
                   },
                   {
@@ -5426,7 +6465,7 @@
                     "type": "point",
                     "pos": {
                       "x": 175.0,
-                      "y": 140.0
+                      "y": 90.0
                     }
                   },
                   {
@@ -5440,7 +6479,7 @@
                     "type": "point",
                     "pos": {
                       "x": 175.0,
-                      "y": 140.0
+                      "y": 90.0
                     }
                   },
                   {
@@ -5448,7 +6487,7 @@
                     "type": "point",
                     "pos": {
                       "x": 175.0,
-                      "y": 260.0
+                      "y": 210.0
                     }
                   },
                   {
@@ -5462,7 +6501,7 @@
                     "type": "point",
                     "pos": {
                       "x": 175.0,
-                      "y": 260.0
+                      "y": 210.0
                     }
                   },
                   {
@@ -5470,7 +6509,7 @@
                     "type": "point",
                     "pos": {
                       "x": -175.0,
-                      "y": 260.0
+                      "y": 210.0
                     }
                   },
                   {
@@ -5484,7 +6523,7 @@
                     "type": "point",
                     "pos": {
                       "x": -175.0,
-                      "y": 260.0
+                      "y": 210.0
                     }
                   },
                   {
@@ -5492,7 +6531,7 @@
                     "type": "point",
                     "pos": {
                       "x": -175.0,
-                      "y": 140.0
+                      "y": 90.0
                     }
                   },
                   {
@@ -5619,7 +6658,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -5633,7 +6672,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -5641,7 +6680,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -5655,7 +6694,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -5790,7 +6829,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -5804,7 +6843,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -5812,7 +6851,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -5826,7 +6865,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6273,7 +7312,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6281,7 +7320,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6295,7 +7334,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6303,7 +7342,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6317,7 +7356,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6325,7 +7364,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6339,7 +7378,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6347,7 +7386,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6444,7 +7483,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6452,7 +7491,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6466,7 +7505,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6474,7 +7513,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 389.0
+                      "y": 339.0
                     }
                   },
                   {
@@ -6488,7 +7527,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 389.0
+                      "y": 339.0
                     }
                   },
                   {
@@ -6496,7 +7535,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 389.0
+                      "y": 339.0
                     }
                   },
                   {
@@ -6510,7 +7549,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 389.0
+                      "y": 339.0
                     }
                   },
                   {
@@ -6518,7 +7557,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6615,7 +7654,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 601.0
+                      "y": 551.0
                     }
                   },
                   {
@@ -6623,7 +7662,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 601.0
+                      "y": 551.0
                     }
                   },
                   {
@@ -6637,7 +7676,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 601.0
+                      "y": 551.0
                     }
                   },
                   {
@@ -6645,7 +7684,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6659,7 +7698,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6667,7 +7706,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6681,7 +7720,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6689,7 +7728,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 601.0
+                      "y": 551.0
                     }
                   },
                   {
@@ -6825,7 +7864,7 @@
       }
     },
     {
-      "id": 12,
+      "id": 14,
       "kind": {
         "type": "part_studio",
         "name": "Box lid",
@@ -6848,7 +7887,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6856,7 +7895,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6870,7 +7909,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -6878,7 +7917,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6892,7 +7931,7 @@
                     "type": "point",
                     "pos": {
                       "x": 119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6900,7 +7939,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6914,7 +7953,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 620.0
+                      "y": 570.0
                     }
                   },
                   {
@@ -6922,7 +7961,7 @@
                     "type": "point",
                     "pos": {
                       "x": -119.0,
-                      "y": 370.0
+                      "y": 320.0
                     }
                   },
                   {
@@ -7015,7 +8054,7 @@
       }
     },
     {
-      "id": 13,
+      "id": 15,
       "kind": {
         "type": "part_studio",
         "name": "Head supports SK20",
@@ -7808,7 +8847,7 @@
       }
     },
     {
-      "id": 14,
+      "id": 16,
       "kind": {
         "type": "part_studio",
         "name": "Head pivot shaft",
@@ -7879,7 +8918,7 @@
       }
     },
     {
-      "id": 15,
+      "id": 17,
       "kind": {
         "type": "part_studio",
         "name": "Collars",
@@ -8092,7 +9131,7 @@
       }
     },
     {
-      "id": 16,
+      "id": 18,
       "kind": {
         "type": "part_studio",
         "name": "Head blocks SC20UU",
@@ -8543,7 +9582,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 19,
       "kind": {
         "type": "part_studio",
         "name": "Tilt clamp",
@@ -9098,7 +10137,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 20,
       "kind": {
         "type": "part_studio",
         "name": "Tool support",
@@ -10281,7 +11320,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 21,
       "kind": {
         "type": "part_studio",
         "name": "Tool support webs",
@@ -10620,7 +11659,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 22,
       "kind": {
         "type": "part_studio",
         "name": "Clamp bolts",
@@ -10743,7 +11782,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 23,
       "kind": {
         "type": "part_studio",
         "name": "Router",
@@ -10918,7 +11957,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 24,
       "kind": {
         "type": "part_studio",
         "name": "Stylus block",
@@ -12858,7 +13897,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 25,
       "kind": {
         "type": "part_studio",
         "name": "Pilot",
@@ -13033,7 +14072,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 26,
       "kind": {
         "type": "part_studio",
         "name": "Stop screw",
@@ -13047,7 +14086,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 113.22630511361596
+                "offset": 171.4870598157986
               },
               "sketch": {
                 "entities": [
@@ -13082,7 +14121,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 141.77369488638402,
+              "depth": 83.5129401842014,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -13156,14 +14195,14 @@
       }
     },
     {
-      "id": 25,
+      "id": 27,
       "kind": {
         "type": "part_studio",
         "name": "Sand",
         "features": [
           {
             "id": 1,
-            "name": "sand, 79 deep",
+            "name": "sand, 63 deep",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -13179,7 +14218,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 389.0
+                      "y": 339.0
                     }
                   },
                   {
@@ -13187,7 +14226,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 389.0
+                      "y": 339.0
                     }
                   },
                   {
@@ -13201,7 +14240,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 389.0
+                      "y": 339.0
                     }
                   },
                   {
@@ -13209,7 +14248,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 601.0
+                      "y": 551.0
                     }
                   },
                   {
@@ -13223,7 +14262,7 @@
                     "type": "point",
                     "pos": {
                       "x": 100.0,
-                      "y": 601.0
+                      "y": 551.0
                     }
                   },
                   {
@@ -13231,7 +14270,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 601.0
+                      "y": 551.0
                     }
                   },
                   {
@@ -13245,7 +14284,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 601.0
+                      "y": 551.0
                     }
                   },
                   {
@@ -13253,7 +14292,7 @@
                     "type": "point",
                     "pos": {
                       "x": -100.0,
-                      "y": 389.0
+                      "y": 339.0
                     }
                   },
                   {
@@ -13316,7 +14355,7 @@
           },
           {
             "id": 2,
-            "name": "sand, 79 deep",
+            "name": "sand, 63 deep",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -13324,7 +14363,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 78.73642621688543,
+              "depth": 63.25325976537397,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -13346,7 +14385,7 @@
       }
     },
     {
-      "id": 26,
+      "id": 28,
       "kind": {
         "type": "part_studio",
         "name": "Platforms",
@@ -13711,7 +14750,7 @@
       }
     },
     {
-      "id": 27,
+      "id": 29,
       "kind": {
         "type": "part_studio",
         "name": "Fences",
@@ -15332,7 +16371,7 @@
       }
     },
     {
-      "id": 28,
+      "id": 30,
       "kind": {
         "type": "part_studio",
         "name": "Blank",
@@ -15522,7 +16561,7 @@
       }
     },
     {
-      "id": 29,
+      "id": 31,
       "kind": {
         "type": "part_studio",
         "name": "Pattern plate",
@@ -18491,13 +19530,13 @@
       }
     },
     {
-      "id": 30,
+      "id": 32,
       "kind": {
         "type": "assembly",
         "name": "Gantry",
         "instances": [
           {
-            "id": 31,
+            "id": 33,
             "name": "Y blocks SC20UU 1",
             "studio": 5,
             "body": 0,
@@ -18516,7 +19555,7 @@
             }
           },
           {
-            "id": 32,
+            "id": 34,
             "name": "Y blocks SC20UU 2",
             "studio": 5,
             "body": 1,
@@ -18535,7 +19574,7 @@
             }
           },
           {
-            "id": 33,
+            "id": 35,
             "name": "Y blocks SC20UU 3",
             "studio": 5,
             "body": 2,
@@ -18554,7 +19593,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 36,
             "name": "Y blocks SC20UU 4",
             "studio": 5,
             "body": 3,
@@ -18573,8 +19612,8 @@
             }
           },
           {
-            "id": 35,
-            "name": "Deck",
+            "id": 37,
+            "name": "Feet 1",
             "studio": 6,
             "body": 0,
             "fixed": true,
@@ -18592,7 +19631,26 @@
             }
           },
           {
-            "id": 36,
+            "id": 38,
+            "name": "Feet 2",
+            "studio": 6,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 39,
             "name": "Posts 1",
             "studio": 7,
             "body": 0,
@@ -18611,7 +19669,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 40,
             "name": "Posts 2",
             "studio": 7,
             "body": 1,
@@ -18630,7 +19688,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 41,
             "name": "X supports SK20 1",
             "studio": 8,
             "body": 0,
@@ -18649,7 +19707,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 42,
             "name": "X supports SK20 2",
             "studio": 8,
             "body": 1,
@@ -18668,9 +19726,66 @@
             }
           },
           {
-            "id": 40,
+            "id": 43,
             "name": "X shafts",
             "studio": 9,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 44,
+            "name": "Tie supports SK20 1",
+            "studio": 10,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 45,
+            "name": "Tie supports SK20 2",
+            "studio": 10,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 46,
+            "name": "Tie shaft",
+            "studio": 11,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -18691,71 +19806,14 @@
       }
     },
     {
-      "id": 41,
+      "id": 47,
       "kind": {
         "type": "assembly",
         "name": "Arm",
         "instances": [
           {
-            "id": 42,
+            "id": 48,
             "name": "X blocks SC20UU 1",
-            "studio": 10,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 43,
-            "name": "X blocks SC20UU 2",
-            "studio": 10,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 44,
-            "name": "Arm frame",
-            "studio": 11,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 45,
-            "name": "Box lid",
             "studio": 12,
             "body": 0,
             "fixed": true,
@@ -18773,8 +19831,27 @@
             }
           },
           {
-            "id": 46,
-            "name": "Head supports SK20 1",
+            "id": 49,
+            "name": "X blocks SC20UU 2",
+            "studio": 12,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 50,
+            "name": "Arm frame",
             "studio": 13,
             "body": 0,
             "fixed": true,
@@ -18792,27 +19869,8 @@
             }
           },
           {
-            "id": 47,
-            "name": "Head supports SK20 2",
-            "studio": 13,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 48,
-            "name": "Head pivot shaft",
+            "id": 51,
+            "name": "Box lid",
             "studio": 14,
             "body": 0,
             "fixed": true,
@@ -18830,8 +19888,8 @@
             }
           },
           {
-            "id": 49,
-            "name": "Collars 1",
+            "id": 52,
+            "name": "Head supports SK20 1",
             "studio": 15,
             "body": 0,
             "fixed": true,
@@ -18849,8 +19907,8 @@
             }
           },
           {
-            "id": 50,
-            "name": "Collars 2",
+            "id": 53,
+            "name": "Head supports SK20 2",
             "studio": 15,
             "body": 1,
             "fixed": true,
@@ -18868,8 +19926,417 @@
             }
           },
           {
-            "id": 51,
+            "id": 54,
+            "name": "Head pivot shaft",
+            "studio": 16,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 55,
+            "name": "Collars 1",
+            "studio": 17,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 56,
+            "name": "Collars 2",
+            "studio": 17,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 57,
             "name": "Sand",
+            "studio": 27,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    },
+    {
+      "id": 58,
+      "kind": {
+        "type": "assembly",
+        "name": "Head",
+        "instances": [
+          {
+            "id": 59,
+            "name": "Head blocks SC20UU 1",
+            "studio": 18,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 60,
+            "name": "Head blocks SC20UU 2",
+            "studio": 18,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 61,
+            "name": "Tilt clamp 1",
+            "studio": 19,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 62,
+            "name": "Tilt clamp 2",
+            "studio": 19,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 63,
+            "name": "Tool support",
+            "studio": 20,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 64,
+            "name": "Tool support webs 1",
+            "studio": 21,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 65,
+            "name": "Tool support webs 2",
+            "studio": 21,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 66,
+            "name": "Tool support webs 3",
+            "studio": 21,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 67,
+            "name": "Clamp bolts",
+            "studio": 22,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 68,
+            "name": "Router",
+            "studio": 23,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 69,
+            "name": "Stylus block 1",
+            "studio": 24,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 70,
+            "name": "Stylus block 2",
+            "studio": 24,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 71,
+            "name": "Stylus block 3",
+            "studio": 24,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 72,
+            "name": "Stylus block 4",
+            "studio": 24,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 73,
+            "name": "Stylus block 5",
+            "studio": 24,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 74,
+            "name": "Stylus block 6",
+            "studio": 24,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 75,
+            "name": "Stylus block 7",
+            "studio": 24,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 76,
+            "name": "Pilot",
             "studio": 25,
             "body": 0,
             "fixed": true,
@@ -18891,365 +20358,13 @@
       }
     },
     {
-      "id": 52,
-      "kind": {
-        "type": "assembly",
-        "name": "Head",
-        "instances": [
-          {
-            "id": 53,
-            "name": "Head blocks SC20UU 1",
-            "studio": 16,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 54,
-            "name": "Head blocks SC20UU 2",
-            "studio": 16,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 55,
-            "name": "Tilt clamp 1",
-            "studio": 17,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 56,
-            "name": "Tilt clamp 2",
-            "studio": 17,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 57,
-            "name": "Tool support",
-            "studio": 18,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 58,
-            "name": "Tool support webs 1",
-            "studio": 19,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 59,
-            "name": "Tool support webs 2",
-            "studio": 19,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 60,
-            "name": "Tool support webs 3",
-            "studio": 19,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 61,
-            "name": "Clamp bolts",
-            "studio": 20,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 62,
-            "name": "Router",
-            "studio": 21,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 63,
-            "name": "Stylus block 1",
-            "studio": 22,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 64,
-            "name": "Stylus block 2",
-            "studio": 22,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 65,
-            "name": "Stylus block 3",
-            "studio": 22,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 66,
-            "name": "Stylus block 4",
-            "studio": 22,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 67,
-            "name": "Stylus block 5",
-            "studio": 22,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 68,
-            "name": "Stylus block 6",
-            "studio": 22,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 69,
-            "name": "Stylus block 7",
-            "studio": 22,
-            "body": 6,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 70,
-            "name": "Pilot",
-            "studio": 23,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          }
-        ],
-        "mates": []
-      }
-    },
-    {
-      "id": 71,
+      "id": 77,
       "kind": {
         "type": "assembly",
         "name": "Duplicator",
         "instances": [
           {
-            "id": 72,
+            "id": 78,
             "name": "Base",
             "studio": 1,
             "body": 0,
@@ -19268,7 +20383,7 @@
             }
           },
           {
-            "id": 73,
+            "id": 79,
             "name": "Battens 1",
             "studio": 2,
             "body": 0,
@@ -19287,7 +20402,7 @@
             }
           },
           {
-            "id": 74,
+            "id": 80,
             "name": "Battens 2",
             "studio": 2,
             "body": 1,
@@ -19306,7 +20421,7 @@
             }
           },
           {
-            "id": 75,
+            "id": 81,
             "name": "Battens 3",
             "studio": 2,
             "body": 2,
@@ -19325,7 +20440,7 @@
             }
           },
           {
-            "id": 76,
+            "id": 82,
             "name": "Y supports SK20 1",
             "studio": 3,
             "body": 0,
@@ -19344,7 +20459,7 @@
             }
           },
           {
-            "id": 77,
+            "id": 83,
             "name": "Y supports SK20 2",
             "studio": 3,
             "body": 1,
@@ -19363,7 +20478,7 @@
             }
           },
           {
-            "id": 78,
+            "id": 84,
             "name": "Y supports SK20 3",
             "studio": 3,
             "body": 2,
@@ -19382,7 +20497,7 @@
             }
           },
           {
-            "id": 79,
+            "id": 85,
             "name": "Y supports SK20 4",
             "studio": 3,
             "body": 3,
@@ -19401,7 +20516,7 @@
             }
           },
           {
-            "id": 80,
+            "id": 86,
             "name": "Y shafts 1",
             "studio": 4,
             "body": 0,
@@ -19420,7 +20535,7 @@
             }
           },
           {
-            "id": 81,
+            "id": 87,
             "name": "Y shafts 2",
             "studio": 4,
             "body": 1,
@@ -19439,84 +20554,8 @@
             }
           },
           {
-            "id": 82,
+            "id": 88,
             "name": "Platforms 1",
-            "studio": 26,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 83,
-            "name": "Platforms 2",
-            "studio": 26,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 84,
-            "name": "Fences 1",
-            "studio": 27,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 85,
-            "name": "Fences 2",
-            "studio": 27,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 86,
-            "name": "Blank",
             "studio": 28,
             "body": 0,
             "fixed": true,
@@ -19534,8 +20573,27 @@
             }
           },
           {
-            "id": 87,
-            "name": "Pattern plate",
+            "id": 89,
+            "name": "Platforms 2",
+            "studio": 28,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 90,
+            "name": "Fences 1",
             "studio": 29,
             "body": 0,
             "fixed": true,
@@ -19553,10 +20611,67 @@
             }
           },
           {
-            "id": 88,
-            "name": "Gantry",
+            "id": 91,
+            "name": "Fences 2",
+            "studio": 29,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 92,
+            "name": "Blank",
             "studio": 30,
             "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 93,
+            "name": "Pattern plate",
+            "studio": 31,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 94,
+            "name": "Gantry",
+            "studio": 32,
+            "body": 0,
             "fixed": false,
             "placement": {
               "position": {
@@ -19572,9 +20687,9 @@
             }
           },
           {
-            "id": 89,
+            "id": 95,
             "name": "Arm",
-            "studio": 41,
+            "studio": 47,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -19591,9 +20706,9 @@
             }
           },
           {
-            "id": 90,
+            "id": 96,
             "name": "Head",
-            "studio": 52,
+            "studio": 58,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -19610,9 +20725,9 @@
             }
           },
           {
-            "id": 91,
+            "id": 97,
             "name": "Stop screw",
-            "studio": 24,
+            "studio": 26,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -19631,11 +20746,11 @@
         ],
         "mates": [
           {
-            "id": 92,
+            "id": 98,
             "name": "Y travel",
             "kind": "slider",
             "a": {
-              "instance": 80,
+              "instance": 86,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -19653,8 +20768,8 @@
               }
             },
             "b": {
-              "instance": 88,
-              "sub": 31,
+              "instance": 94,
+              "sub": 33,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -19676,12 +20791,12 @@
             "flip": true
           },
           {
-            "id": 93,
+            "id": 99,
             "name": "arm",
             "kind": "cylindrical",
             "a": {
-              "instance": 88,
-              "sub": 40,
+              "instance": 94,
+              "sub": 43,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -19699,8 +20814,8 @@
               }
             },
             "b": {
-              "instance": 89,
-              "sub": 42,
+              "instance": 95,
+              "sub": 48,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -19717,17 +20832,17 @@
                 ]
               }
             },
-            "offset": -150.0000000000001,
+            "offset": -149.9999999999999,
             "angle": 0.0,
             "flip": true
           },
           {
-            "id": 94,
+            "id": 100,
             "name": "tilt",
             "kind": "revolute",
             "a": {
-              "instance": 89,
-              "sub": 48,
+              "instance": 95,
+              "sub": 54,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -19745,8 +20860,8 @@
               }
             },
             "b": {
-              "instance": 90,
-              "sub": 53,
+              "instance": 96,
+              "sub": 59,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -19768,12 +20883,12 @@
             "flip": true
           },
           {
-            "id": 95,
+            "id": 101,
             "name": "stop screw",
             "kind": "slider",
             "a": {
-              "instance": 89,
-              "sub": 44,
+              "instance": 95,
+              "sub": 50,
               "face": {
                 "feature": 18,
                 "local": 2,
@@ -19791,7 +20906,7 @@
               }
             },
             "b": {
-              "instance": 91,
+              "instance": 97,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -19808,7 +20923,7 @@
                 ]
               }
             },
-            "offset": -36.386847443191755,
+            "offset": -7.2564700921008125,
             "angle": 0.0,
             "flip": true
           }
@@ -19816,5 +20931,5 @@
       }
     }
   ],
-  "next_id": 96
+  "next_id": 102
 }

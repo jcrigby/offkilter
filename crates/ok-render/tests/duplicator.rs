@@ -229,9 +229,9 @@ fn every_part_of_the_portal_regenerates_closed_and_the_machine_places_every_body
 fn every_part_of_the_arm_regenerates_closed_and_the_machine_places_every_body() {
     every_part_regenerates_closed_and_the_machine_places_every_body_in(
         load_arm(),
-        29,
-        55,
-        &[("Gantry", 10), ("Arm", 10), ("Head", 18)],
+        31,
+        59,
+        &[("Gantry", 14), ("Arm", 10), ("Head", 18)],
     );
 }
 
@@ -894,7 +894,7 @@ fn arm_mates(doc: &mut Document, tab: TabId) -> std::collections::BTreeMap<Strin
     let mut out = std::collections::BTreeMap::new();
     for (id, name, angle, offset) in mates {
         let (part, axis): (&str, fn(Vec3) -> f64) = match name.as_str() {
-            "Y travel" => ("Deck", |v| v.y),
+            "Y travel" => ("Feet 1", |v| v.y),
             "arm" => ("Arm frame", |v| v.x),
             "tilt" => ("Tool support", |v| v.x),
             "stop screw" => ("Stop screw", |v| v.z),
@@ -960,12 +960,12 @@ fn arm_angle_where(
     (lo + hi) / 2.0
 }
 
-/// The arm swings the tools to depth on an arc about the X shaft, 366
+/// The arm swings the tools to depth on an arc about the X shaft, 316
 /// mm behind the head pivot: the last pass (the pilot on the groove's
-/// floor) is 6.4 degrees down, the bit tilted by as much and the tips
-/// 9.8 mm back, the bit and the pilot alike since they are one body;
-/// the stop screw through the bed lands on the deck at the first
-/// pass, 4 mm into the blank, and backs off 3.5 for the last; the X
+/// floor) is 7.1 degrees down, the bit tilted by as much and the tips
+/// 17.6 mm back, the bit and the pilot alike since they are one body;
+/// the stop screw through the bar lands on the tie shaft at the first
+/// pass, 4 mm into the blank, and backs off 3 for the last; the X
 /// and Y travel reach the blank's edges and the reference hole; and
 /// the sand in the tail box balances everything that swings to half a
 /// kilogram nose-down at the tool tips, read off the parts' densities.
@@ -1001,6 +1001,10 @@ fn the_arm_swings_the_tools_to_depth_on_the_woodsmith_arc_and_balances() {
         &group(&r, "Y blocks SC20UU"),
         |v| v.y,
     );
+    // The feet reach past the back blocks to the posts: they meet the
+    // back supports first.
+    let (fm, fp) = travel(&group(&r, "Y supports SK20"), &group(&r, "Feet"), |v| v.y);
+    let (ym, yp) = (ym.min(fm), yp.min(fp));
     println!(
         "X travel -{xm} +{xp} (the bed {} from the posts), Y travel -{ym} +{yp}",
         post_in - bed_hi.x
@@ -1036,11 +1040,11 @@ fn the_arm_swings_the_tools_to_depth_on_the_woodsmith_arc_and_balances() {
     println!(
         "last pass {last:.2} degrees down, the bit tilted {tilt:.2}, the tips {shift:.2} back"
     );
-    assert!((5.5..7.0).contains(&last), "last pass {last}");
+    assert!((6.0..8.0).contains(&last), "last pass {last}");
     assert!((tilt - last).abs() < 1e-6, "the bit tilts with the arm");
-    // Ahead of the pivot by 480 they come in 480 (1 - cos), and 115
-    // below it they swing back 115 sin: both back, 15.7 together.
-    assert!((14.0..18.0).contains(&shift), "the tips move back {shift}");
+    // Ahead of the pivot by 430 they come in 430 (1 - cos), and 115
+    // below it they swing back 115 sin: both back, 17.6 together.
+    assert!((15.0..20.0).contains(&shift), "the tips move back {shift}");
     // The pilot is the same rigid body as the bit: the same transform.
     let j = r_last
         .bodies
@@ -1048,8 +1052,8 @@ fn the_arm_swings_the_tools_to_depth_on_the_woodsmith_arc_and_balances() {
         .position(|b| member(&b.name) == "Pilot")
         .unwrap();
     assert_eq!(r_last.placed[i], r_last.placed[j]);
-    // The stop screw as drawn lands on the deck at the first pass, 4 mm in.
-    let deck_top = bounds(body(&r, "Deck")).1.z;
+    // The stop screw as drawn lands on the tie shaft at the first pass, 4 mm in.
+    let deck_top = bounds(body(&r, "Tie shaft")).1.z;
     let landing = arm_angle_where(&mut doc, machine, &mates, &[], |r| {
         bounds(body(r, "Stop screw")).0.z - deck_top
     });
@@ -1062,10 +1066,10 @@ fn the_arm_swings_the_tools_to_depth_on_the_woodsmith_arc_and_balances() {
     let depth = blank_hi.z - bounds(body(&r_first, "Router")).0.z;
     println!("the screw lands at {landing:.2} degrees, the bit {depth:.2} into the blank");
     // The screw is tilted with the arm, so the rim of its flat tip lands
-    // 0.4 mm before its axis would, which is 0.8 at the tools; the
-    // operator sets the screw by trial anyway.
-    assert!((depth - 4.0).abs() < 1.0, "first pass {depth}");
-    // For the last pass it has to back off: how far its tip would be in the deck.
+    // 0.4 mm before its axis would, which is 1.2 at the tools, 2.9
+    // times further out; the operator sets the screw by trial anyway.
+    assert!((depth - 4.0).abs() < 1.5, "first pass {depth}");
+    // For the last pass it has to back off: how far its tip would be in the shaft.
     let into_deck = deck_top - bounds(body(&r_last, "Stop screw")).0.z;
     println!("backed off {into_deck:.2} for the last pass");
     assert!((2.0..6.0).contains(&into_deck), "back off {into_deck}");
@@ -1094,7 +1098,7 @@ fn the_arm_swings_the_tools_to_depth_on_the_woodsmith_arc_and_balances() {
         mass / 1000.0
     );
     assert!((450.0..550.0).contains(&at_tips), "{at_tips} g at the tips");
-    assert!(mass > 15_000.0 && mass < 22_000.0, "{mass} g");
+    assert!(mass > 12_000.0 && mass < 20_000.0, "{mass} g");
 }
 
 /// The arm swept over the work as the other variants are: the bit at
@@ -1117,7 +1121,7 @@ fn the_arm_clears_itself_over_the_work_and_at_full_tilt() {
     );
     let (blank_lo, blank_hi) = bounds(body(&r, "Blank"));
     let (plate_lo, plate_hi) = bounds(body(&r, "Pattern plate"));
-    let deck_top = bounds(body(&r, "Deck")).1.z;
+    let deck_top = bounds(body(&r, "Tie shaft")).1.z;
     let xs = [blank_lo.x - bit.x, 0.0, blank_hi.x - bit.x];
     let (y0, y1) = (
         (plate_lo.y + 5.0 - bit.y).min(blank_lo.y - bit.y),

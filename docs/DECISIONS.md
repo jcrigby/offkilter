@@ -1028,7 +1028,18 @@ ladder. Two arms on edge, 19 x 100, with a saddle across the blocks,
 a crossbar the width of the head's supports, a stop bar and the box
 floor carry the head with a twentieth of the bending at a third of
 the weight, and the swinging mass went from 13.2 kg to 10.6 before
-the sand. Every part carries a density now, so the sand
+the sand. The owner still saw more ply than the original, and the
+rest of it was the deck, 4.3 kg of sheet the Woodsmith does without:
+its two short carriages are tied by nothing but the main rail. So
+the arm's gantry is a foot on each rail's blocks with the post on
+it, the main shaft the tie between them, and the fourth 1000 mm
+shaft, uncut, across the feet's fronts as a second tie: a 20 mm
+shaft in two clamped SK20s resists one foot running ahead of the
+other by bending, 190 N/mm, which the few newtons of cutting force
+do not trouble, and the screw lands on the shaft instead of a deck,
+40 below the arm instead of 100. The pivot moved 50 forward to keep
+the feet short enough for the Y travel, which costs 0.7 degrees
+more tilt at the last pass. Every part carries a density now, so the sand
 is sized in the script from the document and the test reads the
 same balance back. Found by the tests: the tips swing back 15.7 mm
 from raised to the last pass (480 (1 − cos) ahead of the pivot and

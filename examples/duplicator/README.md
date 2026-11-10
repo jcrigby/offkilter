@@ -220,13 +220,19 @@ The Woodsmith machine has no Z slide. Its long carriage rolls about
 its round main rail, the arms reach forward from it to the tools, and
 depth is the arc: push the handles down and the tools swing. The owner
 wanted that machine on the rail hardware already bought, with one
-change, a swivel on the head. This variant is it. The gantry keeps the
-deck on the four Y blocks (380 deep now, the front blocks 20 further
-back) and loses the wall: a post at each back corner, a ply standing
-on the deck with a gusset on its outer edge running forward, carries
-one SK20 on its front face, and the one X shaft between them, at
-y = 200 and z = 186, is the main pivot. Nothing stands between the
-posts behind the shaft, so the arm's tail swings through. The arm
+change, a swivel on the head. This variant is it. The gantry is the
+Woodsmith's: no deck. A foot of one ply sits on each rail's two blocks
+(the portal's foot, 70 wide and 295 long), a post stands on its back,
+one ply reaching in from the foot to the shaft's end with a gusset
+on its outer edge running forward along the foot, and the one X shaft
+between the posts' SK20s, at y = 150 and z = 186, is the main pivot
+and the tie between the two feet, as the main rail is the tie between
+the Woodsmith's two short carriages. The fourth 1000 mm shaft, left
+whole, lies across the feet's front ends in two more SK20s: the
+second tie, and what the stop screw lands on, so the screw stands 40
+below the arm instead of the 100 the base would want. Nothing stands
+between the posts behind the shaft, so the arm's tail swings through.
+The arm
 frame rides the shaft on two SC20UU blocks 300 apart, bases up: a
 ball bushing is as free about its shaft as along it, so the two blocks
 are the X slide and the depth pivot in one, with nothing to add. The
@@ -252,38 +258,39 @@ and its place along the shaft (a set-screw collar each side of the
 blocks keeps that place when it is loose). The stop screw is M8
 through the bed 200 mm ahead of the pivot, landing on the deck.
 
-The arc. The tool tips hang 115 below the pivot's height and 480
-ahead of it. Pushing the nose down 5.3 degrees puts the bit 4 mm into
-the blank, where the screw lands; 6.4 puts the pilot on the groove's
-floor, the screw backed off 3.5 (three turns). The bit tilts by the
-same angle, and the tips move back 15.7 mm from the raised pose, 480
-(1 − cos) for being ahead of the pivot and 115 sin for hanging below
-it, both the same for the bit and the pilot, since they are one rigid
-head: the copy stays faithful, as the Woodsmith's does, because the
-offset from pilot to bit is parallel to the pivot axis and the arc
-moves both alike. What the swivel adds is the choice: with the clamp
-set so the tools are plumb at the working depth, the walls of a 12.5
-deep cut lean 0.2 mm over their height instead of 1.4; and clamped at
-20 degrees either way the bit undercuts, which no vertical slide does.
-A tilt moves the tips too, since they hang ahead of the head pivot:
-46 mm down at 20 degrees tips back, 32 up at 20 forward, which the arm
-takes up at 5.5 degrees nose up and 3.5 nose down (`motion_tilt.pdf`).
+The arc. The tool tips hang 115 below the pivot's height and 430
+ahead of it. Pushing the nose down 6.0 degrees puts the bit 4 mm into
+the blank, where the screw lands; 7.1 puts the pilot on the groove's
+floor, the screw backed off 3 (two and a half turns). The bit tilts
+by the same angle, and the tips move back 17.6 mm from the raised
+pose, 430 (1 − cos) for being ahead of the pivot and 115 sin for
+hanging below it, both the same for the bit and the pilot, since they
+are one rigid head: the copy stays faithful, as the Woodsmith's does,
+because the offset from pilot to bit is parallel to the pivot axis
+and the arc moves both alike. What the swivel adds is the choice:
+with the clamp set so the tools are plumb at the working depth, the
+walls of a 12.5 deep cut lean 0.3 mm over their height instead of
+1.6; and clamped at 20 degrees either way the bit undercuts, which no
+vertical slide does. A tilt moves the tips too, since they hang ahead
+of the head pivot: 46 mm down at 20 degrees tips back, 32 up at 20
+forward, which the arm takes up at 5 degrees nose up and 4 nose down
+(`motion_tilt.pdf`).
 
 ![Depth on the arc](out/arm/motion_z.png)
 
 ![The head tilted on its pivot](out/arm/motion_tilt.png)
 
-The balance. Everything that swings weighs 10.6 kg without the sand
-(the head 4, the hardware on the arm 1.5, the ply 5) and is 3.8 kg
+The balance. Everything that swings weighs 10.5 kg without the sand
+(the head 4, the hardware on the arm 1.5, the ply 5) and is 3.4 kg
 nose-heavy at the tool tips. The box is the Woodsmith's sand-filled
-pipe: 5.3 kg of dry sand 79 mm deep (the box holds 6.8) brings the
+pipe: 4.3 kg of dry sand 63 mm deep (the box holds 6.8) brings the
 nose down to half a
 kilogram, read in `build.py` from every part's volume and density
 (ply 0.65, the blocks and supports aluminium, the shafts steel, the
 Colt 1.5 kg) and set on the parts, so the test reads the same balance
 off the document. Lead shot does it in a quarter of the depth. The
-whole 16 kg rides the one X shaft between supports 740 apart, which
-sags about 0.8 mm at the middle of the travel and nothing at the ends;
+whole 14.8 kg rides the one X shaft between supports 740 apart, which
+sags about 0.7 mm at the middle of the travel and nothing at the ends;
 both tools go down with it, so the copy does not see it. The rails
 sit at ±425, 10 further out than the gantry's, because the router
 clamp's knob, 44 mm ahead of the tools, swings 5 mm lower on the arc
@@ -292,24 +299,28 @@ last pass; the base is 940 wide for it.
 
 | | gantry | arm |
 |---|---|---|
-| depth | Z slide, 62.5 of travel on two 250 shafts | the arc about the X shaft: 6.4 degrees for the last pass |
+| depth | Z slide, 62.5 of travel on two 250 shafts | the arc about the X shaft: 7.1 degrees for the last pass |
 | the bit at the last pass | plumb | tilted with the arm, or plumb or 20 degrees over with the head clamped so |
-| the tips, raised to the last pass | straight down | 15.7 back on the arc, bit and pilot alike |
+| the tips, raised to the last pass | straight down | 17.6 back on the arc, bit and pilot alike |
 | X travel | ±277.5 | ±185 (the bed 10 clear of the posts at the blocks' limit) |
-| base | 900 x 855 | 940 x 855; the tail reaches 620 behind the tools' line at mid travel, over the bench |
-| counterweight | a spring balancer on the Z slide | 5.3 kg of sand in the tail box, 79 mm deep |
-| SK20 / SC20UU used | 12 / 12 | 8 / 8: Y 4 / 4, main pivot 2 / 2, head 2 / 2 |
-| shafts | all four 1000s cut | three cut: 700 + 300 twice, 760 + 240; the fourth whole, a 300 and the 240 spare |
+| gantry | a deck 890 x 300 on the four blocks, a wall, two gussets | a foot on each rail's blocks with a post on it; no deck, the two shafts the ties |
+| Y travel | ±192.5 | +210 −155 (the feet reach back to the posts) |
+| base | 900 x 855 | 940 x 855; the tail reaches 570 behind the tools' line at mid travel, over the bench |
+| counterweight | a spring balancer on the Z slide | 4.3 kg of sand in the tail box, 63 mm deep |
+| SK20 / SC20UU used | 12 / 12 | 10 / 8: Y 4 / 4, main pivot 2 / 2, tie 2, head 2 / 2 |
+| shafts | all four 1000s cut | three cut: 700 + 300 twice, 760 + 240; the fourth whole as the tie, a 300 and the 240 spare |
 
-The test regenerates the arm's 29 studios and places its 55 bodies;
-reads the X travel off the supports, the blocks, the bed and the posts
-and the Y travel off the Y supports and blocks, against the blank and
-the reference hole; finds the last pass by bisection on the kernel
-(the arm swung until the bit's tip is 12.5 below the plate's top) and
-checks the bit's axis is tilted by that angle and the tips moved back
-14 to 18; finds where the screw as drawn lands on the deck and checks
-the bit is then 4 mm into the blank within a millimetre (the tilted
-screw's flat tip lands on its rim, 0.4 early), and that it backs off
+The test regenerates the arm's 31 studios and places its 59 bodies;
+reads the X travel off the supports, the blocks, the saddle and the
+posts and the Y travel off the Y supports, the blocks and the feet,
+against the blank and the reference hole; finds the last pass by
+bisection on the kernel (the arm swung until the bit's tip is 12.5
+below the plate's top) and checks the bit's axis is tilted by that
+angle and the tips moved back 15 to 20; finds where the screw as
+drawn lands on the tie shaft and checks
+the bit is then 4 mm into the blank within a millimetre and a half
+(the tilted screw's flat tip lands on its rim, 0.4 early at the
+screw and 1.2 at the tools, 2.9 times further out), and that it backs off
 2 to 6 for the last pass; sums the mass and the moment of every body
 of the Arm, the Head and the stop screw about the X shaft's axis from
 their densities and checks the nose is 450 to 550 g heavy at the tool

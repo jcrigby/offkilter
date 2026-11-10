@@ -177,35 +177,38 @@ if PORTAL:
 # edge, a saddle across the blocks' bases under them, a crossbar
 # across their front ends, and a sand box between them at the tail,
 # behind the pivot, that balances the head to half a kilogram
-# nose-down, the way the Woodsmith's sand-filled pipe does. The head is the same tool plate,
-# support plate and webs, hung on two more blocks on a 300 mm shaft (a
-# Z offcut) in two SK20s on the crossbar's front face: a second pivot,
-# free to swing and locked by a split clamp on the shaft (three plies
-# bolted to the support plate's back, a knob bolt across its slit), so
-# the tools are set plumb at the working depth, or leaned over for an
-# undercut, where the Woodsmith's tools tilt with its arm. The depth
-# stop is the M8 screw through the bed ahead of the pivot, landing on
-# the deck. Depth comes from the arc: with the head pivot 366 behind
-# the tools' pivot... see the README for the numbers the test checks.
-# The front Y blocks move 20 mm back so the deck's front edge stays
-# behind the crossbar's swing, and the deck runs to y = 300 to carry
-# the posts.
+# nose-down, the way the Woodsmith's sand-filled pipe does. The head
+# is the same tool plate, support plate and webs, hung on two more
+# blocks on a 300 mm shaft (a Z offcut) in two SK20s on the crossbar's
+# front face: a second pivot, free to swing and locked by a split
+# clamp on the shaft (three plies bolted to the support plate's back,
+# a knob bolt across its slit), so the tools are set plumb at the
+# working depth, or leaned over for an undercut, where the Woodsmith's
+# tools tilt with its arm. The gantry is the Woodsmith's too: a foot
+# on each rail's blocks with a post on it, tied by the main shaft at
+# the posts' tops and by the fourth 1000 mm shaft, whole, across the
+# feet's fronts, which is also what the stop screw, M8 through a bar
+# under the arms, lands on. No deck. See the README for the numbers
+# the test checks.
 # ---------------------------------------------------------------------
 ARM = "--arm" in sys.argv
 if ARM:
     OUT = os.path.join(HERE, "out", "arm")
-    Y_BLOCK_Y = (-50.0, 180.0)                          # the front blocks 20 back: the deck's front edge behind the crossbar at any swing
-    Y_RAIL_X, DECK_X = 425.0, 455.0                     # the rails out 10 a side: the router clamp's knob swings 5 lower than the Z slide took it, over the front Y supports
+    Y_BLOCK_Y = (-50.0, 180.0)                          # the front blocks 20 back, the feet's front ends behind the crossbar at any swing
+    Y_RAIL_X = 425.0                                    # the rails out 10 a side: the router clamp's knob swings 5 lower than the Z slide took it, over the front Y supports
     BASE = dict(x=(-470.0, 470.0), y=(-430.0, 425.0), z=(-PLY, 0.0))
-    DECK_FRONT, DECK_BACK = -80.0, 300.0                # 380 deep, to carry the posts at its back
-    DECK_TOP = Y_BED_Z + PLY                            # 114: the stop screw lands here
-    PIV_Y, PIV_Z = 200.0, 186.0                         # the main pivot: the one X shaft, level with the head pivot at the drawn pose
+    PIV_Y, PIV_Z = 150.0, 186.0                         # the main pivot: the one X shaft, level with the head pivot at the drawn pose
     X_AXIS_Z = (PIV_Z,)
     X_SHAFT_Y = PIV_Y
-    POST_FACE_Y = PIV_Y + SK_H                          # 251: the posts' front faces, the SK20s on them
-    POST_X = (360.0, 399.0)                             # each post, 39 wide: the SK20 on its inner 20, the gusset on its outer 19
+    POST_FACE_Y = PIV_Y + SK_H                          # 201: the posts' front faces, the SK20s on them
+    FOOT_X = (Y_RAIL_X - 25.0, Y_RAIL_X + 45.0)         # a foot each side over its rail's two blocks, 70 wide, as the portal's
+    FOOT_Y = (Y_BLOCK_Y[0] - 25.0, POST_FACE_Y + PLY)   # -75 to 220: from ahead of the front block to the post's back
+    POST_X = (360.0, FOOT_X[1])                         # each post, 110 wide: on the foot, reaching in to the SK20 at the shaft's end, the gusset on its outer 19
     POST_TOP = PIV_Z + 64.0                             # 250
-    GUSSET_REACH = 120.0                                # the gusset runs this far ahead of the post along the deck, outboard of the shaft's end
+    GUSSET_REACH = 120.0                                # the gusset runs this far ahead of the post along the foot
+    TIE_X, TIE_Y = 435.0, 0.0                           # the tie: the fourth 1000 shaft whole, in SK20s standing on the feet, ties them and is what the stop screw lands on
+    TIE_Z = Y_BED_Z + PLY + SK_H                        # 146
+    LAND_Z = TIE_Z + SHAFT_D / 2                        # 156: the screw's landing
     ARM_BLOCK_X = 150.0                                 # the arm's blocks on the X shaft, 300 apart, bases up under the saddle
     BED_X = 175.0                                       # the saddle's half width, over the blocks
     BED_Z = (PIV_Z + BLK_C, PIV_Z + BLK_C + PLY)        # 211 to 230: the saddle, the stop bar and the box floor, all under the arms
@@ -232,8 +235,8 @@ if ARM:
     MOVING = ["X blocks SC20UU", "Arm frame", "Box lid", "Head supports SK20", "Head pivot shaft", "Collars",
               "Head blocks SC20UU", "Tilt clamp", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Stylus block", "Pilot", "Stop screw"]
     DENSITY = {"ply": 0.65, "steel": 7.85, "aluminium": 2.7, "sand": SAND_DENSITY}
-    MATERIAL = {"Base": "ply", "Battens": "ply", "Y supports SK20": "aluminium", "Y shafts": "steel", "Y blocks SC20UU": "aluminium", "Deck": "ply", "Posts": "ply",
-                "X supports SK20": "aluminium", "X shafts": "steel", "X blocks SC20UU": "aluminium", "Arm frame": "ply", "Box lid": "ply", "Head supports SK20": "aluminium",
+    MATERIAL = {"Base": "ply", "Battens": "ply", "Y supports SK20": "aluminium", "Y shafts": "steel", "Y blocks SC20UU": "aluminium", "Feet": "ply", "Posts": "ply",
+                "X supports SK20": "aluminium", "X shafts": "steel", "Tie supports SK20": "aluminium", "Tie shaft": "steel", "X blocks SC20UU": "aluminium", "Arm frame": "ply", "Box lid": "ply", "Head supports SK20": "aluminium",
                 "Head pivot shaft": "steel", "Collars": "steel", "Sand": "sand", "Head blocks SC20UU": "aluminium", "Tilt clamp": "ply", "Tool support": "ply", "Tool support webs": "ply",
                 "Clamp bolts": "steel", "Stylus block": "ply", "Pilot": "steel", "Stop screw": "steel", "Platforms": "ply", "Fences": "ply", "Blank": "ply", "Pattern plate": "ply"}
 
@@ -255,10 +258,10 @@ def arm_angle(drop):
 
 
 def stop_protrusion(angle):
-    """How far the stop screw's tip stands below the bed when it lands on
-    the deck with the arm `angle` degrees nose-down."""
+    """How far the stop screw's tip stands below the bar when it lands on
+    the tie shaft with the arm `angle` degrees nose-down."""
     t = math.radians(angle)
-    return (BED_Z[0] - PIV_Z) - ((DECK_TOP - PIV_Z) - (STOP_Y - PIV_Y) * math.sin(t)) / math.cos(t)
+    return (BED_Z[0] - PIV_Z) - ((LAND_Z - PIV_Z) - (STOP_Y - PIV_Y) * math.sin(t)) / math.cos(t)
 
 
 if ARM:
@@ -675,12 +678,36 @@ def pattern(p):
 # ---------------------------------------------------------------------
 # The arm variant's parts.
 # ---------------------------------------------------------------------
+def feet(p):
+    """A foot each side, one ply on its rail's two blocks, from ahead of
+    the front block to the post's back: the Woodsmith's short carriage.
+    The two are tied only by the shafts, the main one at the posts'
+    tops and the tie across their front ends."""
+    for sgn in (-1.0, 1.0):
+        box(p, "foot, ply", sorted((sgn * FOOT_X[0], sgn * FOOT_X[1])), (YC + FOOT_Y[0], YC + FOOT_Y[1]), (Y_BED_Z, Y_BED_Z + PLY), op="new")
+
+
+def tie_supports(p):
+    """Two SK20s standing on the feet, shaft along x."""
+    for i, sx in enumerate((-TIE_X, TIE_X)):
+        box(p, "base", (sx - SK_T / 2, sx + SK_T / 2), (TIE_Y - SK_W / 2, TIE_Y + SK_W / 2), (Y_BED_Z + PLY, Y_BED_Z + PLY + 12.0), op="new" if i == 0 else "add")
+        box(p, "body", (sx - SK_T / 2, sx + SK_T / 2), (TIE_Y - 16.0, TIE_Y + 16.0), (Y_BED_Z + PLY, Y_BED_Z + PLY + SK_HTOT), op="add")
+    for sx in (-TIE_X, TIE_X):
+        s = p.sketch("right", sx - SK_T / 2 - 1.0, "bore")
+        p.point(s, (TIE_Y, TIE_Z))
+        p.hole(s, SHAFT_D, depth=SK_T + 2.0, direction="normal", name="shaft bore")
+
+
+def tie_shaft(p):
+    xcyl(p, "20 mm shaft, tie, 1000 (uncut)", -500.0, 500.0, TIE_Y, TIE_Z, SHAFT_D)
+
+
 def posts(p):
-    """A post each side at the deck's back, one ply in the plane of the
-    wall, the X shaft's SK20 on its front face, and a gusset on its
-    outer edge running forward along the deck, outboard of the shaft's
-    end, so nothing stands between the posts behind the shaft and the
-    arm's tail swings through."""
+    """A post on the back of each foot, one ply in the plane of the
+    wall, reaching in from the foot to the X shaft's end with the SK20
+    on its front face there, and a gusset on its outer edge running
+    forward along the foot. Nothing stands between the posts behind
+    the shaft, so the arm's tail swings through."""
     for i, sgn in enumerate((-1.0, 1.0)):
         px = sorted((sgn * POST_X[0], sgn * POST_X[1]))
         gx = sorted((sgn * (POST_X[1] - PLY), sgn * POST_X[1]))
@@ -867,8 +894,8 @@ MATES = [
 ]
 if ARM:
     PARTS = [
-        ("Base", base), ("Battens", battens), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Deck", deck), ("Posts", posts),
-        ("X supports SK20", x_supports), ("X shafts", x_shafts),
+        ("Base", base), ("Battens", battens), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Feet", feet), ("Posts", posts),
+        ("X supports SK20", x_supports), ("X shafts", x_shafts), ("Tie supports SK20", tie_supports), ("Tie shaft", tie_shaft),
         ("X blocks SC20UU", arm_blocks), ("Arm frame", arm_frame), ("Box lid", box_lid), ("Head supports SK20", head_supports), ("Head pivot shaft", head_shaft), ("Collars", collars),
         ("Head blocks SC20UU", head_blocks), ("Tilt clamp", tilt_clamp), ("Tool support", tool_support), ("Tool support webs", tool_support_webs), ("Clamp bolts", clamp_bolts),
         ("Router", router), ("Stylus block", stylus_block), ("Pilot", pilot), ("Stop screw", arm_stop_screw), ("Sand", sand),
@@ -877,8 +904,8 @@ if ARM:
     # The gantry carries the main pivot; the arm swings and slides on
     # it; the head swings on the arm. The stop screw rides in the bed.
     MOTION = [
-        ("gantry", "Gantry", ["Y blocks SC20UU", "Deck", "Posts", "X supports SK20", "X shafts"],
-         f"deck {2 * DECK_X:.0f} x {DECK_BACK - DECK_FRONT:.0f}, one ply, on the four Y blocks; a post each side at its back, a gusset outboard; one X shaft 760 at z = {PIV_Z:.0f}, the main pivot, SK20s 740 apart"),
+        ("gantry", "Gantry", ["Y blocks SC20UU", "Feet", "Posts", "X supports SK20", "X shafts", "Tie supports SK20", "Tie shaft"],
+         f"a foot on each rail's two blocks with a post on its back, a gusset outboard; one X shaft 760 at z = {PIV_Z:.0f} between the posts, the main pivot, SK20s 740 apart; the 1000 shaft whole across the feet's fronts, the tie and the stop screw's landing"),
         ("arm", "Arm", ["X blocks SC20UU", "Arm frame", "Box lid", "Head supports SK20", "Head pivot shaft", "Collars", "Sand"],
          f"a ladder of ply, {BED_Y[1] - CROSS_Y[0]:.0f} long: two arms 19 x {ARM_H:.0f} on edge, a saddle on two SC20UU {2 * ARM_BLOCK_X:.0f} apart on the X shaft, the crossbar with the head's SK20s, the stop bar, the sand box at the tail; the head pivot shaft 300, {ARM_R:.0f} ahead of the main one"),
         ("head", "Head", ["Head blocks SC20UU", "Tilt clamp", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Stylus block", "Pilot"],
@@ -948,17 +975,18 @@ if ARM:
     HARDWARE = [
         ("4 Y SK20 supports on the base", "M6 x 40 hex bolt, washer, four-prong T-nut from the far face, prongs piloted, epoxied", 8),
         ("2 X SK20 supports on the posts' front faces, the main pivot", "M6 x 40 hex bolt, washer, T-nut from the post's back", 4),
+        ("2 tie SK20 supports on the feet", "M6 x 40 hex bolt, washer, T-nut from under the foot", 4),
         ("2 head SK20 supports on the crossbar's front face", "M6 x 40 hex bolt, washer, T-nut from the crossbar's back", 4),
-        ("4 Y blocks under the deck, from above", "M5 x 30 (or M6, as the block is tapped) into the block", 16),
-        ("2 arm blocks under the bed, from above", "M5 x 30 (or M6) into the block", 8),
+        ("4 Y blocks under the feet, from above", "M5 x 30 (or M6, as the block is tapped) into the block", 16),
+        ("2 arm blocks under the saddle, from above", "M5 x 30 (or M6) into the block", 8),
         ("2 head blocks on the support plate's back, from its front face, before the tool plate goes on", "M5 x 30 (or M6) into the block", 8),
         ("Shaft collars either side of the head's blocks, snug", "20 mm bore set-screw collar, 32 x 12", 2),
         ("Tilt clamp to the support plate's back, from the plate's front face", "no. 8 x 50 wood screw, glued", 4),
         ("Tilt clamp's knob bolt, down through it behind the shaft, across the slit", "M6 x 80 knob bolt through an M6 T-nut in the clamp's underside", 1),
-        ("Stop screw", "M8 x 130 with a knob, through an M8 T-nut set into the bed's top, an M8 jam nut above the bed", 1),
+        ("Stop screw", "M8 x 90 with a knob, through an M8 T-nut set into the stop bar's top, an M8 jam nut above the bar", 1),
     ] + [(j, f, n) for j, f, n in HARDWARE if j.startswith(KEEP)] + [
-        ("Posts to the deck, from below through the deck", "no. 8 x 50 wood screw, glued", 6),
-        ("Gussets to the posts' outer edges and down into the deck", "no. 8 x 50 wood screw, 3 each way, glued", 12),
+        ("Posts to the feet, from below through the foot", "no. 8 x 50 wood screw, glued", 6),
+        ("Gussets to the posts' outer edges and down into the feet", "no. 8 x 50 wood screw, 3 each way, glued", 12),
         ("Arms onto the saddle, the stop bar and the box floor, from below", "no. 8 x 50 wood screw, 3 each per arm, glued", 18),
         ("Crossbar to the arms' front ends", "no. 8 x 50 wood screw, 3 each, glued", 6),
         ("Sand box walls to the floor and the arms", "no. 8 x 50 wood screw, 2 each way, glued", 12),
