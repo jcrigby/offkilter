@@ -1019,8 +1019,16 @@ drawn pose, 366 mm back, on posts at the deck's back corners with
 nothing between them, so the tail swings through; the counterweight
 is a box of sand between the arms at the tail, the Woodsmith's
 sand-filled pipe, because the four spare shafts across the tail
-weigh 3.8 kg and the balance wants 5.6 at that lever, and sand is
-trimmed by the scoop. Every part carries a density now, so the sand
+weigh 3.8 kg and the balance wants 5.3 at that lever, and sand is
+trimmed by the scoop. The frame was first drawn as a channel, a
+full-width bed the whole length with the arms on it and a crossbar as
+wide, and the owner saw at once that it was more wood than the
+Woodsmith's two tubes; it was 9 kg of ply where the loads want a
+ladder. Two arms on edge, 19 x 100, with a saddle across the blocks,
+a crossbar the width of the head's supports, a stop bar and the box
+floor carry the head with a twentieth of the bending at a third of
+the weight, and the swinging mass went from 13.2 kg to 10.6 before
+the sand. Every part carries a density now, so the sand
 is sized in the script from the document and the test reads the
 same balance back. Found by the tests: the tips swing back 15.7 mm
 from raised to the last pass (480 (1 − cos) ahead of the pivot and

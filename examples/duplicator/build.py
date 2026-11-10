@@ -173,11 +173,11 @@ if PORTAL:
 # on two posts at the back of the deck is the main pivot; the arm frame
 # rides it on two SC20UU blocks, which slide for X and turn for depth,
 # since a ball bushing is as free about its shaft as along it. The
-# frame is a channel of ply: a bed on the blocks' bases, an arm on edge
-# along each side of the bed's top, a crossbar across the front, and a
-# sand box between the arms at the tail, behind the pivot, that
-# balances the head to half a kilogram nose-down, the way the
-# Woodsmith's sand-filled pipe does. The head is the same tool plate,
+# frame is a ladder of ply, the Woodsmith's two tubes: two arms on
+# edge, a saddle across the blocks' bases under them, a crossbar
+# across their front ends, and a sand box between them at the tail,
+# behind the pivot, that balances the head to half a kilogram
+# nose-down, the way the Woodsmith's sand-filled pipe does. The head is the same tool plate,
 # support plate and webs, hung on two more blocks on a 300 mm shaft (a
 # Z offcut) in two SK20s on the crossbar's front face: a second pivot,
 # free to swing and locked by a split clamp on the shaft (three plies
@@ -206,18 +206,21 @@ if ARM:
     POST_X = (360.0, 399.0)                             # each post, 39 wide: the SK20 on its inner 20, the gusset on its outer 19
     POST_TOP = PIV_Z + 64.0                             # 250
     GUSSET_REACH = 120.0                                # the gusset runs this far ahead of the post along the deck, outboard of the shaft's end
-    ARM_BLOCK_X = 150.0                                 # the arm's blocks on the X shaft, 300 apart, bases up under the bed
-    BED_X = 175.0                                       # the bed's half width, over the blocks
-    BED_Z = (PIV_Z + BLK_C, PIV_Z + BLK_C + PLY)        # 211 to 230
-    ARM_X, ARM_H = (100.0, 119.0), 120.0                # the arms on edge on the bed's top, inside the blocks; their height is the sand box's depth
+    ARM_BLOCK_X = 150.0                                 # the arm's blocks on the X shaft, 300 apart, bases up under the saddle
+    BED_X = 175.0                                       # the saddle's half width, over the blocks
+    BED_Z = (PIV_Z + BLK_C, PIV_Z + BLK_C + PLY)        # 211 to 230: the saddle, the stop bar and the box floor, all under the arms
+    SADDLE_Y = (PIV_Y - 60.0, PIV_Y + 60.0)             # the one plate across both blocks
+    ARM_X, ARM_H = (100.0, 119.0), 100.0                # the two arms on edge, the Woodsmith's two tubes: 19 x 100, inside the blocks; the sand box's depth
+    CROSS_X = 120.0                                     # the crossbar's half width: the head's SK20s and the arms' ends
+    STOP_BAR_Y = (-30.0, 30.0)                          # a bar under the arms, 200 ahead of the pivot, for the stop screw
     HP_Y, HP_Z = SUPPORT_Y[1] + BLK_C, ZC               # -166, 186: the head pivot, on blocks on the support plate's back
     HEAD_BLOCK_X, HEAD_SK_X = 52.5, 100.0               # the head's blocks and the SK20s they sit between
     COLLAR_D, COLLAR_W, COLLAR_X = 32.0, 12.0, 75.5     # a shaft collar each side of the head, snug to its blocks
     CROSS_Y = (HP_Y + SK_H, HP_Y + SK_H + PLY)          # -115 to -96: the crossbar, the head's SK20s on its front face
-    CROSS_Z = (HP_Z - 34.0, BED_Z[1] + ARM_H)           # 152 to 330, the arms' and the box's height, 4 below the SK20s' bases
-    TAIL = 420.0                                        # the bed behind the pivot: the sand box's lever
-    BED_Y = (CROSS_Y[1], PIV_Y + TAIL)                  # -96 to 620
-    BOX_L, LID_T = 250.0, PLY                           # the sand box at the tail, between the arms
+    CROSS_Z = (HP_Z - 36.0, BED_Z[1] + ARM_H)           # 150 to 330: from 6 below the SK20s' bases to the arms' top
+    TAIL = 420.0                                        # the arms behind the pivot: the sand box's lever
+    BED_Y = (CROSS_Y[1], PIV_Y + TAIL)                  # -96 to 620: the arms' length
+    BOX_L, LID_T = 250.0, PLY                           # the sand box at the tail, between the arms, on its own floor under them
     BOX_Y = (BED_Y[1] - BOX_L, BED_Y[1])
     SAND_DENSITY, NOSE_DOWN = 1.6, 500.0                # dry sand, g/cm3; the balance the sand is sized for, grams at the tool tips
     CLAMP_W, CLAMP_T, CLAMP_H = 50.0, 3 * PLY, 60.0     # the tilt clamp: three plies round the head shaft, between the head's blocks
@@ -699,15 +702,20 @@ def arm_blocks(p):
 
 
 def arm_frame(p):
-    """The channel: the bed on the blocks, from the crossbar to the tail,
-    an arm on edge along each side of its top, the crossbar across the
-    front from below the head's SK20s to the arms' top, and the sand
-    box's two walls between the arms at the tail; the M8 hole for the
-    stop screw ahead of the pivot."""
-    box(p, "bed, ply", (-BED_X, BED_X), BED_Y, BED_Z)
-    box(p, "crossbar, ply", (-BED_X, BED_X), CROSS_Y, CROSS_Z, op="add")
+    """The ladder, the Woodsmith's two tubes in ply: two arms on edge,
+    19 x 80, from the crossbar to the tail; a saddle across both blocks
+    under them at the pivot; the crossbar across their front ends,
+    from below the head's SK20s to their top; a bar under them 200
+    ahead of the pivot with the M8 hole for the stop screw; and the
+    sand box at the tail, a floor under the arms and two walls between
+    them. On edge the arms carry the head with a twentieth of the
+    bending a flat bed would, at a third of its weight."""
+    box(p, "saddle, ply", (-BED_X, BED_X), SADDLE_Y, BED_Z)
     for sgn in (-1.0, 1.0):
         box(p, "arm, ply", sorted((sgn * ARM_X[0], sgn * ARM_X[1])), BED_Y, (BED_Z[1], BED_Z[1] + ARM_H), op="add")
+    box(p, "crossbar, ply", (-CROSS_X, CROSS_X), CROSS_Y, CROSS_Z, op="add")
+    box(p, "stop bar, ply", (-CROSS_X, CROSS_X), STOP_BAR_Y, BED_Z, op="add")
+    box(p, "box floor, ply", (-ARM_X[1], ARM_X[1]), BOX_Y, BED_Z, op="add")
     box(p, "box front wall, ply", (-ARM_X[0], ARM_X[0]), (BOX_Y[0], BOX_Y[0] + PLY), (BED_Z[1], BED_Z[1] + ARM_H), op="add")
     box(p, "box back wall, ply", (-ARM_X[0], ARM_X[0]), (BOX_Y[1] - PLY, BOX_Y[1]), (BED_Z[1], BED_Z[1] + ARM_H), op="add")
     s = p.sketch("top", BED_Z[1] + 1.0, "screw hole")
@@ -872,7 +880,7 @@ if ARM:
         ("gantry", "Gantry", ["Y blocks SC20UU", "Deck", "Posts", "X supports SK20", "X shafts"],
          f"deck {2 * DECK_X:.0f} x {DECK_BACK - DECK_FRONT:.0f}, one ply, on the four Y blocks; a post each side at its back, a gusset outboard; one X shaft 760 at z = {PIV_Z:.0f}, the main pivot, SK20s 740 apart"),
         ("arm", "Arm", ["X blocks SC20UU", "Arm frame", "Box lid", "Head supports SK20", "Head pivot shaft", "Collars", "Sand"],
-         f"a channel of ply, {BED_Y[1] - CROSS_Y[0]:.0f} long: the bed on two SC20UU {2 * ARM_BLOCK_X:.0f} apart on the X shaft, an arm each side, the crossbar with the head's SK20s, the sand box at the tail; the head pivot shaft 300, {ARM_R:.0f} ahead of the main one"),
+         f"a ladder of ply, {BED_Y[1] - CROSS_Y[0]:.0f} long: two arms 19 x {ARM_H:.0f} on edge, a saddle on two SC20UU {2 * ARM_BLOCK_X:.0f} apart on the X shaft, the crossbar with the head's SK20s, the stop bar, the sand box at the tail; the head pivot shaft 300, {ARM_R:.0f} ahead of the main one"),
         ("head", "Head", ["Head blocks SC20UU", "Tilt clamp", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Stylus block", "Pilot"],
          "the tool plate 480 x 110 x 38 and its support plate on two SC20UU on the head shaft; the tilt clamp, three plies round the shaft with a knob bolt across its slit, locks the swing"),
     ]
@@ -951,9 +959,9 @@ if ARM:
     ] + [(j, f, n) for j, f, n in HARDWARE if j.startswith(KEEP)] + [
         ("Posts to the deck, from below through the deck", "no. 8 x 50 wood screw, glued", 6),
         ("Gussets to the posts' outer edges and down into the deck", "no. 8 x 50 wood screw, 3 each way, glued", 12),
-        ("Arms onto the bed's top, from below through the bed", "no. 8 x 50 wood screw, every 100 mm, glued", 14),
-        ("Crossbar to the bed's front edge and the arms' front ends", "no. 8 x 50 wood screw, 6 and 2 each, glued", 10),
-        ("Sand box walls to the bed and the arms", "no. 8 x 50 wood screw, 2 each way, glued", 12),
+        ("Arms onto the saddle, the stop bar and the box floor, from below", "no. 8 x 50 wood screw, 3 each per arm, glued", 18),
+        ("Crossbar to the arms' front ends", "no. 8 x 50 wood screw, 3 each, glued", 6),
+        ("Sand box walls to the floor and the arms", "no. 8 x 50 wood screw, 2 each way, glued", 12),
         ("Sand box lid, removable, onto the arms and the walls", "no. 8 x 32 wood screw", 4),
     ]
 

@@ -230,10 +230,16 @@ posts behind the shaft, so the arm's tail swings through. The arm
 frame rides the shaft on two SC20UU blocks 300 apart, bases up: a
 ball bushing is as free about its shaft as along it, so the two blocks
 are the X slide and the depth pivot in one, with nothing to add. The
-frame is a channel of ply 735 mm long: a bed on the blocks, an arm on
-edge along each side of its top, a crossbar across the front from
-below the head's supports to the arms' top, and between the arms at
-the tail a box 250 long with a lid. The head is the tool plate,
+frame is the Woodsmith's two tubes in ply, a ladder 735 mm long: two
+arms on edge, 19 x 100, a saddle across both blocks under them at the
+pivot, a crossbar across their front ends from below the head's
+supports to their top, a bar under them 200 ahead of the pivot for
+the stop screw, and at the tail a box 250 long between them on its
+own floor, with a lid. A first draft had a full-width bed the whole
+length and a crossbar as wide; the owner saw more wood than the
+Woodsmith has, and it was: on edge, the arms carry the head with a
+twentieth of the bending that flat bed had, at a third of the
+weight, and the frame lost 3.4 kg. The head is the tool plate,
 support plate and webs of the other variants unchanged, hung on two
 more blocks on the back of the support plate, which ride a 300 mm
 shaft (a Z offcut) in two SK20s on the crossbar's front face, 366 mm
@@ -267,16 +273,17 @@ takes up at 5.5 degrees nose up and 3.5 nose down (`motion_tilt.pdf`).
 
 ![The head tilted on its pivot](out/arm/motion_tilt.png)
 
-The balance. Everything that swings weighs 13.2 kg without the sand
-(the head 4, the frame the rest) and is 3.9 kg nose-heavy at the tool
-tips. The box is the Woodsmith's sand-filled pipe: 5.6 kg of dry sand
-82 mm deep (the box holds 8.1) brings the nose down to half a
+The balance. Everything that swings weighs 10.6 kg without the sand
+(the head 4, the hardware on the arm 1.5, the ply 5) and is 3.8 kg
+nose-heavy at the tool tips. The box is the Woodsmith's sand-filled
+pipe: 5.3 kg of dry sand 79 mm deep (the box holds 6.8) brings the
+nose down to half a
 kilogram, read in `build.py` from every part's volume and density
 (ply 0.65, the blocks and supports aluminium, the shafts steel, the
 Colt 1.5 kg) and set on the parts, so the test reads the same balance
 off the document. Lead shot does it in a quarter of the depth. The
-whole 18.7 kg rides the one X shaft between supports 740 apart, which
-sags about 1 mm at the middle of the travel and nothing at the ends;
+whole 16 kg rides the one X shaft between supports 740 apart, which
+sags about 0.8 mm at the middle of the travel and nothing at the ends;
 both tools go down with it, so the copy does not see it. The rails
 sit at ±425, 10 further out than the gantry's, because the router
 clamp's knob, 44 mm ahead of the tools, swings 5 mm lower on the arc
@@ -290,7 +297,7 @@ last pass; the base is 940 wide for it.
 | the tips, raised to the last pass | straight down | 15.7 back on the arc, bit and pilot alike |
 | X travel | ±277.5 | ±185 (the bed 10 clear of the posts at the blocks' limit) |
 | base | 900 x 855 | 940 x 855; the tail reaches 620 behind the tools' line at mid travel, over the bench |
-| counterweight | a spring balancer on the Z slide | 5.6 kg of sand in the tail box, 82 mm deep |
+| counterweight | a spring balancer on the Z slide | 5.3 kg of sand in the tail box, 79 mm deep |
 | SK20 / SC20UU used | 12 / 12 | 8 / 8: Y 4 / 4, main pivot 2 / 2, head 2 / 2 |
 | shafts | all four 1000s cut | three cut: 700 + 300 twice, 760 + 240; the fourth whole, a 300 and the 240 spare |
 
