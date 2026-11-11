@@ -992,61 +992,41 @@ clutters a 1:1 sheet); a gray per prism shape (a shape repeats in
 every tile, so it says nothing the stripes do not, and makes the
 tiles vanish).
 
-## 2026-11 · The duplicator's arm: the Woodsmith's arc on the rail, with a swivel at the head
+## 2026-11 · The duplicator's Woodsmith variant: the plan's machine, part for part, and what got pared off
 
 The owner may unretire the duplicator, and read the Woodsmith plan
 again: the long carriage rolls about its round main rail, the arms
-reach forward to the tools, and depth is the arc, not a slide. Asked
-for that machine on the rail hardware on hand, with an extra pivot
-at the head that "does not force vertical but allows it, and allows
-some undercuts", the arm variant (`examples/duplicator/build.py
---arm`) was drawn beside the gantry and the portal rather than
-replacing them: all three share the base, the Y gantry, the tool
-plate, the stylus block and the work, and the test suite covers each.
-
-What decided its shape. A ball bushing is as free about its shaft as
-along it, so the two SC20UU blocks under the arm's bed are the X
-slide and the depth pivot in one; the Woodsmith needed a round rail
-and rollers for the same reason. The head's pivot is the same trick
-again on a 300 mm offcut, and its lock is the router clamp's idea, a
-split block of ply round the shaft with a knob bolt across the slit:
-continuous, compact, no quadrant or pin. A parallelogram to keep the
-tools plumb was not what the owner asked for: a free pivot with a
-lock gives plumb at the working depth when the operator sets it, the
-Woodsmith's tilt when it is left, and an undercut when it is leaned,
-and nothing else moves. The pivot is level with the head's at the
-drawn pose, 366 mm back, on posts at the deck's back corners with
-nothing between them, so the tail swings through; the counterweight
-is a box of sand between the arms at the tail, the Woodsmith's
-sand-filled pipe, because the four spare shafts across the tail
-weigh 3.8 kg and the balance wants 5.3 at that lever, and sand is
-trimmed by the scoop. The frame was first drawn as a channel, a
-full-width bed the whole length with the arms on it and a crossbar as
-wide, and the owner saw at once that it was more wood than the
-Woodsmith's two tubes; it was 9 kg of ply where the loads want a
-ladder. Two arms on edge, 19 x 100, with a saddle across the blocks,
-a crossbar the width of the head's supports, a stop bar and the box
-floor carry the head with a twentieth of the bending at a third of
-the weight, and the swinging mass went from 13.2 kg to 10.6 before
-the sand. The owner still saw more ply than the original, and the
-rest of it was the deck, 4.3 kg of sheet the Woodsmith does without:
-its two short carriages are tied by nothing but the main rail. So
-the arm's gantry is a foot on each rail's blocks with the post on
-it, the main shaft the tie between them, and the fourth 1000 mm
-shaft, uncut, across the feet's fronts as a second tie: a 20 mm
-shaft in two clamped SK20s resists one foot running ahead of the
-other by bending, 190 N/mm, which the few newtons of cutting force
-do not trouble, and the screw lands on the shaft instead of a deck,
-40 below the arm instead of 100. The pivot moved 50 forward to keep
-the feet short enough for the Y travel, which costs 0.7 degrees
-more tilt at the last pass. Every part carries a density now, so the sand
-is sized in the script from the document and the test reads the
-same balance back. Found by the tests: the tips swing back 15.7 mm
-from raised to the last pass (480 (1 − cos) ahead of the pivot and
-115 sin below it, both back, where a first guess had them cancelling),
-which is harmless because the bit and the pilot are one body; the
-router clamp's knob, 44 ahead of the tools, swings 5 lower than the
-Z slide took it and clipped the front Y supports at the last pass,
-so the arm's rails sit 10 further out; and a shaft turned in a bore
-is two faceted cylinders that overlap by a cubic millimetre, which
-the sweep now allows for the bearing pairs and nothing else.
+reach forward to the tools, and depth is the arc, not a slide. The
+first ask was that machine on the rail hardware on hand with an extra
+pivot at the head, free with a lock, so the tools could be set plumb
+at the working depth or leaned for an undercut. It was drawn as a
+variant beside the gantry and the portal (`build.py --arm`, in the
+history at `e5fc922`): a ply channel, then a ladder, riding one X
+shaft on two SC20UU blocks, the head on a 300 mm offcut across the
+arm's front with a split clamp for its lock, a stop screw through the
+arm landing first on a deck and then on a second shaft tied across
+the feet, and a sand box at the tail; every part given a density so
+the sand could be sized from the document and the balance read back
+by the test. Three times the owner looked at the picture and saw more
+plywood than the original, and three times that was right: a full-
+width bed where two arms on edge do; a deck where the plan's short
+carriages are tied by the main rail alone; a second rail the plan
+does not have. The last word was to start from zero and build the
+Woodsmith with the bearings and rails and no extra tilt, and that is
+the variant kept (`--woodsmith`): side rails, short carriages, main
+rail, long carriage, arms, tool support, counterweight, each the
+plan's part in the nearest piece of hardware on hand, and nothing
+else. The arm-variant lessons that survive in it: a ball bushing is
+as free about its shaft as along it, so two blocks are the X slide and
+the depth pivot together; the tips swing back on the arc by R (1 −
+cos) and h sin, both backward, which is harmless because the bit and
+the pilot are one body; the router clamp's knob swings 5 lower on an
+arc than the Z slide took it, so the rails sit 10 further out; and a
+shaft turned in a bore is two faceted cylinders that overlap by a
+cubic millimetre, which the sweep allows for the bearing pair only.
+The passes come from the stylus, as the plan's do: set 8.5 mm longer
+than the bit it bottoms in the groove with the bit 4 mm in, matched it
+bottoms with the bit through; so there is no stop screw and nothing
+for one to land on. What the plan has that this does not is conduit:
+the arms are ply on edge, 19 x 80, because that is what is on hand,
+and they are twice the plan's weight for it.

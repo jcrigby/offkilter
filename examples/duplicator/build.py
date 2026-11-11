@@ -27,7 +27,7 @@ newtons and its drag cannot bend it.
     cargo build --release -p ok-mcp
     python3 examples/duplicator/build.py          # the document, pictures and sheets
     python3 examples/duplicator/build.py --portal # the portal gantry, under out/portal/
-    python3 examples/duplicator/build.py --arm    # the Woodsmith's arc, under out/arm/
+    python3 examples/duplicator/build.py --woodsmith  # the plan's machine, part for part, under out/woodsmith/
     cargo test -p ok-render --test duplicator     # what CI runs
 
 Frame: x across, y toward the operator negative, z up from the base
@@ -167,84 +167,68 @@ if PORTAL:
 
 
 # ---------------------------------------------------------------------
-# The arm variant (`--arm`): the Woodsmith machine's own motion on the
-# same rail, the long carriage that rolls about its main rail and the
-# arms that reach forward to the tools. The Z slide goes. One X shaft
-# on two posts at the back of the deck is the main pivot; the arm frame
-# rides it on two SC20UU blocks, which slide for X and turn for depth,
-# since a ball bushing is as free about its shaft as along it. The
-# frame is a ladder of ply, the Woodsmith's two tubes: two arms on
-# edge, a saddle across the blocks' bases under them, a crossbar
-# across their front ends, and a sand box between them at the tail,
-# behind the pivot, that balances the head to half a kilogram
-# nose-down, the way the Woodsmith's sand-filled pipe does. The head
-# is the same tool plate, support plate and webs, hung on two more
-# blocks on a 300 mm shaft (a Z offcut) in two SK20s on the crossbar's
-# front face: a second pivot, free to swing and locked by a split
-# clamp on the shaft (three plies bolted to the support plate's back,
-# a knob bolt across its slit), so the tools are set plumb at the
-# working depth, or leaned over for an undercut, where the Woodsmith's
-# tools tilt with its arm. The gantry is the Woodsmith's too: a foot
-# on each rail's blocks with a post on it, tied by the main shaft at
-# the posts' tops and by the fourth 1000 mm shaft, whole, across the
-# feet's fronts, which is also what the stop screw, M8 through a bar
-# under the arms, lands on. No deck. See the README for the numbers
-# the test checks.
+# The Woodsmith variant (`--woodsmith`): the plan's machine part for
+# part on the rail hardware, nothing added. Its side rails are the two
+# Y shafts on their SK20s; its short carriages are a foot of one ply on
+# each rail's two blocks with the main rail's SK20 standing on it; its
+# main rail is the one X shaft between them; its long carriage, which
+# rolls about the main rail and slides along it, is two SC20UU blocks
+# under a saddle, a ball bushing being as free about its shaft as
+# along it; its two arms are two plies on edge on the saddle; its tool
+# support is the tool plate the other variants have, on a support
+# plate across the arms' ends, with the router and the stylus in it;
+# and its sand-filled pipe is a box of sand between the arms behind
+# the pivot. No Z slide, no second X rail, no head pivot, no stop
+# screw: depth is the arc, as the plan's is, and the passes are set
+# as the plan sets them, by the stylus. For the puzzle the stylus is
+# set 8.5 mm longer than the bit for the first pass, so it bottoms in
+# the 12.5 groove with the bit 4 mm in, and matched to the bit for the
+# last. The front Y blocks sit 20 further back than the gantry's so
+# the feet clear the tool plate's swing, and the rails 10 further out
+# so the router clamp's knob clears the front Y supports at the last
+# pass; the base is 940 wide for it.
 # ---------------------------------------------------------------------
-ARM = "--arm" in sys.argv
-if ARM:
-    OUT = os.path.join(HERE, "out", "arm")
-    Y_BLOCK_Y = (-50.0, 180.0)                          # the front blocks 20 back, the feet's front ends behind the crossbar at any swing
-    Y_RAIL_X = 425.0                                    # the rails out 10 a side: the router clamp's knob swings 5 lower than the Z slide took it, over the front Y supports
+WOODSMITH = "--woodsmith" in sys.argv
+SUPPORT_X, SUPPORT_TOP = 110.0, ZC + 65.0               # the support plate's half width and top
+if WOODSMITH:
+    OUT = os.path.join(HERE, "out", "woodsmith")
+    Y_BLOCK_Y = (-50.0, 180.0)
+    Y_RAIL_X = 425.0
     BASE = dict(x=(-470.0, 470.0), y=(-430.0, 425.0), z=(-PLY, 0.0))
-    PIV_Y, PIV_Z = 150.0, 186.0                         # the main pivot: the one X shaft, level with the head pivot at the drawn pose
+    FOOT_X = (360.0, Y_RAIL_X + 45.0)                   # the short carriage: a foot over its rail's two blocks, reaching in under the main rail's end
+    FOOT_Y = (Y_BLOCK_Y[0] - 25.0, Y_BLOCK_Y[1] + 25.0) # -75 to 205
+    PIV_Y, PIV_Z = 170.0, Y_BED_Z + PLY + SK_H          # the main rail: the X shaft in SK20s standing on the feet, 146 up, 170 back
     X_AXIS_Z = (PIV_Z,)
     X_SHAFT_Y = PIV_Y
-    POST_FACE_Y = PIV_Y + SK_H                          # 201: the posts' front faces, the SK20s on them
-    FOOT_X = (Y_RAIL_X - 25.0, Y_RAIL_X + 45.0)         # a foot each side over its rail's two blocks, 70 wide, as the portal's
-    FOOT_Y = (Y_BLOCK_Y[0] - 25.0, POST_FACE_Y + PLY)   # -75 to 220: from ahead of the front block to the post's back
-    POST_X = (360.0, FOOT_X[1])                         # each post, 110 wide: on the foot, reaching in to the SK20 at the shaft's end, the gusset on its outer 19
-    POST_TOP = PIV_Z + 64.0                             # 250
-    GUSSET_REACH = 120.0                                # the gusset runs this far ahead of the post along the foot
-    TIE_X, TIE_Y = 435.0, 0.0                           # the tie: the fourth 1000 shaft whole, in SK20s standing on the feet, ties them and is what the stop screw lands on
-    TIE_Z = Y_BED_Z + PLY + SK_H                        # 146
-    LAND_Z = TIE_Z + SHAFT_D / 2                        # 156: the screw's landing
-    ARM_BLOCK_X = 150.0                                 # the arm's blocks on the X shaft, 300 apart, bases up under the saddle
-    BED_X = 175.0                                       # the saddle's half width, over the blocks
-    BED_Z = (PIV_Z + BLK_C, PIV_Z + BLK_C + PLY)        # 211 to 230: the saddle, the stop bar and the box floor, all under the arms
-    SADDLE_Y = (PIV_Y - 60.0, PIV_Y + 60.0)             # the one plate across both blocks
-    ARM_X, ARM_H = (100.0, 119.0), 100.0                # the two arms on edge, the Woodsmith's two tubes: 19 x 100, inside the blocks; the sand box's depth
-    CROSS_X = 120.0                                     # the crossbar's half width: the head's SK20s and the arms' ends
-    STOP_BAR_Y = (-30.0, 30.0)                          # a bar under the arms, 200 ahead of the pivot, for the stop screw
-    HP_Y, HP_Z = SUPPORT_Y[1] + BLK_C, ZC               # -166, 186: the head pivot, on blocks on the support plate's back
-    HEAD_BLOCK_X, HEAD_SK_X = 52.5, 100.0               # the head's blocks and the SK20s they sit between
-    COLLAR_D, COLLAR_W, COLLAR_X = 32.0, 12.0, 75.5     # a shaft collar each side of the head, snug to its blocks
-    CROSS_Y = (HP_Y + SK_H, HP_Y + SK_H + PLY)          # -115 to -96: the crossbar, the head's SK20s on its front face
-    CROSS_Z = (HP_Z - 36.0, BED_Z[1] + ARM_H)           # 150 to 330: from 6 below the SK20s' bases to the arms' top
+    ARM_BLOCK_X = 150.0                                 # the long carriage: two SC20UU 300 apart, bases up
+    BED_X = 175.0                                       # the saddle over them
+    BED_Z = (PIV_Z + BLK_C, PIV_Z + BLK_C + PLY)        # 171 to 190
+    SADDLE_Y = (PIV_Y - 60.0, PIV_Y + 60.0)
+    ARM_X, ARM_H = (85.0, 104.0), 80.0                  # the two arms on edge on the saddle, 19 x 80, inside the support plate's width
+    SUPPORT_X, SUPPORT_TOP = 120.0, BED_Z[1] + ARM_H    # the support plate 240 wide, up to the arms' top: the arms' ends glue to its back
     TAIL = 420.0                                        # the arms behind the pivot: the sand box's lever
-    BED_Y = (CROSS_Y[1], PIV_Y + TAIL)                  # -96 to 620: the arms' length
+    ARM_Y = (SUPPORT_Y[1], PIV_Y + TAIL)                # -191 to 590: from the support plate's back to the tail
     BOX_L, LID_T = 250.0, PLY                           # the sand box at the tail, between the arms, on its own floor under them
-    BOX_Y = (BED_Y[1] - BOX_L, BED_Y[1])
+    BOX_Y = (ARM_Y[1] - BOX_L, ARM_Y[1])
     SAND_DENSITY, NOSE_DOWN = 1.6, 500.0                # dry sand, g/cm3; the balance the sand is sized for, grams at the tool tips
-    CLAMP_W, CLAMP_T, CLAMP_H = 50.0, 3 * PLY, 60.0     # the tilt clamp: three plies round the head shaft, between the head's blocks
-    TILT_BOLT_Y = HP_Y + 21.0                           # the clamp's knob bolt, vertical, behind the shaft
-    STOP_Y = 0.0                                        # the stop screw through the bed, 200 ahead of the pivot
-    ARM_R = PIV_Y - HP_Y                                # 366: the head pivot's radius about the main one
+    ARM_R = PIV_Y - TOOL_Y                              # 450: the tools' radius about the main rail
     ROUTER_MASS = 1500.0                                # the Colt, grams; the drawn cylinder gets the density that makes it so
     SAND_H = None                                       # set by balance() before the sand is drawn
-    MOVING = ["X blocks SC20UU", "Arm frame", "Box lid", "Head supports SK20", "Head pivot shaft", "Collars",
-              "Head blocks SC20UU", "Tilt clamp", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Stylus block", "Pilot", "Stop screw"]
+    MOVING = ["X blocks SC20UU", "Arm frame", "Box lid", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Stylus block", "Pilot"]
     DENSITY = {"ply": 0.65, "steel": 7.85, "aluminium": 2.7, "sand": SAND_DENSITY}
-    MATERIAL = {"Base": "ply", "Battens": "ply", "Y supports SK20": "aluminium", "Y shafts": "steel", "Y blocks SC20UU": "aluminium", "Feet": "ply", "Posts": "ply",
-                "X supports SK20": "aluminium", "X shafts": "steel", "Tie supports SK20": "aluminium", "Tie shaft": "steel", "X blocks SC20UU": "aluminium", "Arm frame": "ply", "Box lid": "ply", "Head supports SK20": "aluminium",
-                "Head pivot shaft": "steel", "Collars": "steel", "Sand": "sand", "Head blocks SC20UU": "aluminium", "Tilt clamp": "ply", "Tool support": "ply", "Tool support webs": "ply",
-                "Clamp bolts": "steel", "Stylus block": "ply", "Pilot": "steel", "Stop screw": "steel", "Platforms": "ply", "Fences": "ply", "Blank": "ply", "Pattern plate": "ply"}
+    MATERIAL = {"Base": "ply", "Battens": "ply", "Y supports SK20": "aluminium", "Y shafts": "steel", "Y blocks SC20UU": "aluminium", "Feet": "ply",
+                "X supports SK20": "aluminium", "X shafts": "steel", "X blocks SC20UU": "aluminium", "Arm frame": "ply", "Box lid": "ply", "Sand": "sand",
+                "Tool support": "ply", "Tool support webs": "ply", "Clamp bolts": "steel", "Stylus block": "ply", "Pilot": "steel",
+                "Platforms": "ply", "Fences": "ply", "Blank": "ply", "Pattern plate": "ply"}
+    FIRST_PASS = (ZC - TIP_BELOW - BOARD_TOP) + 4.0      # 44: the tips 4 mm into the blank
+    LAST_PASS = (ZC - TIP_BELOW - BOARD_TOP) + GROOVE_D   # 52.5: the pilot on the groove's floor
+    STYLUS_LEAD = LAST_PASS - FIRST_PASS                 # 8.5: the stylus set this much longer than the bit for the first pass
 
 
 def arm_angle(drop):
     """The arm's angle, degrees nose-down from the drawn pose, that
     lowers the tool tips by `drop` (bisection: the tips swing on an arc
-    about the main pivot)."""
+    about the main rail)."""
     dy, dz = TOOL_Y - PIV_Y, (ZC - TIP_BELOW) - PIV_Z
     lo, hi = 0.0, 45.0
     for _ in range(60):
@@ -257,17 +241,12 @@ def arm_angle(drop):
     return (lo + hi) / 2
 
 
-def stop_protrusion(angle):
-    """How far the stop screw's tip stands below the bar when it lands on
-    the tie shaft with the arm `angle` degrees nose-down."""
+def tips_back(angle):
+    """How far the tool tips move back from the drawn pose at `angle`
+    degrees nose-down: ahead of the pivot they come in by R (1 - cos),
+    and below it they swing back by h sin, both back."""
     t = math.radians(angle)
-    return (BED_Z[0] - PIV_Z) - ((LAND_Z - PIV_Z) - (STOP_Y - PIV_Y) * math.sin(t)) / math.cos(t)
-
-
-if ARM:
-    FIRST_PASS = (ZC - TIP_BELOW - BOARD_TOP) + 4.0      # 44: the tips 4 mm into the blank
-    LAST_PASS = (ZC - TIP_BELOW - BOARD_TOP) + GROOVE_D   # 52.5: the pilot on the groove's floor
-    STOP_PROTRUDE = stop_protrusion(arm_angle(FIRST_PASS))
+    return -(TOOL_Y - PIV_Y) * (1.0 - math.cos(t)) - ((ZC - TIP_BELOW) - PIV_Z) * math.sin(t)
 
 
 def box(p, name, x, y, z, op="new"):
@@ -451,9 +430,9 @@ def tool_support(p):
     zb = ZC - TOOL_Z_BELOW
     zm = zb + TOOL_T / 2                                   # the clamp bolts' height, mid plate
     front = TOOL_PLATE_Y[0]
-    box(p, "support plate, ply", (-110.0, 110.0), SUPPORT_Y, (zb, ZC + 65.0))
+    box(p, "support plate, ply", (-SUPPORT_X, SUPPORT_X), SUPPORT_Y, (zb, SUPPORT_TOP))
     box(p, "tool plate, two plies", (BIT_X - 65.0, PILOT_X + 65.0), TOOL_PLATE_Y, (zb, zb + TOOL_T), op="add")
-    if not ARM:                                            # the arm's head has no stop ear, cable eye or screw: its lock is the tilt clamp on its back
+    if not WOODSMITH:                                      # the Woodsmith's tool support has no stop ear, cable eye or screw
         box(p, "stop ear", (-15.0, 15.0), EAR_Y, (ZC - 10.0, ZC + 9.0), op="add")
         vcyl(p, "cable eye", 0.0, BAL_Y, ZC + 9.0, ZC + 9.0 + EYE_H, EYE_D, op="add")
     # Both bores in one drill-press setup, then a slit from each to the front edge.
@@ -496,7 +475,7 @@ def tool_support(p):
     s = p.sketch("top", zb + TOOL_T + 1.0, "nut pocket")
     p.rect(s, (BIT_X + 26.0, wall_y - 5.0), (BIT_X + 32.0, wall_y + 5.0))
     p.cut(s, TOOL_T / 2 + 1.0 + 5.0, direction="reverse", name="nut pocket, from the top")
-    if not ARM:
+    if not WOODSMITH:
         s = p.sketch("top", ZC + 10.0, "screw hole")
         p.point(s, (0.0, SCREW_Y))
         p.hole(s, SCREW_D, depth=21.0, direction="reverse", name="M8 tapped")
@@ -676,50 +655,31 @@ def pattern(p):
 
 
 # ---------------------------------------------------------------------
-# The arm variant's parts.
+# The Woodsmith variant's parts.
 # ---------------------------------------------------------------------
 def feet(p):
-    """A foot each side, one ply on its rail's two blocks, from ahead of
-    the front block to the post's back: the Woodsmith's short carriage.
-    The two are tied only by the shafts, the main one at the posts'
-    tops and the tie across their front ends."""
+    """The short carriages: a foot each side, one ply on its rail's two
+    blocks, reaching in under the main rail's end for its SK20. The two
+    are tied by nothing but the main rail, as the plan's are."""
     for sgn in (-1.0, 1.0):
         box(p, "foot, ply", sorted((sgn * FOOT_X[0], sgn * FOOT_X[1])), (YC + FOOT_Y[0], YC + FOOT_Y[1]), (Y_BED_Z, Y_BED_Z + PLY), op="new")
 
 
-def tie_supports(p):
-    """Two SK20s standing on the feet, shaft along x."""
-    for i, sx in enumerate((-TIE_X, TIE_X)):
-        box(p, "base", (sx - SK_T / 2, sx + SK_T / 2), (TIE_Y - SK_W / 2, TIE_Y + SK_W / 2), (Y_BED_Z + PLY, Y_BED_Z + PLY + 12.0), op="new" if i == 0 else "add")
-        box(p, "body", (sx - SK_T / 2, sx + SK_T / 2), (TIE_Y - 16.0, TIE_Y + 16.0), (Y_BED_Z + PLY, Y_BED_Z + PLY + SK_HTOT), op="add")
-    for sx in (-TIE_X, TIE_X):
+def main_rail_supports(p):
+    """Two SK20s standing on the feet, shaft along x: the main rail's."""
+    for i, sx in enumerate((-X_SK_X, X_SK_X)):
+        box(p, "base", (sx - SK_T / 2, sx + SK_T / 2), (YC + PIV_Y - SK_W / 2, YC + PIV_Y + SK_W / 2), (Y_BED_Z + PLY, Y_BED_Z + PLY + 12.0), op="new" if i == 0 else "add")
+        box(p, "body", (sx - SK_T / 2, sx + SK_T / 2), (YC + PIV_Y - 16.0, YC + PIV_Y + 16.0), (Y_BED_Z + PLY, Y_BED_Z + PLY + SK_HTOT), op="add")
+    for sx in (-X_SK_X, X_SK_X):
         s = p.sketch("right", sx - SK_T / 2 - 1.0, "bore")
-        p.point(s, (TIE_Y, TIE_Z))
+        p.point(s, (YC + PIV_Y, PIV_Z))
         p.hole(s, SHAFT_D, depth=SK_T + 2.0, direction="normal", name="shaft bore")
 
 
-def tie_shaft(p):
-    xcyl(p, "20 mm shaft, tie, 1000 (uncut)", -500.0, 500.0, TIE_Y, TIE_Z, SHAFT_D)
-
-
-def posts(p):
-    """A post on the back of each foot, one ply in the plane of the
-    wall, reaching in from the foot to the X shaft's end with the SK20
-    on its front face there, and a gusset on its outer edge running
-    forward along the foot. Nothing stands between the posts behind
-    the shaft, so the arm's tail swings through."""
-    for i, sgn in enumerate((-1.0, 1.0)):
-        px = sorted((sgn * POST_X[0], sgn * POST_X[1]))
-        gx = sorted((sgn * (POST_X[1] - PLY), sgn * POST_X[1]))
-        box(p, "post, ply", px, (POST_FACE_Y, POST_FACE_Y + PLY), (Y_BED_Z + PLY, POST_TOP), op="new")
-        s = p.sketch("right", gx[0], "gusset")
-        p.polygon(s, [(POST_FACE_Y, Y_BED_Z + PLY), (POST_FACE_Y - GUSSET_REACH, Y_BED_Z + PLY), (POST_FACE_Y, POST_TOP)])
-        p.extrude(s, PLY, op="add", name="gusset, ply")
-
-
 def arm_blocks(p):
-    """Two SC20UU on the X shaft, bases up under the bed: the arm's
-    pivot and its X slide in one, 300 apart so the arm cannot nod."""
+    """The long carriage: two SC20UU on the main rail, bases up under the
+    saddle, 300 apart so the arm cannot nod. They slide for X and turn
+    for depth."""
     for i, bx in enumerate((-ARM_BLOCK_X, ARM_BLOCK_X)):
         box(p, "block", (bx - BLK_L / 2, bx + BLK_L / 2), (PIV_Y - BLK_W / 2, PIV_Y + BLK_W / 2), (BED_Z[0] - BLK_H, BED_Z[0]), op="new" if i == 0 else "add")
     for bx in (-ARM_BLOCK_X, ARM_BLOCK_X):
@@ -729,57 +689,21 @@ def arm_blocks(p):
 
 
 def arm_frame(p):
-    """The ladder, the Woodsmith's two tubes in ply: two arms on edge,
-    19 x 80, from the crossbar to the tail; a saddle across both blocks
-    under them at the pivot; the crossbar across their front ends,
-    from below the head's SK20s to their top; a bar under them 200
-    ahead of the pivot with the M8 hole for the stop screw; and the
-    sand box at the tail, a floor under the arms and two walls between
-    them. On edge the arms carry the head with a twentieth of the
-    bending a flat bed would, at a third of its weight."""
+    """The two arms and what ties them: the saddle across the blocks
+    under them at the pivot, the arms on edge from the support plate's
+    back to the tail, and the sand box at the tail, a floor under the
+    arms and two walls between them. The support plate across the arms'
+    front ends is the tool support's."""
     box(p, "saddle, ply", (-BED_X, BED_X), SADDLE_Y, BED_Z)
     for sgn in (-1.0, 1.0):
-        box(p, "arm, ply", sorted((sgn * ARM_X[0], sgn * ARM_X[1])), BED_Y, (BED_Z[1], BED_Z[1] + ARM_H), op="add")
-    box(p, "crossbar, ply", (-CROSS_X, CROSS_X), CROSS_Y, CROSS_Z, op="add")
-    box(p, "stop bar, ply", (-CROSS_X, CROSS_X), STOP_BAR_Y, BED_Z, op="add")
+        box(p, "arm, ply", sorted((sgn * ARM_X[0], sgn * ARM_X[1])), ARM_Y, (BED_Z[1], BED_Z[1] + ARM_H), op="add")
     box(p, "box floor, ply", (-ARM_X[1], ARM_X[1]), BOX_Y, BED_Z, op="add")
     box(p, "box front wall, ply", (-ARM_X[0], ARM_X[0]), (BOX_Y[0], BOX_Y[0] + PLY), (BED_Z[1], BED_Z[1] + ARM_H), op="add")
     box(p, "box back wall, ply", (-ARM_X[0], ARM_X[0]), (BOX_Y[1] - PLY, BOX_Y[1]), (BED_Z[1], BED_Z[1] + ARM_H), op="add")
-    s = p.sketch("top", BED_Z[1] + 1.0, "screw hole")
-    p.point(s, (0.0, STOP_Y))
-    p.hole(s, SCREW_D, depth=PLY + 2.0, direction="reverse", name="M8 tapped")
 
 
 def box_lid(p):
     box(p, "box lid, ply", (-ARM_X[1], ARM_X[1]), BOX_Y, (BED_Z[1] + ARM_H, BED_Z[1] + ARM_H + LID_T))
-
-
-def head_supports(p):
-    """Two SK20s on the crossbar's front face, shaft along x: the head pivot."""
-    for i, sx in enumerate((-HEAD_SK_X, HEAD_SK_X)):
-        box(p, "base", (sx - SK_T / 2, sx + SK_T / 2), (CROSS_Y[0] - 12.0, CROSS_Y[0]), (HP_Z - SK_W / 2, HP_Z + SK_W / 2), op="new" if i == 0 else "add")
-        box(p, "body", (sx - SK_T / 2, sx + SK_T / 2), (CROSS_Y[0] - SK_HTOT, CROSS_Y[0]), (HP_Z - 16.0, HP_Z + 16.0), op="add")
-    for sx in (-HEAD_SK_X, HEAD_SK_X):
-        s = p.sketch("right", sx - SK_T / 2 - 1.0, "bore")
-        p.point(s, (HP_Y, HP_Z))
-        p.hole(s, SHAFT_D, depth=SK_T + 2.0, direction="normal", name="shaft bore")
-
-
-def head_shaft(p):
-    xcyl(p, "20 mm shaft, head pivot, 300", -150.0, 150.0, HP_Y, HP_Z, SHAFT_D)
-
-
-def collars(p):
-    """A set-screw shaft collar each side of the head, against its
-    blocks, so the head's x on its shaft is the arm's."""
-    for sgn in (-1.0, 1.0):
-        x0, x1 = sorted((sgn * COLLAR_X, sgn * (COLLAR_X + COLLAR_W)))
-        xcyl(p, "shaft collar, 20 bore, 32 x 12", x0, x1, HP_Y, HP_Z, COLLAR_D, op="new")
-    for sgn in (-1.0, 1.0):
-        x0 = min(sgn * COLLAR_X, sgn * (COLLAR_X + COLLAR_W))
-        s = p.sketch("right", x0 - 1.0, "bore")
-        p.point(s, (HP_Y, HP_Z))
-        p.hole(s, SHAFT_D, depth=COLLAR_W + 2.0, direction="normal", name="bore")
 
 
 def sand(p):
@@ -787,48 +711,8 @@ def sand(p):
     box(p, f"sand, {SAND_H:.0f} deep", (-ARM_X[0], ARM_X[0]), (BOX_Y[0] + PLY, BOX_Y[1] - PLY), (BED_Z[1], BED_Z[1] + SAND_H))
 
 
-def head_blocks(p):
-    """Two SC20UU on the support plate's back, bases forward, bores along
-    x: the head on its pivot shaft."""
-    for i, bx in enumerate((-HEAD_BLOCK_X, HEAD_BLOCK_X)):
-        box(p, "block", (bx - BLK_L / 2, bx + BLK_L / 2), (SUPPORT_Y[1], SUPPORT_Y[1] + BLK_H), (HP_Z - BLK_W / 2, HP_Z + BLK_W / 2), op="new" if i == 0 else "add")
-    for bx in (-HEAD_BLOCK_X, HEAD_BLOCK_X):
-        s = p.sketch("right", bx - BLK_L / 2 - 1.0, "bore")
-        p.point(s, (HP_Y, HP_Z))
-        p.hole(s, SHAFT_D, depth=BLK_L + 2.0, direction="normal", name="shaft bore")
-
-
-def tilt_clamp(p):
-    """The head's lock: three plies on the support plate's back between
-    the blocks, bored 20.5 round the head shaft with a slit from the
-    bore to the back face, and an M6 knob bolt down through it behind
-    the shaft into a T-nut in its underside. Loose, the head swings on
-    its bushings; tight, the clamp grips the shaft and the head is
-    fixed at that angle, and in x."""
-    box(p, "tilt clamp, three plies", (-CLAMP_W / 2, CLAMP_W / 2), (SUPPORT_Y[1], SUPPORT_Y[1] + CLAMP_T), (HP_Z - CLAMP_H / 2, HP_Z + CLAMP_H / 2))
-    s = p.sketch("right", -CLAMP_W / 2 - 1.0, "bore")
-    p.point(s, (HP_Y, HP_Z))
-    p.hole(s, SHAFT_D + 0.5, depth=CLAMP_W + 2.0, direction="normal", name="shaft bore, 20.5")
-    s = p.sketch("right", -CLAMP_W / 2 - 1.0, "slit")
-    p.rect(s, (HP_Y, HP_Z - SLIT_W / 2), (SUPPORT_Y[1] + CLAMP_T + 1.0, HP_Z + SLIT_W / 2))
-    p.cut(s, CLAMP_W + 2.0, direction="normal", name="clamp slit, to the back")
-    s = p.sketch("top", HP_Z + CLAMP_H / 2 + 1.0, "bolt hole")
-    p.point(s, (0.0, TILT_BOLT_Y))
-    p.hole(s, ROUTER_BOLT_D + 0.5, depth=CLAMP_H + 2.0, direction="reverse", name="M6 clearance")
-    vcyl(p, "M6 x 80 knob bolt", 0.0, TILT_BOLT_Y, HP_Z - CLAMP_H / 2 - 6.0, HP_Z + CLAMP_H / 2 + 4.0, ROUTER_BOLT_D, op="new")
-    vcyl(p, "knob", 0.0, TILT_BOLT_Y, HP_Z + CLAMP_H / 2 + 4.0, HP_Z + CLAMP_H / 2 + 16.0, 25.0, op="add")
-
-
-def arm_stop_screw(p):
-    """M8 through the bed ahead of the pivot, its tip the first pass's
-    protrusion below the bed: it lands on the deck."""
-    tip = BED_Z[0] - STOP_PROTRUDE
-    vcyl(p, "M8 stop screw", 0.0, STOP_Y, tip, BED_Z[1] + 25.0, SCREW_D)
-    vcyl(p, "knob", 0.0, STOP_Y, BED_Z[1] + 25.0, BED_Z[1] + 37.0, 24.0, op="add")
-
-
 def balance(reports):
-    """The moment of everything that swings on the main pivot, drawn
+    """The moment of everything that swings on the main rail, drawn
     level, from the studios' volumes and densities, and the sand that
     brings it to NOSE_DOWN grams at the tool tips: sets SAND_H."""
     global SAND_H
@@ -892,31 +776,26 @@ MATES = [
     ("Z travel", "X slide/Z shafts 1", "Z slide/Z blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2, "slider"),
     ("stop screw", "Z slide/Tool support", "Stop screw", SCREW_D / 2, SCREW_D / 2, "slider"),
 ]
-if ARM:
+if WOODSMITH:
     PARTS = [
-        ("Base", base), ("Battens", battens), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Feet", feet), ("Posts", posts),
-        ("X supports SK20", x_supports), ("X shafts", x_shafts), ("Tie supports SK20", tie_supports), ("Tie shaft", tie_shaft),
-        ("X blocks SC20UU", arm_blocks), ("Arm frame", arm_frame), ("Box lid", box_lid), ("Head supports SK20", head_supports), ("Head pivot shaft", head_shaft), ("Collars", collars),
-        ("Head blocks SC20UU", head_blocks), ("Tilt clamp", tilt_clamp), ("Tool support", tool_support), ("Tool support webs", tool_support_webs), ("Clamp bolts", clamp_bolts),
-        ("Router", router), ("Stylus block", stylus_block), ("Pilot", pilot), ("Stop screw", arm_stop_screw), ("Sand", sand),
+        ("Base", base), ("Battens", battens), ("Y supports SK20", y_supports), ("Y shafts", y_shafts), ("Y blocks SC20UU", y_blocks), ("Feet", feet),
+        ("X supports SK20", main_rail_supports), ("X shafts", x_shafts),
+        ("X blocks SC20UU", arm_blocks), ("Arm frame", arm_frame), ("Box lid", box_lid),
+        ("Tool support", tool_support), ("Tool support webs", tool_support_webs), ("Clamp bolts", clamp_bolts), ("Router", router), ("Stylus block", stylus_block), ("Pilot", pilot), ("Sand", sand),
         ("Platforms", platforms), ("Fences", fences), ("Blank", blank), ("Pattern plate", pattern),
     ]
-    # The gantry carries the main pivot; the arm swings and slides on
-    # it; the head swings on the arm. The stop screw rides in the bed.
+    # The gantry carries the main rail; the arm swings and slides on it.
     MOTION = [
-        ("gantry", "Gantry", ["Y blocks SC20UU", "Feet", "Posts", "X supports SK20", "X shafts", "Tie supports SK20", "Tie shaft"],
-         f"a foot on each rail's two blocks with a post on its back, a gusset outboard; one X shaft 760 at z = {PIV_Z:.0f} between the posts, the main pivot, SK20s 740 apart; the 1000 shaft whole across the feet's fronts, the tie and the stop screw's landing"),
-        ("arm", "Arm", ["X blocks SC20UU", "Arm frame", "Box lid", "Head supports SK20", "Head pivot shaft", "Collars", "Sand"],
-         f"a ladder of ply, {BED_Y[1] - CROSS_Y[0]:.0f} long: two arms 19 x {ARM_H:.0f} on edge, a saddle on two SC20UU {2 * ARM_BLOCK_X:.0f} apart on the X shaft, the crossbar with the head's SK20s, the stop bar, the sand box at the tail; the head pivot shaft 300, {ARM_R:.0f} ahead of the main one"),
-        ("head", "Head", ["Head blocks SC20UU", "Tilt clamp", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Stylus block", "Pilot"],
-         "the tool plate 480 x 110 x 38 and its support plate on two SC20UU on the head shaft; the tilt clamp, three plies round the shaft with a knob bolt across its slit, locks the swing"),
+        ("gantry", "Gantry", ["Y blocks SC20UU", "Feet", "X supports SK20", "X shafts"],
+         f"a foot on each rail's two blocks, the main rail's SK20 standing on it; one X shaft 760 at z = {PIV_Z:.0f}, SK20s 740 apart"),
+        ("arm", "Arm", ["X blocks SC20UU", "Arm frame", "Box lid", "Sand", "Tool support", "Tool support webs", "Clamp bolts", "Router", "Stylus block", "Pilot"],
+         f"two arms 19 x {ARM_H:.0f} on edge, {ARM_Y[1] - ARM_Y[0]:.0f} long, on a saddle over two SC20UU {2 * ARM_BLOCK_X:.0f} apart on the main rail; the tool plate 480 x 110 x 38 on a support plate across their ends; the sand box at the tail"),
     ]
     MATES = [
         ("Y travel", "Y shafts 1", "Gantry/Y blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2, "slider"),
         ("arm", "Gantry/X shafts", "Arm/X blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2, "cylindrical"),
-        ("tilt", "Arm/Head pivot shaft", "Head/Head blocks SC20UU 1", SHAFT_D / 2, SHAFT_D / 2, "revolute"),
-        ("stop screw", "Arm/Arm frame", "Stop screw", SCREW_D / 2, SCREW_D / 2, "slider"),
     ]
+
 
 
 # ---------------------------------------------------------------------
@@ -970,28 +849,20 @@ if PORTAL:
         for j, f, n in HARDWARE
     ]
 
-if ARM:
+if WOODSMITH:
     KEEP = ("Router clamp", "Stylus", "Springs", "Bridge", "Blank's", "Tool plate", "Webs", "Battens", "Platforms", "Pattern plate")
     HARDWARE = [
         ("4 Y SK20 supports on the base", "M6 x 40 hex bolt, washer, four-prong T-nut from the far face, prongs piloted, epoxied", 8),
-        ("2 X SK20 supports on the posts' front faces, the main pivot", "M6 x 40 hex bolt, washer, T-nut from the post's back", 4),
-        ("2 tie SK20 supports on the feet", "M6 x 40 hex bolt, washer, T-nut from under the foot", 4),
-        ("2 head SK20 supports on the crossbar's front face", "M6 x 40 hex bolt, washer, T-nut from the crossbar's back", 4),
+        ("2 main rail SK20 supports standing on the feet", "M6 x 40 hex bolt, washer, T-nut from under the foot", 4),
         ("4 Y blocks under the feet, from above", "M5 x 30 (or M6, as the block is tapped) into the block", 16),
-        ("2 arm blocks under the saddle, from above", "M5 x 30 (or M6) into the block", 8),
-        ("2 head blocks on the support plate's back, from its front face, before the tool plate goes on", "M5 x 30 (or M6) into the block", 8),
-        ("Shaft collars either side of the head's blocks, snug", "20 mm bore set-screw collar, 32 x 12", 2),
-        ("Tilt clamp to the support plate's back, from the plate's front face", "no. 8 x 50 wood screw, glued", 4),
-        ("Tilt clamp's knob bolt, down through it behind the shaft, across the slit", "M6 x 80 knob bolt through an M6 T-nut in the clamp's underside", 1),
-        ("Stop screw", "M8 x 90 with a knob, through an M8 T-nut set into the stop bar's top, an M8 jam nut above the bar", 1),
+        ("2 long carriage blocks under the saddle, from above", "M5 x 30 (or M6) into the block", 8),
     ] + [(j, f, n) for j, f, n in HARDWARE if j.startswith(KEEP)] + [
-        ("Posts to the feet, from below through the foot", "no. 8 x 50 wood screw, glued", 6),
-        ("Gussets to the posts' outer edges and down into the feet", "no. 8 x 50 wood screw, 3 each way, glued", 12),
-        ("Arms onto the saddle, the stop bar and the box floor, from below", "no. 8 x 50 wood screw, 3 each per arm, glued", 18),
-        ("Crossbar to the arms' front ends", "no. 8 x 50 wood screw, 3 each, glued", 6),
+        ("Arms onto the saddle and the box floor, from below", "no. 8 x 50 wood screw, 3 each per arm, glued", 12),
+        ("Support plate to the arms' front ends, from its front face", "no. 8 x 50 wood screw, 3 each, glued", 6),
         ("Sand box walls to the floor and the arms", "no. 8 x 50 wood screw, 2 each way, glued", 12),
         ("Sand box lid, removable, onto the arms and the walls", "no. 8 x 32 wood screw", 4),
     ]
+
 
 
 def _v(d):
@@ -1097,12 +968,12 @@ def main():
             tab = int(re.search(r"tab (\d+)", text).group(1))
         tabs[title] = tab
         part = Part(mcp, tab, title)
-        if ARM and title == "Sand":
+        if WOODSMITH and title == "Sand":
             balance(reports)
         fn(part)
         bodies[title] = part.bodies()
         reports[title] = json.loads(mcp.call("report", {"tab": tab, "detail": "full"}))["bodies"]
-        if ARM:
+        if WOODSMITH:
             # Every part gets its density, so the balance can be read off the document.
             part.apply(*[{"type": "set_part_material", "source": b["source"], "material": {"name": "router" if title == "Router" else MATERIAL[title], "density": density_of(title, b)}} for b in reports[title]])
         print(f"{title:<20} tab {tab:>2}: {len(bodies[title])} bodies")
@@ -1121,7 +992,8 @@ def main():
     ops = instance_ops(tabs, bodies, FIXED, True)
     ops += [{"type": "add_instance", "studio": sub_tabs[title], "body": 0, "name": title, "fixed": False,
              "placement": {"position": {"x": 0.0, "y": 0.0, "z": 0.0}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}} for _, title, _, _ in MOTION]
-    ops += instance_ops(tabs, bodies, ["Stop screw"], False)
+    if not WOODSMITH:
+        ops += instance_ops(tabs, bodies, ["Stop screw"], False)
     apply(mcp, ops, asm)
     ids = instance_ids(mcp, asm)
 
@@ -1168,12 +1040,10 @@ def main():
     # Which way each mate's offset (or angle) moves its part, by trying
     # it: the sign that moves the part the positive way along its axis;
     # for the arm's angle, the sign that lowers its nose (the Arm's
-    # origin is ahead of the pivot, like the tools); for the tilt, the
-    # sign that swings the tool tips toward the operator (a positive
-    # turn about +x moves what hangs below the pivot the other way).
+    # origin is ahead of the pivot, like the tools).
     probes = (("Y travel", "Gantry", 1, "offset"), ("X travel", "X slide", 0, "offset"), ("Z travel", "Z slide", 2, "offset"), ("stop screw", "Stop screw", 2, "offset"))
-    if ARM:
-        probes = (("Y travel", "Gantry", 1, "offset"), ("arm", "Arm", 0, "offset"), ("arm", "Arm", 2, "angle"), ("tilt", "Head", 0, "angle"), ("stop screw", "Stop screw", 2, "offset"))
+    if WOODSMITH:
+        probes = (("Y travel", "Gantry", 1, "offset"), ("arm", "Arm", 0, "offset"), ("arm", "Arm", 2, "angle"))
     signs = {}
     for name, part, axis, what in probes:
         m = mates[name]
@@ -1185,11 +1055,8 @@ def main():
             moved = position[axis]
             assert abs(abs(moved) - 10.0) < 1e-6, f"{name}: {part} moved {moved}"
             signs[name, what] = 1.0 if moved > 0.0 else -1.0
-        elif name == "arm":
-            signs[name, what] = 1.0 if position[2] < 0.0 else -1.0
         else:
-            assert abs(abs(rotation[axis]) - 5.0) < 1e-6, f"{name}: {part} turned {rotation}"
-            signs[name, what] = -1.0 if rotation[axis] > 0.0 else 1.0
+            signs[name, what] = 1.0 if position[2] < 0.0 else -1.0
     at = lambda name, d: mates[name]["offset"] + signs[name, "offset"] * d
     turned = lambda name, a: mates[name]["angle"] + signs[name, "angle"] * a
 
@@ -1197,7 +1064,7 @@ def main():
         mcp.call("screenshot", {"tab": asm, "view": view, "width": 1600, "height": 1100, "path": os.path.join(OUT, f"{name}.png")})
     mcp.call("screenshot", {"tab": asm, "view": "front", "section": f"y:{TOOL_Y + 0.5}:flip", "width": 1600, "height": 1100, "path": os.path.join(OUT, "section_tools.png")})
     mcp.call("screenshot", {"tab": asm, "view": "right", "section": "x:0", "width": 1600, "height": 1100, "path": os.path.join(OUT, "section_carriage.png")})
-    note = (f"round rail duplicator, puzzle size, on the Woodsmith's arc: Y {Y_SHAFT[1] - Y_SHAFT[0]:.0f}, one X shaft 760 the arm pivots and slides on, a 300 head shaft; the arm {ARM_R:.0f} to the head pivot, the sand box behind" if ARM else
+    note = (f"the Woodsmith duplicator on round rail, puzzle size: Y {Y_SHAFT[1] - Y_SHAFT[0]:.0f} side rails, one X shaft 760 the main rail; the tools {ARM_R:.0f} ahead of it on two arms, the sand box behind" if WOODSMITH else
             f"round rail duplicator, puzzle size: X 760 stacked, Y {Y_SHAFT[1] - Y_SHAFT[0]:.0f}, Z 250 shafts; " + ("portal gantry: feet on the Y blocks under the tools, cheeks in front of the wall, a deck strip behind it" if PORTAL else "one-piece gantry on the Y blocks"))
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A2", "note": note, "path": os.path.join(OUT, "duplicator.pdf")}))
     for file, title, _, note in MOTION:
@@ -1211,39 +1078,25 @@ def main():
     raised = ZC - TIP_BELOW - BOARD_TOP                     # 40: the tips above the board
     last = raised + GROOVE_D                                # 52.5
     sheets = [("motion_z", "front"), ("motion_xy", "top")]
-    if ARM:
+    if WOODSMITH:
         # The arm swings for depth: the angles that put the tips 4 mm
-        # into the blank (the screw landing on the deck) and on the
-        # groove's floor (the screw backed off), and how far back the
-        # tips move on the arc. The head tilts on its own pivot: plumb,
-        # and 20 degrees each way for an undercut.
+        # into the blank (the stylus set 8.5 longer than the bit
+        # bottoming in the groove) and on the groove's floor (the stylus
+        # matched to the bit), and how far back the tips move on the arc.
         th1, th2 = arm_angle(FIRST_PASS), arm_angle(LAST_PASS)
-        back_off = STOP_PROTRUDE - stop_protrusion(th2)
         swing = lambda a: {"angle": turned("arm", a), "offset": mates["arm"]["offset"]}
         slide = lambda d: {"angle": mates["arm"]["angle"], "offset": at("arm", d)}
-        # The tips swing back on the arc: ahead of the pivot they come in
-        # by R(1 - cos), and below it they swing back by h sin.
-        shift = -(TOOL_Y - PIV_Y) * (1.0 - math.cos(math.radians(th2))) - ((ZC - TIP_BELOW) - PIV_Z) * math.sin(math.radians(th2))
         z_positions = [
             {"arm": swing(0.0), "label": f"raised, tips {raised:g} up, the arm level"},
-            {"arm": swing(th1), "label": f"first pass, 4 mm, on the screw: {th1:.1f} degrees down"},
-            {"arm": swing(th2), "stop screw": at("stop screw", back_off), "label": f"last pass, {GROOVE_D:g} mm, screw backed off {back_off:.0f}: {th2:.1f} degrees, the tips {shift:.1f} back"},
+            {"arm": swing(th1), "label": f"first pass, 4 mm, the stylus {STYLUS_LEAD:g} longer than the bit: {th1:.1f} degrees down"},
+            {"arm": swing(th2), "label": f"last pass, {GROOVE_D:g} mm, the stylus matched: {th2:.1f} degrees, the tips {tips_back(th2):.1f} back"},
         ]
         xy_positions = [
             {"arm": slide(-BOARD_W / 2), "Y travel": at("Y travel", -PLATE_D / 2 + REF_IN), "label": "front-left corner, reference hole"},
             {"arm": slide(0.0), "Y travel": at("Y travel", 0.0), "label": "centre"},
             {"arm": slide(BOARD_W / 2), "Y travel": at("Y travel", BOARD_D / 2), "label": "back-right corner"},
         ]
-        # The tips are 115 below the head pivot and 114 ahead of it, so
-        # a tilt also swings them down (tips forward) or up (tips back),
-        # 46 and 32 mm at 20 degrees; the arm takes that up.
-        tilt_positions = [
-            {"tilt": turned("tilt", -20.0), "arm": swing(-5.5), "label": "tips 20 degrees back, the motor leaning toward the operator; the arm 5.5 degrees up"},
-            {"tilt": turned("tilt", 0.0), "arm": swing(0.0), "label": "plumb, the clamp tight"},
-            {"tilt": turned("tilt", 20.0), "arm": swing(3.5), "label": "tips 20 degrees forward, the motor leaning away; the arm 3.5 degrees down"},
-        ]
-        sheets.append(("motion_tilt", "right"))
-        print(f"arc: first pass {th1:.2f} degrees, last pass {th2:.2f}; the stop screw {STOP_PROTRUDE:.1f} below the bed, backed off {back_off:.1f} for the last; the tips {shift:.2f} back at the last pass")
+        print(f"arc: first pass {th1:.2f} degrees, last pass {th2:.2f}; the tips {tips_back(th2):.2f} back at the last pass")
     else:
         landing = (ZC - 10.0 - STOP_PROTRUDE) - STOP_BLOCK["z"][1]  # how far the slide drops before the screw lands: 36
         z_positions = [
@@ -1257,7 +1110,7 @@ def main():
             {"X travel": at("X travel", BOARD_W / 2), "Y travel": at("Y travel", BOARD_D / 2), "label": "back-right corner"},
         ]
     for stem, view in sheets:
-        positions = {"motion_z": z_positions, "motion_xy": xy_positions}.get(stem) or tilt_positions
+        positions = {"motion_z": z_positions, "motion_xy": xy_positions}[stem]
         print(mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, f"{stem}.pdf")}))
         mcp.call("range_of_motion", {"tab": asm, "positions": positions, "view": view, "width": 1800, "height": 600, "path": os.path.join(OUT, f"{stem}.png")})
     with open(os.path.join(OUT, "hardware.csv"), "w") as f:

@@ -208,130 +208,96 @@ foot, and runs the same sweep over the work as the gantry's: no two
 bodies of different instances meet at any pose but the tools in the
 work.
 
-## The arm variant: the Woodsmith's own motion
+## The Woodsmith variant: the plan's machine, part for part
 
 ```sh
-python3 examples/duplicator/build.py --arm      # the same outputs under out/arm/, plus motion_tilt
+python3 examples/duplicator/build.py --woodsmith   # the same outputs under out/woodsmith/
 ```
 
-![The arm from the front left](out/arm/iso.png)
+![The Woodsmith on round rail](out/woodsmith/iso.png)
 
-The Woodsmith machine has no Z slide. Its long carriage rolls about
-its round main rail, the arms reach forward from it to the tools, and
-depth is the arc: push the handles down and the tools swing. The owner
-wanted that machine on the rail hardware already bought, with one
-change, a swivel on the head. This variant is it. The gantry is the
-Woodsmith's: no deck. A foot of one ply sits on each rail's two blocks
-(the portal's foot, 70 wide and 295 long), a post stands on its back,
-one ply reaching in from the foot to the shaft's end with a gusset
-on its outer edge running forward along the foot, and the one X shaft
-between the posts' SK20s, at y = 150 and z = 186, is the main pivot
-and the tie between the two feet, as the main rail is the tie between
-the Woodsmith's two short carriages. The fourth 1000 mm shaft, left
-whole, lies across the feet's front ends in two more SK20s: the
-second tie, and what the stop screw lands on, so the screw stands 40
-below the arm instead of the 100 the base would want. Nothing stands
-between the posts behind the shaft, so the arm's tail swings through.
-The arm
-frame rides the shaft on two SC20UU blocks 300 apart, bases up: a
-ball bushing is as free about its shaft as along it, so the two blocks
-are the X slide and the depth pivot in one, with nothing to add. The
-frame is the Woodsmith's two tubes in ply, a ladder 735 mm long: two
-arms on edge, 19 x 100, a saddle across both blocks under them at the
-pivot, a crossbar across their front ends from below the head's
-supports to their top, a bar under them 200 ahead of the pivot for
-the stop screw, and at the tail a box 250 long between them on its
-own floor, with a lid. A first draft had a full-width bed the whole
-length and a crossbar as wide; the owner saw more wood than the
-Woodsmith has, and it was: on edge, the arms carry the head with a
-twentieth of the bending that flat bed had, at a third of the
-weight, and the frame lost 3.4 kg. The head is the tool plate,
-support plate and webs of the other variants unchanged, hung on two
-more blocks on the back of the support plate, which ride a 300 mm
-shaft (a Z offcut) in two SK20s on the crossbar's front face, 366 mm
-ahead of the main pivot: a second pivot. Its lock is a split clamp,
-three plies on the support plate's back between the blocks, bored
-20.5 round the shaft with a slit to the back face and an M6 knob bolt
-down through it behind the shaft. Loose, the head swings on its
-bushings; tight, the clamp grips the shaft and fixes the head's angle
-and its place along the shaft (a set-screw collar each side of the
-blocks keeps that place when it is loose). The stop screw is M8
-through the bed 200 mm ahead of the pivot, landing on the deck.
+The owner may unretire the duplicator, and asked for the Woodsmith
+machine itself on the rail hardware on hand, nothing added: no Z
+slide, no second rail, no extra pivot. This variant is that, part for
+part. The plan's side rails are the two Y shafts on their SK20s. Its
+short carriages are a foot of one ply on each rail's two blocks, 110
+x 280, reaching in under the main rail's end with the main rail's
+SK20 standing straight on it, 146 up. Its main rail is the one X
+shaft, 760, between those two SK20s, which is also all that ties the
+two feet, as the main rail is all that ties the plan's carriages. Its
+long carriage, which rolls about the main rail and slides along it,
+is two SC20UU blocks 300 apart under a saddle, since a ball bushing is
+as free about its shaft as along it. Its two arms are two plies on
+edge, 19 x 80, on the saddle, 780 long. Its tool support is the tool
+plate the other variants have, 480 x 110 x 38 with the router in its
+split clamp and the stylus chuck in its adjustable block, on a support
+plate across the arms' front ends with three webs. Its sand-filled
+pipe is a box of sand between the arms at the tail, 250 long with a
+floor and a lid. The front Y blocks sit 20 further back than the
+gantry's so the feet clear the tool plate's swing, and the rails 10
+further out because the router clamp's knob swings 5 mm lower on the
+arc than the Z slide took it and was clipping the front Y supports at
+the last pass; the base is 940 wide for it.
 
-The arc. The tool tips hang 115 below the pivot's height and 430
-ahead of it. Pushing the nose down 6.0 degrees puts the bit 4 mm into
-the blank, where the screw lands; 7.1 puts the pilot on the groove's
-floor, the screw backed off 3 (two and a half turns). The bit tilts
-by the same angle, and the tips move back 17.6 mm from the raised
-pose, 430 (1 − cos) for being ahead of the pivot and 115 sin for
-hanging below it, both the same for the bit and the pilot, since they
-are one rigid head: the copy stays faithful, as the Woodsmith's does,
-because the offset from pilot to bit is parallel to the pivot axis
-and the arc moves both alike. What the swivel adds is the choice:
-with the clamp set so the tools are plumb at the working depth, the
-walls of a 12.5 deep cut lean 0.3 mm over their height instead of
-1.6; and clamped at 20 degrees either way the bit undercuts, which no
-vertical slide does. A tilt moves the tips too, since they hang ahead
-of the head pivot: 46 mm down at 20 degrees tips back, 32 up at 20
-forward, which the arm takes up at 5 degrees nose up and 4 nose down
-(`motion_tilt.pdf`).
+Depth is the arc, and the passes are set as the plan sets them, by
+the stylus. The tool tips hang 75 below the main rail and 450 ahead
+of it. For the first pass the stylus is set 8.5 mm longer than the
+bit (its height screw, twelve turns, the clamp loosened and
+retightened), so it bottoms in the 12.5 deep groove with the bit 4 mm
+into the blank, 5.7 degrees down; for the last it is matched to the
+bit and bottoms with the bit through the board, 6.8 degrees down. The
+bit tilts by the same angle, and the tips move back 12 mm from the
+raised pose, 450 (1 − cos) for being ahead of the pivot and 75 sin
+for hanging below it, both the same for the bit and the pilot, since
+they are one rigid arm: the copy stays faithful, as the plan's does,
+because the offset from pilot to bit is parallel to the rail and the
+arc moves both alike. The walls of a 12.5 deep cut lean 1.5 mm over
+their height, which the plan's do too, and nothing is adjusted away.
 
-![Depth on the arc](out/arm/motion_z.png)
+![Depth on the arc](out/woodsmith/motion_z.png)
 
-![The head tilted on its pivot](out/arm/motion_tilt.png)
+The balance. Everything that swings weighs 7.7 kg without the sand:
+the tool plate and its support 2.9, the router and the stylus 1.9,
+the two blocks 0.4, the arms, saddle and box 2.5. It is 2.4 kg
+nose-heavy at the tool tips, and 2.9 kg of dry sand 50 mm deep (the
+box holds 4.6) brings that to half a kilogram, read in `build.py`
+from every part's volume and density (ply 0.65, the blocks and
+supports aluminium, the shafts steel, the Colt 1.5 kg) and set on the
+parts, so the test reads the same balance off the document. The whole
+10.6 kg rides the main rail between supports 740 apart, which sags
+about half a millimetre at the middle of the travel and nothing at
+the ends; both tools go down with it, so the copy does not see it.
 
-The balance. Everything that swings weighs 10.5 kg without the sand
-(the head 4, the hardware on the arm 1.5, the ply 5) and is 3.4 kg
-nose-heavy at the tool tips. The box is the Woodsmith's sand-filled
-pipe: 4.3 kg of dry sand 63 mm deep (the box holds 6.8) brings the
-nose down to half a
-kilogram, read in `build.py` from every part's volume and density
-(ply 0.65, the blocks and supports aluminium, the shafts steel, the
-Colt 1.5 kg) and set on the parts, so the test reads the same balance
-off the document. Lead shot does it in a quarter of the depth. The
-whole 14.8 kg rides the one X shaft between supports 740 apart, which
-sags about 0.7 mm at the middle of the travel and nothing at the ends;
-both tools go down with it, so the copy does not see it. The rails
-sit at ±425, 10 further out than the gantry's, because the router
-clamp's knob, 44 mm ahead of the tools, swings 5 mm lower on the arc
-than the Z slide took it and was clipping the front Y supports at the
-last pass; the base is 940 wide for it.
-
-| | gantry | arm |
+| | gantry | Woodsmith |
 |---|---|---|
-| depth | Z slide, 62.5 of travel on two 250 shafts | the arc about the X shaft: 7.1 degrees for the last pass |
-| the bit at the last pass | plumb | tilted with the arm, or plumb or 20 degrees over with the head clamped so |
-| the tips, raised to the last pass | straight down | 17.6 back on the arc, bit and pilot alike |
-| X travel | ±277.5 | ±185 (the bed 10 clear of the posts at the blocks' limit) |
-| gantry | a deck 890 x 300 on the four blocks, a wall, two gussets | a foot on each rail's blocks with a post on it; no deck, the two shafts the ties |
-| Y travel | ±192.5 | +210 −155 (the feet reach back to the posts) |
-| base | 900 x 855 | 940 x 855; the tail reaches 570 behind the tools' line at mid travel, over the bench |
-| counterweight | a spring balancer on the Z slide | 4.3 kg of sand in the tail box, 63 mm deep |
-| SK20 / SC20UU used | 12 / 12 | 10 / 8: Y 4 / 4, main pivot 2 / 2, tie 2, head 2 / 2 |
-| shafts | all four 1000s cut | three cut: 700 + 300 twice, 760 + 240; the fourth whole as the tie, a 300 and the 240 spare |
+| depth | Z slide, 62.5 of travel on two 250 shafts | the arc about the main rail: 6.8 degrees for the last pass |
+| passes | the stop screw, then the pilot bottoming | the stylus 8.5 long, then matched |
+| the tips, raised to the last pass | straight down | 12 back on the arc, bit and pilot alike |
+| the bit at the last pass | plumb | 6.8 degrees over, as the plan's |
+| the gantry | a deck 890 x 300, a wall, two gussets | a foot on each rail's blocks, tied by the main rail alone |
+| X travel | ±277.5 | ±185 (the saddle 2.5 short of the blocks' limit) |
+| Y travel | ±192.5 | +210 −170 |
+| base | 900 x 855 | 940 x 855; the tail reaches 590 behind the tools' line at mid travel, over the bench |
+| swinging mass | the 4.5 kg Z slide on a spring balancer | 10.6 kg with 2.9 of sand |
+| SK20 / SC20UU used | 12 / 12 | 6 / 6: Y 4 / 4, main rail 2 / 2 |
+| shafts | all four 1000s cut | two cut, 700 + 300 each, and a third 760 + 240; the fourth whole |
+| ply in the moving parts | 2.1 kg | 4.4 kg (the plan's arms are conduit) |
 
-The test regenerates the arm's 31 studios and places its 59 bodies;
-reads the X travel off the supports, the blocks, the saddle and the
-posts and the Y travel off the Y supports, the blocks and the feet,
-against the blank and the reference hole; finds the last pass by
-bisection on the kernel (the arm swung until the bit's tip is 12.5
-below the plate's top) and checks the bit's axis is tilted by that
-angle and the tips moved back 15 to 20; finds where the screw as
-drawn lands on the tie shaft and checks
-the bit is then 4 mm into the blank within a millimetre and a half
-(the tilted screw's flat tip lands on its rim, 0.4 early at the
-screw and 1.2 at the tools, 2.9 times further out), and that it backs off
-2 to 6 for the last pass; sums the mass and the moment of every body
-of the Arm, the Head and the stop screw about the X shaft's axis from
+The test regenerates the variant's 22 studios and places its 44
+bodies; reads the X travel off the supports, the blocks and the saddle
+and the Y travel off the Y supports, the blocks and the feet, against
+the blank and the reference hole; finds both passes by bisection on
+the kernel (the arm swung until the bit's tip is 4 below the blank's
+top, then 12.5 below the plate's) and checks the bit's axis is tilted
+by the last pass's angle and the tips moved back 10 to 14; sums the
+mass and the moment of every body of the Arm about the main rail from
 their densities and checks the nose is 450 to 550 g heavy at the tool
 tips; then runs the same sweep as the other variants over the work,
-74 poses (every 25 mm in Y at the blank's edges and middle, first and
-last pass with the screw backed off, and the head at 20 degrees each
-way with the arm compensating), every pair of bodies that move
-differently intersected: nothing meets but the tools in the work. A
-shaft turned in a bushing's bore is two faceted cylinders whose
-facets no longer line up, which overlap by a cubic millimetre or two
-at every pose but the drawn one; those pairs are allowed up to 5.
+72 poses, every pair of bodies that move differently intersected:
+nothing meets but the tools in the work. A shaft turned in a
+bushing's bore is two faceted cylinders whose facets no longer line
+up, which overlap by a cubic millimetre or two at every pose but the
+drawn one; those pairs are allowed up to 5.
 
 ## Hardware
 

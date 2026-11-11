@@ -3347,7 +3347,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -400.0,
+                      "x": -360.0,
                       "y": -75.0
                     }
                   },
@@ -3361,7 +3361,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -400.0,
+                      "x": -360.0,
                       "y": -75.0
                     }
                   },
@@ -3369,8 +3369,8 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -400.0,
-                      "y": 220.0
+                      "x": -360.0,
+                      "y": 205.0
                     }
                   },
                   {
@@ -3383,8 +3383,8 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -400.0,
-                      "y": 220.0
+                      "x": -360.0,
+                      "y": 205.0
                     }
                   },
                   {
@@ -3392,7 +3392,7 @@
                     "type": "point",
                     "pos": {
                       "x": -470.0,
-                      "y": 220.0
+                      "y": 205.0
                     }
                   },
                   {
@@ -3406,7 +3406,7 @@
                     "type": "point",
                     "pos": {
                       "x": -470.0,
-                      "y": 220.0
+                      "y": 205.0
                     }
                   },
                   {
@@ -3510,7 +3510,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 400.0,
+                      "x": 360.0,
                       "y": -75.0
                     }
                   },
@@ -3541,7 +3541,7 @@
                     "type": "point",
                     "pos": {
                       "x": 470.0,
-                      "y": 220.0
+                      "y": 205.0
                     }
                   },
                   {
@@ -3555,15 +3555,15 @@
                     "type": "point",
                     "pos": {
                       "x": 470.0,
-                      "y": 220.0
+                      "y": 205.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 400.0,
-                      "y": 220.0
+                      "x": 360.0,
+                      "y": 205.0
                     }
                   },
                   {
@@ -3576,15 +3576,15 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 400.0,
-                      "y": 220.0
+                      "x": 360.0,
+                      "y": 205.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 400.0,
+                      "x": 360.0,
                       "y": -75.0
                     }
                   },
@@ -3685,579 +3685,6 @@
       "id": 7,
       "kind": {
         "type": "part_studio",
-        "name": "Posts",
-        "features": [
-          {
-            "id": 1,
-            "name": "post, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 95.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -470.0,
-                      "y": 201.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": -360.0,
-                      "y": 201.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": -360.0,
-                      "y": 201.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": -360.0,
-                      "y": 220.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": -360.0,
-                      "y": 220.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -470.0,
-                      "y": 220.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -470.0,
-                      "y": 220.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -470.0,
-                      "y": 201.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "post, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 155.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "gusset",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -470.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 201.0,
-                      "y": 95.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 81.0,
-                      "y": 95.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 81.0,
-                      "y": 95.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 201.0,
-                      "y": 250.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 201.0,
-                      "y": 250.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 201.0,
-                      "y": 95.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 9,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "gusset, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 19.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 5,
-            "name": "post, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 95.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 360.0,
-                      "y": 201.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 470.0,
-                      "y": 201.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 470.0,
-                      "y": 201.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 470.0,
-                      "y": 220.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 470.0,
-                      "y": 220.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 360.0,
-                      "y": 220.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 360.0,
-                      "y": 220.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 360.0,
-                      "y": 201.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "post, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 155.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 7,
-            "name": "gusset",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 451.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 201.0,
-                      "y": 95.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 81.0,
-                      "y": 95.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 81.0,
-                      "y": 95.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 201.0,
-                      "y": 250.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 201.0,
-                      "y": 250.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 201.0,
-                      "y": 95.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 9,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "gusset, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 7,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 19.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          }
-        ],
-        "next_id": 9,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_materials": {
-          "2": {
-            "name": "ply",
-            "density": 0.65
-          },
-          "6": {
-            "name": "ply",
-            "density": 0.65
-          }
-        }
-      }
-    },
-    {
-      "id": 8,
-      "kind": {
-        "type": "part_studio",
         "name": "X supports SK20",
         "features": [
           {
@@ -4269,7 +3696,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 156.0
+                "offset": 95.0
               },
               "sketch": {
                 "entities": [
@@ -4278,7 +3705,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 189.0
+                      "y": 140.0
                     }
                   },
                   {
@@ -4286,7 +3713,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 189.0
+                      "y": 140.0
                     }
                   },
                   {
@@ -4300,7 +3727,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 189.0
+                      "y": 140.0
                     }
                   },
                   {
@@ -4308,7 +3735,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 201.0
+                      "y": 200.0
                     }
                   },
                   {
@@ -4322,7 +3749,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 201.0
+                      "y": 200.0
                     }
                   },
                   {
@@ -4330,7 +3757,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 201.0
+                      "y": 200.0
                     }
                   },
                   {
@@ -4344,7 +3771,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 201.0
+                      "y": 200.0
                     }
                   },
                   {
@@ -4352,7 +3779,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 189.0
+                      "y": 140.0
                     }
                   },
                   {
@@ -4423,7 +3850,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 60.0,
+              "depth": 12.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4440,7 +3867,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 170.0
+                "offset": 95.0
               },
               "sketch": {
                 "entities": [
@@ -4449,7 +3876,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 131.0
+                      "y": 154.0
                     }
                   },
                   {
@@ -4457,7 +3884,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 131.0
+                      "y": 154.0
                     }
                   },
                   {
@@ -4471,7 +3898,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 131.0
+                      "y": 154.0
                     }
                   },
                   {
@@ -4479,7 +3906,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 201.0
+                      "y": 186.0
                     }
                   },
                   {
@@ -4493,7 +3920,7 @@
                     "type": "point",
                     "pos": {
                       "x": -360.0,
-                      "y": 201.0
+                      "y": 186.0
                     }
                   },
                   {
@@ -4501,7 +3928,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 201.0
+                      "y": 186.0
                     }
                   },
                   {
@@ -4515,7 +3942,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 201.0
+                      "y": 186.0
                     }
                   },
                   {
@@ -4523,7 +3950,7 @@
                     "type": "point",
                     "pos": {
                       "x": -380.0,
-                      "y": 131.0
+                      "y": 154.0
                     }
                   },
                   {
@@ -4594,7 +4021,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 32.0,
+              "depth": 70.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4611,7 +4038,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 156.0
+                "offset": 95.0
               },
               "sketch": {
                 "entities": [
@@ -4620,7 +4047,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 189.0
+                      "y": 140.0
                     }
                   },
                   {
@@ -4628,7 +4055,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 189.0
+                      "y": 140.0
                     }
                   },
                   {
@@ -4642,7 +4069,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 189.0
+                      "y": 140.0
                     }
                   },
                   {
@@ -4650,7 +4077,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 201.0
+                      "y": 200.0
                     }
                   },
                   {
@@ -4664,7 +4091,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 201.0
+                      "y": 200.0
                     }
                   },
                   {
@@ -4672,7 +4099,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 201.0
+                      "y": 200.0
                     }
                   },
                   {
@@ -4686,7 +4113,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 201.0
+                      "y": 200.0
                     }
                   },
                   {
@@ -4694,7 +4121,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 189.0
+                      "y": 140.0
                     }
                   },
                   {
@@ -4765,7 +4192,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 60.0,
+              "depth": 12.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4782,7 +4209,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 170.0
+                "offset": 95.0
               },
               "sketch": {
                 "entities": [
@@ -4791,7 +4218,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 131.0
+                      "y": 154.0
                     }
                   },
                   {
@@ -4799,7 +4226,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 131.0
+                      "y": 154.0
                     }
                   },
                   {
@@ -4813,7 +4240,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 131.0
+                      "y": 154.0
                     }
                   },
                   {
@@ -4821,7 +4248,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 201.0
+                      "y": 186.0
                     }
                   },
                   {
@@ -4835,7 +4262,7 @@
                     "type": "point",
                     "pos": {
                       "x": 380.0,
-                      "y": 201.0
+                      "y": 186.0
                     }
                   },
                   {
@@ -4843,7 +4270,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 201.0
+                      "y": 186.0
                     }
                   },
                   {
@@ -4857,7 +4284,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 201.0
+                      "y": 186.0
                     }
                   },
                   {
@@ -4865,7 +4292,7 @@
                     "type": "point",
                     "pos": {
                       "x": 360.0,
-                      "y": 131.0
+                      "y": 154.0
                     }
                   },
                   {
@@ -4936,7 +4363,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 32.0,
+              "depth": 70.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -4961,8 +4388,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 150.0,
-                      "y": 186.0
+                      "x": 170.0,
+                      "y": 146.0
                     }
                   }
                 ],
@@ -5004,8 +4431,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 150.0,
-                      "y": 186.0
+                      "x": 170.0,
+                      "y": 146.0
                     }
                   }
                 ],
@@ -5048,7 +4475,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 8,
       "kind": {
         "type": "part_studio",
         "name": "X shafts",
@@ -5070,8 +4497,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 150.0,
-                      "y": 186.0
+                      "x": 170.0,
+                      "y": 146.0
                     }
                   },
                   {
@@ -5119,871 +4546,7 @@
       }
     },
     {
-      "id": 10,
-      "kind": {
-        "type": "part_studio",
-        "name": "Tie supports SK20",
-        "features": [
-          {
-            "id": 1,
-            "name": "base",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 95.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -445.0,
-                      "y": -30.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": -425.0,
-                      "y": -30.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": -425.0,
-                      "y": -30.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": -425.0,
-                      "y": 30.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": -425.0,
-                      "y": 30.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -445.0,
-                      "y": 30.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -445.0,
-                      "y": 30.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -445.0,
-                      "y": -30.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "base",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 12.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "body",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 95.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -445.0,
-                      "y": -16.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": -425.0,
-                      "y": -16.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": -425.0,
-                      "y": -16.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": -425.0,
-                      "y": 16.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": -425.0,
-                      "y": 16.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -445.0,
-                      "y": 16.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -445.0,
-                      "y": 16.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -445.0,
-                      "y": -16.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "body",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 70.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 5,
-            "name": "base",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 95.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 425.0,
-                      "y": -30.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 445.0,
-                      "y": -30.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 445.0,
-                      "y": -30.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 445.0,
-                      "y": 30.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 445.0,
-                      "y": 30.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 425.0,
-                      "y": 30.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 425.0,
-                      "y": 30.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 425.0,
-                      "y": -30.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "base",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 12.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 7,
-            "name": "body",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 95.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 425.0,
-                      "y": -16.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 445.0,
-                      "y": -16.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 445.0,
-                      "y": -16.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 445.0,
-                      "y": 16.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 445.0,
-                      "y": 16.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 425.0,
-                      "y": 16.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 425.0,
-                      "y": 16.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 425.0,
-                      "y": -16.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "body",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 7,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 70.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 9,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -446.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 146.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 10,
-            "name": "shaft bore",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 9,
-              "diameter": 20.0,
-              "depth": 22.0,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          },
-          {
-            "id": 11,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 424.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 146.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 12,
-            "name": "shaft bore",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 11,
-              "diameter": 20.0,
-              "depth": 22.0,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          }
-        ],
-        "next_id": 13,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_materials": {
-          "2": {
-            "name": "aluminium",
-            "density": 2.7
-          },
-          "6": {
-            "name": "aluminium",
-            "density": 2.7
-          }
-        }
-      }
-    },
-    {
-      "id": 11,
-      "kind": {
-        "type": "part_studio",
-        "name": "Tie shaft",
-        "features": [
-          {
-            "id": 1,
-            "name": "20 mm shaft, tie, 1000 (uncut)",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -500.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 146.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 10.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "20 mm shaft, tie, 1000 (uncut)",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 1000.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          }
-        ],
-        "next_id": 3,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_materials": {
-          "2": {
-            "name": "steel",
-            "density": 7.85
-          }
-        }
-      }
-    },
-    {
-      "id": 12,
+      "id": 9,
       "kind": {
         "type": "part_studio",
         "name": "X blocks SC20UU",
@@ -5997,7 +4560,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 169.0
+                "offset": 129.0
               },
               "sketch": {
                 "entities": [
@@ -6006,7 +4569,7 @@
                     "type": "point",
                     "pos": {
                       "x": -172.5,
-                      "y": 125.0
+                      "y": 145.0
                     }
                   },
                   {
@@ -6014,7 +4577,7 @@
                     "type": "point",
                     "pos": {
                       "x": -127.5,
-                      "y": 125.0
+                      "y": 145.0
                     }
                   },
                   {
@@ -6028,7 +4591,7 @@
                     "type": "point",
                     "pos": {
                       "x": -127.5,
-                      "y": 125.0
+                      "y": 145.0
                     }
                   },
                   {
@@ -6036,7 +4599,7 @@
                     "type": "point",
                     "pos": {
                       "x": -127.5,
-                      "y": 175.0
+                      "y": 195.0
                     }
                   },
                   {
@@ -6050,7 +4613,7 @@
                     "type": "point",
                     "pos": {
                       "x": -127.5,
-                      "y": 175.0
+                      "y": 195.0
                     }
                   },
                   {
@@ -6058,7 +4621,7 @@
                     "type": "point",
                     "pos": {
                       "x": -172.5,
-                      "y": 175.0
+                      "y": 195.0
                     }
                   },
                   {
@@ -6072,7 +4635,7 @@
                     "type": "point",
                     "pos": {
                       "x": -172.5,
-                      "y": 175.0
+                      "y": 195.0
                     }
                   },
                   {
@@ -6080,7 +4643,7 @@
                     "type": "point",
                     "pos": {
                       "x": -172.5,
-                      "y": 125.0
+                      "y": 145.0
                     }
                   },
                   {
@@ -6168,7 +4731,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 169.0
+                "offset": 129.0
               },
               "sketch": {
                 "entities": [
@@ -6177,7 +4740,7 @@
                     "type": "point",
                     "pos": {
                       "x": 127.5,
-                      "y": 125.0
+                      "y": 145.0
                     }
                   },
                   {
@@ -6185,7 +4748,7 @@
                     "type": "point",
                     "pos": {
                       "x": 172.5,
-                      "y": 125.0
+                      "y": 145.0
                     }
                   },
                   {
@@ -6199,7 +4762,7 @@
                     "type": "point",
                     "pos": {
                       "x": 172.5,
-                      "y": 125.0
+                      "y": 145.0
                     }
                   },
                   {
@@ -6207,7 +4770,7 @@
                     "type": "point",
                     "pos": {
                       "x": 172.5,
-                      "y": 175.0
+                      "y": 195.0
                     }
                   },
                   {
@@ -6221,7 +4784,7 @@
                     "type": "point",
                     "pos": {
                       "x": 172.5,
-                      "y": 175.0
+                      "y": 195.0
                     }
                   },
                   {
@@ -6229,7 +4792,7 @@
                     "type": "point",
                     "pos": {
                       "x": 127.5,
-                      "y": 175.0
+                      "y": 195.0
                     }
                   },
                   {
@@ -6243,7 +4806,7 @@
                     "type": "point",
                     "pos": {
                       "x": 127.5,
-                      "y": 175.0
+                      "y": 195.0
                     }
                   },
                   {
@@ -6251,7 +4814,7 @@
                     "type": "point",
                     "pos": {
                       "x": 127.5,
-                      "y": 125.0
+                      "y": 145.0
                     }
                   },
                   {
@@ -6347,8 +4910,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 150.0,
-                      "y": 186.0
+                      "x": 170.0,
+                      "y": 146.0
                     }
                   }
                 ],
@@ -6390,8 +4953,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 150.0,
-                      "y": 186.0
+                      "x": 170.0,
+                      "y": 146.0
                     }
                   }
                 ],
@@ -6434,7 +4997,7 @@
       }
     },
     {
-      "id": 13,
+      "id": 10,
       "kind": {
         "type": "part_studio",
         "name": "Arm frame",
@@ -6448,7 +5011,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 211.0
+                "offset": 171.0
               },
               "sketch": {
                 "entities": [
@@ -6457,7 +5020,7 @@
                     "type": "point",
                     "pos": {
                       "x": -175.0,
-                      "y": 90.0
+                      "y": 110.0
                     }
                   },
                   {
@@ -6465,7 +5028,7 @@
                     "type": "point",
                     "pos": {
                       "x": 175.0,
-                      "y": 90.0
+                      "y": 110.0
                     }
                   },
                   {
@@ -6479,7 +5042,7 @@
                     "type": "point",
                     "pos": {
                       "x": 175.0,
-                      "y": 90.0
+                      "y": 110.0
                     }
                   },
                   {
@@ -6487,7 +5050,7 @@
                     "type": "point",
                     "pos": {
                       "x": 175.0,
-                      "y": 210.0
+                      "y": 230.0
                     }
                   },
                   {
@@ -6501,7 +5064,7 @@
                     "type": "point",
                     "pos": {
                       "x": 175.0,
-                      "y": 210.0
+                      "y": 230.0
                     }
                   },
                   {
@@ -6509,7 +5072,7 @@
                     "type": "point",
                     "pos": {
                       "x": -175.0,
-                      "y": 210.0
+                      "y": 230.0
                     }
                   },
                   {
@@ -6523,7 +5086,7 @@
                     "type": "point",
                     "pos": {
                       "x": -175.0,
-                      "y": 210.0
+                      "y": 230.0
                     }
                   },
                   {
@@ -6531,7 +5094,7 @@
                     "type": "point",
                     "pos": {
                       "x": -175.0,
-                      "y": 90.0
+                      "y": 110.0
                     }
                   },
                   {
@@ -6619,7 +5182,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 230.0
+                "offset": 190.0
               },
               "sketch": {
                 "entities": [
@@ -6627,16 +5190,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": -111.0
+                      "x": -104.0,
+                      "y": -206.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -100.0,
-                      "y": -111.0
+                      "x": -85.0,
+                      "y": -206.0
                     }
                   },
                   {
@@ -6649,16 +5212,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -100.0,
-                      "y": -111.0
+                      "x": -85.0,
+                      "y": -206.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -100.0,
-                      "y": 570.0
+                      "x": -85.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -6671,16 +5234,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -100.0,
-                      "y": 570.0
+                      "x": -85.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 570.0
+                      "x": -104.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -6693,16 +5256,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 570.0
+                      "x": -104.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": -111.0
+                      "x": -104.0,
+                      "y": -206.0
                     }
                   },
                   {
@@ -6773,7 +5336,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 100.0,
+              "depth": 80.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -6790,7 +5353,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 230.0
+                "offset": 190.0
               },
               "sketch": {
                 "entities": [
@@ -6798,16 +5361,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 100.0,
-                      "y": -111.0
+                      "x": 85.0,
+                      "y": -206.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": -111.0
+                      "x": 104.0,
+                      "y": -206.0
                     }
                   },
                   {
@@ -6820,16 +5383,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": -111.0
+                      "x": 104.0,
+                      "y": -206.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 570.0
+                      "x": 104.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -6842,16 +5405,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 570.0
+                      "x": 104.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 100.0,
-                      "y": 570.0
+                      "x": 85.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -6864,16 +5427,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 100.0,
-                      "y": 570.0
+                      "x": 85.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 100.0,
-                      "y": -111.0
+                      "x": 85.0,
+                      "y": -206.0
                     }
                   },
                   {
@@ -6944,7 +5507,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 100.0,
+              "depth": 80.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -6954,14 +5517,14 @@
           },
           {
             "id": 7,
-            "name": "crossbar, ply",
+            "name": "box floor, ply",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 150.0
+                "offset": 171.0
               },
               "sketch": {
                 "entities": [
@@ -6969,16 +5532,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -120.0,
-                      "y": -130.0
+                      "x": -104.0,
+                      "y": 340.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 120.0,
-                      "y": -130.0
+                      "x": 104.0,
+                      "y": 340.0
                     }
                   },
                   {
@@ -6991,16 +5554,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 120.0,
-                      "y": -130.0
+                      "x": 104.0,
+                      "y": 340.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 120.0,
-                      "y": -111.0
+                      "x": 104.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -7013,16 +5576,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 120.0,
-                      "y": -111.0
+                      "x": 104.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -120.0,
-                      "y": -111.0
+                      "x": -104.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -7035,16 +5598,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -120.0,
-                      "y": -111.0
+                      "x": -104.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -120.0,
-                      "y": -130.0
+                      "x": -104.0,
+                      "y": 340.0
                     }
                   },
                   {
@@ -7107,7 +5670,7 @@
           },
           {
             "id": 8,
-            "name": "crossbar, ply",
+            "name": "box floor, ply",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -7115,7 +5678,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 180.0,
+              "depth": 19.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -7125,14 +5688,14 @@
           },
           {
             "id": 9,
-            "name": "stop bar, ply",
+            "name": "box front wall, ply",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 211.0
+                "offset": 190.0
               },
               "sketch": {
                 "entities": [
@@ -7140,16 +5703,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -120.0,
-                      "y": -30.0
+                      "x": -85.0,
+                      "y": 340.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 120.0,
-                      "y": -30.0
+                      "x": 85.0,
+                      "y": 340.0
                     }
                   },
                   {
@@ -7162,16 +5725,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 120.0,
-                      "y": -30.0
+                      "x": 85.0,
+                      "y": 340.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 120.0,
-                      "y": 30.0
+                      "x": 85.0,
+                      "y": 359.0
                     }
                   },
                   {
@@ -7184,16 +5747,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 120.0,
-                      "y": 30.0
+                      "x": 85.0,
+                      "y": 359.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -120.0,
-                      "y": 30.0
+                      "x": -85.0,
+                      "y": 359.0
                     }
                   },
                   {
@@ -7206,16 +5769,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -120.0,
-                      "y": 30.0
+                      "x": -85.0,
+                      "y": 359.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -120.0,
-                      "y": -30.0
+                      "x": -85.0,
+                      "y": 340.0
                     }
                   },
                   {
@@ -7278,7 +5841,7 @@
           },
           {
             "id": 10,
-            "name": "stop bar, ply",
+            "name": "box front wall, ply",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -7286,7 +5849,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 19.0,
+              "depth": 80.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -7296,14 +5859,14 @@
           },
           {
             "id": 11,
-            "name": "box floor, ply",
+            "name": "box back wall, ply",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 211.0
+                "offset": 190.0
               },
               "sketch": {
                 "entities": [
@@ -7311,16 +5874,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 320.0
+                      "x": -85.0,
+                      "y": 571.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 320.0
+                      "x": 85.0,
+                      "y": 571.0
                     }
                   },
                   {
@@ -7333,16 +5896,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 320.0
+                      "x": 85.0,
+                      "y": 571.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 570.0
+                      "x": 85.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -7355,16 +5918,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 570.0
+                      "x": 85.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 570.0
+                      "x": -85.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -7377,16 +5940,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 570.0
+                      "x": -85.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 320.0
+                      "x": -85.0,
+                      "y": 571.0
                     }
                   },
                   {
@@ -7449,7 +6012,7 @@
           },
           {
             "id": 12,
-            "name": "box floor, ply",
+            "name": "box back wall, ply",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -7457,401 +6020,16 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 19.0,
+              "depth": 80.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
               },
               "op": "add"
-            }
-          },
-          {
-            "id": 13,
-            "name": "box front wall, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 230.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -100.0,
-                      "y": 320.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 100.0,
-                      "y": 320.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 100.0,
-                      "y": 320.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 100.0,
-                      "y": 339.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 100.0,
-                      "y": 339.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -100.0,
-                      "y": 339.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -100.0,
-                      "y": 339.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -100.0,
-                      "y": 320.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 14,
-            "name": "box front wall, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 13,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 100.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 15,
-            "name": "box back wall, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 230.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -100.0,
-                      "y": 551.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 100.0,
-                      "y": 551.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 100.0,
-                      "y": 551.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 100.0,
-                      "y": 570.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 100.0,
-                      "y": 570.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -100.0,
-                      "y": 570.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -100.0,
-                      "y": 570.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -100.0,
-                      "y": 551.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 16,
-            "name": "box back wall, ply",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 15,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 100.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 17,
-            "name": "screw hole",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 231.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 0.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 18,
-            "name": "M8 tapped",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 17,
-              "diameter": 8.0,
-              "depth": 21.0,
-              "through_all": false,
-              "direction": "reverse",
-              "counterbore": null,
-              "countersink": null
             }
           }
         ],
-        "next_id": 19,
+        "next_id": 13,
         "settings": {
           "facet_angle": 5.0
         },
@@ -7864,7 +6042,7 @@
       }
     },
     {
-      "id": 14,
+      "id": 11,
       "kind": {
         "type": "part_studio",
         "name": "Box lid",
@@ -7878,7 +6056,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 330.0
+                "offset": 270.0
               },
               "sketch": {
                 "entities": [
@@ -7886,16 +6064,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 320.0
+                      "x": -104.0,
+                      "y": 340.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 320.0
+                      "x": 104.0,
+                      "y": 340.0
                     }
                   },
                   {
@@ -7908,16 +6086,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 320.0
+                      "x": 104.0,
+                      "y": 340.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 570.0
+                      "x": 104.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -7930,16 +6108,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 119.0,
-                      "y": 570.0
+                      "x": 104.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 570.0
+                      "x": -104.0,
+                      "y": 590.0
                     }
                   },
                   {
@@ -7952,16 +6130,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 570.0
+                      "x": -104.0,
+                      "y": 590.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -119.0,
-                      "y": 320.0
+                      "x": -104.0,
+                      "y": 340.0
                     }
                   },
                   {
@@ -8054,2090 +6232,7 @@
       }
     },
     {
-      "id": 15,
-      "kind": {
-        "type": "part_studio",
-        "name": "Head supports SK20",
-        "features": [
-          {
-            "id": 1,
-            "name": "base",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 156.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -110.0,
-                      "y": -142.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": -90.0,
-                      "y": -142.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": -90.0,
-                      "y": -142.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": -90.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": -90.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -110.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -110.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -110.0,
-                      "y": -142.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "base",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 60.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "body",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 170.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -110.0,
-                      "y": -200.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": -90.0,
-                      "y": -200.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": -90.0,
-                      "y": -200.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": -90.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": -90.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -110.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -110.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -110.0,
-                      "y": -200.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "body",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 32.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 5,
-            "name": "base",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 156.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 90.0,
-                      "y": -142.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 110.0,
-                      "y": -142.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 110.0,
-                      "y": -142.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 110.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 110.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 90.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 90.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 90.0,
-                      "y": -142.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "base",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 60.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 7,
-            "name": "body",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 170.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 90.0,
-                      "y": -200.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 110.0,
-                      "y": -200.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 110.0,
-                      "y": -200.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 110.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 110.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 90.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 90.0,
-                      "y": -130.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 90.0,
-                      "y": -200.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "body",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 7,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 32.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 9,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -111.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 10,
-            "name": "shaft bore",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 9,
-              "diameter": 20.0,
-              "depth": 22.0,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          },
-          {
-            "id": 11,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 89.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 12,
-            "name": "shaft bore",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 11,
-              "diameter": 20.0,
-              "depth": 22.0,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          }
-        ],
-        "next_id": 13,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_materials": {
-          "2": {
-            "name": "aluminium",
-            "density": 2.7
-          },
-          "6": {
-            "name": "aluminium",
-            "density": 2.7
-          }
-        }
-      }
-    },
-    {
-      "id": 16,
-      "kind": {
-        "type": "part_studio",
-        "name": "Head pivot shaft",
-        "features": [
-          {
-            "id": 1,
-            "name": "20 mm shaft, head pivot, 300",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -150.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 10.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "20 mm shaft, head pivot, 300",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 300.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          }
-        ],
-        "next_id": 3,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_materials": {
-          "2": {
-            "name": "steel",
-            "density": 7.85
-          }
-        }
-      }
-    },
-    {
-      "id": 17,
-      "kind": {
-        "type": "part_studio",
-        "name": "Collars",
-        "features": [
-          {
-            "id": 1,
-            "name": "shaft collar, 20 bore, 32 x 12",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -87.5
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 16.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "shaft collar, 20 bore, 32 x 12",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 12.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "shaft collar, 20 bore, 32 x 12",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 75.5
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 16.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "shaft collar, 20 bore, 32 x 12",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 12.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 5,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -88.5
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 5,
-              "diameter": 20.0,
-              "depth": 14.0,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          },
-          {
-            "id": 7,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 74.5
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 7,
-              "diameter": 20.0,
-              "depth": 14.0,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          }
-        ],
-        "next_id": 9,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_materials": {
-          "2": {
-            "name": "steel",
-            "density": 7.85
-          },
-          "4": {
-            "name": "steel",
-            "density": 7.85
-          }
-        }
-      }
-    },
-    {
-      "id": 18,
-      "kind": {
-        "type": "part_studio",
-        "name": "Head blocks SC20UU",
-        "features": [
-          {
-            "id": 1,
-            "name": "block",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 161.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -75.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": -30.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": -30.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": -30.0,
-                      "y": -164.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": -30.0,
-                      "y": -164.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -75.0,
-                      "y": -164.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -75.0,
-                      "y": -164.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -75.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "block",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 50.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "block",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 161.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 30.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 75.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 75.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 75.0,
-                      "y": -164.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 75.0,
-                      "y": -164.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 30.0,
-                      "y": -164.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 30.0,
-                      "y": -164.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 30.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "block",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 50.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 5,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -76.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "shaft bore",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 5,
-              "diameter": 20.0,
-              "depth": 47.0,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          },
-          {
-            "id": 7,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 29.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "shaft bore",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 7,
-              "diameter": 20.0,
-              "depth": 47.0,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          }
-        ],
-        "next_id": 9,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_materials": {
-          "2": {
-            "name": "aluminium",
-            "density": 2.7
-          },
-          "4": {
-            "name": "aluminium",
-            "density": 2.7
-          }
-        }
-      }
-    },
-    {
-      "id": 19,
-      "kind": {
-        "type": "part_studio",
-        "name": "Tilt clamp",
-        "features": [
-          {
-            "id": 1,
-            "name": "tilt clamp, three plies",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 156.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": -149.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": -149.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": -149.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": -149.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": -206.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "tilt clamp, three plies",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 60.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -26.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 186.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "shaft bore, 20.5",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 3,
-              "diameter": 20.5,
-              "depth": 52.0,
-              "through_all": false,
-              "direction": "normal",
-              "counterbore": null,
-              "countersink": null
-            }
-          },
-          {
-            "id": 5,
-            "name": "slit",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -26.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 185.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": -148.0,
-                      "y": 185.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": -148.0,
-                      "y": 185.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": -148.0,
-                      "y": 187.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": -148.0,
-                      "y": 187.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 187.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 187.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -181.0,
-                      "y": 185.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [
-                  {
-                    "id": 0,
-                    "type": "coincident",
-                    "a": 1,
-                    "b": 3
-                  },
-                  {
-                    "id": 1,
-                    "type": "coincident",
-                    "a": 4,
-                    "b": 6
-                  },
-                  {
-                    "id": 2,
-                    "type": "coincident",
-                    "a": 7,
-                    "b": 9
-                  },
-                  {
-                    "id": 3,
-                    "type": "coincident",
-                    "a": 10,
-                    "b": 0
-                  },
-                  {
-                    "id": 4,
-                    "type": "horizontal",
-                    "line": 2
-                  },
-                  {
-                    "id": 5,
-                    "type": "vertical",
-                    "line": 5
-                  },
-                  {
-                    "id": 6,
-                    "type": "horizontal",
-                    "line": 8
-                  },
-                  {
-                    "id": 7,
-                    "type": "vertical",
-                    "line": 11
-                  }
-                ],
-                "next_entity": 12,
-                "next_constraint": 8
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "clamp slit, to the back",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 52.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 7,
-            "name": "bolt hole",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 217.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": -160.0
-                    }
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 1,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "M6 clearance",
-            "suppressed": false,
-            "kind": {
-              "type": "hole",
-              "sketch": 7,
-              "diameter": 6.5,
-              "depth": 62.0,
-              "through_all": false,
-              "direction": "reverse",
-              "counterbore": null,
-              "countersink": null
-            }
-          },
-          {
-            "id": 9,
-            "name": "M6 x 80 knob bolt",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 150.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": -160.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 3.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 10,
-            "name": "M6 x 80 knob bolt",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 9,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 70.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 11,
-            "name": "knob",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 220.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": -160.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 12.5
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 12,
-            "name": "knob",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 11,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 12.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          }
-        ],
-        "next_id": 13,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_materials": {
-          "2": {
-            "name": "ply",
-            "density": 0.65
-          },
-          "10": {
-            "name": "ply",
-            "density": 0.65
-          }
-        }
-      }
-    },
-    {
-      "id": 20,
+      "id": 12,
       "kind": {
         "type": "part_studio",
         "name": "Tool support",
@@ -10159,7 +6254,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -110.0,
+                      "x": -120.0,
                       "y": -225.0
                     }
                   },
@@ -10167,7 +6262,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 110.0,
+                      "x": 120.0,
                       "y": -225.0
                     }
                   },
@@ -10181,7 +6276,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 110.0,
+                      "x": 120.0,
                       "y": -225.0
                     }
                   },
@@ -10189,7 +6284,7 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 110.0,
+                      "x": 120.0,
                       "y": -206.0
                     }
                   },
@@ -10203,7 +6298,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 110.0,
+                      "x": 120.0,
                       "y": -206.0
                     }
                   },
@@ -10211,7 +6306,7 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -110.0,
+                      "x": -120.0,
                       "y": -206.0
                     }
                   },
@@ -10225,7 +6320,7 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -110.0,
+                      "x": -120.0,
                       "y": -206.0
                     }
                   },
@@ -10233,7 +6328,7 @@
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -110.0,
+                      "x": -120.0,
                       "y": -225.0
                     }
                   },
@@ -10305,7 +6400,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 130.0,
+              "depth": 149.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -11320,7 +7415,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 13,
       "kind": {
         "type": "part_studio",
         "name": "Tool support webs",
@@ -11659,7 +7754,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 14,
       "kind": {
         "type": "part_studio",
         "name": "Clamp bolts",
@@ -11782,7 +7877,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 15,
       "kind": {
         "type": "part_studio",
         "name": "Router",
@@ -11957,7 +8052,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 16,
       "kind": {
         "type": "part_studio",
         "name": "Stylus block",
@@ -13897,7 +9992,7 @@
       }
     },
     {
-      "id": 25,
+      "id": 17,
       "kind": {
         "type": "part_studio",
         "name": "Pilot",
@@ -14072,144 +10167,21 @@
       }
     },
     {
-      "id": 26,
-      "kind": {
-        "type": "part_studio",
-        "name": "Stop screw",
-        "features": [
-          {
-            "id": 1,
-            "name": "M8 stop screw",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 171.4870598157986
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 0.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 4.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 2,
-            "name": "M8 stop screw",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 1,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 83.5129401842014,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "knob",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "top",
-                "offset": 255.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 0.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 12.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "knob",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 12.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          }
-        ],
-        "next_id": 5,
-        "settings": {
-          "facet_angle": 5.0
-        },
-        "part_materials": {
-          "2": {
-            "name": "steel",
-            "density": 7.85
-          }
-        }
-      }
-    },
-    {
-      "id": 27,
+      "id": 18,
       "kind": {
         "type": "part_studio",
         "name": "Sand",
         "features": [
           {
             "id": 1,
-            "name": "sand, 63 deep",
+            "name": "sand, 50 deep",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 230.0
+                "offset": 190.0
               },
               "sketch": {
                 "entities": [
@@ -14217,16 +10189,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -100.0,
-                      "y": 339.0
+                      "x": -85.0,
+                      "y": 359.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 100.0,
-                      "y": 339.0
+                      "x": 85.0,
+                      "y": 359.0
                     }
                   },
                   {
@@ -14239,16 +10211,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 100.0,
-                      "y": 339.0
+                      "x": 85.0,
+                      "y": 359.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 100.0,
-                      "y": 551.0
+                      "x": 85.0,
+                      "y": 571.0
                     }
                   },
                   {
@@ -14261,16 +10233,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 100.0,
-                      "y": 551.0
+                      "x": 85.0,
+                      "y": 571.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -100.0,
-                      "y": 551.0
+                      "x": -85.0,
+                      "y": 571.0
                     }
                   },
                   {
@@ -14283,16 +10255,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -100.0,
-                      "y": 551.0
+                      "x": -85.0,
+                      "y": 571.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -100.0,
-                      "y": 339.0
+                      "x": -85.0,
+                      "y": 359.0
                     }
                   },
                   {
@@ -14355,7 +10327,7 @@
           },
           {
             "id": 2,
-            "name": "sand, 63 deep",
+            "name": "sand, 50 deep",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -14363,7 +10335,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 63.25325976537397,
+              "depth": 49.871471455051875,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -14385,7 +10357,7 @@
       }
     },
     {
-      "id": 28,
+      "id": 19,
       "kind": {
         "type": "part_studio",
         "name": "Platforms",
@@ -14750,7 +10722,7 @@
       }
     },
     {
-      "id": 29,
+      "id": 20,
       "kind": {
         "type": "part_studio",
         "name": "Fences",
@@ -16371,7 +12343,7 @@
       }
     },
     {
-      "id": 30,
+      "id": 21,
       "kind": {
         "type": "part_studio",
         "name": "Blank",
@@ -16561,7 +12533,7 @@
       }
     },
     {
-      "id": 31,
+      "id": 22,
       "kind": {
         "type": "part_studio",
         "name": "Pattern plate",
@@ -19530,13 +15502,13 @@
       }
     },
     {
-      "id": 32,
+      "id": 23,
       "kind": {
         "type": "assembly",
         "name": "Gantry",
         "instances": [
           {
-            "id": 33,
+            "id": 24,
             "name": "Y blocks SC20UU 1",
             "studio": 5,
             "body": 0,
@@ -19555,7 +15527,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 25,
             "name": "Y blocks SC20UU 2",
             "studio": 5,
             "body": 1,
@@ -19574,7 +15546,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 26,
             "name": "Y blocks SC20UU 3",
             "studio": 5,
             "body": 2,
@@ -19593,7 +15565,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 27,
             "name": "Y blocks SC20UU 4",
             "studio": 5,
             "body": 3,
@@ -19612,7 +15584,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 28,
             "name": "Feet 1",
             "studio": 6,
             "body": 0,
@@ -19631,7 +15603,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 29,
             "name": "Feet 2",
             "studio": 6,
             "body": 1,
@@ -19650,47 +15622,9 @@
             }
           },
           {
-            "id": 39,
-            "name": "Posts 1",
-            "studio": 7,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 40,
-            "name": "Posts 2",
-            "studio": 7,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 41,
+            "id": 30,
             "name": "X supports SK20 1",
-            "studio": 8,
+            "studio": 7,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -19707,9 +15641,9 @@
             }
           },
           {
-            "id": 42,
+            "id": 31,
             "name": "X supports SK20 2",
-            "studio": 8,
+            "studio": 7,
             "body": 1,
             "fixed": true,
             "placement": {
@@ -19726,8 +15660,37 @@
             }
           },
           {
-            "id": 43,
+            "id": 32,
             "name": "X shafts",
+            "studio": 8,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    },
+    {
+      "id": 33,
+      "kind": {
+        "type": "assembly",
+        "name": "Arm",
+        "instances": [
+          {
+            "id": 34,
+            "name": "X blocks SC20UU 1",
             "studio": 9,
             "body": 0,
             "fixed": true,
@@ -19745,8 +15708,27 @@
             }
           },
           {
-            "id": 44,
-            "name": "Tie supports SK20 1",
+            "id": 35,
+            "name": "X blocks SC20UU 2",
+            "studio": 9,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 36,
+            "name": "Arm frame",
             "studio": 10,
             "body": 0,
             "fixed": true,
@@ -19764,27 +15746,8 @@
             }
           },
           {
-            "id": 45,
-            "name": "Tie supports SK20 2",
-            "studio": 10,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 46,
-            "name": "Tie shaft",
+            "id": 37,
+            "name": "Box lid",
             "studio": 11,
             "body": 0,
             "fixed": true,
@@ -19800,20 +15763,29 @@
                 "z": 0.0
               }
             }
-          }
-        ],
-        "mates": []
-      }
-    },
-    {
-      "id": 47,
-      "kind": {
-        "type": "assembly",
-        "name": "Arm",
-        "instances": [
+          },
           {
-            "id": 48,
-            "name": "X blocks SC20UU 1",
+            "id": 38,
+            "name": "Sand",
+            "studio": 18,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 39,
+            "name": "Tool support",
             "studio": 12,
             "body": 0,
             "fixed": true,
@@ -19831,27 +15803,8 @@
             }
           },
           {
-            "id": 49,
-            "name": "X blocks SC20UU 2",
-            "studio": 12,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 50,
-            "name": "Arm frame",
+            "id": 40,
+            "name": "Tool support webs 1",
             "studio": 13,
             "body": 0,
             "fixed": true,
@@ -19869,8 +15822,46 @@
             }
           },
           {
-            "id": 51,
-            "name": "Box lid",
+            "id": 41,
+            "name": "Tool support webs 2",
+            "studio": 13,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 42,
+            "name": "Tool support webs 3",
+            "studio": 13,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 43,
+            "name": "Clamp bolts",
             "studio": 14,
             "body": 0,
             "fixed": true,
@@ -19888,8 +15879,8 @@
             }
           },
           {
-            "id": 52,
-            "name": "Head supports SK20 1",
+            "id": 44,
+            "name": "Router",
             "studio": 15,
             "body": 0,
             "fixed": true,
@@ -19907,27 +15898,8 @@
             }
           },
           {
-            "id": 53,
-            "name": "Head supports SK20 2",
-            "studio": 15,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 54,
-            "name": "Head pivot shaft",
+            "id": 45,
+            "name": "Stylus block 1",
             "studio": 16,
             "body": 0,
             "fixed": true,
@@ -19945,285 +15917,9 @@
             }
           },
           {
-            "id": 55,
-            "name": "Collars 1",
-            "studio": 17,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 56,
-            "name": "Collars 2",
-            "studio": 17,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 57,
-            "name": "Sand",
-            "studio": 27,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          }
-        ],
-        "mates": []
-      }
-    },
-    {
-      "id": 58,
-      "kind": {
-        "type": "assembly",
-        "name": "Head",
-        "instances": [
-          {
-            "id": 59,
-            "name": "Head blocks SC20UU 1",
-            "studio": 18,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 60,
-            "name": "Head blocks SC20UU 2",
-            "studio": 18,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 61,
-            "name": "Tilt clamp 1",
-            "studio": 19,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 62,
-            "name": "Tilt clamp 2",
-            "studio": 19,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 63,
-            "name": "Tool support",
-            "studio": 20,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 64,
-            "name": "Tool support webs 1",
-            "studio": 21,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 65,
-            "name": "Tool support webs 2",
-            "studio": 21,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 66,
-            "name": "Tool support webs 3",
-            "studio": 21,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 67,
-            "name": "Clamp bolts",
-            "studio": 22,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 68,
-            "name": "Router",
-            "studio": 23,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 69,
-            "name": "Stylus block 1",
-            "studio": 24,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 70,
+            "id": 46,
             "name": "Stylus block 2",
-            "studio": 24,
+            "studio": 16,
             "body": 1,
             "fixed": true,
             "placement": {
@@ -20240,9 +15936,9 @@
             }
           },
           {
-            "id": 71,
+            "id": 47,
             "name": "Stylus block 3",
-            "studio": 24,
+            "studio": 16,
             "body": 2,
             "fixed": true,
             "placement": {
@@ -20259,9 +15955,9 @@
             }
           },
           {
-            "id": 72,
+            "id": 48,
             "name": "Stylus block 4",
-            "studio": 24,
+            "studio": 16,
             "body": 3,
             "fixed": true,
             "placement": {
@@ -20278,9 +15974,9 @@
             }
           },
           {
-            "id": 73,
+            "id": 49,
             "name": "Stylus block 5",
-            "studio": 24,
+            "studio": 16,
             "body": 4,
             "fixed": true,
             "placement": {
@@ -20297,9 +15993,9 @@
             }
           },
           {
-            "id": 74,
+            "id": 50,
             "name": "Stylus block 6",
-            "studio": 24,
+            "studio": 16,
             "body": 5,
             "fixed": true,
             "placement": {
@@ -20316,9 +16012,9 @@
             }
           },
           {
-            "id": 75,
+            "id": 51,
             "name": "Stylus block 7",
-            "studio": 24,
+            "studio": 16,
             "body": 6,
             "fixed": true,
             "placement": {
@@ -20335,9 +16031,9 @@
             }
           },
           {
-            "id": 76,
+            "id": 52,
             "name": "Pilot",
-            "studio": 25,
+            "studio": 17,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -20358,13 +16054,13 @@
       }
     },
     {
-      "id": 77,
+      "id": 53,
       "kind": {
         "type": "assembly",
         "name": "Duplicator",
         "instances": [
           {
-            "id": 78,
+            "id": 54,
             "name": "Base",
             "studio": 1,
             "body": 0,
@@ -20383,7 +16079,7 @@
             }
           },
           {
-            "id": 79,
+            "id": 55,
             "name": "Battens 1",
             "studio": 2,
             "body": 0,
@@ -20402,7 +16098,7 @@
             }
           },
           {
-            "id": 80,
+            "id": 56,
             "name": "Battens 2",
             "studio": 2,
             "body": 1,
@@ -20421,7 +16117,7 @@
             }
           },
           {
-            "id": 81,
+            "id": 57,
             "name": "Battens 3",
             "studio": 2,
             "body": 2,
@@ -20440,7 +16136,7 @@
             }
           },
           {
-            "id": 82,
+            "id": 58,
             "name": "Y supports SK20 1",
             "studio": 3,
             "body": 0,
@@ -20459,7 +16155,7 @@
             }
           },
           {
-            "id": 83,
+            "id": 59,
             "name": "Y supports SK20 2",
             "studio": 3,
             "body": 1,
@@ -20478,7 +16174,7 @@
             }
           },
           {
-            "id": 84,
+            "id": 60,
             "name": "Y supports SK20 3",
             "studio": 3,
             "body": 2,
@@ -20497,7 +16193,7 @@
             }
           },
           {
-            "id": 85,
+            "id": 61,
             "name": "Y supports SK20 4",
             "studio": 3,
             "body": 3,
@@ -20516,7 +16212,7 @@
             }
           },
           {
-            "id": 86,
+            "id": 62,
             "name": "Y shafts 1",
             "studio": 4,
             "body": 0,
@@ -20535,7 +16231,7 @@
             }
           },
           {
-            "id": 87,
+            "id": 63,
             "name": "Y shafts 2",
             "studio": 4,
             "body": 1,
@@ -20554,9 +16250,9 @@
             }
           },
           {
-            "id": 88,
+            "id": 64,
             "name": "Platforms 1",
-            "studio": 28,
+            "studio": 19,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -20573,9 +16269,9 @@
             }
           },
           {
-            "id": 89,
+            "id": 65,
             "name": "Platforms 2",
-            "studio": 28,
+            "studio": 19,
             "body": 1,
             "fixed": true,
             "placement": {
@@ -20592,9 +16288,9 @@
             }
           },
           {
-            "id": 90,
+            "id": 66,
             "name": "Fences 1",
-            "studio": 29,
+            "studio": 20,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -20611,9 +16307,9 @@
             }
           },
           {
-            "id": 91,
+            "id": 67,
             "name": "Fences 2",
-            "studio": 29,
+            "studio": 20,
             "body": 1,
             "fixed": true,
             "placement": {
@@ -20630,9 +16326,9 @@
             }
           },
           {
-            "id": 92,
+            "id": 68,
             "name": "Blank",
-            "studio": 30,
+            "studio": 21,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -20649,9 +16345,9 @@
             }
           },
           {
-            "id": 93,
+            "id": 69,
             "name": "Pattern plate",
-            "studio": 31,
+            "studio": 22,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -20668,9 +16364,9 @@
             }
           },
           {
-            "id": 94,
+            "id": 70,
             "name": "Gantry",
-            "studio": 32,
+            "studio": 23,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -20687,47 +16383,9 @@
             }
           },
           {
-            "id": 95,
+            "id": 71,
             "name": "Arm",
-            "studio": 47,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 96,
-            "name": "Head",
-            "studio": 58,
-            "body": 0,
-            "fixed": false,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 97,
-            "name": "Stop screw",
-            "studio": 26,
+            "studio": 33,
             "body": 0,
             "fixed": false,
             "placement": {
@@ -20746,11 +16404,11 @@
         ],
         "mates": [
           {
-            "id": 98,
+            "id": 72,
             "name": "Y travel",
             "kind": "slider",
             "a": {
-              "instance": 86,
+              "instance": 62,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -20768,8 +16426,8 @@
               }
             },
             "b": {
-              "instance": 94,
-              "sub": 33,
+              "instance": 70,
+              "sub": 24,
               "face": {
                 "feature": 10,
                 "local": 2,
@@ -20791,12 +16449,12 @@
             "flip": true
           },
           {
-            "id": 99,
+            "id": 73,
             "name": "arm",
             "kind": "cylindrical",
             "a": {
-              "instance": 94,
-              "sub": 43,
+              "instance": 70,
+              "sub": 32,
               "face": {
                 "feature": 2,
                 "local": 2,
@@ -20814,8 +16472,8 @@
               }
             },
             "b": {
-              "instance": 95,
-              "sub": 48,
+              "instance": 71,
+              "sub": 34,
               "face": {
                 "feature": 6,
                 "local": 2,
@@ -20832,98 +16490,7 @@
                 ]
               }
             },
-            "offset": -149.9999999999999,
-            "angle": 0.0,
-            "flip": true
-          },
-          {
-            "id": 100,
-            "name": "tilt",
-            "kind": "revolute",
-            "a": {
-              "instance": 95,
-              "sub": 54,
-              "face": {
-                "feature": 2,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  1013877695,
-                  1159760287,
-                  1468198494,
-                  2870100803,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 96,
-              "sub": 59,
-              "face": {
-                "feature": 6,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  573667395,
-                  1468198494,
-                  1659127064,
-                  3735147870,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": -52.500000000000014,
-            "angle": 0.0,
-            "flip": true
-          },
-          {
-            "id": 101,
-            "name": "stop screw",
-            "kind": "slider",
-            "a": {
-              "instance": 95,
-              "sub": 50,
-              "face": {
-                "feature": 18,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  774544575,
-                  1466211999,
-                  1946866782,
-                  2291824963,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "b": {
-              "instance": 97,
-              "face": {
-                "feature": 2,
-                "local": 2,
-                "part": 0,
-                "near": [
-                  1013877695,
-                  1468198494,
-                  2027755391,
-                  2870100803,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            },
-            "offset": -7.2564700921008125,
+            "offset": -149.99999999999986,
             "angle": 0.0,
             "flip": true
           }
@@ -20931,5 +16498,5 @@
       }
     }
   ],
-  "next_id": 102
+  "next_id": 74
 }
