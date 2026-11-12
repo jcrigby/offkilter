@@ -5,6 +5,7 @@
 //! only narrows going up so the plunger comes down, the template for
 //! the sliced tiles has a pocket per tile, and the cut list is short.
 
+use ok_math::Vec2;
 use ok_model::{Document, TabId};
 use std::path::PathBuf;
 
@@ -242,5 +243,74 @@ fn the_cut_list_has_few_shapes() {
             ),
             _ => {}
         }
+    }
+}
+
+/// The line sample: one STL, three samples of the lid along a strip
+/// at the three line widths, each a patch of pads on a base.
+#[test]
+fn the_line_sample_is_three_samples_along_a_strip() {
+    let n: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/gap_sample.json")).unwrap())
+            .unwrap();
+    let mesh =
+        ok_mesh::from_stl(&std::fs::read(dir().join("out/gap_sample.stl")).unwrap()).unwrap();
+    let gaps: Vec<f64> = n["gaps"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|g| g.as_f64().unwrap())
+        .collect();
+    assert_eq!(gaps.len(), 3);
+    assert!(
+        gaps.windows(2).all(|w| w[0] > w[1]),
+        "narrower left to right: {gaps:?}"
+    );
+    let (side, pad, height, pitch) = (
+        n["side"].as_f64().unwrap(),
+        n["pad"].as_f64().unwrap(),
+        n["height"].as_f64().unwrap(),
+        n["pitch"].as_f64().unwrap(),
+    );
+    let (lo, hi) = mesh.vertices.iter().fold(
+        (
+            Vec2::new(f64::INFINITY, f64::INFINITY),
+            Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY),
+        ),
+        |(lo, hi), v| {
+            (
+                Vec2::new(lo.x.min(v.x), lo.y.min(v.y)),
+                Vec2::new(hi.x.max(v.x), hi.y.max(v.y)),
+            )
+        },
+    );
+    let (zlo, zhi) = mesh
+        .vertices
+        .iter()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| {
+            (a.min(v.z), b.max(v.z))
+        });
+    println!(
+        "strip {:.0} x {:.0}, {:.1} tall, {} triangles",
+        hi.x - lo.x,
+        hi.y - lo.y,
+        zhi - zlo,
+        mesh.triangles.len()
+    );
+    assert!((hi.x - lo.x - (2.0 * pitch + side + 4.0)).abs() < 1e-3);
+    assert!((zhi - zlo - height).abs() < 1e-6, "{} tall", zhi - zlo);
+    assert_eq!(
+        mesh.triangles.len() as u64,
+        n["triangles"].as_u64().unwrap()
+    );
+    // Pads in every sample: vertices at the pads' top in each third of the strip.
+    for k in 0..3 {
+        let x0 = k as f64 * pitch;
+        let tops = mesh
+            .vertices
+            .iter()
+            .filter(|v| v.x >= x0 && v.x <= x0 + side && (v.z - pad).abs() < 1e-6)
+            .count();
+        assert!(tops > 20, "sample {}: {tops} pad corners", k + 1);
     }
 }

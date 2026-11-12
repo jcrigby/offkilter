@@ -92,6 +92,20 @@ deep, runs round the lid's trim rectangle across the pocket floors
 and the ridge tops, so which part of a tile ends up in the lid is
 plain while it is being laid.
 
+## The line sample
+
+![The strip: the same patch of the lid at 1.5, 1.0 and 0.7 mm lines](out/gap_sample.png)
+
+`gap_sample.py` writes `gap_sample.stl`, a 138 mm strip of three
+samples of the lid, the same 40 mm patch of tiles in each, with the
+line between tiles at 1.5 mm (the current width), 1.0 and 0.7, left
+to right. Every tile is a 3 mm pad on a 1.5 mm base, sunk 0.3 into
+it, so the gaps between pads are the lines; printed in a dark filament
+they read as the dark glue will. Notches in each base's front edge
+count the samples, one for the current line, three for the
+narrowest. Change `GAPS` in the script for other widths; the one the
+eye picks goes into `GAP` here and in the mosaic.
+
 ## What the test checks
 
 `crates/ok-render/tests/spectre_cauls.rs` regenerates the cauls'
@@ -101,5 +115,5 @@ the length; the pocket's lower part and the negative together are the
 eroded tile plus the clearance; the part of the outline above the
 split only narrows going up, within the slot; the plunger fits the
 slot with its play; the template regenerates to one body with a pocket
-floor per tile and the trim scribe in its floors and ridges; and the cut list is a few shapes, triangles the
+floor per tile and the trim scribe in its floors and ridges; the line sample strip is three samples long at the three widths; and the cut list is a few shapes, triangles the
 commonest, every triangle equilateral and every half a 30-60-90.
