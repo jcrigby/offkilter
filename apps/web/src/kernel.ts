@@ -97,7 +97,7 @@ export type FeatureKind =
 /** What a puzzle regenerates: the assembled design, or one colour's pieces laid out for its board with the rows spread a bit apart. */
 export type PuzzleLayout = "design" | "light" | "dark" | "pattern";
 /** What a Spectre puzzle regenerates: the assembled design, one whole tile as a sample to print, or the printable pattern plate alone. */
-export type SpectreLayout = "design" | "sample" | "pattern";
+export type SpectreLayout = "design" | "sample" | "pattern" | "template";
 /** The shape of a Spectre edge's curve: Kaplan's cubic, a circular arc, an S of two arcs (one ogee bit cuts every edge), or half a hexagon (the tile on the triangular lattice, sawn from triangular sticks). */
 export type SpectreCurve = "cubic" | "arc" | "ogee" | "hex";
 /** How a Spectre top's pieces get their woods: the mystic pairs dark; all light; two or three at random; two by the tile's turn; four with no two neighbours alike, spread evenly or the light wood favoured; by strip profile; by prism shape. */

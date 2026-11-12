@@ -4,7 +4,12 @@ spectre-mosaic cover) are laid lengthwise into a printed cradle whose
 pocket is the tile's outline, glued, and a printed plunger lid is
 pressed down on them, so the tile comes out of the cauls as one solid
 stick with no resin in it; the stick is sliced into tiles, and the
-pieces go into the pattern plate for the resin between tiles. The
+tiles are laid out on a printed template at their spacing, taped, and
+glued down to a substrate, the dark glue or a coat of dark resin in
+the lines between them. The tiles are to stand apart by the line, so
+the tile stick is the tile eroded by half of it, and the sticks along
+its boundary are the lattice shapes cut back by that much: the cut
+list of them is part of the answer. The
 outline is turned and split so the lid descends onto the bundle
 without catching: above the split the outline must only narrow going
 up, inside the chord, since the lid is a negative of that part sliding
@@ -19,9 +24,9 @@ corner, for the split that gives the lid the most of the tile.
 
 Outputs under out/: cauls.okpart (base, lid and a tile stick in
 place), base.stl and lid.stl (short cauls; three along a stick), the
-pictures, cauls.pdf, cauls.json (the turn, the split and the numbers),
-and pattern.okpart, the pattern plate the sliced tiles are laid in
-for the resin, with its picture.
+pictures, cauls.pdf, cauls.json (the turn, the split, the numbers and
+the cut list), and template.okpart and template.stl, the template the
+sliced tiles are laid out on, with its picture.
 """
 import json
 import math
@@ -43,7 +48,8 @@ GUIDE = 8.0                                     # the cradle's walls above the b
 FLANGE = 12.0                                   # the plunger above the walls when it is down, for the clamps
 LENGTH = 50.0                                   # a short caul; three along a 200 mm stick
 LIFT = 12.0                                     # the lid drawn this far up, off the bundle
-SIDE, GAP = 4.0 * IN, 1.5                       # the pattern plate: the 4 in lid, the line between tiles
+SIDE, GAP, INNER = 4.0 * IN, 1.5, 0.1           # the 4 in lid; the line between tiles; the glue line between a tile's sticks
+POCKET = 3.0                                    # the template's pockets, deep enough to hold a 10 mm tile for the tape
 SHIFT = [2.0, 5.0]
 
 
@@ -196,7 +202,8 @@ def main():
     if os.path.exists(path):
         os.remove(path)
     mcp = Mcp(path)
-    tile = json.loads(mcp.call("spectre_tile", {"edge": EDGE, "curve": "hex"}))
+    # The tile stick is the tile eroded by half the line between tiles.
+    tile = json.loads(mcp.call("spectre_tile", {"edge": EDGE, "curve": "hex", "gap": GAP}))
     outline = [tuple(p) for p in tile["outline"]]
     if area(outline) < 0:
         outline.reverse()
@@ -207,6 +214,20 @@ def main():
     left, right = chord_at(loose, s)
     xlo, xhi = min(p[0] for p in loose), max(p[0] for p in loose)
     print(f"turned {deg} degrees, split at y = {s:.2f} ({(s - bottom):.1f} up of {top - bottom:.1f}): the lid takes {100 * share:.0f} % of the tile; chord {right - left:.2f} wide")
+    # The sticks of one tile with the glue line inside and the half line
+    # outside: the boundary sticks come out cut back, in a few shapes.
+    lid_sticks = json.loads(mcp.call("spectre_mosaic", {"width": SIDE, "height": SIDE, "edge": EDGE, "gap": GAP, "inner": INNER, "min": 1.0, "shift": SHIFT}))
+    first = min(p["tile"] for p in lid_sticks["pieces"])
+    shapes = {}
+    for piece in (p for p in lid_sticks["pieces"] if p["tile"] == first):
+        o = piece["outline"]
+        sides = sorted(round(math.hypot(o[(i + 1) % len(o)][0] - o[i][0], o[(i + 1) % len(o)][1] - o[i][1]), 2) for i in range(len(o)))
+        key = (piece["shape"], tuple(sides))
+        shapes[key] = shapes.get(key, 0) + 1
+    cut_list = sorted(({"shape": k[0], "sides": list(k[1]), "count": n} for k, n in shapes.items()), key=lambda r: (-r["count"], r["shape"]))
+    print(f"one tile: {sum(r['count'] for r in cut_list)} sticks in {len(cut_list)} shapes:")
+    for r in cut_list:
+        print(f"  {r['count']:>3} {r['shape']:<10} " + " x ".join(f"{x:.2f}" for x in r["sides"]))
     walls_top = top + GUIDE
     mcp.call("create_document", {"name": "cauls"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Spectre tile stick cauls"}, {"type": "rename_tab", "tab": 1, "name": "Base"}]})
@@ -257,18 +278,20 @@ def main():
     for tab, name in ((1, "base"), (lid_tab, "lid")):
         print(mcp.call("export", {"tab": tab, "format": "stl", "path": os.path.join(OUT, f"{name}.stl")}))
     mcp.close()
-    # The pattern plate the sliced tiles go into, with the resin's gap.
-    ppath = os.path.join(OUT, "pattern.okpart")
-    if os.path.exists(ppath):
-        os.remove(ppath)
-    mcp = Mcp(ppath)
-    mcp.call("create_document", {"name": "pattern"})
-    mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Spectre hex pattern plate"}, {"type": "rename_tab", "tab": 1, "name": "Pattern plate"}]})
-    top_part = Part(mcp, 1, "Pattern plate")
-    top_part.feature({"type": "add_spectre", "plane": {"type": "standard", "base": "top", "offset": 0}, "width": SIDE, "height": SIDE, "edge": EDGE, "thickness": 12.0,
-                      "gap": GAP, "curve": "hex", "bulge": 0.433, "bit": 0.0, "whole": True, "show": "pattern", "groove": 6.0, "shift": v2(*SHIFT), "name": "Pattern plate"})
+    # The template the sliced tiles are laid out on: a pocket per tile,
+    # the lines between them standing as ridges.
+    tpath = os.path.join(OUT, "template.okpart")
+    if os.path.exists(tpath):
+        os.remove(tpath)
+    mcp = Mcp(tpath)
+    mcp.call("create_document", {"name": "template"})
+    mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Spectre hex layout template"}, {"type": "rename_tab", "tab": 1, "name": "Template"}]})
+    top_part = Part(mcp, 1, "Template")
+    top_part.feature({"type": "add_spectre", "plane": {"type": "standard", "base": "top", "offset": 0}, "width": SIDE, "height": SIDE, "edge": EDGE, "thickness": 10.0,
+                      "gap": GAP, "curve": "hex", "bulge": 0.433, "bit": 0.0, "whole": True, "show": "template", "groove": POCKET, "shift": v2(*SHIFT), "name": "Template"})
     plate = top_part.bodies()
-    mcp.call("screenshot", {"tab": 1, "view": "top", "width": 1400, "height": 1400, "path": os.path.join(OUT, "pattern_top.png")})
+    mcp.call("screenshot", {"tab": 1, "view": "-0.3,-0.6,0.75", "width": 1400, "height": 1200, "path": os.path.join(OUT, "template.png")})
+    print(mcp.call("export", {"tab": 1, "format": "stl", "path": os.path.join(OUT, "template.stl")}))
     mcp.close()
     numbers = {
         "edge": EDGE, "turn": deg, "split": s, "bottom": bottom, "top": top, "chord": [left, right], "lid_share": share,
@@ -280,11 +303,12 @@ def main():
         "negative_area": area(clip_half(clip_half(clip_half(clip(loose, s, False), lambda p: p[0] >= xlo + PLAY), lambda p: p[0] <= xhi - PLAY), lambda p: p[1] >= s + PLAY)),
         "block": [[xlo - WALL, bottom - FLOOR], [xhi + WALL, walls_top]],
         "plunger": [[xlo + PLAY, s + PLAY], [xhi - PLAY, walls_top + FLANGE]],
-        "bodies": {"base": base_bodies, "lid": lid_bodies, "stick": stick_bodies, "pattern": plate},
+        "gap": GAP, "inner": INNER, "pocket": POCKET, "cut_list": cut_list, "tiles": lid_sticks["tiles"],
+        "bodies": {"base": base_bodies, "lid": lid_bodies, "stick": stick_bodies, "template": plate},
     }
     with open(os.path.join(OUT, "cauls.json"), "w") as f:
         json.dump(numbers, f, indent=1)
-    print(f"base {xhi - xlo + 2 * WALL:.0f} x {walls_top - bottom + FLOOR:.0f} x {LENGTH:.0f}, lid {xhi - xlo - 2 * PLAY:.0f} x {walls_top + FLANGE - s - PLAY:.0f} x {LENGTH:.0f}; pattern plate {len(plate)} body")
+    print(f"base {xhi - xlo + 2 * WALL:.0f} x {walls_top - bottom + FLOOR:.0f} x {LENGTH:.0f}, lid {xhi - xlo - 2 * PLAY:.0f} x {walls_top + FLANGE - s - PLAY:.0f} x {LENGTH:.0f}; template {len(plate)} body, {lid_sticks['tiles']} pockets")
 
 
 if __name__ == "__main__":

@@ -1,15 +1,15 @@
 {
-  "name": "Spectre hex pattern plate",
+  "name": "Spectre hex layout template",
   "tabs": [
     {
       "id": 1,
       "kind": {
         "type": "part_studio",
-        "name": "Pattern plate",
+        "name": "Template",
         "features": [
           {
             "id": 1,
-            "name": "Pattern plate",
+            "name": "Template",
             "suppressed": false,
             "kind": {
               "type": "spectre",
@@ -21,7 +21,7 @@
               "width": 101.6,
               "height": 101.6,
               "edge": 10.56,
-              "thickness": 12.0,
+              "thickness": 10.0,
               "gap": 1.5,
               "curve": "hex",
               "bulge": 0.433,
@@ -33,8 +33,8 @@
               "angle": 0.0,
               "scrap": 100.0,
               "web": 0.0,
-              "groove": 6.0,
-              "show": "pattern",
+              "groove": 3.0,
+              "show": "template",
               "scheme": "mystics",
               "seed": 0,
               "whole": true

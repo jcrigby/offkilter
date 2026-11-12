@@ -2,8 +2,8 @@
 //! (examples/spectre-cauls) as a regression suite: the cradle and the
 //! plunger regenerate to the volumes their profiles give, the pocket
 //! and the negative together are the tile, the part above the split
-//! only narrows going up so the plunger comes down, and the pattern
-//! plate for the sliced tiles regenerates.
+//! only narrows going up so the plunger comes down, the template for
+//! the sliced tiles has a pocket per tile, and the cut list is short.
 
 use ok_model::{Document, TabId};
 use std::path::PathBuf;
@@ -134,24 +134,88 @@ fn the_lid_takes_the_part_of_the_tile_that_narrows_upward() {
     assert!(plunger[0].1 > s);
 }
 
+/// The template the sliced tiles are laid out on: one body, a pocket
+/// per tile the 4 in board reaches, the ridges between them the line.
 #[test]
-fn the_pattern_plate_for_the_sliced_tiles_regenerates() {
-    let mut doc = load("pattern.okpart");
-    let r = doc
-        .regenerate_studio(tab(&doc, "Pattern plate"), None)
-        .unwrap();
+fn the_template_has_a_pocket_per_tile() {
+    let n = numbers();
+    let mut doc = load("template.okpart");
+    let r = doc.regenerate_studio(tab(&doc, "Template"), None).unwrap();
     assert_eq!(r.bodies.len(), 1);
     let plate = &r.bodies[0].solid;
     plate.validate().unwrap();
     let (lo, hi) = plate.bounds().unwrap();
+    let pocket = n["pocket"].as_f64().unwrap();
     println!(
-        "plate {:.0} x {:.0} x {:.0}, {} faces",
+        "template {:.0} x {:.0} x {:.0}, {} faces",
         hi.x - lo.x,
         hi.y - lo.y,
         hi.z - lo.z,
         plate.faces.len()
     );
-    // The grooves are the hex outlines' lines: hundreds of faces.
-    assert!(plate.faces.len() > 500, "{}", plate.faces.len());
+    assert!((hi.z - lo.z - (3.0 + pocket)).abs() < 1e-6);
+    // The pocket floors: one horizontal face at z = 0 per tile, inside the slab.
+    let floors = plate
+        .faces
+        .iter()
+        .filter(|f| {
+            (f.plane.normal.z - 1.0).abs() < 1e-9
+                && plate.vertices[f.loops[0][0] as usize].z.abs() < 1e-9
+        })
+        .count();
+    let tiles = n["tiles"].as_u64().unwrap() as usize;
+    println!("{floors} pocket floors for {tiles} tiles");
+    assert_eq!(floors, tiles);
     assert!(hi.x - lo.x > 101.6 && hi.y - lo.y > 101.6);
+}
+
+/// The tile stick is the tile less half the line, so the sticks along
+/// its boundary are cut back: the cut list has the whole lattice shapes
+/// and a few cut-back ones, and every stick of one tile is in it.
+#[test]
+fn the_cut_list_has_few_shapes() {
+    let n = numbers();
+    let list = n["cut_list"].as_array().unwrap();
+    let sticks: u64 = list.iter().map(|r| r["count"].as_u64().unwrap()).sum();
+    println!("{sticks} sticks in {} shapes", list.len());
+    for r in list {
+        println!("  {} {} {}", r["count"], r["shape"], r["sides"]);
+    }
+    assert!(sticks > 60 && sticks < 110, "{sticks}");
+    assert!(list.len() >= 4 && list.len() <= 16, "{} shapes", list.len());
+    // Triangles are the commonest stick, and the whole lattice triangle
+    // less its glue line is among them; a boundary triangle is the same
+    // shape smaller, since its sides only move in.
+    let edge = n["edge"].as_f64().unwrap();
+    let inner = n["inner"].as_f64().unwrap();
+    assert_eq!(list[0]["shape"], "triangle");
+    let whole = edge / 2.0 - inner * 3f64.sqrt();
+    assert!(list.iter().any(|r| {
+        r["shape"] == "triangle"
+            && r["sides"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|x| (x.as_f64().unwrap() - whole).abs() < 0.02)
+    }));
+    for r in list {
+        let sides: Vec<f64> = r["sides"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|x| x.as_f64().unwrap())
+            .collect();
+        match r["shape"].as_str().unwrap() {
+            "triangle" => assert!(
+                sides.windows(2).all(|w| (w[0] - w[1]).abs() < 0.02),
+                "{sides:?}"
+            ),
+            "half" | "small" => assert!(
+                (sides[2] - 2.0 * sides[0]).abs() < 0.03
+                    && (sides[1] - sides[0] * 3f64.sqrt()).abs() < 0.03,
+                "{sides:?}"
+            ),
+            _ => {}
+        }
+    }
 }

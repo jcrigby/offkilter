@@ -832,6 +832,11 @@ pub enum SpectreLayout {
     /// deep in a slab, for cutting the top from one board with a pilot
     /// and a bit the size of the gap.
     Pattern,
+    /// The printable template alone: a pocket per piece, `groove` deep
+    /// in a slab, the gaps standing between them as ridges, for laying
+    /// out tiles made one at a time at their exact spacing before they
+    /// are taped and glued down.
+    Template,
 }
 
 /// Which layout of a puzzle regenerates.

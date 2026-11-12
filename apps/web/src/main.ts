@@ -2490,7 +2490,7 @@ class App implements SketchHost {
     const scrap = this.exprInput(f, "scrap", k.scrap, (v) => set({ scrap: Math.max(0, v) }));
     scrap.title = "Pieces smaller than this area (mm²), the slivers the board's edge cuts off outer tiles, are left to the resin";
     body.appendChild(field("Scrap under", scrap));
-    const show = select(["design", "sample", "pattern"], k.show, (v) => set({ show: v as SpectreLayout }));
+    const show = select(["design", "sample", "pattern", "template"], k.show, (v) => set({ show: v as SpectreLayout }));
     show.title = "The assembled design; one whole tile as the pieces are cut, at the board's centre, a sample to export and print; or the printable pattern plate with the gaps as grooves";
     body.appendChild(field("Show", show));
     const whole = checkbox(k.whole, (v) => set({ whole: v }));

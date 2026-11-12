@@ -1090,3 +1090,23 @@ a time from above and a bay under an overhang is reached by sliding
 the stick in before the ones above it, and the plunger's force
 spreads through the lattice at 60°. The plunger is the slot's full
 width for the clamps, with the bump's negative in its middle.
+
+The owner then settled the lid's construction: the tiles stay
+separate units, so a later version can push them, laid out on a
+raised template at their spacing, taped, and glued down to a
+substrate with a dark glue or a coat of dark resin showing in the
+lines; the sticks within a tile get the thinnest glue line. Two
+consequences went into the kernel and the example. A tile that stands
+1.5 mm from its neighbours is the tile eroded by 0.75, which is what
+every layout has drawn as a piece since the puzzle top, so the cauls'
+pocket is the eroded outline and the boundary sticks are the lattice
+shapes with a side moved in: a triangle stays a triangle and a half a
+half, only smaller, which keeps the cut list at six shapes. And the
+template is a layout of its own (`template`), the pattern plate's
+inverse: a pocket per piece and the lines standing between them, so
+the tiles drop in at their exact places and tape lifts the whole
+layout off. Rejected: tiles at full size with the tiling spread to
+make the line (the Spectre's tiling is not a dilation of its tile, so
+the lines would vary round each one), and the comb or the pattern
+plate for the layout (the first holds sticks, the second is for a
+pilot; neither holds a finished tile at its place).

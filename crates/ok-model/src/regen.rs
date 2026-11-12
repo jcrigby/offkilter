@@ -1141,6 +1141,22 @@ impl PartStudio {
                 Err(e) => Some(format!("pattern plate: {e}")),
             };
         }
+        if sf.show == crate::SpectreLayout::Template {
+            if sf.groove <= 0.0 {
+                return Some("the template layout needs a pocket depth (groove)".into());
+            }
+            return match Self::template_plate(&patch, &plane, sf.groove, opts) {
+                Ok(mut solid) => {
+                    for f in &mut solid.faces {
+                        f.origin.local += (patch.pieces.len() as u32 + 3) * PIECE_LOCALS;
+                    }
+                    result.next_part += 1;
+                    result.bodies.push(Body::new("Template".into(), id, solid));
+                    None
+                }
+                Err(e) => Some(format!("template: {e}")),
+            };
+        }
         let mut bodies: Vec<(String, Solid, Option<crate::Material>, Option<Shade>)> = Vec::new();
         let prisms = patch
             .pieces
@@ -1459,6 +1475,35 @@ impl PartStudio {
         let drill = ok_brep::extrude(&hole, plane, -FLOOR - 1.0, depth + 1.0, 0)
             .map_err(|e| e.to_string())?;
         boolean(&plate, &drill, BoolOp::Difference).map_err(|e| e.to_string())
+    }
+
+    /// The template: a slab with a pocket per piece, `depth` deep, the
+    /// gaps standing between the pockets as ridges and the slab a margin
+    /// wider than the pieces' box.
+    fn template_plate(
+        patch: &ok_sketch::spectre::Patch,
+        plane: &Plane,
+        depth: f64,
+        opts: &ProfileOptions,
+    ) -> Result<Solid, String> {
+        const MARGIN: f64 = 10.0;
+        const FLOOR: f64 = 3.0;
+        let mut sk = ok_sketch::Sketch::new();
+        sk.add_rectangle(
+            Vec2::new(-MARGIN, -MARGIN),
+            Vec2::new(patch.width + MARGIN, patch.height + MARGIN),
+        );
+        let slab = sk.profiles(opts).into_iter().next().ok_or("no slab")?;
+        let mut plate =
+            ok_brep::extrude(&slab, plane, -FLOOR, depth, 0).map_err(|e| e.to_string())?;
+        for (k, piece) in patch.pieces.iter().enumerate() {
+            let profile = ok_sketch::spectre::piece_profile(piece, opts)?;
+            let cutter = ok_brep::extrude(&profile, plane, 0.0, depth + 1.0, 0)
+                .map_err(|e| format!("pocket {}: {e}", k + 1))?;
+            plate = boolean(&plate, &cutter, BoolOp::Difference)
+                .map_err(|e| format!("pocket {}: {e}", k + 1))?;
+        }
+        Ok(plate)
     }
 
     /// The region between the pieces: every outline plus the short
