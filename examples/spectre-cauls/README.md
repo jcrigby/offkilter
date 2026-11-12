@@ -87,7 +87,10 @@ than the tiles. The sliced tiles drop into the pockets, which puts
 every one at its exact place and spacing; tape across the tops holds
 them; the taped sheet lifts off and goes down on the glue. The
 pockets are shallow so the tape reaches most of a 10 mm tile and the
-sheet does not bind on the ridges.
+sheet does not bind on the ridges. A faint scribe, 0.5 wide and 0.4
+deep, runs round the lid's trim rectangle across the pocket floors
+and the ridge tops, so which part of a tile ends up in the lid is
+plain while it is being laid.
 
 ## What the test checks
 
@@ -98,5 +101,5 @@ the length; the pocket's lower part and the negative together are the
 eroded tile plus the clearance; the part of the outline above the
 split only narrows going up, within the slot; the plunger fits the
 slot with its play; the template regenerates to one body with a pocket
-floor per tile; and the cut list is a few shapes, triangles the
+floor per tile and the trim scribe in its floors and ridges; and the cut list is a few shapes, triangles the
 commonest, every triangle equilateral and every half a 30-60-90.

@@ -1496,13 +1496,50 @@ impl PartStudio {
         let slab = sk.profiles(opts).into_iter().next().ok_or("no slab")?;
         let mut plate =
             ok_brep::extrude(&slab, plane, -FLOOR, depth, 0).map_err(|e| e.to_string())?;
+        // The trim line: a faint scribe round the board's rectangle, so
+        // what part of a tile is in the lid is plain. A band of the
+        // rectangle's outline, cut into each pocket's floor where it
+        // crosses the tile (the band meets the pocket's cutter, so the
+        // ridges keep their roots) and into the ridge tops where it
+        // crosses a line.
+        const SCRIBE_W: f64 = 0.5;
+        const SCRIBE_D: f64 = 0.4;
+        let (lo, hi) = patch.board;
+        let mut sk = ok_sketch::Sketch::new();
+        sk.add_rectangle(
+            lo - Vec2::new(SCRIBE_W / 2.0, SCRIBE_W / 2.0),
+            hi + Vec2::new(SCRIBE_W / 2.0, SCRIBE_W / 2.0),
+        );
+        sk.add_rectangle(
+            lo + Vec2::new(SCRIBE_W / 2.0, SCRIBE_W / 2.0),
+            hi - Vec2::new(SCRIBE_W / 2.0, SCRIBE_W / 2.0),
+        );
+        let band = sk
+            .profiles(opts)
+            .into_iter()
+            .max_by(|a, b| a.holes.len().cmp(&b.holes.len()))
+            .ok_or("no trim band")?;
+        let floor_band =
+            ok_brep::extrude(&band, plane, -SCRIBE_D, 1.0, 0).map_err(|e| e.to_string())?;
+        let top_band = ok_brep::extrude(&band, plane, depth - SCRIBE_D, depth + 1.0, 0)
+            .map_err(|e| e.to_string())?;
         for (k, piece) in patch.pieces.iter().enumerate() {
             let profile = ok_sketch::spectre::piece_profile(piece, opts)?;
             let cutter = ok_brep::extrude(&profile, plane, 0.0, depth + 1.0, 0)
                 .map_err(|e| format!("pocket {}: {e}", k + 1))?;
             plate = boolean(&plate, &cutter, BoolOp::Difference)
                 .map_err(|e| format!("pocket {}: {e}", k + 1))?;
+            let floor_cutter = ok_brep::extrude(&profile, plane, -SCRIBE_D - 1.0, 1.0, 0)
+                .map_err(|e| format!("pocket {}: {e}", k + 1))?;
+            if let Ok(scribe) = boolean(&floor_band, &floor_cutter, BoolOp::Intersection) {
+                if scribe.volume() > 1e-6 {
+                    plate = boolean(&plate, &scribe, BoolOp::Difference)
+                        .map_err(|e| format!("trim line in pocket {}: {e}", k + 1))?;
+                }
+            }
         }
+        plate = boolean(&plate, &top_band, BoolOp::Difference)
+            .map_err(|e| format!("trim line: {e}"))?;
         Ok(plate)
     }
 

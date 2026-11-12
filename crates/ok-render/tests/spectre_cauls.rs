@@ -164,9 +164,34 @@ fn the_template_has_a_pocket_per_tile() {
         })
         .count();
     let tiles = n["tiles"].as_u64().unwrap() as usize;
-    println!("{floors} pocket floors for {tiles} tiles");
-    assert_eq!(floors, tiles);
+    // The trim scribe splits the floors it crosses, so there are more
+    // floor faces than pockets, never fewer and not many more.
+    println!("{floors} pocket floor faces for {tiles} tiles");
+    assert!(
+        floors >= tiles && floors <= 3 * tiles,
+        "{floors} floors for {tiles} tiles"
+    );
     assert!(hi.x - lo.x > 101.6 && hi.y - lo.y > 101.6);
+    // The trim line: a scribe 0.4 deep in the pocket floors where the
+    // lid's edge crosses a tile, and in the ridge tops where it crosses a
+    // line; its floors are horizontal faces at those depths.
+    let at = |z: f64| {
+        plate
+            .faces
+            .iter()
+            .filter(|f| {
+                (f.plane.normal.z - 1.0).abs() < 1e-9
+                    && (plate.vertices[f.loops[0][0] as usize].z - z).abs() < 1e-6
+            })
+            .count()
+    };
+    let (in_floors, in_ridges) = (at(-0.4), at(pocket - 0.4));
+    println!("trim scribe: {in_floors} faces in the pocket floors, {in_ridges} in the ridge tops");
+    assert!(
+        in_floors >= 4,
+        "the scribe crosses the tiles on all four sides"
+    );
+    assert!(in_ridges >= 1, "the scribe crosses the lines");
 }
 
 /// The tile stick is the tile less half the line, so the sticks along
