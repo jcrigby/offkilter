@@ -36,13 +36,13 @@ with a 0.1 mm glue line between sticks:
 | count | stick | sides, mm |
 |---|---|---|
 | 32 | triangle, one side on the tile's edge | 4.30 |
-| 28 | triangle, inside | 5.11 |
+| 29 | triangle, inside | 5.11 |
 | 21 | small half, inside | 1.18, 2.05, 2.37 |
-| 20 | half, inside | 2.50, 4.34, 5.01 |
+| 18 | half, inside | 2.50, 4.34, 5.01 |
 | 4 | half, one side on the edge | 1.80, 3.12, 3.61 |
 | 1 | half, on the edge | 1.70, 2.94, 3.39 |
 
-106 sticks in six shapes. The small halves are the ones to drop if
+105 sticks in six shapes. The small halves are the ones to drop if
 they are too fiddly to saw; they become glue and dust, 2 % of the tile.
 
 ## Why the lid takes one bump

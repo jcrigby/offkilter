@@ -2026,12 +2026,30 @@ impl Server {
                     0.5,
                 );
                 let patch = spectre::build(&params, 10f64.to_radians())?;
-                let m =
-                    mosaic::mosaic(num("rounds", 6000.0) as u32, num("search_seed", 3.0) as u64);
+                // The sticks to cover the tile with: the default four, or a
+                // list of names, e.g. "triangle,half".
+                let shapes: Vec<mosaic::Shape> = match args.get("shapes").and_then(|v| v.as_str()) {
+                    None => mosaic::Shape::DEFAULT.to_vec(),
+                    Some(list) => list
+                        .split(',')
+                        .map(|n| {
+                            mosaic::Shape::ALL
+                                .iter()
+                                .copied()
+                                .find(|s| s.name() == n.trim())
+                                .ok_or_else(|| format!("shapes: {} is not triangle, half, small, trapezoid or quarter", n.trim()))
+                        })
+                        .collect::<Result<_, _>>()?,
+                };
+                let m = mosaic::mosaic_with(
+                    &shapes,
+                    num("rounds", 6000.0) as u32,
+                    num("search_seed", 3.0) as u64,
+                );
                 let laid = mosaic::lay(&patch, &m, gap, inner, min);
                 let index =
                     |s: mosaic::Shape| mosaic::Shape::ALL.iter().position(|x| *x == s).unwrap();
-                let mut counts = [0usize; 4];
+                let mut counts = [0usize; mosaic::Shape::ALL.len()];
                 for l in &laid {
                     counts[index(l.shape)] += 1;
                 }
@@ -2123,6 +2141,7 @@ impl Server {
                         mosaic::Shape::Trapezoid => {
                             vec![e / 8.0, e * 3f64.sqrt() / 8.0, e / 4.0, e / 4.0]
                         }
+                        mosaic::Shape::Quarter => vec![e / 4.0, e / 4.0, e / 4.0],
                     }
                 };
                 let shapes: serde_json::Map<String, Value> = mosaic::Shape::ALL
@@ -2782,8 +2801,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "spectre_mosaic",
-            "description": "A lid of the hex-edged Spectre as a bundle of sawn triangular sticks, and the mold that holds the bundle at the pattern. With half a hexagon on every edge (`curve` hex) every corner of the tile lies on the triangular lattice of half-edge triangles, so a tile is built from four sticks and no curve is routed: the lattice triangle (equilateral, side half an edge), its half (30-60-90), the half of the quarter triangle, and the trapezoid a half leaves when that small half comes off its apex. The tile's edges fall into two lattice families in three runs each, with offsets that do not agree, so the cover is a search over the six lattices (greedy, then ruin-and-recreate for `rounds` from `search_seed`, repeatable) that reaches 99.4 % of the tile, the slivers along the seams left to the resin. Takes the board (`width`, `height`, mm, 101.6 each), `edge` (10.56), `gap` between tiles (1.5: the line that shows the pieces), `inner` between a tile's sticks (0.7: the texture), `min` (1.0: a stick narrower than this after the gaps is dropped and becomes resin), `shift`, `angle`, `scheme` and `seed` as `add_spectre`, and for the mold `bar`, the bars' height (10), `backing` of silicone under their tips (5), `draft` degrees (1), `plate` thickness (4), `margin` of plate past the sticks (6). Every tile the board reaches is kept whole, as a glue-up blank trimmed after. With `out`, writes `positive.stl` (the plate with a bar per stick: pour silicone over it in the box and the silicone is a comb with a slot per stick) and `box.stl` (the tray the silicone is poured in, whose rim the plate rests on, and which backs the comb after). Returns JSON: `tile` (the one tile's cover: `pieces` in edge units, `coverage`, `counts`), `pieces` (every stick on the lid: `tile`, `wood`, `shape`, `outline` mm), `shapes` (sides mm, area, per tile and in all), `sticks`, `dropped`, `tiles`, `board`, `plate`, `box` and `files`. No document is needed. See `examples/spectre-mosaic/`.",
-            "inputSchema": { "type": "object", "properties": { "width": { "type": "number" }, "height": { "type": "number" }, "edge": { "type": "number" }, "gap": { "type": "number" }, "inner": { "type": "number" }, "min": { "type": "number" }, "shift": { "type": "array", "items": { "type": "number" } }, "angle": { "type": "number" }, "scheme": { "type": "string" }, "seed": { "type": "number" }, "rounds": { "type": "number" }, "search_seed": { "type": "number" }, "bar": { "type": "number" }, "backing": { "type": "number" }, "draft": { "type": "number" }, "plate": { "type": "number" }, "margin": { "type": "number" }, "out": { "type": "string" } } }
+            "description": "A lid of the hex-edged Spectre as a bundle of sawn triangular sticks, and the mold that holds the bundle at the pattern. With half a hexagon on every edge (`curve` hex) every corner of the tile lies on the triangular lattice of half-edge triangles, so a tile is built from four sticks and no curve is routed: the lattice triangle (equilateral, side half an edge), its half (30-60-90), the half of the quarter triangle, and the trapezoid a half leaves when that small half comes off its apex. The tile's edges fall into two lattice families in three runs each, with offsets that do not agree, so the cover is a search over the six lattices (greedy, then ruin-and-recreate for `rounds` from `search_seed`, repeatable) that reaches 99.4 % of the tile, the slivers along the seams left to the resin. Takes the board (`width`, `height`, mm, 101.6 each), `edge` (10.56), `gap` between tiles (1.5: the line that shows the pieces), `inner` between a tile's sticks (0.7: the texture), `min` (1.0: a stick narrower than this after the gaps is dropped and becomes resin), `shapes` (the sticks to cover with, a list of names: the default `triangle,half,small,trapezoid` reaches 99.4 %, `triangle,half` 97.7 % in 87 sticks with the rest in slivers under 1.6 mm wide, and `quarter`, the triangle at half the side, is a fifth), `shift`, `angle`, `scheme` and `seed` as `add_spectre`, and for the mold `bar`, the bars' height (10), `backing` of silicone under their tips (5), `draft` degrees (1), `plate` thickness (4), `margin` of plate past the sticks (6). Every tile the board reaches is kept whole, as a glue-up blank trimmed after. With `out`, writes `positive.stl` (the plate with a bar per stick: pour silicone over it in the box and the silicone is a comb with a slot per stick) and `box.stl` (the tray the silicone is poured in, whose rim the plate rests on, and which backs the comb after). Returns JSON: `tile` (the one tile's cover: `pieces` in edge units, `coverage`, `counts`), `pieces` (every stick on the lid: `tile`, `wood`, `shape`, `outline` mm), `shapes` (sides mm, area, per tile and in all), `sticks`, `dropped`, `tiles`, `board`, `plate`, `box` and `files`. No document is needed. See `examples/spectre-mosaic/`.",
+            "inputSchema": { "type": "object", "properties": { "width": { "type": "number" }, "height": { "type": "number" }, "edge": { "type": "number" }, "gap": { "type": "number" }, "inner": { "type": "number" }, "min": { "type": "number" }, "shapes": { "type": "string" }, "shift": { "type": "array", "items": { "type": "number" } }, "angle": { "type": "number" }, "scheme": { "type": "string" }, "seed": { "type": "number" }, "rounds": { "type": "number" }, "search_seed": { "type": "number" }, "bar": { "type": "number" }, "backing": { "type": "number" }, "draft": { "type": "number" }, "plate": { "type": "number" }, "margin": { "type": "number" }, "out": { "type": "string" } } }
         },
         {
             "name": "spectre_saw",

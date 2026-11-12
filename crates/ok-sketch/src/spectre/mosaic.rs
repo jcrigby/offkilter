@@ -51,10 +51,22 @@ pub enum Shape {
     /// A half with the small half off its apex: parallel sides 1/4 and
     /// 1/8, √3/8 apart, one slant of 1/4.
     Trapezoid,
+    /// The quarter-size triangle: equilateral, side 1/4, the lattice
+    /// triangle with its sides' midpoints joined. Not in the default
+    /// set; the same saw setting as the triangle at half the width.
+    Quarter,
 }
 
 impl Shape {
-    pub const ALL: [Shape; 4] = [Shape::Triangle, Shape::Half, Shape::Small, Shape::Trapezoid];
+    pub const ALL: [Shape; 5] = [
+        Shape::Triangle,
+        Shape::Half,
+        Shape::Small,
+        Shape::Trapezoid,
+        Shape::Quarter,
+    ];
+    /// The set the search uses unless told otherwise.
+    pub const DEFAULT: [Shape; 4] = [Shape::Triangle, Shape::Half, Shape::Small, Shape::Trapezoid];
 
     pub fn name(self) -> &'static str {
         match self {
@@ -62,6 +74,7 @@ impl Shape {
             Shape::Half => "half",
             Shape::Small => "small",
             Shape::Trapezoid => "trapezoid",
+            Shape::Quarter => "quarter",
         }
     }
 
@@ -73,6 +86,7 @@ impl Shape {
             Shape::Half => t / 2.0,
             Shape::Small => t / 8.0,
             Shape::Trapezoid => t * 3.0 / 8.0,
+            Shape::Quarter => t / 4.0,
         }
     }
 
@@ -82,7 +96,8 @@ impl Shape {
             Shape::Triangle => 0,
             Shape::Half => 1,
             Shape::Trapezoid => 2,
-            Shape::Small => 3,
+            Shape::Quarter => 3,
+            Shape::Small => 4,
         }
     }
 }
@@ -102,7 +117,7 @@ pub struct Mosaic {
     /// The tile's area the pieces cover, as a fraction.
     pub coverage: f64,
     /// Pieces of each shape, in `Shape::ALL`'s order.
-    pub counts: [usize; 4],
+    pub counts: [usize; 5],
 }
 
 /// The hex tile in its own frame, 42 corners, counter-clockwise.
@@ -234,12 +249,15 @@ fn lattices() -> Vec<(u8, Vec2)> {
     out
 }
 
-/// Every placement of every shape on every lattice inside the tile.
-fn candidates(tile: &[Vec2]) -> Vec<Piece> {
+/// Every placement of every shape in `shapes` on every lattice inside the tile.
+fn candidates(tile: &[Vec2], shapes: &[Shape]) -> Vec<Piece> {
     let (lo, hi) = bbox(tile);
     let mut seen = std::collections::HashSet::new();
     let mut out = Vec::new();
     let mut push = |shape: Shape, poly: Vec<Vec2>, out: &mut Vec<Piece>| {
+        if !shapes.contains(&shape) {
+            return;
+        }
         let poly = ccw(poly);
         if !inside(&poly, tile) {
             return;
@@ -284,10 +302,12 @@ fn candidates(tile: &[Vec2]) -> Vec<Piece> {
                         }
                     }
                 }
-                // The small halves on the half-step lattice, wherever they fit.
+                // The quarter triangles on the half-step lattice, and the
+                // small halves, wherever they fit.
                 let (h1, h2) = (e1 * 0.5, e2 * 0.5);
                 for q in [p, p + h1, p + h2, p + h1 + h2] {
                     for t in [[q, q + h1, q + h2], [q + h1, q + h1 + h2, q + h2]] {
+                        push(Shape::Quarter, t.to_vec(), &mut out);
                         for k in 0..3 {
                             let (a, b, c) = (t[k], t[(k + 1) % 3], t[(k + 2) % 3]);
                             let m = (b + c) * 0.5;
@@ -326,8 +346,13 @@ impl Rng {
 /// start, seeded so the answer repeats. A thousand rounds reach 99.5 %
 /// of the tile; the first hundred most of the way there.
 pub fn mosaic(rounds: u32, seed: u64) -> Mosaic {
+    mosaic_with(&Shape::DEFAULT, rounds, seed)
+}
+
+/// The cover from a chosen set of shapes.
+pub fn mosaic_with(shapes: &[Shape], rounds: u32, seed: u64) -> Mosaic {
     let tile = tile();
-    let cands = candidates(&tile);
+    let cands = candidates(&tile, shapes);
     let n = cands.len();
     let areas: Vec<f64> = cands.iter().map(|c| signed_area(&c.outline)).collect();
     let boxes: Vec<(Vec2, Vec2)> = cands.iter().map(|c| bbox(&c.outline)).collect();
@@ -428,7 +453,7 @@ pub fn mosaic(rounds: u32, seed: u64) -> Mosaic {
         .filter(|&i| best[i])
         .map(|i| cands[i].clone())
         .collect();
-    let mut counts = [0usize; 4];
+    let mut counts = [0usize; 5];
     for p in &pieces {
         counts[Shape::ALL.iter().position(|s| *s == p.shape).unwrap()] += 1;
     }
@@ -595,7 +620,7 @@ mod tests {
 
     #[test]
     fn the_shapes_have_their_sides() {
-        let c = candidates(&tile());
+        let c = candidates(&tile(), &Shape::ALL);
         let sides = |p: &[Vec2]| -> Vec<f64> {
             let mut s: Vec<f64> = (0..p.len())
                 .map(|i| p[(i + 1) % p.len()].distance(p[i]))
@@ -610,6 +635,7 @@ mod tests {
                 Shape::Half => vec![0.25, SQRT3 / 4.0, 0.5],
                 Shape::Small => vec![0.125, SQRT3 / 8.0, 0.25],
                 Shape::Trapezoid => vec![0.125, SQRT3 / 8.0, 0.25, 0.25],
+                Shape::Quarter => vec![0.25, 0.25, 0.25],
             };
             assert_eq!(s.len(), want.len());
             for (a, b) in s.iter().zip(&want) {
@@ -632,8 +658,41 @@ mod tests {
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(1);
-        println!("{} candidates", candidates(&tile()).len());
-        let m = mosaic(rounds, seed);
+        // SHAPES=triangle,quarter picks the set; the default set otherwise.
+        let shapes: Vec<Shape> = match std::env::var("SHAPES") {
+            Ok(v) => v
+                .split(',')
+                .map(|n| {
+                    *Shape::ALL
+                        .iter()
+                        .find(|s| s.name() == n.trim())
+                        .expect("a shape name")
+                })
+                .collect(),
+            Err(_) => Shape::DEFAULT.to_vec(),
+        };
+        println!(
+            "{} candidates for {:?}",
+            candidates(&tile(), &shapes).len(),
+            shapes
+        );
+        let m = mosaic_with(&shapes, rounds, seed);
+        if let Ok(path) = std::env::var("DUMP") {
+            // One piece a line: the shape, then x y pairs.
+            let text: String = m
+                .pieces
+                .iter()
+                .map(|p| {
+                    let pts: Vec<String> = p
+                        .outline
+                        .iter()
+                        .map(|q| format!("{} {}", q.x, q.y))
+                        .collect();
+                    format!("{} {}\n", p.shape.name(), pts.join(" "))
+                })
+                .collect();
+            std::fs::write(path, text).unwrap();
+        }
         println!(
             "{:.2} % in {} pieces {:?} in {:.1} s",
             100.0 * m.coverage,
@@ -641,7 +700,6 @@ mod tests {
             m.counts,
             t0.elapsed().as_secs_f64()
         );
-        assert!(m.coverage > 0.99, "{}", m.coverage);
     }
 
     #[test]
