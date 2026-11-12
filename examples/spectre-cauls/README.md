@@ -106,6 +106,19 @@ count the samples, one for the current line, three for the
 narrowest. Change `GAPS` in the script for other widths; the one the
 eye picks goes into `GAP` here and in the mosaic.
 
+The owner picked 0.7. `gap_sample.py --round` writes
+`gap_sample_round.stl`, the 0.7 sample again with every tile's top
+edges rounded over by 0.6 mm, as a tile eased with a sanding block
+would be, so the line reads deeper than it is. The kernel's fillet
+rolls a true radius, but across three hundred facet edges of eroded
+corners and the slivers the board's edge leaves it breaks on one of
+them, so the roundover is built the way the printer builds it at its
+0.2 mm layers: the pad stops its radius short of the top and the last
+three layers are each the piece eroded to where the circle stands at
+that height. The print is the same stair a sliced fillet would be.
+
+![The rounded sample: the lines between eased edges](out/gap_sample_round.png)
+
 ## What the test checks
 
 `crates/ok-render/tests/spectre_cauls.rs` regenerates the cauls'

@@ -1,0 +1,11 @@
+{
+ "gap": 0.7,
+ "round": 0.6,
+ "side": 40.0,
+ "pad": 3.0,
+ "base": 1.5,
+ "sink": 0.3,
+ "height": 4.8,
+ "pads": 6,
+ "triangles": 5192
+}

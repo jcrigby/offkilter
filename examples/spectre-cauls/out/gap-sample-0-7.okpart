@@ -21,7 +21,7 @@
               "width": 40.0,
               "height": 40.0,
               "edge": 10.56,
-              "thickness": 3.3,
+              "thickness": 2.6999999999999997,
               "gap": 0.7,
               "curve": "hex",
               "bulge": 0.433,
@@ -42,6 +42,105 @@
           },
           {
             "id": 2,
+            "name": "roundover layer 1, 0.01 in",
+            "suppressed": false,
+            "kind": {
+              "type": "spectre",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 2.35
+              },
+              "width": 40.0,
+              "height": 40.0,
+              "edge": 10.56,
+              "thickness": 0.25,
+              "gap": 0.7167840433800767,
+              "curve": "hex",
+              "bulge": 0.433,
+              "bit": 0.0,
+              "shift": {
+                "x": 2.0,
+                "y": 5.0
+              },
+              "angle": 0.0,
+              "scrap": 12.0,
+              "web": 0.0,
+              "groove": 0.0,
+              "show": "design",
+              "scheme": "mystics",
+              "seed": 0,
+              "whole": false
+            }
+          },
+          {
+            "id": 3,
+            "name": "roundover layer 2, 0.08 in",
+            "suppressed": false,
+            "kind": {
+              "type": "spectre",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 2.5500000000000003
+              },
+              "width": 40.0,
+              "height": 40.0,
+              "edge": 10.56,
+              "thickness": 0.25,
+              "gap": 0.8607695154586734,
+              "curve": "hex",
+              "bulge": 0.433,
+              "bit": 0.0,
+              "shift": {
+                "x": 2.0,
+                "y": 5.0
+              },
+              "angle": 0.0,
+              "scrap": 12.0,
+              "web": 0.0,
+              "groove": 0.0,
+              "show": "design",
+              "scheme": "mystics",
+              "seed": 0,
+              "whole": false
+            }
+          },
+          {
+            "id": 4,
+            "name": "roundover layer 3, 0.27 in",
+            "suppressed": false,
+            "kind": {
+              "type": "spectre",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 2.75
+              },
+              "width": 40.0,
+              "height": 40.0,
+              "edge": 10.56,
+              "thickness": 0.25,
+              "gap": 1.23667504192892,
+              "curve": "hex",
+              "bulge": 0.433,
+              "bit": 0.0,
+              "shift": {
+                "x": 2.0,
+                "y": 5.0
+              },
+              "angle": 0.0,
+              "scrap": 12.0,
+              "web": 0.0,
+              "groove": 0.0,
+              "show": "design",
+              "scheme": "mystics",
+              "seed": 0,
+              "whole": false
+            }
+          },
+          {
+            "id": 5,
             "name": "base",
             "suppressed": false,
             "kind": {
@@ -194,12 +293,12 @@
             }
           },
           {
-            "id": 3,
+            "id": 6,
             "name": "base",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 2,
+              "sketch": 5,
               "profiles": {
                 "type": "all"
               },
@@ -212,7 +311,7 @@
             }
           },
           {
-            "id": 4,
+            "id": 7,
             "name": "notches",
             "suppressed": false,
             "kind": {
@@ -629,12 +728,12 @@
             }
           },
           {
-            "id": 5,
+            "id": 8,
             "name": "3 notch",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 4,
+              "sketch": 7,
               "profiles": {
                 "type": "all"
               },
@@ -647,7 +746,7 @@
             }
           }
         ],
-        "next_id": 6,
+        "next_id": 9,
         "settings": {
           "facet_angle": 5.0
         }

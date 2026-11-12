@@ -314,3 +314,44 @@ fn the_line_sample_is_three_samples_along_a_strip() {
         assert!(tops > 20, "sample {}: {tops} pad corners", k + 1);
     }
 }
+
+/// The rounded sample: the chosen line with every tile's top edges
+/// stepped to a 0.6 mm roundover, a layer at a time: the pad tops stand
+/// at the full height, and there are corners at each layer below it.
+#[test]
+fn the_rounded_sample_steps_its_top_edges_a_layer_at_a_time() {
+    let n: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(dir().join("out/gap_sample_round.json")).unwrap(),
+    )
+    .unwrap();
+    let mesh =
+        ok_mesh::from_stl(&std::fs::read(dir().join("out/gap_sample_round.stl")).unwrap()).unwrap();
+    let (pad, height, round) = (
+        n["pad"].as_f64().unwrap(),
+        n["height"].as_f64().unwrap(),
+        n["round"].as_f64().unwrap(),
+    );
+    let (zlo, zhi) = mesh
+        .vertices
+        .iter()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), v| {
+            (a.min(v.z), b.max(v.z))
+        });
+    assert!((zhi - zlo - height).abs() < 1e-6, "{} tall", zhi - zlo);
+    let at = |z: f64| {
+        mesh.vertices
+            .iter()
+            .filter(|v| (v.z - z).abs() < 1e-6)
+            .count()
+    };
+    let steps = (round / 0.2).round() as usize;
+    for i in 0..=steps {
+        let z = pad - round + i as f64 * round / steps as f64;
+        println!("{} corners at z = {z:.1}", at(z));
+        assert!(at(z) > 20, "no step at {z}");
+    }
+    assert_eq!(
+        mesh.triangles.len() as u64,
+        n["triangles"].as_u64().unwrap()
+    );
+}
