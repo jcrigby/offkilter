@@ -1074,3 +1074,19 @@ but it is an hour of printing per bundle), a single lattice with the
 boundary pieces cut to arbitrary shapes (four sticks is the point),
 and the search's result baked in as constants (a few seconds, and the
 test proves it repeats).
+
+The comb was for a bundle poured through with resin; the owner's
+next step was to glue the tile sticks tight in printed clamping
+cauls and keep the resin for the lines between tiles only, which is
+the pattern plate the puzzle top already has, now with the hex curve.
+A caul pair is a cradle whose pocket is the outline and a plunger
+that is the negative of what stands above a split, and the plunger
+only comes down if that part does nothing but narrow going up; the
+Spectre has a dent close under its top at every turn, so the search
+over every turn and split ends with the lid taking one bump, 4 % of
+the tile. That was accepted rather than fought with side cauls: the
+pocket enforces the other 96 % exactly, since the sticks go in one at
+a time from above and a bay under an overhang is reached by sliding
+the stick in before the ones above it, and the plunger's force
+spreads through the lattice at 60°. The plunger is the slot's full
+width for the clamps, with the bump's negative in its middle.

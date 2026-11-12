@@ -68,6 +68,10 @@ that.
 
 ## The comb
 
+For a bundle poured through with resin. The tiles can be glued tight
+instead, in the cauls of `examples/spectre-cauls`, with the resin
+kept for the lines between tiles; this comb is then not needed.
+
 The sticks stand end-on in a comb that holds the pattern while the
 resin is poured. It is silicone, cast in two printed parts, both for
 an FDM printer:

@@ -1,0 +1,52 @@
+{
+  "name": "Spectre hex pattern plate",
+  "tabs": [
+    {
+      "id": 1,
+      "kind": {
+        "type": "part_studio",
+        "name": "Pattern plate",
+        "features": [
+          {
+            "id": 1,
+            "name": "Pattern plate",
+            "suppressed": false,
+            "kind": {
+              "type": "spectre",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "width": 101.6,
+              "height": 101.6,
+              "edge": 10.56,
+              "thickness": 12.0,
+              "gap": 1.5,
+              "curve": "hex",
+              "bulge": 0.433,
+              "bit": 0.0,
+              "shift": {
+                "x": 2.0,
+                "y": 5.0
+              },
+              "angle": 0.0,
+              "scrap": 100.0,
+              "web": 0.0,
+              "groove": 6.0,
+              "show": "pattern",
+              "scheme": "mystics",
+              "seed": 0,
+              "whole": true
+            }
+          }
+        ],
+        "next_id": 2,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    }
+  ],
+  "next_id": 2
+}
