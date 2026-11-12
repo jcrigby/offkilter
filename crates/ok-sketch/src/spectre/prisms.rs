@@ -252,6 +252,8 @@ pub fn theta(curve: Curve, bulge: f64) -> f64 {
         Curve::Ogee => 2.0 * (4.0 * bulge).atan().to_degrees(),
         // A cubic has no one radius; its end tangent stands at this.
         Curve::Cubic => bulge.atan2(0.33).to_degrees(),
+        // The hex's pieces leave the edge at 60°.
+        Curve::Hex => 60.0,
     }
 }
 
@@ -261,6 +263,7 @@ pub fn radius(curve: Curve, bulge: f64) -> f64 {
         Curve::Arc => (0.25 + bulge * bulge) / (2.0 * bulge),
         Curve::Ogee => (1.0 / 16.0 + bulge * bulge) / (2.0 * bulge),
         Curve::Cubic => super::tightest_radius(curve, bulge),
+        Curve::Hex => 0.0,
     }
 }
 
@@ -533,6 +536,9 @@ pub fn decompose(
     cuts: &[Cut],
     facet: f64,
 ) -> Result<Decomposition, String> {
+    if curve == Curve::Hex {
+        return Err("the hex tile is a bundle of lattice triangles, not prisms: see mosaic".into());
+    }
     let cuts = &snap(cuts);
     if let Some(c) = cuts.iter().find(|c| !cut_ok(c[0], c[1])) {
         return Err(format!(

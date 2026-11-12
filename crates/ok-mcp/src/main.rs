@@ -14,6 +14,7 @@
 //! `create_document`, `open_document`, `report`, `apply`, `screenshot`,
 //! `import`, `export`, `document_url`. See docs/MCP.md.
 
+use ok_math::{Vec2, Vec3};
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};
 
@@ -22,6 +23,70 @@ const PROTOCOL: &str = "2024-11-05";
 
 /// Turns every `{x, y}` in a JSON tree into `[x, y]`, the form the
 /// tools give points in.
+/// A flat-shaded mesh of triangles, a corner per triangle corner.
+fn tri_mesh(tris: &[[Vec3; 3]]) -> ok_mesh::TriMesh {
+    let mut m = ok_mesh::TriMesh::new();
+    for t in tris {
+        let n = (t[1] - t[0])
+            .cross(t[2] - t[0])
+            .normalized()
+            .unwrap_or(Vec3::new(0.0, 0.0, 1.0));
+        for p in t {
+            let i = m.positions.len() as u32 / 3;
+            m.positions.extend([p.x as f32, p.y as f32, p.z as f32]);
+            m.normals.extend([n.x as f32, n.y as f32, n.z as f32]);
+            m.indices.push(i);
+        }
+    }
+    m
+}
+
+/// A convex prism from `bottom` at `z0` to `top` at `z1` (the same corners
+/// in the same order, counter-clockwise from above), outward faces.
+fn frustum(bottom: &[Vec2], top: &[Vec2], z0: f64, z1: f64) -> ok_mesh::TriMesh {
+    let n = bottom.len();
+    let b = |i: usize| Vec3::new(bottom[i % n].x, bottom[i % n].y, z0);
+    let t = |i: usize| Vec3::new(top[i % n].x, top[i % n].y, z1);
+    let mut tris = Vec::new();
+    for i in 1..n - 1 {
+        tris.push([b(0), b(i + 1), b(i)]);
+        tris.push([t(0), t(i), t(i + 1)]);
+    }
+    for i in 0..n {
+        tris.push([b(i), b(i + 1), t(i + 1)]);
+        tris.push([b(i), t(i + 1), t(i)]);
+    }
+    tri_mesh(&tris)
+}
+
+fn block(lo: Vec2, hi: Vec2, z0: f64, z1: f64) -> ok_mesh::TriMesh {
+    let r = [lo, Vec2::new(hi.x, lo.y), hi, Vec2::new(lo.x, hi.y)];
+    frustum(&r, &r, z0, z1)
+}
+
+/// A convex counter-clockwise polygon pulled in by `d` on every side.
+fn inset(poly: &[Vec2], d: f64) -> Vec<Vec2> {
+    let n = poly.len();
+    let mut out = Vec::with_capacity(n);
+    for i in 0..n {
+        let (p0, p1, p2) = (poly[(i + n - 1) % n], poly[i], poly[(i + 1) % n]);
+        let n1 = (p1 - p0).perp().normalized().unwrap_or(Vec2::ZERO);
+        let n2 = (p2 - p1).perp().normalized().unwrap_or(Vec2::ZERO);
+        // The corner moves along the bisector so both sides move by d.
+        let bis = n1 + n2;
+        let k = bis.dot(n1);
+        if k.abs() < 1e-9 {
+            return Vec::new();
+        }
+        out.push(p1 + bis * (d / k));
+    }
+    // A side that vanished turns the polygon inside out.
+    if ok_sketch::signed_area(&out) <= 0.0 {
+        return Vec::new();
+    }
+    out
+}
+
 fn points_as_pairs(v: &mut Value) {
     match v {
         Value::Object(m) => {
@@ -1381,7 +1446,8 @@ impl Server {
                     "cubic" => ok_sketch::spectre::Curve::Cubic,
                     "arc" => ok_sketch::spectre::Curve::Arc,
                     "ogee" => ok_sketch::spectre::Curve::Ogee,
-                    other => return Err(format!("curve is cubic, arc or ogee, not {other}")),
+                    "hex" => ok_sketch::spectre::Curve::Hex,
+                    other => return Err(format!("curve is cubic, arc, ogee or hex, not {other}")),
                 };
                 let params = ok_sketch::spectre::Params {
                     width: 1.0,
@@ -1903,6 +1969,191 @@ impl Server {
                 };
                 let p = ok_sketch::spectre::sticks::plan(&settings)?;
                 let mut v = serde_json::to_value(&p).map_err(|e| e.to_string())?;
+                points_as_pairs(&mut v);
+                Ok(v.to_string())
+            }
+            "spectre_mosaic" => {
+                use ok_sketch::spectre::{self, mosaic};
+                let num = |k: &str, d: f64| args.get(k).and_then(|v| v.as_f64()).unwrap_or(d);
+                let pair = |k: &str| -> Result<Option<Vec2>, String> {
+                    match args.get(k) {
+                        None => Ok(None),
+                        Some(v) => {
+                            let a = v
+                                .as_array()
+                                .filter(|a| a.len() == 2)
+                                .ok_or(format!("{k} is [x, y]"))?;
+                            Ok(Some(Vec2::new(
+                                a[0].as_f64().ok_or(format!("{k} is [x, y]"))?,
+                                a[1].as_f64().ok_or(format!("{k} is [x, y]"))?,
+                            )))
+                        }
+                    }
+                };
+                let edge = num("edge", 10.56);
+                let (gap, inner, min) = (num("gap", 1.5), num("inner", 0.7), num("min", 1.0));
+                let scheme: spectre::Scheme = match args.get("scheme") {
+                    Some(v) => {
+                        serde_json::from_value(v.clone()).map_err(|e| format!("scheme: {e}"))?
+                    }
+                    None => spectre::Scheme::default(),
+                };
+                let params = spectre::Params {
+                    width: num("width", 101.6),
+                    height: num("height", 101.6),
+                    edge,
+                    gap,
+                    curve: spectre::Curve::Hex,
+                    bulge: spectre::HEX_BULGE,
+                    bit: 0.0,
+                    shift: pair("shift")?.unwrap_or(Vec2::ZERO),
+                    angle: num("angle", 0.0),
+                    scrap: 0.0,
+                    scheme,
+                    seed: num("seed", 0.0) as u32,
+                    rips: Vec::new(),
+                    whole: true,
+                    prisms: Vec::new(),
+                };
+                let (bar, backing, draft, plate_t, wall, seat, margin, sink) = (
+                    num("bar", 10.0),
+                    num("backing", 5.0),
+                    num("draft", 1.0),
+                    num("plate", 4.0),
+                    3.0,
+                    2.5,
+                    num("margin", 6.0),
+                    0.5,
+                );
+                let patch = spectre::build(&params, 10f64.to_radians())?;
+                let m =
+                    mosaic::mosaic(num("rounds", 6000.0) as u32, num("search_seed", 3.0) as u64);
+                let laid = mosaic::lay(&patch, &m, gap, inner, min);
+                let index =
+                    |s: mosaic::Shape| mosaic::Shape::ALL.iter().position(|x| *x == s).unwrap();
+                let mut counts = [0usize; 4];
+                for l in &laid {
+                    counts[index(l.shape)] += 1;
+                }
+                let tiles = patch
+                    .pieces
+                    .iter()
+                    .map(|p| p.tile)
+                    .collect::<std::collections::HashSet<_>>()
+                    .len();
+                let (mut lo, mut hi) = (
+                    Vec2::new(f64::INFINITY, f64::INFINITY),
+                    Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY),
+                );
+                for l in &laid {
+                    for q in &l.outline {
+                        lo = Vec2::new(lo.x.min(q.x), lo.y.min(q.y));
+                        hi = Vec2::new(hi.x.max(q.x), hi.y.max(q.y));
+                    }
+                }
+                if laid.is_empty() {
+                    return Err(
+                        "no piece survives the gaps and min: narrower gaps or a smaller min".into(),
+                    );
+                }
+                let plate = (
+                    lo - Vec2::new(margin, margin),
+                    hi + Vec2::new(margin, margin),
+                );
+                // The positive: the plate with every piece a bar standing on
+                // it, sunk half a millimetre in, tapering by the draft.
+                let mut positive = vec![block(plate.0, plate.1, -plate_t, 0.0)];
+                let taper = bar * draft.to_radians().tan();
+                for l in &laid {
+                    let top = inset(&l.outline, taper);
+                    let top = if top.len() == l.outline.len() {
+                        top
+                    } else {
+                        l.outline.clone()
+                    };
+                    positive.push(frustum(&l.outline, &top, -sink, bar));
+                }
+                // The box the silicone is poured in, which backs it after:
+                // the plate rests on its rim, the bars reach down to the
+                // backing's depth above its floor.
+                let floor = 3.0;
+                let cavity = (
+                    plate.0 + Vec2::new(seat, seat),
+                    plate.1 - Vec2::new(seat, seat),
+                );
+                let outer = (
+                    cavity.0 - Vec2::new(wall, wall),
+                    cavity.1 + Vec2::new(wall, wall),
+                );
+                let top = floor + backing + bar;
+                let tray = vec![
+                    block(outer.0, outer.1, 0.0, floor),
+                    block(outer.0, Vec2::new(cavity.0.x, outer.1.y), 0.0, top),
+                    block(Vec2::new(cavity.1.x, outer.0.y), outer.1, 0.0, top),
+                    block(
+                        Vec2::new(cavity.0.x, outer.0.y),
+                        Vec2::new(cavity.1.x, cavity.0.y),
+                        0.0,
+                        top,
+                    ),
+                    block(
+                        Vec2::new(cavity.0.x, cavity.1.y),
+                        Vec2::new(cavity.1.x, outer.1.y),
+                        0.0,
+                        top,
+                    ),
+                ];
+                let mut files = Vec::new();
+                if let Some(out) = args.get("out").and_then(|v| v.as_str()) {
+                    std::fs::create_dir_all(out)
+                        .map_err(|e| format!("could not make {out}: {e}"))?;
+                    for (name, meshes) in [("positive.stl", &positive), ("box.stl", &tray)] {
+                        let path = std::path::Path::new(out).join(name);
+                        std::fs::write(&path, ok_mesh::to_stl(meshes, "offkilter spectre mosaic"))
+                            .map_err(|e| format!("could not write {}: {e}", path.display()))?;
+                        files.push(path.display().to_string());
+                    }
+                }
+                let sides = |s: mosaic::Shape| -> Vec<f64> {
+                    let e = edge;
+                    match s {
+                        mosaic::Shape::Triangle => vec![e / 2.0, e / 2.0, e / 2.0],
+                        mosaic::Shape::Half => vec![e / 4.0, e * 3f64.sqrt() / 4.0, e / 2.0],
+                        mosaic::Shape::Small => vec![e / 8.0, e * 3f64.sqrt() / 8.0, e / 4.0],
+                        mosaic::Shape::Trapezoid => {
+                            vec![e / 8.0, e * 3f64.sqrt() / 8.0, e / 4.0, e / 4.0]
+                        }
+                    }
+                };
+                let shapes: serde_json::Map<String, Value> = mosaic::Shape::ALL
+                    .iter()
+                    .enumerate()
+                    .map(|(i, s)| {
+                        (
+                            s.name().to_string(),
+                            json!({ "sides": sides(*s), "area": s.area() * edge * edge, "per_tile": m.counts[i], "count": counts[i] }),
+                        )
+                    })
+                    .collect();
+                let mut v = json!({
+                    "edge": edge,
+                    "board": [patch.board.0, patch.board.1],
+                    "tiles": tiles,
+                    "gap": gap,
+                    "inner": inner,
+                    "min": min,
+                    "tile": m,
+                    "pieces": laid,
+                    "shapes": shapes,
+                    "sticks": laid.len(),
+                    "dropped": m.pieces.len() * tiles - laid.len(),
+                    "plate": [plate.0, plate.1],
+                    "bar": bar,
+                    "backing": backing,
+                    "draft": draft,
+                    "box": [outer.0, outer.1, top],
+                    "files": files,
+                });
                 points_as_pairs(&mut v);
                 Ok(v.to_string())
             }
@@ -2528,6 +2779,11 @@ fn tool_list() -> Value {
             "name": "spectre_sticks",
             "description": "How the curvy Spectre's prisms are cut as sticks, one per prism: a plan for a table saw whose blade stands at 90 degrees for good, with a cradle per cut on a one-sided sled, and for a router table with a cradle per pass. The tile's bumps and flutes are arcs of one radius, so a flute is one pass of a core box bit of that radius and a bump two passes of a roundover of it on a gable (two flats at the arc's end angle theta to the chord, tangent to the arc at its ends, meeting at a ridge over the apex): with a gable face standing against the fence and the bit's arc starting at the face's foot, the roundover sweeps a quarter circle past the apex, its shoulder slits off the ridge, and the second pass from the other flat finishes the arc. That wants theta between 45 (the quarter circle, one pass) and 90 degrees; a half-round bullnose will not do, its body past the arc bites a 120 degree corner. Takes `edge` (mm), `curve` (arc), `bulge` (0.2673, five sixteenths of a circle), `cuts` (the glue lines in tile units, else the fewest the search finds), `gap` (0.2: the flutes are cut this much deeper than the bumps stand, the clearance between pieces, since bits of one radius mate tight), `kerf` (3.175), `floor` (4, the thinnest cassette floor), `margin` (2, blank past the section) and `shoulder` (3, the roundover's flat past its arc). Every stick is sawn first, every face a through rip (the section is convex): the blank's datum is the prism's longest glue line, and each other face is a cut with the stick turned so the face stands vertical on the blade's near side (`turn`, `shift`, `bed`, `top`: the blade at one `height` over the plate for every cut of every stick), the stock `before` and `after`, the `offcuts`, and the `lower` and `upper` envelopes a cassette's base and lid are the negatives of. Then the router passes: a flute with the chord down over the bit's axis (`height` the depth), a bump with the gable face in x 0, the bit on its left, its foot at the top where the roundover's arc starts under the bearing (`height`), the second pass with the stick end for end (`mirrored`), each with its `before`, `after`, `offcuts` and envelopes for the cradle. Returns JSON: `theta`, `radius`, `sagitta`, `flute_depth`, `ridge`, `bits`, `height` and `sticks`, each with its `prism`, `shape`, `datum`, sawn `section` and `faces` (glue, chord, gable), `blank`, `saw`, `router`, `finished`, `target` (the prism's curved outline) and `off` (how far the finished section is from it, mm2). No document is needed. See `examples/spectre-sticks/`.",
             "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "curve": { "type": "string", "enum": ["arc"] }, "bulge": { "type": "number" }, "cuts": { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } } }, "gap": { "type": "number" }, "kerf": { "type": "number" }, "floor": { "type": "number" }, "margin": { "type": "number" }, "shoulder": { "type": "number" } } }
+        },
+        {
+            "name": "spectre_mosaic",
+            "description": "A lid of the hex-edged Spectre as a bundle of sawn triangular sticks, and the mold that holds the bundle at the pattern. With half a hexagon on every edge (`curve` hex) every corner of the tile lies on the triangular lattice of half-edge triangles, so a tile is built from four sticks and no curve is routed: the lattice triangle (equilateral, side half an edge), its half (30-60-90), the half of the quarter triangle, and the trapezoid a half leaves when that small half comes off its apex. The tile's edges fall into two lattice families in three runs each, with offsets that do not agree, so the cover is a search over the six lattices (greedy, then ruin-and-recreate for `rounds` from `search_seed`, repeatable) that reaches 99.4 % of the tile, the slivers along the seams left to the resin. Takes the board (`width`, `height`, mm, 101.6 each), `edge` (10.56), `gap` between tiles (1.5: the line that shows the pieces), `inner` between a tile's sticks (0.7: the texture), `min` (1.0: a stick narrower than this after the gaps is dropped and becomes resin), `shift`, `angle`, `scheme` and `seed` as `add_spectre`, and for the mold `bar`, the bars' height (10), `backing` of silicone under their tips (5), `draft` degrees (1), `plate` thickness (4), `margin` of plate past the sticks (6). Every tile the board reaches is kept whole, as a glue-up blank trimmed after. With `out`, writes `positive.stl` (the plate with a bar per stick: pour silicone over it in the box and the silicone is a comb with a slot per stick) and `box.stl` (the tray the silicone is poured in, whose rim the plate rests on, and which backs the comb after). Returns JSON: `tile` (the one tile's cover: `pieces` in edge units, `coverage`, `counts`), `pieces` (every stick on the lid: `tile`, `wood`, `shape`, `outline` mm), `shapes` (sides mm, area, per tile and in all), `sticks`, `dropped`, `tiles`, `board`, `plate`, `box` and `files`. No document is needed. See `examples/spectre-mosaic/`.",
+            "inputSchema": { "type": "object", "properties": { "width": { "type": "number" }, "height": { "type": "number" }, "edge": { "type": "number" }, "gap": { "type": "number" }, "inner": { "type": "number" }, "min": { "type": "number" }, "shift": { "type": "array", "items": { "type": "number" } }, "angle": { "type": "number" }, "scheme": { "type": "string" }, "seed": { "type": "number" }, "rounds": { "type": "number" }, "search_seed": { "type": "number" }, "bar": { "type": "number" }, "backing": { "type": "number" }, "draft": { "type": "number" }, "plate": { "type": "number" }, "margin": { "type": "number" }, "out": { "type": "string" } } }
         },
         {
             "name": "spectre_saw",

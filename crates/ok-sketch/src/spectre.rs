@@ -49,6 +49,7 @@ const SPECTRE: [(f64, f64); 14] = [
 const KEYS: [usize; 4] = [3, 5, 7, 11];
 /// Area of the tile with unit edges (the curves add and take away the
 /// same amount), `3 + 3√3`.
+pub mod mosaic;
 pub mod prisms;
 pub mod rips;
 pub mod saw;
@@ -163,7 +164,17 @@ pub enum Curve {
     /// cannot mate: the curve the Spectre's chirality argument wants.
     /// At most 0.25, where the halves are semicircles.
     Ogee,
+    /// Half a regular hexagon on every edge, out then in alternately:
+    /// three straight pieces of half an edge at 60°, standing √3/4
+    /// edge off the middle (`bulge` is ignored). Every corner of the
+    /// tile then lies on the triangular lattice of half-edge triangles,
+    /// so the tile is a bundle of lattice triangles, sawn, with no
+    /// curve to rout: see `mosaic`.
+    Hex,
 }
+
+/// Where the hex curve's apex stands off the edge: half an edge at 60°.
+pub const HEX_BULGE: f64 = 0.433_012_701_892_219_3;
 
 /// One piece: a tile (or the part of one the board's edge leaves)
 /// eroded by half the gap.
@@ -204,6 +215,11 @@ pub struct Patch {
     /// tiles are kept whole, when the frame is the pieces' box and the
     /// board is the rectangle to trim the glue-up to.
     pub board: (Vec2, Vec2),
+    /// Every tile of the patch's placement, by `Piece::tile`: the affine
+    /// map from the tile's own frame (unit edges, `vertex`) to the
+    /// board's millimetres, a reflection for a mirrored tile.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub frames: Vec<Xf>,
 }
 
 // -- affine transforms, as Kaplan's [a b tx c d ty] ----------------------
@@ -477,7 +493,11 @@ pub(crate) fn vertex(i: usize) -> Vec2 {
 /// The curved tile with unit edges in its own frame, counter-clockwise,
 /// `per_edge` straight pieces per edge, the first vertex first.
 pub fn curved_tile(curve: Curve, bulge: f64, per_edge: usize) -> Vec<Vec2> {
-    let n = per_edge.max(1);
+    // The hex's three pieces each take the same number of points.
+    let n = match curve {
+        Curve::Hex => 3 * (per_edge / 3).max(1),
+        _ => per_edge.max(1),
+    };
     let mut out = Vec::with_capacity(14 * n);
     let mut sign = 1.0;
     for i in 0..14 {
@@ -528,6 +548,18 @@ pub fn curved_tile(curve: Curve, bulge: f64, per_edge: usize) -> Vec<Vec2> {
                     out.push(a + v * (k as f64 / n as f64));
                 }
             }
+            Curve::Hex => {
+                // Out (or in) at 60° for half an edge, along for half,
+                // and back: half a hexagon of side 1/2 on the edge.
+                let p1 = a + v * 0.25 + v.perp() * (sign * HEX_BULGE);
+                let p2 = p1 + v * 0.5;
+                let third = n / 3;
+                for (p, q) in [(a, p1), (p1, p2), (p2, b)] {
+                    for k in 1..=third {
+                        out.push(p + (q - p) * (k as f64 / third as f64));
+                    }
+                }
+            }
             Curve::Ogee => {
                 // Two arcs on the edge's halves, the convex one first:
                 // the same S from both sides, so no sign to alternate.
@@ -572,6 +604,8 @@ pub fn pieces_per_edge(curve: Curve, bulge: f64, facet: f64) -> usize {
         Curve::Cubic => bulge.abs().atan2(0.33),
         Curve::Arc => 2.0 * (2.0 * bulge.abs()).atan(),
         Curve::Ogee => 2.0 * (4.0 * bulge.abs()).atan(),
+        // Three straight pieces, whatever the facet.
+        Curve::Hex => return 3,
     };
     let n = ((2.0 * end_angle / facet.max(1e-3)).ceil() as usize).clamp(4, 64);
     match curve {
@@ -584,10 +618,14 @@ pub fn pieces_per_edge(curve: Curve, bulge: f64, facet: f64) -> usize {
 /// The tightest radius along an edge's curve, in edge lengths: what a
 /// router bit following the concave side has to get round.
 pub fn tightest_radius(curve: Curve, bulge: f64) -> f64 {
+    if curve == Curve::Hex {
+        return 0.0; // sharp corners: nothing a bit follows
+    }
     if bulge.abs() < 1e-9 {
         return f64::INFINITY;
     }
     match curve {
+        Curve::Hex => 0.0,
         Curve::Arc => (0.25 + bulge * bulge) / (2.0 * bulge),
         Curve::Ogee => (1.0 / 16.0 + bulge * bulge) / (2.0 * bulge),
         Curve::Cubic => {
@@ -1048,8 +1086,11 @@ fn validate(p: &Params) -> Result<(), String> {
     if !(p.bit.is_finite() && p.bit >= 0.0) {
         return Err("bit must be zero or positive".into());
     }
+    if p.curve == Curve::Hex && p.bit > 0.0 {
+        return Err("the hex tile's corners are sharp, sawn not routed: set the bit to 0".into());
+    }
     if !p.rips.is_empty() {
-        if p.bulge != 0.0 {
+        if p.bulge != 0.0 || p.curve == Curve::Hex {
             return Err("rips need the straight tile: set the bulge to 0".into());
         }
         if let Some(c) = p.rips.iter().find(|c| !rips::cut_ok(c[0], c[1])) {
@@ -1339,6 +1380,15 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
         );
     };
     let place = |q: Vec2| spin((q - patch_centre) * p.edge) + centre;
+    // The same map as an affine, composed with each tile's own.
+    let place_xf = mul(
+        &mul(&ttrans(centre), &trot(p.angle.to_radians())),
+        &mul(
+            &[p.edge, 0.0, 0.0, 0.0, p.edge, 0.0],
+            &ttrans(-patch_centre),
+        ),
+    );
+    let mut frames: Vec<Xf> = all.iter().map(|(_, xf)| mul(&place_xf, xf)).collect();
     let opts = ProfileOptions {
         arc_segment_angle: facet,
         merge_tolerance: 1e-6,
@@ -1523,6 +1573,10 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
                 *q -= lo;
             }
         }
+        // The tile frames move with the pieces.
+        for xf in &mut frames {
+            *xf = mul(&ttrans(-lo), xf);
+        }
         board = (Vec2::ZERO - lo, Vec2::new(p.width, p.height) - lo);
         width = hi.x - lo.x;
         height = hi.y - lo.y;
@@ -1534,6 +1588,7 @@ pub fn build(p: &Params, facet: f64) -> Result<Patch, String> {
         depth,
         tiles: touched,
         board,
+        frames,
     })
 }
 

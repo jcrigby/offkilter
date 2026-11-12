@@ -2473,8 +2473,8 @@ class App implements SketchHost {
     gap.title = "Between pieces, for a resin fill; a quarter of the edge at most";
     body.appendChild(field("Gap", gap));
     // Each curve starts at its router-bit bulge when the one it inherits is another curve's: the arc at five sixteenths of a circle, the S at quarter circles.
-    const curve = select(["cubic", "arc", "ogee"], k.curve, (v) => set({ curve: v as SpectreCurve, ...(v === "ogee" && k.bulge > 0.25 ? { bulge: 0.1036 } : v === "arc" && k.curve === "cubic" ? { bulge: 0.2673 } : {}) }));
-    curve.title = "Kaplan's cubic, tightest at its apex (0.28 of the edge at 0.6); a circular arc, one radius all along (0.57 of the edge at 0.3, a quarter circle at 0.2071) and kinder to a router bit; or an ogee, an S of two arcs on every edge (quarter circles at 0.1036), which one ogee bit cuts and a mirrored tile cannot mate";
+    const curve = select(["cubic", "arc", "ogee", "hex"], k.curve, (v) => set({ curve: v as SpectreCurve, ...(v === "ogee" && k.bulge > 0.25 ? { bulge: 0.1036 } : v === "arc" && k.curve === "cubic" ? { bulge: 0.2673 } : {}) }));
+    curve.title = "Kaplan's cubic, tightest at its apex (0.28 of the edge at 0.6); a circular arc, one radius all along (0.57 of the edge at 0.3, a quarter circle at 0.2071) and kinder to a router bit; an ogee, an S of two arcs on every edge (quarter circles at 0.1036), which one ogee bit cuts and a mirrored tile cannot mate; or half a hexagon on every edge, which puts the tile on the triangular lattice so it is a bundle of sawn triangular sticks (the bulge is ignored)";
     body.appendChild(field("Curve", curve));
     const bulge = this.exprInput(f, "bulge", k.bulge, (v) => set({ bulge: v }));
     bulge.title = "How far each edge's curve stands off the straight edge, as a fraction of it: the cubic's control offset (0.6 is Kaplan's), the arc's sagitta (0.3 matches Kaplan's corners, 0.2071 is a quarter circle, 0.2673 five sixteenths of one) or the S's half-arcs' (at most 0.25); 0 is the straight-sided tile";

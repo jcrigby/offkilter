@@ -1030,3 +1030,47 @@ bottoms with the bit through; so there is no stop screw and nothing
 for one to land on. What the plan has that this does not is conduit:
 the arms are ply on edge, 19 x 80, because that is what is on hand,
 and they are twice the plan's weight for it.
+
+## 2026-11 · The Spectre lid from triangular sticks: a hex edge, a lattice search, a silicone comb
+
+The owner looked at the sticks planner's cassettes, then at a
+programmable jig to replace them, and then set both aside for a
+simpler idea: build the tile from a few primitive sticks on the
+triangular lattice, hold a bundle of them end-on in a comb at the
+pattern, and pour resin through. The curved edge is what made the
+prisms and their router passes necessary, so the first move is the
+edge: half a regular hexagon on every edge, out then in as the arcs
+alternate, which puts every corner of the tile on the lattice of
+half-edge triangles. The tile still tiles (a bump meets a dent as the
+arcs do) and has the straight tile's area, and the router goes with
+the curve: a 60° corner is sawn. What does not come for free is the
+cover. The tile's fourteen edges run eight on the 0-60-120 lattice
+and six on the 30-90-150 one, in three runs each, and a 30° edge
+moves the 60° lattice by a fraction of a step, so the runs disagree
+on where the lattice sits and no single lattice covers the tile. The
+owner's own figure had four shapes covering 97.9 % with slivers
+inside; the kernel takes the same four (the lattice triangle, its
+half, the quarter's half, the trapezoid) on the six lattices the runs
+define and searches: greedy, biggest first and boundary first, then
+ruin-and-recreate from a fixed seed, which reaches 99.4 % in a few
+seconds and repeats exactly, and a merge after it for the pairs of
+halves that make a triangle, which the owner spotted in the first
+picture. The slivers are the resin's. Two lines show by design, 0.7
+between a tile's sticks for the texture and 1.5 between tiles for
+the pieces, and the test puts a number on what they cost: a 0.7 line
+round a 5.3 mm triangle takes two fifths of it, so the lid is about
+half wood at this edge, which is the owner's to weigh against a
+thinner line or a longer edge. The comb is silicone, because resin
+does not bond to it and one comb serves every bundle: cast in a
+printed box over a printed positive of the lid's sticks as bars, the
+plate resting on the box's rim so the bars stop a backing's depth
+above its floor, and the box backing the comb when it is turned over
+for a pour. Both print on the owner's FDM machine, since the channels
+between the bars are air and only the bars' sides carry layer lines,
+on faces nothing sees; the comb holds only the sticks' ends, and that
+end of the bundle is sawn off with the first slice. Rejected: a comb
+printed as the negative (resin bonds to it; it could be sacrificial,
+but it is an hour of printing per bundle), a single lattice with the
+boundary pieces cut to arbitrary shapes (four sticks is the point),
+and the search's result baked in as constants (a few seconds, and the
+test proves it repeats).
