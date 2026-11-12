@@ -79,7 +79,7 @@ fn the_hex_tile_is_covered_by_the_four_sticks_to_ninety_nine_percent() {
         .get("rounds")
         .and_then(|v| v.as_u64())
         .unwrap_or(6000) as u32;
-    let again = mosaic::mosaic(rounds, 3);
+    let again = mosaic::mosaic(rounds, 1);
     assert!(
         (again.coverage - cover).abs() < 1e-12,
         "{} vs {cover}",

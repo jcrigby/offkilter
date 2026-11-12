@@ -34,7 +34,7 @@ GAP, INNER = 1.5, 0.7                           # between tiles (the pieces) and
 MIN = 1.0                                       # a stick narrower than this after the gaps is resin instead
 SHIFT = [2.0, 5.0]                              # the slide of the tiling the prism lid settled on: 21 whole tiles
 HEIGHT, BACKING, DRAFT = 10.0, 5.0, 1.0         # the bars: how deep the comb's slots are, the silicone under their tips, their taper
-ROUNDS, SEARCH_SEED = 6000, 3                   # the cover's search: repeatable
+ROUNDS, SEARCH_SEED = 6000, 1                   # the cover's search: repeatable
 COLOURS = {"triangle": "#4a7fe0", "half": "#f5a03a", "small": "#12a5a8", "trapezoid": "#9b59d0"}
 WOODS = ["#d9b98a", "#7a5230", "#c47d4a", "#9a9a9a"]
 

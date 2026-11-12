@@ -2044,7 +2044,7 @@ impl Server {
                 let m = mosaic::mosaic_with(
                     &shapes,
                     num("rounds", 6000.0) as u32,
-                    num("search_seed", 3.0) as u64,
+                    num("search_seed", 1.0) as u64,
                 );
                 let laid = mosaic::lay(&patch, &m, gap, inner, min);
                 let index =

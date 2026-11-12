@@ -221,6 +221,30 @@ fn touches(piece: &[Vec2], tile: &[Vec2]) -> bool {
     })
 }
 
+/// The length of a piece's sides that lie along the tile's outline:
+/// what a caul's pocket wall presses on.
+fn on_outline(piece: &[Vec2], tile: &[Vec2]) -> f64 {
+    let n = tile.len();
+    let on = |p: Vec2| {
+        (0..n).any(|j| {
+            let (a, b) = (tile[j], tile[(j + 1) % n]);
+            let ab = b - a;
+            let t = (p - a).dot(ab) / ab.dot(ab);
+            (0.0..=1.0).contains(&t) && (a + ab * t).distance(p) < 1e-6
+        })
+    };
+    (0..piece.len())
+        .map(|i| {
+            let (a, b) = (piece[i], piece[(i + 1) % piece.len()]);
+            if on(a) && on(b) && on((a + b) * 0.5) {
+                a.distance(b)
+            } else {
+                0.0
+            }
+        })
+        .sum()
+}
+
 fn ccw(mut p: Vec<Vec2>) -> Vec<Vec2> {
     if signed_area(&p) < 0.0 {
         p.reverse();
@@ -358,6 +382,10 @@ pub fn mosaic_with(shapes: &[Shape], rounds: u32, seed: u64) -> Mosaic {
     let boxes: Vec<(Vec2, Vec2)> = cands.iter().map(|c| bbox(&c.outline)).collect();
     let centres: Vec<Vec2> = cands.iter().map(|c| centroid(&c.outline)).collect();
     let edge_touch: Vec<bool> = cands.iter().map(|c| touches(&c.outline, &tile)).collect();
+    let contact: Vec<f64> = cands
+        .iter()
+        .map(|c| on_outline(&c.outline, &tile))
+        .collect();
     // Who overlaps whom, once.
     let mut conflicts: Vec<Vec<u32>> = vec![Vec::new(); n];
     for i in 0..n {
@@ -395,8 +423,20 @@ pub fn mosaic_with(shapes: &[Shape], rounds: u32, seed: u64) -> Mosaic {
         }
     }
     let mut best = chosen.clone();
+    // Among covers of one area, the one with more stick sides along the
+    // outline wins: a side on the outline is a face the caul presses.
+    let along = |chosen: &[bool]| -> f64 {
+        chosen
+            .iter()
+            .zip(&contact)
+            .filter(|(c, _)| **c)
+            .map(|(_, l)| l)
+            .sum()
+    };
     let mut best_area = total(&best);
+    let mut best_along = along(&best);
     let mut cur_area = best_area;
+    let mut cur_along = best_along;
     let mut rng = Rng(seed.wrapping_mul(0x9E37_79B9_7F4A_7C15) | 1);
     for round in 0..rounds {
         let radius = [0.35, 0.5, 0.7][(round % 3) as usize];
@@ -422,11 +462,14 @@ pub fn mosaic_with(shapes: &[Shape], rounds: u32, seed: u64) -> Mosaic {
             }
         }
         let a = total(&trial);
-        if a >= cur_area - 1e-12 {
+        let l = along(&trial);
+        if a > cur_area + 1e-9 || (a >= cur_area - 1e-12 && l >= cur_along - 1e-9) {
             chosen = trial;
             cur_area = a;
-            if a > best_area + 1e-9 {
+            cur_along = l;
+            if a > best_area + 1e-9 || ((a - best_area).abs() <= 1e-9 && l > best_along + 1e-9) {
                 best_area = a;
+                best_along = l;
                 best = chosen.clone();
             }
         }
