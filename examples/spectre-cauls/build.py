@@ -45,6 +45,8 @@ CLEAR = 0.1                                     # the pocket past the tile's out
 PLAY = 0.15                                     # the plunger short of the cradle's walls, each side
 WALL, FLOOR = 6.0, 6.0                          # the cradle round the pocket
 GUIDE = 8.0                                     # the cradle's walls above the bundle's top, which guide the plunger
+SHOULDER = 4.0                                  # outside the chord the cradle rises this far above the split: the lip over a bay is never thin
+FLAT_CLEAR = 1.0                                # the plunger's flat underside stops this far above the shoulders when its notch is seated: its travel
 FLANGE = 12.0                                   # the plunger above the walls when it is down, for the clamps
 LENGTH = 50.0                                   # a short caul; three along a 200 mm stick
 LIFT = 12.0                                     # the lid drawn this far up, off the bundle
@@ -232,26 +234,39 @@ def main():
     mcp.call("create_document", {"name": "cauls"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Spectre tile stick cauls"}, {"type": "rename_tab", "tab": 1, "name": "Base"}]})
     # The base: a block round the pocket. The pocket is the part of the
-    # outline below the split, exactly, and above the split a slot the
-    # outline's full width with vertical walls, which the lid slides in.
+    # outline below the split, exactly; above the split, between the
+    # chord's ends, a slot the chord wide (plus the play) for the
+    # plunger's tongue; and outside the chord the cradle keeps its
+    # material up to a shoulder, so the lip over a bay just under the
+    # split is never thin; above the shoulders a slot the outline's
+    # full width with vertical walls, which the plunger slides in.
     base = Part(mcp, 1, "Base")
     sk = base.sketch("top", 0.0, "block")
     base.rect(sk, (xlo - WALL, bottom - FLOOR), (xhi + WALL, walls_top))
     base.extrude(sk, LENGTH, name="cradle")
     sk = base.sketch("top", LENGTH + 1.0, "pocket")
     seq = ring(loose, s, lower=True)
-    base.polygon(sk, seq + [(right, s), (xhi, s), (xhi, walls_top + 1.0), (xlo, walls_top + 1.0), (xlo, s), (left, s)])
+    sh = s + SHOULDER
+    base.polygon(sk, seq + [(right, s), (right + PLAY, s), (right + PLAY, sh), (xhi, sh), (xhi, walls_top + 1.0),
+                            (xlo, walls_top + 1.0), (xlo, sh), (left - PLAY, sh), (left - PLAY, s), (left, s)])
     base.cut(sk, LENGTH + 2.0, direction="reverse", name="pocket, through")
     base_bodies = base.bodies()
-    # The lid: a plunger the slot wide less the play, its underside the
-    # negative of the part above the split, which only narrows going
-    # up, so it comes down onto the bundle; beside that it stops a play
-    # above the split, over the base's own material.
+    # The lid: a plunger the slot wide less the play, its flat underside
+    # a millimetre above the shoulders, with the negative of the part
+    # above the split cut into it: that part only narrows going up, so
+    # the plunger comes down onto the bundle. The bump's own sides stand
+    # between the shoulders; its roof is what the plunger seats on, so
+    # the bump must stay the chord's full width up past the flat, and
+    # the millimetre under the flat is the plunger's travel.
     text = mcp.call("apply", {"ops": [{"type": "add_part_studio", "name": "Lid"}]})
     lid_tab = int(re.search(r"tab (\d+)", text).group(1))
     lid = Part(mcp, lid_tab, "Lid")
+    flat = sh + FLAT_CLEAR
+    at_flat = crossings(loose, flat)
+    if len(at_flat) != 2 or at_flat[0] > left + 0.5 or at_flat[1] < right - 0.5:
+        raise SystemExit(f"the bump narrows below the plunger's flat: {at_flat} at {flat:.2f}, chord {left:.2f}..{right:.2f}")
     sk = lid.sketch("top", 0.0, "plunger")
-    lid.rect(sk, (xlo + PLAY, s + PLAY + LIFT), (xhi - PLAY, walls_top + FLANGE + LIFT))
+    lid.rect(sk, (xlo + PLAY, flat + LIFT), (xhi - PLAY, walls_top + FLANGE + LIFT))
     lid.extrude(sk, LENGTH, name="plunger")
     sk = lid.sketch("top", LENGTH + 1.0, "negative")
     seq = ring(loose, s, lower=False)
@@ -297,18 +312,20 @@ def main():
         "edge": EDGE, "turn": deg, "split": s, "bottom": bottom, "top": top, "chord": [left, right], "lid_share": share,
         "clear": CLEAR, "play": PLAY, "wall": WALL, "floor": FLOOR, "guide": GUIDE, "flange": FLANGE, "length": LENGTH, "lift": LIFT,
         "tile_area": tile["area"], "outline": poly, "loose": loose,
-        "pocket_area": area(clip(loose, s, True)) + (xhi - xlo) * (walls_top - s),
-        # the part of the negative that is inside the plunger: the strip
-        # under its bottom and anything past its sides are not cut from it
-        "negative_area": area(clip_half(clip_half(clip_half(clip(loose, s, False), lambda p: p[0] >= xlo + PLAY), lambda p: p[0] <= xhi - PLAY), lambda p: p[1] >= s + PLAY)),
+        "pocket_area": area(clip(loose, s, True)) + (right - left + 2 * PLAY) * SHOULDER + (xhi - xlo) * (walls_top - s - SHOULDER),
+        # the part of the negative that is inside the plunger: above its
+        # flat, where the bump narrows going up, so nothing past its sides
+        "negative_area": area(clip_half(clip(loose, s, False), lambda p: p[1] >= flat)),
         "block": [[xlo - WALL, bottom - FLOOR], [xhi + WALL, walls_top]],
-        "plunger": [[xlo + PLAY, s + PLAY], [xhi - PLAY, walls_top + FLANGE]],
+        "shoulder": SHOULDER, "flat_clear": FLAT_CLEAR,
+        "plunger": [[xlo + PLAY, flat], [xhi - PLAY, walls_top + FLANGE]],
+        "plunger_area": (xhi - xlo - 2 * PLAY) * (walls_top + FLANGE - flat),
         "gap": GAP, "inner": INNER, "pocket": POCKET, "cut_list": cut_list, "tiles": lid_sticks["tiles"],
         "bodies": {"base": base_bodies, "lid": lid_bodies, "stick": stick_bodies, "template": plate},
     }
     with open(os.path.join(OUT, "cauls.json"), "w") as f:
         json.dump(numbers, f, indent=1)
-    print(f"base {xhi - xlo + 2 * WALL:.0f} x {walls_top - bottom + FLOOR:.0f} x {LENGTH:.0f}, lid {xhi - xlo - 2 * PLAY:.0f} x {walls_top + FLANGE - s - PLAY:.0f} x {LENGTH:.0f}; template {len(plate)} body, {lid_sticks['tiles']} pockets")
+    print(f"base {xhi - xlo + 2 * WALL:.0f} x {walls_top - bottom + FLOOR:.0f} x {LENGTH:.0f}, lid {xhi - xlo - 2 * PLAY:.0f} x {walls_top + FLANGE - s - 1.0:.0f} x {LENGTH:.0f}; template {len(plate)} body, {lid_sticks['tiles']} pockets")
 
 
 if __name__ == "__main__":

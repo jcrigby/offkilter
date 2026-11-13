@@ -63,8 +63,7 @@ fn the_cradle_and_the_plunger_regenerate_to_their_profiles() {
     let block = pts(&n["block"]);
     let block_area = (block[1].0 - block[0].0) * (block[1].1 - block[0].1);
     let pocket = n["pocket_area"].as_f64().unwrap();
-    let plunger = pts(&n["plunger"]);
-    let plunger_area = (plunger[1].0 - plunger[0].0) * (plunger[1].1 - plunger[0].1);
+    let plunger_area = n["plunger_area"].as_f64().unwrap();
     let negative = n["negative_area"].as_f64().unwrap();
     for (name, want) in [
         ("Base", (block_area - pocket) * length),
@@ -133,6 +132,38 @@ fn the_lid_takes_the_part_of_the_tile_that_narrows_upward() {
     let xhi = loose.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max);
     assert!((plunger[0].0 - xlo - play).abs() < 1e-9 && (xhi - plunger[1].0 - play).abs() < 1e-9);
     assert!(plunger[0].1 > s);
+    // The cradle's lip over a bay outside the chord: at least the
+    // shoulder's height, everywhere; the first cut of these cauls had
+    // it 0.04 mm thick where the chord's left end met a bay.
+    let shoulder = n["shoulder"].as_f64().unwrap();
+    assert!(shoulder >= 3.0, "{shoulder}");
+    let mut thinnest = f64::INFINITY;
+    for k in 1..400 {
+        let x = xlo + (xhi - xlo) * k as f64 / 400.0;
+        if x >= chord[0] - play && x <= chord[1] + play {
+            continue;
+        }
+        let top = ys_at(&loose, x)
+            .into_iter()
+            .filter(|&y| y <= s)
+            .fold(f64::NEG_INFINITY, f64::max);
+        if top.is_finite() {
+            thinnest = thinnest.min(s + shoulder - top);
+        }
+    }
+    println!("the lip over a bay is at least {thinnest:.2} mm");
+    assert!(thinnest >= shoulder - 1e-9, "{thinnest}");
+}
+
+/// Where a vertical line at `x` crosses the polygon.
+fn ys_at(poly: &[(f64, f64)], x: f64) -> Vec<f64> {
+    let m = poly.len();
+    (0..m)
+        .filter_map(|i| {
+            let (p, q) = (poly[i], poly[(i + 1) % m]);
+            ((p.0 > x) != (q.0 > x)).then(|| p.1 + (x - p.0) * (q.1 - p.1) / (q.0 - p.0))
+        })
+        .collect()
 }
 
 /// The template the sliced tiles are laid out on: one body, a pocket

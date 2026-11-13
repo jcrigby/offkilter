@@ -1091,6 +1091,19 @@ the stick in before the ones above it, and the plunger's force
 spreads through the lattice at 60°. The plunger is the slot's full
 width for the clamps, with the bump's negative in its middle.
 
+The owner asked what the cradle's material under the plunger's flat
+was for, expecting a flexure; it is not one, and measuring it found
+the first cut's flaw: the slot above the split was the outline's full
+width, so where a bay reaches up to just under the split the cradle's
+lip over it was 0.04 mm thick. Now the cradle rises 4 mm above the
+split in two shoulders outside the chord, the bump's sides stand in
+the slot between them, and the plunger's flat stops a millimetre
+above the shoulders when its notch seats on the bump's roof. Rejected:
+a tongue on the plunger the chord wide going down between the
+shoulders, because the bump's sides are vertical for 5.4 mm above the
+chord, so the negative cut the tongue away to a fin. Nothing in the
+cauls flexes; the squeeze is the pocket's clearance and the glue lines.
+
 The owner then settled the lid's construction: the tiles stay
 separate units, so a later version can push them, laid out on a
 raised template at their spacing, taped, and glued down to a

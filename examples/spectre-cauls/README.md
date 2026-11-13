@@ -64,15 +64,22 @@ above and a bay under an overhang is reached by sliding the stick in
 sideways before the sticks above it are placed; and the plunger's
 force spreads through the lattice at 60°, so by the floor it covers
 the tile's width. The plunger is the slot's full width for stiffness
-and the clamps, with the bump's negative in its middle; beside the
-bump it stops a play above the split, over the cradle's own material.
+and the clamps, with the bump's negative cut into its flat underside.
+Beside the bump the cradle rises 4 mm above the split in two
+shoulders, so its lip over a bay just under the split is never thin
+(the first version had that lip 0.04 mm thick at one spot); the bump's
+sides, which stand straight up from the chord for 5.4 mm, fill the
+slot between them, and the plunger's flat stops a millimetre above the
+shoulders when its notch seats on the bump's roof: that millimetre is
+its travel. Nothing in the cauls flexes; the squeeze is the pocket's
+clearance and the glue lines.
 
 | | |
 |---|---|
 | turn | 330°, split 38.0 mm up of the tile's 45.9 |
 | pocket | the eroded outline plus 0.1 mm each side |
 | cradle | 60 x 60 x 50 mm, walls 6, floor 6, the walls 8 above the bundle |
-| plunger | 48 x 28 x 50, 0.15 short of the walls each side, 12 above them when down |
+| plunger | 48 x 27 x 50, 0.15 short of the walls each side, 12 above them when down |
 | per stick | three of each along a 200 mm stick, like the ladder's stands |
 
 The tile's mirror image needs no second set: a prism's mirror is the
@@ -130,6 +137,7 @@ its pocket and the plunger's is its block less the bump's negative, at
 the length; the pocket's lower part and the negative together are the
 eroded tile plus the clearance; the part of the outline above the
 split only narrows going up, within the slot; the plunger fits the
-slot with its play; the template regenerates to one body with a pocket
+slot with its play and the cradle's lip over every bay is at least the
+shoulder's height; the template regenerates to one body with a pocket
 floor per tile and the trim scribe in its floors and ridges; the line sample strip is three samples long at the three widths; and the cut list is a few shapes, triangles the
 commonest, every triangle equilateral and every half a 30-60-90.
