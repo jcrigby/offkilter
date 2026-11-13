@@ -240,6 +240,23 @@ fn the_cut_list_has_few_shapes() {
     }
     assert!(sticks > 60 && sticks < 110, "{sticks}");
     assert!(list.len() >= 4 && list.len() <= 16, "{} shapes", list.len());
+    // A stick whose point is on the tile's edge has it taken off at the
+    // eroded tile: a flat, at most half the line between tiles deep,
+    // noted against the whole shape it is cut as. A fifth of the sticks.
+    let gap = n["gap"].as_f64().unwrap();
+    let off: u64 = list
+        .iter()
+        .filter_map(|r| r["points_off"]["count"].as_u64())
+        .sum();
+    println!("{off} sticks with a point taken off");
+    assert!(off >= sticks / 10 && off <= sticks / 2, "{off} of {sticks}");
+    for r in list.iter().filter(|r| !r["points_off"].is_null()) {
+        let (lo, hi) = (
+            r["points_off"]["min"].as_f64().unwrap(),
+            r["points_off"]["max"].as_f64().unwrap(),
+        );
+        assert!(lo > 0.05 && hi <= gap / 2.0 + 1e-9, "{lo}..{hi}");
+    }
     // Triangles are the commonest stick, and the whole lattice triangle
     // less its glue line is among them; a boundary triangle is the same
     // shape smaller, since its sides only move in.

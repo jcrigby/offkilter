@@ -209,14 +209,78 @@ fn inside(piece: &[Vec2], tile: &[Vec2]) -> bool {
 }
 
 /// Whether a piece has a vertex on the tile's outline.
+/// Where a point `p` on the tile's outline, a corner of `stick` with
+/// neither side there, sends the stick: lines to clip it by, as a → b
+/// with the inside on the left, so that it keeps `d` from the outline
+/// like the eroded tile (`offset`, which is the pocket it goes in).
+/// Beside a segment the stick keeps off its offset line; a stick at a
+/// corner of the tile that lies alongside one of the corner's segments
+/// (every corner of the stick projects onto it) is clipped by that
+/// segment's line, which is exact there and clears the corner too. A
+/// stick out past both segments' ends, in the fan of a reflex corner,
+/// faces the eroded tile's arc about the corner: a flat tangent to it,
+/// square to the stick's own corner, takes the point off.
+fn point_cuts(p: Vec2, tile: &[Vec2], d: f64, stick: &[Vec2]) -> Vec<(Vec2, Vec2)> {
+    let n = tile.len();
+    let line = |e: Vec2| (p + e.perp() * d, p + e.perp() * d + e);
+    for j in 0..n {
+        if tile[j].distance(p) < 1e-6 {
+            let e0 = (tile[j] - tile[(j + n - 1) % n])
+                .normalized()
+                .unwrap_or(Vec2::X);
+            let e1 = (tile[(j + 1) % n] - tile[j])
+                .normalized()
+                .unwrap_or(Vec2::X);
+            // Along the segment before the corner: (q - p) · e0 <= 0;
+            // along the one after: (q - p) · e1 >= 0.
+            let before = stick.iter().all(|q| (*q - p).dot(e0) <= 1e-6);
+            let after = stick.iter().all(|q| (*q - p).dot(e1) >= -1e-6);
+            let mut cuts = Vec::new();
+            if before {
+                cuts.push(line(e0));
+            }
+            if after {
+                cuts.push(line(e1));
+            }
+            if cuts.is_empty() {
+                let k = stick.len();
+                let i = (0..k).find(|&i| stick[i].distance(p) < 1e-9).unwrap_or(0);
+                let u = (stick[(i + 1) % k] - p).normalized().unwrap_or(Vec2::X);
+                let v = (stick[(i + k - 1) % k] - p).normalized().unwrap_or(Vec2::X);
+                let b = (u + v).normalized().unwrap_or(u);
+                cuts.push((p + b * d, p + b * d - b.perp()));
+                // The flat clears both segments only while the stick's
+                // corner opens away from them; where it leans over one,
+                // that segment's line keeps it off.
+                if b.dot(e0) < -1e-9 {
+                    cuts.push(line(e0));
+                }
+                if b.dot(e1) > 1e-9 {
+                    cuts.push(line(e1));
+                }
+            }
+            return cuts;
+        }
+    }
+    for j in 0..n {
+        let (a, b) = (tile[j], tile[(j + 1) % n]);
+        if touches(&[p], &[a, b]) {
+            return vec![line((b - a).normalized().unwrap_or(Vec2::X))];
+        }
+    }
+    Vec::new()
+}
+
 fn touches(piece: &[Vec2], tile: &[Vec2]) -> bool {
     let n = tile.len();
     piece.iter().any(|p| {
         (0..n).any(|j| {
             let (a, b) = (tile[j], tile[(j + 1) % n]);
             let ab = b - a;
-            let t = (*p - a).dot(ab) / ab.dot(ab);
-            (0.0..=1.0).contains(&t) && (a + ab * t).distance(*p) < 1e-6
+            // To the segment, ends included: a point at its end comes
+            // out a rounding error past it as often as not.
+            let t = ((*p - a).dot(ab) / ab.dot(ab)).clamp(0.0, 1.0);
+            (a + ab * t).distance(*p) < 1e-6
         })
     })
 }
@@ -544,21 +608,41 @@ pub fn lay(patch: &super::Patch, mosaic: &Mosaic, gap: f64, inner: f64, min: f64
         }
         let xf = &patch.frames[piece.tile as usize];
         let edge_line: Vec<Vec2> = tile.iter().map(|q| super::apply(xf, *q)).collect();
+        let edge_ccw = ccw(edge_line.clone());
         for m in &mosaic.pieces {
             let poly = ccw(m.outline.iter().map(|q| super::apply(xf, *q)).collect());
             let k = poly.len();
+            let on_edge: Vec<bool> = (0..k)
+                .map(|i| {
+                    let (a, b) = (poly[i], poly[(i + 1) % k]);
+                    touches(&[a], &edge_line)
+                        && touches(&[b], &edge_line)
+                        && touches(&[(a + b) * 0.5], &edge_line)
+                })
+                .collect();
             let mut cut = poly.clone();
             for i in 0..k {
                 let (a, b) = (poly[i], poly[(i + 1) % k]);
-                let on_edge = touches(&[a], &edge_line)
-                    && touches(&[b], &edge_line)
-                    && touches(&[(a + b) * 0.5], &edge_line);
-                let d = if on_edge { gap / 2.0 } else { inner / 2.0 };
+                let d = if on_edge[i] { gap / 2.0 } else { inner / 2.0 };
                 // The side moved in by d: the left of a → b is the inside.
                 let n = (b - a).perp().normalized().unwrap_or(Vec2::ZERO) * d;
                 cut = clip_left(&cut, a + n, b + n);
                 if cut.len() < 3 {
                     break;
+                }
+            }
+            // A corner on the tile's edge: a point on the line, or the end
+            // of a side on it at a corner of the tile. Pulled in by its
+            // sides alone it can stand proud of the eroded tile, into the
+            // line between tiles (a point by the inner line's worth, the
+            // end of a side into the tile's other segment), so it keeps
+            // off the eroded tile as well.
+            for i in 0..k {
+                if cut.len() < 3 || !touches(&[poly[i]], &edge_line) {
+                    continue;
+                }
+                for (a, b) in point_cuts(poly[i], &edge_ccw, gap / 2.0, &poly) {
+                    cut = clip_left(&cut, a, b);
                 }
             }
             if cut.len() < 3 || super::saw::least_width(&cut) < min {
@@ -591,6 +675,96 @@ mod tests {
             assert!((d - 0.5).abs() < 1e-9, "piece {i}: {d}");
         }
         assert_eq!(lattices().len(), 6);
+    }
+
+    /// A stick whose point is on the tile's edge, at a reflex corner,
+    /// gets its point taken off at the eroded tile: pulling its sides in
+    /// by the inner line alone would leave the point in the line.
+    #[test]
+    fn a_point_on_the_edge_is_taken_off_at_the_eroded_tile() {
+        let p = super::super::Params {
+            width: 60.0,
+            height: 60.0,
+            edge: 10.0,
+            gap: 1.0,
+            curve: Curve::Hex,
+            bulge: super::super::HEX_BULGE,
+            bit: 0.0,
+            shift: Vec2::new(2.0, -3.0),
+            angle: 17.0,
+            scrap: 0.0,
+            scheme: Default::default(),
+            seed: 0,
+            rips: Vec::new(),
+            whole: true,
+            prisms: Vec::new(),
+        };
+        let patch = super::super::build(&p, 10f64.to_radians()).unwrap();
+        let t = ccw(tile());
+        let n = t.len();
+        // A reflex corner of the tile, and a triangle with its point there
+        // along the corner's bisector, inside the tile.
+        let j = (0..n)
+            .find(|&j| {
+                let e0 = t[j] - t[(j + n - 1) % n];
+                let e1 = t[(j + 1) % n] - t[j];
+                e0.cross(e1) < -1e-9
+            })
+            .expect("a reflex corner");
+        let e0 = (t[j] - t[(j + n - 1) % n]).normalized().unwrap();
+        let e1 = (t[(j + 1) % n] - t[j]).normalized().unwrap();
+        let axis = (e0.perp() + e1.perp()).normalized().unwrap();
+        let v = t[j];
+        let tri = vec![
+            v,
+            v + Vec2::from_angle(axis.angle() - 30f64.to_radians()) * 0.5,
+            v + Vec2::from_angle(axis.angle() + 30f64.to_radians()) * 0.5,
+        ];
+        assert!(tri.iter().skip(1).all(|q| point_in_polygon(*q, &t)));
+        let m = Mosaic {
+            pieces: vec![Piece {
+                shape: Shape::Triangle,
+                outline: tri,
+            }],
+            coverage: 0.0,
+            counts: [0; 5],
+        };
+        let (gap, inner) = (0.4, 0.1);
+        let laid = lay(&patch, &m, gap, inner, 0.0);
+        assert!(!laid.is_empty());
+        for l in &laid {
+            let framed = ccw(tile()
+                .iter()
+                .map(|q| super::super::apply(&patch.frames[l.tile as usize], *q))
+                .collect());
+            // Four corners: the point became a flat, and every corner is
+            // at least half the gap from the outline.
+            assert_eq!(l.outline.len(), 4, "{:?}", l.outline);
+            for q in &l.outline {
+                let d = (0..framed.len())
+                    .map(|i| {
+                        let (a, b) = (framed[i], framed[(i + 1) % framed.len()]);
+                        let ab = b - a;
+                        let t = ((*q - a).dot(ab) / ab.dot(ab)).clamp(0.0, 1.0);
+                        (a + ab * t).distance(*q)
+                    })
+                    .fold(f64::INFINITY, f64::min);
+                assert!(d >= gap / 2.0 - 1e-9, "{d}");
+            }
+            // The flat: the eroded sides' point would be inner/2 / sin 30°
+            // along the axis, the chord is at gap/2, and the cap lost is
+            // a 60° triangle of that height, in the frame's scale.
+            let scale = (framed[1] - framed[0]).length() / (t[1] - t[0]).length();
+            let h = (gap / 2.0 - inner) / scale;
+            let cap = h * h * 30f64.to_radians().tan();
+            let side = 0.5 - inner / scale * 3f64.sqrt();
+            let expect = (side * side * 3f64.sqrt() / 4.0 - cap) * scale * scale;
+            assert!(
+                (signed_area(&l.outline) - expect).abs() < 1e-6,
+                "{} vs {expect}",
+                signed_area(&l.outline)
+            );
+        }
     }
 
     /// A patch's frames map the tile onto its piece: the eroded piece
@@ -638,7 +812,8 @@ mod tests {
                 }
             }
             let m = mosaic(20, 1);
-            let laid = lay(&patch, &m, 0.2, 0.2, 0.0);
+            let (gap, inner) = (0.4, 0.1);
+            let laid = lay(&patch, &m, gap, inner, 0.0);
             let tiles = patch
                 .pieces
                 .iter()
@@ -651,10 +826,26 @@ mod tests {
                     .map(|q| super::super::apply(&patch.frames[l.tile as usize], *q))
                     .collect();
                 let framed = ccw(framed);
+                // Inside the tile, and half the gap from its outline at
+                // every corner: a side on the outline, a side partly on
+                // it, a point on it, at a corner of the tile or not.
                 for q in &l.outline {
                     assert!(
                         point_in_polygon(*q, &framed),
                         "whole {whole}: a stick outside its tile"
+                    );
+                    let d = (0..framed.len())
+                        .map(|i| {
+                            let (a, b) = (framed[i], framed[(i + 1) % framed.len()]);
+                            let ab = b - a;
+                            let t = ((*q - a).dot(ab) / ab.dot(ab)).clamp(0.0, 1.0);
+                            (a + ab * t).distance(*q)
+                        })
+                        .fold(f64::INFINITY, f64::min);
+                    assert!(
+                        d >= gap / 2.0 - 1e-6,
+                        "whole {whole}: a {:?} stick {d} from the outline at {q:?}",
+                        l.shape
                     );
                 }
             }

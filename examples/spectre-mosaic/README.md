@@ -32,11 +32,11 @@ the six lattices the runs define with four sticks:
 | stick | sides at a 10.56 mm edge | area | per tile |
 |---|---|---|---|
 | triangle, equilateral | 5.28 | 12.1 mm² | 60 |
-| half, 30-60-90 | 2.64, 4.57, 5.28 | 6.0 | 23 |
-| small, the quarter triangle's half | 1.32, 2.29, 2.64 | 1.5 | 21 |
-| trapezoid, a half less its small apex | 1.32, 2.29, 2.64, 2.64 | 4.5 | 3 |
+| half, 30-60-90 | 2.64, 4.57, 5.28 | 6.0 | 25 |
+| small, the quarter triangle's half | 1.32, 2.29, 2.64 | 1.5 | 18 |
+| trapezoid, a half less its small apex | 1.32, 2.29, 2.64, 2.64 | 4.5 | 1 |
 
-That is 107 sticks covering 99.39 % of the tile, found by a search
+That is 104 sticks covering 99.22 % of the tile, found by a search
 (every placement of every stick on every lattice inside the tile is a
 candidate; greedy biggest first and boundary first; then six thousand
 rounds of clearing a disc and refilling it in a jittered order,
@@ -44,7 +44,7 @@ keeping the result if it covers no less, and among covers of one area
 the one with more stick sides along the tile's outline, since a side
 on the outline is a face the caul presses; then every two halves that
 make a lattice triangle become one) from a fixed seed, so it repeats.
-The slivers along the seams between lattices, 0.6 % of the tile, are
+The slivers along the seams between lattices, 0.8 % of the tile, are
 the resin's. The tool's `shapes` picks the set: with the triangle and
 the half alone it covers 97.7 % in 84 sticks, the rest in slivers
 none wider than 2 mm, and a fifth shape, the quarter triangle (the
@@ -52,7 +52,7 @@ triangle at half the side, the same saw setting), adds a third of a
 percent to that; the small half and the trapezoid are what take the
 last two percent, at the cost of sticks under 3 mm. The small sticks are too narrow to keep their lines: at
 0.7 mm between sticks they come out under a millimetre wide and are
-dropped, 21 per tile, and become resin too.
+dropped, 18 per tile, and become resin too.
 
 ## The lid
 
@@ -61,10 +61,12 @@ dropped, 21 per tile, and become resin too.
 The board is the prism lid's: a 4 in square at a 10.56 mm edge, the
 tiling slid by the same (2, 5) mm, every tile the board reaches kept
 whole and the square trimmed after the bundle is sliced. That is 21
-tiles, 1806 sticks (1260 triangles, 483 halves and 63 trapezoids), maple for the
+tiles, 1806 sticks (1260 triangles, 525 halves and 21 trapezoids), maple for the
 field and walnut for the mystic pairs by the tile's wood, each stick
 pulled in by half its line on every side, 0.35 inside a tile and
-0.35 on the tile's edge alike. `lid.svg` is the lid at 1:1, every stick,
+0.35 on the tile's edge alike, and a stick that meets the tile's edge
+with a point has the point taken off at the eroded tile, so no stick
+stands into the line. `lid.svg` is the lid at 1:1, every stick,
 for a check against a print.
 
 The lines cost wood. A 0.7 mm line round a 5.28 mm triangle takes two

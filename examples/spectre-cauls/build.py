@@ -149,6 +149,39 @@ def lid_able(poly, s):
     return True
 
 
+def point_back_on(outline):
+    """A stick that touched the tile's edge with a point has it taken
+    off at the eroded tile: a flat under a millimetre. The stick is cut
+    as the whole shape and the point taken off after, so the cut list
+    wants the shape with the point back on, and how much comes off:
+    returns (outline, height removed or None)."""
+    k = len(outline)
+    if k < 4:
+        return outline, None
+    lens = [math.hypot(outline[(i + 1) % k][0] - outline[i][0], outline[(i + 1) % k][1] - outline[i][1]) for i in range(k)]
+    i = min(range(k), key=lambda j: lens[j])
+    if lens[i] > 1.0:
+        return outline, None
+    # a flat takes at most half the line between tiles off a point
+    a, b = outline[i], outline[(i + 1) % k]
+    a0, b1 = outline[(i - 1) % k], outline[(i + 2) % k]
+    # the point: where the two sides beside the flat meet
+    d1 = (a[0] - a0[0], a[1] - a0[1])
+    d2 = (b1[0] - b[0], b1[1] - b[1])
+    den = d1[0] * d2[1] - d1[1] * d2[0]
+    if abs(den) < 1e-12:
+        return outline, None
+    t = ((b[0] - a[0]) * d2[1] - (b[1] - a[1]) * d2[0]) / den
+    apex = (a[0] + d1[0] * t, a[1] + d1[1] * t)
+    # the height removed: the apex's distance from the flat's line
+    fl = math.hypot(b[0] - a[0], b[1] - a[1])
+    h = abs((b[0] - a[0]) * (apex[1] - a[1]) - (b[1] - a[1]) * (apex[0] - a[0])) / fl
+    if h > GAP / 2 + 0.05:
+        return outline, None
+    whole = outline[:i] + [apex] + outline[i + 2:] if i + 2 <= k else [apex] + outline[1:i]
+    return whole, h
+
+
 def chord_at(poly, s):
     return crossings(poly, s + 1e-6)
 
@@ -222,14 +255,22 @@ def main():
     first = min(p["tile"] for p in lid_sticks["pieces"])
     shapes = {}
     for piece in (p for p in lid_sticks["pieces"] if p["tile"] == first):
-        o = piece["outline"]
+        o, off = point_back_on(piece["outline"])
         sides = sorted(round(math.hypot(o[(i + 1) % len(o)][0] - o[i][0], o[(i + 1) % len(o)][1] - o[i][1]), 2) for i in range(len(o)))
         key = (piece["shape"], tuple(sides))
-        shapes[key] = shapes.get(key, 0) + 1
-    cut_list = sorted(({"shape": k[0], "sides": list(k[1]), "count": n} for k, n in shapes.items()), key=lambda r: (-r["count"], r["shape"]))
+        shapes.setdefault(key, []).append(off)
+    cut_list = []
+    for k, offs in shapes.items():
+        r = {"shape": k[0], "sides": list(k[1]), "count": len(offs)}
+        taken = [x for x in offs if x is not None]
+        if taken:
+            r["points_off"] = {"count": len(taken), "min": round(min(taken), 2), "max": round(max(taken), 2)}
+        cut_list.append(r)
+    cut_list.sort(key=lambda r: (-r["count"], r["shape"]))
     print(f"one tile: {sum(r['count'] for r in cut_list)} sticks in {len(cut_list)} shapes:")
     for r in cut_list:
-        print(f"  {r['count']:>3} {r['shape']:<10} " + " x ".join(f"{x:.2f}" for x in r["sides"]))
+        po = r.get("points_off")
+        print(f"  {r['count']:>3} {r['shape']:<10} " + " x ".join(f"{x:.2f}" for x in r["sides"]) + (f"; {po['count']} with the point taken off {po['min']:.2f} to {po['max']:.2f}" if po else ""))
     walls_top = top + GUIDE
     mcp.call("create_document", {"name": "cauls"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Spectre tile stick cauls"}, {"type": "rename_tab", "tab": 1, "name": "Base"}]})

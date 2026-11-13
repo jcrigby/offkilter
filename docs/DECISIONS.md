@@ -1052,7 +1052,7 @@ owner's own figure had four shapes covering 97.9 % with slivers
 inside; the kernel takes the same four (the lattice triangle, its
 half, the quarter's half, the trapezoid) on the six lattices the runs
 define and searches: greedy, biggest first and boundary first, then
-ruin-and-recreate from a fixed seed, which reaches 99.4 % in a few
+ruin-and-recreate from a fixed seed, which reaches 99.2 % in a few
 seconds and repeats exactly, and a merge after it for the pairs of
 halves that make a triangle, which the owner spotted in the first
 picture. The slivers are the resin's. Two lines show by design, 0.7
@@ -1133,3 +1133,25 @@ just the template: a tile that stands 0.7 from its neighbours is the
 tile eroded by 0.35, so the boundary sticks grew from 4.30 to 4.76 on
 a side and the lid went from 48 % wood to 54 %. The examples carry
 0.7 now; the strip stays as the record of the comparison.
+
+The owner asked for a drawing of eroded triangles at a tile edge,
+side, point, side, and drawing the point showed what the kernel was
+not doing. A stick that meets the tile's outline with a point rather
+than a side was pulled in by its sides alone, the inner line's worth,
+so its point stood 0.25 mm into the line between tiles and would not
+have gone into the cradle's pocket; a third of the sticks at a reflex
+corner of the outline do that, 36 per tile, which the first cut list
+listed as whole inner triangles. The same went for the end of a side
+on the outline at a convex corner, into the tile's other segment.
+Now every stick keeps half the gap off the outline: beside a segment
+by that segment's offset line, exact there; out in the fan of a
+reflex corner, where the eroded tile is an arc about the corner, by a
+flat tangent to the arc and square to the stick's own corner, since a
+stick stays convex and nobody saws a concave bite into a 5 mm point.
+The cut list reports the stick as the whole shape with the point
+taken off, the depth of the flat, because that is how it is made: a
+pass over a sanding block along the stick. Finding it also fixed the
+outline test, which took a side ending exactly at a segment's end as
+off it when the parameter rounded past 1; with that the search's
+tie-break counts differently and the cover moved from 99.4 % in 107
+sticks to 99.2 % in 104, as good a cover, so the examples carry it.

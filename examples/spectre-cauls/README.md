@@ -31,21 +31,29 @@ outline (plus 0.1 of clearance for the saw's error over a few
 sticks), and the sticks along the tile's boundary are the lattice
 shapes with that side moved in by 0.35. A
 side moved in leaves a triangle a triangle and a half a half, only
-smaller, so the cut list stays short. For one tile at a 10.56 mm edge,
-with a 0.1 mm glue line between sticks:
+smaller, so the cut list stays short. A stick that meets the tile's
+edge with a point rather than a side, which a third of the sticks at
+a reflex corner of the outline do, is cut as the whole shape and has
+the point taken off at the eroded tile after: a flat a quarter of a
+millimetre deep, a pass over a sanding block along the stick. (The
+first cut list listed those as whole inner triangles, which would
+have stood 0.25 mm proud into the line and not gone into the pocket;
+the kernel now keeps every stick half the line off the outline, and
+the test checks it.) For one tile at a 10.56 mm edge, with a 0.1 mm
+glue line between sticks:
 
-| count | stick | sides, mm |
-|---|---|---|
-| 32 | triangle, one side on the tile's edge | 4.76 |
-| 28 | triangle, inside | 5.11 |
-| 19 | small half, inside | 1.18, 2.05, 2.37 |
-| 17 | half, inside | 2.50, 4.34, 5.01 |
-| 4 | half, one side on the edge | 2.20, 3.82, 4.41 |
-| 2 | trapezoid, inside | 1.24, 2.19, 2.50, 2.52 |
-| 1 | half, its long side on the edge | 2.33, 4.04, 4.66 |
-| 2 | two more cut-back shapes, one stick each | |
+| count | stick | sides, mm | point taken off |
+|---|---|---|---|
+| 33 | triangle, one side on the tile's edge | 4.76 | 4 of them a corner, 0.09 |
+| 27 | triangle, inside | 5.11 | 21 of them, 0.25 |
+| 16 | small half, inside | 1.18, 2.05, 2.37 | 3 of them, 0.21 to 0.25 |
+| 12 | half, inside | 2.50, 4.34, 5.01 | 3 of them, 0.16 to 0.21 |
+| 10 | half, one side on the edge | 2.20, 3.82, 4.41 | 1, 0.25 |
+| 2 | half, cut back further | 2.16, 3.74, 4.31 | |
+| 1 | half, its long side on the edge | 2.33, 4.04, 4.66 | 1, 0.21 |
+| 1 | trapezoid, inside | 0.89, 2.16, 2.19, 2.52 | |
 
-105 sticks in nine shapes, seven of them with more than one stick. The small halves are the ones to drop if
+102 sticks in eight shapes, 33 of them with a point taken off. The small halves are the ones to drop if
 they are too fiddly to saw; they become glue and dust, 2 % of the tile.
 
 ## Why the lid takes one bump

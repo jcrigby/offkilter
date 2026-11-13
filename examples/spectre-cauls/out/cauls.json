@@ -1378,7 +1378,12 @@
     4.76,
     4.76
    ],
-   "count": 32
+   "count": 33,
+   "points_off": {
+    "count": 4,
+    "min": 0.09,
+    "max": 0.09
+   }
   },
   {
    "shape": "triangle",
@@ -1387,7 +1392,12 @@
     5.11,
     5.11
    ],
-   "count": 28
+   "count": 27,
+   "points_off": {
+    "count": 21,
+    "min": 0.25,
+    "max": 0.26
+   }
   },
   {
    "shape": "small",
@@ -1396,7 +1406,12 @@
     2.05,
     2.37
    ],
-   "count": 19
+   "count": 16,
+   "points_off": {
+    "count": 3,
+    "min": 0.21,
+    "max": 0.25
+   }
   },
   {
    "shape": "half",
@@ -1405,7 +1420,12 @@
     4.34,
     5.01
    ],
-   "count": 17
+   "count": 12,
+   "points_off": {
+    "count": 3,
+    "min": 0.16,
+    "max": 0.21
+   }
   },
   {
    "shape": "half",
@@ -1414,15 +1434,19 @@
     3.82,
     4.41
    ],
-   "count": 4
+   "count": 10,
+   "points_off": {
+    "count": 1,
+    "min": 0.25,
+    "max": 0.25
+   }
   },
   {
-   "shape": "trapezoid",
+   "shape": "half",
    "sides": [
-    1.24,
-    2.19,
-    2.5,
-    2.52
+    2.16,
+    3.74,
+    4.31
    ],
    "count": 2
   },
@@ -1433,16 +1457,12 @@
     4.04,
     4.66
    ],
-   "count": 1
-  },
-  {
-   "shape": "half",
-   "sides": [
-    2.16,
-    3.74,
-    4.31
-   ],
-   "count": 1
+   "count": 1,
+   "points_off": {
+    "count": 1,
+    "min": 0.21,
+    "max": 0.21
+   }
   },
   {
    "shape": "trapezoid",
