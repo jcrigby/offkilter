@@ -48,7 +48,7 @@ GUIDE = 8.0                                     # the cradle's walls above the b
 FLANGE = 12.0                                   # the plunger above the walls when it is down, for the clamps
 LENGTH = 50.0                                   # a short caul; three along a 200 mm stick
 LIFT = 12.0                                     # the lid drawn this far up, off the bundle
-SIDE, GAP, INNER = 4.0 * IN, 1.5, 0.1           # the 4 in lid; the line between tiles; the glue line between a tile's sticks
+SIDE, GAP, INNER = 4.0 * IN, 0.7, 0.1           # the 4 in lid; the line between tiles, the owner's pick from the printed strip; the glue line between a tile's sticks
 POCKET = 3.0                                    # the template's pockets, deep enough to hold a 10 mm tile for the tape
 SHIFT = [2.0, 5.0]
 

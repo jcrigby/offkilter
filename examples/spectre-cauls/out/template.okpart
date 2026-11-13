@@ -22,7 +22,7 @@
               "height": 101.6,
               "edge": 10.56,
               "thickness": 10.0,
-              "gap": 1.5,
+              "gap": 0.7,
               "curve": "hex",
               "bulge": 0.433,
               "bit": 0.0,

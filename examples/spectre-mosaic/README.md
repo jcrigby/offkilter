@@ -9,7 +9,8 @@ resin is poured through the bundle, and the bundle is sliced into
 lids. The comb is silicone, cast in a printed box over a printed
 positive of the lid, so one comb serves every bundle and nothing bonds
 to it. Two lines show: 0.7 mm between a tile's sticks, the texture of
-what the piece is built from, and 1.5 mm between tiles, the pieces.
+what the piece is built from, and 0.7 mm between tiles too, the
+owner's pick from a printed strip of 1.5, 1.0 and 0.7.
 
 ```sh
 cargo build --release -p ok-mcp
@@ -63,12 +64,12 @@ whole and the square trimmed after the bundle is sliced. That is 21
 tiles, 1806 sticks (1260 triangles, 483 halves and 63 trapezoids), maple for the
 field and walnut for the mystic pairs by the tile's wood, each stick
 pulled in by half its line on every side, 0.35 inside a tile and
-0.75 on the tile's edge. `lid.svg` is the lid at 1:1, every stick,
+0.35 on the tile's edge alike. `lid.svg` is the lid at 1:1, every stick,
 for a check against a print.
 
 The lines cost wood. A 0.7 mm line round a 5.28 mm triangle takes two
 fifths of its area (the inradius goes from 1.52 to 1.17), so the lid
-is 48 % wood and the rest resin, which is a choice to make with the
+is 54 % wood and the rest resin, which is a choice to make with the
 line width and the edge: a 0.4 line keeps 75 % of a triangle, a 14 mm
 edge keeps 68 % at 0.7. The tool takes `inner`, `gap` and `edge` for
 that.
@@ -83,12 +84,12 @@ The sticks stand end-on in a comb that holds the pattern while the
 resin is poured. It is silicone, cast in two printed parts, both for
 an FDM printer:
 
-- `positive.stl`: a plate 4 mm thick, 192 x 183, with every stick of
+- `positive.stl`: a plate 4 mm thick, 193 x 184, with every stick of
   the lid standing on it as a bar 10 mm tall, sunk half a millimetre
   in and tapering 1° so the silicone releases. The channels between
-  the bars are the lines, 0.7 and 1.5 mm of air, which a 0.4 nozzle
+  the bars are the lines, 0.7 mm of air, which a 0.4 nozzle
   prints; the bars' sides carry layer lines, on faces nothing sees.
-- `box.stl`: the tray the silicone is poured in, 193 x 184 and 18
+- `box.stl`: the tray the silicone is poured in, 194 x 185 and 18
   tall with 3 mm walls and floor. The plate rests on its rim, bars
   down, so the bars stop 5 mm above the floor: that is the silicone
   backing under the comb. Lift the plate out and the comb stays in the

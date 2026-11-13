@@ -7,7 +7,7 @@ lengthwise into a printed cradle whose pocket is the tile's outline,
 glued with the thinnest line, and a printed plunger is pressed down on
 them, so the tile comes out as one solid stick. The stick is sliced
 into tiles. The tiles are laid out on a printed template, a pocket
-per tile with the 1.5 mm lines standing between them as ridges, taped
+per tile with the 0.7 mm lines standing between them as ridges, taped
 across their tops to hold the layout, lifted off, and glued and
 clamped to a substrate, the dark glue or a coat of dark resin showing
 in the lines. Keeping the tiles separate is what lets a later version
@@ -23,25 +23,26 @@ cargo test -p ok-render --test spectre_cauls   # what CI runs
 
 ## The tile is the tile less half the line
 
-Tiles that stand 1.5 mm apart on the tiling are not the tile: they
-are the tile eroded by 0.75 all round, which is what every layout in
-this repository has drawn as a piece since the puzzle top. So the
-cradle's pocket is the eroded outline (plus 0.1 of clearance for the
-saw's error over a few sticks), and the sticks along the tile's
-boundary are the lattice shapes with that side moved in by 0.75. A
+Tiles that stand 0.7 mm apart on the tiling (the owner's pick from
+the printed strip) are not the tile: they are the tile eroded by 0.35
+all round, which is what every layout in this repository has drawn as
+a piece since the puzzle top. So the cradle's pocket is the eroded
+outline (plus 0.1 of clearance for the saw's error over a few
+sticks), and the sticks along the tile's boundary are the lattice
+shapes with that side moved in by 0.35. A
 side moved in leaves a triangle a triangle and a half a half, only
 smaller, so the cut list stays short. For one tile at a 10.56 mm edge,
 with a 0.1 mm glue line between sticks:
 
 | count | stick | sides, mm |
 |---|---|---|
-| 32 | triangle, one side on the tile's edge | 4.30 |
+| 32 | triangle, one side on the tile's edge | 4.76 |
 | 28 | triangle, inside | 5.11 |
 | 19 | small half, inside | 1.18, 2.05, 2.37 |
 | 17 | half, inside | 2.50, 4.34, 5.01 |
-| 4 | half, one side on the edge | 1.80, 3.12, 3.61 |
+| 4 | half, one side on the edge | 2.20, 3.82, 4.41 |
 | 2 | trapezoid, inside | 1.24, 2.19, 2.50, 2.52 |
-| 1 | half, its long side on the edge | 2.10, 3.64, 4.20 |
+| 1 | half, its long side on the edge | 2.33, 4.04, 4.66 |
 | 2 | two more cut-back shapes, one stick each | |
 
 105 sticks in nine shapes, seven of them with more than one stick. The small halves are the ones to drop if
@@ -68,10 +69,10 @@ bump it stops a play above the split, over the cradle's own material.
 
 | | |
 |---|---|
-| turn | 330°, split 37.3 mm up of the tile's 45.0 |
+| turn | 330°, split 38.0 mm up of the tile's 45.9 |
 | pocket | the eroded outline plus 0.1 mm each side |
-| cradle | 59 x 59 x 50 mm, walls 6, floor 6, the walls 8 above the bundle |
-| plunger | 47 x 28 x 50, 0.15 short of the walls each side, 12 above them when down |
+| cradle | 60 x 60 x 50 mm, walls 6, floor 6, the walls 8 above the bundle |
+| plunger | 48 x 28 x 50, 0.15 short of the walls each side, 12 above them when down |
 | per stick | three of each along a 200 mm stick, like the ladder's stands |
 
 The tile's mirror image needs no second set: a prism's mirror is the
@@ -83,7 +84,7 @@ prism turned end for end, so the same cauls make both chiralities.
 
 `template.stl` is `add_spectre` with the hex curve, the 4 in board,
 every tile the board reaches kept whole, and the `template` layout:
-a slab 200 x 192 with a 3 mm pocket per tile, 21 of them, the 1.5 mm
+a slab 200 x 192 with a 3 mm pocket per tile, 21 of them, the 0.7 mm
 lines between them standing as ridges and the slab a margin wider
 than the tiles. The sliced tiles drop into the pockets, which puts
 every one at its exact place and spacing; tape across the tops holds

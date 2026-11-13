@@ -1110,3 +1110,13 @@ make the line (the Spectre's tiling is not a dilation of its tile, so
 the lines would vary round each one), and the comb or the pattern
 plate for the layout (the first holds sticks, the second is for a
 pilot; neither holds a finished tile at its place).
+
+The line between tiles is 0.7 mm, chosen from a printed strip of
+three samples of the lid at 1.5, 1.0 and 0.7, and a second print of
+the 0.7 sample with the tiles' top edges rounded 0.6, which the owner
+found made the line read right; the roundover will be tumbling or a
+sanding block on the wood. Choosing the line changed the sticks, not
+just the template: a tile that stands 0.7 from its neighbours is the
+tile eroded by 0.35, so the boundary sticks grew from 4.30 to 4.76 on
+a side and the lid went from 48 % wood to 54 %. The examples carry
+0.7 now; the strip stays as the record of the comparison.
