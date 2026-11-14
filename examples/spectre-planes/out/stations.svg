@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 658" width="2400" height="658" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="100%" height="100%" fill="#fff"/>
+<text x="30" y="34" font-size="21" font-weight="bold" fill="#222">The three stations in section, the sled down on its rails at the end of the cut</text>
+<text x="30" y="58" fill="#555">edge 10.56, line 0.7 between tiles, glue line 0.1; heights are over the stick's seat; dashed is the stock as sawn, dark the blade's edge</text>
+<text x="30" y="90" font-size="18" font-weight="bold" fill="#222">bump block, hollow blade</text>
+<text x="30" y="110" fill="#555">the sole starts 0.96 over the rails and comes down onto them</text>
+<clipPath id="c0"><rect x="30" y="118" width="760" height="470"/></clipPath><g clip-path="url(#c0)">
+<path d="M -670.0,1000.6 L 1490.0,1000.6 L 1490.0,892.6 L 950.0,892.6 L 950.0,352.6 L 680.0,352.6 L 680.0,370.6 L 140.0,370.6 L 140.0,352.6 L -130.0,352.6 L -130.0,892.6 L -670.0,892.6 Z" fill="#d5d9de" stroke="#222" stroke-width="1.2"/>
+<path d="M 308.2,316.6 L 395.6,468.1 L 395.6,514.6 L 424.4,514.6 L 424.4,468.1 L 511.8,316.6 Z" fill="#fff" stroke="#222" stroke-width="1.2"/>
+<rect x="30" y="118" width="760" height="234.6" fill="#fff"/>
+<path d="M -670.0,1000.6 L 1490.0,1000.6 L 1490.0,892.6 L 950.0,892.6 L 950.0,352.6 L 680.0,352.6 L 680.0,370.6 L 140.0,370.6 L 140.0,352.6 L -130.0,352.6 L -130.0,892.6 L -670.0,892.6 Z" fill="none" stroke="#222" stroke-width="1.2"/>
+<path d="M -135.4,352.6 L 248.0,352.6 L 248.0,280.6 L 572.0,280.6 L 572.0,352.6 L 955.4,352.6 L 955.4,230.2 L -135.4,230.2 Z" fill="#9db4cf" fill-opacity="0.6" stroke="#222" stroke-width="1.2"/>
+<path d="M 194.0,358.7 L 298.2,358.7 L 304.2,354.1 L 310.4,349.7 L 316.7,345.6 L 323.2,341.8 L 329.9,338.2 L 336.7,335.0 L 343.7,332.0 L 350.7,329.3 L 357.9,326.9 L 365.2,324.9 L 372.5,323.1 L 379.9,321.7 L 387.4,320.6 L 394.9,319.8 L 402.4,319.3 L 410.0,319.1 L 417.6,319.3 L 425.1,319.8 L 432.6,320.6 L 440.1,321.7 L 447.5,323.1 L 454.8,324.9 L 462.1,326.9 L 469.3,329.3 L 476.3,332.0 L 483.3,335.0 L 490.1,338.2 L 496.8,341.8 L 503.3,345.6 L 509.6,349.7 L 515.8,354.1 L 521.8,358.7 L 626.0,358.7 L 626.0,230.2 L 194.0,230.2 Z" fill="#3d4650" fill-opacity="0.3" stroke="none"/>
+<path d="M 410.0,493.0 L 497.2,342.0 L 492.2,339.3 L 487.1,336.7 L 481.9,334.3 L 476.7,332.1 L 471.4,330.1 L 466.0,328.2 L 460.5,326.5 L 455.1,324.9 L 449.5,323.6 L 444.0,322.4 L 438.4,321.4 L 432.7,320.6 L 427.1,319.9 L 421.4,319.5 L 415.7,319.2 L 410.0,319.1 L 404.3,319.2 L 398.6,319.5 L 392.9,319.9 L 387.3,320.6 L 381.6,321.4 L 376.0,322.4 L 370.5,323.6 L 364.9,324.9 L 359.5,326.5 L 354.0,328.2 L 348.6,330.1 L 343.3,332.1 L 338.1,334.3 L 332.9,336.7 L 327.8,339.3 L 322.8,342.0 Z" fill="#c9a46c" stroke="#222" stroke-width="1.3"/>
+<path d="M 410.0,493.0 L 511.8,316.6 L 308.2,316.6 Z" fill="none" stroke="#7a5a2a" stroke-width="1.2" stroke-dasharray="5 4"/>
+<path d="M 194.0,358.7 L 298.2,358.7 L 304.2,354.1 L 310.4,349.7 L 316.7,345.6 L 323.2,341.8 L 329.9,338.2 L 336.7,335.0 L 343.7,332.0 L 350.7,329.3 L 357.9,326.9 L 365.2,324.9 L 372.5,323.1 L 379.9,321.7 L 387.4,320.6 L 394.9,319.8 L 402.4,319.3 L 410.0,319.1 L 417.6,319.3 L 425.1,319.8 L 432.6,320.6 L 440.1,321.7 L 447.5,323.1 L 454.8,324.9 L 462.1,326.9 L 469.3,329.3 L 476.3,332.0 L 483.3,335.0 L 490.1,338.2 L 496.8,341.8 L 503.3,345.6 L 509.6,349.7 L 515.8,354.1 L 521.8,358.7 L 626.0,358.7" fill="none" stroke="#3d4650" stroke-width="3"/>
+</g>
+<rect x="30" y="118" width="760" height="470" fill="none" stroke="#bbb"/>
+<path d="M 744.8,352.6 L 699.8,448.6" stroke="#1a4fb3" stroke-width="1"/><circle cx="744.8" cy="352.6" r="2.6" fill="#1a4fb3"/>
+<text x="694.8" y="453.6" text-anchor="end" fill="#1a4fb3">rail plane, 3.90 over the seat</text>
+<path d="M 201.2,370.6 L 211.2,448.6" stroke="#1a4fb3" stroke-width="1"/><circle cx="201.2" cy="370.6" r="2.6" fill="#1a4fb3"/>
+<text x="216.2" y="453.6" text-anchor="start" fill="#1a4fb3">land, 0.5 under</text>
+<path d="M 266.0,280.6 L 196.0,188.6" stroke="#1a4fb3" stroke-width="1"/><circle cx="266.0" cy="280.6" r="2.6" fill="#1a4fb3"/>
+<text x="191.0" y="193.6" text-anchor="end" fill="#1a4fb3">tunnel 9 x 2</text>
+<path d="M 410.0,319.1 L 370.0,151.1" stroke="#1a4fb3" stroke-width="1"/><circle cx="410.0" cy="319.1" r="2.6" fill="#1a4fb3"/>
+<text x="375.0" y="156.1" text-anchor="start" fill="#1a4fb3">top 4.83; radius 4.93, centre 0.1 under the apex</text>
+<path d="M 497.2,342.0 L 601.2,404.0" stroke="#1a4fb3" stroke-width="1"/><circle cx="497.2" cy="342.0" r="2.6" fill="#1a4fb3"/>
+<text x="606.2" y="409.0" text-anchor="start" fill="#1a4fb3">corner 4.19</text>
+<path d="M 511.8,316.6 L 607.8,200.6" stroke="#1a4fb3" stroke-width="1"/><circle cx="511.8" cy="316.6" r="2.6" fill="#1a4fb3"/>
+<text x="612.8" y="205.6" text-anchor="start" fill="#1a4fb3">strip 4.9</text>
+<path d="M 410.0,493.0 L 480.0,527.0" stroke="#1a4fb3" stroke-width="1"/><circle cx="410.0" cy="493.0" r="2.6" fill="#1a4fb3"/>
+<text x="485.0" y="532.0" text-anchor="start" fill="#1a4fb3">apex in the 60° V</text>
+<text x="820" y="90" font-size="18" font-weight="bold" fill="#222">dent block, cove blade</text>
+<text x="820" y="110" fill="#555">the sole starts 0.48 over the rails and comes down onto them</text>
+<clipPath id="c1"><rect x="820" y="118" width="760" height="470"/></clipPath><g clip-path="url(#c1)">
+<path d="M 120.0,1018.1 L 2280.0,1018.1 L 2280.0,910.1 L 1740.0,910.1 L 1740.0,370.1 L 1470.0,370.1 L 1470.0,388.1 L 930.0,388.1 L 930.0,370.1 L 660.0,370.1 L 660.0,910.1 L 120.0,910.1 Z" fill="#d5d9de" stroke="#222" stroke-width="1.2"/>
+<path d="M 1108.2,334.1 L 1185.6,468.1 L 1185.6,514.6 L 1214.4,514.6 L 1214.4,468.1 L 1291.8,334.1 Z" fill="#fff" stroke="#222" stroke-width="1.2"/>
+<rect x="820" y="118" width="760" height="252.1" fill="#fff"/>
+<path d="M 120.0,1018.1 L 2280.0,1018.1 L 2280.0,910.1 L 1740.0,910.1 L 1740.0,370.1 L 1470.0,370.1 L 1470.0,388.1 L 930.0,388.1 L 930.0,370.1 L 660.0,370.1 L 660.0,910.1 L 120.0,910.1 Z" fill="none" stroke="#222" stroke-width="1.2"/>
+<path d="M 654.6,370.1 L 1038.0,370.1 L 1038.0,298.1 L 1362.0,298.1 L 1362.0,370.1 L 1745.4,370.1 L 1745.4,247.7 L 654.6,247.7 Z" fill="#9db4cf" fill-opacity="0.6" stroke="#222" stroke-width="1.2"/>
+<path d="M 984.0,330.5 L 1079.7,330.5 L 1086.2,335.1 L 1093.0,339.5 L 1099.9,343.6 L 1107.0,347.4 L 1114.2,351.0 L 1121.6,354.3 L 1129.1,357.2 L 1136.7,359.9 L 1144.3,362.3 L 1152.1,364.3 L 1160.0,366.1 L 1167.9,367.5 L 1175.9,368.6 L 1183.9,369.4 L 1191.9,369.9 L 1200.0,370.1 L 1208.1,369.9 L 1216.1,369.4 L 1224.1,368.6 L 1232.1,367.5 L 1240.0,366.1 L 1247.9,364.3 L 1255.7,362.3 L 1263.3,359.9 L 1270.9,357.2 L 1278.4,354.3 L 1285.8,351.0 L 1293.0,347.4 L 1300.1,343.6 L 1307.0,339.5 L 1313.8,335.1 L 1320.3,330.5 L 1416.0,330.5 L 1416.0,247.7 L 984.0,247.7 Z" fill="#3d4650" fill-opacity="0.3" stroke="none"/>
+<path d="M 1200.0,493.0 L 1280.6,353.3 L 1275.9,355.3 L 1271.0,357.2 L 1266.2,359.0 L 1261.2,360.6 L 1256.3,362.1 L 1251.3,363.5 L 1246.2,364.7 L 1241.2,365.8 L 1236.1,366.8 L 1231.0,367.7 L 1225.8,368.4 L 1220.7,369.0 L 1215.5,369.5 L 1210.4,369.8 L 1205.2,370.0 L 1200.0,370.1 L 1194.8,370.0 L 1189.6,369.8 L 1184.5,369.5 L 1179.3,369.0 L 1174.2,368.4 L 1169.0,367.7 L 1163.9,366.8 L 1158.8,365.8 L 1153.8,364.7 L 1148.7,363.5 L 1143.7,362.1 L 1138.8,360.6 L 1133.8,359.0 L 1129.0,357.2 L 1124.1,355.3 L 1119.4,353.3 Z" fill="#c9a46c" stroke="#222" stroke-width="1.3"/>
+<path d="M 1200.0,493.0 L 1281.1,352.6 L 1118.9,352.6 Z" fill="none" stroke="#7a5a2a" stroke-width="1.2" stroke-dasharray="5 4"/>
+<path d="M 984.0,330.5 L 1079.7,330.5 L 1086.2,335.1 L 1093.0,339.5 L 1099.9,343.6 L 1107.0,347.4 L 1114.2,351.0 L 1121.6,354.3 L 1129.1,357.2 L 1136.7,359.9 L 1144.3,362.3 L 1152.1,364.3 L 1160.0,366.1 L 1167.9,367.5 L 1175.9,368.6 L 1183.9,369.4 L 1191.9,369.9 L 1200.0,370.1 L 1208.1,369.9 L 1216.1,369.4 L 1224.1,368.6 L 1232.1,367.5 L 1240.0,366.1 L 1247.9,364.3 L 1255.7,362.3 L 1263.3,359.9 L 1270.9,357.2 L 1278.4,354.3 L 1285.8,351.0 L 1293.0,347.4 L 1300.1,343.6 L 1307.0,339.5 L 1313.8,335.1 L 1320.3,330.5 L 1416.0,330.5" fill="none" stroke="#3d4650" stroke-width="3"/>
+</g>
+<rect x="820" y="118" width="760" height="470" fill="none" stroke="#bbb"/>
+<path d="M 1534.8,370.1 L 1489.8,466.1" stroke="#1a4fb3" stroke-width="1"/><circle cx="1534.8" cy="370.1" r="2.6" fill="#1a4fb3"/>
+<text x="1484.8" y="471.1" text-anchor="end" fill="#1a4fb3">rail plane, 3.42 over the seat</text>
+<path d="M 991.2,388.1 L 1001.2,466.1" stroke="#1a4fb3" stroke-width="1"/><circle cx="991.2" cy="388.1" r="2.6" fill="#1a4fb3"/>
+<text x="1006.2" y="471.1" text-anchor="start" fill="#1a4fb3">land, 0.5 under</text>
+<path d="M 1056.0,298.1 L 986.0,206.1" stroke="#1a4fb3" stroke-width="1"/><circle cx="1056.0" cy="298.1" r="2.6" fill="#1a4fb3"/>
+<text x="981.0" y="211.1" text-anchor="end" fill="#1a4fb3">tunnel 9 x 2</text>
+<path d="M 1200.0,370.1 L 1160.0,194.1" stroke="#1a4fb3" stroke-width="1"/><circle cx="1200.0" cy="370.1" r="2.6" fill="#1a4fb3"/>
+<text x="1165.0" y="199.1" text-anchor="start" fill="#1a4fb3">bottom 3.42, on the rail plane; radius 5.63</text>
+<path d="M 1280.6,353.3 L 1390.6,427.3" stroke="#1a4fb3" stroke-width="1"/><circle cx="1280.6" cy="353.3" r="2.6" fill="#1a4fb3"/>
+<text x="1395.6" y="432.3" text-anchor="start" fill="#1a4fb3">corner 3.88</text>
+<path d="M 1281.1,352.6 L 1391.1,230.6" stroke="#1a4fb3" stroke-width="1"/><circle cx="1281.1" cy="352.6" r="2.6" fill="#1a4fb3"/>
+<text x="1396.1" y="235.6" text-anchor="start" fill="#1a4fb3">strip 3.9</text>
+<path d="M 1200.0,493.0 L 1270.0,527.0" stroke="#1a4fb3" stroke-width="1"/><circle cx="1200.0" cy="493.0" r="2.6" fill="#1a4fb3"/>
+<text x="1275.0" y="532.0" text-anchor="start" fill="#1a4fb3">apex in the 60° V</text>
+<text x="1610" y="90" font-size="18" font-weight="bold" fill="#222">point block, straight blade</text>
+<text x="1610" y="110" fill="#555">the sole starts 0.25 over the rails and comes down onto them</text>
+<clipPath id="c2"><rect x="1610" y="118" width="760" height="470"/></clipPath><g clip-path="url(#c2)">
+<path d="M 910.0,990.8 L 3070.0,990.8 L 3070.0,882.8 L 2530.0,882.8 L 2530.0,342.8 L 2260.0,342.8 L 2260.0,360.8 L 1720.0,360.8 L 1720.0,342.8 L 1450.0,342.8 L 1450.0,882.8 L 910.0,882.8 Z" fill="#d5d9de" stroke="#222" stroke-width="1.2"/>
+<path d="M 1895.2,493.0 L 2084.8,493.0 L 2084.8,306.8 L 1895.2,306.8 Z" fill="#fff" stroke="#222" stroke-width="1.2"/>
+<rect x="1610" y="118" width="760" height="224.8" fill="#fff"/>
+<path d="M 910.0,990.8 L 3070.0,990.8 L 3070.0,882.8 L 2530.0,882.8 L 2530.0,342.8 L 2260.0,342.8 L 2260.0,360.8 L 1720.0,360.8 L 1720.0,342.8 L 1450.0,342.8 L 1450.0,882.8 L 910.0,882.8 Z" fill="none" stroke="#222" stroke-width="1.2"/>
+<path d="M 1444.6,342.8 L 1828.0,342.8 L 1828.0,270.8 L 2152.0,270.8 L 2152.0,342.8 L 2535.4,342.8 L 2535.4,220.4 L 1444.6,220.4 Z" fill="#9db4cf" fill-opacity="0.6" stroke="#222" stroke-width="1.2"/>
+<path d="M 1774.0,342.8 L 2206.0,342.8 L 2206.0,220.4 L 1774.0,220.4 Z" fill="#3d4650" fill-opacity="0.3" stroke="none"/>
+<path d="M 1898.1,493.0 L 2081.9,493.0 L 1995.2,342.8 L 1984.8,342.8 Z" fill="#c9a46c" stroke="#222" stroke-width="1.3"/>
+<path d="M 1898.1,493.0 L 2081.9,493.0 L 1990.0,333.8 Z" fill="none" stroke="#7a5a2a" stroke-width="1.2" stroke-dasharray="5 4"/>
+<path d="M 1774.0,342.8 L 2206.0,342.8" fill="none" stroke="#3d4650" stroke-width="3"/>
+</g>
+<rect x="1610" y="118" width="760" height="470" fill="none" stroke="#bbb"/>
+<path d="M 2324.8,342.8 L 2279.8,438.8" stroke="#1a4fb3" stroke-width="1"/><circle cx="2324.8" cy="342.8" r="2.6" fill="#1a4fb3"/>
+<text x="2274.8" y="443.8" text-anchor="end" fill="#1a4fb3">rail plane, 4.17 over the seat</text>
+<path d="M 1781.2,360.8 L 1791.2,438.8" stroke="#1a4fb3" stroke-width="1"/><circle cx="1781.2" cy="360.8" r="2.6" fill="#1a4fb3"/>
+<text x="1796.2" y="443.8" text-anchor="start" fill="#1a4fb3">land, 0.5 under</text>
+<path d="M 1846.0,270.8 L 1776.0,178.8" stroke="#1a4fb3" stroke-width="1"/><circle cx="1846.0" cy="270.8" r="2.6" fill="#1a4fb3"/>
+<text x="1771.0" y="183.8" text-anchor="end" fill="#1a4fb3">tunnel 9 x 2</text>
+<path d="M 1990.0,342.8 L 1950.0,192.8" stroke="#1a4fb3" stroke-width="1"/><circle cx="1990.0" cy="342.8" r="2.6" fill="#1a4fb3"/>
+<text x="1955.0" y="197.8" text-anchor="start" fill="#1a4fb3">flat 4.17: the point 0.25 off, 0.29 wide</text>
+<path d="M 2081.9,493.0 L 2115.9,537.0" stroke="#1a4fb3" stroke-width="1"/><circle cx="2081.9" cy="493.0" r="2.6" fill="#1a4fb3"/>
+<text x="2120.9" y="542.0" text-anchor="start" fill="#1a4fb3">base 5.11, channel 5.27</text>
+<path d="M 1990.0,333.8 L 2110.0,223.8" stroke="#1a4fb3" stroke-width="1"/><circle cx="1990.0" cy="333.8" r="2.6" fill="#1a4fb3"/>
+<text x="2115.0" y="228.8" text-anchor="start" fill="#1a4fb3">strip 4.42</text>
+<rect x="30" y="612" width="24" height="17" fill="#d5d9de" stroke="#444" stroke-width="0.8"/><text x="62" y="626" fill="#222">block</text>
+<rect x="220" y="612" width="24" height="17" fill="#c9a46c" stroke="#444" stroke-width="0.8"/><text x="252" y="626" fill="#222">stick, finished</text>
+<rect x="410" y="612" width="24" height="17" fill="#fff" stroke="#444" stroke-width="0.8"/><text x="442" y="626" fill="#222">stock, dashed</text>
+<rect x="600" y="612" width="24" height="17" fill="#9db4cf" stroke="#444" stroke-width="0.8"/><text x="632" y="626" fill="#222">sled</text>
+<rect x="790" y="612" width="24" height="17" fill="#3d4650" stroke="#444" stroke-width="0.8"/><text x="822" y="626" fill="#222">blade</text>
+</svg>

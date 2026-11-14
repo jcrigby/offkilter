@@ -1155,3 +1155,50 @@ outline test, which took a side ending exactly at a segment's end as
 off it when the parameter rounded past 1; with that the search's
 tie-break counts differently and the cover moved from 99.4 % in 107
 sticks to 99.2 % in 104, as good a cover, so the examples carry it.
+
+## 2026-11 · A curvy Spectre from the same sticks: scraped arcs, rails for depth, a master printed on end
+
+The owner saw that if the outer sticks of the hex-edged tile had
+curves instead of flats the tile would be a true curvy Spectre, and
+proposed small moulding planes in a fixture, then printed plane
+bodies with the curve built in, then card scraper steel for the
+blades. The geometry is kind: half a hexagon is inscribed in the
+circle of half an edge about the edge's middle, so the arcs are that
+circle's, every edge a semicircle, and the kernel's cover already has
+a triangle with its apex at that middle on every bump chord, which
+makes a bump stick a plain 60° sector whose arc is centred, to the
+glue line, on its own apex. The eroded tile makes the two radii
+differ, 4.93 on a bump and 5.63 in a dent, so the blades are not a
+matched hollow and round; a matched pair would leave no line.
+
+What carries the curve is the blade and a master, not the plane's
+sole. A sole with the curve in it registers on the work, a 5 mm
+triangular stick, and that is the fidgety part; here the sole is flat
+and lands on rails on the fixture, the skirts down the block's sides
+are the fence, and the blade stops cutting when the sole is down.
+Three consequences. The blade's lean, which a scraper needs, is in
+the slot (10°), because a sole that must end flat cannot be tipped by
+hand; the 1.5 % the lean takes off a filed curve's height is 0.01 mm
+over a face and is left. The top between the rails is lower than
+they are, so no blade shoulder wears them. And the depth is not filed
+into the blade: it is set on a master, the finished face standing
+over a pair of rail edges, so only the curve has to be filed right.
+The master is printed on end, face and rail edges one outline; lying
+down, the 0.93 mm between them would round to a layer. Each rail
+height is chosen so its blade can be seen to be right: the hollow's
+arc where the bump's top is, the cove's tip on the rail plane, the
+straight blade flush.
+
+Rejected: a fence on the stick itself (the beading tool's own, which
+tips on a triangle); shoulders on the blade as the depth stop (they
+would ride and wear the printed rails, and put the filing's accuracy
+into the stick); one master with a face on each of two opposite edges
+(it rocks on whichever is down, so there are two, each with a flat
+back); a chamfer plane for the points (it registers on a square
+corner and a stick's is 60°); an edger blade for the steel (hard
+enough, but 3 mm thick where a scratch stock wants under 1). Not done
+yet, and said in the example's README: the kernel does not draw the
+arcs, so the cradle, template and cut list are still the flat tile's;
+nine dent chords per tile lie on halves and odd sticks with no seat;
+and with arcs the points at a dent's inner corners come off square to
+one face, not to the stick.

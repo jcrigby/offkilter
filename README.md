@@ -75,7 +75,13 @@ works today, all in the browser:
   prisms per tile that a roundover and a core box curve, whole tiles
   all round and a trim line (`examples/spectre-lid/`), and the saw
   cassettes and router cradles that cut those five sticks with the
-  blade at 90° (`examples/spectre-sticks/`), a mini chop saw from an angle
+  blade at 90° (`examples/spectre-sticks/`), the lid again as bundles
+  of sawn triangular sticks on a hexagon-edged tile
+  (`examples/spectre-mosaic/`), the cauls that glue a tile's sticks
+  and the template that lays the tiles out
+  (`examples/spectre-cauls/`), and the scratch-stock stations that
+  scrape those sticks' outer faces round, into a curvy Spectre
+  (`examples/spectre-planes/`), a mini chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`) and the Edwardian
   Lift, a minimal router table lifted by a scissor jack through a
