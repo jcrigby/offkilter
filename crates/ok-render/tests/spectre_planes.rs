@@ -12,7 +12,7 @@
 use ok_brep::{BoolOp, Solid};
 use ok_math::{Plane, Vec2, Vec3};
 use ok_model::{Document, TabId};
-use ok_sketch::spectre::{curved_tile, Curve};
+use ok_sketch::spectre::{build, curved_tile, Curve, Params, HEX_BULGE};
 use ok_sketch::{Loop, Profile};
 use std::path::PathBuf;
 
@@ -567,4 +567,140 @@ fn the_masters_carry_the_faces_over_their_rail_edges() {
             );
         }
     }
+}
+
+/// Does it still tile. Bowed to semicircles it does, exactly: the
+/// kernel's arc tile at a sagitta of half an edge is the hex tile
+/// with every flat bowed to its circle, and in a patch every edge two
+/// tiles share has a bump on one side and a dent on the other, about
+/// the same middle, so the two semicircles are one circle and the
+/// eroded tiles stand the line apart all along it. Leave one flat of
+/// a dent flat and they do not: the neighbour's bump still bows the
+/// sagitta past that chord, which at this edge is the line's whole
+/// width, so the line closes to nothing at the flat's middle. Keeping
+/// the line there means cutting that stick back by the sagitta, and
+/// then the line is the dent's own arc's depth wider at the flat's ends.
+#[test]
+fn bowed_edges_still_tile_and_a_flat_left_in_a_dent_closes_the_line() {
+    let n = numbers();
+    let (edge, gap) = (f(&n["edge"]), f(&n["gap"]));
+    let hex = curved_tile(Curve::Hex, 0.0, 3);
+    let arc = curved_tile(Curve::Arc, 0.5, 12);
+    let at = |i: usize| hex[i % 42];
+    let phase = (0..3)
+        .find(|&ph| {
+            (0..14).all(|k| (at(ph + 3 * k).distance(at(ph + 3 * k + 3)) - 1.0).abs() < 1e-9)
+        })
+        .unwrap();
+    let ccw: f64 = (0..42).map(|i| at(i).cross(at(i + 1))).sum();
+    // An edge: its ends, its middle, whether it bumps, and the middle of its middle flat.
+    let edges: Vec<_> = (0..14)
+        .map(|k| {
+            let (a, p1, p2, b) = (
+                at(phase + 3 * k),
+                at(phase + 3 * k + 1),
+                at(phase + 3 * k + 2),
+                at(phase + 3 * k + 3),
+            );
+            (
+                (a + b) * 0.5,
+                (p1 - a).cross(p2 - p1) * ccw > 0.0,
+                (p1 + p2) * 0.5,
+            )
+        })
+        .collect();
+    // The arc tile is the hex tile bowed: every point of it half an edge from an edge's middle, every hex corner on it.
+    for q in &arc {
+        let d = edges
+            .iter()
+            .map(|e| (q.distance(e.0) - 0.5).abs())
+            .fold(f64::INFINITY, f64::min);
+        assert!(d < 1e-9, "a point of the arc tile {d} off the semicircles");
+    }
+    for q in &hex {
+        let d = arc
+            .iter()
+            .map(|a| a.distance(*q))
+            .fold(f64::INFINITY, f64::min);
+        assert!(d < 0.05, "a hex corner {d} from the arc tile's points");
+    }
+    // The tiling: every tile of a patch, by its frame.
+    let patch = build(
+        &Params {
+            width: 4.0 * 25.4,
+            height: 4.0 * 25.4,
+            edge,
+            gap,
+            curve: Curve::Hex,
+            bulge: HEX_BULGE,
+            bit: 0.0,
+            shift: Vec2::new(2.0, 5.0),
+            angle: 0.0,
+            scrap: 0.0,
+            scheme: Default::default(),
+            seed: 0,
+            rips: Vec::new(),
+            whole: true,
+            prisms: Vec::new(),
+        },
+        10f64.to_radians(),
+    )
+    .unwrap();
+    let put = |t: &[f64; 6], q: Vec2| {
+        Vec2::new(
+            t[0] * q.x + t[1] * q.y + t[2],
+            t[3] * q.x + t[4] * q.y + t[5],
+        )
+    };
+    let mut by_middle: std::collections::HashMap<(i64, i64), Vec<(usize, usize)>> =
+        Default::default();
+    for (t, frame) in patch.frames.iter().enumerate() {
+        for (k, e) in edges.iter().enumerate() {
+            let m = put(frame, e.0);
+            by_middle
+                .entry(((m.x * 1e3).round() as i64, (m.y * 1e3).round() as i64))
+                .or_default()
+                .push((t, k));
+        }
+    }
+    let shared: Vec<_> = by_middle.values().filter(|v| v.len() > 1).collect();
+    println!(
+        "{} tiles in the patch, {} edges shared by two of them",
+        patch.frames.len(),
+        shared.len()
+    );
+    assert!(
+        shared.len() > patch.frames.len(),
+        "the tiling is edge to edge"
+    );
+    let mut worst = f64::INFINITY;
+    for pair in &shared {
+        assert_eq!(pair.len(), 2, "an edge has two sides");
+        let ((t, i), (u, k)) = (pair[0], pair[1]);
+        assert_ne!(
+            edges[i].1, edges[k].1,
+            "a bump meets a dent on every shared edge"
+        );
+        // Leave the dent's middle flat flat: the dent tile's wood ends half the line inside that
+        // chord, the bump tile's half the line inside the circle, along the line through the middle.
+        let (dent, flat) = if edges[i].1 {
+            (u, edges[k])
+        } else {
+            (t, edges[i])
+        };
+        let m = put(&patch.frames[dent], flat.0);
+        let chord = put(&patch.frames[dent], flat.2).distance(m);
+        worst = worst.min((chord + gap / 2.0) - (edge / 2.0 - gap / 2.0));
+    }
+    let sagitta = edge / 2.0 * (1.0 - 30f64.to_radians().cos());
+    println!("a flat left in a dent: the line is {worst:.3} mm at its middle (the bump bows {sagitta:.3} past the chord, the line is {gap})");
+    assert!((worst - (gap - sagitta)).abs() < 1e-6);
+    assert!(worst < 0.05, "the line closes at the flat's middle");
+    // Cut that stick back by the sagitta and the line is whole again, wider toward the flat's ends:
+    // the cut-back flat is the tangent to the dent's own eroded arc at its deepest.
+    let back = edge / 2.0 * 30f64.to_radians().cos() + gap / 2.0 + sagitta;
+    assert!((back - f(&n["r_dent"])).abs() < 1e-9);
+    let ends = back - (edge / 2.0 - gap / 2.0) * 30f64.to_radians().cos();
+    println!("cut back by the sagitta: {gap} at the middle, {ends:.2} at the flat's ends");
+    assert!(ends > 1.9 * gap && ends < 2.0 * gap);
 }

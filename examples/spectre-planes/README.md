@@ -127,13 +127,20 @@ reset once. After that every stick from that block is the same.
 
 ## What it does not do yet
 
-- The kernel does not draw the arcs. The cradle, the layout template
-  and the cut list of `examples/spectre-cauls` are still the
-  flat-edged tile's; a curvy tile needs them redrawn with the arcs,
-  which is the next increment.
-- Nine dent chords per tile lie on halves and odd sticks. They need
-  seats of their own, or a cover searched to put a triangle on every
-  dent chord as it already does on every bump chord.
+- The kernel draws the bowed tile already (`curve` arc at a `bulge`
+  of 0.5 is the semicircle on every edge, and the layout template
+  builds with it), but the cover's sticks and the cut list of
+  `examples/spectre-cauls` are still the flat-edged tile's, and so
+  are that example's cradle and template.
+- Nine dent chords per tile lie on halves and odd sticks, with no
+  seat here. Four are at corners where the dent's triangle would lie
+  half over the next bump's sector, two are in necks where two dents
+  face each other, and three are the search's own choice. They cannot
+  simply be left flat: the neighbour's bump bows 0.71 past the chord
+  and the line is 0.7, so the line closes to nothing at the flat's
+  middle (the test measures it on the kernel's tiling). A stick left
+  flat has to be cut back by that 0.71, and the line is then 0.7 at
+  the flat's middle and 1.36 at its ends.
 - The point block is drawn for the flat-edged tile, where a point is
   taken off square to the stick. With arcs the eroded outline runs
   straight through a dent's inner corners, so the points there come
@@ -162,4 +169,6 @@ reaches the slot without marking the wall the blade lies on, and that
 the block fits the bed with rail under the sled's heel at the stick's
 near end. For the masters it checks the arc's top and the hollow's
 bottom over the rail edges and that the hollow blade lies along the
-bump master.
+bump master. And it checks the tiling: in a patch every shared edge
+has a bump on one side and a dent on the other, so bowed tiles stand
+the line apart all along it, and a flat left in a dent closes it.
