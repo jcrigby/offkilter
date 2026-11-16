@@ -254,6 +254,8 @@ pub fn theta(curve: Curve, bulge: f64) -> f64 {
         Curve::Cubic => bulge.atan2(0.33).to_degrees(),
         // The hex's pieces leave the edge at 60°.
         Curve::Hex => 60.0,
+        // A half ellipse leaves the edge square.
+        Curve::Ellipse => 90.0,
     }
 }
 
@@ -264,6 +266,7 @@ pub fn radius(curve: Curve, bulge: f64) -> f64 {
         Curve::Ogee => (1.0 / 16.0 + bulge * bulge) / (2.0 * bulge),
         Curve::Cubic => super::tightest_radius(curve, bulge),
         Curve::Hex => 0.0,
+        Curve::Ellipse => super::tightest_radius(curve, bulge),
     }
 }
 
@@ -538,6 +541,11 @@ pub fn decompose(
 ) -> Result<Decomposition, String> {
     if curve == Curve::Hex {
         return Err("the hex tile is a bundle of lattice triangles, not prisms: see mosaic".into());
+    }
+    if curve == Curve::Ellipse {
+        return Err(
+            "the leaning half ellipse is milled round one stick, not glued up from prisms".into(),
+        );
     }
     let cuts = &snap(cuts);
     if let Some(c) = cuts.iter().find(|c| !cut_ok(c[0], c[1])) {

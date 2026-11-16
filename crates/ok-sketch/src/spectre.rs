@@ -57,6 +57,14 @@ pub mod sticks;
 
 pub const TILE_AREA: f64 = 8.196_152_422_706_632;
 
+/// How far the leaning half ellipse's crest stands off the edge's
+/// middle, edge lengths: 1.2 mm at the lid's 10.56 mm edge, the
+/// owner's pick between a lean that hardly shows and one that hooks.
+pub const ELLIPSE_LEAN: f64 = 1.2 / 10.56;
+/// The leaning half ellipse's depth the owner chose: 0.8 of the
+/// semicircle's, which takes the narrowest neck from 2.5 mm to 4.5.
+pub const ELLIPSE_BULGE: f64 = 0.4;
+
 /// Kaplan's curve: the control points `0.6` edge lengths off the edge.
 pub const KAPLAN_BULGE: f64 = 0.6;
 
@@ -171,6 +179,16 @@ pub enum Curve {
     /// so the tile is a bundle of lattice triangles, sawn, with no
     /// curve to rout: see `mosaic`.
     Hex,
+    /// Half an ellipse on every edge, out then in alternately, as wide
+    /// as the edge and `bulge` edge lengths deep, leaving each corner
+    /// square to the edge like a semicircle but shallower, so the
+    /// tile's necks stay wide; and leaning: its crest stands
+    /// `ELLIPSE_LEAN` off the edge's middle, two quarter ellipses of
+    /// unequal width meeting there. A bump leans back the way the
+    /// outline came and a dent forward, so the bump and the dent two
+    /// tiles share are one curve, while a mirrored tile's lean the
+    /// other way and fit nothing: the tile is strictly one-handed.
+    Ellipse,
 }
 
 /// Where the hex curve's apex stands off the edge: half an edge at 60°.
@@ -560,6 +578,21 @@ pub fn curved_tile(curve: Curve, bulge: f64, per_edge: usize) -> Vec<Vec2> {
                     }
                 }
             }
+            Curve::Ellipse => {
+                // Two quarter ellipses meeting at the crest, which
+                // stands off the middle toward the edge's end on a
+                // dent and its start on a bump: the same point from
+                // both tiles, since their signs and directions are
+                // both opposite.
+                let m = (a + b) * 0.5;
+                let lean = sign * ELLIPSE_LEAN;
+                for k in 1..=n {
+                    let t = std::f64::consts::PI * k as f64 / n as f64;
+                    let c = -t.cos();
+                    let half = if c >= 0.0 { 0.5 - lean } else { 0.5 + lean };
+                    out.push(m + v * (lean + c * half) + v.perp() * (sign * bulge * t.sin()));
+                }
+            }
             Curve::Ogee => {
                 // Two arcs on the edge's halves, the convex one first:
                 // the same S from both sides, so no sign to alternate.
@@ -606,11 +639,16 @@ pub fn pieces_per_edge(curve: Curve, bulge: f64, facet: f64) -> usize {
         Curve::Ogee => 2.0 * (4.0 * bulge.abs()).atan(),
         // Three straight pieces, whatever the facet.
         Curve::Hex => return 3,
+        // It leaves both ends square to the edge.
+        Curve::Ellipse => std::f64::consts::FRAC_PI_2,
     };
     let n = ((2.0 * end_angle / facet.max(1e-3)).ceil() as usize).clamp(4, 64);
     match curve {
         // Two arcs, each turning through twice its end angle, in an even count.
         Curve::Ogee => (2 * n).clamp(4, 64) & !1,
+        // An even count, so the points the two tiles put on a shared
+        // edge are the same points.
+        Curve::Ellipse => (n + 1) & !1,
         _ => n,
     }
 }
@@ -628,6 +666,13 @@ pub fn tightest_radius(curve: Curve, bulge: f64) -> f64 {
         Curve::Hex => 0.0,
         Curve::Arc => (0.25 + bulge * bulge) / (2.0 * bulge),
         Curve::Ogee => (1.0 / 16.0 + bulge * bulge) / (2.0 * bulge),
+        // An ellipse is tightest at the ends of its longer axis: at the
+        // edge's end beside the wide quarter, or at the crest of the
+        // narrow one.
+        Curve::Ellipse => {
+            let (wide, narrow) = (0.5 + ELLIPSE_LEAN, 0.5 - ELLIPSE_LEAN);
+            (bulge * bulge / wide).min(narrow * narrow / bulge)
+        }
         Curve::Cubic => {
             // One edge from (0, 0) to (1, 0), sampled finely: the apex
             // at t = 1/2 is the tightest.
@@ -1070,6 +1115,9 @@ fn validate(p: &Params) -> Result<(), String> {
     }
     if p.curve == Curve::Arc && p.bulge > 0.5 {
         return Err("an arc's sagitta must be at most half the edge (a semicircle)".into());
+    }
+    if p.curve == Curve::Ellipse && !(p.bulge > 0.0 && p.bulge <= 0.5) {
+        return Err("a half ellipse is between a sliver and a semicircle deep: the bulge is over 0 and at most 0.5".into());
     }
     if p.curve == Curve::Ogee && p.bulge > 0.25 {
         return Err(
@@ -1789,6 +1837,207 @@ fn outline_key(outline: &[Vec2]) -> Vec<Key> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// An edge's curve in the edge's own frame: along it from its
+    /// middle, and off it to the left of the way the outline runs.
+    fn edge_curves(outline: &[Vec2], n: usize) -> Vec<Vec<Vec2>> {
+        let m = outline.len();
+        (0..14)
+            .map(|k| {
+                let (a, b) = (outline[k * n], outline[(k * n + n) % m]);
+                let (mid, u) = ((a + b) * 0.5, (b - a).normalized().unwrap());
+                (0..=n)
+                    .map(|i| {
+                        let q = outline[(k * n + i) % m] - mid;
+                        Vec2::new(q.dot(u), q.dot(u.perp()))
+                    })
+                    .collect()
+            })
+            .collect()
+    }
+
+    /// How far apart two edges' curves are when the second tile is
+    /// laid against the first along them: it runs the other way and
+    /// its left is the first's right.
+    fn mismatch(a: &[Vec2], b: &[Vec2]) -> f64 {
+        let n = a.len();
+        (0..n)
+            .map(|i| a[i].distance(Vec2::new(-b[n - 1 - i].x, -b[n - 1 - i].y)))
+            .fold(0.0, f64::max)
+    }
+
+    fn ellipse_params(gap: f64, bit: f64) -> Params {
+        Params {
+            width: 101.6,
+            height: 101.6,
+            edge: 10.56,
+            gap,
+            curve: Curve::Ellipse,
+            bulge: ELLIPSE_BULGE,
+            bit,
+            shift: Vec2::new(2.0, 5.0),
+            angle: 0.0,
+            scrap: 0.0,
+            scheme: Default::default(),
+            seed: 0,
+            rips: Vec::new(),
+            whole: true,
+            prisms: Vec::new(),
+        }
+    }
+
+    /// The leaning half ellipse closes into a tile of the straight
+    /// tile's area, every curve as deep as the bulge with its crest
+    /// the lean off the middle, back on a bump and forward on a dent.
+    #[test]
+    fn the_leaning_ellipse_tile_closes_with_its_crests_off_centre() {
+        let n = 24;
+        let t = curved_tile(Curve::Ellipse, ELLIPSE_BULGE, n);
+        assert_eq!(t.len(), 14 * n);
+        assert!(signed_area(&t) > 0.0);
+        assert!(
+            (signed_area(&t) - TILE_AREA).abs() < 2e-3,
+            "{}",
+            signed_area(&t) - TILE_AREA
+        );
+        assert!(!self_intersects(&t));
+        let (mut bumps, mut dents) = (0, 0);
+        for c in edge_curves(&t, n) {
+            assert!((c[0].x + 0.5).abs() < 1e-12 && (c[n].x - 0.5).abs() < 1e-12);
+            let crest = c
+                .iter()
+                .copied()
+                .fold(c[0], |m, q| if q.y.abs() > m.y.abs() { q } else { m });
+            assert!((crest.y.abs() - ELLIPSE_BULGE).abs() < 1e-12);
+            // Left of a counter-clockwise outline is inside: a dent.
+            if crest.y > 0.0 {
+                dents += 1;
+                assert!((crest.x - ELLIPSE_LEAN).abs() < 1e-12);
+            } else {
+                bumps += 1;
+                assert!((crest.x + ELLIPSE_LEAN).abs() < 1e-12);
+            }
+            // Square to the edge at both ends, like a semicircle: the
+            // first of 24 chords of a half turn leans 3.75° at most
+            // times the quarter's width over the depth.
+            assert!((c[1].x - c[0].x).abs() < 0.2 * (c[1].y - c[0].y).abs());
+        }
+        assert_eq!((bumps, dents), (7, 7));
+    }
+
+    /// It tiles, and only one-handed. In a patch every edge two tiles
+    /// share carries the same curve from both sides, point for point.
+    /// A dent of the tile fits every bump of the tile; against a
+    /// mirrored tile no edge fits any edge, by twice the lean.
+    #[test]
+    fn the_leaning_ellipse_tiles_and_its_mirror_does_not_fit() {
+        let p = ellipse_params(0.0, 0.0);
+        let facet = 10f64.to_radians();
+        let n = pieces_per_edge(p.curve, p.bulge, facet);
+        assert_eq!(n % 2, 0);
+        let patch = build(&p, facet).unwrap();
+        let unit = curved_tile(p.curve, p.bulge, n);
+        // The tiles in place, and the edges they share by their straight middles.
+        let tiles: Vec<Vec<Vec2>> = patch
+            .frames
+            .iter()
+            .map(|f| unit.iter().map(|q| apply(f, *q)).collect())
+            .collect();
+        let mut by_middle: std::collections::HashMap<(i64, i64), Vec<(usize, usize)>> =
+            Default::default();
+        for (t, o) in tiles.iter().enumerate() {
+            for k in 0..14 {
+                let m = (o[k * n] + o[(k * n + n) % (14 * n)]) * 0.5;
+                by_middle
+                    .entry(((m.x * 1e4).round() as i64, (m.y * 1e4).round() as i64))
+                    .or_default()
+                    .push((t, k));
+            }
+        }
+        let (mut shared, mut worst) = (0, 0f64);
+        for pair in by_middle.values().filter(|v| v.len() > 1) {
+            assert_eq!(pair.len(), 2);
+            let ((t, i), (u, k)) = (pair[0], pair[1]);
+            shared += 1;
+            for j in 0..=n {
+                let a = tiles[t][(i * n + j) % (14 * n)];
+                let b = tiles[u][(k * n + n - j) % (14 * n)];
+                worst = worst.max(a.distance(b));
+            }
+        }
+        println!(
+            "{} tiles, {shared} shared edges, the two sides at most {worst:.2e} mm apart",
+            tiles.len()
+        );
+        assert!(shared > tiles.len());
+        assert!(worst < 1e-6, "{worst}");
+        // The pieces of the patch are whole tiles, none over another: their areas are the tile's.
+        for piece in &patch.pieces {
+            assert!((signed_area(&piece.outline).abs() - TILE_AREA * p.edge * p.edge).abs() < 0.5);
+        }
+        // One hand only.
+        let own = edge_curves(&unit, n);
+        let mirrored: Vec<Vec2> = unit.iter().rev().map(|q| Vec2::new(-q.x, q.y)).collect();
+        // Reversed, the mirror's outline starts one point before a corner.
+        let mut mirrored = mirrored;
+        mirrored.rotate_right(1);
+        assert!(signed_area(&mirrored) > 0.0);
+        let other = edge_curves(&mirrored, n);
+        let fits = |a: &[Vec<Vec2>], b: &[Vec<Vec2>]| {
+            let mut all = Vec::new();
+            for x in a {
+                for y in b {
+                    all.push(mismatch(x, y));
+                }
+            }
+            all
+        };
+        let same = fits(&own, &own);
+        assert_eq!(
+            same.iter().filter(|d| **d < 1e-9).count(),
+            2 * 7 * 7,
+            "every dent fits every bump"
+        );
+        let cross = fits(&own, &other);
+        let least = cross.iter().copied().fold(f64::INFINITY, f64::min);
+        println!("against a mirrored tile the best of 196 pairings is {:.3} edges off ({:.2} mm at 10.56)", least, least * 10.56);
+        assert!(least > 1.9 * ELLIPSE_LEAN, "{least}");
+    }
+
+    /// With the line between tiles and a 3 mm bit: the curve is nowhere
+    /// tighter than the bit, the patch builds, and the tiles stand apart.
+    #[test]
+    fn the_leaning_ellipse_takes_the_line_and_a_three_millimetre_bit() {
+        let p = ellipse_params(0.7, 3.0);
+        assert!(tightest_radius(p.curve, p.bulge) * p.edge > p.bit / 2.0);
+        let patch = build(&p, 10f64.to_radians()).unwrap();
+        assert!(patch.tiles >= 16, "{}", patch.tiles);
+        let whole = TILE_AREA * p.edge * p.edge;
+        for piece in &patch.pieces {
+            let a = signed_area(&piece.outline).abs();
+            assert!(a < whole && a > 0.85 * whole, "{a} of {whole}");
+        }
+        // No corner of one piece nearer another piece than the line, less the facets' sag.
+        let mut least = f64::INFINITY;
+        for (i, a) in patch.pieces.iter().enumerate() {
+            for b in patch.pieces.iter().skip(i + 1) {
+                for q in &a.outline {
+                    let m = b.outline.len();
+                    for j in 0..m {
+                        let (u, w) = (b.outline[j], b.outline[(j + 1) % m]);
+                        let t = ((*q - u).dot(w - u) / (w - u).dot(w - u)).clamp(0.0, 1.0);
+                        least = least.min((u + (w - u) * t).distance(*q));
+                    }
+                }
+            }
+        }
+        println!(
+            "{} tiles, the line between them at least {least:.3} mm",
+            patch.tiles
+        );
+        assert!(least > p.gap - 0.08, "{least}");
+        assert!((ELLIPSE_LEAN * p.edge - 1.2).abs() < 1e-12);
+    }
 
     fn near(a: f64, b: f64, tol: f64) -> bool {
         (a - b).abs() < tol

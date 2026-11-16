@@ -1447,7 +1447,12 @@ impl Server {
                     "arc" => ok_sketch::spectre::Curve::Arc,
                     "ogee" => ok_sketch::spectre::Curve::Ogee,
                     "hex" => ok_sketch::spectre::Curve::Hex,
-                    other => return Err(format!("curve is cubic, arc, ogee or hex, not {other}")),
+                    "ellipse" => ok_sketch::spectre::Curve::Ellipse,
+                    other => {
+                        return Err(format!(
+                            "curve is cubic, arc, ogee, hex or ellipse, not {other}"
+                        ))
+                    }
                 };
                 let params = ok_sketch::spectre::Params {
                     width: 1.0,

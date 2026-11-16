@@ -1202,3 +1202,36 @@ arcs, so the cradle, template and cut list are still the flat tile's;
 nine dent chords per tile lie on halves and odd sticks with no seat;
 and with arcs the points at a dent's inner corners come off square to
 one face, not to the stick.
+
+
+## 2026-11 · The leaning half ellipse: a tile for one solid stick, and one-handed by its edges
+
+The owner turned from bundles of sticks to milling the tile's whole
+outline round one solid stick on an indexed router, set by the bit
+against an end pattern. Checked against the hex tile, twelve stops
+reach 40 of its 42 faces with straight bits and two faces only two
+thirds of the way, tucked under a neighbouring bump. A curved edge
+has no such pockets: a 3 mm ball-nose at the same twelve stops
+reaches everything but the four inside corners, which the kernel's
+bit rule already fillets. The half circle was the owner's favourite
+shape but leaves a 2.5 mm neck; half an ellipse as wide as the edge
+and 0.8 as deep keeps the look, since it still leaves each corner
+square to the edge where a shallower circular arc does not, and the
+neck is 4.3. Leaning the ellipse, its crest off the middle, is what
+makes the tile strictly one-handed: a bump and the dent it meets are
+one curve only if bumps lean back along the outline and dents
+forward, which is what the alternating sign already gives, and a
+mirrored tile's lean the other way, so no edge of it fits any edge
+(the test's best pairing is 2.4 mm off). Whether the symmetric
+bump-and-dent tile is one-handed already was not settled; the lean
+removes the question. Of the two directions the lean can take, one
+narrows the neck and the other widens it to 4.5; the owner chose
+that one at 1.2 mm from drawings at 0.8, 1.2 and 1.6.
+
+The lean is a constant of the curve, not a parameter: `Params` is
+built by hand in forty-six places and one more field for a number
+nobody has asked to vary is not worth that. Circles in resin, half
+rounds with ring segments, and drilling a blank on the edge middles
+were drawn on the way and not built; the ball-nose's cost, a few
+hundred passes a stick, is why the end pattern has to set position
+and depth together.

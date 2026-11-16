@@ -806,7 +806,12 @@ impl Doc {
             "arc" => ok_sketch::spectre::Curve::Arc,
             "ogee" => ok_sketch::spectre::Curve::Ogee,
             "hex" => ok_sketch::spectre::Curve::Hex,
-            other => return error(format!("curve is cubic, arc, ogee or hex, not {other}")),
+            "ellipse" => ok_sketch::spectre::Curve::Ellipse,
+            other => {
+                return error(format!(
+                    "curve is cubic, arc, ogee, hex or ellipse, not {other}"
+                ))
+            }
         };
         let cuts: Vec<[ok_math::Vec2; 2]> = match serde_json::from_str(cuts_json) {
             Ok(c) => c,
@@ -835,7 +840,12 @@ impl Doc {
             "arc" => ok_sketch::spectre::Curve::Arc,
             "ogee" => ok_sketch::spectre::Curve::Ogee,
             "hex" => ok_sketch::spectre::Curve::Hex,
-            other => return error(format!("curve is cubic, arc, ogee or hex, not {other}")),
+            "ellipse" => ok_sketch::spectre::Curve::Ellipse,
+            other => {
+                return error(format!(
+                    "curve is cubic, arc, ogee, hex or ellipse, not {other}"
+                ))
+            }
         };
         match ok_sketch::spectre::prisms::search(curve, bulge, 10f64.to_radians()) {
             Ok(d) => serde_json::json!({ "cuts": d.cuts }).to_string(),
