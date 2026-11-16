@@ -211,28 +211,59 @@ fn the_pattern_is_the_tile_and_one_sliding_cradle_locks_the_star() {
         "the cradle stands on the guide's floor"
     );
     assert!((hi.z - f(&h["cradle_top"])).abs() < 1e-6 && hi.z < axis);
-    assert!((hi.y - lo.y - f(&h["cradle_w"])).abs() < 1e-6 && (hi.x - lo.x - t).abs() < 1e-6);
+    let back = f(&h["cradle_back"]);
+    assert!(
+        (hi.y - lo.y - f(&h["cradle_w"])).abs() < 1e-6 && (hi.x - lo.x - t - back).abs() < 1e-6
+    );
     let (slo, shi) = star.bounds().unwrap();
-    assert!((slo.x - lo.x).abs() < 1e-6 && (shi.x - hi.x).abs() < 1e-6);
+    assert!((slo.x - lo.x).abs() < 1e-6 && (shi.x - (hi.x - back)).abs() < 1e-6);
+    assert!(
+        f(&h["back_gap"]) >= 1.0 && f(&h["back_gap"]) < back - 3.0,
+        "the taper seats before the star meets the cradle's back"
+    );
     // The axis is as low as the star lets it be: a few millimetres of cradle under the point, on the guide's floor.
     let under = axis - r - floor;
     println!("axis {axis:.0} over the base, {under:.1} of cradle under the star's point");
     assert!((4.0..10.0).contains(&under));
-    // Its way off: clear of the star with room to spare, still between the lips, short of the end wall.
+    // Its way off: one throw of the toggle clamp, clear of the star with room to spare and still between the lips.
+    let c = &h["clamp"];
     let travel = f(&h["travel"]);
+    assert!((travel - (f(&c["stroke"]) - f(&c["squeeze"]))).abs() < 1e-9);
+    assert!(f(&c["squeeze"]) >= 1.0 && f(&c["squeeze"]) < f(&c["pad"]) / 2.0);
     let (glo, ghi) = guide.bounds().unwrap();
     assert!(travel >= t + 5.0, "the cradle comes right off the star");
-    assert!(glo.x <= lo.x && hi.x + travel <= ghi.x - f(&g["end"][0]) + 1e-6);
+    assert!(f(&g["lips_x"][0]) <= lo.x && hi.x + travel <= f(&g["lips_x"][1]));
     assert!(glo.z.abs() < 1e-6 && lip >= 5.0 && play > 0.05 && play < 0.3);
     assert!(
         (ghi.y - glo.y) > f(&h["cradle_w"]) + 2.0 * (play + f(&g["wall"])),
         "the guide has ears for its screws"
     );
-    // The push screw is home on the cradle's face, and through the end wall's hole, not its plastic.
-    let screw = one(&mut doc, "Push screw");
-    let (plo, _) = screw.bounds().unwrap();
-    assert!((plo.x - hi.x).abs() < 1e-6);
-    assert!(overlap(&screw, &guide) < 1e-6 && overlap(&screw, &cradle) < 1e-6);
+    // The clamp, locked: its pad on the middle of the cradle's back, its body beyond the cradle's furthest
+    // and on the guide, all of it under the pattern's swing and through nothing.
+    let clamp = bodies_of(&mut doc, "Toggle clamp");
+    assert_eq!(clamp.len(), 3);
+    let (plo, phi) = clamp[0].bounds().unwrap();
+    assert!((plo.x - hi.x).abs() < 1e-6 && (phi.x - plo.x - f(&c["pad"])).abs() < 1e-6);
+    assert!(((plo.y + phi.y) / 2.0).abs() < 1e-6 && phi.z < hi.z && plo.z > lo.z);
+    let (blo, bhi) = clamp[2].bounds().unwrap();
+    assert!(
+        blo.x >= hi.x + travel + f(&c["pad"]),
+        "the body is behind the cradle's way"
+    );
+    assert!(blo.z >= floor - 1e-6 && bhi.x <= ghi.x + 1e-6);
+    let swing = f(&n["tile"]["swing"]);
+    println!(
+        "clamp top {:.1}, the pattern swings down to {:.1}",
+        bhi.z,
+        axis - swing
+    );
+    for part in &clamp {
+        let (_, top) = part.bounds().unwrap();
+        assert!(top.z < axis - swing - 1.0, "the clamp is under the pattern");
+        for other in [&cradle, &guide, &pattern, &star] {
+            assert!(overlap(part, other) < 1e-6);
+        }
+    }
     // The spindle runs in a bearing in each face of the headstock.
     let bearings = bodies_of(&mut doc, "Bearings 6201");
     assert_eq!(bearings.len(), 2);

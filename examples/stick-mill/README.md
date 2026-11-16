@@ -23,9 +23,10 @@ cargo test -p ok-render --test stick_mill   # what CI runs
 
 ## A pass
 
-1. Back the push screw off and slide the cradle off the star, turn
-   the star a point, slide the cradle home and tighten the screw.
-   Every stop is the same move, and nothing is lifted.
+1. Throw the clamp's lever back: the cradle comes off the star. Turn
+   the star a point. Throw the lever forward: the cradle goes home
+   and locks. Every stop is the same two throws, and nothing is
+   lifted.
 2. Bring the carriage over the pattern.
 3. Turn the cross screw to the pass's place: every pass is on a mark
    of the handwheel, 0.125 mm.
@@ -39,18 +40,27 @@ section does not change: set once, lock, cut.
 
 ## The star and its cradle
 
-![The headstock end: the crank, the upright with its bearings, the star with the cradle home on it in its guide, the push screw's knob](out/head.png)
+![The headstock end: the crank, the upright with its bearings, the star with the cradle home on it in its guide, and the toggle clamp on its side behind the cradle, its lever toward the front](out/head.png)
 
 The spindle runs in a 6201 bearing in each face of the headstock, so
 its height never changes. The cradle only sets the angle. It is the
 negative of the star's lower three points and slides in a guide on
-the base, along the spindle's axis: 26 mm takes it right off the
-star's 20.
+the base, along the spindle's axis, on the plunger of a push-pull
+toggle clamp: one throw of the lever is 30 mm, right off the star's
+20, and the other brings it home and locks over centre. The cradle is
+moved at every one of a stick's twelve stops and for every journal,
+so it is a lever, not a screw.
+
+The clamp lies on its side against an upright plate of the guide, so
+its lever swings level, toward the front, under the pattern. A toggle
+locks at a place, not at a force, so a urethane pad sits between the
+plunger and the cradle's back, squeezed 2 mm when home: that is what
+presses the taper.
 
 Star and pocket taper 10° a side, narrowing toward the way the cradle
-leaves. Pushed home by its screw the cradle seats on six flanks as a
-cone seats, with no play to become an error in angle, and it lets go
-when the screw is backed off. The star's points are blunted 1.5 mm
+leaves. Pushed home the cradle seats on six flanks as a cone seats,
+with no play to become an error in angle, and it lets go when the
+lever is thrown back. The star's points are blunted 1.5 mm
 and the pocket's two crests cut back 1, so only flanks meet.
 
 With the cradle back, the stick turns freely and a crank outboard of
@@ -144,6 +154,8 @@ in the way, the next stop round cuts it with the side of the ball.
 | the blank | sawn within 2 mm of the tile, swinging 30.9 about the moved axis | 32 between the axis and the cross slide |
 | the star and cradle | two hexagons 100 across their flats, tapered 10° a side, the cradle pushed onto six flanks | a tenth of a millimetre at a steep flank is 0.07 at the tile's edge; printed tapers bed in, so try every stop before trusting one |
 | the bearings | two 6201 (12 x 32 x 10), one in each face of the headstock | any pair that takes the M12 studding; the push screw's thrust goes through the spindle's nuts to them |
+| the toggle clamp | push-pull, 32 mm of stroke, drawn 60 x 28 x 32 with its plunger 19 over the base; on its side it is 2 mm under the pattern's swing | measure the one bought: its stroke sets the cradle's travel and the pad's squeeze, its size the plate, and its lever must swing clear of the base's front |
+| the pad | urethane, 18 dia x 6, squeezed 2 | harder or softer until the star does not shake and the lever still throws; the plunger's thread sets the squeeze |
 | the cradle's hold-down | none drawn: the star's wedge presses it onto the guide's floor | if it lifts at its outer end, a strip over each lip |
 | the room under the stick | 35 between a blank's swing and the base | enough for chips and a brush; the carriage square's lower edge is 42 over the base |
 | the shelf | 195 out from the square, a gusset over each edge | push down on its front edge: if the bit moves, deepen the gussets |
@@ -162,8 +174,9 @@ in the way, the next stop round cuts it with the side of the ball.
 | headstock | two plies, 140 wide, bored 32 | M12 studding in two 6201 bearings |
 | crank | 60 dia x 10 with a handle | on the spindle outboard of the headstock, for turning the journals |
 | star | 115.5 over its points x 20, tapering to 108.4, printed | on the spindle, outside the shelf's reach, its large end toward the headstock |
-| cradle | 150 wide x 26.4 high x 20, printed | slides in the guide |
-| cradle guide | 60 x 196, a 3 mm floor, 6 mm lips and an end wall, printed | four screws to the base; an M6 knob screw through the end wall pushes the cradle home |
+| cradle | 150 wide x 26.4 high x 27, printed | slides in the guide; its 7 mm back closes the pocket's small end and takes the clamp's push |
+| cradle guide | 131 x 196, a 3 mm floor, 6 mm lips and an upright plate for the clamp, printed | six screws to the base |
+| toggle clamp | push-pull, 32 mm stroke | bolted on its side to the guide's plate; a urethane pad on its plunger |
 | pattern | the tile's section x 20 and the journal's round master x 10 on its outer face, printed as one | on the spindle against the stick |
 | posts, 2 | 28.4 wide x 10, 63.5 high, a right-angled V, on a 30 x 61 foot, printed | under the journals, two screws each to the base; fitted once the journals are cut |
 | tail | one ply, an M10 pointed bolt | |
@@ -179,7 +192,9 @@ frustum, its points short of the pocket's and the pocket's crests
 short of its corners so only flanks meet; the cradle is home on the
 star without passing through it, on the guide's floor between its
 lips, and its travel takes it right off the star inside the guide;
-the push screw is home on the cradle's face; the spindle passes
+the toggle clamp's pad is on the middle of the cradle's back, its
+body behind the cradle's furthest, and all of it under the pattern's
+swing and through nothing; the spindle passes
 through a bearing in each face of the headstock; the axis is as low
 as the star lets it be; with the carriage over the pattern the bit
 stands on it and the square, the shelf and the cross slide clear the

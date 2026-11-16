@@ -1368,3 +1368,21 @@ only the cradle is fewer moving parts.
 - The star's reliefs went with the lift: its points are blunted and
   the pocket's crests cut back, so the two sections differ only away
   from the flanks.
+
+## 2026-11 · The stick mill's cradle moves on a push-pull toggle clamp
+
+The cradle was pushed home by a knob screw. The owner pointed out it
+is moved at every stop and wanted a lever. A push-pull toggle clamp's
+plunger carries it: one throw is the whole 30 mm off the star, the
+other brings it home and locks over centre.
+
+- A toggle locks at a place, not a force, and the taper needs a push:
+  a urethane pad between plunger and cradle, squeezed 2 mm, supplies
+  it. Draw latches either side lost: two levers and the cradle still
+  slid by hand.
+- The plunger must push the cradle's middle, where the pocket is, so
+  the cradle has a back closing the pocket's small end, a gap inside
+  it so the taper seats first.
+- The clamp lies on its side: upright, its lever would swing through
+  the pattern. On its side it fits under the pattern's swing by 2 mm,
+  with the size drawn; the clamp bought has to be measured.

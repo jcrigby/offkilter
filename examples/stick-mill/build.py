@@ -5,8 +5,9 @@ bearings. A printed twelve-pointed star on the spindle (a hexagon and
 the same hexagon turned 30°) is held at any of twelve stops by one
 cradle, the negative of its lower three points, which is the only
 part that moves: it slides along the spindle's axis in a guide on the
-base, onto the star to lock it and off to let the stick turn. Star
-and pocket taper, so the cradle seats without play. With the cradle
+base, onto the star to lock it and off to let the stick turn, on the
+plunger of a push-pull toggle clamp, so one throw of a lever does
+both. Star and pocket taper, so the cradle seats without play. With the cradle
 back, a crank turns the stick under the bit: that is how the two
 round journals are cut that the stick then rests on. A trim router in
 its plunge base stands on a shelf out from a ply square that rides
@@ -111,10 +112,15 @@ STAR_K = 1.0 - HEX_T * math.tan(math.radians(TAPER)) / HEX_R   # the small end's
 TIP_FLAT, EASE = 1.5, 1.0                       # the star's points blunted and the pocket's crests cut back, so only flanks meet
 HEX_X = (CAR_MIN - SHELF_W / 2 - 15.0 - HEX_T, CAR_MIN - SHELF_W / 2 - 15.0)   # outside the shelf's reach; the large end toward the headstock
 CRADLE_W = 150.0                                # the cradle across
-TRAVEL = 26.0                                   # the cradle's way off the star, toward the pattern: the star's thickness and 6
+CRADLE_BACK = 7.0                               # the cradle's back, closing the pocket's small end: the clamp's plunger pushes its middle
+BACK_GAP = 1.5                                  # between the star's small end and that back, so the taper seats first
+CLAMP_STROKE = 32.0                             # a push-pull toggle clamp, lying on its side so its lever swings level, toward the front
+CLAMP_PAD, CLAMP_SQUEEZE = 6.0, 2.0             # a urethane pad between plunger and cradle, as long as this when home and squeezed this much: the toggle locks at a place, the pad makes it a push
+TRAVEL = CLAMP_STROKE - CLAMP_SQUEEZE           # 30: the cradle's way off the star's 20
+CLAMP_Z = 19.0                                  # the plunger's height: under the pattern's swing, on the cradle's back
+CLAMP_BODY = (60.0, 28.0, 32.0)                 # the clamp as drawn, lying on its side: along its plunger, front to back, and up
 GUIDE_FLOOR, GUIDE_LIP, GUIDE_WALL, GUIDE_PLAY, GUIDE_EAR = 3.0, 6.0, 5.0, 0.15, 18.0   # the guide: screwed to the base, the cradle between its lips
-GUIDE_END = (12.0, 24.0)                        # its end wall, thick and high over the floor: the push screw's nut
-PUSH_D = 6.0                                    # the push screw, M6 with a knob
+PLATE_T = 6.0                                   # the guide's upright plate the clamp bolts to
 HEAD_X = (HEX_X[0] - 25.0 - 2 * PLY, HEX_X[0] - 25.0)   # the headstock upright: two plies, a bearing in each face
 TAIL_X = (STICK + 30.0, STICK + 30.0 + PLY)     # the tail centre's upright
 UPRIGHT_Y = 70.0
@@ -305,33 +311,50 @@ def cradle_top():
 
 
 def cradle(p):
-    """Drawn home on the star. A block with the star's lower three points cut in it, tapered as the star is."""
-    box(p, "cradle", HEX_X, (-CRADLE_W / 2, CRADLE_W / 2), (GUIDE_FLOOR, cradle_top()))
+    """Drawn home on the star. A block with the star's lower three points cut in it, tapered as the star is, and a back the clamp pushes."""
+    box(p, "cradle", (HEX_X[0], HEX_X[1] + CRADLE_BACK), (-CRADLE_W / 2, CRADLE_W / 2), (GUIDE_FLOOR, cradle_top()))
     star_loft(p, True, "remove", "pocket: the star, its crests cut back")
+    s = p.sketch("right", HEX_X[1], "pocket's end")
+    p.polygon(s, [(y, AXIS_Z + z) for y, z in star_section(STAR_K, True)])
+    p.cut(s, BACK_GAP, name="clear of the star's small end")
+
+
+def clamp_x():
+    """Where the clamp's body starts: behind the cradle at its furthest, the pad and a little more."""
+    return HEX_X[1] + CRADLE_BACK + TRAVEL + CLAMP_PAD + 4.0
+
+
+def guide_x():
+    return (HEX_X[0] - 2.0, clamp_x() + CLAMP_BODY[0] + 2.0)
+
+
+def lips_x():
+    return (HEX_X[0] - 2.0, HEX_X[1] + CRADLE_BACK + TRAVEL + 2.0)
 
 
 def guide(p):
-    """Screwed to the base: a floor, a lip each side of the cradle, and an end wall for the push screw."""
+    """Screwed to the base: a floor, a lip each side of the cradle's way, and an upright plate the clamp bolts to on its side."""
     half = CRADLE_W / 2 + GUIDE_PLAY
-    x = (HEX_X[0] - 2.0, HEX_X[1] + TRAVEL + GUIDE_END[0])
+    x = guide_x()
     box(p, "floor", x, (-half - GUIDE_WALL - GUIDE_EAR, half + GUIDE_WALL + GUIDE_EAR), (0.0, GUIDE_FLOOR))
     for y in ((-half - GUIDE_WALL, -half), (half, half + GUIDE_WALL)):
-        box(p, "lip", x, y, (GUIDE_FLOOR, GUIDE_FLOOR + GUIDE_LIP), op="add")
-    box(p, "end wall", (x[1] - GUIDE_END[0], x[1]), (-half - GUIDE_WALL, half + GUIDE_WALL), (GUIDE_FLOOR, GUIDE_FLOOR + GUIDE_END[1]), op="add")
-    xbore(p, x[1] - GUIDE_END[0], x[1], 0.0, GUIDE_FLOOR + GUIDE_END[1] / 2 + 2.0, PUSH_D + 0.5, "push screw")
+        box(p, "lip", lips_x(), y, (GUIDE_FLOOR, GUIDE_FLOOR + GUIDE_LIP), op="add")
+    box(p, "clamp plate", (clamp_x(), x[1]), (CLAMP_BODY[1] / 2, CLAMP_BODY[1] / 2 + PLATE_T), (GUIDE_FLOOR, CLAMP_Z + CLAMP_BODY[2] / 2), op="add")
     s = p.sketch("top", GUIDE_FLOOR, "screws")
-    for sx in (x[0] + 8.0, x[1] - 8.0):
+    for sx in (x[0] + 8.0, (x[0] + x[1]) / 2, x[1] - 8.0):
         for sy in (-half - GUIDE_WALL - GUIDE_EAR / 2, half + GUIDE_WALL + GUIDE_EAR / 2):
             p.point(s, (sx, sy))
-    p.hole(s, 4.5, name="four screws to the base")
+    p.hole(s, 4.5, name="six screws to the base")
 
 
 def push(p):
-    """The push screw, home: its end on the cradle's face."""
-    z = GUIDE_FLOOR + GUIDE_END[1] / 2 + 2.0
-    x1 = HEX_X[1] + TRAVEL + GUIDE_END[0]
-    xcyl(p, "M6 push screw", HEX_X[1], x1 + 22.0, 0.0, z, PUSH_D)
-    xcyl(p, "knob", x1 + 22.0, x1 + 34.0, 0.0, z, 25.0, op="add")
+    """The toggle clamp, locked: on its side against the guide's plate, its plunger and pad on the cradle's back, its lever toward the front."""
+    back, x0 = HEX_X[1] + CRADLE_BACK, clamp_x()
+    l, across, wide = CLAMP_BODY
+    xcyl(p, "urethane pad", back, back + CLAMP_PAD, 0.0, CLAMP_Z, 18.0)
+    xcyl(p, "plunger", back + CLAMP_PAD, x0, 0.0, CLAMP_Z, 12.0, op="new")
+    box(p, "clamp body", (x0, x0 + l), (-across / 2, across / 2), (CLAMP_Z - wide / 2, CLAMP_Z + wide / 2), op="new")
+    box(p, "lever, locked", (x0 + l - 22.0, x0 + l - 8.0), (-across / 2 - 95.0, -across / 2), (CLAMP_Z - 6.0, CLAMP_Z + 6.0), op="add")
 
 
 def inside(q, poly):
@@ -642,7 +665,7 @@ def main():
     tip_drawn = AXIS_Z + max(z + math.sqrt(max(0.0, (BIT / 2) ** 2 - y * y)) for y, z in outline if abs(y) < BIT / 2) - BIT / 2
     parts = [("Base", base), ("Back wall", wall), ("Shaft supports SK20", supports), ("Shafts", shafts), ("Blocks SC20UU", blocks), ("Carriage square", square), ("Shelf", shelf),
              ("Cross slide", slide), ("Router", router), ("Bit", lambda p: bit(p, tip_drawn)), ("Cross screw", screw), ("Headstock", headstock), ("Bearings 6201", bearings), ("Crank", crank), ("Tailstock", tailstock),
-             ("Spindle and centre", spindle), ("Star", star), ("Cradle", cradle), ("Cradle guide", guide), ("Push screw", push),
+             ("Spindle and centre", spindle), ("Star", star), ("Cradle", cradle), ("Cradle guide", guide), ("Toggle clamp", push),
              ("Pattern", lambda p: pattern(p, outline, radius)), ("Stick", lambda p: stick(p, outline, radius)),
              ("Post 1", lambda p: post(p, JOURNAL_AT[0], pk, post_half, post_top)), ("Post 2", lambda p: post(p, JOURNAL_AT[1], pk, post_half, post_top))]
     tabs, bodies = {}, {}
@@ -661,7 +684,7 @@ def main():
     mcp.call("screenshot", {"tab": asm, "view": "-0.55,-0.7,0.5", "width": 1700, "height": 1100, "path": os.path.join(OUT, "mill.png")})
     mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{-PATTERN_T / 2}", "fit": f"{-PATTERN_T / 2},{BASE_Y[0]},-20,{-PATTERN_T / 2 + 1},{BASE_Y[1]},310", "width": 1500, "height": 1100, "path": os.path.join(OUT, "end.png")})
     mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{JOURNAL_AT[0]}", "fit": f"{JOURNAL_AT[0]},-60,-20,{JOURNAL_AT[0] + 1},60,110", "width": 1300, "height": 1000, "path": os.path.join(OUT, "journal.png")})
-    mcp.call("screenshot", {"tab": asm, "view": "-0.2,-1,0.35", "fit": f"{HEAD_X[0] - 70},-90,-20,{-PATTERN_T + 5},90,130", "width": 1500, "height": 1000, "path": os.path.join(OUT, "head.png")})
+    mcp.call("screenshot", {"tab": asm, "view": "0.35,-1,0.5", "fit": f"{HEAD_X[0] - 40},-120,-20,{10},90,120", "width": 1500, "height": 1000, "path": os.path.join(OUT, "head.png")})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "mill.pdf"),
                               "note": f"indexed stick mill: two stacked 20 mm shafts held at both ends, a twelve-pointed star and one sliding cradle for {STOPS} stops, round journals turned by a crank, the bit set on a pattern of the tile at full size; {len(passes)} passes a stick"}))
     for title, name in (("Pattern", "pattern"), ("Star", "star"), ("Cradle", "cradle"), ("Cradle guide", "cradle_guide"), ("Post 1", "post")):
@@ -678,8 +701,9 @@ def main():
         "slide": {"z": SLIDE_Z, "t": SLIDE_T, "travel": SLOT}, "carriage": {"square": SQUARE, "at": CAR_AT, "block_x": BLOCK_X, "blk_l": BLK_L, "face_y": FACE_Y},
         "bit_x": BIT_X, "pattern_t": PATTERN_T, "reach": REACH, "plunge": PLUNGE, "tip_drawn": tip_drawn, "upright_top": UPRIGHT_TOP,
         "star": {"af": HEX_AF, "r": HEX_R, "inside": STAR_IN, "t": HEX_T, "x": HEX_X, "spindle": SPINDLE_D, "taper": TAPER, "k": STAR_K, "tip_flat": TIP_FLAT, "ease": EASE,
-                 "section": star_section(), "cutter": star_section(cutter=True), "cradle_w": CRADLE_W, "cradle_top": cradle_top(), "travel": TRAVEL,
-                 "guide": {"floor": GUIDE_FLOOR, "lip": GUIDE_LIP, "wall": GUIDE_WALL, "play": GUIDE_PLAY, "end": GUIDE_END}, "bearing": {"d": BEARING_D, "w": BEARING_W}},
+                 "section": star_section(), "cutter": star_section(cutter=True), "cradle_w": CRADLE_W, "cradle_top": cradle_top(), "cradle_back": CRADLE_BACK, "back_gap": BACK_GAP, "travel": TRAVEL,
+                 "clamp": {"stroke": CLAMP_STROKE, "pad": CLAMP_PAD, "squeeze": CLAMP_SQUEEZE, "z": CLAMP_Z, "body": CLAMP_BODY, "x": clamp_x()},
+                 "guide": {"floor": GUIDE_FLOOR, "lip": GUIDE_LIP, "wall": GUIDE_WALL, "play": GUIDE_PLAY, "lips_x": lips_x(), "plate": PLATE_T}, "bearing": {"d": BEARING_D, "w": BEARING_W}},
         "rough": {"bit": ROUGH_BIT, "bite": ROUGH_BITE, "step": ROUGH_STEP, "allow": ALLOW, "ball_bite": BALL_BITE, "blank": BLANK, "cell": CELL, "places": len(roughs), "runs": rough_runs, "finish_runs": finish_runs,
                   "over_post": rough_over_post, **waste, "list": roughs},
         "plan": {"passes": len(passes), "per_stop": per_stop, "tip_low": min(tips), "tip_high": max(tips), "covered": covered, "worst": worst, "orphans": orphans,
@@ -688,7 +712,7 @@ def main():
     }
     with open(os.path.join(OUT, "mill.json"), "w") as f:
         json.dump(numbers, f, indent=1)
-    print(f"base {BASE_X[1] - BASE_X[0]:.0f} x {BASE_Y[1] - BASE_Y[0]:.0f}, shafts {SHAFT_X[1] - SHAFT_X[0]:.0f} long at z {RAIL_Z[0]:.0f} and {RAIL_Z[1]:.0f}, axis at {AXIS_Z:.0f}, the shelf's top at {SLIDE_Z:.0f}, star {2 * HEX_R:.1f} over its points tapering {TAPER:.0f} deg, the cradle {TRAVEL:.0f} off it to turn")
+    print(f"base {BASE_X[1] - BASE_X[0]:.0f} x {BASE_Y[1] - BASE_Y[0]:.0f}, shafts {SHAFT_X[1] - SHAFT_X[0]:.0f} long at z {RAIL_Z[0]:.0f} and {RAIL_Z[1]:.0f}, axis at {AXIS_Z:.0f}, the shelf's top at {SLIDE_Z:.0f}, star {2 * HEX_R:.1f} over its points tapering {TAPER:.0f} deg, the cradle {TRAVEL:.0f} off it on a toggle clamp to turn")
 
 
 if __name__ == "__main__":
