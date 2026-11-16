@@ -174,8 +174,45 @@ fn the_pattern_is_the_tile_and_the_hexagon_has_twelve_seats() {
     assert!(seated < 1.0);
     let (lo, _) = hexagon.bounds().unwrap();
     assert!((lo.z - f(&h["seat_corner"])).abs() < 1e-6);
-    one(&mut doc, "Cradle flat down");
-    for name in ["pattern", "hexagon", "cradle_corner", "cradle_flat"] {
+    let flat = one(&mut doc, "Cradle flat down");
+    // The tray: either cradle in the one pocket, with its play, on the tray's floor.
+    let tray = one(&mut doc, "Cradle tray");
+    let t = &h["tray"];
+    let (floor, lip, play) = (f(&t["floor"]), f(&t["lip"]), f(&t["play"]));
+    for (name, cradle) in [("corner", &corner), ("flat", &flat)] {
+        assert!(
+            overlap(cradle, &tray) < 1e-6,
+            "the {name} cradle is in the tray's plastic"
+        );
+        let (lo, hi) = cradle.bounds().unwrap();
+        assert!(
+            (lo.z - floor).abs() < 1e-6,
+            "the {name} cradle stands on the tray's floor"
+        );
+        assert!(
+            (hi.y - lo.y - f(&h["cradle_w"])).abs() < 1e-6
+                && (hi.x - lo.x - f(&h["t"])).abs() < 1e-6
+        );
+    }
+    let (lo, hi) = tray.bounds().unwrap();
+    assert!((hi.z - floor - lip).abs() < 1e-6 && lo.z.abs() < 1e-6);
+    let pocket = (f(&h["cradle_w"]) + 2.0 * play) * (f(&h["t"]) + 2.0 * play) * lip;
+    let block = (hi.x - lo.x) * (hi.y - lo.y) * (floor + lip);
+    let screws = 2.0 * std::f64::consts::PI * 2.25f64.powi(2) * (floor + lip);
+    println!(
+        "tray {:.0} mm3, a block less its pocket and screws gives {:.0}",
+        tray.volume(),
+        block - pocket - screws
+    );
+    assert!((tray.volume() - (block - pocket - screws)).abs() < 2.0);
+    assert!(play > 0.05 && play < 0.3 && lip >= 4.0);
+    for name in [
+        "pattern",
+        "hexagon",
+        "cradle_corner",
+        "cradle_flat",
+        "cradle_tray",
+    ] {
         assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
     }
 }

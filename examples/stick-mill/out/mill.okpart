@@ -6045,7 +6045,7 @@
                     "type": "point",
                     "pos": {
                       "x": -75.0,
-                      "y": 0.0
+                      "y": 3.0
                     }
                   },
                   {
@@ -6053,7 +6053,7 @@
                     "type": "point",
                     "pos": {
                       "x": 75.0,
-                      "y": 0.0
+                      "y": 3.0
                     }
                   },
                   {
@@ -6067,7 +6067,7 @@
                     "type": "point",
                     "pos": {
                       "x": 75.0,
-                      "y": 0.0
+                      "y": 3.0
                     }
                   },
                   {
@@ -6229,7 +6229,7 @@
                     "type": "point",
                     "pos": {
                       "x": -75.0,
-                      "y": 0.0
+                      "y": 3.0
                     }
                   },
                   {
@@ -6294,7 +6294,7 @@
                     "type": "point",
                     "pos": {
                       "x": -75.0,
-                      "y": 0.0
+                      "y": 3.0
                     }
                   },
                   {
@@ -6302,7 +6302,7 @@
                     "type": "point",
                     "pos": {
                       "x": 75.0,
-                      "y": 0.0
+                      "y": 3.0
                     }
                   },
                   {
@@ -6316,7 +6316,7 @@
                     "type": "point",
                     "pos": {
                       "x": 75.0,
-                      "y": 0.0
+                      "y": 3.0
                     }
                   },
                   {
@@ -6456,7 +6456,7 @@
                     "type": "point",
                     "pos": {
                       "x": -75.0,
-                      "y": 0.0
+                      "y": 3.0
                     }
                   },
                   {
@@ -6499,6 +6499,412 @@
     },
     {
       "id": 18,
+      "kind": {
+        "type": "part_studio",
+        "name": "Cradle tray",
+        "features": [
+          {
+            "id": 1,
+            "name": "cradle tray",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -124.15,
+                      "y": -97.15
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -95.85,
+                      "y": -97.15
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": -95.85,
+                      "y": -97.15
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": -95.85,
+                      "y": 97.15
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -95.85,
+                      "y": 97.15
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -124.15,
+                      "y": 97.15
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -124.15,
+                      "y": 97.15
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -124.15,
+                      "y": -97.15
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "cradle tray",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 8.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "pocket",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 8.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -120.15,
+                      "y": -75.15
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -99.85,
+                      "y": -75.15
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": -99.85,
+                      "y": -75.15
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": -99.85,
+                      "y": 75.15
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -99.85,
+                      "y": 75.15
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -120.15,
+                      "y": 75.15
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -120.15,
+                      "y": 75.15
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -120.15,
+                      "y": -75.15
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "pocket for a cradle",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 5.0,
+              "direction": "reverse",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 5,
+            "name": "screws",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 8.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -110.0,
+                      "y": -88.15
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -110.0,
+                      "y": 88.15
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "two screws to the base",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 5,
+              "diameter": 4.5,
+              "depth": 0.0,
+              "through_all": true,
+              "direction": "reverse",
+              "counterbore": null,
+              "countersink": null
+            }
+          }
+        ],
+        "next_id": 7,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 19,
       "kind": {
         "type": "part_studio",
         "name": "Pattern",
@@ -16985,7 +17391,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 20,
       "kind": {
         "type": "part_studio",
         "name": "Stick",
@@ -27420,13 +27826,13 @@
       }
     },
     {
-      "id": 20,
+      "id": 21,
       "kind": {
         "type": "assembly",
         "name": "Mill",
         "instances": [
           {
-            "id": 21,
+            "id": 22,
             "name": "Base",
             "studio": 1,
             "body": 0,
@@ -27445,7 +27851,7 @@
             }
           },
           {
-            "id": 22,
+            "id": 23,
             "name": "Back wall",
             "studio": 2,
             "body": 0,
@@ -27464,7 +27870,7 @@
             }
           },
           {
-            "id": 23,
+            "id": 24,
             "name": "Shaft supports SK20 1",
             "studio": 3,
             "body": 0,
@@ -27483,7 +27889,7 @@
             }
           },
           {
-            "id": 24,
+            "id": 25,
             "name": "Shaft supports SK20 2",
             "studio": 3,
             "body": 1,
@@ -27502,7 +27908,7 @@
             }
           },
           {
-            "id": 25,
+            "id": 26,
             "name": "Shaft supports SK20 3",
             "studio": 3,
             "body": 2,
@@ -27521,7 +27927,7 @@
             }
           },
           {
-            "id": 26,
+            "id": 27,
             "name": "Shaft supports SK20 4",
             "studio": 3,
             "body": 3,
@@ -27540,7 +27946,7 @@
             }
           },
           {
-            "id": 27,
+            "id": 28,
             "name": "Shafts 1",
             "studio": 4,
             "body": 0,
@@ -27559,7 +27965,7 @@
             }
           },
           {
-            "id": 28,
+            "id": 29,
             "name": "Shafts 2",
             "studio": 4,
             "body": 1,
@@ -27578,7 +27984,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 30,
             "name": "Blocks SC20UU 1",
             "studio": 5,
             "body": 0,
@@ -27597,7 +28003,7 @@
             }
           },
           {
-            "id": 30,
+            "id": 31,
             "name": "Blocks SC20UU 2",
             "studio": 5,
             "body": 1,
@@ -27616,7 +28022,7 @@
             }
           },
           {
-            "id": 31,
+            "id": 32,
             "name": "Blocks SC20UU 3",
             "studio": 5,
             "body": 2,
@@ -27635,7 +28041,7 @@
             }
           },
           {
-            "id": 32,
+            "id": 33,
             "name": "Blocks SC20UU 4",
             "studio": 5,
             "body": 3,
@@ -27654,7 +28060,7 @@
             }
           },
           {
-            "id": 33,
+            "id": 34,
             "name": "Carriage square",
             "studio": 6,
             "body": 0,
@@ -27673,7 +28079,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 35,
             "name": "Shelf",
             "studio": 7,
             "body": 0,
@@ -27692,7 +28098,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 36,
             "name": "Cross slide",
             "studio": 8,
             "body": 0,
@@ -27711,7 +28117,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 37,
             "name": "Router",
             "studio": 9,
             "body": 0,
@@ -27730,7 +28136,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 38,
             "name": "Bit",
             "studio": 10,
             "body": 0,
@@ -27749,7 +28155,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 39,
             "name": "Cross screw",
             "studio": 11,
             "body": 0,
@@ -27768,7 +28174,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 40,
             "name": "Headstock",
             "studio": 12,
             "body": 0,
@@ -27787,7 +28193,7 @@
             }
           },
           {
-            "id": 40,
+            "id": 41,
             "name": "Tailstock",
             "studio": 13,
             "body": 0,
@@ -27806,7 +28212,7 @@
             }
           },
           {
-            "id": 41,
+            "id": 42,
             "name": "Spindle and centre 1",
             "studio": 14,
             "body": 0,
@@ -27825,7 +28231,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 43,
             "name": "Spindle and centre 2",
             "studio": 14,
             "body": 1,
@@ -27844,7 +28250,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 44,
             "name": "Hexagon",
             "studio": 15,
             "body": 0,
@@ -27863,7 +28269,7 @@
             }
           },
           {
-            "id": 44,
+            "id": 45,
             "name": "Cradle corner down",
             "studio": 16,
             "body": 0,
@@ -27882,7 +28288,7 @@
             }
           },
           {
-            "id": 45,
+            "id": 46,
             "name": "Cradle flat down",
             "studio": 17,
             "body": 0,
@@ -27891,7 +28297,7 @@
               "position": {
                 "x": 380.0,
                 "y": -60.0,
-                "z": 0.0
+                "z": -3.0
               },
               "rotation": {
                 "x": 0.0,
@@ -27901,8 +28307,8 @@
             }
           },
           {
-            "id": 46,
-            "name": "Pattern",
+            "id": 47,
+            "name": "Cradle tray",
             "studio": 18,
             "body": 0,
             "fixed": true,
@@ -27920,9 +28326,28 @@
             }
           },
           {
-            "id": 47,
-            "name": "Stick",
+            "id": 48,
+            "name": "Pattern",
             "studio": 19,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 49,
+            "name": "Stick",
+            "studio": 20,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -27943,5 +28368,5 @@
       }
     }
   ],
-  "next_id": 48
+  "next_id": 50
 }

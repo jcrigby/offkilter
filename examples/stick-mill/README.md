@@ -23,7 +23,8 @@ cargo test -p ok-render --test stick_mill   # what CI runs
 
 1. Lift the hexagon out of its cradle, turn it a face, drop it back
    and clamp it. After six, change to the other cradle for the six
-   in between: one change a stick.
+   in between: one change a stick. Both cradles drop into the same
+   tray on the base, so the change does not move the axis.
 2. Bring the carriage over the pattern.
 3. Turn the cross screw to the pass's place: every pass is on a mark
    of the handwheel, 0.125 mm.
@@ -79,6 +80,7 @@ in the way, the next stop round cuts it with the side of the ball.
 | headstock | two plies, 140 wide | M12 studding in a slot, so it lifts 8.7 to turn |
 | hexagon | 100 across flats x 20, printed | on the spindle, outside the shelf's reach |
 | cradles, 2 | 150 wide x 20, printed | corner down and flat down |
+| cradle tray | 194 x 28 x 8, printed | screwed to the base under the hexagon; either cradle drops into its pocket, 0.15 of play, so both put the axis in one place |
 | pattern | the tile's section x 20, printed | on the spindle against the stick |
 | tail | one ply, an M10 pointed bolt | |
 

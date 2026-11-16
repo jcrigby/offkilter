@@ -17,8 +17,8 @@ carriage run along the stick.
     cargo test -p ok-render --test stick_mill   # what CI runs
 
 Outputs under out/: mill.okpart (every part in place and the machine
-assembled), pattern.stl, hexagon.stl, cradle_corner.stl and
-cradle_flat.stl to print, mill.png and end.png, mill.pdf, and
+assembled), pattern.stl, hexagon.stl, cradle_corner.stl,
+cradle_flat.stl and cradle_tray.stl to print, mill.png and end.png, mill.pdf, and
 mill.json (the numbers and the pass plan).
 """
 import json
@@ -83,6 +83,8 @@ HEX_AF, HEX_T = 100.0, 20.0                     # the hexagon, across its flats,
 HEX_R = HEX_AF / math.sqrt(3.0)                 # its corners' radius, 57.7
 HEX_X = (CAR_AT - SHELF_W / 2 - 15.0 - HEX_T, CAR_AT - SHELF_W / 2 - 15.0)   # outside the shelf's reach
 CRADLE_W, CRADLE_UP = 150.0, 22.0               # a cradle block across, and how far its cheeks stand over the seat
+TRAY_FLOOR, TRAY_LIP, TRAY_WALL, TRAY_PLAY = 3.0, 5.0, 4.0, 0.15   # a tray screwed to the base: either cradle drops into its pocket, in the same place
+TRAY_EAR = 18.0                                 # past the pocket at each end, for a screw
 HEAD_X = (HEX_X[0] - 25.0 - 2 * PLY, HEX_X[0] - 25.0)   # the headstock upright: two plies, the spindle in a slot so it can lift to turn
 TAIL_X = (STICK + 30.0, STICK + 30.0 + PLY)     # the tail centre's upright
 UPRIGHT_Y = 70.0
@@ -250,7 +252,7 @@ def cradle_outline(flat):
     lo_l, lo_r = seat[0], seat[-1]
     l = at(lo_l, [q for q in left_up if q[1] > lo_l[1] + 1e-6][0], top) if lo_l[1] < top else lo_l
     r = at(lo_r, [q for q in right_up if q[1] > lo_r[1] + 1e-6][0], top) if lo_r[1] < top else lo_r
-    return [(-w, 0.0), (w, 0.0), (w, top), r] + seat[::-1] + [l, (-w, top)], low
+    return [(-w, TRAY_FLOOR), (w, TRAY_FLOOR), (w, top), r] + seat[::-1] + [l, (-w, top)], low
 
 
 def cradle(p, flat):
@@ -258,6 +260,20 @@ def cradle(p, flat):
     s = p.sketch("right", HEX_X[0], "cradle")
     p.polygon(s, outline)
     p.extrude(s, HEX_T, name="cradle, flat down" if flat else "cradle, corner down")
+
+
+def tray(p):
+    """Screwed to the base under the hexagon: a pocket either cradle sits in."""
+    x = (HEX_X[0] - TRAY_PLAY - TRAY_WALL, HEX_X[1] + TRAY_PLAY + TRAY_WALL)
+    y = CRADLE_W / 2 + TRAY_PLAY + TRAY_WALL + TRAY_EAR
+    box(p, "cradle tray", x, (-y, y), (0.0, TRAY_FLOOR + TRAY_LIP))
+    s = p.sketch("top", TRAY_FLOOR + TRAY_LIP, "pocket")
+    p.rect(s, (HEX_X[0] - TRAY_PLAY, -CRADLE_W / 2 - TRAY_PLAY), (HEX_X[1] + TRAY_PLAY, CRADLE_W / 2 + TRAY_PLAY))
+    p.cut(s, TRAY_LIP, direction="reverse", name="pocket for a cradle")
+    s = p.sketch("top", TRAY_FLOOR + TRAY_LIP, "screws")
+    for sy in (-y + TRAY_EAR / 2, y - TRAY_EAR / 2):
+        p.point(s, ((HEX_X[0] + HEX_X[1]) / 2, sy))
+    p.hole(s, 4.5, name="two screws to the base")
 
 
 def pattern(p, outline):
@@ -381,7 +397,7 @@ def main():
     tip_drawn = AXIS_Z + max(z + math.sqrt(max(0.0, (BIT / 2) ** 2 - y * y)) for y, z in outline if abs(y) < BIT / 2) - BIT / 2
     parts = [("Base", base), ("Back wall", wall), ("Shaft supports SK20", supports), ("Shafts", shafts), ("Blocks SC20UU", blocks), ("Carriage square", square), ("Shelf", shelf),
              ("Cross slide", slide), ("Router", router), ("Bit", lambda p: bit(p, tip_drawn)), ("Cross screw", screw), ("Headstock", headstock), ("Tailstock", tailstock),
-             ("Spindle and centre", spindle), ("Hexagon", hexagon), ("Cradle corner down", lambda p: cradle(p, False)), ("Cradle flat down", lambda p: cradle(p, True)),
+             ("Spindle and centre", spindle), ("Hexagon", hexagon), ("Cradle corner down", lambda p: cradle(p, False)), ("Cradle flat down", lambda p: cradle(p, True)), ("Cradle tray", tray),
              ("Pattern", lambda p: pattern(p, outline)), ("Stick", lambda p: stick(p, outline))]
     tabs, bodies = {}, {}
     for i, (title, make) in enumerate(parts):
@@ -393,7 +409,7 @@ def main():
     asm = new_tab(mcp, {"type": "add_assembly", "name": "Mill"})
     ops = [{"type": "assembly", "tab": asm, "op": {"type": "add_instance", "studio": tabs[t], "body": k, "name": t if len(bodies[t]) == 1 else f"{t} {k + 1}", "fixed": True,
                                                         # the second cradle waits on the base, in front of the tail
-                                                        "placement": placed(STICK + 60.0 - HEX_X[0], -60.0, 0.0) if t == "Cradle flat down" else placed(0.0, 0.0, 0.0)}}
+                                                        "placement": placed(STICK + 60.0 - HEX_X[0], -60.0, -TRAY_FLOOR) if t == "Cradle flat down" else placed(0.0, 0.0, 0.0)}}
            for t, _ in parts for k in range(len(bodies[t]))]
     text = mcp.call("apply", {"ops": ops})
     if "ERROR:" in text:
@@ -402,7 +418,7 @@ def main():
     mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{-PATTERN_T / 2}", "fit": f"{-PATTERN_T / 2},{BASE_Y[0]},-20,{-PATTERN_T / 2 + 1},{BASE_Y[1]},360", "width": 1500, "height": 1100, "path": os.path.join(OUT, "end.png")})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "mill.pdf"),
                               "note": f"indexed stick mill: two stacked 20 mm shafts held at both ends, a hexagon in two cradles for {STOPS} stops, the bit set on a pattern of the tile at full size; {len(passes)} passes a stick"}))
-    for title, name in (("Pattern", "pattern"), ("Hexagon", "hexagon"), ("Cradle corner down", "cradle_corner"), ("Cradle flat down", "cradle_flat")):
+    for title, name in (("Pattern", "pattern"), ("Hexagon", "hexagon"), ("Cradle corner down", "cradle_corner"), ("Cradle flat down", "cradle_flat"), ("Cradle tray", "cradle_tray")):
         print(mcp.call("export", {"tab": tabs[title], "format": "stl", "path": os.path.join(OUT, f"{name}.stl")}))
     mcp.close()
     numbers = {
@@ -412,6 +428,7 @@ def main():
         "slide": {"z": SLIDE_Z, "t": SLIDE_T, "travel": SLOT}, "carriage": {"square": SQUARE, "at": CAR_AT, "block_x": BLOCK_X, "blk_l": BLK_L, "face_y": FACE_Y},
         "bit_x": BIT_X, "pattern_t": PATTERN_T, "reach": REACH, "plunge": PLUNGE, "tip_drawn": tip_drawn, "upright_top": UPRIGHT_TOP,
         "hexagon": {"af": HEX_AF, "r": HEX_R, "t": HEX_T, "x": HEX_X, "spindle": SPINDLE_D, "lift": LIFT,
+                    "cradle_w": CRADLE_W, "tray": {"floor": TRAY_FLOOR, "lip": TRAY_LIP, "wall": TRAY_WALL, "play": TRAY_PLAY, "ear": TRAY_EAR},
                     "seat_corner": cradle_outline(False)[1], "seat_flat": cradle_outline(True)[1], "corner": cradle_outline(False)[0], "flat": cradle_outline(True)[0]},
         "plan": {"passes": len(passes), "per_stop": per_stop, "tip_low": min(tips), "tip_high": max(tips), "covered": covered, "worst": worst, "orphans": orphans,
                  "list": passes},
