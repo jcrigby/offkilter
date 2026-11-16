@@ -76,6 +76,32 @@ stick is then milled in three spans of 60 mm between supports.
   cap. And nothing here stops the stick twisting.
 - Each journal costs 14 mm of stick.
 
+## Roughing
+
+The finishing passes alone would bury a 3 mm ball-nose in solid wood,
+so the build follows the waste (the blank less the tile, 767 mm² of
+section) on a grid and plans the bites that come first.
+
+1. **The straight bit, 6 mm**, the journals' bit. At each stop it
+   works across in places 3 mm apart. At a place, with the router
+   off, it is plunged until it touches the pattern and the depth stop
+   is set there over a 0.4 mm feeler: that is as deep as it may go
+   without reaching the tile, and nothing is measured. Then it goes
+   down to the stop in bites of at most 3 mm. 80 places, 133 runs of
+   the carriage, the deepest 17.1 mm in six bites: 78 % of the waste.
+2. **The ball-nose** then makes its 262 passes. 224 of them find less
+   than 1.5 mm standing and are one run. The other 38 take what they
+   find in bites of 1.5 mm, set the same way: touch the pattern, set
+   the depth stop, come down to it. 343 runs in all.
+
+Three of the ball-nose's passes are the hard ones: slots between
+lobes where the straight bit does not fit, 12.6 to 16.7 mm deep and
+the bit's own width, 32 runs between them. They are where the bit's
+taper and its stick-out matter most.
+
+A blank is taken to be the tile's hull and 2 mm over, as a saw
+leaves it.
+
 ## The plan
 
 `mill.json` lists every pass: its stop, its place across, and the
@@ -84,7 +110,7 @@ semicircle deep, a 0.7 mm line and a 3 mm ball-nose:
 
 | | |
 |---|---|
-| passes a stick | 262, 16 to 27 at each stop |
+| finishing passes a stick | 262, 16 to 27 at each stop; 343 runs with their bites, after 133 roughing |
 | ridge left between passes | 0.05 mm, to sand |
 | outline within 0.08 mm of a pass | 95 % |
 | the rest | up to 0.32 mm proud, in the tightest corners, for a file |
@@ -139,7 +165,10 @@ star, its cradle, the pattern and the wall; the axis is at the tile's fattest pl
 the circle that fits there, no pass touching a journal or coming
 within a millimetre of a post, the posts seated under the journals
 without passing through the stick, and the straight bit's plunges
-clearing the blank; and the plan's passes are a few hundred over all
+clearing the blank; no roughing bite reaches the tile less its
+allowance, every bite of either bit is within its limit, the straight
+bit takes over 70 % of the waste and under 1 % stands at the end;
+and the plan's passes are a few hundred over all
 twelve stops, on the handwheel's marks, within the bit's reach, the
 plunge and the cross travel, with 95 % of the outline cut and nothing
 left more than 0.4 mm proud.

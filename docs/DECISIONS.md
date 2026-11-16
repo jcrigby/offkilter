@@ -1321,3 +1321,24 @@ supports under them, at a third and two thirds.
   circle the journal is cut inside.
 - The journal's depth is set as every other depth is, by touching the
   bit on a printed master, here on the pattern's outer face.
+
+## 2026-11 · The stick mill's roughing: the pattern sets every depth, a grid counts the bites
+
+The plan was 262 finishing passes and nothing before them, so the
+first pass at a stop was a 3 mm ball-nose at full depth in solid
+wood. The owner asked for roughing.
+
+- Roughing depths are found as finishing depths are: the bit, off,
+  on the pattern. A flat 6 mm bit resting on the pattern is exactly
+  as deep as it can go there without cutting the tile; a feeler under
+  the depth stop leaves the allowance. A table of depths to dial lost:
+  the machine has no vertical scale and the point of it is that
+  nothing is measured.
+- The bites are counted by following the waste on a 0.15 mm grid in
+  the build script, in the order the cuts are made. It is a count for
+  the plan, not geometry the kernel owns, so it stays in the example.
+- The blank is taken as the tile's convex hull and 2 mm: what a saw
+  can leave, and it swings under the cross slide.
+- Three slots between lobes are too narrow for the straight bit and
+  stay with the ball-nose, up to 16.7 mm deep in twelve bites. A
+  second, narrower roughing bit lost for now: it is three places.

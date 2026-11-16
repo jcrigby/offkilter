@@ -360,6 +360,114 @@ fn the_journals_are_inside_the_tile_and_the_posts_clear_of_every_pass() {
     assert!(dir().join("out/post.stl").exists());
 }
 
+/// Roughing: the straight bit goes down at each place until it would
+/// touch the pattern, less an allowance, so it never cuts the tile; it
+/// and the ball-nose after it take the waste in bites within their
+/// limits, and most of the waste goes to the straight bit.
+#[test]
+fn roughing_takes_most_of_the_waste_in_bites_and_never_reaches_the_tile() {
+    let n = numbers();
+    let g = &n["rough"];
+    let outline: Vec<(f64, f64)> = n["tile"]["outline"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|q| (f(&q[0]), f(&q[1])))
+        .collect();
+    let (r, allow, bite) = (f(&g["bit"]) / 2.0, f(&g["allow"]), f(&g["bite"]));
+    let (mark, travel) = (f(&n["mark"]), f(&n["slide"]["travel"]));
+    let places = g["list"].as_array().unwrap();
+    assert_eq!(places.len() as u64, g["places"].as_u64().unwrap());
+    let mut runs = 0;
+    let (mut low, mut high) = (f64::MAX, f64::MIN);
+    for q in places {
+        let (k, y, tip) = (q["stop"].as_u64().unwrap(), f(&q["across"]), f(&q["tip"]));
+        let t = std::f64::consts::TAU * k as f64 / 12.0;
+        // The tile under the bit at this stop: nothing of it stands over the bit's end less the allowance.
+        let under = outline
+            .iter()
+            .map(|p| {
+                (
+                    -p.0 * t.sin() + p.1 * t.cos(),
+                    p.0 * t.cos() + p.1 * t.sin(),
+                )
+            })
+            .filter(|(u, _)| (u - y).abs() <= r)
+            .map(|(_, h)| h)
+            .fold(f64::MIN, f64::max);
+        assert!(
+            under <= tip - allow + 1e-3,
+            "a roughing bite reaches the tile"
+        );
+        assert!((f(&q["touch"]) + allow - tip).abs() < 1e-9);
+        let (depth, bites) = (f(&q["depth"]), q["bites"].as_u64().unwrap());
+        assert!(bites >= 1 && depth / bites as f64 <= bite + 1e-6);
+        assert!(y.abs() <= travel && ((y / mark).round() * mark - y).abs() < 1e-6);
+        runs += bites;
+        low = low.min(tip);
+        high = high.max(tip + depth);
+    }
+    assert_eq!(runs, g["runs"].as_u64().unwrap());
+    let (waste, rough, left, end) = (
+        f(&g["waste"]),
+        f(&g["rough_area"]),
+        f(&g["left_after_rough"]),
+        f(&g["left_at_end"]),
+    );
+    println!(
+        "waste {waste:.0} mm2: {} places and {runs} runs of the straight bit take {rough:.0}, the ball-nose {:.0}, {end:.1} stands",
+        places.len(),
+        left - end
+    );
+    assert!((rough + left - waste).abs() < 1e-6);
+    assert!(
+        rough > 0.7 * waste,
+        "the straight bit takes most of the waste"
+    );
+    assert!(end < 0.01 * waste, "all but the corners' ridges is cut");
+    // The blank: the tile's hull and a little over, so the waste is the hull's area less the tile's and a band round it.
+    let hull: Vec<(f64, f64)> = g["hull"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|q| (f(&q[0]), f(&q[1])))
+        .collect();
+    let (mut area, mut around) = (0.0, 0.0);
+    for i in 0..hull.len() {
+        let (a, b) = (hull[i], hull[(i + 1) % hull.len()]);
+        area += (a.0 * b.1 - b.0 * a.1) / 2.0;
+        around += (a.0 - b.0).hypot(a.1 - b.1);
+    }
+    let over = f(&g["blank"]);
+    let expect =
+        area.abs() + around * over + std::f64::consts::PI * over * over - f(&n["tile"]["area"]);
+    println!("the blank less the tile is {expect:.0} mm2");
+    assert!((waste - expect).abs() < 0.02 * expect);
+    // The ball-nose after it: every pass in bites within its limit, and far fewer deep ones than passes.
+    let ball = f(&g["ball_bite"]);
+    let passes = n["plan"]["list"].as_array().unwrap();
+    let mut finish = 0;
+    for q in passes {
+        let (depth, bites) = (f(&q["depth"]), q["bites"].as_u64().unwrap());
+        assert!(bites >= 1 && depth / bites as f64 <= ball + 1e-6);
+        finish += bites;
+    }
+    assert_eq!(finish, g["finish_runs"].as_u64().unwrap());
+    let deep = passes
+        .iter()
+        .filter(|q| q["bites"].as_u64().unwrap() > 1)
+        .count();
+    println!(
+        "{finish} runs of the ball-nose over {} passes, {deep} of them in more than one bite",
+        passes.len()
+    );
+    assert!(deep * 4 < passes.len());
+    // Inside the machine: the straight bit's range within the plunge, and clear of the posts.
+    assert!(high - low + 6.0 <= f(&n["plunge"]));
+    assert!(high <= f(&g["blank"]) + f(&n["tile"]["swing"]) + 1e-6);
+    assert!(f(&g["over_post"]) >= f(&n["journal"]["post"]["least"]));
+}
+
 /// The plan: a few hundred passes over all twelve stops, the outline
 /// nearly all within a ridge of one, and every pass inside the
 /// router's reach and plunge and the cross slide's travel.

@@ -37,6 +37,12 @@ EDGE, BULGE, GAP = 10.56, 0.4, 0.7              # the lid's edge; 0.8 of a semic
 BIT = 3.0                                       # a ball-nose, 1.5 radius: the kernel fillets the inside corners to it
 RIDGE = 0.05                                    # what a pass may leave standing between it and the next, to sand
 MARK = 0.125                                    # the cross screw's handwheel: ten marks a turn of M8
+ROUGH_BIT, ROUGH_BITE = 6.0, 3.0                # roughing: the journals' straight bit, and the most it takes at a bite
+ROUGH_STEP = 3.0                                # its places across, half its width apart
+ALLOW = 0.4                                     # what roughing leaves on the tile for the ball-nose: a feeler under the depth stop
+BALL_BITE = 1.5                                 # the most the ball-nose takes at a bite
+BLANK = 2.0                                     # the blank: sawn to the tile's hull and this much over
+CELL = 0.15                                     # the grid the waste is followed on
 STOPS = 12                                      # index positions, 30° apart
 STICK = 200.0                                   # the stick's length, as the cauls'
 
@@ -494,6 +500,94 @@ def plan(outline):
     return passes, sum(1 for v in left if v < 0.08) / n, reach, max(left), orphans
 
 
+def hull(points):
+    pts = sorted(set(points))
+    def half(seq):
+        out = []
+        for q in seq:
+            while len(out) >= 2 and (out[-1][0] - out[-2][0]) * (q[1] - out[-2][1]) - (out[-1][1] - out[-2][1]) * (q[0] - out[-2][0]) <= 0:
+                out.pop()
+            out.append(q)
+        return out
+    lower, upper = half(pts), half(pts[::-1])
+    return lower[:-1] + upper[:-1]
+
+
+def rough(outline, passes):
+    """The bites before the finish. The waste (the blank less the tile)
+    is followed on a grid. First the straight bit, stop by stop, at
+    places ROUGH_STEP apart: at each it may go down until it would
+    touch the pattern, which is how its depth is found (the bit on the
+    pattern, the depth stop set there over a feeler ALLOW thick), and
+    it gets there in bites of ROUGH_BITE. Then every finishing pass,
+    in order: what still stands over the ball's tip is its depth, and
+    it takes that in bites of BALL_BITE to the same touch."""
+    h_ = hull(outline)
+    lo_x, hi_x = min(q[0] for q in h_) - BLANK, max(q[0] for q in h_) + BLANK
+    lo_y, hi_y = min(q[1] for q in h_) - BLANK, max(q[1] for q in h_) + BLANK
+    cells = []
+    for i in range(int((hi_x - lo_x) / CELL) + 1):
+        for j in range(int((hi_y - lo_y) / CELL) + 1):
+            q = (lo_x + (i + 0.5) * CELL, lo_y + (j + 0.5) * CELL)
+            if not inside(q, outline) and (inside(q, h_) or min(near(q, h_[m - 1], h_[m]) for m in range(len(h_))) <= BLANK):
+                cells.append(q)
+    waste = len(cells) * CELL * CELL
+    alive = bytearray([1]) * len(cells)
+    frames = [((math.cos(t), math.sin(t)), (-math.sin(t), math.cos(t))) for t in (2 * math.pi * k / STOPS for k in range(STOPS))]
+    # per stop: the cells in bins a millimetre wide across, and the outline finely stepped
+    fine = []
+    for i in range(len(outline)):
+        a, b = outline[i - 1], outline[i]
+        m = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / 0.05))
+        fine.extend((a[0] + (b[0] - a[0]) * t / m, a[1] + (b[1] - a[1]) * t / m) for t in range(m))
+    bins, lines = [], []
+    for d, e in frames:
+        by = {}
+        for i, q in enumerate(cells):
+            u = q[0] * e[0] + q[1] * e[1]
+            by.setdefault(math.floor(u), []).append((u, q[0] * d[0] + q[1] * d[1], i))
+        bins.append(by)
+        lines.append([(q[0] * e[0] + q[1] * e[1], q[0] * d[0] + q[1] * d[1]) for q in fine])
+
+    def cut(k, y, tip, r, ball, dry=False):
+        """What a bit at y, its tip at tip, takes at stop k: the area, and how far the waste stood over its tip."""
+        took, top = [], tip
+        for b in range(math.floor(y - r), math.floor(y + r) + 1):
+            for u, h, i in bins[k].get(b, ()):
+                if alive[i] and abs(u - y) <= r and h >= (tip + r - math.sqrt(r * r - (u - y) ** 2) if ball else tip):
+                    took.append(i)
+                    top = max(top, h)
+        if not dry:
+            for i in took:
+                alive[i] = 0
+        return len(took) * CELL * CELL, top - tip
+
+    r6 = ROUGH_BIT / 2
+    roughs, rough_area = [], 0.0
+    for k in range(STOPS):
+        span = max(abs(u) for u, _ in lines[k])
+        n = int(span / ROUGH_STEP) + 1
+        for j in range(-n, n + 1):
+            y = j * ROUGH_STEP
+            under = [h for u, h in lines[k] if abs(u - y) <= r6]
+            if not under:
+                continue                              # beside the tile at this stop: another stop faces it
+            touch = max(under)                        # where the bit meets the pattern
+            area, depth = cut(k, y, touch + ALLOW, r6, False, dry=True)
+            if area < 1.0:
+                continue
+            cut(k, y, touch + ALLOW, r6, False)
+            rough_area += area
+            roughs.append({"stop": k, "across": y, "touch": round(touch, 3), "tip": round(touch + ALLOW, 3), "depth": round(depth, 3), "bites": max(1, math.ceil(depth / ROUGH_BITE - 1e-9)), "area": round(area, 2)})
+    left_after_rough = sum(alive) * CELL * CELL
+    rb = BIT / 2
+    for q in passes:
+        area, depth = cut(q["stop"], q["across"], q["tip"], rb, True)
+        q["depth"] = round(depth, 3)
+        q["bites"] = max(1, math.ceil(depth / BALL_BITE - 1e-9))
+    return roughs, {"waste": waste, "rough_area": rough_area, "left_after_rough": left_after_rough, "left_at_end": sum(alive) * CELL * CELL, "hull": h_}
+
+
 def placed(x, y, z):
     return {"position": {"x": x, "y": y, "z": z}, "rotation": {"x": 0.0, "y": 0.0, "z": 0.0}}
 
@@ -518,7 +612,15 @@ def main():
     need = lift_needed()
     if need > LIFT - 0.5:
         raise SystemExit(f"the star needs {need:.2f} to turn and the slot gives {LIFT}")
+    roughs, waste = rough(outline, passes)
+    rough_runs, finish_runs = sum(q["bites"] for q in roughs), sum(q["bites"] for q in passes)
+    r6 = ROUGH_BIT / 2
+    print(f"waste {waste['waste']:.0f} mm2 of section: {len(roughs)} roughing places take {waste['rough_area']:.0f} in {rough_runs} runs, the deepest {max(q['depth'] for q in roughs):.1f}; "
+          f"the ball-nose takes the {waste['left_after_rough']:.0f} left in {finish_runs} runs, {sum(1 for q in passes if q['bites'] > 1)} of its {len(passes)} passes in more than one bite, the deepest {max(q['depth'] for q in passes):.1f}; {waste['left_at_end']:.1f} stands at the end")
     flats, pk, post_half, post_top = post_seat(passes, apothem)
+    rough_over_post = min((q["tip"] - post_top for q in roughs if abs(q["across"]) < post_half + r6), default=99.0)
+    if rough_over_post < POST_CLEAR:
+        raise SystemExit(f"a roughing bite comes {rough_over_post:.2f} over a post")
     blank = max(math.hypot(x, y) for x, y in outline) + 2.0
     reach_y = blank * math.sin(math.radians(15.0))   # a stop clears the blank this far either side of its middle
     n_across = max(1, math.ceil((2 * reach_y) / (JOURNAL_BIT - 1.0)))
@@ -564,6 +666,8 @@ def main():
         "bit_x": BIT_X, "pattern_t": PATTERN_T, "reach": REACH, "plunge": PLUNGE, "tip_drawn": tip_drawn, "upright_top": UPRIGHT_TOP,
         "star": {"af": HEX_AF, "r": HEX_R, "inside": STAR_IN, "t": HEX_T, "x": HEX_X, "spindle": SPINDLE_D, "lift": LIFT, "lift_needed": need,
                  "cradle_w": CRADLE_W, "relief": RELIEF, "ease": EASE, "pocket": pocket(), "cradle": cradle_outline()},
+        "rough": {"bit": ROUGH_BIT, "bite": ROUGH_BITE, "step": ROUGH_STEP, "allow": ALLOW, "ball_bite": BALL_BITE, "blank": BLANK, "cell": CELL, "places": len(roughs), "runs": rough_runs, "finish_runs": finish_runs,
+                  "over_post": rough_over_post, **waste, "list": roughs},
         "plan": {"passes": len(passes), "per_stop": per_stop, "tip_low": min(tips), "tip_high": max(tips), "covered": covered, "worst": worst, "orphans": orphans,
                  "list": passes},
         "bodies": {k: [list(b) for b in v] for k, v in bodies.items()},

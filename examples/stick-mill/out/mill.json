@@ -2122,6 +2122,927 @@
    ]
   ]
  },
+ "rough": {
+  "bit": 6.0,
+  "bite": 3.0,
+  "step": 3.0,
+  "allow": 0.4,
+  "ball_bite": 1.5,
+  "blank": 2.0,
+  "cell": 0.15,
+  "places": 80,
+  "runs": 133,
+  "finish_runs": 343,
+  "over_post": 4.6083249492309974,
+  "waste": 766.9125,
+  "rough_area": 597.5099999999999,
+  "left_after_rough": 169.40249999999997,
+  "left_at_end": 5.085,
+  "hull": [
+   [
+    -22.587210505295637,
+    2.9754975408984823
+   ],
+   [
+    -22.539802960632503,
+    2.3095546250203665
+   ],
+   [
+    -22.37942203925638,
+    1.6666141104585943
+   ],
+   [
+    -22.111308110774548,
+    1.0661378834626998
+   ],
+   [
+    -21.74389267526841,
+    0.5261180080400756
+   ],
+   [
+    -11.9832047114072,
+    -13.25085179861847
+   ],
+   [
+    -11.522840501932237,
+    -13.727464156663142
+   ],
+   [
+    -10.99040891526058,
+    -14.113434859369299
+   ],
+   [
+    -10.40220787665843,
+    -14.397398072280733
+   ],
+   [
+    4.93928076178766,
+    -21.44825993008762
+   ],
+   [
+    5.576274041208452,
+    -21.63083623517442
+   ],
+   [
+    6.230358672396441,
+    -21.69888087549866
+   ],
+   [
+    6.88173732081401,
+    -21.650699712319135
+   ],
+   [
+    7.510879971987889,
+    -21.48804326672727
+   ],
+   [
+    8.104383629099999,
+    -21.213498403307806
+   ],
+   [
+    9.00820579900449,
+    -20.620610287758073
+   ],
+   [
+    9.825796875888976,
+    -19.936815705548124
+   ],
+   [
+    10.52620912080786,
+    -19.188146169306282
+   ],
+   [
+    21.202243270085503,
+    -5.9420005840207555
+   ],
+   [
+    21.635535251690406,
+    -5.336301373076559
+   ],
+   [
+    27.44669632889738,
+    5.548626953441728
+   ],
+   [
+    27.59830172299467,
+    5.8712485277169915
+   ],
+   [
+    27.77861803131396,
+    6.521914578496206
+   ],
+   [
+    27.845973664769858,
+    7.190509778777551
+   ],
+   [
+    27.798566120106727,
+    7.856452694655667
+   ],
+   [
+    27.638185198730604,
+    8.49939320921744
+   ],
+   [
+    27.370071270248772,
+    9.09986943621333
+   ],
+   [
+    27.002655834742633,
+    9.639889311635956
+   ],
+   [
+    26.547219895183858,
+    10.103414607360895
+   ],
+   [
+    26.01270524042802,
+    10.480131419949211
+   ],
+   [
+    25.047337985807822,
+    10.966420321815209
+   ],
+   [
+    24.046358968201595,
+    11.332577673199681
+   ],
+   [
+    23.047786008317203,
+    11.564817702300195
+   ],
+   [
+    -9.950438969147825,
+    18.042340367535544
+   ],
+   [
+    -10.60170064515561,
+    18.101329369891815
+   ],
+   [
+    -11.68087766257134,
+    18.039784285176104
+   ],
+   [
+    -12.730829596165758,
+    17.856396344454367
+   ],
+   [
+    -13.711739161508117,
+    17.558235629488856
+   ],
+   [
+    -14.59193905359949,
+    17.156484601618565
+   ],
+   [
+    -15.343413055252068,
+    16.666634882022805
+   ],
+   [
+    -15.943480110611272,
+    16.108007903696794
+   ],
+   [
+    -16.376772092216182,
+    15.502308692752598
+   ],
+   [
+    -22.187933169423165,
+    4.617380366234304
+   ],
+   [
+    -22.339538563520446,
+    4.294758791959042
+   ],
+   [
+    -22.519854871839737,
+    3.6440927411798256
+   ]
+  ],
+  "list": [
+   {
+    "stop": 0,
+    "across": -24.0,
+    "touch": 8.406,
+    "tip": 8.806,
+    "depth": 2.682,
+    "bites": 1,
+    "area": 3.13
+   },
+   {
+    "stop": 0,
+    "across": -21.0,
+    "touch": 11.279,
+    "tip": 11.679,
+    "depth": 2.209,
+    "bites": 1,
+    "area": 3.38
+   },
+   {
+    "stop": 0,
+    "across": -18.0,
+    "touch": 11.806,
+    "tip": 12.206,
+    "depth": 4.082,
+    "bites": 2,
+    "area": 9.29
+   },
+   {
+    "stop": 0,
+    "across": -15.0,
+    "touch": 11.806,
+    "tip": 12.206,
+    "depth": 6.482,
+    "bites": 3,
+    "area": 16.56
+   },
+   {
+    "stop": 0,
+    "across": -12.0,
+    "touch": 11.549,
+    "tip": 11.949,
+    "depth": 9.289,
+    "bites": 4,
+    "area": 24.73
+   },
+   {
+    "stop": 0,
+    "across": -9.0,
+    "touch": 21.127,
+    "tip": 21.527,
+    "depth": 1.961,
+    "bites": 1,
+    "area": 3.1
+   },
+   {
+    "stop": 0,
+    "across": -6.0,
+    "touch": 21.961,
+    "tip": 22.361,
+    "depth": 2.627,
+    "bites": 1,
+    "area": 5.96
+   },
+   {
+    "stop": 0,
+    "across": -3.0,
+    "touch": 21.961,
+    "tip": 22.361,
+    "depth": 4.277,
+    "bites": 2,
+    "area": 10.76
+   },
+   {
+    "stop": 0,
+    "across": 0.0,
+    "touch": 21.189,
+    "tip": 21.589,
+    "depth": 6.699,
+    "bites": 3,
+    "area": 20.09
+   },
+   {
+    "stop": 0,
+    "across": 3.0,
+    "touch": 27.626,
+    "tip": 28.026,
+    "depth": 1.612,
+    "bites": 1,
+    "area": 3.15
+   },
+   {
+    "stop": 0,
+    "across": 6.0,
+    "touch": 27.846,
+    "tip": 28.246,
+    "depth": 1.542,
+    "bites": 1,
+    "area": 4.7
+   },
+   {
+    "stop": 0,
+    "across": 9.0,
+    "touch": 27.846,
+    "tip": 28.246,
+    "depth": 1.242,
+    "bites": 1,
+    "area": 1.82
+   },
+   {
+    "stop": 0,
+    "across": 12.0,
+    "touch": 27.411,
+    "tip": 27.811,
+    "depth": 0.326,
+    "bites": 1,
+    "area": 1.15
+   },
+   {
+    "stop": 0,
+    "across": 15.0,
+    "touch": 9.587,
+    "tip": 9.987,
+    "depth": 17.101,
+    "bites": 6,
+    "area": 42.07
+   },
+   {
+    "stop": 0,
+    "across": 18.0,
+    "touch": -6.95,
+    "tip": -6.55,
+    "depth": 16.388,
+    "bites": 6,
+    "area": 46.17
+   },
+   {
+    "stop": 0,
+    "across": 21.0,
+    "touch": -9.846,
+    "tip": -9.446,
+    "depth": 2.784,
+    "bites": 1,
+    "area": 4.88
+   },
+   {
+    "stop": 1,
+    "across": -12.0,
+    "touch": 18.624,
+    "tip": 19.024,
+    "depth": 8.027,
+    "bites": 3,
+    "area": 7.31
+   },
+   {
+    "stop": 1,
+    "across": -6.0,
+    "touch": 28.253,
+    "tip": 28.653,
+    "depth": 1.138,
+    "bites": 1,
+    "area": 2.16
+   },
+   {
+    "stop": 1,
+    "across": 3.0,
+    "touch": 14.49,
+    "tip": 14.89,
+    "depth": 8.946,
+    "bites": 3,
+    "area": 23.98
+   },
+   {
+    "stop": 1,
+    "across": 6.0,
+    "touch": 14.49,
+    "tip": 14.89,
+    "depth": 1.093,
+    "bites": 1,
+    "area": 1.64
+   },
+   {
+    "stop": 1,
+    "across": 15.0,
+    "touch": 1.703,
+    "tip": 2.103,
+    "depth": 6.865,
+    "bites": 3,
+    "area": 15.01
+   },
+   {
+    "stop": 1,
+    "across": 18.0,
+    "touch": 1.703,
+    "tip": 2.103,
+    "depth": 1.091,
+    "bites": 1,
+    "area": 1.24
+   },
+   {
+    "stop": 1,
+    "across": 24.0,
+    "touch": -0.177,
+    "tip": 0.223,
+    "depth": 1.477,
+    "bites": 1,
+    "area": 2.25
+   },
+   {
+    "stop": 2,
+    "across": -18.0,
+    "touch": 22.082,
+    "tip": 22.482,
+    "depth": 1.165,
+    "bites": 1,
+    "area": 1.78
+   },
+   {
+    "stop": 2,
+    "across": -3.0,
+    "touch": 15.638,
+    "tip": 16.038,
+    "depth": 1.077,
+    "bites": 1,
+    "area": 1.17
+   },
+   {
+    "stop": 2,
+    "across": 0.0,
+    "touch": 15.638,
+    "tip": 16.038,
+    "depth": 1.132,
+    "bites": 1,
+    "area": 1.42
+   },
+   {
+    "stop": 2,
+    "across": 9.0,
+    "touch": 7.743,
+    "tip": 8.143,
+    "depth": 5.242,
+    "bites": 2,
+    "area": 9.88
+   },
+   {
+    "stop": 2,
+    "across": 21.0,
+    "touch": 10.481,
+    "tip": 10.881,
+    "depth": 0.806,
+    "bites": 1,
+    "area": 1.15
+   },
+   {
+    "stop": 2,
+    "across": 24.0,
+    "touch": 7.852,
+    "tip": 8.252,
+    "depth": 2.35,
+    "bites": 1,
+    "area": 3.08
+   },
+   {
+    "stop": 3,
+    "across": -15.0,
+    "touch": 5.662,
+    "tip": 6.062,
+    "depth": 4.214,
+    "bites": 2,
+    "area": 16.88
+   },
+   {
+    "stop": 3,
+    "across": -3.0,
+    "touch": 14.26,
+    "tip": 14.66,
+    "depth": 0.266,
+    "bites": 1,
+    "area": 1.28
+   },
+   {
+    "stop": 3,
+    "across": 0.0,
+    "touch": 11.47,
+    "tip": 11.87,
+    "depth": 2.756,
+    "bites": 1,
+    "area": 6.48
+   },
+   {
+    "stop": 3,
+    "across": 12.0,
+    "touch": 18.101,
+    "tip": 18.501,
+    "depth": 1.225,
+    "bites": 1,
+    "area": 2.54
+   },
+   {
+    "stop": 3,
+    "across": 18.0,
+    "touch": 16.868,
+    "tip": 17.268,
+    "depth": 1.258,
+    "bites": 1,
+    "area": 2.43
+   },
+   {
+    "stop": 3,
+    "across": 21.0,
+    "touch": 4.701,
+    "tip": 5.101,
+    "depth": 11.475,
+    "bites": 4,
+    "area": 36.09
+   },
+   {
+    "stop": 4,
+    "across": -18.0,
+    "touch": -2.034,
+    "tip": -1.634,
+    "depth": 1.619,
+    "bites": 1,
+    "area": 1.08
+   },
+   {
+    "stop": 4,
+    "across": 6.0,
+    "touch": 22.154,
+    "tip": 22.554,
+    "depth": 1.127,
+    "bites": 1,
+    "area": 2.36
+   },
+   {
+    "stop": 4,
+    "across": 12.0,
+    "touch": 15.163,
+    "tip": 15.563,
+    "depth": 4.631,
+    "bites": 2,
+    "area": 6.73
+   },
+   {
+    "stop": 4,
+    "across": 18.0,
+    "touch": 15.093,
+    "tip": 15.493,
+    "depth": 1.151,
+    "bites": 1,
+    "area": 1.44
+   },
+   {
+    "stop": 4,
+    "across": 21.0,
+    "touch": 13.954,
+    "tip": 14.354,
+    "depth": 1.12,
+    "bites": 1,
+    "area": 2.02
+   },
+   {
+    "stop": 5,
+    "across": -15.0,
+    "touch": 3.211,
+    "tip": 3.611,
+    "depth": 1.028,
+    "bites": 1,
+    "area": 1.46
+   },
+   {
+    "stop": 5,
+    "across": -6.0,
+    "touch": 21.934,
+    "tip": 22.334,
+    "depth": 1.017,
+    "bites": 1,
+    "area": 1.96
+   },
+   {
+    "stop": 5,
+    "across": 0.0,
+    "touch": 19.357,
+    "tip": 19.757,
+    "depth": 2.619,
+    "bites": 1,
+    "area": 3.19
+   },
+   {
+    "stop": 5,
+    "across": 12.0,
+    "touch": 20.847,
+    "tip": 21.247,
+    "depth": 1.144,
+    "bites": 1,
+    "area": 1.89
+   },
+   {
+    "stop": 5,
+    "across": 15.0,
+    "touch": 5.575,
+    "tip": 5.975,
+    "depth": 14.157,
+    "bites": 5,
+    "area": 47.59
+   },
+   {
+    "stop": 6,
+    "across": -9.0,
+    "touch": 16.577,
+    "tip": 16.977,
+    "depth": 0.936,
+    "bites": 1,
+    "area": 1.98
+   },
+   {
+    "stop": 6,
+    "across": -3.0,
+    "touch": 22.587,
+    "tip": 22.987,
+    "depth": 1.075,
+    "bites": 1,
+    "area": 2.27
+   },
+   {
+    "stop": 6,
+    "across": 3.0,
+    "touch": 21.165,
+    "tip": 21.565,
+    "depth": 2.047,
+    "bites": 1,
+    "area": 1.66
+   },
+   {
+    "stop": 6,
+    "across": 6.0,
+    "touch": 9.361,
+    "tip": 9.761,
+    "depth": 8.901,
+    "bites": 3,
+    "area": 26.17
+   },
+   {
+    "stop": 6,
+    "across": 12.0,
+    "touch": 12.832,
+    "tip": 13.232,
+    "depth": 2.13,
+    "bites": 1,
+    "area": 3.17
+   },
+   {
+    "stop": 6,
+    "across": 18.0,
+    "touch": -3.117,
+    "tip": -2.717,
+    "depth": 15.679,
+    "bites": 6,
+    "area": 60.07
+   },
+   {
+    "stop": 6,
+    "across": 21.0,
+    "touch": -3.117,
+    "tip": -2.717,
+    "depth": 3.379,
+    "bites": 2,
+    "area": 2.88
+   },
+   {
+    "stop": 6,
+    "across": 24.0,
+    "touch": -4.129,
+    "tip": -3.729,
+    "depth": 0.941,
+    "bites": 1,
+    "area": 1.96
+   },
+   {
+    "stop": 7,
+    "across": -21.0,
+    "touch": 7.273,
+    "tip": 7.673,
+    "depth": 0.846,
+    "bites": 1,
+    "area": 1.06
+   },
+   {
+    "stop": 7,
+    "across": -12.0,
+    "touch": 18.616,
+    "tip": 19.016,
+    "depth": 0.745,
+    "bites": 1,
+    "area": 1.08
+   },
+   {
+    "stop": 7,
+    "across": -6.0,
+    "touch": 17.342,
+    "tip": 17.742,
+    "depth": 1.23,
+    "bites": 1,
+    "area": 1.51
+   },
+   {
+    "stop": 7,
+    "across": -3.0,
+    "touch": 10.538,
+    "tip": 10.938,
+    "depth": 5.257,
+    "bites": 2,
+    "area": 8.66
+   },
+   {
+    "stop": 7,
+    "across": 0.0,
+    "touch": 12.308,
+    "tip": 12.708,
+    "depth": 4.16,
+    "bites": 2,
+    "area": 2.75
+   },
+   {
+    "stop": 7,
+    "across": 3.0,
+    "touch": 17.051,
+    "tip": 17.451,
+    "depth": 1.142,
+    "bites": 1,
+    "area": 1.35
+   },
+   {
+    "stop": 7,
+    "across": 6.0,
+    "touch": 17.051,
+    "tip": 17.451,
+    "depth": 1.367,
+    "bites": 1,
+    "area": 1.15
+   },
+   {
+    "stop": 7,
+    "across": 15.0,
+    "touch": 4.892,
+    "tip": 5.292,
+    "depth": 3.653,
+    "bites": 2,
+    "area": 7.81
+   },
+   {
+    "stop": 7,
+    "across": 24.0,
+    "touch": 6.475,
+    "tip": 6.875,
+    "depth": 1.313,
+    "bites": 1,
+    "area": 2.18
+   },
+   {
+    "stop": 8,
+    "across": -18.0,
+    "touch": 10.649,
+    "tip": 11.049,
+    "depth": 0.77,
+    "bites": 1,
+    "area": 1.46
+   },
+   {
+    "stop": 8,
+    "across": -12.0,
+    "touch": 10.18,
+    "tip": 10.58,
+    "depth": 1.283,
+    "bites": 1,
+    "area": 1.78
+   },
+   {
+    "stop": 8,
+    "across": 6.0,
+    "touch": 12.933,
+    "tip": 13.333,
+    "depth": 2.097,
+    "bites": 1,
+    "area": 4.18
+   },
+   {
+    "stop": 8,
+    "across": 9.0,
+    "touch": 10.751,
+    "tip": 11.151,
+    "depth": 2.09,
+    "bites": 1,
+    "area": 4.77
+   },
+   {
+    "stop": 8,
+    "across": 15.0,
+    "touch": 16.153,
+    "tip": 16.553,
+    "depth": 1.012,
+    "bites": 1,
+    "area": 2.32
+   },
+   {
+    "stop": 8,
+    "across": 21.0,
+    "touch": 13.538,
+    "tip": 13.938,
+    "depth": 2.747,
+    "bites": 1,
+    "area": 2.07
+   },
+   {
+    "stop": 8,
+    "across": 24.0,
+    "touch": -4.53,
+    "tip": -4.13,
+    "depth": 2.29,
+    "bites": 1,
+    "area": 3.31
+   },
+   {
+    "stop": 9,
+    "across": 0.0,
+    "touch": 12.035,
+    "tip": 12.435,
+    "depth": 8.339,
+    "bites": 3,
+    "area": 7.9
+   },
+   {
+    "stop": 9,
+    "across": 6.0,
+    "touch": 21.699,
+    "tip": 22.099,
+    "depth": 1.075,
+    "bites": 1,
+    "area": 1.89
+   },
+   {
+    "stop": 9,
+    "across": 15.0,
+    "touch": 7.935,
+    "tip": 8.335,
+    "depth": 9.589,
+    "bites": 4,
+    "area": 4.05
+   },
+   {
+    "stop": 9,
+    "across": 21.0,
+    "touch": 7.675,
+    "tip": 8.075,
+    "depth": 0.848,
+    "bites": 1,
+    "area": 1.17
+   },
+   {
+    "stop": 9,
+    "across": 27.0,
+    "touch": -5.549,
+    "tip": -5.149,
+    "depth": 1.623,
+    "bites": 1,
+    "area": 2.29
+   },
+   {
+    "stop": 10,
+    "across": -12.0,
+    "touch": 9.285,
+    "tip": 9.685,
+    "depth": 0.659,
+    "bites": 1,
+    "area": 1.12
+   },
+   {
+    "stop": 10,
+    "across": -3.0,
+    "touch": 22.424,
+    "tip": 22.824,
+    "depth": 1.116,
+    "bites": 1,
+    "area": 1.75
+   },
+   {
+    "stop": 10,
+    "across": 6.0,
+    "touch": 14.155,
+    "tip": 14.555,
+    "depth": 4.078,
+    "bites": 2,
+    "area": 5.35
+   },
+   {
+    "stop": 10,
+    "across": 21.0,
+    "touch": 9.694,
+    "tip": 10.094,
+    "depth": 1.778,
+    "bites": 1,
+    "area": 1.1
+   },
+   {
+    "stop": 11,
+    "across": -12.0,
+    "touch": 18.802,
+    "tip": 19.202,
+    "depth": 0.888,
+    "bites": 1,
+    "area": 1.08
+   },
+   {
+    "stop": 11,
+    "across": -3.0,
+    "touch": 12.407,
+    "tip": 12.807,
+    "depth": 3.772,
+    "bites": 2,
+    "area": 13.75
+   }
+  ]
+ },
  "plan": {
   "passes": 262,
   "per_stop": [
@@ -2147,1312 +3068,1836 @@
    {
     "stop": 0,
     "across": -17.125,
-    "tip": 11.702
+    "tip": 11.702,
+    "depth": 0.236,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": -16.0,
-    "tip": 11.804
+    "tip": 11.804,
+    "depth": 0.134,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": -15.0,
-    "tip": 11.661
+    "tip": 11.661,
+    "depth": 0.277,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": -13.375,
-    "tip": 9.694
+    "tip": 9.694,
+    "depth": 1.944,
+    "bites": 2
    },
    {
     "stop": 0,
     "across": -13.25,
-    "tip": 9.436
+    "tip": 9.436,
+    "depth": 0.702,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": -13.0,
-    "tip": 9.041
+    "tip": 9.041,
+    "depth": 0.647,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": -12.5,
-    "tip": 8.543
+    "tip": 8.543,
+    "depth": 0.545,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": -11.875,
-    "tip": 8.11
+    "tip": 8.11,
+    "depth": 0.528,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": -11.0,
-    "tip": 7.702
+    "tip": 7.702,
+    "depth": 1.536,
+    "bites": 2
    },
    {
     "stop": 0,
     "across": -10.125,
-    "tip": 7.433
+    "tip": 7.433,
+    "depth": 2.255,
+    "bites": 2
    },
    {
     "stop": 0,
     "across": -2.0,
-    "tip": 20.567
+    "tip": 20.567,
+    "depth": 1.721,
+    "bites": 2
    },
    {
     "stop": 0,
     "across": -1.375,
-    "tip": 20.397
+    "tip": 20.397,
+    "depth": 0.691,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": -0.5,
-    "tip": 20.34
+    "tip": 20.34,
+    "depth": 1.048,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": 0.375,
-    "tip": 20.42
+    "tip": 20.42,
+    "depth": 0.968,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": 1.375,
-    "tip": 20.656
+    "tip": 20.656,
+    "depth": 0.882,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": 6.25,
-    "tip": 27.754
+    "tip": 27.754,
+    "depth": 0.384,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": 7.125,
-    "tip": 27.845
+    "tip": 27.845,
+    "depth": 0.293,
+    "bites": 1
    },
    {
     "stop": 0,
     "across": 8.125,
-    "tip": 27.774
+    "tip": 27.774,
+    "depth": 0.364,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": -18.125,
-    "tip": 2.396
+    "tip": 2.396,
+    "depth": 12.639,
+    "bites": 9
    },
    {
     "stop": 1,
     "across": -14.75,
-    "tip": 16.906
+    "tip": 16.906,
+    "depth": 0.634,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": -13.875,
-    "tip": 16.706
+    "tip": 16.706,
+    "depth": 0.314,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": -13.375,
-    "tip": 16.578
+    "tip": 16.578,
+    "depth": 0.128,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": -12.625,
-    "tip": 16.641
+    "tip": 16.641,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": -6.75,
-    "tip": 28.156
+    "tip": 28.156,
+    "depth": 0.435,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": -5.875,
-    "tip": 28.251
+    "tip": 28.251,
+    "depth": 0.381,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": -4.875,
-    "tip": 28.179
+    "tip": 28.179,
+    "depth": 0.473,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 2.0,
-    "tip": 14.153
+    "tip": 14.153,
+    "depth": 0.729,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 2.875,
-    "tip": 14.4
+    "tip": 14.4,
+    "depth": 0.447,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 3.875,
-    "tip": 14.489
+    "tip": 14.489,
+    "depth": 0.398,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 5.125,
-    "tip": 14.412
+    "tip": 14.412,
+    "depth": 0.461,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 6.25,
-    "tip": 14.215
+    "tip": 14.215,
+    "depth": 0.588,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 12.375,
-    "tip": 0.721
+    "tip": 0.721,
+    "depth": 2.27,
+    "bites": 2
    },
    {
     "stop": 1,
     "across": 12.875,
-    "tip": 0.586
+    "tip": 0.586,
+    "depth": 0.817,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 13.375,
-    "tip": 0.537
+    "tip": 0.537,
+    "depth": 1.001,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 13.875,
-    "tip": 0.568
+    "tip": 0.568,
+    "depth": 1.53,
+    "bites": 2
    },
    {
     "stop": 1,
     "across": 14.375,
-    "tip": 0.681
+    "tip": 0.681,
+    "depth": 1.382,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 15.125,
-    "tip": 1.028
+    "tip": 1.028,
+    "depth": 1.055,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 15.875,
-    "tip": 1.372
+    "tip": 1.372,
+    "depth": 0.696,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 16.75,
-    "tip": 1.611
+    "tip": 1.611,
+    "depth": 0.478,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 17.625,
-    "tip": 1.701
+    "tip": 1.701,
+    "depth": 0.393,
+    "bites": 1
    },
    {
     "stop": 1,
     "across": 18.625,
-    "tip": 1.63
+    "tip": 1.63,
+    "depth": 0.449,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": -18.25,
-    "tip": 21.991
+    "tip": 21.991,
+    "depth": 0.487,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": -17.25,
-    "tip": 22.082
+    "tip": 22.082,
+    "depth": 0.391,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": -16.0,
-    "tip": 22.006
+    "tip": 22.006,
+    "depth": 0.461,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": -14.75,
-    "tip": 21.781
+    "tip": 21.781,
+    "depth": 0.591,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": -8.75,
-    "tip": 8.317
+    "tip": 8.317,
+    "depth": 4.434,
+    "bites": 3
    },
    {
     "stop": 2,
     "across": -8.25,
-    "tip": 8.181
+    "tip": 8.181,
+    "depth": 3.959,
+    "bites": 3
    },
    {
     "stop": 2,
     "across": -7.75,
-    "tip": 8.13
+    "tip": 8.13,
+    "depth": 4.92,
+    "bites": 4
    },
    {
     "stop": 2,
     "across": -7.5,
-    "tip": 8.15
+    "tip": 8.15,
+    "depth": 4.825,
+    "bites": 4
    },
    {
     "stop": 2,
     "across": -7.375,
-    "tip": 8.171
+    "tip": 8.171,
+    "depth": 4.859,
+    "bites": 4
    },
    {
     "stop": 2,
     "across": -7.25,
-    "tip": 9.882
+    "tip": 9.882,
+    "depth": 3.073,
+    "bites": 3
    },
    {
     "stop": 2,
     "across": -7.25,
-    "tip": 9.882
+    "tip": 9.882,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": -7.125,
-    "tip": 10.856
+    "tip": 10.856,
+    "depth": 2.228,
+    "bites": 2
    },
    {
     "stop": 2,
     "across": -7.0,
-    "tip": 11.39
+    "tip": 11.39,
+    "depth": 1.749,
+    "bites": 2
    },
    {
     "stop": 2,
     "across": -6.625,
-    "tip": 12.263
+    "tip": 12.263,
+    "depth": 1.061,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": -1.25,
-    "tip": 15.519
+    "tip": 15.519,
+    "depth": 0.502,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": 0.0,
-    "tip": 15.638
+    "tip": 15.638,
+    "depth": 0.398,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": 1.125,
-    "tip": 15.571
+    "tip": 15.571,
+    "depth": 0.46,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": 8.0,
-    "tip": 6.778
+    "tip": 6.778,
+    "depth": 1.355,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": 8.5,
-    "tip": 6.623
+    "tip": 6.623,
+    "depth": 0.22,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": 9.0,
-    "tip": 6.561
+    "tip": 6.561,
+    "depth": 0.132,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": 9.625,
-    "tip": 6.614
+    "tip": 6.614,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": 15.375,
-    "tip": 10.756
+    "tip": 10.756,
+    "depth": 0.687,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": 16.375,
-    "tip": 10.861
+    "tip": 10.861,
+    "depth": 0.282,
+    "bites": 1
    },
    {
     "stop": 2,
     "across": 17.25,
-    "tip": 10.793
+    "tip": 10.793,
+    "depth": 0.365,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -23.25,
-    "tip": 11.551
+    "tip": 11.551,
+    "depth": 0.375,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -22.125,
-    "tip": 11.656
+    "tip": 11.656,
+    "depth": 0.27,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -21.0,
-    "tip": 11.597
+    "tip": 11.597,
+    "depth": 0.329,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -15.25,
-    "tip": 3.525
+    "tip": 3.525,
+    "depth": 2.401,
+    "bites": 2
    },
    {
     "stop": 3,
     "across": -14.5,
-    "tip": 3.019
+    "tip": 3.019,
+    "depth": 0.807,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -14.0,
-    "tip": 2.773
+    "tip": 2.773,
+    "depth": 0.453,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -13.5,
-    "tip": 2.633
+    "tip": 2.633,
+    "depth": 0.143,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -13.0,
-    "tip": 2.585
+    "tip": 2.585,
+    "depth": 0.041,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -6.5,
-    "tip": 14.164
+    "tip": 14.164,
+    "depth": 0.762,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -5.5,
-    "tip": 14.26
+    "tip": 14.26,
+    "depth": 0.366,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": -4.5,
-    "tip": 14.134
+    "tip": 14.134,
+    "depth": 0.492,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 0.375,
-    "tip": 9.902
+    "tip": 9.902,
+    "depth": 1.874,
+    "bites": 2
    },
    {
     "stop": 3,
     "across": 1.375,
-    "tip": 9.718
+    "tip": 9.718,
+    "depth": 0.558,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 2.375,
-    "tip": 9.654
+    "tip": 9.654,
+    "depth": 0.172,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 3.0,
-    "tip": 9.712
+    "tip": 9.712,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 9.625,
-    "tip": 18.007
+    "tip": 18.007,
+    "depth": 0.369,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 10.625,
-    "tip": 18.101
+    "tip": 18.101,
+    "depth": 0.275,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 11.875,
-    "tip": 18.027
+    "tip": 18.027,
+    "depth": 0.349,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 13.125,
-    "tip": 17.804
+    "tip": 17.804,
+    "depth": 0.572,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 19.125,
-    "tip": 4.341
+    "tip": 4.341,
+    "depth": 1.585,
+    "bites": 2
    },
    {
     "stop": 3,
     "across": 19.625,
-    "tip": 4.201
+    "tip": 4.201,
+    "depth": 0.825,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 20.125,
-    "tip": 4.148
+    "tip": 4.148,
+    "depth": 0.878,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 20.625,
-    "tip": 4.173
+    "tip": 4.173,
+    "depth": 0.853,
+    "bites": 1
    },
    {
     "stop": 3,
     "across": 21.25,
-    "tip": 4.335
+    "tip": 4.335,
+    "depth": 0.691,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -23.625,
-    "tip": -0.323
+    "tip": -0.323,
+    "depth": 0.318,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -22.625,
-    "tip": -0.228
+    "tip": -0.228,
+    "depth": 0.208,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -21.625,
-    "tip": -0.356
+    "tip": -0.356,
+    "depth": 0.321,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -20.0,
-    "tip": -1.904
+    "tip": -1.904,
+    "depth": 1.609,
+    "bites": 2
    },
    {
     "stop": 4,
     "across": -20.0,
-    "tip": -1.904
+    "tip": -1.904,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -19.875,
-    "tip": -2.486
+    "tip": -2.486,
+    "depth": 1.037,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -19.5,
-    "tip": -3.048
+    "tip": -3.048,
+    "depth": 0.95,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -19.0,
-    "tip": -3.531
+    "tip": -3.531,
+    "depth": 0.543,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -18.375,
-    "tip": -3.951
+    "tip": -3.951,
+    "depth": 0.639,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -17.625,
-    "tip": -4.308
+    "tip": -4.308,
+    "depth": 0.607,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -16.75,
-    "tip": -4.588
+    "tip": -4.588,
+    "depth": 0.367,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -8.5,
-    "tip": 8.516
+    "tip": 8.516,
+    "depth": 1.397,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -7.875,
-    "tip": 8.358
+    "tip": 8.358,
+    "depth": 1.272,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -7.125,
-    "tip": 8.301
+    "tip": 8.301,
+    "depth": 0.809,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -6.25,
-    "tip": 8.373
+    "tip": 8.373,
+    "depth": 0.292,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": -5.25,
-    "tip": 8.602
+    "tip": 8.602,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": 2.875,
-    "tip": 22.045
+    "tip": 22.045,
+    "depth": 0.506,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": 4.0,
-    "tip": 22.153
+    "tip": 22.153,
+    "depth": 0.363,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": 5.125,
-    "tip": 22.096
+    "tip": 22.096,
+    "depth": 0.445,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": 12.125,
-    "tip": 13.276
+    "tip": 13.276,
+    "depth": 1.976,
+    "bites": 2
    },
    {
     "stop": 4,
     "across": 12.625,
-    "tip": 13.132
+    "tip": 13.132,
+    "depth": 0.232,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": 13.125,
-    "tip": 13.081
+    "tip": 13.081,
+    "depth": 0.098,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": 13.75,
-    "tip": 13.142
+    "tip": 13.142,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 4,
     "across": 16.625,
-    "tip": 15.066
+    "tip": 15.066,
+    "depth": 0.383,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": -17.75,
-    "tip": -11.318
+    "tip": -11.318,
+    "depth": 0.217,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": -14.5,
-    "tip": 3.196
+    "tip": 3.196,
+    "depth": 0.364,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": -13.5,
-    "tip": 2.986
+    "tip": 2.986,
+    "depth": 0.403,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": -13.0,
-    "tip": 2.88
+    "tip": 2.88,
+    "depth": 0.134,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": -6.25,
-    "tip": 21.837
+    "tip": 21.837,
+    "depth": 0.494,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": -5.25,
-    "tip": 21.934
+    "tip": 21.934,
+    "depth": 0.392,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": -4.25,
-    "tip": 21.81
+    "tip": 21.81,
+    "depth": 0.441,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": 0.625,
-    "tip": 17.578
+    "tip": 17.578,
+    "depth": 1.644,
+    "bites": 2
    },
    {
     "stop": 5,
     "across": 1.625,
-    "tip": 17.393
+    "tip": 17.393,
+    "depth": 0.533,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": 2.625,
-    "tip": 17.328
+    "tip": 17.328,
+    "depth": 0.169,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": 3.25,
-    "tip": 17.385
+    "tip": 17.385,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": 7.75,
-    "tip": 21.464
+    "tip": 21.464,
+    "depth": 0.548,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": 12.25,
-    "tip": 3.564
+    "tip": 3.564,
+    "depth": 15.569,
+    "bites": 11
    },
    {
     "stop": 5,
     "across": 12.75,
-    "tip": 3.604
+    "tip": 3.604,
+    "depth": 1.021,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": 13.25,
-    "tip": 3.734
+    "tip": 3.734,
+    "depth": 1.186,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": 13.75,
-    "tip": 3.964
+    "tip": 3.964,
+    "depth": 1.195,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": 14.125,
-    "tip": 4.206
+    "tip": 4.206,
+    "depth": 1.268,
+    "bites": 1
    },
    {
     "stop": 5,
     "across": 14.625,
-    "tip": 4.705
+    "tip": 4.705,
+    "depth": 1.009,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": -12.125,
-    "tip": 15.296
+    "tip": 15.296,
+    "depth": 1.266,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": -11.5,
-    "tip": 15.135
+    "tip": 15.135,
+    "depth": 1.277,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": -10.75,
-    "tip": 15.076
+    "tip": 15.076,
+    "depth": 0.736,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": -9.875,
-    "tip": 15.146
+    "tip": 15.146,
+    "depth": 0.216,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": -8.875,
-    "tip": 15.374
+    "tip": 15.374,
+    "depth": 0.288,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": -3.875,
-    "tip": 22.502
+    "tip": 22.502,
+    "depth": 0.36,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": -3.0,
-    "tip": 22.587
+    "tip": 22.587,
+    "depth": 0.275,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": -2.125,
-    "tip": 22.528
+    "tip": 22.528,
+    "depth": 0.334,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 4.625,
-    "tip": 8.883
+    "tip": 8.883,
+    "depth": 0.779,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 5.625,
-    "tip": 8.7
+    "tip": 8.7,
+    "depth": 0.962,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 6.625,
-    "tip": 8.637
+    "tip": 8.637,
+    "depth": 0.725,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 7.125,
-    "tip": 8.674
+    "tip": 8.674,
+    "depth": 0.238,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 7.625,
-    "tip": 8.803
+    "tip": 8.803,
+    "depth": 0.109,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 11.75,
-    "tip": 12.768
+    "tip": 12.768,
+    "depth": 0.344,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 16.25,
-    "tip": -5.127
+    "tip": -5.127,
+    "depth": 16.739,
+    "bites": 12
    },
    {
     "stop": 6,
     "across": 16.75,
-    "tip": -5.083
+    "tip": -5.083,
+    "depth": 0.795,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 17.25,
-    "tip": -4.95
+    "tip": -4.95,
+    "depth": 1.262,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 17.75,
-    "tip": -4.716
+    "tip": -4.716,
+    "depth": 1.628,
+    "bites": 2
    },
    {
     "stop": 6,
     "across": 18.125,
-    "tip": -4.467
+    "tip": -4.467,
+    "depth": 1.379,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 18.5,
-    "tip": -4.122
+    "tip": -4.122,
+    "depth": 1.034,
+    "bites": 1
    },
    {
     "stop": 6,
     "across": 19.625,
-    "tip": -3.162
+    "tip": -3.162,
+    "depth": 0.074,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -21.0,
-    "tip": 7.261
+    "tip": 7.261,
+    "depth": 0.404,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -20.0,
-    "tip": 7.038
+    "tip": 7.038,
+    "depth": 0.442,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -19.5,
-    "tip": 6.943
+    "tip": 6.943,
+    "depth": 0.113,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -18.875,
-    "tip": 6.989
+    "tip": 6.989,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -12.875,
-    "tip": 18.528
+    "tip": 18.528,
+    "depth": 0.468,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -12.0,
-    "tip": 18.616
+    "tip": 18.616,
+    "depth": 0.346,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -11.125,
-    "tip": 18.554
+    "tip": 18.554,
+    "depth": 0.223,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -4.375,
-    "tip": 9.772
+    "tip": 9.772,
+    "depth": 1.161,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -3.75,
-    "tip": 9.602
+    "tip": 9.602,
+    "depth": 1.267,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -2.875,
-    "tip": 9.544
+    "tip": 9.544,
+    "depth": 0.675,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -2.0,
-    "tip": 9.625
+    "tip": 9.625,
+    "depth": 0.3,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": -1.0,
-    "tip": 9.86
+    "tip": 9.86,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": 3.875,
-    "tip": 16.958
+    "tip": 16.958,
+    "depth": 0.475,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": 4.75,
-    "tip": 17.049
+    "tip": 17.049,
+    "depth": 0.369,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": 5.75,
-    "tip": 16.979
+    "tip": 16.979,
+    "depth": 0.459,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": 12.5,
-    "tip": 3.329
+    "tip": 3.329,
+    "depth": 2.262,
+    "bites": 2
    },
    {
     "stop": 7,
     "across": 13.375,
-    "tip": 3.167
+    "tip": 3.167,
+    "depth": 1.471,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": 14.375,
-    "tip": 3.099
+    "tip": 3.099,
+    "depth": 0.834,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": 14.875,
-    "tip": 3.128
+    "tip": 3.128,
+    "depth": 0.381,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": 15.375,
-    "tip": 3.249
+    "tip": 3.249,
+    "depth": 0.225,
+    "bites": 1
    },
    {
     "stop": 7,
     "across": 19.5,
-    "tip": 7.24
+    "tip": 7.24,
+    "depth": 0.473,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -18.75,
-    "tip": 10.563
+    "tip": 10.563,
+    "depth": 0.182,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -17.875,
-    "tip": 10.648
+    "tip": 10.648,
+    "depth": 0.057,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -16.625,
-    "tip": 10.583
+    "tip": 10.583,
+    "depth": 0.157,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -15.375,
-    "tip": 10.371
+    "tip": 10.371,
+    "depth": 0.378,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -10.75,
-    "tip": 7.313
+    "tip": 7.313,
+    "depth": 1.711,
+    "bites": 2
    },
    {
     "stop": 8,
     "across": -10.375,
-    "tip": 6.437
+    "tip": 6.437,
+    "depth": 1.358,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -10.375,
-    "tip": 6.437
+    "tip": 6.437,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -10.25,
-    "tip": 6.176
+    "tip": 6.176,
+    "depth": 0.724,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -10.125,
-    "tip": 6.093
+    "tip": 6.093,
+    "depth": 0.077,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -10.0,
-    "tip": 6.066
+    "tip": 6.066,
+    "depth": 0.009,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -9.25,
-    "tip": 6.112
+    "tip": 6.112,
+    "depth": 0.088,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -3.375,
-    "tip": 17.627
+    "tip": 17.627,
+    "depth": 0.844,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -2.5,
-    "tip": 17.717
+    "tip": 17.717,
+    "depth": 0.379,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": -1.625,
-    "tip": 17.658
+    "tip": 17.658,
+    "depth": 0.213,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": 5.125,
-    "tip": 8.879
+    "tip": 8.879,
+    "depth": 4.168,
+    "bites": 3
    },
    {
     "stop": 8,
     "across": 5.875,
-    "tip": 8.693
+    "tip": 8.693,
+    "depth": 1.754,
+    "bites": 2
    },
    {
     "stop": 8,
     "across": 6.625,
-    "tip": 8.645
+    "tip": 8.645,
+    "depth": 0.758,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": 7.5,
-    "tip": 8.724
+    "tip": 8.724,
+    "depth": 0.249,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": 8.5,
-    "tip": 8.958
+    "tip": 8.958,
+    "depth": 0.194,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": 13.375,
-    "tip": 16.056
+    "tip": 16.056,
+    "depth": 0.46,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": 14.375,
-    "tip": 16.152
+    "tip": 16.152,
+    "depth": 0.399,
+    "bites": 1
    },
    {
     "stop": 8,
     "across": 15.25,
-    "tip": 16.084
+    "tip": 16.084,
+    "depth": 0.427,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -18.0,
-    "tip": 1.384
+    "tip": 1.384,
+    "depth": 1.24,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -16.875,
-    "tip": 1.49
+    "tip": 1.49,
+    "depth": 0.984,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -15.75,
-    "tip": 1.432
+    "tip": 1.432,
+    "depth": 0.592,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -14.625,
-    "tip": 1.171
+    "tip": 1.171,
+    "depth": 0.403,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -10.0,
-    "tip": 14.554
+    "tip": 14.554,
+    "depth": 0.07,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -9.125,
-    "tip": 14.63
+    "tip": 14.63,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -7.875,
-    "tip": 14.559
+    "tip": 14.559,
+    "depth": 0.065,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -6.625,
-    "tip": 14.339
+    "tip": 14.339,
+    "depth": 0.285,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -2.0,
-    "tip": 11.185
+    "tip": 11.185,
+    "depth": 1.789,
+    "bites": 2
    },
    {
     "stop": 9,
     "across": -1.625,
-    "tip": 10.254
+    "tip": 10.254,
+    "depth": 1.37,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -1.625,
-    "tip": 10.254
+    "tip": 10.254,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -1.5,
-    "tip": 10.109
+    "tip": 10.109,
+    "depth": 0.165,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -1.25,
-    "tip": 10.036
+    "tip": 10.036,
+    "depth": 0.088,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": -0.625,
-    "tip": 10.08
+    "tip": 10.08,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 5.25,
-    "tip": 21.595
+    "tip": 21.595,
+    "depth": 0.379,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 6.25,
-    "tip": 21.699
+    "tip": 21.699,
+    "depth": 0.275,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 7.125,
-    "tip": 21.631
+    "tip": 21.631,
+    "depth": 0.343,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 14.0,
-    "tip": 7.585
+    "tip": 7.585,
+    "depth": 0.739,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 15.0,
-    "tip": 7.862
+    "tip": 7.862,
+    "depth": 0.462,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 15.875,
-    "tip": 7.935
+    "tip": 7.935,
+    "depth": 0.389,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 17.125,
-    "tip": 7.862
+    "tip": 7.862,
+    "depth": 0.462,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 18.375,
-    "tip": 7.64
+    "tip": 7.64,
+    "depth": 0.384,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 24.375,
-    "tip": -5.822
+    "tip": -5.822,
+    "depth": 2.746,
+    "bites": 2
    },
    {
     "stop": 9,
     "across": 24.875,
-    "tip": -5.964
+    "tip": -5.964,
+    "depth": 0.788,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 25.375,
-    "tip": -6.019
+    "tip": -6.019,
+    "depth": 0.843,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 26.0,
-    "tip": -5.966
+    "tip": -5.966,
+    "depth": 0.79,
+    "bites": 1
    },
    {
     "stop": 9,
     "across": 26.5,
-    "tip": -5.835
+    "tip": -5.835,
+    "depth": 0.359,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": -12.5,
-    "tip": 9.172
+    "tip": 9.172,
+    "depth": 0.502,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": -11.375,
-    "tip": 9.282
+    "tip": 9.282,
+    "depth": 0.377,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": -10.25,
-    "tip": 9.229
+    "tip": 9.229,
+    "depth": 0.435,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": -9.125,
-    "tip": 8.977
+    "tip": 8.977,
+    "depth": 0.373,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": -4.5,
-    "tip": 22.342
+    "tip": 22.342,
+    "depth": 0.467,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": -3.625,
-    "tip": 22.423
+    "tip": 22.423,
+    "depth": 0.256,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": -2.375,
-    "tip": 22.356
+    "tip": 22.356,
+    "depth": 0.459,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": -1.125,
-    "tip": 22.141
+    "tip": 22.141,
+    "depth": 0.679,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": 4.875,
-    "tip": 8.68
+    "tip": 8.68,
+    "depth": 3.632,
+    "bites": 3
    },
    {
     "stop": 10,
     "across": 5.375,
-    "tip": 8.53
+    "tip": 8.53,
+    "depth": 3.144,
+    "bites": 3
    },
    {
     "stop": 10,
     "across": 6.0,
-    "tip": 8.473
+    "tip": 8.473,
+    "depth": 4.245,
+    "bites": 3
    },
    {
     "stop": 10,
     "across": 6.25,
-    "tip": 8.498
+    "tip": 8.498,
+    "depth": 4.705,
+    "bites": 4
    },
    {
     "stop": 10,
     "across": 6.375,
-    "tip": 8.533
+    "tip": 8.533,
+    "depth": 4.745,
+    "bites": 4
    },
    {
     "stop": 10,
     "across": 6.5,
-    "tip": 10.91
+    "tip": 10.91,
+    "depth": 2.443,
+    "bites": 2
    },
    {
     "stop": 10,
     "across": 6.75,
-    "tip": 11.879
+    "tip": 11.879,
+    "depth": 1.624,
+    "bites": 2
    },
    {
     "stop": 10,
     "across": 7.125,
-    "tip": 12.695
+    "tip": 12.695,
+    "depth": 0.958,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": 12.5,
-    "tip": 15.869
+    "tip": 15.869,
+    "depth": 0.744,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": 13.625,
-    "tip": 15.978
+    "tip": 15.978,
+    "depth": 0.605,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": 14.75,
-    "tip": 15.922
+    "tip": 15.922,
+    "depth": 0.682,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": 21.75,
-    "tip": 7.105
+    "tip": 7.105,
+    "depth": 1.6,
+    "bites": 2
    },
    {
     "stop": 10,
     "across": 22.25,
-    "tip": 6.959
+    "tip": 6.959,
+    "depth": 0.207,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": 22.75,
-    "tip": 6.906
+    "tip": 6.906,
+    "depth": 0.075,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": 23.375,
-    "tip": 6.965
+    "tip": 6.965,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 10,
     "across": 26.25,
-    "tip": 8.889
+    "tip": 8.889,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": -11.625,
-    "tip": 18.685
+    "tip": 18.685,
+    "depth": 0.511,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": -10.375,
-    "tip": 18.802
+    "tip": 18.802,
+    "depth": 0.389,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": -9.25,
-    "tip": 18.734
+    "tip": 18.734,
+    "depth": 0.232,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": -3.625,
-    "tip": 10.717
+    "tip": 10.717,
+    "depth": 1.205,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": -2.75,
-    "tip": 10.134
+    "tip": 10.134,
+    "depth": 0.949,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": -2.375,
-    "tip": 9.939
+    "tip": 9.939,
+    "depth": 0.249,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": -1.875,
-    "tip": 9.786
+    "tip": 9.786,
+    "depth": 0.177,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": -1.375,
-    "tip": 9.726
+    "tip": 9.726,
+    "depth": 0.087,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": 5.125,
-    "tip": 21.296
+    "tip": 21.296,
+    "depth": 0.968,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": 6.25,
-    "tip": 21.404
+    "tip": 21.404,
+    "depth": 0.56,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": 7.25,
-    "tip": 21.266
+    "tip": 21.266,
+    "depth": 0.268,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": 12.125,
-    "tip": 17.036
+    "tip": 17.036,
+    "depth": 0.199,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": 13.125,
-    "tip": 16.858
+    "tip": 16.858,
+    "depth": 0.406,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": 14.0,
-    "tip": 16.796
+    "tip": 16.796,
+    "depth": 0.168,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": 14.625,
-    "tip": 16.845
+    "tip": 16.845,
+    "depth": 0.0,
+    "bites": 1
    },
    {
     "stop": 11,
     "across": 19.125,
-    "tip": 20.946
+    "tip": 20.946,
+    "depth": 0.219,
+    "bites": 1
    }
   ]
  },
