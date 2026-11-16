@@ -71,8 +71,8 @@ in the way, the next stop round cuts it with the side of the ball.
 
 | part | size, mm | |
 |---|---|---|
-| base | 586 x 443 ply | |
-| back wall | 566 x 315, two plies, a gusset behind each end | the four shaft supports bolt to its face |
+| base | 616 x 393 ply | |
+| back wall | 596 x 315, two plies, a brace in front at each end, 120 x 250 | the four shaft supports bolt to its face; the braces stand outside the shafts' ends |
 | shafts, 2 | 20 dia x 546 | cut from the 700s; one 150 above the other, an SK20 at each end |
 | carriage square | 240 x 240 ply, upright | an SC20UU behind each corner |
 | shelf | 150 x 195 ply, two gussets | out over the stick, the cross slide on it |

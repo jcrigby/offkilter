@@ -67,10 +67,11 @@ BLOCK_X = 85.0                                  # the blocks either side of the 
 WALL_Y = (RAIL_Y + SK_H, RAIL_Y + SK_H + 2 * PLY)   # the back wall, two plies: the shaft supports bolt to its face at both ends
 SUPPORT_X = (BIT_X[0] - SQUARE / 2 - 30.0, BIT_X[1] + SQUARE / 2 + 30.0)   # the supports, clear of the square at both ends of its travel
 SHAFT_X = (SUPPORT_X[0] - SK_T / 2 - 5.0, SUPPORT_X[1] + SK_T / 2 + 5.0)
-WALL_X = (SHAFT_X[0] - 10.0, SHAFT_X[1] + 10.0)
+GUSSET_D, GUSSET_H = 120.0, 250.0               # the wall's braces, in front of it at each end, outside the shafts' ends
+WALL_X = (SHAFT_X[0] - 6.0 - PLY, SHAFT_X[1] + 6.0 + PLY)
 WALL_TOP = RAIL_Z[1] + 45.0
 BASE_X = (WALL_X[0] - 10.0, WALL_X[1] + 10.0)
-BASE_Y = (-150.0, WALL_Y[1] + 60.0)
+BASE_Y = (-150.0, WALL_Y[1] + 10.0)
 # The router's shelf: out from the square's face over the stick, the cross slide on it.
 SHELF_W = 150.0                                 # along the stick
 SHELF_Y = (-95.0, FACE_Y)
@@ -132,8 +133,8 @@ def wall(p):
     box(p, "back wall, two plies", WALL_X, WALL_Y, (0.0, WALL_TOP))
     for i, x in enumerate((WALL_X[0], WALL_X[1] - PLY)):
         s = p.sketch("right", x, "gusset")
-        p.polygon(s, [(WALL_Y[1], 0.0), (WALL_Y[1] + 55.0, 0.0), (WALL_Y[1], 200.0)])
-        p.extrude(s, PLY, op="add", name="gusset")
+        p.polygon(s, [(WALL_Y[0], 0.0), (WALL_Y[0], GUSSET_H), (WALL_Y[0] - GUSSET_D, 0.0)])
+        p.extrude(s, PLY, op="add", name="brace, in front")
 
 
 def supports(p):

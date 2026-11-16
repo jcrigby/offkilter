@@ -86,6 +86,12 @@ fn the_shafts_are_held_at_both_ends_and_the_carriage_stays_between() {
         assert!(supports.iter().map(|k| overlap(s, k)).sum::<f64>() < 1.0);
         assert!(blocks.iter().map(|k| overlap(s, k)).sum::<f64>() < 1.0);
     }
+    // The wall's braces stand in front of it, outside the shafts' ends: nothing of the wall is in a shaft or a support.
+    let wall = bodies_of(&mut doc, "Back wall");
+    assert_eq!(wall.len(), 1);
+    for part in shafts.iter().chain(supports.iter()).chain(blocks.iter()) {
+        assert!(overlap(&wall[0], part) < 1e-6);
+    }
     let reach = f(&n["carriage"]["block_x"]) + f(&n["carriage"]["blk_l"]) / 2.0;
     let (b0, b1) = (f(&n["bit_x"][0]), f(&n["bit_x"][1]));
     println!(
