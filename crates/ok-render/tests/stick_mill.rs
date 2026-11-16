@@ -95,6 +95,9 @@ fn the_shafts_are_held_at_both_ends_and_the_carriage_stays_between() {
     }
     let reach = f(&n["carriage"]["block_x"]) + f(&n["carriage"]["blk_l"]) / 2.0;
     let (b0, b1) = (f(&n["bit_x"][0]), f(&n["bit_x"][1]));
+    // The carriage goes a little further than the pattern, to set the straight bit on the journal's master.
+    let far = f(&n["car_min"]);
+    assert!(far < b0 && far > -f(&n["pattern_t"]) - f(&n["journal"]["master_t"]));
     println!(
         "blocks from {:.0} to {:.0}, supports' faces at {:.0} and {:.0}",
         b0 - reach,
@@ -102,7 +105,7 @@ fn the_shafts_are_held_at_both_ends_and_the_carriage_stays_between() {
         x0 + half,
         x1 - half
     );
-    assert!(b0 - reach > x0 + half && b1 + reach < x1 - half);
+    assert!(far - reach > x0 + half && b1 + reach < x1 - half);
     assert!(
         b0 < 0.0 && b0 > -f(&n["pattern_t"]),
         "the bit sets over the pattern"
@@ -127,16 +130,25 @@ fn the_pattern_is_the_tile_and_the_star_has_twelve_seats_in_one_cradle() {
         / 2.0;
     assert!((shoelace - area).abs() < 0.01);
     let stick = one(&mut doc, "Stick");
-    assert!((stick.volume() - area * f(&n["stick"])).abs() < 1.0);
+    // The stick is the tile's section but for two journals, twelve-sided about the axis.
+    let j = &n["journal"];
+    let (apothem, jl) = (f(&j["apothem"]), f(&j["length"]));
+    let prism = 12.0 * apothem * apothem * 15f64.to_radians().tan();
+    let expect = area * (f(&n["stick"]) - 2.0 * jl) + prism * 2.0 * jl;
+    println!(
+        "stick {:.0} mm3, tile and two journals give {expect:.0}",
+        stick.volume()
+    );
+    assert!((stick.volume() - expect).abs() < 2.0);
     let pattern = one(&mut doc, "Pattern");
     let h = &n["star"];
     let bore = std::f64::consts::PI * ((f(&h["spindle"]) + 0.2) / 2.0).powi(2);
+    let expect = (area - bore) * f(&n["pattern_t"]) + (prism - bore) * f(&j["master_t"]);
     println!(
-        "pattern {:.0} mm3, the tile's section gives {:.0}",
-        pattern.volume(),
-        (area - bore) * f(&n["pattern_t"])
+        "pattern {:.0} mm3, the tile's section and the journal's master give {expect:.0}",
+        pattern.volume()
     );
-    assert!((pattern.volume() - (area - bore) * f(&n["pattern_t"])).abs() < 6.0);
+    assert!((pattern.volume() - expect).abs() < 8.0);
     // The star: a hexagon and the same hexagon turned 30°, twelve points alike.
     let (af, r, inside, t) = (f(&h["af"]), f(&h["r"]), f(&h["inside"]), f(&h["t"]));
     assert!((r - af / 3f64.sqrt()).abs() < 1e-9);
@@ -255,6 +267,97 @@ fn the_carriage_passes_over_the_headstock_and_the_bit_stands_on_the_pattern() {
     // A blank sawn within 2 mm of the tile swings under the cross slide.
     assert!(f(&n["tile"]["swing"]) + 2.0 < f(&n["slide"]["z"]) - f(&n["axis_z"]));
     assert!(f(&n["upright_top"]) < f(&n["slide"]["z"]));
+}
+
+/// The journals: the axis is where the tile is fattest, the journal a
+/// twelve-sided prism inside the tile there, so no pass of the plan
+/// touches it; a post under each seats its lower flats and no pass
+/// comes near the post.
+#[test]
+fn the_journals_are_inside_the_tile_and_the_posts_clear_of_every_pass() {
+    let (mut doc, n) = (load(), numbers());
+    let j = &n["journal"];
+    let (apothem, circle) = (f(&j["apothem"]), f(&n["tile"]["circle"]));
+    let corner = apothem / 15f64.to_radians().cos();
+    println!(
+        "a circle of {circle:.2} about the axis fits in the tile; the journal {:.1} across flats, {:.2} over corners",
+        2.0 * apothem,
+        2.0 * corner
+    );
+    assert!(circle > 9.5, "the axis is at the tile's fattest place");
+    assert!(corner < circle - 0.05 && corner > circle - 0.3);
+    // The circle is the tile's: no point of the outline is nearer the axis.
+    let near = n["tile"]["outline"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|q| f(&q[0]).hypot(f(&q[1])))
+        .fold(f64::MAX, f64::min);
+    assert!(near >= circle - 1e-9);
+    // No pass's ball reaches the journal, nor comes within the clearance of a post.
+    let r = f(&n["bit"]) / 2.0;
+    let post = &j["post"];
+    let (half, top) = (f(&post["half"]), f(&post["top"]));
+    let mut least = f64::MAX;
+    for q in n["plan"]["list"].as_array().unwrap() {
+        let (y, tip) = (f(&q["across"]), f(&q["tip"]));
+        assert!(
+            y.hypot(tip + r) >= corner + r - 1e-6,
+            "a pass cuts a journal"
+        );
+        if y.abs() < half + r {
+            let d = (y.abs() - half).max(0.0);
+            least = least.min(tip + r - (r * r - d * d).sqrt() - top);
+        }
+    }
+    println!(
+        "posts seat {} flats, {:.1} wide; the bit never nearer than {least:.2}",
+        post["flats"],
+        2.0 * half
+    );
+    assert!(least >= f(&post["least"]));
+    assert!((least - f(&post["clear"])).abs() < 0.05);
+    // The posts: one under each journal, inside its length, seated without passing through the stick.
+    let stick = one(&mut doc, "Stick");
+    let axis = f(&n["axis_z"]);
+    for (i, name) in ["Post 1", "Post 2"].iter().enumerate() {
+        let p = one(&mut doc, name);
+        let through = overlap(&p, &stick);
+        assert!(through < 1.0, "{name} is {through:.2} mm3 into the stick");
+        let (lo, hi) = p.bounds().unwrap();
+        let at = f(&j["at"][i]);
+        assert!(lo.z.abs() < 1e-6 && (hi.z - (axis + top)).abs() < 1e-6);
+        assert!(top < 0.0, "a post stops under the axis");
+        // The upright is inside the journal with room each side; the foot is wider, on the base.
+        assert!(f(&post["t"]) + 3.0 <= f(&j["length"]));
+        assert!(lo.x < at && hi.x > at && hi.z < axis - 2.0);
+        let seat = post["seat"].as_array().unwrap();
+        assert_eq!(seat.len() as u64, post["flats"].as_u64().unwrap() + 1);
+        for c in seat {
+            assert!((f(&c[0]).hypot(f(&c[1])) - corner).abs() < 1e-9);
+        }
+    }
+    for name in ["Shelf", "Carriage square", "Cross slide"] {
+        let part = one(&mut doc, name);
+        let (lo, _) = part.bounds().unwrap();
+        assert!(
+            lo.z > axis + top || lo.y > half + 30.0,
+            "{name} passes over the posts"
+        );
+    }
+    // Cutting a journal: the straight bit's plunges at each stop clear the blank, and a flat is narrower than the bit.
+    let bit = f(&j["bit"]);
+    let across: Vec<f64> = j["across"].as_array().unwrap().iter().map(f).collect();
+    let covered = across.last().unwrap() + bit / 2.0;
+    let need = f(&j["blank_swing"]) * 15f64.to_radians().sin();
+    println!(
+        "a journal: {} plunges a stop reaching {covered:.1} either side, the blank needs {need:.1}",
+        across.len()
+    );
+    assert!(covered >= need && (across[0] + across.last().unwrap()).abs() < 1e-9);
+    assert!(across.windows(2).all(|w| w[1] - w[0] < bit));
+    assert!(2.0 * apothem * 15f64.to_radians().tan() < bit);
+    assert!(dir().join("out/post.stl").exists());
 }
 
 /// The plan: a few hundred passes over all twelve stops, the outline

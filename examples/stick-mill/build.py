@@ -18,7 +18,7 @@ carriage run along the stick.
     cargo test -p ok-render --test stick_mill   # what CI runs
 
 Outputs under out/: mill.okpart (every part in place and the machine
-assembled), pattern.stl, star.stl and cradle.stl to print, mill.png and end.png, mill.pdf, and
+assembled), pattern.stl, star.stl and cradle.stl and post.stl (two) to print, mill.png, end.png and journal.png, mill.pdf, and
 mill.json (the numbers and the pass plan).
 """
 import json
@@ -52,12 +52,23 @@ REACH = 50.0                                    # the bit's tip under the base's
 
 # The machine. x along the stick from its headstock end, y across (the rails behind, at +y), z up from the base's top.
 SLIDE_T = 6.0                                   # the cross slide: an aluminium plate, the router's base on it
-SLIDE_Z = 99.0                                  # the shelf's top, where the cross slide lies
-AXIS_Z = SLIDE_Z - 33.0                         # 66: the stick's axis, as low as the star lets it be: its point 57.7 under, a relief, and 6.8 of cradle on the base. A blank sawn within 2 mm of the tile swings 29
+SLIDE_Z = 98.0                                  # the shelf's top, where the cross slide lies
+AXIS_Z = SLIDE_Z - 32.0                         # 66: the stick's axis, as low as the star lets it be: its point 57.7 under, a relief, and 6.8 of cradle on the base. A blank sawn within 2 mm of the tile swings 29
 PATTERN_T = 20.0                                # the pattern, against the stick's end on the same spindle
 RUN = 6.0                                       # the bit past the stick's far end
 BIT_X = (-PATTERN_T / 2, STICK + RUN)           # where the bit goes: mid pattern to past the stick's far end
 CAR_AT = BIT_X[0]                               # the carriage as drawn: over the pattern, setting a pass
+# The journals: two lengths of the stick cut first, while the blank is whole, to a twelve-sided prism about the axis
+# that lies inside the tile, so no later pass touches them; a printed post under each holds the stick while it is milled.
+JOURNAL_AT = (STICK / 3.0, 2.0 * STICK / 3.0)   # their middles
+JOURNAL_L = 14.0                                # along the stick: a post and 2 mm each side
+JOURNAL_IN = 0.1                                # the prism's corners this far inside the tile's largest circle
+JOURNAL_BIT = 6.0                               # a straight bit for this step: a flat is under 5 wide
+MASTER_T = 10.0                                 # the journal's master, the same prism, printed on the pattern's outer face: the straight bit is set on it
+POST_T, POST_WALL = 10.0, 3.0                   # a post along the stick, and its plastic outside the seat
+POST_FOOT = (30.0, 5.0, 18.0)                   # its foot: along the stick, thick, and past the upright each side for a screw
+POST_CLEAR = 1.0                                # the least a bit may pass over a post
+CAR_MIN = -PATTERN_T - MASTER_T / 2             # the carriage's furthest: the bit over the journal's master
 # The carriage: a ply square upright behind the stick, a bearing block at each corner, on two shafts one above the other.
 SQUARE = 200.0
 FACE_Y = 100.0                                  # the square's front face, behind anything the stick swings
@@ -65,7 +76,7 @@ RAIL_Y = FACE_Y + PLY + BLK_C                   # 144: the shafts
 RAIL_Z = (AXIS_Z + 1.0, AXIS_Z + 151.0)         # stacked, 150 apart, the lower at the stick's height
 BLOCK_X = 72.5                                  # the blocks either side of the square's middle
 WALL_Y = (RAIL_Y + SK_H, RAIL_Y + SK_H + 2 * PLY)   # the back wall, two plies: the shaft supports bolt to its face at both ends
-SUPPORT_X = (BIT_X[0] - SQUARE / 2 - 30.0, BIT_X[1] + SQUARE / 2 + 30.0)   # the supports, clear of the square at both ends of its travel
+SUPPORT_X = (CAR_MIN - SQUARE / 2 - 30.0, BIT_X[1] + SQUARE / 2 + 30.0)   # the supports, clear of the square at both ends of its travel
 SHAFT_X = (SUPPORT_X[0] - SK_T / 2 - 5.0, SUPPORT_X[1] + SK_T / 2 + 5.0)
 GUSSET_D, GUSSET_H = 120.0, 200.0               # the wall's braces, in front of it at each end, outside the shafts' ends
 WALL_X = (SHAFT_X[0] - 6.0 - PLY, SHAFT_X[1] + 6.0 + PLY)
@@ -83,7 +94,7 @@ SPINDLE_D = 12.0                                # M12 studding
 HEX_AF, HEX_T = 100.0, 20.0                     # the star: two hexagons this far across their flats, 30° apart, printed
 HEX_R = HEX_AF / math.sqrt(3.0)                 # its points' radius, 57.7
 STAR_IN = HEX_AF / 2.0 / math.cos(math.radians(15.0))   # its inside corners' radius, 51.8
-HEX_X = (CAR_AT - SHELF_W / 2 - 15.0 - HEX_T, CAR_AT - SHELF_W / 2 - 15.0)   # outside the shelf's reach
+HEX_X = (CAR_MIN - SHELF_W / 2 - 15.0 - HEX_T, CAR_MIN - SHELF_W / 2 - 15.0)   # outside the shelf's reach
 CRADLE_W = 150.0                                # the cradle across, screwed to the base
 RELIEF, EASE = 1.5, 1.0                         # a round at each point's seat so a point never bottoms; the cradle's two crests eased clear of the star's inside corners
 CRADLE_SCREW = 58.0                             # a screw to the base either side of the pocket
@@ -300,17 +311,101 @@ def lift_needed():
     return need
 
 
-def pattern(p, outline):
+def near(q, a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    t = max(0.0, min(1.0, ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / (dx * dx + dy * dy)))
+    return math.hypot(q[0] - a[0] - t * dx, q[1] - a[1] - t * dy)
+
+
+def room(q, outline):
+    """The largest circle about q inside the outline; nothing if q is outside."""
+    return min(near(q, outline[i - 1], outline[i]) for i in range(len(outline))) if inside(q, outline) else -1.0
+
+
+def widest(outline):
+    """Where the tile's largest inscribed circle is, and its radius: the place for the axis that gives the fattest journal."""
+    xs, ys = [q[0] for q in outline], [q[1] for q in outline]
+    best = max(((room((x, y), outline), x, y) for x in (min(xs) + 0.5 * i for i in range(int((max(xs) - min(xs)) * 2) + 1))
+                for y in (min(ys) + 0.5 * j for j in range(int((max(ys) - min(ys)) * 2) + 1))))
+    step = 0.25
+    while step > 1e-4:
+        cand = max((room((best[1] + dx * step, best[2] + dy * step), outline), best[1] + dx * step, best[2] + dy * step) for dx in (-1, 0, 1) for dy in (-1, 0, 1))
+        if cand[0] > best[0] + 1e-12:
+            best = cand
+        else:
+            step /= 2
+    return (round(best[1], 2), round(best[2], 2))
+
+
+def journal_outline(apothem, z=None):
+    """The journal's section about the axis: twelve flats, one up and one down at every stop."""
+    z = AXIS_Z if z is None else z
+    r = apothem / math.cos(math.radians(15.0))
+    return [(r * math.cos(math.radians(15.0 + 30.0 * k)), z + r * math.sin(math.radians(15.0 + 30.0 * k))) for k in range(12)]
+
+
+def seat(apothem, flats):
+    """A post's seat: the journal's lower 3 or 5 flats, right to left, about the axis at 0."""
+    r = apothem / math.cos(math.radians(15.0))
+    first = -15.0 if flats == 5 else -45.0
+    return [(r * math.cos(math.radians(first - 30.0 * k)), r * math.sin(math.radians(first - 30.0 * k))) for k in range(flats + 1)]
+
+
+def over_post(passes, half, top):
+    """The least any pass's ball comes over a post half wide with its top at top (off the axis)."""
+    r, least = BIT / 2, 99.0
+    for q in passes:
+        lo, hi = max(q["across"] - r, -half), min(q["across"] + r, half)
+        if lo < hi:
+            for j in range(9):
+                y = lo + (hi - lo) * j / 8
+                least = min(least, q["tip"] + r - math.sqrt(max(0.0, r * r - (y - q["across"]) ** 2)) - top)
+    return least
+
+
+def post_seat(passes, apothem):
+    """The deepest seat no pass comes within POST_CLEAR of: five flats if the bit allows, else three."""
+    for flats in (5, 3):
+        pk = seat(apothem, flats)
+        half, top = pk[0][0] + POST_WALL, pk[0][1]
+        if over_post(passes, half, top) >= POST_CLEAR:
+            return flats, pk, half, top
+    raise SystemExit("no post fits under the journal")
+
+
+def post(p, at, pk, half, top):
+    s = p.sketch("right", at - POST_T / 2, "post")
+    p.polygon(s, [(-half, 0.0), (half, 0.0), (half, AXIS_Z + top)] + [(y, AXIS_Z + z) for y, z in pk] + [(-half, AXIS_Z + top)])
+    p.extrude(s, POST_T, name="post")
+    fx, ft, fy = POST_FOOT
+    box(p, "foot", (at - fx / 2, at + fx / 2), (-half - fy, half + fy), (0.0, ft), op="add")
+    s = p.sketch("top", ft, "screws")
+    for sy in (-half - fy / 2, half + fy / 2):
+        p.point(s, (at, sy))
+    p.hole(s, 4.5, name="two screws to the base")
+
+
+def pattern(p, outline, apothem):
     s = p.sketch("right", -PATTERN_T, "tile section")
     p.polygon(s, [(y, AXIS_Z + z) for y, z in outline])
     p.extrude(s, PATTERN_T, name="pattern")
-    xbore(p, -PATTERN_T, 0.0, 0.0, AXIS_Z, SPINDLE_D + 0.2, "spindle")
+    s = p.sketch("right", -PATTERN_T - MASTER_T, "journal master")
+    p.polygon(s, journal_outline(apothem))
+    p.extrude(s, MASTER_T, op="add", name="journal master")
+    xbore(p, -PATTERN_T - MASTER_T, 0.0, 0.0, AXIS_Z, SPINDLE_D + 0.2, "spindle")
 
 
-def stick(p, outline):
-    s = p.sketch("right", 0.0, "tile section")
-    p.polygon(s, [(y, AXIS_Z + z) for y, z in outline])
-    p.extrude(s, STICK, name="stick, milled")
+def stick_spans():
+    """The stick along its length: tile, journal, tile, journal, tile."""
+    cuts = [0.0] + [x for at in JOURNAL_AT for x in (at - JOURNAL_L / 2, at + JOURNAL_L / 2)] + [STICK]
+    return [(cuts[i], cuts[i + 1], i % 2 == 1) for i in range(len(cuts) - 1)]
+
+
+def stick(p, outline, apothem):
+    for i, (x0, x1, is_journal) in enumerate(stick_spans()):
+        s = p.sketch("right", x0, "journal" if is_journal else "tile section")
+        p.polygon(s, journal_outline(apothem) if is_journal else [(y, AXIS_Z + z) for y, z in outline])
+        p.extrude(s, x1 - x0, op="new" if i == 0 else "add", name="journal" if is_journal else "stick, milled")
 
 
 # -- the pass plan -----------------------------------------------------------
@@ -410,7 +505,11 @@ def main():
         os.remove(path)
     mcp = Mcp(path)
     tile = json.loads(mcp.call("spectre_tile", {"edge": EDGE, "curve": "ellipse", "bulge": BULGE, "bit": BIT, "gap": GAP}))
-    outline = [tuple(q) for q in tile["outline"]]
+    raw = [tuple(q) for q in tile["outline"]]
+    centre = widest(raw)                             # the axis goes where the tile is fattest, for the journals
+    outline = [(x - centre[0], y - centre[1]) for x, y in raw]
+    circle = room((0.0, 0.0), outline)
+    apothem = math.floor((circle - JOURNAL_IN) * math.cos(math.radians(15.0)) * 20) / 20     # to 0.05
     passes, covered, reach, worst, orphans = plan(outline)
     per_stop = [sum(1 for q in passes if q["stop"] == k) for k in range(STOPS)]
     tips = [q["tip"] for q in passes]
@@ -419,13 +518,20 @@ def main():
     need = lift_needed()
     if need > LIFT - 0.5:
         raise SystemExit(f"the star needs {need:.2f} to turn and the slot gives {LIFT}")
+    flats, pk, post_half, post_top = post_seat(passes, apothem)
+    blank = max(math.hypot(x, y) for x, y in outline) + 2.0
+    reach_y = blank * math.sin(math.radians(15.0))   # a stop clears the blank this far either side of its middle
+    n_across = max(1, math.ceil((2 * reach_y) / (JOURNAL_BIT - 1.0)))
+    journal_across = [round((i - (n_across - 1) / 2) * (JOURNAL_BIT - 1.0), 3) for i in range(n_across)]
+    print(f"axis moved {centre} in the tile: a circle of {circle:.2f} fits, the journal {2 * apothem:.1f} across flats; posts seat {flats} flats, {2 * post_half:.1f} wide, the bit never nearer than {over_post(passes, post_half, post_top):.2f}; a journal is {STOPS} x {n_across} plunges of the {JOURNAL_BIT:.0f} mm bit")
     mcp.call("create_document", {"name": "mill"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Indexed stick mill for the leaning half-ellipse Spectre"}, {"type": "rename_tab", "tab": 1, "name": "Base"}]})
     tip_drawn = AXIS_Z + max(z + math.sqrt(max(0.0, (BIT / 2) ** 2 - y * y)) for y, z in outline if abs(y) < BIT / 2) - BIT / 2
     parts = [("Base", base), ("Back wall", wall), ("Shaft supports SK20", supports), ("Shafts", shafts), ("Blocks SC20UU", blocks), ("Carriage square", square), ("Shelf", shelf),
              ("Cross slide", slide), ("Router", router), ("Bit", lambda p: bit(p, tip_drawn)), ("Cross screw", screw), ("Headstock", headstock), ("Tailstock", tailstock),
              ("Spindle and centre", spindle), ("Star", star), ("Cradle", cradle),
-             ("Pattern", lambda p: pattern(p, outline)), ("Stick", lambda p: stick(p, outline))]
+             ("Pattern", lambda p: pattern(p, outline, apothem)), ("Stick", lambda p: stick(p, outline, apothem)),
+             ("Post 1", lambda p: post(p, JOURNAL_AT[0], pk, post_half, post_top)), ("Post 2", lambda p: post(p, JOURNAL_AT[1], pk, post_half, post_top))]
     tabs, bodies = {}, {}
     for i, (title, make) in enumerate(parts):
         tabs[title] = 1 if i == 0 else new_tab(mcp, {"type": "add_part_studio", "name": title})
@@ -441,14 +547,18 @@ def main():
         raise SystemExit(text)
     mcp.call("screenshot", {"tab": asm, "view": "-0.55,-0.7,0.5", "width": 1700, "height": 1100, "path": os.path.join(OUT, "mill.png")})
     mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{-PATTERN_T / 2}", "fit": f"{-PATTERN_T / 2},{BASE_Y[0]},-20,{-PATTERN_T / 2 + 1},{BASE_Y[1]},310", "width": 1500, "height": 1100, "path": os.path.join(OUT, "end.png")})
+    mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{JOURNAL_AT[0]}", "fit": f"{JOURNAL_AT[0]},-60,-20,{JOURNAL_AT[0] + 1},60,110", "width": 1300, "height": 1000, "path": os.path.join(OUT, "journal.png")})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "mill.pdf"),
                               "note": f"indexed stick mill: two stacked 20 mm shafts held at both ends, a twelve-pointed star in one cradle for {STOPS} stops, the bit set on a pattern of the tile at full size; {len(passes)} passes a stick"}))
-    for title, name in (("Pattern", "pattern"), ("Star", "star"), ("Cradle", "cradle")):
+    for title, name in (("Pattern", "pattern"), ("Star", "star"), ("Cradle", "cradle"), ("Post 1", "post")):
         print(mcp.call("export", {"tab": tabs[title], "format": "stl", "path": os.path.join(OUT, f"{name}.stl")}))
     mcp.close()
     numbers = {
         "edge": EDGE, "bulge": BULGE, "gap": GAP, "bit": BIT, "ridge": RIDGE, "mark": MARK, "stops": STOPS, "stick": STICK,
-        "tile": {"across": tile["across"], "area": tile["area"], "outline": outline, "swing": reach - BIT / 2},
+        "tile": {"across": tile["across"], "area": tile["area"], "outline": outline, "swing": reach - BIT / 2, "axis_in_tile": centre, "circle": circle},
+        "journal": {"apothem": apothem, "at": JOURNAL_AT, "length": JOURNAL_L, "bit": JOURNAL_BIT, "across": journal_across, "blank_swing": blank, "master_t": MASTER_T, "spans": stick_spans(),
+                    "post": {"flats": flats, "seat": pk, "half": post_half, "top": post_top, "t": POST_T, "foot": POST_FOOT, "clear": over_post(passes, post_half, post_top), "least": POST_CLEAR}},
+        "car_min": CAR_MIN,
         "axis_z": AXIS_Z, "shaft": {"z": RAIL_Z, "y": RAIL_Y, "x": SHAFT_X, "d": SHAFT_D}, "supports_x": SUPPORT_X, "sk_t": SK_T,
         "slide": {"z": SLIDE_Z, "t": SLIDE_T, "travel": SLOT}, "carriage": {"square": SQUARE, "at": CAR_AT, "block_x": BLOCK_X, "blk_l": BLK_L, "face_y": FACE_Y},
         "bit_x": BIT_X, "pattern_t": PATTERN_T, "reach": REACH, "plunge": PLUNGE, "tip_drawn": tip_drawn, "upright_top": UPRIGHT_TOP,

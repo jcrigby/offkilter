@@ -49,6 +49,33 @@ axis, then the relief and 6.8 mm of cradle, so the axis is 66 over
 the base (it was 119 when a cradle stood in a tray under a hexagon
 with room to spare). Everything above came down with it.
 
+## Journals and posts
+
+Milled to the tile, the stick is 200 mm of wood with necks of 4.5 mm
+in its section, and it would spring away from the bit. So two short
+lengths, at a third and two thirds, are cut first, while the blank is
+whole and stiff, to a twelve-sided prism about the axis: a journal. A
+printed post goes under each, seating its lower five flats, and the
+stick is then milled in three spans of 60 mm between supports.
+
+![A journal on its post, the tile's section behind](out/journal.png)
+
+- The journal must lie inside the tile, or the profile's passes would
+  cut it away. So the axis is not at the tile's middle but where the
+  tile is fattest, 2.8 and 3.4 mm from where the kernel puts its
+  origin: a circle of 9.8 mm radius fits there (7.0 at the old axis),
+  and the journal is 18.7 across its flats, 19.4 over its corners.
+- Twelve flats, because the mill has twelve stops: the journal looks
+  the same to its post at every one. A flat is 5.0 wide, so a 6 mm
+  straight bit makes it in one plunge; four plunges a stop, 5 apart,
+  clear a blank's corners. That is 48 plunges a journal, in steps of
+  depth, the last set by touching the bit on the journal's master.
+- No pass of the plan comes within 3.2 mm of a post.
+- The posts hold the stick down and, on their 60° flanks, sideways.
+  Nothing holds it up: the bit passes too close over a journal for a
+  cap. And nothing here stops the stick twisting.
+- Each journal costs 14 mm of stick.
+
 ## The plan
 
 `mill.json` lists every pass: its stop, its place across, and the
@@ -57,11 +84,11 @@ semicircle deep, a 0.7 mm line and a 3 mm ball-nose:
 
 | | |
 |---|---|
-| passes a stick | 260, 16 to 28 at each stop |
+| passes a stick | 262, 16 to 27 at each stop |
 | ridge left between passes | 0.05 mm, to sand |
 | outline within 0.08 mm of a pass | 95 % |
-| the rest | up to 0.34 mm proud, in the tightest corners, for a file |
-| the bit's tip | from 25.4 above the stick's axis to 10.6 below it |
+| the rest | up to 0.32 mm proud, in the tightest corners, for a file |
+| the bit's tip | from 28.3 above the stick's axis to 11.3 below it |
 
 Each point of the outline goes to the stop that faces it most squarely
 among those whose bit can get down to it; where a neighbouring lobe is
@@ -71,12 +98,12 @@ in the way, the next stop round cuts it with the side of the ball.
 
 | what | in the model | check |
 |---|---|---|
-| the bit | a tapered ball-nose, 1.5 radius, 6 mm shank, 50 mm out of the collet | the deepest pass is 49.6 under the base's sole; a shorter bit needs the cross slide lower, which the blank's swing limits |
+| the bit | a tapered ball-nose, 1.5 radius, 6 mm shank, 50 mm out of the collet | the deepest pass is 49.3 under the base's sole; a shorter bit needs the cross slide lower, which the blank's swing limits |
 | the bit's taper in the dents | not modelled: the plan treats the bit as 3 mm all the way up | try the pattern by hand at the deep passes before cutting wood |
 | the plunge base | 50 mm of travel, sole 100 square | the Colt's plunge base, or the cross slide's hole and travel change |
-| the blank | sawn within 2 mm of the tile, swinging 29 | 33 between the axis and the cross slide |
+| the blank | sawn within 2 mm of the tile, swinging 30.9 about the moved axis | 32 between the axis and the cross slide |
 | the star | two hexagons 100 across their flats, on six flanks in one cradle | a tenth of a millimetre at a steep flank is 0.07 at the tile's edge; if one stop rocks, file the high flank |
-| the room under the stick | 37 between a blank's swing and the base | enough for chips and a brush; the carriage square's lower edge is 42 over the base |
+| the room under the stick | 35 between a blank's swing and the base | enough for chips and a brush; the carriage square's lower edge is 42 over the base |
 | the hold-down | not drawn | a bar over the star on two studs with wing nuts, or a toggle clamp |
 | the shelf | 195 out from the square, a gusset over each edge | push down on its front edge: if the bit moves, deepen the gussets |
 | the stick's stiffness | not checked | 200 mm between centres with necks of 4.5 mm in its section; halve the stick if it sings |
@@ -85,16 +112,17 @@ in the way, the next stop round cuts it with the side of the ball.
 
 | part | size, mm | |
 |---|---|---|
-| base | 576 x 393 ply | |
-| back wall | 556 x 262, two plies, a brace in front at each end, 120 x 200 | the four shaft supports bolt to its face; the braces stand outside the shafts' ends |
-| shafts, 2 | 20 dia x 506 | cut from the 700s; one 150 above the other, an SK20 at each end |
+| base | 591 x 393 ply | |
+| back wall | 571 x 262, two plies, a brace in front at each end, 120 x 200 | the four shaft supports bolt to its face; the braces stand outside the shafts' ends |
+| shafts, 2 | 20 dia x 521 | cut from the 700s; one 150 above the other, an SK20 at each end |
 | carriage square | 200 x 200 ply, upright | an SC20UU behind each corner: the least that takes two shafts 150 apart and their 50 mm blocks, the blocks 145 apart along the shafts |
 | shelf | 150 x 195 ply, two gussets | out over the stick, the cross slide on it |
 | cross slide | 165 x 90 x 6 aluminium | the plunge base on it, an M8 screw from the front |
 | headstock | two plies, 140 wide | M12 studding in a slot, in a slot 9 tall over it: the star lifts 8.0 to turn |
 | star | 115.5 over its points x 20, printed | on the spindle, outside the shelf's reach |
 | cradle | 150 wide x 29.4 high x 20, printed | two screws down into the base |
-| pattern | the tile's section x 20, printed | on the spindle against the stick |
+| pattern | the tile's section x 20 and the journal's twelve-sided master x 10 on its outer face, printed as one | on the spindle against the stick |
+| posts, 2 | 24.7 wide x 10, 63.5 high, on a 30 x 61 foot, printed | under the journals, two screws each to the base; fitted once the journals are cut |
 | tail | one ply, an M10 pointed bolt | |
 
 ## What the test checks
@@ -107,7 +135,11 @@ through it on six flanks that all run across, rises clear inside the
 spindle's slot to turn, and leaves 4 to 10 mm of cradle under its
 point, which is what makes the axis as low as it can be; with the carriage over the pattern the bit stands on it and
 the square, the shelf and the cross slide clear the headstock, the
-star, its cradle, the pattern and the wall; and the plan's passes are a few hundred over all
+star, its cradle, the pattern and the wall; the axis is at the tile's fattest place, the journals' corners inside
+the circle that fits there, no pass touching a journal or coming
+within a millimetre of a post, the posts seated under the journals
+without passing through the stick, and the straight bit's plunges
+clearing the blank; and the plan's passes are a few hundred over all
 twelve stops, on the handwheel's marks, within the bit's reach, the
 plunge and the cross travel, with 95 % of the outline cut and nothing
 left more than 0.4 mm proud.

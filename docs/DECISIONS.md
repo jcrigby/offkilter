@@ -1299,3 +1299,25 @@ cradles and the tray, and the change of cradle mid-stick goes.
   6.8 mm of floor put it at 66, and the shafts, square, shelf and
   uprights came down 53 with it. Lower would need a smaller star,
   which costs accuracy, or a hole in the base.
+
+## 2026-11 · The stick mill: journals on posts, and the axis where the tile is fattest
+
+A stick milled to the tile has 4.5 mm necks and 200 mm between
+centres. The owner proposed steadies: cut round places and put
+supports under them, at a third and two thirds.
+
+- The journals are cut first, on the whole blank, which needs no
+  support; the owner's first step, a temporary round at the middle,
+  is dropped for that reason.
+- Twelve flats rather than a round: the mill indexes, it does not
+  turn, and a twelve-sided journal meets its post alike at every stop.
+- A journal has to lie inside the tile or the profile cuts it away.
+  About the tile's own origin a 7.0 mm circle fits; the owner asked
+  for the largest, so the build finds the tile's largest inscribed
+  circle (9.8) and puts the axis there. The plan is the same plan
+  moved; the swing grows from 25.4 to 28.9, which took a millimetre
+  from the gap under the cross slide to keep the bit's reach at 50.
+- A cap over the journal lost: the passes come within a hair of the
+  circle the journal is cut inside.
+- The journal's depth is set as every other depth is, by touching the
+  bit on a printed master, here on the pattern's outer face.
