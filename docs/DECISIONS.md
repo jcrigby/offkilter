@@ -1342,3 +1342,29 @@ wood. The owner asked for roughing.
 - Three slots between lobes are too narrow for the straight bit and
   stay with the ball-nose, up to 16.7 mm deep in twelve bites. A
   second, narrower roughing bit lost for now: it is three places.
+
+## 2026-11 · The stick mill: the cradle slides, the spindle stays, the journals are turned
+
+The owner asked whether a journal could be a circle, cut by turning
+the stick while the bit comes down. It could not on the mill as it
+was: the star sat in a fixed cradle, and the spindle lay loose in a
+slot so the star could be lifted out to index. The owner proposed
+sliding the spindle assembly off the cradle, then agreed that moving
+only the cradle is fewer moving parts.
+
+- The spindle runs in two bearings and never moves. The cradle slides
+  along the axis in a guide, 26 mm, off the star's 20. Indexing is
+  slide off, turn a point, slide on; nothing is lifted, so the stick
+  stays level and on its posts.
+- With height set by the bearings, a pocket with sliding clearance
+  would leave the angle loose. So star and pocket taper 10° a side
+  and the cradle is pushed home by a screw: it seats as a cone does.
+  10° is past the angle at which printed tapers stick. A fork coming
+  down on the star from above lost: its guides or hinge would have
+  had the play the taper removes.
+- Journals are round, 19.4 mm, turned with a crank in 24 turns each
+  where twelve flats took 48 plunges in bites; their posts are plain
+  right-angled Vs.
+- The star's reliefs went with the lift: its points are blunted and
+  the pocket's crests cut back, so the two sections differ only away
+  from the flanks.

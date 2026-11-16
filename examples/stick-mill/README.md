@@ -3,9 +3,11 @@
 A reduced duplicator that mills the leaning half-ellipse Spectre's
 whole outline round one solid stick, so a tile is one piece of wood
 with no glue lines inside it. The stick turns between a headstock and
-a tail centre. A printed twelve-pointed star on its spindle (a hexagon
-and the same hexagon turned 30°) drops into one cradle at any of
-twelve stops, 30° apart. A trim router in its plunge base stands on a shelf out
+a tail centre, its spindle in two ball bearings. A printed
+twelve-pointed star on the spindle (a hexagon and the same hexagon
+turned 30°) is locked at any of twelve stops by one cradle, the only
+part that moves: it slides along the axis onto the star, and off it
+to let the stick turn. A trim router in its plunge base stands on a shelf out
 from a ply square that rides two 20 mm shafts, one above the other
 behind the stick, each held at both ends, with a bearing block behind
 each corner of the square. On the same spindle as the stick, against
@@ -21,8 +23,9 @@ cargo test -p ok-render --test stick_mill   # what CI runs
 
 ## A pass
 
-1. Lift the star 8 mm out of its cradle, turn it a point, drop it
-   back and clamp it. Every stop is the same move.
+1. Back the push screw off and slide the cradle off the star, turn
+   the star a point, slide the cradle home and tighten the screw.
+   Every stop is the same move, and nothing is lifted.
 2. Bring the carriage over the pattern.
 3. Turn the cross screw to the pass's place: every pass is on a mark
    of the handwheel, 0.125 mm.
@@ -36,27 +39,35 @@ section does not change: set once, lock, cut.
 
 ## The star and its cradle
 
-The cradle is the negative of the star's lower three points. The star
-bears on six flanks of 15.5 mm: a flat seat under each outer point
-that carries the weight, a shallow V (150°) under the bottom point,
-and a steep flank each side, 73 mm apart, that sets the angle. No
-flank is upright, so it drops straight in. A 1.5 mm round at each
-point's seat keeps a blunt printed point from bottoming, and the
-cradle's two crests are eased 1 mm clear of the star's inside corners.
+![The headstock end: the crank, the upright with its bearings, the star with the cradle home on it in its guide, the push screw's knob](out/head.png)
+
+The spindle runs in a 6201 bearing in each face of the headstock, so
+its height never changes. The cradle only sets the angle. It is the
+negative of the star's lower three points and slides in a guide on
+the base, along the spindle's axis: 26 mm takes it right off the
+star's 20.
+
+Star and pocket taper 10° a side, narrowing toward the way the cradle
+leaves. Pushed home by its screw the cradle seats on six flanks as a
+cone seats, with no play to become an error in angle, and it lets go
+when the screw is backed off. The star's points are blunted 1.5 mm
+and the pocket's two crests cut back 1, so only flanks meet.
+
+With the cradle back, the stick turns freely and a crank outboard of
+the headstock turns it: that is how the journals are cut.
 
 The star is what sets the axis's height: its point is 57.7 under the
-axis, then the relief and 6.8 mm of cradle, so the axis is 66 over
-the base (it was 119 when a cradle stood in a tray under a hexagon
-with room to spare). Everything above came down with it.
+axis, then 5.3 mm of cradle and the guide's 3 mm floor, so the axis
+is 66 over the base.
 
 ## Journals and posts
 
 Milled to the tile, the stick is 200 mm of wood with necks of 4.5 mm
 in its section, and it would spring away from the bit. So two short
-lengths, at a third and two thirds, are cut first, while the blank is
-whole and stiff, to a twelve-sided prism about the axis: a journal. A
-printed post goes under each, seating its lower five flats, and the
-stick is then milled in three spans of 60 mm between supports.
+lengths, at a third and two thirds, are turned first, while the blank
+is whole and stiff, to a round about the axis: a journal. A printed V
+post goes under each, and the stick is then milled in three spans of
+60 mm between supports.
 
 ![A journal on its post, the tile's section behind](out/journal.png)
 
@@ -64,16 +75,19 @@ stick is then milled in three spans of 60 mm between supports.
   cut it away. So the axis is not at the tile's middle but where the
   tile is fattest, 2.8 and 3.4 mm from where the kernel puts its
   origin: a circle of 9.8 mm radius fits there (7.0 at the old axis),
-  and the journal is 18.7 across its flats, 19.4 over its corners.
-- Twelve flats, because the mill has twelve stops: the journal looks
-  the same to its post at every one. A flat is 5.0 wide, so a 6 mm
-  straight bit makes it in one plunge; four plunges a stop, 5 apart,
-  clear a blank's corners. That is 48 plunges a journal, in steps of
-  depth, the last set by touching the bit on the journal's master.
-- No pass of the plan comes within 3.2 mm of a post.
-- The posts hold the stick down and, on their 60° flanks, sideways.
-  Nothing holds it up: the bit passes too close over a journal for a
-  cap. And nothing here stops the stick twisting.
+  and the journal is 19.4 mm round.
+- To turn one: cradle back, the 6 mm straight bit over the journal's
+  place, router on, the bit lowered a bite of 3 mm and the crank
+  turned once round; again until the bit, tried on the round master
+  on the pattern's outer face, is at depth. Eight bites at three
+  places along the journal: 24 turns of the crank. (As twelve flats
+  cut by plunging at each stop it was 48 plunges, each in bites.)
+- Turn against the cutter and keep a hand on the crank: a bit can
+  take hold of work that is free to turn.
+- No pass of the plan comes within 3.0 mm of a post.
+- The posts hold the stick down and, in their V, sideways. Nothing
+  holds it up: the bit passes too close over a journal for a cap. And
+  nothing here stops the stick twisting.
 - Each journal costs 14 mm of stick.
 
 ## Roughing
@@ -128,9 +142,10 @@ in the way, the next stop round cuts it with the side of the ball.
 | the bit's taper in the dents | not modelled: the plan treats the bit as 3 mm all the way up | try the pattern by hand at the deep passes before cutting wood |
 | the plunge base | 50 mm of travel, sole 100 square | the Colt's plunge base, or the cross slide's hole and travel change |
 | the blank | sawn within 2 mm of the tile, swinging 30.9 about the moved axis | 32 between the axis and the cross slide |
-| the star | two hexagons 100 across their flats, on six flanks in one cradle | a tenth of a millimetre at a steep flank is 0.07 at the tile's edge; if one stop rocks, file the high flank |
+| the star and cradle | two hexagons 100 across their flats, tapered 10° a side, the cradle pushed onto six flanks | a tenth of a millimetre at a steep flank is 0.07 at the tile's edge; printed tapers bed in, so try every stop before trusting one |
+| the bearings | two 6201 (12 x 32 x 10), one in each face of the headstock | any pair that takes the M12 studding; the push screw's thrust goes through the spindle's nuts to them |
+| the cradle's hold-down | none drawn: the star's wedge presses it onto the guide's floor | if it lifts at its outer end, a strip over each lip |
 | the room under the stick | 35 between a blank's swing and the base | enough for chips and a brush; the carriage square's lower edge is 42 over the base |
-| the hold-down | not drawn | a bar over the star on two studs with wing nuts, or a toggle clamp |
 | the shelf | 195 out from the square, a gusset over each edge | push down on its front edge: if the bit moves, deepen the gussets |
 | the stick's stiffness | not checked | 200 mm between centres with necks of 4.5 mm in its section; halve the stick if it sings |
 
@@ -144,31 +159,38 @@ in the way, the next stop round cuts it with the side of the ball.
 | carriage square | 200 x 200 ply, upright | an SC20UU behind each corner: the least that takes two shafts 150 apart and their 50 mm blocks, the blocks 145 apart along the shafts |
 | shelf | 150 x 195 ply, two gussets | out over the stick, the cross slide on it |
 | cross slide | 165 x 90 x 6 aluminium | the plunge base on it, an M8 screw from the front |
-| headstock | two plies, 140 wide | M12 studding in a slot, in a slot 9 tall over it: the star lifts 8.0 to turn |
-| star | 115.5 over its points x 20, printed | on the spindle, outside the shelf's reach |
-| cradle | 150 wide x 29.4 high x 20, printed | two screws down into the base |
-| pattern | the tile's section x 20 and the journal's twelve-sided master x 10 on its outer face, printed as one | on the spindle against the stick |
-| posts, 2 | 24.7 wide x 10, 63.5 high, on a 30 x 61 foot, printed | under the journals, two screws each to the base; fitted once the journals are cut |
+| headstock | two plies, 140 wide, bored 32 | M12 studding in two 6201 bearings |
+| crank | 60 dia x 10 with a handle | on the spindle outboard of the headstock, for turning the journals |
+| star | 115.5 over its points x 20, tapering to 108.4, printed | on the spindle, outside the shelf's reach, its large end toward the headstock |
+| cradle | 150 wide x 26.4 high x 20, printed | slides in the guide |
+| cradle guide | 60 x 196, a 3 mm floor, 6 mm lips and an end wall, printed | four screws to the base; an M6 knob screw through the end wall pushes the cradle home |
+| pattern | the tile's section x 20 and the journal's round master x 10 on its outer face, printed as one | on the spindle against the stick |
+| posts, 2 | 28.4 wide x 10, 63.5 high, a right-angled V, on a 30 x 61 foot, printed | under the journals, two screws each to the base; fitted once the journals are cut |
 | tail | one ply, an M10 pointed bolt | |
 
 ## What the test checks
 
 `crates/ok-render/tests/stick_mill.rs`: each shaft runs through a
 support at both ends and the carriage's blocks stay between the
-supports wherever the bit goes; the pattern and the stick regenerate
-to the tile's section; the star is two hexagons' worth, sits in its cradle without passing
-through it on six flanks that all run across, rises clear inside the
-spindle's slot to turn, and leaves 4 to 10 mm of cradle under its
-point, which is what makes the axis as low as it can be; with the carriage over the pattern the bit stands on it and
-the square, the shelf and the cross slide clear the headstock, the
-star, its cradle, the pattern and the wall; the axis is at the tile's fattest place, the journals' corners inside
-the circle that fits there, no pass touching a journal or coming
-within a millimetre of a post, the posts seated under the journals
-without passing through the stick, and the straight bit's plunges
-clearing the blank; no roughing bite reaches the tile less its
-allowance, every bite of either bit is within its limit, the straight
-bit takes over 70 % of the waste and under 1 % stands at the end;
-and the plan's passes are a few hundred over all
+supports wherever the bit goes; the pattern (with the journal's
+master) and the stick (with its two journals) regenerate to their
+sections' volumes; the star is two hexagons' worth tapering as a
+frustum, its points short of the pocket's and the pocket's crests
+short of its corners so only flanks meet; the cradle is home on the
+star without passing through it, on the guide's floor between its
+lips, and its travel takes it right off the star inside the guide;
+the push screw is home on the cradle's face; the spindle passes
+through a bearing in each face of the headstock; the axis is as low
+as the star lets it be; with the carriage over the pattern the bit
+stands on it and the square, the shelf and the cross slide clear the
+headstock, the star, its cradle, the pattern and the wall; the axis
+is at the tile's fattest place, the journals inside the circle that
+fits there, no pass touching a journal or coming within a millimetre
+of a post, each post's V tangent to its journal, and the crank's
+turns enough bites and places for a journal; no roughing bite reaches
+the tile less its allowance, every bite of either bit is within its
+limit, the straight bit takes over 70 % of the waste and under 1 %
+stands at the end; and the plan's passes are a few hundred over all
 twelve stops, on the handwheel's marks, within the bit's reach, the
-plunge and the cross travel, with 95 % of the outline cut and nothing
+plunge and the cross travel, with 94 % of the outline cut and nothing
 left more than 0.4 mm proud.

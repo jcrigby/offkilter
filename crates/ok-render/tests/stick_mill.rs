@@ -1,9 +1,10 @@
 //! The indexed stick mill (examples/stick-mill) as a regression suite:
 //! the shafts are held at both ends and the carriage never leaves
 //! them; the pattern and the milled stick are the kernel's leaning
-//! half-ellipse tile; a twelve-pointed star drops into one cradle, on
-//! six flanks of its lower three points, for twelve stops; the axis is
-//! as low as the star lets it be; the carriage's shelf passes clear of
+//! half-ellipse tile; a tapered twelve-pointed star is locked at twelve
+//! stops by one cradle that slides onto it along the axis, and with the
+//! cradle back the stick turns in its bearings for two round journals;
+//! the axis is as low as the star lets it be; the carriage's shelf passes clear of
 //! the headstock, the star and the wall;
 //! and the pass plan covers the outline within what the bit can reach,
 //! inside the router's plunge and the cross slide's travel.
@@ -113,124 +114,138 @@ fn the_shafts_are_held_at_both_ends_and_the_carriage_stays_between() {
     assert!(b1 > f(&n["stick"]), "and runs off the stick's far end");
 }
 
-/// The pattern and the stick are the tile's section; the star in its
-/// one cradle gives twelve stops.
+/// The pattern and the stick are the tile's section; the star and the
+/// one cradle that slides onto it give twelve stops.
 #[test]
-fn the_pattern_is_the_tile_and_the_star_has_twelve_seats_in_one_cradle() {
+fn the_pattern_is_the_tile_and_one_sliding_cradle_locks_the_star() {
     let (mut doc, n) = (load(), numbers());
     let area = f(&n["tile"]["area"]);
     let outline = n["tile"]["outline"].as_array().unwrap();
-    let shoelace: f64 = (0..outline.len())
-        .map(|i| {
-            let (a, b) = (&outline[i], &outline[(i + 1) % outline.len()]);
-            f(&a[0]) * f(&b[1]) - f(&b[0]) * f(&a[1])
-        })
-        .sum::<f64>()
-        .abs()
-        / 2.0;
-    assert!((shoelace - area).abs() < 0.01);
-    let stick = one(&mut doc, "Stick");
-    // The stick is the tile's section but for two journals, twelve-sided about the axis.
+    let shoelace = |pts: &[serde_json::Value]| -> f64 {
+        (0..pts.len())
+            .map(|i| {
+                let (a, b) = (&pts[i], &pts[(i + 1) % pts.len()]);
+                f(&a[0]) * f(&b[1]) - f(&b[0]) * f(&a[1])
+            })
+            .sum::<f64>()
+            .abs()
+            / 2.0
+    };
+    assert!((shoelace(outline) - area).abs() < 0.01);
+    let pi = std::f64::consts::PI;
+    // The stick is the tile's section but for two round journals about the axis.
     let j = &n["journal"];
-    let (apothem, jl) = (f(&j["apothem"]), f(&j["length"]));
-    let prism = 12.0 * apothem * apothem * 15f64.to_radians().tan();
-    let expect = area * (f(&n["stick"]) - 2.0 * jl) + prism * 2.0 * jl;
+    let (radius, jl) = (f(&j["radius"]), f(&j["length"]));
+    let round = pi * radius * radius;
+    let stick = one(&mut doc, "Stick");
+    let expect = area * (f(&n["stick"]) - 2.0 * jl) + round * 2.0 * jl;
     println!(
         "stick {:.0} mm3, tile and two journals give {expect:.0}",
         stick.volume()
     );
-    assert!((stick.volume() - expect).abs() < 2.0);
+    assert!((stick.volume() - expect).abs() < 0.002 * expect);
     let pattern = one(&mut doc, "Pattern");
     let h = &n["star"];
-    let bore = std::f64::consts::PI * ((f(&h["spindle"]) + 0.2) / 2.0).powi(2);
-    let expect = (area - bore) * f(&n["pattern_t"]) + (prism - bore) * f(&j["master_t"]);
+    let bore = pi * ((f(&h["spindle"]) + 0.2) / 2.0).powi(2);
+    let expect = (area - bore) * f(&n["pattern_t"]) + (round - bore) * f(&j["master_t"]);
     println!(
         "pattern {:.0} mm3, the tile's section and the journal's master give {expect:.0}",
         pattern.volume()
     );
-    assert!((pattern.volume() - expect).abs() < 8.0);
-    // The star: a hexagon and the same hexagon turned 30°, twelve points alike.
+    assert!((pattern.volume() - expect).abs() < 0.002 * expect);
+    // The star: a hexagon and the same hexagon turned 30°, its points blunted, tapering along the axis.
     let (af, r, inside, t) = (f(&h["af"]), f(&h["r"]), f(&h["inside"]), f(&h["t"]));
     assert!((r - af / 3f64.sqrt()).abs() < 1e-9);
     assert!((inside - af / 2.0 / 15f64.to_radians().cos()).abs() < 1e-9);
+    let (taper, k) = (f(&h["taper"]), f(&h["k"]));
+    assert!((k - (1.0 - t * taper.to_radians().tan() / r)).abs() < 1e-9);
+    assert!(
+        (7.0..=15.0).contains(&taper),
+        "steep enough to let go, shallow enough to seat"
+    );
+    let section = h["section"].as_array().unwrap();
+    let cutter = h["cutter"].as_array().unwrap();
+    assert_eq!((section.len(), cutter.len()), (36, 36));
     let star = one(&mut doc, "Star");
-    let expect = (12.0 * r * inside * 15f64.to_radians().sin() - bore) * t;
+    // A frustum of similar sections: the mean of the ends' areas and their geometric mean.
+    let expect = (shoelace(section) * (1.0 + k + k * k) / 3.0 - bore) * t;
     println!(
-        "star {:.0} mm3, two hexagons {af} across flats give {expect:.0}",
+        "star {:.0} mm3, its section tapering to {k:.3} gives {expect:.0}",
         star.volume()
     );
     assert!((star.volume() - expect).abs() < 0.002 * expect);
     assert_eq!(n["stops"].as_u64(), Some(12));
-    // The pocket: six flanks of the lower three points, each a flank of the star, none upright or overhanging.
-    let axis = f(&n["axis_z"]);
-    let pocket: Vec<(f64, f64)> = h["pocket"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|q| (f(&q[0]), f(&q[1]) - axis))
-        .collect();
-    assert_eq!(pocket.len(), 7);
-    let flank = (r * r + inside * inside - 2.0 * r * inside * 15f64.to_radians().cos()).sqrt();
-    for (i, w) in pocket.windows(2).enumerate() {
-        let (a, b) = (w[0], w[1]);
-        assert!(((a.0 - b.0).hypot(a.1 - b.1) - flank).abs() < 1e-9);
-        let (ra, rb) = (a.0.hypot(a.1), b.0.hypot(b.1));
-        let want = if i % 2 == 0 { (inside, r) } else { (r, inside) };
-        assert!((ra - want.0).abs() < 1e-9 && (rb - want.1).abs() < 1e-9);
-        assert!(
-            a.0 - b.0 > 1.0,
-            "a flank runs across: the star drops straight in"
-        );
-    }
+    // Only flanks meet: the star's points stop short of the pocket's, the pocket's crests short of the star's corners.
+    let far = |pts: &[serde_json::Value]| {
+        pts.iter()
+            .map(|q| f(&q[0]).hypot(f(&q[1])))
+            .fold(0.0, f64::max)
+    };
+    let near = |pts: &[serde_json::Value]| {
+        pts.iter()
+            .map(|q| f(&q[0]).hypot(f(&q[1])))
+            .fold(f64::MAX, f64::min)
+    };
     println!(
-        "six flanks of {flank:.1}, the pocket {:.1} wide and {:.1} deep",
-        pocket[0].0 - pocket[6].0,
-        pocket[0].1 + r
+        "points {:.2} in a pocket of {:.2}; corners {:.2} over crests of {:.2}",
+        far(section),
+        far(cutter),
+        near(section),
+        near(cutter)
     );
-    assert!((pocket[3].0).abs() < 1e-9 && (pocket[3].1 + r).abs() < 1e-9);
+    assert!((far(cutter) - r).abs() < 1e-9 && far(section) < r - 0.3);
+    assert!((near(section) - inside).abs() < 1e-9 && near(cutter) > inside + 0.2);
+    // The cradle, drawn home: on the guide's floor between its lips, the star in its pocket and not through it.
     let cradle = one(&mut doc, "Cradle");
+    let guide = one(&mut doc, "Cradle guide");
+    let g = &h["guide"];
+    let (floor, lip, play) = (f(&g["floor"]), f(&g["lip"]), f(&g["play"]));
     let seated = overlap(&star, &cradle);
     println!("star in its cradle: {seated:.3} mm3 through it");
     assert!(seated < 1.0);
+    assert!(overlap(&cradle, &guide) < 1e-6);
+    let axis = f(&n["axis_z"]);
     let (lo, hi) = cradle.bounds().unwrap();
-    assert!(lo.z.abs() < 1e-6, "the cradle stands on the base");
-    assert!((hi.z - (axis + pocket[0].1)).abs() < 1e-6);
-    assert!((hi.y - lo.y - f(&h["cradle_w"])).abs() < 1e-6 && (hi.x - lo.x - t).abs() < 1e-6);
-    // The axis is as low as the star lets it be: a relief under the point, then a few millimetres of cradle.
-    let (slo, _) = star.bounds().unwrap();
-    assert!((slo.z - (axis - r)).abs() < 1e-6);
-    let floor = slo.z - f(&h["relief"]);
-    println!("axis {axis:.0} over the base, {floor:.1} of cradle under the point's relief");
-    assert!((4.0..10.0).contains(&floor));
-    // The cradle's section: its block less the pocket, the reliefs and crests (roughly half of each round is in it) and two screws.
-    let outline = h["cradle"].as_array().unwrap();
-    let section: f64 = (0..outline.len())
-        .map(|i| {
-            let (a, b) = (&outline[i], &outline[(i + 1) % outline.len()]);
-            f(&a[0]) * f(&b[1]) - f(&b[0]) * f(&a[1])
-        })
-        .sum::<f64>()
-        .abs()
-        / 2.0;
-    let screws = 2.0 * std::f64::consts::PI * 2.25f64.powi(2) * hi.z;
-    println!(
-        "cradle {:.0} mm3, its section less two screws gives {:.0}",
-        cradle.volume(),
-        section * t - screws
+    assert!(
+        (lo.z - floor).abs() < 1e-6,
+        "the cradle stands on the guide's floor"
     );
-    let rounds =
-        (3.0 * f(&h["relief"]).powi(2) + 2.0 * f(&h["ease"]).powi(2)) * std::f64::consts::PI * t;
-    assert!(cradle.volume() < section * t - screws + 1.0);
-    assert!(cradle.volume() > section * t - screws - rounds);
-    // Turning a stop: the star rises clear of the pocket inside the spindle's slot.
-    let (need, lift) = (f(&h["lift_needed"]), f(&h["lift"]));
-    println!("lift to turn a stop {need:.2}, the slot gives {lift}");
-    assert!(need > 5.0 && need + 0.5 <= lift);
-    for name in ["pattern", "star", "cradle"] {
-        assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
+    assert!((hi.z - f(&h["cradle_top"])).abs() < 1e-6 && hi.z < axis);
+    assert!((hi.y - lo.y - f(&h["cradle_w"])).abs() < 1e-6 && (hi.x - lo.x - t).abs() < 1e-6);
+    let (slo, shi) = star.bounds().unwrap();
+    assert!((slo.x - lo.x).abs() < 1e-6 && (shi.x - hi.x).abs() < 1e-6);
+    // The axis is as low as the star lets it be: a few millimetres of cradle under the point, on the guide's floor.
+    let under = axis - r - floor;
+    println!("axis {axis:.0} over the base, {under:.1} of cradle under the star's point");
+    assert!((4.0..10.0).contains(&under));
+    // Its way off: clear of the star with room to spare, still between the lips, short of the end wall.
+    let travel = f(&h["travel"]);
+    let (glo, ghi) = guide.bounds().unwrap();
+    assert!(travel >= t + 5.0, "the cradle comes right off the star");
+    assert!(glo.x <= lo.x && hi.x + travel <= ghi.x - f(&g["end"][0]) + 1e-6);
+    assert!(glo.z.abs() < 1e-6 && lip >= 5.0 && play > 0.05 && play < 0.3);
+    assert!(
+        (ghi.y - glo.y) > f(&h["cradle_w"]) + 2.0 * (play + f(&g["wall"])),
+        "the guide has ears for its screws"
+    );
+    // The push screw is home on the cradle's face, and through the end wall's hole, not its plastic.
+    let screw = one(&mut doc, "Push screw");
+    let (plo, _) = screw.bounds().unwrap();
+    assert!((plo.x - hi.x).abs() < 1e-6);
+    assert!(overlap(&screw, &guide) < 1e-6 && overlap(&screw, &cradle) < 1e-6);
+    // The spindle runs in a bearing in each face of the headstock.
+    let bearings = bodies_of(&mut doc, "Bearings 6201");
+    assert_eq!(bearings.len(), 2);
+    let spindle = &bodies_of(&mut doc, "Spindle and centre")[0];
+    let (plo, phi) = spindle.bounds().unwrap();
+    for b in &bearings {
+        let (blo, bhi) = b.bounds().unwrap();
+        assert!(plo.x < blo.x && phi.x > bhi.x);
+        assert!(((blo.z + bhi.z) / 2.0 - axis).abs() < 1e-6);
+        assert!(overlap(b, spindle) < 1e-6);
     }
-    for gone in ["hexagon", "cradle_corner", "cradle_flat", "cradle_tray"] {
-        assert!(!dir().join(format!("out/{gone}.stl")).exists());
+    for name in ["pattern", "star", "cradle", "cradle_guide", "post"] {
+        assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
     }
 }
 
@@ -270,22 +285,20 @@ fn the_carriage_passes_over_the_headstock_and_the_bit_stands_on_the_pattern() {
 }
 
 /// The journals: the axis is where the tile is fattest, the journal a
-/// twelve-sided prism inside the tile there, so no pass of the plan
-/// touches it; a post under each seats its lower flats and no pass
-/// comes near the post.
+/// round inside the tile there, so no pass of the plan touches it; a V
+/// post under each, and no pass comes near a post. They are turned:
+/// the crank's turns take the blank down in bites.
 #[test]
 fn the_journals_are_inside_the_tile_and_the_posts_clear_of_every_pass() {
     let (mut doc, n) = (load(), numbers());
     let j = &n["journal"];
-    let (apothem, circle) = (f(&j["apothem"]), f(&n["tile"]["circle"]));
-    let corner = apothem / 15f64.to_radians().cos();
+    let (radius, circle) = (f(&j["radius"]), f(&n["tile"]["circle"]));
     println!(
-        "a circle of {circle:.2} about the axis fits in the tile; the journal {:.1} across flats, {:.2} over corners",
-        2.0 * apothem,
-        2.0 * corner
+        "a circle of {circle:.2} about the axis fits in the tile; the journal {:.1} round",
+        2.0 * radius
     );
     assert!(circle > 9.5, "the axis is at the tile's fattest place");
-    assert!(corner < circle - 0.05 && corner > circle - 0.3);
+    assert!(radius < circle - 0.05 && radius > circle - 0.2);
     // The circle is the tile's: no point of the outline is nearer the axis.
     let near = n["tile"]["outline"]
         .as_array()
@@ -302,7 +315,7 @@ fn the_journals_are_inside_the_tile_and_the_posts_clear_of_every_pass() {
     for q in n["plan"]["list"].as_array().unwrap() {
         let (y, tip) = (f(&q["across"]), f(&q["tip"]));
         assert!(
-            y.hypot(tip + r) >= corner + r - 1e-6,
+            y.hypot(tip + r) >= radius + r - 1e-6,
             "a pass cuts a journal"
         );
         if y.abs() < half + r {
@@ -311,13 +324,30 @@ fn the_journals_are_inside_the_tile_and_the_posts_clear_of_every_pass() {
         }
     }
     println!(
-        "posts seat {} flats, {:.1} wide; the bit never nearer than {least:.2}",
-        post["flats"],
-        2.0 * half
+        "posts {:.1} wide, their lips {:.1} under the axis; the bit never nearer than {least:.2}",
+        2.0 * half,
+        -top
     );
     assert!(least >= f(&post["least"]));
     assert!((least - f(&post["clear"])).abs() < 0.05);
-    // The posts: one under each journal, inside its length, seated without passing through the stick.
+    // The V: a right angle whose walls touch the journal, its lips above where they touch.
+    let seat: Vec<(f64, f64)> = post["seat"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|q| (f(&q[0]), f(&q[1])))
+        .collect();
+    assert_eq!(seat.len(), 3);
+    let (lip, foot) = (seat[0], seat[1]);
+    let wall = (lip.0 - foot.0).hypot(lip.1 - foot.1);
+    let off = (lip.0 * foot.1 - foot.0 * lip.1).abs() / wall;
+    assert!(
+        (off - radius).abs() < 1e-9,
+        "the wall is tangent to the journal"
+    );
+    assert!(((lip.0 - foot.0) - (lip.1 - foot.1)).abs() < 1e-9 && foot.0.abs() < 1e-9);
+    assert!(top > -radius * 0.5f64.sqrt() + 1.0 && top < 0.0);
+    // The posts: one under each journal, inside its length, not through the stick.
     let stick = one(&mut doc, "Stick");
     let axis = f(&n["axis_z"]);
     for (i, name) in ["Post 1", "Post 2"].iter().enumerate() {
@@ -327,15 +357,8 @@ fn the_journals_are_inside_the_tile_and_the_posts_clear_of_every_pass() {
         let (lo, hi) = p.bounds().unwrap();
         let at = f(&j["at"][i]);
         assert!(lo.z.abs() < 1e-6 && (hi.z - (axis + top)).abs() < 1e-6);
-        assert!(top < 0.0, "a post stops under the axis");
-        // The upright is inside the journal with room each side; the foot is wider, on the base.
         assert!(f(&post["t"]) + 3.0 <= f(&j["length"]));
-        assert!(lo.x < at && hi.x > at && hi.z < axis - 2.0);
-        let seat = post["seat"].as_array().unwrap();
-        assert_eq!(seat.len() as u64, post["flats"].as_u64().unwrap() + 1);
-        for c in seat {
-            assert!((f(&c[0]).hypot(f(&c[1])) - corner).abs() < 1e-9);
-        }
+        assert!(lo.x < at && hi.x > at);
     }
     for name in ["Shelf", "Carriage square", "Cross slide"] {
         let part = one(&mut doc, name);
@@ -345,18 +368,16 @@ fn the_journals_are_inside_the_tile_and_the_posts_clear_of_every_pass() {
             "{name} passes over the posts"
         );
     }
-    // Cutting a journal: the straight bit's plunges at each stop clear the blank, and a flat is narrower than the bit.
+    // Turning a journal: bites from the blank's swing to the journal, at places that cover its length.
+    let (bites, places) = (j["bites"].as_u64().unwrap(), j["places"].as_u64().unwrap());
     let bit = f(&j["bit"]);
-    let across: Vec<f64> = j["across"].as_array().unwrap().iter().map(f).collect();
-    let covered = across.last().unwrap() + bit / 2.0;
-    let need = f(&j["blank_swing"]) * 15f64.to_radians().sin();
     println!(
-        "a journal: {} plunges a stop reaching {covered:.1} either side, the blank needs {need:.1}",
-        across.len()
+        "a journal: {bites} bites at {places} places, {} turns of the crank",
+        j["turns"]
     );
-    assert!(covered >= need && (across[0] + across.last().unwrap()).abs() < 1e-9);
-    assert!(across.windows(2).all(|w| w[1] - w[0] < bit));
-    assert!(2.0 * apothem * 15f64.to_radians().tan() < bit);
+    assert_eq!(j["turns"].as_u64().unwrap(), bites * places);
+    assert!(bites as f64 * f(&n["rough"]["bite"]) >= f(&j["blank_swing"]) - radius);
+    assert!(places as f64 * (bit - 1.0) >= f(&j["length"]));
     assert!(dir().join("out/post.stl").exists());
 }
 
