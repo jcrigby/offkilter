@@ -1,21 +1,25 @@
 """An indexed stick mill: a reduced duplicator that mills the leaning
 half-ellipse Spectre's whole outline round one solid stick. The stick
-turns between a headstock and a tail centre and is held at one of
-twelve stops, 30° apart. A trim router in its plunge base rides a
-carriage on two 20 mm shafts that run the stick's length and are held
-at both ends, so nothing hangs. Beside the stick, on the same spindle,
-is a printed pattern: the tile's section at full size. For each pass
-the carriage is brought over the pattern, the cross slide stepped by
-its screw, the router (off) plunged until the bit itself touches the
-pattern, the plunge locked, and the carriage run along the stick.
+turns between a headstock and a tail centre; a printed hexagon on its
+spindle drops into one of two cradles, a corner down or a flat down,
+six positions each and 30° apart, twelve in all. A trim router in its
+plunge base stands on a shelf out from a ply square that rides two
+20 mm shafts, one above the other behind the stick, each held at both
+ends, a bearing block behind each corner of the square. Beside the
+stick, on the same spindle, is a printed pattern: the tile's section
+at full size. For each pass the carriage is brought over the pattern,
+the cross slide stepped by its screw, the router (off) plunged until
+the bit itself touches the pattern, the plunge locked, and the
+carriage run along the stick.
 
     cargo build --release -p ok-mcp
     python3 examples/stick-mill/build.py
     cargo test -p ok-render --test stick_mill   # what CI runs
 
 Outputs under out/: mill.okpart (every part in place and the machine
-assembled), pattern.stl and index_plate.stl to print, mill.png and
-end.png, mill.pdf, and mill.json (the numbers and the pass plan).
+assembled), pattern.stl, hexagon.stl, cradle_corner.stl and
+cradle_flat.stl to print, mill.png and end.png, mill.pdf, and
+mill.json (the numbers and the pass plan).
 """
 import json
 import math
@@ -46,35 +50,44 @@ ROUTER_BASE = 100.0                             # its plunge base, square
 PLUNGE = 50.0                                   # the base's travel
 REACH = 50.0                                    # the bit's tip under the base's sole at full plunge: a tapered ball-nose on a 6 mm shank, this far out of the collet
 
-# The machine. x along the stick from its headstock end, y across, z up from the base's top.
-RISER_H = 3 * PLY                               # three plies glued: the shafts' supports stand on them at both ends
-SHAFT_Z = RISER_H + SK_H                        # 108
-SHAFT_Y = 110.0                                 # the shafts either side of the stick, clear of anything it swings
-BOLSTER_W = 60.0                                # a ply strip on each shaft's two blocks, bases up
-SLIDE_Z = SHAFT_Z + BLK_C + PLY                 # 152: the bolsters' tops, where the cross slide lies
+# The machine. x along the stick from its headstock end, y across (the rails behind, at +y), z up from the base's top.
 SLIDE_T = 6.0                                   # the cross slide: an aluminium plate, the router's base on it
+SLIDE_Z = 152.0                                 # the shelf's top, where the cross slide lies
 AXIS_Z = SLIDE_Z - 33.0                         # 119: the stick's axis; a blank sawn within 2 mm of the tile swings 29
 PATTERN_T = 20.0                                # the pattern, against the stick's end on the same spindle
-CAR_L = 150.0                                   # the carriage along the shafts
-BLOCK_X = 50.0                                  # its blocks, either side of its middle
-SLIDE_L, SLIDE_W = 300.0, 150.0                 # the cross slide, across and along
-SLOT = 70.0                                     # travel across, either side: the tile is 51 across and the bit steps past it
-HEAD_X = (-80.0, -80.0 + 2 * PLY)               # the headstock: two plies, the spindle through them
-TAIL_X = (STICK + 30.0, STICK + 30.0 + PLY)     # the tail centre's upright
-UPRIGHT_Y = 75.0                                # their half width, between the bolsters
-UPRIGHT_TOP = SLIDE_Z - 6.0                     # under the cross slide
-SPINDLE_D = 12.0                                # M12 studding
-INDEX_D, INDEX_T, INDEX_R, PIN_D = 120.0, 6.0, 50.0, 5.0   # the index plate outboard of the headstock, its holes on a 100 mm circle
-RUN = 6.0                                       # the bit past each end of the stick
+RUN = 6.0                                       # the bit past the stick's far end
 BIT_X = (-PATTERN_T / 2, STICK + RUN)           # where the bit goes: mid pattern to past the stick's far end
-RISER_X = ((BIT_X[0] - CAR_L / 2 - 80.0, BIT_X[0] - CAR_L / 2 - 20.0), (BIT_X[1] + CAR_L / 2 + 20.0, BIT_X[1] + CAR_L / 2 + 80.0))
-SHAFT_X = (RISER_X[0][0] + 5.0, RISER_X[1][1] - 5.0)
-BASE_X = (RISER_X[0][0] - 30.0, RISER_X[1][1] + 30.0)
-BASE_Y = 170.0
-INDEX_X = RISER_X[0][0] + 41.0                  # the index plate over the left riser, outside the carriage's reach, so it can be big
-POST_X = (INDEX_X - 8.0 - PLY, INDEX_X - 8.0)   # a post on the riser carries the pin
 CAR_AT = BIT_X[0]                               # the carriage as drawn: over the pattern, setting a pass
+# The carriage: a ply square upright behind the stick, a bearing block at each corner, on two shafts one above the other.
+SQUARE = 240.0
+FACE_Y = 100.0                                  # the square's front face, behind anything the stick swings
+RAIL_Y = FACE_Y + PLY + BLK_C                   # 144: the shafts
+RAIL_Z = (120.0, 270.0)                         # stacked, 150 apart, the lower at the stick's height
+BLOCK_X = 85.0                                  # the blocks either side of the square's middle
+WALL_Y = (RAIL_Y + SK_H, RAIL_Y + SK_H + 2 * PLY)   # the back wall, two plies: the shaft supports bolt to its face at both ends
+SUPPORT_X = (BIT_X[0] - SQUARE / 2 - 30.0, BIT_X[1] + SQUARE / 2 + 30.0)   # the supports, clear of the square at both ends of its travel
+SHAFT_X = (SUPPORT_X[0] - SK_T / 2 - 5.0, SUPPORT_X[1] + SK_T / 2 + 5.0)
+WALL_X = (SHAFT_X[0] - 10.0, SHAFT_X[1] + 10.0)
+WALL_TOP = RAIL_Z[1] + 45.0
+BASE_X = (WALL_X[0] - 10.0, WALL_X[1] + 10.0)
+BASE_Y = (-150.0, WALL_Y[1] + 60.0)
+# The router's shelf: out from the square's face over the stick, the cross slide on it.
+SHELF_W = 150.0                                 # along the stick
+SHELF_Y = (-95.0, FACE_Y)
+SLIDE_L, SLIDE_W = 190.0, 130.0                 # the cross slide, across and along
+SLOT = 40.0                                     # its travel across, either side: the tile is 51 across
 SCREW_D = 8.0                                   # the cross slide's screw: M8, 1.25 mm a turn
+# The spindle and its twelve stops: a hexagon in one of two cradles.
+SPINDLE_D = 12.0                                # M12 studding
+HEX_AF, HEX_T = 100.0, 20.0                     # the hexagon, across its flats, printed
+HEX_R = HEX_AF / math.sqrt(3.0)                 # its corners' radius, 57.7
+HEX_X = (CAR_AT - SHELF_W / 2 - 15.0 - HEX_T, CAR_AT - SHELF_W / 2 - 15.0)   # outside the shelf's reach
+CRADLE_W, CRADLE_UP = 150.0, 22.0               # a cradle block across, and how far its cheeks stand over the seat
+HEAD_X = (HEX_X[0] - 25.0 - 2 * PLY, HEX_X[0] - 25.0)   # the headstock upright: two plies, the spindle in a slot so it can lift to turn
+TAIL_X = (STICK + 30.0, STICK + 30.0 + PLY)     # the tail centre's upright
+UPRIGHT_Y = 70.0
+UPRIGHT_TOP = AXIS_Z + 25.0
+LIFT = HEX_R - HEX_AF / 2.0 + 1.0               # the spindle rises this far for a corner to pass: 8.7
 
 
 def box(p, name, x, y, z, op="new"):
@@ -110,66 +123,72 @@ def xbore(p, x0, x1, cy, cz, d, name):
 # -- the parts, each drawn where it stands ----------------------------------
 
 def base(p):
-    box(p, "base", BASE_X, (-BASE_Y, BASE_Y), (-PLY, 0.0))
+    box(p, "base", BASE_X, BASE_Y, (-PLY, 0.0))
 
 
-def risers(p):
-    for i, x in enumerate(RISER_X):
-        box(p, "riser, three plies", x, (-BASE_Y + 10.0, BASE_Y - 10.0), (0.0, RISER_H), op="new" if i == 0 else "add")
+def wall(p):
+    box(p, "back wall, two plies", WALL_X, WALL_Y, (0.0, WALL_TOP))
+    for i, x in enumerate((WALL_X[0], WALL_X[1] - PLY)):
+        s = p.sketch("right", x, "gusset")
+        p.polygon(s, [(WALL_Y[1], 0.0), (WALL_Y[1] + 55.0, 0.0), (WALL_Y[1], 200.0)])
+        p.extrude(s, PLY, op="add", name="gusset")
 
 
 def supports(p):
-    """Four SK20s on the risers: a shaft end in each."""
-    spots = [((x[0] + x[1]) / 2, sy) for x in RISER_X for sy in (-SHAFT_Y, SHAFT_Y)]
-    for i, (sx, sy) in enumerate(spots):
-        box(p, "base", (sx - SK_T / 2, sx + SK_T / 2), (sy - SK_W / 2, sy + SK_W / 2), (RISER_H, RISER_H + 12.0), op="new" if i == 0 else "add")
-        box(p, "body", (sx - SK_T / 2, sx + SK_T / 2), (sy - 16.0, sy + 16.0), (RISER_H, RISER_H + SK_HTOT), op="add")
-    for sx, sy in spots:
-        xbore(p, sx - SK_T / 2, sx + SK_T / 2, sy, SHAFT_Z, SHAFT_D, "shaft bore")
+    """Four SK20s on the wall's face: both ends of both shafts."""
+    spots = [(sx, sz) for sx in SUPPORT_X for sz in RAIL_Z]
+    for i, (sx, sz) in enumerate(spots):
+        box(p, "base", (sx - SK_T / 2, sx + SK_T / 2), (WALL_Y[0] - 12.0, WALL_Y[0]), (sz - SK_W / 2, sz + SK_W / 2), op="new" if i == 0 else "add")
+        box(p, "body", (sx - SK_T / 2, sx + SK_T / 2), (WALL_Y[0] - SK_HTOT, WALL_Y[0]), (sz - 16.0, sz + 16.0), op="add")
+    for sx, sz in spots:
+        xbore(p, sx - SK_T / 2, sx + SK_T / 2, RAIL_Y, sz, SHAFT_D, "shaft bore")
 
 
 def shafts(p):
-    for i, sy in enumerate((-SHAFT_Y, SHAFT_Y)):
-        xcyl(p, f"20 mm shaft, {SHAFT_X[1] - SHAFT_X[0]:.0f}", SHAFT_X[0], SHAFT_X[1], sy, SHAFT_Z, SHAFT_D, op="new" if i == 0 else "add")
+    for i, sz in enumerate(RAIL_Z):
+        xcyl(p, f"20 mm shaft, {SHAFT_X[1] - SHAFT_X[0]:.0f}", SHAFT_X[0], SHAFT_X[1], RAIL_Y, sz, SHAFT_D, op="new" if i == 0 else "add")
 
 
 def blocks(p):
-    """Four SC20UU under the bolsters, bases up."""
-    spots = [(CAR_AT + bx, sy) for bx in (-BLOCK_X, BLOCK_X) for sy in (-SHAFT_Y, SHAFT_Y)]
-    for i, (bx, sy) in enumerate(spots):
-        box(p, "block", (bx - BLK_L / 2, bx + BLK_L / 2), (sy - BLK_W / 2, sy + BLK_W / 2), (SHAFT_Z + BLK_C - BLK_H, SHAFT_Z + BLK_C), op="new" if i == 0 else "add")
-    for bx, sy in spots:
-        xbore(p, bx - BLK_L / 2, bx + BLK_L / 2, sy, SHAFT_Z, SHAFT_D, "shaft bore")
+    """Four SC20UU, one behind each corner of the square, bases forward."""
+    spots = [(CAR_AT + bx, sz) for bx in (-BLOCK_X, BLOCK_X) for sz in RAIL_Z]
+    for i, (bx, sz) in enumerate(spots):
+        box(p, "block", (bx - BLK_L / 2, bx + BLK_L / 2), (RAIL_Y - BLK_C, RAIL_Y - BLK_C + BLK_H), (sz - BLK_W / 2, sz + BLK_W / 2), op="new" if i == 0 else "add")
+    for bx, sz in spots:
+        xbore(p, bx - BLK_L / 2, bx + BLK_L / 2, RAIL_Y, sz, SHAFT_D, "shaft bore")
 
 
-def bolsters(p):
-    for i, sy in enumerate((-SHAFT_Y, SHAFT_Y)):
-        box(p, "bolster", (CAR_AT - CAR_L / 2, CAR_AT + CAR_L / 2), (sy - BOLSTER_W / 2, sy + BOLSTER_W / 2), (SHAFT_Z + BLK_C, SLIDE_Z), op="new" if i == 0 else "add")
+def square(p):
+    mid = (RAIL_Z[0] + RAIL_Z[1]) / 2
+    box(p, "carriage square", (CAR_AT - SQUARE / 2, CAR_AT + SQUARE / 2), (FACE_Y, FACE_Y + PLY), (mid - SQUARE / 2, mid + SQUARE / 2))
 
 
-def guides(p):
-    """Two strips across the bolsters' ends: the cross slide runs between them."""
-    for i, x in enumerate(((CAR_AT - CAR_L / 2 - PLY, CAR_AT - CAR_L / 2), (CAR_AT + CAR_L / 2, CAR_AT + CAR_L / 2 + PLY))):
-        box(p, "guide", x, (-SHAFT_Y - BOLSTER_W / 2, SHAFT_Y + BOLSTER_W / 2), (SHAFT_Z + BLK_C, SLIDE_Z + SLIDE_T + 12.0), op="new" if i == 0 else "add")
-    # each guide is cut away over the stick, so it clears the headstock and the pattern
-    s = p.sketch("right", CAR_AT - CAR_L / 2 - PLY - 1.0, "arch")
-    p.rect(s, (-SHAFT_Y + BOLSTER_W / 2, SHAFT_Z + BLK_C - 1.0), (SHAFT_Y - BOLSTER_W / 2, SLIDE_Z))
-    p.cut(s, CAR_L + 2 * PLY + 2.0, name="over the stick")
+def shelf(p):
+    """Out from the square over the stick, a gusset under each edge, an opening for the bit."""
+    box(p, "shelf", (CAR_AT - SHELF_W / 2, CAR_AT + SHELF_W / 2), SHELF_Y, (SLIDE_Z - PLY, SLIDE_Z))
+    s = p.sketch("top", SLIDE_Z, "bit's way")
+    p.rect(s, (CAR_AT - 20.0, -SLOT - 20.0), (CAR_AT + 20.0, SLOT + 20.0))
+    p.cut(s, PLY + 1.0, direction="reverse", name="opening across the stick")
+    for x in (CAR_AT - SHELF_W / 2, CAR_AT + SHELF_W / 2 - PLY):
+        s = p.sketch("right", x, "gusset")
+        p.polygon(s, [(FACE_Y, SLIDE_Z), (FACE_Y, SLIDE_Z + 110.0), (FACE_Y - 150.0, SLIDE_Z)])
+        p.extrude(s, PLY, op="add", name="gusset over the shelf's edge")
 
 
 def slide(p):
     """The cross slide at mid travel: the router's base on it, a hole for the bit."""
-    box(p, "cross slide, 6 mm aluminium", (CAR_AT - SLIDE_W / 2, CAR_AT + SLIDE_W / 2), (-SLIDE_L / 2, SLIDE_L / 2), (SLIDE_Z, SLIDE_Z + SLIDE_T))
+    box(p, "cross slide, 6 mm aluminium", (CAR_AT - SLIDE_W / 2 + PLY + 1.0, CAR_AT + SLIDE_W / 2 - PLY - 1.0), (-SLIDE_L / 2, SLIDE_L / 2 - 25.0), (SLIDE_Z, SLIDE_Z + SLIDE_T))
     s = p.sketch("top", SLIDE_Z + SLIDE_T, "bit")
     p.point(s, (CAR_AT, 0.0))
     p.hole(s, 30.0, name="for the bit and the collet")
 
 
 def router(p):
-    box(p, "plunge base", (CAR_AT - ROUTER_BASE / 2, CAR_AT + ROUTER_BASE / 2), (-ROUTER_BASE / 2, ROUTER_BASE / 2), (SLIDE_Z + SLIDE_T, SLIDE_Z + SLIDE_T + 12.0))
+    w = SLIDE_W / 2 - PLY - 1.0
+    box(p, "plunge base", (CAR_AT - w, CAR_AT + w), (-ROUTER_BASE / 2, ROUTER_BASE / 2 - 25.0), (SLIDE_Z + SLIDE_T, SLIDE_Z + SLIDE_T + 12.0))
     vcyl(p, "motor", CAR_AT, 0.0, SLIDE_Z + SLIDE_T + 40.0, SLIDE_Z + SLIDE_T + 40.0 + ROUTER_H, ROUTER_D, op="add")
-    for sy in (-38.0, 38.0):
-        vcyl(p, "plunge post", CAR_AT, sy, SLIDE_Z + SLIDE_T + 12.0, SLIDE_Z + SLIDE_T + 40.0, 12.0, op="add")
+    for sx in (-34.0, 34.0):
+        vcyl(p, "plunge post", CAR_AT + sx, -30.0, SLIDE_Z + SLIDE_T + 12.0, SLIDE_Z + SLIDE_T + 40.0, 12.0, op="add")
 
 
 def bit(p, tip):
@@ -179,17 +198,18 @@ def bit(p, tip):
 
 
 def screw(p):
-    """The cross slide's screw and its bracket on one bolster."""
-    y0 = SHAFT_Y + BOLSTER_W / 2
-    box(p, "bracket", (CAR_AT - 20.0, CAR_AT + 20.0), (y0, y0 + PLY), (SLIDE_Z - PLY, SLIDE_Z + 40.0))
-    ycyl(p, "M8 screw", SLIDE_L / 2 - 30.0, y0 + PLY + 45.0, CAR_AT, SLIDE_Z + SLIDE_T + 14.0, SCREW_D, op="add")
-    ycyl(p, "handwheel, 10 marks", y0 + PLY + 25.0, y0 + PLY + 37.0, CAR_AT, SLIDE_Z + SLIDE_T + 14.0, 60.0, op="add")
-    box(p, "nut block on the slide", (CAR_AT - 15.0, CAR_AT + 15.0), (SLIDE_L / 2 - 30.0, SLIDE_L / 2), (SLIDE_Z + SLIDE_T, SLIDE_Z + SLIDE_T + 28.0), op="add")
+    """The cross slide's screw, from a bracket at the shelf's front edge."""
+    box(p, "bracket", (CAR_AT - 20.0, CAR_AT + 20.0), (SHELF_Y[0] - PLY, SHELF_Y[0]), (SLIDE_Z - PLY, SLIDE_Z + 34.0))
+    ycyl(p, "M8 screw", SHELF_Y[0] - PLY - 45.0, -SLIDE_L / 2 + 30.0, CAR_AT, SLIDE_Z + SLIDE_T + 14.0, SCREW_D, op="add")
+    ycyl(p, "handwheel, 10 marks", SHELF_Y[0] - PLY - 37.0, SHELF_Y[0] - PLY - 25.0, CAR_AT, SLIDE_Z + SLIDE_T + 14.0, 60.0, op="add")
+    box(p, "nut block on the slide", (CAR_AT - 15.0, CAR_AT + 15.0), (-SLIDE_L / 2, -SLIDE_L / 2 + 30.0), (SLIDE_Z + SLIDE_T, SLIDE_Z + SLIDE_T + 28.0), op="add")
 
 
 def headstock(p):
     box(p, "headstock, two plies", HEAD_X, (-UPRIGHT_Y, UPRIGHT_Y), (0.0, UPRIGHT_TOP))
-    xbore(p, HEAD_X[0], HEAD_X[1], 0.0, AXIS_Z, SPINDLE_D + 0.5, "spindle")
+    s = p.sketch("right", HEAD_X[0] - 1.0, "slot")
+    p.rect(s, (-SPINDLE_D / 2 - 0.3, AXIS_Z - SPINDLE_D / 2 - 0.3), (SPINDLE_D / 2 + 0.3, AXIS_Z + SPINDLE_D / 2 + LIFT))
+    p.cut(s, 2 * PLY + 2.0, name="the spindle's slot: it lifts to turn")
 
 
 def tailstock(p):
@@ -198,28 +218,46 @@ def tailstock(p):
 
 
 def spindle(p):
-    xcyl(p, "M12 studding", INDEX_X - 20.0, -PATTERN_T + 8.0, 0.0, AXIS_Z, SPINDLE_D)
+    xcyl(p, "M12 studding", HEAD_X[0] - 30.0, -PATTERN_T + 8.0, 0.0, AXIS_Z, SPINDLE_D)
     xcyl(p, "tail centre, M10 pointed", STICK, TAIL_X[1] + 25.0, 0.0, AXIS_Z, 10.0, op="new")
 
 
-def index_plate(p):
-    xcyl(p, "index plate", INDEX_X, INDEX_X + INDEX_T, 0.0, AXIS_Z, INDEX_D)
-    s = p.sketch("right", INDEX_X - 1.0, "holes")
-    p.circle(s, (0.0, AXIS_Z), SPINDLE_D / 2 + 0.2)
-    for k in range(STOPS):
-        a = 2 * math.pi * k / STOPS
-        p.circle(s, (INDEX_R * math.cos(a), AXIS_Z + INDEX_R * math.sin(a)), PIN_D / 2 + 0.1)
-    p.cut(s, INDEX_T + 2.0, name="spindle and twelve stops")
+def hexagon_of(turn):
+    """The hexagon's corners about the axis: a corner down at turn 0, a flat down at 30."""
+    return [(HEX_R * math.cos(math.radians(-90.0 + turn + 60.0 * k)), AXIS_Z + HEX_R * math.sin(math.radians(-90.0 + turn + 60.0 * k))) for k in range(6)]
 
 
-def index_pin(p):
-    xcyl(p, "index pin, 5 mm", POST_X[0] - 6.0, INDEX_X + INDEX_T + 2.0, INDEX_R, AXIS_Z, PIN_D)
-    xcyl(p, "knob", POST_X[0] - 20.0, POST_X[0] - 6.0, INDEX_R, AXIS_Z, 18.0, op="add")
+def hexagon(p):
+    s = p.sketch("right", HEX_X[0], "hexagon")
+    p.polygon(s, hexagon_of(0.0))
+    p.extrude(s, HEX_T, name="index hexagon")
+    xbore(p, HEX_X[0], HEX_X[1], 0.0, AXIS_Z, SPINDLE_D + 0.2, "spindle")
 
 
-def pin_post(p):
-    box(p, "pin post", POST_X, (INDEX_R - 20.0, INDEX_R + 20.0), (RISER_H, AXIS_Z + 20.0))
-    xbore(p, POST_X[0], POST_X[1], INDEX_R, AXIS_Z, PIN_D + 0.2, "pin")
+def cradle_outline(flat):
+    """A cradle's section: a block with the hexagon's lower faces cut in it, a corner down or a flat down."""
+    w = CRADLE_W / 2
+    h = hexagon_of(30.0 if flat else 0.0)
+    low = min(z for _, z in h)
+    seat = sorted((q for q in h if q[1] < AXIS_Z - 1.0), key=lambda q: q[0])       # the corners under the axis, left to right
+    top = low + CRADLE_UP
+    # up each outer face to the cheeks' top
+    def at(a, b, z):
+        t = (z - a[1]) / (b[1] - a[1])
+        return (a[0] + (b[0] - a[0]) * t, z)
+    left_up = sorted((q for q in h if q[0] < 0), key=lambda q: q[1])
+    right_up = sorted((q for q in h if q[0] > 0), key=lambda q: q[1])
+    lo_l, lo_r = seat[0], seat[-1]
+    l = at(lo_l, [q for q in left_up if q[1] > lo_l[1] + 1e-6][0], top) if lo_l[1] < top else lo_l
+    r = at(lo_r, [q for q in right_up if q[1] > lo_r[1] + 1e-6][0], top) if lo_r[1] < top else lo_r
+    return [(-w, 0.0), (w, 0.0), (w, top), r] + seat[::-1] + [l, (-w, top)], low
+
+
+def cradle(p, flat):
+    outline, _ = cradle_outline(flat)
+    s = p.sketch("right", HEX_X[0], "cradle")
+    p.polygon(s, outline)
+    p.extrude(s, HEX_T, name="cradle, flat down" if flat else "cradle, corner down")
 
 
 def pattern(p, outline):
@@ -341,9 +379,10 @@ def main():
     mcp.call("create_document", {"name": "mill"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Indexed stick mill for the leaning half-ellipse Spectre"}, {"type": "rename_tab", "tab": 1, "name": "Base"}]})
     tip_drawn = AXIS_Z + max(z + math.sqrt(max(0.0, (BIT / 2) ** 2 - y * y)) for y, z in outline if abs(y) < BIT / 2) - BIT / 2
-    parts = [("Base", base), ("Risers", risers), ("Shaft supports SK20", supports), ("Shafts", shafts), ("Blocks SC20UU", blocks), ("Bolsters", bolsters), ("Guides", guides),
+    parts = [("Base", base), ("Back wall", wall), ("Shaft supports SK20", supports), ("Shafts", shafts), ("Blocks SC20UU", blocks), ("Carriage square", square), ("Shelf", shelf),
              ("Cross slide", slide), ("Router", router), ("Bit", lambda p: bit(p, tip_drawn)), ("Cross screw", screw), ("Headstock", headstock), ("Tailstock", tailstock),
-             ("Spindle and centre", spindle), ("Index plate", index_plate), ("Index pin", index_pin), ("Pin post", pin_post), ("Pattern", lambda p: pattern(p, outline)), ("Stick", lambda p: stick(p, outline))]
+             ("Spindle and centre", spindle), ("Hexagon", hexagon), ("Cradle corner down", lambda p: cradle(p, False)), ("Cradle flat down", lambda p: cradle(p, True)),
+             ("Pattern", lambda p: pattern(p, outline)), ("Stick", lambda p: stick(p, outline))]
     tabs, bodies = {}, {}
     for i, (title, make) in enumerate(parts):
         tabs[title] = 1 if i == 0 else new_tab(mcp, {"type": "add_part_studio", "name": title})
@@ -352,32 +391,35 @@ def main():
         bodies[title] = part.bodies()
         print(f"{title}: " + ", ".join(f"{v:.0f} mm3" for _, v in bodies[title]))
     asm = new_tab(mcp, {"type": "add_assembly", "name": "Mill"})
-    ops = [{"type": "assembly", "tab": asm, "op": {"type": "add_instance", "studio": tabs[t], "body": k, "name": t if len(bodies[t]) == 1 else f"{t} {k + 1}", "fixed": True, "placement": placed(0.0, 0.0, 0.0)}}
+    ops = [{"type": "assembly", "tab": asm, "op": {"type": "add_instance", "studio": tabs[t], "body": k, "name": t if len(bodies[t]) == 1 else f"{t} {k + 1}", "fixed": True,
+                                                        # the second cradle waits on the base, in front of the tail
+                                                        "placement": placed(STICK + 60.0 - HEX_X[0], -60.0, 0.0) if t == "Cradle flat down" else placed(0.0, 0.0, 0.0)}}
            for t, _ in parts for k in range(len(bodies[t]))]
     text = mcp.call("apply", {"ops": ops})
     if "ERROR:" in text:
         raise SystemExit(text)
     mcp.call("screenshot", {"tab": asm, "view": "-0.55,-0.7,0.5", "width": 1700, "height": 1100, "path": os.path.join(OUT, "mill.png")})
-    mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{-PATTERN_T / 2}", "fit": f"{-PATTERN_T / 2},{-BASE_Y},-20,{-PATTERN_T / 2 + 1},{BASE_Y},330", "width": 1500, "height": 1100, "path": os.path.join(OUT, "end.png")})
+    mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{-PATTERN_T / 2}", "fit": f"{-PATTERN_T / 2},{BASE_Y[0]},-20,{-PATTERN_T / 2 + 1},{BASE_Y[1]},360", "width": 1500, "height": 1100, "path": os.path.join(OUT, "end.png")})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "mill.pdf"),
-                              "note": f"indexed stick mill: {STOPS} stops, 20 mm shafts held at both ends, the bit set on a pattern of the tile at full size; {len(passes)} passes a stick"}))
-    for title, name in (("Pattern", "pattern"), ("Index plate", "index_plate")):
+                              "note": f"indexed stick mill: two stacked 20 mm shafts held at both ends, a hexagon in two cradles for {STOPS} stops, the bit set on a pattern of the tile at full size; {len(passes)} passes a stick"}))
+    for title, name in (("Pattern", "pattern"), ("Hexagon", "hexagon"), ("Cradle corner down", "cradle_corner"), ("Cradle flat down", "cradle_flat")):
         print(mcp.call("export", {"tab": tabs[title], "format": "stl", "path": os.path.join(OUT, f"{name}.stl")}))
     mcp.close()
     numbers = {
         "edge": EDGE, "bulge": BULGE, "gap": GAP, "bit": BIT, "ridge": RIDGE, "mark": MARK, "stops": STOPS, "stick": STICK,
         "tile": {"across": tile["across"], "area": tile["area"], "outline": outline, "swing": reach - BIT / 2},
-        "axis_z": AXIS_Z, "shaft": {"z": SHAFT_Z, "y": SHAFT_Y, "x": SHAFT_X, "d": SHAFT_D}, "supports_x": [(x[0] + x[1]) / 2 for x in RISER_X], "sk_t": SK_T,
-        "slide": {"z": SLIDE_Z, "t": SLIDE_T, "l": SLIDE_L, "w": SLIDE_W, "travel": SLOT}, "carriage": {"l": CAR_L, "at": CAR_AT, "block_x": BLOCK_X, "blk_l": BLK_L},
+        "axis_z": AXIS_Z, "shaft": {"z": RAIL_Z, "y": RAIL_Y, "x": SHAFT_X, "d": SHAFT_D}, "supports_x": SUPPORT_X, "sk_t": SK_T,
+        "slide": {"z": SLIDE_Z, "t": SLIDE_T, "travel": SLOT}, "carriage": {"square": SQUARE, "at": CAR_AT, "block_x": BLOCK_X, "blk_l": BLK_L, "face_y": FACE_Y},
         "bit_x": BIT_X, "pattern_t": PATTERN_T, "reach": REACH, "plunge": PLUNGE, "tip_drawn": tip_drawn, "upright_top": UPRIGHT_TOP,
-        "index": {"d": INDEX_D, "t": INDEX_T, "r": INDEX_R, "pin": PIN_D, "spindle": SPINDLE_D, "x": INDEX_X, "post_x": POST_X},
+        "hexagon": {"af": HEX_AF, "r": HEX_R, "t": HEX_T, "x": HEX_X, "spindle": SPINDLE_D, "lift": LIFT,
+                    "seat_corner": cradle_outline(False)[1], "seat_flat": cradle_outline(True)[1], "corner": cradle_outline(False)[0], "flat": cradle_outline(True)[0]},
         "plan": {"passes": len(passes), "per_stop": per_stop, "tip_low": min(tips), "tip_high": max(tips), "covered": covered, "worst": worst, "orphans": orphans,
                  "list": passes},
         "bodies": {k: [list(b) for b in v] for k, v in bodies.items()},
     }
     with open(os.path.join(OUT, "mill.json"), "w") as f:
         json.dump(numbers, f, indent=1)
-    print(f"base {BASE_X[1] - BASE_X[0]:.0f} x {2 * BASE_Y:.0f}, shafts {SHAFT_X[1] - SHAFT_X[0]:.0f} long at z {SHAFT_Z:.0f}, axis at {AXIS_Z:.0f}, cross slide's sole at {SLIDE_Z:.0f}")
+    print(f"base {BASE_X[1] - BASE_X[0]:.0f} x {BASE_Y[1] - BASE_Y[0]:.0f}, shafts {SHAFT_X[1] - SHAFT_X[0]:.0f} long at z {RAIL_Z[0]:.0f} and {RAIL_Z[1]:.0f}, axis at {AXIS_Z:.0f}, the shelf's top at {SLIDE_Z:.0f}, hexagon {HEX_AF:.0f} across flats")
 
 
 if __name__ == "__main__":

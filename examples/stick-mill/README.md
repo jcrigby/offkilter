@@ -3,11 +3,13 @@
 A reduced duplicator that mills the leaning half-ellipse Spectre's
 whole outline round one solid stick, so a tile is one piece of wood
 with no glue lines inside it. The stick turns between a headstock and
-a tail centre and is held at one of twelve stops, 30° apart. A trim
-router in its plunge base rides a carriage on two 20 mm shafts that
-run the stick's length and are held at both ends. On the same spindle
-as the stick, against its end, is a printed pattern: the tile's
-section at full size.
+a tail centre. A printed hexagon on its spindle drops into one of two
+cradles, a corner down or a flat down: six positions each, 30° apart,
+twelve in all. A trim router in its plunge base stands on a shelf out
+from a ply square that rides two 20 mm shafts, one above the other
+behind the stick, each held at both ends, with a bearing block behind
+each corner of the square. On the same spindle as the stick, against
+its end, is a printed pattern: the tile's section at full size.
 
 ```sh
 cargo build --release -p ok-mcp
@@ -15,11 +17,13 @@ python3 examples/stick-mill/build.py
 cargo test -p ok-render --test stick_mill   # what CI runs
 ```
 
-![The mill: the carriage over the pattern, the stick beyond it, the index plate at the near end](out/mill.png)
+![The mill: the back wall with its two shafts, the square and its shelf over the pattern, the hexagon in its cradle at the near end, the second cradle waiting on the base](out/mill.png)
 
 ## A pass
 
-1. Pull the pin, turn the stick to the stop, drop the pin.
+1. Lift the hexagon out of its cradle, turn it a face, drop it back
+   and clamp it. After six, change to the other cradle for the six
+   in between: one change a stick.
 2. Bring the carriage over the pattern.
 3. Turn the cross screw to the pass's place: every pass is on a mark
    of the handwheel, 0.125 mm.
@@ -57,20 +61,24 @@ in the way, the next stop round cuts it with the side of the ball.
 | the bit's taper in the dents | not modelled: the plan treats the bit as 3 mm all the way up | try the pattern by hand at the deep passes before cutting wood |
 | the plunge base | 50 mm of travel, sole 100 square | the Colt's plunge base, or the cross slide's hole and travel change |
 | the blank | sawn within 2 mm of the tile, swinging 29 | 33 between the axis and the cross slide |
-| the index plate | twelve 5.2 holes on a 100 mm circle | 0.1 mm of slop at the pin is 0.05 at the tile's edge |
+| the hexagon | 100 across its flats, in a cradle on two faces or a flat | a tenth of a millimetre at a seat is 0.05 at the tile's edge; the two cradles must put the axis at one height, 61.3 and 69.0 under it |
+| the hold-down | not drawn | a bar over the hexagon on two studs with wing nuts, or a toggle clamp |
+| the shelf | 195 out from the square, a gusset over each edge | push down on its front edge: if the bit moves, deepen the gussets |
 | the stick's stiffness | not checked | 200 mm between centres with necks of 4.5 mm in its section; halve the stick if it sings |
 
 ## Parts
 
 | part | size, mm | |
 |---|---|---|
-| base | 586 x 340 ply | |
-| risers, 2 | 60 x 320 x 57, three plies | the shaft supports stand on them |
-| shafts, 2 | 20 dia x 516 | cut from the 700s; an SK20 at each end |
-| carriage | four SC20UU bases up, two ply bolsters, two guides | 150 along |
-| cross slide | 300 x 150 x 6 aluminium | the plunge base on it, an M8 screw across |
-| headstock | two plies, 150 wide | M12 studding through it |
-| index plate | 120 dia x 6, printed | outboard, over the left riser, with a pin post |
+| base | 586 x 443 ply | |
+| back wall | 566 x 315, two plies, a gusset behind each end | the four shaft supports bolt to its face |
+| shafts, 2 | 20 dia x 546 | cut from the 700s; one 150 above the other, an SK20 at each end |
+| carriage square | 240 x 240 ply, upright | an SC20UU behind each corner |
+| shelf | 150 x 195 ply, two gussets | out over the stick, the cross slide on it |
+| cross slide | 165 x 90 x 6 aluminium | the plunge base on it, an M8 screw from the front |
+| headstock | two plies, 140 wide | M12 studding in a slot, so it lifts 8.7 to turn |
+| hexagon | 100 across flats x 20, printed | on the spindle, outside the shelf's reach |
+| cradles, 2 | 150 wide x 20, printed | corner down and flat down |
 | pattern | the tile's section x 20, printed | on the spindle against the stick |
 | tail | one ply, an M10 pointed bolt | |
 
@@ -79,10 +87,12 @@ in the way, the next stop round cuts it with the side of the ball.
 `crates/ok-render/tests/stick_mill.rs`: each shaft runs through a
 support at both ends and the carriage's blocks stay between the
 supports wherever the bit goes; the pattern and the stick regenerate
-to the tile's section; the index plate is a disc less its spindle
-hole and twelve stops; with the carriage over the pattern the bit
-stands on it and the carriage clears the headstock, the index plate
-and the pattern; and the plan's passes are a few hundred over all
+to the tile's section; the hexagon is its size, sits in its corner
+cradle without passing through it, and the two seats are a corner's
+radius and half the hexagon under the axis, the flat one a side
+wide; with the carriage over the pattern the bit stands on it and
+the square, the shelf and the cross slide clear the headstock, the
+hexagon, its cradle, the pattern and the wall; and the plan's passes are a few hundred over all
 twelve stops, on the handwheel's marks, within the bit's reach, the
 plunge and the cross travel, with 95 % of the outline cut and nothing
 left more than 0.4 mm proud.

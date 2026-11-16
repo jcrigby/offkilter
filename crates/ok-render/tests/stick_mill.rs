@@ -1,8 +1,9 @@
 //! The indexed stick mill (examples/stick-mill) as a regression suite:
 //! the shafts are held at both ends and the carriage never leaves
 //! them; the pattern and the milled stick are the kernel's leaning
-//! half-ellipse tile; the index plate has twelve stops; the carriage
-//! passes over the headstock and the index plate stands clear of it;
+//! half-ellipse tile; a hexagon drops into two cradles 30° apart for
+//! twelve stops; the carriage's shelf passes clear of the headstock,
+//! the hexagon and the wall;
 //! and the pass plan covers the outline within what the bit can reach,
 //! inside the router's plunge and the cross slide's travel.
 
@@ -102,10 +103,10 @@ fn the_shafts_are_held_at_both_ends_and_the_carriage_stays_between() {
     assert!(b1 > f(&n["stick"]), "and runs off the stick's far end");
 }
 
-/// The pattern and the stick are the tile's section; the index plate
-/// is a disc with the spindle's hole and twelve stops.
+/// The pattern and the stick are the tile's section; the hexagon and
+/// its two cradles give twelve stops.
 #[test]
-fn the_pattern_is_the_tile_and_the_plate_has_twelve_stops() {
+fn the_pattern_is_the_tile_and_the_hexagon_has_twelve_seats() {
     let (mut doc, n) = (load(), numbers());
     let area = f(&n["tile"]["area"]);
     let outline = n["tile"]["outline"].as_array().unwrap();
@@ -121,34 +122,66 @@ fn the_pattern_is_the_tile_and_the_plate_has_twelve_stops() {
     let stick = one(&mut doc, "Stick");
     assert!((stick.volume() - area * f(&n["stick"])).abs() < 1.0);
     let pattern = one(&mut doc, "Pattern");
-    let i = &n["index"];
-    let bore = std::f64::consts::PI * ((f(&i["spindle"]) + 0.2) / 2.0).powi(2);
+    let bore = std::f64::consts::PI * ((f(&n["hexagon"]["spindle"]) + 0.2) / 2.0).powi(2);
     println!(
         "pattern {:.0} mm3, the tile's section gives {:.0}",
         pattern.volume(),
         (area - bore) * f(&n["pattern_t"])
     );
     assert!((pattern.volume() - (area - bore) * f(&n["pattern_t"])).abs() < 6.0);
-    let plate = one(&mut doc, "Index plate");
-    let pi = std::f64::consts::PI;
-    let stops = n["stops"].as_u64().unwrap() as f64;
-    let expect = pi / 4.0
-        * (f(&i["d"]).powi(2)
-            - (f(&i["spindle"]) + 0.4).powi(2)
-            - stops * (f(&i["pin"]) + 0.2).powi(2))
-        * f(&i["t"]);
+    // The hexagon, and the two seats it drops into: on a corner, and 30° on, on a flat.
+    let h = &n["hexagon"];
+    let (af, r, t) = (f(&h["af"]), f(&h["r"]), f(&h["t"]));
+    assert!((r - af / 3f64.sqrt()).abs() < 1e-9);
+    let hexagon = one(&mut doc, "Hexagon");
+    let expect = (3.0 * 3f64.sqrt() / 2.0 * r * r
+        - std::f64::consts::PI * ((f(&h["spindle"]) + 0.2) / 2.0).powi(2))
+        * t;
     println!(
-        "index plate {:.0} mm3, a disc less its {stops} stops gives {expect:.0}",
-        plate.volume()
+        "hexagon {:.0} mm3, {af} across flats gives {expect:.0}",
+        hexagon.volume()
     );
-    assert_eq!(stops, 12.0);
-    // The kernel's circles are many-sided: a 120 mm disc comes out a tenth of a percent small.
-    assert!((plate.volume() - expect).abs() < 0.003 * expect);
-    assert!(dir().join("out/pattern.stl").exists() && dir().join("out/index_plate.stl").exists());
+    assert!((hexagon.volume() - expect).abs() < 0.002 * expect);
+    let axis = f(&n["axis_z"]);
+    assert!(
+        (f(&h["seat_corner"]) - (axis - r)).abs() < 1e-9,
+        "a corner down: the V's bottom a corner's radius under the axis"
+    );
+    assert!(
+        (f(&h["seat_flat"]) - (axis - af / 2.0)).abs() < 1e-9,
+        "a flat down: the floor half the hexagon under it"
+    );
+    let floor: Vec<f64> = h["flat"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|q| (f(&q[1]) - f(&h["seat_flat"])).abs() < 1e-9)
+        .map(|q| f(&q[0]))
+        .collect();
+    assert_eq!(floor.len(), 2);
+    assert!(
+        ((floor[0] - floor[1]).abs() - r).abs() < 1e-9,
+        "the floor is one side of the hexagon wide"
+    );
+    assert!(
+        f(&h["lift"]) > r - af / 2.0,
+        "the spindle's slot lets a corner pass"
+    );
+    assert_eq!(n["stops"].as_u64(), Some(12));
+    let corner = one(&mut doc, "Cradle corner down");
+    let seated = overlap(&hexagon, &corner);
+    println!("hexagon in its corner cradle: {seated:.3} mm3 through it");
+    assert!(seated < 1.0);
+    let (lo, _) = hexagon.bounds().unwrap();
+    assert!((lo.z - f(&h["seat_corner"])).abs() < 1e-6);
+    one(&mut doc, "Cradle flat down");
+    for name in ["pattern", "hexagon", "cradle_corner", "cradle_flat"] {
+        assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
+    }
 }
 
-/// Drawn with the carriage over the pattern: the bit stands on it, the
-/// carriage clears the headstock, and the index plate is out of reach.
+/// Drawn with the carriage over the pattern: the bit stands on it, and
+/// the square, its shelf and the cross slide clear everything fixed.
 #[test]
 fn the_carriage_passes_over_the_headstock_and_the_bit_stands_on_the_pattern() {
     let (mut doc, n) = (load(), numbers());
@@ -162,19 +195,20 @@ fn the_carriage_passes_over_the_headstock_and_the_bit_stands_on_the_pattern() {
     assert!((lo.z - f(&n["tip_drawn"])).abs() < 1e-6);
     assert!(lo.z - f(&n["axis_z"]) <= f(&n["tile"]["swing"]) + 1e-6);
     let head = one(&mut doc, "Headstock");
-    let plate = one(&mut doc, "Index plate");
-    let slide = one(&mut doc, "Cross slide");
-    assert!(overlap(&slide, &head) < 1e-6 && overlap(&slide, &plate) < 1e-6);
-    for g in bodies_of(&mut doc, "Guides")
-        .iter()
-        .chain(bodies_of(&mut doc, "Bolsters").iter())
-    {
-        assert!(
-            overlap(g, &head) < 1e-6,
-            "the carriage clears the headstock"
-        );
-        assert!(overlap(g, &plate) < 1e-6, "and the index plate");
-        assert!(overlap(g, &pattern) < 1e-6);
+    let hexagon = one(&mut doc, "Hexagon");
+    let cradle = one(&mut doc, "Cradle corner down");
+    let wall = one(&mut doc, "Back wall");
+    for name in ["Cross slide", "Shelf", "Carriage square"] {
+        let part = one(&mut doc, name);
+        for (other, what) in [
+            (&head, "headstock"),
+            (&hexagon, "hexagon"),
+            (&cradle, "cradle"),
+            (&pattern, "pattern"),
+            (&wall, "back wall"),
+        ] {
+            assert!(overlap(&part, other) < 1e-6, "{name} is in the {what}");
+        }
     }
     // A blank sawn within 2 mm of the tile swings under the cross slide.
     assert!(f(&n["tile"]["swing"]) + 2.0 < f(&n["slide"]["z"]) - f(&n["axis_z"]));

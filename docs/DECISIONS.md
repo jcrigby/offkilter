@@ -1264,3 +1264,16 @@ from twelve stops by up to a third of a millimetre; the deepest
 passes need the bit 50 mm out of the collet, which means a tapered
 bit whose taper the plan does not model; and the stick's stiffness
 at 200 mm was not checked.
+
+The first drawing had the shafts either side of the stick with a pin
+in a 120 mm index plate. The owner preferred two things, and both are
+better. The shafts are stacked behind the stick on a back wall, as on
+a sliding saw but held at both ends, with a ply square upright on a
+bearing block at each corner and the router on a shelf out from its
+face: the lower shaft is at the stick's height, so the bit is not far
+below the rails as it would be hung from rails overhead. And the
+twelve stops are a hexagon in two cradles, one holding it corner down
+and one flat down, 30° apart: a hexagon seats on its faces with no
+slop where a pin has a hole's clearance, and a stick needs one change
+of cradle. The spindle lies in a slot so it can lift the 8.7 mm a
+corner needs to pass. Not drawn: the hold-down over the hexagon.
