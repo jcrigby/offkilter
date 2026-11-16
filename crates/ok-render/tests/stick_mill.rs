@@ -1,9 +1,10 @@
 //! The indexed stick mill (examples/stick-mill) as a regression suite:
 //! the shafts are held at both ends and the carriage never leaves
 //! them; the pattern and the milled stick are the kernel's leaning
-//! half-ellipse tile; a hexagon drops into two cradles 30° apart for
-//! twelve stops; the carriage's shelf passes clear of the headstock,
-//! the hexagon and the wall;
+//! half-ellipse tile; a twelve-pointed star drops into one cradle, on
+//! six flanks of its lower three points, for twelve stops; the axis is
+//! as low as the star lets it be; the carriage's shelf passes clear of
+//! the headstock, the star and the wall;
 //! and the pass plan covers the outline within what the bit can reach,
 //! inside the router's plunge and the cross slide's travel.
 
@@ -109,10 +110,10 @@ fn the_shafts_are_held_at_both_ends_and_the_carriage_stays_between() {
     assert!(b1 > f(&n["stick"]), "and runs off the stick's far end");
 }
 
-/// The pattern and the stick are the tile's section; the hexagon and
-/// its two cradles give twelve stops.
+/// The pattern and the stick are the tile's section; the star in its
+/// one cradle gives twelve stops.
 #[test]
-fn the_pattern_is_the_tile_and_the_hexagon_has_twelve_seats() {
+fn the_pattern_is_the_tile_and_the_star_has_twelve_seats_in_one_cradle() {
     let (mut doc, n) = (load(), numbers());
     let area = f(&n["tile"]["area"]);
     let outline = n["tile"]["outline"].as_array().unwrap();
@@ -128,98 +129,96 @@ fn the_pattern_is_the_tile_and_the_hexagon_has_twelve_seats() {
     let stick = one(&mut doc, "Stick");
     assert!((stick.volume() - area * f(&n["stick"])).abs() < 1.0);
     let pattern = one(&mut doc, "Pattern");
-    let bore = std::f64::consts::PI * ((f(&n["hexagon"]["spindle"]) + 0.2) / 2.0).powi(2);
+    let h = &n["star"];
+    let bore = std::f64::consts::PI * ((f(&h["spindle"]) + 0.2) / 2.0).powi(2);
     println!(
         "pattern {:.0} mm3, the tile's section gives {:.0}",
         pattern.volume(),
         (area - bore) * f(&n["pattern_t"])
     );
     assert!((pattern.volume() - (area - bore) * f(&n["pattern_t"])).abs() < 6.0);
-    // The hexagon, and the two seats it drops into: on a corner, and 30° on, on a flat.
-    let h = &n["hexagon"];
-    let (af, r, t) = (f(&h["af"]), f(&h["r"]), f(&h["t"]));
+    // The star: a hexagon and the same hexagon turned 30°, twelve points alike.
+    let (af, r, inside, t) = (f(&h["af"]), f(&h["r"]), f(&h["inside"]), f(&h["t"]));
     assert!((r - af / 3f64.sqrt()).abs() < 1e-9);
-    let hexagon = one(&mut doc, "Hexagon");
-    let expect = (3.0 * 3f64.sqrt() / 2.0 * r * r
-        - std::f64::consts::PI * ((f(&h["spindle"]) + 0.2) / 2.0).powi(2))
-        * t;
+    assert!((inside - af / 2.0 / 15f64.to_radians().cos()).abs() < 1e-9);
+    let star = one(&mut doc, "Star");
+    let expect = (12.0 * r * inside * 15f64.to_radians().sin() - bore) * t;
     println!(
-        "hexagon {:.0} mm3, {af} across flats gives {expect:.0}",
-        hexagon.volume()
+        "star {:.0} mm3, two hexagons {af} across flats give {expect:.0}",
+        star.volume()
     );
-    assert!((hexagon.volume() - expect).abs() < 0.002 * expect);
+    assert!((star.volume() - expect).abs() < 0.002 * expect);
+    assert_eq!(n["stops"].as_u64(), Some(12));
+    // The pocket: six flanks of the lower three points, each a flank of the star, none upright or overhanging.
     let axis = f(&n["axis_z"]);
-    assert!(
-        (f(&h["seat_corner"]) - (axis - r)).abs() < 1e-9,
-        "a corner down: the V's bottom a corner's radius under the axis"
-    );
-    assert!(
-        (f(&h["seat_flat"]) - (axis - af / 2.0)).abs() < 1e-9,
-        "a flat down: the floor half the hexagon under it"
-    );
-    let floor: Vec<f64> = h["flat"]
+    let pocket: Vec<(f64, f64)> = h["pocket"]
         .as_array()
         .unwrap()
         .iter()
-        .filter(|q| (f(&q[1]) - f(&h["seat_flat"])).abs() < 1e-9)
-        .map(|q| f(&q[0]))
+        .map(|q| (f(&q[0]), f(&q[1]) - axis))
         .collect();
-    assert_eq!(floor.len(), 2);
-    assert!(
-        ((floor[0] - floor[1]).abs() - r).abs() < 1e-9,
-        "the floor is one side of the hexagon wide"
-    );
-    assert!(
-        f(&h["lift"]) > r - af / 2.0,
-        "the spindle's slot lets a corner pass"
-    );
-    assert_eq!(n["stops"].as_u64(), Some(12));
-    let corner = one(&mut doc, "Cradle corner down");
-    let seated = overlap(&hexagon, &corner);
-    println!("hexagon in its corner cradle: {seated:.3} mm3 through it");
-    assert!(seated < 1.0);
-    let (lo, _) = hexagon.bounds().unwrap();
-    assert!((lo.z - f(&h["seat_corner"])).abs() < 1e-6);
-    let flat = one(&mut doc, "Cradle flat down");
-    // The tray: either cradle in the one pocket, with its play, on the tray's floor.
-    let tray = one(&mut doc, "Cradle tray");
-    let t = &h["tray"];
-    let (floor, lip, play) = (f(&t["floor"]), f(&t["lip"]), f(&t["play"]));
-    for (name, cradle) in [("corner", &corner), ("flat", &flat)] {
+    assert_eq!(pocket.len(), 7);
+    let flank = (r * r + inside * inside - 2.0 * r * inside * 15f64.to_radians().cos()).sqrt();
+    for (i, w) in pocket.windows(2).enumerate() {
+        let (a, b) = (w[0], w[1]);
+        assert!(((a.0 - b.0).hypot(a.1 - b.1) - flank).abs() < 1e-9);
+        let (ra, rb) = (a.0.hypot(a.1), b.0.hypot(b.1));
+        let want = if i % 2 == 0 { (inside, r) } else { (r, inside) };
+        assert!((ra - want.0).abs() < 1e-9 && (rb - want.1).abs() < 1e-9);
         assert!(
-            overlap(cradle, &tray) < 1e-6,
-            "the {name} cradle is in the tray's plastic"
-        );
-        let (lo, hi) = cradle.bounds().unwrap();
-        assert!(
-            (lo.z - floor).abs() < 1e-6,
-            "the {name} cradle stands on the tray's floor"
-        );
-        assert!(
-            (hi.y - lo.y - f(&h["cradle_w"])).abs() < 1e-6
-                && (hi.x - lo.x - f(&h["t"])).abs() < 1e-6
+            a.0 - b.0 > 1.0,
+            "a flank runs across: the star drops straight in"
         );
     }
-    let (lo, hi) = tray.bounds().unwrap();
-    assert!((hi.z - floor - lip).abs() < 1e-6 && lo.z.abs() < 1e-6);
-    let pocket = (f(&h["cradle_w"]) + 2.0 * play) * (f(&h["t"]) + 2.0 * play) * lip;
-    let block = (hi.x - lo.x) * (hi.y - lo.y) * (floor + lip);
-    let screws = 2.0 * std::f64::consts::PI * 2.25f64.powi(2) * (floor + lip);
     println!(
-        "tray {:.0} mm3, a block less its pocket and screws gives {:.0}",
-        tray.volume(),
-        block - pocket - screws
+        "six flanks of {flank:.1}, the pocket {:.1} wide and {:.1} deep",
+        pocket[0].0 - pocket[6].0,
+        pocket[0].1 + r
     );
-    assert!((tray.volume() - (block - pocket - screws)).abs() < 2.0);
-    assert!(play > 0.05 && play < 0.3 && lip >= 4.0);
-    for name in [
-        "pattern",
-        "hexagon",
-        "cradle_corner",
-        "cradle_flat",
-        "cradle_tray",
-    ] {
+    assert!((pocket[3].0).abs() < 1e-9 && (pocket[3].1 + r).abs() < 1e-9);
+    let cradle = one(&mut doc, "Cradle");
+    let seated = overlap(&star, &cradle);
+    println!("star in its cradle: {seated:.3} mm3 through it");
+    assert!(seated < 1.0);
+    let (lo, hi) = cradle.bounds().unwrap();
+    assert!(lo.z.abs() < 1e-6, "the cradle stands on the base");
+    assert!((hi.z - (axis + pocket[0].1)).abs() < 1e-6);
+    assert!((hi.y - lo.y - f(&h["cradle_w"])).abs() < 1e-6 && (hi.x - lo.x - t).abs() < 1e-6);
+    // The axis is as low as the star lets it be: a relief under the point, then a few millimetres of cradle.
+    let (slo, _) = star.bounds().unwrap();
+    assert!((slo.z - (axis - r)).abs() < 1e-6);
+    let floor = slo.z - f(&h["relief"]);
+    println!("axis {axis:.0} over the base, {floor:.1} of cradle under the point's relief");
+    assert!((4.0..10.0).contains(&floor));
+    // The cradle's section: its block less the pocket, the reliefs and crests (roughly half of each round is in it) and two screws.
+    let outline = h["cradle"].as_array().unwrap();
+    let section: f64 = (0..outline.len())
+        .map(|i| {
+            let (a, b) = (&outline[i], &outline[(i + 1) % outline.len()]);
+            f(&a[0]) * f(&b[1]) - f(&b[0]) * f(&a[1])
+        })
+        .sum::<f64>()
+        .abs()
+        / 2.0;
+    let screws = 2.0 * std::f64::consts::PI * 2.25f64.powi(2) * hi.z;
+    println!(
+        "cradle {:.0} mm3, its section less two screws gives {:.0}",
+        cradle.volume(),
+        section * t - screws
+    );
+    let rounds =
+        (3.0 * f(&h["relief"]).powi(2) + 2.0 * f(&h["ease"]).powi(2)) * std::f64::consts::PI * t;
+    assert!(cradle.volume() < section * t - screws + 1.0);
+    assert!(cradle.volume() > section * t - screws - rounds);
+    // Turning a stop: the star rises clear of the pocket inside the spindle's slot.
+    let (need, lift) = (f(&h["lift_needed"]), f(&h["lift"]));
+    println!("lift to turn a stop {need:.2}, the slot gives {lift}");
+    assert!(need > 5.0 && need + 0.5 <= lift);
+    for name in ["pattern", "star", "cradle"] {
         assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
+    }
+    for gone in ["hexagon", "cradle_corner", "cradle_flat", "cradle_tray"] {
+        assert!(!dir().join(format!("out/{gone}.stl")).exists());
     }
 }
 
@@ -238,14 +237,14 @@ fn the_carriage_passes_over_the_headstock_and_the_bit_stands_on_the_pattern() {
     assert!((lo.z - f(&n["tip_drawn"])).abs() < 1e-6);
     assert!(lo.z - f(&n["axis_z"]) <= f(&n["tile"]["swing"]) + 1e-6);
     let head = one(&mut doc, "Headstock");
-    let hexagon = one(&mut doc, "Hexagon");
-    let cradle = one(&mut doc, "Cradle corner down");
+    let star = one(&mut doc, "Star");
+    let cradle = one(&mut doc, "Cradle");
     let wall = one(&mut doc, "Back wall");
     for name in ["Cross slide", "Shelf", "Carriage square"] {
         let part = one(&mut doc, name);
         for (other, what) in [
             (&head, "headstock"),
-            (&hexagon, "hexagon"),
+            (&star, "star"),
             (&cradle, "cradle"),
             (&pattern, "pattern"),
             (&wall, "back wall"),

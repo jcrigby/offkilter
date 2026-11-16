@@ -1277,3 +1277,25 @@ and one flat down, 30° apart: a hexagon seats on its faces with no
 slop where a pin has a hole's clearance, and a stick needs one change
 of cradle. The spindle lies in a slot so it can lift the 8.7 mm a
 corner needs to pass. Not drawn: the hold-down over the hexagon.
+
+## 2026-11 · The stick mill's index: a twelve-pointed star in one cradle, and the axis as low as the star allows
+
+The mill indexed with a hexagon in two cradles, corner down and flat
+down, swapped in a tray half way round a stick. The owner asked
+whether the two hexagons could be one shape, then pointed out the
+cradle is that shape too. A hexagon and itself turned 30° is a
+twelve-pointed star, and the negative of its lower three points is a
+pocket it drops straight into at every stop: six flanks, two of them
+level, none upright. One cradle screwed to the base replaces two
+cradles and the tray, and the change of cradle mid-stick goes.
+
+- A single V under one point lost: it bears on two 15.5 mm flanks
+  close together, about 2.5 times less accurate than the hexagon's
+  seat. Across three points the outer flanks are 73 mm apart.
+- Wrapping more than three points lost: the next flank round is
+  upright, so the star could not drop in.
+- The axis was 119 over the base, a figure left from the first
+  layout. With the cradle on the base the star's point, a relief and
+  6.8 mm of floor put it at 66, and the shafts, square, shelf and
+  uprights came down 53 with it. Lower would need a smaller star,
+  which costs accuracy, or a hole in the base.
