@@ -81,7 +81,9 @@ works today, all in the browser:
   and the template that lays the tiles out
   (`examples/spectre-cauls/`), and the scratch-stock stations that
   scrape those sticks' outer faces round, into a curvy Spectre
-  (`examples/spectre-planes/`), a mini chop saw from an angle
+  (`examples/spectre-planes/`), and an indexed mill that cuts a
+  one-handed curvy tile round one solid stick, set by its own bit on
+  a pattern (`examples/stick-mill/`), a mini chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`) and the Edwardian
   Lift, a minimal router table lifted by a scissor jack through a

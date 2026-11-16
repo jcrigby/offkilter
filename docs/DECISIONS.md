@@ -1235,3 +1235,32 @@ rounds with ring segments, and drilling a blank on the edge middles
 were drawn on the way and not built; the ball-nose's cost, a few
 hundred passes a stick, is why the end pattern has to set position
 and depth together.
+
+## 2026-11 · The stick mill: the bit sets itself on a pattern at the stick's end, and the shafts are held at both ends
+
+The owner wanted a duplicator with most of it taken out: a 12-stop
+fourth axis for the stock and a pattern that only sets the router,
+since the section does not change along the stick, and pointed at the
+two-shaft carriages of mitre saws, held at both ends so nothing sags.
+So the carriage is four of the owner's SC20UU on two 20 mm shafts
+either side of the stick, an SK20 at each end of each; the router
+stays in its own plunge base, whose lock is the depth lock, on a
+plate that crosses by an M8 screw; and the pattern is the tile's
+section at full size on the stick's own spindle, touched by the bit
+itself with the router off. No stylus, no second tool, no scale.
+The index plate is outboard over a riser, clear of the carriage, so
+it can be 120 across: at the 60 that fits under the carriage a
+tenth of slop at the pin would be a tenth at the tile.
+
+The pass plan comes from the kernel's tile, not a rule of thumb. A
+first plan stepped evenly across the stick and kept the passes that
+faced their stop; it left the steep walls of the dents with ridges
+several times the allowance, because a step across is a longer step
+along a wall. Now each point of the outline goes to the stop that
+faces it best among those that can reach it, and a stop's passes are
+spaced by the ridge they leave on the surface. Honest limits, said in
+the README: a twentieth of the outline is out of a 3 mm ball's reach
+from twelve stops by up to a third of a millimetre; the deepest
+passes need the bit 50 mm out of the collet, which means a tapered
+bit whose taper the plan does not model; and the stick's stiffness
+at 200 mm was not checked.
