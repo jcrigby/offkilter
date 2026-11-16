@@ -76,7 +76,7 @@ in the way, the next stop round cuts it with the side of the ball.
 | the plunge base | 50 mm of travel, sole 100 square | the Colt's plunge base, or the cross slide's hole and travel change |
 | the blank | sawn within 2 mm of the tile, swinging 29 | 33 between the axis and the cross slide |
 | the star | two hexagons 100 across their flats, on six flanks in one cradle | a tenth of a millimetre at a steep flank is 0.07 at the tile's edge; if one stop rocks, file the high flank |
-| the room under the stick | 37 between a blank's swing and the base | enough for chips and a brush; the carriage square's lower edge is 22 over the base |
+| the room under the stick | 37 between a blank's swing and the base | enough for chips and a brush; the carriage square's lower edge is 42 over the base |
 | the hold-down | not drawn | a bar over the star on two studs with wing nuts, or a toggle clamp |
 | the shelf | 195 out from the square, a gusset over each edge | push down on its front edge: if the bit moves, deepen the gussets |
 | the stick's stiffness | not checked | 200 mm between centres with necks of 4.5 mm in its section; halve the stick if it sings |
@@ -85,10 +85,10 @@ in the way, the next stop round cuts it with the side of the ball.
 
 | part | size, mm | |
 |---|---|---|
-| base | 616 x 393 ply | |
-| back wall | 596 x 262, two plies, a brace in front at each end, 120 x 200 | the four shaft supports bolt to its face; the braces stand outside the shafts' ends |
-| shafts, 2 | 20 dia x 546 | cut from the 700s; one 150 above the other, an SK20 at each end |
-| carriage square | 240 x 240 ply, upright | an SC20UU behind each corner |
+| base | 576 x 393 ply | |
+| back wall | 556 x 262, two plies, a brace in front at each end, 120 x 200 | the four shaft supports bolt to its face; the braces stand outside the shafts' ends |
+| shafts, 2 | 20 dia x 506 | cut from the 700s; one 150 above the other, an SK20 at each end |
+| carriage square | 200 x 200 ply, upright | an SC20UU behind each corner: the least that takes two shafts 150 apart and their 50 mm blocks, the blocks 145 apart along the shafts |
 | shelf | 150 x 195 ply, two gussets | out over the stick, the cross slide on it |
 | cross slide | 165 x 90 x 6 aluminium | the plunge base on it, an M8 screw from the front |
 | headstock | two plies, 140 wide | M12 studding in a slot, in a slot 9 tall over it: the star lifts 8.0 to turn |

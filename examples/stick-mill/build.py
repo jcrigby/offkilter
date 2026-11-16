@@ -59,11 +59,11 @@ RUN = 6.0                                       # the bit past the stick's far e
 BIT_X = (-PATTERN_T / 2, STICK + RUN)           # where the bit goes: mid pattern to past the stick's far end
 CAR_AT = BIT_X[0]                               # the carriage as drawn: over the pattern, setting a pass
 # The carriage: a ply square upright behind the stick, a bearing block at each corner, on two shafts one above the other.
-SQUARE = 240.0
+SQUARE = 200.0
 FACE_Y = 100.0                                  # the square's front face, behind anything the stick swings
 RAIL_Y = FACE_Y + PLY + BLK_C                   # 144: the shafts
 RAIL_Z = (AXIS_Z + 1.0, AXIS_Z + 151.0)         # stacked, 150 apart, the lower at the stick's height
-BLOCK_X = 85.0                                  # the blocks either side of the square's middle
+BLOCK_X = 72.5                                  # the blocks either side of the square's middle
 WALL_Y = (RAIL_Y + SK_H, RAIL_Y + SK_H + 2 * PLY)   # the back wall, two plies: the shaft supports bolt to its face at both ends
 SUPPORT_X = (BIT_X[0] - SQUARE / 2 - 30.0, BIT_X[1] + SQUARE / 2 + 30.0)   # the supports, clear of the square at both ends of its travel
 SHAFT_X = (SUPPORT_X[0] - SK_T / 2 - 5.0, SUPPORT_X[1] + SK_T / 2 + 5.0)
