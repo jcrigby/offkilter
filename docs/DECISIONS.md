@@ -1828,3 +1828,27 @@ unmeasured, and its boxes slide on strips under gib pressure where
 the hinged sled had ball bushings and rails. Whether that holds a
 few hundredths is the open question, and it is the positioner's to
 answer.
+
+## 2026-11 · The stick sled is set up by six touches, and what they leave
+
+The hinged sled needed 40 touches and a fit in 22 unknowns. With two
+straight screws the list is short: depth is measured whenever a bit is
+set; height needs its middle and its screw's true travel; the master
+has its runout. A pin against the master from the front, from below
+and from above, at two half turns, gives all of that by arithmetic.
+
+Tried on 300 machines built wrong it brings the worst cut from 1.6 mm
+to 0.044 (median), which is twice what the hinged sled's probing left.
+The study says why: the same machines with their travels square come
+to 0.013. The six touches level the bit with the stick's axis at one
+depth, and a quill that does not travel square to the stage carries
+the bit off level as it runs in and out.
+
+So squareness is the next thing to measure, and how is known: the
+ball-nose's tip on the top and the side of a square block stood on the
+sled's plate, two touches on each. A pin cannot do it, because where
+a pin's side meets an edge moves along the pin, and the pin's own lean
+in the collet reads as travel. That is not written; the README says so
+and says what 2 mm in a metre costs. The depth screw's pitch, which
+looked like the worry with a threaded rod, turned out to cost under a
+hundredth.

@@ -122,7 +122,8 @@ Estimated.
 | how it lies | on its lid, on a 19 mm plinth | the stage's weight then pulls away from its column, onto the collar that has no thrust bearing yet |
 | its face from the stick's axis | 36 mm | the uncut blank's corners swing 33.5 |
 | the bit out of the collet nut | 45.5 mm | to reach 12 mm past the stick's axis from behind that face. A 75 mm tapered ball-nose does; the 6 mm straight bit must be as long |
-| the depth's screw | M8 rod, as the positioner draws | a rod's pitch is nobody's promise. Over 45 mm of depth, a tenth of a per cent is 0.045 mm. Setting up will measure it; a T8 lead screw would not need it |
+| the depth's screw | M8 rod, as the positioner draws | a rod's pitch is nobody's promise, but it matters little here: 0.2 % off costs under a hundredth of a millimetre in the study |
+| its two travels, square | not known until it is built | 2 mm in a metre out is 0.07 mm on the tile: the largest thing left. See Setting up |
 
 The collet nut never comes within the blank's swing: at the deepest
 cut its face is 33.5 mm from the axis.
@@ -160,24 +161,80 @@ and sets the bit again before it cuts.
 Only the spindle's motor and its home switch ride on the sled; the
 rest of the wiring stays still.
 
-## Setting up: not yet redone
+## Setting up a built machine
 
-The hinged sled was measured by touching a pin and a block, and
-fitted in 22 unknowns. This one needs far less, and the controller
-already has the touches for it, but the tables and the fit are not
-written yet:
+Two straight screws leave little to find, and none of it needs a fit.
+The controller runs both steps from tables `build.py` writes;
+`calibrate.py` reads the results.
 
-- where the stick's axis is from the positioner's home, in height:
-  the bit's shank or a pin brought down on the master and up under
-  it, and the middle taken;
-- each screw's true travel, against the master's diameter and a
-  block's thickness;
-- whether the two travels are square;
-- the master's runout, by touching it again half a turn round;
-- whether the stick runs parallel to the shafts, by the bands the
-  hinged sled turned.
+**Depth needs nothing.** Setting a bit by touch measures it every time
+one goes in.
 
-Depth needs nothing: setting a bit measures it every time.
+### 1. Where the bit's height is: `out/probe.csv`
+
+A ground pin goes in the collet in place of a bit, with the probe's
+clip on it, and no stick on the sled. The controller brings the pin
+against the master from the front, from below and from above, and
+again with the spindle half a turn round: six places, three touches
+each, a few minutes.
+
+```sh
+python3 calibrate.py fit probe_log.csv --master 15.98 --pin 6.00
+python3 build.py
+```
+
+- The middle of where the pin met the master from below and from
+  above is the height at which the bit's axis is level with the
+  stick's.
+- Those two are the master and the pin apart, whatever the screw
+  says, so they give the height screw's true travel.
+- What half a turn of the spindle changes is the master's runout,
+  and the table's setting rows allow for it.
+
+`calibrate.py study` tries it on 300 machines built wrong at random:
+the height's home anywhere in 3 mm, the height's screw 0.3 % off its
+pitch and the depth's 0.2 %, the two travels 2 mm in a metre out of
+square, the master 0.05 mm off the spindle's centre, a touch
+repeating to 0.01 mm. The worst finishing cut of each:
+
+| | median | 95 in 100 | worst of 300 |
+|---|---|---|---|
+| from the drawing's table | 1.62 mm | 2.97 | 3.19 |
+| after the six touches | 0.044 mm | 0.070 | 0.077 |
+| the same, were the depth's screw true | 0.038 | 0.066 | 0.075 |
+| and the two travels square as well | 0.013 | 0.025 | 0.033 |
+
+One machine is recorded in `out/calibration.json` as probed by the
+controller's own program on a computer: 0.80 mm out from the drawing's
+table, 0.040 planned for. The test works it again.
+
+**What the touches do not find is whether the two travels are
+square**, and that is most of what is left. The pin is level with
+the stick's axis at the depth the touches were made, 50 mm out; a
+bit run in or out from there rises or falls with whatever the quill's
+travel is out of square with the stage's. Two millimetres in a metre
+is 0.07 mm over the cuts' 45 mm of depth. It can be measured, with
+the ball-nose's tip on the top and the side of a 1-2-3 block stood on
+the sled's plate; that is not written yet. Until it is, it is the
+positioner's to be built square, and its builder's to check with a
+square.
+
+### 2. Whether the stick runs true: `out/bands.csv`
+
+The stick's axis has to run parallel to the sled's shafts. A scrap
+stick goes between the centres with a stop clamped 25 mm in from each
+end. The table sets the straight bit and, in three bites, has the
+sled pushed to the far stop and drawn back to the near one, the
+spindle turning the stick once round at each while the foot switch is
+held: first with the bit's end at the stick from the front, then with
+its side over the stick. Four bands, four diameters:
+
+```sh
+python3 calibrate.py align FRONT_NEAR FRONT_FAR TOP_NEAR TOP_FAR
+```
+
+says how far to move the tail centre, toward or away from the router
+and up or down. All of it is simulation.
 
 ## Measure these first
 
@@ -236,4 +293,9 @@ written a second time, in Rust, and works every row forward:
 - the document is the sled at one finishing row, the bit's tip on the
   stick and none of its 36 bodies through another;
 - every bearing block stays on its shaft over the whole travel, and
-  the stops leave the bit beside the master and past the stick.
+  the stops leave the bit beside the master and past the stick;
+- for setting up: a recorded machine built wrong, its six touches
+  touches on it, the arithmetic made again, the height found within
+  2 µm at the depth it was probed, and the table planned for it run
+  on the real machine with the bit set by touch; and the probing
+  table and the bands are where the reading of them assumes.

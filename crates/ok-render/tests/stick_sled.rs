@@ -11,8 +11,13 @@
 //! controller's own program, simulated, ends every row on the table's
 //! steps and sets the bit again when a stick is taken up part way;
 //! that the model is the sled at one row with nothing through
-//! anything; and that the sled's travel fits its shafts and its stops
-//! leave the bit beside the master and past the stick.
+//! anything; that the sled's travel fits its shafts and its stops
+//! leave the bit beside the master and past the stick; and, for
+//! setting a built machine up, that six touches of a pin on the
+//! master find where the bit's height is level with the stick's axis
+//! well enough that the table planned for it cuts true on a machine
+//! built wrong, and that the probing table and the bands are where
+//! the reading of them assumes.
 
 //! and comes at nothing blind, that a sled built wrong, probed by the
 //! controller's own program, is found well enough that the table
@@ -971,4 +976,281 @@ fn the_sled_s_travel_fits_its_shafts_and_its_stops_put_the_bit_beside_the_master
     assert_eq!(bodies_of(&mut doc, "Sled-back switch").len(), 1);
     // drawn mid-pass, the plate is between its stops and touches neither
     assert!(stops.0 + drawn < plate.0 - 50.0 && stops.1 + drawn > plate.1 + 50.0);
+}
+
+/// A machine's two travels as they really are, for the setting up.
+struct Real {
+    tip_home: f64,
+    across_home: f64,
+    scale: P2,
+    shear: f64,
+    ecc: P2,
+    master_r: f64,
+    pin_r: f64,
+}
+
+impl Real {
+    /// (tip, across) of the tool's tip.
+    fn tip(&self, depth: f64, height: f64) -> P2 {
+        (
+            self.tip_home - self.scale.0 * depth,
+            self.across_home + self.scale.1 * height + self.shear * depth,
+        )
+    }
+
+    /// The master's middle from the stick's axis, the spindle turned: (toward the router, up).
+    fn master(&self, turn: f64) -> P2 {
+        let a = turn.to_radians();
+        (
+            self.ecc.0 * a.cos() - self.ecc.1 * a.sin(),
+            self.ecc.0 * a.sin() + self.ecc.1 * a.cos(),
+        )
+    }
+
+    /// Between a pin in the collet, a round bar with a flat end, and the master.
+    fn pin_gap(&self, depth: f64, height: f64, turn: f64) -> f64 {
+        let ((tip, across), c) = (self.tip(depth, height), self.master(turn));
+        (tip - c.0)
+            .max(0.0)
+            .hypot(((across - c.1).abs() - self.pin_r).max(0.0))
+            - self.master_r
+    }
+
+    /// The depth at which a ball-nose run out at this height meets the master.
+    fn ball_touch(&self, height: f64, ball: f64) -> f64 {
+        let c = self.master(0.0);
+        let (mut lo, mut hi) = (0.0, (self.tip_home - c.0) / self.scale.0);
+        for _ in 0..60 {
+            let mid = (lo + hi) / 2.0;
+            let (tip, across) = self.tip(mid, height);
+            if (tip + ball - c.0).hypot(across - c.1) > self.master_r + ball {
+                lo = mid
+            } else {
+                hi = mid
+            }
+        }
+        hi
+    }
+}
+
+/// One machine built wrong, the whole way: the controller's own
+/// program touching a pin on its master at six places, the arithmetic
+/// on what it found, and the table planned for that run on the
+/// machine as it really is, its bit set by touch as the controller
+/// sets it. Worked again here from the recorded touches.
+#[test]
+fn six_touches_find_the_bit_s_height_and_the_table_planned_for_it_cuts_true() {
+    let n = numbers();
+    let c: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/calibration.json")).unwrap())
+            .unwrap();
+    let (d, e) = (&c["drawn"], &c["example"]);
+    let t = &e["true"];
+    let real = Real {
+        tip_home: f(&d["tip_home"]),
+        across_home: f(&t["across_home"]),
+        scale: pair(&t["scale"]),
+        shear: f(&t["shear"]),
+        ecc: pair(&t["ecc"]),
+        master_r: f(&t["master_r"]),
+        pin_r: f(&t["pin_r"]),
+    };
+    // it is built wrong: the height's home is not where the drawing has it
+    assert!((real.across_home - f(&d["across_home"])).abs() > 0.5);
+    let (master_r, pin_r) = (f(&d["master_r"]), f(&c["pin_d"]) / 2.0);
+    let touches = e["touches"].as_array().unwrap();
+    assert_eq!(touches.len(), 6);
+    let at = |kind: &str, turn: f64| -> P2 {
+        let t = touches
+            .iter()
+            .find(|t| t[1].as_str() == Some(kind) && (f(&t[4]) - turn).abs() < 1e-6)
+            .unwrap_or_else(|| panic!("no {kind} at {turn}"));
+        (f(&t[2]), f(&t[3]))
+    };
+    for t in touches {
+        let g = real.pin_gap(f(&t[2]), f(&t[3]), f(&t[4]));
+        assert!(g.abs() < 0.03, "row {} is {g} from a touch", t[0]);
+        assert!(f(&t[5]) <= 0.05);
+    }
+    // The arithmetic: under and over the master are the master and the pin apart; their middle is level with it;
+    // half a turn puts its runout the other way.
+    let reach = master_r + pin_r;
+    let apart = [
+        at("dn", 0.0).1 - at("up", 0.0).1,
+        at("dn", 180.0).1 - at("up", 180.0).1,
+    ];
+    let scale = 2.0 * reach / ((apart[0] + apart[1]) / 2.0);
+    let middle = [
+        (at("dn", 0.0).1 + at("up", 0.0).1) / 2.0,
+        (at("dn", 180.0).1 + at("up", 180.0).1) / 2.0,
+    ];
+    let level = (middle[0] + middle[1]) / 2.0;
+    let ecc = (
+        (at("in", 180.0).0 - at("in", 0.0).0) / 2.0,
+        scale * (middle[0] - middle[1]) / 2.0,
+    );
+    let found = &e["found"];
+    assert!((scale - f(&found["scale_z"])).abs() < 1e-9);
+    assert!((-scale * level - f(&found["across_home"])).abs() < 1e-9);
+    assert!(
+        (ecc.0 - f(&found["ecc"][0])).abs() < 1e-9 && (ecc.1 - f(&found["ecc"][1])).abs() < 1e-9
+    );
+    // and it is right: at the depth the touches were made, that height is level with the stick's axis
+    let off = real.tip(at("up", 0.0).0, level).1;
+    println!(
+        "found level at height {level:.3}: {:.0} um off the stick's axis there; the screw {scale:.4} to one (really {:.4}); the master's runout ({:.3}, {:.3}) (really ({:.3}, {:.3}))",
+        1000.0 * off,
+        real.scale.1,
+        ecc.0,
+        ecc.1,
+        real.ecc.0,
+        real.ecc.1
+    );
+    assert!(off.abs() < 0.02 && (scale - real.scale.1).abs() < 0.002);
+    assert!((ecc.0 - real.ecc.0).abs() < 0.02 && (ecc.1 - real.ecc.1).abs() < 0.02);
+    // The table planned for what was found, on the real machine. The bit is run out, level with where the master's
+    // middle is taken to be, until it touches; its tip is then taken to be the master's radius and runout from the
+    // axis, and every depth is counted from there.
+    let ball = f(&c["ball_r"]);
+    let across_home = -scale * level;
+    let height_for = |across: f64| (across - across_home) / scale;
+    let (set_tip, set_across) = (master_r + ecc.0, ecc.1);
+    let touched = real.ball_touch(height_for(set_across), ball);
+    let mut error = 0.0f64;
+    let mut count = 0;
+    for r in rows(&n)
+        .iter()
+        .filter(|r| r.kind == "finish" && r.last_bite)
+    {
+        let depth = touched + (set_tip - r.tip);
+        let (tip, across) = real.tip(depth, height_for(r.across));
+        let q = seen_back((across, tip + ball), r.t);
+        let p = seen_back((r.across, r.tip + ball), r.t);
+        error = error.max((q.0 - p.0).hypot(q.1 - p.1));
+        count += 1;
+    }
+    println!(
+        "{count} finishing cuts land within {error:.3} mm of where they were wanted; from the drawing's table they would be {:.2} out",
+        f(&e["error_as_drawn"])
+    );
+    assert!(count > 200 && error < 0.09 && (error - f(&e["error"])).abs() < 1e-6);
+    assert!(f(&e["error_as_drawn"]) > 0.3);
+    // And over three hundred such machines, as calibrate.py's study recorded it. What the touches do not find is
+    // whether the two travels are square: with that true as well, the cuts are three times nearer.
+    let s = &c["study"];
+    assert!(s["trials"].as_u64().unwrap() >= 300);
+    assert!(f(&s["as_drawn"][0]) > 1.0);
+    assert!(f(&s["fitted"][0]) < 0.06 && f(&s["fitted"][2]) < 0.1);
+    assert!(f(&s["and_square"][0]) < 0.02 && f(&s["and_square"][2]) < 0.05);
+    assert!(f(&s["and_square"][0]) * 2.0 < f(&s["fitted"][0]));
+}
+
+/// A point given as (across, toward the router) with the stick turned to t, back in the tile's frame.
+fn seen_back(q: P2, t: f64) -> P2 {
+    (
+        -q.0 * t.sin() + q.1 * t.cos(),
+        q.0 * t.cos() + q.1 * t.sin(),
+    )
+}
+
+/// The probing table, on the machine as drawn: each of its six rows is
+/// the pin touching the master, from the front level with the axis and
+/// from below and above with its end past it, at the spindle's mark
+/// and half a turn on, each come to by the quill's home. And the bands
+/// are turned with the bit's end at the stick from the front and with
+/// its side over the stick, in bites of 4 mm.
+#[test]
+fn the_probing_table_and_the_bands_are_where_the_reading_of_them_assumes() {
+    let n = numbers();
+    let cal = &n["calibration"];
+    let d = &cal["drawn"];
+    let drawn = Real {
+        tip_home: f(&d["tip_home"]),
+        across_home: f(&d["across_home"]),
+        scale: (1.0, 1.0),
+        shear: 0.0,
+        ecc: (0.0, 0.0),
+        master_r: f(&d["master_r"]),
+        pin_r: f(&cal["pin_d"]) / 2.0,
+    };
+    let (travel, probe) = (pair(&n["axes"]["travel"]), pair(&n["axes"]["probe"]));
+    let mut kinds = Vec::new();
+    for row in cal["rows"].as_array().unwrap() {
+        let kind = row["kind"].as_str().unwrap();
+        if !["in", "up", "dn"].contains(&kind) {
+            continue;
+        }
+        let (depth, height, turn) = (f(&row["depth"]), f(&row["height"]), f(&row["turn"]));
+        assert!(
+            drawn.pin_gap(depth, height, turn).abs() < 1e-3,
+            "row {}",
+            row["n"]
+        );
+        assert_eq!(row["via"].as_str(), Some("h"));
+        let (tip, across) = drawn.tip(depth, height);
+        if kind == "in" {
+            assert!(across.abs() < 1e-3 && depth - probe.0 > 1.0 && depth + probe.0 < travel.0);
+        } else {
+            // the pin's end past the stick's axis, so its side is what meets the master
+            assert!((tip + f(&cal["over"])).abs() < 1e-3);
+            assert!((across > 0.0) == (kind == "dn"));
+            assert!(height - probe.1 > 1.0 && height + probe.1 < travel.1 - 1.0);
+        }
+        kinds.push((kind.to_string(), turn as i64));
+    }
+    kinds.sort();
+    let want: Vec<(String, i64)> = [
+        ("dn", 0),
+        ("dn", 180),
+        ("in", 0),
+        ("in", 180),
+        ("up", 0),
+        ("up", 180),
+    ]
+    .iter()
+    .map(|&(k, t)| (k.to_string(), t))
+    .collect();
+    assert_eq!(kinds, want);
+    // the bands
+    let axes = Axes::new(&n);
+    let bit_r = f(&n["rough"]["bit"]) / 2.0;
+    let rows = n["bands"]["rows"].as_array().unwrap();
+    let sim: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/steps.json")).unwrap())
+            .unwrap();
+    let per = [f(&sim["per"][0]), f(&sim["per"][1])];
+    let done = sim["bands"].as_array().unwrap();
+    assert_eq!(done.len(), rows.len());
+    let (mut front, mut top, mut rounds) = (Vec::new(), Vec::new(), 0);
+    for (row, s) in rows.iter().zip(done) {
+        match row["kind"].as_str().unwrap() {
+            "place" => {
+                let (depth, height) = (f(&row["depth"]), f(&row["height"]));
+                let (across, tip, _) = axes.cutter(depth, height, f(&row["turn"]));
+                if across.abs() < 1e-3 {
+                    front.push(tip);
+                } else {
+                    assert!((tip + bit_r).abs() < 1e-3 && across > 0.0);
+                    top.push(across - bit_r);
+                }
+                assert!((f(&s[1]) - depth * per[0]).abs() <= 0.5 + 1e-6);
+                assert!((f(&s[2]) - height * per[1]).abs() <= 0.5 + 1e-6);
+                assert!(
+                    depth < travel.0 - f(&n["axes"]["bit_margin"]) + 1e-6
+                        && height < travel.1 - 2.0
+                );
+            }
+            "round" => rounds += 1,
+            _ => {}
+        }
+    }
+    println!("bands from the front at {front:?}, from above at {top:?}; {rounds} turns");
+    assert_eq!(rounds, 12);
+    for bands in [&front, &top] {
+        assert_eq!(bands.len(), 3);
+        assert!(bands
+            .windows(2)
+            .all(|w| w[0] > w[1] && w[0] - w[1] <= 4.0 + 1e-3));
+        assert!((bands[2] - f(&n["bands"]["r"])).abs() < 1e-3);
+    }
 }

@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 from okmcp import Mcp, Part, new_tab  # noqa: E402
 import plan as P  # noqa: E402
+import calibrate as K  # noqa: E402
 sys.path.insert(0, os.path.join(HERE, "firmware"))
 import config as FW  # noqa: E402
 
@@ -169,7 +170,14 @@ def main():
     deep = cands + passes
     low_tip = min(q["tip"] for q in deep)
     tip_home = x_travel - BIT_MARGIN + low_tip                   # with the quill at home: so the deepest cut leaves the margin of the travel
-    axes = P.Axes(tip_home, -z_travel / 2)
+    drawn_axes = P.Axes(tip_home, -z_travel / 2)
+    # What calibrate.py found a built machine to be, if it has been run: where the bit's height is level with the stick's
+    # axis, the height screw's true travel, and the master's runout. The table is then planned for that.
+    built = json.load(open(K.BUILT)) if os.path.exists(K.BUILT) else None
+    axes = P.Axes(tip_home, built["across_home"], (1.0, built["scale_z"])) if built else drawn_axes
+    master_r, ecc = (built["master_r"], built["ecc"]) if built else (MASTER_R, [0.0, 0.0])
+    if built:
+        print(f"PLANNED FOR THE MACHINE AS BUILT ({K.BUILT}): the bit level with the stick's axis at height {-axes.across_home / axes.scale[1]:.3f}, the height's screw {axes.scale[1]:.4f} to one, the master {math.hypot(*ecc):.3f} off the spindle's centre")
     nut_face_home = face + (pos["quill"]["front"] - box_x[0]) - pos["router"]["collet"][1]   # the collet nut's face from the axis, the quill at home
     bit_out = nut_face_home - tip_home                           # how far the bit stands out of the collet nut
     safe = tip_home - (MASTER_R + SAFE_CLEAR)                    # the depth at or short of which the bit clears the master at any height
@@ -195,7 +203,7 @@ def main():
     label = lambda *text: "".join(t.ljust(16) for t in text).rstrip()
     cuts.append(("load", "none", load_t, 0.0, blank, label("blank on centres", f"{under:.1f} up from its", f"wide face {toward:.1f}", "in from router")))
     # A bit is set by touch: run out at the master, level with the stick's axis, until the clip on it reads.
-    setting = (0.0, 0.0, MASTER_R)
+    setting = (0.0, ecc[1], master_r + ecc[0])        # level with the master's middle, at its near side
     cuts.append(("set", "straight") + setting + ("set the straight bit on the master",))
     for q in places:
         for b in range(1, q["bites"] + 1):
@@ -271,6 +279,20 @@ def main():
         raise SystemExit("taken up half way, the controller does not end the rows where it does run through")
     with open(steps, "w") as f:
         json.dump(sim, f)
+    # -- the two tables that set a built machine up ------------------------------
+    probing = K.probe_rows(drawn_axes, MASTER_R, (FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM), (x_travel, z_travel))
+    K.write_table(os.path.join(OUT, "probe.csv"), probing, safe)
+    bands = K.band_rows(axes, setting)
+    if max(r["depth"] for r in bands) > x_travel - BIT_MARGIN or max(r["height"] for r in bands) > z_travel - 2.0:
+        raise SystemExit("the bands do not fit the positioner's travel")
+    K.write_table(os.path.join(OUT, "bands.csv"), bands, safe)
+    banded = os.path.join(OUT, "steps_bands.json")
+    subprocess.run([sys.executable, os.path.join(HERE, "firmware", "main.py"), "--sim", os.path.join(OUT, "bands.csv"), banded], check=True, cwd=os.path.join(HERE, "firmware"))
+    sim["bands"] = json.load(open(banded))["rows"]
+    os.remove(banded)
+    with open(steps, "w") as f:
+        json.dump(sim, f)
+    print(f"probing: {sum(1 for r in probing if r['kind'] in ('in', 'up', 'dn'))} touches in {len(probing)} rows; bands: {len(bands)} rows")
     print(f"{len(rows)} rows; the controller, simulated, ends at {sim['rows'][-1][1:]} steps and never changes height with the bit further out than step {sim['deepest_crossing']} (safe {sim['safe_steps']})")
 
     # -- where things are ---------------------------------------------------------
@@ -447,7 +469,7 @@ def main():
                  "finish_runs": sum(q["bites"] for q in passes), "deepest": max(q["depth"] for q in passes), "ball_bite": P.BALL_BITE},
         "rough": {"bit": P.ROUGH_BIT, "bite": P.ROUGH_BITE, "step": P.ROUGH_STEP, "allow": P.ALLOW, "angles": P.ROUGH_ANGLES, "places": len(places),
                   "runs": sum(q["bites"] for q in places), **waste},
-        "axes": {"tip_home": tip_home, "across_home": -z_travel / 2, "scale": [1.0, 1.0], "shear": 0.0, "travel": [x_travel, z_travel], "safe": safe, "safe_clear": SAFE_CLEAR,
+        "axes": {"tip_home": tip_home, "across_home": axes.across_home, "scale": list(axes.scale), "shear": axes.shear, "travel": [x_travel, z_travel], "safe": safe, "safe_clear": SAFE_CLEAR,
                  "move_clear": MOVE_CLEAR, "bit_margin": BIT_MARGIN, "bit_out": bit_out, "past": FW.PAST_MM, "turn_past": FW.TURN_PAST_DEG, "nearest_master": nearest, "probe": [FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM]},
         "straight": straight,
         "sled": {"za": za, "face": face, "face_clear": FACE_CLEAR, "bed_clear": BED_CLEAR, "top": sled_top, "plate_x": PLATE_X, "plate_y": plate_y, "stock_half": STOCK_HALF, "stock_top": stock_top,
@@ -457,6 +479,9 @@ def main():
         "positioner": {"half_box": half_box, "box_y": [face, face + box_x[1] - box_x[0]], "top": top_z, "bit_home_z": bit_home_z, "collet": pos["router"]["collet"], "size": pos["size"],
                        "length_beyond_face": pos["x"]["end"] - box_x[0]},
         "drawn": {"row": row["n"], "x": DRAWN_X, "psi": psi, "bit_z": bit_z},
+        "calibration": {"drawn": {"tip_home": tip_home, "across_home": -z_travel / 2, "master_r": MASTER_R}, "rows": probing, "setting": setting, "built": bool(built),
+                        "pin_d": K.PIN_D, "over": K.OVER},
+        "bands": {"r": K.BAND_R, "span": K.BAND_SPAN, "rows": bands},
         "count": count, "rows": rows,
         "bodies": {k: [list(v) for v in b_] for k, b_ in bodies.items()},
     }
