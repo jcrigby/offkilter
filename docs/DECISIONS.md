@@ -1596,3 +1596,68 @@ two hours and more of rows, so:
   are there, and the same four lines over USB always. Not required:
   a controller that will not start for want of a display is worse
   than one without.
+
+## 2026-11 · The stick sled is measured by touch and planned for as built
+
+The table came from the drawing, and the README said calibration was
+not designed. Run from the drawing's table, a sled with every
+dimension up to half a millimetre out and its home switches 2 mm out
+cuts 1.6 mm from where it should (median of 300), so this was the gap
+between a drawing and a machine.
+
+What lost:
+
+- **Trims and scales from a test stick.** Six numbers in `config.py`
+  got a sled 0.5 mm out to 0.06 mm at best, and nobody could say how
+  to get the six with callipers from a cut tile. The scales are gone
+  from the controller; the trims stay as a nudge.
+- **Cutting forks and measuring them.** A prototype that cut slots in
+  a scrap stick and fitted the sled to calliper readings of them left
+  0.38 mm (median). Callipers on wood are the limit.
+- **Measuring the built sled directly.** A hinge's centre cannot be
+  reached with a rule to better than the half millimetre in question.
+
+What is there: the sled measures itself. The master on the spindle is
+a ground steel sleeve; a clip lead on it and another on what it
+touches make a contact the Pico reads. The controller brings it onto
+a 6 mm pin in the collet and a 1-2-3 block in three attitudes, 40
+places, and `calibrate.py` fits the sled those touches describe.
+`build.py` plans for that sled, so the controller stays what it was:
+three numbers a row, no geometry.
+
+Things the numbers decided, not taste:
+
+- **Coverage before precision.** The first probing set (pin, block
+  flat, block on edge) left 0.035 mm with perfect touches: nothing
+  was touched above 59 mm and finishing cuts go to 68. The block on
+  end is 76 tall, too tall to cross, so only one face of it can be
+  touched from each side, with its place unknown. A straight face at
+  an unknown place is still a straight line, and four heights on it
+  each side brought perfect touches to 0.009 and real ones to 0.021.
+- **The pin twice, half a turn apart.** A sleeve on studding runs
+  out. Probed at one angle, 0.1 mm of runout reads as a cutter 0.1 mm
+  out of place: 0.11 mm median. The second half turn separates them.
+- **Three touches a place.** Scatter of 0.01 mm a touch is the next
+  limit: 0.029 with one touch, 0.021 with three.
+- **The sled puts the block where it wants it.** A block placed by
+  eye is 3 mm from where the table expects it and the master came
+  down on it in the simulation. Held where the face should be, the
+  master is the gauge: the block is slid up until a lamp lights.
+- **Down the pin's side a step at a time.** Coming down from the top
+  of the lift beside the pin's foot, 1 sled in 300 brought the master
+  within half a millimetre of the pin on the way. The first touch on each side is the shallowest and
+  the rest step down from it.
+
+What it cost the sled: the master is bought, not printed; the spur is
+14 mm so a block lying under master and spur touches only the master;
+the swing screw's travel went from 32 to 51 mm for the block's two
+faces, and its rail from 100 to 150, the lift's size.
+
+Whether the stick's axis runs parallel to the sled's travel is not
+something a touch on one master can say, so that is a second table:
+round bands turned near each end of a scrap stick, under the cutter
+and beside it, and four calliper readings that say how far to move
+the tail centre.
+
+All of it is simulation. The study assumes a flat table, a square
+block, a clean touch and a stiff sled.

@@ -13,6 +13,15 @@ It says what it wants on a small display if one is fitted (an SSD1306,
 over USB. It keeps its place in at.txt, so a stick stopped half way
 can be taken up again after homing.
 
+The same program runs the two tables that set a built sled up, copied
+to the Pico as passes.csv in their turn: bands.csv, which turns two
+round bands on a scrap stick to show whether the stick's axis runs
+true to the table and the fence, and probe.csv, which brings the
+master on the spindle onto a pin in the router and a block on the
+table until an electrical contact closes, three times at each place,
+and writes where the screws stood to probe_log.csv. calibrate.py makes both tables and
+reads the log.
+
 Copy main.py, config.py and passes.csv to the Pico. On a computer,
 `python3 main.py --sim passes.csv steps.json [row]` runs the same code
 on pins that do nothing and writes where every row left the motors;
@@ -56,27 +65,33 @@ class Pins:
             return True
         return (self.inp[n].value() == 1) if C.HOME_OPENS else (self.inp[n].value() == 0)
 
+    def touching(self):
+        """The probe's contact: the master, clipped to ground, on the pin or block, clipped to the probe's pin."""
+        if SIM:
+            return CONTACT() if CONTACT else True
+        return self.inp[C.PROBE_PIN].value() == 0
+
     def pause(self, us):
         if not SIM:
             utime.sleep_us(us)
 
 
 PINS = Pins()
+CONTACT = None                      # on a computer: something to stand in for the probe's contact
 
 
 class Axis:
-    def __init__(self, name, pins, per_unit, flip, trim, scale=1.0, mid=0.0):
+    def __init__(self, name, pins, per_unit, flip, trim):
         self.name, self.step, self.dir = name, pins[0], pins[1]
         self.per_unit, self.flip, self.trim = per_unit, flip, trim
-        self.scale, self.mid = scale, mid
         self.at = 0                 # steps from home
         self.stepped = 0            # steps taken in all
         PINS.output(self.step)
         PINS.output(self.dir)
 
     def steps_for(self, units):
-        """The table's number as steps: stretched about `mid` by the scale a test stick found, moved by the trim."""
-        return int(round((self.mid + (units - self.mid) * self.scale + self.trim) * self.per_unit))
+        """The table's number as steps, moved by the trim."""
+        return int(round((units + self.trim) * self.per_unit))
 
     def run(self, steps, guard=None, slow=None):
         """Step by `steps`, ramping up and down. `guard` is asked every step; while it says no, wait."""
@@ -198,7 +213,8 @@ def keep_place(n, total):
 
 def read_table(path):
     """passes.csv: '#safe,<mm>' then rows of n,kind,tool,lift,swing,turn,via,label.
-    via is 'd' for a move that may go straight to its row, 's' for one that must go by the safe height."""
+    via is 'd' for a move that may go straight to its row, 's' for one that must go by the safe height,
+    'h' for one that must go by the top of the lift: over a pin or a block."""
     safe, rows = 0.0, []
     with open(path) as f:
         for line in f:
@@ -213,20 +229,23 @@ def read_table(path):
             p = line.split(",")
             if p[0] == "n":
                 continue
-            rows.append((int(p[0]), p[1], p[2], float(p[3]), float(p[4]), float(p[5]), p[6] == "d", p[7] if len(p) > 7 else ""))
+            rows.append((int(p[0]), p[1], p[2], float(p[3]), float(p[4]), float(p[5]), p[6], p[7] if len(p) > 7 else ""))
     return safe, rows
 
 
 class Sled:
     def __init__(self, safe):
-        self.lift = Axis("lift", C.LIFT_PINS, C.LIFT_STEPS_PER_MM, C.LIFT_FLIP, C.LIFT_TRIM_MM, C.LIFT_SCALE, C.LIFT_MID_MM)
-        self.swing = Axis("swing", C.SWING_PINS, C.SWING_STEPS_PER_MM, C.SWING_FLIP, C.SWING_TRIM_MM, C.SWING_SCALE, C.SWING_MID_MM)
+        self.lift = Axis("lift", C.LIFT_PINS, C.LIFT_STEPS_PER_MM, C.LIFT_FLIP, C.LIFT_TRIM_MM)
+        self.swing = Axis("swing", C.SWING_PINS, C.SWING_STEPS_PER_MM, C.SWING_FLIP, C.SWING_TRIM_MM)
         self.turn = Axis("turn", C.TURN_PINS, C.TURN_STEPS_PER_DEG, C.TURN_FLIP, C.TURN_TRIM_DEG)
         self.safe = safe            # the lift at or above which the spindle clears the cutter wherever the frame swings
         self.deepest_crossing = 0   # the lowest the lift ever was while the frame swung or the spindle turned, on a move by the safe height
         self.went_straight = 0
         self.turned = 0             # steps the spindle has turned forwards coming up to its angles
-        for n in (C.LIFT_HOME_PIN, C.SWING_HOME_PIN, C.TURN_HOME_PIN, C.SLED_BACK_PIN, C.NEXT_PIN):
+        self.probed = []            # what a probing table found: row, kind, lift, swing, turn
+        self.row = 0                # the row being done
+        self.touch = 0              # and, probing, which of its touches
+        for n in (C.LIFT_HOME_PIN, C.SWING_HOME_PIN, C.TURN_HOME_PIN, C.SLED_BACK_PIN, C.NEXT_PIN, C.PROBE_PIN):
             PINS.input(n)
         PINS.output(C.ENABLE_PIN)
         PINS.output(C.LED_PIN)
@@ -256,12 +275,15 @@ class Sled:
         self.turned += abs(ahead)
         self.turn.run(ahead, guard, slow)
 
-    def go(self, lift, swing, turn, straight=False):
+    def go(self, lift, swing, turn, via="s"):
         """To a pass, the sled back: across and round, then to its height. Unless the table says this move
-        may go straight, up to the safe height first if below it: the master is over the cutter."""
+        may go straight ('d'), up to the safe height first if below it: the master is over the cutter.
+        'h' is by the top of the lift, over anything standing on the table."""
         guard = self.back
-        if straight:
+        if via == "d":
             self.went_straight += 1
+        elif via == "h":
+            self.lift.run(-self.lift.at, guard)
         else:
             safe_steps = self.lift.steps_for(self.safe)
             if self.lift.at > safe_steps:
@@ -270,6 +292,30 @@ class Sled:
         self.swing.to(swing, guard)
         self.turn_on_to(turn, guard)
         self.lift.to(lift, guard)
+
+    def probe(self, axis, expected, way, window):
+        """One screw brought slowly on, from a window short of where the drawn sled would touch to a window past
+        it, until the contact closes; then backed off a little and brought on again, for PROBE_TOUCHES touches.
+        Where it stood at them, in the table's units: the mean, and how far apart they were. None if it never closed."""
+        start = max(0.0, expected - way * window)
+        axis.to(start, self.back)
+        if PINS.touching():
+            raise RuntimeError("touching before the probe began")
+        last = axis.steps_for(expected + way * window)
+        step = 1 if last > axis.at else -1
+        found = []
+        for k in range(C.PROBE_TOUCHES):
+            self.touch = k
+            while axis.at != last and not PINS.touching():
+                axis.run(step, self.back, C.PROBE_US)
+            if not PINS.touching():
+                break
+            found.append(axis.at)
+            axis.run(-step * int(C.PROBE_BACK_MM * axis.per_unit), self.back)
+        axis.to(start, self.back)
+        if len(found) < C.PROBE_TOUCHES:
+            return None
+        return sum(found) / len(found) / axis.per_unit, (max(found) - min(found)) / axis.per_unit
 
     def run(self, rows, record=None, after=None):
         """The whole table, or what is left of it after row `after`."""
@@ -281,26 +327,88 @@ class Sled:
                 done = 0
         self.home()
         from_home = True                    # the first move is from home, whatever the table took it to be from
-        for n, kind, tool, lift, swing, turn, straight, label in rows:
+        for n, kind, tool, lift, swing, turn, via, label in rows:
             if n <= done:
                 continue
+            self.row = n
             head = "%d/%d %s" % (n, total, kind)
-            if kind == "measure":           # nothing moves: a reading to take, in a calibration
-                SCREEN.show(head, label, "then foot switch")
+            if kind in ("measure", "say"):  # nothing moves: something to do or to read off, then the foot switch
+                SCREEN.show(head, label[:16], label[16:32], label[32:48], label[48:64], "then foot switch")
                 wait(C.NEXT_PIN)
+            elif kind == "leads":           # the probe's two clips, on: the master bridged to the thing it will touch must read, and not once the bridge is gone
+                SCREEN.show(head, "bridge master", "and %s with" % label[:12], "something metal")
+                while not SIM and not PINS.touching():
+                    utime.sleep_ms(20)
+                SCREEN.show(head, "good. take it", "away, then foot", "switch")
+                wait(C.NEXT_PIN)
+                if not SIM and PINS.touching():
+                    raise RuntimeError("still touching")
+            elif kind == "round":           # a band turned under the cutter, the sled at a stop: only while the foot switch is held
+                SCREEN.show(head, label[:16], label[16:32], "hold foot switch")
+                while not SIM and not PINS.closed(C.NEXT_PIN):
+                    utime.sleep_ms(20)
+                self.turn.run(int(round(360.0 * self.turn.per_unit)), lambda: PINS.closed(C.NEXT_PIN), C.ROUND_US)
+                SCREEN.show(head, "round. let go")
+                while not SIM and PINS.closed(C.NEXT_PIN):
+                    utime.sleep_ms(20)
+            elif kind in ("br+", "br-"):    # the master put where a block's face should be: the block is slid up to it until the lamp lights
+                SCREEN.show(head, "block off the", "table. sled back", "then foot switch")
+                wait(C.SLED_BACK_PIN)
+                wait(C.NEXT_PIN)
+                way = 1.0 if kind == "br+" else -1.0
+                short = max(0.0, swing - way * C.PROBE_SWING_MM)
+                self.go(lift, short, turn, "h")
+                self.swing.to(swing, self.back)
+                SCREEN.show(head, label[:16], label[16:32], label[32:48], "to the master:", "lamp, then foot")
+                while not SIM:
+                    PINS.set(C.LED_PIN, PINS.touching())
+                    if PINS.closed(C.NEXT_PIN) and PINS.touching():
+                        break
+                    utime.sleep_ms(20)
+                PINS.set(C.LED_PIN, 0)
+                self.swing.to(short, self.back)     # away from it before anything is lifted
+                from_home = False
+            elif kind in ("down", "sw+", "sw-"):
+                SCREEN.show(head, label[:16], "sled back,", "then foot switch")
+                wait(C.SLED_BACK_PIN)
+                if from_home:
+                    wait(C.NEXT_PIN)        # the first probe waits to be told; the rest follow on by themselves
+                SCREEN.show(head, "probing")
+                if kind == "down":
+                    self.go(max(0.0, lift - C.PROBE_LIFT_MM), swing, turn, via)
+                    at = self.probe(self.lift, lift, 1.0, C.PROBE_LIFT_MM)
+                    found = None if at is None else (at[0], self.swing.at / self.swing.per_unit, at[1])
+                else:
+                    way = 1.0 if kind == "sw+" else -1.0
+                    self.go(lift, max(0.0, swing - way * C.PROBE_SWING_MM), turn, via)
+                    at = self.probe(self.swing, swing, way, C.PROBE_SWING_MM)
+                    found = None if at is None else (self.lift.at / self.lift.per_unit, at[0], at[1])
+                from_home = False
+                if found is None:
+                    raise RuntimeError("no touch at row %d: check the clips" % n)
+                if found[2] > C.PROBE_AGREE_MM:
+                    raise RuntimeError("row %d: touches %d um apart" % (n, int(1000 * found[2])))
+                self.probed.append([n, kind, found[0], found[1], turn, found[2]])
+                if not SIM:
+                    with open(C.PROBE_FILE, "a") as f:
+                        f.write("%d,%s,%.5f,%.5f,%.4f,%.5f\n" % (n, kind, found[0], found[1], turn, found[2]))
+                if not SCREEN.quiet:
+                    print("probe,%d,%s,%.5f,%.5f,%.4f,%.5f" % (n, kind, found[0], found[1], turn, found[2]))
             else:
                 SCREEN.show(head, tool, "sled back,", "then foot switch")
                 wait(C.SLED_BACK_PIN)
                 wait(C.NEXT_PIN)
                 SCREEN.show(head, "moving")
-                self.go(lift, swing, turn, straight and not from_home)
+                self.go(lift, swing, turn, "s" if from_home and via == "d" else via)
                 from_home = False
                 PINS.set(C.LED_PIN, 1)
                 if kind == "set":
                     SCREEN.show(head, "raise the bit", "to the master,", "then foot switch")
                     wait(C.NEXT_PIN)
+                elif kind == "place":       # brought to a height for turning bands: the rows after it say what to do
+                    pass
                 else:
-                    SCREEN.show(head, label, "push through", "and pull back")
+                    SCREEN.show(head, label[:16], "push through", "and pull back")
                     wait_for_the_cut()
                 PINS.set(C.LED_PIN, 0)
             keep_place(n, total)
@@ -322,7 +430,7 @@ def main(path="passes.csv", out=None, after=None):
     if out:
         import json
         with open(out, "w") as f:
-            json.dump({"rows": record, "after": after or 0, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight,
+            json.dump({"rows": record, "after": after or 0, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight, "probed": sled.probed,
                        "stepped": [sled.lift.stepped, sled.swing.stepped, sled.turn.stepped], "safe_steps": sled.lift.steps_for(safe),
                        "per": [C.LIFT_STEPS_PER_MM, C.SWING_STEPS_PER_MM, C.TURN_STEPS_PER_DEG]}, f)
 

@@ -8,7 +8,13 @@
 //! hangers clear the table at every row, that the controller's own
 //! program, simulated, ends every row on the table's steps and never
 //! swings the stick across the cutter below the safe height, and that
-//! the model is the sled at one of the rows.
+//! the model is the sled at one of the rows. And the setting up of a
+//! built sled: that the probing table touches what it says it touches
+//! and comes at nothing blind, that a sled built wrong, probed by the
+//! controller's own program, is found well enough that the table
+//! planned for what was found cuts true on the sled as it really is,
+//! and that the bands turned to see whether the stick runs true are
+//! turned where the reading of them assumes.
 
 use ok_brep::{BoolOp, Solid};
 use ok_model::{Document, TabId};
@@ -60,6 +66,7 @@ struct Sled {
     l2: f64,
     c1_home: f64,
     c2_home: f64,
+    cutter_y: f64,
     bit_up: f64,
 }
 
@@ -87,6 +94,7 @@ impl Sled {
             l2: f(&s["l2"]),
             c1_home: f(&s["c1_home"]),
             c2_home: f(&s["c2_home"]),
+            cutter_y: f(&s["cutter_y"]),
             bit_up: f(&n["bit_up"]),
         }
     }
@@ -149,7 +157,7 @@ impl Sled {
             alpha,
             hang,
             axis,
-            across: -axis.0,
+            across: self.cutter_y - axis.0,
             tip: axis.1 - self.bit_up,
             t: (-psi - PI / 2.0).rem_euclid(TAU),
         }
@@ -573,19 +581,23 @@ fn in_the_table_s_order_no_row_takes_more_than_its_bite_of_what_stands() {
 /// At every row the blank clears the table, and so does the pulley,
 /// which stands lower than the hangers; each link is a link's length
 /// from pin to pin and stays near its screw's line; and the axis is
-/// where the tile is fattest, the master and spur inside that.
+/// where the tile is fattest, the master inside that and the spur
+/// inside the master, so a block lying under both touches only the
+/// master.
 #[test]
 fn the_stick_clears_the_table_and_the_links_stay_true_at_every_row() {
     let n = numbers();
     let (sled, rows, tile) = (Sled::new(&n), rows(&n), outline(&n));
     let circle = f(&n["tile"]["circle"]);
     let nearest = tile.iter().map(|q| q.0.hypot(q.1)).fold(f64::MAX, f64::min);
-    let master = f(&n["sled"]["master_r"]);
+    let (master, spur) = (f(&n["sled"]["master_r"]), f(&n["sled"]["spur_r"]));
     println!(
-        "a circle of {circle:.2} fits about the axis; the master and spur are {:.0} round",
-        2.0 * master
+        "a circle of {circle:.2} fits about the axis; the master is {:.0} round, the spur {:.0}",
+        2.0 * master,
+        2.0 * spur
     );
     assert!(circle > 9.5 && nearest >= circle - 1e-9 && master <= circle - 1.0);
+    assert!(spur <= master - 1.0);
     let blank = f(&n["rough"]["blank"]);
     let (mut table, mut pulley) = (f64::MAX, f64::MAX);
     let (mut lean1, mut lean2) = (0.0f64, 0.0f64);
@@ -987,7 +999,9 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
     assert!((sled.pusher2(p.alpha, p.hang) - f(&d["c2"])).abs() < 1e-3);
     assert!(!dir().join("out/guide.stl").exists());
     assert!(!dir().join("out/tower.stl").exists());
-    for name in ["master", "lift_block", "swing_block", "swing_base"] {
+    // the master is bought, a ground sleeve: a printed one could not be probed with
+    assert!(!dir().join("out/master.stl").exists());
+    for name in ["lift_block", "swing_block", "swing_base"] {
         assert!(!dir().join("out/steady.stl").exists());
         assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
     }
@@ -995,4 +1009,394 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
     // The build tries the sled at a couple of hundred poses, the rows and the ways between them, and stops if any part
     // is in another or in the cutter's lane; this is one pose of those, tried again here with the kernel's own solids.
     assert!(n["sweep"]["poses"].as_u64().unwrap() >= 100);
+}
+
+/// A sled off the drawing by `v`, in the order calibrate.py fits them.
+fn built(d: &Value, v: &[f64]) -> Sled {
+    Sled {
+        h1: (f(&d["h1"][0]) + v[0], f(&d["h1"][1]) + v[1]),
+        arm: (f(&d["arm"][0]) + v[2], f(&d["arm"][1]) + v[3]),
+        drop: f(&d["drop"]) + v[4],
+        p1_y: f(&d["p1_y"]) + v[5],
+        e1: (f(&d["e1"][0]) + v[6], f(&d["e1"][1]) + v[7]),
+        l1: f(&d["l1"]) + v[8],
+        p2_z: f(&d["p2_z"]) + v[9],
+        e2: (f(&d["e2"][0]) + v[10], f(&d["e2"][1]) + v[11]),
+        l2: f(&d["l2"]) + v[12],
+        c1_home: f(&d["c1_home"]) + v[13],
+        c2_home: f(&d["c2_home"]) + v[14],
+        cutter_y: v[15],
+        bit_up: f(&d["bit_up"]),
+    }
+}
+
+/// What the probing touches: the pin, and the block lying, on edge and on end.
+struct Things<'a> {
+    drawn: &'a Value,
+    pin_r: f64,
+    block: [f64; 3],
+    post_face: f64,
+    sizes: Option<&'a Value>,
+}
+
+impl Things<'_> {
+    fn size(&self, key: &str, default: f64) -> f64 {
+        self.sizes
+            .and_then(|s| s.get(key))
+            .map(f)
+            .unwrap_or(default)
+    }
+
+    /// One of them as the master meets it end on: from, to, and its top over the table.
+    fn section(&self, what: &str, v: &[f64]) -> (f64, f64, f64) {
+        let b = self.block;
+        match what {
+            "pin" => {
+                let r = self.size("pin_r", self.pin_r);
+                (v[15] - r, v[15] + r, f(&self.drawn["bit_up"]) + v[16])
+            }
+            "flat" => {
+                let y = self.size("flat_y", 0.0);
+                (y - b[2] / 2.0, y + b[2] / 2.0, self.size("flat_top", b[0]))
+            }
+            "edge" => {
+                let y = f(&self.drawn["edge_y"]) + v[19];
+                let half = self.size("edge_half", b[0] / 2.0);
+                (y - half, y + half, self.size("edge_top", b[1]))
+            }
+            "post_far" => {
+                let y = -self.post_face + v[20];
+                (y - b[0], y, self.size("post_top", b[2]))
+            }
+            "post_near" => {
+                let y = self.post_face + v[21];
+                (y, y + b[0], self.size("post_top", b[2]))
+            }
+            other => panic!("nothing called {other}"),
+        }
+    }
+}
+
+/// The master's middle with the screws at `at`: the axis, and the master's runout turned with the spindle.
+fn master(sled: &Sled, v: &[f64], at: (f64, f64, f64)) -> P2 {
+    let p = sled.pose(at.0, at.1, at.2);
+    let (m, t) = ((v[17], v[18]), p.t);
+    (
+        p.axis.0 - m.0 * t.sin() + m.1 * t.cos(),
+        p.axis.1 - m.0 * t.cos() - m.1 * t.sin(),
+    )
+}
+
+/// Between the master, `r` in radius, and a thing: nothing at a touch.
+fn gap(c: P2, r: f64, thing: (f64, f64, f64)) -> f64 {
+    let dy = (thing.0 - c.0).max(c.0 - thing.1).max(0.0);
+    let dz = (c.1 - thing.2).max(0.0);
+    dy.hypot(dz) - r
+}
+
+fn floats(v: &Value) -> Vec<f64> {
+    v.as_array().unwrap().iter().map(f).collect()
+}
+
+/// The table that finds out what a built sled is, on the sled as drawn:
+/// every touch is a touch, its screw has a window's room each side of
+/// it, and the master is never brought past a thing nearer than the
+/// planner says.
+#[test]
+fn the_probing_table_touches_what_it_says_and_comes_at_nothing_blind() {
+    let n = numbers();
+    let d = &n["sled"]["as_drawn"];
+    let probe = &n["probe"];
+    let things = Things {
+        drawn: d,
+        pin_r: f(&probe["pin_r"]),
+        block: [
+            f(&probe["block"][0]),
+            f(&probe["block"][1]),
+            f(&probe["block"][2]),
+        ],
+        post_face: f(&probe["post_face"]),
+        sizes: None,
+    };
+    let zero = vec![0.0; 22];
+    let sled = built(d, &zero);
+    let r = f(&d["master_r"]);
+    let (lift_w, swing_w) = (f(&probe["windows"][0]), f(&probe["windows"][1]));
+    let (lift_most, swing_most) = (f(&d["lift_most"]), f(&d["swing_most"]));
+    let rows = probe["rows"].as_array().unwrap();
+    let csv = std::fs::read_to_string(dir().join("out/probe.csv")).unwrap();
+    assert_eq!(
+        csv.lines()
+            .filter(|l| l.as_bytes()[0].is_ascii_digit())
+            .count(),
+        rows.len()
+    );
+    let mut count = std::collections::BTreeMap::new();
+    let mut last: Option<(f64, f64)> = None; // where the last probe left the screws
+    let mut nearest = (f64::MAX, f64::MAX); // the pin, a block
+    for row in rows {
+        let kind = row["kind"].as_str().unwrap();
+        let what = row["tool"].as_str().unwrap();
+        let at = (f(&row["lift"]), f(&row["swing"]), f(&row["turn"]));
+        match kind {
+            "down" => {
+                let g = gap(master(&sled, &zero, at), r, things.section(what, &zero));
+                assert!(g.abs() < 2e-3, "row {} is {g} from a touch", row["n"]);
+                assert!(at.0 - lift_w >= 0.0 && at.0 + lift_w <= lift_most);
+                // the master's lowest point is on the thing's top, not off its edge
+                let (y0, y1, _) = things.section(what, &zero);
+                let c = master(&sled, &zero, at);
+                assert!(c.0 > y0 + 2.0 && c.0 < y1 - 2.0, "row {}", row["n"]);
+                *count.entry(what.to_string()).or_insert(0) += 1;
+                last = None;
+            }
+            "sw+" | "sw-" | "br+" | "br-" => {
+                let way = if kind.ends_with('+') { 1.0 } else { -1.0 };
+                let thing = things.section(what, &zero);
+                let g = gap(master(&sled, &zero, at), r, thing);
+                assert!(g.abs() < 2e-3, "row {} is {g} from a touch", row["n"]);
+                // against a side, not a top corner: the axis is under the thing's top
+                assert!(master(&sled, &zero, at).1 < thing.2 - 2.0);
+                let (start, far) = (at.1 - way * swing_w, at.1 + way * swing_w);
+                assert!(start >= 0.5 && start <= swing_most && far >= 0.5 && far <= swing_most);
+                assert!(at.0 <= lift_most);
+                if kind.starts_with("br") {
+                    // the block is not there yet: the master is put where its face will be, and backs off
+                    last = Some((at.0, start));
+                    continue;
+                }
+                // the way there: down from the top of the lift at the starting swing, or the swing first and then
+                // the lift from where the last probe on this face left the screws
+                let via = row["via"].as_str().unwrap();
+                let path: Vec<(f64, f64)> = if via == "h" {
+                    (0..=(at.0 as usize)).map(|k| (k as f64, start)).collect()
+                } else {
+                    let from = last.expect("a straight move with nothing before it");
+                    (0..=12)
+                        .map(|k| (from.0 + (at.0 - from.0) * k as f64 / 12.0, start))
+                        .collect()
+                };
+                let clear = path
+                    .iter()
+                    .map(|&(lift, swing)| gap(master(&sled, &zero, (lift, swing, at.2)), r, thing))
+                    .fold(f64::MAX, f64::min);
+                if what == "pin" {
+                    nearest.0 = nearest.0.min(clear);
+                } else {
+                    nearest.1 = nearest.1.min(clear);
+                }
+                *count.entry(what.to_string()).or_insert(0) += 1;
+                last = Some((at.0, start));
+            }
+            _ => {}
+        }
+    }
+    println!(
+        "probing: {count:?}; on its way the master passes the pin no nearer than {:.1} mm, a block than {:.1}",
+        nearest.0, nearest.1
+    );
+    let want = [
+        ("edge", 11),
+        ("flat", 3),
+        ("pin", 18),
+        ("post_far", 4),
+        ("post_near", 4),
+    ];
+    assert_eq!(
+        count,
+        want.iter().map(|&(k, v)| (k.to_string(), v)).collect()
+    );
+    // The pin is wherever the router is, and a sled a few millimetres out must still pass it; a block was slid up
+    // to the master where the sled held it, so it is where the sled thinks it is.
+    assert!(nearest.0 >= 6.0 && nearest.1 >= 4.0);
+    // A block on end is taller than the lift can carry the master over: it is only ever touched from the side it
+    // was brought up on. The block on edge is crossed, at the top of the lift, with room.
+    let top = sled.pose(0.0, f(&d["swing_most"]) / 2.0, 0.0).axis.1 - r;
+    assert!(top > things.block[1] + 5.0 && top < things.block[2]);
+}
+
+/// One sled built wrong, the whole way: the controller's own program
+/// probing it, the fit, and the table planned for what was found run
+/// on the sled as it really is. All of it worked again here from the
+/// recorded touches and tables, by this file's own hinges.
+#[test]
+fn a_sled_built_wrong_is_found_by_touching_and_the_table_planned_for_it_cuts_true() {
+    let c: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/calibration.json")).unwrap())
+            .unwrap();
+    let (d, e) = (&c["drawn"], &c["example"]);
+    let block = [f(&c["block"][0]), f(&c["block"][1]), f(&c["block"][2])];
+    let real_things = Things {
+        drawn: d,
+        pin_r: f(&c["pin_r"]),
+        block,
+        post_face: f(&c["post_face"]),
+        sizes: Some(&e["sizes"]),
+    };
+    let sold = Things {
+        sizes: None,
+        ..real_things
+    };
+    let (truth, fitted) = (floats(&e["true"]), floats(&e["fitted"]));
+    let zero = vec![0.0; truth.len()];
+    let (real, found, drawn) = (built(d, &truth), built(d, &fitted), built(d, &zero));
+    let (r_real, r) = (f(&e["sizes"]["master_r"]), f(&d["master_r"]));
+    // It was built wrong: up to half a millimetre in its dimensions, more in its switches.
+    let out = truth[..13].iter().fold(0.0f64, |m, x| m.max(x.abs()));
+    assert!(out > 0.3 && out <= 0.5 && truth[13].abs().max(truth[14].abs()) > 1.0);
+
+    let touches = e["touches"].as_array().unwrap();
+    assert_eq!(touches.len(), 40);
+    let (mut sum, mut worst, mut off_drawing) = (0.0, 0.0f64, 0.0f64);
+    for t in touches {
+        let what = t[2].as_str().unwrap();
+        let at = (f(&t[3]), f(&t[4]), f(&t[5]));
+        // a touch on the sled as it is: the three taken there, a hundredth of a millimetre of scatter each
+        let g = gap(
+            master(&real, &truth, at),
+            r_real,
+            real_things.section(what, &truth),
+        );
+        assert!(g.abs() < 0.03, "row {} is {g} from the real sled", t[0]);
+        assert!(
+            f(&t[6]) <= 0.08,
+            "row {}'s touches are {} apart",
+            t[0],
+            t[6]
+        );
+        // and on the sled fitted, with everything the size it is sold as
+        let g = gap(master(&found, &fitted, at), r, sold.section(what, &fitted));
+        sum += g * g;
+        worst = worst.max(g.abs());
+        // the pin and the lying block are where they are, whatever the sled: the drawn sled is nowhere near them
+        if what == "pin" || what == "flat" {
+            let g = gap(master(&drawn, &zero, at), r, sold.section(what, &zero));
+            off_drawing = off_drawing.max(g.abs());
+        }
+    }
+    let rms = (sum / touches.len() as f64).sqrt();
+    println!(
+        "{} touches: the fitted sled leaves them {:.0} um out, the worst {:.0}; the drawn sled up to {off_drawing:.2} mm",
+        touches.len(),
+        1000.0 * rms,
+        1000.0 * worst
+    );
+    assert!(rms < 0.012 && worst < 0.03 && off_drawing > 0.5);
+    assert!((rms - f(&e["rms"])).abs() < 1e-4);
+
+    // The table for the sled found, run on the real one. A bit is set by bringing its tip up to the master where
+    // the table's setting row holds it; then the cuts.
+    let table = e["table"].as_array().unwrap();
+    let ball = f(&c["ball_r"]);
+    assert_eq!(table[0][0].as_str(), Some("set"));
+    let at = (f(&table[0][4]), f(&table[0][5]), f(&table[0][6]));
+    let m = master(&real, &truth, at);
+    let tip_z = m.1 - ((r_real + ball).powi(2) - (truth[15] - m.0).powi(2)).sqrt() + ball;
+    assert!((tip_z - found.bit_up).abs() < 1.5);
+    let turn = |a: f64| (a + PI).rem_euclid(TAU) - PI;
+    let (mut got, mut want) = (Vec::new(), Vec::new());
+    for row in &table[1..] {
+        let (t, across, tip) = (f(&row[1]), f(&row[2]), f(&row[3]));
+        let at = (f(&row[4]), f(&row[5]), f(&row[6]));
+        // the table is the found sled's: there, the row is the cut
+        let q = found.pose(at.0, at.1, at.2);
+        assert!((q.across - across).abs() < 1e-6 && (q.tip - tip).abs() < 1e-6);
+        assert!(turn(q.t - t).abs() < 1e-7);
+        let p = real.pose(at.0, at.1, at.2);
+        got.push((p.across, p.axis.1 - tip_z + ball, p.t));
+        want.push((across, tip + ball, t));
+    }
+    assert!(got.len() > 200);
+    // A tile turned about its axis is the same tile: take the common turn out.
+    let twist = got
+        .iter()
+        .zip(&want)
+        .map(|(g, w)| turn(g.2 - w.2))
+        .sum::<f64>()
+        / got.len() as f64;
+    let mut error = 0.0f64;
+    for (g, w) in got.iter().zip(&want) {
+        let u = g.2 - twist;
+        let q = (
+            -g.0 * u.sin() + g.1 * u.cos(),
+            g.0 * u.cos() + g.1 * u.sin(),
+        );
+        let p = (
+            -w.0 * w.2.sin() + w.1 * w.2.cos(),
+            w.0 * w.2.cos() + w.1 * w.2.sin(),
+        );
+        error = error.max((q.0 - p.0).hypot(q.1 - p.1));
+    }
+    println!(
+        "the finishing cuts land within {error:.3} mm of where they were wanted; from the drawing's table they would be {:.2} out",
+        f(&e["error_as_built"])
+    );
+    assert!(error < 0.05 && (error - f(&e["error"])).abs() < 1e-6);
+    assert!(f(&e["error_as_built"]) > 1.0);
+
+    // And over three hundred such sleds, as calibrate.py's study recorded it.
+    let s = &c["study"];
+    assert!(s["trials"].as_u64().unwrap() >= 300);
+    assert_eq!(s["stopped"].as_u64(), Some(0));
+    assert_eq!(s["touches"].as_u64(), Some(40));
+    assert!(f(&s["as_built"][0]) > 1.0);
+    assert!(f(&s["fitted"][0]) < 0.03 && f(&s["fitted"][1]) < 0.045 && f(&s["fitted"][2]) < 0.06);
+}
+
+/// The bands that show whether the stick runs true: turned with the
+/// cutter straight under the axis, where a band's radius is the axis's
+/// height over the bit, and with the bit's side level with the axis on
+/// the fence's side, where it is the axis's distance from the bit.
+#[test]
+fn the_bands_are_turned_under_the_axis_and_beside_it() {
+    let n = numbers();
+    let sled = Sled::new(&n);
+    let bit_r = f(&n["rough"]["bit"]) / 2.0;
+    let radius = f(&n["bands"]["r"]);
+    let rows = n["bands"]["rows"].as_array().unwrap();
+    let sim: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/steps.json")).unwrap())
+            .unwrap();
+    let per = [f(&sim["per"][0]), f(&sim["per"][1]), f(&sim["per"][2])];
+    let done = sim["bands"].as_array().unwrap();
+    assert_eq!(done.len(), rows.len());
+    let (mut under, mut beside, mut rounds) = (Vec::new(), Vec::new(), 0);
+    let mut at = (0.0, 0.0);
+    for (row, s) in rows.iter().zip(done) {
+        match row["kind"].as_str().unwrap() {
+            "place" => {
+                let p = sled.pose(f(&row["lift"]), f(&row["swing"]), f(&row["turn"]));
+                if p.across.abs() < 1e-3 {
+                    under.push(p.tip);
+                } else {
+                    // the bit's tip over the axis's height, its side on the band
+                    assert!((p.tip + bit_r).abs() < 1e-3 && p.across > 0.0);
+                    beside.push(p.across - bit_r);
+                }
+                at = (f(&row["lift"]) * per[0], f(&row["swing"]) * per[1]);
+                assert!(
+                    (f(&s[1]) - at.0).abs() <= 0.5 + 1e-6 && (f(&s[2]) - at.1).abs() <= 0.5 + 1e-6
+                );
+            }
+            "round" => {
+                // a whole turn, nothing else moved
+                rounds += 1;
+                assert!(
+                    (f(&s[1]) - at.0).abs() <= 0.5 + 1e-6 && (f(&s[2]) - at.1).abs() <= 0.5 + 1e-6
+                );
+            }
+            _ => {}
+        }
+    }
+    println!("bands under the axis at {under:?}, beside it at {beside:?}; {rounds} turns");
+    assert_eq!(rounds, 12);
+    for bands in [&under, &beside] {
+        assert_eq!(bands.len(), 3);
+        assert!(bands
+            .windows(2)
+            .all(|w| w[0] > w[1] && w[0] - w[1] <= 4.0 + 1e-3));
+        assert!((bands[2] - radius).abs() < 1e-3);
+    }
+    // A full turn of the spindle is a whole number of steps, so a band closes on itself.
+    assert!((360.0 * per[2] - (360.0 * per[2]).round()).abs() < 1e-9);
 }

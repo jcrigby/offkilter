@@ -8,7 +8,7 @@
  "ridge": 0.05,
  "stick": 200.0,
  "sweep": {
-  "poses": 203,
+  "poses": 334,
   "lane": [
    [
     -33.0,
@@ -35,7 +35,7 @@
   ],
   "stepped": [
    4431226,
-   2768589,
+   2774989,
    36982
   ]
  },
@@ -2191,11 +2191,11 @@
    "rail": [
     12.0,
     8.0,
-    100.0
+    150.0
    ],
    "rail_y": [
-    29,
-    129.0
+    -24.0,
+    126
    ],
    "rail_z": 48.0,
    "carriage": [
@@ -2211,14 +2211,25 @@
    ],
    "unit_x": 271.0,
    "screw_x": 277.0,
-   "motor_y": 131.0
+   "motor_y": 132.0
   },
   "tail_x": [
    232.0,
    251.0
   ],
   "c1_home": 225,
-  "c2_home": 78,
+  "c2_home": 86,
+  "cutter_y": 0.0,
+  "ecc": [
+   0.0,
+   0.0
+  ],
+  "built": false,
+  "swing_more": 9.0,
+  "home_over": [
+   3.0,
+   10.0
+  ],
   "safe": 37.25,
   "lift": {
    "rail_z": [
@@ -2256,9 +2267,959 @@
    -4.0
   ],
   "master_r": 8.0,
+  "spur_r": 7.0,
   "belt": [
    60,
    16
+  ],
+  "as_drawn": {
+   "h1": [
+    150.0,
+    204
+   ],
+   "arm": [
+    -150.0,
+    -26.0
+   ],
+   "drop": 130.0,
+   "p1_y": -130.0,
+   "e1": [
+    -280.0,
+    10.0
+   ],
+   "l1": 30.0,
+   "p2_z": 73,
+   "e2": [
+    0.0,
+    -105.0
+   ],
+   "l2": 60.0,
+   "c1_home": 225,
+   "c2_home": 86,
+   "bit_up": 39.0,
+   "master_r": 8.0,
+   "lift_most": 82.06151169807652,
+   "swing_most": 51.46059957351683,
+   "edge_y": -0.5
+  }
+ },
+ "probe": {
+  "windows": [
+   8.0,
+   6.0
+  ],
+  "edge_y": -0.5,
+  "post_face": 18.0,
+  "pin_r": 3.0,
+  "block": [
+   25.4,
+   50.8,
+   76.2
+  ],
+  "rows": [
+   {
+    "n": 1,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "h",
+    "label": "router UNPLUGGED6 mm pin in the collet its top  39 over table"
+   },
+   {
+    "n": 2,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "h",
+    "label": "sled clamped at its back stop.  clips on pin    and spindle"
+   },
+   {
+    "n": 3,
+    "kind": "leads",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "h",
+    "label": "pin"
+   },
+   {
+    "n": 4,
+    "kind": "down",
+    "tool": "pin",
+    "lift": 42.8681,
+    "swing": 25.9743,
+    "turn": 0.0,
+    "via": "h",
+    "label": "down on pin"
+   },
+   {
+    "n": 5,
+    "kind": "sw+",
+    "tool": "pin",
+    "lift": 65.9686,
+    "swing": 17.9917,
+    "turn": 0.0,
+    "via": "h",
+    "label": "pin fence side"
+   },
+   {
+    "n": 6,
+    "kind": "sw+",
+    "tool": "pin",
+    "lift": 70.6516,
+    "swing": 18.4727,
+    "turn": 0.0,
+    "via": "d",
+    "label": "pin fence side"
+   },
+   {
+    "n": 7,
+    "kind": "sw+",
+    "tool": "pin",
+    "lift": 75.3488,
+    "swing": 19.0601,
+    "turn": 0.0,
+    "via": "d",
+    "label": "pin fence side"
+   },
+   {
+    "n": 8,
+    "kind": "sw+",
+    "tool": "pin",
+    "lift": 80.0588,
+    "swing": 19.7582,
+    "turn": 0.0,
+    "via": "d",
+    "label": "pin fence side"
+   },
+   {
+    "n": 9,
+    "kind": "sw-",
+    "tool": "pin",
+    "lift": 66.9372,
+    "swing": 35.7565,
+    "turn": 0.0,
+    "via": "h",
+    "label": "pin far side"
+   },
+   {
+    "n": 10,
+    "kind": "sw-",
+    "tool": "pin",
+    "lift": 71.8539,
+    "swing": 36.2398,
+    "turn": 0.0,
+    "via": "d",
+    "label": "pin far side"
+   },
+   {
+    "n": 11,
+    "kind": "sw-",
+    "tool": "pin",
+    "lift": 76.8028,
+    "swing": 36.8309,
+    "turn": 0.0,
+    "via": "d",
+    "label": "pin far side"
+   },
+   {
+    "n": 12,
+    "kind": "sw-",
+    "tool": "pin",
+    "lift": 81.783,
+    "swing": 37.5345,
+    "turn": 0.0,
+    "via": "d",
+    "label": "pin far side"
+   },
+   {
+    "n": 13,
+    "kind": "down",
+    "tool": "pin",
+    "lift": 42.8681,
+    "swing": 25.9743,
+    "turn": 180.0,
+    "via": "h",
+    "label": "down on pin"
+   },
+   {
+    "n": 14,
+    "kind": "sw+",
+    "tool": "pin",
+    "lift": 65.9686,
+    "swing": 17.9917,
+    "turn": 180.0,
+    "via": "h",
+    "label": "pin fence side"
+   },
+   {
+    "n": 15,
+    "kind": "sw+",
+    "tool": "pin",
+    "lift": 70.6516,
+    "swing": 18.4727,
+    "turn": 180.0,
+    "via": "d",
+    "label": "pin fence side"
+   },
+   {
+    "n": 16,
+    "kind": "sw+",
+    "tool": "pin",
+    "lift": 75.3488,
+    "swing": 19.0601,
+    "turn": 180.0,
+    "via": "d",
+    "label": "pin fence side"
+   },
+   {
+    "n": 17,
+    "kind": "sw+",
+    "tool": "pin",
+    "lift": 80.0588,
+    "swing": 19.7582,
+    "turn": 180.0,
+    "via": "d",
+    "label": "pin fence side"
+   },
+   {
+    "n": 18,
+    "kind": "sw-",
+    "tool": "pin",
+    "lift": 66.9372,
+    "swing": 35.7565,
+    "turn": 180.0,
+    "via": "h",
+    "label": "pin far side"
+   },
+   {
+    "n": 19,
+    "kind": "sw-",
+    "tool": "pin",
+    "lift": 71.8539,
+    "swing": 36.2398,
+    "turn": 180.0,
+    "via": "d",
+    "label": "pin far side"
+   },
+   {
+    "n": 20,
+    "kind": "sw-",
+    "tool": "pin",
+    "lift": 76.8028,
+    "swing": 36.8309,
+    "turn": 180.0,
+    "via": "d",
+    "label": "pin far side"
+   },
+   {
+    "n": 21,
+    "kind": "sw-",
+    "tool": "pin",
+    "lift": 81.783,
+    "swing": 37.5345,
+    "turn": 180.0,
+    "via": "d",
+    "label": "pin far side"
+   },
+   {
+    "n": 22,
+    "kind": "place",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 30.6534,
+    "turn": 0.0,
+    "via": "h",
+    "label": "to the top"
+   },
+   {
+    "n": 23,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "h",
+    "label": "pin down under  the table. blocklying flat its  3 in. across"
+   },
+   {
+    "n": 24,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "h",
+    "label": "under the master2 mm clear of   the hanger. clipon the block"
+   },
+   {
+    "n": 25,
+    "kind": "leads",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "h",
+    "label": "block"
+   },
+   {
+    "n": 26,
+    "kind": "down",
+    "tool": "flat",
+    "lift": 73.5547,
+    "swing": 44.9268,
+    "turn": 0.0,
+    "via": "h",
+    "label": "down on flat"
+   },
+   {
+    "n": 27,
+    "kind": "down",
+    "tool": "flat",
+    "lift": 68.613,
+    "swing": 27.173,
+    "turn": 0.0,
+    "via": "h",
+    "label": "down on flat"
+   },
+   {
+    "n": 28,
+    "kind": "down",
+    "tool": "flat",
+    "lift": 71.016,
+    "swing": 9.3969,
+    "turn": 0.0,
+    "via": "h",
+    "label": "down on flat"
+   },
+   {
+    "n": 29,
+    "kind": "br+",
+    "tool": "edge",
+    "lift": 76.8272,
+    "swing": 11.6309,
+    "turn": 0.0,
+    "via": "h",
+    "label": "block on its 3  in. edge along  the stick: slide"
+   },
+   {
+    "n": 30,
+    "kind": "sw+",
+    "tool": "edge",
+    "lift": 76.8272,
+    "swing": 11.6309,
+    "turn": 0.0,
+    "via": "d",
+    "label": "edge fence side"
+   },
+   {
+    "n": 31,
+    "kind": "sw+",
+    "tool": "edge",
+    "lift": 66.7083,
+    "swing": 10.4685,
+    "turn": 0.0,
+    "via": "d",
+    "label": "edge fence side"
+   },
+   {
+    "n": 32,
+    "kind": "sw+",
+    "tool": "edge",
+    "lift": 56.6317,
+    "swing": 9.8011,
+    "turn": 0.0,
+    "via": "d",
+    "label": "edge fence side"
+   },
+   {
+    "n": 33,
+    "kind": "sw+",
+    "tool": "edge",
+    "lift": 46.5996,
+    "swing": 9.6055,
+    "turn": 0.0,
+    "via": "d",
+    "label": "edge fence side"
+   },
+   {
+    "n": 34,
+    "kind": "down",
+    "tool": "edge",
+    "lift": 21.136,
+    "swing": 32.5085,
+    "turn": 0.0,
+    "via": "h",
+    "label": "down on edge"
+   },
+   {
+    "n": 35,
+    "kind": "down",
+    "tool": "edge",
+    "lift": 20.9626,
+    "swing": 27.6675,
+    "turn": 0.0,
+    "via": "h",
+    "label": "down on edge"
+   },
+   {
+    "n": 36,
+    "kind": "down",
+    "tool": "edge",
+    "lift": 21.3002,
+    "swing": 22.8114,
+    "turn": 0.0,
+    "via": "h",
+    "label": "down on edge"
+   },
+   {
+    "n": 37,
+    "kind": "sw-",
+    "tool": "edge",
+    "lift": 47.2563,
+    "swing": 43.0329,
+    "turn": 0.0,
+    "via": "h",
+    "label": "edge far side"
+   },
+   {
+    "n": 38,
+    "kind": "sw-",
+    "tool": "edge",
+    "lift": 58.0214,
+    "swing": 43.2238,
+    "turn": 0.0,
+    "via": "d",
+    "label": "edge far side"
+   },
+   {
+    "n": 39,
+    "kind": "sw-",
+    "tool": "edge",
+    "lift": 68.9867,
+    "swing": 43.8943,
+    "turn": 0.0,
+    "via": "d",
+    "label": "edge far side"
+   },
+   {
+    "n": 40,
+    "kind": "sw-",
+    "tool": "edge",
+    "lift": 80.1606,
+    "swing": 45.0712,
+    "turn": 0.0,
+    "via": "d",
+    "label": "edge far side"
+   },
+   {
+    "n": 41,
+    "kind": "br+",
+    "tool": "post_far",
+    "lift": 4.3853,
+    "swing": 37.8976,
+    "turn": 0.0,
+    "via": "h",
+    "label": "block on end on the far side:   slide it"
+   },
+   {
+    "n": 42,
+    "kind": "sw+",
+    "tool": "post_far",
+    "lift": 4.3853,
+    "swing": 37.8976,
+    "turn": 0.0,
+    "via": "d",
+    "label": "post_far fence side"
+   },
+   {
+    "n": 43,
+    "kind": "sw+",
+    "tool": "post_far",
+    "lift": 26.6955,
+    "swing": 34.8226,
+    "turn": 0.0,
+    "via": "d",
+    "label": "post_far fence side"
+   },
+   {
+    "n": 44,
+    "kind": "sw+",
+    "tool": "post_far",
+    "lift": 49.3372,
+    "swing": 34.0547,
+    "turn": 0.0,
+    "via": "d",
+    "label": "post_far fence side"
+   },
+   {
+    "n": 45,
+    "kind": "sw+",
+    "tool": "post_far",
+    "lift": 72.6211,
+    "swing": 35.5418,
+    "turn": 0.0,
+    "via": "d",
+    "label": "post_far fence side"
+   },
+   {
+    "n": 46,
+    "kind": "br-",
+    "tool": "post_near",
+    "lift": 71.4918,
+    "swing": 19.3894,
+    "turn": 0.0,
+    "via": "h",
+    "label": "block on end on the fence side: slide it"
+   },
+   {
+    "n": 47,
+    "kind": "sw-",
+    "tool": "post_near",
+    "lift": 71.4918,
+    "swing": 19.3894,
+    "turn": 0.0,
+    "via": "d",
+    "label": "post_near far side"
+   },
+   {
+    "n": 48,
+    "kind": "sw-",
+    "tool": "post_near",
+    "lift": 49.0972,
+    "swing": 17.9042,
+    "turn": 0.0,
+    "via": "d",
+    "label": "post_near far side"
+   },
+   {
+    "n": 49,
+    "kind": "sw-",
+    "tool": "post_near",
+    "lift": 27.0157,
+    "swing": 18.6603,
+    "turn": 0.0,
+    "via": "d",
+    "label": "post_near far side"
+   },
+   {
+    "n": 50,
+    "kind": "sw-",
+    "tool": "post_near",
+    "lift": 4.9863,
+    "swing": 21.7192,
+    "turn": 0.0,
+    "via": "d",
+    "label": "post_near far side"
+   },
+   {
+    "n": 51,
+    "kind": "place",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 30.6534,
+    "turn": 0.0,
+    "via": "h",
+    "label": "to the top"
+   },
+   {
+    "n": 52,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "h",
+    "label": "done. copy      probe_log.csv   run calibrate.pyfit"
+   }
+  ]
+ },
+ "bands": {
+  "r": 10.0,
+  "span": 150.0,
+  "rows": [
+   {
+    "n": 1,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "a scrap stick 30square or less  between centres.straight bit",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 2,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "a stop clamped  25 mm in from   each end of the stick",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 3,
+    "kind": "set",
+    "tool": "straight",
+    "lift": 42.8681,
+    "swing": 25.9743,
+    "turn": 270.0779,
+    "via": "s",
+    "label": "set the straight bit on the master",
+    "across": 0.0,
+    "tip": 8.0,
+    "t": 0.0
+   },
+   {
+    "n": 4,
+    "kind": "place",
+    "tool": "straight",
+    "lift": 24.2961,
+    "swing": 26.9255,
+    "turn": 269.4342,
+    "via": "s",
+    "label": "under 18",
+    "across": 0.0,
+    "tip": 18.0,
+    "t": 0.0
+   },
+   {
+    "n": 5,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "push to the far stop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 6,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "back to the nearstop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 7,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "pull right back",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 8,
+    "kind": "place",
+    "tool": "straight",
+    "lift": 31.6994,
+    "swing": 26.3588,
+    "turn": 269.6558,
+    "via": "s",
+    "label": "under 14",
+    "across": 0.0,
+    "tip": 14.0,
+    "t": 0.0
+   },
+   {
+    "n": 9,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "push to the far stop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 10,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "back to the nearstop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 11,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "pull right back",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 12,
+    "kind": "place",
+    "tool": "straight",
+    "lift": 39.1348,
+    "swing": 26.041,
+    "turn": 269.9251,
+    "via": "s",
+    "label": "under 10",
+    "across": 0.0,
+    "tip": 10.0,
+    "t": 0.0
+   },
+   {
+    "n": 13,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "push to the far stop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 14,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "back to the nearstop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 15,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "pull right back",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 16,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "move both stops 10 mm toward thetail",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 17,
+    "kind": "place",
+    "tool": "straight",
+    "lift": 67.9048,
+    "swing": 43.6519,
+    "turn": 280.7221,
+    "via": "s",
+    "label": "beside 18",
+    "across": 21.0,
+    "tip": -3.0,
+    "t": 0.0
+   },
+   {
+    "n": 18,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "push to the far stop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 19,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "back to the nearstop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 20,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "pull right back",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 21,
+    "kind": "place",
+    "tool": "straight",
+    "lift": 66.5279,
+    "swing": 40.4296,
+    "turn": 278.8452,
+    "via": "s",
+    "label": "beside 14",
+    "across": 17.0,
+    "tip": -3.0,
+    "t": 0.0
+   },
+   {
+    "n": 22,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "push to the far stop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 23,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "back to the nearstop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 24,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "pull right back",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 25,
+    "kind": "place",
+    "tool": "straight",
+    "lift": 65.4289,
+    "swing": 37.2053,
+    "turn": 276.9965,
+    "via": "s",
+    "label": "beside 10",
+    "across": 13.0,
+    "tip": -3.0,
+    "t": 0.0
+   },
+   {
+    "n": 26,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "push to the far stop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 27,
+    "kind": "round",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "back to the nearstop and hold",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 28,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "pull right back",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   },
+   {
+    "n": 29,
+    "kind": "say",
+    "tool": "",
+    "lift": 0.0,
+    "swing": 0.0,
+    "turn": 0.0,
+    "via": "s",
+    "label": "measure the fourbands. run      calibrate.py    align",
+    "across": 0.0,
+    "tip": 0.0,
+    "t": 0.0
+   }
   ]
  },
  "drawn": {
@@ -2301,7 +3262,7 @@
    "tip": 8.0,
    "label": "set the straight bit on the master",
    "lift": 42.8681,
-   "swing": 17.9743,
+   "swing": 25.9743,
    "turn": 270.0779,
    "via": "s"
   },
@@ -2314,7 +3275,7 @@
    "tip": 22.072709859989335,
    "label": "rough 270 deg +3 bite 1 of 1",
    "lift": 16.7681,
-   "swing": 22.1885,
+   "swing": 30.1885,
    "turn": 0.579,
    "via": "s"
   },
@@ -2327,7 +3288,7 @@
    "tip": 22.098880875498658,
    "label": "rough 270 deg +6 bite 1 of 1",
    "lift": 16.84,
-   "swing": 24.614,
+   "swing": 32.614,
    "turn": 1.903,
    "via": "d"
   },
@@ -2340,7 +3301,7 @@
    "tip": 21.02061028775807,
    "label": "rough 270 deg +12 bite 1 of 1",
    "lift": 19.4767,
-   "swing": 29.1912,
+   "swing": 37.1912,
    "turn": 4.6089,
    "via": "d"
   },
@@ -2353,7 +3314,7 @@
    "tip": 17.986169110442077,
    "label": "rough 270 deg +15 bite 1 of 5",
    "lift": 25.6694,
-   "swing": 31.0014,
+   "swing": 39.0014,
    "turn": 6.0943,
    "via": "d"
   },
@@ -2366,7 +3327,7 @@
    "tip": 15.573457345385501,
    "label": "rough 270 deg +15 bite 2 of 5",
    "lift": 30.2006,
-   "swing": 30.6319,
+   "swing": 38.6319,
    "turn": 6.2305,
    "via": "d"
   },
@@ -2379,7 +3340,7 @@
    "tip": 13.160745580328923,
    "label": "rough 270 deg +15 bite 3 of 5",
    "lift": 34.7517,
-   "swing": 30.3537,
+   "swing": 38.3537,
    "turn": 6.385,
    "via": "d"
   },
@@ -2392,7 +3353,7 @@
    "tip": 10.748033815272347,
    "label": "rough 270 deg +15 bite 4 of 5",
    "lift": 39.3258,
-   "swing": 30.1657,
+   "swing": 38.1657,
    "turn": 6.558,
    "via": "d"
   },
@@ -2405,7 +3366,7 @@
    "tip": 8.335322050215769,
    "label": "rough 270 deg +15 bite 5 of 5",
    "lift": 43.9258,
-   "swing": 30.0674,
+   "swing": 38.0674,
    "turn": 6.75,
    "via": "d"
   },
@@ -2418,7 +3379,7 @@
    "tip": 10.495843697772916,
    "label": "rough 255 deg -18 bite 1 of 3",
    "lift": 40.556,
-   "swing": 3.4825,
+   "swing": 11.4825,
    "turn": 7.0229,
    "via": "s"
   },
@@ -2431,7 +3392,7 @@
    "tip": 8.442625868705756,
    "label": "rough 255 deg -18 bite 2 of 3",
    "lift": 44.2998,
-   "swing": 3.4058,
+   "swing": 11.4058,
    "turn": 7.1821,
    "via": "d"
   },
@@ -2444,7 +3405,7 @@
    "tip": 6.389408039638597,
    "label": "rough 255 deg -18 bite 3 of 3",
    "lift": 48.0491,
-   "swing": 3.3935,
+   "swing": 11.3935,
    "turn": 7.3534,
    "via": "d"
   },
@@ -2457,7 +3418,7 @@
    "tip": 10.567101462857213,
    "label": "rough 270 deg +18 bite 1 of 2",
    "lift": 40.3978,
-   "swing": 32.5638,
+   "swing": 40.5638,
    "turn": 7.9341,
    "via": "s"
   },
@@ -2470,7 +3431,7 @@
    "tip": 8.335322050215769,
    "label": "rough 270 deg +18 bite 2 of 2",
    "lift": 44.6764,
-   "swing": 32.4773,
+   "swing": 40.4773,
    "turn": 8.1165,
    "via": "d"
   },
@@ -2483,7 +3444,7 @@
    "tip": 12.176884194372565,
    "label": "rough 255 deg -15 bite 1 of 3",
    "lift": 36.779,
-   "swing": 6.0318,
+   "swing": 14.0318,
    "turn": 8.2078,
    "via": "s"
   },
@@ -2496,7 +3457,7 @@
    "tip": 9.28314611700558,
    "label": "rough 255 deg -15 bite 2 of 3",
    "lift": 42.0709,
-   "swing": 5.8654,
+   "swing": 13.8654,
    "turn": 8.4188,
    "via": "d"
   },
@@ -2509,7 +3470,7 @@
    "tip": 6.389408039638597,
    "label": "rough 255 deg -15 bite 3 of 3",
    "lift": 47.3748,
-   "swing": 5.827,
+   "swing": 13.827,
    "turn": 8.6539,
    "via": "d"
   },
@@ -2522,7 +3483,7 @@
    "tip": 15.423116088921391,
    "label": "rough 255 deg -12 bite 1 of 1",
    "lift": 30.2431,
-   "swing": 8.8102,
+   "swing": 16.8102,
    "turn": 9.3103,
    "via": "d"
   },
@@ -2535,7 +3496,7 @@
    "tip": 17.001491488391945,
    "label": "rough 255 deg -9 bite 1 of 1",
    "lift": 26.8628,
-   "swing": 11.4722,
+   "swing": 19.4722,
    "turn": 10.5346,
    "via": "d"
   },
@@ -2548,7 +3509,7 @@
    "tip": 17.004828177575586,
    "label": "rough 255 deg -6 bite 1 of 1",
    "lift": 26.4898,
-   "swing": 13.9055,
+   "swing": 21.9055,
    "turn": 11.849,
    "via": "d"
   },
@@ -2561,7 +3522,7 @@
    "tip": 17.004828177575586,
    "label": "rough 255 deg -3 bite 1 of 1",
    "lift": 26.2493,
-   "swing": 16.3349,
+   "swing": 24.3349,
    "turn": 13.1656,
    "via": "d"
   },
@@ -2574,7 +3535,7 @@
    "tip": 18.116433091735246,
    "label": "rough 255 deg +0 bite 1 of 2",
    "lift": 24.0809,
-   "swing": 18.9458,
+   "swing": 26.9458,
    "turn": 14.4284,
    "via": "d"
   },
@@ -2587,7 +3548,7 @@
    "tip": 16.07850803574041,
    "label": "rough 255 deg +0 bite 2 of 2",
    "lift": 27.8493,
-   "swing": 18.6219,
+   "swing": 26.6219,
    "turn": 14.5347,
    "via": "d"
   },
@@ -2600,7 +3561,7 @@
    "tip": 17.717701765000974,
    "label": "rough 255 deg +3 bite 1 of 3",
    "lift": 24.8284,
-   "swing": 21.3001,
+   "swing": 29.3001,
    "turn": 15.7708,
    "via": "d"
   },
@@ -2613,7 +3574,7 @@
    "tip": 14.794863907991552,
    "label": "rough 255 deg +3 bite 2 of 3",
    "lift": 30.2523,
-   "swing": 20.8739,
+   "swing": 28.8739,
    "turn": 15.9311,
    "via": "d"
   },
@@ -2626,7 +3587,7 @@
    "tip": 11.872026050982127,
    "label": "rough 255 deg +3 bite 3 of 3",
    "lift": 35.6946,
-   "swing": 20.5812,
+   "swing": 28.5812,
    "turn": 16.117,
    "via": "d"
   },
@@ -2639,7 +3600,7 @@
    "tip": 19.448023937449953,
    "label": "rough 255 deg +6 bite 1 of 1",
    "lift": 21.7549,
-   "swing": 24.0355,
+   "swing": 32.0355,
    "turn": 17.0137,
    "via": "d"
   },
@@ -2652,7 +3613,7 @@
    "tip": 11.049010491254412,
    "label": "rough 240 deg -18 bite 1 of 1",
    "lift": 39.5481,
-   "swing": 3.5142,
+   "swing": 11.5142,
    "turn": 21.9821,
    "via": "d"
   },
@@ -2665,7 +3626,7 @@
    "tip": 16.436052367550626,
    "label": "rough 255 deg +18 bite 1 of 1",
    "lift": 29.2575,
-   "swing": 33.1588,
+   "swing": 41.1588,
    "turn": 22.5325,
    "via": "d"
   },
@@ -2678,7 +3639,7 @@
    "tip": 15.473032362671296,
    "label": "rough 240 deg -9 bite 1 of 4",
    "lift": 29.6672,
-   "swing": 11.2518,
+   "swing": 19.2518,
    "turn": 25.6194,
    "via": "d"
   },
@@ -2691,7 +3652,7 @@
    "tip": 13.084328898286554,
    "label": "rough 240 deg -9 bite 2 of 4",
    "lift": 34.0545,
-   "swing": 10.9805,
+   "swing": 18.9805,
    "turn": 25.7656,
    "via": "d"
   },
@@ -2704,7 +3665,7 @@
    "tip": 10.695625433901814,
    "label": "rough 240 deg -9 bite 3 of 4",
    "lift": 38.4496,
-   "swing": 10.7973,
+   "swing": 18.7973,
    "turn": 25.9283,
    "via": "d"
   },
@@ -2717,7 +3678,7 @@
    "tip": 8.306921969517072,
    "label": "rough 240 deg -9 bite 4 of 4",
    "lift": 42.8547,
-   "swing": 10.7017,
+   "swing": 18.7017,
    "turn": 26.1077,
    "via": "d"
   },
@@ -2730,7 +3691,7 @@
    "tip": 13.333235683217199,
    "label": "rough 240 deg +6 bite 1 of 1",
    "lift": 33.1358,
-   "swing": 23.1304,
+   "swing": 31.1304,
    "turn": 32.3493,
    "via": "s"
   },
@@ -2743,7 +3704,7 @@
    "tip": 14.130173124410344,
    "label": "rough 240 deg +9 bite 1 of 2",
    "lift": 31.9383,
-   "swing": 25.6314,
+   "swing": 33.6314,
    "turn": 33.6328,
    "via": "d"
   },
@@ -2756,7 +3717,7 @@
    "tip": 11.150791949218485,
    "label": "rough 240 deg +9 bite 2 of 2",
    "lift": 37.532,
-   "swing": 25.3655,
+   "swing": 33.3655,
    "turn": 33.8326,
    "via": "d"
   },
@@ -2769,7 +3730,7 @@
    "tip": 16.55250513019702,
    "label": "rough 240 deg +15 bite 1 of 1",
    "lift": 28.3597,
-   "swing": 30.7707,
+   "swing": 38.7707,
    "turn": 36.173,
    "via": "d"
   },
@@ -2782,7 +3743,7 @@
    "tip": 15.408952387485831,
    "label": "rough 225 deg -18 bite 1 of 1",
    "lift": 31.613,
-   "swing": 3.9286,
+   "swing": 11.9286,
    "turn": 36.6906,
    "via": "d"
   },
@@ -2795,7 +3756,7 @@
    "tip": 9.918213181474155,
    "label": "rough 225 deg -6 bite 1 of 1",
    "lift": 39.5568,
-   "swing": 13.1858,
+   "swing": 21.1858,
    "turn": 42.2964,
    "via": "d"
   },
@@ -2808,7 +3769,7 @@
    "tip": 18.25466165111906,
    "label": "rough 225 deg +0 bite 1 of 1",
    "lift": 23.8255,
-   "swing": 18.9702,
+   "swing": 26.9702,
    "turn": 44.4217,
    "via": "d"
   },
@@ -2821,7 +3782,7 @@
    "tip": 17.43202570326467,
    "label": "rough 210 deg -18 bite 1 of 1",
    "lift": 27.9336,
-   "swing": 4.2212,
+   "swing": 12.2212,
    "turn": 51.5736,
    "via": "d"
   },
@@ -2834,7 +3795,7 @@
    "tip": 19.010651390002447,
    "label": "rough 210 deg -15 bite 1 of 1",
    "lift": 24.3086,
-   "swing": 6.9394,
+   "swing": 14.9394,
    "turn": 52.8046,
    "via": "d"
   },
@@ -2847,7 +3808,7 @@
    "tip": 12.861430472477274,
    "label": "rough 210 deg -3 bite 1 of 2",
    "lift": 33.9025,
-   "swing": 15.8182,
+   "swing": 23.8182,
    "turn": 58.4083,
    "via": "d"
   },
@@ -2860,7 +3821,7 @@
    "tip": 10.937897695105075,
    "label": "rough 210 deg -3 bite 2 of 2",
    "lift": 37.4659,
-   "swing": 15.6688,
+   "swing": 23.6688,
    "turn": 58.5382,
    "via": "d"
   },
@@ -2873,7 +3834,7 @@
    "tip": 14.770419125419682,
    "label": "rough 210 deg +0 bite 1 of 2",
    "lift": 30.2714,
-   "swing": 18.4485,
+   "swing": 26.4485,
    "turn": 59.6094,
    "via": "d"
   },
@@ -2886,7 +3847,7 @@
    "tip": 12.707541050829432,
    "label": "rough 210 deg +0 bite 2 of 2",
    "lift": 34.0978,
-   "swing": 18.2291,
+   "swing": 26.2291,
    "turn": 59.7376,
    "via": "d"
   },
@@ -2899,7 +3860,7 @@
    "tip": 15.611082547681082,
    "label": "rough 195 deg -18 bite 1 of 2",
    "lift": 31.2454,
-   "swing": 3.955,
+   "swing": 11.955,
    "turn": 66.6784,
    "via": "d"
   },
@@ -2912,7 +3873,7 @@
    "tip": 12.810644660869004,
    "label": "rough 195 deg -18 bite 2 of 2",
    "lift": 36.3404,
-   "swing": 3.6464,
+   "swing": 11.6464,
    "turn": 66.8578,
    "via": "d"
   },
@@ -2925,7 +3886,7 @@
    "tip": 5.292027706573894,
    "label": "rough 210 deg +15 bite 1 of 1",
    "lift": 49.7687,
-   "swing": 30.0713,
+   "swing": 38.0713,
    "turn": 67.0197,
    "via": "d"
   },
@@ -2938,7 +3899,7 @@
    "tip": 18.46133003289511,
    "label": "rough 195 deg -15 bite 1 of 3",
    "lift": 25.3106,
-   "swing": 6.8392,
+   "swing": 14.8392,
    "turn": 67.8321,
    "via": "s"
   },
@@ -2951,7 +3912,7 @@
    "tip": 15.840724581607665,
    "label": "rough 195 deg -15 bite 2 of 3",
    "lift": 30.0908,
-   "swing": 6.4275,
+   "swing": 14.4275,
    "turn": 67.975,
    "via": "d"
   },
@@ -2964,7 +3925,7 @@
    "tip": 13.220119130320219,
    "label": "rough 195 deg -15 bite 3 of 3",
    "lift": 34.8736,
-   "swing": 6.1234,
+   "swing": 14.1234,
    "turn": 68.1376,
    "via": "d"
   },
@@ -2977,7 +3938,7 @@
    "tip": 11.451162482418713,
    "label": "rough 195 deg +3 bite 1 of 1",
    "lift": 36.48,
-   "swing": 20.5499,
+   "swing": 28.5499,
    "turn": 76.1459,
    "via": "d"
   },
@@ -2990,7 +3951,7 @@
    "tip": 16.976576176038588,
    "label": "rough 180 deg -18 bite 1 of 1",
    "lift": 28.762,
-   "swing": 4.1497,
+   "swing": 12.1497,
    "turn": 81.599,
    "via": "d"
   },
@@ -3003,7 +3964,7 @@
    "tip": 21.316999328489388,
    "label": "rough 180 deg -9 bite 1 of 3",
    "lift": 18.9492,
-   "swing": 12.2953,
+   "swing": 20.2953,
    "turn": 85.3314,
    "via": "d"
   },
@@ -3016,7 +3977,7 @@
    "tip": 19.14678815168314,
    "label": "rough 180 deg -9 bite 2 of 3",
    "lift": 22.9287,
-   "swing": 11.8439,
+   "swing": 19.8439,
    "turn": 85.4269,
    "via": "d"
   },
@@ -3029,7 +3990,7 @@
    "tip": 16.97657697487689,
    "label": "rough 180 deg -9 bite 3 of 3",
    "lift": 26.9085,
-   "swing": 11.4683,
+   "swing": 19.4683,
    "turn": 85.5359,
    "via": "d"
   },
@@ -3042,7 +4003,7 @@
    "tip": 22.987210505295636,
    "label": "rough 180 deg -3 bite 1 of 1",
    "lift": 15.2269,
-   "swing": 17.5635,
+   "swing": 25.5635,
    "turn": 87.9038,
    "via": "d"
   },
@@ -3055,7 +4016,7 @@
    "tip": 19.58862107937357,
    "label": "rough 165 deg -15 bite 1 of 1",
    "lift": 23.2543,
-   "swing": 7.05,
+   "swing": 15.05,
    "turn": 97.7766,
    "via": "d"
   },
@@ -3068,7 +4029,7 @@
    "tip": 16.02114771490288,
    "label": "rough 165 deg -18 bite 1 of 7",
    "lift": 30.4996,
-   "swing": 4.0104,
+   "swing": 12.0104,
    "turn": 96.654,
    "via": "d"
   },
@@ -3081,7 +4042,7 @@
    "tip": 13.220530691388525,
    "label": "rough 165 deg -18 bite 2 of 7",
    "lift": 35.5944,
-   "swing": 3.684,
+   "swing": 11.684,
    "turn": 96.8301,
    "via": "d"
   },
@@ -3094,7 +4055,7 @@
    "tip": 10.419913667874168,
    "label": "rough 165 deg -18 bite 3 of 7",
    "lift": 40.6943,
-   "swing": 3.4786,
+   "swing": 11.4786,
    "turn": 97.0286,
    "via": "d"
   },
@@ -3107,7 +4068,7 @@
    "tip": 7.619296644359811,
    "label": "rough 165 deg -18 bite 4 of 7",
    "lift": 45.8026,
-   "swing": 3.3931,
+   "swing": 11.3931,
    "turn": 97.2493,
    "via": "d"
   },
@@ -3120,7 +4081,7 @@
    "tip": 4.818679620845454,
    "label": "rough 165 deg -18 bite 5 of 7",
    "lift": 50.9215,
-   "swing": 3.4276,
+   "swing": 11.4276,
    "turn": 97.4925,
    "via": "d"
   },
@@ -3133,7 +4094,7 @@
    "tip": 2.018062597331097,
    "label": "rough 165 deg -18 bite 6 of 7",
    "lift": 56.0528,
-   "swing": 3.5827,
+   "swing": 11.5827,
    "turn": 97.7584,
    "via": "d"
   },
@@ -3146,7 +4107,7 @@
    "tip": -0.7825544261832594,
    "label": "rough 165 deg -18 bite 7 of 7",
    "lift": 61.1975,
-   "swing": 3.8599,
+   "swing": 11.8599,
    "turn": 98.047,
    "via": "d"
   },
@@ -3159,7 +4120,7 @@
    "tip": 5.986262894473374,
    "label": "rough 180 deg +18 bite 1 of 4",
    "lift": 49.2084,
-   "swing": 32.4691,
+   "swing": 40.4691,
    "turn": 98.3267,
    "via": "s"
   },
@@ -3172,7 +4133,7 @@
    "tip": 3.0853152836511124,
    "label": "rough 180 deg +18 bite 2 of 4",
    "lift": 54.8484,
-   "swing": 32.577,
+   "swing": 40.577,
    "turn": 98.6127,
    "via": "d"
   },
@@ -3185,7 +4146,7 @@
    "tip": 0.1843676728288517,
    "label": "rough 180 deg +18 bite 3 of 4",
    "lift": 60.5388,
-   "swing": 32.8168,
+   "swing": 40.8168,
    "turn": 98.9288,
    "via": "d"
   },
@@ -3198,7 +4159,7 @@
    "tip": -2.716579937993409,
    "label": "rough 180 deg +18 bite 4 of 4",
    "lift": 66.2816,
-   "swing": 33.1914,
+   "swing": 41.1914,
    "turn": 99.2759,
    "via": "d"
   },
@@ -3211,7 +4172,7 @@
    "tip": 20.56974957060354,
    "label": "rough 165 deg -3 bite 1 of 2",
    "lift": 19.6799,
-   "swing": 16.9968,
+   "swing": 24.9968,
    "turn": 102.9971,
    "via": "s"
   },
@@ -3224,7 +4185,7 @@
    "tip": 18.883007466902843,
    "label": "rough 165 deg -3 bite 2 of 2",
    "lift": 22.7872,
-   "swing": 16.6582,
+   "swing": 24.6582,
    "turn": 103.0722,
    "via": "d"
   },
@@ -3237,7 +4198,7 @@
    "tip": 16.874423874515983,
    "label": "rough 165 deg +9 bite 1 of 4",
    "lift": 26.8094,
-   "swing": 25.9985,
+   "swing": 33.9985,
    "turn": 108.4729,
    "via": "d"
   },
@@ -3250,7 +4211,7 @@
    "tip": 13.973302433435617,
    "label": "rough 165 deg +9 bite 2 of 4",
    "lift": 32.2321,
-   "swing": 25.614,
+   "swing": 33.614,
    "turn": 108.6426,
    "via": "d"
   },
@@ -3263,7 +4224,7 @@
    "tip": 11.072180992355246,
    "label": "rough 165 deg +9 bite 3 of 4",
    "lift": 37.68,
-   "swing": 25.3604,
+   "swing": 33.3604,
    "turn": 108.8383,
    "via": "d"
   },
@@ -3276,7 +4237,7 @@
    "tip": 8.171059551274878,
    "label": "rough 165 deg +9 bite 4 of 4",
    "lift": 43.1581,
-   "swing": 25.2365,
+   "swing": 33.2365,
    "turn": 109.0603,
    "via": "d"
   },
@@ -3289,7 +4250,7 @@
    "tip": 2.894143171867294,
    "label": "rough 150 deg -18 bite 1 of 1",
    "lift": 54.4462,
-   "swing": 3.5211,
+   "swing": 11.5211,
    "turn": 112.6728,
    "via": "s"
   },
@@ -3302,7 +4263,7 @@
    "tip": 10.507465548621182,
    "label": "rough 150 deg -15 bite 1 of 4",
    "lift": 39.8307,
-   "swing": 5.9202,
+   "swing": 13.9202,
    "turn": 113.3266,
    "via": "d"
   },
@@ -3315,7 +4276,7 @@
    "tip": 8.208718003006602,
    "label": "rough 150 deg -15 bite 2 of 4",
    "lift": 44.0387,
-   "swing": 5.8362,
+   "swing": 13.8362,
    "turn": 113.5033,
    "via": "d"
   },
@@ -3328,7 +4289,7 @@
    "tip": 5.909970457392022,
    "label": "rough 150 deg -15 bite 3 of 4",
    "lift": 48.2549,
-   "swing": 5.833,
+   "swing": 13.833,
    "turn": 113.6952,
    "via": "d"
   },
@@ -3341,7 +4302,7 @@
    "tip": 3.6112229117774426,
    "label": "rough 150 deg -15 bite 4 of 4",
    "lift": 52.4806,
-   "swing": 5.9109,
+   "swing": 13.9109,
    "turn": 113.9025,
    "via": "d"
   },
@@ -3354,7 +4315,7 @@
    "tip": 20.423461238249402,
    "label": "rough 150 deg -12 bite 1 of 1",
    "lift": 21.0964,
-   "swing": 9.6616,
+   "swing": 17.6616,
    "turn": 114.0534,
    "via": "s"
   },
@@ -3367,7 +4328,7 @@
    "tip": 19.756665530675143,
    "label": "rough 150 deg +0 bite 1 of 1",
    "lift": 21.0513,
-   "swing": 19.2546,
+   "swing": 27.2546,
    "turn": 119.3518,
    "via": "d"
   },
@@ -3380,7 +4341,7 @@
    "tip": 19.232373948666233,
    "label": "rough 150 deg +3 bite 1 of 1",
    "lift": 22.023,
-   "swing": 21.5742,
+   "swing": 29.5742,
    "turn": 120.6977,
    "via": "d"
   },
@@ -3393,7 +4354,7 @@
    "tip": 4.74500845120201,
    "label": "rough 135 deg -18 bite 1 of 1",
    "lift": 51.0563,
-   "swing": 3.4301,
+   "swing": 11.4301,
    "turn": 127.4993,
    "via": "d"
   },
@@ -3406,7 +4367,7 @@
    "tip": 9.64184277354583,
    "label": "rough 135 deg -12 bite 1 of 2",
    "lift": 40.8405,
-   "swing": 8.3129,
+   "swing": 16.3129,
    "turn": 129.6971,
    "via": "d"
   },
@@ -3419,7 +4380,7 @@
    "tip": 7.200411786711209,
    "label": "rough 135 deg -12 bite 2 of 2",
    "lift": 45.3306,
-   "swing": 8.257,
+   "swing": 16.257,
    "turn": 129.8895,
    "via": "d"
   },
@@ -3432,7 +4393,7 @@
    "tip": 23.063824522036583,
    "label": "rough 135 deg -3 bite 1 of 1",
    "lift": 15.0857,
-   "swing": 17.5831,
+   "swing": 25.5831,
    "turn": 132.9011,
    "via": "s"
   },
@@ -3445,7 +4406,7 @@
    "tip": 18.726357190844627,
    "label": "rough 135 deg +6 bite 1 of 1",
    "lift": 23.0943,
-   "swing": 23.8978,
+   "swing": 31.8978,
    "turn": 137.0475,
    "via": "d"
   },
@@ -3458,7 +4419,7 @@
    "tip": 18.435008812130334,
    "label": "rough 135 deg +9 bite 1 of 1",
    "lift": 23.901,
-   "swing": 26.2602,
+   "swing": 34.2602,
    "turn": 138.3923,
    "via": "d"
   },
@@ -3471,7 +4432,7 @@
    "tip": 6.547260740355899,
    "label": "rough 120 deg -18 bite 1 of 4",
    "lift": 47.7606,
-   "swing": 3.3922,
+   "swing": 11.3922,
    "turn": 142.3398,
    "via": "d"
   },
@@ -3484,7 +4445,7 @@
    "tip": 3.8203354965079064,
    "label": "rough 120 deg -18 bite 2 of 4",
    "lift": 52.7492,
-   "swing": 3.469,
+   "swing": 11.469,
    "turn": 142.5847,
    "via": "d"
   },
@@ -3497,7 +4458,7 @@
    "tip": 1.0934102526599139,
    "label": "rough 120 deg -18 bite 3 of 4",
    "lift": 57.7499,
-   "swing": 3.6606,
+   "swing": 11.6606,
    "turn": 142.8511,
    "via": "d"
   },
@@ -3510,7 +4471,7 @@
    "tip": -1.6335149911880786,
    "label": "rough 120 deg -18 bite 4 of 4",
    "lift": 62.7634,
-   "swing": 3.9687,
+   "swing": 11.9687,
    "turn": 143.1393,
    "via": "d"
   },
@@ -3523,7 +4484,7 @@
    "tip": 15.303799601926267,
    "label": "rough 120 deg -6 bite 1 of 3",
    "lift": 29.6198,
-   "swing": 13.6616,
+   "swing": 21.6616,
    "turn": 146.943,
    "via": "s"
   },
@@ -3536,7 +4497,7 @@
    "tip": 12.567387815864208,
    "label": "rough 120 deg -6 bite 2 of 3",
    "lift": 34.6626,
-   "swing": 13.3639,
+   "swing": 21.3639,
    "turn": 147.1119,
    "via": "d"
   },
@@ -3549,7 +4510,7 @@
    "tip": 9.83097602980215,
    "label": "rough 120 deg -6 bite 3 of 3",
    "lift": 39.7182,
-   "swing": 13.1818,
+   "swing": 21.1818,
    "turn": 147.3028,
    "via": "d"
   },
@@ -3562,7 +4523,7 @@
    "tip": 7.981858933849319,
    "label": "rough 105 deg -18 bite 1 of 2",
    "lift": 45.1407,
-   "swing": 3.3974,
+   "swing": 11.3974,
    "turn": 157.2195,
    "via": "d"
   },
@@ -3575,7 +4536,7 @@
    "tip": 5.540518655020232,
    "label": "rough 105 deg -18 bite 2 of 2",
    "lift": 49.601,
-   "swing": 3.4072,
+   "swing": 11.4072,
    "turn": 157.4277,
    "via": "d"
   },
@@ -3588,7 +4549,7 @@
    "tip": 10.186913092350476,
    "label": "rough 105 deg -15 bite 1 of 1",
    "lift": 40.417,
-   "swing": 5.9036,
+   "swing": 13.9036,
    "turn": 158.3503,
    "via": "d"
   },
@@ -3601,7 +4562,7 @@
    "tip": 10.776955169882003,
    "label": "rough 105 deg -3 bite 1 of 1",
    "lift": 37.7644,
-   "swing": 15.6589,
+   "swing": 23.6589,
    "turn": 163.5496,
    "via": "s"
   },
@@ -3614,7 +4575,7 @@
    "tip": 20.94293555300471,
    "label": "rough 105 deg +9 bite 1 of 1",
    "lift": 19.2365,
-   "swing": 26.7628,
+   "swing": 34.7628,
    "turn": 168.278,
    "via": "d"
   },
@@ -3627,7 +4588,7 @@
    "tip": 11.962567845135865,
    "label": "rough 90 deg -18 bite 1 of 1",
    "lift": 37.8843,
-   "swing": 3.5768,
+   "swing": 11.5768,
    "turn": 171.9165,
    "via": "d"
   },
@@ -3640,7 +4601,7 @@
    "tip": 6.061853997806222,
    "label": "rough 90 deg -15 bite 1 of 1",
    "lift": 47.9761,
-   "swing": 5.8308,
+   "swing": 13.8308,
    "turn": 173.6821,
    "via": "d"
   },
@@ -3653,7 +4614,7 @@
    "tip": 13.966769910220078,
    "label": "rough 90 deg +3 bite 1 of 2",
    "lift": 31.7921,
-   "swing": 20.7775,
+   "swing": 28.7775,
    "turn": 180.9811,
    "via": "s"
   },
@@ -3666,7 +4627,7 @@
    "tip": 11.932420695938813,
    "label": "rough 90 deg +3 bite 2 of 2",
    "lift": 35.5819,
-   "swing": 20.5859,
+   "swing": 28.5859,
    "turn": 181.1129,
    "via": "d"
   },
@@ -3679,7 +4640,7 @@
    "tip": 17.57008511931282,
    "label": "rough 75 deg -18 bite 1 of 1",
    "lift": 27.6826,
-   "swing": 4.2435,
+   "swing": 12.2435,
    "turn": 186.5661,
    "via": "d"
   },
@@ -3692,7 +4653,7 @@
    "tip": 12.918589676892745,
    "label": "rough 75 deg -12 bite 1 of 3",
    "lift": 34.8292,
-   "swing": 8.5315,
+   "swing": 16.5315,
    "turn": 189.466,
    "via": "d"
   },
@@ -3705,7 +4666,7 @@
    "tip": 10.857585913679827,
    "label": "rough 75 deg -12 bite 2 of 3",
    "lift": 38.6084,
-   "swing": 8.3748,
+   "swing": 16.3748,
    "turn": 189.6077,
    "via": "d"
   },
@@ -3718,7 +4679,7 @@
    "tip": 8.796582150466909,
    "label": "rough 75 deg -12 bite 3 of 3",
    "lift": 42.3939,
-   "swing": 8.2832,
+   "swing": 16.2832,
    "turn": 189.7617,
    "via": "d"
   },
@@ -3731,7 +4692,7 @@
    "tip": 15.718618836570394,
    "label": "rough 75 deg -3 bite 1 of 1",
    "lift": 28.6223,
-   "swing": 16.1458,
+   "swing": 24.1458,
    "turn": 193.2355,
    "via": "s"
   },
@@ -3744,7 +4705,7 @@
    "tip": 22.48241266488951,
    "label": "rough 60 deg -18 bite 1 of 1",
    "lift": 18.7422,
-   "swing": 5.2369,
+   "swing": 13.2369,
    "turn": 201.3324,
    "via": "d"
   },
@@ -3757,7 +4718,7 @@
    "tip": 24.654139206707075,
    "label": "rough 45 deg -18 bite 1 of 1",
    "lift": 14.7811,
-   "swing": 5.803,
+   "swing": 13.803,
    "turn": 216.2509,
    "via": "d"
   },
@@ -3770,7 +4731,7 @@
    "tip": 26.3125755023554,
    "label": "rough 45 deg -15 bite 1 of 1",
    "lift": 10.9641,
-   "swing": 8.7424,
+   "swing": 16.7424,
    "turn": 217.5209,
    "via": "d"
   },
@@ -3783,7 +4744,7 @@
    "tip": 18.62926933869182,
    "label": "rough 30 deg -18 bite 1 of 2",
    "lift": 25.7561,
-   "swing": 4.4248,
+   "swing": 12.4248,
    "turn": 231.5099,
    "via": "d"
   },
@@ -3796,7 +4757,7 @@
    "tip": 17.009665452828013,
    "label": "rough 30 deg -18 bite 2 of 2",
    "lift": 28.7018,
-   "swing": 4.1548,
+   "swing": 12.1548,
    "turn": 231.5971,
    "via": "d"
   },
@@ -3809,7 +4770,7 @@
    "tip": 6.760478627182459,
    "label": "rough 45 deg +15 bite 1 of 1",
    "lift": 46.9435,
-   "swing": 30.0516,
+   "swing": 38.0516,
    "turn": 231.8857,
    "via": "d"
   },
@@ -3822,7 +4783,7 @@
    "tip": 22.61938745821187,
    "label": "rough 30 deg -15 bite 1 of 3",
    "lift": 17.7219,
-   "swing": 7.7189,
+   "swing": 15.7189,
    "turn": 232.6454,
    "via": "s"
   },
@@ -3835,7 +4796,7 @@
    "tip": 19.96503056127169,
    "label": "rough 30 deg -15 bite 2 of 3",
    "lift": 22.5676,
-   "swing": 7.1249,
+   "swing": 15.1249,
    "turn": 232.7589,
    "via": "d"
   },
@@ -3848,7 +4809,7 @@
    "tip": 17.310673664331507,
    "label": "rough 30 deg -15 bite 3 of 3",
    "lift": 27.4094,
-   "swing": 6.6451,
+   "swing": 14.6451,
    "turn": 232.8924,
    "via": "d"
   },
@@ -3861,7 +4822,7 @@
    "tip": 25.820699090925313,
    "label": "rough 30 deg -12 bite 1 of 4",
    "lift": 11.2092,
-   "swing": 11.0398,
+   "swing": 19.0398,
    "turn": 233.8564,
    "via": "d"
   },
@@ -3874,7 +4835,7 @@
    "tip": 23.555218261400356,
    "label": "rough 30 deg -12 bite 2 of 4",
    "lift": 15.3638,
-   "swing": 10.4014,
+   "swing": 18.4014,
    "turn": 233.9289,
    "via": "d"
   },
@@ -3887,7 +4848,7 @@
    "tip": 21.289737431875395,
    "label": "rough 30 deg -12 bite 3 of 4",
    "lift": 19.5115,
-   "swing": 9.85,
+   "swing": 17.85,
    "turn": 234.0161,
    "via": "d"
   },
@@ -3900,7 +4861,7 @@
    "tip": 19.024256602350434,
    "label": "rough 30 deg -12 bite 4 of 4",
    "lift": 23.6557,
-   "swing": 9.3831,
+   "swing": 17.3831,
    "turn": 234.118,
    "via": "d"
   },
@@ -3913,7 +4874,7 @@
    "tip": 22.215870746693533,
    "label": "rough 30 deg +3 bite 1 of 4",
    "lift": 16.5034,
-   "swing": 22.223,
+   "swing": 30.223,
    "turn": 240.5737,
    "via": "d"
   },
@@ -3926,7 +4887,7 @@
    "tip": 19.7737648032123,
    "label": "rough 30 deg +3 bite 2 of 4",
    "lift": 21.0209,
-   "swing": 21.6811,
+   "swing": 29.6811,
    "turn": 240.6733,
    "via": "d"
   },
@@ -3939,7 +4900,7 @@
    "tip": 17.331658859731064,
    "label": "rough 30 deg +3 bite 3 of 4",
    "lift": 25.5439,
-   "swing": 21.236,
+   "swing": 29.236,
    "turn": 240.7905,
    "via": "d"
   },
@@ -3952,7 +4913,7 @@
    "tip": 14.889552916249832,
    "label": "rough 30 deg +3 bite 4 of 4",
    "lift": 30.0763,
-   "swing": 20.8856,
+   "swing": 28.8856,
    "turn": 240.9255,
    "via": "d"
   },
@@ -3965,7 +4926,7 @@
    "tip": 18.962112072451326,
    "label": "rough 15 deg -15 bite 1 of 2",
    "lift": 24.3972,
-   "swing": 6.9303,
+   "swing": 14.9303,
    "turn": 247.807,
    "via": "d"
   },
@@ -3978,7 +4939,7 @@
    "tip": 17.06195092704857,
    "label": "rough 15 deg -15 bite 2 of 2",
    "lift": 27.8631,
-   "swing": 6.6059,
+   "swing": 14.6059,
    "turn": 247.906,
    "via": "d"
   },
@@ -3991,7 +4952,7 @@
    "tip": 29.296241709574662,
    "label": "rough 15 deg +0 bite 1 of 1",
    "lift": 3.4235,
-   "swing": 21.9453,
+   "swing": 29.9453,
    "turn": 254.0616,
    "via": "d"
   },
@@ -4004,7 +4965,7 @@
    "tip": -2.4252849982351496,
    "label": "rough 15 deg +18 bite 1 of 1",
    "lift": 65.7025,
-   "swing": 33.1476,
+   "swing": 41.1476,
    "turn": 264.2396,
    "via": "d"
   },
@@ -4017,7 +4978,7 @@
    "tip": 21.58908197861019,
    "label": "rough 0 deg +0 bite 1 of 1",
    "lift": 17.6687,
-   "swing": 19.6513,
+   "swing": 27.6513,
    "turn": 269.2755,
    "via": "s"
   },
@@ -4030,7 +4991,7 @@
    "tip": 15.818691278980976,
    "label": "rough 345 deg -18 bite 1 of 1",
    "lift": 30.8678,
-   "swing": 3.9827,
+   "swing": 11.9827,
    "turn": 276.666,
    "via": "d"
   },
@@ -4043,7 +5004,7 @@
    "tip": 22.766807216902137,
    "label": "rough 345 deg +0 bite 1 of 1",
    "lift": 15.495,
-   "swing": 19.9355,
+   "swing": 27.9355,
    "turn": 284.2316,
    "via": "d"
   },
@@ -4056,7 +5017,7 @@
    "tip": 22.447388077046213,
    "label": "rough 345 deg +9 bite 1 of 1",
    "lift": 16.4424,
-   "swing": 27.1137,
+   "swing": 35.1137,
    "turn": 288.2186,
    "via": "d"
   },
@@ -4069,7 +5030,7 @@
    "tip": 15.01145817527851,
    "label": "rough 330 deg -3 bite 1 of 2",
    "lift": 29.9279,
-   "swing": 16.0529,
+   "swing": 24.0529,
    "turn": 298.2761,
    "via": "d"
   },
@@ -4082,7 +5043,7 @@
    "tip": 12.806697580457321,
    "label": "rough 330 deg -3 bite 2 of 2",
    "lift": 34.0038,
-   "swing": 15.8131,
+   "swing": 23.8131,
    "turn": 298.4119,
    "via": "d"
   },
@@ -4095,7 +5056,7 @@
    "tip": 16.32644987503904,
    "label": "rough 315 deg -15 bite 1 of 5",
    "lift": 29.2047,
-   "swing": 6.4957,
+   "swing": 14.4957,
    "turn": 307.9471,
    "via": "d"
   },
@@ -4108,7 +5069,7 @@
    "tip": 13.906317850725051,
    "label": "rough 315 deg -15 bite 2 of 5",
    "lift": 33.6207,
-   "swing": 6.1927,
+   "swing": 14.1927,
    "turn": 308.0932,
    "via": "d"
   },
@@ -4121,7 +5082,7 @@
    "tip": 11.486185826411063,
    "label": "rough 315 deg -15 bite 3 of 5",
    "lift": 38.0412,
-   "swing": 5.9805,
+   "swing": 13.9805,
    "turn": 308.256,
    "via": "d"
   },
@@ -4134,7 +5095,7 @@
    "tip": 9.066053802097073,
    "label": "rough 315 deg -15 bite 4 of 5",
    "lift": 42.4684,
-   "swing": 5.8581,
+   "swing": 13.8581,
    "turn": 308.4356,
    "via": "d"
   },
@@ -4147,7 +5108,7 @@
    "tip": 6.6459217777830855,
    "label": "rough 315 deg -15 bite 5 of 5",
    "lift": 46.9041,
-   "swing": 5.8253,
+   "swing": 13.8253,
    "turn": 308.6321,
    "via": "d"
   },
@@ -4160,7 +5121,7 @@
    "tip": 17.34432641250314,
    "label": "rough 270 deg +0 bite 1 of 3",
    "lift": 25.508,
-   "swing": 18.8154,
+   "swing": 26.8154,
    "turn": 359.4673,
    "via": "s"
   },
@@ -4173,7 +5134,7 @@
    "tip": 14.889771949507617,
    "label": "rough 270 deg +0 bite 2 of 3",
    "lift": 30.0503,
-   "swing": 18.4632,
+   "swing": 26.4632,
    "turn": 359.6024,
    "via": "d"
   },
@@ -4186,7 +5147,7 @@
    "tip": 12.435217486512096,
    "label": "rough 270 deg +0 bite 3 of 3",
    "lift": 34.6036,
-   "swing": 18.2051,
+   "swing": 26.2051,
    "turn": 359.7554,
    "via": "d"
   },
@@ -4199,7 +5160,7 @@
    "tip": 8.0,
    "label": "set the ball-nose on the master",
    "lift": 42.8681,
-   "swing": 17.9743,
+   "swing": 25.9743,
    "turn": 270.0779,
    "via": "s"
   },
@@ -4212,7 +5173,7 @@
    "tip": 8.325658105810906,
    "label": "finish bite 1 of 1",
    "lift": 43.4116,
-   "swing": 27.9894,
+   "swing": 35.9894,
    "turn": 0.5822,
    "via": "s"
   },
@@ -4225,7 +5186,7 @@
    "tip": 3.323358267639726,
    "label": "finish bite 1 of 1",
    "lift": 53.0603,
-   "swing": 5.722,
+   "swing": 13.722,
    "turn": 0.8202,
    "via": "s"
   },
@@ -4238,7 +5199,7 @@
    "tip": 11.04975240578487,
    "label": "finish bite 1 of 2",
    "lift": 37.1953,
-   "swing": 17.1498,
+   "swing": 25.1498,
    "turn": 0.8317,
    "via": "s"
   },
@@ -4251,7 +5212,7 @@
    "tip": 10.131714069306923,
    "label": "finish bite 2 of 2",
    "lift": 38.9024,
-   "swing": 17.0968,
+   "swing": 25.0968,
    "turn": 0.8973,
    "via": "d"
   },
@@ -4264,7 +5225,7 @@
    "tip": 8.99542994144439,
    "label": "finish bite 1 of 1",
    "lift": 42.482,
-   "swing": 29.4107,
+   "swing": 37.4107,
    "turn": 1.8154,
    "via": "d"
   },
@@ -4277,7 +5238,7 @@
    "tip": 9.124579498090679,
    "label": "finish bite 1 of 1",
    "lift": 43.3164,
-   "swing": 32.9532,
+   "swing": 40.9532,
    "turn": 2.8087,
    "via": "d"
   },
@@ -4290,7 +5251,7 @@
    "tip": 11.380874707979874,
    "label": "finish bite 1 of 7",
    "lift": 37.8675,
-   "swing": 7.4348,
+   "swing": 15.4348,
    "turn": 2.5476,
    "via": "s"
   },
@@ -4303,7 +5264,7 @@
    "tip": 9.939763769776796,
    "label": "finish bite 2 of 7",
    "lift": 40.5087,
-   "swing": 7.3528,
+   "swing": 15.3528,
    "turn": 2.6522,
    "via": "d"
   },
@@ -4316,7 +5277,7 @@
    "tip": 8.498652831573715,
    "label": "finish bite 3 of 7",
    "lift": 43.153,
-   "swing": 7.3026,
+   "swing": 15.3026,
    "turn": 2.7628,
    "via": "d"
   },
@@ -4329,7 +5290,7 @@
    "tip": 7.057541893370634,
    "label": "finish bite 4 of 7",
    "lift": 45.8009,
-   "swing": 7.2841,
+   "swing": 15.2841,
    "turn": 2.8795,
    "via": "d"
   },
@@ -4342,7 +5303,7 @@
    "tip": 5.616430955167554,
    "label": "finish bite 5 of 7",
    "lift": 48.4525,
-   "swing": 7.2975,
+   "swing": 15.2975,
    "turn": 3.0022,
    "via": "d"
   },
@@ -4355,7 +5316,7 @@
    "tip": 4.1753200169644735,
    "label": "finish bite 6 of 7",
    "lift": 51.1083,
-   "swing": 7.3427,
+   "swing": 15.3427,
    "turn": 3.131,
    "via": "d"
   },
@@ -4368,7 +5329,7 @@
    "tip": 2.7342090787613937,
    "label": "finish bite 7 of 7",
    "lift": 53.7683,
-   "swing": 7.4199,
+   "swing": 15.4199,
    "turn": 3.2659,
    "via": "d"
   },
@@ -4381,7 +5342,7 @@
    "tip": 10.060856722009824,
    "label": "finish bite 1 of 1",
    "lift": 39.0216,
-   "swing": 18.4083,
+   "swing": 26.4083,
    "turn": 7.6195,
    "via": "s"
   },
@@ -4394,7 +5355,7 @@
    "tip": 8.040869943388708,
    "label": "finish bite 1 of 2",
    "lift": 44.3312,
-   "swing": 29.4889,
+   "swing": 37.4889,
    "turn": 7.9517,
    "via": "d"
   },
@@ -4407,7 +5368,7 @@
    "tip": 7.235241100092013,
    "label": "finish bite 2 of 2",
    "lift": 45.8725,
-   "swing": 29.4796,
+   "swing": 37.4796,
    "turn": 8.0205,
    "via": "d"
   },
@@ -4420,7 +5381,7 @@
    "tip": 3.057925867712026,
    "label": "finish bite 1 of 1",
    "lift": 53.014,
-   "swing": 8.1742,
+   "swing": 16.1742,
    "turn": 8.1503,
    "via": "s"
   },
@@ -4433,7 +5394,7 @@
    "tip": 20.841340037904292,
    "label": "finish bite 1 of 1",
    "lift": 19.459,
-   "swing": 26.9895,
+   "swing": 34.9895,
    "turn": 8.9198,
    "via": "s"
   },
@@ -4446,7 +5407,7 @@
    "tip": 3.049666966386539,
    "label": "finish bite 1 of 1",
    "lift": 52.9857,
-   "swing": 8.4025,
+   "swing": 16.4025,
    "turn": 9.2733,
    "via": "d"
   },
@@ -4459,7 +5420,7 @@
    "tip": 6.156232802554084,
    "label": "finish bite 1 of 1",
    "lift": 47.8681,
-   "swing": 5.5722,
+   "swing": 13.5722,
    "turn": 10.0362,
    "via": "d"
   },
@@ -4472,7 +5433,7 @@
    "tip": 11.12320344301167,
    "label": "finish bite 1 of 2",
    "lift": 37.1043,
-   "swing": 20.7663,
+   "swing": 28.7663,
    "turn": 13.2997,
    "via": "s"
   },
@@ -4485,7 +5446,7 @@
    "tip": 10.240793022444969,
    "label": "finish bite 2 of 2",
    "lift": 38.7543,
-   "swing": 20.714,
+   "swing": 28.714,
    "turn": 13.363,
    "via": "d"
   },
@@ -4498,7 +5459,7 @@
    "tip": 5.2319170140690545,
    "label": "finish bite 1 of 1",
    "lift": 50.759,
-   "swing": 32.7314,
+   "swing": 40.7314,
    "turn": 17.0395,
    "via": "d"
   },
@@ -4511,7 +5472,7 @@
    "tip": 19.08899937800712,
    "label": "finish bite 1 of 1",
    "lift": 23.1337,
-   "swing": 29.0836,
+   "swing": 37.0836,
    "turn": 20.8576,
    "via": "d"
   },
@@ -4524,7 +5485,7 @@
    "tip": 9.54394206791638,
    "label": "finish bite 1 of 1",
    "lift": 40.0732,
-   "swing": 20.9191,
+   "swing": 28.9191,
    "turn": 22.0452,
    "via": "d"
   },
@@ -4537,7 +5498,7 @@
    "tip": 9.854461176395489,
    "label": "finish bite 1 of 1",
    "lift": 39.6378,
-   "swing": 22.7225,
+   "swing": 30.7225,
    "turn": 23.0066,
    "via": "d"
   },
@@ -4550,7 +5511,7 @@
    "tip": 17.338430835624024,
    "label": "finish bite 1 of 1",
    "lift": 25.7581,
-   "swing": 14.9902,
+   "swing": 22.9902,
    "turn": 23.3901,
    "via": "d"
   },
@@ -4563,7 +5524,7 @@
    "tip": 17.308039488612827,
    "label": "finish bite 1 of 1",
    "lift": 25.645,
-   "swing": 17.0646,
+   "swing": 25.0646,
    "turn": 24.0198,
    "via": "d"
   },
@@ -4576,7 +5537,7 @@
    "tip": 10.761128097976714,
    "label": "finish bite 1 of 1",
    "lift": 39.3722,
-   "swing": 5.9138,
+   "swing": 13.9138,
    "turn": 24.797,
    "via": "d"
   },
@@ -4589,7 +5550,7 @@
    "tip": 12.146288294697339,
    "label": "finish bite 1 of 1",
    "lift": 37.6544,
-   "swing": 3.266,
+   "swing": 11.266,
    "turn": 27.2297,
    "via": "d"
   },
@@ -4602,7 +5563,7 @@
    "tip": 6.379514937207918,
    "label": "finish bite 1 of 1",
    "lift": 46.5414,
-   "swing": 9.9032,
+   "swing": 17.9032,
    "turn": 27.342,
    "via": "d"
   },
@@ -4615,7 +5576,7 @@
    "tip": 17.055861193599902,
    "label": "finish bite 1 of 1",
    "lift": 26.8713,
-   "swing": 28.4163,
+   "swing": 36.4163,
    "turn": 30.2878,
    "via": "s"
   },
@@ -4628,7 +5589,7 @@
    "tip": 12.893552237185759,
    "label": "finish bite 1 of 1",
    "lift": 35.3831,
-   "swing": 6.419,
+   "swing": 14.419,
    "turn": 31.8342,
    "via": "d"
   },
@@ -4641,7 +5602,7 @@
    "tip": 16.945979588672273,
    "label": "finish bite 1 of 1",
    "lift": 27.5971,
-   "swing": 30.7368,
+   "swing": 38.7368,
    "turn": 32.0982,
    "via": "d"
   },
@@ -4654,7 +5615,7 @@
    "tip": 7.248315499414922,
    "label": "finish bite 1 of 1",
    "lift": 44.7726,
-   "swing": 10.9417,
+   "swing": 18.9417,
    "turn": 33.8297,
    "via": "d"
   },
@@ -4667,7 +5628,7 @@
    "tip": 17.71274331752544,
    "label": "finish bite 1 of 1",
    "lift": 24.905,
-   "swing": 17.0217,
+   "swing": 25.0217,
    "turn": 34.4396,
    "via": "s"
   },
@@ -4680,7 +5641,7 @@
    "tip": 17.711639198924654,
    "label": "finish bite 1 of 1",
    "lift": 24.8246,
-   "swing": 19.0996,
+   "swing": 27.0996,
    "turn": 35.0703,
    "via": "d"
   },
@@ -4693,7 +5654,7 @@
    "tip": 8.402530139107448,
    "label": "finish bite 1 of 1",
    "lift": 42.4266,
-   "swing": 23.1799,
+   "swing": 31.1799,
    "turn": 35.3993,
    "via": "d"
   },
@@ -4706,7 +5667,7 @@
    "tip": 15.114696635537072,
    "label": "finish bite 1 of 1",
    "lift": 31.7691,
-   "swing": 5.1029,
+   "swing": 13.1029,
    "turn": 38.3582,
    "via": "s"
   },
@@ -4719,7 +5680,7 @@
    "tip": 14.845686158679204,
    "label": "finish bite 1 of 1",
    "lift": 31.7034,
-   "swing": 7.0614,
+   "swing": 15.0614,
    "turn": 38.4437,
    "via": "d"
   },
@@ -4732,7 +5693,7 @@
    "tip": 8.153794228499013,
    "label": "finish bite 1 of 1",
    "lift": 42.8275,
-   "swing": 13.0999,
+   "swing": 21.0999,
    "turn": 39.4162,
    "via": "d"
   },
@@ -4745,7 +5706,7 @@
    "tip": 14.908134492696036,
    "label": "finish bite 1 of 1",
    "lift": 31.199,
-   "swing": 29.5106,
+   "swing": 37.5106,
    "turn": 39.6913,
    "via": "s"
   },
@@ -4758,7 +5719,7 @@
    "tip": 14.397519668707805,
    "label": "finish bite 1 of 1",
    "lift": 32.8615,
-   "swing": 32.083,
+   "swing": 40.083,
    "turn": 43.2026,
    "via": "d"
   },
@@ -4771,7 +5732,7 @@
    "tip": 17.659561782376954,
    "label": "finish bite 1 of 1",
    "lift": 24.9225,
-   "swing": 19.0011,
+   "swing": 27.0011,
    "turn": 45.524,
    "via": "d"
   },
@@ -4784,7 +5745,7 @@
    "tip": 17.657870153644946,
    "label": "finish bite 1 of 1",
    "lift": 24.9371,
-   "swing": 21.2167,
+   "swing": 29.2167,
    "turn": 46.7338,
    "via": "d"
   },
@@ -4797,7 +5758,7 @@
    "tip": 8.858839636842442,
    "label": "finish bite 1 of 1",
    "lift": 41.5134,
-   "swing": 13.1897,
+   "swing": 21.1897,
    "turn": 47.9003,
    "via": "d"
   },
@@ -4810,7 +5771,7 @@
    "tip": 9.16935874532155,
    "label": "finish bite 1 of 1",
    "lift": 40.7846,
-   "swing": 14.9952,
+   "swing": 22.9952,
    "turn": 48.8491,
    "via": "s"
   },
@@ -4823,7 +5784,7 @@
    "tip": 17.57040991494757,
    "label": "finish bite 1 of 1",
    "lift": 26.7761,
-   "swing": 7.2698,
+   "swing": 15.2698,
    "turn": 49.1917,
    "via": "d"
   },
@@ -4836,7 +5797,7 @@
    "tip": 17.456608808599828,
    "label": "finish bite 1 of 1",
    "lift": 26.4708,
-   "swing": 9.3386,
+   "swing": 17.3386,
    "turn": 49.8211,
    "via": "d"
   },
@@ -4849,7 +5810,7 @@
    "tip": 11.523232815289042,
    "label": "finish bite 1 of 1",
    "lift": 38.7399,
-   "swing": 33.1253,
+   "swing": 41.1253,
    "turn": 54.1456,
    "via": "d"
   },
@@ -4862,7 +5823,7 @@
    "tip": 8.011213031387673,
    "label": "finish bite 1 of 1",
    "lift": 45.0123,
-   "swing": 3.6434,
+   "swing": 11.6434,
    "turn": 54.8482,
    "via": "d"
   },
@@ -4875,7 +5836,7 @@
    "tip": 8.65670642126348,
    "label": "finish bite 1 of 1",
    "lift": 44.1493,
-   "swing": 2.6533,
+   "swing": 10.6533,
    "turn": 56.7604,
    "via": "d"
   },
@@ -4888,7 +5849,7 @@
    "tip": 9.81232769173532,
    "label": "finish bite 1 of 1",
    "lift": 39.5018,
-   "swing": 16.8872,
+   "swing": 24.8872,
    "turn": 57.315,
    "via": "s"
   },
@@ -4901,7 +5862,7 @@
    "tip": 9.379872170863853,
    "label": "finish bite 1 of 1",
    "lift": 42.59,
-   "swing": 3.4334,
+   "swing": 11.4334,
    "turn": 59.6083,
    "via": "d"
   },
@@ -4914,7 +5875,7 @@
    "tip": 9.714919642729312,
    "label": "finish bite 1 of 1",
    "lift": 39.737,
-   "swing": 15.5805,
+   "swing": 23.5805,
    "turn": 61.1142,
    "via": "s"
   },
@@ -4927,7 +5888,7 @@
    "tip": 3.7442967173048443,
    "label": "finish bite 1 of 1",
    "lift": 52.1819,
-   "swing": 28.0437,
+   "swing": 36.0437,
    "turn": 63.9904,
    "via": "d"
   },
@@ -4940,7 +5901,7 @@
    "tip": 3.1805865354950145,
    "label": "finish bite 1 of 1",
    "lift": 54.0007,
-   "swing": 30.6388,
+   "swing": 38.6388,
    "turn": 67.9985,
    "via": "d"
   },
@@ -4953,7 +5914,7 @@
    "tip": 21.146293231163,
    "label": "finish bite 1 of 1",
    "lift": 19.2233,
-   "swing": 12.4714,
+   "swing": 20.4714,
    "turn": 71.4543,
    "via": "s"
   },
@@ -4966,7 +5927,7 @@
    "tip": 1.9515299841363722,
    "label": "finish bite 1 of 1",
    "lift": 55.9707,
-   "swing": 29.3503,
+   "swing": 37.3503,
    "turn": 71.8462,
    "via": "d"
   },
@@ -4979,7 +5940,7 @@
    "tip": 10.223893539239914,
    "label": "finish bite 1 of 1",
    "lift": 38.785,
-   "swing": 20.697,
+   "swing": 28.697,
    "turn": 73.3554,
    "via": "s"
   },
@@ -4992,7 +5953,7 @@
    "tip": 14.196820370074153,
    "label": "finish bite 1 of 1",
    "lift": 33.4227,
-   "swing": 5.0579,
+   "swing": 13.0579,
    "turn": 73.449,
    "via": "d"
   },
@@ -5005,7 +5966,7 @@
    "tip": 13.033222724617477,
    "label": "finish bite 1 of 1",
    "lift": 35.1165,
-   "swing": 6.4754,
+   "swing": 14.4754,
    "turn": 73.8483,
    "via": "d"
   },
@@ -5018,7 +5979,7 @@
    "tip": 0.4073643866679062,
    "label": "finish bite 1 of 1",
    "lift": 59.7065,
-   "swing": 31.7293,
+   "swing": 39.7293,
    "turn": 79.2914,
    "via": "d"
   },
@@ -5031,7 +5992,7 @@
    "tip": -0.020470388576478094,
    "label": "finish bite 1 of 1",
    "lift": 60.1314,
-   "swing": 30.5602,
+   "swing": 38.5602,
    "turn": 79.6446,
    "via": "d"
   },
@@ -5044,7 +6005,7 @@
    "tip": -2.409963311733138,
    "label": "finish bite 1 of 1",
    "lift": 64.9888,
-   "swing": 31.3322,
+   "swing": 39.3322,
    "turn": 88.6919,
    "via": "d"
   },
@@ -5057,7 +6018,7 @@
    "tip": -2.367531619345196,
    "label": "finish bite 1 of 1",
    "lift": 65.3503,
-   "swing": 32.5343,
+   "swing": 40.5343,
    "turn": 89.8826,
    "via": "d"
   },
@@ -5070,7 +6031,7 @@
    "tip": 13.492226832880782,
    "label": "finish bite 1 of 1",
    "lift": 33.4717,
-   "swing": 27.5273,
+   "swing": 35.5273,
    "turn": 90.264,
    "via": "s"
   },
@@ -5083,7 +6044,7 @@
    "tip": 8.785003566651024,
    "label": "finish bite 1 of 1",
    "lift": 41.8537,
-   "swing": 24.3274,
+   "swing": 32.3274,
    "turn": 93.9982,
    "via": "d"
   },
@@ -5096,7 +6057,7 @@
    "tip": 22.606491031628156,
    "label": "finish bite 1 of 1",
    "lift": 15.7813,
-   "swing": 20.2575,
+   "swing": 28.2575,
    "turn": 95.4346,
    "via": "s"
   },
@@ -5109,7 +6070,7 @@
    "tip": 8.146329440992664,
    "label": "finish bite 1 of 1",
    "lift": 42.9265,
-   "swing": 23.3122,
+   "swing": 31.3122,
    "turn": 97.9961,
    "via": "d"
   },
@@ -5122,7 +6083,7 @@
    "tip": 19.587852548135256,
    "label": "finish bite 1 of 1",
    "lift": 22.5274,
-   "swing": 9.9189,
+   "swing": 17.9189,
    "turn": 98.3217,
    "via": "s"
   },
@@ -5135,7 +6096,7 @@
    "tip": 16.913477684606967,
    "label": "finish bite 1 of 1",
    "lift": 26.7513,
-   "swing": 13.1847,
+   "swing": 21.1847,
    "turn": 98.4716,
    "via": "d"
   },
@@ -5148,7 +6109,7 @@
    "tip": 11.921504160108933,
    "label": "finish bite 1 of 1",
    "lift": 36.6421,
-   "swing": 28.3891,
+   "swing": 36.3891,
    "turn": 99.4304,
    "via": "d"
   },
@@ -5161,7 +6122,7 @@
    "tip": -5.351097328808977,
    "label": "finish bite 1 of 1",
    "lift": 71.3085,
-   "swing": 33.0844,
+   "swing": 41.0844,
    "turn": 100.7891,
    "via": "d"
   },
@@ -5174,7 +6135,7 @@
    "tip": -5.735773620428509,
    "label": "finish bite 1 of 1",
    "lift": 72.1915,
-   "swing": 33.4346,
+   "swing": 41.4346,
    "turn": 103.0003,
    "via": "d"
   },
@@ -5187,7 +6148,7 @@
    "tip": -6.065385441553042,
    "label": "finish bite 1 of 1",
    "lift": 72.9539,
-   "swing": 33.7417,
+   "swing": 41.7417,
    "turn": 105.185,
    "via": "d"
   },
@@ -5200,7 +6161,7 @@
    "tip": 7.329333465240024,
    "label": "finish bite 1 of 1",
    "lift": 44.9111,
-   "swing": 26.0975,
+   "swing": 34.0975,
    "turn": 105.6157,
    "via": "s"
   },
@@ -5213,7 +6174,7 @@
    "tip": -6.3437633643948725,
    "label": "finish bite 1 of 1",
    "lift": 73.5989,
-   "swing": 33.9992,
+   "swing": 41.9992,
    "turn": 107.3396,
    "via": "d"
   },
@@ -5226,7 +6187,7 @@
    "tip": 17.518200548402167,
    "label": "finish bite 1 of 1",
    "lift": 25.3183,
-   "swing": 16.2124,
+   "swing": 24.2124,
    "turn": 108.5276,
    "via": "s"
   },
@@ -5239,7 +6200,7 @@
    "tip": -11.978802940200984,
    "label": "finish bite 1 of 1",
    "lift": 82.0615,
-   "swing": 5.5168,
+   "swing": 13.5168,
    "turn": 112.0426,
    "via": "d"
   },
@@ -5252,7 +6213,7 @@
    "tip": 21.404005992545972,
    "label": "finish bite 1 of 1",
    "lift": 18.6056,
-   "swing": 13.3771,
+   "swing": 21.3771,
    "turn": 112.4019,
    "via": "s"
   },
@@ -5265,7 +6226,7 @@
    "tip": 3.020787308504117,
    "label": "finish bite 1 of 1",
    "lift": 53.2374,
-   "swing": 7.4098,
+   "swing": 15.4098,
    "turn": 115.2427,
    "via": "d"
   },
@@ -5278,7 +6239,7 @@
    "tip": -5.4310549853586,
    "label": "finish bite 1 of 5",
    "lift": 69.751,
-   "swing": 4.6567,
+   "swing": 12.6567,
    "turn": 114.6089,
    "via": "d"
   },
@@ -5291,7 +6252,7 @@
    "tip": -6.824146055065562,
    "label": "finish bite 2 of 5",
    "lift": 72.3262,
-   "swing": 4.947,
+   "swing": 12.947,
    "turn": 114.7804,
    "via": "d"
   },
@@ -5304,7 +6265,7 @@
    "tip": -8.217237124772524,
    "label": "finish bite 3 of 5",
    "lift": 74.9042,
-   "swing": 5.2705,
+   "swing": 13.2705,
    "turn": 114.9578,
    "via": "d"
   },
@@ -5317,7 +6278,7 @@
    "tip": -9.610328194479486,
    "label": "finish bite 4 of 5",
    "lift": 77.4847,
-   "swing": 5.6277,
+   "swing": 13.6277,
    "turn": 115.1411,
    "via": "d"
   },
@@ -5330,7 +6291,7 @@
    "tip": -11.003419264186448,
    "label": "finish bite 5 of 5",
    "lift": 80.0675,
-   "swing": 6.0196,
+   "swing": 14.0196,
    "turn": 115.3305,
    "via": "d"
   },
@@ -5343,7 +6304,7 @@
    "tip": 5.505382717623423,
    "label": "finish bite 1 of 1",
    "lift": 48.4347,
-   "swing": 26.3552,
+   "swing": 34.3552,
    "turn": 115.4121,
    "via": "s"
   },
@@ -5356,7 +6317,7 @@
    "tip": 5.5942961082705285,
    "label": "finish bite 1 of 1",
    "lift": 48.541,
-   "swing": 27.6166,
+   "swing": 35.6166,
    "turn": 116.6115,
    "via": "d"
   },
@@ -5369,7 +6330,7 @@
    "tip": 17.552933229239038,
    "label": "finish bite 1 of 1",
    "lift": 25.1199,
-   "swing": 18.9676,
+   "swing": 26.9676,
    "turn": 117.5208,
    "via": "s"
   },
@@ -5382,7 +6343,7 @@
    "tip": 21.844695851831677,
    "label": "finish bite 1 of 1",
    "lift": 17.3644,
-   "swing": 25.1905,
+   "swing": 33.1905,
    "turn": 117.7626,
    "via": "d"
   },
@@ -5395,7 +6356,7 @@
    "tip": 21.86928388401444,
    "label": "finish bite 1 of 1",
    "lift": 17.3432,
-   "swing": 16.6458,
+   "swing": 24.6458,
    "turn": 118.5955,
    "via": "d"
   },
@@ -5408,7 +6369,7 @@
    "tip": -9.239860734469563,
    "label": "finish bite 1 of 2",
    "lift": 76.7887,
-   "swing": 5.5695,
+   "swing": 13.5695,
    "turn": 120.1131,
    "via": "d"
   },
@@ -5421,7 +6382,7 @@
    "tip": -10.356834862901994,
    "label": "finish bite 2 of 2",
    "lift": 78.8592,
-   "swing": 5.8735,
+   "swing": 13.8735,
    "turn": 120.2632,
    "via": "d"
   },
@@ -5434,7 +6395,7 @@
    "tip": 17.511028242603338,
    "label": "finish bite 1 of 1",
    "lift": 25.2418,
-   "swing": 22.0297,
+   "swing": 30.0297,
    "turn": 121.6997,
    "via": "s"
   },
@@ -5447,7 +6408,7 @@
    "tip": -10.050814081279272,
    "label": "finish bite 1 of 1",
    "lift": 78.2802,
-   "swing": 5.8383,
+   "swing": 13.8383,
    "turn": 122.2485,
    "via": "d"
   },
@@ -5460,7 +6421,7 @@
    "tip": 4.50191180457546,
    "label": "finish bite 1 of 1",
    "lift": 50.318,
-   "swing": 8.2452,
+   "swing": 16.2452,
    "turn": 122.5923,
    "via": "d"
   },
@@ -5473,7 +6434,7 @@
    "tip": -8.59132697939638,
    "label": "finish bite 1 of 2",
    "lift": 75.5525,
-   "swing": 5.5491,
+   "swing": 13.5491,
    "turn": 124.6054,
    "via": "d"
   },
@@ -5486,7 +6447,7 @@
    "tip": -9.564209643914479,
    "label": "finish bite 2 of 2",
    "lift": 77.3558,
-   "swing": 5.8013,
+   "swing": 13.8013,
    "turn": 124.7339,
    "via": "d"
   },
@@ -5499,7 +6460,7 @@
    "tip": 17.151844056338962,
    "label": "finish bite 1 of 1",
    "lift": 25.8889,
-   "swing": 21.533,
+   "swing": 29.533,
    "turn": 125.9782,
    "via": "s"
   },
@@ -5512,7 +6473,7 @@
    "tip": 20.86965271752373,
    "label": "finish bite 1 of 1",
    "lift": 19.408,
-   "swing": 27.0073,
+   "swing": 35.0073,
    "turn": 127.425,
    "via": "d"
   },
@@ -5525,7 +6486,7 @@
    "tip": 3.4417514448877053,
    "label": "finish bite 1 of 1",
    "lift": 53.0055,
-   "swing": 28.9723,
+   "swing": 36.9723,
    "turn": 128.0353,
    "via": "d"
   },
@@ -5538,7 +6499,7 @@
    "tip": 5.682922148277253,
    "label": "finish bite 1 of 1",
    "lift": 47.7849,
-   "swing": 10.1894,
+   "swing": 18.1894,
    "turn": 128.0506,
    "via": "s"
   },
@@ -5551,7 +6512,7 @@
    "tip": -8.746313915942586,
    "label": "finish bite 1 of 1",
    "lift": 75.8148,
-   "swing": 5.6939,
+   "swing": 13.6939,
    "turn": 128.1819,
    "via": "d"
   },
@@ -5564,7 +6525,7 @@
    "tip": 3.1826686486078772,
    "label": "finish bite 1 of 1",
    "lift": 53.6537,
-   "swing": 29.5081,
+   "swing": 37.5081,
    "turn": 130.3563,
    "via": "s"
   },
@@ -5577,7 +6538,7 @@
    "tip": -6.836334276710115,
    "label": "finish bite 1 of 2",
    "lift": 72.2384,
-   "swing": 5.4006,
+   "swing": 13.4006,
    "turn": 132.5218,
    "via": "s"
   },
@@ -5590,7 +6551,7 @@
    "tip": -7.611732285739826,
    "label": "finish bite 2 of 2",
    "lift": 73.6747,
-   "swing": 5.5765,
+   "swing": 13.5765,
    "turn": 132.6197,
    "via": "d"
   },
@@ -5603,7 +6564,7 @@
    "tip": 2.967784574698938,
    "label": "finish bite 1 of 1",
    "lift": 54.2152,
-   "swing": 30.0116,
+   "swing": 38.0116,
    "turn": 132.6563,
    "via": "s"
   },
@@ -5616,7 +6577,7 @@
    "tip": 16.620885090696817,
    "label": "finish bite 1 of 1",
    "lift": 27.1599,
-   "swing": 25.0212,
+   "swing": 33.0212,
    "turn": 133.9685,
    "via": "s"
   },
@@ -5629,7 +6590,7 @@
    "tip": 16.344919571697538,
    "label": "finish bite 1 of 1",
    "lift": 27.5663,
-   "swing": 23.9945,
+   "swing": 31.9945,
    "turn": 134.4406,
    "via": "d"
   },
@@ -5642,7 +6603,7 @@
    "tip": 2.7931288728610806,
    "label": "finish bite 1 of 1",
    "lift": 54.6942,
-   "swing": 30.4757,
+   "swing": 38.4757,
    "turn": 134.9318,
    "via": "d"
   },
@@ -5655,7 +6616,7 @@
    "tip": 22.439226923909093,
    "label": "finish bite 1 of 1",
    "lift": 16.1572,
-   "swing": 18.5523,
+   "swing": 26.5523,
    "turn": 135.035,
    "via": "s"
   },
@@ -5668,7 +6629,7 @@
    "tip": 8.069336375849286,
    "label": "finish bite 1 of 1",
    "lift": 43.6994,
-   "swing": 8.4228,
+   "swing": 16.4228,
    "turn": 135.903,
    "via": "d"
   },
@@ -5681,7 +6642,7 @@
    "tip": 6.946352307481233,
    "label": "finish bite 1 of 1",
    "lift": 45.4799,
-   "swing": 9.9864,
+   "swing": 17.9864,
    "turn": 136.3405,
    "via": "d"
   },
@@ -5694,7 +6655,7 @@
    "tip": 7.256871415960344,
    "label": "finish bite 1 of 1",
    "lift": 44.6409,
-   "swing": 11.7841,
+   "swing": 19.7841,
    "turn": 137.2834,
    "via": "d"
   },
@@ -5707,7 +6668,7 @@
    "tip": -5.135918483859407,
    "label": "finish bite 1 of 2",
    "lift": 69.0241,
-   "swing": 5.3273,
+   "swing": 13.3273,
    "turn": 137.4607,
    "via": "d"
   },
@@ -5720,7 +6681,7 @@
    "tip": -6.326251710201621,
    "label": "finish bite 2 of 2",
    "lift": 71.2278,
-   "swing": 5.5672,
+   "swing": 13.5672,
    "turn": 137.6057,
    "via": "d"
   },
@@ -5733,7 +6694,7 @@
    "tip": -3.437961959323276,
    "label": "finish bite 1 of 2",
    "lift": 65.7909,
-   "swing": 5.4076,
+   "swing": 13.4076,
    "turn": 143.4648,
    "via": "d"
   },
@@ -5746,7 +6707,7 @@
    "tip": -4.770632847509013,
    "label": "finish bite 2 of 2",
    "lift": 68.2567,
-   "swing": 5.64,
+   "swing": 13.64,
    "turn": 143.6204,
    "via": "d"
   },
@@ -5759,7 +6720,7 @@
    "tip": 15.040781112182522,
    "label": "finish bite 1 of 1",
    "lift": 30.32,
-   "swing": 26.3062,
+   "swing": 34.3062,
    "turn": 144.3906,
    "via": "s"
   },
@@ -5772,7 +6733,7 @@
    "tip": 8.427845980858265,
    "label": "finish bite 1 of 1",
    "lift": 42.2806,
-   "swing": 13.4946,
+   "swing": 21.4946,
    "turn": 145.605,
    "via": "d"
   },
@@ -5785,7 +6746,7 @@
    "tip": 10.003178872853502,
    "label": "finish bite 1 of 1",
    "lift": 40.0893,
-   "swing": 8.7523,
+   "swing": 16.7523,
    "turn": 145.8976,
    "via": "d"
   },
@@ -5798,7 +6759,7 @@
    "tip": 8.659208872206255,
    "label": "finish bite 1 of 1",
    "lift": 42.0054,
-   "swing": 12.1191,
+   "swing": 20.1191,
    "turn": 149.3402,
    "via": "d"
   },
@@ -5811,7 +6772,7 @@
    "tip": -0.28408614112047825,
    "label": "finish bite 1 of 3",
    "lift": 59.8408,
-   "swing": 5.4836,
+   "swing": 13.4836,
    "turn": 151.3906,
    "via": "d"
   },
@@ -5824,7 +6785,7 @@
    "tip": -1.5004941339193456,
    "label": "finish bite 2 of 3",
    "lift": 62.0869,
-   "swing": 5.6324,
+   "swing": 13.6324,
    "turn": 151.5208,
    "via": "d"
   },
@@ -5837,7 +6798,7 @@
    "tip": -2.716902126718213,
    "label": "finish bite 3 of 3",
    "lift": 64.3357,
-   "swing": 5.8048,
+   "swing": 13.8048,
    "turn": 151.6553,
    "via": "d"
   },
@@ -5850,7 +6811,7 @@
    "tip": 21.714928119306393,
    "label": "finish bite 1 of 1",
    "lift": 17.4197,
-   "swing": 21.5189,
+   "swing": 29.5189,
    "turn": 151.7731,
    "via": "s"
   },
@@ -5863,7 +6824,7 @@
    "tip": 10.04617680251188,
    "label": "finish bite 1 of 2",
    "lift": 39.1383,
-   "swing": 15.3199,
+   "swing": 23.3199,
    "turn": 153.4399,
    "via": "d"
   },
@@ -5876,7 +6837,7 @@
    "tip": 9.290285523977099,
    "label": "finish bite 2 of 2",
    "lift": 40.5418,
-   "swing": 15.2871,
+   "swing": 23.2871,
    "turn": 153.496,
    "via": "d"
   },
@@ -5889,7 +6850,7 @@
    "tip": 12.932681420593385,
    "label": "finish bite 1 of 1",
    "lift": 35.1182,
-   "swing": 30.0841,
+   "swing": 38.0841,
    "turn": 157.7613,
    "via": "s"
   },
@@ -5902,7 +6863,7 @@
    "tip": 21.014898948812256,
    "label": "finish bite 1 of 1",
    "lift": 18.7474,
-   "swing": 22.6461,
+   "swing": 30.6461,
    "turn": 159.5044,
    "via": "d"
   },
@@ -5915,7 +6876,7 @@
    "tip": 12.139445272647277,
    "label": "finish bite 1 of 1",
    "lift": 35.8763,
-   "swing": 10.4037,
+   "swing": 18.4037,
    "turn": 159.5618,
    "via": "d"
   },
@@ -5928,7 +6889,7 @@
    "tip": 21.28708230221522,
    "label": "finish bite 1 of 1",
    "lift": 18.498,
-   "swing": 26.0309,
+   "swing": 34.0309,
    "turn": 159.818,
    "via": "d"
   },
@@ -5941,7 +6902,7 @@
    "tip": 1.6561804070741644,
    "label": "finish bite 1 of 3",
    "lift": 56.0801,
-   "swing": 6.0509,
+   "swing": 14.0509,
    "turn": 160.096,
    "via": "d"
   },
@@ -5954,7 +6915,7 @@
    "tip": 0.49338748050821346,
    "label": "finish bite 2 of 3",
    "lift": 58.226,
-   "swing": 6.1568,
+   "swing": 14.1568,
    "turn": 160.2135,
    "via": "d"
   },
@@ -5967,7 +6928,7 @@
    "tip": -0.6694054460577374,
    "label": "finish bite 3 of 3",
    "lift": 60.3747,
-   "swing": 6.2839,
+   "swing": 14.2839,
    "turn": 160.3349,
    "via": "d"
   },
@@ -5980,7 +6941,7 @@
    "tip": 10.959674870564823,
    "label": "finish bite 1 of 2",
    "lift": 37.3605,
-   "swing": 17.2287,
+   "swing": 25.2287,
    "turn": 161.3841,
    "via": "s"
   },
@@ -5993,7 +6954,7 @@
    "tip": 9.88111417347893,
    "label": "finish bite 2 of 2",
    "lift": 39.3669,
-   "swing": 17.1693,
+   "swing": 25.1693,
    "turn": 161.4618,
    "via": "d"
   },
@@ -6006,7 +6967,7 @@
    "tip": 1.8051679222018802,
    "label": "finish bite 1 of 2",
    "lift": 55.6829,
-   "swing": 6.5702,
+   "swing": 14.5702,
    "turn": 165.3654,
    "via": "d"
   },
@@ -6019,7 +6980,7 @@
    "tip": 0.4980609833601781,
    "label": "finish bite 2 of 2",
    "lift": 58.0976,
-   "swing": 6.6875,
+   "swing": 14.6875,
    "turn": 165.497,
    "via": "d"
   },
@@ -6032,7 +6993,7 @@
    "tip": 10.309329808756328,
    "label": "finish bite 1 of 1",
    "lift": 40.7546,
-   "swing": 32.1349,
+   "swing": 40.1349,
    "turn": 169.2187,
    "via": "s"
   },
@@ -6045,7 +7006,7 @@
    "tip": 10.90593611174996,
    "label": "finish bite 1 of 1",
    "lift": 40.0571,
-   "swing": 2.7374,
+   "swing": 10.7374,
    "turn": 171.5818,
    "via": "s"
   },
@@ -6058,7 +7019,7 @@
    "tip": 10.043504161431121,
    "label": "finish bite 1 of 1",
    "lift": 41.6545,
-   "swing": 33.2796,
+   "swing": 41.2796,
    "turn": 172.3984,
    "via": "d"
   },
@@ -6071,7 +7032,7 @@
    "tip": 8.931715070855077,
    "label": "finish bite 1 of 1",
    "lift": 43.7951,
-   "swing": 33.2522,
+   "swing": 41.2522,
    "turn": 174.999,
    "via": "d"
   },
@@ -6084,7 +7045,7 @@
    "tip": 3.754671379036205,
    "label": "finish bite 1 of 2",
    "lift": 51.9037,
-   "swing": 7.2708,
+   "swing": 15.2708,
    "turn": 175.1209,
    "via": "s"
   },
@@ -6097,7 +7058,7 @@
    "tip": 2.7225133951283027,
    "label": "finish bite 2 of 2",
    "lift": 53.8091,
-   "swing": 7.3296,
+   "swing": 15.3296,
    "turn": 175.2182,
    "via": "d"
   },
@@ -6110,7 +7071,7 @@
    "tip": 12.705968664140679,
    "label": "finish bite 1 of 1",
    "lift": 36.7902,
-   "swing": 2.8468,
+   "swing": 10.8468,
    "turn": 175.442,
    "via": "d"
   },
@@ -6123,7 +7084,7 @@
    "tip": 18.717501051148044,
    "label": "finish bite 1 of 1",
    "lift": 23.284,
-   "swing": 25.6039,
+   "swing": 33.6039,
    "turn": 178.4878,
    "via": "d"
   },
@@ -6136,7 +7097,7 @@
    "tip": 7.229255158913821,
    "label": "finish bite 1 of 1",
    "lift": 46.8484,
-   "swing": 32.5832,
+   "swing": 40.5832,
    "turn": 179.2818,
    "via": "d"
   },
@@ -6149,7 +7110,7 @@
    "tip": 14.38776500394827,
    "label": "finish bite 1 of 1",
    "lift": 33.7296,
-   "swing": 3.0247,
+   "swing": 11.0247,
    "turn": 179.336,
    "via": "s"
   },
@@ -6162,7 +7123,7 @@
    "tip": 18.7397544243237,
    "label": "finish bite 1 of 1",
    "lift": 23.785,
-   "swing": 29.0143,
+   "swing": 37.0143,
    "turn": 179.3726,
    "via": "d"
   },
@@ -6175,7 +7136,7 @@
    "tip": 10.622709657344878,
    "label": "finish bite 1 of 2",
    "lift": 38.0548,
-   "swing": 20.9967,
+   "swing": 28.9967,
    "turn": 181.9788,
    "via": "d"
   },
@@ -6188,7 +7149,7 @@
    "tip": 9.839588865612198,
    "label": "finish bite 2 of 2",
    "lift": 39.5207,
-   "swing": 20.9558,
+   "swing": 28.9558,
    "turn": 182.0361,
    "via": "d"
   },
@@ -6201,7 +7162,7 @@
    "tip": 5.917813789783363,
    "label": "finish bite 1 of 2",
    "lift": 47.6657,
-   "swing": 8.4075,
+   "swing": 16.4075,
    "turn": 186.0745,
    "via": "d"
   },
@@ -6214,7 +7175,7 @@
    "tip": 4.9608550597340955,
    "label": "finish bite 2 of 2",
    "lift": 49.4317,
-   "swing": 8.4292,
+   "swing": 16.4292,
    "turn": 186.1582,
    "via": "d"
   },
@@ -6227,7 +7188,7 @@
    "tip": 17.397170676928322,
    "label": "finish bite 1 of 1",
    "lift": 27.8568,
-   "swing": 4.6457,
+   "swing": 12.6457,
    "turn": 188.3064,
    "via": "d"
   },
@@ -6240,7 +7201,7 @@
    "tip": 15.15510610146972,
    "label": "finish bite 1 of 1",
    "lift": 29.7283,
-   "swing": 15.2308,
+   "swing": 23.2308,
    "turn": 194.3119,
    "via": "d"
   },
@@ -6253,7 +7214,7 @@
    "tip": 7.753020752878335,
    "label": "finish bite 1 of 2",
    "lift": 44.0117,
-   "swing": 9.8668,
+   "swing": 17.8668,
    "turn": 196.7073,
    "via": "d"
   },
@@ -6266,7 +7227,7 @@
    "tip": 6.7984772219791445,
    "label": "finish bite 2 of 2",
    "lift": 45.7739,
-   "swing": 9.8613,
+   "swing": 17.8613,
    "turn": 196.7854,
    "via": "d"
   },
@@ -6279,7 +7240,7 @@
    "tip": 20.02943880007635,
    "label": "finish bite 1 of 1",
    "lift": 22.6366,
-   "swing": 6.4977,
+   "swing": 14.4977,
    "turn": 196.9114,
    "via": "d"
   },
@@ -6292,7 +7253,7 @@
    "tip": 14.445240983012416,
    "label": "finish bite 1 of 1",
    "lift": 31.9152,
-   "swing": 28.7715,
+   "swing": 36.7715,
    "turn": 201.3384,
    "via": "d"
   },
@@ -6305,7 +7266,7 @@
    "tip": 14.68893318654801,
    "label": "finish bite 1 of 1",
    "lift": 31.9329,
-   "swing": 30.7728,
+   "swing": 38.7728,
    "turn": 201.4272,
    "via": "d"
   },
@@ -6318,7 +7279,7 @@
    "tip": 15.331314245900206,
    "label": "finish bite 1 of 1",
    "lift": 29.3284,
-   "swing": 16.2253,
+   "swing": 24.2253,
    "turn": 202.8289,
    "via": "d"
   },
@@ -6331,7 +7292,7 @@
    "tip": 7.943834900326486,
    "label": "finish bite 1 of 1",
    "lift": 43.3248,
-   "swing": 23.4375,
+   "swing": 31.4375,
    "turn": 203.5837,
    "via": "d"
   },
@@ -6344,7 +7305,7 @@
    "tip": 22.176770452856587,
    "label": "finish bite 1 of 1",
    "lift": 18.3462,
-   "swing": 8.2659,
+   "swing": 16.2659,
    "turn": 204.5153,
    "via": "s"
   },
@@ -6357,7 +7318,7 @@
    "tip": 15.4298436024993,
    "label": "finish bite 1 of 1",
    "lift": 29.0434,
-   "swing": 19.4483,
+   "swing": 27.4483,
    "turn": 206.5705,
    "via": "d"
   },
@@ -6370,7 +7331,7 @@
    "tip": 23.476371923459997,
    "label": "finish bite 1 of 1",
    "lift": 16.5994,
-   "swing": 6.4849,
+   "swing": 14.4849,
    "turn": 207.3313,
    "via": "d"
   },
@@ -6383,7 +7344,7 @@
    "tip": 9.294468265467914,
    "label": "finish bite 1 of 2",
    "lift": 40.8929,
-   "swing": 11.6717,
+   "swing": 19.6717,
    "turn": 208.039,
    "via": "d"
   },
@@ -6396,7 +7357,7 @@
    "tip": 8.363651552892021,
    "label": "finish bite 2 of 2",
    "lift": 42.6133,
-   "swing": 11.6438,
+   "swing": 19.6438,
    "turn": 208.1106,
    "via": "d"
   },
@@ -6409,7 +7370,7 @@
    "tip": 15.307650896478776,
    "label": "finish bite 1 of 1",
    "lift": 29.3301,
-   "swing": 16.9354,
+   "swing": 24.9354,
    "turn": 210.2176,
    "via": "s"
   },
@@ -6422,7 +7383,7 @@
    "tip": 24.123209525568964,
    "label": "finish bite 1 of 1",
    "lift": 14.3994,
-   "swing": 10.239,
+   "swing": 18.239,
    "turn": 212.2398,
    "via": "d"
   },
@@ -6435,7 +7396,7 @@
    "tip": 11.810843581551456,
    "label": "finish bite 1 of 1",
    "lift": 37.2073,
-   "swing": 29.8558,
+   "swing": 37.8558,
    "turn": 212.265,
    "via": "d"
   },
@@ -6448,7 +7409,7 @@
    "tip": 10.218320842598851,
    "label": "finish bite 1 of 2",
    "lift": 39.0116,
-   "swing": 13.1105,
+   "swing": 21.1105,
    "turn": 213.7257,
    "via": "d"
   },
@@ -6461,7 +7422,7 @@
    "tip": 8.991913841657642,
    "label": "finish bite 2 of 2",
    "lift": 41.2811,
-   "swing": 13.0589,
+   "swing": 21.0589,
    "turn": 213.8171,
    "via": "d"
   },
@@ -6474,7 +7435,7 @@
    "tip": 9.151402247328457,
    "label": "finish bite 1 of 1",
    "lift": 40.9811,
-   "swing": 13.1079,
+   "swing": 21.1079,
    "turn": 215.8285,
    "via": "d"
   },
@@ -6487,7 +7448,7 @@
    "tip": 6.525404197765775,
    "label": "finish bite 1 of 1",
    "lift": 46.5004,
-   "swing": 26.3994,
+   "swing": 34.3994,
    "turn": 216.3536,
    "via": "s"
   },
@@ -6500,7 +7461,7 @@
    "tip": 15.314864396370307,
    "label": "finish bite 1 of 1",
    "lift": 29.2913,
-   "swing": 21.0761,
+   "swing": 29.0761,
    "turn": 217.9752,
    "via": "s"
   },
@@ -6513,7 +7474,7 @@
    "tip": 9.591966773335722,
    "label": "finish bite 1 of 1",
    "lift": 40.0846,
-   "swing": 13.9398,
+   "swing": 21.9398,
    "turn": 219.2364,
    "via": "d"
   },
@@ -6526,7 +7487,7 @@
    "tip": 25.959436355461914,
    "label": "finish bite 1 of 1",
    "lift": 11.128,
-   "swing": 10.3873,
+   "swing": 18.3873,
    "turn": 219.4773,
    "via": "d"
   },
@@ -6539,7 +7500,7 @@
    "tip": 25.75264596273241,
    "label": "finish bite 1 of 1",
    "lift": 11.0701,
-   "swing": 12.1656,
+   "swing": 20.1656,
    "turn": 219.4776,
    "via": "d"
   },
@@ -6552,7 +7513,7 @@
    "tip": 10.018458223111482,
    "label": "finish bite 1 of 1",
    "lift": 39.2827,
-   "swing": 14.0904,
+   "swing": 22.0904,
    "turn": 219.776,
    "via": "d"
   },
@@ -6565,7 +7526,7 @@
    "tip": 10.997611871152904,
    "label": "finish bite 1 of 1",
    "lift": 37.4471,
-   "swing": 14.4023,
+   "swing": 22.4023,
    "turn": 220.845,
    "via": "d"
   },
@@ -6578,7 +7539,7 @@
    "tip": 12.057450853392828,
    "label": "finish bite 1 of 1",
    "lift": 35.4298,
-   "swing": 15.1739,
+   "swing": 23.1739,
    "turn": 223.6493,
    "via": "d"
   },
@@ -6591,7 +7552,7 @@
    "tip": 9.082409363530651,
    "label": "finish bite 1 of 1",
    "lift": 43.3378,
-   "swing": 32.7801,
+   "swing": 40.7801,
    "turn": 223.7144,
    "via": "d"
   },
@@ -6604,7 +7565,7 @@
    "tip": 14.93548068866049,
    "label": "finish bite 1 of 1",
    "lift": 29.9727,
-   "swing": 18.1127,
+   "swing": 26.1127,
    "turn": 224.4056,
    "via": "s"
   },
@@ -6617,7 +7578,7 @@
    "tip": 14.815960253904692,
    "label": "finish bite 1 of 1",
    "lift": 32.114,
-   "swing": 5.7474,
+   "swing": 13.7474,
    "turn": 225.7419,
    "via": "d"
   },
@@ -6630,7 +7591,7 @@
    "tip": 4.655511060573456,
    "label": "finish bite 1 of 1",
    "lift": 50.0973,
-   "swing": 26.5584,
+   "swing": 34.5584,
    "turn": 226.0908,
    "via": "d"
   },
@@ -6643,7 +7604,7 @@
    "tip": 4.7341679998242565,
    "label": "finish bite 1 of 1",
    "lift": 50.2374,
-   "swing": 27.8369,
+   "swing": 35.8369,
    "turn": 227.3021,
    "via": "d"
   },
@@ -6656,7 +7617,7 @@
    "tip": 13.05365787518696,
    "label": "finish bite 1 of 1",
    "lift": 33.5117,
-   "swing": 16.4461,
+   "swing": 24.4461,
    "turn": 228.2272,
    "via": "s"
   },
@@ -6669,7 +7630,7 @@
    "tip": 27.548583198571198,
    "label": "finish bite 1 of 1",
    "lift": 7.1287,
-   "swing": 16.2123,
+   "swing": 24.2123,
    "turn": 231.8137,
    "via": "d"
   },
@@ -6682,7 +7643,7 @@
    "tip": 8.258057607395909,
    "label": "finish bite 1 of 5",
    "lift": 44.6437,
-   "swing": 3.3791,
+   "swing": 11.3791,
    "turn": 233.1848,
    "via": "d"
   },
@@ -6695,7 +7656,7 @@
    "tip": 6.868518178197113,
    "label": "finish bite 2 of 5",
    "lift": 47.1807,
-   "swing": 3.3677,
+   "swing": 11.3677,
    "turn": 233.3001,
    "via": "d"
   },
@@ -6708,7 +7669,7 @@
    "tip": 5.478978748998317,
    "label": "finish bite 3 of 5",
    "lift": 49.7204,
-   "swing": 3.3857,
+   "swing": 11.3857,
    "turn": 233.4209,
    "via": "d"
   },
@@ -6721,7 +7682,7 @@
    "tip": 4.0894393197995225,
    "label": "finish bite 4 of 5",
    "lift": 52.2631,
-   "swing": 3.4334,
+   "swing": 11.4334,
    "turn": 233.5474,
    "via": "d"
   },
@@ -6734,7 +7695,7 @@
    "tip": 2.6998998906007268,
    "label": "finish bite 5 of 5",
    "lift": 54.809,
-   "swing": 3.5108,
+   "swing": 11.5108,
    "turn": 233.6793,
    "via": "d"
   },
@@ -6747,7 +7708,7 @@
    "tip": 13.80605700128047,
    "label": "finish bite 1 of 1",
    "lift": 32.0608,
-   "swing": 18.2213,
+   "swing": 26.2213,
    "turn": 234.6043,
    "via": "s"
   },
@@ -6760,7 +7721,7 @@
    "tip": 14.585226488689091,
    "label": "finish bite 1 of 1",
    "lift": 30.6137,
-   "swing": 19.7578,
+   "swing": 27.7578,
    "turn": 235.8471,
    "via": "d"
   },
@@ -6773,7 +7734,7 @@
    "tip": 2.6019593344361898,
    "label": "finish bite 1 of 1",
    "lift": 54.3063,
-   "swing": 27.797,
+   "swing": 35.797,
    "turn": 236.9279,
    "via": "d"
   },
@@ -6786,7 +7747,7 @@
    "tip": 2.7856817342076416,
    "label": "finish bite 1 of 1",
    "lift": 54.2817,
-   "swing": 29.0379,
+   "swing": 37.0379,
    "turn": 237.6166,
    "via": "d"
   },
@@ -6799,7 +7760,7 @@
    "tip": 3.3032347784394815,
    "label": "finish bite 1 of 1",
    "lift": 53.4185,
-   "swing": 4.4822,
+   "swing": 12.4822,
    "turn": 239.1593,
    "via": "s"
   },
@@ -6812,7 +7773,7 @@
    "tip": 3.5628014877871177,
    "label": "finish bite 1 of 1",
    "lift": 52.825,
-   "swing": 4.9043,
+   "swing": 12.9043,
    "turn": 241.3677,
    "via": "d"
   },
@@ -6825,7 +7786,7 @@
    "tip": 14.102257091814666,
    "label": "finish bite 1 of 1",
    "lift": 31.5244,
-   "swing": 20.3314,
+   "swing": 28.3314,
    "turn": 242.2204,
    "via": "s"
   },
@@ -6838,7 +7799,7 @@
    "tip": 18.128698394768715,
    "label": "finish bite 1 of 1",
    "lift": 25.0488,
-   "swing": 10.3432,
+   "swing": 18.3432,
    "turn": 242.2669,
    "via": "d"
   },
@@ -6851,7 +7812,7 @@
    "tip": 28.539789021441496,
    "label": "finish bite 1 of 1",
    "lift": 5.1057,
-   "swing": 18.0136,
+   "swing": 26.0136,
    "turn": 243.0857,
    "via": "d"
   },
@@ -6864,7 +7825,7 @@
    "tip": 2.9134634964477675,
    "label": "finish bite 1 of 1",
    "lift": 54.7435,
-   "swing": 31.3381,
+   "swing": 39.3381,
    "turn": 243.4153,
    "via": "d"
   },
@@ -6877,7 +7838,7 @@
    "tip": 3.9680226985213753,
    "label": "finish bite 1 of 1",
    "lift": 51.9317,
-   "swing": 5.4602,
+   "swing": 13.4602,
    "turn": 244.1376,
    "via": "s"
   },
@@ -6890,7 +7851,7 @@
    "tip": 4.628750207924553,
    "label": "finish bite 1 of 1",
    "lift": 50.5267,
-   "swing": 6.2054,
+   "swing": 14.2054,
    "turn": 247.9902,
    "via": "d"
   },
@@ -6903,7 +7864,7 @@
    "tip": 0.5123572576785982,
    "label": "finish bite 1 of 1",
    "lift": 58.9521,
-   "swing": 30.074,
+   "swing": 38.074,
    "turn": 248.3397,
    "via": "s"
   },
@@ -6916,7 +7877,7 @@
    "tip": 13.492993715656207,
    "label": "finish bite 1 of 1",
    "lift": 32.9559,
-   "swing": 24.2533,
+   "swing": 32.2533,
    "turn": 251.4491,
    "via": "s"
   },
@@ -6929,7 +7890,7 @@
    "tip": 5.488047708752534,
    "label": "finish bite 1 of 1",
    "lift": 48.7148,
-   "swing": 7.1826,
+   "swing": 15.1826,
    "turn": 252.9504,
    "via": "d"
   },
@@ -6942,7 +7903,7 @@
    "tip": -0.1713006453809438,
    "label": "finish bite 1 of 1",
    "lift": 60.664,
-   "swing": 31.282,
+   "swing": 39.282,
    "turn": 253.5651,
    "via": "s"
   },
@@ -6955,7 +7916,7 @@
    "tip": 28.708228411754618,
    "label": "finish bite 1 of 1",
    "lift": 4.5179,
-   "swing": 21.6163,
+   "swing": 29.6163,
    "turn": 255.0083,
    "via": "s"
   },
@@ -6968,7 +7929,7 @@
    "tip": -0.32358539815784537,
    "label": "finish bite 1 of 1",
    "lift": 61.8005,
-   "swing": 33.5282,
+   "swing": 41.5282,
    "turn": 255.3663,
    "via": "d"
   },
@@ -6981,7 +7942,7 @@
    "tip": 20.98115334528669,
    "label": "finish bite 1 of 1",
    "lift": 19.3211,
-   "swing": 13.6687,
+   "swing": 21.6687,
    "turn": 257.1281,
    "via": "s"
   },
@@ -6994,7 +7955,7 @@
    "tip": 19.897740279976,
    "label": "finish bite 1 of 1",
    "lift": 21.1093,
-   "swing": 14.9233,
+   "swing": 22.9233,
    "turn": 257.4778,
    "via": "d"
   },
@@ -7007,7 +7968,7 @@
    "tip": -1.6466225119258495,
    "label": "finish bite 1 of 1",
    "lift": 63.358,
-   "swing": 30.8607,
+   "swing": 38.8607,
    "turn": 257.8914,
    "via": "d"
   },
@@ -7020,7 +7981,7 @@
    "tip": 6.373023856719795,
    "label": "finish bite 1 of 1",
    "lift": 46.8348,
-   "swing": 8.3592,
+   "swing": 16.3592,
    "turn": 258.5126,
    "via": "s"
   },
@@ -7033,7 +7994,7 @@
    "tip": 11.93235481548269,
    "label": "finish bite 1 of 1",
    "lift": 37.1844,
-   "swing": 6.1689,
+   "swing": 14.1689,
    "turn": 264.3084,
    "via": "d"
   },
@@ -7046,7 +8007,7 @@
    "tip": 8.248895080495904,
    "label": "finish bite 1 of 2",
    "lift": 43.109,
-   "swing": 9.8056,
+   "swing": 17.8056,
    "turn": 265.1304,
    "via": "d"
   },
@@ -7059,7 +8020,7 @@
    "tip": 7.320780841852912,
    "label": "finish bite 2 of 2",
    "lift": 44.8213,
-   "swing": 9.7931,
+   "swing": 17.7931,
    "turn": 265.2049,
    "via": "d"
   },
@@ -7072,7 +8033,7 @@
    "tip": -3.290772628876474,
    "label": "finish bite 1 of 1",
    "lift": 67.3799,
-   "swing": 33.1718,
+   "swing": 41.1718,
    "turn": 265.2846,
    "via": "s"
   },
@@ -7085,7 +8046,7 @@
    "tip": 28.112538078196533,
    "label": "finish bite 1 of 1",
    "lift": 5.7545,
-   "swing": 27.1238,
+   "swing": 35.1238,
    "turn": 268.1437,
    "via": "s"
   },
@@ -7098,7 +8059,7 @@
    "tip": 21.921635037056962,
    "label": "finish bite 1 of 1",
    "lift": 17.324,
-   "swing": 15.9126,
+   "swing": 23.9126,
    "turn": 268.1892,
    "via": "d"
   },
@@ -7111,7 +8072,7 @@
    "tip": 13.50027456551323,
    "label": "finish bite 1 of 1",
    "lift": 34.6988,
-   "swing": 4.9627,
+   "swing": 12.9627,
    "turn": 269.4821,
    "via": "d"
   },
@@ -7124,7 +8085,7 @@
    "tip": 20.39653919673647,
    "label": "finish bite 1 of 1",
    "lift": 19.8742,
-   "swing": 19.2356,
+   "swing": 27.2356,
    "turn": 271.7416,
    "via": "d"
   },
@@ -7137,7 +8098,7 @@
    "tip": 9.519802494926344,
    "label": "finish bite 1 of 2",
    "lift": 40.4784,
-   "swing": 11.6682,
+   "swing": 19.6682,
    "turn": 274.0155,
    "via": "d"
   },
@@ -7150,7 +8111,7 @@
    "tip": 8.359316956793752,
    "label": "finish bite 2 of 2",
    "lift": 42.6229,
-   "swing": 11.6315,
+   "swing": 19.6315,
    "turn": 274.1044,
    "via": "d"
   },
@@ -7163,7 +8124,7 @@
    "tip": 21.72149087982428,
    "label": "finish bite 1 of 2",
    "lift": 17.4512,
-   "swing": 23.0804,
+   "swing": 31.0804,
    "turn": 276.1258,
    "via": "s"
   },
@@ -7176,7 +8137,7 @@
    "tip": 20.707927293020035,
    "label": "finish bite 2 of 2",
    "lift": 19.3275,
-   "swing": 22.8519,
+   "swing": 30.8519,
    "turn": 276.1666,
    "via": "d"
   },
@@ -7189,7 +8150,7 @@
    "tip": 27.071543669040373,
    "label": "finish bite 1 of 1",
    "lift": 7.7197,
-   "swing": 27.1442,
+   "swing": 35.1442,
    "turn": 276.3692,
    "via": "d"
   },
@@ -7202,7 +8163,7 @@
    "tip": 15.295023414365087,
    "label": "finish bite 1 of 1",
    "lift": 30.5439,
-   "swing": 8.5015,
+   "swing": 16.5015,
    "turn": 278.1607,
    "via": "d"
   },
@@ -7215,7 +8176,7 @@
    "tip": 22.231028205814635,
    "label": "finish bite 1 of 1",
    "lift": 16.4928,
-   "swing": 19.5299,
+   "swing": 27.5299,
    "turn": 283.1022,
    "via": "d"
   },
@@ -7228,7 +8189,7 @@
    "tip": 19.943692481174438,
    "label": "finish bite 1 of 1",
    "lift": 20.7412,
-   "swing": 22.656,
+   "swing": 30.656,
    "turn": 283.1803,
    "via": "d"
   },
@@ -7241,7 +8202,7 @@
    "tip": 10.396824783750994,
    "label": "finish bite 1 of 2",
    "lift": 38.6187,
-   "swing": 13.7193,
+   "swing": 21.7193,
    "turn": 283.5371,
    "via": "d"
   },
@@ -7254,7 +8215,7 @@
    "tip": 9.092476947153827,
    "label": "finish bite 2 of 2",
    "lift": 41.0343,
-   "swing": 13.6615,
+   "swing": 21.6615,
    "turn": 283.6337,
    "via": "d"
   },
@@ -7267,7 +8228,7 @@
    "tip": 10.643397512765215,
    "label": "finish bite 1 of 2",
    "lift": 38.0599,
-   "swing": 14.9229,
+   "swing": 22.9229,
    "turn": 289.164,
    "via": "d"
   },
@@ -7280,7 +8241,7 @@
    "tip": 9.384572850935182,
    "label": "finish bite 2 of 2",
    "lift": 40.3947,
-   "swing": 14.8617,
+   "swing": 22.8617,
    "turn": 289.2561,
    "via": "d"
   },
@@ -7293,7 +8254,7 @@
    "tip": 17.95392516841398,
    "label": "finish bite 1 of 1",
    "lift": 25.1792,
-   "swing": 11.2808,
+   "swing": 19.2808,
    "turn": 291.7977,
    "via": "d"
   },
@@ -7306,7 +8267,7 @@
    "tip": 18.883726948437385,
    "label": "finish bite 1 of 1",
    "lift": 22.9739,
-   "swing": 25.6266,
+   "swing": 33.6266,
    "turn": 293.4753,
    "via": "d"
   },
@@ -7319,7 +8280,7 @@
    "tip": 20.10472037056492,
    "label": "finish bite 1 of 2",
    "lift": 21.109,
-   "swing": 28.5926,
+   "swing": 36.5926,
    "turn": 294.9257,
    "via": "d"
   },
@@ -7332,7 +8293,7 @@
    "tip": 19.042677374400455,
    "label": "finish bite 2 of 2",
    "lift": 23.0888,
-   "swing": 28.382,
+   "swing": 36.382,
    "turn": 294.9751,
    "via": "d"
   },
@@ -7345,7 +8306,7 @@
    "tip": 21.57420360938853,
    "label": "finish bite 1 of 1",
    "lift": 17.7086,
-   "swing": 22.6781,
+   "swing": 30.6781,
    "turn": 297.4301,
    "via": "d"
   },
@@ -7358,7 +8319,7 @@
    "tip": 10.789434347011788,
    "label": "finish bite 1 of 2",
    "lift": 37.6882,
-   "swing": 16.8263,
+   "swing": 24.8263,
    "turn": 299.6829,
    "via": "d"
   },
@@ -7371,7 +8332,7 @@
    "tip": 9.765417745303147,
    "label": "finish bite 2 of 2",
    "lift": 39.5923,
-   "swing": 16.7721,
+   "swing": 24.7721,
    "turn": 299.757,
    "via": "d"
   },
@@ -7384,7 +8345,7 @@
    "tip": 17.4234941586509,
    "label": "finish bite 1 of 1",
    "lift": 26.1255,
-   "swing": 28.1696,
+   "swing": 36.1696,
    "turn": 302.598,
    "via": "d"
   },
@@ -7397,7 +8358,7 @@
    "tip": 22.214599132099398,
    "label": "finish bite 1 of 1",
    "lift": 18.4661,
-   "swing": 34.4606,
+   "swing": 42.4606,
    "turn": 302.8475,
    "via": "d"
   },
@@ -7410,7 +8371,7 @@
    "tip": 19.83583779216533,
    "label": "finish bite 1 of 1",
    "lift": 21.9741,
-   "swing": 10.4216,
+   "swing": 18.4216,
    "turn": 303.0547,
    "via": "d"
   },
@@ -7423,7 +8384,7 @@
    "tip": 16.88249321578702,
    "label": "finish bite 1 of 1",
    "lift": 27.817,
-   "swing": 31.1223,
+   "swing": 39.1223,
    "turn": 306.8232,
    "via": "d"
   },
@@ -7436,7 +8397,7 @@
    "tip": 20.313350284854558,
    "label": "finish bite 1 of 1",
    "lift": 20.2065,
-   "swing": 24.8673,
+   "swing": 32.8673,
    "turn": 309.3356,
    "via": "d"
   },
@@ -7449,7 +8410,7 @@
    "tip": 10.703073911555508,
    "label": "finish bite 1 of 2",
    "lift": 37.8283,
-   "swing": 18.9019,
+   "swing": 26.9019,
    "turn": 311.3235,
    "via": "d"
   },
@@ -7462,7 +8423,7 @@
    "tip": 9.743578148503895,
    "label": "finish bite 2 of 2",
    "lift": 39.6184,
-   "swing": 18.8519,
+   "swing": 26.8519,
    "turn": 311.3933,
    "via": "d"
   },
@@ -7475,7 +8436,7 @@
    "tip": 17.712071357428027,
    "label": "finish bite 1 of 1",
    "lift": 27.0969,
-   "swing": 34.1267,
+   "swing": 42.1267,
    "turn": 313.3931,
    "via": "d"
   },
@@ -7488,7 +8449,7 @@
    "tip": 17.020436731913588,
    "label": "finish bite 1 of 1",
    "lift": 28.3984,
-   "swing": 34.0081,
+   "swing": 42.0081,
    "turn": 313.9284,
    "via": "d"
   },
@@ -7501,7 +8462,7 @@
    "tip": 20.927024017465207,
    "label": "finish bite 1 of 1",
    "lift": 19.1124,
-   "swing": 16.0774,
+   "swing": 24.0774,
    "turn": 313.9412,
    "via": "d"
   },
@@ -7514,7 +8475,7 @@
    "tip": 16.384447934367124,
    "label": "finish bite 1 of 1",
    "lift": 29.5725,
-   "swing": 33.8319,
+   "swing": 41.8319,
    "turn": 314.4203,
    "via": "d"
   },
@@ -7527,7 +8488,7 @@
    "tip": 15.48019721743503,
    "label": "finish bite 1 of 1",
    "lift": 31.3131,
-   "swing": 33.8007,
+   "swing": 41.8007,
    "turn": 316.0291,
    "via": "d"
   },
@@ -7540,7 +8501,7 @@
    "tip": 14.822399852275161,
    "label": "finish bite 1 of 1",
    "lift": 32.5297,
-   "swing": 33.6307,
+   "swing": 41.6307,
    "turn": 317.0219,
    "via": "d"
   },
@@ -7553,7 +8514,7 @@
    "tip": 7.925306890193834,
    "label": "finish bite 1 of 1",
    "lift": 44.2546,
-   "swing": 7.0785,
+   "swing": 15.0785,
    "turn": 318.6943,
    "via": "d"
   },
@@ -7566,7 +8527,7 @@
    "tip": 13.920223136417533,
    "label": "finish bite 1 of 1",
    "lift": 34.267,
-   "swing": 33.605,
+   "swing": 41.605,
    "turn": 319.1256,
    "via": "s"
   },
@@ -7579,7 +8540,7 @@
    "tip": 13.450555560008556,
    "label": "finish bite 1 of 1",
    "lift": 34.8254,
-   "swing": 32.5361,
+   "swing": 40.5361,
    "turn": 319.5795,
    "via": "d"
   },
@@ -7592,7 +8553,7 @@
    "tip": 18.684959442006594,
    "label": "finish bite 1 of 1",
    "lift": 23.4582,
-   "swing": 26.469,
+   "swing": 34.469,
    "turn": 319.9702,
    "via": "d"
   },
@@ -7605,7 +8566,7 @@
    "tip": 21.913145213305143,
    "label": "finish bite 1 of 1",
    "lift": 17.5078,
-   "swing": 14.5724,
+   "swing": 22.5724,
    "turn": 321.9646,
    "via": "d"
   },
@@ -7618,7 +8579,7 @@
    "tip": 10.219997075203398,
    "label": "finish bite 1 of 2",
    "lift": 38.8006,
-   "swing": 20.8441,
+   "swing": 28.8441,
    "turn": 322.4365,
    "via": "d"
   },
@@ -7631,7 +8592,7 @@
    "tip": 9.278550309245434,
    "label": "finish bite 2 of 2",
    "lift": 40.564,
-   "swing": 20.8018,
+   "swing": 28.8018,
    "turn": 322.5067,
    "via": "d"
   },
@@ -7644,7 +8605,7 @@
    "tip": 21.682109784205753,
    "label": "finish bite 1 of 1",
    "lift": 17.5818,
-   "swing": 17.9078,
+   "swing": 25.9078,
    "turn": 322.8117,
    "via": "s"
   },
@@ -7657,7 +8618,7 @@
    "tip": 9.251691252760068,
    "label": "finish bite 1 of 1",
    "lift": 41.8092,
-   "swing": 7.1591,
+   "swing": 15.1591,
    "turn": 325.6153,
    "via": "d"
   },
@@ -7670,7 +8631,7 @@
    "tip": 9.287446948590585,
    "label": "finish bite 1 of 1",
    "lift": 41.0135,
-   "swing": 10.9331,
+   "swing": 18.9331,
    "turn": 328.1413,
    "via": "d"
   },
@@ -7683,7 +8644,7 @@
    "tip": 22.15925138537972,
    "label": "finish bite 1 of 1",
    "lift": 16.6299,
-   "swing": 19.3867,
+   "swing": 27.3867,
    "turn": 330.5363,
    "via": "s"
   },
@@ -7696,7 +8657,7 @@
    "tip": 10.555426719460112,
    "label": "finish bite 1 of 1",
    "lift": 39.3822,
-   "swing": 7.3742,
+   "swing": 15.3742,
    "turn": 332.6016,
    "via": "d"
   },
@@ -7709,7 +8670,7 @@
    "tip": 10.384049128616613,
    "label": "finish bite 1 of 1",
    "lift": 38.9987,
-   "swing": 10.9361,
+   "swing": 18.9361,
    "turn": 333.0349,
    "via": "d"
   },
@@ -7722,7 +8683,7 @@
    "tip": 9.34744187704246,
    "label": "finish bite 1 of 2",
    "lift": 40.5955,
-   "swing": 22.7457,
+   "swing": 30.7457,
    "turn": 334.0696,
    "via": "d"
   },
@@ -7735,7 +8696,7 @@
    "tip": 8.346132485415158,
    "label": "finish bite 2 of 2",
    "lift": 42.4804,
-   "swing": 22.7146,
+   "swing": 30.7146,
    "turn": 334.1476,
    "via": "d"
   },
@@ -7748,7 +8709,7 @@
    "tip": 9.623766314960596,
    "label": "finish bite 1 of 1",
    "lift": 40.1536,
-   "swing": 12.7097,
+   "swing": 20.7097,
    "turn": 335.5678,
    "via": "s"
   },
@@ -7761,7 +8722,7 @@
    "tip": 15.2901318290019,
    "label": "finish bite 1 of 1",
    "lift": 30.1435,
-   "swing": 27.9822,
+   "swing": 35.9822,
    "turn": 336.2886,
    "via": "s"
   },
@@ -7774,7 +8735,7 @@
    "tip": 11.719383227099787,
    "label": "finish bite 1 of 1",
    "lift": 37.2069,
-   "swing": 7.6318,
+   "swing": 15.6318,
    "turn": 339.1169,
    "via": "d"
   },
@@ -7787,7 +8748,7 @@
    "tip": 9.927632320463191,
    "label": "finish bite 1 of 3",
    "lift": 39.6642,
-   "swing": 24.119,
+   "swing": 32.119,
    "turn": 339.7704,
    "via": "d"
   },
@@ -7800,7 +8761,7 @@
    "tip": 8.853869323997397,
    "label": "finish bite 2 of 3",
    "lift": 41.6883,
-   "swing": 24.0768,
+   "swing": 32.0768,
    "turn": 339.8528,
    "via": "d"
   },
@@ -7813,7 +8774,7 @@
    "tip": 7.780106327531602,
    "label": "finish bite 3 of 3",
    "lift": 43.7167,
-   "swing": 24.0524,
+   "swing": 32.0524,
    "turn": 339.9389,
    "via": "d"
   },
@@ -7826,7 +8787,7 @@
    "tip": 9.406236922685435,
    "label": "finish bite 1 of 1",
    "lift": 40.4321,
-   "swing": 13.8958,
+   "swing": 21.8958,
    "turn": 340.7306,
    "via": "s"
   },
@@ -7839,7 +8800,7 @@
    "tip": 9.272263501666771,
    "label": "finish bite 1 of 1",
    "lift": 40.6529,
-   "swing": 14.2071,
+   "swing": 22.2071,
    "turn": 341.912,
    "via": "d"
   },
@@ -7852,7 +8813,7 @@
    "tip": 7.4639542971900585,
    "label": "finish bite 1 of 1",
    "lift": 44.3152,
-   "swing": 24.0513,
+   "swing": 32.0513,
    "turn": 341.9664,
    "via": "s"
   },
@@ -7865,7 +8826,7 @@
    "tip": 12.056335572966987,
    "label": "finish bite 1 of 1",
    "lift": 35.7935,
-   "swing": 11.8671,
+   "swing": 19.8671,
    "turn": 342.8602,
    "via": "s"
   },
@@ -7878,7 +8839,7 @@
    "tip": 7.195093399452375,
    "label": "finish bite 1 of 1",
    "lift": 44.9341,
-   "swing": 24.7745,
+   "swing": 32.7745,
    "turn": 345.3912,
    "via": "d"
   },
@@ -7891,7 +8852,7 @@
    "tip": 22.53654850117172,
    "label": "finish bite 1 of 1",
    "lift": 15.906,
-   "swing": 22.082,
+   "swing": 30.082,
    "turn": 345.442,
    "via": "s"
   },
@@ -7904,7 +8865,7 @@
    "tip": 7.503933717700038,
    "label": "finish bite 1 of 1",
    "lift": 44.3669,
-   "swing": 24.8903,
+   "swing": 32.8903,
    "turn": 345.9284,
    "via": "d"
   },
@@ -7917,7 +8878,7 @@
    "tip": 8.248368520021128,
    "label": "finish bite 1 of 1",
    "lift": 42.9923,
-   "swing": 25.121,
+   "swing": 33.121,
    "turn": 346.989,
    "via": "d"
   },
@@ -7930,7 +8891,7 @@
    "tip": -0.36300106578378055,
    "label": "finish bite 1 of 1",
    "lift": 60.4774,
-   "swing": 3.627,
+   "swing": 11.627,
    "turn": 347.4046,
    "via": "s"
   },
@@ -7943,7 +8904,7 @@
    "tip": 8.725229982859878,
    "label": "finish bite 1 of 1",
    "lift": 42.1889,
-   "swing": 25.7185,
+   "swing": 33.7185,
    "turn": 349.7762,
    "via": "s"
   },
@@ -7956,7 +8917,7 @@
    "tip": 11.719383227099797,
    "label": "finish bite 1 of 1",
    "lift": 37.0588,
-   "swing": 28.5272,
+   "swing": 36.5272,
    "turn": 350.5306,
    "via": "d"
   },
@@ -7969,7 +8930,7 @@
    "tip": 8.80232375313197,
    "label": "finish bite 1 of 1",
    "lift": 42.2235,
-   "swing": 26.6868,
+   "swing": 34.6868,
    "turn": 354.3082,
    "via": "d"
   },
@@ -7982,7 +8943,7 @@
    "tip": 1.691893165072352,
    "label": "finish bite 1 of 1",
    "lift": 55.9329,
-   "swing": 6.3988,
+   "swing": 14.3988,
    "turn": 356.2801,
    "via": "s"
   }
@@ -8007,7 +8968,7 @@
   "Sled": [
    [
     "Part 1",
-    3140795.0
+    3194166.0
    ]
   ],
   "Riser": [
@@ -8109,7 +9070,7 @@
   "Spindle and centre": [
    [
     "Part 1",
-    13454.058938803828
+    13265.802547701365
    ],
    [
     "Part 2",
@@ -8197,13 +9158,13 @@
    ],
    [
     "Part 2",
-    6365.478393554682
+    7005.478393554693
    ]
   ],
   "Swing rail": [
    [
     "Part 1",
-    9600.0
+    14400.0
    ],
    [
     "Part 2",
@@ -8219,7 +9180,7 @@
   "Swing base": [
    [
     "Part 1",
-    75399.99999999999
+    113100.0
    ],
    [
     "Part 2",

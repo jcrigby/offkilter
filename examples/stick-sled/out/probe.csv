@@ -1,0 +1,54 @@
+#safe,0.0
+n,kind,tool,lift,swing,turn,via,label
+1,say,,0.0,0.0,0.0,h,router UNPLUGGED6 mm pin in the collet its top  39 over table
+2,say,,0.0,0.0,0.0,h,sled clamped at its back stop.  clips on pin    and spindle
+3,leads,,0.0,0.0,0.0,h,pin
+4,down,pin,42.8681,25.9743,0.0,h,down on pin
+5,sw+,pin,65.9686,17.9917,0.0,h,pin fence side
+6,sw+,pin,70.6516,18.4727,0.0,d,pin fence side
+7,sw+,pin,75.3488,19.0601,0.0,d,pin fence side
+8,sw+,pin,80.0588,19.7582,0.0,d,pin fence side
+9,sw-,pin,66.9372,35.7565,0.0,h,pin far side
+10,sw-,pin,71.8539,36.2398,0.0,d,pin far side
+11,sw-,pin,76.8028,36.8309,0.0,d,pin far side
+12,sw-,pin,81.783,37.5345,0.0,d,pin far side
+13,down,pin,42.8681,25.9743,180.0,h,down on pin
+14,sw+,pin,65.9686,17.9917,180.0,h,pin fence side
+15,sw+,pin,70.6516,18.4727,180.0,d,pin fence side
+16,sw+,pin,75.3488,19.0601,180.0,d,pin fence side
+17,sw+,pin,80.0588,19.7582,180.0,d,pin fence side
+18,sw-,pin,66.9372,35.7565,180.0,h,pin far side
+19,sw-,pin,71.8539,36.2398,180.0,d,pin far side
+20,sw-,pin,76.8028,36.8309,180.0,d,pin far side
+21,sw-,pin,81.783,37.5345,180.0,d,pin far side
+22,place,,0.0,30.6534,0.0,h,to the top
+23,say,,0.0,0.0,0.0,h,pin down under  the table. blocklying flat its  3 in. across
+24,say,,0.0,0.0,0.0,h,under the master2 mm clear of   the hanger. clipon the block
+25,leads,,0.0,0.0,0.0,h,block
+26,down,flat,73.5547,44.9268,0.0,h,down on flat
+27,down,flat,68.613,27.173,0.0,h,down on flat
+28,down,flat,71.016,9.3969,0.0,h,down on flat
+29,br+,edge,76.8272,11.6309,0.0,h,block on its 3  in. edge along  the stick: slide
+30,sw+,edge,76.8272,11.6309,0.0,d,edge fence side
+31,sw+,edge,66.7083,10.4685,0.0,d,edge fence side
+32,sw+,edge,56.6317,9.8011,0.0,d,edge fence side
+33,sw+,edge,46.5996,9.6055,0.0,d,edge fence side
+34,down,edge,21.136,32.5085,0.0,h,down on edge
+35,down,edge,20.9626,27.6675,0.0,h,down on edge
+36,down,edge,21.3002,22.8114,0.0,h,down on edge
+37,sw-,edge,47.2563,43.0329,0.0,h,edge far side
+38,sw-,edge,58.0214,43.2238,0.0,d,edge far side
+39,sw-,edge,68.9867,43.8943,0.0,d,edge far side
+40,sw-,edge,80.1606,45.0712,0.0,d,edge far side
+41,br+,post_far,4.3853,37.8976,0.0,h,block on end on the far side:   slide it
+42,sw+,post_far,4.3853,37.8976,0.0,d,post_far fence side
+43,sw+,post_far,26.6955,34.8226,0.0,d,post_far fence side
+44,sw+,post_far,49.3372,34.0547,0.0,d,post_far fence side
+45,sw+,post_far,72.6211,35.5418,0.0,d,post_far fence side
+46,br-,post_near,71.4918,19.3894,0.0,h,block on end on the fence side: slide it
+47,sw-,post_near,71.4918,19.3894,0.0,d,post_near far side
+48,sw-,post_near,49.0972,17.9042,0.0,d,post_near far side
+49,sw-,post_near,27.0157,18.6603,0.0,d,post_near far side
+50,sw-,post_near,4.9863,21.7192,0.0,d,post_near far side
+51,place,,0.0,30.6534,0.0,h,to the top
+52,say,,0.0,0.0,0.0,h,done. copy      probe_log.csv   run calibrate.pyfit

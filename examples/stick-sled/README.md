@@ -155,7 +155,9 @@ with E 10 GPa along the grain and G 0.7 GPa:
 `firmware/main.py` and `firmware/config.py` are MicroPython for a
 Raspberry Pi Pico; `out/passes.csv` is the table. Copy the three to
 the Pico. `config.py` has the pins, the steps for a millimetre and a
-degree, and the trims and scales found from a test stick.
+degree, and the probing's numbers. The same program runs the two
+tables that set a built sled up, `out/bands.csv` and `out/probe.csv`,
+each copied to the Pico as `passes.csv` in its turn.
 
 `python3 main.py --sim passes.csv steps.json` runs the same program on
 a computer, on pins that do nothing. The build does that and the test
@@ -192,39 +194,135 @@ long as the router has not been touched.
 | 10, 11, 12 | home switches: lift, swing, the spindle's mark; each to ground, normally closed |
 | 13 | sled-back switch, to ground, closing when the sled is back |
 | 14 | foot switch, to ground |
+| 15 | the probe: a clip lead to the pin or block being touched; a second lead from ground to the spindle |
 | 16, 17 | display: SDA, SCL |
-| 25 | the Pico's own LED: lit while a row waits to be cut |
+| 25 | the Pico's own LED: lit while a row waits to be cut, and while the master touches a block being slid up to it |
 
-## Calibration: not yet designed
+## Setting up a built sled
 
-The table is worked out from the sled as drawn. A built sled differs,
-and the hinges turn an error in a length into an error that changes
-across the travel.
+The table is worked out from the sled as drawn. A built sled differs:
+half a millimetre in a hinge's place or a link's length, the home
+switches wherever they were screwed down, the cutter not quite on the
+sled's line. Run from the drawing's table, such a sled cuts 1.6 mm
+out. So a built sled is measured before it cuts a tile, in two steps.
+The controller runs both from tables `build.py` writes, and
+`calibrate.py` reads the results.
 
-| every dimension of hinges and links off by | passes off by, after trimming |
-|---|---|
-| 0.5 mm | 0.06 mm |
-| 0.2 mm | 0.025 mm |
+Needed: a 6 mm ground pin 60 or 70 long (a dowel pin), a 1-2-3 block,
+two clip leads, callipers, and for the master a ground steel sleeve.
+A printed master is not round enough and does not conduct.
 
-That is with six numbers found from a test cut: a trim each for lift,
-swing and turn, the cutter's place across, and a scale each for lift
-and swing, which `config.py` has. With the trims alone and no scales
-it is three times worse. How to get the six from a test cut with
-callipers is not worked out.
+### 1. Does the stick run true: `out/bands.csv`
 
-Play is not trimmed out, so it is kept out. The swing screw's link
+The stick's axis has to run parallel to the sled's travel: a far end
+0.05 mm high is a tile 0.05 mm bigger at that end. Put a scrap stick
+between the centres and clamp a stop to the fence 25 mm in from each
+end of it. The table sets the straight bit and brings the stick down
+in three bites; at each the sled is pushed to the far stop and drawn
+back to the near one, and at each stop the spindle turns the stick
+once round over the cutter while the foot switch is held. That leaves
+two round bands. Then the same with the bit beside the stick, the
+stops moved 10 mm. Four bands, four diameters:
+
+```sh
+python3 calibrate.py align UNDER_NEAR UNDER_FAR BESIDE_NEAR BESIDE_FAR
+```
+
+says how far to move the tail centre, up or down and across. Under
+the stick a band's radius is the axis's height over the bit, beside
+it the axis's distance from the bit, so the difference between two
+diameters is twice what the axis is out between them. Callipers tell
+0.03 mm of that.
+
+### 2. What the sled is: `out/probe.csv`
+
+The controller can feel the master touch metal: a clip lead from GP15
+to the thing touched, another from ground to the spindle, and a touch
+closes the contact. The router is unplugged and the sled clamped at
+its back stop. The master is brought
+
+| onto | where | touches |
+|---|---|---|
+| a 6 mm pin in the collet, its top about 39 mm up | down on its top, and against each side at four heights; then all of it again with the spindle half a turn round | 18 |
+| the block lying flat | down on it at three places across | 3 |
+| the block on its long edge | down on it at three places, and against both faces at four heights | 11 |
+| the block on end, on the far side of the cutter and then on the fence's | against one face at four heights, to the top of the lift | 8 |
+
+A block that is touched on a face is put in its place by the sled:
+the controller holds the master where the face should be and the
+block is slid up to it until the Pico's lamp lights. Each place is
+touched three times, and three that disagree by 0.08 mm stop the
+probing. About twenty minutes, most of it the motors.
+
+```sh
+python3 calibrate.py fit probe_log.csv --master 15.98
+python3 build.py
+```
+
+`fit` finds the sled that all 40 touches fit: thirteen dimensions of
+hinges and links, where the two home switches are, the cutter's place
+across, the pin's height, the master's runout on the spindle and
+where the blocks stood. That is 22 unknowns, each held loosely to the
+drawing. It writes `built.json`, and `build.py` then plans every row
+for that sled. `--master` is the sleeve's diameter by micrometer.
+
+`calibrate.py study` tries this on 300 sleds built wrong at random:
+every dimension up to 0.5 mm out, the home switches 2 mm, the cutter
+1 mm, the master running out up to 0.1 mm, a touch repeating to
+0.01 mm, the pin and block within 0.005 mm of their sizes. The worst
+finishing cut of each sled:
+
+| | median | 95 in 100 | worst of 300 |
+|---|---|---|---|
+| run from the drawing's table | 1.61 mm | 3.34 | 4.98 |
+| probed and planned for | 0.021 mm | 0.036 | 0.049 |
+
+None of the 300 stopped the probing or brought the master onto
+anything unawares. One of them is recorded in `out/calibration.json`
+as probed by the controller's own program run on a computer, and the
+test works it through again with its own hinges: 2.48 mm out as
+built, 0.029 mm planned for.
+
+What each set-up is for was found by leaving it out, a hundred sleds
+each:
+
+| left out | median | worst |
+|---|---|---|
+| nothing | 0.021 mm | 0.049 |
+| the block on end | 0.035 | 0.11 |
+| the block on edge | 0.038 | 0.10 |
+| the block lying flat | 0.040 | 0.12 |
+| the pin's second half turn | 0.111 | 0.26 |
+| two touches of each three | 0.029 | 0.08 |
+
+Nothing but the block on end reaches above 59 mm, and finishing cuts
+go to 68. Without the second half turn the master's runout passes
+for a cutter out of place.
+
+This is simulation. It takes the table for flat, the block for
+square and a touch for clean. A real sled also flexes, and has play
+that no fit takes out.
+
+### Play
+
+Play is not fitted out, so it is kept out. The swing screw's link
 leans up to 21°, because the frame rises and falls 40 mm past a screw
 that stays put, and whatever its nose moves across the screw comes
 through to the stick at half of itself: 0.2 mm of rattle in a printed
 bore was 0.1 mm at the stick. So the nose is a block on an MGN12H
-carriage on a 100 mm rail, which has about a hundredth of a
+carriage on a 150 mm rail, which has about a hundredth of a
 millimetre of play: 0.005 mm at the stick. The carriage also keeps
 the nose from turning with the screw. The lift's link leans only 7°,
 but its nose is on a rail too, upright on a post, for the same two
 reasons.
 
 Along the screws, slack in a nut comes through whole, a little more
-than whole on the swing. Both screws take anti-backlash nuts.
+than whole on the swing. The plate's weight keeps the lift's nut on
+one flank. The hanging frame's does not: left of plumb it pulls on
+the swing screw and right of plumb it pushes, so slack there would
+show as a step in the middle of the travel. Both screws take
+anti-backlash nuts, and a light spring keeps the frame's load one
+way.
 
 ## Measure these first
 
@@ -234,12 +332,13 @@ than whole on the swing. Both screws take anti-backlash nuts.
 | the fence | 290 mm right of the cutter | a table whose fence will not go that far wants a bar in its mitre slot under the left runner |
 | the lead screws | T8, 2 mm lead | the common T8 is 8 mm lead: a quarter the steps a millimetre, and it runs back under load |
 | the shafts, supports and blocks | the 20 mm set from the duplicator: two shafts of 490 and 416, four SK20, four SC20UU | the blocks turn on the shafts as hinges; collars keep them from sliding |
-| the hinges and links | hinge 1 at 150 right and 204 up, hinge 2 150 left of it and 26 down, the axis 130 under hinge 2; links 30 and 60 | see Calibration |
-| the rails | MGN12 with H carriages: 100 long and level for the swing, its seat 48 over the table; 150 long and upright on a ply post for the lift. The blocks' bores for the pins and nuts are not drawn, nor the motors' mounts | each rail square to the stick; where it really is goes in `build.py` |
+| the hinges and links | hinge 1 at 150 right and 204 up, hinge 2 150 left of it and 26 down, the axis 130 under hinge 2; links 30 and 60 | built within half a millimetre; what they really are is found by probing, see Setting up a built sled |
+| the rails | MGN12 with H carriages, both 150 long: level for the swing, its seat 48 over the table; upright on a ply post for the lift. The blocks' bores for the pins and nuts are not drawn, nor the motors' mounts | each rail square to the stick; where it really is goes in `build.py` |
 | the pins | not drawn | 5 mm shoulder bolts, a close fit |
 | slack | a screw's nut and two pins a link | anti-backlash nuts on both screws; a light spring from the plate to the sled and from the tail hanger to the riser, not drawn |
 | the pulleys and belt | 60 and 16 teeth, 52 between centres: a closed belt of 184 | a 60 with a 12 mm bore is not the common one |
-| the drive | a 16 mm spur on the spindle's end, the tail centre pushing the stick onto it | not drawn in detail |
+| the drive | a 14 mm spur on the spindle's end, the tail centre pushing the stick onto it | not drawn in detail. The tail centre's hole wants a little slack under its nuts: setting up moves it by tenths |
+| the master | a ground steel sleeve, 16 round, 12 bore, 29 long | its diameter by micrometer goes to `calibrate.py fit`; its runout on the studding is found by the probing |
 | the blank | the tile's hull and 2 mm, put on its centres within a millimetre and a few degrees | a card template of the hull with the centre marked |
 | the feed | 20 mm/s at 25,000 rpm is a chip of 0.02 mm a tooth | that is fine dust, and may burn: the router's slowest speed, and a brisk push |
 | the frame | not checked | lean on the stick with the motors holding: if the cutter's mark moves, stiffen what gave |
@@ -255,11 +354,11 @@ than whole on the swing. Both screws take anti-backlash nuts.
 | head hangers, 2 | ply, 70 wide, round-ended | a 6201 bearing in each, 43 apart |
 | tail hanger | ply, 70 wide, round-ended | the tail centre, and link 2's pin 25 over it |
 | spindle | M12 studding | the 60-tooth pulley outboard, the master and a drive spur inboard |
-| master | printed sleeve, 16 round x 29 | on the spindle between hanger and spur; the cutter is under it with the sled back, and a bit is set on it |
+| master | a ground steel sleeve, 16 round x 29, bought | on the spindle between hanger and spur; the cutter is under it with the sled back, a bit is set on it, and the sled is probed with it. The spur beside it is 14, so a block lying under both touches only the master |
 | lift screw | NEMA 17 on the left runner, shaft up; a T8 screw of 2 mm lead with an anti-backlash nut | 79 mm of travel |
 | lift rail | MGN12 x 150 with an MGN12H carriage, on a ply post 60 x 223 on the left runner | carries the lift's nose block, printed, 27 x 24 x 68: link 1's pin near its top, the nut in its foot |
-| swing screw | NEMA 17 on a printed seat on the right runner, 73 over the table; a T8 screw of 2 mm lead with an anti-backlash nut | 32 mm of travel |
-| swing rail | MGN12 x 100 with an MGN12H carriage, on a printed seat on a shelf of the sled | carries the nose block, which holds link 2's pin and the screw's nut |
+| swing screw | NEMA 17 on a printed seat on the right runner, 73 over the table; a T8 screw of 2 mm lead with an anti-backlash nut | 32 mm of travel cutting, 51 with the probing's reach |
+| swing rail | MGN12 x 150 with an MGN12H carriage, on a printed seat on a shelf of the sled | carries the nose block, which holds link 2's pin and the screw's nut |
 | nose block | printed, 27 x 46 x 24 | on the carriage |
 | links, 2 | strips, 30 and 60 between pins, and a clevis under the plate | each nose to what it moves |
 | spindle motor | NEMA 17 on the head hanger, 52 over the spindle | a closed GT2 belt |
@@ -291,8 +390,21 @@ them:
   test's own geometry: the master clear of the cutter, the blank clear
   of the table at every angle it turns through;
 - the document is the sled at one finishing row, the cutter's tip on
-  the stick and no part through another.
+  the stick and no part through another;
+- the probing table, on the sled as drawn: every touch is a touch, on
+  a top or a side and not a corner, with a window of its screw to
+  spare each way, and on its way there the master passes the pin by
+  6 mm and a block by 4;
+- the recorded sled built wrong: its 40 touches are touches on it, the
+  fitted sled leaves them 5 µm out where the drawn one is 1.7 mm
+  from them, and the table planned for the fitted sled, run on the
+  real one with the bit set as the table sets it, lands every
+  finishing cut within 0.03 mm;
+- the bands are turned with the cutter straight under the axis and
+  with the bit's side level with it, in bites of 4 mm, and a turn of
+  the spindle is a whole number of steps.
 
-The build itself tries the sled at 167 poses, the rows and the ways
-between them, with every part as its outline along the stick, and
-stops if any is in another or in the cutter's lane.
+The build itself tries the sled at 334 poses, the rows, the ways
+between them and every place the probing takes it, with every part as
+its outline along the stick, and stops if any is in another or in the
+cutter's lane.

@@ -37,6 +37,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 from okmcp import Mcp, Part, new_tab  # noqa: E402
 import plan as P  # noqa: E402
+import calibrate as K  # noqa: E402
 sys.path.insert(0, os.path.join(HERE, "firmware"))
 import config as FW  # noqa: E402
 
@@ -68,10 +69,13 @@ E1, L1 = (P1_Y - H1_Y, BLK_C - 15.0), 30.0       # link 1: its pin in a clevis u
 E2_UP, L2 = 25.0, 60.0                          # link 2: its pin on the tail hanger's middle line this far over the axis, and its length
 LEAN = 30.0                                     # the most a link may lean off its screw's line, degrees
 HANGER_R = 18.5                                 # the hangers' lower ends, round about the axis: a bearing and 2.5
-MASTER_R = 8.0                                  # the master: a sleeve over the spindle from the hanger to the spur, and the spur its size. With the sled back the cutter is under it
+MASTER_R = 8.0                                  # the master: a ground sleeve over the spindle from the hanger to the spur. With the sled back the cutter is under it
+SPUR_R = 7.0                                    # the spur, smaller: a block lying under both touches only the master
 SPINDLE_CLEAR = 3.0                             # between the master and the cutter while the frame swings with the sled back
 MOVE_CLEAR = (1.5, 1.0)                         # a move may go straight to its row, not by the safe height, if the master passes the cutter by this much and the blank the table by this much
-HOME_OVER = (3.0, 2.0)                          # the home switches beyond the furthest any row goes: lift, swing
+HOME_OVER = (3.0, 10.0)                         # the home switches beyond the furthest any row goes: lift, swing. The swing's has room for probing a block's faces
+SWING_MORE = 15.0                               # and the swing's rail runs this far beyond the furthest row the other way, for the same
+BUILT = os.path.join(HERE, "built.json")        # what calibrate.py found a built sled to be, if it has been run: the table is then planned for that sled
 BACK_X = -12.0                                  # the cutter along the sled with the sled back: under the master, 9 mm of the straight bit clear of the stick's end, 18 of the hanger
 RUN = 6.0                                       # the cutter past the stick's far end
 DRAWN_X = 100.0                                 # where the cutter is drawn: mid stick, mid pass
@@ -88,7 +92,7 @@ PUSH_X = 100.0                                  # link 1 and its clevis, half wa
 ROUGH_R = P.ROUGH_BIT / 2
 # Each screw's nose: a block on a linear rail's carriage, so it cannot move across its screw. Its link leans up to 21 deg,
 # so what play it had in a printed bore came through to the stick at four tenths of itself.
-RAIL = (12.0, 8.0, 100.0)                       # MGN12 rail: wide, high, long
+RAIL = (12.0, 8.0, 150.0)                       # MGN12 rail: wide, high, long. The same as the lift's: the travel with the probing's reach is 51, and a carriage
 CARRIAGE = (27.0, 45.4, 13.0)                   # MGN12H carriage: wide, long, and its top over the rail's seat
 BLOCK = (27.0, 46.0, 24.0, 8.0)                 # the nose block on it: wide, long, high, and how far it starts short of link 2's pin
 UNIT_X = TAIL_X[1] + 6.5 + BLOCK[0] / 2         # the rail's middle line: the block's near face against link 2, which lies on the tail hanger's far face
@@ -294,12 +298,18 @@ def main():
     places, waste = P.bites(outline, cands, passes)
     print(f"waste {waste['waste']:.0f} mm2 of section: {len(places)} roughing places take {waste['rough_area']:.0f} in {sum(q['bites'] for q in places)} runs; "
           f"the ball-nose takes the rest in {sum(q['bites'] for q in passes)} runs, the deepest {max(q['depth'] for q in passes):.1f}; {waste['left_at_end']:.1f} stands at the end")
+    built = json.load(open(BUILT)) if os.path.exists(BUILT) else None
+    ecc = tuple(built["ecc"]) if built else (0.0, 0.0)          # the master's middle off the spindle's, in the spindle's own frame
+    # A bit is set with the master's lowest point on its tip. At a setting the stick's frame is a quarter turn from the
+    # sled's, so that is where the master's middle is from the axis there.
+    off = P.rot(-math.pi / 2, ecc)
+    setting = (0.0, off[0], (built["master_r"] if built else MASTER_R) - off[1])
     cuts = []                                        # every time the cutter is brought to the stick: kind, tool, t, across, tip, label
-    cuts.append(("set", "straight", 0.0, 0.0, MASTER_R, "set the straight bit on the master"))
+    cuts.append(("set", "straight") + setting + ("set the straight bit on the master",))
     for q in places:
         for b in range(1, q["bites"] + 1):
             cuts.append(("rough", "straight", q["t"], q["across"], q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], f"rough {math.degrees(q['t']):.0f} deg {q['across']:+.0f} bite {b} of {q['bites']}"))
-    cuts.append(("set", "ball", 0.0, 0.0, MASTER_R, "set the ball-nose on the master"))
+    cuts.append(("set", "ball") + setting + ("set the ball-nose on the master",))
     for q in passes:
         for b in range(1, q["bites"] + 1):
             cuts.append(("finish", "ball", q["t"], q["across"], q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], f"finish bite {b} of {q['bites']}"))
@@ -310,6 +320,24 @@ def main():
         raise SystemExit(f"a link leans {lean} deg")
     c1_home = math.ceil(max(q["c1"] for q in poses) + HOME_OVER[0])
     c2_home = math.ceil(max(q["c2"] for q in poses) + HOME_OVER[1])
+    drawn_c2 = (min(q["c2"] for q in poses), c2_home)            # the swing's travel as drawn: the rail is sized from it
+    drawn_c1 = (min(q["c1"] for q in poses), c1_home)
+    as_drawn = {"h1": h1, "arm": ARM, "drop": DROP, "p1_y": P1_Y, "e1": E1, "l1": L1, "p2_z": p2_z, "e2": e2, "l2": L2, "c1_home": c1_home, "c2_home": c2_home, "bit_up": bit_up,
+                "master_r": MASTER_R, "lift_most": drawn_c1[1] - drawn_c1[0], "swing_most": drawn_c2[1] - drawn_c2[0] + SWING_MORE - 6.0}
+    # The table that finds out what a built sled is: the master brought to touch a pin and a block. Always for the sled as drawn:
+    # what it finds is how far the built one is off that.
+    probing, edge_y = K.probe_rows(as_drawn, (FW.PROBE_LIFT_MM, FW.PROBE_SWING_MM))
+    as_drawn["edge_y"] = edge_y
+    if built:
+        # The sled as calibrate.py found it: its hinges and links, where its home switches leave the screws, where the
+        # cutter is across it. The same cuts, the screws worked out for that sled.
+        dv = built["dims"]
+        sled = P.Sled((h1[0] + dv[0], h1[1] + dv[1]), (ARM[0] + dv[2], ARM[1] + dv[3]), DROP + dv[4], P1_Y + dv[5], (E1[0] + dv[6], E1[1] + dv[7]), L1 + dv[8],
+                      p2_z + dv[9], (e2[0] + dv[10], e2[1] + dv[11]), L2 + dv[12])
+        sled.cutter_y = built["cutter_y"]
+        c1_home, c2_home = c1_home + built["home"][0], c2_home + built["home"][1]
+        poses = [sled.pose(c[2], c[3], c[4], bit_up) for c in cuts]
+        print(f"PLANNED FOR THE SLED AS BUILT ({BUILT}): cutter {sled.cutter_y:+.3f} across, home switches {built['home'][0]:+.3f} and {built['home'][1]:+.3f}, dimensions up to {max(abs(v) for v in dv):.2f} off the drawing")
     rows = []
     for n, (c, q) in enumerate(zip(cuts, poses)):
         rows.append({"n": n + 1, "kind": c[0], "tool": c[1], "t": c[2], "across": c[3], "tip": c[4], "label": c[5],
@@ -322,14 +350,14 @@ def main():
     safe = 0.0
     while True:
         a = sled.alpha_of(c1_home - (safe + 0.25))
-        c2_lo = min(q["c2"] for q in poses)             # the frame is lowest hanging straight down, in the middle of its swing: try all of it
+        c2_lo = min(q["c2"] for q in poses) - (SWING_MORE - 6.0)    # the frame is lowest hanging straight down, in the middle of its swing: try all of it, probing's reach too
         if min(sled.axis(a, sled.beta_of(c2_lo + (c2_home - c2_lo) * k / 40, a))[1] for k in range(41)) < bit_up + MASTER_R + SPINDLE_CLEAR:
             break
         safe += 0.25
     print(f"cutter {bit_up:.1f} over the table; hinge 1 at {h1}; the plate swings {math.degrees(min(alphas)):.1f} to {math.degrees(max(alphas)):.1f} deg, the frame hangs {math.degrees(min(x + y for x, y in zip(alphas, betas))):.1f} to {math.degrees(max(x + y for x, y in zip(alphas, betas))):.1f} off upright; screw 2 at {p2_z:.0f}; the links lean at most {lean[0]:.1f} and {lean[1]:.1f} deg; "
           f"lift {min(r['lift'] for r in rows):.1f} to {max(r['lift'] for r in rows):.1f} mm from home, swing {min(r['swing'] for r in rows):.1f} to {max(r['swing'] for r in rows):.1f}; safe to swing at lift {safe:.2f} or less")
 
-    print(f"axis moved {centre} in the tile: a circle of {circle:.2f} fits about it, the master and spur {2 * MASTER_R:.0f} round inside that")
+    print(f"axis moved {centre} in the tile: a circle of {circle:.2f} fits about it, the master {2 * MASTER_R:.0f} round and the spur {2 * SPUR_R:.0f} inside that")
 
     # -- which moves can go straight -----------------------------------------
     # Going up to the safe height and down again between passes is most of what the lift screw does. A move may skip it
@@ -402,26 +430,40 @@ def main():
         raise SystemExit("taken up half way, the controller does not end the rows where it does run through")
     with open(steps, "w") as f:
         json.dump(sim, f)
+    K.write_table(os.path.join(OUT, "probe.csv"), probing, 0.0)
+    # and the one that turns round bands on a scrap stick, to see whether the stick runs true: for the sled as it is now
+    now = K.Built(as_drawn, (built["dims"] + built["home"] + [built["cutter_y"], 0.0] + built["ecc"] + [0.0]) if built else None, {"master_r": built["master_r"]} if built else None)
+    bands = K.band_rows(now)
+    K.write_table(os.path.join(OUT, "bands.csv"), bands, safe)
+    banded = os.path.join(OUT, "steps_bands.json")
+    subprocess.run([sys.executable, os.path.join(HERE, "firmware", "main.py"), "--sim", os.path.join(OUT, "bands.csv"), banded], check=True, cwd=os.path.join(HERE, "firmware"))
+    sim["bands"] = json.load(open(banded))["rows"]
+    os.remove(banded)
+    with open(steps, "w") as f:
+        json.dump(sim, f)
+    touches = [r for r in probing if r["kind"] in ("down", "sw+", "sw-")]
+    print(f"probing: {len(touches)} touches in {len(probing)} rows, the block stood {edge_y:+.1f} from the cutter's line; bands: {len(bands)} rows")
     print(f"{len(rows)} rows; the controller, simulated, ends at {sim['rows'][-1][1:]} steps and never swings below lift step {sim['deepest_crossing']} (safe {sim['safe_steps']})")
 
     # -- the parts, at one pass ----------------------------------------------
     drawn = next(i for i, r in enumerate(rows) if r["kind"] == "finish" and abs(r["across"]) < 2.0 and r["tip"] > 12.0 and r["label"].startswith("finish bite 1 of 1"))
     top_z = h1[1] + SK_W / 2
-    c1_low = min(p["c1"] for p in poses)
+    c1_low = drawn_c1[0]
     over1 = lambda c1_: c1_ + BLOCK1[3] - BLOCK1[1] / 2    # the lift block's middle, and its carriage's
     rail1_z = (math.floor(over1(c1_low) - CARRIAGE[1] / 2 - 6.0), math.floor(over1(c1_low) - CARRIAGE[1] / 2 - 6.0) + RAIL1_L)
-    if over1(c1_home) + CARRIAGE[1] / 2 > rail1_z[1] - 2.0:
+    if over1(drawn_c1[1]) + CARRIAGE[1] / 2 > rail1_z[1] - 2.0:
         raise SystemExit("the lift's carriage runs off its rail")
-    screw1_top = c1_home + BLOCK1[3] - BLOCK1[1] + 6.0   # the screw's end: just past the nut with the block at home
+    screw1_top = drawn_c1[1] + BLOCK1[3] - BLOCK1[1] + 6.0   # the screw's end: just past the nut with the block at home
     motor_c = (0.0, -DROP + BELT_C)                  # the spindle's motor in the hanging frame
-    c2_low = min(p["c2"] for p in poses)
+    c2_low = drawn_c2[0] - SWING_MORE + 6.0
     rail_z = p2_z - CARRIAGE[2] - BLOCK[2] / 2       # the rail's seat: the pin half way up the block
     over = lambda c2_: c2_ - BLOCK[3] + BLOCK[1] / 2   # the block's middle, and the carriage's under it
-    rail_y = (math.floor(over(c2_low) - CARRIAGE[1] / 2 - 6.0), math.floor(over(c2_low) - CARRIAGE[1] / 2 - 6.0) + RAIL[2])
-    if over(c2_home) + CARRIAGE[1] / 2 > rail_y[1] - 2.0:
+    rail_hi = math.ceil(over(drawn_c2[1]) + CARRIAGE[1] / 2 + 2.0)    # the rail ends just past the carriage at home: the motor is next, and the riser behind that
+    rail_y = (rail_hi - RAIL[2], rail_hi)
+    if over(c2_low) - CARRIAGE[1] / 2 < rail_y[0] + 2.0:
         raise SystemExit("the carriage runs off its rail")
     screw2_end = c2_low - BLOCK[3] - 4.0             # the swing screw's end: just past the block's far face at its furthest
-    motor2_y = max(c2_home - BLOCK[3] + BLOCK[1] + 8.0, rail_y[1] + 2.0)   # the motor's face: clear of the block at home, and past the rail's end
+    motor2_y = max(drawn_c2[1] - BLOCK[3] + BLOCK[1] + 8.0, rail_y[1] + 2.0)   # the motor's face: clear of the block at home, and past the rail's end
 
     def parts_at(q):
         """Every part, as a list of (tab, maker), with the sled at the joints q."""
@@ -485,7 +527,7 @@ def main():
 
         def spindle(p):
             xcyl(p, "M12 studding", -116.0, -4.0, axis, SPINDLE_D)
-            xcyl(p, "drive spur", -4.0, 0.0, axis, 2 * MASTER_R, op="add")
+            xcyl(p, "drive spur", -4.0, 0.0, axis, 2 * SPUR_R, op="add")
             xcyl(p, "tail centre, M10 pointed", STICK, TAIL_X[1] + 5.0, axis, 10.0, op="new")
 
         def drive(p):
@@ -591,9 +633,16 @@ def main():
     tried = [(poses[i], ()) for i in range(0, len(poses), 12)]
     for r in rows[::12]:
         tried += [(joints(safe + (r["lift"] - safe) * k / 4, r["swing"], r["turn"]), ("Stick",)) for k in range(4) if r["lift"] > safe]
-    tried += [(joints(safe * i / 4, swing_most * k / 5), ("Stick",)) for i in range(5) for k in range(6)]
+    tried += [(joints(safe * i / 4, (swing_most + SWING_MORE - 6.0) * k / 6), ("Stick",)) for i in range(5) for k in range(7)]
     # and, of the moves that go straight, every sixth at its corner: the old lift and angle with the new swing
     tried += [(joints(rows[i - 1]["lift"], r["swing"], rows[i - 1]["turn"]), ()) for i, r in enumerate(rows) if r["via"] == "d" and i % 6 == 0]
+    # the probing: every touch, where its screw starts short of it, and the top of the lift it goes by; no stick is on
+    for r in touches:
+        way = -1.0 if r["kind"] == "sw-" else 1.0
+        short = (max(0.0, r["lift"] - FW.PROBE_LIFT_MM), r["swing"]) if r["kind"] == "down" else (r["lift"], r["swing"] - way * FW.PROBE_SWING_MM)
+        tried += [(joints(r["lift"], r["swing"], r["turn"]), ("Stick",)), (joints(short[0], short[1], r["turn"]), ("Stick",)), (joints(0.0, short[1], r["turn"]), ("Stick",))]
+    # and the bands, on a scrap stick smaller than the blank
+    tried += [(joints(r["lift"], r["swing"], r["turn"]), ("Stick",)) for r in bands if r["kind"] == "place"]
     lane = rect(-ROUGH_R - 1.0, ROUGH_R + 1.0, -1.0, bit_up + 1.0)       # where the cutter is, wherever the sled is along its travel
     lane_x = (MASTER_X[0], STICK + RUN + 23.0)
     in_lane = ("Cutter", "Table and fence", "Stick", "Master", "Spindle and centre")    # these the plan itself keeps off the cutter
@@ -634,7 +683,7 @@ def main():
     mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{HANGER_X[0][0] - 2}", "fit": f"{HANGER_X[0][0] - 2},-90,-35,{HANGER_X[0][0]},120,{top_z + 40}", "width": 1300, "height": 1100, "path": os.path.join(OUT, "head.png")})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "sled.pdf"),
                               "note": f"stick sled: a lift plate and a hanging frame on two hinges, three motors, {len(rows)} rows a stick; the cutter {bit_up:.1f} over the table"}))
-    for title, name in (("Master", "master"), ("Lift block", "lift_block"), ("Swing block", "swing_block"), ("Swing base", "swing_base")):
+    for title, name in (("Lift block", "lift_block"), ("Swing block", "swing_block"), ("Swing base", "swing_base")):
         print(mcp.call("export", {"tab": tabs[title], "format": "stl", "path": os.path.join(OUT, f"{name}.stl")}))
     mcp.close()
 
@@ -650,8 +699,10 @@ def main():
                   "runs": sum(q["bites"] for q in places), **waste},
         "bit_up": bit_up, "table_clear": TABLE_CLEAR, "pulley_r": PULLEY_R, "hanger_r": HANGER_R, "spindle_d": SPINDLE_D, "spindle_clear": SPINDLE_CLEAR, "move_clear": MOVE_CLEAR, "turn_past": FW.TURN_PAST_DEG, "straight": straight,
         "sled": {"h1": h1, "arm": ARM, "drop": DROP, "p1_y": P1_Y, "e1": E1, "l1": L1, "p2_z": p2_z, "e2": e2, "l2": L2, "lean": lean, "lean_most": LEAN, "swing": {"rail": RAIL, "rail_y": rail_y, "rail_z": rail_z, "carriage": CARRIAGE, "block": BLOCK, "unit_x": UNIT_X, "screw_x": SCREW2_X, "motor_y": motor2_y}, "tail_x": TAIL_X,
-                 "c1_home": c1_home, "c2_home": c2_home, "safe": safe, "lift": {"rail_z": rail1_z, "block": BLOCK1, "unit_x": UNIT1_X, "screw_x": SCREW1_X, "screw_top": screw1_top, "post_y": POST_Y}, "x": SLED_X, "left_y": LEFT_Y, "right_y": RIGHT_Y, "ply": PLY,
-                 "back_x": BACK_X, "run": RUN, "master_x": MASTER_X, "master_r": MASTER_R, "belt": [60, 16]},
+                 "c1_home": c1_home, "c2_home": c2_home, "cutter_y": sled.cutter_y, "ecc": ecc, "built": bool(built), "swing_more": SWING_MORE - 6.0, "home_over": HOME_OVER, "safe": safe, "lift": {"rail_z": rail1_z, "block": BLOCK1, "unit_x": UNIT1_X, "screw_x": SCREW1_X, "screw_top": screw1_top, "post_y": POST_Y}, "x": SLED_X, "left_y": LEFT_Y, "right_y": RIGHT_Y, "ply": PLY,
+                 "back_x": BACK_X, "run": RUN, "master_x": MASTER_X, "master_r": MASTER_R, "spur_r": SPUR_R, "belt": [60, 16], "as_drawn": as_drawn},
+        "probe": {"windows": [FW.PROBE_LIFT_MM, FW.PROBE_SWING_MM], "edge_y": edge_y, "post_face": K.POST_FACE, "pin_r": K.PIN_R, "block": K.BLOCK, "rows": probing},
+        "bands": {"r": K.BAND_R, "span": K.BAND_SPAN, "rows": bands},
         "drawn": {"row": rows[drawn]["n"], "x": DRAWN_X, "alpha": a, "beta": b, "axis": axis, "h2": h2, "c1": c1, "c2": c2, "psi": psi, "pin1": pin1, "pin2": pin2},
         "count": count, "rows": rows,
         "bodies": {k: [list(v) for v in b_] for k, b_ in bodies.items()},

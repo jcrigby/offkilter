@@ -325,6 +325,23 @@ def rot(a, v):
     return (v[0] * c - v[1] * s, v[0] * s + v[1] * c)
 
 
+def meet(a, ra, b, rb):
+    """Where two circles meet: both points."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    d = math.hypot(dx, dy)
+    k = (ra * ra - rb * rb + d * d) / (2 * d)
+    h2 = ra * ra - k * k
+    if h2 < 0:
+        raise ValueError("out of a link's reach")
+    h = math.sqrt(h2)
+    mx, my = a[0] + k * dx / d, a[1] + k * dy / d
+    return (mx - h * dy / d, my + h * dx / d), (mx + h * dy / d, my - h * dx / d)
+
+
+def turned(a):
+    return math.atan2(math.sin(a), math.cos(a))
+
+
 class Sled:
     """The sled's geometry in its own frame: y to the right (the lift
     hinge's side), z up from the table. A lift plate swings on hinge 1;
@@ -342,6 +359,7 @@ class Sled:
         self.e1, self.l1 = e1, l1       # link 1's pin on the plate, in the plate's frame from hinge 1, and its length
         self.p2_z = p2_z                # screw 2's line over the table, level
         self.e2, self.l2 = e2, l2       # link 2's pin on the hanging frame, from hinge 2, and its length
+        self.cutter_y = 0.0             # where the cutter is across the sled: 0 as drawn, as found on a built one
 
     def axis(self, alpha, beta):
         h2 = rot(alpha, self.arm)
@@ -391,22 +409,20 @@ class Sled:
         return math.asin((q1[0] - self.p1_y) / self.l1), math.asin((q2[1] - self.p2_z) / self.l2)
 
     def alpha_of(self, c1):
-        lo, hi = -0.6, 0.6                              # pusher 1 up, the plate's free edge up: alpha falls
-        for _ in range(60):
-            mid = (lo + hi) / 2
-            lo, hi = (mid, hi) if self.pusher1(mid) > c1 else (lo, mid)
-        return (lo + hi) / 2
+        """The plate's angle with nose 1's pin at c1: the plate's pin is where its circle about hinge 1 meets the link's about the nose, over the nose."""
+        pin = max(meet(self.h1, math.hypot(*self.e1), (self.p1_y, c1), self.l1), key=lambda q: q[1])
+        return turned(math.atan2(pin[1] - self.h1[1], pin[0] - self.h1[0]) - math.atan2(self.e1[1], self.e1[0]))
 
     def beta_of(self, c2, alpha):
-        lo, hi = -0.7 - alpha, 0.7 - alpha               # the frame hangs within 40 deg of upright; pusher out, the frame swings left, its angle falls
-        for _ in range(60):
-            mid = (lo + hi) / 2
-            lo, hi = (mid, hi) if self.pusher2(alpha, mid) < c2 else (lo, mid)
-        return (lo + hi) / 2
+        """The frame's angle against the plate with nose 2's pin at c2: the frame's pin left of the nose, the frame hanging the nearer upright."""
+        h2 = self.hinge2(alpha)
+        hangs = [turned(math.atan2(q[1] - h2[1], q[0] - h2[0]) - math.atan2(self.e2[1], self.e2[0]))
+                 for q in meet(h2, math.hypot(*self.e2), (c2, self.p2_z), self.l2) if q[0] < c2]
+        return min(hangs, key=abs) - alpha
 
     def pose(self, t, across, tip, bit_up):
         """The joints for a cut: the two noses' pins along their screws and the spindle's angle in its frame, degrees."""
-        ya, za = -across, bit_up + tip
+        ya, za = self.cutter_y - across, bit_up + tip
         alpha, beta = self.angles(ya, za)
         psi = -t - math.pi / 2                           # the stick's section in the sled's frame
         gamma = math.degrees(psi - alpha - beta) % 360.0
@@ -419,6 +435,5 @@ class Sled:
         ya, za = self.axis(alpha, beta)
         psi = math.radians(gamma) + alpha + beta
         t = -psi - math.pi / 2
-        d, e = frame(t)
-        # the tip is at (0, bit_up) in the sled's frame; a point p of the section is at (ya + p.e, za - p.d)
-        return (0.0 - ya, za - bit_up, t % (2 * math.pi))
+        # the tip is at (cutter_y, bit_up) in the sled's frame; a point p of the section is at (ya + p.e, za - p.d)
+        return (self.cutter_y - ya, za - bit_up, t % (2 * math.pi))
