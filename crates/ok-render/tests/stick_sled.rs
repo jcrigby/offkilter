@@ -660,7 +660,25 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
     // Travel: both pushers start a little short of their home switches and stay on their screws.
     let deep = rows.iter().map(|r| r.lift).fold(0.0, f64::max);
     assert!(rows.iter().all(|r| r.lift >= 2.0 && r.swing >= 1.5));
-    assert!(deep < f(&n["sled"]["nose"]) - 25.0 && hi < f(&n["sled"]["nose2"]) - 20.0);
+    assert!(deep < f(&n["sled"]["nose"]) - 25.0);
+    // Screw 2's nose is a block on a linear rail's carriage: at home and at the furthest any row sends it the carriage
+    // is wholly on the rail, and the motor stands past the rail's end, clear of the block at home.
+    let w = &n["sled"]["swing"];
+    let (rail0, rail1) = (f(&w["rail_y"][0]), f(&w["rail_y"][1]));
+    let (carriage, block, short) = (f(&w["carriage"][1]), f(&w["block"][1]), f(&w["block"][3]));
+    assert!((rail1 - rail0 - f(&w["rail"][2])).abs() < 1e-9);
+    for swing in [0.0, hi] {
+        let mid = sled.c2_home - swing - short + block / 2.0;
+        assert!(
+            mid - carriage / 2.0 >= rail0 + 2.0 && mid + carriage / 2.0 <= rail1 - 2.0,
+            "the carriage is off its rail at swing {swing}"
+        );
+    }
+    assert!(f(&w["motor_y"]) >= rail1 && f(&w["motor_y"]) >= sled.c2_home - short + block + 5.0);
+    // The pin is half way up the block, on the screw's line.
+    assert!(
+        (f(&w["rail_z"]) + f(&w["carriage"][2]) + f(&w["block"][2]) / 2.0 - sled.p2_z).abs() < 1e-9
+    );
     assert!(1.0 / per[0] < 0.005 && 1.0 / per[2] < 0.05);
 }
 
@@ -728,7 +746,9 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
         "Links",
         "Tower",
         "Swing pusher",
-        "Guide",
+        "Swing rail",
+        "Swing block",
+        "Swing base",
         "Controller",
     ] {
         for (k, b) in bodies_of(&mut doc, t).into_iter().enumerate() {
@@ -770,7 +790,8 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
         (sled.pusher1(p.alpha) - c1).abs() < 1e-3 && (sled.c1_home - row.lift - c1).abs() < 1e-3
     );
     assert!((sled.pusher2(p.alpha, p.hang) - f(&d["c2"])).abs() < 1e-3);
-    for name in ["master", "tower", "guide"] {
+    assert!(!dir().join("out/guide.stl").exists());
+    for name in ["master", "tower", "swing_block", "swing_base"] {
         assert!(!dir().join("out/steady.stl").exists());
         assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
     }

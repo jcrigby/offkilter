@@ -1521,3 +1521,30 @@ under a micrometre and twists its edge 14. The owner dropped them.
 - The axis stays where the tile is fattest, though no journal needs
   it now: that is what lets a 16 mm spur and master sit inside the
   circle every pass stays clear of.
+
+## 2026-11 · The stick sled: the swing screw's nose rides a linear rail
+
+The sanity check found that play in the swing screw's nose came
+through to the stick at half of itself: 0.2 mm of rattle in a printed
+bore, 0.1 mm at the cut, differently at every pass. The cause is the
+link's lean, up to 21 degrees, and the lean is there because the
+frame rises and falls with the lift past a screw fixed to the sled.
+
+- **The nose is now a block on an MGN12H carriage** on a 100 mm rail:
+  about a hundredth of a millimetre of play, 0.005 mm at the stick.
+  It also stops the nose turning with the screw, which the printed
+  guide left to "a flat or a key", and it takes the side push of a
+  leaning link on four rows of balls where a bore took it on 24 mm of
+  plastic.
+- **Moving the screw onto the lift plate lost.** There the link would
+  lean 5 degrees and the play would matter a fifth as much, but the
+  screw would hang on a bracket 156 mm under the plate to reach the
+  pin where its leverage is good, and travel 54 mm for 32 of use
+  undoing the plate's own tilt. A rail removes the play; the plate
+  only made it matter less.
+- **A longer link lost** for want of room: 120 mm halves the lean and
+  puts the motor through the riser.
+- The geometry the table is worked from did not change: same pin,
+  same link, same screw line. The table is the same rows.
+- Anti-backlash nuts on both screws, since slack along a screw comes
+  through whole and no geometry helps that.

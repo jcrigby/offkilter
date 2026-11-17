@@ -30,7 +30,8 @@ tail centre.
   screw, so the plate is a bridge, not an arm.
 - **Left and right:** a frame hangs from a second hinge under the
   plate, above the stick. A second screw, level, fixed to the sled,
-  swings it by its tail hanger.
+  swings it by its tail hanger. Its nose is a block on a linear
+  rail's carriage.
 - **Held both ways.** Each screw's nose is tied to what it moves by a
   short link with a pin at each end: 30 mm to a clevis under the
   plate, 60 mm to the tail hanger. A lead screw does not run back
@@ -181,10 +182,18 @@ and swing, which `config.py` has. With the trims alone and no scales
 it is three times worse. How to get the six from a test cut with
 callipers is not worked out.
 
-Play is not trimmed out. The swing screw's link leans up to 21°, so
-0.2 mm of its nose rattling in its guide is 0.1 mm at the stick: its
-nose wants linear bearings on a ground rod, not a printed bore. The
-lift's link leans 7°, and the same play is 0.014 mm.
+Play is not trimmed out, so it is kept out. The swing screw's link
+leans up to 21°, because the frame rises and falls 40 mm past a screw
+that stays put, and whatever its nose moves across the screw comes
+through to the stick at half of itself: 0.2 mm of rattle in a printed
+bore was 0.1 mm at the stick. So the nose is a block on an MGN12H
+carriage on a 100 mm rail, which has about a hundredth of a
+millimetre of play: 0.005 mm at the stick. The carriage also keeps
+the nose from turning with the screw. The lift's link leans 7°, and
+0.2 mm of play there is 0.014 mm.
+
+Along the screws, slack in a nut comes through whole, a little more
+than whole on the swing. Both screws take anti-backlash nuts.
 
 ## Measure these first
 
@@ -195,9 +204,10 @@ lift's link leans 7°, and the same play is 0.014 mm.
 | the lead screws | T8, 2 mm lead | the common T8 is 8 mm lead: a quarter the steps a millimetre, and it runs back under load |
 | the shafts, supports and blocks | the 20 mm set from the duplicator: two shafts of 490 and 416, four SK20, four SC20UU | the blocks turn on the shafts as hinges; collars keep them from sliding |
 | the hinges and links | hinge 1 at 150 right and 204 up, hinge 2 150 left of it and 26 down, the axis 130 under hinge 2; links 30 and 60 | see Calibration |
-| the pushers | drawn as a motor, a screw, a nose and a printed guide | the nose must not turn, and the swing's must not rattle. The lift's tower is drawn 30 square and wants a 42 flange for the motor's screws |
+| the lift's nose | drawn as a round nose sliding in a printed tower | it must not turn with the screw: a flat or a key. The tower is drawn 30 square and wants a 42 flange for the motor's screws. A rail like the swing's would do both jobs |
+| the swing's rail | MGN12, 100 long, an H carriage, its seat 48 over the table; the block's bores for the pin and the nut are not drawn | the rail level and square to the stick; where it really is goes in `build.py` |
 | the pins | not drawn | 5 mm shoulder bolts, a close fit |
-| slack | a screw's nut and two pins a link | a light spring from the plate to the sled and from the tail hanger to the riser, not drawn; if a cut still rattles, an anti-backlash nut |
+| slack | a screw's nut and two pins a link | anti-backlash nuts on both screws; a light spring from the plate to the sled and from the tail hanger to the riser, not drawn |
 | the pulleys and belt | 60 and 16 teeth, 52 between centres: a closed belt of 184 | a 60 with a 12 mm bore is not the common one |
 | the drive | a 16 mm spur on the spindle's end, the tail centre pushing the stick onto it | not drawn in detail |
 | the blank | the tile's hull and 2 mm, put on its centres within a millimetre and a few degrees | a card template of the hull with the centre marked |
@@ -208,7 +218,7 @@ lift's link leans 7°, and the same play is 0.014 mm.
 
 | part | size, mm | |
 |---|---|---|
-| sled | 540 x 480 ply: two runners and a tie at each end | open under the stick; its right edge on the fence |
+| sled | 540 x 480 ply: two runners, a tie at each end, and a shelf beyond the stick's tail for the swing rail | open under the stick; its right edge on the fence |
 | riser | 540 x 215 ply, a gusset at each end | hinge 1's two supports on its face |
 | lift plate | 420 x 335 ply | two blocks under its right edge on hinge 1; hinge 2's supports under its middle |
 | beam | 350 x 60 ply | two blocks on hinge 2; the hangers under it |
@@ -217,7 +227,9 @@ lift's link leans 7°, and the same play is 0.014 mm.
 | spindle | M12 studding | the 60-tooth pulley outboard, the master and a drive spur inboard |
 | master | printed sleeve, 16 round x 29 | on the spindle between hanger and spur; the cutter is under it with the sled back, and a bit is set on it |
 | lift pusher | NEMA 17 on the left runner, a printed tower on its face, a nose of 120 | 79 mm of travel |
-| swing pusher | NEMA 17 and a printed guide on the right runner, 73 over the table, a nose of 75 | 32 mm of travel |
+| swing screw | NEMA 17 on a printed seat on the right runner, 73 over the table; a T8 screw of 2 mm lead with an anti-backlash nut | 32 mm of travel |
+| swing rail | MGN12 x 100 with an MGN12H carriage, on a printed seat on a shelf of the sled | carries the nose block, which holds link 2's pin and the screw's nut |
+| nose block | printed, 27 x 46 x 24 | on the carriage |
 | links, 2 | strips, 30 and 60 between pins, and a clevis under the plate | each nose to what it moves |
 | spindle motor | NEMA 17 on the head hanger, 52 over the spindle | a closed GT2 belt |
 | controller | a box on the right runner | Pico, three drivers |

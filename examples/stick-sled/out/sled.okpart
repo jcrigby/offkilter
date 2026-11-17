@@ -840,9 +840,135 @@
               },
               "op": "add"
             }
+          },
+          {
+            "id": 9,
+            "name": "shelf under the swing rail",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 252.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 110.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 110.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 110.0,
+                      "y": 19.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 110.0,
+                      "y": 19.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.0,
+                      "y": 19.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.0,
+                      "y": 19.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 10,
+            "name": "shelf under the swing rail",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 9,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 53.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
           }
         ],
-        "next_id": 9,
+        "next_id": 11,
         "settings": {
           "facet_angle": 5.0
         }
@@ -4872,7 +4998,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 71.0,
+              "depth": 56.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -16869,7 +16995,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 220.5
+                "offset": 256.0
               },
               "sketch": {
                 "entities": [
@@ -16877,7 +17003,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
+                      "x": 132.0,
                       "y": 52.0
                     }
                   },
@@ -16885,7 +17011,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 193.0,
+                      "x": 172.0,
                       "y": 52.0
                     }
                   },
@@ -16899,7 +17025,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 193.0,
+                      "x": 172.0,
                       "y": 52.0
                     }
                   },
@@ -16907,7 +17033,7 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 193.0,
+                      "x": 172.0,
                       "y": 94.0
                     }
                   },
@@ -16921,7 +17047,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 193.0,
+                      "x": 172.0,
                       "y": 94.0
                     }
                   },
@@ -16929,7 +17055,7 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
+                      "x": 132.0,
                       "y": 94.0
                     }
                   },
@@ -16943,7 +17069,7 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
+                      "x": 132.0,
                       "y": 94.0
                     }
                   },
@@ -16951,7 +17077,7 @@
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
+                      "x": 132.0,
                       "y": 52.0
                     }
                   },
@@ -16995,7 +17121,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 237.5
+                "offset": 273.0
               },
               "sketch": {
                 "entities": [
@@ -17003,7 +17129,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 133.83776061622137,
+                      "x": 96.83776061622136,
                       "y": 69.0
                     }
                   },
@@ -17011,7 +17137,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
+                      "x": 132.0,
                       "y": 69.0
                     }
                   },
@@ -17025,7 +17151,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
+                      "x": 132.0,
                       "y": 69.0
                     }
                   },
@@ -17033,7 +17159,7 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
+                      "x": 132.0,
                       "y": 77.0
                     }
                   },
@@ -17047,7 +17173,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
+                      "x": 132.0,
                       "y": 77.0
                     }
                   },
@@ -17055,7 +17181,7 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 133.83776061622137,
+                      "x": 96.83776061622136,
                       "y": 77.0
                     }
                   },
@@ -17069,7 +17195,7 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 133.83776061622137,
+                      "x": 96.83776061622136,
                       "y": 77.0
                     }
                   },
@@ -17077,7 +17203,7 @@
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 133.83776061622137,
+                      "x": 96.83776061622136,
                       "y": 69.0
                     }
                   },
@@ -17111,135 +17237,9 @@
               },
               "op": "new"
             }
-          },
-          {
-            "id": 5,
-            "name": "nose",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 235.5
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 53.83776061622135,
-                      "y": 67.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 133.83776061622137,
-                      "y": 67.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 133.83776061622137,
-                      "y": 67.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 133.83776061622137,
-                      "y": 79.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 133.83776061622137,
-                      "y": 79.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 53.83776061622135,
-                      "y": 79.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 53.83776061622135,
-                      "y": 79.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 53.83776061622135,
-                      "y": 67.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "nose",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 12.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
           }
         ],
-        "next_id": 7,
+        "next_id": 5,
         "settings": {
           "facet_angle": 5.0
         }
@@ -17249,18 +17249,18 @@
       "id": 24,
       "kind": {
         "type": "part_studio",
-        "name": "Guide",
+        "name": "Swing rail",
         "features": [
           {
             "id": 1,
-            "name": "guide",
+            "name": "MGN12 rail",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 226.5
+                "offset": 265.0
               },
               "sketch": {
                 "entities": [
@@ -17268,16 +17268,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 86.0,
-                      "y": 58.0
+                      "x": 30.0,
+                      "y": 48.0
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
-                      "y": 58.0
+                      "x": 130.0,
+                      "y": 48.0
                     }
                   },
                   {
@@ -17290,16 +17290,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
-                      "y": 58.0
+                      "x": 130.0,
+                      "y": 48.0
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
-                      "y": 88.0
+                      "x": 130.0,
+                      "y": 56.0
                     }
                   },
                   {
@@ -17312,16 +17312,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 153.0,
-                      "y": 88.0
+                      "x": 130.0,
+                      "y": 56.0
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 86.0,
-                      "y": 88.0
+                      "x": 30.0,
+                      "y": 56.0
                     }
                   },
                   {
@@ -17334,16 +17334,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 86.0,
-                      "y": 88.0
+                      "x": 30.0,
+                      "y": 56.0
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 86.0,
-                      "y": 58.0
+                      "x": 30.0,
+                      "y": 48.0
                     }
                   },
                   {
@@ -17361,7 +17361,7 @@
           },
           {
             "id": 2,
-            "name": "guide",
+            "name": "MGN12 rail",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -17369,7 +17369,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 30.0,
+              "depth": 12.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -17379,14 +17379,14 @@
           },
           {
             "id": 3,
-            "name": "foot",
+            "name": "MGN12H carriage",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 220.5
+                "offset": 257.5
               },
               "sketch": {
                 "entities": [
@@ -17394,7 +17394,285 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 86.0,
+                      "x": 51.13776061622134,
+                      "y": 56.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 96.53776061622136,
+                      "y": 56.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 96.53776061622136,
+                      "y": 56.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 96.53776061622136,
+                      "y": 61.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 96.53776061622136,
+                      "y": 61.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 51.13776061622134,
+                      "y": 61.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 51.13776061622134,
+                      "y": 61.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 51.13776061622134,
+                      "y": 56.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "MGN12H carriage",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 27.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 5,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 25,
+      "kind": {
+        "type": "part_studio",
+        "name": "Swing block",
+        "features": [
+          {
+            "id": 1,
+            "name": "nose block",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 257.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 50.83776061622135,
+                      "y": 61.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 96.83776061622136,
+                      "y": 61.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 96.83776061622136,
+                      "y": 61.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 96.83776061622136,
+                      "y": 85.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 96.83776061622136,
+                      "y": 85.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 50.83776061622135,
+                      "y": 85.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 50.83776061622135,
+                      "y": 85.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 50.83776061622135,
+                      "y": 61.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "nose block",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 27.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 3,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 26,
+      "kind": {
+        "type": "part_studio",
+        "name": "Swing base",
+        "features": [
+          {
+            "id": 1,
+            "name": "rail's seat",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 258.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 30.0,
                       "y": 19.0
                     }
                   },
@@ -17402,7 +17680,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 193.0,
+                      "x": 130.0,
                       "y": 19.0
                     }
                   },
@@ -17416,7 +17694,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 193.0,
+                      "x": 130.0,
                       "y": 19.0
                     }
                   },
@@ -17424,7 +17702,133 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 193.0,
+                      "x": 130.0,
+                      "y": 48.0
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 130.0,
+                      "y": 48.0
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 30.0,
+                      "y": 48.0
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 30.0,
+                      "y": 48.0
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 30.0,
+                      "y": 19.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "rail's seat",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 26.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "motor's seat",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 256.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 132.0,
+                      "y": 19.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 172.0,
+                      "y": 19.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 172.0,
+                      "y": 19.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 172.0,
                       "y": 52.0
                     }
                   },
@@ -17438,7 +17842,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 193.0,
+                      "x": 172.0,
                       "y": 52.0
                     }
                   },
@@ -17446,7 +17850,7 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": 86.0,
+                      "x": 132.0,
                       "y": 52.0
                     }
                   },
@@ -17460,7 +17864,7 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": 86.0,
+                      "x": 132.0,
                       "y": 52.0
                     }
                   },
@@ -17468,7 +17872,7 @@
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": 86.0,
+                      "x": 132.0,
                       "y": 19.0
                     }
                   },
@@ -17487,7 +17891,7 @@
           },
           {
             "id": 4,
-            "name": "foot",
+            "name": "motor's seat",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -17502,194 +17906,16 @@
               },
               "op": "add"
             }
-          },
-          {
-            "id": 5,
-            "name": "web",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 226.5
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 86.0,
-                      "y": 52.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 153.0,
-                      "y": 52.0
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 153.0,
-                      "y": 52.0
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 153.0,
-                      "y": 58.0
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 153.0,
-                      "y": 58.0
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 86.0,
-                      "y": 58.0
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 86.0,
-                      "y": 58.0
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 86.0,
-                      "y": 52.0
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "web",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 30.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 7,
-            "name": "the nose's way",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "front",
-                "offset": -154.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 241.5,
-                      "y": 73.0
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 8.75
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "the nose's way",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 7,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 69.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
           }
         ],
-        "next_id": 9,
+        "next_id": 5,
         "settings": {
           "facet_angle": 5.0
         }
       }
     },
     {
-      "id": 25,
+      "id": 27,
       "kind": {
         "type": "part_studio",
         "name": "Controller",
@@ -17828,13 +18054,13 @@
       }
     },
     {
-      "id": 26,
+      "id": 28,
       "kind": {
         "type": "assembly",
         "name": "Sled",
         "instances": [
           {
-            "id": 27,
+            "id": 29,
             "name": "Table and fence 1",
             "studio": 1,
             "body": 0,
@@ -17853,7 +18079,7 @@
             }
           },
           {
-            "id": 28,
+            "id": 30,
             "name": "Table and fence 2",
             "studio": 1,
             "body": 1,
@@ -17872,7 +18098,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 31,
             "name": "Cutter",
             "studio": 2,
             "body": 0,
@@ -17891,7 +18117,7 @@
             }
           },
           {
-            "id": 30,
+            "id": 32,
             "name": "Sled",
             "studio": 3,
             "body": 0,
@@ -17910,7 +18136,7 @@
             }
           },
           {
-            "id": 31,
+            "id": 33,
             "name": "Riser",
             "studio": 4,
             "body": 0,
@@ -17929,7 +18155,7 @@
             }
           },
           {
-            "id": 32,
+            "id": 34,
             "name": "Hinge 1 shaft",
             "studio": 5,
             "body": 0,
@@ -17948,7 +18174,7 @@
             }
           },
           {
-            "id": 33,
+            "id": 35,
             "name": "Hinge 1 supports SK20 1",
             "studio": 6,
             "body": 0,
@@ -17967,7 +18193,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 36,
             "name": "Hinge 1 supports SK20 2",
             "studio": 6,
             "body": 1,
@@ -17986,7 +18212,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 37,
             "name": "Hinge 1 blocks SC20UU 1",
             "studio": 7,
             "body": 0,
@@ -18005,7 +18231,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 38,
             "name": "Hinge 1 blocks SC20UU 2",
             "studio": 7,
             "body": 1,
@@ -18024,7 +18250,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 39,
             "name": "Lift plate",
             "studio": 8,
             "body": 0,
@@ -18043,7 +18269,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 40,
             "name": "Hinge 2 supports SK20 1",
             "studio": 9,
             "body": 0,
@@ -18062,7 +18288,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 41,
             "name": "Hinge 2 supports SK20 2",
             "studio": 9,
             "body": 1,
@@ -18081,7 +18307,7 @@
             }
           },
           {
-            "id": 40,
+            "id": 42,
             "name": "Hinge 2 shaft",
             "studio": 10,
             "body": 0,
@@ -18100,7 +18326,7 @@
             }
           },
           {
-            "id": 41,
+            "id": 43,
             "name": "Hinge 2 blocks SC20UU 1",
             "studio": 11,
             "body": 0,
@@ -18119,7 +18345,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 44,
             "name": "Hinge 2 blocks SC20UU 2",
             "studio": 11,
             "body": 1,
@@ -18138,7 +18364,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 45,
             "name": "Beam",
             "studio": 12,
             "body": 0,
@@ -18157,7 +18383,7 @@
             }
           },
           {
-            "id": 44,
+            "id": 46,
             "name": "Head hangers 1",
             "studio": 13,
             "body": 0,
@@ -18176,7 +18402,7 @@
             }
           },
           {
-            "id": 45,
+            "id": 47,
             "name": "Head hangers 2",
             "studio": 13,
             "body": 1,
@@ -18195,7 +18421,7 @@
             }
           },
           {
-            "id": 46,
+            "id": 48,
             "name": "Tail hanger",
             "studio": 14,
             "body": 0,
@@ -18214,7 +18440,7 @@
             }
           },
           {
-            "id": 47,
+            "id": 49,
             "name": "Bearings 6201 1",
             "studio": 15,
             "body": 0,
@@ -18233,7 +18459,7 @@
             }
           },
           {
-            "id": 48,
+            "id": 50,
             "name": "Bearings 6201 2",
             "studio": 15,
             "body": 1,
@@ -18252,7 +18478,7 @@
             }
           },
           {
-            "id": 49,
+            "id": 51,
             "name": "Spindle and centre 1",
             "studio": 16,
             "body": 0,
@@ -18271,7 +18497,7 @@
             }
           },
           {
-            "id": 50,
+            "id": 52,
             "name": "Spindle and centre 2",
             "studio": 16,
             "body": 1,
@@ -18290,7 +18516,7 @@
             }
           },
           {
-            "id": 51,
+            "id": 53,
             "name": "Belt drive 1",
             "studio": 17,
             "body": 0,
@@ -18309,7 +18535,7 @@
             }
           },
           {
-            "id": 52,
+            "id": 54,
             "name": "Belt drive 2",
             "studio": 17,
             "body": 1,
@@ -18328,7 +18554,7 @@
             }
           },
           {
-            "id": 53,
+            "id": 55,
             "name": "Belt drive 3",
             "studio": 17,
             "body": 2,
@@ -18347,7 +18573,7 @@
             }
           },
           {
-            "id": 54,
+            "id": 56,
             "name": "Belt drive 4",
             "studio": 17,
             "body": 3,
@@ -18366,7 +18592,7 @@
             }
           },
           {
-            "id": 55,
+            "id": 57,
             "name": "Master",
             "studio": 18,
             "body": 0,
@@ -18385,7 +18611,7 @@
             }
           },
           {
-            "id": 56,
+            "id": 58,
             "name": "Stick",
             "studio": 19,
             "body": 0,
@@ -18404,7 +18630,7 @@
             }
           },
           {
-            "id": 57,
+            "id": 59,
             "name": "Lift pusher 1",
             "studio": 20,
             "body": 0,
@@ -18423,7 +18649,7 @@
             }
           },
           {
-            "id": 58,
+            "id": 60,
             "name": "Lift pusher 2",
             "studio": 20,
             "body": 1,
@@ -18442,7 +18668,7 @@
             }
           },
           {
-            "id": 59,
+            "id": 61,
             "name": "Links 1",
             "studio": 21,
             "body": 0,
@@ -18461,7 +18687,7 @@
             }
           },
           {
-            "id": 60,
+            "id": 62,
             "name": "Links 2",
             "studio": 21,
             "body": 1,
@@ -18480,7 +18706,7 @@
             }
           },
           {
-            "id": 61,
+            "id": 63,
             "name": "Links 3",
             "studio": 21,
             "body": 2,
@@ -18499,7 +18725,7 @@
             }
           },
           {
-            "id": 62,
+            "id": 64,
             "name": "Tower",
             "studio": 22,
             "body": 0,
@@ -18518,7 +18744,7 @@
             }
           },
           {
-            "id": 63,
+            "id": 65,
             "name": "Swing pusher 1",
             "studio": 23,
             "body": 0,
@@ -18537,7 +18763,7 @@
             }
           },
           {
-            "id": 64,
+            "id": 66,
             "name": "Swing pusher 2",
             "studio": 23,
             "body": 1,
@@ -18556,8 +18782,8 @@
             }
           },
           {
-            "id": 65,
-            "name": "Guide",
+            "id": 67,
+            "name": "Swing rail 1",
             "studio": 24,
             "body": 0,
             "fixed": true,
@@ -18575,9 +18801,85 @@
             }
           },
           {
-            "id": 66,
-            "name": "Controller",
+            "id": 68,
+            "name": "Swing rail 2",
+            "studio": 24,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 69,
+            "name": "Swing block",
             "studio": 25,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 70,
+            "name": "Swing base 1",
+            "studio": 26,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 71,
+            "name": "Swing base 2",
+            "studio": 26,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 72,
+            "name": "Controller",
+            "studio": 27,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -18598,5 +18900,5 @@
       }
     }
   ],
-  "next_id": 67
+  "next_id": 73
 }
