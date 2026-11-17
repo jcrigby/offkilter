@@ -286,19 +286,19 @@ class Sled:
     """The sled's geometry in its own frame: y to the right (the lift
     hinge's side), z up from the table. A lift plate swings on hinge 1;
     under it, on hinge 2, hangs the frame that carries the stick; the
-    spindle turns the stick in that frame. A pusher under the plate's
-    free edge sets the lift; a second, level, on the sled, bears on
-    the hanging frame's edge and sets the swing."""
+    spindle turns the stick in that frame. Each of the two is moved
+    by a screw's nose through a short link pinned at both ends, so the
+    screw holds it both ways: an upright one under the plate's free
+    edge for the lift, a level one on the sled for the swing."""
 
-    def __init__(self, h1, arm, drop_len, p1_y, plate_under, ball, p2_z, pad_y):
+    def __init__(self, h1, arm, drop_len, p1_y, e1, l1, p2_z, e2, l2):
         self.h1 = h1                    # hinge 1
         self.arm = arm                  # hinge 1 to hinge 2 in the plate's frame
         self.drop = drop_len            # hinge 2 down to the stick's axis
-        self.p1_y = p1_y                # pusher 1's line, upright
-        self.plate_under = plate_under  # the plate's underside over hinge 1's centre
-        self.ball = ball                # a pusher's ball end, its radius
-        self.p2_z = p2_z                # pusher 2's line over the table, level
-        self.pad_y = pad_y              # the edge it bears on, right of the hanging frame's middle
+        self.p1_y = p1_y                # screw 1's line, upright
+        self.e1, self.l1 = e1, l1       # link 1's pin on the plate, in the plate's frame from hinge 1, and its length
+        self.p2_z = p2_z                # screw 2's line over the table, level
+        self.e2, self.l2 = e2, l2       # link 2's pin on the hanging frame, from hinge 2, and its length
 
     def axis(self, alpha, beta):
         h2 = rot(alpha, self.arm)
@@ -324,20 +324,28 @@ class Sled:
         alpha = math.atan2(v[1], v[0]) - math.atan2(w[1], w[0])
         return math.atan2(math.sin(alpha), math.cos(alpha)), beta
 
+    def pin1(self, alpha):
+        q = rot(alpha, self.e1)
+        return (self.h1[0] + q[0], self.h1[1] + q[1])
+
+    def pin2(self, alpha, beta):
+        h2, q = self.hinge2(alpha), rot(alpha + beta, self.e2)
+        return (h2[0] + q[0], h2[1] + q[1])
+
     def pusher1(self, alpha):
-        """The height of pusher 1's ball centre under the plate."""
-        return self.h1[1] + (self.plate_under - self.ball + math.sin(alpha) * (self.p1_y - self.h1[0])) / math.cos(alpha)
+        """The height of nose 1's pin, under the plate's: a link's length from it along the screw's line."""
+        q = self.pin1(alpha)
+        return q[1] - math.sqrt(self.l1 ** 2 - (q[0] - self.p1_y) ** 2)
 
     def pusher2(self, alpha, beta):
-        """Pusher 2's ball centre along its line: the frame's edge is a plane pad_y from hinge 2, the ball a radius beyond it."""
-        h2, th = self.hinge2(alpha), alpha + beta
-        return h2[0] + (self.pad_y + self.ball - (self.p2_z - h2[1]) * math.sin(th)) / math.cos(th)
+        """Nose 2's pin along its line, right of the frame's."""
+        q = self.pin2(alpha, beta)
+        return q[0] + math.sqrt(self.l2 ** 2 - (q[1] - self.p2_z) ** 2)
 
-    def pad_at(self, alpha, beta):
-        """How far down the frame's edge from hinge 2 the ball bears."""
-        h2, th = self.hinge2(alpha), alpha + beta
-        c = (self.pusher2(alpha, beta) - h2[0], self.p2_z - h2[1])
-        return -c[0] * math.sin(th) + c[1] * math.cos(th)
+    def lean(self, alpha, beta):
+        """How far each link leans off its screw's line, radians."""
+        q1, q2 = self.pin1(alpha), self.pin2(alpha, beta)
+        return math.asin((q1[0] - self.p1_y) / self.l1), math.asin((q2[1] - self.p2_z) / self.l2)
 
     def alpha_of(self, c1):
         lo, hi = -0.6, 0.6                              # pusher 1 up, the plate's free edge up: alpha falls
@@ -354,7 +362,7 @@ class Sled:
         return (lo + hi) / 2
 
     def pose(self, t, across, tip, bit_up):
-        """The joints for a cut: the pushers' ball centres and the spindle's angle in its frame, degrees."""
+        """The joints for a cut: the two noses' pins along their screws and the spindle's angle in its frame, degrees."""
         ya, za = -across, bit_up + tip
         alpha, beta = self.angles(ya, za)
         psi = -t - math.pi / 2                           # the stick's section in the sled's frame

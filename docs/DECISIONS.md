@@ -1431,3 +1431,24 @@ motors and a controller, with the sled still pushed by hand.
   program is run on dead pins over the whole table. The first run of
   that test found the safe height wrong: the frame is lowest hanging
   straight down, in the middle of its swing, not at either end.
+
+## 2026-11 · The stick sled's screws hold both ways, through links
+
+As first drawn each pusher's ball end rested on a flat: the plate lay
+on one by its weight, and a spring held the hanging frame against the
+other. The owner looked at it and said it just hangs there. A cut
+that lifted the stick, or pushed it off the swing pusher, met a few
+kilograms and a spring.
+
+- Each nose is now tied to what it moves by a link pinned at both
+  ends, 30 mm to a clevis under the plate and 60 mm to the tail
+  hanger. A lead screw does not back-drive, so the screw is the stop
+  in both directions.
+- A link, not a pin in a slot: the far pin moves across the screw's
+  line as the plate tilts and the stick rises (the hanger's pin 23 mm
+  either way), and a link takes that up by leaning, at most 22
+  degrees. The planner solves the link as it did the ball on a flat.
+- A brake on each hinge lost for now: stiffer, but two more actuators
+  and a step in every pass.
+- Springs stay, light, only to keep the slack of nut and pins to one
+  side.

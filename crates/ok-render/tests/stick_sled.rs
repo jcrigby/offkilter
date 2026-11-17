@@ -52,10 +52,11 @@ struct Sled {
     arm: P2,
     drop: f64,
     p1_y: f64,
-    under: f64,
-    ball: f64,
+    e1: P2,
+    l1: f64,
     p2_z: f64,
-    pad_y: f64,
+    e2: P2,
+    l2: f64,
     c1_home: f64,
     c2_home: f64,
     bit_up: f64,
@@ -78,10 +79,11 @@ impl Sled {
             arm: pair(&s["arm"]),
             drop: f(&s["drop"]),
             p1_y: f(&s["p1_y"]),
-            under: f(&s["plate_under"]),
-            ball: f(&s["ball"]),
+            e1: pair(&s["e1"]),
+            l1: f(&s["l1"]),
             p2_z: f(&s["p2_z"]),
-            pad_y: f(&s["pad_y"]),
+            e2: pair(&s["e2"]),
+            l2: f(&s["l2"]),
             c1_home: f(&s["c1_home"]),
             c2_home: f(&s["c2_home"]),
             bit_up: f(&n["bit_up"]),
@@ -92,15 +94,25 @@ impl Sled {
         add(self.h1, rot(alpha, self.arm))
     }
 
-    /// Pusher 1's ball under the plate: the plate's underside is a plane `under` over hinge 1.
-    fn pusher1(&self, alpha: f64) -> f64 {
-        self.h1.1 + (self.under - self.ball + alpha.sin() * (self.p1_y - self.h1.0)) / alpha.cos()
+    /// Link 1's pin on the plate, and link 2's on the hanging frame.
+    fn pin1(&self, alpha: f64) -> P2 {
+        add(self.h1, rot(alpha, self.e1))
     }
 
-    /// Pusher 2's ball on the hanging frame's edge, a plane `pad_y` from hinge 2.
+    fn pin2(&self, alpha: f64, hang: f64) -> P2 {
+        add(self.hinge2(alpha), rot(hang, self.e2))
+    }
+
+    /// Nose 1's pin on its upright screw, a link's length under the plate's.
+    fn pusher1(&self, alpha: f64) -> f64 {
+        let q = self.pin1(alpha);
+        q.1 - (self.l1 * self.l1 - (q.0 - self.p1_y).powi(2)).sqrt()
+    }
+
+    /// Nose 2's pin on its level screw, a link's length right of the frame's.
     fn pusher2(&self, alpha: f64, hang: f64) -> f64 {
-        let h2 = self.hinge2(alpha);
-        h2.0 + (self.pad_y + self.ball - (self.p2_z - h2.1) * hang.sin()) / hang.cos()
+        let q = self.pin2(alpha, hang);
+        q.0 + (self.l2 * self.l2 - (q.1 - self.p2_z).powi(2)).sqrt()
     }
 
     fn axis(&self, alpha: f64, hang: f64) -> P2 {
@@ -387,8 +399,9 @@ fn the_finishing_passes_reach_the_whole_outline_each_from_its_own_direction() {
 }
 
 /// At every row the blank clears the table, so do the pulley and the
-/// hangers; the steadies clear the cutter; pusher 2 bears on the
-/// hanger's edge; and the journals lie inside the tile.
+/// hangers; the steadies clear the cutter; each link stays near its
+/// screw's line, a link's length from pin to pin; and the journals
+/// lie inside the tile.
 #[test]
 fn the_stick_clears_the_table_and_the_steadies_clear_the_cutter_at_every_row() {
     let n = numbers();
@@ -408,20 +421,22 @@ fn the_stick_clears_the_table_and_the_steadies_clear_the_cutter_at_every_row() {
         .iter()
         .map(pair)
         .collect();
-    let (mut table, mut gap, mut pulley, mut corner) = (f64::MAX, f64::MAX, f64::MAX, f64::MAX);
-    let (mut pad_lo, mut pad_hi) = (f64::MAX, f64::MIN);
+    let (mut table, mut gap, mut pulley) = (f64::MAX, f64::MAX, f64::MAX);
+    let (mut lean1, mut lean2) = (0.0f64, 0.0f64);
     for r in &rows {
         let p = sled.pose(r.lift, r.swing, r.turn);
         pulley = pulley.min(p.axis.1 - f(&n["pulley_r"]));
-        for sy in [-1.0, 1.0] {
-            let c = add(p.axis, rot(p.hang, (sy * sled.pad_y, -f(&n["hanger_r"]))));
-            corner = corner.min(c.1);
-        }
-        let h2 = sled.hinge2(p.alpha);
-        let c = (sled.pusher2(p.alpha, p.hang) - h2.0, sled.p2_z - h2.1);
-        let down = -c.0 * p.hang.sin() + c.1 * p.hang.cos();
-        pad_lo = pad_lo.min(down);
-        pad_hi = pad_hi.max(down);
+        // Each link: its two pins a link apart, and how far it leans off its screw.
+        let (q1, q2) = (sled.pin1(p.alpha), sled.pin2(p.alpha, p.hang));
+        let (c1, c2) = (sled.c1_home - r.lift, sled.c2_home - r.swing);
+        assert!(((q1.0 - sled.p1_y).hypot(q1.1 - c1) - sled.l1).abs() < 1e-3);
+        assert!(((q2.0 - c2).hypot(q2.1 - sled.p2_z) - sled.l2).abs() < 1e-3);
+        assert!(
+            q1.1 > c1 && q2.0 < c2,
+            "the noses are under the plate and right of the frame"
+        );
+        lean1 = lean1.max(((q1.0 - sled.p1_y) / sled.l1).asin().abs().to_degrees());
+        lean2 = lean2.max(((q2.1 - sled.p2_z) / sled.l2).asin().abs().to_degrees());
         if r.kind != "rough" && r.kind != "finish" {
             continue;
         }
@@ -449,14 +464,17 @@ fn the_stick_clears_the_table_and_the_steadies_clear_the_cutter_at_every_row() {
         }
     }
     println!(
-        "the blank {table:.2} over the table at its lowest, the pulley {pulley:.2}, the tail hanger's corner {corner:.2}; \
-         the cutter {gap:.2} from a steady at its nearest; pusher 2 bears {:.0} to {:.0} down the hanger's edge",
-        -pad_hi, -pad_lo
+        "the blank {table:.2} over the table at its lowest, the pulley {pulley:.2}; the cutter {gap:.2} from a steady at its nearest; \
+         the links lean at most {lean1:.1} and {lean2:.1} deg"
     );
     assert!(table >= f(&n["table_clear"]) - 0.51 && table < f(&n["table_clear"]) + 0.5);
-    assert!(pulley >= 1.0 && corner >= 1.0);
+    assert!(pulley >= 1.0 && f(&n["hanger_r"]) < f(&n["pulley_r"]));
     assert!(gap >= f(&n["steady"]["least"]) && (gap - f(&n["steady"]["clear"])).abs() < 1e-2);
-    assert!(pad_lo > -(sled.drop + f(&n["hanger_r"])) + 2.0 && pad_hi < -50.0);
+    assert!(lean1.max(lean2) <= f(&n["sled"]["lean_most"]));
+    assert!(
+        (lean1 - f(&n["sled"]["lean"][0])).abs() < 0.01
+            && (lean2 - f(&n["sled"]["lean"][1])).abs() < 0.01
+    );
     // A steady's cap fits the journal and leaves plastic at its lips.
     assert!(f(&n["steady"]["lip"]) >= 2.0 && f(&n["steady"]["t"]) + 3.0 <= f(&j["length"]));
     for q in steady.iter().skip(1).take(13) {
@@ -541,7 +559,7 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
     // Travel: both pushers start a little short of their home switches and stay on their screws.
     let deep = rows.iter().map(|r| r.lift).fold(0.0, f64::max);
     assert!(rows.iter().all(|r| r.lift >= 2.0 && r.swing >= 1.5));
-    assert!(deep < f(&n["sled"]["nose"]) - 25.0 && hi < f(&n["sled"]["nose2"]) - 30.0);
+    assert!(deep < f(&n["sled"]["nose"]) - 25.0 && hi < f(&n["sled"]["nose2"]) - 20.0);
     assert!(1.0 / per[0] < 0.005 && 1.0 / per[2] < 0.05);
 }
 
@@ -609,6 +627,7 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
         "Master",
         "Steadies",
         "Lift pusher",
+        "Links",
         "Tower",
         "Swing pusher",
         "Guide",
@@ -644,7 +663,10 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
         all.len()
     );
     assert!(all.len() >= 30);
-    // The plate lies on pusher 1's ball and the hanger's edge on pusher 2's.
+    // The links as drawn run from the noses' pins to the plate's and the frame's.
+    let (q1, q2) = (pair(&d["pin1"]), pair(&d["pin2"]));
+    let (w1, w2) = (sled.pin1(p.alpha), sled.pin2(p.alpha, p.hang));
+    assert!((q1.0 - w1.0).hypot(q1.1 - w1.1) < 1e-3 && (q2.0 - w2.0).hypot(q2.1 - w2.1) < 1e-3);
     let c1 = f(&d["c1"]);
     assert!(
         (sled.pusher1(p.alpha) - c1).abs() < 1e-3 && (sled.c1_home - row.lift - c1).abs() < 1e-3

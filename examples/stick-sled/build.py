@@ -5,10 +5,11 @@ small motors and pushed over the cutter by hand.
 The sled slides on the table against the fence. The stick hangs under
 it between a spindle and a tail centre, over the cutter, which stays
 where it is. A lift plate swings on a hinge along the sled's right
-side and rests on a pusher at its left: that is the stick's height. A
-frame hangs from a second hinge under the plate, above the stick, and
-a second pusher, level, on the sled, swings it: that is the stick's
-place left and right.
+side and is held at its left by a screw: that is the stick's height.
+A frame hangs from a second hinge under the plate, above the stick,
+and a second screw, level, on the sled, swings it: that is the
+stick's place left and right. Each screw's nose is tied to what it
+moves by a short link pinned at both ends, so it holds both ways.
 A third motor turns the spindle through a belt. For each pass the
 sled is pulled back, the foot switch pressed, the motors go to the
 next row of a table and stop, and the sled is pushed through and
@@ -69,8 +70,9 @@ H1_Y = 150.0                                    # hinge 1, right of the cutter
 ARM = (-H1_Y, -(SK_H - BLK_C))                  # hinge 1 to hinge 2 in the plate's frame: over the cutter, a support's height less a block's under the plate
 DROP = 130.0                                    # hinge 2 down to the stick's axis
 P1_Y = -130.0                                   # pusher 1, left of the cutter: the plate bridges from hinge to pusher over the stick
-BALL = 4.0                                      # a pusher's ball end
-PAD_Y = 35.0                                    # pusher 2 bears on the tail hanger's right edge, this far from the frame's middle
+E1, L1 = (P1_Y - H1_Y, BLK_C - 15.0), 30.0       # link 1: its pin in a clevis under the plate's free edge, over the screw, and its length
+E2_UP, L2 = 25.0, 60.0                          # link 2: its pin on the tail hanger's middle line this far over the axis, and its length
+LEAN = 30.0                                     # the most a link may lean off its screw's line, degrees
 HANGER_R = 18.5                                 # the hangers' lower ends, round about the axis: a bearing and 2.5
 SPINDLE_CLEAR = 3.0                             # between the spindle and the cutter while the frame swings with the sled back
 HOME_OVER = (3.0, 2.0)                          # the home switches beyond the furthest any row goes: lift, swing
@@ -88,7 +90,7 @@ TAIL_X = (232.0, 251.0)
 MASTER_X = (-30.0, -18.0)
 PUSH_X = 100.0                                  # pusher 1, half way along
 NOSE_L = 120.0                                  # pusher 1's nose, sliding in its tower
-NOSE2_L = 90.0                                  # pusher 2's nose, sliding in its guide
+NOSE2_L = 75.0                                  # pusher 2's nose, sliding in its guide
 
 
 def slab(p, name, x, pts, op="new"):
@@ -136,9 +138,13 @@ def hanger_outline():
     return [(-35.0, -BLK_C - PLY), (35.0, -BLK_C - PLY), (35.0, -DROP + 30.0)] + arc + [(-35.0, -DROP + 30.0)]
 
 
-def hanger_square():
-    """The tail hanger: square-ended, its right edge the pad pusher 2 bears on."""
-    return rect(-PAD_Y, PAD_Y, -DROP - HANGER_R, -BLK_C - PLY)
+def link(a, b, w=10.0):
+    """A link between two pins, as a strip."""
+    dy, dz = b[0] - a[0], b[1] - a[1]
+    ln = math.hypot(dy, dz)
+    ny, nz = -dz / ln * w / 2, dy / ln * w / 2
+    ey, ez = dy / ln * w / 2, dz / ln * w / 2
+    return [(a[0] - ey + ny, a[1] - ez + nz), (a[0] - ey - ny, a[1] - ez - nz), (b[0] + ey - ny, b[1] + ez - nz), (b[0] + ey + ny, b[1] + ez + nz)]
 
 
 def steady_outline(radius, half):
@@ -214,8 +220,10 @@ def main():
     # -- the hinges ----------------------------------------------------------
     za_mid = bit_up + (low_tip + max(c[4] for c in cuts)) / 2
     h1 = (H1_Y, round(za_mid + DROP - ARM[1]))       # so the plate lies level and the frame hangs square at the middle of the travel
-    p2_z = math.ceil(bit_up + max(c[4] for c in cuts) - HANGER_R + 6.0)      # pusher 2's line: on the hanger's edge, a little up from its end, with the stick at its highest
-    sled = P.Sled(h1, ARM, DROP, P1_Y, BLK_C, BALL, p2_z, PAD_Y)
+    e2 = (0.0, -(DROP - E2_UP))
+    sled = P.Sled(h1, ARM, DROP, P1_Y, E1, L1, 0.0, e2, L2)
+    pins = [sled.pin2(*sled.angles(-c[3], bit_up + c[4]))[1] for c in cuts]
+    sled.p2_z = p2_z = round((min(pins) + max(pins)) / 2)        # screw 2 level with the middle of where its link's far pin goes
     poses = [sled.pose(c[2], c[3], c[4], bit_up) for c in cuts]
     # Roughing, and then finishing, in the order of the spindle's angle, so it turns a little at a time and mostly forwards;
     # the bites of one cut stay together, in order. A cut is the rows that share a direction and a place across.
@@ -229,12 +237,10 @@ def main():
         i = k + 1
     picked = [j for _, group in sorted(order, key=lambda g: g[0]) for j in group]
     cuts, poses = [cuts[j] for j in picked], [poses[j] for j in picked]
-    pad = [sled.pad_at(q["alpha"], q["beta"]) for q in poses]
-    if min(pad) < -DROP - HANGER_R + 3.0 or max(pad) > -BLK_C - PLY - 6.0:
-        raise SystemExit(f"pusher 2 runs off the hanger's edge: {min(pad):.1f} to {max(pad):.1f}")
-    corner = min(tf(((q["ya"], q["za"]), q["alpha"] + q["beta"]), [(sy * PAD_Y, -HANGER_R)])[0][1] for q in poses for sy in (-1.0, 1.0))
-    if corner < 1.0:
-        raise SystemExit(f"the tail hanger's corner comes {corner:.2f} from the table")
+    leans = [sled.lean(q["alpha"], q["beta"]) for q in poses]
+    lean = [max(abs(math.degrees(v[k])) for v in leans) for k in (0, 1)]
+    if max(lean) > LEAN:
+        raise SystemExit(f"a link leans {lean} deg")
     c1_home = math.ceil(max(q["c1"] for q in poses) + HOME_OVER[0])
     c2_home = math.ceil(max(q["c2"] for q in poses) + HOME_OVER[1])
     rows = []
@@ -253,7 +259,7 @@ def main():
         if min(sled.axis(a, sled.beta_of(c2_lo + (c2_home - c2_lo) * k / 40, a))[1] for k in range(41)) < bit_up + SPINDLE_D / 2 + SPINDLE_CLEAR:
             break
         safe += 0.25
-    print(f"cutter {bit_up:.1f} over the table; hinge 1 at {h1}; the plate swings {math.degrees(min(alphas)):.1f} to {math.degrees(max(alphas)):.1f} deg, the frame hangs {math.degrees(min(x + y for x, y in zip(alphas, betas))):.1f} to {math.degrees(max(x + y for x, y in zip(alphas, betas))):.1f} off upright; pusher 2 at {p2_z:.0f}, on the hanger's edge {-max(pad):.0f} to {-min(pad):.0f} under hinge 2, its corner {corner:.1f} over the table; "
+    print(f"cutter {bit_up:.1f} over the table; hinge 1 at {h1}; the plate swings {math.degrees(min(alphas)):.1f} to {math.degrees(max(alphas)):.1f} deg, the frame hangs {math.degrees(min(x + y for x, y in zip(alphas, betas))):.1f} to {math.degrees(max(x + y for x, y in zip(alphas, betas))):.1f} off upright; screw 2 at {p2_z:.0f}; the links lean at most {lean[0]:.1f} and {lean[1]:.1f} deg; "
           f"lift {min(r['lift'] for r in rows):.1f} to {max(r['lift'] for r in rows):.1f} mm from home, swing {min(r['swing'] for r in rows):.1f} to {max(r['swing'] for r in rows):.1f}; safe to swing at lift {safe:.2f} or less")
 
     # -- the steadies: caps over the journals, clear of the cutter at every row
@@ -341,7 +347,7 @@ def main():
             xbore(p, x[0], x[1], axis, BEARING_D, "bearing")
 
     def tail(p):
-        slab(p, "tail hanger", TAIL_X, tf(HG, hanger_square()))
+        slab(p, "tail hanger", TAIL_X, tf(HG, hanger_outline()))
         xbore(p, TAIL_X[0], TAIL_X[1], axis, 10.5, "centre")
 
     def bearings(p):
@@ -382,11 +388,19 @@ def main():
         for at in JOURNAL_AT:
             slab(p, "steady", (at - STEADY_T / 2, at + STEADY_T / 2), pts)
 
+    pin1, pin2 = sled.pin1(a), sled.pin2(a, b)
+
     def lift_pusher(p):
         m = MOTOR[0] / 2
         box(p, "lift motor", (PUSH_X - m, PUSH_X + m), (P1_Y - m, P1_Y + m), (PLY, PLY + MOTOR[1]))
         vcyl(p, "T8 screw", PUSH_X, P1_Y, PLY + MOTOR[1], c1 - NOSE_L, 8.0, op="new")
-        vcyl(p, "nose", PUSH_X, P1_Y, c1 - NOSE_L, c1 + BALL - 0.7, 14.0, op="add")
+        vcyl(p, "nose", PUSH_X, P1_Y, c1 - NOSE_L, c1 + 5.0, 14.0, op="add")
+
+    def links(p):
+        """Each nose to what it moves: a strip beside the nose, a pin through each end (the pins are not drawn)."""
+        slab(p, "link 1", (PUSH_X + 8.0, PUSH_X + 14.0), link((P1_Y, c1), pin1))
+        slab(p, "clevis under the plate", (PUSH_X - 7.0, PUSH_X + 7.0), tf(PL, rect(E1[0] - 10.0, E1[0] + 10.0, E1[1] - 8.0, BLK_C)))
+        slab(p, "link 2", (TAIL_X[1], TAIL_X[1] + 6.0), link((c2, p2_z), pin2))
 
     def tower(p):
         box(p, "tower", (PUSH_X - 15.0, PUSH_X + 15.0), (P1_Y - 15.0, P1_Y + 15.0), (PLY + MOTOR[1], tower_top))
@@ -406,7 +420,7 @@ def main():
         m = MOTOR[0] / 2
         box(p, "swing motor", (tail_mid - m, tail_mid + m), (g1, g1 + MOTOR[1]), (p2_z - m, p2_z + m))
         box(p, "T8 screw", (tail_mid - 4.0, tail_mid + 4.0), (c2 + NOSE2_L, g1), (p2_z - 4.0, p2_z + 4.0), op="new")
-        box(p, "nose", (tail_mid - 6.0, tail_mid + 6.0), (c2 - BALL + 1.5, c2 + NOSE2_L), (p2_z - 6.0, p2_z + 6.0), op="add")
+        box(p, "nose", (tail_mid - 6.0, tail_mid + 6.0), (c2 - 5.0, c2 + NOSE2_L), (p2_z - 6.0, p2_z + 6.0), op="add")
 
     def guide(p):
         m = MOTOR[0] / 2
@@ -431,7 +445,7 @@ def main():
              ("Hinge 2 supports SK20", supports2), ("Hinge 2 shaft", lambda p: xcyl(p, "20 mm shaft", -133.0, 283.0, h2, SHAFT_D)),
              ("Hinge 2 blocks SC20UU", lambda p: blocks(p, HG, (-70.0, 215.0), True)), ("Beam", beam), ("Head hangers", hangers), ("Tail hanger", tail),
              ("Bearings 6201", bearings), ("Spindle and centre", spindle), ("Belt drive", drive), ("Master", master), ("Stick", stick), ("Steadies", steadies),
-             ("Lift pusher", lift_pusher), ("Tower", tower), ("Swing pusher", swing_pusher), ("Guide", guide), ("Controller", controller)]
+             ("Lift pusher", lift_pusher), ("Links", links), ("Tower", tower), ("Swing pusher", swing_pusher), ("Guide", guide), ("Controller", controller)]
     mcp.call("create_document", {"name": "sled"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Stick sled for the leaning half-ellipse Spectre"}, {"type": "rename_tab", "tab": 1, "name": parts[0][0]}]})
     tabs, bodies = {}, {}
@@ -468,10 +482,10 @@ def main():
         "rough": {"bit": P.ROUGH_BIT, "bite": P.ROUGH_BITE, "step": P.ROUGH_STEP, "allow": P.ALLOW, "angles": P.ROUGH_ANGLES, "blank": P.BLANK, "places": len(places),
                   "runs": sum(q["bites"] for q in places), **waste},
         "bit_up": bit_up, "table_clear": TABLE_CLEAR, "pulley_r": PULLEY_R, "hanger_r": HANGER_R, "spindle_d": SPINDLE_D, "spindle_clear": SPINDLE_CLEAR,
-        "sled": {"h1": h1, "arm": ARM, "drop": DROP, "p1_y": P1_Y, "plate_under": BLK_C, "ball": BALL, "p2_z": p2_z, "pad_y": PAD_Y, "pad": [min(pad), max(pad)], "corner": corner, "nose2": NOSE2_L, "guide_y": [g0, g1], "tail_x": TAIL_X,
+        "sled": {"h1": h1, "arm": ARM, "drop": DROP, "p1_y": P1_Y, "e1": E1, "l1": L1, "p2_z": p2_z, "e2": e2, "l2": L2, "lean": lean, "lean_most": LEAN, "nose2": NOSE2_L, "guide_y": [g0, g1], "tail_x": TAIL_X,
                  "c1_home": c1_home, "c2_home": c2_home, "safe": safe, "nose": NOSE_L, "tower_top": tower_top, "x": SLED_X, "left_y": LEFT_Y, "right_y": RIGHT_Y, "ply": PLY,
                  "back_x": BACK_X, "set_x": SET_X, "run": RUN, "master_x": MASTER_X, "belt": [60, 16]},
-        "drawn": {"row": rows[drawn]["n"], "x": DRAWN_X, "alpha": a, "beta": b, "axis": axis, "h2": h2, "c1": c1, "c2": c2, "psi": psi},
+        "drawn": {"row": rows[drawn]["n"], "x": DRAWN_X, "alpha": a, "beta": b, "axis": axis, "h2": h2, "c1": c1, "c2": c2, "psi": psi, "pin1": pin1, "pin2": pin2},
         "count": count, "rows": rows,
         "bodies": {k: [list(v) for v in b_] for k, b_ in bodies.items()},
     }

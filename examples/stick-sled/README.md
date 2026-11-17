@@ -20,22 +20,29 @@ The cutter stays where it is, up through the table. The sled slides
 along the fence, and the stick hangs under it between a spindle and a
 tail centre.
 
-![From the spindle end, cut through the middle: the lift plate on its hinge and its pusher, the frame hanging from the second hinge, the level pusher against it, the stick's section on the cutter](out/end.png)
+![From the spindle end, cut through the middle: the lift plate on its hinge, its screw and link at the far side, the frame hanging from the second hinge, the level screw and its link to the tail hanger, the stick's section on the cutter](out/end.png)
 
-- **Height:** a ply plate hinged along the sled's right side, resting
-  on a screw-driven pusher at its left. The stick is between hinge
-  and pusher, so the plate is a bridge, not an arm.
+- **Height:** a ply plate hinged along the sled's right side and held
+  at its left by an upright screw. The stick is between hinge and
+  screw, so the plate is a bridge, not an arm.
 - **Left and right:** a frame hangs from a second hinge under the
-  plate, above the stick. A second pusher, level, fixed to the sled,
-  bears on the frame's tail hanger and swings it; a spring holds the
-  hanger against it.
+  plate, above the stick. A second screw, level, fixed to the sled,
+  swings it by its tail hanger.
+- **Held both ways.** Each screw's nose is tied to what it moves by a
+  short link with a pin at each end: 30 mm to a clevis under the
+  plate, 60 mm to the tail hanger. A lead screw does not run back
+  under load, so the stick is held against a cut that lifts it or
+  pushes it either way, not by the plate's weight or a spring. A
+  light spring on each only keeps the slack in nut and pins to one
+  side.
 - **Rotation:** a motor on the hanging frame turns the spindle through
   a belt, 16 teeth to 60.
 
 Swinging the plate also shifts and tilts the stick a little, and so
-does swinging the frame. Both are exact functions of the two pushers,
-so `plan.py` works the hinges backwards for every cut: the table holds
-three numbers a row, where the two pushers and the spindle stand.
+does swinging the frame, and a link leans as its far pin moves. All
+of it is exact, so `plan.py` works the hinges and links backwards for
+every cut: the table holds three numbers a row, where the two noses
+and the spindle stand.
 
 ## A pass
 
@@ -101,8 +108,9 @@ checks every row ends on the table's numbers to the step.
 | switches | a home for each pusher, a mark once round for the spindle, sled back, and the foot switch |
 | supply | 12 V |
 
-No encoders. The lift screw is loaded by the plate's weight and the
-swing screw by its spring, each always from the same side.
+No encoders. The screws hold both ways through their links; the
+plate's weight and a light spring keep each one's slack on the same
+side.
 
 ## Measure these first
 
@@ -117,7 +125,8 @@ swing screw by its spring, each always from the same side.
 | the home switches | 3 and 2 mm beyond the furthest any row goes | cut a test stick, measure it, and put the differences in `config.py`'s trims |
 | the cutter's place across | under the middle of the frame's swing | the same test stick: a cut that is off to one side shows as a tile fat on one side |
 | the pushers | drawn as a motor, a screw, a nose and a printed guide | the nose must not turn: a flat or a key in the guide. Not drawn |
-| the spring | not drawn | from the tail hanger to the riser, enough to hold it on the pusher against a cut |
+| the links | 30 and 60 between pins, leaning at most 9° and 22° off their screws | the pins are not drawn: 5 mm shoulder bolts, a close fit. Measure the lengths as made and put them in `build.py` |
+| slack | a screw's nut and two pins a link | a light spring from the plate to the sled and from the tail hanger to the riser, not drawn; if a cut still rattles, an anti-backlash nut |
 | the drive | a spur on the spindle's end, the tail centre pushing the stick onto it | not drawn in detail |
 | stiffness | not checked | lean on the stick with the motors holding: if the cutter's mark moves, stiffen what gave |
 
@@ -130,12 +139,13 @@ swing screw by its spring, each always from the same side.
 | lift plate | 420 x 335 ply | two blocks under its right edge on hinge 1; hinge 2's supports under its middle |
 | beam | 350 x 60 ply | two blocks on hinge 2; the hangers under it |
 | head hangers, 2 | ply, 70 wide, round-ended | a 6201 bearing in each, 43 apart |
-| tail hanger | ply, 70 wide, square-ended | the tail centre; its right edge is what pusher 2 bears on |
+| tail hanger | ply, 70 wide, round-ended | the tail centre, and link 2's pin 25 over it |
 | spindle | M12 studding | the 60-tooth pulley outboard, the master and a drive spur inboard |
 | steadies, 2 | printed, 23 wide at the journal | caps over the journals from above, where the cutter does not come |
 | master | printed, 19.4 round x 12 | on the spindle beside the stick, for setting a bit |
-| lift pusher | NEMA 17 on the left runner, a printed tower on its face, a nose of 120 | 86 mm of travel |
-| swing pusher | NEMA 17 and a printed guide on the right runner, 60 over the table, a nose of 90 | 37 mm of travel |
+| lift pusher | NEMA 17 on the left runner, a printed tower on its face, a nose of 120 | 85 mm of travel |
+| swing pusher | NEMA 17 and a printed guide on the right runner, 74 over the table, a nose of 75 | 32 mm of travel |
+| links, 2 | strips, 30 and 60 between pins, and a clevis under the plate | each nose to what it moves |
 | spindle motor | NEMA 17 on the head hanger, 52 over the spindle | a closed GT2 belt |
 | controller | a box on the right runner | Pico, three drivers |
 
@@ -154,9 +164,9 @@ ball is never in the tile and a roughing bite never within its
 allowance; the last bites of the finishing passes together reach the
 whole outline, from nearly as many directions as passes; every bite
 is within its bit's limit; at every row the blank clears the table,
-so do the pulley and the tail hanger's corners, the cutter is at
-least a millimetre from a steady, and pusher 2 bears on the hanger's
-edge; the controller's program, simulated, ends every row on the
+so does the pulley, the cutter is at least a millimetre from a
+steady, and each link is its length from pin to pin and leans no
+more than 30° off its screw; the controller's program, simulated, ends every row on the
 table's steps, turns the spindle under three turns in all, and never
 swings the stick below the height at which the spindle clears the
 cutter; and the document is the sled at one finishing row, the
