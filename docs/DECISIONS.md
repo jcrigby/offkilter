@@ -1548,3 +1548,14 @@ frame rises and falls with the lift past a screw fixed to the sled.
   same link, same screw line. The table is the same rows.
 - Anti-backlash nuts on both screws, since slack along a screw comes
   through whole and no geometry helps that.
+
+## 2026-11 · The stick sled's passes keep off the ball's dead centre
+
+The planner gave every finishing pass the direction that met its face
+most squarely, which is the direction that cuts with the very tip of
+the ball: the one point of a ball-nose that does not turn. 162 of 244
+passes were within 5 degrees of it. Each pass now takes the open
+direction nearest 15 degrees round the ball from the tip, where the
+edge passes at about a metre a second at 25,000 rpm. Two passes
+cannot. Passes, reach, bit height and travel are unchanged; at 25
+degrees the bit would have to stand 1.4 mm higher, so 15.

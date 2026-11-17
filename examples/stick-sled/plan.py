@@ -15,6 +15,7 @@ TAPER = math.degrees(math.atan(1.5 / 30.5))   # degrees a side its flank leans o
 SHANK = 6.0                     # its shank: the taper stops at this diameter
 RIDGE = 0.05                    # what a pass may leave standing between it and the next, to sand
 FACE_MIN = 0.2                  # the ball cuts no further round its side than this: the cosine between the bit and the face (78 deg)
+OFF_CENTRE = 15.0               # degrees: a pass meets its face this far round the ball from its tip, where it can. The tip's dead centre does not turn; 15 deg round, the edge passes at a metre a second
 Y_LIM = 19.0                    # the planner keeps the cutter this near the axis; the hinge has a little more
 ROUGH_BIT, ROUGH_BITE = 6.0, 3.0   # roughing: a straight bit, and the most it takes at a bite
 ROUGH_STEP = 3.0                # its places across, half its width apart
@@ -161,7 +162,7 @@ def open_dirs(q, outline, r):
 
 
 def best_dir(q, n, outline, r, face_min):
-    """The open direction that meets the face most squarely, the cutter within Y_LIM of the axis and a degree clear of anything."""
+    """The open direction that meets the face nearest OFF_CENTRE round the ball from its tip, the cutter within Y_LIM of the axis and a degree clear of anything."""
     shut = open_dirs(q, outline, r)
     if shut is None:
         return None
@@ -176,16 +177,18 @@ def best_dir(q, n, outline, r, face_min):
             continue
         if abs(q[0] * e[0] + q[1] * e[1]) > Y_LIM:
             continue
-        if best is None or facing > best[0]:
-            best = (facing, t)
+        near_it = -abs(math.degrees(math.acos(min(1.0, facing))) - OFF_CENTRE)
+        if best is None or near_it > best[0]:
+            best = (near_it, t)
     return best[1] if best else None
 
 
 def finish(outline):
     """The finishing passes: round the outline, a pass wherever the
     passes so far leave more than the ridge, each from the direction
-    that meets the face most squarely among those the shank can come
-    from. No two need share a direction: a motor turns the stick."""
+    that meets the face a little off the ball's tip among those the
+    whole bit can come from. No two need share a direction: a motor
+    turns the stick."""
     r, n = BIT / 2, len(outline)
     ns = normals(outline)
     left = [9.0] * n

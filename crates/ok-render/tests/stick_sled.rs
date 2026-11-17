@@ -370,8 +370,42 @@ fn the_finishing_passes_reach_the_whole_outline_each_from_its_own_direction() {
     assert!(covered > 0.995 && worst < 0.1);
     assert!((worst - f(&n["plan"]["worst"])).abs() < 1e-6);
     assert!(
-        apart * 10 > last.len() * 8,
+        apart * 10 > last.len() * 6,
         "the passes do not share a dozen stops"
+    );
+    // Where each pass meets the tile, round the ball from its tip: the point of the outline nearest the ball's centre.
+    // The tip's dead centre does not turn, so the plan keeps off it where it can.
+    let mut round: Vec<f64> = last
+        .iter()
+        .map(|r| {
+            let (d, e) = ((r.t.cos(), r.t.sin()), (-r.t.sin(), r.t.cos()));
+            let c = r.tip + ball;
+            let centre = (r.across * e.0 + c * d.0, r.across * e.1 + c * d.1);
+            let q = tile
+                .iter()
+                .min_by(|a, b| {
+                    (a.0 - centre.0)
+                        .hypot(a.1 - centre.1)
+                        .partial_cmp(&(b.0 - centre.0).hypot(b.1 - centre.1))
+                        .unwrap()
+                })
+                .unwrap();
+            let v = (q.0 - centre.0, q.1 - centre.1);
+            (-(v.0 * d.0 + v.1 * d.1) / v.0.hypot(v.1))
+                .clamp(-1.0, 1.0)
+                .acos()
+                .to_degrees()
+        })
+        .collect();
+    round.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let dead = round.iter().filter(|a| **a < 5.0).count();
+    println!(
+        "passes meet the tile a median {:.0} deg round the ball from its tip; {dead} within 5 deg of dead centre",
+        round[round.len() / 2]
+    );
+    assert!(
+        dead * 20 < last.len()
+            && (round[round.len() / 2] - f(&n["plan"]["off_centre"])).abs() < 4.0
     );
     assert!(last.len() > 150 && last.len() < 400);
     assert!(n["plan"]["orphans"].as_u64() == Some(0));

@@ -65,20 +65,25 @@ master, 29 mm of it. Forward, past the stick's end there is only the
 tail centre for 30 mm, and no pass comes near it; then the tail
 hanger, which a stop must keep the cutter short of.
 
-## The table: 440 rows a stick
+## The table: 438 rows a stick
 
 | rows | what | cutter |
 |---|---|---|
 | 1 | set the straight bit | 6 mm straight |
 | 145 | roughing: 79 places from 24 directions, in bites of 3 mm | |
 | 1 | set the ball-nose | 3 mm ball-nose, tapered |
-| 293 | finishing: 244 passes, the deep ones in bites of 1.5 mm | |
+| 291 | finishing: 244 passes, the deep ones in bites of 1.5 mm | |
 
 - **Every finishing pass has its own direction.** With a motor on the
-  spindle nothing needs twelve stops, so each pass comes at its face
-  as squarely as the tile lets a bit in. The passes reach the whole
+  spindle nothing needs twelve stops. The passes reach the whole
   outline: every point within 0.05 mm of one. Twelve stops left 5 %
   for a file.
+- **Off the ball's dead centre.** The very tip of a ball-nose does not
+  turn, it only rubs. So each pass comes at its face 15° round the
+  ball from the tip, where the edge passes at about a metre a second,
+  wherever the tile lets the bit in that way: all but 2 of the 244
+  do. Square-on, 162 of them cut on the dead centre. It costs
+  nothing: the same passes, the same reach, the same bit height.
 - **The cutter stays within 19 mm of the axis**, which is all the
   frame has to swing.
 - **Roughing takes 79 % of the waste** with the straight bit, to
@@ -94,7 +99,7 @@ hanger, which a stop must keep the cutter short of.
   raised until the bit touches it. Homing may land a hair differently
   each day; setting the bit on the master takes that up.
 
-A stick is about two and a half hours: 438 pushes at a quarter of a
+A stick is about two and a half hours: 436 pushes at a quarter of a
 minute, and three quarters of an hour of the motors moving between
 them (8.5 m of lift screw at 800 steps a millimetre). Estimated.
 
