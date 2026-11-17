@@ -19,6 +19,10 @@ HEIGHT_HOME_PIN = 11            # the stage at its home end
 TURN_HOME_PIN = 12              # once a turn of the spindle, at its mark
 DEPTH_MOST_MM = 70.0            # homing gives up if the switch has not spoken in this much travel
 HEIGHT_MOST_MM = 90.0
+# An axis found already at home is first run away until its switch lets go and this much further, then brought
+# back: home is the same edge from the same side every time. The spindle's fin is 10 degrees wide.
+HOME_CLEAR_MM = 1.0
+TURN_CLEAR_DEG = 5.0
 SLED_BACK_PIN = 13              # closed with the sled against its back stop, the bit beside the master and clear of the stick
 NEXT_PIN = 14                   # the foot switch
 LED_PIN = 25
@@ -47,10 +51,10 @@ PLACE_FILE = "at.txt"
 
 # Steps for a millimetre of screw and a degree of spindle.
 # 200-step motors; the positioner's screws M8 rod, 1.25 mm a turn (a T8 of 2 mm lead: 200 * 8 / 2.0);
-# the drivers at 8 microsteps for the screws and 16 for the spindle; a 16-tooth pulley driving a wheel of 160.
+# the drivers at 8 microsteps for the screws and 16 for the spindle; a 20-tooth pulley driving a wheel of 160.
 DEPTH_STEPS_PER_MM = 200 * 8 / 1.25
 HEIGHT_STEPS_PER_MM = 200 * 8 / 1.25
-TURN_STEPS_PER_DEG = 200 * 16 * (160 / 16) / 360.0
+TURN_STEPS_PER_DEG = 200 * 16 * (160 / 20) / 360.0
 
 # A nudge to every row: positive moves it further from home. Leave these at nothing: where the stick's axis is
 # from the positioner's home switches is found by touching (calibrate.py) and planned for in the table itself.

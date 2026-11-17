@@ -1,7 +1,7 @@
-#safe,36.0212
+#safe,38.0212
 n,kind,tool,depth,height,turn,via,label
 1,load,none,12.5609,40.0,24.6832,s,blank on centres19.5 up from itswide face 24.8  in from router
-2,set,straight,38.0212,40.0,0.0,s,set the straight bit on the master
+2,set,straight,40.0212,40.0,0.0,s,set the straight bit on the master
 3,rough,straight,28.3944,22.0,0.0,s,rough 0 deg -18 bite 1 of 3
 4,rough,straight,31.1047,22.0,0.0,d,rough 0 deg -18 bite 2 of 3
 5,rough,straight,33.815,22.0,0.0,d,rough 0 deg -18 bite 3 of 3
@@ -90,7 +90,7 @@ n,kind,tool,depth,height,turn,via,label
 88,rough,straight,32.5728,55.0,90.0,d,rough 270 deg +15 bite 2 of 4
 89,rough,straight,35.1293,55.0,90.0,d,rough 270 deg +15 bite 3 of 4
 90,rough,straight,37.6859,55.0,90.0,d,rough 270 deg +15 bite 4 of 4
-91,rough,straight,31.8819,22.0,105.0,s,rough 255 deg -18 bite 1 of 4
+91,rough,straight,31.8819,22.0,105.0,d,rough 255 deg -18 bite 1 of 4
 92,rough,straight,34.4652,22.0,105.0,d,rough 255 deg -18 bite 2 of 4
 93,rough,straight,37.0485,22.0,105.0,d,rough 255 deg -18 bite 3 of 4
 94,rough,straight,39.6318,22.0,105.0,d,rough 255 deg -18 bite 4 of 4
@@ -108,7 +108,7 @@ n,kind,tool,depth,height,turn,via,label
 106,rough,straight,32.7777,31.0,120.0,d,rough 240 deg -9 bite 2 of 4
 107,rough,straight,35.0878,31.0,120.0,d,rough 240 deg -9 bite 3 of 4
 108,rough,straight,37.3979,31.0,120.0,d,rough 240 deg -9 bite 4 of 4
-109,rough,straight,32.4388,49.0,120.0,s,rough 240 deg +9 bite 1 of 2
+109,rough,straight,32.4388,49.0,120.0,d,rough 240 deg +9 bite 1 of 2
 110,rough,straight,34.7018,49.0,120.0,d,rough 240 deg +9 bite 2 of 2
 111,rough,straight,29.4687,52.0,120.0,d,rough 240 deg +12 bite 1 of 1
 112,rough,straight,22.2156,22.0,135.0,d,rough 225 deg -18 bite 1 of 4
@@ -117,7 +117,7 @@ n,kind,tool,depth,height,turn,via,label
 115,rough,straight,30.6122,22.0,135.0,d,rough 225 deg -18 bite 4 of 4
 116,rough,straight,35.9872,34.0,135.0,d,rough 225 deg -6 bite 1 of 1
 117,rough,straight,37.7127,52.0,135.0,d,rough 225 deg +12 bite 1 of 1
-118,rough,straight,28.3849,22.0,150.0,s,rough 210 deg -18 bite 1 of 1
+118,rough,straight,28.3849,22.0,150.0,d,rough 210 deg -18 bite 1 of 1
 119,rough,straight,27.0053,25.0,150.0,d,rough 210 deg -15 bite 1 of 1
 120,rough,straight,34.9013,37.0,150.0,d,rough 210 deg -3 bite 1 of 1
 121,rough,straight,31.0597,40.0,150.0,d,rough 210 deg +0 bite 1 of 2
@@ -180,14 +180,14 @@ n,kind,tool,depth,height,turn,via,label
 178,rough,straight,32.279,28.0,285.0,d,rough 75 deg -12 bite 1 of 3
 179,rough,straight,34.6282,28.0,285.0,d,rough 75 deg -12 bite 2 of 3
 180,rough,straight,36.9775,28.0,285.0,d,rough 75 deg -12 bite 3 of 3
-181,rough,straight,30.3209,34.0,285.0,s,rough 75 deg -6 bite 1 of 1
+181,rough,straight,30.3209,34.0,285.0,d,rough 75 deg -6 bite 1 of 1
 182,rough,straight,23.5388,22.0,300.0,d,rough 60 deg -18 bite 1 of 1
 183,rough,straight,34.7605,55.0,300.0,d,rough 60 deg +15 bite 1 of 1
 184,rough,straight,25.4369,43.0,330.0,d,rough 30 deg +3 bite 1 of 3
 185,rough,straight,28.2843,43.0,330.0,d,rough 30 deg +3 bite 2 of 3
 186,rough,straight,31.1316,43.0,330.0,d,rough 30 deg +3 bite 3 of 3
 187,rough,straight,43.9186,55.0,330.0,d,rough 30 deg +15 bite 1 of 1
-188,set,ball,38.0212,40.0,0.0,s,set the ball-nose on the master
+188,set,ball,40.0212,40.0,0.0,s,set the ball-nose on the master
 189,finish,ball,37.4088,29.9726,0.0,s,finish bite 1 of 2
 190,finish,ball,38.6126,29.9726,0.0,d,finish bite 2 of 2
 191,finish,ball,34.0888,25.1922,1.0,d,finish bite 1 of 1
@@ -199,17 +199,17 @@ n,kind,tool,depth,height,turn,via,label
 197,finish,ball,32.5209,23.5385,7.0,d,finish bite 1 of 1
 198,finish,ball,36.2785,32.1469,7.5,d,finish bite 1 of 2
 199,finish,ball,37.6619,32.1469,7.5,d,finish bite 2 of 2
-200,finish,ball,26.0775,44.1654,12.0,s,finish bite 1 of 1
+200,finish,ball,26.0775,44.1654,12.0,d,finish bite 1 of 1
 201,finish,ball,30.7262,27.6405,14.0,d,finish bite 1 of 1
 202,finish,ball,23.7902,39.6618,14.0,d,finish bite 1 of 1
 203,finish,ball,35.5623,34.6293,16.0,d,finish bite 1 of 2
 204,finish,ball,36.9287,34.6293,16.0,d,finish bite 2 of 2
-205,finish,ball,27.1375,48.1102,20.5,s,finish bite 1 of 1
+205,finish,ball,27.1375,48.1102,20.5,d,finish bite 1 of 1
 206,finish,ball,25.9198,51.4991,20.5,d,finish bite 1 of 2
 207,finish,ball,26.9785,51.4991,20.5,d,finish bite 2 of 2
 208,finish,ball,35.3705,36.0997,21.0,d,finish bite 1 of 2
 209,finish,ball,36.6366,36.0997,21.0,d,finish bite 2 of 2
-210,finish,ball,23.8066,58.2305,25.5,s,finish bite 1 of 1
+210,finish,ball,23.8066,58.2305,25.5,d,finish bite 1 of 1
 211,finish,ball,28.0673,30.5721,26.5,d,finish bite 1 of 1
 212,finish,ball,24.447,43.7522,26.5,d,finish bite 1 of 1
 213,finish,ball,28.5977,51.5908,28.0,d,finish bite 1 of 1
@@ -231,11 +231,11 @@ n,kind,tool,depth,height,turn,via,label
 229,finish,ball,27.3362,49.2029,46.5,d,finish bite 1 of 1
 230,finish,ball,35.7643,43.4585,51.0,d,finish bite 1 of 2
 231,finish,ball,36.7426,43.4585,51.0,d,finish bite 2 of 2
-232,finish,ball,38.0959,26.5375,54.5,s,finish bite 1 of 1
-233,finish,ball,24.3391,37.8179,54.5,s,finish bite 1 of 1
+232,finish,ball,38.0959,26.5375,54.5,d,finish bite 1 of 1
+233,finish,ball,24.3391,37.8179,54.5,d,finish bite 1 of 1
 234,finish,ball,24.1081,33.6352,55.5,d,finish bite 1 of 1
 235,finish,ball,36.7695,26.5958,61.5,d,finish bite 1 of 1
-236,finish,ball,23.8619,39.5062,61.5,s,finish bite 1 of 1
+236,finish,ball,23.8619,39.5062,61.5,d,finish bite 1 of 1
 237,finish,ball,36.7518,45.8656,61.5,d,finish bite 1 of 2
 238,finish,ball,37.6751,45.8656,61.5,d,finish bite 2 of 2
 239,finish,ball,30.7311,51.7477,61.5,d,finish bite 1 of 1
@@ -245,10 +245,10 @@ n,kind,tool,depth,height,turn,via,label
 243,finish,ball,33.8772,31.3448,62.5,d,finish bite 4 of 6
 244,finish,ball,35.2675,31.3448,62.5,d,finish bite 5 of 6
 245,finish,ball,36.6578,31.3448,62.5,d,finish bite 6 of 6
-246,finish,ball,36.2239,47.5387,66.5,s,finish bite 1 of 3
+246,finish,ball,36.2239,47.5387,66.5,d,finish bite 1 of 3
 247,finish,ball,37.2325,47.5387,66.5,d,finish bite 2 of 3
 248,finish,ball,38.2411,47.5387,66.5,d,finish bite 3 of 3
-249,finish,ball,35.6371,31.1928,67.0,s,finish bite 1 of 1
+249,finish,ball,35.6371,31.1928,67.0,d,finish bite 1 of 1
 250,finish,ball,35.4658,26.7882,68.5,d,finish bite 1 of 1
 251,finish,ball,35.8735,47.542,68.5,d,finish bite 1 of 3
 252,finish,ball,37.2154,47.542,68.5,d,finish bite 2 of 3
@@ -258,20 +258,20 @@ n,kind,tool,depth,height,turn,via,label
 256,finish,ball,38.7525,48.3661,71.0,d,finish bite 1 of 1
 257,finish,ball,38.3415,48.5107,71.5,d,finish bite 1 of 1
 258,finish,ball,37.6959,48.7692,72.5,d,finish bite 1 of 1
-259,finish,ball,35.5616,34.9046,73.0,s,finish bite 1 of 2
+259,finish,ball,35.5616,34.9046,73.0,d,finish bite 1 of 2
 260,finish,ball,36.615,34.9046,73.0,d,finish bite 2 of 2
 261,finish,ball,36.7082,35.3898,74.5,d,finish bite 1 of 1
 262,finish,ball,34.3018,27.0135,75.0,d,finish bite 1 of 1
 263,finish,ball,23.4846,42.7281,75.0,d,finish bite 1 of 1
 264,finish,ball,34.3018,52.8801,75.0,d,finish bite 1 of 1
 265,finish,ball,37.296,49.5816,75.5,d,finish bite 1 of 1
-266,finish,ball,33.9649,32.2047,76.5,s,finish bite 1 of 1
+266,finish,ball,33.9649,32.2047,76.5,d,finish bite 1 of 1
 267,finish,ball,37.2189,50.7817,79.5,d,finish bite 1 of 1
-268,finish,ball,46.3842,21.7734,84.5,s,finish bite 1 of 1
+268,finish,ball,46.3842,21.7734,84.5,d,finish bite 1 of 1
 269,finish,ball,37.5876,52.3298,84.5,s,finish bite 1 of 1
 270,finish,ball,36.8966,58.5657,84.5,d,finish bite 1 of 1
 271,finish,ball,37.0258,54.1606,85.5,d,finish bite 1 of 1
-272,finish,ball,35.8895,38.8232,91.5,s,finish bite 1 of 1
+272,finish,ball,35.8895,38.8232,91.5,d,finish bite 1 of 1
 273,finish,ball,38.786,54.2876,91.5,d,finish bite 1 of 1
 274,finish,ball,35.0027,25.4735,92.5,s,finish bite 1 of 8
 275,finish,ball,36.317,25.4735,92.5,d,finish bite 2 of 8
@@ -323,11 +323,11 @@ n,kind,tool,depth,height,turn,via,label
 321,finish,ball,42.2769,52.4099,148.0,d,finish bite 1 of 1
 322,finish,ball,42.8406,55.5972,150.5,d,finish bite 1 of 1
 323,finish,ball,38.01,22.3023,152.5,s,finish bite 1 of 1
-324,finish,ball,36.3063,36.9717,152.5,s,finish bite 1 of 1
+324,finish,ball,36.3063,36.9717,152.5,d,finish bite 1 of 1
 325,finish,ball,37.3645,21.0674,155.0,d,finish bite 1 of 1
-326,finish,ball,44.0697,53.8937,155.0,s,finish bite 1 of 1
+326,finish,ball,44.0697,53.8937,155.0,d,finish bite 1 of 1
 327,finish,ball,36.6413,22.0007,157.5,s,finish bite 1 of 1
-328,finish,ball,45.6138,56.6776,161.0,s,finish bite 1 of 1
+328,finish,ball,45.6138,56.6776,161.0,d,finish bite 1 of 1
 329,finish,ball,35.7973,43.276,162.0,s,finish bite 1 of 1
 330,finish,ball,46.0417,55.1697,162.0,d,finish bite 1 of 1
 331,finish,ball,24.8749,31.264,166.0,s,finish bite 1 of 1
@@ -335,7 +335,7 @@ n,kind,tool,depth,height,turn,via,label
 333,finish,ball,48.4312,55.7496,170.5,d,finish bite 1 of 1
 334,finish,ball,31.8244,23.5656,171.0,s,finish bite 1 of 1
 335,finish,ball,48.3887,57.2492,171.0,d,finish bite 1 of 1
-336,finish,ball,32.529,51.4416,175.5,s,finish bite 1 of 1
+336,finish,ball,32.529,51.4416,175.5,d,finish bite 1 of 1
 337,finish,ball,37.2362,47.8523,180.5,d,finish bite 1 of 1
 338,finish,ball,51.2212,57.3295,181.0,d,finish bite 1 of 1
 339,finish,ball,51.6029,57.6716,183.0,d,finish bite 1 of 1
@@ -344,13 +344,13 @@ n,kind,tool,depth,height,turn,via,label
 342,finish,ball,51.9299,57.9709,185.0,d,finish bite 1 of 1
 343,finish,ball,23.4147,40.4479,186.0,s,finish bite 1 of 1
 344,finish,ball,52.2061,58.2194,187.0,d,finish bite 1 of 1
-345,finish,ball,38.6919,50.0837,191.0,s,finish bite 1 of 1
+345,finish,ball,38.6919,50.0837,191.0,d,finish bite 1 of 1
 346,finish,ball,29.1077,33.1282,192.0,s,finish bite 1 of 1
 347,finish,ball,26.4333,28.5256,194.0,d,finish bite 1 of 1
 348,finish,ball,28.503,36.7463,200.5,d,finish bite 1 of 1
 349,finish,ball,40.5158,50.3886,200.5,d,finish bite 1 of 1
 350,finish,ball,40.4269,51.9575,201.0,d,finish bite 1 of 1
-351,finish,ball,24.1765,46.7908,205.5,s,finish bite 1 of 1
+351,finish,ball,24.1765,46.7908,205.5,d,finish bite 1 of 1
 352,finish,ball,24.6172,32.3078,206.5,d,finish bite 1 of 1
 353,finish,ball,58.0,21.0844,208.0,d,finish bite 1 of 1
 354,finish,ball,28.4683,40.1459,208.0,s,finish bite 1 of 1
@@ -367,7 +367,7 @@ n,kind,tool,depth,height,turn,via,label
 365,finish,ball,24.1519,36.2054,211.0,s,finish bite 1 of 1
 366,finish,ball,42.4614,53.5007,211.0,d,finish bite 1 of 1
 367,finish,ball,42.7148,54.1509,213.0,d,finish bite 1 of 1
-368,finish,ball,25.1515,49.3241,214.0,s,finish bite 1 of 1
+368,finish,ball,25.1515,49.3241,214.0,d,finish bite 1 of 1
 369,finish,ball,28.8694,43.4039,215.0,d,finish bite 1 of 1
 370,finish,ball,42.9244,54.7625,215.0,d,finish bite 1 of 1
 371,finish,ball,56.2215,22.0468,216.5,s,finish bite 1 of 1
@@ -385,7 +385,7 @@ n,kind,tool,depth,height,turn,via,label
 383,finish,ball,54.6139,22.3726,224.5,d,finish bite 1 of 1
 384,finish,ball,23.582,38.3905,226.5,s,finish bite 1 of 1
 385,finish,ball,53.6329,22.6318,228.5,d,finish bite 1 of 1
-386,finish,ball,39.0748,30.1356,230.5,s,finish bite 1 of 1
+386,finish,ball,39.0748,30.1356,230.5,d,finish bite 1 of 1
 387,finish,ball,38.7643,32.3548,230.5,d,finish bite 1 of 1
 388,finish,ball,30.9804,49.7035,230.5,s,finish bite 1 of 1
 389,finish,ball,37.9519,28.1929,231.0,d,finish bite 1 of 1
@@ -397,8 +397,8 @@ n,kind,tool,depth,height,turn,via,label
 395,finish,ball,24.3063,42.2754,241.5,d,finish bite 1 of 1
 396,finish,ball,33.0885,54.6912,241.5,d,finish bite 1 of 1
 397,finish,ball,37.362,32.7399,242.5,d,finish bite 1 of 1
-398,finish,ball,36.7309,36.6303,245.0,s,finish bite 1 of 1
-399,finish,ball,24.7341,47.9948,247.0,s,finish bite 1 of 1
+398,finish,ball,36.7309,36.6303,245.0,d,finish bite 1 of 1
+399,finish,ball,24.7341,47.9948,247.0,d,finish bite 1 of 1
 400,finish,ball,47.3342,24.0779,247.5,d,finish bite 1 of 2
 401,finish,ball,48.7381,24.0779,247.5,d,finish bite 2 of 2
 402,finish,ball,25.0063,43.8698,248.5,s,finish bite 1 of 1
@@ -411,7 +411,7 @@ n,kind,tool,depth,height,turn,via,label
 409,finish,ball,45.6118,25.0117,256.0,d,finish bite 2 of 3
 410,finish,ball,46.6906,25.0117,256.0,d,finish bite 3 of 3
 411,finish,ball,37.0895,58.946,256.5,s,finish bite 1 of 1
-412,finish,ball,44.1771,25.668,261.0,s,finish bite 1 of 2
+412,finish,ball,44.1771,25.668,261.0,d,finish bite 1 of 2
 413,finish,ball,45.5231,25.668,261.0,d,finish bite 2 of 2
 414,finish,ball,38.7919,58.1498,261.0,s,finish bite 1 of 1
 415,finish,ball,27.2814,52.3567,264.5,d,finish bite 1 of 1
@@ -430,7 +430,7 @@ n,kind,tool,depth,height,turn,via,label
 428,finish,ball,28.624,22.5277,286.5,d,finish bite 1 of 1
 429,finish,ball,30.8661,35.9616,286.5,d,finish bite 1 of 1
 430,finish,ball,38.0774,46.7724,290.5,d,finish bite 1 of 1
-431,finish,ball,38.233,29.9811,291.0,s,finish bite 1 of 2
+431,finish,ball,38.233,29.9811,291.0,d,finish bite 1 of 2
 432,finish,ball,39.2227,29.9811,291.0,d,finish bite 2 of 2
 433,finish,ball,25.9918,24.2143,294.5,d,finish bite 1 of 1
 434,finish,ball,30.6899,37.1624,294.5,d,finish bite 1 of 1
@@ -439,13 +439,13 @@ n,kind,tool,depth,height,turn,via,label
 437,finish,ball,23.8444,25.8025,301.5,d,finish bite 1 of 1
 438,finish,ball,36.7033,32.1619,301.5,d,finish bite 1 of 2
 439,finish,ball,37.6575,32.1619,301.5,d,finish bite 2 of 2
-440,finish,ball,30.7135,38.044,301.5,s,finish bite 1 of 1
+440,finish,ball,30.7135,38.044,301.5,d,finish bite 1 of 1
 441,finish,ball,39.4958,50.4599,301.5,d,finish bite 1 of 1
 442,finish,ball,22.5448,23.2226,305.5,s,finish bite 1 of 1
 443,finish,ball,36.9388,58.3518,305.5,d,finish bite 1 of 1
-444,finish,ball,35.8444,33.8886,306.5,s,finish bite 1 of 2
+444,finish,ball,35.8444,33.8886,306.5,d,finish bite 1 of 2
 445,finish,ball,37.0293,33.8886,306.5,d,finish bite 2 of 2
-446,finish,ball,30.7063,43.1687,307.0,s,finish bite 1 of 1
+446,finish,ball,30.7063,43.1687,307.0,d,finish bite 1 of 1
 447,finish,ball,21.898,27.6143,308.5,d,finish bite 1 of 1
 448,finish,ball,36.8698,33.9426,308.5,d,finish bite 1 of 1
 449,finish,ball,36.4735,34.8532,311.0,d,finish bite 1 of 1

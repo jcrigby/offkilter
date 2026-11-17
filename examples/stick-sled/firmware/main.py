@@ -67,7 +67,7 @@ class Pins:
     def home(self, n):
         """A home switch reads home. Wired normally closed, it opens at home, so a broken wire reads home and stops the motor."""
         if SIM:
-            return True
+            return HOME(n) if HOME else True
         return (self.inp[n].value() == 1) if C.HOME_OPENS else (self.inp[n].value() == 0)
 
     def touching(self):
@@ -83,6 +83,7 @@ class Pins:
 
 PINS = Pins()
 CONTACT = None                      # on a computer: something to stand in for the probe's contact
+HOME = None                         # and for the home switches
 
 
 class Axis:
@@ -131,19 +132,31 @@ class Axis:
             steps = self.past
         self.run(steps, guard, slow)
 
-    def seek(self, pin, most):
-        """Run toward home until its switch says so; that is zero. No further than `most` of its units: a switch that never speaks is a fault."""
-        PINS.set(self.dir, self.flip)       # home is the negative way
-        left = int(most * self.per_unit)
-        while not PINS.home(pin):
+    def seek(self, pin, most, clear):
+        """Run toward home until its switch says so; that is zero. If it says so before a step is taken, first run
+        away until it stops saying so and `clear` further: home is then always the same edge of the switch, come to
+        from the same side, wherever the axis was left. No further than `most` of its units either way: a switch
+        that never changes is a fault."""
+        def step(left):
             if left <= 0:
                 PINS.set(C.ENABLE_PIN, 1)
-                raise RuntimeError("no home switch found on the %s axis" % self.name)
-            left -= 1
+                raise RuntimeError("the %s axis's home switch never changes" % self.name)
             PINS.set(self.step, 1)
             PINS.pause(2)
             PINS.set(self.step, 0)
             PINS.pause(C.STEP_SLOW_US)
+            return left - 1
+        if PINS.home(pin) and (HOME or not SIM):
+            PINS.set(self.dir, not self.flip)       # away from home
+            left, more = int(most * self.per_unit), int(clear * self.per_unit)
+            while more > 0:
+                if not PINS.home(pin):
+                    more -= 1
+                left = step(left)
+        PINS.set(self.dir, self.flip)       # home is the negative way
+        left = int(most * self.per_unit)
+        while not PINS.home(pin):
+            left = step(left)
         self.at = 0
 
 
@@ -285,9 +298,9 @@ class Sled:
         wait(C.SLED_BACK_PIN)
         wait(C.NEXT_PIN)
         SCREEN.show("finding home")
-        self.depth.seek(C.DEPTH_HOME_PIN, C.DEPTH_MOST_MM)      # the bit drawn back first: away from everything
-        self.height.seek(C.HEIGHT_HOME_PIN, C.HEIGHT_MOST_MM)
-        self.turn.seek(C.TURN_HOME_PIN, 400.0)
+        self.depth.seek(C.DEPTH_HOME_PIN, C.DEPTH_MOST_MM, C.HOME_CLEAR_MM)     # the bit drawn back first: away from everything
+        self.height.seek(C.HEIGHT_HOME_PIN, C.HEIGHT_MOST_MM, C.HOME_CLEAR_MM)
+        self.turn.seek(C.TURN_HOME_PIN, 400.0, C.TURN_CLEAR_DEG)
 
     def turn_on_to(self, degrees, guard, slow=None):
         """The shorter way round, but always arriving forwards, so the belt is pulled from the same side:

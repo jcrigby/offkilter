@@ -265,9 +265,11 @@ fn every_row_puts_the_bit_where_the_plan_wants_it_and_never_in_the_tile() {
     let sets: Vec<&Row> = rows.iter().filter(|r| r.kind == "set").collect();
     assert_eq!(sets.len(), 2);
     assert!(sets[0].tool == "straight" && sets[1].tool == "ball");
-    // The master is smaller than anything a pass comes near, so the bit, which is beside it with the sled back, is
-    // never in it at a row.
-    assert!(master < f(&n["tile"]["circle"]) - 1.0 && master > f(&n["spindle_d"]) / 2.0);
+    // The master is the spindle's own rod, smaller than anything a pass comes near, so the bit, which is beside it
+    // with the sled back, is never in it at a row.
+    assert!(
+        master < f(&n["tile"]["circle"]) - 1.0 && (master - f(&n["spindle_d"]) / 2.0).abs() < 1e-9
+    );
     assert!(
         rows[0].kind == "load" && rows[1].kind == "set" && rows.last().unwrap().kind == "finish"
     );
@@ -801,7 +803,7 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
         - ball;
     assert!(off.abs() < 0.05, "the ball is {off} off the tile");
     // every part, and what is through what. Parts fitted on each other share a surface: a shaft in its supports and
-    // blocks, a bearing in its seat. The bit is drawn as a plain cylinder to its tip, so it is left out.
+    // blocks. The bit is drawn as a plain cylinder to its tip, so it is left out.
     let mut all: Vec<(String, Solid)> = Vec::new();
     for (name, list) in n["bodies"].as_object().unwrap() {
         let solids = bodies_of(&mut doc, name);
@@ -812,9 +814,7 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
     }
     let fitted = |a: &str, b: &str| {
         let pair = |x: &str, y: &str| (a == x && b == y) || (a == y && b == x);
-        pair("Shafts", "Shaft supports SK20")
-            || pair("Shafts", "Bearing blocks SC20UU")
-            || pair("Bearings 6201", "Headstock")
+        pair("Shafts", "Shaft supports SK20") || pair("Shafts", "Bearing blocks SC20UU")
     };
     let (mut tried, mut worst) = (0, (0.0f64, String::new()));
     for i in 0..all.len() {
@@ -925,6 +925,129 @@ fn the_blank_is_a_rectangle_about_the_tile_and_goes_on_a_wide_face_down() {
         "and that far in from the face toward the router"
     );
     assert!(under > 15.0 && toward > 15.0);
+}
+
+/// From the motor to the far end of the stick, every part is joined to
+/// the next by something drawn. The belt has six teeth of the motor's
+/// pulley in it; the wheel is on a hub on the rod; the rod runs in two
+/// flange bearings bolted to the uprights' faces, the nearer one
+/// taking the tail centre's push; the rod is bare where the bit is set
+/// against it; the spur is a ring on its end, inside what is left of
+/// the tile; the tail centre is the same rod in two clamps, past where
+/// the bit runs out to; and a fin on the wheel passes through a
+/// sensor once a turn.
+#[test]
+fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_centre() {
+    let n = numbers();
+    let s = &n["sled"];
+    let mut doc = load();
+    let (za, rod_d) = (f(&s["za"]), f(&n["spindle_d"]));
+    let x_of = |b: &Solid| {
+        let (lo, hi) = b.bounds().unwrap();
+        (lo.x, hi.x)
+    };
+    // the belt: teeth of the small pulley in mesh, and the controller's steps for a turn follow the two pulleys
+    let w = &s["wheel"];
+    let (big_t, small_t, c) = (f(&w[0]), f(&w[1]), f(&w[3]));
+    let (big, small) = (big_t * 2.0 / PI, small_t * 2.0 / PI);
+    let mesh = small_t * (PI - 2.0 * ((big - small) / 2.0 / c).asin()) / (2.0 * PI);
+    println!("{small_t:.0} teeth on the motor, {big_t:.0} on the spindle: {mesh:.1} of the pulley's teeth in the belt");
+    assert!(mesh >= 6.0 && (mesh - f(&s["mesh"])).abs() < 1e-9);
+    let sim: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/steps.json")).unwrap())
+            .unwrap();
+    assert!((f(&sim["per"][2]) * 360.0 - 200.0 * 16.0 * big_t / small_t).abs() < 1e-6);
+    // the rod, end to end, and what is on it in order: hub, wheel, sensor, two bearings, bare rod, spur ring
+    let spindle = bodies_of(&mut doc, "Spindle");
+    assert_eq!(spindle.len(), 2);
+    let (ring, rod) = (x_of(&spindle[0]), x_of(&spindle[1]));
+    let rod_x = pair(&s["rod_x"]);
+    assert!((rod.0 - rod_x.0).abs() < 1e-6 && (rod.1 - rod_x.1).abs() < 1e-6);
+    let long = rod.1 - rod.0;
+    assert!(
+        (spindle[1].volume() - PI * rod_d * rod_d / 4.0 * long).abs() < 0.01 * spindle[1].volume()
+    );
+    let hub = x_of(&bodies_of(&mut doc, "Wheel hub")[0]);
+    let wheel = pair(&s["wheel_x"]);
+    let bearings: Vec<(f64, f64)> = bodies_of(&mut doc, "Flange bearings KFL001")
+        .iter()
+        .map(x_of)
+        .collect();
+    assert_eq!(bearings.len(), 2);
+    assert!(
+        rod.0 < hub.0 && (hub.1 - wheel.0).abs() < 1e-6,
+        "the hub is on the wheel's outer face"
+    );
+    let head = [pair(&s["head_x"][0]), pair(&s["head_x"][1])];
+    for (b, up) in bearings.iter().zip(head.iter()) {
+        // each bearing is against the stick's side of its upright: pushed toward the head, it is pushed onto the wood
+        assert!((b.0 - up.1).abs() < 1e-6 && b.0 > wheel.1);
+    }
+    assert!(
+        bearings[0].1 < head[1].0,
+        "the outer bearing fits between the uprights"
+    );
+    let master = pair(&s["master_x"]);
+    assert!((master.0 - bearings[1].1).abs() < 1e-6 && (master.1 - ring.0).abs() < 1e-6);
+    assert!(
+        (f(&s["master_r"]) - rod_d / 2.0).abs() < 1e-9,
+        "the master is the rod itself"
+    );
+    // the spur: on the rod's end, its teeth past the rod's end, and all of it inside the circle the tile leaves
+    let spur = &s["spur"];
+    assert!(ring.1.abs() < 1e-6 && (ring.1 - rod.1 - f(&spur[2])).abs() < 1e-6);
+    assert!(f(&spur[0]) / 2.0 + 1.0 <= f(&n["tile"]["circle"]) && f(&spur[0]) > rod_d + 3.0);
+    // the tail centre: the same rod, in two clamps either side of its upright, the nearer one past the bit's run
+    let tail = bodies_of(&mut doc, "Tailstock");
+    assert_eq!(tail.len(), 4);
+    let (upright, centre) = (pair(&s["tail_x"]), x_of(&tail[3]));
+    let clamps = [x_of(&tail[1]), x_of(&tail[2])];
+    assert!((clamps[0].1 - upright.0).abs() < 1e-6 && (clamps[1].0 - upright.1).abs() < 1e-6);
+    assert!((centre.0 - f(&n["stick"])).abs() < 1e-6 && centre.1 > clamps[1].1 + 10.0);
+    assert!((f(&s["tail"][0]) - rod_d).abs() < 1e-9);
+    let bit_out_to = f(&n["stick"]) + f(&s["run"]) + f(&n["rough"]["bit"]) / 2.0;
+    assert!(
+        clamps[0].0 >= bit_out_to + 5.0,
+        "the tail clamp is {} from the bit",
+        clamps[0].0 - bit_out_to
+    );
+    // the home mark: the sensor on the outer upright's outer face, short of the wheel, its slot at the fin's radius
+    let sensor = bodies_of(&mut doc, "Turn home sensor").remove(0);
+    let (lo, hi) = sensor.bounds().unwrap();
+    assert!((hi.x - head[0].0).abs() < 1e-6 && lo.x >= wheel.1 + 1.5);
+    assert!(
+        ((lo.z + hi.z) / 2.0 - za - f(&s["flag_r"])).abs() < 1e-6
+            && hi.z <= za + f(&s["stock_above"])
+    );
+    // The sensor says home over the fin's whole width. The controller's own homing, run by the build from nine
+    // places in the fin and out of it, ends on the same edge of it every time, to a step.
+    let homing = &s["homing"];
+    let ends: Vec<(f64, f64)> = homing["ends"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(pair)
+        .collect();
+    let (fin, step) = (f(&homing["fin_deg"]), f(&homing["step_deg"]));
+    assert!(
+        (fin - (6.0 / f(&s["flag_r"])).to_degrees()).abs() < 1e-9 && f(&homing["clear_deg"]) > 1.0
+    );
+    assert!(ends.len() >= 8 && ends.iter().filter(|e| e.0 >= 0.0 && e.0 < fin).count() >= 3);
+    for e in &ends {
+        assert!(
+            (e.1 - ends[0].1).abs() <= 1.5 * step && (e.1 - fin).abs() <= 1.5 * step,
+            "from {} it ends at {}",
+            e.0,
+            e.1
+        );
+    }
+    // a fin 0.02 mm out where the sensor reads it turns the stick this far wrong at the tile's edge
+    let at_edge = 0.02 / f(&s["flag_r"]) * f(&n["tile"]["swing"]);
+    println!(
+        "the home fin at {:.0} mm: 0.02 mm there is {at_edge:.3} mm at the tile's edge",
+        f(&s["flag_r"])
+    );
+    assert!(at_edge < 0.02);
 }
 
 /// The sled rides the owner's two shafts on four bearing blocks. Over
@@ -1154,6 +1277,28 @@ fn six_touches_find_the_bit_s_height_and_the_table_planned_for_it_cuts_true() {
     assert!(f(&s["fitted"][0]) < 0.06 && f(&s["fitted"][2]) < 0.1);
     assert!(f(&s["and_square"][0]) < 0.02 && f(&s["and_square"][2]) < 0.05);
     assert!(f(&s["and_square"][0]) * 2.0 < f(&s["fitted"][0]));
+    // What no touch on a round master can find is how far the spindle has really turned. A wheel off its turning
+    // centre lets the belt in and out once a turn: that much over the wheel's pitch radius, as an angle, and at the
+    // furthest finishing cut from the axis that angle is this far. The study adds it to the same machines.
+    let turning = &s["turning"];
+    let wheel = &n["sled"]["wheel"];
+    assert!((f(&turning["wheel_r"]) - f(&wheel[0]) / PI).abs() < 1e-9);
+    assert!((f(&turning["ratio"]) - f(&wheel[0]) / f(&wheel[1])).abs() < 1e-9);
+    let far = rows(&n)
+        .iter()
+        .filter(|r| r.kind == "finish" && r.last_bite)
+        .map(|r| r.across.hypot(r.tip + ball))
+        .fold(0.0, f64::max);
+    let per = 0.01 / f(&turning["wheel_r"]) * far;
+    println!(
+        "0.01 mm off the wheel's centre is {per:.4} mm at the furthest cut; trued to {} the cuts are within {} (median), left {} off, {}",
+        turning["wheel_off"], turning["trued"][0], turning["wheel_loose"], turning["loose"][0]
+    );
+    assert!((per - f(&turning["per_hundredth"])).abs() < 1e-9 && per < 0.01);
+    // trued, the wheel and the pulley cost a hundredth; left as printed, more than the travels' squareness does
+    assert!(f(&turning["trued"][0]) >= f(&s["fitted"][0]));
+    assert!(f(&turning["trued"][0]) < f(&s["fitted"][0]) + 0.012 && f(&turning["trued"][2]) < 0.1);
+    assert!(f(&turning["loose"][0]) > f(&turning["trued"][0]) + 0.01);
 }
 
 /// A point given as (across, toward the router) with the stick turned to t, back in the tile's frame.

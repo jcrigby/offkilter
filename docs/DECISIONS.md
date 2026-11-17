@@ -1919,3 +1919,51 @@ pass had guessed 65, and guessed the rest too.
   every box. The README says which numbers are measured.
 
 Not settled by this: whether a thumb through the slot works the lock.
+
+## 2026-11 · The stick's drive, joint by joint
+
+The owner asked for the chain from the motor to the far end of the
+stick, connections included. Writing it down showed four joints that
+were a bore on a rod and nothing more: wheel to spindle, the spindle
+endways, the master, and spur to stick; and a home mark the controller
+read that was not drawn at all.
+
+- **Bought flange units, not bearings in bored plywood.** A 6201 in a
+  32 mm hole in ply sits wherever the hole lets it, and nothing held
+  the rod endways. Two KFL001 units bolt to the uprights' faces, line
+  themselves up, and hold the rod with their own set screws. The
+  uprights are drilled slack.
+- **The master is the rod.** A sleeve needs fixing and can run out;
+  the ground rod between the bearing and the spur is already a
+  cylinder of known size on the turning axis. One part and one joint
+  fewer.
+- **The spur is a toothed ring, because everything at the stick's end
+  has to be inside 8 mm of the axis.** The bit comes onto the stick
+  from its end at cutting depth, so nothing bigger than what the tile
+  leaves can be there: no faceplate, no screws into the blank. On a
+  12 mm rod a blade or pins act at 4 mm; a ring of 16 x 2 tube acts
+  at 7 and has twelve teeth. Lost with reasons: pins in drilled holes
+  (any clearance at 5 mm of radius is degrees), a tang in a slot (the
+  same), a faceplate and a plunge past it (the controller does not
+  know where the sled is).
+- **The tail centre slides.** The M10 pointed screw would have put
+  its point somewhere new each time it was screwed up to a stick,
+  unless its point were dead on its thread. A pointed length of the
+  spindle's rod in two flange clamps is pushed up, tapped and
+  clamped, and is not turned.
+- **Twenty teeth on the motor.** Sixteen had 5.6 in the belt. Twenty
+  has 7.1, is the commonest pulley there is, and keeps the belt. The
+  ratio falls from ten to eight; the runout arithmetic does not
+  change, since a pulley's error is divided by the ratio it makes.
+- **The wheel's runout goes in the study, trued and not.** The six
+  touches cannot see it, so the figure after them was short of the
+  truth. Trued to 0.02 mm off centre it costs 0.006 mm on the median;
+  left at 0.1 it costs 0.02. Measuring it and taking it out in the
+  table is still not done: truing makes it small.
+- **Homing backs off first.** A fin 10 degrees wide says home over
+  10 degrees. An axis found at home is run away until the sensor lets
+  go and then brought back, so home is one edge from one side.
+
+What the spur holds is an estimate, not a measurement, and so is what
+the cut asks of it. A pencil line across the ring and the stick is
+the check until someone cuts a stick.

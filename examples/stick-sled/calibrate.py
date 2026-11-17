@@ -224,11 +224,26 @@ def touches_of(true, rows, windows, rng, noise=TOUCH):
     return out
 
 
-def cut_error(true, planned, ecc, cuts, ball_r):
+# What the touches cannot see: how far the spindle has really turned. The master is round. A wheel off its turning
+# centre by e lets the belt in and out by e once a turn, so the stick is e over the wheel's pitch radius from where the
+# motor sent it; the motor's pulley does the same once a turn of its own, and the ratio brings it to the same figure.
+WHEEL_OFF = 0.02                                # the wheel off centre once it has been trued under an indicator: 0.04 on the dial
+PULLEY_OFF = 0.03                               # the motor's pulley, as bought, on the motor's shaft
+WHEEL_LOOSE = 0.10                              # the wheel as printed and bolted up, not trued
+
+
+def turning(wheel, pulley, radius, ratio):
+    """How far the stick is from where the motor sent it, radians, at spindle angle a: the wheel off centre by
+    wheel[0] toward wheel[1], the pulley likewise."""
+    return lambda a: (wheel[0] * math.sin(a - wheel[1]) + pulley[0] * math.sin(ratio * a - pulley[1])) / radius
+
+
+def cut_error(true, planned, ecc, cuts, ball_r, turned=None):
     """The worst a finishing cut is from where it was wanted, on the machine `true` run from a table planned for the
     machine `planned` with the master's runout taken to be `ecc`. The bit is set as the controller sets it: run out,
     level with where the master's middle is taken to be, until it touches; its tip is then taken to be the master's
-    radius and that runout from the axis, and every depth is counted from there."""
+    radius and that runout from the axis, and every depth is counted from there. `turned`, if given, is how far the
+    stick is from where the motor sent it at each angle."""
     set_tip, set_across = planned.master_r + ecc[0], ecc[1]
     _, set_height = planned.axes.screws(set_tip, set_across)
     found = true.ball_touch(set_height, 0.0, ball_r)
@@ -238,6 +253,8 @@ def cut_error(true, planned, ecc, cuts, ball_r):
         _, height = planned.axes.screws(tip, across)
         tip_real, across_real = true.axes.tip(depth, height)
         q = (-across_real * math.sin(t) + (tip_real + ball_r) * math.cos(t), across_real * math.cos(t) + (tip_real + ball_r) * math.sin(t))
+        if turned:
+            q = P.rot(turned(-t), q)
         p = (-across * math.sin(t) + (tip + ball_r) * math.cos(t), across * math.cos(t) + (tip + ball_r) * math.sin(t))
         worst = max(worst, math.hypot(q[0] - p[0], q[1] - p[1]))
     return worst
@@ -276,13 +293,20 @@ def study(trials):
     cuts = [(r["t"], r["across"], r["tip"]) for r in numbers["rows"] if r["kind"] == "finish" and r["label"].split()[2] == r["label"].split()[4]]
     drawn = Machine(P.Axes(d["tip_home"], d["across_home"]), d["master_r"])
     rng = random.Random(11)
-    before, after, square, both = [], [], [], []
+    wheel_t, pinion_t = numbers["sled"]["wheel"][0], numbers["sled"]["wheel"][1]
+    wheel_r, ratio = wheel_t / math.pi, wheel_t / pinion_t        # GT2: 2 mm a tooth
+    spin = random.Random(23)                                      # its own dice: the machines are the same ones as before
+    before, after, square, both, trued, loose = [], [], [], [], [], []
     for k in range(trials):
         true = mis_built(d, rng)
         found = fit(touches_of(true, rows, windows, rng), d["master_r"])
         planned = Machine(P.Axes(d["tip_home"], found["across_home"], (1.0, found["scale_z"])), d["master_r"])
         before.append(cut_error(true, drawn, (0.0, 0.0), cuts, ball_r))
         after.append(cut_error(true, planned, found["ecc"], cuts, ball_r))
+        # the same machine and table with the wheel and the motor's pulley off their centres, trued and not
+        w, wa, u, ua = spin.uniform(0.0, 1.0), spin.uniform(0.0, 2 * math.pi), spin.uniform(0.0, PULLEY_OFF), spin.uniform(0.0, 2 * math.pi)
+        trued.append(cut_error(true, planned, found["ecc"], cuts, ball_r, turning((w * WHEEL_OFF, wa), (u, ua), wheel_r, ratio)))
+        loose.append(cut_error(true, planned, found["ecc"], cuts, ball_r, turning((w * WHEEL_LOOSE, wa), (u, ua), wheel_r, ratio)))
         # and what is left to the two things the touches do not find: the same machine with its depth screw true, and
         # then square as well, each probed and planned for afresh
         for out, change in ((square, lambda a: setattr(a, "scale", (1.0, a.scale[1]))), (both, lambda a: setattr(a, "shear", 0.0))):
@@ -300,12 +324,16 @@ def study(trials):
                "error": cut_error(true, planned, found["ecc"], cuts, ball_r)}
     out = {"drawn": d, "pin_d": PIN_D, "over": OVER, "touch": TOUCH, "touches": TOUCHES, "windows": windows, "ball_r": ball_r,
            "spread": {"height_home": 3.0, "height_scale": 0.003, "depth_scale": 0.002, "shear": 0.002, "runout": 0.05, "master_r": 0.01, "pin_r": 0.003},
-           "study": {"trials": trials, "as_drawn": percentiles(before), "fitted": percentiles(after), "depth_screw_true": percentiles(square), "and_square": percentiles(both)},
+           "study": {"trials": trials, "as_drawn": percentiles(before), "fitted": percentiles(after), "depth_screw_true": percentiles(square), "and_square": percentiles(both),
+                     "turning": {"wheel_r": wheel_r, "ratio": ratio, "wheel_off": WHEEL_OFF, "pulley_off": PULLEY_OFF, "wheel_loose": WHEEL_LOOSE, "trued": percentiles(trued), "loose": percentiles(loose),
+                                 "per_hundredth": 0.01 / wheel_r * max(math.hypot(across, tip + ball_r) for _, across, tip in cuts)}},
            "example": example}
     with open(os.path.join(OUT, "calibration.json"), "w") as f:
         json.dump(out, f, indent=1)
     print(f"{trials} machines built wrong. Worst finishing cut, mm (median, 95th, worst): from the drawing's table {percentiles(before)}; after six touches {percentiles(after)}")
     print(f"   of what is left: with the depth screw's travel true {percentiles(square)}; and the two travels square as well {percentiles(both)}")
+    print(f"   and with the turning: the wheel trued to {WHEEL_OFF} off centre and the pulley {PULLEY_OFF} {percentiles(trued)}; the wheel left {WHEEL_LOOSE} off {percentiles(loose)}; "
+          f"0.01 mm off the wheel's centre is {out['study']['turning']['per_hundredth']:.4f} at the tile's edge")
     print(f"one machine through the controller's own program: {len(log)} touches; worst cut {example['error_as_drawn']:.3f} from the drawing's table, {example['error']:.3f} planned for")
 
 
