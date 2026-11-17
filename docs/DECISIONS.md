@@ -2008,3 +2008,37 @@ The socket's angle on the rod is set when it is glued, on the table's
 first row with a wide wall of the pocket flat on a block. If that is
 a degree out the tile is a degree round in its blank, which the 2 mm
 all round allows.
+
+## 2026-11 · A sled between two fences, not on shafts
+
+Shown the sled on its two shafts, the owner saw the hinged design's
+hardware still in the picture, which it was: the same shafts, supports
+and blocks, as rails. The instruction that followed was a sled between
+two fences, the work support anchored to it, and a lip on the fences
+to stop it lifting.
+
+- **It is built as asked.** A plate on the base, a fence each side,
+  a lip over each edge. No shafts, supports, bearing blocks, packing
+  or plinth.
+- **One fence is the datum and the sled is sprung onto it.** Two
+  fences a sliding fit apart is the usual way, and the fit is then
+  the accuracy: across the sled is the way the bit reaches, so slack
+  there is depth of cut. Spring plungers in the sled's near edge keep
+  its far edge on one fence, the near fence stands a millimetre off,
+  and the cut pushes the same way as the springs.
+- **The lips are clear of the sled.** A lip that rubs is a second
+  guide fighting the base. At 0.3 mm they only catch a sled that
+  lifts or tips; weight and a hand hold it down.
+- **The plungers are in the sled, not the fence.** The near fence is
+  14 mm wide and stands against the positioner's face, where nothing
+  behind it can be reached.
+- **What it costs is said, not hidden.** Ground shafts in ball
+  bushings were taken to be true and the study has no term for the
+  slide. A fence is as straight as it is made and a ply base as flat
+  as it is: both go into the stick one for one. The README asks for a
+  metal datum and a straightedge on it.
+
+The sled is low now, so the stick's axis is 89.5 mm over it and the
+uprights are 130 tall where they were 84. They are stiff the way the
+cut pushes, across their 50 mm, and limber along the stick, which
+does not matter to a prism.

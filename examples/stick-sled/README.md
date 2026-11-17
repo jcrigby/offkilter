@@ -2,8 +2,8 @@
 
 The leaning half-ellipse Spectre milled round one solid stick. The
 stick is held between a printed socket on a spindle and the point of
-a second, idle spindle, on a sled that slides on two shafts, and it
-only turns. Beside it, fixed to the base,
+a second, idle spindle, on a flat sled that slides on the base
+between two fences, and it only turns. Beside it, fixed to the base,
 lies the [two-axis router positioner](../router-positioner/) with its
 bit pointing at the stick: the positioner's X sets how deep the bit
 reaches, its Z how high. Three motors go to the next row of a table,
@@ -20,7 +20,7 @@ python3 examples/stick-sled/build.py
 cargo test -p ok-render --test stick_sled   # what CI runs
 ```
 
-![The sled on its two shafts: the tail spindle at the near end where the bit waits, the stick, its far end in the socket, the headstock, and the wheel and motor hanging off the far end; the positioner standing beside it on its lid with its column out behind](out/sled.png)
+![The sled between its two fences: the tail spindle at the near end where the bit waits, the stick, its far end in the socket, the headstock, and the wheel and motor hanging off the far end; the positioner standing beside it on its lid with its column out behind](out/sled.png)
 
 Nothing here has been built or run on a motor, and the positioner's
 sizes rest on a router nobody has measured yet. What is checked is
@@ -28,7 +28,7 @@ checked by calculation and by the test.
 
 ## How it works
 
-![Cut across the middle of the stick, looking along it: the positioner's box on its plinth, the bit reaching out of its slot to the tile's section, the sled's plate on its bearing blocks and the two shafts under it](out/end.png)
+![Cut across the middle of the stick, looking along it: the positioner's box on the base, the bit reaching out of its slot to the tile's section, the sled's plate on two slips between the fences with a lip over each of its edges](out/end.png)
 
 - **The stick turns and does nothing else.** Its far end sits in a
   printed socket on a spindle; its near end is on the point of a
@@ -43,12 +43,13 @@ checked by calculation and by the test.
   **Height** is its Z. A cut is a direction round the stick, a height
   of the bit over the stick's axis, and a depth. Each is one motor,
   and none of the three moves any other.
-- **The sled rides the two 20 mm shafts** on four bearing blocks: the
-  set the duplicator had, doing what it was made for. The longer
-  shaft is under the stick, the shorter 150 mm out to the left.
-- **The wheel hangs off the sled's far end.** At 105 mm across it
-  comes lower than the sled's plate and within 2 mm of the
-  positioner's face, so it sits beyond both. At 2.7 times the radius of the
+- **The sled is a flat plate between two fences.** It slides on the
+  base with its far edge along one fence, and each fence has a lip
+  over the sled's edge so that it cannot lift. What holds the stick
+  is screwed to it. More in [The slide](#the-slide).
+- **The wheel is past the sled's far end.** At 105 mm across it
+  comes within 2 mm of the positioner's face, so it sits beyond the
+  positioner's box. At 2.7 times the radius of the
   60-tooth pulley it replaces, the same runout turns the stick 2.7
   times less far wrong, and by my estimate the belt gives about a
   fifth as much. The ratio is eight to one.
@@ -71,13 +72,42 @@ do not need it: the build follows each one along its own path and
 marks it straight if the whole bit passes the master by 1.5 mm. 430
 of the 485 are.
 
-A stop post on the base meets the sled's plate at each end of its
-188 mm. The shafts set how far apart the bearing blocks can be: 210 mm
-on the 490 shaft and 134 on the 416, with 3.5 and 4.5 mm to spare at
-each end. The plate is longer than the shafts' supports are apart, so
-its ends pass over them: it rides on 6 mm of packing on each block,
-which puts it 4 mm over the supports, and the positioner's plinth is
-6 mm thicker to match.
+## The slide
+
+The sled is one piece of 19 mm ply, 424 x 219, and everything that
+holds the stick is screwed to it. It slides on the base between two
+fences. There are no shafts and no bearing blocks under it.
+
+- **The far fence is the datum.** The sled's far edge runs along it.
+  Across the sled is the way the bit reaches, so whatever bow that
+  fence or that edge has is cut into the stick, one for one. Make the
+  pair as straight as you can: a metal bar or an aluminium extrusion
+  for the fence, a factory edge for the sled.
+- **Two spring plungers in the sled's near edge** push off the near
+  fence and keep the far edge on the datum. So there is no fit to get
+  right between the fences: the near one stands 1 mm off the sled. A
+  cut pushes the stick away from the bit, which is the same way.
+- **Each fence has a lip over the sled's edge,** 0.3 mm clear of its
+  top: 10 mm over at the datum, 7 at the near fence. They stop the
+  sled lifting or tipping. They are not what holds it down: its
+  weight and the hand on it do that, and by my estimate a roughing
+  cut tips it with about two thirds of what its weight resists.
+- **It rides on two slippery strips** on the base, one under each
+  edge, 3 mm thick. A chip on a strip lifts the sled, and the sled's
+  height is the bit's height on the stick: brush them, or fix a felt
+  wiper to each end of the sled.
+- **The near fence stands against the positioner's face.** It is
+  14 mm wide, which is all the room there is, and the uprights are
+  50 mm wide to stay inside its lip.
+- **A stop block** on the base meets the sled at each end of its
+  188 mm; the back one carries the sled-back switch.
+
+With nothing under it the sled is low: the positioner lies on the
+base itself, the stick's axis is 89.5 mm over the sled, and the
+uprights are 130 mm tall. How straight the datum fence is and how
+flat the base is are not in the study under Setting up: the ground
+shafts this replaces were taken to be true, and a fence is as true as
+it is made.
 
 ## The stick's drive, joint by joint
 
@@ -112,7 +142,8 @@ not cut.
 To buy: four KFL001, a 12 mm flanged hub, a 20-tooth GT2 pulley of
 5 mm bore, a 400 mm closed GT2 belt, an optical endstop, 12 mm ground
 rod for a 147 mm length and a 100, two M5 set screws and threaded
-inserts for the socket, epoxy. The sizes in `build.py` are the
+inserts for the socket, two M6 spring plungers and inserts for the
+sled, epoxy. The sizes in `build.py` are the
 catalogue's: measure the ones that come before drilling for them. To
 make: the printed wheel and socket, a flat on the rod for the hub,
 and three flats for the tail's point.
@@ -136,9 +167,9 @@ and three flats for the tail's point.
   the wheel where the belt runs, turn the spindle, and tap the wheel
   until the needle moves 0.04 mm or less. Then tighten. That 0.04 is
   0.02 off centre, and what it buys is in Setting up.
-- **Lining the stick up with the shafts** (`out/bands.csv`) is moving
-  the tail spindle's two bearings on their uprights: their bolt holes
-  are slack.
+- **Lining the stick up with the sled's travel** (`out/bands.csv`) is
+  moving the tail spindle's two bearings on their uprights: their
+  bolt holes are slack.
 - **The home fin** is read 34 mm from the axis, so 0.02 mm there is
   0.017 mm at the tile's edge. It matters only when a stick is taken
   up again after the controller has been off. The sensor says home
@@ -198,7 +229,7 @@ Estimated.
 |---|---|---|
 | X travel | 12.6 to 58.0 mm used of 60 | all of it: the deepest cut is 2 mm short of the end |
 | Z travel | 21.0 to 59.0 mm used of 80 | 60 would do |
-| how it lies | on its lid, on a 19 mm plinth | the stage's weight then pulls away from its column, onto the collar that has no thrust bearing yet |
+| how it lies | on its lid, on the base | the stage's weight then pulls away from its column, onto the collar that has no thrust bearing yet |
 | its face from the stick's axis | 54 mm | the Colt's collet nut is 34 mm in front of the quill, so at the deepest cut it is 20.5 out of the face, and the uncut blank's corners swing 33.5. The nut sets the distance, not the face |
 | the bit out of the collet nut | 45.5 mm | the blank's swing, and 12 mm past the stick's axis. The router does not change it: the positioner stands back by what the nut stands out. A 3 in tapered ball-nose on a 1/4 in shank does; the 1/4 in straight bit must be as long, 3 in overall |
 | the depth's screw | M8 rod, as the positioner draws | a rod's pitch is nobody's promise, but it matters little here: 0.2 % off costs under a hundredth of a millimetre in the study |
@@ -313,7 +344,7 @@ square.
 
 ### 2. Whether the stick runs true: `out/bands.csv`
 
-The stick's axis has to run parallel to the sled's shafts. A scrap
+The stick's axis has to run parallel to the sled's travel. A scrap
 stick goes on with a stop clamped 25 mm in from each
 end. The table sets the straight bit and, in three bites, has the
 sled pushed to the far stop and drawn back to the near one, the
@@ -334,29 +365,30 @@ and up or down. All of it is simulation.
 |---|---|---|
 | the router | its body is 70.71 mm, measured; the rest is read off two photographs, with allowances where it matters | see the positioner's own table |
 | the probe's pin | 6.35 mm, a 1/4 in dowel pin or drill rod | measure it and give `fit` what it is with `--pin` |
-| the two shafts | 490 and 416 long | they set the blocks' spacing and the travel; shorter ones want a shorter stick |
-| the shafts' supports and blocks | SK20 51 to the centre, 70 high; SC20UU 25 to the centre, 42 high | they set the sled's height, and with the plinth, the blank's 10 mm and the socket's 4 over the plate. The supports are higher than the blocks: the plate passes over them only because of its packing |
+| the datum fence, and the sled's edge on it | straight | lay a straightedge along each: their bow is cut into the stick, one for one |
+| the base under the two slips | flat along the travel | the sled's height is the bit's height on the stick, so a hump is cut in too |
 | the bit's length | 45.5 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach |
 | the wheel | 160 teeth, printed; a closed belt of 400; the motor 100.1 from the spindle, in slots | it has to run true: 0.1 mm off centre is 0.11° once a turn, 0.06 mm at the tile's edge. True it on its hub under an indicator |
 | the two spindles | 12 mm ground rod, 147 long for the drive and 100 for the tail | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
 | the bought parts | KFL001 16 thick, 38 x 63, bolts 48 apart; the hub's flange 36 across, bolts on a 28 circle | catalogue sizes, and makers differ: measure before drilling, and before printing the wheel's bolt holes |
 | the blank's end in the socket | 49 x 42 with 0.3 mm all round | saw and plane the blanks to one size and print the pocket to that; the lock screw takes up what is left |
-| the shafts, parallel | 150 apart | a stick cut to fit between them at one end, tried at the other |
 
 ## Parts
 
 | part | size, mm | |
 |---|---|---|
-| base | 722 x 413 ply, and a 25 plinth 176 x 144 under the positioner | the positioner's column overhangs it behind |
-| shafts, supports, blocks | the 20 mm set: two shafts, four SK20, four SC20UU | the sled's rails |
-| sled plate | 424 x 214 ply | on 6 mm of packing on each of the four blocks; its edge 20 mm short of the positioner's face |
-| tailstock, headstock | each two uprights 60 wide, 19 thick, 84 high, tied at the foot | a KFL001 flange bearing on the stick's side of each upright |
+| base | 722 x 433 ply | the positioner lies on it, its column overhanging behind |
+| datum fence | 692 long, 30 wide, 22 high, and a lip 6 thick reaching 10 over the sled | as straight as can be had: metal for choice |
+| near fence | 692 long, 14 wide, 22 high, and a lip 6 thick reaching 7 over the sled | against the positioner's face |
+| slips, 2 | 612 x 30 x 3 | something slippery: UHMW tape on a strip, or HDPE |
+| sled plate | 424 x 219 ply | between the fences; two M6 spring plungers in its near edge |
+| tailstock, headstock | each two uprights 50 wide, 19 thick, 130 high, tied at the foot | a KFL001 flange bearing on the stick's side of each upright |
 | tail spindle | 12 mm ground rod, 100 long | a three-flat point on its end; 21 mm bare as the master |
 | spindle | 12 mm ground rod, 147 long | its end in the socket's boss; the wheel and hub outboard |
 | blank socket | printed, 58 x 51 x 26 with a boss 26 across and 22 long | a pocket 20 deep for the blank's end; a jack screw in its floor, a lock screw in a wall |
 | wheel | 160 teeth, 105 across, 12 wide, bore 13, a fin on its inner face | on a 12 mm flanged hub; a 20-tooth pulley on a NEMA 17 on a bracket on the plate |
 | home sensor | an optical endstop | on the outer upright's outer face, over the axis |
-| stops, 2 | posts 40 x 40 x 93 on the base | the back one carries the sled-back switch |
+| stops, 2 | blocks 40 x 40 x 22 on the base, between the fences | the back one carries the sled-back switch |
 | router positioner | 440 x 176 x 453 | its own example |
 
 ## What the test checks
@@ -388,10 +420,10 @@ written a second time, in Rust, and works every row forward:
 - the blank is a rectangle with the tile 2 mm inside every face, and
   the first row hangs it with a wide face level and underneath;
 - the document is the sled at one finishing row, the bit's tip on the
-  stick and none of its 40 bodies through another; and with the sled
+  stick and none of its 36 bodies through another; and with the sled
   at each end of its travel nothing that rides on it is through
-  anything that stands on the base, the plate passing over the
-  shafts' supports, which it would be in without its packing;
+  anything that stands on the base. Lifted a millimetre there the
+  plate is in a lip, and pushed a millimetre across it is in a fence;
 - the stick's drive, from the motor to the tail spindle: seven of the
   pulley's teeth in the belt and the controller's steps for a turn
   the two pulleys' ratio; the hub on the wheel's outer face; each
@@ -401,9 +433,12 @@ written a second time, in Rust, and works every row forward:
   corners clear of the plate and the positioner as it turns; the tail
   spindle's end at the stick's end, bare where the bit is set; the
   sensor short of the wheel at the fin's radius;
-- every bearing block stays on its shaft over the whole travel, and
-  the stops leave the bit beside the master at one end and its collet
-  nut 2 mm short of the socket at the other;
+- the slide: the plate's far edge on the datum fence, a spring's gap
+  at the near one with the plungers' noses in it, a lip over each
+  edge a hair clear of its top, two slips under it, the fences
+  reaching past both ends of its travel and the near one against the
+  positioner's face; and the stops leave the bit beside the master at
+  one end and its collet nut 2 mm short of the socket at the other;
 - for setting up: a recorded machine built wrong, its six touches
   touches on it, the arithmetic made again, the height found within
   2 µm at the depth it was probed, and the table planned for it run

@@ -86,9 +86,9 @@ works today, all in the browser:
   a pattern (`examples/stick-mill/`), the sled that replaced it, the
   stick hung from two hinges over a router table's cutter
   (`examples/stick-sled-hinged/`), and the sled that replaced that,
-  the stick only turning beside a router held in the two-axis
-  positioner, three motors going to the next row of a table
-  (`examples/stick-sled/`), a mini
+  the stick only turning, on a flat sled between two fences, beside
+  a router held in the two-axis positioner, three motors going to
+  the next row of a table (`examples/stick-sled/`), a mini
   chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`), the Edwardian

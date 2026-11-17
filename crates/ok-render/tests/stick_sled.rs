@@ -566,12 +566,11 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
     let travel = pair(&a["travel"]);
     assert!((f(&p["bit_home_z"]) + travel.1 / 2.0 - za).abs() < 1e-9);
     assert!((f(&a["across_home"]) + travel.1 / 2.0).abs() < 1e-9);
-    // The wheel: lower than the plate's top, so it hangs off the plate's far end, clear of the positioner's box
-    // with the sled forward, which is as near as it comes; and over the shafts' supports.
+    // The wheel: past the positioner's box with the sled forward, which is as near as it comes, and well over
+    // the fences' lips.
     let (rim, wx) = (f(&s["wheel_rim"]), pair(&s["wheel_x"]));
-    assert!(za - rim < top && wx.0 > f(&s["plate_x"][1]));
     assert!(wx.0 - (f(&s["forward_x"]) + f(&p["half_box"])) >= 5.0);
-    assert!(za - rim >= f(&s["sk"][3]) + 3.0);
+    assert!(za - rim >= f(&s["lip_top"]) + 10.0 && f(&s["lip_top"]) > top);
     let w = &s["wheel"];
     let (big, small, c) = (f(&w[0]) * 2.0 / PI, f(&w[1]) * 2.0 / PI, f(&w[3]));
     let belt = 2.0 * c + PI * (big + small) / 2.0 + (big - small).powi(2) / (4.0 * c);
@@ -804,8 +803,7 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
         .fold(f64::MAX, f64::min)
         - ball;
     assert!(off.abs() < 0.05, "the ball is {off} off the tile");
-    // every part, and what is through what. Parts fitted on each other share a surface: a shaft in its supports and
-    // blocks. The bit is drawn as a plain cylinder to its tip, so it is left out.
+    // every part, and what is through what. The bit is drawn as a plain cylinder to its tip, so it is left out.
     let mut all: Vec<(String, Solid)> = Vec::new();
     for (name, list) in n["bodies"].as_object().unwrap() {
         let solids = bodies_of(&mut doc, name);
@@ -814,15 +812,11 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
             all.push((name.clone(), solid));
         }
     }
-    let fitted = |a: &str, b: &str| {
-        let pair = |x: &str, y: &str| (a == x && b == y) || (a == y && b == x);
-        pair("Shafts", "Shaft supports SK20") || pair("Shafts", "Bearing blocks SC20UU")
-    };
     let (mut tried, mut worst) = (0, (0.0f64, String::new()));
     for i in 0..all.len() {
         for k in i + 1..all.len() {
             let (a, b) = (&all[i], &all[k]);
-            if a.0 == "Bit" || b.0 == "Bit" || fitted(&a.0, &b.0) {
+            if a.0 == "Bit" || b.0 == "Bit" {
                 continue;
             }
             let (p, q) = (a.1.bounds().unwrap(), b.1.bounds().unwrap());
@@ -851,11 +845,11 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
     assert!(all.len() >= 30 && tried >= 10);
     assert!(worst.0 < 1.0, "{} share {:.1} mm3", worst.1, worst.0);
     // The sled at each end of its travel: all that rides on it, moved there, against all that stands on the base.
-    // The plate is longer than the shafts' supports are apart less the travel, so its ends pass over them: it has
-    // to be higher than they are. Dropped by its packing, it is in one.
+    // It slides between two fences under their lips. Lifted a millimetre it is in a lip, and pushed a millimetre
+    // either way across it is in a fence: that is what holds it.
     let rides = [
-        "Bearing blocks SC20UU",
         "Sled plate",
+        "Spring plungers",
         "Tailstock",
         "Tail bearings KFL001",
         "Tail spindle",
@@ -871,8 +865,8 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
     ];
     let stands = [
         "Base",
-        "Shafts",
-        "Shaft supports SK20",
+        "Fences",
+        "Slips",
         "Stops",
         "Sled-back switch",
         "Controller",
@@ -882,8 +876,27 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
         .iter()
         .chain(stands.iter())
         .all(|k| all.iter().any(|a| a.0 == *k)));
-    assert!(f(&s["top"]) - f(&s["ply"]) >= f(&s["sk"][3]) + 3.0);
-    let mut low = 0.0f64;
+    assert!(
+        all.iter().all(|a| a.0 == "Bit"
+            || rides.contains(&a.0.as_str())
+            || stands.contains(&a.0.as_str())),
+        "every body rides or stands"
+    );
+    let fences: Vec<&Solid> = all
+        .iter()
+        .filter(|a| a.0 == "Fences")
+        .map(|a| &a.1)
+        .collect();
+    assert_eq!(fences.len(), 2);
+    let held = |solid: &Solid, dy: f64, dz: f64| {
+        let moved = solid.transformed(&ok_brep::Transform::translation(ok_math::Vec3::new(
+            0.0, dy, dz,
+        )));
+        fences
+            .iter()
+            .map(|f| overlap(&moved, f))
+            .fold(0.0, f64::max)
+    };
     for (end, at) in [("back", f(&s["back_x"])), ("forward", f(&s["forward_x"]))] {
         let shift = f(&n["drawn"]["x"]) - at;
         let (mut tried, mut worst) = (0, (0.0f64, String::new()));
@@ -894,9 +907,6 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
                 )));
             let p = moved.bounds().unwrap();
             for b in all.iter().filter(|b| stands.contains(&b.0.as_str())) {
-                if a.0 == "Bearing blocks SC20UU" && b.0 == "Shafts" {
-                    continue;
-                }
                 let q = b.1.bounds().unwrap();
                 if p.0.x >= q.1.x
                     || q.0.x >= p.1.x
@@ -912,12 +922,15 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
                 if common > worst.0 {
                     worst = (common, format!("{} and {}", a.0, b.0));
                 }
-                if a.0 == "Sled plate" && b.0 == "Shaft supports SK20" {
-                    let dropped = moved.transformed(&ok_brep::Transform::translation(
-                        ok_math::Vec3::new(0.0, 0.0, -f(&s["pack"])),
-                    ));
-                    low = low.max(overlap(&dropped, &b.1));
-                }
+            }
+            if a.0 == "Sled plate" {
+                let (up, far, near) = (
+                    held(&moved, 0.0, 1.0),
+                    held(&moved, -1.0, 0.0),
+                    held(&moved, 2.0, 0.0),
+                );
+                println!("sled {end}: lifted 1 mm the plate is {up:.0} mm3 into a lip; pushed across, {far:.0} into the datum fence, {near:.0} into the near one");
+                assert!(up > 100.0 && far > 100.0 && near > 100.0);
             }
         }
         println!(
@@ -925,16 +938,12 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
             worst.0, worst.1
         );
         assert!(
-            tried >= 1 && worst.0 < 1.0,
+            tried >= 4 && worst.0 < 1.0,
             "sled {end}: {} share {:.1} mm3",
             worst.1,
             worst.0
         );
     }
-    assert!(
-        low > 100.0,
-        "the plate does not pass over a support at either end"
-    );
     // the positioner is drawn where the row puts it: its face a wall at the stick's side
     let box_ = bodies_of(&mut doc, "Router positioner").remove(0);
     assert!((box_.bounds().unwrap().0.y - face).abs() < 1e-6);
@@ -1181,14 +1190,16 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     assert!(at_edge < 0.02);
 }
 
-/// The sled rides the owner's two shafts on four bearing blocks. Over
-/// the whole of its travel every block stays on its shaft between the
-/// supports; a stop post on the base meets the plate at each end:
-/// against the back one the bit is beside the master, clear of the
-/// tailstock and of the stick's end, against the forward one its
-/// collet nut is short of the socket.
+/// The sled is a flat plate on the base, between two fences. Its far
+/// edge runs on the datum fence and spring plungers in its near edge
+/// keep it there; it rides on two slips; each fence has a lip over it,
+/// a hair clear of its top. The fences reach past both ends of its
+/// travel. A stop on the base meets the plate at each end: against the
+/// back one the bit is beside the master, clear of the tailstock and
+/// of the stick's end, against the forward one its collet nut is
+/// short of the socket.
 #[test]
-fn the_sled_s_travel_fits_its_shafts_and_its_stops_put_the_bit_beside_the_master() {
+fn the_sled_slides_between_two_fences_and_its_stops_put_the_bit_beside_the_master() {
     let n = numbers();
     let s = &n["sled"];
     let (plate, stops, drawn) = (pair(&s["plate_x"]), pair(&s["stops_x"]), f(&s["drawn_x"]));
@@ -1215,36 +1226,53 @@ fn the_sled_s_travel_fits_its_shafts_and_its_stops_put_the_bit_beside_the_master
             && f(&n["stick"]) - f(&s["cut_to"]) < 25.0
     );
     assert!((forward - back - f(&s["travel"])).abs() < 1e-9);
-    // the shafts
-    let (sk_t, blk_l) = (f(&s["sk"][1]), f(&s["blk"][1]));
+    // the fences: the plate's far edge on the datum, a spring's gap at the near one, a lip over each edge
     let mut doc = load();
-    let shafts = bodies_of(&mut doc, "Shafts");
-    assert_eq!(shafts.len(), 2);
-    for i in 0..2 {
-        let (span, blocks, length) = (
-            pair(&s["spans"][i]),
-            pair(&s["blocks_x"][i]),
-            f(&s["shafts"][i]),
-        );
-        assert!((span.1 - span.0 - length).abs() < 1e-9);
-        // the blocks' ends in the base's frame, the sled forward and back
-        let lo = blocks.0 - blk_l / 2.0 - forward;
-        let hi = blocks.1 + blk_l / 2.0 - back;
-        let room = (lo - (span.0 + sk_t)).min(span.1 - sk_t - hi);
-        println!(
-            "the {length:.0} shaft: blocks {:.0} apart, {room:.1} mm to spare at each end of the travel",
-            blocks.1 - blocks.0
-        );
-        assert!(room >= 2.0);
-        let (lo, hi) = shafts[i].bounds().unwrap();
-        assert!((hi.x - lo.x - length).abs() < 1e-6);
-        assert!(
-            (lo.x - (span.0 + drawn)).abs() < 1e-6,
-            "drawn where the bit is {drawn} along the sled"
-        );
+    let plate_body = bodies_of(&mut doc, "Sled plate").remove(0);
+    let (lo, hi) = plate_body.bounds().unwrap();
+    let (top, ply, slip) = (f(&s["top"]), f(&s["ply"]), f(&s["slip"]));
+    assert!(
+        (hi.z - top).abs() < 1e-6 && (lo.z - slip).abs() < 1e-6 && (top - slip - ply).abs() < 1e-9
+    );
+    let fences = bodies_of(&mut doc, "Fences");
+    assert_eq!(fences.len(), 2);
+    let (datum, near) = (fences[0].bounds().unwrap(), fences[1].bounds().unwrap());
+    let lip = &s["lip"];
+    let (gap, clear) = (f(&s["spring_gap"]), f(&lip[3]));
+    println!(
+        "the plate {:.0} wide: on the datum fence, {gap} from the near one, a lip {:.0} and {:.0} over its edges and {clear} clear of its top",
+        hi.y - lo.y,
+        f(&lip[1]),
+        f(&lip[2])
+    );
+    // the datum fence's body stops at the plate's edge and its lip reaches over it; the near one the same, a gap off
+    assert!((datum.1.y - (lo.y + f(&lip[1]))).abs() < 1e-6 && f(&lip[1]) >= 5.0);
+    assert!((near.0.y - (hi.y - f(&lip[2]))).abs() < 1e-6 && f(&lip[2]) >= 5.0);
+    assert!((0.5..=1.5).contains(&gap) && clear > 0.0 && clear <= 0.5);
+    for fence in [&datum, &near] {
+        assert!((fence.1.z - f(&s["lip_top"])).abs() < 1e-6 && fence.0.z.abs() < 1e-6);
+        // and reaches past the plate at both ends of its travel
+        assert!(fence.0.x - drawn <= plate.0 - forward && fence.1.x - drawn >= plate.1 - back);
     }
-    assert_eq!(bodies_of(&mut doc, "Shaft supports SK20").len(), 4);
-    assert_eq!(bodies_of(&mut doc, "Bearing blocks SC20UU").len(), 4);
+    // the near fence stands against the positioner's face, and the uprights are inside its lip
+    assert!((near.1.y - f(&s["face"])).abs() < 1e-6);
+    assert!(f(&s["stock_half"]) + 2.0 <= near.0.y);
+    // the plungers' noses fill the gap, and both stay on the fence over the whole travel
+    let plungers = bodies_of(&mut doc, "Spring plungers");
+    assert_eq!(plungers.len(), 2);
+    for nose in &plungers {
+        let (a, b) = nose.bounds().unwrap();
+        assert!((a.y - hi.y).abs() < 1e-6 && (b.y - a.y - gap).abs() < 1e-6);
+        assert!(a.z > lo.z && b.z < hi.z && a.x > lo.x + 20.0 && b.x < hi.x - 20.0);
+    }
+    // two slips under the plate, as long as the travel between the stops
+    let slips = bodies_of(&mut doc, "Slips");
+    assert_eq!(slips.len(), 2);
+    for strip in &slips {
+        let (a, b) = strip.bounds().unwrap();
+        assert!(a.z.abs() < 1e-6 && (b.z - slip).abs() < 1e-6 && a.y >= lo.y && b.y <= hi.y);
+        assert!((a.x - drawn - stops.0).abs() < 1e-6 && (b.x - drawn - stops.1).abs() < 1e-6);
+    }
     assert_eq!(bodies_of(&mut doc, "Stops").len(), 2);
     assert_eq!(bodies_of(&mut doc, "Sled-back switch").len(), 1);
     // drawn mid-pass, the plate is between its stops and touches neither
