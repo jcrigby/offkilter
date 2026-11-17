@@ -2042,3 +2042,49 @@ The sled is low now, so the stick's axis is 89.5 mm over it and the
 uprights are 130 tall where they were 84. They are stiff the way the
 cut pushes, across their 50 mm, and limber along the stick, which
 does not matter to a prism.
+
+## 2026-11 · The positioner in plywood
+
+The owner asked for everything that can be plywood to be, 1/2 in or
+3/4 in, with 3/4 already on hand (a combination-core sheet, not
+Baltic birch). The first pass had 8 and 10 mm walls and was sized
+against a printer's bed.
+
+- **Which thickness where.** 3/4 where a part is a wall or a cheek
+  with screws into its edge and where there is plenty of it: the
+  outer box, the stage's cheeks, the nut's bar, the router's collars.
+  1/2 where a part slides inside another and its thickness is paid for
+  twice in every box outside it: the quill, the tube, the motor
+  housings, the cages. All 3/4 would be 25 mm deeper again.
+- **The outer box's face is 1/2.** At full plunge the quill's front is
+  at the sleeve's mouth, and the collet nut has to come out of the
+  face for a wrench: 4.8 mm clear in 1/2, 1.5 mm inside it in 3/4. In
+  the stick sled a 3/4 face would bring the positioner 7 mm nearer the
+  stick, where there is no room left for the near fence.
+- **The sleeve, the column and the X motor's housing are one tube.**
+  The first pass left "how the column is fixed to the stage" as not
+  drawn. In panels the answer is not to have a joint: four boards run
+  from the mouth to the motor's cap, and the stage is glued round
+  their first 140 mm.
+- **The stage's cheeks are its bearing faces.** The rail the stage
+  needed either side of the tube is a 3/4 cheek, and the cheek's two
+  edges are where it bears: right on what the slot leaves of the right
+  wall, left under two gibs. The rule of a width and a half then asks
+  for a stage 267 tall, 3 mm more than its parts need.
+- **Nuts are caged, not pocketed.** A hex pocket is a printer's
+  feature. Two strips two layers thick either side of the nut's
+  flats, and a keeper each end, is a saw's.
+- **A tube's four panels are one width,** each lapping the next, so a
+  tube is one rip setting and four crosscuts.
+- **The cut list is tested.** Every body of the plywood parts has to
+  be a piece on the list at its size, or two layers of one, with the
+  list used up.
+- **The sled became a box.** The plywood positioner's bit is 130 mm
+  over the base where the printed one's was 111. On a flat sled that
+  is uprights 148 mm tall. A bottom, two rails on edge and a deck,
+  all 3/4, bring the deck up instead, and the uprights are the 84 mm
+  they were.
+
+Not settled: screws, glue and joints are not drawn, and plywood's
+movement with the weather is left to the gibs. The sheet's real
+thickness goes in two numbers at the top of the build.

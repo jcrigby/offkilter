@@ -570,7 +570,12 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
     // the fences' lips.
     let (rim, wx) = (f(&s["wheel_rim"]), pair(&s["wheel_x"]));
     assert!(wx.0 - (f(&s["forward_x"]) + f(&p["half_box"])) >= 5.0);
-    assert!(za - rim >= f(&s["lip_top"]) + 10.0 && f(&s["lip_top"]) > top);
+    assert!(za - rim >= f(&s["lip_top"]) + 10.0 && f(&s["lip_top"]) > f(&s["plate_top"]));
+    // the sled is a box, and its deck is where the uprights stand: the stick's axis the same height over it always
+    assert!(
+        (za - top - f(&s["axis_over"])).abs() < 1e-9
+            && top > f(&s["plate_top"]) + 2.0 * f(&s["ply"])
+    );
     let w = &s["wheel"];
     let (big, small, c) = (f(&w[0]) * 2.0 / PI, f(&w[1]) * 2.0 / PI, f(&w[3]));
     let belt = 2.0 * c + PI * (big + small) / 2.0 + (big - small).powi(2) / (4.0 * c);
@@ -849,6 +854,7 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
     // either way across it is in a fence: that is what holds it.
     let rides = [
         "Sled plate",
+        "Sled box",
         "Spring plungers",
         "Tailstock",
         "Tail bearings KFL001",
@@ -1230,7 +1236,7 @@ fn the_sled_slides_between_two_fences_and_its_stops_put_the_bit_beside_the_maste
     let mut doc = load();
     let plate_body = bodies_of(&mut doc, "Sled plate").remove(0);
     let (lo, hi) = plate_body.bounds().unwrap();
-    let (top, ply, slip) = (f(&s["top"]), f(&s["ply"]), f(&s["slip"]));
+    let (top, ply, slip) = (f(&s["plate_top"]), f(&s["ply"]), f(&s["slip"]));
     assert!(
         (hi.z - top).abs() < 1e-6 && (lo.z - slip).abs() < 1e-6 && (top - slip - ply).abs() < 1e-9
     );
@@ -1257,6 +1263,22 @@ fn the_sled_slides_between_two_fences_and_its_stops_put_the_bit_beside_the_maste
     // the near fence stands against the positioner's face, and the uprights are inside its lip
     assert!((near.1.y - f(&s["face"])).abs() < 1e-6);
     assert!(f(&s["stock_half"]) + 2.0 <= near.0.y);
+    // The box on the sled's bottom: two rails on edge and a deck, inside both lips, the deck's top where the
+    // uprights stand.
+    let boxed = bodies_of(&mut doc, "Sled box");
+    assert_eq!(boxed.len(), 3);
+    let deck = boxed[2].bounds().unwrap();
+    assert!((deck.1.z - f(&s["top"])).abs() < 1e-6 && (deck.1.z - deck.0.z - ply).abs() < 1e-6);
+    assert!(deck.0.y >= datum.1.y + 1.5 && deck.1.y <= near.0.y - 1.5);
+    for rail in &boxed[..2] {
+        let r = rail.bounds().unwrap();
+        assert!(
+            (r.0.z - top).abs() < 1e-6
+                && (r.1.z - deck.0.z).abs() < 1e-6
+                && (r.1.y - r.0.y - ply).abs() < 1e-6
+        );
+        assert!(r.0.y >= deck.0.y - 1e-6 && r.1.y <= deck.1.y + 1e-6 && r.1.z - r.0.z >= 20.0);
+    }
     // the plungers' noses fill the gap, and both stay on the fence over the whole travel
     let plungers = bodies_of(&mut doc, "Spring plungers");
     assert_eq!(plungers.len(), 2);

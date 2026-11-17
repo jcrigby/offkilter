@@ -15,6 +15,10 @@ few numbers at the top, the brief's rules enforced, the four corners of
 the travel checked, and the envelope reported, so the trade-offs can be
 looked at before anything is detailed. What is a guess says so.
 
+It is made of plywood, as the owner asked: every box is flat panels of
+1/2 in or 3/4 in sheet, butted and glued, and the build writes the cut
+list. What is not plywood is thin or bought.
+
     cargo build --release -p ok-mcp
     python3 examples/router-positioner/build.py
     cargo test -p ok-render --test router_positioner
@@ -22,7 +26,7 @@ looked at before anything is detailed. What is a guess says so.
 Writes out/positioner.okpart (every part in its own tab, and the module
 assembled at the four corners of its travel), positioner.png,
 section-home.png and section-plunged-down.png, positioner.pdf and
-positioner.json.
+positioner.json, and cutlist.csv, the panels to saw.
 """
 import json
 import math
@@ -60,83 +64,89 @@ BIT_D, BIT_L = 6.35, 40.0       # a quarter-inch bit past the nut, for the pictu
 X_TRAVEL = 60.0                 # plunge. The brief leaves it open: a 50 mm mortise and room to clear the work
 Z_TRAVEL = 80.0                 # bit height. Open too
 
-WALL = 8.0                      # the sliding boxes' walls: rigidity before print time, the brief says
-OUTER_WALL = 10.0               # the outer box's
+# The plywood. Two thicknesses and no other: nominal here. Sheet goods run thin, so put in what the sheets measure,
+# and everything follows.
+T12 = 12.7                      # 1/2 in: the sliding tubes, the motor housings, the nut cages, and the outer box's bit-side face
+T34 = 19.05                     # 3/4 in: the rest of the outer box, the stage's two cheeks, the bar the X nut is on, the router's collars
+SHEET = (1220.0, 2440.0)        # a sheet, for saying how much of one the panels take
+
 GAP = 1.5                       # between a box and its guide all round: a bearing strip thick, and room for dust
 STRIP_L = 25.0                  # a bearing strip along the travel, one near each end of a box
-GIB = (4.0, 20.0)               # a gib strip: thick, wide. It stands GAP out of its pocket
-SET_SCREW = 4.2                 # an M5 set screw's tapping hole, three to a gib
+GIB = (4.0, 20.0)               # a gib strip: thick, wide. It stands GAP out of its groove. Hardwood or UHMW, not plywood
+SET_SCREW = 4.2                 # an M5 set screw's hole, three to a gib: a threaded insert in plywood
 ENGAGE = 1.5                    # a box is in its guide at least this many of its own widths, everywhere in its travel
-RAIL = 16.0                     # the Z stage is this much wider than the X column each side: see `rules`
+RAIL = T34                      # the Z stage is this much wider than the tube each side: its cheeks, whose edges ride the outer box's right wall
 
-SCREW_D, SCREW_PITCH = 8.0, 1.25  # M8 rod. Open: a T8 lead screw of 2 mm lead goes in the same bores
+SCREW_D, SCREW_PITCH = 8.0, 1.25  # M8 rod. Open: a T8 lead screw of 2 mm lead goes in the same holes
 NUT_AF, NUT_L = 13.0, 24.0      # an M8 coupling nut, DIN 6334: across flats, long. Brass, or it galls
-NUT_FLOAT = 0.5                 # the nut's play across its pocket, so a bent rod does not bind
+NUT_FLOAT = 0.5                 # the nut's play across its cage, so a bent rod does not bind
 NUT_LEAD = 3.0                  # the screw stands this far through the nut at the far end of the travel
 TIP_CLEAR = 4.0                 # and its tip stops this far short of what it is run toward
-BEARING = (16.0, 5.0)           # a thrust bearing, F8-16M: across, thick
+BEARING = (16.0, 5.0)           # a thrust bearing, F8-16M: across, thick. On a steel washer: plywood would crush under it
 COLLAR_L = 8.0                  # a collar on the screw each side of the bulkhead
 COUPLING = (19.0, 25.0)         # a rigid coupling, 5 to 8 mm
 MOTOR = (42.3, 40.0, 24.0)      # NEMA 17: square, long, and its shaft. Assumed, as the brief does
-BULKHEAD, CAP = 12.0, 6.0       # the wall the thrust bearing sits against, and the end cap the motor is on
+BULKHEAD, CAP = T12, T12        # the panel the thrust bearing sits against, and the end cap the motor is on
 SWITCH = (20.0, 10.0, 6.0)      # a limit switch
 
 SLOT_W = ROUTER_D + 6.0         # the bit slot: as wide as the body, so all that stands out of its front face passes, and the lock can be reached
-BED = 256.0                     # the printer, a Bambu P1S: nothing longer prints in one piece
 
 # -- what follows from them ---------------------------------------------------
 QI = ROUTER_ENV + 2.0                           # the quill's bore: the router goes in from the front, its cap first
-QO = QI + 2 * WALL                              # the quill
-SB = QO + 2 * GAP                               # the sleeve's bore, and the column's
-CO = SB + 2 * WALL                              # the column, outside
-SPIDER_T = 12.0                                 # the spider's plate
-BOSS = NUT_L + 4.0                              # a nut boss: the nut and 2 mm each end
-BOSS_D = 30.0
-REC = COLLAR_L + BEARING[1] + 3.0               # a drive housing's recess: the collar and bearing on the nut's side of the bulkhead
-CHAMBER = COLLAR_L + 2.0 + COUPLING[1] + 5.0    # and its chamber: the other collar, the coupling, the motor's shaft
-DRIVE = REC + BULKHEAD + CHAMBER                # a drive housing, end to end
+QO = QI + 2 * T12                               # the quill, a square tube of the thin plywood
+SB = QO + 2 * GAP                               # the bore of the tube it slides in: sleeve, column and X motor housing in one
+CO = SB + 2 * T12                               # that tube, outside
+CAGE = 2 * T12                                  # a nut's cage: two layers of the thin plywood between two keepers. The nut, 24 long, floats in it
+NUT_END = (CAGE - NUT_L) / 2
+FOOT = T12 + CAGE + T12                         # the stage's foot: keeper, cage, keeper
+REC = COLLAR_L + BEARING[1] + 3.0               # in a motor housing: the collar and bearing on the nut's side of the bulkhead
+CHAMBER = COLLAR_L + 2.0 + COUPLING[1] + 0.5    # and the other collar and the coupling, which reaches the cap so the motor's shaft is well into it
+DRIVE = REC + BULKHEAD + CHAMBER                # a motor housing, from where it starts to its cap
 
-MX = CO                                         # the Z stage along the bit: as long as the column is wide
-MD = CO + 2 * RAIL                              # and across: the column and a rail each side
-Z_CLEAR = Z_TRAVEL + NUT_LEAD + TIP_CLEAR + 1.0  # under the sleeve, in the stage: where the Z screw goes
-MH = WALL + SB + WALL + Z_CLEAR + BOSS          # the stage: lid, sleeve, sleeve floor, the screw's room, the nut boss
+MX = CO                                         # the Z stage along the bit: as long as the tube is wide
+MD = CO + 2 * RAIL                              # and across: the tube and a cheek each side
+Z_NEED = (T12 + NUT_END) + NUT_L + NUT_LEAD + Z_TRAVEL + TIP_CLEAR - FOOT   # the Z screw's room over the foot: what its tip needs with the stage down
+MH = max(T12 + SB + T12 + Z_NEED + FOOT, float(math.ceil(ENGAGE * max(MX, MD))))   # the stage: the tube, the screw's room, the foot; and tall enough for its width
+Z_CLEAR = MH - (2 * T12 + SB + FOOT)
 IH = MH + Z_TRAVEL + 2.0                        # the outer box inside: the stage, its travel, a millimetre each end
 
 # Where things are with both axes at home: X drawn back, Z up. x along the bit from the sleeve's mouth, the bit pointing to -x;
 # y front (-) to back (+) from the bit's axis; z up from the outer box's floor.
 ZB = Z_TRAVEL + 1.0                             # the stage's foot
-AZ = ZB + MH - WALL - SB / 2                    # the bit's axis
+AZ = ZB + MH - T12 - SB / 2                     # the bit's axis
 XQ = X_TRAVEL                                   # the quill's front: at full plunge it is level with the sleeve's mouth
 X_ROUTER_BACK = XQ + ROUTER_L
 X_TIP = X_ROUTER_BACK + TIP_CLEAR               # the X screw's tip: it does not move
 X_NUT = X_TIP + NUT_LEAD + X_TRAVEL             # the X nut's near end, drawn back
-X_SPIDER = X_NUT - 2.0                          # the spider's plate starts 2 mm before its nut
-QL = X_SPIDER + SPIDER_T - XQ                   # the quill, so
-X_BOSS_END = X_SPIDER + BOSS
-X_COL_END = X_BOSS_END + 3.0                    # the column ends where the X drive housing begins
-X_END = X_COL_END + DRIVE + CAP + MOTOR[1]      # the X motor's far end
-Z_NUT = ZB + 2.0                                # the Z nut's lower end, up
+X_SPIDER = X_NUT - NUT_END - T34                # the bar across the quill's back that the nut's cage is on
+QL = X_SPIDER + T34 - XQ                        # the quill, so
+X_CAGE_END = X_SPIDER + T34 + CAGE + T12        # the back of the cage's keeper
+X_COL_END = X_CAGE_END + 3.0                    # where the X motor housing begins, in the same tube
+X_TUBE_END = X_COL_END + DRIVE                  # the tube's end, where its cap goes on
+X_END = X_TUBE_END + CAP + MOTOR[1]             # the X motor's far end
+Z_NUT = ZB + T12 + NUT_END                      # the Z nut's lower end, up
 Z_TIP = Z_NUT + NUT_L + NUT_LEAD                # the Z screw's tip
-Z_END = -OUTER_WALL - DRIVE - CAP - MOTOR[1]    # the Z motor's far end
-BOX_X = (-GAP - OUTER_WALL, MX + GAP + OUTER_WALL)
-BOX_Y = MD / 2 + GAP + OUTER_WALL
+Z_END = -T34 - DRIVE - CAP - MOTOR[1]           # the Z motor's far end
+BOX_X = (-GAP - T12, MX + GAP + T34)            # the outer box: its bit-side face is thin, so the collet nut comes out of it
+BOX_Y = MD / 2 + GAP + T34
 SLOT_Z = (AZ - Z_TRAVEL - SLOT_W / 2, AZ + SLOT_W / 2)
-COL_SLOT_Z = (1.0 + MH - CO - 1.5, IH)          # the column's way through the outer box's right wall
+COL_SLOT_Z = (1.0 + MH - CO - 1.5, IH)          # the tube's way through the outer box's right wall
 CORD_SLOT = CORD_D + 6.0                        # the cord's slots, across
 CORD_PLUG = 40.0                                # the quill's slot, along: the plug goes through it flat, as the router goes in
-CORD_X = (XQ - X_TRAVEL + CORD_AT - CORD_SLOT / 2 - CORD_SLACK, XQ + CORD_AT + CORD_SLOT / 2 + CORD_SLACK)   # the slot in the stage's floor and the column's
-CORD_HANG = CORD_L - (CO - ROUTER_ENV) / 2      # the boot's end, below the column's underside
-CORD_NOTCH = CORD_HANG + 1.5 + 8.0              # the notch under the column's slot: that, the slot's clearance, and room for the cord to turn
+CORD_X = (XQ - X_TRAVEL + CORD_AT - CORD_SLOT / 2 - CORD_SLACK, XQ + CORD_AT + CORD_SLOT / 2 + CORD_SLACK)   # the slot in the tube's floor
+CORD_HANG = CORD_L - (CO - ROUTER_ENV) / 2      # the boot's end, below the tube's underside
+CORD_NOTCH = max(CORD_HANG, 0.0) + 1.5 + 8.0    # the notch under the tube's slot in the right wall: that, the slot's clearance, and room for the cord to turn
+
+PANELS = []                                     # every piece of plywood, as it is drawn: part, name, thickness, long, wide
 
 
 def rules():
     """The brief's rules of thumb, as numbers; stops the build if one is broken."""
     found = {}
-    # A box in its guide: 1.5 widths at least. The quill is guided by sleeve and column together, the column being the
-    # sleeve carried on; the stage by the outer box.
+    # A box in its guide: 1.5 widths at least. The quill is guided by the tube's whole length; the stage by the outer box.
     found["x_engaged"] = QL / QO
     found["z_engaged"] = MH / max(MX, MD)
-    # The quill's two bearing zones stay in their guides: the front one in the sleeve, the back one in the column.
+    # The quill's two bearing zones stay in their guides: the front one in the stage's length of the tube, the back one beyond it.
     front = (XQ - X_TRAVEL + 2.0, XQ + 2.0 + STRIP_L)
     back = (XQ + QL - 2.0 - STRIP_L - X_TRAVEL, XQ + QL - 2.0)
     found["front_strip_in_sleeve"] = min(front[0], MX - front[1])
@@ -144,32 +154,32 @@ def rules():
     # The screws: through the nut at one end of the travel, short of what they run toward at the other.
     found["x_tip_to_router"] = X_TIP - X_ROUTER_BACK
     found["x_through_nut"] = (X_NUT - X_TRAVEL) - X_TIP
-    found["z_tip_to_sleeve"] = (1.0 + BOSS + Z_CLEAR) - Z_TIP          # the stage down
+    found["z_tip_to_sleeve"] = (1.0 + FOOT + Z_CLEAR) - Z_TIP          # the stage down
     found["z_through_nut"] = Z_TIP - (Z_NUT + NUT_L)                   # the stage up
-    # The column in the outer box's right wall, the stage up and down.
+    # The tube in the outer box's right wall, the stage up and down.
     found["column_in_slot"] = min((1.0 + MH - CO) - COL_SLOT_Z[0], COL_SLOT_Z[1] - (ZB + MH))
-    # At full plunge the quill's front is at the sleeve's mouth: the router's nose is this far out of the outer box's
-    # face, and the whole of the collet nut this far clear of it, for a wrench.
-    found["nose_proud"] = NOSE_L - (GAP + OUTER_WALL)
+    # At full plunge the quill's front is at the sleeve's mouth. The outer box's face is the thin plywood so that
+    # the collet nut is still clear of it there, for a wrench; the router's nose stays in the slot.
+    found["nose_proud"] = NOSE_L - (GAP + T12)
+    found["collet_proud"] = NOSE_L + SHAFT_L - (GAP + T12)
     found["rack_in_wall"] = RACK[2] - GAP                # the rack's end is this far into the face's thickness, in the slot
     found["slot_past_body"] = (SLOT_W - ROUTER_D) / 2
-    found["collet_proud"] = NOSE_L + SHAFT_L - (GAP + OUTER_WALL)
-    # The cord's boot comes down through the quill's floor and the column's. Where it is drawn it runs between the
-    # stage and where the quill's back strip runs, and at full plunge it is in the outer box's right wall, which is
-    # notched for it. The slots run CORD_SLACK further each way: into the edge of the stage's own floor, and under
-    # where the back strip runs, which is far wider than the slot and bears either side of it.
+    # The cord's boot comes down through the quill's floor and the tube's. At full plunge it is over the stage's own
+    # room, at its open side. The tube's slot runs CORD_SLACK further each way than the boot goes, its back end under
+    # where the quill's back strip runs: the strip is far wider than the slot and bears either side of it.
     boot = (XQ - X_TRAVEL + CORD_AT - CORD_D / 2, XQ + CORD_AT + CORD_D / 2)
     found["cord_past_stage"] = boot[0] - MX
-    found["cord_short_of_strip"] = back[0] - boot[1]
-    found["cord_in_wall"] = (MX + GAP + OUTER_WALL) - boot[0]
+    found["slot_under_strip"] = max(0.0, CORD_X[1] - back[0])
     found["cord_slot_short_of_strip"] = (QL - 2.0 - STRIP_L) - (CORD_AT - CORD_SLOT / 2 + CORD_PLUG)   # the quill's own slot and its own back strip
-    found["strip_beside_slot"] = (QO - 8.0 - CORD_SLOT) / 2                                           # the back strip's bearing each side of the column's slot
+    found["strip_beside_slot"] = (QO - 8.0 - CORD_SLOT) / 2                                           # the back strip's bearing each side of the tube's slot
     found["cap_in_bore"] = (QI - 81.0) / 2                                                            # round the cap as the photo sees it
+    found["motor_shaft_in_coupling"] = MOTOR[2] - CAP - 0.5                                           # through a plywood cap, what is left of the shaft
     bad = []
     if min(found["x_engaged"], found["z_engaged"]) < ENGAGE:
         bad.append(f"a box is under {ENGAGE} widths in its guide: {found['x_engaged']:.2f} along X, {found['z_engaged']:.2f} along Z")
     for key, least in (("front_strip_in_sleeve", 0.0), ("back_strip_in_column", 0.0), ("x_tip_to_router", 3.0), ("x_through_nut", 2.0), ("z_tip_to_sleeve", 3.0),
-                       ("z_through_nut", 2.0), ("column_in_slot", 1.0), ("cord_past_stage", 0.0), ("cord_short_of_strip", 0.0), ("cord_slot_short_of_strip", 10.0), ("slot_past_body", 2.0), ("strip_beside_slot", 25.0)):
+                       ("z_through_nut", 2.0), ("column_in_slot", 1.0), ("cord_slot_short_of_strip", 10.0), ("slot_past_body", 2.0), ("strip_beside_slot", 25.0),
+                       ("collet_proud", 2.0), ("motor_shaft_in_coupling", 8.0)):
         if found[key] < least - 1e-9:
             bad.append(f"{key} is {found[key]:.1f}, under {least}")
     if bad:
@@ -185,16 +195,44 @@ def box(p, name, x, y, z, op="new"):
     return p.extrude(s, x[1] - x[0], op=op, name=name)
 
 
+def panel(p, part, name, x, y, z, layers=1):
+    """A piece of plywood: drawn, and written down for the cut list. One of its three sizes is a sheet's thickness,
+    or `layers` of them glued up."""
+    size = [x[1] - x[0], y[1] - y[0], z[1] - z[0]]
+    # its thickness: whichever of the three is a whole number of layers of one of the sheets, the smallest first
+    thick = next((v for v in sorted(size) for t in (T12, T34) if abs(v - layers * t) < 1e-6), None)
+    if thick is None:
+        raise SystemExit(f"{part}, {name}: {sorted(size)} has no side that is {layers} of either plywood")
+    size.remove(thick)
+    sheet = T12 if abs(thick - layers * T12) < 1e-6 else T34
+    for _ in range(layers):
+        PANELS.append({"part": part, "name": name, "t": sheet, "long": max(size), "wide": min(size)})
+    return box(p, name, x, y, z)
+
+
+def tube(p, part, along, lo, hi, c, bore, t):
+    """A square tube of four panels the same width, each lapping the next, about `c`: along x about (y, z), or
+    along z about (x, y)."""
+    b = bore / 2
+    a = ((-b - t, b), (b, b + t)), ((b, b + t), (-b, b + t)), ((-b, b + t), (-b - t, -b)), ((-b - t, -b), (-b - t, b))
+    names = ("lid", "back", "floor", "front") if along == "x" else ("right", "back", "left", "front")
+    for name, (u, v) in zip(names, a):
+        if along == "x":
+            panel(p, part, name, (lo, hi), (c[0] + u[0], c[0] + u[1]), (c[1] + v[0], c[1] + v[1]))
+        else:
+            panel(p, part, name, (c[0] + v[0], c[0] + v[1]), (c[1] + u[0], c[1] + u[1]), (lo, hi))
+
+
 def xcyl(p, name, x, c, d, op="new"):
     s = p.sketch("right", x[0], name)
     p.circle(s, c, d / 2)
     return p.extrude(s, x[1] - x[0], op=op, name=name)
 
 
-def xhex(p, name, x, c, af, op="new"):
+def xhex(p, name, x, c, af, op="new", turn=0.0):
     s = p.sketch("right", x[0], name)
     r = af / 2 / math.cos(math.radians(30))
-    p.polygon(s, [(c[0] + r * math.cos(math.radians(60 * k)), c[1] + r * math.sin(math.radians(60 * k))) for k in range(6)])
+    p.polygon(s, [(c[0] + r * math.cos(math.radians(turn + 60 * k)), c[1] + r * math.sin(math.radians(turn + 60 * k))) for k in range(6)])
     return p.extrude(s, x[1] - x[0], op=op, name=name)
 
 
@@ -229,32 +267,42 @@ def spread(lo, hi, n=3, inset=15.0):
 
 
 # The gibs: which wall of which guide each is let into. The opposite walls are the reference faces.
-# The Z stage is pushed back (the feed pushes the bit that way) and to the right, against the two rails (the router's
-# weight and the plunge both tip it that way). The quill is pushed back and down.
-# The two in the left wall lie outside the sleeve's mouth, where the stage has a face all the way up, each straight across from a rail.
-Z_GIBS = [("left", -(SB / 2 + 1.5 + GIB[1] / 2)), ("left", SB / 2 + 1.5 + GIB[1] / 2), ("front", MX / 2)]
+# The Z stage is pushed back (the feed pushes the bit that way) and to the right, against the right wall either side
+# of the tube's slot (the router's weight and the plunge both tip it that way). The quill is pushed back and down.
+# The two in the face bear on the left edges of the stage's cheeks, each straight across from where the cheek's
+# right edge rides the right wall.
+Z_GIBS = [("left", -(CO / 2 + T34 / 2)), ("left", CO / 2 + T34 / 2), ("front", MX / 2)]
 Z_SWITCH_Y = (MD / 2 + GAP - 3.0 - SWITCH[1], MD / 2 + GAP - 3.0)
+STRIP_Z = ((ZB + 2.0, ZB + 2.0 + STRIP_L), (ZB + MH - 2.0 - STRIP_L, ZB + MH - 2.0))      # the stage's bearing strips, one near each end
+QUILL_STRIP_X = ((XQ + 2.0, XQ + 2.0 + STRIP_L), (XQ + QL - 2.0 - STRIP_L, XQ + QL - 2.0))
+SINK = GIB[0] - GAP + 0.5                       # how deep a gib's groove is
 
 
 def outer_box(p):
-    box(p, "outer box", BOX_X, (-BOX_Y, BOX_Y), (-OUTER_WALL, IH + OUTER_WALL))
-    box(p, "inside: the Z guide", (-GAP, MX + GAP), (-MD / 2 - GAP, MD / 2 + GAP), (0.0, IH), op="remove")
+    """Six panels. Floor and lid take the whole footprint, front and back stand between them the box's whole
+    length, and the two ends stand between those: the bit-side face in the thin plywood, the right wall in the thick."""
+    part, wy = "Outer box", MD / 2 + GAP
+    panel(p, part, "floor", BOX_X, (-BOX_Y, BOX_Y), (-T34, 0.0))
+    panel(p, part, "lid", BOX_X, (-BOX_Y, BOX_Y), (IH, IH + T34))
+    panel(p, part, "front", BOX_X, (-BOX_Y, -wy), (0.0, IH))
+    panel(p, part, "back", BOX_X, (wy, BOX_Y), (0.0, IH))
+    panel(p, part, "face", (BOX_X[0], -GAP), (-wy, wy), (0.0, IH))
+    panel(p, part, "right wall", (MX + GAP, BOX_X[1]), (-wy, wy), (0.0, IH))
     box(p, "bit slot", (BOX_X[0] - 1.0, -GAP + 1.0), (-SLOT_W / 2, SLOT_W / 2), SLOT_Z, op="remove")
-    box(p, "the X column's way", (MX + GAP - 1.0, BOX_X[1] + 1.0), (-CO / 2 - 1.5, CO / 2 + 1.5), COL_SLOT_Z, op="remove")
-    # At full plunge and the stage down the cord's boot hangs under the column in the thickness of this wall.
+    box(p, "the tube's way", (MX + GAP - 1.0, BOX_X[1] + 1.0), (-CO / 2 - 1.5, CO / 2 + 1.5), COL_SLOT_Z, op="remove")
+    # With the stage down and the quill near full plunge the cord trails out under the tube, through this wall.
     box(p, "the cord's notch", (MX + GAP - 1.0, BOX_X[1] + 1.0), (-CORD_SLOT / 2, CORD_SLOT / 2), (COL_SLOT_Z[0] - CORD_NOTCH, COL_SLOT_Z[0] + 1.0), op="remove")
     box(p, "the Z switch's pocket", (7.5, 8.5 + SWITCH[0]), (Z_SWITCH_Y[0] - 0.5, Z_SWITCH_Y[1] + 0.5), (IH - 1.0, IH + SWITCH[2]), op="remove")
-    zcyl(p, "the Z screw's way", (-OUTER_WALL - 1.0, 1.0), (MX / 2, 0.0), SCREW_D + 1.0, op="remove")
-    sink = GIB[0] - GAP + 0.5
+    zcyl(p, "the Z screw's way", (-T34 - 1.0, 1.0), (MX / 2, 0.0), SCREW_D + 1.0, op="remove")
     for wall, at in Z_GIBS:
         if wall == "left":
-            box(p, "gib pocket", (-GAP - sink, -GAP + 0.5), (at - GIB[1] / 2 - 0.25, at + GIB[1] / 2 + 0.25), (8.0, IH - 8.0), op="remove")
+            box(p, "gib groove", (-GAP - SINK, -GAP + 0.5), (at - GIB[1] / 2 - 0.25, at + GIB[1] / 2 + 0.25), (8.0, IH - 8.0), op="remove")
             for z in spread(8.0, IH - 8.0):
                 xcyl(p, "set screw", (BOX_X[0] - 1.0, -GAP), (at, z), SET_SCREW, op="remove")
         else:
-            box(p, "gib pocket", (at - GIB[1] / 2 - 0.25, at + GIB[1] / 2 + 0.25), (-MD / 2 - GAP - sink, -MD / 2 - GAP + 0.5), (8.0, IH - 8.0), op="remove")
+            box(p, "gib groove", (at - GIB[1] / 2 - 0.25, at + GIB[1] / 2 + 0.25), (-wy - SINK, -wy + 0.5), (8.0, IH - 8.0), op="remove")
             for z in spread(8.0, IH - 8.0):
-                ybore(p, "set screw", (at, z), SET_SCREW, -MD / 2 - GAP, OUTER_WALL + 1.0)
+                ybore(p, "set screw", (at, z), SET_SCREW, -wy, T34 + 1.0)
 
 
 def z_gibs(p):
@@ -265,74 +313,90 @@ def z_gibs(p):
             box(p, "Z gib", (at - GIB[1] / 2, at + GIB[1] / 2), (-MD / 2 - GIB[0], -MD / 2), (9.0, IH - 9.0))
 
 
-def z_stage(p):
-    top = ZB + MH
-    box(p, "Z stage", (0.0, MX), (-MD / 2, MD / 2), (ZB, top))
-    box(p, "sleeve: the X guide", (-1.0, MX + 1.0), (-SB / 2, SB / 2), (top - WALL - SB, top - WALL), op="remove")
-    box(p, "the Z screw's room", (WALL, MX + 1.0), (-SB / 2, SB / 2), (ZB + BOSS, ZB + BOSS + Z_CLEAR), op="remove")
-    zhex(p, "nut pocket", (ZB - 1.0, ZB + 2.0 + NUT_L + 0.5), (MX / 2, 0.0), NUT_AF + 2 * NUT_FLOAT, op="remove")
-    if CORD_X[0] < MX:      # the cord's slot begins in the edge of the sleeve's floor, over the screw's room
-        zbox(p, "the cord's slot", (CORD_X[0], MX + 1.0), (-CORD_SLOT / 2, CORD_SLOT / 2), (top - 2 * WALL - SB - 1.0, top - WALL - SB + 1.0), op="remove")
-    zcyl(p, "the screw's way", (ZB + NUT_L, ZB + BOSS + 1.0), (MX / 2, 0.0), SCREW_D + 1.0, op="remove")
-    # bearing strips on the two reference sides, one near each end: against the rails, and against the back wall
-    for z in ((ZB + 2.0, ZB + 2.0 + STRIP_L), (top - 2.0 - STRIP_L, top - 2.0)):
-        for y in ((-MD / 2, -CO / 2 - 3.0), (CO / 2 + 3.0, MD / 2)):
-            box(p, "strip on a rail", (MX, MX + GAP), y, z, op="add")
-        box(p, "strip on the back wall", (2.0, MX - 2.0), (MD / 2, MD / 2 + GAP), z, op="add")
-    # the quill's gibs, in the sleeve's lid and its front wall
-    sink = GIB[0] - GAP + 0.5
-    box(p, "gib pocket", (8.0, MX - 8.0), (-GIB[1] / 2 - 0.25, GIB[1] / 2 + 0.25), (top - WALL - 0.5, top - WALL + sink), op="remove")
-    box(p, "gib pocket", (8.0, MX - 8.0), (-SB / 2 - sink, -SB / 2 + 0.5), (AZ - GIB[1] / 2 - 0.25, AZ + GIB[1] / 2 + 0.25), op="remove")
-    for x in spread(8.0, MX - 8.0):
-        zcyl(p, "set screw", (top - WALL, top + 1.0), (x, 0.0), SET_SCREW, op="remove")
-        ybore(p, "set screw", (x, AZ), SET_SCREW, -SB / 2, RAIL + WALL + 1.0)
-
-
-def x_column(p):
-    box(p, "X column", (MX, X_COL_END), (-CO / 2, CO / 2), (AZ - CO / 2, AZ + CO / 2))
-    box(p, "bore: the sleeve carried on", (MX - 1.0, X_COL_END + 1.0), (-SB / 2, SB / 2), (AZ - SB / 2, AZ + SB / 2), op="remove")
-    # the cord's slot, in the floor: as long as the travel, between the stage and where the quill's back strip runs
-    zbox(p, "the cord's slot", (max(CORD_X[0], MX - 1.0), CORD_X[1]), (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - CO / 2 - 1.0, AZ - SB / 2 + 1.0), op="remove")
-    for y in ((-SB / 2 + 6.0, -GIB[1] / 2 - 6.0), (GIB[1] / 2 + 6.0, SB / 2 - 6.0)):   # air in through the lid at the back, each side of the gib; the spider lets it through to the router
+def x_tube(p):
+    """One square tube of the thin plywood from the sleeve's mouth to the X motor: the quill's guide through the
+    stage, the column beyond it, and the motor's housing at its end, with a bulkhead let in for the thrust bearing
+    and a cap for the motor. Its being one piece is what joins column to stage."""
+    part = "X tube"
+    tube(p, part, "x", 0.0, X_TUBE_END, (0.0, AZ), SB, T12)
+    a = X_COL_END
+    panel(p, part, "bulkhead", (a + REC, a + REC + BULKHEAD), (-SB / 2, SB / 2), (AZ - SB / 2, AZ + SB / 2))
+    panel(p, part, "motor's cap", (X_TUBE_END, X_TUBE_END + CAP), (-CO / 2, CO / 2), (AZ - CO / 2, AZ + CO / 2))
+    xcyl(p, "the screw's way", (a + REC - 1.0, a + REC + BULKHEAD + 1.0), (0.0, AZ), SCREW_D + 1.0, op="remove")
+    xcyl(p, "motor's pilot", (X_TUBE_END - 0.5, X_TUBE_END + CAP + 0.5), (0.0, AZ), 22.5, op="remove")
+    # the cord's slot, in the floor: as long as the travel and the slack each way
+    zbox(p, "the cord's slot", CORD_X, (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - CO / 2 - 1.0, AZ - SB / 2 + 1.0), op="remove")
+    for y in ((-SB / 2 + 6.0, -GIB[1] / 2 - 6.0), (GIB[1] / 2 + 6.0, SB / 2 - 6.0)):   # air in through the lid at the back, each side of the gib; it passes the nut's bar to the router
         zbox(p, "vent", (X_COL_END - 70.0, X_COL_END - 20.0), y, (AZ + SB / 2 - 1.0, AZ + CO / 2 + 1.0), op="remove")
-    lo, hi = XQ + QL - X_TRAVEL - STRIP_L - 10.0, X_COL_END - 8.0       # the gibs lie where the quill's back end runs
-    sink = GIB[0] - GAP + 0.5
-    box(p, "gib pocket", (lo, hi), (-GIB[1] / 2 - 0.25, GIB[1] / 2 + 0.25), (AZ + SB / 2 - 0.5, AZ + SB / 2 + sink), op="remove")
-    box(p, "gib pocket", (lo, hi), (-SB / 2 - sink, -SB / 2 + 0.5), (AZ - GIB[1] / 2 - 0.25, AZ + GIB[1] / 2 + 0.25), op="remove")
-    for x in spread(lo, hi):
-        zcyl(p, "set screw", (AZ + SB / 2, AZ + CO / 2 + 1.0), (x, 0.0), SET_SCREW, op="remove")
-        ybore(p, "set screw", (x, AZ), SET_SCREW, -SB / 2, WALL + 1.0)
+    # the quill's gibs: grooves in the lid and the front panel, where the quill's front end runs and where its back end does
+    for lo, hi in X_GIB_X:
+        box(p, "gib groove", (lo - 1.0, hi + 1.0), (-GIB[1] / 2 - 0.25, GIB[1] / 2 + 0.25), (AZ + SB / 2 - 0.5, AZ + SB / 2 + SINK), op="remove")
+        box(p, "gib groove", (lo - 1.0, hi + 1.0), (-SB / 2 - SINK, -SB / 2 + 0.5), (AZ - GIB[1] / 2 - 0.25, AZ + GIB[1] / 2 + 0.25), op="remove")
+        for x in spread(lo, hi):
+            zcyl(p, "set screw", (AZ + SB / 2, AZ + CO / 2 + 1.0), (x, 0.0), SET_SCREW, op="remove")
+            ybore(p, "set screw", (x, AZ), SET_SCREW, -SB / 2, T12 + 1.0)
+
+
+X_GIB_X = ((9.0, MX - 9.0), (XQ + QL - X_TRAVEL - STRIP_L - 9.0, X_COL_END - 9.0))
+
+
+def z_stage(p):
+    """What is glued to the tube to make the stage: a cheek of the thick plywood on its front and on its back,
+    the stage's whole height, and between them at the bottom a foot of four thin layers with the Z nut caged in it.
+    The cheeks' edges are the stage's bearing faces left and right."""
+    part, top = "Z stage", ZB + MH
+    panel(p, part, "front cheek", (0.0, MX), (-MD / 2, -CO / 2), (ZB, top))
+    panel(p, part, "back cheek", (0.0, MX), (CO / 2, MD / 2), (ZB, top))
+    slot = NUT_AF / 2 + NUT_FLOAT
+    panel(p, part, "foot under the nut", (0.0, MX), (-CO / 2, CO / 2), (ZB, ZB + T12))
+    panel(p, part, "foot beside the nut", (0.0, MX), (-CO / 2, -slot), (ZB + T12, ZB + T12 + CAGE), layers=2)
+    panel(p, part, "foot beside the nut", (0.0, MX), (slot, CO / 2), (ZB + T12, ZB + T12 + CAGE), layers=2)
+    panel(p, part, "foot over the nut", (0.0, MX), (-CO / 2, CO / 2), (ZB + T12 + CAGE, ZB + FOOT))
+    zcyl(p, "the screw's way", (ZB - 1.0, ZB + FOOT + 1.0), (MX / 2, 0.0), SCREW_D + 1.0, op="remove")
+    for x in spread(*X_GIB_X[0]):                    # the quill's front gib's set screws come through the front cheek too
+        ybore(p, "set screw", (x, AZ), SET_SCREW, -CO / 2, T34 + 1.0)
+
+
+def stage_strips(p):
+    """The stage's bearing strips, one near each end of its height: on its cheeks' right edges, against the right
+    wall either side of the tube's slot, and on its back cheek, against the back wall."""
+    for z in STRIP_Z:
+        for y in ((-MD / 2, -CO / 2 - 3.0), (CO / 2 + 3.0, MD / 2)):
+            box(p, "strip on the right wall", (MX, MX + GAP), y, z)
+        box(p, "strip on the back wall", (2.0, MX - 2.0), (MD / 2, MD / 2 + GAP), z)
 
 
 def x_gibs(p):
-    lo, hi = XQ + QL - X_TRAVEL - STRIP_L - 9.0, X_COL_END - 9.0
-    for x in ((9.0, MX - 9.0), (lo, hi)):
+    for x in X_GIB_X:
         box(p, "X gib, over the quill", x, (-GIB[1] / 2, GIB[1] / 2), (AZ + QO / 2, AZ + QO / 2 + GIB[0]))
         box(p, "X gib, before it", x, (-QO / 2 - GIB[0], -QO / 2), (AZ - GIB[1] / 2, AZ + GIB[1] / 2))
 
 
 def quill(p):
-    box(p, "X quill", (XQ, XQ + QL), (-QO / 2, QO / 2), (AZ - QO / 2, AZ + QO / 2))
-    box(p, "bore: the router's", (XQ - 1.0, XQ + QL + 1.0), (-QI / 2, QI / 2), (AZ - QI / 2, AZ + QI / 2), op="remove")
+    tube(p, "X quill", "x", XQ, XQ + QL, (0.0, AZ), QI, T12)
     # the cord's slot, in the floor between the two strips: the plug is fed through it as the router goes in
     zbox(p, "the cord's slot", (XQ + CORD_AT - CORD_SLOT / 2 - CORD_SLACK, XQ + CORD_AT - CORD_SLOT / 2 + CORD_PLUG), (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - QO / 2 - 1.0, AZ - QI / 2 + 1.0), op="remove")
-    for x in ((XQ + 2.0, XQ + 2.0 + STRIP_L), (XQ + QL - 2.0 - STRIP_L, XQ + QL - 2.0)):
-        box(p, "strip underneath", x, (-QO / 2 + 4.0, QO / 2 - 4.0), (AZ - QO / 2 - GAP, AZ - QO / 2), op="add")
-        box(p, "strip behind", x, (QO / 2, QO / 2 + GAP), (AZ - QO / 2 + 4.0, AZ + QO / 2 - 4.0), op="add")
+
+
+def quill_strips(p):
+    for x in QUILL_STRIP_X:
+        box(p, "strip underneath", x, (-QO / 2 + 4.0, QO / 2 - 4.0), (AZ - QO / 2 - GAP, AZ - QO / 2))
+        box(p, "strip behind", x, (QO / 2, QO / 2 + GAP), (AZ - QO / 2 + 4.0, AZ + QO / 2 - 4.0))
+
+
+SPIDER_W = 54.0                                 # the nut's bar, across: the quill is open either side of it, for air
 
 
 def spider(p):
-    """A plate across the back of the quill: a rim, four ribs, and the nut boss on the centre. Open between the ribs."""
-    fit, rim, rib = QI / 2 - 0.2, 6.0, 14.0
-    box(p, "spider", (X_SPIDER, X_SPIDER + SPIDER_T), (-fit, fit), (AZ - fit, AZ + fit))
-    for sy in (-1, 1):
-        for sz in (-1, 1):
-            y = sorted((sy * rib / 2, sy * (fit - rim)))
-            z = sorted((AZ + sz * rib / 2, AZ + sz * (fit - rim)))
-            box(p, "open, for air and the cord", (X_SPIDER - 1.0, X_SPIDER + SPIDER_T + 1.0), y, z, op="remove")
-    xcyl(p, "nut boss", (X_SPIDER, X_SPIDER + BOSS), (0.0, AZ), BOSS_D, op="add")
-    xhex(p, "nut pocket", (X_NUT, X_SPIDER + BOSS + 1.0), (0.0, AZ), NUT_AF + 2 * NUT_FLOAT, op="remove")
-    xcyl(p, "the screw's way", (X_SPIDER - 1.0, X_NUT + 1.0), (0.0, AZ), SCREW_D + 1.0, op="remove")
+    """A bar of the thick plywood across the back of the quill, top to bottom, with the X nut caged behind it:
+    two strips of two thin layers either side of the nut, and a keeper over them."""
+    part, fit, w, slot, h = "Spider", QI / 2 - 0.2, SPIDER_W / 2, NUT_AF / 2 + NUT_FLOAT, 20.0
+    x0 = X_SPIDER + T34
+    panel(p, part, "bar", (X_SPIDER, x0), (-w, w), (AZ - fit, AZ + fit))
+    panel(p, part, "beside the nut", (x0, x0 + CAGE), (-w, -slot), (AZ - h, AZ + h), layers=2)
+    panel(p, part, "beside the nut", (x0, x0 + CAGE), (slot, w), (AZ - h, AZ + h), layers=2)
+    panel(p, part, "keeper", (x0 + CAGE, X_CAGE_END), (-w, w), (AZ - h, AZ + h))
+    xcyl(p, "the screw's way", (X_SPIDER - 1.0, X_CAGE_END + 1.0), (0.0, AZ), SCREW_D + 1.0, op="remove")
 
 
 def router(p):
@@ -356,34 +420,24 @@ def router(p):
 
 
 def clamps(p):
-    """Two collars round the body, a close fit in the quill, pushed on from the front after the router is in. Both
-    are on the 58 mm that is round. How they are tightened is the brief's sixth open question."""
+    """Two collars of the thick plywood round the body, a close fit in the quill, pushed on from the front after
+    the router is in. Both are on the 58 mm that is round. A saw kerf and a bolt across it would tighten one; that
+    is the brief's sixth open question and is not drawn."""
     fit = QI / 2 - 0.2
-    for x0 in (XQ + 2.0, XQ + ROUTER_HOUSING - 22.0):
-        box(p, "collar", (x0, x0 + 20.0), (-fit, fit), (AZ - fit, AZ + fit))
-        xcyl(p, "the housing's bore", (x0 - 0.5, x0 + 20.5), (0.0, AZ), ROUTER_D + 0.6, op="remove")
+    for x0 in (XQ + 2.0, XQ + ROUTER_HOUSING - 2.0 - T34):
+        panel(p, "Router clamps", "collar", (x0, x0 + T34), (-fit, fit), (AZ - fit, AZ + fit))
+        xcyl(p, "the body's bore", (x0 - 0.5, x0 + T34 + 0.5), (0.0, AZ), ROUTER_D + 0.6, op="remove")
 
 
-def drive_housing(p, axis):
-    """The end of a column: a recess for the collar and bearing, the bulkhead the bearing sits against, a chamber for
-    the coupling, and the cap the motor is on. The same part on both axes."""
-    half, inner = CO / 2, CO / 2 - WALL
-    if axis == "x":
-        a = X_COL_END
-        box(p, "drive housing", (a, a + DRIVE), (-half, half), (AZ - half, AZ + half))
-        xcyl(p, "recess", (a - 1.0, a + REC), (0.0, AZ), BEARING[0] + 6.0, op="remove")
-        xcyl(p, "the screw's way", (a + REC - 1.0, a + REC + BULKHEAD + 1.0), (0.0, AZ), SCREW_D + 1.0, op="remove")
-        box(p, "chamber", (a + REC + BULKHEAD, a + DRIVE + 1.0), (-inner, inner), (AZ - inner, AZ + inner), op="remove")
-        box(p, "end cap", (a + DRIVE, a + DRIVE + CAP), (-half, half), (AZ - half, AZ + half))
-        xcyl(p, "motor's pilot", (a + DRIVE - 0.5, a + DRIVE + CAP + 0.5), (0.0, AZ), 22.5, op="remove")
-    else:
-        a, c = -OUTER_WALL, MX / 2
-        zbox(p, "drive housing", (c - half, c + half), (-half, half), (a - DRIVE, a))
-        zcyl(p, "recess", (a - REC, a + 1.0), (c, 0.0), BEARING[0] + 6.0, op="remove")
-        zcyl(p, "the screw's way", (a - REC - BULKHEAD - 1.0, a - REC + 1.0), (c, 0.0), SCREW_D + 1.0, op="remove")
-        zbox(p, "chamber", (c - inner, c + inner), (-inner, inner), (a - DRIVE - 1.0, a - REC - BULKHEAD), op="remove")
-        zbox(p, "end cap", (c - half, c + half), (-half, half), (a - DRIVE - CAP, a - DRIVE))
-        zcyl(p, "motor's pilot", (a - DRIVE - CAP - 0.5, a - DRIVE + 0.5), (c, 0.0), 22.5, op="remove")
+def z_drive_housing(p):
+    """Under the outer box's floor: the X motor's housing over again, a square tube of the thin plywood with a
+    bulkhead for the thrust bearing and a cap for the motor."""
+    part, a, c = "Z drive housing", -T34, (MX / 2, 0.0)
+    tube(p, part, "z", a - DRIVE, a, c, SB, T12)
+    panel(p, part, "bulkhead", (c[0] - SB / 2, c[0] + SB / 2), (-SB / 2, SB / 2), (a - REC - BULKHEAD, a - REC))
+    panel(p, part, "motor's cap", (c[0] - CO / 2, c[0] + CO / 2), (-CO / 2, CO / 2), (a - DRIVE - CAP, a - DRIVE))
+    zcyl(p, "the screw's way", (a - REC - BULKHEAD - 1.0, a - REC + 1.0), c, SCREW_D + 1.0, op="remove")
+    zcyl(p, "motor's pilot", (a - DRIVE - CAP - 0.5, a - DRIVE + 0.5), c, 22.5, op="remove")
 
 
 def drive_parts(p, axis):
@@ -393,7 +447,7 @@ def drive_parts(p, axis):
         a, cyl, c = X_COL_END, xcyl, (0.0, AZ)
         rng = lambda u0, u1: (a + u0, a + u1)
     else:
-        a, cyl, c = -OUTER_WALL, zcyl, (MX / 2, 0.0)
+        a, cyl, c = -T34, zcyl, (MX / 2, 0.0)
         rng = lambda u0, u1: (a - u1, a - u0)
     rings = (("collar", REC - BEARING[1] - COLLAR_L, REC - BEARING[1], BEARING[0]), ("thrust bearing", REC - BEARING[1], REC, BEARING[0]),
              ("collar", REC + BULKHEAD, REC + BULKHEAD + COLLAR_L, BEARING[0]), ("coupling", REC + BULKHEAD + COLLAR_L + 2.0, REC + BULKHEAD + COLLAR_L + 2.0 + COUPLING[1], COUPLING[0]))
@@ -413,7 +467,7 @@ def drive_parts(p, axis):
 
 def nut(p, axis):
     if axis == "x":
-        xhex(p, "X nut", (X_NUT, X_NUT + NUT_L), (0.0, AZ), NUT_AF)
+        xhex(p, "X nut", (X_NUT, X_NUT + NUT_L), (0.0, AZ), NUT_AF, turn=30.0)      # its flats to the cage's two strips
         xcyl(p, "thread", (X_NUT - 0.5, X_NUT + NUT_L + 0.5), (0.0, AZ), SCREW_D + 0.4, op="remove")
     else:
         zhex(p, "Z nut", (Z_NUT, Z_NUT + NUT_L), (MX / 2, 0.0), NUT_AF)
@@ -421,24 +475,37 @@ def nut(p, axis):
 
 
 def x_switch(p):
-    """Home is the quill drawn back: its end closes the switch, on the column's floor."""
+    """Home is the quill drawn back: its end closes the switch, on the tube's floor."""
     x0 = XQ + QL + 1.0
     box(p, "X home switch", (x0, x0 + SWITCH[2]), (SB / 2 - 4.0 - SWITCH[1], SB / 2 - 4.0), (AZ - SB / 2, AZ - SB / 2 + SWITCH[0]))
 
 
 def z_switch(p):
-    """Home is the stage up, away from the end where its screw would meet the sleeve: its lid closes the switch."""
+    """Home is the stage up, away from the end where its screw would meet the tube: its top closes the switch."""
     box(p, "Z home switch", (8.0, 8.0 + SWITCH[0]), Z_SWITCH_Y, (IH - 0.5, IH - 0.5 + SWITCH[2]))
 
 
 # Every part: its tab, what draws it, and what it moves with.
-PARTS = [("Outer box", outer_box, "fixed"), ("Z gibs", z_gibs, "fixed"), ("Z drive housing", lambda p: drive_housing(p, "z"), "fixed"),
+PARTS = [("Outer box", outer_box, "fixed"), ("Z gibs", z_gibs, "fixed"), ("Z drive housing", z_drive_housing, "fixed"),
          ("Z drive", lambda p: drive_parts(p, "z"), "fixed"), ("Z home switch", z_switch, "fixed"),
-         ("Z stage", z_stage, "z"), ("Z nut", lambda p: nut(p, "z"), "z"), ("X column", x_column, "z"), ("X gibs", x_gibs, "z"),
-         ("X drive housing", lambda p: drive_housing(p, "x"), "z"), ("X drive", lambda p: drive_parts(p, "x"), "z"), ("X home switch", x_switch, "z"),
-         ("X quill", quill, "xz"), ("Spider", spider, "xz"), ("X nut", lambda p: nut(p, "x"), "xz"), ("Router", router, "xz"), ("Router clamps", clamps, "xz")]
+         ("X tube", x_tube, "z"), ("Z stage", z_stage, "z"), ("Stage strips", stage_strips, "z"), ("Z nut", lambda p: nut(p, "z"), "z"), ("X gibs", x_gibs, "z"),
+         ("X drive", lambda p: drive_parts(p, "x"), "z"), ("X home switch", x_switch, "z"),
+         ("X quill", quill, "xz"), ("Quill strips", quill_strips, "xz"), ("Spider", spider, "xz"), ("X nut", lambda p: nut(p, "x"), "xz"), ("Router", router, "xz"), ("Router clamps", clamps, "xz")]
+PLYWOOD = ("Outer box", "Z drive housing", "X tube", "Z stage", "X quill", "Spider", "Router clamps")   # the tabs whose every body is a piece of plywood
 # The four corners of the travel: how far the quill is run out, and how far the stage is run down.
 CORNERS = [("Home: drawn back, up", 0.0, 0.0), ("Plunged, up", X_TRAVEL, 0.0), ("Drawn back, down", 0.0, Z_TRAVEL), ("Plunged, down", X_TRAVEL, Z_TRAVEL)]
+
+
+def cut_list():
+    """The panels, like with like: thickness, part, piece, long, wide, how many. And how much of a sheet each
+    thickness comes to."""
+    rows = {}
+    for q in PANELS:
+        key = (q["t"], q["part"], q["name"], round(q["long"], 2), round(q["wide"], 2))
+        rows[key] = rows.get(key, 0) + 1
+    out = [{"t": k[0], "part": k[1], "name": k[2], "long": k[3], "wide": k[4], "count": n} for k, n in sorted(rows.items(), key=lambda kv: (-kv[0][0], PLYWOOD.index(kv[0][1]), -kv[0][3]))]
+    area = {t: sum(r["long"] * r["wide"] * r["count"] for r in out if r["t"] == t) for t in (T34, T12)}
+    return out, area
 
 
 def main():
@@ -457,6 +524,9 @@ def main():
         make(part)
         bodies[title] = part.bodies()
         print(f"{title}: " + ", ".join(f"{v:.0f} mm3" for _, v in bodies[title]))
+    for title in PLYWOOD:
+        if len(bodies[title]) != sum(1 for q in PANELS if q["part"] == title) - sum(1 for q in PANELS if q["part"] == title and q["name"].endswith("beside the nut")) // 2:
+            raise SystemExit(f"{title}: its bodies are not its panels")
     corners = {}
     for label, dx, dz in CORNERS:
         asm = new_tab(mcp, {"type": "add_assembly", "name": label})
@@ -472,41 +542,50 @@ def main():
         corners[label] = asm
     home, far = corners[CORNERS[0][0]], corners[CORNERS[3][0]]
     mcp.call("screenshot", {"tab": home, "view": "-0.55,-0.7,0.45", "width": 1500, "height": 1100, "path": os.path.join(OUT, "positioner.png")})
-    fit = f"{BOX_X[0] - X_TRAVEL - 20},-1,{Z_END - 10},{X_END + 10},1,{IH + OUTER_WALL + 10}"
+    fit = f"{BOX_X[0] - X_TRAVEL - 20},-1,{Z_END - 10},{X_END + 10},1,{IH + T34 + 10}"
     mcp.call("screenshot", {"tab": home, "view": "0,-1,0", "section": "y:0", "fit": fit, "width": 1500, "height": 1100, "path": os.path.join(OUT, "section-home.png")})
     mcp.call("screenshot", {"tab": far, "view": "0,-1,0", "section": "y:0", "fit": fit, "width": 1500, "height": 1100, "path": os.path.join(OUT, "section-plunged-down.png")})
     print(mcp.call("export", {"tab": home, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "positioner.pdf"),
-                              "note": f"two-axis router positioner, first pass: X {X_TRAVEL:.0f}, Z {Z_TRAVEL:.0f} of travel; the router's body {ROUTER_D:.0f} as measured, the rest of it off a photograph"}))
+                              "note": f"two-axis router positioner in 1/2 and 3/4 in plywood, first pass: X {X_TRAVEL:.0f}, Z {Z_TRAVEL:.0f} of travel; the router's body {ROUTER_D:.0f} as measured, the rest of it off a photograph"}))
     mcp.close()
 
+    # -- the cut list ---------------------------------------------------------------
+    panels, area = cut_list()
+    with open(os.path.join(OUT, "cutlist.csv"), "w") as f:
+        f.write("thickness_mm,part,piece,long_mm,wide_mm,count\n")
+        for r in panels:
+            f.write(f"{r['t']},{r['part']},{r['name']},{r['long']:.1f},{r['wide']:.1f},{r['count']}\n")
+    sheet = SHEET[0] * SHEET[1]
+
     # -- the report the brief asks for -------------------------------------------
-    sizes = {"Outer box": (BOX_X[1] - BOX_X[0], 2 * BOX_Y, IH + 2 * OUTER_WALL), "Z stage": (MX + GAP, MD + GAP, MH), "X column": (X_COL_END - MX, CO, CO),
-             "X quill": (QL, QO + GAP, QO + GAP), "Spider": (BOSS, QI - 0.4, QI - 0.4), "Drive housing": (DRIVE, CO, CO), "End cap": (CAP, CO, CO)}
-    too_long = sorted(k for k, v in sizes.items() if max(v) > BED)
-    envelope = {"x": (BOX_X[0], X_END), "y": (-BOX_Y, BOX_Y), "z": (Z_END, IH + OUTER_WALL)}
+    sizes = {"Outer box": (BOX_X[1] - BOX_X[0], 2 * BOX_Y, IH + 2 * T34), "Z stage": (MX + GAP, MD + GAP, MH), "X tube": (X_TUBE_END + CAP, CO, CO),
+             "X quill": (QL, QO + GAP, QO + GAP)}
+    envelope = {"x": (BOX_X[0], X_END), "y": (-BOX_Y, BOX_Y), "z": (Z_END, IH + T34)}
     numbers = {
         "router": {"d": ROUTER_D, "envelope": ROUTER_ENV, "length": ROUTER_L, "housing": ROUTER_HOUSING, "grip": ROUTER_GRIP, "nose": [NOSE_D, NOSE_L], "shaft": [SHAFT_D, SHAFT_L],
                    "collet": [COLLET_D, COLLET_L], "nut_face": NUT_FACE, "overall": ROUTER_L + NUT_FACE, "cord": [CORD_AT, CORD_D, CORD_L], "rack": RACK, "rack_turn": RACK_TURN, "face_proud": FACE_PROUD, "bit": [BIT_D, BIT_L]},
-        "travel": {"x": X_TRAVEL, "z": Z_TRAVEL}, "wall": WALL, "outer_wall": OUTER_WALL, "gap": GAP, "strip_l": STRIP_L, "gib": GIB, "engage": ENGAGE, "rail": RAIL,
+        "travel": {"x": X_TRAVEL, "z": Z_TRAVEL}, "ply": [T12, T34], "outer_wall": T34, "face_wall": T12, "gap": GAP, "strip_l": STRIP_L, "gib": GIB, "engage": ENGAGE, "rail": RAIL,
         "screw": {"d": SCREW_D, "pitch": SCREW_PITCH, "per_step": SCREW_PITCH / 200, "nut": [NUT_AF, NUT_L], "float": NUT_FLOAT, "lead": NUT_LEAD, "tip_clear": TIP_CLEAR},
         "quill": {"bore": QI, "outside": QO, "length": QL, "front": XQ}, "sleeve": {"bore": SB, "outside": CO},
-        "stage": {"x": MX, "y": MD, "height": MH, "foot": ZB, "screw_room": Z_CLEAR, "boss": BOSS}, "box": {"x": BOX_X, "y": BOX_Y, "inside_height": IH, "slot_z": SLOT_Z, "slot_w": SLOT_W, "column_slot_z": COL_SLOT_Z, "cord_slot": [CORD_SLOT, CORD_PLUG], "cord_x": CORD_X, "cord_slack": CORD_SLACK, "cord_notch": CORD_NOTCH},
-        "axis_z": AZ, "x": {"router_back": X_ROUTER_BACK, "tip": X_TIP, "nut": X_NUT, "spider": X_SPIDER, "column_end": X_COL_END, "end": X_END},
+        "stage": {"x": MX, "y": MD, "height": MH, "foot": ZB, "screw_room": Z_CLEAR, "boss": FOOT}, "box": {"x": BOX_X, "y": BOX_Y, "inside_height": IH, "slot_z": SLOT_Z, "slot_w": SLOT_W, "column_slot_z": COL_SLOT_Z,
+                                                                                                         "cord_slot": [CORD_SLOT, CORD_PLUG], "cord_x": CORD_X, "cord_slack": CORD_SLACK, "cord_notch": CORD_NOTCH},
+        "axis_z": AZ, "x": {"router_back": X_ROUTER_BACK, "tip": X_TIP, "nut": X_NUT, "spider": X_SPIDER, "cage_end": X_CAGE_END, "column_end": X_COL_END, "tube_end": X_TUBE_END, "end": X_END},
         "z": {"nut": Z_NUT, "tip": Z_TIP, "end": Z_END}, "drive": {"recess": REC, "bulkhead": BULKHEAD, "chamber": CHAMBER, "length": DRIVE, "cap": CAP, "motor": MOTOR},
         "rules": found, "envelope": envelope, "size": [envelope[k][1] - envelope[k][0] for k in "xyz"],
         "behind_router": {"drawn_back": X_END - X_ROUTER_BACK, "plunged": X_END - X_ROUTER_BACK + X_TRAVEL},
-        "out_of_the_box": X_END - BOX_X[1], "bed": BED, "sizes": sizes, "too_long_to_print": too_long,
+        "out_of_the_box": X_END - BOX_X[1], "sizes": sizes,
+        "plywood": PLYWOOD, "panels": panels, "area": {"t34": area[T34], "t12": area[T12], "sheet": sheet},
         "parts": [{"tab": t, "moves": m, "bodies": [list(b) for b in bodies[t]]} for t, _, m in PARTS], "corners": [[c[0], c[1], c[2]] for c in CORNERS],
     }
     with open(os.path.join(OUT, "positioner.json"), "w") as f:
         json.dump(numbers, f, indent=1)
-    print(f"envelope {numbers['size'][0]:.0f} long x {numbers['size'][1]:.0f} deep x {numbers['size'][2]:.0f} tall; {numbers['out_of_the_box']:.0f} of that is column and motor out of the box's right side; "
+    print(f"envelope {numbers['size'][0]:.0f} long x {numbers['size'][1]:.0f} deep x {numbers['size'][2]:.0f} tall; {numbers['out_of_the_box']:.0f} of that is tube and motor out of the box's right side; "
           f"{numbers['behind_router']['drawn_back']:.0f} behind the router drawn back")
     print(f"quill {QO:.0f} square x {QL:.0f}, in its guide {found['x_engaged']:.2f} widths; Z stage {MX:.0f} x {MD:.0f} x {MH:.0f}, {found['z_engaged']:.2f} widths; outer box {sizes['Outer box'][0]:.0f} x {sizes['Outer box'][1]:.0f} x {sizes['Outer box'][2]:.0f}")
-    print(f"X screw tip {found['x_tip_to_router']:.0f} from the router's back, drawn back; Z screw tip {found['z_tip_to_sleeve']:.0f} under the sleeve, down; at full plunge the router's nose {found['nose_proud']:.1f} out of the box's face and the collet nut {found['collet_proud']:.1f} clear of it")
-    print(f"the cord's boot: {found['cord_past_stage']:.0f} past the stage at full plunge and {found['cord_in_wall']:.1f} into the outer box's right wall, {found['cord_short_of_strip']:.0f} short of where the quill's back strip runs; "
-          f"its slots allow {CORD_SLACK:.0f} either way, and the bore {found['cap_in_bore']:.1f} round the cap as photographed")
-    print(f"over the printer's {BED:.0f}: {', '.join(too_long) or 'nothing'}")
+    print(f"X screw tip {found['x_tip_to_router']:.0f} from the router's back, drawn back; Z screw tip {found['z_tip_to_sleeve']:.1f} under the tube, down; at full plunge the router's nose {found['nose_proud']:.1f} out of the box's face and the collet nut {found['collet_proud']:.1f} clear of it")
+    print(f"the cord's boot: {-found['cord_past_stage']:.0f} inside the stage's end at full plunge, over its open room; the tube's slot allows {CORD_SLACK:.0f} either way and runs {found['slot_under_strip']:.0f} under "
+          f"where the quill's back strip does, which bears {found['strip_beside_slot']:.0f} each side of it; the bore {found['cap_in_bore']:.1f} round the cap as photographed")
+    print(f"plywood: {sum(r['count'] for r in panels)} pieces; 3/4 in {area[T34] / 1e6:.2f} m2, {100 * area[T34] / sheet:.0f} % of a sheet; 1/2 in {area[T12] / 1e6:.2f} m2, {100 * area[T12] / sheet:.0f} % of a sheet")
 
 
 if __name__ == "__main__":
