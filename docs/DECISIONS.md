@@ -1893,7 +1893,20 @@ pass had guessed 65, and guessed the rest too.
   the cuts need 45. The bit's length out of the nut is the same
   either way: it is the blank's swing and the 12 mm past the axis.
 
+- **The collet is a quarter inch, and the sled is planned for it.**
+  The owner's Colt is the North American one. The plan had 6 mm
+  shanks because the tapered ball-noses it was drawn from are metric;
+  the same bits are sold on 1/4 in shanks, 3 in long. The shank is
+  6.35, the flank leans 3.1° a side where it leant 2.8, the straight
+  bit and the probe's pin are 6.35. The table comes to 485 rows from
+  503: the wider bit roughs in 185 runs where it took 211, and the
+  steeper flank costs 8 more finishing runs. The outline is still
+  reached everywhere, 0.05 mm at the worst.
+- **Points nothing reaches are counted at the end of planning.** The
+  planner counted a point as unreached when its own pass could not
+  better it, even if a neighbour's pass then took it. The steeper
+  flank made four such points; all four end within 0.05 mm. The
+  count is now of what still stands when the passes are all made.
+
 Not settled by this: the cap's width the other way across, where the
-brush caps are; what holds the spindle while the nut is turned; and
-the collet, which on a Colt with this label is 1/4 in, where the
-sled's bits and pin are planned at 6 mm.
+brush caps are, and whether a thumb through the slot works the lock.

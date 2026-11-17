@@ -162,7 +162,6 @@ important first:
 | in front of the body: boss, spindle, collet nut | 44 x 13, 13 x 6, 20 x 15: the nut's face 34 out | where the nut is at full plunge; in the stick sled, how far the positioner stands from the stick |
 | on the front face's rim: the rack's end, the lock, three screw heads | the rack 18 wide and 12 proud, about 100° round from the cord; the rest 3 proud | the slot is as wide as the body so that they pass, wherever round they are |
 | whether a thumb through the slot works the lock | not tried | how a bit is changed |
-| which collet | not in the model | the stick sled's bits and probe pin are planned at 6 mm |
 
 ## Parts
 

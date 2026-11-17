@@ -16,7 +16,7 @@ each. From them:
     pin apart, whatever the screw says;
   - the master's runout on the spindle: what half a turn changes.
 
-    python3 calibrate.py fit probe_log.csv [--master 15.98] [--pin 6.00]
+    python3 calibrate.py fit probe_log.csv [--master 15.98] [--pin 6.35]
         the log -> built.json. Then run build.py: it plans the table for that.
     python3 calibrate.py align FRONT_NEAR FRONT_FAR TOP_NEAR TOP_FAR [SPAN]
         the four band diameters bands.csv turned -> how far to move the tail centre.
@@ -43,7 +43,7 @@ import plan as P  # noqa: E402
 OUT = os.path.join(HERE, "out")
 BUILT = os.path.join(HERE, "built.json")
 
-PIN_D = 6.0                                     # the ground pin in the collet. A quarter-inch collet takes a 6.35 one: say so to `fit`
+PIN_D = 6.35                                    # the ground pin in the collet, a quarter inch: a dowel pin or a length of drill rod. Say what it measures to `fit`
 OVER = 4.0                                      # for the touches from below and above, the pin's end is this far past the stick's axis
 TOUCH = 0.01                                    # how well a touch is taken to repeat
 TOUCHES = 3                                     # each place is touched this many times

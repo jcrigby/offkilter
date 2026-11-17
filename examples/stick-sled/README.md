@@ -64,23 +64,26 @@ master, so a move between passes must not carry it through the
 master. The safe way is to draw the bit back until its tip is 2 mm
 clear of the master, then up or down and round, then out. Most moves
 do not need it: the build follows each one along its own path and
-marks it straight if the whole bit passes the master by 1.5 mm. 412
-of the 503 are.
+marks it straight if the whole bit passes the master by 1.5 mm. 399
+of the 485 are.
 
 A stop post on the base meets the sled's plate at each end of its
 218 mm. The shafts set how far apart the bearing blocks can be: 180 mm
 on the 490 shaft and 104 on the 416, with 3.5 and 4.5 mm to spare at
 each end.
 
-## The table: 503 rows a stick
+## The table: 485 rows a stick
 
 | rows | what | bit |
 |---|---|---|
 | 1 | put the blank on | |
-| 1 | set the straight bit | 6 mm straight |
-| 211 | roughing: 86 places from 24 directions, in bites of 3 mm | |
-| 1 | set the ball-nose | 3 mm ball-nose, tapered |
-| 289 | finishing: 244 passes, the deep ones in bites of 1.5 mm | |
+| 1 | set the straight bit | 1/4 in straight |
+| 185 | roughing: 83 places from 24 directions, in bites of 3 mm | |
+| 1 | set the ball-nose | 3 mm ball-nose, tapered to a 1/4 in shank |
+| 297 | finishing: 244 passes, the deep ones in bites of 1.5 mm | |
+
+Both bits have 1/4 in shanks: the router is the North American Colt,
+and that is its collet.
 
 The cuts are the hinged sled's, planned by the same `plan.py`: every
 finishing pass from its own direction, the whole of a tapered bit
@@ -121,7 +124,7 @@ Estimated.
 | Z travel | 21.0 to 59.0 mm used of 80 | 60 would do |
 | how it lies | on its lid, on a 19 mm plinth | the stage's weight then pulls away from its column, onto the collar that has no thrust bearing yet |
 | its face from the stick's axis | 54 mm | the Colt's collet nut is 34 mm in front of the quill, so at the deepest cut it is 20.5 out of the face, and the uncut blank's corners swing 33.5. The nut sets the distance, not the face |
-| the bit out of the collet nut | 45.5 mm | the blank's swing, and 12 mm past the stick's axis. The router does not change it: the positioner stands back by what the nut stands out. A 75 mm tapered ball-nose does; the 6 mm straight bit must be as long |
+| the bit out of the collet nut | 45.5 mm | the blank's swing, and 12 mm past the stick's axis. The router does not change it: the positioner stands back by what the nut stands out. A 3 in tapered ball-nose on a 1/4 in shank does; the 1/4 in straight bit must be as long, 3 in overall |
 | the depth's screw | M8 rod, as the positioner draws | a rod's pitch is nobody's promise, but it matters little here: 0.2 % off costs under a hundredth of a millimetre in the study |
 | its two travels, square | not known until it is built | 2 mm in a metre out is 0.07 mm on the tile: the largest thing left. See Setting up |
 
@@ -172,14 +175,14 @@ one goes in.
 
 ### 1. Where the bit's height is: `out/probe.csv`
 
-A ground pin goes in the collet in place of a bit, with the probe's
+A ground 1/4 in pin goes in the collet in place of a bit, with the probe's
 clip on it, and no stick on the sled. The controller brings the pin
 against the master from the front, from below and from above, and
 again with the spindle half a turn round: six places, three touches
 each, a few minutes.
 
 ```sh
-python3 calibrate.py fit probe_log.csv --master 15.98 --pin 6.00
+python3 calibrate.py fit probe_log.csv --master 15.98 --pin 6.35
 python3 build.py
 ```
 
@@ -200,7 +203,7 @@ repeating to 0.01 mm. The worst finishing cut of each:
 | | median | 95 in 100 | worst of 300 |
 |---|---|---|---|
 | from the drawing's table | 1.62 mm | 2.97 | 3.19 |
-| after the six touches | 0.044 mm | 0.070 | 0.077 |
+| after the six touches | 0.044 mm | 0.070 | 0.076 |
 | the same, were the depth's screw true | 0.038 | 0.066 | 0.075 |
 | and the two travels square as well | 0.013 | 0.025 | 0.033 |
 
@@ -241,7 +244,7 @@ and up or down. All of it is simulation.
 | what | in the model | check |
 |---|---|---|
 | the router | its body is 70.71 mm, measured; the rest of the positioner rests on two photographs of it | see the positioner's own table |
-| the collet | 6 mm: both bits' shanks and the probe's pin | the Colt in the photograph has the North American label, and those are sold with a 1/4 in collet. Then the straight bit and the pin are 6.35 and the table is planned again |
+| the probe's pin | 6.35 mm, a 1/4 in dowel pin or drill rod | measure it and give `fit` what it is with `--pin` |
 | the two shafts | 490 and 416 long | they set the blocks' spacing and the travel; shorter ones want a shorter stick |
 | the shafts' supports and blocks | SK20 51 to the centre, 70 high; SC20UU 25 to the centre, 42 high | they set the sled's height, and with the plinth, the blank's 9 mm over the plate |
 | the bit's length | 45.5 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach |
@@ -273,7 +276,7 @@ written a second time, in Rust, and works every row forward:
   shank too, is never in the tile, and a roughing bite never within
   its allowance;
 - the last bites of the finishing passes together reach the whole
-  outline, from 181 directions;
+  outline, from 179 directions;
 - the waste, on a grid of the test's own, with the table's rows run
   over it in the table's order: no row meets more than a hair-wide
   fin standing higher than its bit's bite;

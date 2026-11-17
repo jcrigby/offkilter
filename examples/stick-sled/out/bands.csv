@@ -16,15 +16,15 @@ n,kind,tool,depth,height,turn,via,label
 14,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 15,say,,0.0,0.0,0.0,s,draw right back
 16,say,,0.0,0.0,0.0,s,move both stops 10 mm toward thetail
-17,place,straight,49.0212,61.0,0.0,s,top 18
+17,place,straight,49.1962,61.175,0.0,s,top 18
 18,round,,0.0,0.0,0.0,s,push to the far stop and hold
 19,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 20,say,,0.0,0.0,0.0,s,draw right back
-21,place,straight,49.0212,57.0,0.0,s,top 14
+21,place,straight,49.1962,57.175,0.0,s,top 14
 22,round,,0.0,0.0,0.0,s,push to the far stop and hold
 23,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 24,say,,0.0,0.0,0.0,s,draw right back
-25,place,straight,49.0212,53.0,0.0,s,top 10
+25,place,straight,49.1962,53.175,0.0,s,top 10
 26,round,,0.0,0.0,0.0,s,push to the far stop and hold
 27,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 28,say,,0.0,0.0,0.0,s,draw right back

@@ -54,7 +54,7 @@ CORD_AT, CORD_D, CORD_L = 133.0, 16.0, 35.0  # the cord's boot leaves the cap's 
 RACK = (18.0, 6.0, 12.0)        # the depth rack's end: wide, thick, and how far it stands out of the body's front face, at the rim. Photo
 RACK_TURN = 100.0               # and how far round from the cord it is, degrees. The two photos together, so roughly
 FACE_PROUD = 3.0                # three screw heads and the spindle lock, also at the rim of that face, stand out about this much. Photo
-BIT_D, BIT_L = 8.0, 40.0        # a mortising bit past the nut, for the pictures and the slot
+BIT_D, BIT_L = 6.35, 40.0       # a quarter-inch bit past the nut, for the pictures: the collet is a quarter inch
 
 X_TRAVEL = 60.0                 # plunge. The brief leaves it open: a 50 mm mortise and room to clear the work
 Z_TRAVEL = 80.0                 # bit height. Open too

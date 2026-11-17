@@ -4,9 +4,9 @@ n,kind,tool,depth,height,turn,via,label
 2,say,pin,0.0,0.0,0.0,h,no stick on.    sled back at itsstop
 3,leads,pin,0.0,0.0,0.0,h,pin
 4,in,pin,38.0212,40.0,0.0,h,pin at the front
-5,up,pin,50.0212,29.0,0.0,h,pin from below
-6,dn,pin,50.0212,51.0,0.0,h,pin from above
+5,up,pin,50.0212,28.825,0.0,h,pin from below
+6,dn,pin,50.0212,51.175,0.0,h,pin from above
 7,in,pin,38.0212,40.0,180.0,h,pin at the front
-8,up,pin,50.0212,29.0,180.0,h,pin from below
-9,dn,pin,50.0212,51.0,180.0,h,pin from above
+8,up,pin,50.0212,28.825,180.0,h,pin from below
+9,dn,pin,50.0212,51.175,180.0,h,pin from above
 10,say,pin,0.0,0.0,0.0,h,done. park the  clip. copy      probe_log.csv   calibrate.py fit

@@ -11031,7 +11031,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 4.0
+                    "radius": 3.175
                   }
                 ],
                 "constraints": [],

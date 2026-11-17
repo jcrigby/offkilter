@@ -14,14 +14,15 @@ import math
 
 # The tile's cuts.
 BIT = 3.0                       # the finishing bit: a ball-nose, 1.5 radius
-TAPER = math.degrees(math.atan(1.5 / 30.5))   # degrees a side its flank leans out above the ball: the common tapered ball-nose, 3 mm at the tip to 6 over 30.5 (0 for a straight bit)
-SHANK = 6.0                     # its shank: the taper stops at this diameter
+SHANK = 6.35                    # its shank, a quarter inch: the owner's Colt is the North American one, and that is the collet it has. The taper stops at this diameter
+TAPER_L = 30.5                  # the length its flank takes to widen from the ball to the shank
+TAPER = math.degrees(math.atan((SHANK - BIT) / 2 / TAPER_L))   # degrees a side its flank leans out above the ball: the common tapered ball-nose, 3 mm at the tip to its shank over 30.5 (0 for a straight bit)
 RIDGE = 0.05                    # what a pass may leave standing between it and the next, to sand
 FACE_MIN = 0.2                  # the ball cuts no further round its side than this: the cosine between the bit and the face (78 deg)
 OFF_CENTRE = 15.0               # degrees: a pass meets its face this far round the ball from its tip, where it can. The tip's dead centre does not turn; 15 deg round, the edge passes at a metre a second
 Y_LIM = 19.0                    # the planner keeps the cutter this near the axis; the positioner's height travel has twice that
-ROUGH_BIT, ROUGH_BITE = 6.0, 3.0   # roughing: a straight bit, and the most it takes at a bite
-ROUGH_STEP = 3.0                # its places across, half its width apart
+ROUGH_BIT, ROUGH_BITE = 6.35, 3.0   # roughing: a straight quarter-inch bit, and the most it takes at a bite
+ROUGH_STEP = 3.0                # its places across, a little under half its width apart
 ROUGH_ANGLES = 24               # the directions it roughs from, 15 deg apart
 ALLOW = 0.4                     # what roughing leaves on the tile for the ball-nose
 BALL_BITE = 1.5                 # the most the ball-nose takes at a bite
@@ -217,10 +218,11 @@ def finish(outline):
     for i in range(n):
         if left[i] > RIDGE:
             add(i, FACE_MIN)
-    orphans = 0
     for i in range(n):                                    # what is still standing: any direction that reaches it at all
-        if left[i] > RIDGE + 0.03 and not add(i, 0.02):
-            orphans += 1
+        if left[i] > RIDGE + 0.03:
+            add(i, 0.02)
+    # What nothing reached is counted at the end: a point its own pass could not better may be taken by its neighbour's.
+    orphans = sum(1 for v in left if v > RIDGE + 0.03)
     return passes, left, orphans
 
 
