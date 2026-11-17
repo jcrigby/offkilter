@@ -52,7 +52,7 @@ def room(q, outline):
 
 
 def widest(outline):
-    """Where the tile's largest inscribed circle is: the place for the axis that gives the fattest journal."""
+    """Where the tile's largest inscribed circle is: the place for the axis with the most room round it for a spur and a master."""
     xs, ys = [q[0] for q in outline], [q[1] for q in outline]
     best = max(((room((x, y), outline), x, y) for x in (min(xs) + 0.5 * i for i in range(int((max(xs) - min(xs)) * 2) + 1))
                 for y in (min(ys) + 0.5 * j for j in range(int((max(ys) - min(ys)) * 2) + 1))))

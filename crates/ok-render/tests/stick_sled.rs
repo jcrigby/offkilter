@@ -1,13 +1,14 @@
 //! The stick sled (examples/stick-sled) as a regression suite. The
 //! table of rows the controller reads is three numbers a row, where
-//! two pushers and a spindle stand; this works the hinges forward
-//! from them and checks the cutter is where the plan wants it, never
-//! in the tile, that the passes reach the whole outline, that the
-//! stick, its hangers and its steadies clear the table and the cutter
-//! at every row, that the controller's own program, simulated, ends
-//! every row on the table's steps and never swings the stick across
-//! the cutter below the safe height, and that the model is the sled
-//! at one of the rows.
+//! two screws' noses and a spindle stand; this works the hinges and
+//! links forward from them and checks the cutter is where the plan
+//! wants it, the whole of the bit never in the tile, that the passes
+//! reach the whole outline, that run in the table's order no cut
+//! meets more than its bite, that the stick, the pulley and the
+//! hangers clear the table at every row, that the controller's own
+//! program, simulated, ends every row on the table's steps and never
+//! swings the stick across the cutter below the safe height, and that
+//! the model is the sled at one of the rows.
 
 use ok_brep::{BoolOp, Solid};
 use ok_model::{Document, TabId};
@@ -228,17 +229,6 @@ fn near(q: P2, a: P2, b: P2) -> f64 {
     (q.0 - a.0 - t * dx).hypot(q.1 - a.1 - t * dy)
 }
 
-fn seg_seg(a: P2, b: P2, c: P2, d: P2) -> f64 {
-    let cross = |o: P2, p: P2, q: P2| (p.0 - o.0) * (q.1 - o.1) - (p.1 - o.1) * (q.0 - o.0);
-    if cross(a, b, c) * cross(a, b, d) < 0.0 && cross(c, d, a) * cross(c, d, b) < 0.0 {
-        return 0.0;
-    }
-    near(a, c, d)
-        .min(near(b, c, d))
-        .min(near(c, a, b))
-        .min(near(d, a, b))
-}
-
 fn tab(doc: &Document, name: &str) -> TabId {
     doc.tabs
         .iter()
@@ -277,7 +267,6 @@ fn every_row_puts_the_cutter_where_the_plan_wants_it_and_never_in_the_tile() {
     let (sled, rows, tile) = (Sled::new(&n), rows(&n), outline(&n));
     let ball = f(&n["bit"]) / 2.0;
     let (flat, allow) = (f(&n["rough"]["bit"]) / 2.0, f(&n["rough"]["allow"]));
-    let radius = f(&n["journal"]["radius"]);
     let mut worst = 0.0f64;
     let mut gouge = 0.0f64;
     // The finishing bit as it is: a ball, a flank leaning out above it, a shank. The plan must keep all of it out of the tile.
@@ -317,9 +306,6 @@ fn every_row_puts_the_cutter_where_the_plan_wants_it_and_never_in_the_tile() {
                     }
                 }
             }
-            "journal" => {
-                assert!(r.across.abs() < 1e-9 && r.tip >= radius - 1e-9);
-            }
             "set" => {
                 assert!(r.across.abs() < 1e-9 && (r.tip - master).abs() < 1e-9);
             }
@@ -332,10 +318,10 @@ fn every_row_puts_the_cutter_where_the_plan_wants_it_and_never_in_the_tile() {
     );
     assert!(gouge < 1e-6);
     let count = |k: &str| rows.iter().filter(|r| r.kind == k).count() as u64;
-    for k in ["set", "place", "journal", "pause", "rough", "finish"] {
+    for k in ["set", "rough", "finish"] {
         assert_eq!(count(k), n["count"][k].as_u64().unwrap());
     }
-    // Two settings of the cutter, each on the master's radius: the straight bit before the journals, the ball-nose before the finish.
+    // Two settings of the cutter, each on the master's radius: the straight bit before roughing, the ball-nose before the finish.
     let sets: Vec<&Row> = rows.iter().filter(|r| r.kind == "set").collect();
     assert_eq!(sets.len(), 2);
     assert!(sets[0].tool == "straight" && sets[1].tool == "ball");
@@ -548,30 +534,24 @@ fn in_the_table_s_order_no_row_takes_more_than_its_bite_of_what_stands() {
     assert!(rough > 0.7 * waste && left < 0.015 * waste);
 }
 
-/// At every row the blank clears the table, so do the pulley and the
-/// hangers; the steadies clear the cutter; each link stays near its
-/// screw's line, a link's length from pin to pin; and the journals
-/// lie inside the tile.
+/// At every row the blank clears the table, and so does the pulley,
+/// which stands lower than the hangers; each link is a link's length
+/// from pin to pin and stays near its screw's line; and the axis is
+/// where the tile is fattest, the master and spur inside that.
 #[test]
-fn the_stick_clears_the_table_and_the_steadies_clear_the_cutter_at_every_row() {
+fn the_stick_clears_the_table_and_the_links_stay_true_at_every_row() {
     let n = numbers();
     let (sled, rows, tile) = (Sled::new(&n), rows(&n), outline(&n));
-    let j = &n["journal"];
-    let (radius, circle) = (f(&j["radius"]), f(&n["tile"]["circle"]));
+    let circle = f(&n["tile"]["circle"]);
     let nearest = tile.iter().map(|q| q.0.hypot(q.1)).fold(f64::MAX, f64::min);
+    let master = f(&n["sled"]["master_r"]);
     println!(
-        "a circle of {circle:.2} fits about the axis; the journal {:.1} round",
-        2.0 * radius
+        "a circle of {circle:.2} fits about the axis; the master and spur are {:.0} round",
+        2.0 * master
     );
-    assert!(circle > 9.5 && nearest >= circle - 1e-9 && radius < circle - 0.05);
+    assert!(circle > 9.5 && nearest >= circle - 1e-9 && master <= circle - 1.0);
     let blank = f(&n["rough"]["blank"]);
-    let steady: Vec<P2> = n["steady"]["outline"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(pair)
-        .collect();
-    let (mut table, mut gap, mut pulley) = (f64::MAX, f64::MAX, f64::MAX);
+    let (mut table, mut pulley) = (f64::MAX, f64::MAX);
     let (mut lean1, mut lean2) = (0.0f64, 0.0f64);
     for r in &rows {
         let p = sled.pose(r.lift, r.swing, r.turn);
@@ -597,40 +577,17 @@ fn the_stick_clears_the_table_and_the_steadies_clear_the_cutter_at_every_row() {
             .fold(f64::MIN, f64::max)
             + blank;
         table = table.min(p.axis.1 - reach);
-        // The cutter, a line up from under the table to its tip, against the steady hanging with the frame.
-        let rt = if r.tool == "ball" {
-            f(&n["bit"]) / 2.0
-        } else {
-            f(&n["rough"]["bit"]) / 2.0
-        };
-        let top = (0.0, sled.bit_up - if r.tool == "ball" { rt } else { 0.0 });
-        let pts: Vec<P2> = steady
-            .iter()
-            .map(|q| add(p.axis, rot(p.hang, *q)))
-            .collect();
-        for i in 0..pts.len() {
-            let d = seg_seg(top, (0.0, -30.0), pts[i], pts[(i + 1) % pts.len()]) - rt;
-            gap = gap.min(d);
-        }
     }
     println!(
-        "the blank {table:.2} over the table at its lowest, the pulley {pulley:.2}; the cutter {gap:.2} from a steady at its nearest; \
-         the links lean at most {lean1:.1} and {lean2:.1} deg"
+        "the blank {table:.2} over the table at its lowest, the pulley {pulley:.2}; the links lean at most {lean1:.1} and {lean2:.1} deg"
     );
     assert!(table >= f(&n["table_clear"]) - 0.01 && table < f(&n["table_clear"]) + 1.5);
     assert!(pulley >= 1.0 && f(&n["hanger_r"]) < f(&n["pulley_r"]));
-    assert!(gap >= f(&n["steady"]["least"]) && (gap - f(&n["steady"]["clear"])).abs() < 1e-2);
     assert!(lean1.max(lean2) <= f(&n["sled"]["lean_most"]));
     assert!(
         (lean1 - f(&n["sled"]["lean"][0])).abs() < 0.01
             && (lean2 - f(&n["sled"]["lean"][1])).abs() < 0.01
     );
-    // A steady's cap fits the journal and leaves plastic at its lips.
-    assert!(f(&n["steady"]["lip"]) >= 2.0 && f(&n["steady"]["t"]) + 3.0 <= f(&j["length"]));
-    for q in steady.iter().skip(1).take(13) {
-        let over = q.0.hypot(q.1) - radius;
-        assert!(over >= f(&n["steady"]["fit"]) - 1e-9 && over < 0.3);
-    }
 }
 
 /// The controller's program, run on pins that do nothing, ends every
@@ -648,39 +605,18 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
     let turn_steps = (360.0 * per[2]).round();
     let done = sim["rows"].as_array().unwrap();
     assert_eq!(done.len(), rows.len());
-    let (mut place, mut lifted) = (0.0, 0);
-    for (i, (r, s)) in rows.iter().zip(done).enumerate() {
+    for (r, s) in rows.iter().zip(done) {
         assert_eq!(s[0].as_u64().unwrap(), r.n);
-        // The last bite of a journal's place ends lifted back to where the sled came in, the whole blank clear of
-        // the cutter, or pulling the sled back would plough a groove to the stick's end. Every other row ends on its own number.
-        if r.kind == "place" {
-            place = r.lift;
-        }
-        let last_of_place =
-            r.kind == "journal" && rows.get(i + 1).map(|x| x.kind != "journal").unwrap_or(true);
-        let want = if last_of_place { place } else { r.lift };
         assert!(
-            (f(&s[1]) - want * per[0]).abs() <= 0.5 + 1e-6,
+            (f(&s[1]) - r.lift * per[0]).abs() <= 0.5 + 1e-6,
             "row {} lift",
             r.n
         );
-        if last_of_place {
-            let p = sled.pose(want, r.swing, r.turn);
-            assert!(
-                p.tip >= f(&n["journal"]["blank_swing"]) + 1.0,
-                "row {} leaves the cutter in the blank",
-                r.n
-            );
-            lifted += 1;
-        }
         assert!(
             (f(&s[2]) - r.swing * per[1]).abs() <= 0.5 + 1e-6,
             "row {} swing",
             r.n
         );
-        if r.kind == "journal" {
-            continue; // turned once right round from wherever it stood
-        }
         let off = (f(&s[3]) - r.turn * per[2]).rem_euclid(turn_steps);
         assert!(
             off <= 0.5 + 1e-6 || off >= turn_steps - 0.5 - 1e-6,
@@ -699,7 +635,6 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
     assert!((f(&sim["safe_steps"]) - (safe * per[0]).round()).abs() < 1e-9);
     assert!(f(&sim["deepest_crossing"]) <= f(&sim["safe_steps"]));
     // At the safe lift the master, which is what is over the cutter with the sled back, clears it wherever the frame swings.
-    assert_eq!(lifted as u64, n["count"]["place"].as_u64().unwrap());
     let need = sled.bit_up + f(&n["sled"]["master_r"]) + f(&n["spindle_clear"]);
     let (lo, hi) = rows.iter().fold((f64::MAX, 0.0f64), |a, r| {
         (a.0.min(r.swing), a.1.max(r.swing))
@@ -748,14 +683,12 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
         (p.alpha - f(&d["alpha"])).abs() < 1e-5
             && (p.hang - f(&d["alpha"]) - f(&d["beta"])).abs() < 1e-5
     );
-    // The stick: the tile's section but for two round journals, about the drawn axis.
+    // The stick: the tile's section the whole of its length, about the drawn axis.
     let area = f(&n["tile"]["area"]);
-    let j = &n["journal"];
-    let (radius, jl) = (f(&j["radius"]), f(&j["length"]));
     let stick = bodies_of(&mut doc, "Stick").remove(0);
-    let expect = area * (f(&n["stick"]) - 2.0 * jl) + PI * radius * radius * 2.0 * jl;
+    let expect = area * f(&n["stick"]);
     println!(
-        "stick {:.0} mm3, tile and two journals give {expect:.0}",
+        "stick {:.0} mm3, the tile's section gives {expect:.0}",
         stick.volume()
     );
     assert!((stick.volume() - expect).abs() < 0.002 * expect);
@@ -791,7 +724,6 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
         "Spindle and centre",
         "Belt drive",
         "Master",
-        "Steadies",
         "Lift pusher",
         "Links",
         "Tower",
@@ -838,7 +770,8 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
         (sled.pusher1(p.alpha) - c1).abs() < 1e-3 && (sled.c1_home - row.lift - c1).abs() < 1e-3
     );
     assert!((sled.pusher2(p.alpha, p.hang) - f(&d["c2"])).abs() < 1e-3);
-    for name in ["steady", "master", "tower", "guide"] {
+    for name in ["master", "tower", "guide"] {
+        assert!(!dir().join("out/steady.stl").exists());
         assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
     }
     assert!(dir().join("out/passes.csv").exists() && dir().join("firmware/main.py").exists());

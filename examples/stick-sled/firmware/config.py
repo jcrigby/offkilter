@@ -47,5 +47,3 @@ TURN_PAST_DEG = 3.0
 STEP_SLOW_US = 900
 STEP_FAST_US = 140
 RAMP_STEPS = 400
-PLUNGE_US = 2500                # lowering onto the cutter for a journal
-JOURNAL_US = 1500               # turning a journal under the cutter

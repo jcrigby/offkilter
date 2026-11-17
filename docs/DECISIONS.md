@@ -1500,3 +1500,24 @@ tests had passed.
   swing screw's nose is 0.1 mm at the stick per 0.2 mm, because its
   link leans 22 degrees; that nose needs linear bearings, or the
   screw should ride on the plate, where its link would lean 5.
+
+## 2026-11 · The stick sled: no journals, no steadies
+
+The stick was to have two round journals turned in it at a third and
+two thirds, on steadies. That came from the mill, and there from a
+risk listed as the first thing to go wrong: that a stick cut to the
+tile, with necks of 4.5 mm in its section, would be limp. It was never
+calculated. Calculated, the section's second moments are 56,000 and
+110,000 mm4, and between centres a roughing cut of about 2 N bends it
+under a micrometre and twists its edge 14. The owner dropped them.
+
+- What goes with them: 55 rows of the table, 28 mm of every stick, the
+  one mode in which a motor moved with the stick over the cutter (and
+  its dead-man switch), the pause to fit the steadies, two printed
+  parts, and a second kind of stop for the sled.
+- What they would have been for is the case the estimate leaves out,
+  a bit that grabs. The answer to that is lighter bites, which are
+  rows in a table.
+- The axis stays where the tile is fattest, though no journal needs
+  it now: that is what lets a 16 mm spur and master sit inside the
+  circle every pass stays clear of.

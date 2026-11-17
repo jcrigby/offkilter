@@ -63,13 +63,11 @@ master, 29 mm of it. Forward, past the stick's end there is only the
 tail centre for 30 mm, and no pass comes near it; then the tail
 hanger, which a stop must keep the cutter short of.
 
-## The table: 495 rows a stick
+## The table: 440 rows a stick
 
 | rows | what | cutter |
 |---|---|---|
 | 1 | set the straight bit | 6 mm straight |
-| 6 + 48 | two round journals, three places each, eight bites a place | |
-| 1 | a pause, to fit the steadies | |
 | 145 | roughing: 79 places from 24 directions, in bites of 3 mm | |
 | 1 | set the ball-nose | 3 mm ball-nose, tapered |
 | 293 | finishing: 244 passes, the deep ones in bites of 1.5 mm | |
@@ -86,13 +84,9 @@ hanger, which a stop must keep the cutter short of.
   seven bites.
 - **The order is settled first, the bites after.** Roughing and then
   finishing go round the stick in the order of the spindle's angle,
-  so it turns a degree or two at a time, 920° in all, and comes up to
+  so it turns a degree or two at a time, 916° in all, and comes up to
   every angle forwards. What a cut meets is what the cuts before it
   left, so the bites are counted in that order and no other.
-- **Journals are turned.** With the sled at a stop and the foot switch
-  held, the stick comes down a bite and goes once round, and stops if
-  the switch is let go. After the last bite it lifts back clear of
-  the whole blank before the sled is pulled back.
 - **Setting a bit.** The first row, and the row after roughing, bring
   the master to where the cutter's tip should be, and the router is
   raised until the bit touches it. Homing may land a hair differently
@@ -100,7 +94,7 @@ hanger, which a stop must keep the cutter short of.
 
 A stick is about two and a half hours: 438 pushes at a quarter of a
 minute, and three quarters of an hour of the motors moving between
-them (9 m of lift screw at 800 steps a millimetre). Estimated.
+them (8.5 m of lift screw at 800 steps a millimetre). Estimated.
 
 ## The bit
 
@@ -131,10 +125,11 @@ with E 10 GPa along the grain and G 0.7 GPa:
 | finishing, 0.4 mm left | 0.2 N | 1 and 3 µm |
 
 - **The stick is not limp.** Its section has second moments of 56,000
-  and 110,000 mm⁴: between centres, with no steadies at all, the
-  roughing cut bends it under a micrometre. The journals, at 7,000,
-  are its weakest places. By these numbers the journals and steadies
-  are not needed for stiffness; they are kept until that is decided.
+  and 110,000 mm⁴: between centres, with nothing under it, the
+  roughing cut bends it under a micrometre. So it is held at its two
+  ends and nowhere else. (It was first drawn with two turned journals
+  on steadies, for a limpness that was never calculated; a journal's
+  second moment is 7,000, so they were its weakest places.)
 - **The necks hold.** A lobe on its 4.5 mm neck splits at about 25 N
   over 20 mm of stick, ten times the roughing cut.
 - **The plate's weight** on the lift screw is about 25 N, ten times
@@ -164,8 +159,8 @@ checks every row ends on the table's numbers to the step.
 | other switches | sled back, and the foot switch |
 | supply | 12 V |
 
-It speaks only over USB: what the next row is, when to set the bit,
-when to fit the steadies. Until it has a display, a phone or a laptop
+It speaks only over USB: what the next row is and when to set the
+bit. Until it has a display, a phone or a laptop
 on the cable is part of it. It keeps no place: a stick stopped half
 way starts again from the first row.
 
@@ -186,10 +181,10 @@ and swing, which `config.py` has. With the trims alone and no scales
 it is three times worse. How to get the six from a test cut with
 callipers is not worked out.
 
-Play is not trimmed out. The swing screw's link leans up to 22°, so
+Play is not trimmed out. The swing screw's link leans up to 21°, so
 0.2 mm of its nose rattling in its guide is 0.1 mm at the stick: its
 nose wants linear bearings on a ground rod, not a printed bore. The
-lift's link leans 9°, and the same play is 0.014 mm.
+lift's link leans 7°, and the same play is 0.014 mm.
 
 ## Measure these first
 
@@ -199,7 +194,7 @@ lift's link leans 9°, and the same play is 0.014 mm.
 | the fence | 290 mm right of the cutter | a table whose fence will not go that far wants a bar in its mitre slot under the left runner |
 | the lead screws | T8, 2 mm lead | the common T8 is 8 mm lead: a quarter the steps a millimetre, and it runs back under load |
 | the shafts, supports and blocks | the 20 mm set from the duplicator: two shafts of 490 and 416, four SK20, four SC20UU | the blocks turn on the shafts as hinges; collars keep them from sliding |
-| the hinges and links | hinge 1 at 150 right and 205 up, hinge 2 150 left of it and 26 down, the axis 130 under hinge 2; links 30 and 60 | see Calibration |
+| the hinges and links | hinge 1 at 150 right and 204 up, hinge 2 150 left of it and 26 down, the axis 130 under hinge 2; links 30 and 60 | see Calibration |
 | the pushers | drawn as a motor, a screw, a nose and a printed guide | the nose must not turn, and the swing's must not rattle. The lift's tower is drawn 30 square and wants a 42 flange for the motor's screws |
 | the pins | not drawn | 5 mm shoulder bolts, a close fit |
 | slack | a screw's nut and two pins a link | a light spring from the plate to the sled and from the tail hanger to the riser, not drawn; if a cut still rattles, an anti-backlash nut |
@@ -214,16 +209,15 @@ lift's link leans 9°, and the same play is 0.014 mm.
 | part | size, mm | |
 |---|---|---|
 | sled | 540 x 480 ply: two runners and a tie at each end | open under the stick; its right edge on the fence |
-| riser | 540 x 216 ply, a gusset at each end | hinge 1's two supports on its face |
+| riser | 540 x 215 ply, a gusset at each end | hinge 1's two supports on its face |
 | lift plate | 420 x 335 ply | two blocks under its right edge on hinge 1; hinge 2's supports under its middle |
 | beam | 350 x 60 ply | two blocks on hinge 2; the hangers under it |
 | head hangers, 2 | ply, 70 wide, round-ended | a 6201 bearing in each, 43 apart |
 | tail hanger | ply, 70 wide, round-ended | the tail centre, and link 2's pin 25 over it |
 | spindle | M12 studding | the 60-tooth pulley outboard, the master and a drive spur inboard |
 | master | printed sleeve, 16 round x 29 | on the spindle between hanger and spur; the cutter is under it with the sled back, and a bit is set on it |
-| steadies, 2 | printed, 24 wide at the journal | caps over the journals from above, where the cutter does not come; fitted once the journals are turned |
-| lift pusher | NEMA 17 on the left runner, a printed tower on its face, a nose of 120 | 85 mm of travel |
-| swing pusher | NEMA 17 and a printed guide on the right runner, 74 over the table, a nose of 75 | 32 mm of travel |
+| lift pusher | NEMA 17 on the left runner, a printed tower on its face, a nose of 120 | 79 mm of travel |
+| swing pusher | NEMA 17 and a printed guide on the right runner, 73 over the table, a nose of 75 | 32 mm of travel |
 | links, 2 | strips, 30 and 60 between pins, and a clevis under the plate | each nose to what it moves |
 | spindle motor | NEMA 17 on the head hanger, 52 over the spindle | a closed GT2 belt |
 | controller | a box on the right runner | Pico, three drivers |
@@ -242,17 +236,16 @@ them:
 - the waste, on a grid of the test's own, with the table's cutting
   rows run over it in the table's order: no row meets more than a
   hair-wide fin standing higher than its bit's bite;
-- at every row the blank clears the table, so does the pulley, the
-  cutter is at least a millimetre from a steady, and each link is its
-  length from pin to pin and leans no more than 30° off its screw;
+- at every row the blank clears the table, so does the pulley, and
+  each link is its length from pin to pin and leans no more than 30°
+  off its screw;
 - the controller's program, simulated, ends every row on the table's
-  steps, lifts clear of the blank after each journal's last bite,
-  turns the spindle under four turns in all coming up to its angles,
+  steps, turns the spindle under four turns in all coming up to its angles,
   and never swings the stick below the height at which the master
   clears the cutter;
 - the document is the sled at one finishing row, the cutter's tip on
   the stick and no part through another.
 
-The build itself tries the sled at 150 poses, the rows and the ways
+The build itself tries the sled at 167 poses, the rows and the ways
 between them, with every part as its outline along the stick, and
 stops if any is in another or in the cutter's lane.

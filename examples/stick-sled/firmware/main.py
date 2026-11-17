@@ -6,8 +6,7 @@ swing pusher's millimetres out from its, and the spindle's degrees on
 from its mark. For a pass it waits until the sled is pulled back and
 the foot switch pressed, moves, and waits again while the sled is
 pushed and pulled by hand. Nothing moves while the stick is over the
-cutter, except for a journal, which is turned under it for as long as
-the foot switch is held.
+cutter.
 
 Copy main.py, config.py and passes.csv to the Pico. On a computer,
 `python3 main.py --sim passes.csv steps.json` runs the same code on
@@ -160,7 +159,6 @@ class Sled:
         self.safe = safe            # the lift at or above which the spindle clears the cutter wherever the frame swings
         self.deepest_crossing = 0   # the lowest the lift ever was while the frame swung or the spindle turned between passes
         self.turned = 0             # steps the spindle has turned forwards coming up to its angles
-        self.place_lift = 0.0       # the lift at which the sled was pushed to a journal's stop: the blank clear of the cutter
         for n in (C.LIFT_HOME_PIN, C.SWING_HOME_PIN, C.TURN_HOME_PIN, C.SLED_BACK_PIN, C.NEXT_PIN):
             PINS.input(n)
         PINS.output(C.ENABLE_PIN)
@@ -169,9 +167,6 @@ class Sled:
 
     def back(self):
         return PINS.closed(C.SLED_BACK_PIN)
-
-    def held(self):
-        return PINS.closed(C.NEXT_PIN)
 
     def home(self):
         say("pull the sled back, then the foot switch: homing")
@@ -204,47 +199,21 @@ class Sled:
         self.turn_on_to(turn, guard)
         self.lift.to(lift, guard)
 
-    def journal(self, lift, swing):
-        """Down a bite onto the cutter and once round, only while the foot switch is held.
-        The swing follows the lift: the frame's hinge moves a little sideways as the plate comes down."""
-        guard = self.held
-        self.swing.to(swing, guard, C.PLUNGE_US)
-        self.lift.to(lift, guard, C.PLUNGE_US)
-        self.turn.run(int(round(360.0 * self.turn.per_unit)), guard, C.JOURNAL_US)
-
     def run(self, rows, record=None):
         self.home()
         total = len(rows)
-        for i, (n, kind, tool, lift, swing, turn, label) in enumerate(rows):
-            if kind == "journal":
-                say("%d/%d %s: hold the foot switch" % (n, total, label))
-                if not SIM:
-                    while not self.held():
-                        utime.sleep_ms(20)
-                self.journal(lift, swing)
-                if i + 1 == total or rows[i + 1][1] != "journal":
-                    # Back up to where the sled came in, the whole blank clear of the cutter: pulled back at the
-                    # journal's depth, the cutter would plough a groove from here to the stick's end.
-                    self.lift.to(self.place_lift, self.held)
-                    say("let go and pull the sled back")
-            else:
-                say("%d/%d %s: sled back, then the foot switch" % (n, total, label))
-                wait(C.SLED_BACK_PIN)
+        for n, kind, tool, lift, swing, turn, label in rows:
+            say("%d/%d %s: sled back, then the foot switch" % (n, total, label))
+            wait(C.SLED_BACK_PIN)
+            wait(C.NEXT_PIN)
+            self.go(lift, swing, turn)
+            PINS.set(C.LED_PIN, 1)
+            if kind == "set":
+                say("bring the %s bit up until it touches the master, then the foot switch" % tool)
                 wait(C.NEXT_PIN)
-                self.go(lift, swing, turn)
-                PINS.set(C.LED_PIN, 1)
-                if kind == "set":
-                    say("bring the %s bit up until it touches the master, then the foot switch" % tool)
-                    wait(C.NEXT_PIN)
-                elif kind == "pause":
-                    say("%s, then the foot switch" % label)
-                    wait(C.NEXT_PIN)
-                elif kind == "place":
-                    self.place_lift = lift
-                    say("push the sled to the journal's stop")
-                else:
-                    say("cut: push the sled through and pull it back")
-                PINS.set(C.LED_PIN, 0)
+            else:
+                say("cut: push the sled through and pull it back")
+            PINS.set(C.LED_PIN, 0)
             if record is not None:
                 record.append([n, self.lift.at, self.swing.at, self.turn.at % int(round(360.0 * self.turn.per_unit))])
         say("done")
