@@ -407,6 +407,9 @@ class Sled:
                     wait(C.NEXT_PIN)
                 elif kind == "place":       # brought to a height for turning bands: the rows after it say what to do
                     pass
+                elif kind == "load":        # the spindle turned to where the blank goes on with a wide face level and down
+                    SCREEN.show(head, label[:16], label[16:32], label[32:48], label[48:64], "then foot switch")
+                    wait(C.NEXT_PIN)
                 else:
                     SCREEN.show(head, label[:16], "push through", "and pull back")
                     wait_for_the_cut()

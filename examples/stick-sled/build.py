@@ -75,11 +75,15 @@ SPINDLE_CLEAR = 3.0                             # between the master and the cut
 MOVE_CLEAR = (1.5, 1.0)                         # a move may go straight to its row, not by the safe height, if the master passes the cutter by this much and the blank the table by this much
 HOME_OVER = (3.0, 10.0)                         # the home switches beyond the furthest any row goes: lift, swing. The swing's has room for probing a block's faces
 SWING_MORE = 15.0                               # and the swing's rail runs this far beyond the furthest row the other way, for the same
+LIFT_MORE = 8.0                                 # the lift's screw and rail run this far below the lowest row: the probing's window, coming down on the lying block
 BUILT = os.path.join(HERE, "built.json")        # what calibrate.py found a built sled to be, if it has been run: the table is then planned for that sled
 BACK_X = -12.0                                  # the cutter along the sled with the sled back: under the master, 9 mm of the straight bit clear of the stick's end, 18 of the hanger
 RUN = 6.0                                       # the cutter past the stick's far end
 DRAWN_X = 100.0                                 # where the cutter is drawn: mid stick, mid pass
 SLED_X = (-205.0, 335.0)
+STOP = (40.0, 40.0, 60.0)                       # a stop: a block clamped to the fence at each end of the sled's travel
+SWITCH = (28.0, 16.0, 10.0)                     # the sled-back switch, on the right runner's end: the back stop closes it
+GUSSET_IN = 40.0                                # the riser's gusset at that end stands this far in, to leave the switch its place
 LEFT_Y, RIGHT_Y = (-190.0, -95.0), (110.0, 290.0)   # the runners; the right one's edge on the fence
 TIE = 30.0                                      # a tie across each end
 PLATE_X = (-135.0, 285.0)
@@ -98,7 +102,7 @@ BLOCK = (27.0, 46.0, 24.0, 8.0)                 # the nose block on it: wide, lo
 UNIT_X = TAIL_X[1] + 6.5 + BLOCK[0] / 2         # the rail's middle line: the block's near face against link 2, which lies on the tail hanger's far face
 SCREW2_X = UNIT_X + 6.0                         # screw 2, through the block beside the pin's end, at the pin's height
 # Screw 1's nose the same, upright: the rail on a post on the left runner, facing the stick.
-RAIL1_L = 150.0                                 # its rail: 79 of travel and a carriage
+RAIL1_L = 150.0                                 # its rail: 97 of travel, the probing's reach with it, and a carriage
 BLOCK1 = (27.0, 68.0, 24.0, 8.0)                # its block: wide, tall, thick, and how far its top is over link 1's pin; the screw's nut is in its foot
 UNIT1_X = PUSH_X + 14.5 + BLOCK1[0] / 2         # the rail's middle line: the block's near face against link 1
 SCREW1_X = UNIT1_X + 6.0
@@ -272,7 +276,9 @@ def main():
     covered = sum(1 for v in left if v < 0.08) / len(left)
     print(f"tile {tile['across']:.1f} across, swings {swing_r:.1f}; {len(passes)} finishing passes from as many directions, the cutter within {max(abs(q['across']) for q in passes):.1f} of the axis; "
           f"{100 * covered:.1f} % of the outline within 0.08 of a pass, the worst {max(left):.2f}; {orphans} points nothing reaches")
-    blank = swing_r + P.BLANK
+    blank_of = P.stock(outline)
+    blank = max(math.hypot(*q) for q in blank_of["corners"])     # the furthest corner of the blank from the axis
+    print(f"blank {blank_of['size'][0]:.0f} x {blank_of['size'][1]:.0f}, its corners up to {blank:.1f} from the axis; the axis {blank_of['axis'][0]:.1f} and {blank_of['axis'][1]:.1f} in from two of its faces")
 
     # -- the cutter's height: the blank clear of the table, the pulley and the hangers too, at the lowest any cut brings the stick
     deep = cands + passes                            # every cut at its last bite; the bites before it are shallower
@@ -305,6 +311,12 @@ def main():
     off = P.rot(-math.pi / 2, ecc)
     setting = (0.0, off[0], (built["master_r"] if built else MASTER_R) - off[1])
     cuts = []                                        # every time the cutter is brought to the stick: kind, tool, t, across, tip, label
+    # First the blank is put on its centres, and it has to go on the way round the table takes it to be: the spindle is
+    # turned to where one wide face of the blank is level and underneath, as high as the stick is ever cut.
+    wide = 0 if blank_of["size"][0] >= blank_of["size"][1] else 1
+    load_t = blank_of["turn"] - math.pi / 2 + wide * math.pi / 2
+    under, fence = (blank_of["axis"][1], blank_of["size"][0] - blank_of["axis"][0]) if wide == 0 else (blank_of["size"][0] - blank_of["axis"][0], blank_of["size"][1] - blank_of["axis"][1])
+    cuts.append(("load", "none", load_t, 0.0, high_tip, K.lines("blank on centres", f"{under:.1f} up from its", f"wide face {fence:.1f}", "in from fence")))
     cuts.append(("set", "straight") + setting + ("set the straight bit on the master",))
     for q in places:
         for b in range(1, q["bites"] + 1):
@@ -323,7 +335,7 @@ def main():
     drawn_c2 = (min(q["c2"] for q in poses), c2_home)            # the swing's travel as drawn: the rail is sized from it
     drawn_c1 = (min(q["c1"] for q in poses), c1_home)
     as_drawn = {"h1": h1, "arm": ARM, "drop": DROP, "p1_y": P1_Y, "e1": E1, "l1": L1, "p2_z": p2_z, "e2": e2, "l2": L2, "c1_home": c1_home, "c2_home": c2_home, "bit_up": bit_up,
-                "master_r": MASTER_R, "lift_most": drawn_c1[1] - drawn_c1[0], "swing_most": drawn_c2[1] - drawn_c2[0] + SWING_MORE - 6.0}
+                "master_r": MASTER_R, "lift_most": drawn_c1[1] - drawn_c1[0] + LIFT_MORE, "swing_most": drawn_c2[1] - drawn_c2[0] + SWING_MORE - 6.0}
     # The table that finds out what a built sled is: the master brought to touch a pin and a block. Always for the sled as drawn:
     # what it finds is how far the built one is off that.
     probing, edge_y = K.probe_rows(as_drawn, (FW.PROBE_LIFT_MM, FW.PROBE_SWING_MM))
@@ -448,9 +460,9 @@ def main():
     # -- the parts, at one pass ----------------------------------------------
     drawn = next(i for i, r in enumerate(rows) if r["kind"] == "finish" and abs(r["across"]) < 2.0 and r["tip"] > 12.0 and r["label"].startswith("finish bite 1 of 1"))
     top_z = h1[1] + SK_W / 2
-    c1_low = drawn_c1[0]
+    c1_low = drawn_c1[0] - LIFT_MORE
     over1 = lambda c1_: c1_ + BLOCK1[3] - BLOCK1[1] / 2    # the lift block's middle, and its carriage's
-    rail1_z = (math.floor(over1(c1_low) - CARRIAGE[1] / 2 - 6.0), math.floor(over1(c1_low) - CARRIAGE[1] / 2 - 6.0) + RAIL1_L)
+    rail1_z = (math.floor(over1(c1_low) - CARRIAGE[1] / 2 - 2.0), math.floor(over1(c1_low) - CARRIAGE[1] / 2 - 2.0) + RAIL1_L)
     if over1(drawn_c1[1]) + CARRIAGE[1] / 2 > rail1_z[1] - 2.0:
         raise SystemExit("the lift's carriage runs off its rail")
     screw1_top = drawn_c1[1] + BLOCK1[3] - BLOCK1[1] + 6.0   # the screw's end: just past the nut with the block at home
@@ -464,6 +476,11 @@ def main():
         raise SystemExit("the carriage runs off its rail")
     screw2_end = c2_low - BLOCK[3] - 4.0             # the swing screw's end: just past the block's far face at its furthest
     motor2_y = max(drawn_c2[1] - BLOCK[3] + BLOCK[1] + 8.0, rail_y[1] + 2.0)   # the motor's face: clear of the block at home, and past the rail's end
+
+    # The stops, where the sled is drawn (the cutter at DRAWN_X along it): the sled's two ends when the cutter is RUN past
+    # the stick's far end and when it is back under the master.
+    stops_x = (SLED_X[0] - (STICK + RUN - DRAWN_X), SLED_X[1] + (DRAWN_X - BACK_X))
+    switch_y = (RIGHT_Y[1] - STOP[1] + 8.0, RIGHT_Y[1] - STOP[1] + 8.0 + SWITCH[1])
 
     def parts_at(q):
         """Every part, as a list of (tab, maker), with the sled at the joints q."""
@@ -485,7 +502,7 @@ def main():
         def riser(p):
             y0 = H1_Y + SK_H
             box(p, "riser wall", SLED_X, (y0, y0 + PLY), (PLY, top_z))
-            for x in ((SLED_X[0], SLED_X[0] + PLY), (SLED_X[1] - PLY, SLED_X[1])):
+            for x in ((SLED_X[0], SLED_X[0] + PLY), (SLED_X[1] - GUSSET_IN - PLY, SLED_X[1] - GUSSET_IN)):
                 slab(p, "gusset", x, [(y0 + PLY, PLY), (y0 + PLY + 70.0, PLY), (y0 + PLY, top_z - 20.0)], op="add")
 
         def supports1(p):
@@ -606,13 +623,22 @@ def main():
             box(p, "controller box", (0.0, 90.0), (H1_Y + SK_H + PLY + 6.0, RIGHT_Y[1] - 4.0), (PLY, PLY + 40.0))
 
         def table_top(p):
-            box(p, "table", (DRAWN_X - 420.0, DRAWN_X + 420.0), (LEFT_Y[0] - 60.0, RIGHT_Y[1] + 60.0), (-30.0, 0.0))
-            box(p, "fence", (DRAWN_X - 420.0, DRAWN_X + 420.0), (RIGHT_Y[1], RIGHT_Y[1] + 40.0), (0.0, 60.0), op="new")
+            box(p, "table", (stops_x[0] - STOP[0] - 10.0, stops_x[1] + STOP[0] + 10.0), (LEFT_Y[0] - 60.0, RIGHT_Y[1] + 60.0), (-30.0, 0.0))
+            box(p, "fence", (stops_x[0] - STOP[0] - 10.0, stops_x[1] + STOP[0] + 10.0), (RIGHT_Y[1], RIGHT_Y[1] + 40.0), (0.0, 60.0), op="new")
+
+        def stops(p):
+            """Clamped to the fence, in the right runner's way: against the back one the cutter is under the master,
+            against the forward one it is past the stick's far end."""
+            box(p, "forward stop", (stops_x[0] - STOP[0], stops_x[0]), (RIGHT_Y[1] - STOP[1], RIGHT_Y[1]), (0.0, STOP[2]))
+            box(p, "back stop", (stops_x[1], stops_x[1] + STOP[0]), (RIGHT_Y[1] - STOP[1], RIGHT_Y[1]), (0.0, STOP[2]), op="new")
+
+        def back_switch(p):
+            box(p, "sled-back switch", (SLED_X[1] - SWITCH[0], SLED_X[1]), switch_y, (PLY, PLY + SWITCH[2]))
 
         def cutter(p):
             vcyl(p, "ball-nose, 3 mm", DRAWN_X, 0.0, 0.0, bit_up, P.BIT)      # from the table up; the router is under it
 
-        parts = [("Table and fence", table_top), ("Cutter", cutter), ("Sled", sled_base), ("Riser", riser),
+        parts = [("Table and fence", table_top), ("Stops", stops), ("Cutter", cutter), ("Sled", sled_base), ("Sled-back switch", back_switch), ("Riser", riser),
                  ("Hinge 1 shaft", lambda p: xcyl(p, "20 mm shaft", -165.0, 325.0, h1, SHAFT_D)), ("Hinge 1 supports SK20", supports1),
                  ("Hinge 1 blocks SC20UU", lambda p: blocks(p, PL, (-60.0, 210.0), False)), ("Lift plate", plate),
                  ("Hinge 2 supports SK20", supports2), ("Hinge 2 shaft", lambda p: xcyl(p, "20 mm shaft", -133.0, 283.0, h2, SHAFT_D)),
@@ -687,20 +713,22 @@ def main():
         print(mcp.call("export", {"tab": tabs[title], "format": "stl", "path": os.path.join(OUT, f"{name}.stl")}))
     mcp.close()
 
-    count = {k: sum(1 for r in rows if r["kind"] == k) for k in ("set", "rough", "finish")}
+    count = {k: sum(1 for r in rows if r["kind"] == k) for k in ("load", "set", "rough", "finish")}
     numbers = {
         "edge": EDGE, "bulge": BULGE, "gap": GAP, "bit": P.BIT, "taper": P.TAPER, "shank": P.SHANK, "ridge": P.RIDGE, "stick": STICK,
         "sweep": {"poses": len(tried), "lane": [lane_x, lane], "stepped": sim["stepped"]},
         "tile": {"across": tile["across"], "area": tile["area"], "outline": outline, "swing": swing_r, "axis_in_tile": centre, "circle": circle},
         "blank_swing": blank,
+        "blank": {"corners": blank_of["corners"], "size": blank_of["size"], "turn": blank_of["turn"], "axis": blank_of["axis"], "over": P.BLANK,
+                  "load": {"t": load_t, "under": under, "fence": fence}},
         "plan": {"passes": len(passes), "covered": covered, "worst": max(left), "orphans": orphans, "across_limit": P.Y_LIM, "face_min": P.FACE_MIN, "off_centre": P.OFF_CENTRE,
                  "finish_runs": sum(q["bites"] for q in passes), "deepest": max(q["depth"] for q in passes), "ball_bite": P.BALL_BITE},
-        "rough": {"bit": P.ROUGH_BIT, "bite": P.ROUGH_BITE, "step": P.ROUGH_STEP, "allow": P.ALLOW, "angles": P.ROUGH_ANGLES, "blank": P.BLANK, "places": len(places),
+        "rough": {"bit": P.ROUGH_BIT, "bite": P.ROUGH_BITE, "step": P.ROUGH_STEP, "allow": P.ALLOW, "angles": P.ROUGH_ANGLES, "places": len(places),
                   "runs": sum(q["bites"] for q in places), **waste},
         "bit_up": bit_up, "table_clear": TABLE_CLEAR, "pulley_r": PULLEY_R, "hanger_r": HANGER_R, "spindle_d": SPINDLE_D, "spindle_clear": SPINDLE_CLEAR, "move_clear": MOVE_CLEAR, "turn_past": FW.TURN_PAST_DEG, "straight": straight,
         "sled": {"h1": h1, "arm": ARM, "drop": DROP, "p1_y": P1_Y, "e1": E1, "l1": L1, "p2_z": p2_z, "e2": e2, "l2": L2, "lean": lean, "lean_most": LEAN, "swing": {"rail": RAIL, "rail_y": rail_y, "rail_z": rail_z, "carriage": CARRIAGE, "block": BLOCK, "unit_x": UNIT_X, "screw_x": SCREW2_X, "motor_y": motor2_y}, "tail_x": TAIL_X,
                  "c1_home": c1_home, "c2_home": c2_home, "cutter_y": sled.cutter_y, "ecc": ecc, "built": bool(built), "swing_more": SWING_MORE - 6.0, "home_over": HOME_OVER, "safe": safe, "lift": {"rail_z": rail1_z, "block": BLOCK1, "unit_x": UNIT1_X, "screw_x": SCREW1_X, "screw_top": screw1_top, "post_y": POST_Y}, "x": SLED_X, "left_y": LEFT_Y, "right_y": RIGHT_Y, "ply": PLY,
-                 "back_x": BACK_X, "run": RUN, "master_x": MASTER_X, "master_r": MASTER_R, "spur_r": SPUR_R, "belt": [60, 16], "as_drawn": as_drawn},
+                 "back_x": BACK_X, "run": RUN, "drawn_x": DRAWN_X, "stops_x": stops_x, "stop": STOP, "switch": {"size": SWITCH, "y": switch_y}, "master_x": MASTER_X, "master_r": MASTER_R, "spur_r": SPUR_R, "belt": [60, 16], "as_drawn": as_drawn},
         "probe": {"windows": [FW.PROBE_LIFT_MM, FW.PROBE_SWING_MM], "edge_y": edge_y, "post_face": K.POST_FACE, "pin_r": K.PIN_R, "block": K.BLOCK, "rows": probing},
         "bands": {"r": K.BAND_R, "span": K.BAND_SPAN, "rows": bands},
         "drawn": {"row": rows[drawn]["n"], "x": DRAWN_X, "alpha": a, "beta": b, "axis": axis, "h2": h2, "c1": c1, "c2": c2, "psi": psi, "pin1": pin1, "pin2": pin2},

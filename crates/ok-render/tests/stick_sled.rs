@@ -233,10 +233,14 @@ fn seen(p: P2, t: f64) -> P2 {
     )
 }
 
-fn near(q: P2, a: P2, b: P2) -> f64 {
-    let (dx, dy) = (b.0 - a.0, b.1 - a.1);
-    let t = (((q.0 - a.0) * dx + (q.1 - a.1) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
-    (q.0 - a.0 - t * dx).hypot(q.1 - a.1 - t * dy)
+/// The blank's section: the four corners of a rectangle, in the tile's frame.
+fn blank(n: &Value) -> Vec<P2> {
+    n["blank"]["corners"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(pair)
+        .collect()
 }
 
 fn tab(doc: &Document, name: &str) -> TabId {
@@ -337,9 +341,13 @@ fn every_row_puts_the_cutter_where_the_plan_wants_it_and_never_in_the_tile() {
     assert!(sets[0].tool == "straight" && sets[1].tool == "ball");
     // The master is smaller than anything a pass comes near, so a cutter left under it is never touched by it in a cut.
     assert!(master < f(&n["tile"]["circle"]) - 1.0 && master > f(&n["spindle_d"]) / 2.0);
-    assert!(rows[0].kind == "set" && rows.last().unwrap().kind == "finish");
+    assert!(
+        rows[0].kind == "load" && rows[1].kind == "set" && rows.last().unwrap().kind == "finish"
+    );
+    // the blank goes on with no bit in mind; then the straight bit's rows, then the ball-nose's
     assert!(rows
         .iter()
+        .skip(1)
         .skip_while(|r| r.tool == "straight")
         .all(|r| r.tool == "ball"));
 }
@@ -473,18 +481,12 @@ fn inside(q: P2, poly: &[P2]) -> bool {
 fn in_the_table_s_order_no_row_takes_more_than_its_bite_of_what_stands() {
     let n = numbers();
     let (rows, tile) = (rows(&n), outline(&n));
-    let hull: Vec<P2> = n["rough"]["hull"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(pair)
-        .collect();
-    let over = f(&n["rough"]["blank"]);
+    let stock = blank(&n);
     let cell = 0.25;
     let (mut lo, mut hi) = ((f64::MAX, f64::MAX), (f64::MIN, f64::MIN));
-    for q in &hull {
-        lo = (lo.0.min(q.0 - over), lo.1.min(q.1 - over));
-        hi = (hi.0.max(q.0 + over), hi.1.max(q.1 + over));
+    for q in &stock {
+        lo = (lo.0.min(q.0), lo.1.min(q.1));
+        hi = (hi.0.max(q.0), hi.1.max(q.1));
     }
     let mut cells: Vec<P2> = Vec::new();
     let (nx, ny) = (
@@ -497,13 +499,7 @@ fn in_the_table_s_order_no_row_takes_more_than_its_bite_of_what_stands() {
                 lo.0 + (i as f64 + 0.5) * cell,
                 lo.1 + (k as f64 + 0.5) * cell,
             );
-            if inside(q, &tile) {
-                continue;
-            }
-            let near_hull = (0..hull.len())
-                .map(|m| near(q, hull[m], hull[(m + 1) % hull.len()]))
-                .fold(f64::MAX, f64::min);
-            if inside(q, &hull) || near_hull <= over {
+            if inside(q, &stock) && !inside(q, &tile) {
                 cells.push(q);
             }
         }
@@ -598,7 +594,7 @@ fn the_stick_clears_the_table_and_the_links_stay_true_at_every_row() {
     );
     assert!(circle > 9.5 && nearest >= circle - 1e-9 && master <= circle - 1.0);
     assert!(spur <= master - 1.0);
-    let blank = f(&n["rough"]["blank"]);
+    let stock = blank(&n);
     let (mut table, mut pulley) = (f64::MAX, f64::MAX);
     let (mut lean1, mut lean2) = (0.0f64, 0.0f64);
     for r in &rows {
@@ -618,12 +614,11 @@ fn the_stick_clears_the_table_and_the_links_stay_true_at_every_row() {
         if r.kind != "rough" && r.kind != "finish" {
             continue;
         }
-        // The blank: the tile's reach toward the router and what the saw left on it.
-        let reach = tile
+        // The blank as it was sawn, whatever has been cut off it since: its lowest corner.
+        let reach = stock
             .iter()
             .map(|q| seen(*q, r.t).1)
-            .fold(f64::MIN, f64::max)
-            + blank;
+            .fold(f64::MIN, f64::max);
         table = table.min(p.axis.1 - reach);
     }
     println!(
@@ -647,12 +642,12 @@ fn the_stick_clears_the_table_and_the_links_stay_true_at_every_row() {
 #[test]
 fn every_move_marked_straight_passes_the_cutter_and_the_table_clear() {
     let n = numbers();
-    let (sled, rows, tile) = (Sled::new(&n), rows(&n), outline(&n));
+    let (sled, rows) = (Sled::new(&n), rows(&n));
     let ball = f(&n["bit"]) / 2.0;
     let (taper, shank) = (f(&n["taper"]).to_radians(), f(&n["shank"]) / 2.0);
     let flat = f(&n["rough"]["bit"]) / 2.0;
     let master = f(&n["sled"]["master_r"]);
-    let blank = f(&n["rough"]["blank"]);
+    let stock = blank(&n);
     let past = f(&n["turn_past"]);
     // The cutter's outline over the table, as points: the ball-nose with its flank and shank, and the straight bit.
     let mut edge_ball: Vec<P2> = Vec::new();
@@ -680,7 +675,7 @@ fn every_move_marked_straight_passes_the_cutter_and_the_table_clear() {
         edge_flat.push((-flat, z));
         z += 0.5;
     }
-    let reach = |t: f64| tile.iter().map(|q| seen(*q, t).1).fold(f64::MIN, f64::max) + blank;
+    let reach = |t: f64| stock.iter().map(|q| seen(*q, t).1).fold(f64::MIN, f64::max);
     let t_of = |turn: f64, hang: f64| -(turn.to_radians() + hang) - PI / 2.0;
     let (mut straight, mut least_gap, mut least_table) = (0, f64::MAX, f64::MAX);
     for i in 1..rows.len() {
@@ -1399,4 +1394,127 @@ fn the_bands_are_turned_under_the_axis_and_beside_it() {
     }
     // A full turn of the spindle is a whole number of steps, so a band closes on itself.
     assert!((360.0 * per[2] - (360.0 * per[2]).round()).abs() < 1e-9);
+}
+
+/// The blank is a thing a saw and a planer make: a rectangle, whole
+/// millimetres each way, with the tile inside it and 2 mm to spare on
+/// every side. The table's first row turns the spindle to where it
+/// goes on with a wide face level and underneath, and says where the
+/// centre is from that face and from the one toward the fence.
+#[test]
+fn the_blank_is_a_rectangle_about_the_tile_and_goes_on_a_wide_face_down() {
+    let n = numbers();
+    let (sled, rows, tile, stock) = (Sled::new(&n), rows(&n), outline(&n), blank(&n));
+    let b = &n["blank"];
+    let (size, over) = (pair(&b["size"]), f(&b["over"]));
+    assert_eq!(stock.len(), 4);
+    let side = |i: usize| {
+        let (p, q) = (stock[i], stock[(i + 1) % 4]);
+        (q.0 - p.0, q.1 - p.1)
+    };
+    for i in 0..4 {
+        let (u, v) = (side(i), side((i + 1) % 4));
+        assert!((u.0 * v.0 + u.1 * v.1).abs() < 1e-6, "a square corner");
+        let want = if i % 2 == 0 { size.0 } else { size.1 };
+        assert!((u.0.hypot(u.1) - want).abs() < 1e-6);
+    }
+    assert!((size.0 - size.0.round()).abs() < 1e-9 && (size.1 - size.1.round()).abs() < 1e-9);
+    // every point of the tile is inside, at least `over` from every face; and not much more than that from the
+    // nearest: it is the least such rectangle, rounded up to the millimetre
+    let mut least = [f64::MAX; 4];
+    for q in &tile {
+        assert!(inside(*q, &stock));
+        for (i, slot) in least.iter_mut().enumerate() {
+            let (p, u) = (stock[i], side(i));
+            let off = ((q.0 - p.0) * u.1 - (q.1 - p.1) * u.0).abs() / u.0.hypot(u.1);
+            *slot = slot.min(off);
+        }
+    }
+    println!(
+        "blank {:.0} x {:.0}: the tile is {:.2} to {:.2} mm inside its faces",
+        size.0,
+        size.1,
+        least.iter().fold(f64::MAX, |m, x| m.min(*x)),
+        least.iter().fold(0.0f64, |m, x| m.max(*x))
+    );
+    assert!(least
+        .iter()
+        .all(|&m| m >= over - 1e-6 && m < over + 0.5 + 1e-6));
+    let swing = stock.iter().map(|q| q.0.hypot(q.1)).fold(0.0, f64::max);
+    assert!((swing - f(&n["blank_swing"])).abs() < 1e-6);
+
+    // The first row: nothing is cut, the stick is as high as it is ever cut, over the cutter's line.
+    let load = &rows[0];
+    assert_eq!(load.kind, "load");
+    assert!(rows.iter().skip(1).all(|r| r.kind != "load"));
+    let p = sled.pose(load.lift, load.swing, load.turn);
+    assert!(p.across.abs() < 2e-3 && (p.tip - swing).abs() < 2e-3);
+    // The blank as it hangs there: across the sled and down toward the router.
+    let hung: Vec<P2> = stock.iter().map(|q| seen(*q, p.t)).collect();
+    let mut order: Vec<usize> = (0..4).collect();
+    order.sort_by(|&i, &k| hung[k].1.partial_cmp(&hung[i].1).unwrap());
+    let (a, c) = (hung[order[0]], hung[order[1]]);
+    assert!((a.1 - c.1).abs() < 1e-3, "the face underneath is level");
+    assert!(
+        ((a.0 - c.0).abs() - size.0.max(size.1)).abs() < 1e-3,
+        "and it is a wide one"
+    );
+    let (under, fence) = (f(&b["load"]["under"]), f(&b["load"]["fence"]));
+    assert!(
+        (a.1 - under).abs() < 1e-3,
+        "the centre is that far up from it"
+    );
+    let toward_fence = hung.iter().map(|q| q.0).fold(f64::MIN, f64::max);
+    assert!(
+        (toward_fence - fence).abs() < 1e-3,
+        "and that far in from the face toward the fence"
+    );
+    assert!(under > 15.0 && fence > 15.0);
+}
+
+/// A stop is clamped to the fence at each end of the sled's travel.
+/// Against the back one the cutter is under the master, clear of the
+/// hanger and of the stick's end, and the switch on the sled's end is
+/// closed; against the forward one the cutter is past the stick's far
+/// end.
+#[test]
+fn the_stops_leave_the_cutter_under_the_master_and_past_the_stick() {
+    let n = numbers();
+    let s = &n["sled"];
+    let (ends, stops, drawn) = (pair(&s["x"]), pair(&s["stops_x"]), f(&s["drawn_x"]));
+    // The model has the cutter `drawn` along the sled. Slid until an end meets its stop, the cutter is here along it:
+    let back = drawn - (stops.1 - ends.1);
+    let forward = drawn + (ends.0 - stops.0);
+    let (master, bit_r) = (pair(&s["master_x"]), f(&n["rough"]["bit"]) / 2.0);
+    println!(
+        "sled back, the cutter is {back:.0} along it, the master from {:.0} to {:.0}; forward, {forward:.0}, the stick {:.0} long; {:.0} of travel",
+        master.0,
+        master.1,
+        f(&n["stick"]),
+        forward - back
+    );
+    assert!((back - f(&s["back_x"])).abs() < 1e-9);
+    // the widest bit, whole, under the master: not under the hanger behind it nor the spur and the stick's end before it
+    assert!(back - bit_r > master.0 + 5.0 && back + bit_r < master.1 - 2.0);
+    assert!((forward - (f(&n["stick"]) + f(&s["run"]))).abs() < 1e-9);
+    assert!(forward - bit_r > f(&n["stick"]) + 1.0);
+    // The stops are in the right runner's way, on the fence; the switch is on that runner's end, where the back stop
+    // meets it.
+    let (stop, right) = (&s["stop"], pair(&s["right_y"]));
+    let (sw_y, sw) = (pair(&s["switch"]["y"]), &s["switch"]["size"]);
+    assert!(sw_y.0 > right.1 - f(&stop[1]) && sw_y.1 < right.1);
+    assert!(f(&s["ply"]) + f(&sw[2]) < f(&stop[2]));
+    let mut doc = load();
+    let blocks = bodies_of(&mut doc, "Stops");
+    assert_eq!(blocks.len(), 2);
+    let block = f(&stop[0]) * f(&stop[1]) * f(&stop[2]);
+    assert!(blocks
+        .iter()
+        .all(|b| (b.volume() - block).abs() < 1e-3 * block));
+    let switch = bodies_of(&mut doc, "Sled-back switch");
+    assert_eq!(switch.len(), 1);
+    let size = f(&sw[0]) * f(&sw[1]) * f(&sw[2]);
+    assert!((switch[0].volume() - size).abs() < 1e-3 * size);
+    // Drawn mid-pass, the sled is between its stops and touches neither.
+    assert!(stops.0 < ends.0 - 50.0 && stops.1 > ends.1 + 50.0);
 }

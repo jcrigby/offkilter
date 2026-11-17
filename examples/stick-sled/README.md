@@ -63,21 +63,36 @@ height at which the master clears the cutter wherever the frame
 swings, then across and round, then down. Most moves do not need it:
 the build follows each one along its own path, swing, turn, lift, and
 marks it straight if the master passes the cutter by 1.5 mm and the
-blank the table by 1 mm all the way. 346 of the 438 are.
+blank the table by 1 mm all the way. 408 of the 502 are.
 
-The stops are forgiving. Back, the cutter may be anywhere under the
-master, 29 mm of it. Forward, past the stick's end there is only the
-tail centre for 30 mm, and no pass comes near it; then the tail
-hanger, which a stop must keep the cutter short of.
+A stop is clamped to the fence at each end of the travel, in the
+right runner's way. Against the back one the cutter is 12 mm behind
+the stick's end, under the master, and a switch on the runner's end
+is closed. Against the forward one it is 6 mm past the stick's far
+end. That is 218 mm of travel. The stops are forgiving: back, the
+cutter may be anywhere under the master, 29 mm of it; forward, past
+the stick's end there is only the tail centre for 30 mm, and no pass
+comes near it.
 
-## The table: 438 rows a stick
+## The table: 502 rows a stick
 
 | rows | what | cutter |
 |---|---|---|
+| 1 | put the blank on | |
 | 1 | set the straight bit | 6 mm straight |
-| 145 | roughing: 79 places from 24 directions, in bites of 3 mm | |
+| 200 | roughing: 82 places from 24 directions, in bites of 3 mm | |
 | 1 | set the ball-nose | 3 mm ball-nose, tapered |
-| 291 | finishing: 244 passes, the deep ones in bites of 1.5 mm | |
+| 299 | finishing: 244 passes, the deep ones in bites of 1.5 mm | |
+
+- **The blank is a plain rectangle,** 49 x 42 mm and the stick's
+  length: the least rectangle about the tile with 2 mm over on every
+  side, to the whole millimetre. Mark the centre on each end 19.5 mm
+  from one wide face and 24.8 from one narrow face, the same two
+  faces at both ends. The first row turns the spindle to where the
+  blank goes on with that wide face level and underneath and that
+  narrow face toward the fence. (The cuts were first planned from the
+  tile's hull with 2 mm over: 63 fewer pushes, but six flats at odd
+  angles with round corners between, which nothing makes.)
 
 - **Every finishing pass has its own direction.** With a motor on the
   spindle nothing needs twelve stops. The passes reach the whole
@@ -91,22 +106,22 @@ hanger, which a stop must keep the cutter short of.
   nothing: the same passes, the same reach, the same bit height.
 - **The cutter stays within 19 mm of the axis**, which is all the
   frame has to swing.
-- **Roughing takes 79 % of the waste** with the straight bit, to
-  0.4 mm of the tile. The ball-nose's deepest cut is 10.1 mm, in
+- **Roughing takes 87 % of the waste** with the straight bit, to
+  0.4 mm of the tile. The ball-nose's deepest cut is 10.0 mm, in
   seven bites.
 - **The order is settled first, the bites after.** Roughing and then
   finishing go round the stick in the order of the spindle's angle,
-  so it turns a degree or two at a time, 916° in all, and comes up to
+  so it turns a degree or two at a time, 952° in all, and comes up to
   every angle forwards. What a cut meets is what the cuts before it
   left, so the bites are counted in that order and no other.
-- **Setting a bit.** The first row, and the row after roughing, bring
+- **Setting a bit.** The second row, and the row after roughing, bring
   the master to where the cutter's tip should be, and the router is
   raised until the bit touches it. Homing may land a hair differently
   each day; setting the bit on the master takes that up.
 
-A stick is about two and a quarter hours: 436 pushes at a quarter of
-a minute, and half an hour of the motors moving between them (5.5 m
-of lift screw at 800 steps a millimetre; 8.5 m if every move went by
+A stick is about two and a half hours: 499 pushes at a quarter of a
+minute, and half an hour of the motors moving between them (5.9 m of
+lift screw at 800 steps a millimetre; 8.6 m if every move went by
 the safe height). Estimated.
 
 ## The bit
@@ -120,11 +135,13 @@ first was, that bit would have cut into the tile on 120 rows, by up to
 
 - A straight 3.0 mm ball-nose fits inside the tapered one, so the same
   table is safe for it. A 1/8 in one is 0.09 mm fatter and is not.
-- The tapered bit is also about twelve times stiffer at this
-  stick-out: 1.3 µm a newton at its tip against 16.
+- The tapered bit is also about thirteen times stiffer at this
+  stick-out: 1.5 µm a newton at its tip against 19.
 - A steeper taper reaches less: at 5° a side, 98 % of the outline.
   Change `TAPER` and `SHANK` in `plan.py` for the bit bought.
-- It stands 39 mm over the table, so about 50 out of the collet.
+- It stands 42 mm over the table, so about 52 out of the collet: the
+  rectangle's corners have to pass under the stick. The straight bit
+  stands as high.
 
 ## How stiff, how hard: estimates
 
@@ -243,7 +260,7 @@ its back stop. The master is brought
 
 | onto | where | touches |
 |---|---|---|
-| a 6 mm pin in the collet, its top about 39 mm up | down on its top, and against each side at four heights; then all of it again with the spindle half a turn round | 18 |
+| a 6 mm pin in the collet, its top about 42 mm up | down on its top, and against each side at four heights; then all of it again with the spindle half a turn round | 18 |
 | the block lying flat | down on it at three places across | 3 |
 | the block on its long edge | down on it at three places, and against both faces at four heights | 11 |
 | the block on end, on the far side of the cutter and then on the fence's | against one face at four heights, to the top of the lift | 8 |
@@ -274,29 +291,29 @@ finishing cut of each sled:
 
 | | median | 95 in 100 | worst of 300 |
 |---|---|---|---|
-| run from the drawing's table | 1.61 mm | 3.34 | 4.98 |
-| probed and planned for | 0.021 mm | 0.036 | 0.049 |
+| run from the drawing's table | 1.59 mm | 3.38 | 4.91 |
+| probed and planned for | 0.021 mm | 0.037 | 0.052 |
 
 None of the 300 stopped the probing or brought the master onto
 anything unawares. One of them is recorded in `out/calibration.json`
 as probed by the controller's own program run on a computer, and the
-test works it through again with its own hinges: 2.48 mm out as
-built, 0.029 mm planned for.
+test works it through again with its own hinges: 2.42 mm out as
+built, 0.023 mm planned for.
 
 What each set-up is for was found by leaving it out, a hundred sleds
 each:
 
 | left out | median | worst |
 |---|---|---|
-| nothing | 0.021 mm | 0.049 |
-| the block on end | 0.035 | 0.11 |
+| nothing | 0.021 mm | 0.052 |
+| the block on end | 0.045 | 0.13 |
 | the block on edge | 0.038 | 0.10 |
-| the block lying flat | 0.040 | 0.12 |
-| the pin's second half turn | 0.111 | 0.26 |
-| two touches of each three | 0.029 | 0.08 |
+| the block lying flat | 0.039 | 0.12 |
+| the pin's second half turn | 0.107 | 0.26 |
+| two touches of each three | 0.030 | 0.08 |
 
 Nothing but the block on end reaches above 59 mm, and finishing cuts
-go to 68. Without the second half turn the master's runout passes
+go to 71. Without the second half turn the master's runout passes
 for a cutter out of place.
 
 This is simulation. It takes the table for flat, the block for
@@ -328,18 +345,19 @@ way.
 
 | what | in the model | check |
 |---|---|---|
-| the cutter over the table | 39.0 mm | the blank clears the table by 3.3 at its lowest; a shorter bit needs a smaller tile or a hole in the table |
+| the cutter over the table | 42.0 mm | the blank's corners clear the table by 2.9 at the lowest; a shorter bit needs a smaller tile or a hole in the table |
+| the table | 760 mm along the fence for the sled and its 218 mm of travel, and a stop beyond each end | on a shorter table the sled overhangs the ends and the stops want outriggers |
 | the fence | 290 mm right of the cutter | a table whose fence will not go that far wants a bar in its mitre slot under the left runner |
 | the lead screws | T8, 2 mm lead | the common T8 is 8 mm lead: a quarter the steps a millimetre, and it runs back under load |
 | the shafts, supports and blocks | the 20 mm set from the duplicator: two shafts of 490 and 416, four SK20, four SC20UU | the blocks turn on the shafts as hinges; collars keep them from sliding |
-| the hinges and links | hinge 1 at 150 right and 204 up, hinge 2 150 left of it and 26 down, the axis 130 under hinge 2; links 30 and 60 | built within half a millimetre; what they really are is found by probing, see Setting up a built sled |
-| the rails | MGN12 with H carriages, both 150 long: level for the swing, its seat 48 over the table; upright on a ply post for the lift. The blocks' bores for the pins and nuts are not drawn, nor the motors' mounts | each rail square to the stick; where it really is goes in `build.py` |
+| the hinges and links | hinge 1 at 150 right and 209 up, hinge 2 150 left of it and 26 down, the axis 130 under hinge 2; links 30 and 60 | built within half a millimetre; what they really are is found by probing, see Setting up a built sled |
+| the rails | MGN12 with H carriages, both 150 long: level for the swing, its seat 53 over the table; upright on a ply post for the lift. The blocks' bores for the pins and nuts are not drawn, nor the motors' mounts | each rail square to the stick; where it really is goes in `build.py` |
 | the pins | not drawn | 5 mm shoulder bolts, a close fit |
 | slack | a screw's nut and two pins a link | anti-backlash nuts on both screws; a light spring from the plate to the sled and from the tail hanger to the riser, not drawn |
 | the pulleys and belt | 60 and 16 teeth, 52 between centres: a closed belt of 184 | a 60 with a 12 mm bore is not the common one |
 | the drive | a 14 mm spur on the spindle's end, the tail centre pushing the stick onto it | not drawn in detail. The tail centre's hole wants a little slack under its nuts: setting up moves it by tenths |
 | the master | a ground steel sleeve, 16 round, 12 bore, 29 long | its diameter by micrometer goes to `calibrate.py fit`; its runout on the studding is found by the probing |
-| the blank | the tile's hull and 2 mm, put on its centres within a millimetre and a few degrees | a card template of the hull with the centre marked |
+| the blank | 49 x 42, square, its centre marked 19.5 from a wide face and 24.8 from a narrow one | on its centres within a millimetre and level within a couple of degrees: the 2 mm over is for that |
 | the feed | 20 mm/s at 25,000 rpm is a chip of 0.02 mm a tooth | that is fine dust, and may burn: the router's slowest speed, and a brisk push |
 | the frame | not checked | lean on the stick with the motors holding: if the cutter's mark moves, stiffen what gave |
 
@@ -348,21 +366,50 @@ way.
 | part | size, mm | |
 |---|---|---|
 | sled | 540 x 480 ply: two runners, a tie at each end, and a shelf beyond the stick's tail for the swing rail | open under the stick; its right edge on the fence |
-| riser | 540 x 215 ply, a gusset at each end | hinge 1's two supports on its face |
+| riser | 540 x 220 ply, a gusset at one end and 40 mm in from the other | hinge 1's two supports on its face |
 | lift plate | 420 x 327 ply | two blocks under its right edge on hinge 1; hinge 2's supports under its middle |
 | beam | 350 x 60 ply | two blocks on hinge 2; the hangers under it |
 | head hangers, 2 | ply, 70 wide, round-ended | a 6201 bearing in each, 43 apart |
 | tail hanger | ply, 70 wide, round-ended | the tail centre, and link 2's pin 25 over it |
 | spindle | M12 studding | the 60-tooth pulley outboard, the master and a drive spur inboard |
 | master | a ground steel sleeve, 16 round x 29, bought | on the spindle between hanger and spur; the cutter is under it with the sled back, a bit is set on it, and the sled is probed with it. The spur beside it is 14, so a block lying under both touches only the master |
-| lift screw | NEMA 17 on the left runner, shaft up; a T8 screw of 2 mm lead with an anti-backlash nut | 79 mm of travel |
-| lift rail | MGN12 x 150 with an MGN12H carriage, on a ply post 60 x 223 on the left runner | carries the lift's nose block, printed, 27 x 24 x 68: link 1's pin near its top, the nut in its foot |
-| swing screw | NEMA 17 on a printed seat on the right runner, 73 over the table; a T8 screw of 2 mm lead with an anti-backlash nut | 32 mm of travel cutting, 51 with the probing's reach |
+| lift screw | NEMA 17 on the left runner, shaft up; a T8 screw of 2 mm lead with an anti-backlash nut | 86 mm of travel cutting, 98 with the probing's reach |
+| lift rail | MGN12 x 150 with an MGN12H carriage, on a ply post 60 x 220 on the left runner | carries the lift's nose block, printed, 27 x 24 x 68: link 1's pin near its top, the nut in its foot |
+| swing screw | NEMA 17 on a printed seat on the right runner, 78 over the table; a T8 screw of 2 mm lead with an anti-backlash nut | 32 mm of travel cutting, 51 with the probing's reach |
 | swing rail | MGN12 x 150 with an MGN12H carriage, on a printed seat on a shelf of the sled | carries the nose block, which holds link 2's pin and the screw's nut |
 | nose block | printed, 27 x 46 x 24 | on the carriage |
 | links, 2 | strips, 30 and 60 between pins, and a clevis under the plate | each nose to what it moves |
 | spindle motor | NEMA 17 on the head hanger, 52 over the spindle | a closed GT2 belt |
 | controller | a box on the right runner | Pico, three drivers |
+| stops, 2 | blocks 40 x 40 x 60 | clamped to the fence, 758 apart: the sled's length and its travel |
+| sled-back switch | a microswitch on the right runner's end | the back stop closes it |
+| blank | 49 x 42 x 200, sawn and planed | between the spur and the tail centre |
+
+To buy, besides ply, screws and the 20 mm shafts, supports and blocks
+the duplicator already has:
+
+| what | how many | |
+|---|---|---|
+| Raspberry Pi Pico | 1 | MicroPython on it |
+| TMC2209 driver modules | 3 | step and direction |
+| NEMA 17 motors, 200 steps | 3 | |
+| 12 V supply, 3 A | 1 | |
+| SSD1306 display, 128 x 64, I2C | 1 | optional |
+| microswitches | 4 | lift home, swing home, the spindle's mark, sled back; the three home switches wired normally closed |
+| foot switch | 1 | |
+| T8 lead screw, 2 mm lead, 150 long, with an anti-backlash nut | 2 | and a 5 to 8 mm coupling each |
+| MGN12 rail, 150 long, with an MGN12H carriage | 2 | |
+| GT2 pulleys, 6 mm belt: 60 teeth bored 12, 16 teeth bored 5 | 1 each | and a closed belt of 184 |
+| 6201 bearings | 2 | |
+| M12 studding, nuts and washers | 350 mm | the spindle; a pointed length of it is the tail centre |
+| ground steel sleeve, 16 x 12 x 29 | 1 | the master |
+| 5 mm shoulder bolts | 4 | the links' pins |
+| light springs | 2 | |
+| tapered ball-nose, 1.5 mm radius, 2.8° a side, 6 mm shank | 1 | reaching 42 mm over the table |
+| straight bit, 6 mm | 1 | the same reach |
+| 6 mm ground pin, 60 or 70 long | 1 | setting up |
+| 1-2-3 block | 1 | setting up |
+| clip leads | 2 | setting up |
 
 ## What the test checks
 
@@ -391,6 +438,13 @@ them:
   of the table at every angle it turns through;
 - the document is the sled at one finishing row, the cutter's tip on
   the stick and no part through another;
+- the blank is a rectangle of whole millimetres with the tile 2 mm
+  inside every face, and the first row hangs it with a wide face
+  level and underneath, the centre where the row says it is;
+- against the back stop the cutter is under the master with the whole
+  of the widest bit clear of hanger and spur, against the forward one
+  past the stick's end, and the switch is where the back stop meets
+  the sled;
 - the probing table, on the sled as drawn: every touch is a touch, on
   a top or a side and not a corner, with a window of its screw to
   spare each way, and on its way there the master passes the pin by
@@ -404,7 +458,7 @@ them:
   with the bit's side level with it, in bites of 4 mm, and a turn of
   the spindle is a whole number of steps.
 
-The build itself tries the sled at 334 poses, the rows, the ways
+The build itself tries the sled at 356 poses, the rows, the ways
 between them and every place the probing takes it, with every part as
 its outline along the stick, and stops if any is in another or in the
 cutter's lane.

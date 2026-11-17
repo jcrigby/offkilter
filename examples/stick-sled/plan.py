@@ -22,7 +22,7 @@ ROUGH_STEP = 3.0                # its places across, half its width apart
 ROUGH_ANGLES = 24               # the directions it roughs from, 15 deg apart
 ALLOW = 0.4                     # what roughing leaves on the tile for the ball-nose
 BALL_BITE = 1.5                 # the most the ball-nose takes at a bite
-BLANK = 2.0                     # the blank: sawn to the tile's hull and this much over
+BLANK = 2.0                     # the blank: a rectangle about the tile, at least this much over on every side
 CELL = 0.2                      # the grid the waste is followed on
 DIRS = 720                      # directions tried for a pass: every half degree
 
@@ -221,10 +221,37 @@ def finish(outline):
     return passes, left, orphans
 
 
+_STOCK = {}
+
+
+def stock(outline):
+    """The blank's section: the least rectangle about the tile with BLANK over on every side, its sides rounded up to
+    whole millimetres. A rectangle because a saw and a planer make one; the tile's hull and 2 mm over, which the
+    cuts were first planned from, has six flats at odd angles and round corners between, and nothing makes that.
+    Its corners in the tile's frame, its two sides, how far it is turned there, and where the axis is from its
+    first corner along each side."""
+    key = (len(outline), outline[0], outline[len(outline) // 2])
+    if key not in _STOCK:
+        h_, best = hull(outline), None
+        for i in range(len(h_)):
+            a = math.atan2(h_[i][1] - h_[i - 1][1], h_[i][0] - h_[i - 1][0])
+            u = [(q[0] * math.cos(a) + q[1] * math.sin(a), -q[0] * math.sin(a) + q[1] * math.cos(a)) for q in h_]
+            x0, x1, y0, y1 = min(q[0] for q in u), max(q[0] for q in u), min(q[1] for q in u), max(q[1] for q in u)
+            if best is None or (x1 - x0) * (y1 - y0) < best[0]:
+                best = ((x1 - x0) * (y1 - y0), a, x0, x1, y0, y1)
+        _, a, x0, x1, y0, y1 = best
+        size = (float(math.ceil(x1 - x0 + 2 * BLANK - 1e-9)), float(math.ceil(y1 - y0 + 2 * BLANK - 1e-9)))
+        low = ((x0 + x1 - size[0]) / 2, (y0 + y1 - size[1]) / 2)          # its first corner, in its own frame
+        corners = [(low[0] + dx, low[1] + dy) for dx, dy in ((0.0, 0.0), (size[0], 0.0), (size[0], size[1]), (0.0, size[1]))]
+        _STOCK[key] = {"corners": [(q[0] * math.cos(a) - q[1] * math.sin(a), q[0] * math.sin(a) + q[1] * math.cos(a)) for q in corners],
+                       "size": size, "turn": a, "axis": (-low[0], -low[1])}
+    return _STOCK[key]
+
+
 def blank_reach(outline, t):
     """How far the blank stands toward the router when the stick is turned to t."""
     d, _ = frame(t)
-    return max(q[0] * d[0] + q[1] * d[1] for q in outline) + BLANK
+    return max(q[0] * d[0] + q[1] * d[1] for q in stock(outline)["corners"])
 
 
 def rough_places(outline):
@@ -252,17 +279,17 @@ def rough_places(outline):
 
 
 def waste_cells(outline):
-    """The waste, the blank less the tile, as the middles of CELL squares, and the blank's hull."""
-    h_ = hull(outline)
-    lo_x, hi_x = min(q[0] for q in h_) - BLANK, max(q[0] for q in h_) + BLANK
-    lo_y, hi_y = min(q[1] for q in h_) - BLANK, max(q[1] for q in h_) + BLANK
+    """The waste, the blank less the tile, as the middles of CELL squares, and the blank's corners."""
+    c_ = stock(outline)["corners"]
+    lo_x, hi_x = min(q[0] for q in c_), max(q[0] for q in c_)
+    lo_y, hi_y = min(q[1] for q in c_), max(q[1] for q in c_)
     cells = []
     for i in range(int((hi_x - lo_x) / CELL) + 1):
         for j in range(int((hi_y - lo_y) / CELL) + 1):
             q = (lo_x + (i + 0.5) * CELL, lo_y + (j + 0.5) * CELL)
-            if not inside(q, outline) and (inside(q, h_) or min(near(q, h_[m - 1], h_[m]) for m in range(len(h_))) <= BLANK):
+            if inside(q, c_) and not inside(q, outline):
                 cells.append(q)
-    return cells, h_
+    return cells, c_
 
 
 def bites(outline, places, passes):
@@ -274,7 +301,7 @@ def bites(outline, places, passes):
     Then every finishing pass takes what still stands over it in bites
     of BALL_BITE. Returns the places kept, and fills in every cut's
     depth and bites."""
-    cells, h_ = waste_cells(outline)
+    cells, _ = waste_cells(outline)
     waste = len(cells) * CELL * CELL
     alive = bytearray([1]) * len(cells)
 
@@ -315,7 +342,7 @@ def bites(outline, places, passes):
         _, depth = cut(q["t"], q["across"], q["tip"], BIT / 2, True)
         q["depth"] = depth
         q["bites"] = max(1, math.ceil(depth / BALL_BITE - 1e-9))
-    return kept, {"waste": waste, "rough_area": rough_area, "left_after_rough": left_after_rough, "left_at_end": sum(alive) * CELL * CELL, "hull": h_}
+    return kept, {"waste": waste, "rough_area": rough_area, "left_after_rough": left_after_rough, "left_at_end": sum(alive) * CELL * CELL}
 
 
 # -- the two hinges and the spindle ------------------------------------------

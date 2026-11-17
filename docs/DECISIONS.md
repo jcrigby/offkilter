@@ -1629,7 +1629,8 @@ Things the numbers decided, not taste:
 
 - **Coverage before precision.** The first probing set (pin, block
   flat, block on edge) left 0.035 mm with perfect touches: nothing
-  was touched above 59 mm and finishing cuts go to 68. The block on
+  was touched above 59 mm and finishing cuts went to 68 (71 since the
+  blank became a rectangle). The block on
   end is 76 tall, too tall to cross, so only one face of it can be
   touched from each side, with its place unknown. A straight face at
   an unknown place is still a straight line, and four heights on it
@@ -1661,3 +1662,41 @@ the tail centre.
 
 All of it is simulation. The study assumes a flat table, a square
 block, a clean touch and a stiff sled.
+
+## 2026-11 · The stick sled's blank is a rectangle
+
+The cuts were planned from "the tile's hull and 2 mm over", and the
+README promised a card template of it. Drawing the template showed
+what that shape is: six flats of 34, 17, 17, 17, 12 and 12 mm at odd
+angles with curves between them. Nothing in a shop makes it. A polygon
+sawn round it stands proud at its corners by an amount no bite was
+counted for, so the test's promise that no row meets more than its
+bite was a promise about a blank that would not exist.
+
+The blank is now the least rectangle about the tile with 2 mm over on
+every side, rounded up to the millimetre: 49 x 42. A saw and a planer
+make that, and it needs no template: the centre is 19.5 from one wide
+face and 24.8 from one narrow one. The table's first row turns the
+spindle to where the blank goes on with that wide face level and
+underneath.
+
+What it cost:
+
+- Waste goes from 767 to 1214 mm2 of section and roughing from 145
+  rows to 200: 63 more pushes, a quarter of an hour a stick.
+- The cutter stands 42 mm over the table for 39. The table's clearance
+  is tested with the uncut blank at every row, and a rectangle's
+  corner reaches 33.5 mm from the axis for the hull's 30.9. By the
+  deep rows the corners are long gone, so following what still stands
+  would give the 3 mm back; that is not done, and the test stays
+  simple and on the safe side.
+- The lift's travel grows from 79 to 86 mm.
+
+What lost: a six-sided blank, the hull's flats run out to their
+corners. Fewer pushes, but four bevel rips each good to a millimetre,
+against none.
+
+The stops are blocks clamped to the fence, in the right runner's way,
+because a fence is what a clamp reaches; the sled-back switch is on
+that runner's end, and the riser's gusset there moved 40 mm in to
+leave it room.

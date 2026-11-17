@@ -1,30 +1,30 @@
-#safe,37.25
+#safe,45.0
 n,kind,tool,lift,swing,turn,via,label
 1,say,,0.0,0.0,0.0,s,a scrap stick 30square or less  between centres.straight bit
 2,say,,0.0,0.0,0.0,s,a stop clamped  25 mm in from   each end of the stick
-3,set,straight,42.8681,25.9743,270.0779,s,set the straight bit on the master
-4,place,straight,24.2961,26.9255,269.4342,s,under 18
+3,set,straight,50.6136,25.9691,270.243,s,set the straight bit on the master
+4,place,straight,31.9946,26.6108,269.5391,s,under 18
 5,round,,0.0,0.0,0.0,s,push to the far stop and hold
 6,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 7,say,,0.0,0.0,0.0,s,pull right back
-8,place,straight,31.6994,26.3588,269.6558,s,under 14
+8,place,straight,39.4123,26.1691,269.7845,s,under 14
 9,round,,0.0,0.0,0.0,s,push to the far stop and hold
 10,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 11,say,,0.0,0.0,0.0,s,pull right back
-12,place,straight,39.1348,26.041,269.9251,s,under 10
+12,place,straight,46.8681,25.9743,270.0779,s,under 10
 13,round,,0.0,0.0,0.0,s,push to the far stop and hold
 14,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 15,say,,0.0,0.0,0.0,s,pull right back
 16,say,,0.0,0.0,0.0,s,move both stops 10 mm toward thetail
-17,place,straight,67.9048,43.6519,280.7221,s,beside 18
+17,place,straight,75.9345,44.0023,280.9898,s,beside 18
 18,round,,0.0,0.0,0.0,s,push to the far stop and hold
 19,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 20,say,,0.0,0.0,0.0,s,pull right back
-21,place,straight,66.5279,40.4296,278.8452,s,beside 14
+21,place,straight,74.5105,40.7773,279.1033,s,beside 14
 22,round,,0.0,0.0,0.0,s,push to the far stop and hold
 23,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 24,say,,0.0,0.0,0.0,s,pull right back
-25,place,straight,65.4289,37.2053,276.9965,s,beside 10
+25,place,straight,73.369,37.5508,277.247,s,beside 10
 26,round,,0.0,0.0,0.0,s,push to the far stop and hold
 27,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 28,say,,0.0,0.0,0.0,s,pull right back

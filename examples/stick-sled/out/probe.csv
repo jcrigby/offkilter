@@ -1,54 +1,54 @@
 #safe,0.0
 n,kind,tool,lift,swing,turn,via,label
-1,say,,0.0,0.0,0.0,h,router UNPLUGGED6 mm pin in the collet its top  39 over table
+1,say,,0.0,0.0,0.0,h,router UNPLUGGED6 mm pin in the collet its top  42 over table
 2,say,,0.0,0.0,0.0,h,sled clamped at its back stop.  clips on pin    and spindle
 3,leads,,0.0,0.0,0.0,h,pin
-4,down,pin,42.8681,25.9743,0.0,h,down on pin
-5,sw+,pin,65.9686,17.9917,0.0,h,pin fence side
-6,sw+,pin,70.6516,18.4727,0.0,d,pin fence side
-7,sw+,pin,75.3488,19.0601,0.0,d,pin fence side
-8,sw+,pin,80.0588,19.7582,0.0,d,pin fence side
-9,sw-,pin,66.9372,35.7565,0.0,h,pin far side
-10,sw-,pin,71.8539,36.2398,0.0,d,pin far side
-11,sw-,pin,76.8028,36.8309,0.0,d,pin far side
-12,sw-,pin,81.783,37.5345,0.0,d,pin far side
-13,down,pin,42.8681,25.9743,180.0,h,down on pin
-14,sw+,pin,65.9686,17.9917,180.0,h,pin fence side
-15,sw+,pin,70.6516,18.4727,180.0,d,pin fence side
-16,sw+,pin,75.3488,19.0601,180.0,d,pin fence side
-17,sw+,pin,80.0588,19.7582,180.0,d,pin fence side
-18,sw-,pin,66.9372,35.7565,180.0,h,pin far side
-19,sw-,pin,71.8539,36.2398,180.0,d,pin far side
-20,sw-,pin,76.8028,36.8309,180.0,d,pin far side
-21,sw-,pin,81.783,37.5345,180.0,d,pin far side
-22,place,,0.0,30.6534,0.0,h,to the top
+4,down,pin,50.6136,25.9691,0.0,h,down on pin
+5,sw+,pin,73.7138,18.3681,0.0,h,pin fence side
+6,sw+,pin,78.4083,18.9339,0.0,d,pin fence side
+7,sw+,pin,83.1159,19.6095,0.0,d,pin fence side
+8,sw+,pin,87.8347,20.4,0.0,d,pin fence side
+9,sw-,pin,74.8679,36.1346,0.0,h,pin far side
+10,sw-,pin,79.8105,36.7038,0.0,d,pin far side
+11,sw-,pin,84.7845,37.3845,0.0,d,pin far side
+12,sw-,pin,89.7884,38.1822,0.0,d,pin far side
+13,down,pin,50.6136,25.9691,180.0,h,down on pin
+14,sw+,pin,73.7138,18.3681,180.0,h,pin fence side
+15,sw+,pin,78.4083,18.9339,180.0,d,pin fence side
+16,sw+,pin,83.1159,19.6095,180.0,d,pin fence side
+17,sw+,pin,87.8347,20.4,180.0,d,pin fence side
+18,sw-,pin,74.8679,36.1346,180.0,h,pin far side
+19,sw-,pin,79.8105,36.7038,180.0,d,pin far side
+20,sw-,pin,84.7845,37.3845,180.0,d,pin far side
+21,sw-,pin,89.7884,38.1822,180.0,d,pin far side
+22,place,,0.0,31.5615,0.0,h,to the top
 23,say,,0.0,0.0,0.0,h,pin down under  the table. blocklying flat its  3 in. across
 24,say,,0.0,0.0,0.0,h,under the master2 mm clear of   the hanger. clipon the block
 25,leads,,0.0,0.0,0.0,h,block
-26,down,flat,73.5547,44.9268,0.0,h,down on flat
-27,down,flat,68.613,27.173,0.0,h,down on flat
-28,down,flat,71.016,9.3969,0.0,h,down on flat
-29,br+,edge,76.8272,11.6309,0.0,h,block on its 3  in. edge along  the stick: slide
-30,sw+,edge,76.8272,11.6309,0.0,d,edge fence side
-31,sw+,edge,66.7083,10.4685,0.0,d,edge fence side
-32,sw+,edge,56.6317,9.8011,0.0,d,edge fence side
-33,sw+,edge,46.5996,9.6055,0.0,d,edge fence side
-34,down,edge,21.136,32.5085,0.0,h,down on edge
-35,down,edge,20.9626,27.6675,0.0,h,down on edge
-36,down,edge,21.3002,22.8114,0.0,h,down on edge
-37,sw-,edge,47.2563,43.0329,0.0,h,edge far side
-38,sw-,edge,58.0214,43.2238,0.0,d,edge far side
-39,sw-,edge,68.9867,43.8943,0.0,d,edge far side
-40,sw-,edge,80.1606,45.0712,0.0,d,edge far side
-41,br+,post_far,4.3853,37.8976,0.0,h,block on end on the far side:   slide it
-42,sw+,post_far,4.3853,37.8976,0.0,d,post_far fence side
-43,sw+,post_far,26.6955,34.8226,0.0,d,post_far fence side
-44,sw+,post_far,49.3372,34.0547,0.0,d,post_far fence side
-45,sw+,post_far,72.6211,35.5418,0.0,d,post_far fence side
-46,br-,post_near,71.4918,19.3894,0.0,h,block on end on the fence side: slide it
-47,sw-,post_near,71.4918,19.3894,0.0,d,post_near far side
-48,sw-,post_near,49.0972,17.9042,0.0,d,post_near far side
-49,sw-,post_near,27.0157,18.6603,0.0,d,post_near far side
-50,sw-,post_near,4.9863,21.7192,0.0,d,post_near far side
-51,place,,0.0,30.6534,0.0,h,to the top
+26,down,flat,87.8046,46.1617,0.0,h,down on flat
+27,down,flat,82.247,28.3781,0.0,h,down on flat
+28,down,flat,84.1887,10.6146,0.0,h,down on flat
+29,br+,edge,90.4799,11.5387,0.0,h,block on its 3  in. edge along  the stick: slide
+30,sw+,edge,90.4799,11.5387,0.0,d,edge fence side
+31,sw+,edge,80.3838,9.8886,0.0,d,edge fence side
+32,sw+,edge,70.3107,8.7694,0.0,d,edge fence side
+33,sw+,edge,60.2742,8.1421,0.0,d,edge fence side
+34,down,edge,34.3042,30.0846,0.0,h,down on edge
+35,down,edge,34.2516,25.2397,0.0,h,down on edge
+36,down,edge,34.7093,20.3826,0.0,h,down on edge
+37,sw-,edge,60.3627,41.5795,0.0,h,edge far side
+38,sw-,edge,71.2499,42.2021,0.0,d,edge far side
+39,sw-,edge,82.3346,43.3271,0.0,d,edge far side
+40,sw-,edge,93.6118,44.9987,0.0,d,edge far side
+41,br+,post_far,10.2436,37.5461,0.0,h,block on end on the far side:   slide it
+42,sw+,post_far,10.2436,37.5461,0.0,d,post_far fence side
+43,sw+,post_far,34.4348,34.5397,0.0,d,post_far fence side
+44,sw+,post_far,59.0912,34.2103,0.0,d,post_far fence side
+45,sw+,post_far,84.5424,36.576,0.0,d,post_far fence side
+46,br-,post_near,83.0347,20.4169,0.0,h,block on end on the fence side: slide it
+47,sw-,post_near,83.0347,20.4169,0.0,d,post_near far side
+48,sw-,post_near,58.6618,18.0611,0.0,d,post_near far side
+49,sw-,post_near,34.6822,18.3798,0.0,d,post_near far side
+50,sw-,post_near,10.831,21.3691,0.0,d,post_near far side
+51,place,,0.0,31.5615,0.0,h,to the top
 52,say,,0.0,0.0,0.0,h,done. copy      probe_log.csv   run calibrate.pyfit
