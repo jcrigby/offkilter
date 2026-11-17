@@ -1,0 +1,455 @@
+{
+ "router": {
+  "d": 65.0,
+  "envelope": 80.0,
+  "length": 190.0,
+  "housing": 150.0,
+  "collet": [
+   22.0,
+   16.0
+  ],
+  "bit": [
+   8.0,
+   40.0
+  ]
+ },
+ "travel": {
+  "x": 60.0,
+  "z": 80.0
+ },
+ "wall": 8.0,
+ "outer_wall": 10.0,
+ "gap": 1.5,
+ "strip_l": 25.0,
+ "gib": [
+  4.0,
+  20.0
+ ],
+ "engage": 1.5,
+ "rail": 16.0,
+ "screw": {
+  "d": 8.0,
+  "pitch": 1.25,
+  "per_step": 0.00625,
+  "nut": [
+   13.0,
+   24.0
+  ],
+  "float": 0.5,
+  "lead": 3.0,
+  "tip_clear": 4.0
+ },
+ "quill": {
+  "bore": 82.0,
+  "outside": 98.0,
+  "length": 267.0,
+  "front": 60.0
+ },
+ "sleeve": {
+  "bore": 101.0,
+  "outside": 117.0
+ },
+ "stage": {
+  "x": 117.0,
+  "y": 149.0,
+  "height": 233.0,
+  "foot": 81.0,
+  "screw_room": 88.0,
+  "boss": 28.0
+ },
+ "box": {
+  "x": [
+   -11.5,
+   128.5
+  ],
+  "y": 86.0,
+  "inside_height": 315.0,
+  "slot_z": [
+   153.5,
+   277.5
+  ],
+  "slot_w": 44.0,
+  "column_slot_z": [
+   115.5,
+   315.0
+  ]
+ },
+ "axis_z": 255.5,
+ "x": {
+  "router_back": 250.0,
+  "tip": 254.0,
+  "nut": 317.0,
+  "spider": 315.0,
+  "column_end": 346.0,
+  "end": 460.0
+ },
+ "z": {
+  "nut": 83.0,
+  "tip": 110.0,
+  "end": -124.0
+ },
+ "drive": {
+  "recess": 16.0,
+  "bulkhead": 12.0,
+  "chamber": 40.0,
+  "length": 68.0,
+  "cap": 6.0,
+  "motor": [
+   42.3,
+   40.0,
+   24.0
+  ]
+ },
+ "rules": {
+  "x_engaged": 2.7244897959183674,
+  "z_engaged": 1.563758389261745,
+  "front_strip_in_sleeve": 2.0,
+  "back_strip_in_column": 21.0,
+  "x_tip_to_router": 4.0,
+  "x_through_nut": 3.0,
+  "z_tip_to_sleeve": 7.0,
+  "z_through_nut": 3.0,
+  "column_in_slot": 1.0,
+  "collet_proud": 4.5
+ },
+ "envelope": {
+  "x": [
+   -11.5,
+   460.0
+  ],
+  "y": [
+   -86.0,
+   86.0
+  ],
+  "z": [
+   -124.0,
+   325.0
+  ]
+ },
+ "size": [
+  471.5,
+  172.0,
+  449.0
+ ],
+ "behind_router": {
+  "drawn_back": 210.0,
+  "plunged": 270.0
+ },
+ "out_of_the_box": 331.5,
+ "bed": 256.0,
+ "sizes": {
+  "Outer box": [
+   140.0,
+   172.0,
+   335.0
+  ],
+  "Z stage": [
+   118.5,
+   150.5,
+   233.0
+  ],
+  "X column": [
+   229.0,
+   117.0,
+   117.0
+  ],
+  "X quill": [
+   267.0,
+   99.5,
+   99.5
+  ],
+  "Spider": [
+   28.0,
+   81.6,
+   81.6
+  ],
+  "Drive housing": [
+   68.0,
+   117.0,
+   117.0
+  ],
+  "End cap": [
+   6.0,
+   117.0,
+   117.0
+  ]
+ },
+ "too_long_to_print": [
+  "Outer box",
+  "X quill"
+ ],
+ "parts": [
+  {
+   "tab": "Outer box",
+   "moves": "fixed",
+   "bodies": [
+    [
+     "Part 1",
+     1969181.413418436
+    ]
+   ]
+  },
+  {
+   "tab": "Z gibs",
+   "moves": "fixed",
+   "bodies": [
+    [
+     "Part 1",
+     23760.0
+    ],
+    [
+     "Part 2",
+     23760.0
+    ],
+    [
+     "Part 3",
+     23760.0
+    ]
+   ]
+  },
+  {
+   "tab": "Z drive housing",
+   "moves": "fixed",
+   "bodies": [
+    [
+     "Part 1",
+     515975.15501383186
+    ],
+    [
+     "Part 2",
+     79751.37994927986
+    ]
+   ]
+  },
+  {
+   "tab": "Z drive",
+   "moves": "fixed",
+   "bodies": [
+    [
+     "Part 1",
+     1163.6756569843376
+    ],
+    [
+     "Part 2",
+     727.297285615212
+    ],
+    [
+     "Part 3",
+     1163.675656984336
+    ],
+    [
+     "Part 4",
+     5695.540793824302
+    ],
+    [
+     "Part 5",
+     71571.6038726806
+    ],
+    [
+     "Part 6",
+     470.64098262120206
+    ],
+    [
+     "Part 7",
+     8509.189470922502
+    ]
+   ]
+  },
+  {
+   "tab": "Z home switch",
+   "moves": "fixed",
+   "bodies": [
+    [
+     "Part 1",
+     1200.0
+    ]
+   ]
+  },
+  {
+   "tab": "Z stage",
+   "moves": "z",
+   "bodies": [
+    [
+     "Part 1",
+     1891909.2857969496
+    ]
+   ]
+  },
+  {
+   "tab": "Z nut",
+   "moves": "z",
+   "bodies": [
+    [
+     "Part 1",
+     2184.2622935977033
+    ]
+   ]
+  },
+  {
+   "tab": "X column",
+   "moves": "z",
+   "bodies": [
+    [
+     "Part 1",
+     747266.8944994546
+    ]
+   ]
+  },
+  {
+   "tab": "X gibs",
+   "moves": "z",
+   "bodies": [
+    [
+     "Part 1",
+     7920.0
+    ],
+    [
+     "Part 2",
+     7920.0
+    ],
+    [
+     "Part 3",
+     8320.00000000001
+    ],
+    [
+     "Part 4",
+     8319.999999999993
+    ]
+   ]
+  },
+  {
+   "tab": "X drive housing",
+   "moves": "z",
+   "bodies": [
+    [
+     "Part 1",
+     515975.1552344035
+    ],
+    [
+     "Part 2",
+     79751.37995067766
+    ]
+   ]
+  },
+  {
+   "tab": "X drive",
+   "moves": "z",
+   "bodies": [
+    [
+     "Part 1",
+     1163.6756726022647
+    ],
+    [
+     "Part 2",
+     727.297295376383
+    ],
+    [
+     "Part 3",
+     1163.6756726023505
+    ],
+    [
+     "Part 4",
+     5695.54112222147
+    ],
+    [
+     "Part 5",
+     71571.57805481006
+    ],
+    [
+     "Part 6",
+     470.64094409461177
+    ],
+    [
+     "Part 7",
+     7103.54223186554
+    ]
+   ]
+  },
+  {
+   "tab": "X home switch",
+   "moves": "z",
+   "bodies": [
+    [
+     "Part 1",
+     1200.0
+    ]
+   ]
+  },
+  {
+   "tab": "X quill",
+   "moves": "xz",
+   "bodies": [
+    [
+     "Part 1",
+     774508.0000000007
+    ]
+   ]
+  },
+  {
+   "tab": "Spider",
+   "moves": "xz",
+   "bodies": [
+    [
+     "Part 1",
+     50691.70145051919
+    ]
+   ]
+  },
+  {
+   "tab": "X nut",
+   "moves": "xz",
+   "bodies": [
+    [
+     "Part 1",
+     2184.2615226783746
+    ]
+   ]
+  },
+  {
+   "tab": "Router",
+   "moves": "xz",
+   "bodies": [
+    [
+     "Part 1",
+     706003.8867906039
+    ]
+   ]
+  },
+  {
+   "tab": "Router clamps",
+   "moves": "xz",
+   "bodies": [
+    [
+     "Part 1",
+     65659.9246663132
+    ],
+    [
+     "Part 2",
+     65659.92466631315
+    ]
+   ]
+  }
+ ],
+ "corners": [
+  [
+   "Home: drawn back, up",
+   0.0,
+   0.0
+  ],
+  [
+   "Plunged, up",
+   60.0,
+   0.0
+  ],
+  [
+   "Drawn back, down",
+   0.0,
+   80.0
+  ],
+  [
+   "Plunged, down",
+   60.0,
+   80.0
+  ]
+ ]
+}

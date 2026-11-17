@@ -88,9 +88,11 @@ works today, all in the browser:
   three motors from a table of rows (`examples/stick-sled/`), a mini
   chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
-  from a published plan (`examples/cutoff-grinder/`) and the Edwardian
+  from a published plan (`examples/cutoff-grinder/`), the Edwardian
   Lift, a minimal router table lifted by a scissor jack through a
-  lever (`examples/jack-table/`).
+  lever (`examples/jack-table/`), and the first pass of a two-axis
+  router positioner, boxes sliding in boxes on a screw each, from a
+  design brief (`examples/router-positioner/`).
 - Measuring from a photo: print the measuring sheet
   (`examples/measuring-sheet/`), lay parts on it with a steel rule for
   the print scale, photograph it, and the sizes, outlines and holes

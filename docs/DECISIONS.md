@@ -1735,3 +1735,42 @@ The same blind spot holds for the home switches. The fit finds where
 they are; how well they repeat from one day to the next is not in
 the study, and the swing's goes to the stick whole. That is in the
 README as a thing to measure before trusting a table.
+
+## 2026-11 · The router positioner: what the first pass chose, and what it found
+
+The owner's brief (`examples/router-positioner/BRIEF.md`) settles the
+layout: boxes in boxes, a screw on the centre of each, motors on
+column end caps. It leaves nine questions open and asks for a
+parametric model and an envelope before any detailing. Where the
+brief decided, the model follows; these are the model's own choices.
+
+- **The Z stage is wider than the X column, by a rail each side.**
+  The column goes out through the outer box's right wall and travels
+  80 mm up and down in it, so its slot takes that wall from 116 mm
+  up. The stage's tipping load (the router's weight out to the right,
+  and the plunge) puts its top against exactly that wall. A stage the
+  column's own width would have nothing there to bear on. Widening
+  the stage 16 mm front and back leaves the wall a rail either side
+  of the slot. What lost: a slim stage held by gibs alone, and an
+  outer box long enough to swallow the whole column, which moves the
+  wall away rather than giving it back.
+- **Reference faces follow the loads.** The stage bears on the rails
+  and the back wall, the quill down and back; the gibs are opposite.
+  The brief's own rule, applied; its eighth question is still the
+  owner's to confirm.
+- **The column guides the quill too.** The brief calls the column a
+  fixed extension of the sleeve, and taken at its word the quill's
+  back end runs in it. That makes the quill's guide 2.7 of its widths
+  long without a longer sleeve, and keeps the stage short.
+- **One drive housing for both axes.** Collar and thrust bearing in a
+  recess on the nut's side of a bulkhead, coupling in a chamber
+  behind, motor on the cap. It is why the Z column is as wide as the
+  X one.
+- **The collision check has a control.** Nothing through anything at
+  four poses is only worth saying if the check can fail, so the test
+  also runs each axis past each end and requires a hit.
+
+The router's size is a guess three ways (65 across the housing, 80
+across the cap, 190 long): Bosch publishes none of it. The model is
+parametric so that the owner's callipers replace the guesses, and the
+README says which box grows with which number.
