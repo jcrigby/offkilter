@@ -23,6 +23,14 @@ SLED_BACK_PIN = 13              # closed with the sled pulled right back, the st
 NEXT_PIN = 14                   # the foot switch
 LED_PIN = 25
 
+# A display, if there is one: an SSD1306, 128 x 64, on I2C. Put MicroPython's ssd1306 driver on the Pico
+# (mpremote mip install ssd1306). Without it everything is still said over USB.
+OLED = True
+OLED_I2C, OLED_SDA_PIN, OLED_SCL_PIN = 0, 16, 17
+
+# Where the controller keeps its place in a stick.
+PLACE_FILE = "at.txt"
+
 # Steps for a millimetre of pusher and a degree of spindle.
 # 200-step motors; a T8 screw of 2 mm lead; the drivers at 8 microsteps for the pushers
 # and 16 for the spindle; a 16-tooth pulley driving a 60-tooth one.

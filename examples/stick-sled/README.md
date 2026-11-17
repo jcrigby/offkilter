@@ -172,10 +172,28 @@ checks every row ends on the table's numbers to the step.
 | other switches | sled back, and the foot switch |
 | supply | 12 V |
 
-It speaks only over USB: what the next row is and when to set the
-bit. Until it has a display, a phone or a laptop
-on the cable is part of it. It keeps no place: a stick stopped half
-way starts again from the first row.
+It says what it wants in four short lines, on a small display if one
+is fitted and always over USB: which row, which bit, and what to do.
+Without the display's driver or the display it carries on over USB.
+
+It keeps its place. A row is done when the sled has left its back
+stop and come back; the row's number then goes into `at.txt` on the
+Pico. Switched on with a stick part done, it offers to go on from the
+next row (hold the foot switch three seconds to start over), homes,
+and takes its first move by the safe height. The bit is still set, so
+long as the router has not been touched.
+
+| pin (GP) | to |
+|---|---|
+| 2, 3 | lift driver: step, direction |
+| 4, 5 | swing driver: step, direction |
+| 6, 7 | spindle driver: step, direction |
+| 8 | all three drivers' enable |
+| 10, 11, 12 | home switches: lift, swing, the spindle's mark; each to ground, normally closed |
+| 13 | sled-back switch, to ground, closing when the sled is back |
+| 14 | foot switch, to ground |
+| 16, 17 | display: SDA, SCL |
+| 25 | the Pico's own LED: lit while a row waits to be cut |
 
 ## Calibration: not yet designed
 

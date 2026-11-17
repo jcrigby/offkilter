@@ -790,6 +790,23 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
     let safe = f(&n["sled"]["safe"]);
     assert!((f(&sim["safe_steps"]) - (safe * per[0]).round()).abs() < 1e-9);
     assert!(f(&sim["deepest_crossing"]) <= f(&sim["safe_steps"]));
+    // Left half way and taken up again, it homes and ends every remaining row on the same steps; its first move is
+    // from home, so that one goes by the safe height whatever the table says.
+    let again = &sim["resumed"];
+    let after = again["after"].as_u64().unwrap();
+    assert!(after > 100 && (after as usize) < rows.len() - 100);
+    let rest = again["rows"].as_array().unwrap();
+    assert_eq!(rest.len(), rows.len() - after as usize);
+    for (a, b) in rest.iter().zip(&done[after as usize..]) {
+        assert_eq!(a, b);
+    }
+    assert_eq!(
+        again["went_straight"].as_u64().unwrap(),
+        rows.iter()
+            .filter(|r| r.straight && r.n > after + 1)
+            .count() as u64
+    );
+    assert!(f(&again["deepest_crossing"]) <= f(&sim["safe_steps"]));
     // It went straight exactly where the table said it might.
     assert_eq!(
         sim["went_straight"].as_u64().unwrap(),

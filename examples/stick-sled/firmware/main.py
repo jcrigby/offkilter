@@ -1,16 +1,22 @@
 """The stick sled's controller: MicroPython on a Raspberry Pi Pico.
 
 It reads passes.csv, a row a cut, each row where the three motors
-stand: the lift pusher's millimetres down from its home switch, the
-swing pusher's millimetres out from its, and the spindle's degrees on
+stand: the lift screw's millimetres down from its home switch, the
+swing screw's millimetres out from its, and the spindle's degrees on
 from its mark. For a pass it waits until the sled is pulled back and
-the foot switch pressed, moves, and waits again while the sled is
-pushed and pulled by hand. Nothing moves while the stick is over the
-cutter.
+the foot switch pressed, moves, and waits while the sled is pushed
+through and pulled back by hand. Nothing moves while the stick is over
+the cutter.
+
+It says what it wants on a small display if one is fitted (an SSD1306,
+128 x 64, with MicroPython's ssd1306 driver on the Pico), and always
+over USB. It keeps its place in at.txt, so a stick stopped half way
+can be taken up again after homing.
 
 Copy main.py, config.py and passes.csv to the Pico. On a computer,
-`python3 main.py --sim passes.csv steps.json` runs the same code on
-pins that do nothing and writes where every row left the motors.
+`python3 main.py --sim passes.csv steps.json [row]` runs the same code
+on pins that do nothing and writes where every row left the motors;
+with a row, as if taken up again after that row.
 """
 try:
     import machine
@@ -115,20 +121,79 @@ class Axis:
         self.at = 0
 
 
-def say(text):
-    print(text)
+class Screen:
+    """Up to four short lines: on the display if there is one, and over USB."""
+
+    def __init__(self):
+        self.oled = None
+        self.quiet = False
+        if not SIM and C.OLED:
+            try:
+                import ssd1306
+                i2c = machine.I2C(C.OLED_I2C, sda=machine.Pin(C.OLED_SDA_PIN), scl=machine.Pin(C.OLED_SCL_PIN))
+                self.oled = ssd1306.SSD1306_I2C(128, 64, i2c)
+            except Exception as why:        # no driver, no display, wrong pins: carry on over USB
+                print("no display:", why)
+
+    def show(self, *lines):
+        if not self.quiet:
+            print(" | ".join(lines))
+        if self.oled:
+            self.oled.fill(0)
+            for i, line in enumerate(lines[:6]):
+                self.oled.text(line[:16], 0, i * 10)
+            self.oled.show()
+
+
+SCREEN = Screen()
 
 
 def wait(pin):
-    """Until a switch closes, and for the foot switch until it has been let go first."""
+    """Until a switch closes, and for the foot switch until it has been let go first.
+    Returns how long it was then held, in milliseconds, up to three seconds."""
     if SIM:
-        return
+        return 0
     if pin == C.NEXT_PIN:
         while PINS.closed(pin):
             utime.sleep_ms(20)
     while not PINS.closed(pin):
         utime.sleep_ms(20)
     utime.sleep_ms(30)
+    if pin != C.NEXT_PIN:
+        return 0
+    held = 0
+    while PINS.closed(pin) and held < 3000:
+        utime.sleep_ms(20)
+        held += 20
+    return held
+
+
+def wait_for_the_cut():
+    """Until the sled has left its back stop and come back to it: the cut has been made."""
+    if SIM:
+        return
+    while PINS.closed(C.SLED_BACK_PIN):
+        utime.sleep_ms(20)
+    utime.sleep_ms(300)
+    while not PINS.closed(C.SLED_BACK_PIN):
+        utime.sleep_ms(20)
+    utime.sleep_ms(100)
+
+
+def place(total):
+    """The row a stick was left at: the last one finished, if at.txt is of this table."""
+    try:
+        with open(C.PLACE_FILE) as f:
+            n, of = [int(v) for v in f.read().split(",")]
+        return n if of == total and 0 < n < total else 0
+    except (OSError, ValueError):
+        return 0
+
+
+def keep_place(n, total):
+    if not SIM:
+        with open(C.PLACE_FILE, "w") as f:
+            f.write("%d,%d" % (n, total))
 
 
 def read_table(path):
@@ -171,9 +236,10 @@ class Sled:
         return PINS.closed(C.SLED_BACK_PIN)
 
     def home(self):
-        say("pull the sled back, then the foot switch: homing")
+        SCREEN.show("sled back,", "then foot switch", "to find home")
         wait(C.SLED_BACK_PIN)
         wait(C.NEXT_PIN)
+        SCREEN.show("finding home")
         self.lift.seek(C.LIFT_HOME_PIN, C.LIFT_MOST_MM)     # up first: the stick away from the cutter
         self.swing.seek(C.SWING_HOME_PIN, C.SWING_MOST_MM)
         self.turn.seek(C.TURN_HOME_PIN, 400.0)
@@ -205,43 +271,66 @@ class Sled:
         self.turn_on_to(turn, guard)
         self.lift.to(lift, guard)
 
-    def run(self, rows, record=None):
-        self.home()
+    def run(self, rows, record=None, after=None):
+        """The whole table, or what is left of it after row `after`."""
         total = len(rows)
+        done = place(total) if after is None else after
+        if done and after is None:
+            SCREEN.show("left at row %d" % done, "of %d" % total, "press: go on", "hold 3 s: restart")
+            if wait(C.NEXT_PIN) >= 3000:
+                done = 0
+        self.home()
+        from_home = True                    # the first move is from home, whatever the table took it to be from
         for n, kind, tool, lift, swing, turn, straight, label in rows:
-            say("%d/%d %s: sled back, then the foot switch" % (n, total, label))
-            wait(C.SLED_BACK_PIN)
-            wait(C.NEXT_PIN)
-            self.go(lift, swing, turn, straight)
-            PINS.set(C.LED_PIN, 1)
-            if kind == "set":
-                say("bring the %s bit up until it touches the master, then the foot switch" % tool)
+            if n <= done:
+                continue
+            head = "%d/%d %s" % (n, total, kind)
+            if kind == "measure":           # nothing moves: a reading to take, in a calibration
+                SCREEN.show(head, label, "then foot switch")
                 wait(C.NEXT_PIN)
             else:
-                say("cut: push the sled through and pull it back")
-            PINS.set(C.LED_PIN, 0)
+                SCREEN.show(head, tool, "sled back,", "then foot switch")
+                wait(C.SLED_BACK_PIN)
+                wait(C.NEXT_PIN)
+                SCREEN.show(head, "moving")
+                self.go(lift, swing, turn, straight and not from_home)
+                from_home = False
+                PINS.set(C.LED_PIN, 1)
+                if kind == "set":
+                    SCREEN.show(head, "raise the bit", "to the master,", "then foot switch")
+                    wait(C.NEXT_PIN)
+                else:
+                    SCREEN.show(head, label, "push through", "and pull back")
+                    wait_for_the_cut()
+                PINS.set(C.LED_PIN, 0)
+            keep_place(n, total)
             if record is not None:
                 record.append([n, self.lift.at, self.swing.at, self.turn.at % int(round(360.0 * self.turn.per_unit))])
-        say("done")
+        keep_place(0, total)
+        SCREEN.show("done")
 
 
-def main(path="passes.csv", out=None):
+def main(path="passes.csv", out=None, after=None):
     safe, rows = read_table(path)
     sled = Sled(safe)
     record = [] if out else None
-    sled.run(rows, record)
+    try:
+        sled.run(rows, record, after)
+    except RuntimeError as why:
+        SCREEN.show("stopped:", str(why)[:16], str(why)[16:32])
+        raise
     if out:
         import json
         with open(out, "w") as f:
-            json.dump({"rows": record, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight, "stepped": [sled.lift.stepped, sled.swing.stepped, sled.turn.stepped], "safe_steps": sled.lift.steps_for(safe),
+            json.dump({"rows": record, "after": after or 0, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight,
+                       "stepped": [sled.lift.stepped, sled.swing.stepped, sled.turn.stepped], "safe_steps": sled.lift.steps_for(safe),
                        "per": [C.LIFT_STEPS_PER_MM, C.SWING_STEPS_PER_MM, C.TURN_STEPS_PER_DEG]}, f)
 
 
 if SIM:
     import sys
     if len(sys.argv) >= 4 and sys.argv[1] == "--sim":
-        _say = say
-        say = lambda text: None
-        main(sys.argv[2], sys.argv[3])
+        SCREEN.quiet = True
+        main(sys.argv[2], sys.argv[3], int(sys.argv[4]) if len(sys.argv) > 4 else None)
 else:
     main()

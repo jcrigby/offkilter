@@ -392,6 +392,16 @@ def main():
     steps = os.path.join(OUT, "steps.json")
     subprocess.run([sys.executable, os.path.join(HERE, "firmware", "main.py"), "--sim", table, steps], check=True, cwd=os.path.join(HERE, "firmware"))
     sim = json.load(open(steps))
+    # and again as if the stick had been left half way: homed, and taken up from the row after
+    half = len(rows) // 2
+    again = os.path.join(OUT, "steps_again.json")
+    subprocess.run([sys.executable, os.path.join(HERE, "firmware", "main.py"), "--sim", table, again, str(half)], check=True, cwd=os.path.join(HERE, "firmware"))
+    sim["resumed"] = json.load(open(again))
+    os.remove(again)
+    if sim["resumed"]["rows"] != sim["rows"][half:]:
+        raise SystemExit("taken up half way, the controller does not end the rows where it does run through")
+    with open(steps, "w") as f:
+        json.dump(sim, f)
     print(f"{len(rows)} rows; the controller, simulated, ends at {sim['rows'][-1][1:]} steps and never swings below lift step {sim['deepest_crossing']} (safe {sim['safe_steps']})")
 
     # -- the parts, at one pass ----------------------------------------------

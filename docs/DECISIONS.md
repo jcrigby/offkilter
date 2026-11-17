@@ -1580,3 +1580,19 @@ unless a row is so marked. 346 of 438 are, and the screw travels
   ask.
 - A setting of the bit is never gone to or left straight: there the
   master touches the cutter by design.
+
+## 2026-11 · The stick sled's controller keeps its place and says what it wants
+
+It spoke only over USB and began every stick at row one. A stick is
+two hours and more of rows, so:
+
+- A row is counted done when the sled has left its back stop and come
+  back, not when the foot switch is next pressed: the switch that
+  already gates the motors also knows a cut was made. The number goes
+  to a file on the Pico; switched on again it offers to go on from
+  there. Its first move after homing is from home, so it goes by the
+  safe height whatever the table says about that row.
+- A display is four lines on an SSD1306 if the driver and the display
+  are there, and the same four lines over USB always. Not required:
+  a controller that will not start for want of a display is worse
+  than one without.
