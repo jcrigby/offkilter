@@ -1559,3 +1559,24 @@ direction nearest 15 degrees round the ball from the tip, where the
 edge passes at about a metre a second at 25,000 rpm. Two passes
 cannot. Passes, reach, bit height and travel are unchanged; at 25
 degrees the bit would have to stand 1.4 mm higher, so 15.
+
+## 2026-11 · The stick sled: most moves between passes go straight
+
+With the sled back the master is over the cutter, so the controller
+went up to a safe height before every swing and turn and came down
+after. That was most of the lift screw's 8.5 m a stick. The build now
+follows each move along the path the controller takes (swing at the
+old lift, turn there, then lift) and marks it straight if the master
+stays 1.5 mm from the cutter and the blank 1 mm from the table at
+every angle it turns through; the controller goes by the safe height
+unless a row is so marked. 346 of 438 are, and the screw travels
+5.5 m.
+
+- The table carries the mark, not the controller the reasoning: the
+  Pico has no geometry, and the test can follow every marked move
+  with its own.
+- The blank turning into the table was the part nearly missed: at
+  the safe height nothing reaches it, so the old way never had to
+  ask.
+- A setting of the bit is never gone to or left straight: there the
+  master touches the cutter by design.

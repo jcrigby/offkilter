@@ -56,9 +56,14 @@ and the spindle stand.
 3. Push the sled through and pull it back.
 
 The controller will not move a motor unless the sled is back: a switch
-the sled closes there. Between passes it lifts the stick first to a
-height at which the master clears the cutter, then swings and turns,
-then comes down.
+the sled closes there. With the sled back the master is over the
+cutter, so a move between passes must not carry it through the
+cutter, nor turn the blank into the table. The safe way is up to a
+height at which the master clears the cutter wherever the frame
+swings, then across and round, then down. Most moves do not need it:
+the build follows each one along its own path, swing, turn, lift, and
+marks it straight if the master passes the cutter by 1.5 mm and the
+blank the table by 1 mm all the way. 346 of the 438 are.
 
 The stops are forgiving. Back, the cutter may be anywhere under the
 master, 29 mm of it. Forward, past the stick's end there is only the
@@ -99,9 +104,10 @@ hanger, which a stop must keep the cutter short of.
   raised until the bit touches it. Homing may land a hair differently
   each day; setting the bit on the master takes that up.
 
-A stick is about two and a half hours: 436 pushes at a quarter of a
-minute, and three quarters of an hour of the motors moving between
-them (8.5 m of lift screw at 800 steps a millimetre). Estimated.
+A stick is about two and a quarter hours: 436 pushes at a quarter of
+a minute, and half an hour of the motors moving between them (5.5 m
+of lift screw at 800 steps a millimetre; 8.5 m if every move went by
+the safe height). Estimated.
 
 ## The bit
 
@@ -259,9 +265,13 @@ them:
   each link is its length from pin to pin and leans no more than 30°
   off its screw;
 - the controller's program, simulated, ends every row on the table's
-  steps, turns the spindle under four turns in all coming up to its angles,
-  and never swings the stick below the height at which the master
-  clears the cutter;
+  steps, turns the spindle under four turns in all coming up to its
+  angles, goes straight exactly where the table says, and otherwise
+  never swings the stick below the height at which the master clears
+  the cutter;
+- every move marked straight, followed along its own path with the
+  test's own geometry: the master clear of the cutter, the blank clear
+  of the table at every angle it turns through;
 - the document is the sled at one finishing row, the cutter's tip on
   the stick and no part through another.
 
