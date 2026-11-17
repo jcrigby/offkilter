@@ -22,7 +22,7 @@ pulled back. Nothing is touched off and nothing is dialled.
 Outputs under out/: sled.okpart (every part in place at one pass),
 passes.csv (the table the controller reads), steps.json (the
 controller's own program, simulated over the whole table),
-master.stl, tower.stl, swing_block.stl and swing_base.stl to print, sled.png, end.png and
+master.stl, lift_block.stl, swing_block.stl and swing_base.stl to print, sled.png, end.png and
 head.png, sled.pdf, and sled.json (the numbers). plan.py is the
 planner and the hinges' geometry; firmware/ is the Pico's program.
 """
@@ -76,21 +76,26 @@ SLED_X = (-205.0, 335.0)
 LEFT_Y, RIGHT_Y = (-190.0, -95.0), (110.0, 290.0)   # the runners; the right one's edge on the fence
 TIE = 30.0                                      # a tie across each end
 PLATE_X = (-135.0, 285.0)
-PLATE_Y = (-35.0, 300.0)                        # the plate in its own frame, from past the hinge to past the pusher
+PLATE_Y = (-35.0, 292.0)                        # the plate in its own frame, from past the hinge to just past link 1's clevis, short of the lift's rail
 BEAM_X, BEAM_Y = (-100.0, 250.0), 30.0
 HANGER_X = ((-95.0, -76.0), (-52.0, -33.0))     # the head's two hangers, a bearing in each
 TAIL_X = (232.0, 251.0)
 MASTER_X = (HANGER_X[1][1], -4.0)
-PUSH_X = 100.0                                  # pusher 1, half way along
-NOSE_L = 120.0                                  # pusher 1's nose, sliding in its tower
+PUSH_X = 100.0                                  # link 1 and its clevis, half way along
 ROUGH_R = P.ROUGH_BIT / 2
-# Screw 2's nose: a block on a linear rail's carriage, so it cannot move across its screw. Its link leans up to 21 deg,
+# Each screw's nose: a block on a linear rail's carriage, so it cannot move across its screw. Its link leans up to 21 deg,
 # so what play it had in a printed bore came through to the stick at four tenths of itself.
 RAIL = (12.0, 8.0, 100.0)                       # MGN12 rail: wide, high, long
 CARRIAGE = (27.0, 45.4, 13.0)                   # MGN12H carriage: wide, long, and its top over the rail's seat
 BLOCK = (27.0, 46.0, 24.0, 8.0)                 # the nose block on it: wide, long, high, and how far it starts short of link 2's pin
 UNIT_X = TAIL_X[1] + 6.5 + BLOCK[0] / 2         # the rail's middle line: the block's near face against link 2, which lies on the tail hanger's far face
 SCREW2_X = UNIT_X + 6.0                         # screw 2, through the block beside the pin's end, at the pin's height
+# Screw 1's nose the same, upright: the rail on a post on the left runner, facing the stick.
+RAIL1_L = 150.0                                 # its rail: 79 of travel and a carriage
+BLOCK1 = (27.0, 68.0, 24.0, 8.0)                # its block: wide, tall, thick, and how far its top is over link 1's pin; the screw's nut is in its foot
+UNIT1_X = PUSH_X + 14.5 + BLOCK1[0] / 2         # the rail's middle line: the block's near face against link 1
+SCREW1_X = UNIT1_X + 6.0
+POST_Y = P1_Y - BLOCK1[2] / 2 - CARRIAGE[2]     # the post's face: rail, carriage and half the block from the screw's line
 
 
 def slab(p, name, x, pts, op="new"):
@@ -216,7 +221,7 @@ def outlines_meet(a, b):
 # Parts that are bored for one another, or touch by design: solid in the recorder, so not tried against each other.
 FITTED = [("Hinge 1 shaft", "Hinge 1 supports SK20"), ("Hinge 1 shaft", "Hinge 1 blocks SC20UU"), ("Hinge 2 shaft", "Hinge 2 supports SK20"), ("Hinge 2 shaft", "Hinge 2 blocks SC20UU"),
           ("Spindle and centre", "Bearings 6201"), ("Spindle and centre", "Head hangers"), ("Spindle and centre", "Belt drive"), ("Spindle and centre", "Master"),
-          ("Spindle and centre", "Tail hanger"), ("Bearings 6201", "Head hangers"), ("Lift pusher", "Tower"), ("Cutter", "Stick"), ("Cutter", "Table and fence")]
+          ("Spindle and centre", "Tail hanger"), ("Bearings 6201", "Head hangers"), ("Lift pusher", "Lift block"), ("Swing pusher", "Swing block"), ("Cutter", "Stick"), ("Cutter", "Table and fence")]
 
 
 def meetings(parts, skip=()):
@@ -338,7 +343,12 @@ def main():
     # -- the parts, at one pass ----------------------------------------------
     drawn = next(i for i, r in enumerate(rows) if r["kind"] == "finish" and abs(r["across"]) < 2.0 and r["tip"] > 12.0 and r["label"].startswith("finish bite 1 of 1"))
     top_z = h1[1] + SK_W / 2
-    tower_top = math.floor(min(p["c1"] for p in poses) - 6.0)
+    c1_low = min(p["c1"] for p in poses)
+    over1 = lambda c1_: c1_ + BLOCK1[3] - BLOCK1[1] / 2    # the lift block's middle, and its carriage's
+    rail1_z = (math.floor(over1(c1_low) - CARRIAGE[1] / 2 - 6.0), math.floor(over1(c1_low) - CARRIAGE[1] / 2 - 6.0) + RAIL1_L)
+    if over1(c1_home) + CARRIAGE[1] / 2 > rail1_z[1] - 2.0:
+        raise SystemExit("the lift's carriage runs off its rail")
+    screw1_top = c1_home + BLOCK1[3] - BLOCK1[1] + 6.0   # the screw's end: just past the nut with the block at home
     motor_c = (0.0, -DROP + BELT_C)                  # the spindle's motor in the hanging frame
     c2_low = min(p["c2"] for p in poses)
     rail_z = p2_z - CARRIAGE[2] - BLOCK[2] / 2       # the rail's seat: the pin half way up the block
@@ -346,6 +356,7 @@ def main():
     rail_y = (math.floor(over(c2_low) - CARRIAGE[1] / 2 - 6.0), math.floor(over(c2_low) - CARRIAGE[1] / 2 - 6.0) + RAIL[2])
     if over(c2_home) + CARRIAGE[1] / 2 > rail_y[1] - 2.0:
         raise SystemExit("the carriage runs off its rail")
+    screw2_end = c2_low - BLOCK[3] - 4.0             # the swing screw's end: just past the block's far face at its furthest
     motor2_y = max(c2_home - BLOCK[3] + BLOCK[1] + 8.0, rail_y[1] + 2.0)   # the motor's face: clear of the block at home, and past the rail's end
 
     def parts_at(q):
@@ -434,31 +445,38 @@ def main():
 
         pin1, pin2 = sled.pin1(a), sled.pin2(a, b)
 
+        block1_z = (c1 + BLOCK1[3] - BLOCK1[1], c1 + BLOCK1[3])
+
         def lift_pusher(p):
             m = MOTOR[0] / 2
-            box(p, "lift motor", (PUSH_X - m, PUSH_X + m), (P1_Y - m, P1_Y + m), (PLY, PLY + MOTOR[1]))
-            vcyl(p, "T8 screw", PUSH_X, P1_Y, PLY + MOTOR[1], c1 - NOSE_L, 8.0, op="new")
-            vcyl(p, "nose", PUSH_X, P1_Y, c1 - NOSE_L, c1 + 5.0, 14.0, op="add")
+            box(p, "lift motor", (SCREW1_X - m, SCREW1_X + m), (P1_Y - m, P1_Y + m), (PLY, PLY + MOTOR[1]))
+            vcyl(p, "T8 screw", SCREW1_X, P1_Y, PLY + MOTOR[1], screw1_top, 8.0, op="new")
+
+        def lift_rail(p):
+            box(p, "post", (UNIT1_X - 30.0, UNIT1_X + 30.0), (POST_Y - PLY, POST_Y), (PLY, rail1_z[1] + 4.0))
+            box(p, "MGN12 rail", (UNIT1_X - RAIL[0] / 2, UNIT1_X + RAIL[0] / 2), (POST_Y, POST_Y + RAIL[1]), rail1_z, op="new")
+            mid = over1(c1)
+            box(p, "MGN12H carriage", (UNIT1_X - CARRIAGE[0] / 2, UNIT1_X + CARRIAGE[0] / 2), (POST_Y + RAIL[1], POST_Y + CARRIAGE[2]), (mid - CARRIAGE[1] / 2, mid + CARRIAGE[1] / 2), op="new")
+
+        def lift_block(p):
+            """The lift's nose: on the carriage, link 1's pin near its top, the screw's nut in its foot."""
+            box(p, "nose block", (UNIT1_X - BLOCK1[0] / 2, UNIT1_X + BLOCK1[0] / 2), (POST_Y + CARRIAGE[2], POST_Y + CARRIAGE[2] + BLOCK1[2]), block1_z)
+            s = p.sketch("top", block1_z[1], "the screw's way")
+            p.point(s, (SCREW1_X, P1_Y))
+            p.hole(s, 9.0, name="the screw's way")
 
         def links(p):
             """Each nose to what it moves: a strip beside the nose, a pin through each end (the pins are not drawn)."""
-            slab(p, "link 1", (PUSH_X + 8.0, PUSH_X + 14.0), link((P1_Y, c1), pin1))
+            slab(p, "link 1", (PUSH_X + 8.0, PUSH_X + 14.0), link((P1_Y, c1), pin1))      # between the clevis and the block's near face
             slab(p, "clevis under the plate", (PUSH_X - 7.0, PUSH_X + 7.0), tf(PL, rect(E1[0] - 10.0, E1[0] + 10.0, E1[1] - 8.0, BLK_C)))
             slab(p, "link 2", (TAIL_X[1], TAIL_X[1] + 6.0), link((c2, p2_z), pin2))
-
-        def tower(p):
-            box(p, "tower", (PUSH_X - 15.0, PUSH_X + 15.0), (P1_Y - 15.0, P1_Y + 15.0), (PLY + MOTOR[1], tower_top))
-            s = p.sketch("top", tower_top, "bore")
-            p.point(s, (PUSH_X, P1_Y))
-            p.hole(s, 14.5, name="the nose's way")
-
 
         block_y = (c2 - BLOCK[3], c2 - BLOCK[3] + BLOCK[1])
 
         def swing_pusher(p):
             m = MOTOR[0] / 2
             box(p, "swing motor", (SCREW2_X - m, SCREW2_X + m), (motor2_y, motor2_y + MOTOR[1]), (p2_z - m, p2_z + m))
-            box(p, "T8 screw", (SCREW2_X - 4.0, SCREW2_X + 4.0), (block_y[1], motor2_y), (p2_z - 4.0, p2_z + 4.0), op="new")
+            box(p, "T8 screw", (SCREW2_X - 4.0, SCREW2_X + 4.0), (screw2_end, motor2_y), (p2_z - 4.0, p2_z + 4.0), op="new")
 
         def swing_rail(p):
             box(p, "MGN12 rail", (UNIT_X - RAIL[0] / 2, UNIT_X + RAIL[0] / 2), rail_y, (rail_z, rail_z + RAIL[1]))
@@ -468,6 +486,9 @@ def main():
         def swing_block(p):
             """The nose: on the carriage, link 2's pin in its near end and the screw's nut beside it. Bores not drawn."""
             box(p, "nose block", (UNIT_X - BLOCK[0] / 2, UNIT_X + BLOCK[0] / 2), block_y, (rail_z + CARRIAGE[2], rail_z + CARRIAGE[2] + BLOCK[2]))
+            s = p.sketch("front", -block_y[1] - 1.0, "the screw's way")
+            p.circle(s, (SCREW2_X, p2_z), 6.0)
+            p.cut(s, BLOCK[1] + 2.0, name="the screw's way")
 
         def swing_base(p):
             """Under the rail and the motor, on the shelf and the right runner."""
@@ -491,7 +512,7 @@ def main():
                  ("Hinge 2 supports SK20", supports2), ("Hinge 2 shaft", lambda p: xcyl(p, "20 mm shaft", -133.0, 283.0, h2, SHAFT_D)),
                  ("Hinge 2 blocks SC20UU", lambda p: blocks(p, HG, (-70.0, 215.0), True)), ("Beam", beam), ("Head hangers", hangers), ("Tail hanger", tail),
                  ("Bearings 6201", bearings), ("Spindle and centre", spindle), ("Belt drive", drive), ("Master", master), ("Stick", stick),
-                 ("Lift pusher", lift_pusher), ("Links", links), ("Tower", tower), ("Swing pusher", swing_pusher), ("Swing rail", swing_rail), ("Swing block", swing_block), ("Swing base", swing_base), ("Controller", controller)]
+                 ("Lift pusher", lift_pusher), ("Lift rail", lift_rail), ("Lift block", lift_block), ("Links", links), ("Swing pusher", swing_pusher), ("Swing rail", swing_rail), ("Swing block", swing_block), ("Swing base", swing_base), ("Controller", controller)]
         return parts, {"a": a, "b": b, "h2": h2, "axis": axis, "c1": c1, "c2": c2, "psi": psi, "pin1": pin1, "pin2": pin2}
 
     # -- nothing through anything, wherever the motors can put the sled ------
@@ -547,7 +568,7 @@ def main():
     mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{HANGER_X[0][0] - 2}", "fit": f"{HANGER_X[0][0] - 2},-90,-35,{HANGER_X[0][0]},120,{top_z + 40}", "width": 1300, "height": 1100, "path": os.path.join(OUT, "head.png")})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "sled.pdf"),
                               "note": f"stick sled: a lift plate and a hanging frame on two hinges, three motors, {len(rows)} rows a stick; the cutter {bit_up:.1f} over the table"}))
-    for title, name in (("Master", "master"), ("Tower", "tower"), ("Swing block", "swing_block"), ("Swing base", "swing_base")):
+    for title, name in (("Master", "master"), ("Lift block", "lift_block"), ("Swing block", "swing_block"), ("Swing base", "swing_base")):
         print(mcp.call("export", {"tab": tabs[title], "format": "stl", "path": os.path.join(OUT, f"{name}.stl")}))
     mcp.close()
 
@@ -563,7 +584,7 @@ def main():
                   "runs": sum(q["bites"] for q in places), **waste},
         "bit_up": bit_up, "table_clear": TABLE_CLEAR, "pulley_r": PULLEY_R, "hanger_r": HANGER_R, "spindle_d": SPINDLE_D, "spindle_clear": SPINDLE_CLEAR,
         "sled": {"h1": h1, "arm": ARM, "drop": DROP, "p1_y": P1_Y, "e1": E1, "l1": L1, "p2_z": p2_z, "e2": e2, "l2": L2, "lean": lean, "lean_most": LEAN, "swing": {"rail": RAIL, "rail_y": rail_y, "rail_z": rail_z, "carriage": CARRIAGE, "block": BLOCK, "unit_x": UNIT_X, "screw_x": SCREW2_X, "motor_y": motor2_y}, "tail_x": TAIL_X,
-                 "c1_home": c1_home, "c2_home": c2_home, "safe": safe, "nose": NOSE_L, "tower_top": tower_top, "x": SLED_X, "left_y": LEFT_Y, "right_y": RIGHT_Y, "ply": PLY,
+                 "c1_home": c1_home, "c2_home": c2_home, "safe": safe, "lift": {"rail_z": rail1_z, "block": BLOCK1, "unit_x": UNIT1_X, "screw_x": SCREW1_X, "screw_top": screw1_top, "post_y": POST_Y}, "x": SLED_X, "left_y": LEFT_Y, "right_y": RIGHT_Y, "ply": PLY,
                  "back_x": BACK_X, "run": RUN, "master_x": MASTER_X, "master_r": MASTER_R, "belt": [60, 16]},
         "drawn": {"row": rows[drawn]["n"], "x": DRAWN_X, "alpha": a, "beta": b, "axis": axis, "h2": h2, "c1": c1, "c2": c2, "psi": psi, "pin1": pin1, "pin2": pin2},
         "count": count, "rows": rows,

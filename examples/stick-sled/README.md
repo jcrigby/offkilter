@@ -30,8 +30,9 @@ tail centre.
   screw, so the plate is a bridge, not an arm.
 - **Left and right:** a frame hangs from a second hinge under the
   plate, above the stick. A second screw, level, fixed to the sled,
-  swings it by its tail hanger. Its nose is a block on a linear
-  rail's carriage.
+  swings it by its tail hanger.
+- **Each screw's nose is a block on a linear rail's carriage**, so it
+  can neither turn with the screw nor move across it.
 - **Held both ways.** Each screw's nose is tied to what it moves by a
   short link with a pin at each end: 30 mm to a clevis under the
   plate, 60 mm to the tail hanger. A lead screw does not run back
@@ -189,8 +190,9 @@ through to the stick at half of itself: 0.2 mm of rattle in a printed
 bore was 0.1 mm at the stick. So the nose is a block on an MGN12H
 carriage on a 100 mm rail, which has about a hundredth of a
 millimetre of play: 0.005 mm at the stick. The carriage also keeps
-the nose from turning with the screw. The lift's link leans 7°, and
-0.2 mm of play there is 0.014 mm.
+the nose from turning with the screw. The lift's link leans only 7°,
+but its nose is on a rail too, upright on a post, for the same two
+reasons.
 
 Along the screws, slack in a nut comes through whole, a little more
 than whole on the swing. Both screws take anti-backlash nuts.
@@ -204,8 +206,7 @@ than whole on the swing. Both screws take anti-backlash nuts.
 | the lead screws | T8, 2 mm lead | the common T8 is 8 mm lead: a quarter the steps a millimetre, and it runs back under load |
 | the shafts, supports and blocks | the 20 mm set from the duplicator: two shafts of 490 and 416, four SK20, four SC20UU | the blocks turn on the shafts as hinges; collars keep them from sliding |
 | the hinges and links | hinge 1 at 150 right and 204 up, hinge 2 150 left of it and 26 down, the axis 130 under hinge 2; links 30 and 60 | see Calibration |
-| the lift's nose | drawn as a round nose sliding in a printed tower | it must not turn with the screw: a flat or a key. The tower is drawn 30 square and wants a 42 flange for the motor's screws. A rail like the swing's would do both jobs |
-| the swing's rail | MGN12, 100 long, an H carriage, its seat 48 over the table; the block's bores for the pin and the nut are not drawn | the rail level and square to the stick; where it really is goes in `build.py` |
+| the rails | MGN12 with H carriages: 100 long and level for the swing, its seat 48 over the table; 150 long and upright on a ply post for the lift. The blocks' bores for the pins and nuts are not drawn, nor the motors' mounts | each rail square to the stick; where it really is goes in `build.py` |
 | the pins | not drawn | 5 mm shoulder bolts, a close fit |
 | slack | a screw's nut and two pins a link | anti-backlash nuts on both screws; a light spring from the plate to the sled and from the tail hanger to the riser, not drawn |
 | the pulleys and belt | 60 and 16 teeth, 52 between centres: a closed belt of 184 | a 60 with a 12 mm bore is not the common one |
@@ -220,13 +221,14 @@ than whole on the swing. Both screws take anti-backlash nuts.
 |---|---|---|
 | sled | 540 x 480 ply: two runners, a tie at each end, and a shelf beyond the stick's tail for the swing rail | open under the stick; its right edge on the fence |
 | riser | 540 x 215 ply, a gusset at each end | hinge 1's two supports on its face |
-| lift plate | 420 x 335 ply | two blocks under its right edge on hinge 1; hinge 2's supports under its middle |
+| lift plate | 420 x 327 ply | two blocks under its right edge on hinge 1; hinge 2's supports under its middle |
 | beam | 350 x 60 ply | two blocks on hinge 2; the hangers under it |
 | head hangers, 2 | ply, 70 wide, round-ended | a 6201 bearing in each, 43 apart |
 | tail hanger | ply, 70 wide, round-ended | the tail centre, and link 2's pin 25 over it |
 | spindle | M12 studding | the 60-tooth pulley outboard, the master and a drive spur inboard |
 | master | printed sleeve, 16 round x 29 | on the spindle between hanger and spur; the cutter is under it with the sled back, and a bit is set on it |
-| lift pusher | NEMA 17 on the left runner, a printed tower on its face, a nose of 120 | 79 mm of travel |
+| lift screw | NEMA 17 on the left runner, shaft up; a T8 screw of 2 mm lead with an anti-backlash nut | 79 mm of travel |
+| lift rail | MGN12 x 150 with an MGN12H carriage, on a ply post 60 x 223 on the left runner | carries the lift's nose block, printed, 27 x 24 x 68: link 1's pin near its top, the nut in its foot |
 | swing screw | NEMA 17 on a printed seat on the right runner, 73 over the table; a T8 screw of 2 mm lead with an anti-backlash nut | 32 mm of travel |
 | swing rail | MGN12 x 100 with an MGN12H carriage, on a printed seat on a shelf of the sled | carries the nose block, which holds link 2's pin and the screw's nut |
 | nose block | printed, 27 x 46 x 24 | on the carriage |

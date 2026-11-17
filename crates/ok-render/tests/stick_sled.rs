@@ -660,9 +660,25 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
     // Travel: both pushers start a little short of their home switches and stay on their screws.
     let deep = rows.iter().map(|r| r.lift).fold(0.0, f64::max);
     assert!(rows.iter().all(|r| r.lift >= 2.0 && r.swing >= 1.5));
-    assert!(deep < f(&n["sled"]["nose"]) - 25.0);
-    // Screw 2's nose is a block on a linear rail's carriage: at home and at the furthest any row sends it the carriage
-    // is wholly on the rail, and the motor stands past the rail's end, clear of the block at home.
+    // Each screw's nose is a block on a linear rail's carriage: at home and at the furthest any row sends it the
+    // carriage is wholly on its rail. The lift's first.
+    let l = &n["sled"]["lift"];
+    let (z0, z1) = (f(&l["rail_z"][0]), f(&l["rail_z"][1]));
+    let (tall, top) = (f(&l["block"][1]), f(&l["block"][3]));
+    for lift in [0.0, deep] {
+        let mid = sled.c1_home - lift + top - tall / 2.0;
+        let c = f(&n["sled"]["swing"]["carriage"][1]);
+        assert!(
+            mid - c / 2.0 >= z0 + 2.0 && mid + c / 2.0 <= z1 - 2.0,
+            "the lift's carriage is off its rail at lift {lift}"
+        );
+    }
+    // The lift screw ends just past its nut with the block at home, and short of the plate's underside, which is
+    // 15 over link 1's upper pin, with the plate at its lowest.
+    let nut_home = sled.c1_home + top - tall;
+    assert!(f(&l["screw_top"]) >= nut_home + 3.0);
+    assert!(f(&l["screw_top"]) < sled.c1_home - deep + sled.l1 * 0.95 + 15.0 - 5.0);
+    // The swing's: the motor stands past the rail's end, clear of the block at home.
     let w = &n["sled"]["swing"];
     let (rail0, rail1) = (f(&w["rail_y"][0]), f(&w["rail_y"][1]));
     let (carriage, block, short) = (f(&w["carriage"][1]), f(&w["block"][1]), f(&w["block"][3]));
@@ -744,7 +760,8 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
         "Master",
         "Lift pusher",
         "Links",
-        "Tower",
+        "Lift rail",
+        "Lift block",
         "Swing pusher",
         "Swing rail",
         "Swing block",
@@ -791,7 +808,8 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
     );
     assert!((sled.pusher2(p.alpha, p.hang) - f(&d["c2"])).abs() < 1e-3);
     assert!(!dir().join("out/guide.stl").exists());
-    for name in ["master", "tower", "swing_block", "swing_base"] {
+    assert!(!dir().join("out/tower.stl").exists());
+    for name in ["master", "lift_block", "swing_block", "swing_base"] {
         assert!(!dir().join("out/steady.stl").exists());
         assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
     }
