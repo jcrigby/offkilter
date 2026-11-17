@@ -1452,3 +1452,51 @@ kilograms and a spring.
   and a step in every pass.
 - Springs stay, light, only to keep the slack of nut and pins to one
   side.
+
+## 2026-11 · The stick sled, checked: what calculation found that drawing had not
+
+The owner asked for a sanity check of the sled. It was done by
+computing, not by reading the design over, and it found things the
+tests had passed.
+
+- **The bit was a fiction.** The plan took the finishing bit as 3 mm
+  all the way up. The bit that exists tapers to a 6 mm shank, and on
+  that table it cut into the tile on 120 rows, up to 0.33 mm. The
+  planner now knows the bit's outline, shuts that much more either
+  side of every direction, and still reaches everything; a straight
+  3 mm bit fits inside the tapered one, so one table serves both.
+- **Bites were counted in one order and made in another.** Sorting
+  the rows by spindle angle after counting the bites left a roughing
+  row meeting 11.7 mm at once. The order is now settled first. The
+  test that should have caught it compared the heights of rows, not
+  the wood; it now runs the rows over the waste itself, on its own
+  grid, and judges by the area standing over a bite, since a fin a
+  hair wide is as tall as a full cut.
+- **After a journal the cutter was left in its groove.** The
+  controller lifted to the height that clears the spindle, which is
+  lower than the journal. Pulled back, the sled would have ploughed
+  the blank from there to its end. It now lifts back to where the
+  sled came in.
+- **One pose is not a collision check.** The model was the sled at a
+  single row. Tried at 150 poses, the swing link was in its guide at
+  the home position. The build now tries them every time.
+- **Two back stops 17 mm apart, with different things over the
+  cutter, was an accident waiting.** The master is now a sleeve the
+  length of the exposed spindle, smaller than anything a pass comes
+  near, and the safe height is reckoned from it: one stop, anywhere
+  under 29 mm.
+- **The stick is not limp.** The claim that started the journals and
+  steadies was never calculated. The section's second moments are
+  56,000 and 110,000 mm4; at the forces a 6 mm bit makes in wood,
+  estimated at 2 N, it bends under a micrometre between centres. The
+  journals are its weakest places. They stay until the owner decides,
+  but the numbers do not ask for them.
+- **Home switches fail safe, and homing gives up.** Wired normally
+  closed; a travel limit on the search.
+- **Left open, and said so:** how to calibrate. Half a millimetre of
+  error in every hinge and link dimension is 0.06 mm at the cut after
+  six trims and 0.2 without the two scales; the scales are in the
+  controller, the procedure to find them is not written. Play in the
+  swing screw's nose is 0.1 mm at the stick per 0.2 mm, because its
+  link leans 22 degrees; that nose needs linear bearings, or the
+  screw should ride on the plate, where its link would lean 5.

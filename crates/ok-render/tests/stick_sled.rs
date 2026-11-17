@@ -202,6 +202,18 @@ fn outline(n: &Value) -> Vec<P2> {
         .collect()
 }
 
+/// The ball-nose's outline: how far toward the router from the ball's
+/// centre its surface is, `off` from its axis. None beyond the shank.
+fn flank(off: f64, r: f64, taper: f64, shank: f64) -> Option<f64> {
+    if off <= r * taper.cos() {
+        Some(-(r * r - off * off).sqrt())
+    } else if off < shank {
+        Some((off * taper.cos() - r) / taper.sin())
+    } else {
+        None
+    }
+}
+
 /// A point of the section as the cutter sees it with the stick at t: across, and toward the router.
 fn seen(p: P2, t: f64) -> P2 {
     (
@@ -268,6 +280,13 @@ fn every_row_puts_the_cutter_where_the_plan_wants_it_and_never_in_the_tile() {
     let radius = f(&n["journal"]["radius"]);
     let mut worst = 0.0f64;
     let mut gouge = 0.0f64;
+    // The finishing bit as it is: a ball, a flank leaning out above it, a shank. The plan must keep all of it out of the tile.
+    let (taper, shank) = (f(&n["taper"]).to_radians(), f(&n["shank"]) / 2.0);
+    let master = f(&n["sled"]["master_r"]);
+    assert!(
+        taper > 0.03 && shank >= 2.0 * ball - 1e-9,
+        "planned for a tapered bit"
+    );
     for r in &rows {
         let p = sled.pose(r.lift, r.swing, r.turn);
         let miss = (p.across - r.across)
@@ -281,8 +300,8 @@ fn every_row_puts_the_cutter_where_the_plan_wants_it_and_never_in_the_tile() {
                 for q in &tile {
                     let (u, h) = seen(*q, r.t);
                     let off = (u - r.across).abs();
-                    if off < ball {
-                        gouge = gouge.max(h - (r.tip + ball - (ball * ball - off * off).sqrt()));
+                    if let Some(up) = flank(off, ball, taper, shank) {
+                        gouge = gouge.max(h - (r.tip + ball + up));
                     }
                 }
             }
@@ -298,26 +317,30 @@ fn every_row_puts_the_cutter_where_the_plan_wants_it_and_never_in_the_tile() {
                     }
                 }
             }
-            "journal" | "set" => {
+            "journal" => {
                 assert!(r.across.abs() < 1e-9 && r.tip >= radius - 1e-9);
+            }
+            "set" => {
+                assert!(r.across.abs() < 1e-9 && (r.tip - master).abs() < 1e-9);
             }
             _ => {}
         }
     }
     println!(
-        "{} rows, the worst {worst:.1e} mm from its cut; a finishing ball at most {gouge:.1e} mm into the tile",
+        "{} rows, the worst {worst:.1e} mm from its cut; the finishing bit, flank and shank too, at most {gouge:.1e} mm into the tile",
         rows.len()
     );
     assert!(gouge < 1e-6);
     let count = |k: &str| rows.iter().filter(|r| r.kind == k).count() as u64;
-    for k in ["set", "place", "journal", "rough", "finish"] {
+    for k in ["set", "place", "journal", "pause", "rough", "finish"] {
         assert_eq!(count(k), n["count"][k].as_u64().unwrap());
     }
     // Two settings of the cutter, each on the master's radius: the straight bit before the journals, the ball-nose before the finish.
     let sets: Vec<&Row> = rows.iter().filter(|r| r.kind == "set").collect();
     assert_eq!(sets.len(), 2);
     assert!(sets[0].tool == "straight" && sets[1].tool == "ball");
-    assert!(sets.iter().all(|r| (r.tip - radius).abs() < 1e-9));
+    // The master is smaller than anything a pass comes near, so a cutter left under it is never touched by it in a cut.
+    assert!(master < f(&n["tile"]["circle"]) - 1.0 && master > f(&n["spindle_d"]) / 2.0);
     assert!(rows[0].kind == "set" && rows.last().unwrap().kind == "finish");
     assert!(rows
         .iter()
@@ -398,6 +421,133 @@ fn the_finishing_passes_reach_the_whole_outline_each_from_its_own_direction() {
     }
 }
 
+fn inside(q: P2, poly: &[P2]) -> bool {
+    let mut hit = false;
+    for i in 0..poly.len() {
+        let (a, b) = (poly[(i + poly.len() - 1) % poly.len()], poly[i]);
+        if (a.1 > q.1) != (b.1 > q.1) && q.0 < a.0 + (b.0 - a.0) * (q.1 - a.1) / (b.1 - a.1) {
+            hit = !hit;
+        }
+    }
+    hit
+}
+
+/// The waste, the blank less the tile, on a grid of its own, and the
+/// table's cutting rows run over it in the table's order: no row
+/// meets more than a hair-wide fin standing higher than its bit's bite
+/// in what the rows before it left, and at the end nothing but the
+/// ridges stands. The planner counts
+/// its bites the same way; this is that count made again, from the
+/// rows as written, so an order the bites were not counted in shows.
+#[test]
+fn in_the_table_s_order_no_row_takes_more_than_its_bite_of_what_stands() {
+    let n = numbers();
+    let (rows, tile) = (rows(&n), outline(&n));
+    let hull: Vec<P2> = n["rough"]["hull"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(pair)
+        .collect();
+    let over = f(&n["rough"]["blank"]);
+    let cell = 0.25;
+    let (mut lo, mut hi) = ((f64::MAX, f64::MAX), (f64::MIN, f64::MIN));
+    for q in &hull {
+        lo = (lo.0.min(q.0 - over), lo.1.min(q.1 - over));
+        hi = (hi.0.max(q.0 + over), hi.1.max(q.1 + over));
+    }
+    let mut cells: Vec<P2> = Vec::new();
+    let (nx, ny) = (
+        ((hi.0 - lo.0) / cell) as usize + 1,
+        ((hi.1 - lo.1) / cell) as usize + 1,
+    );
+    for i in 0..nx {
+        for k in 0..ny {
+            let q = (
+                lo.0 + (i as f64 + 0.5) * cell,
+                lo.1 + (k as f64 + 0.5) * cell,
+            );
+            if inside(q, &tile) {
+                continue;
+            }
+            let near_hull = (0..hull.len())
+                .map(|m| near(q, hull[m], hull[(m + 1) % hull.len()]))
+                .fold(f64::MAX, f64::min);
+            if inside(q, &hull) || near_hull <= over {
+                cells.push(q);
+            }
+        }
+    }
+    let waste = cells.len() as f64 * cell * cell;
+    assert!((waste - f(&n["rough"]["waste"])).abs() < 0.02 * waste);
+    let mut alive = vec![true; cells.len()];
+    let ball = f(&n["bit"]) / 2.0;
+    let (taper, shank) = (f(&n["taper"]).to_radians(), f(&n["shank"]) / 2.0);
+    let flat = f(&n["rough"]["bit"]) / 2.0;
+    let (rough_bite, ball_bite) = (f(&n["rough"]["bite"]), f(&n["plan"]["ball_bite"]));
+    let (mut deep_rough, mut deep_ball, mut rough_took, mut most_fin) =
+        (0.0f64, 0.0f64, 0usize, 0.0f64);
+    for r in rows
+        .iter()
+        .filter(|r| r.kind == "rough" || r.kind == "finish")
+    {
+        let most = if r.tool == "ball" {
+            ball_bite
+        } else {
+            rough_bite
+        };
+        let (mut depth, mut tall) = (0.0f64, 0usize);
+        for (i, q) in cells.iter().enumerate() {
+            if !alive[i] {
+                continue;
+            }
+            let (u, h) = seen(*q, r.t);
+            let off = (u - r.across).abs();
+            let stands = if r.tool == "ball" {
+                match flank(off, ball, taper, shank) {
+                    Some(up) => h - (r.tip + ball + up),
+                    None => continue,
+                }
+            } else if off <= flat {
+                h - r.tip
+            } else {
+                continue;
+            };
+            if stands >= 0.0 {
+                alive[i] = false;
+                depth = depth.max(stands);
+                if stands > most + 0.1 {
+                    tall += 1;
+                }
+                if r.tool != "ball" {
+                    rough_took += 1;
+                }
+            }
+        }
+        // What stands higher than a bite over the cutter is, at most, a fin left between two earlier cuts: a hair wide.
+        // The area of it says so; its height alone would call a fin a full cut.
+        let fin = tall as f64 * cell * cell;
+        most_fin = most_fin.max(fin);
+        assert!(
+            fin <= 0.4,
+            "row {} meets {fin:.2} mm2 standing more than its bit's bite of {most}, up to {depth:.1} mm",
+            r.n
+        );
+        if r.tool == "ball" {
+            deep_ball = deep_ball.max(depth)
+        } else {
+            deep_rough = deep_rough.max(depth)
+        }
+    }
+    let left = alive.iter().filter(|a| **a).count() as f64 * cell * cell;
+    let rough = rough_took as f64 * cell * cell;
+    println!(
+        "waste {waste:.0} mm2 run in the table's order: at most {most_fin:.2} mm2 ever stands over a bite \
+         (fins, up to {deep_rough:.1} and {deep_ball:.1} mm high); roughing takes {rough:.0}, {left:.1} stands at the end"
+    );
+    assert!(rough > 0.7 * waste && left < 0.015 * waste);
+}
+
 /// At every row the blank clears the table, so do the pulley and the
 /// hangers; the steadies clear the cutter; each link stays near its
 /// screw's line, a link's length from pin to pin; and the journals
@@ -467,7 +617,7 @@ fn the_stick_clears_the_table_and_the_steadies_clear_the_cutter_at_every_row() {
         "the blank {table:.2} over the table at its lowest, the pulley {pulley:.2}; the cutter {gap:.2} from a steady at its nearest; \
          the links lean at most {lean1:.1} and {lean2:.1} deg"
     );
-    assert!(table >= f(&n["table_clear"]) - 0.51 && table < f(&n["table_clear"]) + 0.5);
+    assert!(table >= f(&n["table_clear"]) - 0.01 && table < f(&n["table_clear"]) + 1.5);
     assert!(pulley >= 1.0 && f(&n["hanger_r"]) < f(&n["pulley_r"]));
     assert!(gap >= f(&n["steady"]["least"]) && (gap - f(&n["steady"]["clear"])).abs() < 1e-2);
     assert!(lean1.max(lean2) <= f(&n["sled"]["lean_most"]));
@@ -498,15 +648,30 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
     let turn_steps = (360.0 * per[2]).round();
     let done = sim["rows"].as_array().unwrap();
     assert_eq!(done.len(), rows.len());
-    for (r, s) in rows.iter().zip(done) {
+    let (mut place, mut lifted) = (0.0, 0);
+    for (i, (r, s)) in rows.iter().zip(done).enumerate() {
         assert_eq!(s[0].as_u64().unwrap(), r.n);
-        // A journal row ends lifted clear if it is the last of its place; the others end on the table's numbers.
-        if r.kind != "journal" {
+        // The last bite of a journal's place ends lifted back to where the sled came in, the whole blank clear of
+        // the cutter, or pulling the sled back would plough a groove to the stick's end. Every other row ends on its own number.
+        if r.kind == "place" {
+            place = r.lift;
+        }
+        let last_of_place =
+            r.kind == "journal" && rows.get(i + 1).map(|x| x.kind != "journal").unwrap_or(true);
+        let want = if last_of_place { place } else { r.lift };
+        assert!(
+            (f(&s[1]) - want * per[0]).abs() <= 0.5 + 1e-6,
+            "row {} lift",
+            r.n
+        );
+        if last_of_place {
+            let p = sled.pose(want, r.swing, r.turn);
             assert!(
-                (f(&s[1]) - r.lift * per[0]).abs() <= 0.5 + 1e-6,
-                "row {} lift",
+                p.tip >= f(&n["journal"]["blank_swing"]) + 1.0,
+                "row {} leaves the cutter in the blank",
                 r.n
             );
+            lifted += 1;
         }
         assert!(
             (f(&s[2]) - r.swing * per[1]).abs() <= 0.5 + 1e-6,
@@ -533,8 +698,9 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
     let safe = f(&n["sled"]["safe"]);
     assert!((f(&sim["safe_steps"]) - (safe * per[0]).round()).abs() < 1e-9);
     assert!(f(&sim["deepest_crossing"]) <= f(&sim["safe_steps"]));
-    // At the safe lift the spindle clears the cutter wherever the frame swings.
-    let need = sled.bit_up + f(&n["spindle_d"]) / 2.0 + f(&n["spindle_clear"]);
+    // At the safe lift the master, which is what is over the cutter with the sled back, clears it wherever the frame swings.
+    assert_eq!(lifted as u64, n["count"]["place"].as_u64().unwrap());
+    let need = sled.bit_up + f(&n["sled"]["master_r"]) + f(&n["spindle_clear"]);
     let (lo, hi) = rows.iter().fold((f64::MAX, 0.0f64), |a, r| {
         (a.0.min(r.swing), a.1.max(r.swing))
     });
@@ -548,7 +714,7 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
         least = least.min(p.axis.1);
     }
     println!(
-        "safe at lift {safe} mm: the axis no lower than {least:.2}, the spindle needs {need:.2}; \
+        "safe at lift {safe} mm: the axis no lower than {least:.2}, the master over the cutter needs {need:.2}; \
          the pushers a step is {:.4} and {:.4} mm, the spindle's {:.4} deg",
         1.0 / per[0],
         1.0 / per[1],
@@ -676,4 +842,7 @@ fn the_model_is_the_sled_at_one_row_with_the_cutter_on_the_stick() {
         assert!(dir().join(format!("out/{name}.stl")).exists(), "{name}.stl");
     }
     assert!(dir().join("out/passes.csv").exists() && dir().join("firmware/main.py").exists());
+    // The build tries the sled at a couple of hundred poses, the rows and the ways between them, and stops if any part
+    // is in another or in the cutter's lane; this is one pose of those, tried again here with the kernel's own solids.
+    assert!(n["sweep"]["poses"].as_u64().unwrap() >= 100);
 }

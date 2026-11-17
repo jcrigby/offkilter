@@ -45,6 +45,12 @@ class Pins:
     def closed(self, n):
         return True if SIM else self.inp[n].value() == 0
 
+    def home(self, n):
+        """A home switch reads home. Wired normally closed, it opens at home, so a broken wire reads home and stops the motor."""
+        if SIM:
+            return True
+        return (self.inp[n].value() == 1) if C.HOME_OPENS else (self.inp[n].value() == 0)
+
     def pause(self, us):
         if not SIM:
             utime.sleep_us(us)
@@ -54,15 +60,18 @@ PINS = Pins()
 
 
 class Axis:
-    def __init__(self, name, pins, per_unit, flip, trim):
+    def __init__(self, name, pins, per_unit, flip, trim, scale=1.0, mid=0.0):
         self.name, self.step, self.dir = name, pins[0], pins[1]
         self.per_unit, self.flip, self.trim = per_unit, flip, trim
+        self.scale, self.mid = scale, mid
         self.at = 0                 # steps from home
+        self.stepped = 0            # steps taken in all
         PINS.output(self.step)
         PINS.output(self.dir)
 
     def steps_for(self, units):
-        return int(round((units + self.trim) * self.per_unit))
+        """The table's number as steps: stretched about `mid` by the scale a test stick found, moved by the trim."""
+        return int(round((self.mid + (units - self.mid) * self.scale + self.trim) * self.per_unit))
 
     def run(self, steps, guard=None, slow=None):
         """Step by `steps`, ramping up and down. `guard` is asked every step; while it says no, wait."""
@@ -86,14 +95,20 @@ class Axis:
             PINS.set(self.step, 0)
             PINS.pause(us)
         self.at += steps
+        self.stepped += n
 
     def to(self, units, guard=None, slow=None):
         self.run(self.steps_for(units) - self.at, guard, slow)
 
-    def seek(self, pin):
-        """Run toward home until its switch closes; that is zero."""
+    def seek(self, pin, most):
+        """Run toward home until its switch says so; that is zero. No further than `most` of its units: a switch that never speaks is a fault."""
         PINS.set(self.dir, self.flip)       # home is the negative way
-        while not PINS.closed(pin):
+        left = int(most * self.per_unit)
+        while not PINS.home(pin):
+            if left <= 0:
+                PINS.set(C.ENABLE_PIN, 1)
+                raise RuntimeError("no home switch found on the %s axis" % self.name)
+            left -= 1
             PINS.set(self.step, 1)
             PINS.pause(2)
             PINS.set(self.step, 0)
@@ -139,12 +154,13 @@ def read_table(path):
 
 class Sled:
     def __init__(self, safe):
-        self.lift = Axis("lift", C.LIFT_PINS, C.LIFT_STEPS_PER_MM, C.LIFT_FLIP, C.LIFT_TRIM_MM)
-        self.swing = Axis("swing", C.SWING_PINS, C.SWING_STEPS_PER_MM, C.SWING_FLIP, C.SWING_TRIM_MM)
+        self.lift = Axis("lift", C.LIFT_PINS, C.LIFT_STEPS_PER_MM, C.LIFT_FLIP, C.LIFT_TRIM_MM, C.LIFT_SCALE, C.LIFT_MID_MM)
+        self.swing = Axis("swing", C.SWING_PINS, C.SWING_STEPS_PER_MM, C.SWING_FLIP, C.SWING_TRIM_MM, C.SWING_SCALE, C.SWING_MID_MM)
         self.turn = Axis("turn", C.TURN_PINS, C.TURN_STEPS_PER_DEG, C.TURN_FLIP, C.TURN_TRIM_DEG)
         self.safe = safe            # the lift at or above which the spindle clears the cutter wherever the frame swings
         self.deepest_crossing = 0   # the lowest the lift ever was while the frame swung or the spindle turned between passes
         self.turned = 0             # steps the spindle has turned forwards coming up to its angles
+        self.place_lift = 0.0       # the lift at which the sled was pushed to a journal's stop: the blank clear of the cutter
         for n in (C.LIFT_HOME_PIN, C.SWING_HOME_PIN, C.TURN_HOME_PIN, C.SLED_BACK_PIN, C.NEXT_PIN):
             PINS.input(n)
         PINS.output(C.ENABLE_PIN)
@@ -161,9 +177,9 @@ class Sled:
         say("pull the sled back, then the foot switch: homing")
         wait(C.SLED_BACK_PIN)
         wait(C.NEXT_PIN)
-        self.lift.seek(C.LIFT_HOME_PIN)     # up first: the stick away from the cutter
-        self.swing.seek(C.SWING_HOME_PIN)
-        self.turn.seek(C.TURN_HOME_PIN)
+        self.lift.seek(C.LIFT_HOME_PIN, C.LIFT_MOST_MM)     # up first: the stick away from the cutter
+        self.swing.seek(C.SWING_HOME_PIN, C.SWING_MOST_MM)
+        self.turn.seek(C.TURN_HOME_PIN, 400.0)
 
     def turn_on_to(self, degrees, guard, slow=None):
         """The shorter way round, but always arriving forwards, so the belt is pulled from the same side:
@@ -207,7 +223,9 @@ class Sled:
                         utime.sleep_ms(20)
                 self.journal(lift, swing)
                 if i + 1 == total or rows[i + 1][1] != "journal":
-                    self.lift.to(min(self.safe, lift), self.held)        # clear, before the sled is pulled back
+                    # Back up to where the sled came in, the whole blank clear of the cutter: pulled back at the
+                    # journal's depth, the cutter would plough a groove from here to the stick's end.
+                    self.lift.to(self.place_lift, self.held)
                     say("let go and pull the sled back")
             else:
                 say("%d/%d %s: sled back, then the foot switch" % (n, total, label))
@@ -218,7 +236,11 @@ class Sled:
                 if kind == "set":
                     say("bring the %s bit up until it touches the master, then the foot switch" % tool)
                     wait(C.NEXT_PIN)
+                elif kind == "pause":
+                    say("%s, then the foot switch" % label)
+                    wait(C.NEXT_PIN)
                 elif kind == "place":
+                    self.place_lift = lift
                     say("push the sled to the journal's stop")
                 else:
                     say("cut: push the sled through and pull it back")
@@ -236,7 +258,7 @@ def main(path="passes.csv", out=None):
     if out:
         import json
         with open(out, "w") as f:
-            json.dump({"rows": record, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "safe_steps": sled.lift.steps_for(safe),
+            json.dump({"rows": record, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "stepped": [sled.lift.stepped, sled.swing.stepped, sled.turn.stepped], "safe_steps": sled.lift.steps_for(safe),
                        "per": [C.LIFT_STEPS_PER_MM, C.SWING_STEPS_PER_MM, C.TURN_STEPS_PER_DEG]}, f)
 
 

@@ -74,9 +74,10 @@ E1, L1 = (P1_Y - H1_Y, BLK_C - 15.0), 30.0       # link 1: its pin in a clevis u
 E2_UP, L2 = 25.0, 60.0                          # link 2: its pin on the tail hanger's middle line this far over the axis, and its length
 LEAN = 30.0                                     # the most a link may lean off its screw's line, degrees
 HANGER_R = 18.5                                 # the hangers' lower ends, round about the axis: a bearing and 2.5
-SPINDLE_CLEAR = 3.0                             # between the spindle and the cutter while the frame swings with the sled back
+MASTER_R = 8.0                                  # the master: a sleeve over the spindle from the hanger to the spur, and the spur its size. With the sled back the cutter is under it
+SPINDLE_CLEAR = 3.0                             # between the master and the cutter while the frame swings with the sled back
 HOME_OVER = (3.0, 2.0)                          # the home switches beyond the furthest any row goes: lift, swing
-BACK_X, SET_X = -7.0, -24.0                     # the cutter along the sled with the sled back, and under the master
+BACK_X = -12.0                                  # the cutter along the sled with the sled back: under the master, 9 mm of the straight bit clear of the stick's end, 18 of the hanger
 RUN = 6.0                                       # the cutter past the stick's far end
 DRAWN_X = 100.0                                 # where the cutter is drawn: mid stick, mid pass
 SLED_X = (-205.0, 335.0)
@@ -87,9 +88,10 @@ PLATE_Y = (-35.0, 300.0)                        # the plate in its own frame, fr
 BEAM_X, BEAM_Y = (-100.0, 250.0), 30.0
 HANGER_X = ((-95.0, -76.0), (-52.0, -33.0))     # the head's two hangers, a bearing in each
 TAIL_X = (232.0, 251.0)
-MASTER_X = (-30.0, -18.0)
+MASTER_X = (HANGER_X[1][1], -4.0)
 PUSH_X = 100.0                                  # pusher 1, half way along
 NOSE_L = 120.0                                  # pusher 1's nose, sliding in its tower
+ROUGH_R = P.ROUGH_BIT / 2
 NOSE2_L = 75.0                                  # pusher 2's nose, sliding in its guide
 
 
@@ -166,6 +168,98 @@ def seg_seg(a, b, c, d):
     return min(P.near(a, c, d), P.near(b, c, d), P.near(c, a, b), P.near(d, a, b))
 
 
+class Recorder:
+    """Stands in for a Part: takes the same sketches and extrudes and keeps each body as prisms,
+    (x0, x1, outline in y and z), so the sled can be tried at many poses without the kernel.
+    Cuts and holes are left out, so a bored part is solid here; an upright cylinder is its box."""
+
+    def __init__(self):
+        self.sketches, self.bodies = [], []
+
+    def sketch(self, base, offset, name):
+        self.sketches.append([base, offset, None])
+        return len(self.sketches) - 1
+
+    def polygon(self, s, pts):
+        self.sketches[s][2] = ("poly", list(pts))
+
+    def circle(self, s, c, r):
+        self.sketches[s][2] = ("circle", c, r)
+
+    def point(self, s, pt):
+        pass
+
+    def hole(self, s, d, name=None):
+        pass
+
+    def cut(self, s, depth, name=None):
+        pass
+
+    def extrude(self, s, depth, op="new", name=None):
+        base, off, shape = self.sketches[s]
+        if base == "right":
+            pts = shape[1] if shape[0] == "poly" else [(shape[1][0] + shape[2] * math.cos(math.radians(15 * k)), shape[1][1] + shape[2] * math.sin(math.radians(15 * k))) for k in range(24)]
+            prism = (off, off + depth, pts)
+        elif base == "top" and shape[0] == "circle":       # an upright cylinder: (x, y) centre, from z = off up
+            (cx, cy), r = shape[1], shape[2]
+            prism = (cx - r, cx + r, rect(cy - r, cy + r, off, off + depth))
+        else:
+            raise SystemExit(f"the recorder cannot take a {base} sketch")
+        if op == "new" or not self.bodies:
+            self.bodies.append([prism])
+        else:
+            self.bodies[-1].append(prism)
+
+
+def crossing(a, b, c, d, eps=1e-6):
+    """Two segments properly cross: each one's ends stand clear on opposite sides of the other."""
+    def side(o, p, q):
+        ln = math.hypot(p[0] - o[0], p[1] - o[1]) or 1.0
+        return ((p[0] - o[0]) * (q[1] - o[1]) - (p[1] - o[1]) * (q[0] - o[0])) / ln
+    s1, s2, s3, s4 = side(a, b, c), side(a, b, d), side(c, d, a), side(c, d, b)
+    return ((s1 > eps and s2 < -eps) or (s1 < -eps and s2 > eps)) and ((s3 > eps and s4 < -eps) or (s3 < -eps and s4 > eps))
+
+
+def within(q, poly, eps=1e-6):
+    return P.inside(q, poly) and min(P.near(q, poly[i - 1], poly[i]) for i in range(len(poly))) > eps
+
+
+def outlines_meet(a, b):
+    if max(q[0] for q in a) <= min(q[0] for q in b) or max(q[0] for q in b) <= min(q[0] for q in a):
+        return False
+    if max(q[1] for q in a) <= min(q[1] for q in b) or max(q[1] for q in b) <= min(q[1] for q in a):
+        return False
+    if any(crossing(a[i - 1], a[i], b[j - 1], b[j]) for i in range(len(a)) for j in range(len(b))):
+        return True
+    return within(a[0], b) or within(b[0], a)
+
+
+# Parts that are bored for one another, or touch by design: solid in the recorder, so not tried against each other.
+FITTED = [("Hinge 1 shaft", "Hinge 1 supports SK20"), ("Hinge 1 shaft", "Hinge 1 blocks SC20UU"), ("Hinge 2 shaft", "Hinge 2 supports SK20"), ("Hinge 2 shaft", "Hinge 2 blocks SC20UU"),
+          ("Spindle and centre", "Bearings 6201"), ("Spindle and centre", "Head hangers"), ("Spindle and centre", "Belt drive"), ("Spindle and centre", "Master"),
+          ("Spindle and centre", "Tail hanger"), ("Bearings 6201", "Head hangers"), ("Lift pusher", "Tower"), ("Swing pusher", "Guide"), ("Cutter", "Stick"), ("Cutter", "Table and fence")]
+
+
+def meetings(parts, skip=()):
+    """Which bodies of a posed sled are in one another: pairs of tab names."""
+    rec = []
+    for title, make in parts:
+        if title in skip:
+            continue
+        r = Recorder()
+        make(r)
+        rec.extend((title, body) for body in r.bodies)
+    hits = set()
+    for i in range(len(rec)):
+        for k in range(i + 1, len(rec)):
+            (ta, ba), (tb, bb) = rec[i], rec[k]
+            if ta == tb or (ta, tb) in FITTED or (tb, ta) in FITTED:
+                continue
+            if any(pa[0] < pb[1] - 1e-6 and pb[0] < pa[1] - 1e-6 and outlines_meet(pa[2], pb[2]) for pa in ba for pb in bb):
+                hits.add((ta, tb))
+    return hits, rec
+
+
 def stick_spans():
     cuts = [0.0] + [x for at in JOURNAL_AT for x in (at - JOURNAL_L / 2, at + JOURNAL_L / 2)] + [STICK]
     return [(cuts[i], cuts[i + 1], i % 2 == 1) for i in range(len(cuts) - 1)]
@@ -187,56 +281,55 @@ def main():
 
     # -- the cuts ------------------------------------------------------------
     passes, left, orphans = P.finish(outline)
-    places, waste = P.rough(outline, passes)
+    cands = P.rough_places(outline)
     covered = sum(1 for v in left if v < 0.08) / len(left)
     print(f"tile {tile['across']:.1f} across, swings {swing_r:.1f}; {len(passes)} finishing passes from as many directions, the cutter within {max(abs(q['across']) for q in passes):.1f} of the axis; "
           f"{100 * covered:.1f} % of the outline within 0.08 of a pass, the worst {max(left):.2f}; {orphans} points nothing reaches")
-    print(f"waste {waste['waste']:.0f} mm2 of section: {len(places)} roughing places take {waste['rough_area']:.0f} in {sum(q['bites'] for q in places)} runs; "
-          f"the ball-nose takes the rest in {sum(q['bites'] for q in passes)} runs, the deepest {max(q['depth'] for q in passes):.1f}; {waste['left_at_end']:.1f} stands at the end")
     blank = swing_r + P.BLANK
-    cuts = []                                        # every time the cutter is brought to the stick: kind, tool, t, across, tip, label
-    cuts.append(("set", "straight", 0.0, 0.0, radius, "set the straight bit on the master"))
     j_bites = math.ceil((blank - radius) / P.ROUGH_BITE)
     j_places = math.ceil(JOURNAL_L / (P.ROUGH_BIT - 1.0))
-    for j, at in enumerate(JOURNAL_AT):
-        for k in range(j_places):
-            x = at - JOURNAL_L / 2 + P.ROUGH_BIT / 2 + k * (JOURNAL_L - P.ROUGH_BIT) / (j_places - 1)
-            cuts.append(("place", "straight", 0.0, 0.0, blank + 2.0, f"journal {j + 1} place {k + 1} of {j_places}: stop at {x:.0f}"))
-            for b in range(1, j_bites + 1):
-                cuts.append(("journal", "straight", 0.0, 0.0, max(radius, blank - b * P.ROUGH_BITE), f"journal {j + 1} place {k + 1} bite {b} of {j_bites}"))
-    for q in places:
-        for b in range(1, q["bites"] + 1):
-            cuts.append(("rough", "straight", q["t"], q["across"], q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], f"rough {math.degrees(q['t']):.0f} deg {q['across']:+.0f} bite {b} of {q['bites']}"))
-    cuts.append(("set", "ball", 0.0, 0.0, radius, "set the ball-nose on the master"))
-    for q in passes:
-        for b in range(1, q["bites"] + 1):
-            cuts.append(("finish", "ball", q["t"], q["across"], q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], f"finish bite {b} of {q['bites']}"))
 
     # -- the cutter's height: the blank clear of the table, the pulley and the hangers too, at the lowest any cut brings the stick
-    need = max(P.blank_reach(outline, c[2]) - c[4] for c in cuts if c[0] in ("rough", "finish")) + TABLE_CLEAR
-    low_tip = min(c[4] for c in cuts)
+    deep = cands + passes                            # every cut at its last bite; the bites before it are shallower
+    need = max(P.blank_reach(outline, q["t"]) - q["tip"] for q in deep) + TABLE_CLEAR
+    low_tip, high_tip = min(min(q["tip"] for q in deep), MASTER_R), blank + 2.0
     bit_up = math.ceil(2 * max(need, PULLEY_R + 1.5 - low_tip, HANGER_R + 2.0 - low_tip)) / 2
 
     # -- the hinges ----------------------------------------------------------
-    za_mid = bit_up + (low_tip + max(c[4] for c in cuts)) / 2
+    za_mid = bit_up + (low_tip + high_tip) / 2
     h1 = (H1_Y, round(za_mid + DROP - ARM[1]))       # so the plate lies level and the frame hangs square at the middle of the travel
     e2 = (0.0, -(DROP - E2_UP))
     sled = P.Sled(h1, ARM, DROP, P1_Y, E1, L1, 0.0, e2, L2)
-    pins = [sled.pin2(*sled.angles(-c[3], bit_up + c[4]))[1] for c in cuts]
+    pins = [sled.pin2(*sled.angles(-q["across"], bit_up + q["tip"]))[1] for q in deep] + [sled.pin2(*sled.angles(0.0, bit_up + high_tip))[1]]
     sled.p2_z = p2_z = round((min(pins) + max(pins)) / 2)        # screw 2 level with the middle of where its link's far pin goes
+
+    # -- the order, and then the bites -----------------------------------------
+    # Roughing, and then finishing, go round the stick in the order of the spindle's own angle, so it turns a little at a
+    # time and mostly forwards. The order has to be settled before the bites are counted: what a cut meets is what the
+    # cuts before it left. (Counted in one order and made in another, a roughing cut met 11.7 mm in one bite.)
+    turn_of = lambda q: sled.pose(q["t"], q["across"], q["tip"], bit_up)["gamma"]
+    cands.sort(key=lambda q: (turn_of(q), q["across"]))
+    passes.sort(key=turn_of)
+    places, waste = P.bites(outline, cands, passes)
+    print(f"waste {waste['waste']:.0f} mm2 of section: {len(places)} roughing places take {waste['rough_area']:.0f} in {sum(q['bites'] for q in places)} runs; "
+          f"the ball-nose takes the rest in {sum(q['bites'] for q in passes)} runs, the deepest {max(q['depth'] for q in passes):.1f}; {waste['left_at_end']:.1f} stands at the end")
+    cuts = []                                        # every time the cutter is brought to the stick: kind, tool, t, across, tip, label
+    cuts.append(("set", "straight", 0.0, 0.0, MASTER_R, "set the straight bit on the master"))
+    for j, at in enumerate(JOURNAL_AT):
+        for k in range(j_places):
+            x = at - JOURNAL_L / 2 + P.ROUGH_BIT / 2 + k * (JOURNAL_L - P.ROUGH_BIT) / (j_places - 1)
+            cuts.append(("place", "straight", 0.0, 0.0, high_tip, f"journal {j + 1} place {k + 1} of {j_places}: stop at {x:.0f}"))
+            for b in range(1, j_bites + 1):
+                cuts.append(("journal", "straight", 0.0, 0.0, max(radius, blank - b * P.ROUGH_BITE), f"journal {j + 1} place {k + 1} bite {b} of {j_bites}"))
+    cuts.append(("pause", "straight", 0.0, 0.0, high_tip, "fit the two steadies over the journals"))
+    for q in places:
+        for b in range(1, q["bites"] + 1):
+            cuts.append(("rough", "straight", q["t"], q["across"], q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], f"rough {math.degrees(q['t']):.0f} deg {q['across']:+.0f} bite {b} of {q['bites']}"))
+    cuts.append(("set", "ball", 0.0, 0.0, MASTER_R, "set the ball-nose on the master"))
+    for q in passes:
+        for b in range(1, q["bites"] + 1):
+            cuts.append(("finish", "ball", q["t"], q["across"], q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], f"finish bite {b} of {q['bites']}"))
     poses = [sled.pose(c[2], c[3], c[4], bit_up) for c in cuts]
-    # Roughing, and then finishing, in the order of the spindle's angle, so it turns a little at a time and mostly forwards;
-    # the bites of one cut stay together, in order. A cut is the rows that share a direction and a place across.
-    order, i = [], 0
-    while i < len(cuts):
-        k = i
-        while cuts[i][0] in ("rough", "finish") and k + 1 < len(cuts) and cuts[k + 1][0] == cuts[i][0] and cuts[k + 1][2:4] == cuts[i][2:4]:
-            k += 1
-        block = {"rough": 1, "finish": 3}.get(cuts[i][0])
-        order.append(((block, poses[k]["gamma"]) if block else ((0 if cuts[i][1] == "straight" else 2), i), list(range(i, k + 1))))
-        i = k + 1
-    picked = [j for _, group in sorted(order, key=lambda g: g[0]) for j in group]
-    cuts, poses = [cuts[j] for j in picked], [poses[j] for j in picked]
     leans = [sled.lean(q["alpha"], q["beta"]) for q in poses]
     lean = [max(abs(math.degrees(v[k])) for v in leans) for k in (0, 1)]
     if max(lean) > LEAN:
@@ -256,7 +349,7 @@ def main():
     while True:
         a = sled.alpha_of(c1_home - (safe + 0.25))
         c2_lo = min(q["c2"] for q in poses)             # the frame is lowest hanging straight down, in the middle of its swing: try all of it
-        if min(sled.axis(a, sled.beta_of(c2_lo + (c2_home - c2_lo) * k / 40, a))[1] for k in range(41)) < bit_up + SPINDLE_D / 2 + SPINDLE_CLEAR:
+        if min(sled.axis(a, sled.beta_of(c2_lo + (c2_home - c2_lo) * k / 40, a))[1] for k in range(41)) < bit_up + MASTER_R + SPINDLE_CLEAR:
             break
         safe += 0.25
     print(f"cutter {bit_up:.1f} over the table; hinge 1 at {h1}; the plate swings {math.degrees(min(alphas)):.1f} to {math.degrees(max(alphas)):.1f} deg, the frame hangs {math.degrees(min(x + y for x, y in zip(alphas, betas))):.1f} to {math.degrees(max(x + y for x, y in zip(alphas, betas))):.1f} off upright; screw 2 at {p2_z:.0f}; the links lean at most {lean[0]:.1f} and {lean[1]:.1f} deg; "
@@ -267,7 +360,7 @@ def main():
         least = 99.0
         poly = steady_outline(radius, half)
         for c, q in zip(cuts, poses):
-            if c[0] in ("set", "place", "journal"):
+            if c[0] in ("set", "place", "journal", "pause"):
                 continue                              # the cutter is not beside a steady then
             rt = (P.BIT if c[1] == "ball" else P.ROUGH_BIT) / 2
             top = (0.0, bit_up - (rt if c[1] == "ball" else 0.0))
@@ -294,158 +387,194 @@ def main():
 
     # -- the parts, at one pass ----------------------------------------------
     drawn = next(i for i, r in enumerate(rows) if r["kind"] == "finish" and abs(r["across"]) < 2.0 and r["tip"] > 12.0 and r["label"].startswith("finish bite 1 of 1"))
-    q = poses[drawn]
-    a, b = q["alpha"], q["beta"]
-    h2 = sled.hinge2(a)
-    axis = (q["ya"], q["za"])
-    PL, PL2, HG = (h1, a), (h2, a), (h2, a + b)
-    psi = math.radians(q["gamma"]) + a + b
-    section = tf((axis, psi), outline)
     top_z = h1[1] + SK_W / 2
-    c1, c2 = q["c1"], q["c2"]
     tower_top = math.floor(min(p["c1"] for p in poses) - 6.0)
     motor_c = (0.0, -DROP + BELT_C)                  # the spindle's motor in the hanging frame
-
-    def sled_base(p):
-        box(p, "left runner", SLED_X, LEFT_Y, (0.0, PLY))
-        box(p, "right runner", SLED_X, RIGHT_Y, (0.0, PLY), op="add")
-        for x in ((SLED_X[0], SLED_X[0] + TIE), (SLED_X[1] - TIE, SLED_X[1])):
-            box(p, "tie", x, (LEFT_Y[1], RIGHT_Y[0]), (0.0, PLY), op="add")
-
-    def riser(p):
-        y0 = H1_Y + SK_H
-        box(p, "riser wall", SLED_X, (y0, y0 + PLY), (PLY, top_z))
-        for x in ((SLED_X[0], SLED_X[0] + PLY), (SLED_X[1] - PLY, SLED_X[1])):
-            slab(p, "gusset", x, [(y0 + PLY, PLY), (y0 + PLY + 70.0, PLY), (y0 + PLY, top_z - 20.0)], op="add")
-
-    def supports1(p):
-        for i, x in enumerate((-160.0, 300.0)):
-            box(p, "SK20", (x, x + SK_T), (H1_Y - (SK_HTOT - SK_H), H1_Y + SK_H), (h1[1] - 16.0, h1[1] + 16.0), op="new" if i == 0 else "new")
-            xbore(p, x, x + SK_T, h1, SHAFT_D, "shaft")
-
-    def blocks(p, fr, at, flip):
-        """SC20UU on a shaft at a frame's origin, their bases up (under the plate) or down (on the beam)."""
-        z = (-(BLK_H - BLK_C), BLK_C) if not flip else (-BLK_C, BLK_H - BLK_C)
-        for x in at:
-            slab(p, "SC20UU", (x - BLK_L / 2, x + BLK_L / 2), tf(fr, rect(-BLK_W / 2, BLK_W / 2, z[0], z[1])))
-            xbore(p, x - BLK_L / 2, x + BLK_L / 2, fr[0], SHAFT_D, "shaft")
-
-    def plate(p):
-        slab(p, "lift plate", PLATE_X, tf(PL, rect(-PLATE_Y[1], -PLATE_Y[0], BLK_C, BLK_C + PLY)))
-
-    def supports2(p):
-        for x in (-128.0, 258.0):
-            slab(p, "SK20", (x, x + SK_T), tf(PL2, rect(-16.0, 16.0, -(SK_HTOT - SK_H), SK_H)))
-            xbore(p, x, x + SK_T, h2, SHAFT_D, "shaft")
-
-    def beam(p):
-        slab(p, "beam", BEAM_X, tf(HG, rect(-BEAM_Y, BEAM_Y, -BLK_C - PLY, -BLK_C)))
-
-    def hangers(p):
-        for x in HANGER_X:
-            slab(p, "head hanger", x, tf(HG, hanger_outline()))
-            xbore(p, x[0], x[1], axis, BEARING_D, "bearing")
-
-    def tail(p):
-        slab(p, "tail hanger", TAIL_X, tf(HG, hanger_outline()))
-        xbore(p, TAIL_X[0], TAIL_X[1], axis, 10.5, "centre")
-
-    def bearings(p):
-        for x in (HANGER_X[0][0], HANGER_X[1][1] - BEARING_W):
-            xcyl(p, "6201", x, x + BEARING_W, axis, BEARING_D - 0.1)
-            xbore(p, x, x + BEARING_W, axis, SPINDLE_D + 0.2, "bore")
-
-    def spindle(p):
-        xcyl(p, "M12 studding", -116.0, -4.0, axis, SPINDLE_D)
-        xcyl(p, "drive spur", -4.0, 0.0, axis, 18.0, op="add")
-        xcyl(p, "tail centre, M10 pointed", STICK, TAIL_X[1] + 20.0, axis, 10.0, op="new")
-
-    def drive(p):
-        mc = tf(HG, [motor_c])[0]
-        x1 = -100.0
-        xcyl(p, "60-tooth pulley", x1 - PULLEY[2], x1, axis, PULLEY[0])
-        xbore(p, x1 - PULLEY[2], x1, axis, SPINDLE_D + 0.2, "bore")
-        xcyl(p, "16-tooth pulley", x1 - PULLEY[2], x1, mc, PULLEY[1], op="new")
-        m = MOTOR[0] / 2
-        slab(p, "spindle motor", (x1 - 25.0 - MOTOR[1], x1 - 25.0), tf(HG, rect(-m, m, motor_c[1] - m, motor_c[1] + m)))
-        xcyl(p, "motor shaft", x1 - 25.0, x1 - PULLEY[2], mc, 5.0, op="add")
-        for y in ((m, m + 6.0), (-m - 6.0, -m)):
-            slab(p, "bracket cheek", (x1 - 25.0, HANGER_X[0][0]), tf(HG, rect(y[0], y[1], motor_c[1] - m, motor_c[1] + m)))
-
-    def master(p):
-        xcyl(p, "master", MASTER_X[0], MASTER_X[1], axis, 2 * radius)
-        xbore(p, MASTER_X[0], MASTER_X[1], axis, SPINDLE_D + 0.2, "spindle")
-
-    def stick(p):
-        for i, (x0, x1, is_journal) in enumerate(stick_spans()):
-            if is_journal:
-                xcyl(p, "journal", x0, x1, axis, 2 * radius, op="add")
-            else:
-                slab(p, "stick, milled", (x0, x1), section, op="new" if i == 0 else "add")
-
-    def steadies(p):
-        pts = tf((axis, a + b), steady_outline(radius, half))
-        for at in JOURNAL_AT:
-            slab(p, "steady", (at - STEADY_T / 2, at + STEADY_T / 2), pts)
-
-    pin1, pin2 = sled.pin1(a), sled.pin2(a, b)
-
-    def lift_pusher(p):
-        m = MOTOR[0] / 2
-        box(p, "lift motor", (PUSH_X - m, PUSH_X + m), (P1_Y - m, P1_Y + m), (PLY, PLY + MOTOR[1]))
-        vcyl(p, "T8 screw", PUSH_X, P1_Y, PLY + MOTOR[1], c1 - NOSE_L, 8.0, op="new")
-        vcyl(p, "nose", PUSH_X, P1_Y, c1 - NOSE_L, c1 + 5.0, 14.0, op="add")
-
-    def links(p):
-        """Each nose to what it moves: a strip beside the nose, a pin through each end (the pins are not drawn)."""
-        slab(p, "link 1", (PUSH_X + 8.0, PUSH_X + 14.0), link((P1_Y, c1), pin1))
-        slab(p, "clevis under the plate", (PUSH_X - 7.0, PUSH_X + 7.0), tf(PL, rect(E1[0] - 10.0, E1[0] + 10.0, E1[1] - 8.0, BLK_C)))
-        slab(p, "link 2", (TAIL_X[1], TAIL_X[1] + 6.0), link((c2, p2_z), pin2))
-
-    def tower(p):
-        box(p, "tower", (PUSH_X - 15.0, PUSH_X + 15.0), (P1_Y - 15.0, P1_Y + 15.0), (PLY + MOTOR[1], tower_top))
-        s = p.sketch("top", tower_top, "bore")
-        p.point(s, (PUSH_X, P1_Y))
-        p.hole(s, 14.5, name="the nose's way")
-
     tail_mid = (TAIL_X[0] + TAIL_X[1]) / 2
-    g0, g1 = c2_home + 4.0, c2_home + NOSE2_L       # pusher 2's guide: from clear of the hanger at home to the motor's face
+    g0, g1 = c2_home + 8.0, c2_home + NOSE2_L       # pusher 2's guide: from clear of the link's end at home to the motor's face
 
-    def ycut(p, y0, y1, cx, cz, d, name):
-        s = p.sketch("front", -y1 - 1.0, name)
-        p.circle(s, (cx, cz), d / 2)
-        p.cut(s, y1 - y0 + 2.0, name=name)
+    def parts_at(q):
+        """Every part, as a list of (tab, maker), with the sled at the joints q."""
+        a, b = q["alpha"], q["beta"]
+        h2 = sled.hinge2(a)
+        axis = (q["ya"], q["za"])
+        PL, PL2, HG = (h1, a), (h2, a), (h2, a + b)
+        psi = math.radians(q["gamma"]) + a + b
+        section = tf((axis, psi), outline)
+        c1, c2 = q["c1"], q["c2"]
 
-    def swing_pusher(p):
-        m = MOTOR[0] / 2
-        box(p, "swing motor", (tail_mid - m, tail_mid + m), (g1, g1 + MOTOR[1]), (p2_z - m, p2_z + m))
-        box(p, "T8 screw", (tail_mid - 4.0, tail_mid + 4.0), (c2 + NOSE2_L, g1), (p2_z - 4.0, p2_z + 4.0), op="new")
-        box(p, "nose", (tail_mid - 6.0, tail_mid + 6.0), (c2 - 5.0, c2 + NOSE2_L), (p2_z - 6.0, p2_z + 6.0), op="add")
+        def sled_base(p):
+            box(p, "left runner", SLED_X, LEFT_Y, (0.0, PLY))
+            box(p, "right runner", SLED_X, RIGHT_Y, (0.0, PLY), op="add")
+            for x in ((SLED_X[0], SLED_X[0] + TIE), (SLED_X[1] - TIE, SLED_X[1])):
+                box(p, "tie", x, (LEFT_Y[1], RIGHT_Y[0]), (0.0, PLY), op="add")
 
-    def guide(p):
-        m = MOTOR[0] / 2
-        box(p, "guide", (tail_mid - 15.0, tail_mid + 15.0), (g0, g1), (p2_z - 15.0, p2_z + 15.0))
-        box(p, "foot", (tail_mid - m, tail_mid + m), (g0, g1 + MOTOR[1]), (PLY, p2_z - m), op="add")
-        box(p, "web", (tail_mid - 15.0, tail_mid + 15.0), (g0, g1), (p2_z - m, p2_z - 15.0), op="add")
-        ycut(p, g0, g1, tail_mid, p2_z, 17.5, "the nose's way")
+        def riser(p):
+            y0 = H1_Y + SK_H
+            box(p, "riser wall", SLED_X, (y0, y0 + PLY), (PLY, top_z))
+            for x in ((SLED_X[0], SLED_X[0] + PLY), (SLED_X[1] - PLY, SLED_X[1])):
+                slab(p, "gusset", x, [(y0 + PLY, PLY), (y0 + PLY + 70.0, PLY), (y0 + PLY, top_z - 20.0)], op="add")
 
-    def controller(p):
-        box(p, "controller box", (0.0, 90.0), (H1_Y + SK_H + PLY + 6.0, RIGHT_Y[1] - 4.0), (PLY, PLY + 40.0))
+        def supports1(p):
+            for i, x in enumerate((-160.0, 300.0)):
+                box(p, "SK20", (x, x + SK_T), (H1_Y - (SK_HTOT - SK_H), H1_Y + SK_H), (h1[1] - 16.0, h1[1] + 16.0), op="new" if i == 0 else "new")
+                xbore(p, x, x + SK_T, h1, SHAFT_D, "shaft")
 
-    def table_top(p):
-        box(p, "table", (DRAWN_X - 420.0, DRAWN_X + 420.0), (LEFT_Y[0] - 60.0, RIGHT_Y[1] + 60.0), (-30.0, 0.0))
-        box(p, "fence", (DRAWN_X - 420.0, DRAWN_X + 420.0), (RIGHT_Y[1], RIGHT_Y[1] + 40.0), (0.0, 60.0), op="new")
+        def blocks(p, fr, at, flip):
+            """SC20UU on a shaft at a frame's origin, their bases up (under the plate) or down (on the beam)."""
+            z = (-(BLK_H - BLK_C), BLK_C) if not flip else (-BLK_C, BLK_H - BLK_C)
+            for x in at:
+                slab(p, "SC20UU", (x - BLK_L / 2, x + BLK_L / 2), tf(fr, rect(-BLK_W / 2, BLK_W / 2, z[0], z[1])))
+                xbore(p, x - BLK_L / 2, x + BLK_L / 2, fr[0], SHAFT_D, "shaft")
 
-    def cutter(p):
-        vcyl(p, "ball-nose, 3 mm", DRAWN_X, 0.0, 0.0, bit_up, P.BIT)      # from the table up; the router is under it
+        def plate(p):
+            slab(p, "lift plate", PLATE_X, tf(PL, rect(-PLATE_Y[1], -PLATE_Y[0], BLK_C, BLK_C + PLY)))
 
-    parts = [("Table and fence", table_top), ("Cutter", cutter), ("Sled", sled_base), ("Riser", riser),
-             ("Hinge 1 shaft", lambda p: xcyl(p, "20 mm shaft", -165.0, 325.0, h1, SHAFT_D)), ("Hinge 1 supports SK20", supports1),
-             ("Hinge 1 blocks SC20UU", lambda p: blocks(p, PL, (-60.0, 210.0), False)), ("Lift plate", plate),
-             ("Hinge 2 supports SK20", supports2), ("Hinge 2 shaft", lambda p: xcyl(p, "20 mm shaft", -133.0, 283.0, h2, SHAFT_D)),
-             ("Hinge 2 blocks SC20UU", lambda p: blocks(p, HG, (-70.0, 215.0), True)), ("Beam", beam), ("Head hangers", hangers), ("Tail hanger", tail),
-             ("Bearings 6201", bearings), ("Spindle and centre", spindle), ("Belt drive", drive), ("Master", master), ("Stick", stick), ("Steadies", steadies),
-             ("Lift pusher", lift_pusher), ("Links", links), ("Tower", tower), ("Swing pusher", swing_pusher), ("Guide", guide), ("Controller", controller)]
+        def supports2(p):
+            for x in (-128.0, 258.0):
+                slab(p, "SK20", (x, x + SK_T), tf(PL2, rect(-16.0, 16.0, -(SK_HTOT - SK_H), SK_H)))
+                xbore(p, x, x + SK_T, h2, SHAFT_D, "shaft")
+
+        def beam(p):
+            slab(p, "beam", BEAM_X, tf(HG, rect(-BEAM_Y, BEAM_Y, -BLK_C - PLY, -BLK_C)))
+
+        def hangers(p):
+            for x in HANGER_X:
+                slab(p, "head hanger", x, tf(HG, hanger_outline()))
+                xbore(p, x[0], x[1], axis, BEARING_D, "bearing")
+
+        def tail(p):
+            slab(p, "tail hanger", TAIL_X, tf(HG, hanger_outline()))
+            xbore(p, TAIL_X[0], TAIL_X[1], axis, 10.5, "centre")
+
+        def bearings(p):
+            for x in (HANGER_X[0][0], HANGER_X[1][1] - BEARING_W):
+                xcyl(p, "6201", x, x + BEARING_W, axis, BEARING_D - 0.1)
+                xbore(p, x, x + BEARING_W, axis, SPINDLE_D + 0.2, "bore")
+
+        def spindle(p):
+            xcyl(p, "M12 studding", -116.0, -4.0, axis, SPINDLE_D)
+            xcyl(p, "drive spur", -4.0, 0.0, axis, 2 * MASTER_R, op="add")
+            xcyl(p, "tail centre, M10 pointed", STICK, TAIL_X[1] + 20.0, axis, 10.0, op="new")
+
+        def drive(p):
+            mc = tf(HG, [motor_c])[0]
+            x1 = -100.0
+            xcyl(p, "60-tooth pulley", x1 - PULLEY[2], x1, axis, PULLEY[0])
+            xbore(p, x1 - PULLEY[2], x1, axis, SPINDLE_D + 0.2, "bore")
+            xcyl(p, "16-tooth pulley", x1 - PULLEY[2], x1, mc, PULLEY[1], op="new")
+            m = MOTOR[0] / 2
+            slab(p, "spindle motor", (x1 - 25.0 - MOTOR[1], x1 - 25.0), tf(HG, rect(-m, m, motor_c[1] - m, motor_c[1] + m)))
+            xcyl(p, "motor shaft", x1 - 25.0, x1 - PULLEY[2], mc, 5.0, op="add")
+            for y in ((m, m + 6.0), (-m - 6.0, -m)):
+                slab(p, "bracket cheek", (x1 - 25.0, HANGER_X[0][0]), tf(HG, rect(y[0], y[1], motor_c[1] - m, motor_c[1] + m)))
+
+        def master(p):
+            xcyl(p, "master", MASTER_X[0], MASTER_X[1], axis, 2 * MASTER_R)
+            xbore(p, MASTER_X[0], MASTER_X[1], axis, SPINDLE_D + 0.2, "spindle")
+
+        def stick(p):
+            for i, (x0, x1, is_journal) in enumerate(stick_spans()):
+                if is_journal:
+                    xcyl(p, "journal", x0, x1, axis, 2 * radius, op="add")
+                else:
+                    slab(p, "stick, milled", (x0, x1), section, op="new" if i == 0 else "add")
+
+        def steadies(p):
+            pts = tf((axis, a + b), steady_outline(radius, half))
+            for at in JOURNAL_AT:
+                slab(p, "steady", (at - STEADY_T / 2, at + STEADY_T / 2), pts)
+
+        pin1, pin2 = sled.pin1(a), sled.pin2(a, b)
+
+        def lift_pusher(p):
+            m = MOTOR[0] / 2
+            box(p, "lift motor", (PUSH_X - m, PUSH_X + m), (P1_Y - m, P1_Y + m), (PLY, PLY + MOTOR[1]))
+            vcyl(p, "T8 screw", PUSH_X, P1_Y, PLY + MOTOR[1], c1 - NOSE_L, 8.0, op="new")
+            vcyl(p, "nose", PUSH_X, P1_Y, c1 - NOSE_L, c1 + 5.0, 14.0, op="add")
+
+        def links(p):
+            """Each nose to what it moves: a strip beside the nose, a pin through each end (the pins are not drawn)."""
+            slab(p, "link 1", (PUSH_X + 8.0, PUSH_X + 14.0), link((P1_Y, c1), pin1))
+            slab(p, "clevis under the plate", (PUSH_X - 7.0, PUSH_X + 7.0), tf(PL, rect(E1[0] - 10.0, E1[0] + 10.0, E1[1] - 8.0, BLK_C)))
+            slab(p, "link 2", (TAIL_X[1], TAIL_X[1] + 6.0), link((c2, p2_z), pin2))
+
+        def tower(p):
+            box(p, "tower", (PUSH_X - 15.0, PUSH_X + 15.0), (P1_Y - 15.0, P1_Y + 15.0), (PLY + MOTOR[1], tower_top))
+            s = p.sketch("top", tower_top, "bore")
+            p.point(s, (PUSH_X, P1_Y))
+            p.hole(s, 14.5, name="the nose's way")
+
+
+        def ycut(p, y0, y1, cx, cz, d, name):
+            s = p.sketch("front", -y1 - 1.0, name)
+            p.circle(s, (cx, cz), d / 2)
+            p.cut(s, y1 - y0 + 2.0, name=name)
+
+        def swing_pusher(p):
+            m = MOTOR[0] / 2
+            box(p, "swing motor", (tail_mid - m, tail_mid + m), (g1, g1 + MOTOR[1]), (p2_z - m, p2_z + m))
+            box(p, "T8 screw", (tail_mid - 4.0, tail_mid + 4.0), (c2 + NOSE2_L, g1), (p2_z - 4.0, p2_z + 4.0), op="new")
+            box(p, "nose", (tail_mid - 6.0, tail_mid + 6.0), (c2 - 5.0, c2 + NOSE2_L), (p2_z - 6.0, p2_z + 6.0), op="add")
+
+        def guide(p):
+            m = MOTOR[0] / 2
+            box(p, "guide", (tail_mid - 15.0, tail_mid + 15.0), (g0, g1), (p2_z - 15.0, p2_z + 15.0))
+            box(p, "foot", (tail_mid - m, tail_mid + m), (g0, g1 + MOTOR[1]), (PLY, p2_z - m), op="add")
+            box(p, "web", (tail_mid - 15.0, tail_mid + 15.0), (g0, g1), (p2_z - m, p2_z - 15.0), op="add")
+            ycut(p, g0, g1, tail_mid, p2_z, 17.5, "the nose's way")
+
+        def controller(p):
+            box(p, "controller box", (0.0, 90.0), (H1_Y + SK_H + PLY + 6.0, RIGHT_Y[1] - 4.0), (PLY, PLY + 40.0))
+
+        def table_top(p):
+            box(p, "table", (DRAWN_X - 420.0, DRAWN_X + 420.0), (LEFT_Y[0] - 60.0, RIGHT_Y[1] + 60.0), (-30.0, 0.0))
+            box(p, "fence", (DRAWN_X - 420.0, DRAWN_X + 420.0), (RIGHT_Y[1], RIGHT_Y[1] + 40.0), (0.0, 60.0), op="new")
+
+        def cutter(p):
+            vcyl(p, "ball-nose, 3 mm", DRAWN_X, 0.0, 0.0, bit_up, P.BIT)      # from the table up; the router is under it
+
+        parts = [("Table and fence", table_top), ("Cutter", cutter), ("Sled", sled_base), ("Riser", riser),
+                 ("Hinge 1 shaft", lambda p: xcyl(p, "20 mm shaft", -165.0, 325.0, h1, SHAFT_D)), ("Hinge 1 supports SK20", supports1),
+                 ("Hinge 1 blocks SC20UU", lambda p: blocks(p, PL, (-60.0, 210.0), False)), ("Lift plate", plate),
+                 ("Hinge 2 supports SK20", supports2), ("Hinge 2 shaft", lambda p: xcyl(p, "20 mm shaft", -133.0, 283.0, h2, SHAFT_D)),
+                 ("Hinge 2 blocks SC20UU", lambda p: blocks(p, HG, (-70.0, 215.0), True)), ("Beam", beam), ("Head hangers", hangers), ("Tail hanger", tail),
+                 ("Bearings 6201", bearings), ("Spindle and centre", spindle), ("Belt drive", drive), ("Master", master), ("Stick", stick), ("Steadies", steadies),
+                 ("Lift pusher", lift_pusher), ("Links", links), ("Tower", tower), ("Swing pusher", swing_pusher), ("Guide", guide), ("Controller", controller)]
+        return parts, {"a": a, "b": b, "h2": h2, "axis": axis, "c1": c1, "c2": c2, "psi": psi, "pin1": pin1, "pin2": pin2}
+
+    # -- nothing through anything, wherever the motors can put the sled ------
+    # The table of rows is one pose in six hundred; between them the controller lifts to the safe height, swings and turns there,
+    # and comes down. So: every twelfth row as it stands, its way down from the safe height, and the whole of the swing at and above it.
+    def joints(lift, swing, turn=0.0):
+        a_ = sled.alpha_of(c1_home - lift)
+        b_ = sled.beta_of(c2_home - swing, a_)
+        ya_, za_ = sled.axis(a_, b_)
+        return {"alpha": a_, "beta": b_, "gamma": turn, "ya": ya_, "za": za_, "c1": c1_home - lift, "c2": c2_home - swing}
+    swing_most = max(r["swing"] for r in rows)
+    tried = [(poses[i], ()) for i in range(0, len(poses), 12)]
+    for r in rows[::12]:
+        tried += [(joints(safe + (r["lift"] - safe) * k / 4, r["swing"], r["turn"]), ("Stick",)) for k in range(4) if r["lift"] > safe]
+    tried += [(joints(safe * i / 4, swing_most * k / 5), ("Stick",)) for i in range(5) for k in range(6)]
+    lane = rect(-ROUGH_R - 1.0, ROUGH_R + 1.0, -1.0, bit_up + 1.0)       # where the cutter is, wherever the sled is along its travel
+    lane_x = (MASTER_X[0], STICK + RUN + 23.0)
+    in_lane = ("Cutter", "Table and fence", "Stick", "Steadies", "Master", "Spindle and centre")    # these the plan itself keeps off the cutter
+    met, in_the_lane = {}, set()
+    for q_, skip in tried:
+        hits, rec = meetings(parts_at(q_)[0], skip=("Cutter",) + skip)
+        for h in hits:
+            met[h] = met.get(h, 0) + 1
+        for title, body in rec:
+            if title not in in_lane and any(pr[0] < lane_x[1] and lane_x[0] < pr[1] and outlines_meet(pr[2], lane) for pr in body):
+                in_the_lane.add(title)
+    print(f"{len(tried)} poses tried: " + ("nothing through anything, nothing in the cutter's lane" if not met and not in_the_lane else f"MEETINGS {met}; IN THE CUTTER'S LANE {sorted(in_the_lane)}"))
+
+    if met or in_the_lane:
+        raise SystemExit("the sled meets itself")
+
+    parts, at = parts_at(poses[drawn])
+    a, b, h2, axis, c1, c2, psi, pin1, pin2 = (at[k] for k in ("a", "b", "h2", "axis", "c1", "c2", "psi", "pin1", "pin2"))
+
     mcp.call("create_document", {"name": "sled"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Stick sled for the leaning half-ellipse Spectre"}, {"type": "rename_tab", "tab": 1, "name": parts[0][0]}]})
     tabs, bodies = {}, {}
@@ -471,9 +600,10 @@ def main():
         print(mcp.call("export", {"tab": tabs[title], "format": "stl", "path": os.path.join(OUT, f"{name}.stl")}))
     mcp.close()
 
-    count = {k: sum(1 for r in rows if r["kind"] == k) for k in ("set", "place", "journal", "rough", "finish")}
+    count = {k: sum(1 for r in rows if r["kind"] == k) for k in ("set", "place", "journal", "pause", "rough", "finish")}
     numbers = {
-        "edge": EDGE, "bulge": BULGE, "gap": GAP, "bit": P.BIT, "ridge": P.RIDGE, "stick": STICK,
+        "edge": EDGE, "bulge": BULGE, "gap": GAP, "bit": P.BIT, "taper": P.TAPER, "shank": P.SHANK, "ridge": P.RIDGE, "stick": STICK,
+        "sweep": {"poses": len(tried), "lane": [lane_x, lane], "stepped": sim["stepped"]},
         "tile": {"across": tile["across"], "area": tile["area"], "outline": outline, "swing": swing_r, "axis_in_tile": centre, "circle": circle},
         "journal": {"radius": radius, "at": JOURNAL_AT, "length": JOURNAL_L, "bit": P.ROUGH_BIT, "bites": j_bites, "places": j_places, "blank_swing": blank, "spans": stick_spans()},
         "steady": {"outline": steady_outline(radius, half), "half": half, "wrap": STEADY_WRAP, "lip": lip, "fit": STEADY_FIT, "t": STEADY_T, "clear": steady_gap(half), "least": CLEAR},
@@ -484,7 +614,7 @@ def main():
         "bit_up": bit_up, "table_clear": TABLE_CLEAR, "pulley_r": PULLEY_R, "hanger_r": HANGER_R, "spindle_d": SPINDLE_D, "spindle_clear": SPINDLE_CLEAR,
         "sled": {"h1": h1, "arm": ARM, "drop": DROP, "p1_y": P1_Y, "e1": E1, "l1": L1, "p2_z": p2_z, "e2": e2, "l2": L2, "lean": lean, "lean_most": LEAN, "nose2": NOSE2_L, "guide_y": [g0, g1], "tail_x": TAIL_X,
                  "c1_home": c1_home, "c2_home": c2_home, "safe": safe, "nose": NOSE_L, "tower_top": tower_top, "x": SLED_X, "left_y": LEFT_Y, "right_y": RIGHT_Y, "ply": PLY,
-                 "back_x": BACK_X, "set_x": SET_X, "run": RUN, "master_x": MASTER_X, "belt": [60, 16]},
+                 "back_x": BACK_X, "run": RUN, "master_x": MASTER_X, "master_r": MASTER_R, "belt": [60, 16]},
         "drawn": {"row": rows[drawn]["n"], "x": DRAWN_X, "alpha": a, "beta": b, "axis": axis, "h2": h2, "c1": c1, "c2": c2, "psi": psi, "pin1": pin1, "pin2": pin2},
         "count": count, "rows": rows,
         "bodies": {k: [list(v) for v in b_] for k, b_ in bodies.items()},

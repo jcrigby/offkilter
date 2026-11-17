@@ -11,6 +11,8 @@ import math
 
 # The tile's cuts.
 BIT = 3.0                       # the finishing bit: a ball-nose, 1.5 radius
+TAPER = math.degrees(math.atan(1.5 / 30.5))   # degrees a side its flank leans out above the ball: the common tapered ball-nose, 3 mm at the tip to 6 over 30.5 (0 for a straight bit)
+SHANK = 6.0                     # its shank: the taper stops at this diameter
 RIDGE = 0.05                    # what a pass may leave standing between it and the next, to sand
 FACE_MIN = 0.2                  # the ball cuts no further round its side than this: the cosine between the bit and the face (78 deg)
 Y_LIM = 19.0                    # the planner keeps the cutter this near the axis; the hinge has a little more
@@ -91,6 +93,18 @@ def normals(outline):
     return out
 
 
+def flank(off, r):
+    """The ball-nose's outline: how far toward the router from the
+    ball's centre its surface is, `off` from its axis. The ball, then
+    a cone leaning TAPER, then the shank. None beyond the shank."""
+    a = math.radians(TAPER)
+    if off <= r * math.cos(a):
+        return -math.sqrt(r * r - off * off)
+    if a > 0.0 and off < SHANK / 2:
+        return (off * math.cos(a) - r) / math.sin(a)
+    return None
+
+
 def drop(outline, t, y, r, ball=True):
     """Where a cutter coming at the stick along t, y across, stops on
     the tile: the ball's centre, or a flat cutter's end. None if it
@@ -98,11 +112,18 @@ def drop(outline, t, y, r, ball=True):
     d, e = frame(t)
     best = None
     for q in outline:
-        u = q[0] * e[0] + q[1] * e[1]
-        if abs(u - y) < r:
-            h = q[0] * d[0] + q[1] * d[1] + (math.sqrt(r * r - (u - y) ** 2) if ball else 0.0)
-            if best is None or h > best:
-                best = h
+        off = abs(q[0] * e[0] + q[1] * e[1] - y)
+        if ball:
+            f = flank(off, r)
+            if f is None:
+                continue
+            h = q[0] * d[0] + q[1] * d[1] - f
+        elif off < r:
+            h = q[0] * d[0] + q[1] * d[1]
+        else:
+            continue
+        if best is None or h > best:
+            best = h
     return best
 
 
@@ -117,7 +138,7 @@ def open_dirs(q, outline, r):
         rho = math.hypot(vx, vy)
         if rho < r - 0.06:
             return None                                   # the ball itself is in the tile here
-        w = math.asin(min(1.0, (r - 0.03) / rho))
+        w = math.asin(min(1.0, (r - 0.03) / rho)) + math.radians(TAPER)      # a tapered flank shuts that much more either side
         phi = math.atan2(vy, vx)
         a, b = math.floor((phi - w) / step), math.ceil((phi + w) / step)
         if b - a >= DIRS:
@@ -203,14 +224,32 @@ def blank_reach(outline, t):
     return max(q[0] * d[0] + q[1] * d[1] for q in outline) + BLANK
 
 
-def rough(outline, passes):
-    """The bites before the finish, followed on a grid of the waste
-    (the blank less the tile) in the order the cuts are made. The
-    straight bit first, from ROUGH_ANGLES directions at places
-    ROUGH_STEP apart: at each as deep as the tile allows less ALLOW,
-    in bites of ROUGH_BITE. Then every finishing pass takes what still
-    stands over it in bites of BALL_BITE. Returns the roughing places
-    and fills in each pass's depth and bites."""
+def rough_places(outline):
+    """Where the straight bit could rough: from ROUGH_ANGLES directions,
+    at places ROUGH_STEP apart, each as deep as the tile allows less
+    ALLOW. Which of them are worth making, and in how many bites,
+    depends on the order they are made in: bites() says."""
+    fine = []
+    for i in range(len(outline)):
+        a, b = outline[i - 1], outline[i]
+        m = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / 0.05))
+        fine.extend((a[0] + (b[0] - a[0]) * s / m, a[1] + (b[1] - a[1]) * s / m) for s in range(m))
+    r6, places = ROUGH_BIT / 2, []
+    for k in range(ROUGH_ANGLES):
+        t = 2 * math.pi * k / ROUGH_ANGLES
+        d, e = frame(t)
+        line = [(q[0] * e[0] + q[1] * e[1], q[0] * d[0] + q[1] * d[1]) for q in fine]
+        n = int(Y_LIM / ROUGH_STEP)
+        for j in range(-n, n + 1):
+            y = j * ROUGH_STEP
+            under = [h for u, h in line if abs(u - y) <= r6]
+            if under:                                     # else beside the tile from here: another direction faces it
+                places.append({"t": t, "across": y, "touch": max(under), "tip": max(under) + ALLOW})
+    return places
+
+
+def waste_cells(outline):
+    """The waste, the blank less the tile, as the middles of CELL squares, and the blank's hull."""
     h_ = hull(outline)
     lo_x, hi_x = min(q[0] for q in h_) - BLANK, max(q[0] for q in h_) + BLANK
     lo_y, hi_y = min(q[1] for q in h_) - BLANK, max(q[1] for q in h_) + BLANK
@@ -220,59 +259,60 @@ def rough(outline, passes):
             q = (lo_x + (i + 0.5) * CELL, lo_y + (j + 0.5) * CELL)
             if not inside(q, outline) and (inside(q, h_) or min(near(q, h_[m - 1], h_[m]) for m in range(len(h_))) <= BLANK):
                 cells.append(q)
+    return cells, h_
+
+
+def bites(outline, places, passes):
+    """The bites, followed on a grid of the waste in the order the cuts
+    will be made: `places` as given, then `passes` as given. That order
+    is the table's, and must be: what a cut meets is what the cuts
+    before it left. A roughing place that would take under a square
+    millimetre is dropped; the others go down in bites of ROUGH_BITE.
+    Then every finishing pass takes what still stands over it in bites
+    of BALL_BITE. Returns the places kept, and fills in every cut's
+    depth and bites."""
+    cells, h_ = waste_cells(outline)
     waste = len(cells) * CELL * CELL
     alive = bytearray([1]) * len(cells)
-    fine = []
-    for i in range(len(outline)):
-        a, b = outline[i - 1], outline[i]
-        m = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / 0.05))
-        fine.extend((a[0] + (b[0] - a[0]) * s / m, a[1] + (b[1] - a[1]) * s / m) for s in range(m))
 
     def cut(t, y, tip, r, ball, dry=False):
-        """What a cutter at y, its tip at tip, takes with the stick at t: the area, and how far the waste stood over its tip."""
+        """What a cutter at y, its tip at tip, takes with the stick at t: the area, and how far the waste stood over it."""
         d, e = frame(t)
-        took, top = [], tip
+        took, top = [], 0.0
         for i, q in enumerate(cells):
             if not alive[i]:
                 continue
-            u = q[0] * e[0] + q[1] * e[1]
-            if abs(u - y) > r:
-                continue
+            off = abs(q[0] * e[0] + q[1] * e[1] - y)
             h = q[0] * d[0] + q[1] * d[1]
-            if h >= (tip + r - math.sqrt(r * r - (u - y) ** 2) if ball else tip):
-                took.append(i)
-                top = max(top, h)
+            if ball:
+                f = flank(off, r)
+                if f is None or h < tip + r + f:
+                    continue
+                top = max(top, h - (tip + r + f))
+            else:
+                if off > r or h < tip:
+                    continue
+                top = max(top, h - tip)
+            took.append(i)
         if not dry:
             for i in took:
                 alive[i] = 0
-        return len(took) * CELL * CELL, top - tip
+        return len(took) * CELL * CELL, top
 
-    r6 = ROUGH_BIT / 2
-    places, rough_area = [], 0.0
-    for k in range(ROUGH_ANGLES):
-        t = 2 * math.pi * k / ROUGH_ANGLES
-        d, e = frame(t)
-        line = [(q[0] * e[0] + q[1] * e[1], q[0] * d[0] + q[1] * d[1]) for q in fine]
-        n = int(Y_LIM / ROUGH_STEP)
-        for j in range(-n, n + 1):
-            y = j * ROUGH_STEP
-            under = [h for u, h in line if abs(u - y) <= r6]
-            if not under:
-                continue                                  # beside the tile from here: another direction faces it
-            touch = max(under)
-            area, depth = cut(t, y, touch + ALLOW, r6, False, dry=True)
-            if area < 1.0:
-                continue
-            cut(t, y, touch + ALLOW, r6, False)
-            rough_area += area
-            places.append({"t": t, "across": y, "touch": touch, "tip": touch + ALLOW, "depth": depth, "bites": max(1, math.ceil(depth / ROUGH_BITE - 1e-9)), "area": area})
+    kept, rough_area = [], 0.0
+    for q in places:
+        area, depth = cut(q["t"], q["across"], q["tip"], ROUGH_BIT / 2, False, dry=True)
+        if area < 1.0:
+            continue
+        cut(q["t"], q["across"], q["tip"], ROUGH_BIT / 2, False)
+        rough_area += area
+        kept.append(dict(q, depth=depth, bites=max(1, math.ceil(depth / ROUGH_BITE - 1e-9)), area=area))
     left_after_rough = sum(alive) * CELL * CELL
-    rb = BIT / 2
     for q in passes:
-        _, depth = cut(q["t"], q["across"], q["tip"], rb, True)
+        _, depth = cut(q["t"], q["across"], q["tip"], BIT / 2, True)
         q["depth"] = depth
         q["bites"] = max(1, math.ceil(depth / BALL_BITE - 1e-9))
-    return places, {"waste": waste, "rough_area": rough_area, "left_after_rough": left_after_rough, "left_at_end": sum(alive) * CELL * CELL, "hull": h_}
+    return kept, {"waste": waste, "rough_area": rough_area, "left_after_rough": left_after_rough, "left_at_end": sum(alive) * CELL * CELL, "hull": h_}
 
 
 # -- the two hinges and the spindle ------------------------------------------

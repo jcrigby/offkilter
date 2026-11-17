@@ -11,9 +11,14 @@ SWING_FLIP = False
 TURN_FLIP = False
 
 # Switches, each from its pin to ground: closed reads 0.
-LIFT_HOME_PIN = 10              # closed with pusher 1 at the top of its travel
-SWING_HOME_PIN = 11             # closed with pusher 2 drawn right back
-TURN_HOME_PIN = 12              # closed once a turn of the spindle, at its mark
+# The three home switches are wired normally closed: they open at home, so a wire that comes off
+# reads as home and the motor stops instead of driving into its end. Set False for switches that close at home.
+HOME_OPENS = True
+LIFT_HOME_PIN = 10              # pusher 1 at the top of its travel
+SWING_HOME_PIN = 11             # pusher 2 drawn right back
+TURN_HOME_PIN = 12              # once a turn of the spindle, at its mark
+LIFT_MOST_MM = 110.0            # homing gives up if the switch has not spoken in this much travel
+SWING_MOST_MM = 70.0
 SLED_BACK_PIN = 13              # closed with the sled pulled right back, the stick clear of the cutter
 NEXT_PIN = 14                   # the foot switch
 LED_PIN = 25
@@ -30,6 +35,10 @@ TURN_STEPS_PER_DEG = 200 * 16 * (60 / 16) / 360.0
 LIFT_TRIM_MM = 0.0
 SWING_TRIM_MM = 0.0
 TURN_TRIM_DEG = 0.0
+# The built hinges are never quite the drawn ones, and most of what that does is stretch each screw's travel:
+# a scale, about the middle of the travel, found from the same test stick. 1.0 until then.
+LIFT_SCALE, LIFT_MID_MM = 1.0, 45.0
+SWING_SCALE, SWING_MID_MM = 1.0, 20.0
 
 # Turning back to an angle, the spindle goes this far past it and comes up to it forwards.
 TURN_PAST_DEG = 3.0
