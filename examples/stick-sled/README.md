@@ -164,6 +164,11 @@ with E 10 GPa along the grain and G 0.7 GPa:
   over 20 mm of stick, ten times the roughing cut.
 - **The plate's weight** on the lift screw is about 25 N, ten times
   any cut.
+- **The ply gives nothing to speak of.** The roughing cut bends the
+  lift plate, a bridge 280 mm long and 420 wide, half a micrometre,
+  and a hanger under two. What can give is joints: the bushings'
+  play on the two shafts, which the weight of plate and frame takes
+  up, and screws in ply.
 - The force that matters is the one these numbers leave out: a bit
   that grabs.
 
@@ -364,7 +369,7 @@ way.
 | the master | a ground steel sleeve, 16 round, 12 bore, 29 long | its diameter by micrometer goes to `calibrate.py fit`; its runout on the studding is found by the probing |
 | the blank | 49 x 42, square, its centre marked 19.5 from a wide face and 24.8 from a narrow one | on its centres within a millimetre and level within a couple of degrees: the 2 mm over is for that |
 | the feed | 20 mm/s at 25,000 rpm is a chip of 0.02 mm a tooth | that is fine dust, and may burn: the router's slowest speed, and a brisk push |
-| the frame | not checked | lean on the stick with the motors holding: if the cutter's mark moves, stiffen what gave |
+| the frame | its ply is stiff enough by calculation; its joints are not calculated | lean on the stick with the motors holding: if the cutter's mark moves, tighten or stiffen what gave |
 
 ## Parts
 
