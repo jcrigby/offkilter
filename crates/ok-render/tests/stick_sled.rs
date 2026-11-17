@@ -1329,6 +1329,33 @@ fn a_sled_built_wrong_is_found_by_touching_and_the_table_planned_for_it_cuts_tru
     assert!(error < 0.05 && (error - f(&e["error"])).abs() < 1e-6);
     assert!(f(&e["error_as_built"]) > 1.0);
 
+    // Stopped part way down a face and switched on again, the controller does not come at the next touch from
+    // home, a way nobody checked: it goes back to where that run of touches began, a touch come to by the top of
+    // the lift or a block brought up afresh.
+    let n = numbers();
+    let probing = n["probe"]["rows"].as_array().unwrap();
+    let resumed = e["resumed"].as_array().unwrap();
+    assert_eq!(resumed.len(), 2);
+    for r in resumed {
+        let (after, began) = (
+            r[0].as_u64().unwrap() as usize,
+            r[1].as_u64().unwrap() as usize,
+        );
+        let next = &probing[after]; // rows are numbered from 1: this is row after + 1
+        assert_eq!(
+            next["via"].as_str(),
+            Some("d"),
+            "stopped in the middle of a run"
+        );
+        assert!(began <= after);
+        let first = &probing[began - 1];
+        let before = probing[began - 2]["kind"].as_str().unwrap();
+        assert!(first["via"].as_str() == Some("h") || before.starts_with("br"));
+        assert!(probing[began..=after]
+            .iter()
+            .all(|row| row["via"].as_str() == Some("d")));
+    }
+
     // And over three hundred such sleds, as calibrate.py's study recorded it.
     let s = &c["study"];
     assert!(s["trials"].as_u64().unwrap() >= 300);

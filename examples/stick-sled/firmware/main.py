@@ -211,26 +211,36 @@ def keep_place(n, total):
             f.write("%d,%d" % (n, total))
 
 
-def read_table(path):
+class Table:
     """passes.csv: '#safe,<mm>' then rows of n,kind,tool,lift,swing,turn,via,label.
     via is 'd' for a move that may go straight to its row, 's' for one that must go by the safe height,
-    'h' for one that must go by the top of the lift: over a pin or a block."""
-    safe, rows = 0.0, []
-    with open(path) as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            if line.startswith("#"):
-                parts = line[1:].split(",")
-                if parts[0] == "safe":
-                    safe = float(parts[1])
-                continue
-            p = line.split(",")
-            if p[0] == "n":
-                continue
-            rows.append((int(p[0]), p[1], p[2], float(p[3]), float(p[4]), float(p[5]), p[6], p[7] if len(p) > 7 else ""))
-    return safe, rows
+    'h' for one that must go by the top of the lift: over a pin or a block.
+    Read a row at a time, every time it is gone through: a Pico has not the memory for five hundred rows at once."""
+
+    def __init__(self, path):
+        self.path = path
+        self.safe = 0.0
+        self.total = 0
+        self.follows = bytearray()  # for each row, whether it is a touch come to straight from the touch before it
+        for row in self:
+            self.total += 1
+            self.follows.append(1 if row[1] in ("down", "sw+", "sw-") and row[6] == "d" else 0)
+
+    def __iter__(self):
+        with open(self.path) as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith("#"):
+                    parts = line[1:].split(",")
+                    if parts[0] == "safe":
+                        self.safe = float(parts[1])
+                    continue
+                p = line.split(",")
+                if p[0] == "n":
+                    continue
+                yield (int(p[0]), p[1], p[2], float(p[3]), float(p[4]), float(p[5]), p[6], p[7] if len(p) > 7 else "")
 
 
 class Sled:
@@ -319,8 +329,12 @@ class Sled:
 
     def run(self, rows, record=None, after=None):
         """The whole table, or what is left of it after row `after`."""
-        total = len(rows)
+        total = rows.total
         done = place(total) if after is None else after
+        # A touch that follows straight on from the one before it cannot be come to from home: go back to where
+        # that run of touches began, and make them again.
+        while 0 < done < total and rows.follows[done]:
+            done -= 1
         if done and after is None:
             SCREEN.show("left at row %d" % done, "of %d" % total, "press: go on", "hold 3 s: restart")
             if wait(C.NEXT_PIN) >= 3000:
@@ -422,8 +436,8 @@ class Sled:
 
 
 def main(path="passes.csv", out=None, after=None):
-    safe, rows = read_table(path)
-    sled = Sled(safe)
+    rows = Table(path)
+    sled = Sled(rows.safe)
     record = [] if out else None
     try:
         sled.run(rows, record, after)
@@ -434,7 +448,7 @@ def main(path="passes.csv", out=None, after=None):
         import json
         with open(out, "w") as f:
             json.dump({"rows": record, "after": after or 0, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight, "probed": sled.probed,
-                       "stepped": [sled.lift.stepped, sled.swing.stepped, sled.turn.stepped], "safe_steps": sled.lift.steps_for(safe),
+                       "stepped": [sled.lift.stepped, sled.swing.stepped, sled.turn.stepped], "safe_steps": sled.lift.steps_for(rows.safe),
                        "per": [C.LIFT_STEPS_PER_MM, C.SWING_STEPS_PER_MM, C.TURN_STEPS_PER_DEG]}, f)
 
 

@@ -195,6 +195,9 @@ It says what it wants in four short lines, on a small display if one
 is fitted and always over USB: which row, which bit, and what to do.
 Without the display's driver or the display it carries on over USB.
 
+It reads the table a row at a time, so a table's length is no matter
+to the Pico's memory.
+
 It keeps its place. A row is done when the sled has left its back
 stop and come back; the row's number then goes into `at.txt` on the
 Pico. Switched on with a stick part done, it offers to go on from the
@@ -269,7 +272,9 @@ A block that is touched on a face is put in its place by the sled:
 the controller holds the master where the face should be and the
 block is slid up to it until the Pico's lamp lights. Each place is
 touched three times, and three that disagree by 0.08 mm stop the
-probing. About twenty minutes, most of it the motors.
+probing. Stopped part way down a face and switched on again, it goes
+back to where that run of touches began. About twenty minutes, most
+of it the motors.
 
 ```sh
 python3 calibrate.py fit probe_log.csv --master 15.98

@@ -474,14 +474,18 @@ def cut_error(true, planned, cuts, ball_r):
     return worst
 
 
-def firmware_touches(true, rows, windows, rng):
-    """The probing table run by the controller's own program, on a computer, its contact closed by the sled `true`."""
+def firmware_touches(true, rows, windows, rng, after=0):
+    """The probing table run by the controller's own program, on a computer, its contact closed by the sled `true`.
+    With `after`, as if it had been stopped after that row and switched on again."""
     sys.path.insert(0, os.path.join(HERE, "firmware"))
     import main as fw
     if (fw.C.PROBE_LIFT_MM, fw.C.PROBE_SWING_MM) != tuple(windows) or fw.C.PROBE_TOUCHES != TOUCHES:
         raise SystemExit("the probing table was made for other windows than the controller's")
     fw.SCREEN.quiet = True
-    machine = fw.Sled(0.0)
+    table = fw.Table(os.path.join(OUT, "probe.csv"))           # as build.py wrote it, and as the Pico will read it
+    if [(r[0], r[1], r[2], r[6]) for r in table] != [(r["n"], r["kind"], r["tool"], r["via"]) for r in rows]:
+        raise SystemExit("out/probe.csv is not the probing table in out/sled.json: run build.py")
+    machine = fw.Sled(table.safe)
     bring(true, rows, rng)
     by_n = {row["n"]: row for row in rows}
     noise = {(row["n"], k): rng.gauss(0.0, TOUCH) for row in rows for k in range(TOUCHES)}
@@ -490,7 +494,7 @@ def firmware_touches(true, rows, windows, rng):
         row = by_n[machine.row]
         return true.gap(machine.lift.at / machine.lift.per_unit, machine.swing.at / machine.swing.per_unit, machine.turn.at / machine.turn.per_unit, row["tool"]) <= noise[(row["n"], machine.touch)]
     fw.CONTACT = contact
-    machine.run([(r["n"], r["kind"], r["tool"], r["lift"], r["swing"], r["turn"], r["via"], r["label"]) for r in rows], None, 0)
+    machine.run(table, None, after)
     fw.CONTACT = None
     return [[n, kind, by_n[n]["tool"], lift, swing, turn, apart] for n, kind, lift, swing, turn, apart in machine.probed]
 
@@ -548,8 +552,14 @@ def study(trials):
     log = firmware_touches(true, rows, window, rng)
     w, rms, worst = fit(d, [(what, lift, swing, turn) for _, _, what, lift, swing, turn, _ in log])
     fitted = Built(d, w)
+    # Stopped part way down a face and switched on again, it must not come at the next touch from home: it goes back
+    # to where that run of touches began. Tried in the middle of the pin's side and of the block on end's face.
+    resumed = []
+    for row in (7, 43):
+        again = firmware_touches(Built(d, list(true.v), dict(true.sizes)), rows, window, random.Random(5), row)
+        resumed.append([row, again[0][0]])
     table = [["set", *fitted.setting(), *fitted.row(*fitted.setting())]] + [["finish", *c, *fitted.row(*c)] for c in cuts]
-    example = {"true": true.v, "sizes": true.sizes, "touches": log, "fitted": w, "rms": rms, "worst_touch": worst, "table": table,
+    example = {"true": true.v, "sizes": true.sizes, "touches": log, "fitted": w, "rms": rms, "worst_touch": worst, "table": table, "resumed": resumed,
                "error_as_built": cut_error(true, drawn, cuts, ball_r), "error": cut_error(true, fitted, cuts, ball_r)}
     out = {"drawn": d, "names": NAMES, "prior": PRIOR, "touch": TOUCH, "touches": TOUCHES, "windows": window, "pin_r": PIN_R, "block": BLOCK, "post_face": POST_FACE, "ball_r": ball_r,
            "spread": {"dimensions": 0.5, "home": 2.0, "cutter": 1.0, "pin_top": 1.0, "runout": 0.1, "brought": BROUGHT, "master_r": 0.01, "pin_r": 0.004, "block": 0.005},
