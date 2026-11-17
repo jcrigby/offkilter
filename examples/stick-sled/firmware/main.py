@@ -1,0 +1,250 @@
+"""The stick sled's controller: MicroPython on a Raspberry Pi Pico.
+
+It reads passes.csv, a row a cut, each row where the three motors
+stand: the lift pusher's millimetres down from its home switch, the
+swing pusher's millimetres out from its, and the spindle's degrees on
+from its mark. For a pass it waits until the sled is pulled back and
+the foot switch pressed, moves, and waits again while the sled is
+pushed and pulled by hand. Nothing moves while the stick is over the
+cutter, except for a journal, which is turned under it for as long as
+the foot switch is held.
+
+Copy main.py, config.py and passes.csv to the Pico. On a computer,
+`python3 main.py --sim passes.csv steps.json` runs the same code on
+pins that do nothing and writes where every row left the motors.
+"""
+try:
+    import machine
+    import utime
+    SIM = False
+except ImportError:                 # a computer: simulate
+    SIM = True
+
+import config as C
+
+
+class Pins:
+    """The Pico's pins, or nothing at all."""
+
+    def __init__(self):
+        self.out = {}
+        self.inp = {}
+
+    def output(self, n):
+        if not SIM:
+            self.out[n] = machine.Pin(n, machine.Pin.OUT)
+
+    def input(self, n):
+        if not SIM:
+            self.inp[n] = machine.Pin(n, machine.Pin.IN, machine.Pin.PULL_UP)
+
+    def set(self, n, v):
+        if not SIM:
+            self.out[n].value(1 if v else 0)
+
+    def closed(self, n):
+        return True if SIM else self.inp[n].value() == 0
+
+    def pause(self, us):
+        if not SIM:
+            utime.sleep_us(us)
+
+
+PINS = Pins()
+
+
+class Axis:
+    def __init__(self, name, pins, per_unit, flip, trim):
+        self.name, self.step, self.dir = name, pins[0], pins[1]
+        self.per_unit, self.flip, self.trim = per_unit, flip, trim
+        self.at = 0                 # steps from home
+        PINS.output(self.step)
+        PINS.output(self.dir)
+
+    def steps_for(self, units):
+        return int(round((units + self.trim) * self.per_unit))
+
+    def run(self, steps, guard=None, slow=None):
+        """Step by `steps`, ramping up and down. `guard` is asked every step; while it says no, wait."""
+        if steps == 0:
+            return
+        up = steps > 0
+        PINS.set(self.dir, up != self.flip)
+        n = abs(steps)
+        for i in range(n):
+            while guard is not None and not guard():
+                PINS.pause(20000)
+            edge = min(i, n - 1 - i)
+            if slow is not None:
+                us = slow
+            elif edge >= C.RAMP_STEPS:
+                us = C.STEP_FAST_US
+            else:
+                us = C.STEP_SLOW_US - (C.STEP_SLOW_US - C.STEP_FAST_US) * edge // C.RAMP_STEPS
+            PINS.set(self.step, 1)
+            PINS.pause(2)
+            PINS.set(self.step, 0)
+            PINS.pause(us)
+        self.at += steps
+
+    def to(self, units, guard=None, slow=None):
+        self.run(self.steps_for(units) - self.at, guard, slow)
+
+    def seek(self, pin):
+        """Run toward home until its switch closes; that is zero."""
+        PINS.set(self.dir, self.flip)       # home is the negative way
+        while not PINS.closed(pin):
+            PINS.set(self.step, 1)
+            PINS.pause(2)
+            PINS.set(self.step, 0)
+            PINS.pause(C.STEP_SLOW_US)
+        self.at = 0
+
+
+def say(text):
+    print(text)
+
+
+def wait(pin):
+    """Until a switch closes, and for the foot switch until it has been let go first."""
+    if SIM:
+        return
+    if pin == C.NEXT_PIN:
+        while PINS.closed(pin):
+            utime.sleep_ms(20)
+    while not PINS.closed(pin):
+        utime.sleep_ms(20)
+    utime.sleep_ms(30)
+
+
+def read_table(path):
+    """passes.csv: '#safe,<mm>' then rows of n,kind,tool,lift,swing,turn,label."""
+    safe, rows = 0.0, []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith("#"):
+                parts = line[1:].split(",")
+                if parts[0] == "safe":
+                    safe = float(parts[1])
+                continue
+            p = line.split(",")
+            if p[0] == "n":
+                continue
+            rows.append((int(p[0]), p[1], p[2], float(p[3]), float(p[4]), float(p[5]), p[6] if len(p) > 6 else ""))
+    return safe, rows
+
+
+class Sled:
+    def __init__(self, safe):
+        self.lift = Axis("lift", C.LIFT_PINS, C.LIFT_STEPS_PER_MM, C.LIFT_FLIP, C.LIFT_TRIM_MM)
+        self.swing = Axis("swing", C.SWING_PINS, C.SWING_STEPS_PER_MM, C.SWING_FLIP, C.SWING_TRIM_MM)
+        self.turn = Axis("turn", C.TURN_PINS, C.TURN_STEPS_PER_DEG, C.TURN_FLIP, C.TURN_TRIM_DEG)
+        self.safe = safe            # the lift at or above which the spindle clears the cutter wherever the frame swings
+        self.deepest_crossing = 0   # the lowest the lift ever was while the frame swung or the spindle turned between passes
+        self.turned = 0             # steps the spindle has turned forwards coming up to its angles
+        for n in (C.LIFT_HOME_PIN, C.SWING_HOME_PIN, C.TURN_HOME_PIN, C.SLED_BACK_PIN, C.NEXT_PIN):
+            PINS.input(n)
+        PINS.output(C.ENABLE_PIN)
+        PINS.output(C.LED_PIN)
+        PINS.set(C.ENABLE_PIN, 0)
+
+    def back(self):
+        return PINS.closed(C.SLED_BACK_PIN)
+
+    def held(self):
+        return PINS.closed(C.NEXT_PIN)
+
+    def home(self):
+        say("pull the sled back, then the foot switch: homing")
+        wait(C.SLED_BACK_PIN)
+        wait(C.NEXT_PIN)
+        self.lift.seek(C.LIFT_HOME_PIN)     # up first: the stick away from the cutter
+        self.swing.seek(C.SWING_HOME_PIN)
+        self.turn.seek(C.TURN_HOME_PIN)
+
+    def turn_on_to(self, degrees, guard, slow=None):
+        """The shorter way round, but always arriving forwards, so the belt is pulled from the same side:
+        a move back goes a little past and comes up to the angle."""
+        per_turn = int(round(360.0 * self.turn.per_unit))
+        ahead = (self.turn.steps_for(degrees) - self.turn.at) % per_turn
+        if ahead > per_turn // 2:
+            past = int(round(C.TURN_PAST_DEG * self.turn.per_unit))
+            self.turn.run(ahead - per_turn - past, guard, slow)
+            ahead = past
+        self.turned += abs(ahead)
+        self.turn.run(ahead, guard, slow)
+
+    def go(self, lift, swing, turn):
+        """To a pass, the sled back: up to the safe height if below it, across and round, then down."""
+        guard = self.back
+        safe_steps = self.lift.steps_for(self.safe)
+        if self.lift.at > safe_steps:
+            self.lift.run(safe_steps - self.lift.at, guard)
+        self.deepest_crossing = max(self.deepest_crossing, self.lift.at)
+        self.swing.to(swing, guard)
+        self.turn_on_to(turn, guard)
+        self.lift.to(lift, guard)
+
+    def journal(self, lift, swing):
+        """Down a bite onto the cutter and once round, only while the foot switch is held.
+        The swing follows the lift: the frame's hinge moves a little sideways as the plate comes down."""
+        guard = self.held
+        self.swing.to(swing, guard, C.PLUNGE_US)
+        self.lift.to(lift, guard, C.PLUNGE_US)
+        self.turn.run(int(round(360.0 * self.turn.per_unit)), guard, C.JOURNAL_US)
+
+    def run(self, rows, record=None):
+        self.home()
+        total = len(rows)
+        for i, (n, kind, tool, lift, swing, turn, label) in enumerate(rows):
+            if kind == "journal":
+                say("%d/%d %s: hold the foot switch" % (n, total, label))
+                if not SIM:
+                    while not self.held():
+                        utime.sleep_ms(20)
+                self.journal(lift, swing)
+                if i + 1 == total or rows[i + 1][1] != "journal":
+                    self.lift.to(min(self.safe, lift), self.held)        # clear, before the sled is pulled back
+                    say("let go and pull the sled back")
+            else:
+                say("%d/%d %s: sled back, then the foot switch" % (n, total, label))
+                wait(C.SLED_BACK_PIN)
+                wait(C.NEXT_PIN)
+                self.go(lift, swing, turn)
+                PINS.set(C.LED_PIN, 1)
+                if kind == "set":
+                    say("bring the %s bit up until it touches the master, then the foot switch" % tool)
+                    wait(C.NEXT_PIN)
+                elif kind == "place":
+                    say("push the sled to the journal's stop")
+                else:
+                    say("cut: push the sled through and pull it back")
+                PINS.set(C.LED_PIN, 0)
+            if record is not None:
+                record.append([n, self.lift.at, self.swing.at, self.turn.at % int(round(360.0 * self.turn.per_unit))])
+        say("done")
+
+
+def main(path="passes.csv", out=None):
+    safe, rows = read_table(path)
+    sled = Sled(safe)
+    record = [] if out else None
+    sled.run(rows, record)
+    if out:
+        import json
+        with open(out, "w") as f:
+            json.dump({"rows": record, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "safe_steps": sled.lift.steps_for(safe),
+                       "per": [C.LIFT_STEPS_PER_MM, C.SWING_STEPS_PER_MM, C.TURN_STEPS_PER_DEG]}, f)
+
+
+if SIM:
+    import sys
+    if len(sys.argv) >= 4 and sys.argv[1] == "--sim":
+        _say = say
+        say = lambda text: None
+        main(sys.argv[2], sys.argv[3])
+else:
+    main()

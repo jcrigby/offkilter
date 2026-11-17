@@ -1386,3 +1386,48 @@ other brings it home and locks over centre.
 - The clamp lies on its side: upright, its lever would swing through
   the pattern. On its side it fits under the pattern's swing by 2 mm,
   with the size drawn; the clamp bought has to be measured.
+
+## 2026-11 · The stick sled: the cutter stays put, three motors place the stick, a person pushes
+
+The owner started over: a sled on a router table, the stick held at
+both ends over a fixed cutter, the two ends lifting together. The
+first thought was pattern wheels, a notch a pass setting height and
+angle; then, since the wheels would have been computed here anyway,
+motors and a controller, with the sled still pushed by hand.
+
+- **Wheels lost to motors.** A wheel for 262 passes came out 270 mm
+  across with notches 2 mm apart and cliffs of 17 mm between
+  neighbours, and it has to hang off the table's edge, which wants the
+  cutter within centimetres of that edge. A table of rows has none of
+  that, and roughing bites are more rows, not a stepped rest.
+- **Nothing moves under the cut.** The motors only place the stick
+  between passes; the sled's back switch gates every move. That is
+  what keeps this short of a CNC machine: no powered feed, no motion
+  planning, a hundred lines of program.
+- **Two hinges, not slides.** Height is a plate hinged at one side
+  and propped by a pusher at the other, the stick between them. Left
+  and right is a frame hung from a second hinge above the stick,
+  because below it is the cutter. The hinges are the owner's 20 mm
+  shafts and blocks. Each swing also shifts and tilts the stick; the
+  planner works that out exactly, so the hardware need not be square
+  to anything, only measured.
+- **Pusher 2 is on the sled, not on the plate.** On the plate it had
+  to undo the plate's own tilt, 42 mm of travel for 37 of use, and it
+  hung a motor from the moving part. Level on the sled it bears on the
+  tail hanger's edge near the stick's own height.
+- **Every pass has its own angle.** Twelve stops were the star's
+  limit, not the tile's. Free, each pass meets its face as squarely as
+  the bit can get in, and the 5 % left for a file goes.
+- **Steadies from above.** Under the stick is the cutter. Caps over
+  the tops of the journals sit where no cut comes, and take the push a
+  cutter from below gives.
+- **A Pico, steppers and no encoders.** The G2 Nano the owner found
+  has a closed-loop motion chip but no documentation for it in its
+  repository. Screws of 2 mm lead give 0.00125 mm a microstep, more
+  than a cheap sensor resolves; the plate's weight and a spring keep
+  each screw loaded one way; a test stick finds the trims.
+- **Checked by other code than made it.** The hinges are written
+  twice, Python for the table and Rust for the test, and the Pico's
+  program is run on dead pins over the whole table. The first run of
+  that test found the safe height wrong: the frame is lowest hanging
+  straight down, in the middle of its swing, not at either end.
