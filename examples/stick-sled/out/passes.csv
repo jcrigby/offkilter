@@ -1,440 +1,440 @@
 #safe,37.25
-n,kind,tool,lift,swing,turn,label
-1,set,straight,42.8681,17.9743,270.0779,set the straight bit on the master
-2,rough,straight,16.7681,22.1885,0.579,rough 270 deg +3 bite 1 of 1
-3,rough,straight,16.84,24.614,1.903,rough 270 deg +6 bite 1 of 1
-4,rough,straight,19.4767,29.1912,4.6089,rough 270 deg +12 bite 1 of 1
-5,rough,straight,25.6694,31.0014,6.0943,rough 270 deg +15 bite 1 of 5
-6,rough,straight,30.2006,30.6319,6.2305,rough 270 deg +15 bite 2 of 5
-7,rough,straight,34.7517,30.3537,6.385,rough 270 deg +15 bite 3 of 5
-8,rough,straight,39.3258,30.1657,6.558,rough 270 deg +15 bite 4 of 5
-9,rough,straight,43.9258,30.0674,6.75,rough 270 deg +15 bite 5 of 5
-10,rough,straight,40.556,3.4825,7.0229,rough 255 deg -18 bite 1 of 3
-11,rough,straight,44.2998,3.4058,7.1821,rough 255 deg -18 bite 2 of 3
-12,rough,straight,48.0491,3.3935,7.3534,rough 255 deg -18 bite 3 of 3
-13,rough,straight,40.3978,32.5638,7.9341,rough 270 deg +18 bite 1 of 2
-14,rough,straight,44.6764,32.4773,8.1165,rough 270 deg +18 bite 2 of 2
-15,rough,straight,36.779,6.0318,8.2078,rough 255 deg -15 bite 1 of 3
-16,rough,straight,42.0709,5.8654,8.4188,rough 255 deg -15 bite 2 of 3
-17,rough,straight,47.3748,5.827,8.6539,rough 255 deg -15 bite 3 of 3
-18,rough,straight,30.2431,8.8102,9.3103,rough 255 deg -12 bite 1 of 1
-19,rough,straight,26.8628,11.4722,10.5346,rough 255 deg -9 bite 1 of 1
-20,rough,straight,26.4898,13.9055,11.849,rough 255 deg -6 bite 1 of 1
-21,rough,straight,26.2493,16.3349,13.1656,rough 255 deg -3 bite 1 of 1
-22,rough,straight,24.0809,18.9458,14.4284,rough 255 deg +0 bite 1 of 2
-23,rough,straight,27.8493,18.6219,14.5347,rough 255 deg +0 bite 2 of 2
-24,rough,straight,24.8284,21.3001,15.7708,rough 255 deg +3 bite 1 of 3
-25,rough,straight,30.2523,20.8739,15.9311,rough 255 deg +3 bite 2 of 3
-26,rough,straight,35.6946,20.5812,16.117,rough 255 deg +3 bite 3 of 3
-27,rough,straight,21.7549,24.0355,17.0137,rough 255 deg +6 bite 1 of 1
-28,rough,straight,39.5481,3.5142,21.9821,rough 240 deg -18 bite 1 of 1
-29,rough,straight,29.2575,33.1588,22.5325,rough 255 deg +18 bite 1 of 1
-30,rough,straight,29.6672,11.2518,25.6194,rough 240 deg -9 bite 1 of 4
-31,rough,straight,34.0545,10.9805,25.7656,rough 240 deg -9 bite 2 of 4
-32,rough,straight,38.4496,10.7973,25.9283,rough 240 deg -9 bite 3 of 4
-33,rough,straight,42.8547,10.7017,26.1077,rough 240 deg -9 bite 4 of 4
-34,rough,straight,33.1358,23.1304,32.3493,rough 240 deg +6 bite 1 of 1
-35,rough,straight,31.9383,25.6314,33.6328,rough 240 deg +9 bite 1 of 2
-36,rough,straight,37.532,25.3655,33.8326,rough 240 deg +9 bite 2 of 2
-37,rough,straight,28.3597,30.7707,36.173,rough 240 deg +15 bite 1 of 1
-38,rough,straight,31.613,3.9286,36.6906,rough 225 deg -18 bite 1 of 1
-39,rough,straight,39.5568,13.1858,42.2964,rough 225 deg -6 bite 1 of 1
-40,rough,straight,23.8255,18.9702,44.4217,rough 225 deg +0 bite 1 of 1
-41,rough,straight,27.9336,4.2212,51.5736,rough 210 deg -18 bite 1 of 1
-42,rough,straight,24.3086,6.9394,52.8046,rough 210 deg -15 bite 1 of 1
-43,rough,straight,33.9025,15.8182,58.4083,rough 210 deg -3 bite 1 of 2
-44,rough,straight,37.4659,15.6688,58.5382,rough 210 deg -3 bite 2 of 2
-45,rough,straight,30.2714,18.4485,59.6094,rough 210 deg +0 bite 1 of 2
-46,rough,straight,34.0978,18.2291,59.7376,rough 210 deg +0 bite 2 of 2
-47,rough,straight,31.2454,3.955,66.6784,rough 195 deg -18 bite 1 of 2
-48,rough,straight,36.3404,3.6464,66.8578,rough 195 deg -18 bite 2 of 2
-49,rough,straight,49.7687,30.0713,67.0197,rough 210 deg +15 bite 1 of 1
-50,rough,straight,25.3106,6.8392,67.8321,rough 195 deg -15 bite 1 of 3
-51,rough,straight,30.0908,6.4275,67.975,rough 195 deg -15 bite 2 of 3
-52,rough,straight,34.8736,6.1234,68.1376,rough 195 deg -15 bite 3 of 3
-53,rough,straight,36.48,20.5499,76.1459,rough 195 deg +3 bite 1 of 1
-54,rough,straight,28.762,4.1497,81.599,rough 180 deg -18 bite 1 of 1
-55,rough,straight,18.9492,12.2953,85.3314,rough 180 deg -9 bite 1 of 3
-56,rough,straight,22.9287,11.8439,85.4269,rough 180 deg -9 bite 2 of 3
-57,rough,straight,26.9085,11.4683,85.5359,rough 180 deg -9 bite 3 of 3
-58,rough,straight,15.2269,17.5635,87.9038,rough 180 deg -3 bite 1 of 1
-59,rough,straight,23.2543,7.05,97.7766,rough 165 deg -15 bite 1 of 1
-60,rough,straight,30.4996,4.0104,96.654,rough 165 deg -18 bite 1 of 7
-61,rough,straight,35.5944,3.684,96.8301,rough 165 deg -18 bite 2 of 7
-62,rough,straight,40.6943,3.4786,97.0286,rough 165 deg -18 bite 3 of 7
-63,rough,straight,45.8026,3.3931,97.2493,rough 165 deg -18 bite 4 of 7
-64,rough,straight,50.9215,3.4276,97.4925,rough 165 deg -18 bite 5 of 7
-65,rough,straight,56.0528,3.5827,97.7584,rough 165 deg -18 bite 6 of 7
-66,rough,straight,61.1975,3.8599,98.047,rough 165 deg -18 bite 7 of 7
-67,rough,straight,49.2084,32.4691,98.3267,rough 180 deg +18 bite 1 of 4
-68,rough,straight,54.8484,32.577,98.6127,rough 180 deg +18 bite 2 of 4
-69,rough,straight,60.5388,32.8168,98.9288,rough 180 deg +18 bite 3 of 4
-70,rough,straight,66.2816,33.1914,99.2759,rough 180 deg +18 bite 4 of 4
-71,rough,straight,19.6799,16.9968,102.9971,rough 165 deg -3 bite 1 of 2
-72,rough,straight,22.7872,16.6582,103.0722,rough 165 deg -3 bite 2 of 2
-73,rough,straight,26.8094,25.9985,108.4729,rough 165 deg +9 bite 1 of 4
-74,rough,straight,32.2321,25.614,108.6426,rough 165 deg +9 bite 2 of 4
-75,rough,straight,37.68,25.3604,108.8383,rough 165 deg +9 bite 3 of 4
-76,rough,straight,43.1581,25.2365,109.0603,rough 165 deg +9 bite 4 of 4
-77,rough,straight,54.4462,3.5211,112.6728,rough 150 deg -18 bite 1 of 1
-78,rough,straight,39.8307,5.9202,113.3266,rough 150 deg -15 bite 1 of 4
-79,rough,straight,44.0387,5.8362,113.5033,rough 150 deg -15 bite 2 of 4
-80,rough,straight,48.2549,5.833,113.6952,rough 150 deg -15 bite 3 of 4
-81,rough,straight,52.4806,5.9109,113.9025,rough 150 deg -15 bite 4 of 4
-82,rough,straight,21.0964,9.6616,114.0534,rough 150 deg -12 bite 1 of 1
-83,rough,straight,21.0513,19.2546,119.3518,rough 150 deg +0 bite 1 of 1
-84,rough,straight,22.023,21.5742,120.6977,rough 150 deg +3 bite 1 of 1
-85,rough,straight,51.0563,3.4301,127.4993,rough 135 deg -18 bite 1 of 1
-86,rough,straight,40.8405,8.3129,129.6971,rough 135 deg -12 bite 1 of 2
-87,rough,straight,45.3306,8.257,129.8895,rough 135 deg -12 bite 2 of 2
-88,rough,straight,15.0857,17.5831,132.9011,rough 135 deg -3 bite 1 of 1
-89,rough,straight,23.0943,23.8978,137.0475,rough 135 deg +6 bite 1 of 1
-90,rough,straight,23.901,26.2602,138.3923,rough 135 deg +9 bite 1 of 1
-91,rough,straight,47.7606,3.3922,142.3398,rough 120 deg -18 bite 1 of 4
-92,rough,straight,52.7492,3.469,142.5847,rough 120 deg -18 bite 2 of 4
-93,rough,straight,57.7499,3.6606,142.8511,rough 120 deg -18 bite 3 of 4
-94,rough,straight,62.7634,3.9687,143.1393,rough 120 deg -18 bite 4 of 4
-95,rough,straight,29.6198,13.6616,146.943,rough 120 deg -6 bite 1 of 3
-96,rough,straight,34.6626,13.3639,147.1119,rough 120 deg -6 bite 2 of 3
-97,rough,straight,39.7182,13.1818,147.3028,rough 120 deg -6 bite 3 of 3
-98,rough,straight,45.1407,3.3974,157.2195,rough 105 deg -18 bite 1 of 2
-99,rough,straight,49.601,3.4072,157.4277,rough 105 deg -18 bite 2 of 2
-100,rough,straight,40.417,5.9036,158.3503,rough 105 deg -15 bite 1 of 1
-101,rough,straight,37.7644,15.6589,163.5496,rough 105 deg -3 bite 1 of 1
-102,rough,straight,19.2365,26.7628,168.278,rough 105 deg +9 bite 1 of 1
-103,rough,straight,37.8843,3.5768,171.9165,rough 90 deg -18 bite 1 of 1
-104,rough,straight,47.9761,5.8308,173.6821,rough 90 deg -15 bite 1 of 1
-105,rough,straight,31.7921,20.7775,180.9811,rough 90 deg +3 bite 1 of 2
-106,rough,straight,35.5819,20.5859,181.1129,rough 90 deg +3 bite 2 of 2
-107,rough,straight,27.6826,4.2435,186.5661,rough 75 deg -18 bite 1 of 1
-108,rough,straight,34.8292,8.5315,189.466,rough 75 deg -12 bite 1 of 3
-109,rough,straight,38.6084,8.3748,189.6077,rough 75 deg -12 bite 2 of 3
-110,rough,straight,42.3939,8.2832,189.7617,rough 75 deg -12 bite 3 of 3
-111,rough,straight,28.6223,16.1458,193.2355,rough 75 deg -3 bite 1 of 1
-112,rough,straight,18.7422,5.2369,201.3324,rough 60 deg -18 bite 1 of 1
-113,rough,straight,14.7811,5.803,216.2509,rough 45 deg -18 bite 1 of 1
-114,rough,straight,10.9641,8.7424,217.5209,rough 45 deg -15 bite 1 of 1
-115,rough,straight,25.7561,4.4248,231.5099,rough 30 deg -18 bite 1 of 2
-116,rough,straight,28.7018,4.1548,231.5971,rough 30 deg -18 bite 2 of 2
-117,rough,straight,46.9435,30.0516,231.8857,rough 45 deg +15 bite 1 of 1
-118,rough,straight,17.7219,7.7189,232.6454,rough 30 deg -15 bite 1 of 3
-119,rough,straight,22.5676,7.1249,232.7589,rough 30 deg -15 bite 2 of 3
-120,rough,straight,27.4094,6.6451,232.8924,rough 30 deg -15 bite 3 of 3
-121,rough,straight,11.2092,11.0398,233.8564,rough 30 deg -12 bite 1 of 4
-122,rough,straight,15.3638,10.4014,233.9289,rough 30 deg -12 bite 2 of 4
-123,rough,straight,19.5115,9.85,234.0161,rough 30 deg -12 bite 3 of 4
-124,rough,straight,23.6557,9.3831,234.118,rough 30 deg -12 bite 4 of 4
-125,rough,straight,16.5034,22.223,240.5737,rough 30 deg +3 bite 1 of 4
-126,rough,straight,21.0209,21.6811,240.6733,rough 30 deg +3 bite 2 of 4
-127,rough,straight,25.5439,21.236,240.7905,rough 30 deg +3 bite 3 of 4
-128,rough,straight,30.0763,20.8856,240.9255,rough 30 deg +3 bite 4 of 4
-129,rough,straight,24.3972,6.9303,247.807,rough 15 deg -15 bite 1 of 2
-130,rough,straight,27.8631,6.6059,247.906,rough 15 deg -15 bite 2 of 2
-131,rough,straight,3.4235,21.9453,254.0616,rough 15 deg +0 bite 1 of 1
-132,rough,straight,65.7025,33.1476,264.2396,rough 15 deg +18 bite 1 of 1
-133,rough,straight,17.6687,19.6513,269.2755,rough 0 deg +0 bite 1 of 1
-134,rough,straight,30.8678,3.9827,276.666,rough 345 deg -18 bite 1 of 1
-135,rough,straight,15.495,19.9355,284.2316,rough 345 deg +0 bite 1 of 1
-136,rough,straight,16.4424,27.1137,288.2186,rough 345 deg +9 bite 1 of 1
-137,rough,straight,29.9279,16.0529,298.2761,rough 330 deg -3 bite 1 of 2
-138,rough,straight,34.0038,15.8131,298.4119,rough 330 deg -3 bite 2 of 2
-139,rough,straight,29.2047,6.4957,307.9471,rough 315 deg -15 bite 1 of 5
-140,rough,straight,33.6207,6.1927,308.0932,rough 315 deg -15 bite 2 of 5
-141,rough,straight,38.0412,5.9805,308.256,rough 315 deg -15 bite 3 of 5
-142,rough,straight,42.4684,5.8581,308.4356,rough 315 deg -15 bite 4 of 5
-143,rough,straight,46.9041,5.8253,308.6321,rough 315 deg -15 bite 5 of 5
-144,rough,straight,25.508,18.8154,359.4673,rough 270 deg +0 bite 1 of 3
-145,rough,straight,30.0503,18.4632,359.6024,rough 270 deg +0 bite 2 of 3
-146,rough,straight,34.6036,18.2051,359.7554,rough 270 deg +0 bite 3 of 3
-147,set,ball,42.8681,17.9743,270.0779,set the ball-nose on the master
-148,finish,ball,43.4116,27.9894,0.5822,finish bite 1 of 1
-149,finish,ball,53.0603,5.722,0.8202,finish bite 1 of 1
-150,finish,ball,37.1953,17.1498,0.8317,finish bite 1 of 2
-151,finish,ball,38.9024,17.0968,0.8973,finish bite 2 of 2
-152,finish,ball,42.482,29.4107,1.8154,finish bite 1 of 1
-153,finish,ball,43.3164,32.9532,2.8087,finish bite 1 of 1
-154,finish,ball,37.8675,7.4348,2.5476,finish bite 1 of 7
-155,finish,ball,40.5087,7.3528,2.6522,finish bite 2 of 7
-156,finish,ball,43.153,7.3026,2.7628,finish bite 3 of 7
-157,finish,ball,45.8009,7.2841,2.8795,finish bite 4 of 7
-158,finish,ball,48.4525,7.2975,3.0022,finish bite 5 of 7
-159,finish,ball,51.1083,7.3427,3.131,finish bite 6 of 7
-160,finish,ball,53.7683,7.4199,3.2659,finish bite 7 of 7
-161,finish,ball,39.0216,18.4083,7.6195,finish bite 1 of 1
-162,finish,ball,44.3312,29.4889,7.9517,finish bite 1 of 2
-163,finish,ball,45.8725,29.4796,8.0205,finish bite 2 of 2
-164,finish,ball,53.014,8.1742,8.1503,finish bite 1 of 1
-165,finish,ball,19.459,26.9895,8.9198,finish bite 1 of 1
-166,finish,ball,52.9857,8.4025,9.2733,finish bite 1 of 1
-167,finish,ball,47.8681,5.5722,10.0362,finish bite 1 of 1
-168,finish,ball,37.1043,20.7663,13.2997,finish bite 1 of 2
-169,finish,ball,38.7543,20.714,13.363,finish bite 2 of 2
-170,finish,ball,50.759,32.7314,17.0395,finish bite 1 of 1
-171,finish,ball,23.1337,29.0836,20.8576,finish bite 1 of 1
-172,finish,ball,40.0732,20.9191,22.0452,finish bite 1 of 1
-173,finish,ball,39.6378,22.7225,23.0066,finish bite 1 of 1
-174,finish,ball,25.7581,14.9902,23.3901,finish bite 1 of 1
-175,finish,ball,25.645,17.0646,24.0198,finish bite 1 of 1
-176,finish,ball,39.3722,5.9138,24.797,finish bite 1 of 1
-177,finish,ball,37.6544,3.266,27.2297,finish bite 1 of 1
-178,finish,ball,46.5414,9.9032,27.342,finish bite 1 of 1
-179,finish,ball,26.8713,28.4163,30.2878,finish bite 1 of 1
-180,finish,ball,35.3831,6.419,31.8342,finish bite 1 of 1
-181,finish,ball,27.5971,30.7368,32.0982,finish bite 1 of 1
-182,finish,ball,44.7726,10.9417,33.8297,finish bite 1 of 1
-183,finish,ball,24.905,17.0217,34.4396,finish bite 1 of 1
-184,finish,ball,24.8246,19.0996,35.0703,finish bite 1 of 1
-185,finish,ball,42.4266,23.1799,35.3993,finish bite 1 of 1
-186,finish,ball,31.7691,5.1029,38.3582,finish bite 1 of 1
-187,finish,ball,31.7034,7.0614,38.4437,finish bite 1 of 1
-188,finish,ball,42.8275,13.0999,39.4162,finish bite 1 of 1
-189,finish,ball,31.199,29.5106,39.6913,finish bite 1 of 1
-190,finish,ball,32.8615,32.083,43.2026,finish bite 1 of 1
-191,finish,ball,24.9225,19.0011,45.524,finish bite 1 of 1
-192,finish,ball,24.9371,21.2167,46.7338,finish bite 1 of 1
-193,finish,ball,41.5134,13.1897,47.9003,finish bite 1 of 1
-194,finish,ball,40.7846,14.9952,48.8491,finish bite 1 of 1
-195,finish,ball,26.7761,7.2698,49.1917,finish bite 1 of 1
-196,finish,ball,26.4708,9.3386,49.8211,finish bite 1 of 1
-197,finish,ball,38.7399,33.1253,54.1456,finish bite 1 of 1
-198,finish,ball,45.0123,3.6434,54.8482,finish bite 1 of 1
-199,finish,ball,44.1493,2.6533,56.7604,finish bite 1 of 1
-200,finish,ball,39.5018,16.8872,57.315,finish bite 1 of 1
-201,finish,ball,42.59,3.4334,59.6083,finish bite 1 of 1
-202,finish,ball,39.737,15.5805,61.1142,finish bite 1 of 1
-203,finish,ball,52.1819,28.0437,63.9904,finish bite 1 of 1
-204,finish,ball,54.0007,30.6388,67.9985,finish bite 1 of 1
-205,finish,ball,19.2233,12.4714,71.4543,finish bite 1 of 1
-206,finish,ball,55.9707,29.3503,71.8462,finish bite 1 of 1
-207,finish,ball,38.785,20.697,73.3554,finish bite 1 of 1
-208,finish,ball,33.4227,5.0579,73.449,finish bite 1 of 1
-209,finish,ball,35.1165,6.4754,73.8483,finish bite 1 of 1
-210,finish,ball,59.7065,31.7293,79.2914,finish bite 1 of 1
-211,finish,ball,60.1314,30.5602,79.6446,finish bite 1 of 1
-212,finish,ball,64.9888,31.3322,88.6919,finish bite 1 of 1
-213,finish,ball,65.3503,32.5343,89.8826,finish bite 1 of 1
-214,finish,ball,33.4717,27.5273,90.264,finish bite 1 of 1
-215,finish,ball,41.8537,24.3274,93.9982,finish bite 1 of 1
-216,finish,ball,15.7813,20.2575,95.4346,finish bite 1 of 1
-217,finish,ball,42.9265,23.3122,97.9961,finish bite 1 of 1
-218,finish,ball,22.5274,9.9189,98.3217,finish bite 1 of 1
-219,finish,ball,26.7513,13.1847,98.4716,finish bite 1 of 1
-220,finish,ball,36.6421,28.3891,99.4304,finish bite 1 of 1
-221,finish,ball,71.3085,33.0844,100.7891,finish bite 1 of 1
-222,finish,ball,72.1915,33.4346,103.0003,finish bite 1 of 1
-223,finish,ball,72.9539,33.7417,105.185,finish bite 1 of 1
-224,finish,ball,44.9111,26.0975,105.6157,finish bite 1 of 1
-225,finish,ball,73.5989,33.9992,107.3396,finish bite 1 of 1
-226,finish,ball,25.3183,16.2124,108.5276,finish bite 1 of 1
-227,finish,ball,82.0615,5.5168,112.0426,finish bite 1 of 1
-228,finish,ball,18.6056,13.3771,112.4019,finish bite 1 of 1
-229,finish,ball,53.2374,7.4098,115.2427,finish bite 1 of 1
-230,finish,ball,69.751,4.6567,114.6089,finish bite 1 of 5
-231,finish,ball,72.3262,4.947,114.7804,finish bite 2 of 5
-232,finish,ball,74.9042,5.2705,114.9578,finish bite 3 of 5
-233,finish,ball,77.4847,5.6277,115.1411,finish bite 4 of 5
-234,finish,ball,80.0675,6.0196,115.3305,finish bite 5 of 5
-235,finish,ball,48.4347,26.3552,115.4121,finish bite 1 of 1
-236,finish,ball,48.541,27.6166,116.6115,finish bite 1 of 1
-237,finish,ball,25.1199,18.9676,117.5208,finish bite 1 of 1
-238,finish,ball,17.3644,25.1905,117.7626,finish bite 1 of 1
-239,finish,ball,17.3432,16.6458,118.5955,finish bite 1 of 1
-240,finish,ball,76.7887,5.5695,120.1131,finish bite 1 of 2
-241,finish,ball,78.8592,5.8735,120.2632,finish bite 2 of 2
-242,finish,ball,25.2418,22.0297,121.6997,finish bite 1 of 1
-243,finish,ball,78.2802,5.8383,122.2485,finish bite 1 of 1
-244,finish,ball,50.318,8.2452,122.5923,finish bite 1 of 1
-245,finish,ball,75.5525,5.5491,124.6054,finish bite 1 of 2
-246,finish,ball,77.3558,5.8013,124.7339,finish bite 2 of 2
-247,finish,ball,25.8889,21.533,125.9782,finish bite 1 of 1
-248,finish,ball,19.408,27.0073,127.425,finish bite 1 of 1
-249,finish,ball,53.0055,28.9723,128.0353,finish bite 1 of 1
-250,finish,ball,47.7849,10.1894,128.0506,finish bite 1 of 1
-251,finish,ball,75.8148,5.6939,128.1819,finish bite 1 of 1
-252,finish,ball,53.6537,29.5081,130.3563,finish bite 1 of 1
-253,finish,ball,72.2384,5.4006,132.5218,finish bite 1 of 2
-254,finish,ball,73.6747,5.5765,132.6197,finish bite 2 of 2
-255,finish,ball,54.2152,30.0116,132.6563,finish bite 1 of 1
-256,finish,ball,27.1599,25.0212,133.9685,finish bite 1 of 1
-257,finish,ball,27.5663,23.9945,134.4406,finish bite 1 of 1
-258,finish,ball,54.6942,30.4757,134.9318,finish bite 1 of 1
-259,finish,ball,16.1572,18.5523,135.035,finish bite 1 of 1
-260,finish,ball,43.6994,8.4228,135.903,finish bite 1 of 1
-261,finish,ball,45.4799,9.9864,136.3405,finish bite 1 of 1
-262,finish,ball,44.6409,11.7841,137.2834,finish bite 1 of 1
-263,finish,ball,69.0241,5.3273,137.4607,finish bite 1 of 2
-264,finish,ball,71.2278,5.5672,137.6057,finish bite 2 of 2
-265,finish,ball,65.7909,5.4076,143.4648,finish bite 1 of 2
-266,finish,ball,68.2567,5.64,143.6204,finish bite 2 of 2
-267,finish,ball,30.32,26.3062,144.3906,finish bite 1 of 1
-268,finish,ball,42.2806,13.4946,145.605,finish bite 1 of 1
-269,finish,ball,40.0893,8.7523,145.8976,finish bite 1 of 1
-270,finish,ball,42.0054,12.1191,149.3402,finish bite 1 of 1
-271,finish,ball,59.8408,5.4836,151.3906,finish bite 1 of 3
-272,finish,ball,62.0869,5.6324,151.5208,finish bite 2 of 3
-273,finish,ball,64.3357,5.8048,151.6553,finish bite 3 of 3
-274,finish,ball,17.4197,21.5189,151.7731,finish bite 1 of 1
-275,finish,ball,39.1383,15.3199,153.4399,finish bite 1 of 2
-276,finish,ball,40.5418,15.2871,153.496,finish bite 2 of 2
-277,finish,ball,35.1182,30.0841,157.7613,finish bite 1 of 1
-278,finish,ball,18.7474,22.6461,159.5044,finish bite 1 of 1
-279,finish,ball,35.8763,10.4037,159.5618,finish bite 1 of 1
-280,finish,ball,18.498,26.0309,159.818,finish bite 1 of 1
-281,finish,ball,56.0801,6.0509,160.096,finish bite 1 of 3
-282,finish,ball,58.226,6.1568,160.2135,finish bite 2 of 3
-283,finish,ball,60.3747,6.2839,160.3349,finish bite 3 of 3
-284,finish,ball,37.3605,17.2287,161.3841,finish bite 1 of 2
-285,finish,ball,39.3669,17.1693,161.4618,finish bite 2 of 2
-286,finish,ball,55.6829,6.5702,165.3654,finish bite 1 of 2
-287,finish,ball,58.0976,6.6875,165.497,finish bite 2 of 2
-288,finish,ball,40.7546,32.1349,169.2187,finish bite 1 of 1
-289,finish,ball,40.0571,2.7374,171.5818,finish bite 1 of 1
-290,finish,ball,41.6545,33.2796,172.3984,finish bite 1 of 1
-291,finish,ball,43.7951,33.2522,174.999,finish bite 1 of 1
-292,finish,ball,51.9037,7.2708,175.1209,finish bite 1 of 2
-293,finish,ball,53.8091,7.3296,175.2182,finish bite 2 of 2
-294,finish,ball,36.7902,2.8468,175.442,finish bite 1 of 1
-295,finish,ball,23.284,25.6039,178.4878,finish bite 1 of 1
-296,finish,ball,46.8484,32.5832,179.2818,finish bite 1 of 1
-297,finish,ball,33.7296,3.0247,179.336,finish bite 1 of 1
-298,finish,ball,23.785,29.0143,179.3726,finish bite 1 of 1
-299,finish,ball,38.0548,20.9967,181.9788,finish bite 1 of 2
-300,finish,ball,39.5207,20.9558,182.0361,finish bite 2 of 2
-301,finish,ball,47.6657,8.4075,186.0745,finish bite 1 of 2
-302,finish,ball,49.4317,8.4292,186.1582,finish bite 2 of 2
-303,finish,ball,27.8568,4.6457,188.3064,finish bite 1 of 1
-304,finish,ball,29.7283,15.2308,194.3119,finish bite 1 of 1
-305,finish,ball,44.0117,9.8668,196.7073,finish bite 1 of 2
-306,finish,ball,45.7739,9.8613,196.7854,finish bite 2 of 2
-307,finish,ball,22.6366,6.4977,196.9114,finish bite 1 of 1
-308,finish,ball,31.9152,28.7715,201.3384,finish bite 1 of 1
-309,finish,ball,31.9329,30.7728,201.4272,finish bite 1 of 1
-310,finish,ball,29.3284,16.2253,202.8289,finish bite 1 of 1
-311,finish,ball,43.3248,23.4375,203.5837,finish bite 1 of 1
-312,finish,ball,18.3462,8.2659,204.5153,finish bite 1 of 1
-313,finish,ball,29.0434,19.4483,206.5705,finish bite 1 of 1
-314,finish,ball,16.5994,6.4849,207.3313,finish bite 1 of 1
-315,finish,ball,40.8929,11.6717,208.039,finish bite 1 of 2
-316,finish,ball,42.6133,11.6438,208.1106,finish bite 2 of 2
-317,finish,ball,29.3301,16.9354,210.2176,finish bite 1 of 1
-318,finish,ball,14.3994,10.239,212.2398,finish bite 1 of 1
-319,finish,ball,37.2073,29.8558,212.265,finish bite 1 of 1
-320,finish,ball,39.0116,13.1105,213.7257,finish bite 1 of 2
-321,finish,ball,41.2811,13.0589,213.8171,finish bite 2 of 2
-322,finish,ball,40.9811,13.1079,215.8285,finish bite 1 of 1
-323,finish,ball,46.5004,26.3994,216.3536,finish bite 1 of 1
-324,finish,ball,29.2913,21.0761,217.9752,finish bite 1 of 1
-325,finish,ball,40.0846,13.9398,219.2364,finish bite 1 of 1
-326,finish,ball,11.128,10.3873,219.4773,finish bite 1 of 1
-327,finish,ball,11.0701,12.1656,219.4776,finish bite 1 of 1
-328,finish,ball,39.2827,14.0904,219.776,finish bite 1 of 1
-329,finish,ball,37.4471,14.4023,220.845,finish bite 1 of 1
-330,finish,ball,35.4298,15.1739,223.6493,finish bite 1 of 1
-331,finish,ball,43.3378,32.7801,223.7144,finish bite 1 of 1
-332,finish,ball,29.9727,18.1127,224.4056,finish bite 1 of 1
-333,finish,ball,32.114,5.7474,225.7419,finish bite 1 of 1
-334,finish,ball,50.0973,26.5584,226.0908,finish bite 1 of 1
-335,finish,ball,50.2374,27.8369,227.3021,finish bite 1 of 1
-336,finish,ball,33.5117,16.4461,228.2272,finish bite 1 of 1
-337,finish,ball,7.1287,16.2123,231.8137,finish bite 1 of 1
-338,finish,ball,44.6437,3.3791,233.1848,finish bite 1 of 5
-339,finish,ball,47.1807,3.3677,233.3001,finish bite 2 of 5
-340,finish,ball,49.7204,3.3857,233.4209,finish bite 3 of 5
-341,finish,ball,52.2631,3.4334,233.5474,finish bite 4 of 5
-342,finish,ball,54.809,3.5108,233.6793,finish bite 5 of 5
-343,finish,ball,32.0608,18.2213,234.6043,finish bite 1 of 1
-344,finish,ball,30.6137,19.7578,235.8471,finish bite 1 of 1
-345,finish,ball,54.3063,27.797,236.9279,finish bite 1 of 1
-346,finish,ball,54.2817,29.0379,237.6166,finish bite 1 of 1
-347,finish,ball,53.4185,4.4822,239.1593,finish bite 1 of 1
-348,finish,ball,52.825,4.9043,241.3677,finish bite 1 of 1
-349,finish,ball,31.5244,20.3314,242.2204,finish bite 1 of 1
-350,finish,ball,25.0488,10.3432,242.2669,finish bite 1 of 1
-351,finish,ball,5.1057,18.0136,243.0857,finish bite 1 of 1
-352,finish,ball,54.7435,31.3381,243.4153,finish bite 1 of 1
-353,finish,ball,51.9317,5.4602,244.1376,finish bite 1 of 1
-354,finish,ball,50.5267,6.2054,247.9902,finish bite 1 of 1
-355,finish,ball,58.9521,30.074,248.3397,finish bite 1 of 1
-356,finish,ball,32.9559,24.2533,251.4491,finish bite 1 of 1
-357,finish,ball,48.7148,7.1826,252.9504,finish bite 1 of 1
-358,finish,ball,60.664,31.282,253.5651,finish bite 1 of 1
-359,finish,ball,4.5179,21.6163,255.0083,finish bite 1 of 1
-360,finish,ball,61.8005,33.5282,255.3663,finish bite 1 of 1
-361,finish,ball,19.3211,13.6687,257.1281,finish bite 1 of 1
-362,finish,ball,21.1093,14.9233,257.4778,finish bite 1 of 1
-363,finish,ball,63.358,30.8607,257.8914,finish bite 1 of 1
-364,finish,ball,46.8348,8.3592,258.5126,finish bite 1 of 1
-365,finish,ball,37.1844,6.1689,264.3084,finish bite 1 of 1
-366,finish,ball,43.109,9.8056,265.1304,finish bite 1 of 2
-367,finish,ball,44.8213,9.7931,265.2049,finish bite 2 of 2
-368,finish,ball,67.3799,33.1718,265.2846,finish bite 1 of 1
-369,finish,ball,5.7545,27.1238,268.1437,finish bite 1 of 1
-370,finish,ball,17.324,15.9126,268.1892,finish bite 1 of 1
-371,finish,ball,34.6988,4.9627,269.4821,finish bite 1 of 1
-372,finish,ball,19.8742,19.2356,271.7416,finish bite 1 of 1
-373,finish,ball,40.4784,11.6682,274.0155,finish bite 1 of 2
-374,finish,ball,42.6229,11.6315,274.1044,finish bite 2 of 2
-375,finish,ball,17.4512,23.0804,276.1258,finish bite 1 of 2
-376,finish,ball,19.3275,22.8519,276.1666,finish bite 2 of 2
-377,finish,ball,7.7197,27.1442,276.3692,finish bite 1 of 1
-378,finish,ball,30.5439,8.5015,278.1607,finish bite 1 of 1
-379,finish,ball,16.4928,19.5299,283.1022,finish bite 1 of 1
-380,finish,ball,20.7412,22.656,283.1803,finish bite 1 of 1
-381,finish,ball,38.6187,13.7193,283.5371,finish bite 1 of 2
-382,finish,ball,41.0343,13.6615,283.6337,finish bite 2 of 2
-383,finish,ball,38.0599,14.9229,289.164,finish bite 1 of 2
-384,finish,ball,40.3947,14.8617,289.2561,finish bite 2 of 2
-385,finish,ball,25.1792,11.2808,291.7977,finish bite 1 of 1
-386,finish,ball,22.9739,25.6266,293.4753,finish bite 1 of 1
-387,finish,ball,21.109,28.5926,294.9257,finish bite 1 of 2
-388,finish,ball,23.0888,28.382,294.9751,finish bite 2 of 2
-389,finish,ball,17.7086,22.6781,297.4301,finish bite 1 of 1
-390,finish,ball,37.6882,16.8263,299.6829,finish bite 1 of 2
-391,finish,ball,39.5923,16.7721,299.757,finish bite 2 of 2
-392,finish,ball,26.1255,28.1696,302.598,finish bite 1 of 1
-393,finish,ball,18.4661,34.4606,302.8475,finish bite 1 of 1
-394,finish,ball,21.9741,10.4216,303.0547,finish bite 1 of 1
-395,finish,ball,27.817,31.1223,306.8232,finish bite 1 of 1
-396,finish,ball,20.2065,24.8673,309.3356,finish bite 1 of 1
-397,finish,ball,37.8283,18.9019,311.3235,finish bite 1 of 2
-398,finish,ball,39.6184,18.8519,311.3933,finish bite 2 of 2
-399,finish,ball,27.0969,34.1267,313.3931,finish bite 1 of 1
-400,finish,ball,28.3984,34.0081,313.9284,finish bite 1 of 1
-401,finish,ball,19.1124,16.0774,313.9412,finish bite 1 of 1
-402,finish,ball,29.5725,33.8319,314.4203,finish bite 1 of 1
-403,finish,ball,31.3131,33.8007,316.0291,finish bite 1 of 1
-404,finish,ball,32.5297,33.6307,317.0219,finish bite 1 of 1
-405,finish,ball,44.2546,7.0785,318.6943,finish bite 1 of 1
-406,finish,ball,34.267,33.605,319.1256,finish bite 1 of 1
-407,finish,ball,34.8254,32.5361,319.5795,finish bite 1 of 1
-408,finish,ball,23.4582,26.469,319.9702,finish bite 1 of 1
-409,finish,ball,17.5078,14.5724,321.9646,finish bite 1 of 1
-410,finish,ball,38.8006,20.8441,322.4365,finish bite 1 of 2
-411,finish,ball,40.564,20.8018,322.5067,finish bite 2 of 2
-412,finish,ball,17.5818,17.9078,322.8117,finish bite 1 of 1
-413,finish,ball,41.8092,7.1591,325.6153,finish bite 1 of 1
-414,finish,ball,41.0135,10.9331,328.1413,finish bite 1 of 1
-415,finish,ball,16.6299,19.3867,330.5363,finish bite 1 of 1
-416,finish,ball,39.3822,7.3742,332.6016,finish bite 1 of 1
-417,finish,ball,38.9987,10.9361,333.0349,finish bite 1 of 1
-418,finish,ball,40.5955,22.7457,334.0696,finish bite 1 of 2
-419,finish,ball,42.4804,22.7146,334.1476,finish bite 2 of 2
-420,finish,ball,40.1536,12.7097,335.5678,finish bite 1 of 1
-421,finish,ball,30.1435,27.9822,336.2886,finish bite 1 of 1
-422,finish,ball,37.2069,7.6318,339.1169,finish bite 1 of 1
-423,finish,ball,39.6642,24.119,339.7704,finish bite 1 of 3
-424,finish,ball,41.6883,24.0768,339.8528,finish bite 2 of 3
-425,finish,ball,43.7167,24.0524,339.9389,finish bite 3 of 3
-426,finish,ball,40.4321,13.8958,340.7306,finish bite 1 of 1
-427,finish,ball,40.6529,14.2071,341.912,finish bite 1 of 1
-428,finish,ball,44.3152,24.0513,341.9664,finish bite 1 of 1
-429,finish,ball,35.7935,11.8671,342.8602,finish bite 1 of 1
-430,finish,ball,44.9341,24.7745,345.3912,finish bite 1 of 1
-431,finish,ball,15.906,22.082,345.442,finish bite 1 of 1
-432,finish,ball,44.3669,24.8903,345.9284,finish bite 1 of 1
-433,finish,ball,42.9923,25.121,346.989,finish bite 1 of 1
-434,finish,ball,60.4774,3.627,347.4046,finish bite 1 of 1
-435,finish,ball,42.1889,25.7185,349.7762,finish bite 1 of 1
-436,finish,ball,37.0588,28.5272,350.5306,finish bite 1 of 1
-437,finish,ball,42.2235,26.6868,354.3082,finish bite 1 of 1
-438,finish,ball,55.9329,6.3988,356.2801,finish bite 1 of 1
+n,kind,tool,lift,swing,turn,via,label
+1,set,straight,42.8681,17.9743,270.0779,s,set the straight bit on the master
+2,rough,straight,16.7681,22.1885,0.579,s,rough 270 deg +3 bite 1 of 1
+3,rough,straight,16.84,24.614,1.903,d,rough 270 deg +6 bite 1 of 1
+4,rough,straight,19.4767,29.1912,4.6089,d,rough 270 deg +12 bite 1 of 1
+5,rough,straight,25.6694,31.0014,6.0943,d,rough 270 deg +15 bite 1 of 5
+6,rough,straight,30.2006,30.6319,6.2305,d,rough 270 deg +15 bite 2 of 5
+7,rough,straight,34.7517,30.3537,6.385,d,rough 270 deg +15 bite 3 of 5
+8,rough,straight,39.3258,30.1657,6.558,d,rough 270 deg +15 bite 4 of 5
+9,rough,straight,43.9258,30.0674,6.75,d,rough 270 deg +15 bite 5 of 5
+10,rough,straight,40.556,3.4825,7.0229,s,rough 255 deg -18 bite 1 of 3
+11,rough,straight,44.2998,3.4058,7.1821,d,rough 255 deg -18 bite 2 of 3
+12,rough,straight,48.0491,3.3935,7.3534,d,rough 255 deg -18 bite 3 of 3
+13,rough,straight,40.3978,32.5638,7.9341,s,rough 270 deg +18 bite 1 of 2
+14,rough,straight,44.6764,32.4773,8.1165,d,rough 270 deg +18 bite 2 of 2
+15,rough,straight,36.779,6.0318,8.2078,s,rough 255 deg -15 bite 1 of 3
+16,rough,straight,42.0709,5.8654,8.4188,d,rough 255 deg -15 bite 2 of 3
+17,rough,straight,47.3748,5.827,8.6539,d,rough 255 deg -15 bite 3 of 3
+18,rough,straight,30.2431,8.8102,9.3103,d,rough 255 deg -12 bite 1 of 1
+19,rough,straight,26.8628,11.4722,10.5346,d,rough 255 deg -9 bite 1 of 1
+20,rough,straight,26.4898,13.9055,11.849,d,rough 255 deg -6 bite 1 of 1
+21,rough,straight,26.2493,16.3349,13.1656,d,rough 255 deg -3 bite 1 of 1
+22,rough,straight,24.0809,18.9458,14.4284,d,rough 255 deg +0 bite 1 of 2
+23,rough,straight,27.8493,18.6219,14.5347,d,rough 255 deg +0 bite 2 of 2
+24,rough,straight,24.8284,21.3001,15.7708,d,rough 255 deg +3 bite 1 of 3
+25,rough,straight,30.2523,20.8739,15.9311,d,rough 255 deg +3 bite 2 of 3
+26,rough,straight,35.6946,20.5812,16.117,d,rough 255 deg +3 bite 3 of 3
+27,rough,straight,21.7549,24.0355,17.0137,d,rough 255 deg +6 bite 1 of 1
+28,rough,straight,39.5481,3.5142,21.9821,d,rough 240 deg -18 bite 1 of 1
+29,rough,straight,29.2575,33.1588,22.5325,d,rough 255 deg +18 bite 1 of 1
+30,rough,straight,29.6672,11.2518,25.6194,d,rough 240 deg -9 bite 1 of 4
+31,rough,straight,34.0545,10.9805,25.7656,d,rough 240 deg -9 bite 2 of 4
+32,rough,straight,38.4496,10.7973,25.9283,d,rough 240 deg -9 bite 3 of 4
+33,rough,straight,42.8547,10.7017,26.1077,d,rough 240 deg -9 bite 4 of 4
+34,rough,straight,33.1358,23.1304,32.3493,s,rough 240 deg +6 bite 1 of 1
+35,rough,straight,31.9383,25.6314,33.6328,d,rough 240 deg +9 bite 1 of 2
+36,rough,straight,37.532,25.3655,33.8326,d,rough 240 deg +9 bite 2 of 2
+37,rough,straight,28.3597,30.7707,36.173,d,rough 240 deg +15 bite 1 of 1
+38,rough,straight,31.613,3.9286,36.6906,d,rough 225 deg -18 bite 1 of 1
+39,rough,straight,39.5568,13.1858,42.2964,d,rough 225 deg -6 bite 1 of 1
+40,rough,straight,23.8255,18.9702,44.4217,d,rough 225 deg +0 bite 1 of 1
+41,rough,straight,27.9336,4.2212,51.5736,d,rough 210 deg -18 bite 1 of 1
+42,rough,straight,24.3086,6.9394,52.8046,d,rough 210 deg -15 bite 1 of 1
+43,rough,straight,33.9025,15.8182,58.4083,d,rough 210 deg -3 bite 1 of 2
+44,rough,straight,37.4659,15.6688,58.5382,d,rough 210 deg -3 bite 2 of 2
+45,rough,straight,30.2714,18.4485,59.6094,d,rough 210 deg +0 bite 1 of 2
+46,rough,straight,34.0978,18.2291,59.7376,d,rough 210 deg +0 bite 2 of 2
+47,rough,straight,31.2454,3.955,66.6784,d,rough 195 deg -18 bite 1 of 2
+48,rough,straight,36.3404,3.6464,66.8578,d,rough 195 deg -18 bite 2 of 2
+49,rough,straight,49.7687,30.0713,67.0197,d,rough 210 deg +15 bite 1 of 1
+50,rough,straight,25.3106,6.8392,67.8321,s,rough 195 deg -15 bite 1 of 3
+51,rough,straight,30.0908,6.4275,67.975,d,rough 195 deg -15 bite 2 of 3
+52,rough,straight,34.8736,6.1234,68.1376,d,rough 195 deg -15 bite 3 of 3
+53,rough,straight,36.48,20.5499,76.1459,d,rough 195 deg +3 bite 1 of 1
+54,rough,straight,28.762,4.1497,81.599,d,rough 180 deg -18 bite 1 of 1
+55,rough,straight,18.9492,12.2953,85.3314,d,rough 180 deg -9 bite 1 of 3
+56,rough,straight,22.9287,11.8439,85.4269,d,rough 180 deg -9 bite 2 of 3
+57,rough,straight,26.9085,11.4683,85.5359,d,rough 180 deg -9 bite 3 of 3
+58,rough,straight,15.2269,17.5635,87.9038,d,rough 180 deg -3 bite 1 of 1
+59,rough,straight,23.2543,7.05,97.7766,d,rough 165 deg -15 bite 1 of 1
+60,rough,straight,30.4996,4.0104,96.654,d,rough 165 deg -18 bite 1 of 7
+61,rough,straight,35.5944,3.684,96.8301,d,rough 165 deg -18 bite 2 of 7
+62,rough,straight,40.6943,3.4786,97.0286,d,rough 165 deg -18 bite 3 of 7
+63,rough,straight,45.8026,3.3931,97.2493,d,rough 165 deg -18 bite 4 of 7
+64,rough,straight,50.9215,3.4276,97.4925,d,rough 165 deg -18 bite 5 of 7
+65,rough,straight,56.0528,3.5827,97.7584,d,rough 165 deg -18 bite 6 of 7
+66,rough,straight,61.1975,3.8599,98.047,d,rough 165 deg -18 bite 7 of 7
+67,rough,straight,49.2084,32.4691,98.3267,s,rough 180 deg +18 bite 1 of 4
+68,rough,straight,54.8484,32.577,98.6127,d,rough 180 deg +18 bite 2 of 4
+69,rough,straight,60.5388,32.8168,98.9288,d,rough 180 deg +18 bite 3 of 4
+70,rough,straight,66.2816,33.1914,99.2759,d,rough 180 deg +18 bite 4 of 4
+71,rough,straight,19.6799,16.9968,102.9971,s,rough 165 deg -3 bite 1 of 2
+72,rough,straight,22.7872,16.6582,103.0722,d,rough 165 deg -3 bite 2 of 2
+73,rough,straight,26.8094,25.9985,108.4729,d,rough 165 deg +9 bite 1 of 4
+74,rough,straight,32.2321,25.614,108.6426,d,rough 165 deg +9 bite 2 of 4
+75,rough,straight,37.68,25.3604,108.8383,d,rough 165 deg +9 bite 3 of 4
+76,rough,straight,43.1581,25.2365,109.0603,d,rough 165 deg +9 bite 4 of 4
+77,rough,straight,54.4462,3.5211,112.6728,s,rough 150 deg -18 bite 1 of 1
+78,rough,straight,39.8307,5.9202,113.3266,d,rough 150 deg -15 bite 1 of 4
+79,rough,straight,44.0387,5.8362,113.5033,d,rough 150 deg -15 bite 2 of 4
+80,rough,straight,48.2549,5.833,113.6952,d,rough 150 deg -15 bite 3 of 4
+81,rough,straight,52.4806,5.9109,113.9025,d,rough 150 deg -15 bite 4 of 4
+82,rough,straight,21.0964,9.6616,114.0534,s,rough 150 deg -12 bite 1 of 1
+83,rough,straight,21.0513,19.2546,119.3518,d,rough 150 deg +0 bite 1 of 1
+84,rough,straight,22.023,21.5742,120.6977,d,rough 150 deg +3 bite 1 of 1
+85,rough,straight,51.0563,3.4301,127.4993,d,rough 135 deg -18 bite 1 of 1
+86,rough,straight,40.8405,8.3129,129.6971,d,rough 135 deg -12 bite 1 of 2
+87,rough,straight,45.3306,8.257,129.8895,d,rough 135 deg -12 bite 2 of 2
+88,rough,straight,15.0857,17.5831,132.9011,s,rough 135 deg -3 bite 1 of 1
+89,rough,straight,23.0943,23.8978,137.0475,d,rough 135 deg +6 bite 1 of 1
+90,rough,straight,23.901,26.2602,138.3923,d,rough 135 deg +9 bite 1 of 1
+91,rough,straight,47.7606,3.3922,142.3398,d,rough 120 deg -18 bite 1 of 4
+92,rough,straight,52.7492,3.469,142.5847,d,rough 120 deg -18 bite 2 of 4
+93,rough,straight,57.7499,3.6606,142.8511,d,rough 120 deg -18 bite 3 of 4
+94,rough,straight,62.7634,3.9687,143.1393,d,rough 120 deg -18 bite 4 of 4
+95,rough,straight,29.6198,13.6616,146.943,s,rough 120 deg -6 bite 1 of 3
+96,rough,straight,34.6626,13.3639,147.1119,d,rough 120 deg -6 bite 2 of 3
+97,rough,straight,39.7182,13.1818,147.3028,d,rough 120 deg -6 bite 3 of 3
+98,rough,straight,45.1407,3.3974,157.2195,d,rough 105 deg -18 bite 1 of 2
+99,rough,straight,49.601,3.4072,157.4277,d,rough 105 deg -18 bite 2 of 2
+100,rough,straight,40.417,5.9036,158.3503,d,rough 105 deg -15 bite 1 of 1
+101,rough,straight,37.7644,15.6589,163.5496,s,rough 105 deg -3 bite 1 of 1
+102,rough,straight,19.2365,26.7628,168.278,d,rough 105 deg +9 bite 1 of 1
+103,rough,straight,37.8843,3.5768,171.9165,d,rough 90 deg -18 bite 1 of 1
+104,rough,straight,47.9761,5.8308,173.6821,d,rough 90 deg -15 bite 1 of 1
+105,rough,straight,31.7921,20.7775,180.9811,s,rough 90 deg +3 bite 1 of 2
+106,rough,straight,35.5819,20.5859,181.1129,d,rough 90 deg +3 bite 2 of 2
+107,rough,straight,27.6826,4.2435,186.5661,d,rough 75 deg -18 bite 1 of 1
+108,rough,straight,34.8292,8.5315,189.466,d,rough 75 deg -12 bite 1 of 3
+109,rough,straight,38.6084,8.3748,189.6077,d,rough 75 deg -12 bite 2 of 3
+110,rough,straight,42.3939,8.2832,189.7617,d,rough 75 deg -12 bite 3 of 3
+111,rough,straight,28.6223,16.1458,193.2355,s,rough 75 deg -3 bite 1 of 1
+112,rough,straight,18.7422,5.2369,201.3324,d,rough 60 deg -18 bite 1 of 1
+113,rough,straight,14.7811,5.803,216.2509,d,rough 45 deg -18 bite 1 of 1
+114,rough,straight,10.9641,8.7424,217.5209,d,rough 45 deg -15 bite 1 of 1
+115,rough,straight,25.7561,4.4248,231.5099,d,rough 30 deg -18 bite 1 of 2
+116,rough,straight,28.7018,4.1548,231.5971,d,rough 30 deg -18 bite 2 of 2
+117,rough,straight,46.9435,30.0516,231.8857,d,rough 45 deg +15 bite 1 of 1
+118,rough,straight,17.7219,7.7189,232.6454,s,rough 30 deg -15 bite 1 of 3
+119,rough,straight,22.5676,7.1249,232.7589,d,rough 30 deg -15 bite 2 of 3
+120,rough,straight,27.4094,6.6451,232.8924,d,rough 30 deg -15 bite 3 of 3
+121,rough,straight,11.2092,11.0398,233.8564,d,rough 30 deg -12 bite 1 of 4
+122,rough,straight,15.3638,10.4014,233.9289,d,rough 30 deg -12 bite 2 of 4
+123,rough,straight,19.5115,9.85,234.0161,d,rough 30 deg -12 bite 3 of 4
+124,rough,straight,23.6557,9.3831,234.118,d,rough 30 deg -12 bite 4 of 4
+125,rough,straight,16.5034,22.223,240.5737,d,rough 30 deg +3 bite 1 of 4
+126,rough,straight,21.0209,21.6811,240.6733,d,rough 30 deg +3 bite 2 of 4
+127,rough,straight,25.5439,21.236,240.7905,d,rough 30 deg +3 bite 3 of 4
+128,rough,straight,30.0763,20.8856,240.9255,d,rough 30 deg +3 bite 4 of 4
+129,rough,straight,24.3972,6.9303,247.807,d,rough 15 deg -15 bite 1 of 2
+130,rough,straight,27.8631,6.6059,247.906,d,rough 15 deg -15 bite 2 of 2
+131,rough,straight,3.4235,21.9453,254.0616,d,rough 15 deg +0 bite 1 of 1
+132,rough,straight,65.7025,33.1476,264.2396,d,rough 15 deg +18 bite 1 of 1
+133,rough,straight,17.6687,19.6513,269.2755,s,rough 0 deg +0 bite 1 of 1
+134,rough,straight,30.8678,3.9827,276.666,d,rough 345 deg -18 bite 1 of 1
+135,rough,straight,15.495,19.9355,284.2316,d,rough 345 deg +0 bite 1 of 1
+136,rough,straight,16.4424,27.1137,288.2186,d,rough 345 deg +9 bite 1 of 1
+137,rough,straight,29.9279,16.0529,298.2761,d,rough 330 deg -3 bite 1 of 2
+138,rough,straight,34.0038,15.8131,298.4119,d,rough 330 deg -3 bite 2 of 2
+139,rough,straight,29.2047,6.4957,307.9471,d,rough 315 deg -15 bite 1 of 5
+140,rough,straight,33.6207,6.1927,308.0932,d,rough 315 deg -15 bite 2 of 5
+141,rough,straight,38.0412,5.9805,308.256,d,rough 315 deg -15 bite 3 of 5
+142,rough,straight,42.4684,5.8581,308.4356,d,rough 315 deg -15 bite 4 of 5
+143,rough,straight,46.9041,5.8253,308.6321,d,rough 315 deg -15 bite 5 of 5
+144,rough,straight,25.508,18.8154,359.4673,s,rough 270 deg +0 bite 1 of 3
+145,rough,straight,30.0503,18.4632,359.6024,d,rough 270 deg +0 bite 2 of 3
+146,rough,straight,34.6036,18.2051,359.7554,d,rough 270 deg +0 bite 3 of 3
+147,set,ball,42.8681,17.9743,270.0779,s,set the ball-nose on the master
+148,finish,ball,43.4116,27.9894,0.5822,s,finish bite 1 of 1
+149,finish,ball,53.0603,5.722,0.8202,s,finish bite 1 of 1
+150,finish,ball,37.1953,17.1498,0.8317,s,finish bite 1 of 2
+151,finish,ball,38.9024,17.0968,0.8973,d,finish bite 2 of 2
+152,finish,ball,42.482,29.4107,1.8154,d,finish bite 1 of 1
+153,finish,ball,43.3164,32.9532,2.8087,d,finish bite 1 of 1
+154,finish,ball,37.8675,7.4348,2.5476,s,finish bite 1 of 7
+155,finish,ball,40.5087,7.3528,2.6522,d,finish bite 2 of 7
+156,finish,ball,43.153,7.3026,2.7628,d,finish bite 3 of 7
+157,finish,ball,45.8009,7.2841,2.8795,d,finish bite 4 of 7
+158,finish,ball,48.4525,7.2975,3.0022,d,finish bite 5 of 7
+159,finish,ball,51.1083,7.3427,3.131,d,finish bite 6 of 7
+160,finish,ball,53.7683,7.4199,3.2659,d,finish bite 7 of 7
+161,finish,ball,39.0216,18.4083,7.6195,s,finish bite 1 of 1
+162,finish,ball,44.3312,29.4889,7.9517,d,finish bite 1 of 2
+163,finish,ball,45.8725,29.4796,8.0205,d,finish bite 2 of 2
+164,finish,ball,53.014,8.1742,8.1503,s,finish bite 1 of 1
+165,finish,ball,19.459,26.9895,8.9198,s,finish bite 1 of 1
+166,finish,ball,52.9857,8.4025,9.2733,d,finish bite 1 of 1
+167,finish,ball,47.8681,5.5722,10.0362,d,finish bite 1 of 1
+168,finish,ball,37.1043,20.7663,13.2997,s,finish bite 1 of 2
+169,finish,ball,38.7543,20.714,13.363,d,finish bite 2 of 2
+170,finish,ball,50.759,32.7314,17.0395,d,finish bite 1 of 1
+171,finish,ball,23.1337,29.0836,20.8576,d,finish bite 1 of 1
+172,finish,ball,40.0732,20.9191,22.0452,d,finish bite 1 of 1
+173,finish,ball,39.6378,22.7225,23.0066,d,finish bite 1 of 1
+174,finish,ball,25.7581,14.9902,23.3901,d,finish bite 1 of 1
+175,finish,ball,25.645,17.0646,24.0198,d,finish bite 1 of 1
+176,finish,ball,39.3722,5.9138,24.797,d,finish bite 1 of 1
+177,finish,ball,37.6544,3.266,27.2297,d,finish bite 1 of 1
+178,finish,ball,46.5414,9.9032,27.342,d,finish bite 1 of 1
+179,finish,ball,26.8713,28.4163,30.2878,s,finish bite 1 of 1
+180,finish,ball,35.3831,6.419,31.8342,d,finish bite 1 of 1
+181,finish,ball,27.5971,30.7368,32.0982,d,finish bite 1 of 1
+182,finish,ball,44.7726,10.9417,33.8297,d,finish bite 1 of 1
+183,finish,ball,24.905,17.0217,34.4396,s,finish bite 1 of 1
+184,finish,ball,24.8246,19.0996,35.0703,d,finish bite 1 of 1
+185,finish,ball,42.4266,23.1799,35.3993,d,finish bite 1 of 1
+186,finish,ball,31.7691,5.1029,38.3582,s,finish bite 1 of 1
+187,finish,ball,31.7034,7.0614,38.4437,d,finish bite 1 of 1
+188,finish,ball,42.8275,13.0999,39.4162,d,finish bite 1 of 1
+189,finish,ball,31.199,29.5106,39.6913,s,finish bite 1 of 1
+190,finish,ball,32.8615,32.083,43.2026,d,finish bite 1 of 1
+191,finish,ball,24.9225,19.0011,45.524,d,finish bite 1 of 1
+192,finish,ball,24.9371,21.2167,46.7338,d,finish bite 1 of 1
+193,finish,ball,41.5134,13.1897,47.9003,d,finish bite 1 of 1
+194,finish,ball,40.7846,14.9952,48.8491,s,finish bite 1 of 1
+195,finish,ball,26.7761,7.2698,49.1917,d,finish bite 1 of 1
+196,finish,ball,26.4708,9.3386,49.8211,d,finish bite 1 of 1
+197,finish,ball,38.7399,33.1253,54.1456,d,finish bite 1 of 1
+198,finish,ball,45.0123,3.6434,54.8482,d,finish bite 1 of 1
+199,finish,ball,44.1493,2.6533,56.7604,d,finish bite 1 of 1
+200,finish,ball,39.5018,16.8872,57.315,s,finish bite 1 of 1
+201,finish,ball,42.59,3.4334,59.6083,d,finish bite 1 of 1
+202,finish,ball,39.737,15.5805,61.1142,s,finish bite 1 of 1
+203,finish,ball,52.1819,28.0437,63.9904,d,finish bite 1 of 1
+204,finish,ball,54.0007,30.6388,67.9985,d,finish bite 1 of 1
+205,finish,ball,19.2233,12.4714,71.4543,s,finish bite 1 of 1
+206,finish,ball,55.9707,29.3503,71.8462,d,finish bite 1 of 1
+207,finish,ball,38.785,20.697,73.3554,s,finish bite 1 of 1
+208,finish,ball,33.4227,5.0579,73.449,d,finish bite 1 of 1
+209,finish,ball,35.1165,6.4754,73.8483,d,finish bite 1 of 1
+210,finish,ball,59.7065,31.7293,79.2914,d,finish bite 1 of 1
+211,finish,ball,60.1314,30.5602,79.6446,d,finish bite 1 of 1
+212,finish,ball,64.9888,31.3322,88.6919,d,finish bite 1 of 1
+213,finish,ball,65.3503,32.5343,89.8826,d,finish bite 1 of 1
+214,finish,ball,33.4717,27.5273,90.264,s,finish bite 1 of 1
+215,finish,ball,41.8537,24.3274,93.9982,d,finish bite 1 of 1
+216,finish,ball,15.7813,20.2575,95.4346,s,finish bite 1 of 1
+217,finish,ball,42.9265,23.3122,97.9961,d,finish bite 1 of 1
+218,finish,ball,22.5274,9.9189,98.3217,s,finish bite 1 of 1
+219,finish,ball,26.7513,13.1847,98.4716,d,finish bite 1 of 1
+220,finish,ball,36.6421,28.3891,99.4304,d,finish bite 1 of 1
+221,finish,ball,71.3085,33.0844,100.7891,d,finish bite 1 of 1
+222,finish,ball,72.1915,33.4346,103.0003,d,finish bite 1 of 1
+223,finish,ball,72.9539,33.7417,105.185,d,finish bite 1 of 1
+224,finish,ball,44.9111,26.0975,105.6157,s,finish bite 1 of 1
+225,finish,ball,73.5989,33.9992,107.3396,d,finish bite 1 of 1
+226,finish,ball,25.3183,16.2124,108.5276,s,finish bite 1 of 1
+227,finish,ball,82.0615,5.5168,112.0426,d,finish bite 1 of 1
+228,finish,ball,18.6056,13.3771,112.4019,s,finish bite 1 of 1
+229,finish,ball,53.2374,7.4098,115.2427,d,finish bite 1 of 1
+230,finish,ball,69.751,4.6567,114.6089,d,finish bite 1 of 5
+231,finish,ball,72.3262,4.947,114.7804,d,finish bite 2 of 5
+232,finish,ball,74.9042,5.2705,114.9578,d,finish bite 3 of 5
+233,finish,ball,77.4847,5.6277,115.1411,d,finish bite 4 of 5
+234,finish,ball,80.0675,6.0196,115.3305,d,finish bite 5 of 5
+235,finish,ball,48.4347,26.3552,115.4121,s,finish bite 1 of 1
+236,finish,ball,48.541,27.6166,116.6115,d,finish bite 1 of 1
+237,finish,ball,25.1199,18.9676,117.5208,s,finish bite 1 of 1
+238,finish,ball,17.3644,25.1905,117.7626,d,finish bite 1 of 1
+239,finish,ball,17.3432,16.6458,118.5955,d,finish bite 1 of 1
+240,finish,ball,76.7887,5.5695,120.1131,d,finish bite 1 of 2
+241,finish,ball,78.8592,5.8735,120.2632,d,finish bite 2 of 2
+242,finish,ball,25.2418,22.0297,121.6997,s,finish bite 1 of 1
+243,finish,ball,78.2802,5.8383,122.2485,d,finish bite 1 of 1
+244,finish,ball,50.318,8.2452,122.5923,d,finish bite 1 of 1
+245,finish,ball,75.5525,5.5491,124.6054,d,finish bite 1 of 2
+246,finish,ball,77.3558,5.8013,124.7339,d,finish bite 2 of 2
+247,finish,ball,25.8889,21.533,125.9782,s,finish bite 1 of 1
+248,finish,ball,19.408,27.0073,127.425,d,finish bite 1 of 1
+249,finish,ball,53.0055,28.9723,128.0353,d,finish bite 1 of 1
+250,finish,ball,47.7849,10.1894,128.0506,s,finish bite 1 of 1
+251,finish,ball,75.8148,5.6939,128.1819,d,finish bite 1 of 1
+252,finish,ball,53.6537,29.5081,130.3563,s,finish bite 1 of 1
+253,finish,ball,72.2384,5.4006,132.5218,s,finish bite 1 of 2
+254,finish,ball,73.6747,5.5765,132.6197,d,finish bite 2 of 2
+255,finish,ball,54.2152,30.0116,132.6563,s,finish bite 1 of 1
+256,finish,ball,27.1599,25.0212,133.9685,s,finish bite 1 of 1
+257,finish,ball,27.5663,23.9945,134.4406,d,finish bite 1 of 1
+258,finish,ball,54.6942,30.4757,134.9318,d,finish bite 1 of 1
+259,finish,ball,16.1572,18.5523,135.035,s,finish bite 1 of 1
+260,finish,ball,43.6994,8.4228,135.903,d,finish bite 1 of 1
+261,finish,ball,45.4799,9.9864,136.3405,d,finish bite 1 of 1
+262,finish,ball,44.6409,11.7841,137.2834,d,finish bite 1 of 1
+263,finish,ball,69.0241,5.3273,137.4607,d,finish bite 1 of 2
+264,finish,ball,71.2278,5.5672,137.6057,d,finish bite 2 of 2
+265,finish,ball,65.7909,5.4076,143.4648,d,finish bite 1 of 2
+266,finish,ball,68.2567,5.64,143.6204,d,finish bite 2 of 2
+267,finish,ball,30.32,26.3062,144.3906,s,finish bite 1 of 1
+268,finish,ball,42.2806,13.4946,145.605,d,finish bite 1 of 1
+269,finish,ball,40.0893,8.7523,145.8976,d,finish bite 1 of 1
+270,finish,ball,42.0054,12.1191,149.3402,d,finish bite 1 of 1
+271,finish,ball,59.8408,5.4836,151.3906,d,finish bite 1 of 3
+272,finish,ball,62.0869,5.6324,151.5208,d,finish bite 2 of 3
+273,finish,ball,64.3357,5.8048,151.6553,d,finish bite 3 of 3
+274,finish,ball,17.4197,21.5189,151.7731,s,finish bite 1 of 1
+275,finish,ball,39.1383,15.3199,153.4399,d,finish bite 1 of 2
+276,finish,ball,40.5418,15.2871,153.496,d,finish bite 2 of 2
+277,finish,ball,35.1182,30.0841,157.7613,s,finish bite 1 of 1
+278,finish,ball,18.7474,22.6461,159.5044,d,finish bite 1 of 1
+279,finish,ball,35.8763,10.4037,159.5618,d,finish bite 1 of 1
+280,finish,ball,18.498,26.0309,159.818,d,finish bite 1 of 1
+281,finish,ball,56.0801,6.0509,160.096,d,finish bite 1 of 3
+282,finish,ball,58.226,6.1568,160.2135,d,finish bite 2 of 3
+283,finish,ball,60.3747,6.2839,160.3349,d,finish bite 3 of 3
+284,finish,ball,37.3605,17.2287,161.3841,s,finish bite 1 of 2
+285,finish,ball,39.3669,17.1693,161.4618,d,finish bite 2 of 2
+286,finish,ball,55.6829,6.5702,165.3654,d,finish bite 1 of 2
+287,finish,ball,58.0976,6.6875,165.497,d,finish bite 2 of 2
+288,finish,ball,40.7546,32.1349,169.2187,s,finish bite 1 of 1
+289,finish,ball,40.0571,2.7374,171.5818,s,finish bite 1 of 1
+290,finish,ball,41.6545,33.2796,172.3984,d,finish bite 1 of 1
+291,finish,ball,43.7951,33.2522,174.999,d,finish bite 1 of 1
+292,finish,ball,51.9037,7.2708,175.1209,s,finish bite 1 of 2
+293,finish,ball,53.8091,7.3296,175.2182,d,finish bite 2 of 2
+294,finish,ball,36.7902,2.8468,175.442,d,finish bite 1 of 1
+295,finish,ball,23.284,25.6039,178.4878,d,finish bite 1 of 1
+296,finish,ball,46.8484,32.5832,179.2818,d,finish bite 1 of 1
+297,finish,ball,33.7296,3.0247,179.336,s,finish bite 1 of 1
+298,finish,ball,23.785,29.0143,179.3726,d,finish bite 1 of 1
+299,finish,ball,38.0548,20.9967,181.9788,d,finish bite 1 of 2
+300,finish,ball,39.5207,20.9558,182.0361,d,finish bite 2 of 2
+301,finish,ball,47.6657,8.4075,186.0745,d,finish bite 1 of 2
+302,finish,ball,49.4317,8.4292,186.1582,d,finish bite 2 of 2
+303,finish,ball,27.8568,4.6457,188.3064,d,finish bite 1 of 1
+304,finish,ball,29.7283,15.2308,194.3119,d,finish bite 1 of 1
+305,finish,ball,44.0117,9.8668,196.7073,d,finish bite 1 of 2
+306,finish,ball,45.7739,9.8613,196.7854,d,finish bite 2 of 2
+307,finish,ball,22.6366,6.4977,196.9114,d,finish bite 1 of 1
+308,finish,ball,31.9152,28.7715,201.3384,d,finish bite 1 of 1
+309,finish,ball,31.9329,30.7728,201.4272,d,finish bite 1 of 1
+310,finish,ball,29.3284,16.2253,202.8289,d,finish bite 1 of 1
+311,finish,ball,43.3248,23.4375,203.5837,d,finish bite 1 of 1
+312,finish,ball,18.3462,8.2659,204.5153,s,finish bite 1 of 1
+313,finish,ball,29.0434,19.4483,206.5705,d,finish bite 1 of 1
+314,finish,ball,16.5994,6.4849,207.3313,d,finish bite 1 of 1
+315,finish,ball,40.8929,11.6717,208.039,d,finish bite 1 of 2
+316,finish,ball,42.6133,11.6438,208.1106,d,finish bite 2 of 2
+317,finish,ball,29.3301,16.9354,210.2176,s,finish bite 1 of 1
+318,finish,ball,14.3994,10.239,212.2398,d,finish bite 1 of 1
+319,finish,ball,37.2073,29.8558,212.265,d,finish bite 1 of 1
+320,finish,ball,39.0116,13.1105,213.7257,d,finish bite 1 of 2
+321,finish,ball,41.2811,13.0589,213.8171,d,finish bite 2 of 2
+322,finish,ball,40.9811,13.1079,215.8285,d,finish bite 1 of 1
+323,finish,ball,46.5004,26.3994,216.3536,s,finish bite 1 of 1
+324,finish,ball,29.2913,21.0761,217.9752,s,finish bite 1 of 1
+325,finish,ball,40.0846,13.9398,219.2364,d,finish bite 1 of 1
+326,finish,ball,11.128,10.3873,219.4773,d,finish bite 1 of 1
+327,finish,ball,11.0701,12.1656,219.4776,d,finish bite 1 of 1
+328,finish,ball,39.2827,14.0904,219.776,d,finish bite 1 of 1
+329,finish,ball,37.4471,14.4023,220.845,d,finish bite 1 of 1
+330,finish,ball,35.4298,15.1739,223.6493,d,finish bite 1 of 1
+331,finish,ball,43.3378,32.7801,223.7144,d,finish bite 1 of 1
+332,finish,ball,29.9727,18.1127,224.4056,s,finish bite 1 of 1
+333,finish,ball,32.114,5.7474,225.7419,d,finish bite 1 of 1
+334,finish,ball,50.0973,26.5584,226.0908,d,finish bite 1 of 1
+335,finish,ball,50.2374,27.8369,227.3021,d,finish bite 1 of 1
+336,finish,ball,33.5117,16.4461,228.2272,s,finish bite 1 of 1
+337,finish,ball,7.1287,16.2123,231.8137,d,finish bite 1 of 1
+338,finish,ball,44.6437,3.3791,233.1848,d,finish bite 1 of 5
+339,finish,ball,47.1807,3.3677,233.3001,d,finish bite 2 of 5
+340,finish,ball,49.7204,3.3857,233.4209,d,finish bite 3 of 5
+341,finish,ball,52.2631,3.4334,233.5474,d,finish bite 4 of 5
+342,finish,ball,54.809,3.5108,233.6793,d,finish bite 5 of 5
+343,finish,ball,32.0608,18.2213,234.6043,s,finish bite 1 of 1
+344,finish,ball,30.6137,19.7578,235.8471,d,finish bite 1 of 1
+345,finish,ball,54.3063,27.797,236.9279,d,finish bite 1 of 1
+346,finish,ball,54.2817,29.0379,237.6166,d,finish bite 1 of 1
+347,finish,ball,53.4185,4.4822,239.1593,s,finish bite 1 of 1
+348,finish,ball,52.825,4.9043,241.3677,d,finish bite 1 of 1
+349,finish,ball,31.5244,20.3314,242.2204,s,finish bite 1 of 1
+350,finish,ball,25.0488,10.3432,242.2669,d,finish bite 1 of 1
+351,finish,ball,5.1057,18.0136,243.0857,d,finish bite 1 of 1
+352,finish,ball,54.7435,31.3381,243.4153,d,finish bite 1 of 1
+353,finish,ball,51.9317,5.4602,244.1376,s,finish bite 1 of 1
+354,finish,ball,50.5267,6.2054,247.9902,d,finish bite 1 of 1
+355,finish,ball,58.9521,30.074,248.3397,s,finish bite 1 of 1
+356,finish,ball,32.9559,24.2533,251.4491,s,finish bite 1 of 1
+357,finish,ball,48.7148,7.1826,252.9504,d,finish bite 1 of 1
+358,finish,ball,60.664,31.282,253.5651,s,finish bite 1 of 1
+359,finish,ball,4.5179,21.6163,255.0083,s,finish bite 1 of 1
+360,finish,ball,61.8005,33.5282,255.3663,d,finish bite 1 of 1
+361,finish,ball,19.3211,13.6687,257.1281,s,finish bite 1 of 1
+362,finish,ball,21.1093,14.9233,257.4778,d,finish bite 1 of 1
+363,finish,ball,63.358,30.8607,257.8914,d,finish bite 1 of 1
+364,finish,ball,46.8348,8.3592,258.5126,s,finish bite 1 of 1
+365,finish,ball,37.1844,6.1689,264.3084,d,finish bite 1 of 1
+366,finish,ball,43.109,9.8056,265.1304,d,finish bite 1 of 2
+367,finish,ball,44.8213,9.7931,265.2049,d,finish bite 2 of 2
+368,finish,ball,67.3799,33.1718,265.2846,s,finish bite 1 of 1
+369,finish,ball,5.7545,27.1238,268.1437,s,finish bite 1 of 1
+370,finish,ball,17.324,15.9126,268.1892,d,finish bite 1 of 1
+371,finish,ball,34.6988,4.9627,269.4821,d,finish bite 1 of 1
+372,finish,ball,19.8742,19.2356,271.7416,d,finish bite 1 of 1
+373,finish,ball,40.4784,11.6682,274.0155,d,finish bite 1 of 2
+374,finish,ball,42.6229,11.6315,274.1044,d,finish bite 2 of 2
+375,finish,ball,17.4512,23.0804,276.1258,s,finish bite 1 of 2
+376,finish,ball,19.3275,22.8519,276.1666,d,finish bite 2 of 2
+377,finish,ball,7.7197,27.1442,276.3692,d,finish bite 1 of 1
+378,finish,ball,30.5439,8.5015,278.1607,d,finish bite 1 of 1
+379,finish,ball,16.4928,19.5299,283.1022,d,finish bite 1 of 1
+380,finish,ball,20.7412,22.656,283.1803,d,finish bite 1 of 1
+381,finish,ball,38.6187,13.7193,283.5371,d,finish bite 1 of 2
+382,finish,ball,41.0343,13.6615,283.6337,d,finish bite 2 of 2
+383,finish,ball,38.0599,14.9229,289.164,d,finish bite 1 of 2
+384,finish,ball,40.3947,14.8617,289.2561,d,finish bite 2 of 2
+385,finish,ball,25.1792,11.2808,291.7977,d,finish bite 1 of 1
+386,finish,ball,22.9739,25.6266,293.4753,d,finish bite 1 of 1
+387,finish,ball,21.109,28.5926,294.9257,d,finish bite 1 of 2
+388,finish,ball,23.0888,28.382,294.9751,d,finish bite 2 of 2
+389,finish,ball,17.7086,22.6781,297.4301,d,finish bite 1 of 1
+390,finish,ball,37.6882,16.8263,299.6829,d,finish bite 1 of 2
+391,finish,ball,39.5923,16.7721,299.757,d,finish bite 2 of 2
+392,finish,ball,26.1255,28.1696,302.598,d,finish bite 1 of 1
+393,finish,ball,18.4661,34.4606,302.8475,d,finish bite 1 of 1
+394,finish,ball,21.9741,10.4216,303.0547,d,finish bite 1 of 1
+395,finish,ball,27.817,31.1223,306.8232,d,finish bite 1 of 1
+396,finish,ball,20.2065,24.8673,309.3356,d,finish bite 1 of 1
+397,finish,ball,37.8283,18.9019,311.3235,d,finish bite 1 of 2
+398,finish,ball,39.6184,18.8519,311.3933,d,finish bite 2 of 2
+399,finish,ball,27.0969,34.1267,313.3931,d,finish bite 1 of 1
+400,finish,ball,28.3984,34.0081,313.9284,d,finish bite 1 of 1
+401,finish,ball,19.1124,16.0774,313.9412,d,finish bite 1 of 1
+402,finish,ball,29.5725,33.8319,314.4203,d,finish bite 1 of 1
+403,finish,ball,31.3131,33.8007,316.0291,d,finish bite 1 of 1
+404,finish,ball,32.5297,33.6307,317.0219,d,finish bite 1 of 1
+405,finish,ball,44.2546,7.0785,318.6943,d,finish bite 1 of 1
+406,finish,ball,34.267,33.605,319.1256,s,finish bite 1 of 1
+407,finish,ball,34.8254,32.5361,319.5795,d,finish bite 1 of 1
+408,finish,ball,23.4582,26.469,319.9702,d,finish bite 1 of 1
+409,finish,ball,17.5078,14.5724,321.9646,d,finish bite 1 of 1
+410,finish,ball,38.8006,20.8441,322.4365,d,finish bite 1 of 2
+411,finish,ball,40.564,20.8018,322.5067,d,finish bite 2 of 2
+412,finish,ball,17.5818,17.9078,322.8117,s,finish bite 1 of 1
+413,finish,ball,41.8092,7.1591,325.6153,d,finish bite 1 of 1
+414,finish,ball,41.0135,10.9331,328.1413,d,finish bite 1 of 1
+415,finish,ball,16.6299,19.3867,330.5363,s,finish bite 1 of 1
+416,finish,ball,39.3822,7.3742,332.6016,d,finish bite 1 of 1
+417,finish,ball,38.9987,10.9361,333.0349,d,finish bite 1 of 1
+418,finish,ball,40.5955,22.7457,334.0696,d,finish bite 1 of 2
+419,finish,ball,42.4804,22.7146,334.1476,d,finish bite 2 of 2
+420,finish,ball,40.1536,12.7097,335.5678,s,finish bite 1 of 1
+421,finish,ball,30.1435,27.9822,336.2886,s,finish bite 1 of 1
+422,finish,ball,37.2069,7.6318,339.1169,d,finish bite 1 of 1
+423,finish,ball,39.6642,24.119,339.7704,d,finish bite 1 of 3
+424,finish,ball,41.6883,24.0768,339.8528,d,finish bite 2 of 3
+425,finish,ball,43.7167,24.0524,339.9389,d,finish bite 3 of 3
+426,finish,ball,40.4321,13.8958,340.7306,s,finish bite 1 of 1
+427,finish,ball,40.6529,14.2071,341.912,d,finish bite 1 of 1
+428,finish,ball,44.3152,24.0513,341.9664,s,finish bite 1 of 1
+429,finish,ball,35.7935,11.8671,342.8602,s,finish bite 1 of 1
+430,finish,ball,44.9341,24.7745,345.3912,d,finish bite 1 of 1
+431,finish,ball,15.906,22.082,345.442,s,finish bite 1 of 1
+432,finish,ball,44.3669,24.8903,345.9284,d,finish bite 1 of 1
+433,finish,ball,42.9923,25.121,346.989,d,finish bite 1 of 1
+434,finish,ball,60.4774,3.627,347.4046,s,finish bite 1 of 1
+435,finish,ball,42.1889,25.7185,349.7762,s,finish bite 1 of 1
+436,finish,ball,37.0588,28.5272,350.5306,d,finish bite 1 of 1
+437,finish,ball,42.2235,26.6868,354.3082,d,finish bite 1 of 1
+438,finish,ball,55.9329,6.3988,356.2801,s,finish bite 1 of 1

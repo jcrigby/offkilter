@@ -37,6 +37,8 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 from okmcp import Mcp, Part, new_tab  # noqa: E402
 import plan as P  # noqa: E402
+sys.path.insert(0, os.path.join(HERE, "firmware"))
+import config as FW  # noqa: E402
 
 OUT = os.path.join(HERE, "out")
 
@@ -68,6 +70,7 @@ LEAN = 30.0                                     # the most a link may lean off i
 HANGER_R = 18.5                                 # the hangers' lower ends, round about the axis: a bearing and 2.5
 MASTER_R = 8.0                                  # the master: a sleeve over the spindle from the hanger to the spur, and the spur its size. With the sled back the cutter is under it
 SPINDLE_CLEAR = 3.0                             # between the master and the cutter while the frame swings with the sled back
+MOVE_CLEAR = (1.5, 1.0)                         # a move may go straight to its row, not by the safe height, if the master passes the cutter by this much and the blank the table by this much
 HOME_OVER = (3.0, 2.0)                          # the home switches beyond the furthest any row goes: lift, swing
 BACK_X = -12.0                                  # the cutter along the sled with the sled back: under the master, 9 mm of the straight bit clear of the stick's end, 18 of the hanger
 RUN = 6.0                                       # the cutter past the stick's far end
@@ -328,13 +331,64 @@ def main():
 
     print(f"axis moved {centre} in the tile: a circle of {circle:.2f} fits about it, the master and spur {2 * MASTER_R:.0f} round inside that")
 
+    # -- which moves can go straight -----------------------------------------
+    # Going up to the safe height and down again between passes is most of what the lift screw does. A move may skip it
+    # if, done as the controller does it (swing, then turn, then lift), the master stays clear of the cutter under it and
+    # the blank stays clear of the table as it turns: both are followed along the move's own path.
+    def cutter_edge(tool):
+        """Points round the cutter's outline over the table, for the bit in the router."""
+        if tool == "ball":
+            r, zc, pts = P.BIT / 2, bit_up - P.BIT / 2, []
+            for k in range(61):
+                off = P.SHANK / 2 * k / 60
+                f = P.flank(off, r)
+                if f is not None:
+                    pts += [(off, zc - f), (-off, zc - f)]
+            low = min(z for _, z in pts)
+            return pts + [(sy * P.SHANK / 2, z) for sy in (-1, 1) for z in range(0, int(low) + 1)]
+        r = ROUGH_R
+        return [(r * k / 10, bit_up) for k in range(-10, 11)] + [(sy * r, z) for sy in (-1, 1) for z in range(0, int(bit_up) + 1)]
+    edges = {tool: cutter_edge(tool) for tool in ("straight", "ball")}
+
+    def master_gap(lift, swing, tool):
+        a_ = sled.alpha_of(c1_home - lift)
+        b_ = sled.beta_of(c2_home - swing, a_)
+        ya_, za_ = sled.axis(a_, b_)
+        return min(math.hypot(ya_ - y, za_ - z) for y, z in edges[tool]) - MASTER_R, za_, a_ + b_
+
+    def way_round(g0, g1):
+        """The spindle's angles on its way from g0 to g1, as the controller turns it: forwards, or back a little past and up to it."""
+        ahead = (g1 - g0) % 360.0
+        legs = [(g0, g0 + ahead)] if ahead <= 180.0 else [(g0, g0 + ahead - 360.0 - FW.TURN_PAST_DEG), (g1 - FW.TURN_PAST_DEG, g1)]
+        return [a0 + (a1 - a0) * k / max(1, math.ceil(abs(a1 - a0))) for a0, a1 in legs for k in range(max(1, math.ceil(abs(a1 - a0))) + 1)]
+
+    def straight_ok(prev, row):
+        steps = lambda a0, a1: [a0 + (a1 - a0) * k / max(1, math.ceil(abs(a1 - a0) / 0.5)) for k in range(max(1, math.ceil(abs(a1 - a0) / 0.5)) + 1)]
+        t_of = lambda g, hang: -(math.radians(g) + hang) - math.pi / 2
+        for swing in steps(prev["swing"], row["swing"]):                       # the swing, at the old lift and angle
+            gap, za_, hang = master_gap(prev["lift"], swing, row["tool"])
+            if gap < MOVE_CLEAR[0] or za_ - P.blank_reach(outline, t_of(prev["turn"], hang)) < MOVE_CLEAR[1]:
+                return False
+        _, za_, hang = master_gap(prev["lift"], row["swing"], row["tool"])
+        if any(za_ - P.blank_reach(outline, t_of(g, hang)) < MOVE_CLEAR[1] for g in way_round(prev["turn"], row["turn"])):     # the turn, there
+            return False
+        for lift in steps(prev["lift"], row["lift"]):                           # the lift, at the new swing and angle
+            gap, za_, hang = master_gap(lift, row["swing"], row["tool"])
+            if gap < MOVE_CLEAR[0] or za_ - P.blank_reach(outline, t_of(row["turn"], hang)) < MOVE_CLEAR[1]:
+                return False
+        return True
+    for i, r in enumerate(rows):
+        r["via"] = "d" if r["kind"] != "set" and i > 0 and rows[i - 1]["kind"] != "set" and straight_ok(rows[i - 1], r) else "s"
+    straight = sum(1 for r in rows if r["via"] == "d")
+    print(f"{straight} of {len(rows)} moves go straight to their row; the rest by the safe height")
+
     # -- the table, and the controller's own run over it ---------------------
     table = os.path.join(OUT, "passes.csv")
     with open(table, "w") as f:
         f.write(f"#safe,{safe}\n")
-        f.write("n,kind,tool,lift,swing,turn,label\n")
+        f.write("n,kind,tool,lift,swing,turn,via,label\n")
         for r in rows:
-            f.write(f"{r['n']},{r['kind']},{r['tool']},{r['lift']},{r['swing']},{r['turn']},{r['label']}\n")
+            f.write(f"{r['n']},{r['kind']},{r['tool']},{r['lift']},{r['swing']},{r['turn']},{r['via']},{r['label']}\n")
     steps = os.path.join(OUT, "steps.json")
     subprocess.run([sys.executable, os.path.join(HERE, "firmware", "main.py"), "--sim", table, steps], check=True, cwd=os.path.join(HERE, "firmware"))
     sim = json.load(open(steps))
@@ -528,6 +582,8 @@ def main():
     for r in rows[::12]:
         tried += [(joints(safe + (r["lift"] - safe) * k / 4, r["swing"], r["turn"]), ("Stick",)) for k in range(4) if r["lift"] > safe]
     tried += [(joints(safe * i / 4, swing_most * k / 5), ("Stick",)) for i in range(5) for k in range(6)]
+    # and, of the moves that go straight, every sixth at its corner: the old lift and angle with the new swing
+    tried += [(joints(rows[i - 1]["lift"], r["swing"], rows[i - 1]["turn"]), ()) for i, r in enumerate(rows) if r["via"] == "d" and i % 6 == 0]
     lane = rect(-ROUGH_R - 1.0, ROUGH_R + 1.0, -1.0, bit_up + 1.0)       # where the cutter is, wherever the sled is along its travel
     lane_x = (MASTER_X[0], STICK + RUN + 23.0)
     in_lane = ("Cutter", "Table and fence", "Stick", "Master", "Spindle and centre")    # these the plan itself keeps off the cutter
@@ -582,7 +638,7 @@ def main():
                  "finish_runs": sum(q["bites"] for q in passes), "deepest": max(q["depth"] for q in passes), "ball_bite": P.BALL_BITE},
         "rough": {"bit": P.ROUGH_BIT, "bite": P.ROUGH_BITE, "step": P.ROUGH_STEP, "allow": P.ALLOW, "angles": P.ROUGH_ANGLES, "blank": P.BLANK, "places": len(places),
                   "runs": sum(q["bites"] for q in places), **waste},
-        "bit_up": bit_up, "table_clear": TABLE_CLEAR, "pulley_r": PULLEY_R, "hanger_r": HANGER_R, "spindle_d": SPINDLE_D, "spindle_clear": SPINDLE_CLEAR,
+        "bit_up": bit_up, "table_clear": TABLE_CLEAR, "pulley_r": PULLEY_R, "hanger_r": HANGER_R, "spindle_d": SPINDLE_D, "spindle_clear": SPINDLE_CLEAR, "move_clear": MOVE_CLEAR, "turn_past": FW.TURN_PAST_DEG, "straight": straight,
         "sled": {"h1": h1, "arm": ARM, "drop": DROP, "p1_y": P1_Y, "e1": E1, "l1": L1, "p2_z": p2_z, "e2": e2, "l2": L2, "lean": lean, "lean_most": LEAN, "swing": {"rail": RAIL, "rail_y": rail_y, "rail_z": rail_z, "carriage": CARRIAGE, "block": BLOCK, "unit_x": UNIT_X, "screw_x": SCREW2_X, "motor_y": motor2_y}, "tail_x": TAIL_X,
                  "c1_home": c1_home, "c2_home": c2_home, "safe": safe, "lift": {"rail_z": rail1_z, "block": BLOCK1, "unit_x": UNIT1_X, "screw_x": SCREW1_X, "screw_top": screw1_top, "post_y": POST_Y}, "x": SLED_X, "left_y": LEFT_Y, "right_y": RIGHT_Y, "ply": PLY,
                  "back_x": BACK_X, "run": RUN, "master_x": MASTER_X, "master_r": MASTER_R, "belt": [60, 16]},

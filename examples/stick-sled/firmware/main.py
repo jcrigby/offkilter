@@ -132,7 +132,8 @@ def wait(pin):
 
 
 def read_table(path):
-    """passes.csv: '#safe,<mm>' then rows of n,kind,tool,lift,swing,turn,label."""
+    """passes.csv: '#safe,<mm>' then rows of n,kind,tool,lift,swing,turn,via,label.
+    via is 'd' for a move that may go straight to its row, 's' for one that must go by the safe height."""
     safe, rows = 0.0, []
     with open(path) as f:
         for line in f:
@@ -147,7 +148,7 @@ def read_table(path):
             p = line.split(",")
             if p[0] == "n":
                 continue
-            rows.append((int(p[0]), p[1], p[2], float(p[3]), float(p[4]), float(p[5]), p[6] if len(p) > 6 else ""))
+            rows.append((int(p[0]), p[1], p[2], float(p[3]), float(p[4]), float(p[5]), p[6] == "d", p[7] if len(p) > 7 else ""))
     return safe, rows
 
 
@@ -157,7 +158,8 @@ class Sled:
         self.swing = Axis("swing", C.SWING_PINS, C.SWING_STEPS_PER_MM, C.SWING_FLIP, C.SWING_TRIM_MM, C.SWING_SCALE, C.SWING_MID_MM)
         self.turn = Axis("turn", C.TURN_PINS, C.TURN_STEPS_PER_DEG, C.TURN_FLIP, C.TURN_TRIM_DEG)
         self.safe = safe            # the lift at or above which the spindle clears the cutter wherever the frame swings
-        self.deepest_crossing = 0   # the lowest the lift ever was while the frame swung or the spindle turned between passes
+        self.deepest_crossing = 0   # the lowest the lift ever was while the frame swung or the spindle turned, on a move by the safe height
+        self.went_straight = 0
         self.turned = 0             # steps the spindle has turned forwards coming up to its angles
         for n in (C.LIFT_HOME_PIN, C.SWING_HOME_PIN, C.TURN_HOME_PIN, C.SLED_BACK_PIN, C.NEXT_PIN):
             PINS.input(n)
@@ -188,13 +190,17 @@ class Sled:
         self.turned += abs(ahead)
         self.turn.run(ahead, guard, slow)
 
-    def go(self, lift, swing, turn):
-        """To a pass, the sled back: up to the safe height if below it, across and round, then down."""
+    def go(self, lift, swing, turn, straight=False):
+        """To a pass, the sled back: across and round, then to its height. Unless the table says this move
+        may go straight, up to the safe height first if below it: the master is over the cutter."""
         guard = self.back
-        safe_steps = self.lift.steps_for(self.safe)
-        if self.lift.at > safe_steps:
-            self.lift.run(safe_steps - self.lift.at, guard)
-        self.deepest_crossing = max(self.deepest_crossing, self.lift.at)
+        if straight:
+            self.went_straight += 1
+        else:
+            safe_steps = self.lift.steps_for(self.safe)
+            if self.lift.at > safe_steps:
+                self.lift.run(safe_steps - self.lift.at, guard)
+            self.deepest_crossing = max(self.deepest_crossing, self.lift.at)
         self.swing.to(swing, guard)
         self.turn_on_to(turn, guard)
         self.lift.to(lift, guard)
@@ -202,11 +208,11 @@ class Sled:
     def run(self, rows, record=None):
         self.home()
         total = len(rows)
-        for n, kind, tool, lift, swing, turn, label in rows:
+        for n, kind, tool, lift, swing, turn, straight, label in rows:
             say("%d/%d %s: sled back, then the foot switch" % (n, total, label))
             wait(C.SLED_BACK_PIN)
             wait(C.NEXT_PIN)
-            self.go(lift, swing, turn)
+            self.go(lift, swing, turn, straight)
             PINS.set(C.LED_PIN, 1)
             if kind == "set":
                 say("bring the %s bit up until it touches the master, then the foot switch" % tool)
@@ -227,7 +233,7 @@ def main(path="passes.csv", out=None):
     if out:
         import json
         with open(out, "w") as f:
-            json.dump({"rows": record, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "stepped": [sled.lift.stepped, sled.swing.stepped, sled.turn.stepped], "safe_steps": sled.lift.steps_for(safe),
+            json.dump({"rows": record, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight, "stepped": [sled.lift.stepped, sled.swing.stepped, sled.turn.stepped], "safe_steps": sled.lift.steps_for(safe),
                        "per": [C.LIFT_STEPS_PER_MM, C.SWING_STEPS_PER_MM, C.TURN_STEPS_PER_DEG]}, f)
 
 

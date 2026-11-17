@@ -166,6 +166,7 @@ struct Row {
     lift: f64,
     swing: f64,
     turn: f64,
+    straight: bool,
     last_bite: bool,
 }
 
@@ -188,6 +189,7 @@ fn rows(n: &Value) -> Vec<Row> {
                 lift: f(&r["lift"]),
                 swing: f(&r["swing"]),
                 turn: f(&r["turn"]),
+                straight: r["via"].as_str() == Some("d"),
                 last_bite: k >= 3 && words[k - 2] == "of" && words[k - 3] == words[k - 1],
             }
         })
@@ -624,6 +626,126 @@ fn the_stick_clears_the_table_and_the_links_stay_true_at_every_row() {
     );
 }
 
+/// Between passes the controller goes up to the safe height, unless
+/// the table marks the move as one that may go straight: swing, then
+/// turn, then lift, from where the last row left it. Every move so
+/// marked is followed here along that path: the master, which is over
+/// the cutter with the sled back, passes it clear, and the blank
+/// passes the table clear at every angle it turns through.
+#[test]
+fn every_move_marked_straight_passes_the_cutter_and_the_table_clear() {
+    let n = numbers();
+    let (sled, rows, tile) = (Sled::new(&n), rows(&n), outline(&n));
+    let ball = f(&n["bit"]) / 2.0;
+    let (taper, shank) = (f(&n["taper"]).to_radians(), f(&n["shank"]) / 2.0);
+    let flat = f(&n["rough"]["bit"]) / 2.0;
+    let master = f(&n["sled"]["master_r"]);
+    let blank = f(&n["rough"]["blank"]);
+    let past = f(&n["turn_past"]);
+    // The cutter's outline over the table, as points: the ball-nose with its flank and shank, and the straight bit.
+    let mut edge_ball: Vec<P2> = Vec::new();
+    let zc = sled.bit_up - ball;
+    for k in 0..=80 {
+        let off = shank * k as f64 / 80.0;
+        if let Some(up) = flank(off, ball, taper, shank) {
+            edge_ball.push((off, zc - up));
+            edge_ball.push((-off, zc - up));
+        }
+    }
+    let low = edge_ball.iter().map(|q| q.1).fold(f64::MAX, f64::min);
+    let mut z = 0.0;
+    while z < low {
+        edge_ball.push((shank, z));
+        edge_ball.push((-shank, z));
+        z += 0.5;
+    }
+    let mut edge_flat: Vec<P2> = (-12..=12)
+        .map(|k| (flat * k as f64 / 12.0, sled.bit_up))
+        .collect();
+    let mut z = 0.0;
+    while z < sled.bit_up {
+        edge_flat.push((flat, z));
+        edge_flat.push((-flat, z));
+        z += 0.5;
+    }
+    let reach = |t: f64| tile.iter().map(|q| seen(*q, t).1).fold(f64::MIN, f64::max) + blank;
+    let t_of = |turn: f64, hang: f64| -(turn.to_radians() + hang) - PI / 2.0;
+    let (mut straight, mut least_gap, mut least_table) = (0, f64::MAX, f64::MAX);
+    for i in 1..rows.len() {
+        let (a, b) = (&rows[i - 1], &rows[i]);
+        if !b.straight {
+            continue;
+        }
+        straight += 1;
+        assert!(
+            a.kind != "set" && b.kind != "set",
+            "a setting of the bit is never gone to or left straight"
+        );
+        let edge = if b.tool == "ball" {
+            &edge_ball
+        } else {
+            &edge_flat
+        };
+        let mut look = |lift: f64, swing: f64, turns: &[f64]| {
+            let p = sled.pose(lift, swing, 0.0);
+            let gap = edge
+                .iter()
+                .map(|q| (p.axis.0 - q.0).hypot(p.axis.1 - q.1))
+                .fold(f64::MAX, f64::min)
+                - master;
+            least_gap = least_gap.min(gap);
+            for g in turns {
+                least_table = least_table.min(p.axis.1 - reach(t_of(*g, p.hang)));
+            }
+        };
+        // The swing, at the old lift and angle.
+        let k = ((b.swing - a.swing).abs() / 0.25).ceil().max(1.0) as usize;
+        for j in 0..=k {
+            look(
+                a.lift,
+                a.swing + (b.swing - a.swing) * j as f64 / k as f64,
+                &[a.turn],
+            );
+        }
+        // The turn, there: forwards, or back a little past its angle and up to it.
+        let ahead = (b.turn - a.turn).rem_euclid(360.0);
+        let legs = if ahead <= 180.0 {
+            vec![(a.turn, a.turn + ahead)]
+        } else {
+            vec![
+                (a.turn, a.turn + ahead - 360.0 - past),
+                (b.turn - past, b.turn),
+            ]
+        };
+        let mut through: Vec<f64> = Vec::new();
+        for (g0, g1) in legs {
+            let m = ((g1 - g0).abs() / 0.5).ceil().max(1.0) as usize;
+            through.extend((0..=m).map(|j| g0 + (g1 - g0) * j as f64 / m as f64));
+        }
+        look(a.lift, b.swing, &through);
+        // The lift, at the new swing and angle.
+        let k = ((b.lift - a.lift).abs() / 0.25).ceil().max(1.0) as usize;
+        for j in 0..=k {
+            look(
+                a.lift + (b.lift - a.lift) * j as f64 / k as f64,
+                b.swing,
+                &[b.turn],
+            );
+        }
+    }
+    println!(
+        "{straight} of {} moves go straight: the master never nearer the cutter than {least_gap:.2}, the blank never nearer the table than {least_table:.2}",
+        rows.len()
+    );
+    assert_eq!(straight as u64, n["straight"].as_u64().unwrap());
+    assert!(
+        straight * 2 > rows.len(),
+        "most moves need no trip to the safe height"
+    );
+    assert!(least_gap >= f(&n["move_clear"][0]) - 0.05);
+    assert!(least_table >= f(&n["move_clear"][1]) - 0.05);
+}
+
 /// The controller's program, run on pins that do nothing, ends every
 /// row on the table's numbers to the step, and with the sled back
 /// never swings or turns the stick below the height at which the
@@ -668,6 +790,11 @@ fn the_controller_ends_every_row_on_the_table_and_crosses_only_at_the_safe_heigh
     let safe = f(&n["sled"]["safe"]);
     assert!((f(&sim["safe_steps"]) - (safe * per[0]).round()).abs() < 1e-9);
     assert!(f(&sim["deepest_crossing"]) <= f(&sim["safe_steps"]));
+    // It went straight exactly where the table said it might.
+    assert_eq!(
+        sim["went_straight"].as_u64().unwrap(),
+        rows.iter().filter(|r| r.straight).count() as u64
+    );
     // At the safe lift the master, which is what is over the cutter with the sled back, clears it wherever the frame swings.
     let need = sled.bit_up + f(&n["sled"]["master_r"]) + f(&n["spindle_clear"]);
     let (lo, hi) = rows.iter().fold((f64::MAX, 0.0f64), |a, r| {

@@ -8,7 +8,7 @@
  "ridge": 0.05,
  "stick": 200.0,
  "sweep": {
-  "poses": 147,
+  "poses": 203,
   "lane": [
    [
     -33.0,
@@ -34,7 +34,7 @@
    ]
   ],
   "stepped": [
-   6380392,
+   4431226,
    2768589,
    36982
   ]
@@ -2154,6 +2154,12 @@
  "hanger_r": 18.5,
  "spindle_d": 12.0,
  "spindle_clear": 3.0,
+ "move_clear": [
+  1.5,
+  1.0
+ ],
+ "turn_past": 3.0,
+ "straight": 346,
  "sled": {
   "h1": [
    150.0,
@@ -2296,7 +2302,8 @@
    "label": "set the straight bit on the master",
    "lift": 42.8681,
    "swing": 17.9743,
-   "turn": 270.0779
+   "turn": 270.0779,
+   "via": "s"
   },
   {
    "n": 2,
@@ -2308,7 +2315,8 @@
    "label": "rough 270 deg +3 bite 1 of 1",
    "lift": 16.7681,
    "swing": 22.1885,
-   "turn": 0.579
+   "turn": 0.579,
+   "via": "s"
   },
   {
    "n": 3,
@@ -2320,7 +2328,8 @@
    "label": "rough 270 deg +6 bite 1 of 1",
    "lift": 16.84,
    "swing": 24.614,
-   "turn": 1.903
+   "turn": 1.903,
+   "via": "d"
   },
   {
    "n": 4,
@@ -2332,7 +2341,8 @@
    "label": "rough 270 deg +12 bite 1 of 1",
    "lift": 19.4767,
    "swing": 29.1912,
-   "turn": 4.6089
+   "turn": 4.6089,
+   "via": "d"
   },
   {
    "n": 5,
@@ -2344,7 +2354,8 @@
    "label": "rough 270 deg +15 bite 1 of 5",
    "lift": 25.6694,
    "swing": 31.0014,
-   "turn": 6.0943
+   "turn": 6.0943,
+   "via": "d"
   },
   {
    "n": 6,
@@ -2356,7 +2367,8 @@
    "label": "rough 270 deg +15 bite 2 of 5",
    "lift": 30.2006,
    "swing": 30.6319,
-   "turn": 6.2305
+   "turn": 6.2305,
+   "via": "d"
   },
   {
    "n": 7,
@@ -2368,7 +2380,8 @@
    "label": "rough 270 deg +15 bite 3 of 5",
    "lift": 34.7517,
    "swing": 30.3537,
-   "turn": 6.385
+   "turn": 6.385,
+   "via": "d"
   },
   {
    "n": 8,
@@ -2380,7 +2393,8 @@
    "label": "rough 270 deg +15 bite 4 of 5",
    "lift": 39.3258,
    "swing": 30.1657,
-   "turn": 6.558
+   "turn": 6.558,
+   "via": "d"
   },
   {
    "n": 9,
@@ -2392,7 +2406,8 @@
    "label": "rough 270 deg +15 bite 5 of 5",
    "lift": 43.9258,
    "swing": 30.0674,
-   "turn": 6.75
+   "turn": 6.75,
+   "via": "d"
   },
   {
    "n": 10,
@@ -2404,7 +2419,8 @@
    "label": "rough 255 deg -18 bite 1 of 3",
    "lift": 40.556,
    "swing": 3.4825,
-   "turn": 7.0229
+   "turn": 7.0229,
+   "via": "s"
   },
   {
    "n": 11,
@@ -2416,7 +2432,8 @@
    "label": "rough 255 deg -18 bite 2 of 3",
    "lift": 44.2998,
    "swing": 3.4058,
-   "turn": 7.1821
+   "turn": 7.1821,
+   "via": "d"
   },
   {
    "n": 12,
@@ -2428,7 +2445,8 @@
    "label": "rough 255 deg -18 bite 3 of 3",
    "lift": 48.0491,
    "swing": 3.3935,
-   "turn": 7.3534
+   "turn": 7.3534,
+   "via": "d"
   },
   {
    "n": 13,
@@ -2440,7 +2458,8 @@
    "label": "rough 270 deg +18 bite 1 of 2",
    "lift": 40.3978,
    "swing": 32.5638,
-   "turn": 7.9341
+   "turn": 7.9341,
+   "via": "s"
   },
   {
    "n": 14,
@@ -2452,7 +2471,8 @@
    "label": "rough 270 deg +18 bite 2 of 2",
    "lift": 44.6764,
    "swing": 32.4773,
-   "turn": 8.1165
+   "turn": 8.1165,
+   "via": "d"
   },
   {
    "n": 15,
@@ -2464,7 +2484,8 @@
    "label": "rough 255 deg -15 bite 1 of 3",
    "lift": 36.779,
    "swing": 6.0318,
-   "turn": 8.2078
+   "turn": 8.2078,
+   "via": "s"
   },
   {
    "n": 16,
@@ -2476,7 +2497,8 @@
    "label": "rough 255 deg -15 bite 2 of 3",
    "lift": 42.0709,
    "swing": 5.8654,
-   "turn": 8.4188
+   "turn": 8.4188,
+   "via": "d"
   },
   {
    "n": 17,
@@ -2488,7 +2510,8 @@
    "label": "rough 255 deg -15 bite 3 of 3",
    "lift": 47.3748,
    "swing": 5.827,
-   "turn": 8.6539
+   "turn": 8.6539,
+   "via": "d"
   },
   {
    "n": 18,
@@ -2500,7 +2523,8 @@
    "label": "rough 255 deg -12 bite 1 of 1",
    "lift": 30.2431,
    "swing": 8.8102,
-   "turn": 9.3103
+   "turn": 9.3103,
+   "via": "d"
   },
   {
    "n": 19,
@@ -2512,7 +2536,8 @@
    "label": "rough 255 deg -9 bite 1 of 1",
    "lift": 26.8628,
    "swing": 11.4722,
-   "turn": 10.5346
+   "turn": 10.5346,
+   "via": "d"
   },
   {
    "n": 20,
@@ -2524,7 +2549,8 @@
    "label": "rough 255 deg -6 bite 1 of 1",
    "lift": 26.4898,
    "swing": 13.9055,
-   "turn": 11.849
+   "turn": 11.849,
+   "via": "d"
   },
   {
    "n": 21,
@@ -2536,7 +2562,8 @@
    "label": "rough 255 deg -3 bite 1 of 1",
    "lift": 26.2493,
    "swing": 16.3349,
-   "turn": 13.1656
+   "turn": 13.1656,
+   "via": "d"
   },
   {
    "n": 22,
@@ -2548,7 +2575,8 @@
    "label": "rough 255 deg +0 bite 1 of 2",
    "lift": 24.0809,
    "swing": 18.9458,
-   "turn": 14.4284
+   "turn": 14.4284,
+   "via": "d"
   },
   {
    "n": 23,
@@ -2560,7 +2588,8 @@
    "label": "rough 255 deg +0 bite 2 of 2",
    "lift": 27.8493,
    "swing": 18.6219,
-   "turn": 14.5347
+   "turn": 14.5347,
+   "via": "d"
   },
   {
    "n": 24,
@@ -2572,7 +2601,8 @@
    "label": "rough 255 deg +3 bite 1 of 3",
    "lift": 24.8284,
    "swing": 21.3001,
-   "turn": 15.7708
+   "turn": 15.7708,
+   "via": "d"
   },
   {
    "n": 25,
@@ -2584,7 +2614,8 @@
    "label": "rough 255 deg +3 bite 2 of 3",
    "lift": 30.2523,
    "swing": 20.8739,
-   "turn": 15.9311
+   "turn": 15.9311,
+   "via": "d"
   },
   {
    "n": 26,
@@ -2596,7 +2627,8 @@
    "label": "rough 255 deg +3 bite 3 of 3",
    "lift": 35.6946,
    "swing": 20.5812,
-   "turn": 16.117
+   "turn": 16.117,
+   "via": "d"
   },
   {
    "n": 27,
@@ -2608,7 +2640,8 @@
    "label": "rough 255 deg +6 bite 1 of 1",
    "lift": 21.7549,
    "swing": 24.0355,
-   "turn": 17.0137
+   "turn": 17.0137,
+   "via": "d"
   },
   {
    "n": 28,
@@ -2620,7 +2653,8 @@
    "label": "rough 240 deg -18 bite 1 of 1",
    "lift": 39.5481,
    "swing": 3.5142,
-   "turn": 21.9821
+   "turn": 21.9821,
+   "via": "d"
   },
   {
    "n": 29,
@@ -2632,7 +2666,8 @@
    "label": "rough 255 deg +18 bite 1 of 1",
    "lift": 29.2575,
    "swing": 33.1588,
-   "turn": 22.5325
+   "turn": 22.5325,
+   "via": "d"
   },
   {
    "n": 30,
@@ -2644,7 +2679,8 @@
    "label": "rough 240 deg -9 bite 1 of 4",
    "lift": 29.6672,
    "swing": 11.2518,
-   "turn": 25.6194
+   "turn": 25.6194,
+   "via": "d"
   },
   {
    "n": 31,
@@ -2656,7 +2692,8 @@
    "label": "rough 240 deg -9 bite 2 of 4",
    "lift": 34.0545,
    "swing": 10.9805,
-   "turn": 25.7656
+   "turn": 25.7656,
+   "via": "d"
   },
   {
    "n": 32,
@@ -2668,7 +2705,8 @@
    "label": "rough 240 deg -9 bite 3 of 4",
    "lift": 38.4496,
    "swing": 10.7973,
-   "turn": 25.9283
+   "turn": 25.9283,
+   "via": "d"
   },
   {
    "n": 33,
@@ -2680,7 +2718,8 @@
    "label": "rough 240 deg -9 bite 4 of 4",
    "lift": 42.8547,
    "swing": 10.7017,
-   "turn": 26.1077
+   "turn": 26.1077,
+   "via": "d"
   },
   {
    "n": 34,
@@ -2692,7 +2731,8 @@
    "label": "rough 240 deg +6 bite 1 of 1",
    "lift": 33.1358,
    "swing": 23.1304,
-   "turn": 32.3493
+   "turn": 32.3493,
+   "via": "s"
   },
   {
    "n": 35,
@@ -2704,7 +2744,8 @@
    "label": "rough 240 deg +9 bite 1 of 2",
    "lift": 31.9383,
    "swing": 25.6314,
-   "turn": 33.6328
+   "turn": 33.6328,
+   "via": "d"
   },
   {
    "n": 36,
@@ -2716,7 +2757,8 @@
    "label": "rough 240 deg +9 bite 2 of 2",
    "lift": 37.532,
    "swing": 25.3655,
-   "turn": 33.8326
+   "turn": 33.8326,
+   "via": "d"
   },
   {
    "n": 37,
@@ -2728,7 +2770,8 @@
    "label": "rough 240 deg +15 bite 1 of 1",
    "lift": 28.3597,
    "swing": 30.7707,
-   "turn": 36.173
+   "turn": 36.173,
+   "via": "d"
   },
   {
    "n": 38,
@@ -2740,7 +2783,8 @@
    "label": "rough 225 deg -18 bite 1 of 1",
    "lift": 31.613,
    "swing": 3.9286,
-   "turn": 36.6906
+   "turn": 36.6906,
+   "via": "d"
   },
   {
    "n": 39,
@@ -2752,7 +2796,8 @@
    "label": "rough 225 deg -6 bite 1 of 1",
    "lift": 39.5568,
    "swing": 13.1858,
-   "turn": 42.2964
+   "turn": 42.2964,
+   "via": "d"
   },
   {
    "n": 40,
@@ -2764,7 +2809,8 @@
    "label": "rough 225 deg +0 bite 1 of 1",
    "lift": 23.8255,
    "swing": 18.9702,
-   "turn": 44.4217
+   "turn": 44.4217,
+   "via": "d"
   },
   {
    "n": 41,
@@ -2776,7 +2822,8 @@
    "label": "rough 210 deg -18 bite 1 of 1",
    "lift": 27.9336,
    "swing": 4.2212,
-   "turn": 51.5736
+   "turn": 51.5736,
+   "via": "d"
   },
   {
    "n": 42,
@@ -2788,7 +2835,8 @@
    "label": "rough 210 deg -15 bite 1 of 1",
    "lift": 24.3086,
    "swing": 6.9394,
-   "turn": 52.8046
+   "turn": 52.8046,
+   "via": "d"
   },
   {
    "n": 43,
@@ -2800,7 +2848,8 @@
    "label": "rough 210 deg -3 bite 1 of 2",
    "lift": 33.9025,
    "swing": 15.8182,
-   "turn": 58.4083
+   "turn": 58.4083,
+   "via": "d"
   },
   {
    "n": 44,
@@ -2812,7 +2861,8 @@
    "label": "rough 210 deg -3 bite 2 of 2",
    "lift": 37.4659,
    "swing": 15.6688,
-   "turn": 58.5382
+   "turn": 58.5382,
+   "via": "d"
   },
   {
    "n": 45,
@@ -2824,7 +2874,8 @@
    "label": "rough 210 deg +0 bite 1 of 2",
    "lift": 30.2714,
    "swing": 18.4485,
-   "turn": 59.6094
+   "turn": 59.6094,
+   "via": "d"
   },
   {
    "n": 46,
@@ -2836,7 +2887,8 @@
    "label": "rough 210 deg +0 bite 2 of 2",
    "lift": 34.0978,
    "swing": 18.2291,
-   "turn": 59.7376
+   "turn": 59.7376,
+   "via": "d"
   },
   {
    "n": 47,
@@ -2848,7 +2900,8 @@
    "label": "rough 195 deg -18 bite 1 of 2",
    "lift": 31.2454,
    "swing": 3.955,
-   "turn": 66.6784
+   "turn": 66.6784,
+   "via": "d"
   },
   {
    "n": 48,
@@ -2860,7 +2913,8 @@
    "label": "rough 195 deg -18 bite 2 of 2",
    "lift": 36.3404,
    "swing": 3.6464,
-   "turn": 66.8578
+   "turn": 66.8578,
+   "via": "d"
   },
   {
    "n": 49,
@@ -2872,7 +2926,8 @@
    "label": "rough 210 deg +15 bite 1 of 1",
    "lift": 49.7687,
    "swing": 30.0713,
-   "turn": 67.0197
+   "turn": 67.0197,
+   "via": "d"
   },
   {
    "n": 50,
@@ -2884,7 +2939,8 @@
    "label": "rough 195 deg -15 bite 1 of 3",
    "lift": 25.3106,
    "swing": 6.8392,
-   "turn": 67.8321
+   "turn": 67.8321,
+   "via": "s"
   },
   {
    "n": 51,
@@ -2896,7 +2952,8 @@
    "label": "rough 195 deg -15 bite 2 of 3",
    "lift": 30.0908,
    "swing": 6.4275,
-   "turn": 67.975
+   "turn": 67.975,
+   "via": "d"
   },
   {
    "n": 52,
@@ -2908,7 +2965,8 @@
    "label": "rough 195 deg -15 bite 3 of 3",
    "lift": 34.8736,
    "swing": 6.1234,
-   "turn": 68.1376
+   "turn": 68.1376,
+   "via": "d"
   },
   {
    "n": 53,
@@ -2920,7 +2978,8 @@
    "label": "rough 195 deg +3 bite 1 of 1",
    "lift": 36.48,
    "swing": 20.5499,
-   "turn": 76.1459
+   "turn": 76.1459,
+   "via": "d"
   },
   {
    "n": 54,
@@ -2932,7 +2991,8 @@
    "label": "rough 180 deg -18 bite 1 of 1",
    "lift": 28.762,
    "swing": 4.1497,
-   "turn": 81.599
+   "turn": 81.599,
+   "via": "d"
   },
   {
    "n": 55,
@@ -2944,7 +3004,8 @@
    "label": "rough 180 deg -9 bite 1 of 3",
    "lift": 18.9492,
    "swing": 12.2953,
-   "turn": 85.3314
+   "turn": 85.3314,
+   "via": "d"
   },
   {
    "n": 56,
@@ -2956,7 +3017,8 @@
    "label": "rough 180 deg -9 bite 2 of 3",
    "lift": 22.9287,
    "swing": 11.8439,
-   "turn": 85.4269
+   "turn": 85.4269,
+   "via": "d"
   },
   {
    "n": 57,
@@ -2968,7 +3030,8 @@
    "label": "rough 180 deg -9 bite 3 of 3",
    "lift": 26.9085,
    "swing": 11.4683,
-   "turn": 85.5359
+   "turn": 85.5359,
+   "via": "d"
   },
   {
    "n": 58,
@@ -2980,7 +3043,8 @@
    "label": "rough 180 deg -3 bite 1 of 1",
    "lift": 15.2269,
    "swing": 17.5635,
-   "turn": 87.9038
+   "turn": 87.9038,
+   "via": "d"
   },
   {
    "n": 59,
@@ -2992,7 +3056,8 @@
    "label": "rough 165 deg -15 bite 1 of 1",
    "lift": 23.2543,
    "swing": 7.05,
-   "turn": 97.7766
+   "turn": 97.7766,
+   "via": "d"
   },
   {
    "n": 60,
@@ -3004,7 +3069,8 @@
    "label": "rough 165 deg -18 bite 1 of 7",
    "lift": 30.4996,
    "swing": 4.0104,
-   "turn": 96.654
+   "turn": 96.654,
+   "via": "d"
   },
   {
    "n": 61,
@@ -3016,7 +3082,8 @@
    "label": "rough 165 deg -18 bite 2 of 7",
    "lift": 35.5944,
    "swing": 3.684,
-   "turn": 96.8301
+   "turn": 96.8301,
+   "via": "d"
   },
   {
    "n": 62,
@@ -3028,7 +3095,8 @@
    "label": "rough 165 deg -18 bite 3 of 7",
    "lift": 40.6943,
    "swing": 3.4786,
-   "turn": 97.0286
+   "turn": 97.0286,
+   "via": "d"
   },
   {
    "n": 63,
@@ -3040,7 +3108,8 @@
    "label": "rough 165 deg -18 bite 4 of 7",
    "lift": 45.8026,
    "swing": 3.3931,
-   "turn": 97.2493
+   "turn": 97.2493,
+   "via": "d"
   },
   {
    "n": 64,
@@ -3052,7 +3121,8 @@
    "label": "rough 165 deg -18 bite 5 of 7",
    "lift": 50.9215,
    "swing": 3.4276,
-   "turn": 97.4925
+   "turn": 97.4925,
+   "via": "d"
   },
   {
    "n": 65,
@@ -3064,7 +3134,8 @@
    "label": "rough 165 deg -18 bite 6 of 7",
    "lift": 56.0528,
    "swing": 3.5827,
-   "turn": 97.7584
+   "turn": 97.7584,
+   "via": "d"
   },
   {
    "n": 66,
@@ -3076,7 +3147,8 @@
    "label": "rough 165 deg -18 bite 7 of 7",
    "lift": 61.1975,
    "swing": 3.8599,
-   "turn": 98.047
+   "turn": 98.047,
+   "via": "d"
   },
   {
    "n": 67,
@@ -3088,7 +3160,8 @@
    "label": "rough 180 deg +18 bite 1 of 4",
    "lift": 49.2084,
    "swing": 32.4691,
-   "turn": 98.3267
+   "turn": 98.3267,
+   "via": "s"
   },
   {
    "n": 68,
@@ -3100,7 +3173,8 @@
    "label": "rough 180 deg +18 bite 2 of 4",
    "lift": 54.8484,
    "swing": 32.577,
-   "turn": 98.6127
+   "turn": 98.6127,
+   "via": "d"
   },
   {
    "n": 69,
@@ -3112,7 +3186,8 @@
    "label": "rough 180 deg +18 bite 3 of 4",
    "lift": 60.5388,
    "swing": 32.8168,
-   "turn": 98.9288
+   "turn": 98.9288,
+   "via": "d"
   },
   {
    "n": 70,
@@ -3124,7 +3199,8 @@
    "label": "rough 180 deg +18 bite 4 of 4",
    "lift": 66.2816,
    "swing": 33.1914,
-   "turn": 99.2759
+   "turn": 99.2759,
+   "via": "d"
   },
   {
    "n": 71,
@@ -3136,7 +3212,8 @@
    "label": "rough 165 deg -3 bite 1 of 2",
    "lift": 19.6799,
    "swing": 16.9968,
-   "turn": 102.9971
+   "turn": 102.9971,
+   "via": "s"
   },
   {
    "n": 72,
@@ -3148,7 +3225,8 @@
    "label": "rough 165 deg -3 bite 2 of 2",
    "lift": 22.7872,
    "swing": 16.6582,
-   "turn": 103.0722
+   "turn": 103.0722,
+   "via": "d"
   },
   {
    "n": 73,
@@ -3160,7 +3238,8 @@
    "label": "rough 165 deg +9 bite 1 of 4",
    "lift": 26.8094,
    "swing": 25.9985,
-   "turn": 108.4729
+   "turn": 108.4729,
+   "via": "d"
   },
   {
    "n": 74,
@@ -3172,7 +3251,8 @@
    "label": "rough 165 deg +9 bite 2 of 4",
    "lift": 32.2321,
    "swing": 25.614,
-   "turn": 108.6426
+   "turn": 108.6426,
+   "via": "d"
   },
   {
    "n": 75,
@@ -3184,7 +3264,8 @@
    "label": "rough 165 deg +9 bite 3 of 4",
    "lift": 37.68,
    "swing": 25.3604,
-   "turn": 108.8383
+   "turn": 108.8383,
+   "via": "d"
   },
   {
    "n": 76,
@@ -3196,7 +3277,8 @@
    "label": "rough 165 deg +9 bite 4 of 4",
    "lift": 43.1581,
    "swing": 25.2365,
-   "turn": 109.0603
+   "turn": 109.0603,
+   "via": "d"
   },
   {
    "n": 77,
@@ -3208,7 +3290,8 @@
    "label": "rough 150 deg -18 bite 1 of 1",
    "lift": 54.4462,
    "swing": 3.5211,
-   "turn": 112.6728
+   "turn": 112.6728,
+   "via": "s"
   },
   {
    "n": 78,
@@ -3220,7 +3303,8 @@
    "label": "rough 150 deg -15 bite 1 of 4",
    "lift": 39.8307,
    "swing": 5.9202,
-   "turn": 113.3266
+   "turn": 113.3266,
+   "via": "d"
   },
   {
    "n": 79,
@@ -3232,7 +3316,8 @@
    "label": "rough 150 deg -15 bite 2 of 4",
    "lift": 44.0387,
    "swing": 5.8362,
-   "turn": 113.5033
+   "turn": 113.5033,
+   "via": "d"
   },
   {
    "n": 80,
@@ -3244,7 +3329,8 @@
    "label": "rough 150 deg -15 bite 3 of 4",
    "lift": 48.2549,
    "swing": 5.833,
-   "turn": 113.6952
+   "turn": 113.6952,
+   "via": "d"
   },
   {
    "n": 81,
@@ -3256,7 +3342,8 @@
    "label": "rough 150 deg -15 bite 4 of 4",
    "lift": 52.4806,
    "swing": 5.9109,
-   "turn": 113.9025
+   "turn": 113.9025,
+   "via": "d"
   },
   {
    "n": 82,
@@ -3268,7 +3355,8 @@
    "label": "rough 150 deg -12 bite 1 of 1",
    "lift": 21.0964,
    "swing": 9.6616,
-   "turn": 114.0534
+   "turn": 114.0534,
+   "via": "s"
   },
   {
    "n": 83,
@@ -3280,7 +3368,8 @@
    "label": "rough 150 deg +0 bite 1 of 1",
    "lift": 21.0513,
    "swing": 19.2546,
-   "turn": 119.3518
+   "turn": 119.3518,
+   "via": "d"
   },
   {
    "n": 84,
@@ -3292,7 +3381,8 @@
    "label": "rough 150 deg +3 bite 1 of 1",
    "lift": 22.023,
    "swing": 21.5742,
-   "turn": 120.6977
+   "turn": 120.6977,
+   "via": "d"
   },
   {
    "n": 85,
@@ -3304,7 +3394,8 @@
    "label": "rough 135 deg -18 bite 1 of 1",
    "lift": 51.0563,
    "swing": 3.4301,
-   "turn": 127.4993
+   "turn": 127.4993,
+   "via": "d"
   },
   {
    "n": 86,
@@ -3316,7 +3407,8 @@
    "label": "rough 135 deg -12 bite 1 of 2",
    "lift": 40.8405,
    "swing": 8.3129,
-   "turn": 129.6971
+   "turn": 129.6971,
+   "via": "d"
   },
   {
    "n": 87,
@@ -3328,7 +3420,8 @@
    "label": "rough 135 deg -12 bite 2 of 2",
    "lift": 45.3306,
    "swing": 8.257,
-   "turn": 129.8895
+   "turn": 129.8895,
+   "via": "d"
   },
   {
    "n": 88,
@@ -3340,7 +3433,8 @@
    "label": "rough 135 deg -3 bite 1 of 1",
    "lift": 15.0857,
    "swing": 17.5831,
-   "turn": 132.9011
+   "turn": 132.9011,
+   "via": "s"
   },
   {
    "n": 89,
@@ -3352,7 +3446,8 @@
    "label": "rough 135 deg +6 bite 1 of 1",
    "lift": 23.0943,
    "swing": 23.8978,
-   "turn": 137.0475
+   "turn": 137.0475,
+   "via": "d"
   },
   {
    "n": 90,
@@ -3364,7 +3459,8 @@
    "label": "rough 135 deg +9 bite 1 of 1",
    "lift": 23.901,
    "swing": 26.2602,
-   "turn": 138.3923
+   "turn": 138.3923,
+   "via": "d"
   },
   {
    "n": 91,
@@ -3376,7 +3472,8 @@
    "label": "rough 120 deg -18 bite 1 of 4",
    "lift": 47.7606,
    "swing": 3.3922,
-   "turn": 142.3398
+   "turn": 142.3398,
+   "via": "d"
   },
   {
    "n": 92,
@@ -3388,7 +3485,8 @@
    "label": "rough 120 deg -18 bite 2 of 4",
    "lift": 52.7492,
    "swing": 3.469,
-   "turn": 142.5847
+   "turn": 142.5847,
+   "via": "d"
   },
   {
    "n": 93,
@@ -3400,7 +3498,8 @@
    "label": "rough 120 deg -18 bite 3 of 4",
    "lift": 57.7499,
    "swing": 3.6606,
-   "turn": 142.8511
+   "turn": 142.8511,
+   "via": "d"
   },
   {
    "n": 94,
@@ -3412,7 +3511,8 @@
    "label": "rough 120 deg -18 bite 4 of 4",
    "lift": 62.7634,
    "swing": 3.9687,
-   "turn": 143.1393
+   "turn": 143.1393,
+   "via": "d"
   },
   {
    "n": 95,
@@ -3424,7 +3524,8 @@
    "label": "rough 120 deg -6 bite 1 of 3",
    "lift": 29.6198,
    "swing": 13.6616,
-   "turn": 146.943
+   "turn": 146.943,
+   "via": "s"
   },
   {
    "n": 96,
@@ -3436,7 +3537,8 @@
    "label": "rough 120 deg -6 bite 2 of 3",
    "lift": 34.6626,
    "swing": 13.3639,
-   "turn": 147.1119
+   "turn": 147.1119,
+   "via": "d"
   },
   {
    "n": 97,
@@ -3448,7 +3550,8 @@
    "label": "rough 120 deg -6 bite 3 of 3",
    "lift": 39.7182,
    "swing": 13.1818,
-   "turn": 147.3028
+   "turn": 147.3028,
+   "via": "d"
   },
   {
    "n": 98,
@@ -3460,7 +3563,8 @@
    "label": "rough 105 deg -18 bite 1 of 2",
    "lift": 45.1407,
    "swing": 3.3974,
-   "turn": 157.2195
+   "turn": 157.2195,
+   "via": "d"
   },
   {
    "n": 99,
@@ -3472,7 +3576,8 @@
    "label": "rough 105 deg -18 bite 2 of 2",
    "lift": 49.601,
    "swing": 3.4072,
-   "turn": 157.4277
+   "turn": 157.4277,
+   "via": "d"
   },
   {
    "n": 100,
@@ -3484,7 +3589,8 @@
    "label": "rough 105 deg -15 bite 1 of 1",
    "lift": 40.417,
    "swing": 5.9036,
-   "turn": 158.3503
+   "turn": 158.3503,
+   "via": "d"
   },
   {
    "n": 101,
@@ -3496,7 +3602,8 @@
    "label": "rough 105 deg -3 bite 1 of 1",
    "lift": 37.7644,
    "swing": 15.6589,
-   "turn": 163.5496
+   "turn": 163.5496,
+   "via": "s"
   },
   {
    "n": 102,
@@ -3508,7 +3615,8 @@
    "label": "rough 105 deg +9 bite 1 of 1",
    "lift": 19.2365,
    "swing": 26.7628,
-   "turn": 168.278
+   "turn": 168.278,
+   "via": "d"
   },
   {
    "n": 103,
@@ -3520,7 +3628,8 @@
    "label": "rough 90 deg -18 bite 1 of 1",
    "lift": 37.8843,
    "swing": 3.5768,
-   "turn": 171.9165
+   "turn": 171.9165,
+   "via": "d"
   },
   {
    "n": 104,
@@ -3532,7 +3641,8 @@
    "label": "rough 90 deg -15 bite 1 of 1",
    "lift": 47.9761,
    "swing": 5.8308,
-   "turn": 173.6821
+   "turn": 173.6821,
+   "via": "d"
   },
   {
    "n": 105,
@@ -3544,7 +3654,8 @@
    "label": "rough 90 deg +3 bite 1 of 2",
    "lift": 31.7921,
    "swing": 20.7775,
-   "turn": 180.9811
+   "turn": 180.9811,
+   "via": "s"
   },
   {
    "n": 106,
@@ -3556,7 +3667,8 @@
    "label": "rough 90 deg +3 bite 2 of 2",
    "lift": 35.5819,
    "swing": 20.5859,
-   "turn": 181.1129
+   "turn": 181.1129,
+   "via": "d"
   },
   {
    "n": 107,
@@ -3568,7 +3680,8 @@
    "label": "rough 75 deg -18 bite 1 of 1",
    "lift": 27.6826,
    "swing": 4.2435,
-   "turn": 186.5661
+   "turn": 186.5661,
+   "via": "d"
   },
   {
    "n": 108,
@@ -3580,7 +3693,8 @@
    "label": "rough 75 deg -12 bite 1 of 3",
    "lift": 34.8292,
    "swing": 8.5315,
-   "turn": 189.466
+   "turn": 189.466,
+   "via": "d"
   },
   {
    "n": 109,
@@ -3592,7 +3706,8 @@
    "label": "rough 75 deg -12 bite 2 of 3",
    "lift": 38.6084,
    "swing": 8.3748,
-   "turn": 189.6077
+   "turn": 189.6077,
+   "via": "d"
   },
   {
    "n": 110,
@@ -3604,7 +3719,8 @@
    "label": "rough 75 deg -12 bite 3 of 3",
    "lift": 42.3939,
    "swing": 8.2832,
-   "turn": 189.7617
+   "turn": 189.7617,
+   "via": "d"
   },
   {
    "n": 111,
@@ -3616,7 +3732,8 @@
    "label": "rough 75 deg -3 bite 1 of 1",
    "lift": 28.6223,
    "swing": 16.1458,
-   "turn": 193.2355
+   "turn": 193.2355,
+   "via": "s"
   },
   {
    "n": 112,
@@ -3628,7 +3745,8 @@
    "label": "rough 60 deg -18 bite 1 of 1",
    "lift": 18.7422,
    "swing": 5.2369,
-   "turn": 201.3324
+   "turn": 201.3324,
+   "via": "d"
   },
   {
    "n": 113,
@@ -3640,7 +3758,8 @@
    "label": "rough 45 deg -18 bite 1 of 1",
    "lift": 14.7811,
    "swing": 5.803,
-   "turn": 216.2509
+   "turn": 216.2509,
+   "via": "d"
   },
   {
    "n": 114,
@@ -3652,7 +3771,8 @@
    "label": "rough 45 deg -15 bite 1 of 1",
    "lift": 10.9641,
    "swing": 8.7424,
-   "turn": 217.5209
+   "turn": 217.5209,
+   "via": "d"
   },
   {
    "n": 115,
@@ -3664,7 +3784,8 @@
    "label": "rough 30 deg -18 bite 1 of 2",
    "lift": 25.7561,
    "swing": 4.4248,
-   "turn": 231.5099
+   "turn": 231.5099,
+   "via": "d"
   },
   {
    "n": 116,
@@ -3676,7 +3797,8 @@
    "label": "rough 30 deg -18 bite 2 of 2",
    "lift": 28.7018,
    "swing": 4.1548,
-   "turn": 231.5971
+   "turn": 231.5971,
+   "via": "d"
   },
   {
    "n": 117,
@@ -3688,7 +3810,8 @@
    "label": "rough 45 deg +15 bite 1 of 1",
    "lift": 46.9435,
    "swing": 30.0516,
-   "turn": 231.8857
+   "turn": 231.8857,
+   "via": "d"
   },
   {
    "n": 118,
@@ -3700,7 +3823,8 @@
    "label": "rough 30 deg -15 bite 1 of 3",
    "lift": 17.7219,
    "swing": 7.7189,
-   "turn": 232.6454
+   "turn": 232.6454,
+   "via": "s"
   },
   {
    "n": 119,
@@ -3712,7 +3836,8 @@
    "label": "rough 30 deg -15 bite 2 of 3",
    "lift": 22.5676,
    "swing": 7.1249,
-   "turn": 232.7589
+   "turn": 232.7589,
+   "via": "d"
   },
   {
    "n": 120,
@@ -3724,7 +3849,8 @@
    "label": "rough 30 deg -15 bite 3 of 3",
    "lift": 27.4094,
    "swing": 6.6451,
-   "turn": 232.8924
+   "turn": 232.8924,
+   "via": "d"
   },
   {
    "n": 121,
@@ -3736,7 +3862,8 @@
    "label": "rough 30 deg -12 bite 1 of 4",
    "lift": 11.2092,
    "swing": 11.0398,
-   "turn": 233.8564
+   "turn": 233.8564,
+   "via": "d"
   },
   {
    "n": 122,
@@ -3748,7 +3875,8 @@
    "label": "rough 30 deg -12 bite 2 of 4",
    "lift": 15.3638,
    "swing": 10.4014,
-   "turn": 233.9289
+   "turn": 233.9289,
+   "via": "d"
   },
   {
    "n": 123,
@@ -3760,7 +3888,8 @@
    "label": "rough 30 deg -12 bite 3 of 4",
    "lift": 19.5115,
    "swing": 9.85,
-   "turn": 234.0161
+   "turn": 234.0161,
+   "via": "d"
   },
   {
    "n": 124,
@@ -3772,7 +3901,8 @@
    "label": "rough 30 deg -12 bite 4 of 4",
    "lift": 23.6557,
    "swing": 9.3831,
-   "turn": 234.118
+   "turn": 234.118,
+   "via": "d"
   },
   {
    "n": 125,
@@ -3784,7 +3914,8 @@
    "label": "rough 30 deg +3 bite 1 of 4",
    "lift": 16.5034,
    "swing": 22.223,
-   "turn": 240.5737
+   "turn": 240.5737,
+   "via": "d"
   },
   {
    "n": 126,
@@ -3796,7 +3927,8 @@
    "label": "rough 30 deg +3 bite 2 of 4",
    "lift": 21.0209,
    "swing": 21.6811,
-   "turn": 240.6733
+   "turn": 240.6733,
+   "via": "d"
   },
   {
    "n": 127,
@@ -3808,7 +3940,8 @@
    "label": "rough 30 deg +3 bite 3 of 4",
    "lift": 25.5439,
    "swing": 21.236,
-   "turn": 240.7905
+   "turn": 240.7905,
+   "via": "d"
   },
   {
    "n": 128,
@@ -3820,7 +3953,8 @@
    "label": "rough 30 deg +3 bite 4 of 4",
    "lift": 30.0763,
    "swing": 20.8856,
-   "turn": 240.9255
+   "turn": 240.9255,
+   "via": "d"
   },
   {
    "n": 129,
@@ -3832,7 +3966,8 @@
    "label": "rough 15 deg -15 bite 1 of 2",
    "lift": 24.3972,
    "swing": 6.9303,
-   "turn": 247.807
+   "turn": 247.807,
+   "via": "d"
   },
   {
    "n": 130,
@@ -3844,7 +3979,8 @@
    "label": "rough 15 deg -15 bite 2 of 2",
    "lift": 27.8631,
    "swing": 6.6059,
-   "turn": 247.906
+   "turn": 247.906,
+   "via": "d"
   },
   {
    "n": 131,
@@ -3856,7 +3992,8 @@
    "label": "rough 15 deg +0 bite 1 of 1",
    "lift": 3.4235,
    "swing": 21.9453,
-   "turn": 254.0616
+   "turn": 254.0616,
+   "via": "d"
   },
   {
    "n": 132,
@@ -3868,7 +4005,8 @@
    "label": "rough 15 deg +18 bite 1 of 1",
    "lift": 65.7025,
    "swing": 33.1476,
-   "turn": 264.2396
+   "turn": 264.2396,
+   "via": "d"
   },
   {
    "n": 133,
@@ -3880,7 +4018,8 @@
    "label": "rough 0 deg +0 bite 1 of 1",
    "lift": 17.6687,
    "swing": 19.6513,
-   "turn": 269.2755
+   "turn": 269.2755,
+   "via": "s"
   },
   {
    "n": 134,
@@ -3892,7 +4031,8 @@
    "label": "rough 345 deg -18 bite 1 of 1",
    "lift": 30.8678,
    "swing": 3.9827,
-   "turn": 276.666
+   "turn": 276.666,
+   "via": "d"
   },
   {
    "n": 135,
@@ -3904,7 +4044,8 @@
    "label": "rough 345 deg +0 bite 1 of 1",
    "lift": 15.495,
    "swing": 19.9355,
-   "turn": 284.2316
+   "turn": 284.2316,
+   "via": "d"
   },
   {
    "n": 136,
@@ -3916,7 +4057,8 @@
    "label": "rough 345 deg +9 bite 1 of 1",
    "lift": 16.4424,
    "swing": 27.1137,
-   "turn": 288.2186
+   "turn": 288.2186,
+   "via": "d"
   },
   {
    "n": 137,
@@ -3928,7 +4070,8 @@
    "label": "rough 330 deg -3 bite 1 of 2",
    "lift": 29.9279,
    "swing": 16.0529,
-   "turn": 298.2761
+   "turn": 298.2761,
+   "via": "d"
   },
   {
    "n": 138,
@@ -3940,7 +4083,8 @@
    "label": "rough 330 deg -3 bite 2 of 2",
    "lift": 34.0038,
    "swing": 15.8131,
-   "turn": 298.4119
+   "turn": 298.4119,
+   "via": "d"
   },
   {
    "n": 139,
@@ -3952,7 +4096,8 @@
    "label": "rough 315 deg -15 bite 1 of 5",
    "lift": 29.2047,
    "swing": 6.4957,
-   "turn": 307.9471
+   "turn": 307.9471,
+   "via": "d"
   },
   {
    "n": 140,
@@ -3964,7 +4109,8 @@
    "label": "rough 315 deg -15 bite 2 of 5",
    "lift": 33.6207,
    "swing": 6.1927,
-   "turn": 308.0932
+   "turn": 308.0932,
+   "via": "d"
   },
   {
    "n": 141,
@@ -3976,7 +4122,8 @@
    "label": "rough 315 deg -15 bite 3 of 5",
    "lift": 38.0412,
    "swing": 5.9805,
-   "turn": 308.256
+   "turn": 308.256,
+   "via": "d"
   },
   {
    "n": 142,
@@ -3988,7 +4135,8 @@
    "label": "rough 315 deg -15 bite 4 of 5",
    "lift": 42.4684,
    "swing": 5.8581,
-   "turn": 308.4356
+   "turn": 308.4356,
+   "via": "d"
   },
   {
    "n": 143,
@@ -4000,7 +4148,8 @@
    "label": "rough 315 deg -15 bite 5 of 5",
    "lift": 46.9041,
    "swing": 5.8253,
-   "turn": 308.6321
+   "turn": 308.6321,
+   "via": "d"
   },
   {
    "n": 144,
@@ -4012,7 +4161,8 @@
    "label": "rough 270 deg +0 bite 1 of 3",
    "lift": 25.508,
    "swing": 18.8154,
-   "turn": 359.4673
+   "turn": 359.4673,
+   "via": "s"
   },
   {
    "n": 145,
@@ -4024,7 +4174,8 @@
    "label": "rough 270 deg +0 bite 2 of 3",
    "lift": 30.0503,
    "swing": 18.4632,
-   "turn": 359.6024
+   "turn": 359.6024,
+   "via": "d"
   },
   {
    "n": 146,
@@ -4036,7 +4187,8 @@
    "label": "rough 270 deg +0 bite 3 of 3",
    "lift": 34.6036,
    "swing": 18.2051,
-   "turn": 359.7554
+   "turn": 359.7554,
+   "via": "d"
   },
   {
    "n": 147,
@@ -4048,7 +4200,8 @@
    "label": "set the ball-nose on the master",
    "lift": 42.8681,
    "swing": 17.9743,
-   "turn": 270.0779
+   "turn": 270.0779,
+   "via": "s"
   },
   {
    "n": 148,
@@ -4060,7 +4213,8 @@
    "label": "finish bite 1 of 1",
    "lift": 43.4116,
    "swing": 27.9894,
-   "turn": 0.5822
+   "turn": 0.5822,
+   "via": "s"
   },
   {
    "n": 149,
@@ -4072,7 +4226,8 @@
    "label": "finish bite 1 of 1",
    "lift": 53.0603,
    "swing": 5.722,
-   "turn": 0.8202
+   "turn": 0.8202,
+   "via": "s"
   },
   {
    "n": 150,
@@ -4084,7 +4239,8 @@
    "label": "finish bite 1 of 2",
    "lift": 37.1953,
    "swing": 17.1498,
-   "turn": 0.8317
+   "turn": 0.8317,
+   "via": "s"
   },
   {
    "n": 151,
@@ -4096,7 +4252,8 @@
    "label": "finish bite 2 of 2",
    "lift": 38.9024,
    "swing": 17.0968,
-   "turn": 0.8973
+   "turn": 0.8973,
+   "via": "d"
   },
   {
    "n": 152,
@@ -4108,7 +4265,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.482,
    "swing": 29.4107,
-   "turn": 1.8154
+   "turn": 1.8154,
+   "via": "d"
   },
   {
    "n": 153,
@@ -4120,7 +4278,8 @@
    "label": "finish bite 1 of 1",
    "lift": 43.3164,
    "swing": 32.9532,
-   "turn": 2.8087
+   "turn": 2.8087,
+   "via": "d"
   },
   {
    "n": 154,
@@ -4132,7 +4291,8 @@
    "label": "finish bite 1 of 7",
    "lift": 37.8675,
    "swing": 7.4348,
-   "turn": 2.5476
+   "turn": 2.5476,
+   "via": "s"
   },
   {
    "n": 155,
@@ -4144,7 +4304,8 @@
    "label": "finish bite 2 of 7",
    "lift": 40.5087,
    "swing": 7.3528,
-   "turn": 2.6522
+   "turn": 2.6522,
+   "via": "d"
   },
   {
    "n": 156,
@@ -4156,7 +4317,8 @@
    "label": "finish bite 3 of 7",
    "lift": 43.153,
    "swing": 7.3026,
-   "turn": 2.7628
+   "turn": 2.7628,
+   "via": "d"
   },
   {
    "n": 157,
@@ -4168,7 +4330,8 @@
    "label": "finish bite 4 of 7",
    "lift": 45.8009,
    "swing": 7.2841,
-   "turn": 2.8795
+   "turn": 2.8795,
+   "via": "d"
   },
   {
    "n": 158,
@@ -4180,7 +4343,8 @@
    "label": "finish bite 5 of 7",
    "lift": 48.4525,
    "swing": 7.2975,
-   "turn": 3.0022
+   "turn": 3.0022,
+   "via": "d"
   },
   {
    "n": 159,
@@ -4192,7 +4356,8 @@
    "label": "finish bite 6 of 7",
    "lift": 51.1083,
    "swing": 7.3427,
-   "turn": 3.131
+   "turn": 3.131,
+   "via": "d"
   },
   {
    "n": 160,
@@ -4204,7 +4369,8 @@
    "label": "finish bite 7 of 7",
    "lift": 53.7683,
    "swing": 7.4199,
-   "turn": 3.2659
+   "turn": 3.2659,
+   "via": "d"
   },
   {
    "n": 161,
@@ -4216,7 +4382,8 @@
    "label": "finish bite 1 of 1",
    "lift": 39.0216,
    "swing": 18.4083,
-   "turn": 7.6195
+   "turn": 7.6195,
+   "via": "s"
   },
   {
    "n": 162,
@@ -4228,7 +4395,8 @@
    "label": "finish bite 1 of 2",
    "lift": 44.3312,
    "swing": 29.4889,
-   "turn": 7.9517
+   "turn": 7.9517,
+   "via": "d"
   },
   {
    "n": 163,
@@ -4240,7 +4408,8 @@
    "label": "finish bite 2 of 2",
    "lift": 45.8725,
    "swing": 29.4796,
-   "turn": 8.0205
+   "turn": 8.0205,
+   "via": "d"
   },
   {
    "n": 164,
@@ -4252,7 +4421,8 @@
    "label": "finish bite 1 of 1",
    "lift": 53.014,
    "swing": 8.1742,
-   "turn": 8.1503
+   "turn": 8.1503,
+   "via": "s"
   },
   {
    "n": 165,
@@ -4264,7 +4434,8 @@
    "label": "finish bite 1 of 1",
    "lift": 19.459,
    "swing": 26.9895,
-   "turn": 8.9198
+   "turn": 8.9198,
+   "via": "s"
   },
   {
    "n": 166,
@@ -4276,7 +4447,8 @@
    "label": "finish bite 1 of 1",
    "lift": 52.9857,
    "swing": 8.4025,
-   "turn": 9.2733
+   "turn": 9.2733,
+   "via": "d"
   },
   {
    "n": 167,
@@ -4288,7 +4460,8 @@
    "label": "finish bite 1 of 1",
    "lift": 47.8681,
    "swing": 5.5722,
-   "turn": 10.0362
+   "turn": 10.0362,
+   "via": "d"
   },
   {
    "n": 168,
@@ -4300,7 +4473,8 @@
    "label": "finish bite 1 of 2",
    "lift": 37.1043,
    "swing": 20.7663,
-   "turn": 13.2997
+   "turn": 13.2997,
+   "via": "s"
   },
   {
    "n": 169,
@@ -4312,7 +4486,8 @@
    "label": "finish bite 2 of 2",
    "lift": 38.7543,
    "swing": 20.714,
-   "turn": 13.363
+   "turn": 13.363,
+   "via": "d"
   },
   {
    "n": 170,
@@ -4324,7 +4499,8 @@
    "label": "finish bite 1 of 1",
    "lift": 50.759,
    "swing": 32.7314,
-   "turn": 17.0395
+   "turn": 17.0395,
+   "via": "d"
   },
   {
    "n": 171,
@@ -4336,7 +4512,8 @@
    "label": "finish bite 1 of 1",
    "lift": 23.1337,
    "swing": 29.0836,
-   "turn": 20.8576
+   "turn": 20.8576,
+   "via": "d"
   },
   {
    "n": 172,
@@ -4348,7 +4525,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.0732,
    "swing": 20.9191,
-   "turn": 22.0452
+   "turn": 22.0452,
+   "via": "d"
   },
   {
    "n": 173,
@@ -4360,7 +4538,8 @@
    "label": "finish bite 1 of 1",
    "lift": 39.6378,
    "swing": 22.7225,
-   "turn": 23.0066
+   "turn": 23.0066,
+   "via": "d"
   },
   {
    "n": 174,
@@ -4372,7 +4551,8 @@
    "label": "finish bite 1 of 1",
    "lift": 25.7581,
    "swing": 14.9902,
-   "turn": 23.3901
+   "turn": 23.3901,
+   "via": "d"
   },
   {
    "n": 175,
@@ -4384,7 +4564,8 @@
    "label": "finish bite 1 of 1",
    "lift": 25.645,
    "swing": 17.0646,
-   "turn": 24.0198
+   "turn": 24.0198,
+   "via": "d"
   },
   {
    "n": 176,
@@ -4396,7 +4577,8 @@
    "label": "finish bite 1 of 1",
    "lift": 39.3722,
    "swing": 5.9138,
-   "turn": 24.797
+   "turn": 24.797,
+   "via": "d"
   },
   {
    "n": 177,
@@ -4408,7 +4590,8 @@
    "label": "finish bite 1 of 1",
    "lift": 37.6544,
    "swing": 3.266,
-   "turn": 27.2297
+   "turn": 27.2297,
+   "via": "d"
   },
   {
    "n": 178,
@@ -4420,7 +4603,8 @@
    "label": "finish bite 1 of 1",
    "lift": 46.5414,
    "swing": 9.9032,
-   "turn": 27.342
+   "turn": 27.342,
+   "via": "d"
   },
   {
    "n": 179,
@@ -4432,7 +4616,8 @@
    "label": "finish bite 1 of 1",
    "lift": 26.8713,
    "swing": 28.4163,
-   "turn": 30.2878
+   "turn": 30.2878,
+   "via": "s"
   },
   {
    "n": 180,
@@ -4444,7 +4629,8 @@
    "label": "finish bite 1 of 1",
    "lift": 35.3831,
    "swing": 6.419,
-   "turn": 31.8342
+   "turn": 31.8342,
+   "via": "d"
   },
   {
    "n": 181,
@@ -4456,7 +4642,8 @@
    "label": "finish bite 1 of 1",
    "lift": 27.5971,
    "swing": 30.7368,
-   "turn": 32.0982
+   "turn": 32.0982,
+   "via": "d"
   },
   {
    "n": 182,
@@ -4468,7 +4655,8 @@
    "label": "finish bite 1 of 1",
    "lift": 44.7726,
    "swing": 10.9417,
-   "turn": 33.8297
+   "turn": 33.8297,
+   "via": "d"
   },
   {
    "n": 183,
@@ -4480,7 +4668,8 @@
    "label": "finish bite 1 of 1",
    "lift": 24.905,
    "swing": 17.0217,
-   "turn": 34.4396
+   "turn": 34.4396,
+   "via": "s"
   },
   {
    "n": 184,
@@ -4492,7 +4681,8 @@
    "label": "finish bite 1 of 1",
    "lift": 24.8246,
    "swing": 19.0996,
-   "turn": 35.0703
+   "turn": 35.0703,
+   "via": "d"
   },
   {
    "n": 185,
@@ -4504,7 +4694,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.4266,
    "swing": 23.1799,
-   "turn": 35.3993
+   "turn": 35.3993,
+   "via": "d"
   },
   {
    "n": 186,
@@ -4516,7 +4707,8 @@
    "label": "finish bite 1 of 1",
    "lift": 31.7691,
    "swing": 5.1029,
-   "turn": 38.3582
+   "turn": 38.3582,
+   "via": "s"
   },
   {
    "n": 187,
@@ -4528,7 +4720,8 @@
    "label": "finish bite 1 of 1",
    "lift": 31.7034,
    "swing": 7.0614,
-   "turn": 38.4437
+   "turn": 38.4437,
+   "via": "d"
   },
   {
    "n": 188,
@@ -4540,7 +4733,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.8275,
    "swing": 13.0999,
-   "turn": 39.4162
+   "turn": 39.4162,
+   "via": "d"
   },
   {
    "n": 189,
@@ -4552,7 +4746,8 @@
    "label": "finish bite 1 of 1",
    "lift": 31.199,
    "swing": 29.5106,
-   "turn": 39.6913
+   "turn": 39.6913,
+   "via": "s"
   },
   {
    "n": 190,
@@ -4564,7 +4759,8 @@
    "label": "finish bite 1 of 1",
    "lift": 32.8615,
    "swing": 32.083,
-   "turn": 43.2026
+   "turn": 43.2026,
+   "via": "d"
   },
   {
    "n": 191,
@@ -4576,7 +4772,8 @@
    "label": "finish bite 1 of 1",
    "lift": 24.9225,
    "swing": 19.0011,
-   "turn": 45.524
+   "turn": 45.524,
+   "via": "d"
   },
   {
    "n": 192,
@@ -4588,7 +4785,8 @@
    "label": "finish bite 1 of 1",
    "lift": 24.9371,
    "swing": 21.2167,
-   "turn": 46.7338
+   "turn": 46.7338,
+   "via": "d"
   },
   {
    "n": 193,
@@ -4600,7 +4798,8 @@
    "label": "finish bite 1 of 1",
    "lift": 41.5134,
    "swing": 13.1897,
-   "turn": 47.9003
+   "turn": 47.9003,
+   "via": "d"
   },
   {
    "n": 194,
@@ -4612,7 +4811,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.7846,
    "swing": 14.9952,
-   "turn": 48.8491
+   "turn": 48.8491,
+   "via": "s"
   },
   {
    "n": 195,
@@ -4624,7 +4824,8 @@
    "label": "finish bite 1 of 1",
    "lift": 26.7761,
    "swing": 7.2698,
-   "turn": 49.1917
+   "turn": 49.1917,
+   "via": "d"
   },
   {
    "n": 196,
@@ -4636,7 +4837,8 @@
    "label": "finish bite 1 of 1",
    "lift": 26.4708,
    "swing": 9.3386,
-   "turn": 49.8211
+   "turn": 49.8211,
+   "via": "d"
   },
   {
    "n": 197,
@@ -4648,7 +4850,8 @@
    "label": "finish bite 1 of 1",
    "lift": 38.7399,
    "swing": 33.1253,
-   "turn": 54.1456
+   "turn": 54.1456,
+   "via": "d"
   },
   {
    "n": 198,
@@ -4660,7 +4863,8 @@
    "label": "finish bite 1 of 1",
    "lift": 45.0123,
    "swing": 3.6434,
-   "turn": 54.8482
+   "turn": 54.8482,
+   "via": "d"
   },
   {
    "n": 199,
@@ -4672,7 +4876,8 @@
    "label": "finish bite 1 of 1",
    "lift": 44.1493,
    "swing": 2.6533,
-   "turn": 56.7604
+   "turn": 56.7604,
+   "via": "d"
   },
   {
    "n": 200,
@@ -4684,7 +4889,8 @@
    "label": "finish bite 1 of 1",
    "lift": 39.5018,
    "swing": 16.8872,
-   "turn": 57.315
+   "turn": 57.315,
+   "via": "s"
   },
   {
    "n": 201,
@@ -4696,7 +4902,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.59,
    "swing": 3.4334,
-   "turn": 59.6083
+   "turn": 59.6083,
+   "via": "d"
   },
   {
    "n": 202,
@@ -4708,7 +4915,8 @@
    "label": "finish bite 1 of 1",
    "lift": 39.737,
    "swing": 15.5805,
-   "turn": 61.1142
+   "turn": 61.1142,
+   "via": "s"
   },
   {
    "n": 203,
@@ -4720,7 +4928,8 @@
    "label": "finish bite 1 of 1",
    "lift": 52.1819,
    "swing": 28.0437,
-   "turn": 63.9904
+   "turn": 63.9904,
+   "via": "d"
   },
   {
    "n": 204,
@@ -4732,7 +4941,8 @@
    "label": "finish bite 1 of 1",
    "lift": 54.0007,
    "swing": 30.6388,
-   "turn": 67.9985
+   "turn": 67.9985,
+   "via": "d"
   },
   {
    "n": 205,
@@ -4744,7 +4954,8 @@
    "label": "finish bite 1 of 1",
    "lift": 19.2233,
    "swing": 12.4714,
-   "turn": 71.4543
+   "turn": 71.4543,
+   "via": "s"
   },
   {
    "n": 206,
@@ -4756,7 +4967,8 @@
    "label": "finish bite 1 of 1",
    "lift": 55.9707,
    "swing": 29.3503,
-   "turn": 71.8462
+   "turn": 71.8462,
+   "via": "d"
   },
   {
    "n": 207,
@@ -4768,7 +4980,8 @@
    "label": "finish bite 1 of 1",
    "lift": 38.785,
    "swing": 20.697,
-   "turn": 73.3554
+   "turn": 73.3554,
+   "via": "s"
   },
   {
    "n": 208,
@@ -4780,7 +4993,8 @@
    "label": "finish bite 1 of 1",
    "lift": 33.4227,
    "swing": 5.0579,
-   "turn": 73.449
+   "turn": 73.449,
+   "via": "d"
   },
   {
    "n": 209,
@@ -4792,7 +5006,8 @@
    "label": "finish bite 1 of 1",
    "lift": 35.1165,
    "swing": 6.4754,
-   "turn": 73.8483
+   "turn": 73.8483,
+   "via": "d"
   },
   {
    "n": 210,
@@ -4804,7 +5019,8 @@
    "label": "finish bite 1 of 1",
    "lift": 59.7065,
    "swing": 31.7293,
-   "turn": 79.2914
+   "turn": 79.2914,
+   "via": "d"
   },
   {
    "n": 211,
@@ -4816,7 +5032,8 @@
    "label": "finish bite 1 of 1",
    "lift": 60.1314,
    "swing": 30.5602,
-   "turn": 79.6446
+   "turn": 79.6446,
+   "via": "d"
   },
   {
    "n": 212,
@@ -4828,7 +5045,8 @@
    "label": "finish bite 1 of 1",
    "lift": 64.9888,
    "swing": 31.3322,
-   "turn": 88.6919
+   "turn": 88.6919,
+   "via": "d"
   },
   {
    "n": 213,
@@ -4840,7 +5058,8 @@
    "label": "finish bite 1 of 1",
    "lift": 65.3503,
    "swing": 32.5343,
-   "turn": 89.8826
+   "turn": 89.8826,
+   "via": "d"
   },
   {
    "n": 214,
@@ -4852,7 +5071,8 @@
    "label": "finish bite 1 of 1",
    "lift": 33.4717,
    "swing": 27.5273,
-   "turn": 90.264
+   "turn": 90.264,
+   "via": "s"
   },
   {
    "n": 215,
@@ -4864,7 +5084,8 @@
    "label": "finish bite 1 of 1",
    "lift": 41.8537,
    "swing": 24.3274,
-   "turn": 93.9982
+   "turn": 93.9982,
+   "via": "d"
   },
   {
    "n": 216,
@@ -4876,7 +5097,8 @@
    "label": "finish bite 1 of 1",
    "lift": 15.7813,
    "swing": 20.2575,
-   "turn": 95.4346
+   "turn": 95.4346,
+   "via": "s"
   },
   {
    "n": 217,
@@ -4888,7 +5110,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.9265,
    "swing": 23.3122,
-   "turn": 97.9961
+   "turn": 97.9961,
+   "via": "d"
   },
   {
    "n": 218,
@@ -4900,7 +5123,8 @@
    "label": "finish bite 1 of 1",
    "lift": 22.5274,
    "swing": 9.9189,
-   "turn": 98.3217
+   "turn": 98.3217,
+   "via": "s"
   },
   {
    "n": 219,
@@ -4912,7 +5136,8 @@
    "label": "finish bite 1 of 1",
    "lift": 26.7513,
    "swing": 13.1847,
-   "turn": 98.4716
+   "turn": 98.4716,
+   "via": "d"
   },
   {
    "n": 220,
@@ -4924,7 +5149,8 @@
    "label": "finish bite 1 of 1",
    "lift": 36.6421,
    "swing": 28.3891,
-   "turn": 99.4304
+   "turn": 99.4304,
+   "via": "d"
   },
   {
    "n": 221,
@@ -4936,7 +5162,8 @@
    "label": "finish bite 1 of 1",
    "lift": 71.3085,
    "swing": 33.0844,
-   "turn": 100.7891
+   "turn": 100.7891,
+   "via": "d"
   },
   {
    "n": 222,
@@ -4948,7 +5175,8 @@
    "label": "finish bite 1 of 1",
    "lift": 72.1915,
    "swing": 33.4346,
-   "turn": 103.0003
+   "turn": 103.0003,
+   "via": "d"
   },
   {
    "n": 223,
@@ -4960,7 +5188,8 @@
    "label": "finish bite 1 of 1",
    "lift": 72.9539,
    "swing": 33.7417,
-   "turn": 105.185
+   "turn": 105.185,
+   "via": "d"
   },
   {
    "n": 224,
@@ -4972,7 +5201,8 @@
    "label": "finish bite 1 of 1",
    "lift": 44.9111,
    "swing": 26.0975,
-   "turn": 105.6157
+   "turn": 105.6157,
+   "via": "s"
   },
   {
    "n": 225,
@@ -4984,7 +5214,8 @@
    "label": "finish bite 1 of 1",
    "lift": 73.5989,
    "swing": 33.9992,
-   "turn": 107.3396
+   "turn": 107.3396,
+   "via": "d"
   },
   {
    "n": 226,
@@ -4996,7 +5227,8 @@
    "label": "finish bite 1 of 1",
    "lift": 25.3183,
    "swing": 16.2124,
-   "turn": 108.5276
+   "turn": 108.5276,
+   "via": "s"
   },
   {
    "n": 227,
@@ -5008,7 +5240,8 @@
    "label": "finish bite 1 of 1",
    "lift": 82.0615,
    "swing": 5.5168,
-   "turn": 112.0426
+   "turn": 112.0426,
+   "via": "d"
   },
   {
    "n": 228,
@@ -5020,7 +5253,8 @@
    "label": "finish bite 1 of 1",
    "lift": 18.6056,
    "swing": 13.3771,
-   "turn": 112.4019
+   "turn": 112.4019,
+   "via": "s"
   },
   {
    "n": 229,
@@ -5032,7 +5266,8 @@
    "label": "finish bite 1 of 1",
    "lift": 53.2374,
    "swing": 7.4098,
-   "turn": 115.2427
+   "turn": 115.2427,
+   "via": "d"
   },
   {
    "n": 230,
@@ -5044,7 +5279,8 @@
    "label": "finish bite 1 of 5",
    "lift": 69.751,
    "swing": 4.6567,
-   "turn": 114.6089
+   "turn": 114.6089,
+   "via": "d"
   },
   {
    "n": 231,
@@ -5056,7 +5292,8 @@
    "label": "finish bite 2 of 5",
    "lift": 72.3262,
    "swing": 4.947,
-   "turn": 114.7804
+   "turn": 114.7804,
+   "via": "d"
   },
   {
    "n": 232,
@@ -5068,7 +5305,8 @@
    "label": "finish bite 3 of 5",
    "lift": 74.9042,
    "swing": 5.2705,
-   "turn": 114.9578
+   "turn": 114.9578,
+   "via": "d"
   },
   {
    "n": 233,
@@ -5080,7 +5318,8 @@
    "label": "finish bite 4 of 5",
    "lift": 77.4847,
    "swing": 5.6277,
-   "turn": 115.1411
+   "turn": 115.1411,
+   "via": "d"
   },
   {
    "n": 234,
@@ -5092,7 +5331,8 @@
    "label": "finish bite 5 of 5",
    "lift": 80.0675,
    "swing": 6.0196,
-   "turn": 115.3305
+   "turn": 115.3305,
+   "via": "d"
   },
   {
    "n": 235,
@@ -5104,7 +5344,8 @@
    "label": "finish bite 1 of 1",
    "lift": 48.4347,
    "swing": 26.3552,
-   "turn": 115.4121
+   "turn": 115.4121,
+   "via": "s"
   },
   {
    "n": 236,
@@ -5116,7 +5357,8 @@
    "label": "finish bite 1 of 1",
    "lift": 48.541,
    "swing": 27.6166,
-   "turn": 116.6115
+   "turn": 116.6115,
+   "via": "d"
   },
   {
    "n": 237,
@@ -5128,7 +5370,8 @@
    "label": "finish bite 1 of 1",
    "lift": 25.1199,
    "swing": 18.9676,
-   "turn": 117.5208
+   "turn": 117.5208,
+   "via": "s"
   },
   {
    "n": 238,
@@ -5140,7 +5383,8 @@
    "label": "finish bite 1 of 1",
    "lift": 17.3644,
    "swing": 25.1905,
-   "turn": 117.7626
+   "turn": 117.7626,
+   "via": "d"
   },
   {
    "n": 239,
@@ -5152,7 +5396,8 @@
    "label": "finish bite 1 of 1",
    "lift": 17.3432,
    "swing": 16.6458,
-   "turn": 118.5955
+   "turn": 118.5955,
+   "via": "d"
   },
   {
    "n": 240,
@@ -5164,7 +5409,8 @@
    "label": "finish bite 1 of 2",
    "lift": 76.7887,
    "swing": 5.5695,
-   "turn": 120.1131
+   "turn": 120.1131,
+   "via": "d"
   },
   {
    "n": 241,
@@ -5176,7 +5422,8 @@
    "label": "finish bite 2 of 2",
    "lift": 78.8592,
    "swing": 5.8735,
-   "turn": 120.2632
+   "turn": 120.2632,
+   "via": "d"
   },
   {
    "n": 242,
@@ -5188,7 +5435,8 @@
    "label": "finish bite 1 of 1",
    "lift": 25.2418,
    "swing": 22.0297,
-   "turn": 121.6997
+   "turn": 121.6997,
+   "via": "s"
   },
   {
    "n": 243,
@@ -5200,7 +5448,8 @@
    "label": "finish bite 1 of 1",
    "lift": 78.2802,
    "swing": 5.8383,
-   "turn": 122.2485
+   "turn": 122.2485,
+   "via": "d"
   },
   {
    "n": 244,
@@ -5212,7 +5461,8 @@
    "label": "finish bite 1 of 1",
    "lift": 50.318,
    "swing": 8.2452,
-   "turn": 122.5923
+   "turn": 122.5923,
+   "via": "d"
   },
   {
    "n": 245,
@@ -5224,7 +5474,8 @@
    "label": "finish bite 1 of 2",
    "lift": 75.5525,
    "swing": 5.5491,
-   "turn": 124.6054
+   "turn": 124.6054,
+   "via": "d"
   },
   {
    "n": 246,
@@ -5236,7 +5487,8 @@
    "label": "finish bite 2 of 2",
    "lift": 77.3558,
    "swing": 5.8013,
-   "turn": 124.7339
+   "turn": 124.7339,
+   "via": "d"
   },
   {
    "n": 247,
@@ -5248,7 +5500,8 @@
    "label": "finish bite 1 of 1",
    "lift": 25.8889,
    "swing": 21.533,
-   "turn": 125.9782
+   "turn": 125.9782,
+   "via": "s"
   },
   {
    "n": 248,
@@ -5260,7 +5513,8 @@
    "label": "finish bite 1 of 1",
    "lift": 19.408,
    "swing": 27.0073,
-   "turn": 127.425
+   "turn": 127.425,
+   "via": "d"
   },
   {
    "n": 249,
@@ -5272,7 +5526,8 @@
    "label": "finish bite 1 of 1",
    "lift": 53.0055,
    "swing": 28.9723,
-   "turn": 128.0353
+   "turn": 128.0353,
+   "via": "d"
   },
   {
    "n": 250,
@@ -5284,7 +5539,8 @@
    "label": "finish bite 1 of 1",
    "lift": 47.7849,
    "swing": 10.1894,
-   "turn": 128.0506
+   "turn": 128.0506,
+   "via": "s"
   },
   {
    "n": 251,
@@ -5296,7 +5552,8 @@
    "label": "finish bite 1 of 1",
    "lift": 75.8148,
    "swing": 5.6939,
-   "turn": 128.1819
+   "turn": 128.1819,
+   "via": "d"
   },
   {
    "n": 252,
@@ -5308,7 +5565,8 @@
    "label": "finish bite 1 of 1",
    "lift": 53.6537,
    "swing": 29.5081,
-   "turn": 130.3563
+   "turn": 130.3563,
+   "via": "s"
   },
   {
    "n": 253,
@@ -5320,7 +5578,8 @@
    "label": "finish bite 1 of 2",
    "lift": 72.2384,
    "swing": 5.4006,
-   "turn": 132.5218
+   "turn": 132.5218,
+   "via": "s"
   },
   {
    "n": 254,
@@ -5332,7 +5591,8 @@
    "label": "finish bite 2 of 2",
    "lift": 73.6747,
    "swing": 5.5765,
-   "turn": 132.6197
+   "turn": 132.6197,
+   "via": "d"
   },
   {
    "n": 255,
@@ -5344,7 +5604,8 @@
    "label": "finish bite 1 of 1",
    "lift": 54.2152,
    "swing": 30.0116,
-   "turn": 132.6563
+   "turn": 132.6563,
+   "via": "s"
   },
   {
    "n": 256,
@@ -5356,7 +5617,8 @@
    "label": "finish bite 1 of 1",
    "lift": 27.1599,
    "swing": 25.0212,
-   "turn": 133.9685
+   "turn": 133.9685,
+   "via": "s"
   },
   {
    "n": 257,
@@ -5368,7 +5630,8 @@
    "label": "finish bite 1 of 1",
    "lift": 27.5663,
    "swing": 23.9945,
-   "turn": 134.4406
+   "turn": 134.4406,
+   "via": "d"
   },
   {
    "n": 258,
@@ -5380,7 +5643,8 @@
    "label": "finish bite 1 of 1",
    "lift": 54.6942,
    "swing": 30.4757,
-   "turn": 134.9318
+   "turn": 134.9318,
+   "via": "d"
   },
   {
    "n": 259,
@@ -5392,7 +5656,8 @@
    "label": "finish bite 1 of 1",
    "lift": 16.1572,
    "swing": 18.5523,
-   "turn": 135.035
+   "turn": 135.035,
+   "via": "s"
   },
   {
    "n": 260,
@@ -5404,7 +5669,8 @@
    "label": "finish bite 1 of 1",
    "lift": 43.6994,
    "swing": 8.4228,
-   "turn": 135.903
+   "turn": 135.903,
+   "via": "d"
   },
   {
    "n": 261,
@@ -5416,7 +5682,8 @@
    "label": "finish bite 1 of 1",
    "lift": 45.4799,
    "swing": 9.9864,
-   "turn": 136.3405
+   "turn": 136.3405,
+   "via": "d"
   },
   {
    "n": 262,
@@ -5428,7 +5695,8 @@
    "label": "finish bite 1 of 1",
    "lift": 44.6409,
    "swing": 11.7841,
-   "turn": 137.2834
+   "turn": 137.2834,
+   "via": "d"
   },
   {
    "n": 263,
@@ -5440,7 +5708,8 @@
    "label": "finish bite 1 of 2",
    "lift": 69.0241,
    "swing": 5.3273,
-   "turn": 137.4607
+   "turn": 137.4607,
+   "via": "d"
   },
   {
    "n": 264,
@@ -5452,7 +5721,8 @@
    "label": "finish bite 2 of 2",
    "lift": 71.2278,
    "swing": 5.5672,
-   "turn": 137.6057
+   "turn": 137.6057,
+   "via": "d"
   },
   {
    "n": 265,
@@ -5464,7 +5734,8 @@
    "label": "finish bite 1 of 2",
    "lift": 65.7909,
    "swing": 5.4076,
-   "turn": 143.4648
+   "turn": 143.4648,
+   "via": "d"
   },
   {
    "n": 266,
@@ -5476,7 +5747,8 @@
    "label": "finish bite 2 of 2",
    "lift": 68.2567,
    "swing": 5.64,
-   "turn": 143.6204
+   "turn": 143.6204,
+   "via": "d"
   },
   {
    "n": 267,
@@ -5488,7 +5760,8 @@
    "label": "finish bite 1 of 1",
    "lift": 30.32,
    "swing": 26.3062,
-   "turn": 144.3906
+   "turn": 144.3906,
+   "via": "s"
   },
   {
    "n": 268,
@@ -5500,7 +5773,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.2806,
    "swing": 13.4946,
-   "turn": 145.605
+   "turn": 145.605,
+   "via": "d"
   },
   {
    "n": 269,
@@ -5512,7 +5786,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.0893,
    "swing": 8.7523,
-   "turn": 145.8976
+   "turn": 145.8976,
+   "via": "d"
   },
   {
    "n": 270,
@@ -5524,7 +5799,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.0054,
    "swing": 12.1191,
-   "turn": 149.3402
+   "turn": 149.3402,
+   "via": "d"
   },
   {
    "n": 271,
@@ -5536,7 +5812,8 @@
    "label": "finish bite 1 of 3",
    "lift": 59.8408,
    "swing": 5.4836,
-   "turn": 151.3906
+   "turn": 151.3906,
+   "via": "d"
   },
   {
    "n": 272,
@@ -5548,7 +5825,8 @@
    "label": "finish bite 2 of 3",
    "lift": 62.0869,
    "swing": 5.6324,
-   "turn": 151.5208
+   "turn": 151.5208,
+   "via": "d"
   },
   {
    "n": 273,
@@ -5560,7 +5838,8 @@
    "label": "finish bite 3 of 3",
    "lift": 64.3357,
    "swing": 5.8048,
-   "turn": 151.6553
+   "turn": 151.6553,
+   "via": "d"
   },
   {
    "n": 274,
@@ -5572,7 +5851,8 @@
    "label": "finish bite 1 of 1",
    "lift": 17.4197,
    "swing": 21.5189,
-   "turn": 151.7731
+   "turn": 151.7731,
+   "via": "s"
   },
   {
    "n": 275,
@@ -5584,7 +5864,8 @@
    "label": "finish bite 1 of 2",
    "lift": 39.1383,
    "swing": 15.3199,
-   "turn": 153.4399
+   "turn": 153.4399,
+   "via": "d"
   },
   {
    "n": 276,
@@ -5596,7 +5877,8 @@
    "label": "finish bite 2 of 2",
    "lift": 40.5418,
    "swing": 15.2871,
-   "turn": 153.496
+   "turn": 153.496,
+   "via": "d"
   },
   {
    "n": 277,
@@ -5608,7 +5890,8 @@
    "label": "finish bite 1 of 1",
    "lift": 35.1182,
    "swing": 30.0841,
-   "turn": 157.7613
+   "turn": 157.7613,
+   "via": "s"
   },
   {
    "n": 278,
@@ -5620,7 +5903,8 @@
    "label": "finish bite 1 of 1",
    "lift": 18.7474,
    "swing": 22.6461,
-   "turn": 159.5044
+   "turn": 159.5044,
+   "via": "d"
   },
   {
    "n": 279,
@@ -5632,7 +5916,8 @@
    "label": "finish bite 1 of 1",
    "lift": 35.8763,
    "swing": 10.4037,
-   "turn": 159.5618
+   "turn": 159.5618,
+   "via": "d"
   },
   {
    "n": 280,
@@ -5644,7 +5929,8 @@
    "label": "finish bite 1 of 1",
    "lift": 18.498,
    "swing": 26.0309,
-   "turn": 159.818
+   "turn": 159.818,
+   "via": "d"
   },
   {
    "n": 281,
@@ -5656,7 +5942,8 @@
    "label": "finish bite 1 of 3",
    "lift": 56.0801,
    "swing": 6.0509,
-   "turn": 160.096
+   "turn": 160.096,
+   "via": "d"
   },
   {
    "n": 282,
@@ -5668,7 +5955,8 @@
    "label": "finish bite 2 of 3",
    "lift": 58.226,
    "swing": 6.1568,
-   "turn": 160.2135
+   "turn": 160.2135,
+   "via": "d"
   },
   {
    "n": 283,
@@ -5680,7 +5968,8 @@
    "label": "finish bite 3 of 3",
    "lift": 60.3747,
    "swing": 6.2839,
-   "turn": 160.3349
+   "turn": 160.3349,
+   "via": "d"
   },
   {
    "n": 284,
@@ -5692,7 +5981,8 @@
    "label": "finish bite 1 of 2",
    "lift": 37.3605,
    "swing": 17.2287,
-   "turn": 161.3841
+   "turn": 161.3841,
+   "via": "s"
   },
   {
    "n": 285,
@@ -5704,7 +5994,8 @@
    "label": "finish bite 2 of 2",
    "lift": 39.3669,
    "swing": 17.1693,
-   "turn": 161.4618
+   "turn": 161.4618,
+   "via": "d"
   },
   {
    "n": 286,
@@ -5716,7 +6007,8 @@
    "label": "finish bite 1 of 2",
    "lift": 55.6829,
    "swing": 6.5702,
-   "turn": 165.3654
+   "turn": 165.3654,
+   "via": "d"
   },
   {
    "n": 287,
@@ -5728,7 +6020,8 @@
    "label": "finish bite 2 of 2",
    "lift": 58.0976,
    "swing": 6.6875,
-   "turn": 165.497
+   "turn": 165.497,
+   "via": "d"
   },
   {
    "n": 288,
@@ -5740,7 +6033,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.7546,
    "swing": 32.1349,
-   "turn": 169.2187
+   "turn": 169.2187,
+   "via": "s"
   },
   {
    "n": 289,
@@ -5752,7 +6046,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.0571,
    "swing": 2.7374,
-   "turn": 171.5818
+   "turn": 171.5818,
+   "via": "s"
   },
   {
    "n": 290,
@@ -5764,7 +6059,8 @@
    "label": "finish bite 1 of 1",
    "lift": 41.6545,
    "swing": 33.2796,
-   "turn": 172.3984
+   "turn": 172.3984,
+   "via": "d"
   },
   {
    "n": 291,
@@ -5776,7 +6072,8 @@
    "label": "finish bite 1 of 1",
    "lift": 43.7951,
    "swing": 33.2522,
-   "turn": 174.999
+   "turn": 174.999,
+   "via": "d"
   },
   {
    "n": 292,
@@ -5788,7 +6085,8 @@
    "label": "finish bite 1 of 2",
    "lift": 51.9037,
    "swing": 7.2708,
-   "turn": 175.1209
+   "turn": 175.1209,
+   "via": "s"
   },
   {
    "n": 293,
@@ -5800,7 +6098,8 @@
    "label": "finish bite 2 of 2",
    "lift": 53.8091,
    "swing": 7.3296,
-   "turn": 175.2182
+   "turn": 175.2182,
+   "via": "d"
   },
   {
    "n": 294,
@@ -5812,7 +6111,8 @@
    "label": "finish bite 1 of 1",
    "lift": 36.7902,
    "swing": 2.8468,
-   "turn": 175.442
+   "turn": 175.442,
+   "via": "d"
   },
   {
    "n": 295,
@@ -5824,7 +6124,8 @@
    "label": "finish bite 1 of 1",
    "lift": 23.284,
    "swing": 25.6039,
-   "turn": 178.4878
+   "turn": 178.4878,
+   "via": "d"
   },
   {
    "n": 296,
@@ -5836,7 +6137,8 @@
    "label": "finish bite 1 of 1",
    "lift": 46.8484,
    "swing": 32.5832,
-   "turn": 179.2818
+   "turn": 179.2818,
+   "via": "d"
   },
   {
    "n": 297,
@@ -5848,7 +6150,8 @@
    "label": "finish bite 1 of 1",
    "lift": 33.7296,
    "swing": 3.0247,
-   "turn": 179.336
+   "turn": 179.336,
+   "via": "s"
   },
   {
    "n": 298,
@@ -5860,7 +6163,8 @@
    "label": "finish bite 1 of 1",
    "lift": 23.785,
    "swing": 29.0143,
-   "turn": 179.3726
+   "turn": 179.3726,
+   "via": "d"
   },
   {
    "n": 299,
@@ -5872,7 +6176,8 @@
    "label": "finish bite 1 of 2",
    "lift": 38.0548,
    "swing": 20.9967,
-   "turn": 181.9788
+   "turn": 181.9788,
+   "via": "d"
   },
   {
    "n": 300,
@@ -5884,7 +6189,8 @@
    "label": "finish bite 2 of 2",
    "lift": 39.5207,
    "swing": 20.9558,
-   "turn": 182.0361
+   "turn": 182.0361,
+   "via": "d"
   },
   {
    "n": 301,
@@ -5896,7 +6202,8 @@
    "label": "finish bite 1 of 2",
    "lift": 47.6657,
    "swing": 8.4075,
-   "turn": 186.0745
+   "turn": 186.0745,
+   "via": "d"
   },
   {
    "n": 302,
@@ -5908,7 +6215,8 @@
    "label": "finish bite 2 of 2",
    "lift": 49.4317,
    "swing": 8.4292,
-   "turn": 186.1582
+   "turn": 186.1582,
+   "via": "d"
   },
   {
    "n": 303,
@@ -5920,7 +6228,8 @@
    "label": "finish bite 1 of 1",
    "lift": 27.8568,
    "swing": 4.6457,
-   "turn": 188.3064
+   "turn": 188.3064,
+   "via": "d"
   },
   {
    "n": 304,
@@ -5932,7 +6241,8 @@
    "label": "finish bite 1 of 1",
    "lift": 29.7283,
    "swing": 15.2308,
-   "turn": 194.3119
+   "turn": 194.3119,
+   "via": "d"
   },
   {
    "n": 305,
@@ -5944,7 +6254,8 @@
    "label": "finish bite 1 of 2",
    "lift": 44.0117,
    "swing": 9.8668,
-   "turn": 196.7073
+   "turn": 196.7073,
+   "via": "d"
   },
   {
    "n": 306,
@@ -5956,7 +6267,8 @@
    "label": "finish bite 2 of 2",
    "lift": 45.7739,
    "swing": 9.8613,
-   "turn": 196.7854
+   "turn": 196.7854,
+   "via": "d"
   },
   {
    "n": 307,
@@ -5968,7 +6280,8 @@
    "label": "finish bite 1 of 1",
    "lift": 22.6366,
    "swing": 6.4977,
-   "turn": 196.9114
+   "turn": 196.9114,
+   "via": "d"
   },
   {
    "n": 308,
@@ -5980,7 +6293,8 @@
    "label": "finish bite 1 of 1",
    "lift": 31.9152,
    "swing": 28.7715,
-   "turn": 201.3384
+   "turn": 201.3384,
+   "via": "d"
   },
   {
    "n": 309,
@@ -5992,7 +6306,8 @@
    "label": "finish bite 1 of 1",
    "lift": 31.9329,
    "swing": 30.7728,
-   "turn": 201.4272
+   "turn": 201.4272,
+   "via": "d"
   },
   {
    "n": 310,
@@ -6004,7 +6319,8 @@
    "label": "finish bite 1 of 1",
    "lift": 29.3284,
    "swing": 16.2253,
-   "turn": 202.8289
+   "turn": 202.8289,
+   "via": "d"
   },
   {
    "n": 311,
@@ -6016,7 +6332,8 @@
    "label": "finish bite 1 of 1",
    "lift": 43.3248,
    "swing": 23.4375,
-   "turn": 203.5837
+   "turn": 203.5837,
+   "via": "d"
   },
   {
    "n": 312,
@@ -6028,7 +6345,8 @@
    "label": "finish bite 1 of 1",
    "lift": 18.3462,
    "swing": 8.2659,
-   "turn": 204.5153
+   "turn": 204.5153,
+   "via": "s"
   },
   {
    "n": 313,
@@ -6040,7 +6358,8 @@
    "label": "finish bite 1 of 1",
    "lift": 29.0434,
    "swing": 19.4483,
-   "turn": 206.5705
+   "turn": 206.5705,
+   "via": "d"
   },
   {
    "n": 314,
@@ -6052,7 +6371,8 @@
    "label": "finish bite 1 of 1",
    "lift": 16.5994,
    "swing": 6.4849,
-   "turn": 207.3313
+   "turn": 207.3313,
+   "via": "d"
   },
   {
    "n": 315,
@@ -6064,7 +6384,8 @@
    "label": "finish bite 1 of 2",
    "lift": 40.8929,
    "swing": 11.6717,
-   "turn": 208.039
+   "turn": 208.039,
+   "via": "d"
   },
   {
    "n": 316,
@@ -6076,7 +6397,8 @@
    "label": "finish bite 2 of 2",
    "lift": 42.6133,
    "swing": 11.6438,
-   "turn": 208.1106
+   "turn": 208.1106,
+   "via": "d"
   },
   {
    "n": 317,
@@ -6088,7 +6410,8 @@
    "label": "finish bite 1 of 1",
    "lift": 29.3301,
    "swing": 16.9354,
-   "turn": 210.2176
+   "turn": 210.2176,
+   "via": "s"
   },
   {
    "n": 318,
@@ -6100,7 +6423,8 @@
    "label": "finish bite 1 of 1",
    "lift": 14.3994,
    "swing": 10.239,
-   "turn": 212.2398
+   "turn": 212.2398,
+   "via": "d"
   },
   {
    "n": 319,
@@ -6112,7 +6436,8 @@
    "label": "finish bite 1 of 1",
    "lift": 37.2073,
    "swing": 29.8558,
-   "turn": 212.265
+   "turn": 212.265,
+   "via": "d"
   },
   {
    "n": 320,
@@ -6124,7 +6449,8 @@
    "label": "finish bite 1 of 2",
    "lift": 39.0116,
    "swing": 13.1105,
-   "turn": 213.7257
+   "turn": 213.7257,
+   "via": "d"
   },
   {
    "n": 321,
@@ -6136,7 +6462,8 @@
    "label": "finish bite 2 of 2",
    "lift": 41.2811,
    "swing": 13.0589,
-   "turn": 213.8171
+   "turn": 213.8171,
+   "via": "d"
   },
   {
    "n": 322,
@@ -6148,7 +6475,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.9811,
    "swing": 13.1079,
-   "turn": 215.8285
+   "turn": 215.8285,
+   "via": "d"
   },
   {
    "n": 323,
@@ -6160,7 +6488,8 @@
    "label": "finish bite 1 of 1",
    "lift": 46.5004,
    "swing": 26.3994,
-   "turn": 216.3536
+   "turn": 216.3536,
+   "via": "s"
   },
   {
    "n": 324,
@@ -6172,7 +6501,8 @@
    "label": "finish bite 1 of 1",
    "lift": 29.2913,
    "swing": 21.0761,
-   "turn": 217.9752
+   "turn": 217.9752,
+   "via": "s"
   },
   {
    "n": 325,
@@ -6184,7 +6514,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.0846,
    "swing": 13.9398,
-   "turn": 219.2364
+   "turn": 219.2364,
+   "via": "d"
   },
   {
    "n": 326,
@@ -6196,7 +6527,8 @@
    "label": "finish bite 1 of 1",
    "lift": 11.128,
    "swing": 10.3873,
-   "turn": 219.4773
+   "turn": 219.4773,
+   "via": "d"
   },
   {
    "n": 327,
@@ -6208,7 +6540,8 @@
    "label": "finish bite 1 of 1",
    "lift": 11.0701,
    "swing": 12.1656,
-   "turn": 219.4776
+   "turn": 219.4776,
+   "via": "d"
   },
   {
    "n": 328,
@@ -6220,7 +6553,8 @@
    "label": "finish bite 1 of 1",
    "lift": 39.2827,
    "swing": 14.0904,
-   "turn": 219.776
+   "turn": 219.776,
+   "via": "d"
   },
   {
    "n": 329,
@@ -6232,7 +6566,8 @@
    "label": "finish bite 1 of 1",
    "lift": 37.4471,
    "swing": 14.4023,
-   "turn": 220.845
+   "turn": 220.845,
+   "via": "d"
   },
   {
    "n": 330,
@@ -6244,7 +6579,8 @@
    "label": "finish bite 1 of 1",
    "lift": 35.4298,
    "swing": 15.1739,
-   "turn": 223.6493
+   "turn": 223.6493,
+   "via": "d"
   },
   {
    "n": 331,
@@ -6256,7 +6592,8 @@
    "label": "finish bite 1 of 1",
    "lift": 43.3378,
    "swing": 32.7801,
-   "turn": 223.7144
+   "turn": 223.7144,
+   "via": "d"
   },
   {
    "n": 332,
@@ -6268,7 +6605,8 @@
    "label": "finish bite 1 of 1",
    "lift": 29.9727,
    "swing": 18.1127,
-   "turn": 224.4056
+   "turn": 224.4056,
+   "via": "s"
   },
   {
    "n": 333,
@@ -6280,7 +6618,8 @@
    "label": "finish bite 1 of 1",
    "lift": 32.114,
    "swing": 5.7474,
-   "turn": 225.7419
+   "turn": 225.7419,
+   "via": "d"
   },
   {
    "n": 334,
@@ -6292,7 +6631,8 @@
    "label": "finish bite 1 of 1",
    "lift": 50.0973,
    "swing": 26.5584,
-   "turn": 226.0908
+   "turn": 226.0908,
+   "via": "d"
   },
   {
    "n": 335,
@@ -6304,7 +6644,8 @@
    "label": "finish bite 1 of 1",
    "lift": 50.2374,
    "swing": 27.8369,
-   "turn": 227.3021
+   "turn": 227.3021,
+   "via": "d"
   },
   {
    "n": 336,
@@ -6316,7 +6657,8 @@
    "label": "finish bite 1 of 1",
    "lift": 33.5117,
    "swing": 16.4461,
-   "turn": 228.2272
+   "turn": 228.2272,
+   "via": "s"
   },
   {
    "n": 337,
@@ -6328,7 +6670,8 @@
    "label": "finish bite 1 of 1",
    "lift": 7.1287,
    "swing": 16.2123,
-   "turn": 231.8137
+   "turn": 231.8137,
+   "via": "d"
   },
   {
    "n": 338,
@@ -6340,7 +6683,8 @@
    "label": "finish bite 1 of 5",
    "lift": 44.6437,
    "swing": 3.3791,
-   "turn": 233.1848
+   "turn": 233.1848,
+   "via": "d"
   },
   {
    "n": 339,
@@ -6352,7 +6696,8 @@
    "label": "finish bite 2 of 5",
    "lift": 47.1807,
    "swing": 3.3677,
-   "turn": 233.3001
+   "turn": 233.3001,
+   "via": "d"
   },
   {
    "n": 340,
@@ -6364,7 +6709,8 @@
    "label": "finish bite 3 of 5",
    "lift": 49.7204,
    "swing": 3.3857,
-   "turn": 233.4209
+   "turn": 233.4209,
+   "via": "d"
   },
   {
    "n": 341,
@@ -6376,7 +6722,8 @@
    "label": "finish bite 4 of 5",
    "lift": 52.2631,
    "swing": 3.4334,
-   "turn": 233.5474
+   "turn": 233.5474,
+   "via": "d"
   },
   {
    "n": 342,
@@ -6388,7 +6735,8 @@
    "label": "finish bite 5 of 5",
    "lift": 54.809,
    "swing": 3.5108,
-   "turn": 233.6793
+   "turn": 233.6793,
+   "via": "d"
   },
   {
    "n": 343,
@@ -6400,7 +6748,8 @@
    "label": "finish bite 1 of 1",
    "lift": 32.0608,
    "swing": 18.2213,
-   "turn": 234.6043
+   "turn": 234.6043,
+   "via": "s"
   },
   {
    "n": 344,
@@ -6412,7 +6761,8 @@
    "label": "finish bite 1 of 1",
    "lift": 30.6137,
    "swing": 19.7578,
-   "turn": 235.8471
+   "turn": 235.8471,
+   "via": "d"
   },
   {
    "n": 345,
@@ -6424,7 +6774,8 @@
    "label": "finish bite 1 of 1",
    "lift": 54.3063,
    "swing": 27.797,
-   "turn": 236.9279
+   "turn": 236.9279,
+   "via": "d"
   },
   {
    "n": 346,
@@ -6436,7 +6787,8 @@
    "label": "finish bite 1 of 1",
    "lift": 54.2817,
    "swing": 29.0379,
-   "turn": 237.6166
+   "turn": 237.6166,
+   "via": "d"
   },
   {
    "n": 347,
@@ -6448,7 +6800,8 @@
    "label": "finish bite 1 of 1",
    "lift": 53.4185,
    "swing": 4.4822,
-   "turn": 239.1593
+   "turn": 239.1593,
+   "via": "s"
   },
   {
    "n": 348,
@@ -6460,7 +6813,8 @@
    "label": "finish bite 1 of 1",
    "lift": 52.825,
    "swing": 4.9043,
-   "turn": 241.3677
+   "turn": 241.3677,
+   "via": "d"
   },
   {
    "n": 349,
@@ -6472,7 +6826,8 @@
    "label": "finish bite 1 of 1",
    "lift": 31.5244,
    "swing": 20.3314,
-   "turn": 242.2204
+   "turn": 242.2204,
+   "via": "s"
   },
   {
    "n": 350,
@@ -6484,7 +6839,8 @@
    "label": "finish bite 1 of 1",
    "lift": 25.0488,
    "swing": 10.3432,
-   "turn": 242.2669
+   "turn": 242.2669,
+   "via": "d"
   },
   {
    "n": 351,
@@ -6496,7 +6852,8 @@
    "label": "finish bite 1 of 1",
    "lift": 5.1057,
    "swing": 18.0136,
-   "turn": 243.0857
+   "turn": 243.0857,
+   "via": "d"
   },
   {
    "n": 352,
@@ -6508,7 +6865,8 @@
    "label": "finish bite 1 of 1",
    "lift": 54.7435,
    "swing": 31.3381,
-   "turn": 243.4153
+   "turn": 243.4153,
+   "via": "d"
   },
   {
    "n": 353,
@@ -6520,7 +6878,8 @@
    "label": "finish bite 1 of 1",
    "lift": 51.9317,
    "swing": 5.4602,
-   "turn": 244.1376
+   "turn": 244.1376,
+   "via": "s"
   },
   {
    "n": 354,
@@ -6532,7 +6891,8 @@
    "label": "finish bite 1 of 1",
    "lift": 50.5267,
    "swing": 6.2054,
-   "turn": 247.9902
+   "turn": 247.9902,
+   "via": "d"
   },
   {
    "n": 355,
@@ -6544,7 +6904,8 @@
    "label": "finish bite 1 of 1",
    "lift": 58.9521,
    "swing": 30.074,
-   "turn": 248.3397
+   "turn": 248.3397,
+   "via": "s"
   },
   {
    "n": 356,
@@ -6556,7 +6917,8 @@
    "label": "finish bite 1 of 1",
    "lift": 32.9559,
    "swing": 24.2533,
-   "turn": 251.4491
+   "turn": 251.4491,
+   "via": "s"
   },
   {
    "n": 357,
@@ -6568,7 +6930,8 @@
    "label": "finish bite 1 of 1",
    "lift": 48.7148,
    "swing": 7.1826,
-   "turn": 252.9504
+   "turn": 252.9504,
+   "via": "d"
   },
   {
    "n": 358,
@@ -6580,7 +6943,8 @@
    "label": "finish bite 1 of 1",
    "lift": 60.664,
    "swing": 31.282,
-   "turn": 253.5651
+   "turn": 253.5651,
+   "via": "s"
   },
   {
    "n": 359,
@@ -6592,7 +6956,8 @@
    "label": "finish bite 1 of 1",
    "lift": 4.5179,
    "swing": 21.6163,
-   "turn": 255.0083
+   "turn": 255.0083,
+   "via": "s"
   },
   {
    "n": 360,
@@ -6604,7 +6969,8 @@
    "label": "finish bite 1 of 1",
    "lift": 61.8005,
    "swing": 33.5282,
-   "turn": 255.3663
+   "turn": 255.3663,
+   "via": "d"
   },
   {
    "n": 361,
@@ -6616,7 +6982,8 @@
    "label": "finish bite 1 of 1",
    "lift": 19.3211,
    "swing": 13.6687,
-   "turn": 257.1281
+   "turn": 257.1281,
+   "via": "s"
   },
   {
    "n": 362,
@@ -6628,7 +6995,8 @@
    "label": "finish bite 1 of 1",
    "lift": 21.1093,
    "swing": 14.9233,
-   "turn": 257.4778
+   "turn": 257.4778,
+   "via": "d"
   },
   {
    "n": 363,
@@ -6640,7 +7008,8 @@
    "label": "finish bite 1 of 1",
    "lift": 63.358,
    "swing": 30.8607,
-   "turn": 257.8914
+   "turn": 257.8914,
+   "via": "d"
   },
   {
    "n": 364,
@@ -6652,7 +7021,8 @@
    "label": "finish bite 1 of 1",
    "lift": 46.8348,
    "swing": 8.3592,
-   "turn": 258.5126
+   "turn": 258.5126,
+   "via": "s"
   },
   {
    "n": 365,
@@ -6664,7 +7034,8 @@
    "label": "finish bite 1 of 1",
    "lift": 37.1844,
    "swing": 6.1689,
-   "turn": 264.3084
+   "turn": 264.3084,
+   "via": "d"
   },
   {
    "n": 366,
@@ -6676,7 +7047,8 @@
    "label": "finish bite 1 of 2",
    "lift": 43.109,
    "swing": 9.8056,
-   "turn": 265.1304
+   "turn": 265.1304,
+   "via": "d"
   },
   {
    "n": 367,
@@ -6688,7 +7060,8 @@
    "label": "finish bite 2 of 2",
    "lift": 44.8213,
    "swing": 9.7931,
-   "turn": 265.2049
+   "turn": 265.2049,
+   "via": "d"
   },
   {
    "n": 368,
@@ -6700,7 +7073,8 @@
    "label": "finish bite 1 of 1",
    "lift": 67.3799,
    "swing": 33.1718,
-   "turn": 265.2846
+   "turn": 265.2846,
+   "via": "s"
   },
   {
    "n": 369,
@@ -6712,7 +7086,8 @@
    "label": "finish bite 1 of 1",
    "lift": 5.7545,
    "swing": 27.1238,
-   "turn": 268.1437
+   "turn": 268.1437,
+   "via": "s"
   },
   {
    "n": 370,
@@ -6724,7 +7099,8 @@
    "label": "finish bite 1 of 1",
    "lift": 17.324,
    "swing": 15.9126,
-   "turn": 268.1892
+   "turn": 268.1892,
+   "via": "d"
   },
   {
    "n": 371,
@@ -6736,7 +7112,8 @@
    "label": "finish bite 1 of 1",
    "lift": 34.6988,
    "swing": 4.9627,
-   "turn": 269.4821
+   "turn": 269.4821,
+   "via": "d"
   },
   {
    "n": 372,
@@ -6748,7 +7125,8 @@
    "label": "finish bite 1 of 1",
    "lift": 19.8742,
    "swing": 19.2356,
-   "turn": 271.7416
+   "turn": 271.7416,
+   "via": "d"
   },
   {
    "n": 373,
@@ -6760,7 +7138,8 @@
    "label": "finish bite 1 of 2",
    "lift": 40.4784,
    "swing": 11.6682,
-   "turn": 274.0155
+   "turn": 274.0155,
+   "via": "d"
   },
   {
    "n": 374,
@@ -6772,7 +7151,8 @@
    "label": "finish bite 2 of 2",
    "lift": 42.6229,
    "swing": 11.6315,
-   "turn": 274.1044
+   "turn": 274.1044,
+   "via": "d"
   },
   {
    "n": 375,
@@ -6784,7 +7164,8 @@
    "label": "finish bite 1 of 2",
    "lift": 17.4512,
    "swing": 23.0804,
-   "turn": 276.1258
+   "turn": 276.1258,
+   "via": "s"
   },
   {
    "n": 376,
@@ -6796,7 +7177,8 @@
    "label": "finish bite 2 of 2",
    "lift": 19.3275,
    "swing": 22.8519,
-   "turn": 276.1666
+   "turn": 276.1666,
+   "via": "d"
   },
   {
    "n": 377,
@@ -6808,7 +7190,8 @@
    "label": "finish bite 1 of 1",
    "lift": 7.7197,
    "swing": 27.1442,
-   "turn": 276.3692
+   "turn": 276.3692,
+   "via": "d"
   },
   {
    "n": 378,
@@ -6820,7 +7203,8 @@
    "label": "finish bite 1 of 1",
    "lift": 30.5439,
    "swing": 8.5015,
-   "turn": 278.1607
+   "turn": 278.1607,
+   "via": "d"
   },
   {
    "n": 379,
@@ -6832,7 +7216,8 @@
    "label": "finish bite 1 of 1",
    "lift": 16.4928,
    "swing": 19.5299,
-   "turn": 283.1022
+   "turn": 283.1022,
+   "via": "d"
   },
   {
    "n": 380,
@@ -6844,7 +7229,8 @@
    "label": "finish bite 1 of 1",
    "lift": 20.7412,
    "swing": 22.656,
-   "turn": 283.1803
+   "turn": 283.1803,
+   "via": "d"
   },
   {
    "n": 381,
@@ -6856,7 +7242,8 @@
    "label": "finish bite 1 of 2",
    "lift": 38.6187,
    "swing": 13.7193,
-   "turn": 283.5371
+   "turn": 283.5371,
+   "via": "d"
   },
   {
    "n": 382,
@@ -6868,7 +7255,8 @@
    "label": "finish bite 2 of 2",
    "lift": 41.0343,
    "swing": 13.6615,
-   "turn": 283.6337
+   "turn": 283.6337,
+   "via": "d"
   },
   {
    "n": 383,
@@ -6880,7 +7268,8 @@
    "label": "finish bite 1 of 2",
    "lift": 38.0599,
    "swing": 14.9229,
-   "turn": 289.164
+   "turn": 289.164,
+   "via": "d"
   },
   {
    "n": 384,
@@ -6892,7 +7281,8 @@
    "label": "finish bite 2 of 2",
    "lift": 40.3947,
    "swing": 14.8617,
-   "turn": 289.2561
+   "turn": 289.2561,
+   "via": "d"
   },
   {
    "n": 385,
@@ -6904,7 +7294,8 @@
    "label": "finish bite 1 of 1",
    "lift": 25.1792,
    "swing": 11.2808,
-   "turn": 291.7977
+   "turn": 291.7977,
+   "via": "d"
   },
   {
    "n": 386,
@@ -6916,7 +7307,8 @@
    "label": "finish bite 1 of 1",
    "lift": 22.9739,
    "swing": 25.6266,
-   "turn": 293.4753
+   "turn": 293.4753,
+   "via": "d"
   },
   {
    "n": 387,
@@ -6928,7 +7320,8 @@
    "label": "finish bite 1 of 2",
    "lift": 21.109,
    "swing": 28.5926,
-   "turn": 294.9257
+   "turn": 294.9257,
+   "via": "d"
   },
   {
    "n": 388,
@@ -6940,7 +7333,8 @@
    "label": "finish bite 2 of 2",
    "lift": 23.0888,
    "swing": 28.382,
-   "turn": 294.9751
+   "turn": 294.9751,
+   "via": "d"
   },
   {
    "n": 389,
@@ -6952,7 +7346,8 @@
    "label": "finish bite 1 of 1",
    "lift": 17.7086,
    "swing": 22.6781,
-   "turn": 297.4301
+   "turn": 297.4301,
+   "via": "d"
   },
   {
    "n": 390,
@@ -6964,7 +7359,8 @@
    "label": "finish bite 1 of 2",
    "lift": 37.6882,
    "swing": 16.8263,
-   "turn": 299.6829
+   "turn": 299.6829,
+   "via": "d"
   },
   {
    "n": 391,
@@ -6976,7 +7372,8 @@
    "label": "finish bite 2 of 2",
    "lift": 39.5923,
    "swing": 16.7721,
-   "turn": 299.757
+   "turn": 299.757,
+   "via": "d"
   },
   {
    "n": 392,
@@ -6988,7 +7385,8 @@
    "label": "finish bite 1 of 1",
    "lift": 26.1255,
    "swing": 28.1696,
-   "turn": 302.598
+   "turn": 302.598,
+   "via": "d"
   },
   {
    "n": 393,
@@ -7000,7 +7398,8 @@
    "label": "finish bite 1 of 1",
    "lift": 18.4661,
    "swing": 34.4606,
-   "turn": 302.8475
+   "turn": 302.8475,
+   "via": "d"
   },
   {
    "n": 394,
@@ -7012,7 +7411,8 @@
    "label": "finish bite 1 of 1",
    "lift": 21.9741,
    "swing": 10.4216,
-   "turn": 303.0547
+   "turn": 303.0547,
+   "via": "d"
   },
   {
    "n": 395,
@@ -7024,7 +7424,8 @@
    "label": "finish bite 1 of 1",
    "lift": 27.817,
    "swing": 31.1223,
-   "turn": 306.8232
+   "turn": 306.8232,
+   "via": "d"
   },
   {
    "n": 396,
@@ -7036,7 +7437,8 @@
    "label": "finish bite 1 of 1",
    "lift": 20.2065,
    "swing": 24.8673,
-   "turn": 309.3356
+   "turn": 309.3356,
+   "via": "d"
   },
   {
    "n": 397,
@@ -7048,7 +7450,8 @@
    "label": "finish bite 1 of 2",
    "lift": 37.8283,
    "swing": 18.9019,
-   "turn": 311.3235
+   "turn": 311.3235,
+   "via": "d"
   },
   {
    "n": 398,
@@ -7060,7 +7463,8 @@
    "label": "finish bite 2 of 2",
    "lift": 39.6184,
    "swing": 18.8519,
-   "turn": 311.3933
+   "turn": 311.3933,
+   "via": "d"
   },
   {
    "n": 399,
@@ -7072,7 +7476,8 @@
    "label": "finish bite 1 of 1",
    "lift": 27.0969,
    "swing": 34.1267,
-   "turn": 313.3931
+   "turn": 313.3931,
+   "via": "d"
   },
   {
    "n": 400,
@@ -7084,7 +7489,8 @@
    "label": "finish bite 1 of 1",
    "lift": 28.3984,
    "swing": 34.0081,
-   "turn": 313.9284
+   "turn": 313.9284,
+   "via": "d"
   },
   {
    "n": 401,
@@ -7096,7 +7502,8 @@
    "label": "finish bite 1 of 1",
    "lift": 19.1124,
    "swing": 16.0774,
-   "turn": 313.9412
+   "turn": 313.9412,
+   "via": "d"
   },
   {
    "n": 402,
@@ -7108,7 +7515,8 @@
    "label": "finish bite 1 of 1",
    "lift": 29.5725,
    "swing": 33.8319,
-   "turn": 314.4203
+   "turn": 314.4203,
+   "via": "d"
   },
   {
    "n": 403,
@@ -7120,7 +7528,8 @@
    "label": "finish bite 1 of 1",
    "lift": 31.3131,
    "swing": 33.8007,
-   "turn": 316.0291
+   "turn": 316.0291,
+   "via": "d"
   },
   {
    "n": 404,
@@ -7132,7 +7541,8 @@
    "label": "finish bite 1 of 1",
    "lift": 32.5297,
    "swing": 33.6307,
-   "turn": 317.0219
+   "turn": 317.0219,
+   "via": "d"
   },
   {
    "n": 405,
@@ -7144,7 +7554,8 @@
    "label": "finish bite 1 of 1",
    "lift": 44.2546,
    "swing": 7.0785,
-   "turn": 318.6943
+   "turn": 318.6943,
+   "via": "d"
   },
   {
    "n": 406,
@@ -7156,7 +7567,8 @@
    "label": "finish bite 1 of 1",
    "lift": 34.267,
    "swing": 33.605,
-   "turn": 319.1256
+   "turn": 319.1256,
+   "via": "s"
   },
   {
    "n": 407,
@@ -7168,7 +7580,8 @@
    "label": "finish bite 1 of 1",
    "lift": 34.8254,
    "swing": 32.5361,
-   "turn": 319.5795
+   "turn": 319.5795,
+   "via": "d"
   },
   {
    "n": 408,
@@ -7180,7 +7593,8 @@
    "label": "finish bite 1 of 1",
    "lift": 23.4582,
    "swing": 26.469,
-   "turn": 319.9702
+   "turn": 319.9702,
+   "via": "d"
   },
   {
    "n": 409,
@@ -7192,7 +7606,8 @@
    "label": "finish bite 1 of 1",
    "lift": 17.5078,
    "swing": 14.5724,
-   "turn": 321.9646
+   "turn": 321.9646,
+   "via": "d"
   },
   {
    "n": 410,
@@ -7204,7 +7619,8 @@
    "label": "finish bite 1 of 2",
    "lift": 38.8006,
    "swing": 20.8441,
-   "turn": 322.4365
+   "turn": 322.4365,
+   "via": "d"
   },
   {
    "n": 411,
@@ -7216,7 +7632,8 @@
    "label": "finish bite 2 of 2",
    "lift": 40.564,
    "swing": 20.8018,
-   "turn": 322.5067
+   "turn": 322.5067,
+   "via": "d"
   },
   {
    "n": 412,
@@ -7228,7 +7645,8 @@
    "label": "finish bite 1 of 1",
    "lift": 17.5818,
    "swing": 17.9078,
-   "turn": 322.8117
+   "turn": 322.8117,
+   "via": "s"
   },
   {
    "n": 413,
@@ -7240,7 +7658,8 @@
    "label": "finish bite 1 of 1",
    "lift": 41.8092,
    "swing": 7.1591,
-   "turn": 325.6153
+   "turn": 325.6153,
+   "via": "d"
   },
   {
    "n": 414,
@@ -7252,7 +7671,8 @@
    "label": "finish bite 1 of 1",
    "lift": 41.0135,
    "swing": 10.9331,
-   "turn": 328.1413
+   "turn": 328.1413,
+   "via": "d"
   },
   {
    "n": 415,
@@ -7264,7 +7684,8 @@
    "label": "finish bite 1 of 1",
    "lift": 16.6299,
    "swing": 19.3867,
-   "turn": 330.5363
+   "turn": 330.5363,
+   "via": "s"
   },
   {
    "n": 416,
@@ -7276,7 +7697,8 @@
    "label": "finish bite 1 of 1",
    "lift": 39.3822,
    "swing": 7.3742,
-   "turn": 332.6016
+   "turn": 332.6016,
+   "via": "d"
   },
   {
    "n": 417,
@@ -7288,7 +7710,8 @@
    "label": "finish bite 1 of 1",
    "lift": 38.9987,
    "swing": 10.9361,
-   "turn": 333.0349
+   "turn": 333.0349,
+   "via": "d"
   },
   {
    "n": 418,
@@ -7300,7 +7723,8 @@
    "label": "finish bite 1 of 2",
    "lift": 40.5955,
    "swing": 22.7457,
-   "turn": 334.0696
+   "turn": 334.0696,
+   "via": "d"
   },
   {
    "n": 419,
@@ -7312,7 +7736,8 @@
    "label": "finish bite 2 of 2",
    "lift": 42.4804,
    "swing": 22.7146,
-   "turn": 334.1476
+   "turn": 334.1476,
+   "via": "d"
   },
   {
    "n": 420,
@@ -7324,7 +7749,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.1536,
    "swing": 12.7097,
-   "turn": 335.5678
+   "turn": 335.5678,
+   "via": "s"
   },
   {
    "n": 421,
@@ -7336,7 +7762,8 @@
    "label": "finish bite 1 of 1",
    "lift": 30.1435,
    "swing": 27.9822,
-   "turn": 336.2886
+   "turn": 336.2886,
+   "via": "s"
   },
   {
    "n": 422,
@@ -7348,7 +7775,8 @@
    "label": "finish bite 1 of 1",
    "lift": 37.2069,
    "swing": 7.6318,
-   "turn": 339.1169
+   "turn": 339.1169,
+   "via": "d"
   },
   {
    "n": 423,
@@ -7360,7 +7788,8 @@
    "label": "finish bite 1 of 3",
    "lift": 39.6642,
    "swing": 24.119,
-   "turn": 339.7704
+   "turn": 339.7704,
+   "via": "d"
   },
   {
    "n": 424,
@@ -7372,7 +7801,8 @@
    "label": "finish bite 2 of 3",
    "lift": 41.6883,
    "swing": 24.0768,
-   "turn": 339.8528
+   "turn": 339.8528,
+   "via": "d"
   },
   {
    "n": 425,
@@ -7384,7 +7814,8 @@
    "label": "finish bite 3 of 3",
    "lift": 43.7167,
    "swing": 24.0524,
-   "turn": 339.9389
+   "turn": 339.9389,
+   "via": "d"
   },
   {
    "n": 426,
@@ -7396,7 +7827,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.4321,
    "swing": 13.8958,
-   "turn": 340.7306
+   "turn": 340.7306,
+   "via": "s"
   },
   {
    "n": 427,
@@ -7408,7 +7840,8 @@
    "label": "finish bite 1 of 1",
    "lift": 40.6529,
    "swing": 14.2071,
-   "turn": 341.912
+   "turn": 341.912,
+   "via": "d"
   },
   {
    "n": 428,
@@ -7420,7 +7853,8 @@
    "label": "finish bite 1 of 1",
    "lift": 44.3152,
    "swing": 24.0513,
-   "turn": 341.9664
+   "turn": 341.9664,
+   "via": "s"
   },
   {
    "n": 429,
@@ -7432,7 +7866,8 @@
    "label": "finish bite 1 of 1",
    "lift": 35.7935,
    "swing": 11.8671,
-   "turn": 342.8602
+   "turn": 342.8602,
+   "via": "s"
   },
   {
    "n": 430,
@@ -7444,7 +7879,8 @@
    "label": "finish bite 1 of 1",
    "lift": 44.9341,
    "swing": 24.7745,
-   "turn": 345.3912
+   "turn": 345.3912,
+   "via": "d"
   },
   {
    "n": 431,
@@ -7456,7 +7892,8 @@
    "label": "finish bite 1 of 1",
    "lift": 15.906,
    "swing": 22.082,
-   "turn": 345.442
+   "turn": 345.442,
+   "via": "s"
   },
   {
    "n": 432,
@@ -7468,7 +7905,8 @@
    "label": "finish bite 1 of 1",
    "lift": 44.3669,
    "swing": 24.8903,
-   "turn": 345.9284
+   "turn": 345.9284,
+   "via": "d"
   },
   {
    "n": 433,
@@ -7480,7 +7918,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.9923,
    "swing": 25.121,
-   "turn": 346.989
+   "turn": 346.989,
+   "via": "d"
   },
   {
    "n": 434,
@@ -7492,7 +7931,8 @@
    "label": "finish bite 1 of 1",
    "lift": 60.4774,
    "swing": 3.627,
-   "turn": 347.4046
+   "turn": 347.4046,
+   "via": "s"
   },
   {
    "n": 435,
@@ -7504,7 +7944,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.1889,
    "swing": 25.7185,
-   "turn": 349.7762
+   "turn": 349.7762,
+   "via": "s"
   },
   {
    "n": 436,
@@ -7516,7 +7957,8 @@
    "label": "finish bite 1 of 1",
    "lift": 37.0588,
    "swing": 28.5272,
-   "turn": 350.5306
+   "turn": 350.5306,
+   "via": "d"
   },
   {
    "n": 437,
@@ -7528,7 +7970,8 @@
    "label": "finish bite 1 of 1",
    "lift": 42.2235,
    "swing": 26.6868,
-   "turn": 354.3082
+   "turn": 354.3082,
+   "via": "d"
   },
   {
    "n": 438,
@@ -7540,7 +7983,8 @@
    "label": "finish bite 1 of 1",
    "lift": 55.9329,
    "swing": 6.3988,
-   "turn": 356.2801
+   "turn": 356.2801,
+   "via": "s"
   }
  ],
  "bodies": {
