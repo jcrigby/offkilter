@@ -5256,7 +5256,7 @@
         "features": [
           {
             "id": 1,
-            "name": "M12 studding",
+            "name": "12 mm ground rod",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -5290,7 +5290,7 @@
           },
           {
             "id": 2,
-            "name": "M12 studding",
+            "name": "12 mm ground rod",
             "suppressed": false,
             "kind": {
               "type": "extrude",

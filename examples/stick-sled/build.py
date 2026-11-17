@@ -54,7 +54,7 @@ SHAFT_D = 20.0
 SK_W, SK_T, SK_H, SK_HTOT = 60.0, 20.0, 51.0, 70.0   # SK20: base width, thickness along the shaft, base to centre, height
 BLK_W, BLK_L, BLK_H, BLK_C = 50.0, 45.0, 42.0, 25.0  # SC20UU: width across, length along the shaft, height, base to centre
 MOTOR = (42.0, 40.0)                            # a NEMA 17: square, and long
-SPINDLE_D = 12.0                                # M12 studding
+SPINDLE_D = 12.0                                # a ground rod, M12 cut on its ends. Not studding: a 12 mm bore sits up to 0.15 off centre on that, and the big pulley that much off turns the stick 0.45 deg out
 BEARING_D, BEARING_W = 32.0, 10.0               # 6201
 PULLEY = (38.2, 10.2, 12.0)                     # GT2: 60 teeth on the spindle, 16 on the motor, and their width
 PULLEY_R = 20.5                                 # the 60's flanges
@@ -543,7 +543,7 @@ def main():
                 xbore(p, x, x + BEARING_W, axis, SPINDLE_D + 0.2, "bore")
 
         def spindle(p):
-            xcyl(p, "M12 studding", -116.0, -4.0, axis, SPINDLE_D)
+            xcyl(p, "12 mm ground rod", -116.0, -4.0, axis, SPINDLE_D)
             xcyl(p, "drive spur", -4.0, 0.0, axis, 2 * SPUR_R, op="add")
             xcyl(p, "tail centre, M10 pointed", STICK, TAIL_X[1] + 5.0, axis, 10.0, op="new")
 

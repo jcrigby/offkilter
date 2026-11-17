@@ -1700,3 +1700,38 @@ The stops are blocks clamped to the fence, in the right runner's way,
 because a fence is what a clamp reaches; the sled-back switch is on
 that runner's end, and the riser's gusset there moved 40 mm in to
 leave it room.
+
+## 2026-11 · The stick sled's spindle is a ground rod, not studding
+
+The spindle was M12 studding with everything nutted onto it. Asked
+what was still open, the pulley with a 12 mm bore came up as a part
+hard to find, and the question behind it had not been asked: what
+does that pulley do if it does not run true?
+
+The belt's radius on a pulley that is off the spindle's turning
+centre by e comes and goes by e once a turn, so the spindle is e
+over the pitch radius, times the sine of where it is, from where the
+motor sent it. On 19.1 mm of radius, 0.1 mm is 0.3 deg, and the
+finishing cuts are 0.15 mm out. Studding is 11.70 to 11.97 mm over
+its crests, so a 12 mm bore sits up to 0.15 mm off centre on it, and
+so do the bearings. That is several times what the probing was built
+to take out, and the probing cannot see it: the master is round, so
+touching it says where the axis is and nothing about how far the
+spindle has turned.
+
+So the spindle is a 12 mm ground rod with M12 cut on its ends, on
+which a 12 mm bore runs true to a couple of hundredths: 0.02 mm off
+centre is 0.03 mm of cut. The README says to check the pulley with a
+dial indicator. The test turns every finishing row's spindle by the
+error and works the cuts again, so the figure is not only the
+formula's.
+
+What lost, for now: measuring the once-a-turn error and taking it out
+in the table. It is two numbers and the table could carry them, but
+it needs something on the spindle that is not round to measure
+against, and a rod that fits makes the error small without that.
+
+The same blind spot holds for the home switches. The fit finds where
+they are; how well they repeat from one day to the next is not in
+the study, and the swing's goes to the stick whole. That is in the
+README as a thing to measure before trusting a table.

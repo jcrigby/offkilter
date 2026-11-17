@@ -328,7 +328,11 @@ for a cutter out of place.
 
 This is simulation. It takes the table for flat, the block for
 square and a touch for clean. A real sled also flexes, and has play
-that no fit takes out.
+that no fit takes out. And it finds where the stick's axis is, not
+how far the spindle has turned: a master is round, so the probing
+cannot see the spindle's angle. That rides on the big pulley running
+true and on the spindle's home mark repeating; see Measure these
+first.
 
 ### Play
 
@@ -364,9 +368,11 @@ way.
 | the rails | MGN12 with H carriages, both 150 long: level for the swing, its seat 53 over the table; upright on a ply post for the lift. The blocks' bores for the pins and nuts are not drawn, nor the motors' mounts | each rail square to the stick; where it really is goes in `build.py` |
 | the pins | not drawn | 5 mm shoulder bolts, a close fit |
 | slack | a screw's nut and two pins a link | anti-backlash nuts on both screws; a light spring from the plate to the sled and from the tail hanger to the riser, not drawn |
-| the pulleys and belt | 60 and 16 teeth, 52 between centres: a closed belt of 184 | a 60 with a 12 mm bore is not the common one |
+| the spindle | a 12 mm ground rod (silver steel), M12 cut on its ends | not studding. Studding is 11.70 to 11.97 over its crests, so bearings, pulley and master each sit up to 0.15 mm off centre on it |
+| the pulleys and belt | 60 and 16 teeth, 52 between centres: a closed belt of 184 | a 60 with a 12 mm bore is not the common one, and it has to run true. Off the spindle's turning centre by 0.1 mm it turns the stick 0.3° out once a turn and puts the finishing cuts 0.15 mm out; nothing in the setting up sees that. Within 0.02 mm (0.03 mm of cut), by a dial indicator on its teeth as the spindle is turned by hand. The motor wants slots, to tension the belt |
+| the home switches | not drawn. The lift's opens with its nose's pin 234 mm over the table, the swing's with its pin 86 mm toward the fence from the cutter's line; within 2 mm, and the probing finds where | how well they repeat is what matters, and the study does not have it: the swing's error reaches the stick whole. Home several times and let the probing table run its first five rows each time; the log's numbers for the pin should agree to 0.02 mm |
 | the drive | a 14 mm spur on the spindle's end, the tail centre pushing the stick onto it | not drawn in detail. The tail centre's hole wants a little slack under its nuts: setting up moves it by tenths |
-| the master | a ground steel sleeve, 16 round, 12 bore, 29 long | its diameter by micrometer goes to `calibrate.py fit`; its runout on the studding is found by the probing |
+| the master | a ground steel sleeve, 16 round, 12 bore, 29 long | its diameter by micrometer goes to `calibrate.py fit`; its runout on the spindle is found by the probing |
 | the blank | 49 x 42, square, its centre marked 19.5 from a wide face and 24.8 from a narrow one | on its centres within a millimetre and level within a couple of degrees: the 2 mm over is for that |
 | the feed | 20 mm/s at 25,000 rpm is a chip of 0.02 mm a tooth | that is fine dust, and may burn: the router's slowest speed, and a brisk push |
 | the frame | its ply is stiff enough by calculation; its joints are not calculated | lean on the stick with the motors holding: if the cutter's mark moves, tighten or stiffen what gave |
@@ -381,7 +387,7 @@ way.
 | beam | 350 x 60 ply | two blocks on hinge 2; the hangers under it |
 | head hangers, 2 | ply, 70 wide, round-ended | a 6201 bearing in each, 43 apart |
 | tail hanger | ply, 70 wide, round-ended | the tail centre, and link 2's pin 25 over it |
-| spindle | M12 studding | the 60-tooth pulley outboard, the master and a drive spur inboard |
+| spindle | 12 mm ground rod, M12 cut on its ends | the 60-tooth pulley outboard, the master and a drive spur inboard |
 | master | a ground steel sleeve, 16 round x 29, bought | on the spindle between hanger and spur; the cutter is under it with the sled back, a bit is set on it, and the sled is probed with it. The spur beside it is 14, so a block lying under both touches only the master |
 | lift screw | NEMA 17 on the left runner, shaft up; a T8 screw of 2 mm lead with an anti-backlash nut | 86 mm of travel cutting, 98 with the probing's reach |
 | lift rail | MGN12 x 150 with an MGN12H carriage, on a ply post 60 x 220 on the left runner | carries the lift's nose block, printed, 27 x 24 x 68: link 1's pin near its top, the nut in its foot |
@@ -411,7 +417,8 @@ the duplicator already has:
 | MGN12 rail, 150 long, with an MGN12H carriage | 2 | |
 | GT2 pulleys, 6 mm belt: 60 teeth bored 12, 16 teeth bored 5 | 1 each | and a closed belt of 184 |
 | 6201 bearings | 2 | |
-| M12 studding, nuts and washers | 350 mm | the spindle; a pointed length of it is the tail centre |
+| 12 mm ground rod (silver steel), M12 nuts and washers | 350 mm | the spindle, a thread cut on each end |
+| M10 studding, pointed, and two nuts | 100 mm | the tail centre |
 | ground steel sleeve, 16 x 12 x 29 | 1 | the master |
 | 5 mm shoulder bolts | 4 | the links' pins |
 | light springs | 2 | |
@@ -455,6 +462,9 @@ them:
   of the widest bit clear of hanger and spur, against the forward one
   past the stick's end, and the switch is where the back stop meets
   the sled;
+- the big pulley 0.1 mm off the spindle's centre puts the finishing
+  cuts 0.15 mm out, and 0.02 mm off, 0.03: the test turns every row's
+  spindle by that error and works the cuts again;
 - the probing table, on the sled as drawn: every touch is a touch, on
   a top or a side and not a corner, with a window of its screw to
   spare each way, and on its way there the master passes the pin by

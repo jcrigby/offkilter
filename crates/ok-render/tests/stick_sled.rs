@@ -1545,3 +1545,56 @@ fn the_stops_leave_the_cutter_under_the_master_and_past_the_stick() {
     // Drawn mid-pass, the sled is between its stops and touches neither.
     assert!(stops.0 < ends.0 - 50.0 && stops.1 > ends.1 + 50.0);
 }
+
+/// The probing finds where the stick's axis is; it cannot see how far
+/// the spindle has turned, because a master is round. That angle is
+/// as true as the 60-tooth pulley runs: off the spindle's turning
+/// centre by e, the belt's radius on it comes and goes by e once a
+/// turn, and the spindle is e over that radius, times the sine of
+/// where it is, from where it was sent. This turns every finishing
+/// row's spindle by that and works the cuts again, to say what the
+/// README's figure for a pulley on studding is.
+#[test]
+fn a_pulley_off_centre_puts_the_cuts_out_by_half_as_much_again() {
+    let n = numbers();
+    let (sled, rows) = (Sled::new(&n), rows(&n));
+    let ball = f(&n["bit"]) / 2.0;
+    let pitch_r = f(&n["sled"]["belt"][0]) * 2.0 / TAU; // GT2: 2 mm a tooth
+    assert!((pitch_r - 19.1).abs() < 0.01);
+    let turn = |a: f64| (a + PI).rem_euclid(TAU) - PI;
+    let worst = |e: f64, high: f64| -> f64 {
+        let (mut got, mut want) = (Vec::new(), Vec::new());
+        for r in rows.iter().filter(|r| r.kind == "finish" && r.last_bite) {
+            let out = (e / pitch_r * (r.turn.to_radians() - high).sin()).to_degrees();
+            let p = sled.pose(r.lift, r.swing, r.turn + out);
+            got.push((p.across, p.tip + ball, p.t));
+            want.push((r.across, r.tip + ball, r.t));
+        }
+        // a tile turned about its axis is the same tile
+        let twist = got
+            .iter()
+            .zip(&want)
+            .map(|(g, w)| turn(g.2 - w.2))
+            .sum::<f64>()
+            / got.len() as f64;
+        got.iter().zip(&want).fold(0.0f64, |m, (g, w)| {
+            // back into the tile's frame: the turn and flip that takes a point there is its own inverse
+            let q = seen((g.0, g.1), g.2 - twist);
+            let p = seen((w.0, w.1), w.2);
+            m.max((q.0 - p.0).hypot(q.1 - p.1))
+        })
+    };
+    assert!(worst(0.0, 0.0) < 2e-3);
+    let over = |e: f64| {
+        (0..12)
+            .map(|k| worst(e, TAU * k as f64 / 12.0))
+            .fold((f64::MAX, 0.0f64), |m, w| (m.0.min(w), m.1.max(w)))
+    };
+    let (fine, loose) = (over(0.02), over(0.1));
+    println!(
+        "the big pulley 0.02 mm off centre: finishing cuts up to {:.3} mm out; 0.1 mm off: {:.3} to {:.3}, by where round its high side is",
+        fine.1, loose.0, loose.1
+    );
+    assert!(fine.1 < 0.035);
+    assert!(loose.0 > 0.13 && loose.1 < 0.17);
+}
