@@ -36,13 +36,24 @@ from okmcp import Mcp, Part, new_tab  # noqa: E402
 OUT = os.path.join(HERE, "out")
 
 # -- the numbers to set -------------------------------------------------------
-# The router: a Bosch Colt PR20EVS, if this module uses the one on hand (the brief's first open question).
-# Bosch publishes no motor dimensions, so every one of these wants callipers.
-ROUTER_D = 65.0                 # the housing a clamp grips: what examples/router-lift takes the Colt's to be. A guess
-ROUTER_ENV = 80.0               # the widest thing on it, the top cap and its switch: the quill has to pass it. A guess
-ROUTER_L = 190.0                # from the collet nut's seat to the back cap: retailers give 7.5 in for the whole tool
-ROUTER_HOUSING = 150.0          # how much of that is the round housing, the rest being the cap. A guess
-COLLET_D, COLLET_L = 22.0, 16.0  # the collet nut, as examples/router-lift has it. Measure
+# The router: the owner's Bosch Colt, out of its base (the brief's first open question). Its body is 70.71 mm across by
+# the owner's callipers. Everything else is read off the owner's two photographs of it, one from the side and one end
+# on, scaled by that body: good to 2 or 3 mm, and across the cap only one way, the brush caps being on the sides the
+# pictures do not show. Callipers before anything is cut. Lengths are from the body's front face, the end the spindle
+# comes out of.
+ROUTER_D = 70.71                # the round body a clamp grips. Measured
+ROUTER_HOUSING = 58.0           # how far back it stays round and bare, to the nearest edge of the rubber grip. Photo
+ROUTER_GRIP = (73.0, 105.0)     # the grip behind that: across, and where it ends. Photo
+ROUTER_ENV = 82.0               # the widest thing on it, the top cap: 81 across as the photo sees it. The quill has to pass it
+ROUTER_L = 159.0                # to the top of the cap. Photo; with the nose and the nut 193, and retailers give 7.5 in
+NOSE_D, NOSE_L = 44.0, 13.0     # the bearing's boss, in front of the body. Photo
+SHAFT_D, SHAFT_L = 13.0, 6.0    # the spindle showing between the boss and the nut. Photo
+COLLET_D, COLLET_L = 20.0, 15.0  # the collet nut, 17 across its flats. Photo
+NUT_FACE = NOSE_L + SHAFT_L + COLLET_L  # the collet nut's face, in front of the body's
+CORD_AT, CORD_D, CORD_L = 133.0, 16.0, 35.0  # the cord's boot leaves the cap's side 127 back, leaning back: where it is through the quill's wall, across, long. Photo
+RACK = (18.0, 6.0, 12.0)        # the depth rack's end: wide, thick, and how far it stands out of the body's front face, at the rim. Photo
+RACK_TURN = 100.0               # and how far round from the cord it is, degrees. The two photos together, so roughly
+FACE_PROUD = 3.0                # three screw heads and the spindle lock, also at the rim of that face, stand out about this much. Photo
 BIT_D, BIT_L = 8.0, 40.0        # a mortising bit past the nut, for the pictures and the slot
 
 X_TRAVEL = 60.0                 # plunge. The brief leaves it open: a 50 mm mortise and room to clear the work
@@ -69,11 +80,11 @@ MOTOR = (42.3, 40.0, 24.0)      # NEMA 17: square, long, and its shaft. Assumed,
 BULKHEAD, CAP = 12.0, 6.0       # the wall the thrust bearing sits against, and the end cap the motor is on
 SWITCH = (20.0, 10.0, 6.0)      # a limit switch
 
-SLOT_W = 44.0                   # the bit slot: the collet nut and a finger's room each side
+SLOT_W = ROUTER_D + 6.0         # the bit slot: as wide as the body, so all that stands out of its front face passes, and the lock can be reached
 BED = 256.0                     # the printer, a Bambu P1S: nothing longer prints in one piece
 
 # -- what follows from them ---------------------------------------------------
-QI = ROUTER_ENV + 2.0                           # the quill's bore: the router goes in from the back
+QI = ROUTER_ENV + 2.0                           # the quill's bore: the router goes in from the front, its cap first
 QO = QI + 2 * WALL                              # the quill
 SB = QO + 2 * GAP                               # the sleeve's bore, and the column's
 CO = SB + 2 * WALL                              # the column, outside
@@ -110,6 +121,10 @@ BOX_X = (-GAP - OUTER_WALL, MX + GAP + OUTER_WALL)
 BOX_Y = MD / 2 + GAP + OUTER_WALL
 SLOT_Z = (AZ - Z_TRAVEL - SLOT_W / 2, AZ + SLOT_W / 2)
 COL_SLOT_Z = (1.0 + MH - CO - 1.5, IH)          # the column's way through the outer box's right wall
+CORD_SLOT = CORD_D + 6.0                        # the cord's slots, across
+CORD_PLUG = 40.0                                # the quill's slot, along: the plug goes through it flat, as the router goes in
+CORD_HANG = CORD_L - (CO - ROUTER_ENV) / 2      # the boot's end, below the column's underside
+CORD_NOTCH = CORD_HANG + 1.5 + 8.0              # the notch under the column's slot: that, the slot's clearance, and room for the cord to turn
 
 
 def rules():
@@ -131,13 +146,24 @@ def rules():
     found["z_through_nut"] = Z_TIP - (Z_NUT + NUT_L)                   # the stage up
     # The column in the outer box's right wall, the stage up and down.
     found["column_in_slot"] = min((1.0 + MH - CO) - COL_SLOT_Z[0], COL_SLOT_Z[1] - (ZB + MH))
-    # At full plunge the bit is at the sleeve's mouth, and the collet nut this far out of the outer box's face.
-    found["collet_proud"] = COLLET_L - (GAP + OUTER_WALL)
+    # At full plunge the quill's front is at the sleeve's mouth: the router's nose is this far out of the outer box's
+    # face, and the whole of the collet nut this far clear of it, for a wrench.
+    found["nose_proud"] = NOSE_L - (GAP + OUTER_WALL)
+    found["rack_in_wall"] = RACK[2] - GAP                # the rack's end is this far into the face's thickness, in the slot
+    found["slot_past_body"] = (SLOT_W - ROUTER_D) / 2
+    found["collet_proud"] = NOSE_L + SHAFT_L - (GAP + OUTER_WALL)
+    # The cord's boot comes down through the quill's floor and the column's: it runs between the stage and where the
+    # quill's back strip runs, and at full plunge it is in the outer box's right wall, which is notched for it.
+    boot = (XQ - X_TRAVEL + CORD_AT - CORD_D / 2, XQ + CORD_AT + CORD_D / 2)
+    found["cord_past_stage"] = boot[0] - MX
+    found["cord_short_of_strip"] = back[0] - boot[1]
+    found["cord_in_wall"] = (MX + GAP + OUTER_WALL) - boot[0]
+    found["cord_slot_short_of_strip"] = (QL - 2.0 - STRIP_L) - (CORD_AT - CORD_SLOT / 2 + CORD_PLUG)   # the quill's own slot and its own back strip
     bad = []
     if min(found["x_engaged"], found["z_engaged"]) < ENGAGE:
         bad.append(f"a box is under {ENGAGE} widths in its guide: {found['x_engaged']:.2f} along X, {found['z_engaged']:.2f} along Z")
     for key, least in (("front_strip_in_sleeve", 0.0), ("back_strip_in_column", 0.0), ("x_tip_to_router", 3.0), ("x_through_nut", 2.0), ("z_tip_to_sleeve", 3.0),
-                       ("z_through_nut", 2.0), ("column_in_slot", 1.0)):
+                       ("z_through_nut", 2.0), ("column_in_slot", 1.0), ("cord_past_stage", 3.0), ("cord_short_of_strip", 3.0), ("cord_slot_short_of_strip", 10.0), ("slot_past_body", 2.0)):
         if found[key] < least - 1e-9:
             bad.append(f"{key} is {found[key]:.1f}, under {least}")
     if bad:
@@ -209,6 +235,8 @@ def outer_box(p):
     box(p, "inside: the Z guide", (-GAP, MX + GAP), (-MD / 2 - GAP, MD / 2 + GAP), (0.0, IH), op="remove")
     box(p, "bit slot", (BOX_X[0] - 1.0, -GAP + 1.0), (-SLOT_W / 2, SLOT_W / 2), SLOT_Z, op="remove")
     box(p, "the X column's way", (MX + GAP - 1.0, BOX_X[1] + 1.0), (-CO / 2 - 1.5, CO / 2 + 1.5), COL_SLOT_Z, op="remove")
+    # At full plunge and the stage down the cord's boot hangs under the column in the thickness of this wall.
+    box(p, "the cord's notch", (MX + GAP - 1.0, BOX_X[1] + 1.0), (-CORD_SLOT / 2, CORD_SLOT / 2), (COL_SLOT_Z[0] - CORD_NOTCH, COL_SLOT_Z[0] + 1.0), op="remove")
     box(p, "the Z switch's pocket", (7.5, 8.5 + SWITCH[0]), (Z_SWITCH_Y[0] - 0.5, Z_SWITCH_Y[1] + 0.5), (IH - 1.0, IH + SWITCH[2]), op="remove")
     zcyl(p, "the Z screw's way", (-OUTER_WALL - 1.0, 1.0), (MX / 2, 0.0), SCREW_D + 1.0, op="remove")
     sink = GIB[0] - GAP + 0.5
@@ -255,7 +283,8 @@ def z_stage(p):
 def x_column(p):
     box(p, "X column", (MX, X_COL_END), (-CO / 2, CO / 2), (AZ - CO / 2, AZ + CO / 2))
     box(p, "bore: the sleeve carried on", (MX - 1.0, X_COL_END + 1.0), (-SB / 2, SB / 2), (AZ - SB / 2, AZ + SB / 2), op="remove")
-    box(p, "the cord's slot", (X_ROUTER_BACK - X_TRAVEL - 10.0, X_COL_END - 30.0), (-CO / 2 - 1.0, -SB / 2 + 1.0), (AZ + GIB[1] / 2 + 6.0, AZ + GIB[1] / 2 + 20.0), op="remove")
+    # the cord's slot, in the floor: as long as the travel, between the stage and where the quill's back strip runs
+    zbox(p, "the cord's slot", (XQ - X_TRAVEL + CORD_AT - CORD_SLOT / 2, XQ + CORD_AT + CORD_SLOT / 2), (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - CO / 2 - 1.0, AZ - SB / 2 + 1.0), op="remove")
     for y in ((-SB / 2 + 6.0, -GIB[1] / 2 - 6.0), (GIB[1] / 2 + 6.0, SB / 2 - 6.0)):   # air in through the lid at the back, each side of the gib; the spider lets it through to the router
         zbox(p, "vent", (X_COL_END - 70.0, X_COL_END - 20.0), y, (AZ + SB / 2 - 1.0, AZ + CO / 2 + 1.0), op="remove")
     lo, hi = XQ + QL - X_TRAVEL - STRIP_L - 10.0, X_COL_END - 8.0       # the gibs lie where the quill's back end runs
@@ -277,7 +306,8 @@ def x_gibs(p):
 def quill(p):
     box(p, "X quill", (XQ, XQ + QL), (-QO / 2, QO / 2), (AZ - QO / 2, AZ + QO / 2))
     box(p, "bore: the router's", (XQ - 1.0, XQ + QL + 1.0), (-QI / 2, QI / 2), (AZ - QI / 2, AZ + QI / 2), op="remove")
-    box(p, "the cord's slot", (X_ROUTER_BACK - 10.0, X_SPIDER - 4.0), (-QO / 2 - 1.0, -QI / 2 + 1.0), (AZ + GIB[1] / 2 + 6.0, AZ + GIB[1] / 2 + 20.0), op="remove")
+    # the cord's slot, in the floor between the two strips: the plug is fed through it as the router goes in
+    zbox(p, "the cord's slot", (XQ + CORD_AT - CORD_SLOT / 2, XQ + CORD_AT - CORD_SLOT / 2 + CORD_PLUG), (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - QO / 2 - 1.0, AZ - QI / 2 + 1.0), op="remove")
     for x in ((XQ + 2.0, XQ + 2.0 + STRIP_L), (XQ + QL - 2.0 - STRIP_L, XQ + QL - 2.0)):
         box(p, "strip underneath", x, (-QO / 2 + 4.0, QO / 2 - 4.0), (AZ - QO / 2 - GAP, AZ - QO / 2), op="add")
         box(p, "strip behind", x, (QO / 2, QO / 2 + GAP), (AZ - QO / 2 + 4.0, AZ + QO / 2 - 4.0), op="add")
@@ -298,16 +328,30 @@ def spider(p):
 
 
 def router(p):
-    xcyl(p, "router housing", (XQ, XQ + ROUTER_HOUSING), (0.0, AZ), ROUTER_D)
-    xcyl(p, "router cap", (XQ + ROUTER_HOUSING, X_ROUTER_BACK), (0.0, AZ), ROUTER_ENV, op="add")
-    xcyl(p, "collet nut", (XQ - COLLET_L, XQ), (0.0, AZ), COLLET_D, op="add")
-    xcyl(p, "bit", (XQ - COLLET_L - BIT_L, XQ - COLLET_L), (0.0, AZ), BIT_D, op="add")
+    """The Colt as the photograph has it, turned in its clamps so that the cord's boot points down."""
+    xcyl(p, "router body", (XQ, XQ + ROUTER_HOUSING), (0.0, AZ), ROUTER_D)
+    xcyl(p, "grip", (XQ + ROUTER_HOUSING, XQ + ROUTER_GRIP[1]), (0.0, AZ), ROUTER_GRIP[0], op="add")
+    xcyl(p, "cap", (XQ + ROUTER_GRIP[1], X_ROUTER_BACK), (0.0, AZ), ROUTER_ENV, op="add")
+    xcyl(p, "nose", (XQ - NOSE_L, XQ), (0.0, AZ), NOSE_D, op="add")
+    xcyl(p, "spindle", (XQ - NOSE_L - SHAFT_L, XQ - NOSE_L), (0.0, AZ), SHAFT_D, op="add")
+    xcyl(p, "collet nut", (XQ - NUT_FACE, XQ - NOSE_L - SHAFT_L), (0.0, AZ), COLLET_D, op="add")
+    xcyl(p, "bit", (XQ - NUT_FACE - BIT_L, XQ - NUT_FACE), (0.0, AZ), BIT_D, op="add")
+    zcyl(p, "cord's boot", (AZ - ROUTER_ENV / 2 - CORD_L, AZ - ROUTER_ENV / 2 + 10.0), (XQ + CORD_AT, 0.0), CORD_D, op="add")
+    # On the front face, at its rim: the screw heads and the lock as a low ring, and the rack's end, round from the cord.
+    xcyl(p, "screw heads and lock", (XQ - FACE_PROUD, XQ), (0.0, AZ), ROUTER_D, op="add")
+    a, r1 = math.radians(RACK_TURN - 90.0), ROUTER_D / 2
+    r0, h = r1 - RACK[1], RACK[0] / 2
+    cs, sn = math.cos(a), math.sin(a)
+    s = p.sketch("right", XQ - RACK[2], "rack's end")
+    p.polygon(s, [(r * cs - t * sn, AZ + r * sn + t * cs) for r, t in ((r0, -h), (r1 - 0.8, -h), (r1 - 0.8, h), (r0, h))])
+    p.extrude(s, RACK[2], op="add", name="rack's end")
 
 
 def clamps(p):
-    """Two collars round the housing, a close fit in the quill. How they are tightened is the brief's sixth open question."""
+    """Two collars round the body, a close fit in the quill, pushed on from the front after the router is in. Both
+    are on the 58 mm that is round. How they are tightened is the brief's sixth open question."""
     fit = QI / 2 - 0.2
-    for x0 in (XQ + 15.0, XQ + ROUTER_HOUSING - 35.0):
+    for x0 in (XQ + 2.0, XQ + ROUTER_HOUSING - 22.0):
         box(p, "collar", (x0, x0 + 20.0), (-fit, fit), (AZ - fit, AZ + fit))
         xcyl(p, "the housing's bore", (x0 - 0.5, x0 + 20.5), (0.0, AZ), ROUTER_D + 0.6, op="remove")
 
@@ -424,7 +468,7 @@ def main():
     mcp.call("screenshot", {"tab": home, "view": "0,-1,0", "section": "y:0", "fit": fit, "width": 1500, "height": 1100, "path": os.path.join(OUT, "section-home.png")})
     mcp.call("screenshot", {"tab": far, "view": "0,-1,0", "section": "y:0", "fit": fit, "width": 1500, "height": 1100, "path": os.path.join(OUT, "section-plunged-down.png")})
     print(mcp.call("export", {"tab": home, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "positioner.pdf"),
-                              "note": f"two-axis router positioner, first pass: X {X_TRAVEL:.0f}, Z {Z_TRAVEL:.0f} of travel; every router dimension a guess"}))
+                              "note": f"two-axis router positioner, first pass: X {X_TRAVEL:.0f}, Z {Z_TRAVEL:.0f} of travel; the router's body {ROUTER_D:.0f} as measured, the rest of it off a photograph"}))
     mcp.close()
 
     # -- the report the brief asks for -------------------------------------------
@@ -433,11 +477,12 @@ def main():
     too_long = sorted(k for k, v in sizes.items() if max(v) > BED)
     envelope = {"x": (BOX_X[0], X_END), "y": (-BOX_Y, BOX_Y), "z": (Z_END, IH + OUTER_WALL)}
     numbers = {
-        "router": {"d": ROUTER_D, "envelope": ROUTER_ENV, "length": ROUTER_L, "housing": ROUTER_HOUSING, "collet": [COLLET_D, COLLET_L], "bit": [BIT_D, BIT_L]},
+        "router": {"d": ROUTER_D, "envelope": ROUTER_ENV, "length": ROUTER_L, "housing": ROUTER_HOUSING, "grip": ROUTER_GRIP, "nose": [NOSE_D, NOSE_L], "shaft": [SHAFT_D, SHAFT_L],
+                   "collet": [COLLET_D, COLLET_L], "nut_face": NUT_FACE, "overall": ROUTER_L + NUT_FACE, "cord": [CORD_AT, CORD_D, CORD_L], "rack": RACK, "rack_turn": RACK_TURN, "face_proud": FACE_PROUD, "bit": [BIT_D, BIT_L]},
         "travel": {"x": X_TRAVEL, "z": Z_TRAVEL}, "wall": WALL, "outer_wall": OUTER_WALL, "gap": GAP, "strip_l": STRIP_L, "gib": GIB, "engage": ENGAGE, "rail": RAIL,
         "screw": {"d": SCREW_D, "pitch": SCREW_PITCH, "per_step": SCREW_PITCH / 200, "nut": [NUT_AF, NUT_L], "float": NUT_FLOAT, "lead": NUT_LEAD, "tip_clear": TIP_CLEAR},
         "quill": {"bore": QI, "outside": QO, "length": QL, "front": XQ}, "sleeve": {"bore": SB, "outside": CO},
-        "stage": {"x": MX, "y": MD, "height": MH, "foot": ZB, "screw_room": Z_CLEAR, "boss": BOSS}, "box": {"x": BOX_X, "y": BOX_Y, "inside_height": IH, "slot_z": SLOT_Z, "slot_w": SLOT_W, "column_slot_z": COL_SLOT_Z},
+        "stage": {"x": MX, "y": MD, "height": MH, "foot": ZB, "screw_room": Z_CLEAR, "boss": BOSS}, "box": {"x": BOX_X, "y": BOX_Y, "inside_height": IH, "slot_z": SLOT_Z, "slot_w": SLOT_W, "column_slot_z": COL_SLOT_Z, "cord_slot": [CORD_SLOT, CORD_PLUG], "cord_notch": CORD_NOTCH},
         "axis_z": AZ, "x": {"router_back": X_ROUTER_BACK, "tip": X_TIP, "nut": X_NUT, "spider": X_SPIDER, "column_end": X_COL_END, "end": X_END},
         "z": {"nut": Z_NUT, "tip": Z_TIP, "end": Z_END}, "drive": {"recess": REC, "bulkhead": BULKHEAD, "chamber": CHAMBER, "length": DRIVE, "cap": CAP, "motor": MOTOR},
         "rules": found, "envelope": envelope, "size": [envelope[k][1] - envelope[k][0] for k in "xyz"],
@@ -450,7 +495,8 @@ def main():
     print(f"envelope {numbers['size'][0]:.0f} long x {numbers['size'][1]:.0f} deep x {numbers['size'][2]:.0f} tall; {numbers['out_of_the_box']:.0f} of that is column and motor out of the box's right side; "
           f"{numbers['behind_router']['drawn_back']:.0f} behind the router drawn back")
     print(f"quill {QO:.0f} square x {QL:.0f}, in its guide {found['x_engaged']:.2f} widths; Z stage {MX:.0f} x {MD:.0f} x {MH:.0f}, {found['z_engaged']:.2f} widths; outer box {sizes['Outer box'][0]:.0f} x {sizes['Outer box'][1]:.0f} x {sizes['Outer box'][2]:.0f}")
-    print(f"X screw tip {found['x_tip_to_router']:.0f} from the router's back, drawn back; Z screw tip {found['z_tip_to_sleeve']:.0f} under the sleeve, down; the collet nut {found['collet_proud']:.1f} out of the box's face at full plunge")
+    print(f"X screw tip {found['x_tip_to_router']:.0f} from the router's back, drawn back; Z screw tip {found['z_tip_to_sleeve']:.0f} under the sleeve, down; at full plunge the router's nose {found['nose_proud']:.1f} out of the box's face and the collet nut {found['collet_proud']:.1f} clear of it")
+    print(f"the cord's boot: {found['cord_past_stage']:.0f} past the stage at full plunge and {found['cord_in_wall']:.1f} into the outer box's right wall, {found['cord_short_of_strip']:.0f} short of where the quill's back strip runs")
     print(f"over the printer's {BED:.0f}: {', '.join(too_long) or 'nothing'}")
 
 

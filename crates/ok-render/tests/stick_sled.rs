@@ -536,10 +536,12 @@ fn bit_edge(n: &Value, tool: &str) -> Vec<P2> {
 /// The positioner's face is a wall beside the stick and the sled's
 /// plate a floor under it: the uncut blank turns clear of both. The
 /// headstock and tailstock pass that wall as the sled travels, and
-/// the wheel, which is bigger than the gap, never does. Every row is
-/// within the positioner's travel, with room for a bit set a little
-/// long or short; and the collet nut never comes within the blank's
-/// swing.
+/// the wheel, hung off the plate's head end, never comes to it. Every
+/// row is within the positioner's travel, with room for a bit set a
+/// little long or short. The collet nut never comes within the
+/// blank's swing, and that is what sets how far the positioner
+/// stands from the stick: the nut is out of its face at the deepest
+/// cut, by the router's nose.
 #[test]
 fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
     let n = numbers();
@@ -553,7 +555,7 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
         face - swing,
         za - top - swing
     );
-    assert!(face - swing >= f(&s["face_clear"]) - 1e-9 && face - swing < f(&s["face_clear"]) + 1.0);
+    assert!(face - swing >= f(&s["face_clear"]) - 1e-9);
     assert!(za - top - swing >= f(&s["bed_clear"]));
     assert!((f(&p["box_y"][0]) - face).abs() < 1e-9);
     // the uprights and the plate stay on the stick's side of that face
@@ -562,10 +564,10 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
     let travel = pair(&a["travel"]);
     assert!((f(&p["bit_home_z"]) + travel.1 / 2.0 - za).abs() < 1e-9);
     assert!((f(&a["across_home"]) + travel.1 / 2.0).abs() < 1e-9);
-    // The wheel: wider than the gap to the face, so it hangs off the plate's head end, clear of the positioner's box
+    // The wheel: lower than the plate's top, so it hangs off the plate's head end, clear of the positioner's box
     // with the sled back, which is as near as it comes; and over the shafts' supports.
     let (rim, wx) = (f(&s["wheel_rim"]), pair(&s["wheel_x"]));
-    assert!(rim > face && za - rim < top && wx.1 < f(&s["plate_x"][0]));
+    assert!(za - rim < top && wx.1 < f(&s["plate_x"][0]));
     assert!(f(&s["back_x"]) - f(&p["half_box"]) - wx.1 >= 5.0);
     assert!(za - rim >= f(&s["sk"][3]) + 3.0);
     let w = &s["wheel"];
@@ -589,6 +591,15 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
     assert!(d.0 >= past + margin && d.1 <= travel.0 - margin + 1e-6);
     assert!(h.0 >= probe.1 + 2.0 && h.1 <= travel.1 - probe.1 - 2.0);
     assert!(nut >= swing);
+    // Run out for the deepest cut the nut is this far in front of the positioner's face: more than the blank's own
+    // clearance of the face, so it is the nut that says where the face is, and the face is no further off than that.
+    let nut_out = travel.0 - margin - f(&p["nut_behind"]);
+    assert!(
+        nut_out > f(&s["face_clear"]),
+        "the nut is {nut_out} out of the face"
+    );
+    assert!(face - swing >= nut_out && face - swing < nut_out + 1.0);
+    assert!((nut - (face - nut_out)).abs() < 1e-3);
     // a bit is set within the travel too, its probe's window and the margin with it
     let set = rows.iter().find(|r| r.kind == "set").unwrap();
     assert!(set.depth - probe.0 - margin > 0.0 && set.depth + probe.0 + margin < travel.0);

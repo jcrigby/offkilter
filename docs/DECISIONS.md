@@ -1852,3 +1852,48 @@ in the collet reads as travel. That is not written; the README says so
 and says what 2 mm in a metre costs. The depth screw's pitch, which
 looked like the worry with a threaded rod, turned out to cost under a
 hundredth.
+
+## 2026-11 · The positioner's router: one measurement and a photograph
+
+The owner took the Colt out of its base, measured its body at 70.71 mm
+and sent two photographs of it, from the side and end on. The first
+pass had guessed 65, and guessed the rest too.
+
+- **The photographs are used, with their limits said.** Scaled by the
+  body, they give lengths along the router and widths across one way
+  to 2 or 3 mm. That is worse than callipers and far better than the guesses
+  it replaces, two of which were wrong by 30 mm: the router is 159
+  long behind its body's front face, not 190, and it stays round for
+  58 mm, not 150. `build.py` marks each number measured or photo, and
+  the README lists what to measure, most important first.
+- **The cord goes down, through the floors.** It leaves the cap's
+  side, where the first pass had it leave the back. Out of the front
+  or the back of the column it meets the rails the stage bears on,
+  just where finding 1 put them; out of the top it meets the lid, and
+  in the stick sled the plinth the positioner lies on. Down, it wants
+  a slot in two floors that miss the bearing strips and a notch in a
+  part of the right wall nothing bears on. In the sled, turned over,
+  down is up, into free air.
+- **The bit slot is as wide as the body.** The front face has three
+  screw heads, the spindle lock and the rack's end at its rim, the
+  rack 12 mm proud, and at full plunge that face is 1.5 mm behind the
+  box's wall. A slot for the boss alone would want the router set
+  back in the quill by the rack's 12 mm, which gives away reach and
+  leaves the lock behind the wall. A slot 77 wide passes all of it
+  and puts the lock under a thumb.
+- **The cord's boot is part of the router in the collision check.**
+  The notch exists because the check found the boot in the wall, and
+  taking the notch out makes the check fail.
+- **In the stick sled the collet nut places the positioner.** The
+  real nut is 34 mm in front of the quill where 16 was drawn, so at
+  the deepest cut it is 20.5 mm out of the positioner's face. The
+  rule that the nut stays outside the uncut blank's swing then puts
+  the face 54 mm from the stick, not 36. The alternative, keeping 36
+  and using less of the quill's travel, leaves 41 mm of depth where
+  the cuts need 45. The bit's length out of the nut is the same
+  either way: it is the blank's swing and the 12 mm past the axis.
+
+Not settled by this: the cap's width the other way across, where the
+brush caps are; what holds the spindle while the nut is turned; and
+the collet, which on a Colt with this label is 1/4 in, where the
+sled's bits and pin are planned at 6 mm.

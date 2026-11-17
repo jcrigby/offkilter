@@ -35,8 +35,8 @@ checked by calculation and by the test.
   a belt, 16 teeth to a wheel of 160.
 - **The positioner places the bit.** It lies on its lid with its Z
   column standing up, so the bit's axis is a stick's height over the
-  base. Its face is a wall 36 mm from the stick's axis; the bit comes
-  out of the slot in it.
+  base. Its face is a wall 54 mm from the stick's axis; the bit comes
+  out of the slot in it, and for the deeper cuts the collet nut too.
 - **Depth** is the positioner's X: the quill run out along the bit.
   **Height** is its Z. A cut is a direction round the stick, a height
   of the bit over the stick's axis, and a depth. Each is one motor,
@@ -44,9 +44,9 @@ checked by calculation and by the test.
 - **The sled rides the two 20 mm shafts** on four bearing blocks: the
   set the duplicator had, doing what it was made for. The longer
   shaft is under the stick, the shorter 150 mm out to the left.
-- **The wheel hangs off the sled's head end.** At 105 mm across it is
-  wider than the gap to the positioner and lower than the sled's
-  plate, so it sits beyond both. At 2.7 times the radius of the
+- **The wheel hangs off the sled's head end.** At 105 mm across it
+  comes lower than the sled's plate and within 2 mm of the
+  positioner's face, so it sits beyond both. At 2.7 times the radius of the
   60-tooth pulley it replaces, the same runout turns the stick 2.7
   times less far wrong, and by my estimate the belt gives about a
   fifth as much. The ratio is ten to one.
@@ -120,8 +120,8 @@ Estimated.
 | X travel | 12.6 to 58.0 mm used of 60 | all of it: the deepest cut is 2 mm short of the end |
 | Z travel | 21.0 to 59.0 mm used of 80 | 60 would do |
 | how it lies | on its lid, on a 19 mm plinth | the stage's weight then pulls away from its column, onto the collar that has no thrust bearing yet |
-| its face from the stick's axis | 36 mm | the uncut blank's corners swing 33.5 |
-| the bit out of the collet nut | 45.5 mm | to reach 12 mm past the stick's axis from behind that face. A 75 mm tapered ball-nose does; the 6 mm straight bit must be as long |
+| its face from the stick's axis | 54 mm | the Colt's collet nut is 34 mm in front of the quill, so at the deepest cut it is 20.5 out of the face, and the uncut blank's corners swing 33.5. The nut sets the distance, not the face |
+| the bit out of the collet nut | 45.5 mm | the blank's swing, and 12 mm past the stick's axis. The router does not change it: the positioner stands back by what the nut stands out. A 75 mm tapered ball-nose does; the 6 mm straight bit must be as long |
 | the depth's screw | M8 rod, as the positioner draws | a rod's pitch is nobody's promise, but it matters little here: 0.2 % off costs under a hundredth of a millimetre in the study |
 | its two travels, square | not known until it is built | 2 mm in a metre out is 0.07 mm on the tile: the largest thing left. See Setting up |
 
@@ -240,9 +240,10 @@ and up or down. All of it is simulation.
 
 | what | in the model | check |
 |---|---|---|
-| the router | everything in the positioner rests on it | see the positioner's own table |
+| the router | its body is 70.71 mm, measured; the rest of the positioner rests on two photographs of it | see the positioner's own table |
+| the collet | 6 mm: both bits' shanks and the probe's pin | the Colt in the photograph has the North American label, and those are sold with a 1/4 in collet. Then the straight bit and the pin are 6.35 and the table is planned again |
 | the two shafts | 490 and 416 long | they set the blocks' spacing and the travel; shorter ones want a shorter stick |
-| the shafts' supports and blocks | SK20 51 to the centre, 70 high; SC20UU 25 to the centre, 42 high | they set the sled's height, and with the plinth, the blank's 8 mm over the plate |
+| the shafts' supports and blocks | SK20 51 to the centre, 70 high; SC20UU 25 to the centre, 42 high | they set the sled's height, and with the plinth, the blank's 9 mm over the plate |
 | the bit's length | 45.5 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach |
 | the wheel | 160 teeth, printed; a closed belt of 400; the motor 101.7 from the spindle, in slots | it has to run true: 0.1 mm off centre is 0.11° once a turn, 0.06 mm at the tile's edge. Bolted to a hub through slack holes it can be tapped true under an indicator |
 | the spindle | a 12 mm ground rod | not studding: see the hinged sled |
@@ -252,16 +253,16 @@ and up or down. All of it is simulation.
 
 | part | size, mm | |
 |---|---|---|
-| base | 687 x 391 ply, and a 19 plinth 172 x 140 under the positioner | the positioner's column overhangs it behind |
+| base | 687 x 411 ply, and a 19 plinth 174 x 142 under the positioner | the positioner's column overhangs it behind |
 | shafts, supports, blocks | the 20 mm set: two shafts, four SK20, four SC20UU | the sled's rails |
-| sled plate | 359 x 214 ply | on the four blocks; its edge 2 mm from the positioner's face |
+| sled plate | 359 x 214 ply | on the four blocks; its edge 20 mm short of the positioner's face |
 | headstock | two uprights 60 wide, 19 thick, tied at the foot | a 6201 bearing in each, 43 apart |
 | tailstock | an upright 60 wide | the tail centre, M10 pointed, in a slack hole |
 | spindle | 12 mm ground rod | the wheel outboard, the master and a 14 mm spur inboard |
 | master | ground steel sleeve, 16 x 12 x 29 | a bit is set on it; with the sled back the bit is beside it |
 | wheel | 160 teeth, 105 across, 12 wide | and a 16-tooth pulley on a NEMA 17 on a bracket on the plate |
 | stops, 2 | posts 40 x 40 x 87 on the base | the back one carries the sled-back switch |
-| router positioner | 472 x 172 x 449 | its own example |
+| router positioner | 440 x 174 x 451 | its own example |
 
 ## What the test checks
 
@@ -276,11 +277,12 @@ written a second time, in Rust, and works every row forward:
 - the waste, on a grid of the test's own, with the table's rows run
   over it in the table's order: no row meets more than a hair-wide
   fin standing higher than its bit's bite;
-- the blank turns 2.5 mm clear of the positioner's face and 8 mm clear
-  of the sled's plate; the uprights pass that face; the wheel is clear
+- the blank turns clear of the positioner's face and 9 mm clear of
+  the sled's plate; the uprights pass that face; the wheel is clear
   of the positioner's box with the sled back; every row is within the
-  positioner's travel with the bit's margin; and the collet nut never
-  comes within the blank's swing;
+  positioner's travel with the bit's margin; the collet nut, which
+  comes 20.5 mm out of that face, never comes within the blank's
+  swing, and the face stands no further off than that takes;
 - every move marked straight, followed along the controller's own
   path, passes the master by 1.5 mm, and drawn back to the safe depth
   the bit is clear of it at any height;

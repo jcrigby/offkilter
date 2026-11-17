@@ -161,7 +161,12 @@ def main():
     x_travel, z_travel = pos["travel"]["x"], pos["travel"]["z"]
     box_x, wall = pos["box"]["x"], pos["outer_wall"]
     lid = pos["box"]["inside_height"] + wall                     # the lid's outer face, up from the positioner's own floor
-    face = math.ceil(blank + FACE_CLEAR)                         # the positioner's face, from the stick's axis
+    # The collet nut is in front of the quill by the router's nose and spindle. With the quill at home it is behind the
+    # positioner's face by `nut_behind`; run out for the deepest cut it is in front of it, and the blank has to turn
+    # clear of it there. That, more than the face itself, is what sets how far the positioner stands from the stick.
+    nut_behind = pos["quill"]["front"] - box_x[0] - pos["router"]["nut_face"]
+    near = math.ceil(blank + FACE_CLEAR)                         # as near as the face could come: the blank turning clear of it
+    face = max(near, math.ceil(blank + x_travel - BIT_MARGIN - nut_behind))   # the positioner's face, from the stick's axis
     bit_home_z = PLINTH + lid - pos["axis_z"]                    # the bit's axis over the base, the stage at home
     za = bit_home_z + z_travel / 2                               # the stick's axis: level with the middle of the height's travel
     sled_top = SK_H + (BLK_H - BLK_C) + PLY
@@ -178,10 +183,10 @@ def main():
     master_r, ecc = (built["master_r"], built["ecc"]) if built else (MASTER_R, [0.0, 0.0])
     if built:
         print(f"PLANNED FOR THE MACHINE AS BUILT ({K.BUILT}): the bit level with the stick's axis at height {-axes.across_home / axes.scale[1]:.3f}, the height's screw {axes.scale[1]:.4f} to one, the master {math.hypot(*ecc):.3f} off the spindle's centre")
-    nut_face_home = face + (pos["quill"]["front"] - box_x[0]) - pos["router"]["collet"][1]   # the collet nut's face from the axis, the quill at home
+    nut_face_home = face + nut_behind                            # the collet nut's face from the axis, the quill at home
     bit_out = nut_face_home - tip_home                           # how far the bit stands out of the collet nut
     safe = tip_home - (MASTER_R + SAFE_CLEAR)                    # the depth at or short of which the bit clears the master at any height
-    print(f"the positioner's face {face:.0f} from the stick's axis, the blank's corners {face - blank:.1f} clear of it; the axis {za:.1f} over the base, {za - sled_top - blank:.1f} clear of the sled's plate; "
+    print(f"the positioner's face {face:.0f} from the stick's axis, the blank's corners {face - blank:.1f} clear of it and {nut_face_home - (x_travel - BIT_MARGIN) - blank:.1f} of the collet nut at the deepest cut; the axis {za:.1f} over the base, {za - sled_top - blank:.1f} clear of the sled's plate; "
           f"the bit {bit_out:.1f} out of the collet nut, its tip {tip_home:.1f} from the axis with the quill at home")
 
     # -- the order, and then the bites -----------------------------------------
@@ -302,7 +307,7 @@ def main():
     section = tf(((0.0, za), psi), outline)
     centres = belt_centres(BELT, WHEEL_D, PINION_D)
     motor_y = -centres                               # the spindle's motor: level with the spindle, out to the left
-    plate_y = (RAIL_Y[1] - BLK_W / 2 - 5.0, face - FACE_CLEAR + 0.5)
+    plate_y = (RAIL_Y[1] - BLK_W / 2 - 5.0, near - FACE_CLEAR + 0.5)      # as far toward the positioner as the uprights need
     stock_top = za + STOCK_HALF
     # The base, fixed, in the sled's frame where the sled is drawn: the bit at DRAWN_X along it.
     base = lambda u: u + DRAWN_X                     # from the base's own frame, the bit at 0
@@ -429,7 +434,12 @@ def main():
     def bit(p):
         tool = P.BIT if row["tool"] == "ball" else P.ROUGH_BIT
         ycyl(p, "bit", (row["tip"], row["tip"] + bit_out), (base(0.0), bit_z), tool)
-        ycyl(p, "collet nut", (row["tip"] + bit_out, row["tip"] + bit_out + pos["router"]["collet"][1]), (base(0.0), bit_z), pos["router"]["collet"][0])
+        # the collet nut, and behind it the spindle and the router's nose, as far as the quill's front
+        y = row["tip"] + bit_out
+        for k, (name, key) in enumerate((("collet nut", "collet"), ("spindle", "shaft"), ("router's nose", "nose"))):
+            d, long = pos["router"][key]
+            ycyl(p, name, (y, y + long), (base(0.0), bit_z), d, op="add" if k else "new")
+            y += long
 
     parts = [("Base", base_board), ("Shafts", rails), ("Shaft supports SK20", supports), ("Bearing blocks SC20UU", blocks), ("Sled plate", plate), ("Headstock", headstock),
              ("Bearings 6201", bearings), ("Spindle", spindle), ("Master", master), ("Wheel", wheel), ("Spindle drive", drive_motor), ("Tailstock", tailstock), ("Stick", stick),
@@ -476,7 +486,8 @@ def main():
                  "head_x": HEAD_X, "tail_x": TAIL_X, "master_x": MASTER_X, "master_r": MASTER_R, "spur_r": SPUR_R, "wheel_x": WHEEL_X, "wheel_rim": WHEEL_RIM, "wheel": [WHEEL_T, PINION_T, BELT, centres],
                  "motor_y": motor_y, "rail_y": RAIL_Y, "blocks_x": BLOCKS_X, "shafts": SHAFTS, "spans": spans, "sk": [SK_W, SK_T, SK_H, SK_HTOT], "blk": [BLK_W, BLK_L, BLK_H, BLK_C],
                  "back_x": BACK_X, "run": RUN, "travel": travel, "drawn_x": DRAWN_X, "stops_x": stops_x, "stop": STOP, "switch": SWITCH, "base_x": base_x, "base_y": base_y, "ply": PLY, "plinth": PLINTH},
-        "positioner": {"half_box": half_box, "box_y": [face, face + box_x[1] - box_x[0]], "top": top_z, "bit_home_z": bit_home_z, "collet": pos["router"]["collet"], "size": pos["size"],
+        "positioner": {"half_box": half_box, "box_y": [face, face + box_x[1] - box_x[0]], "top": top_z, "bit_home_z": bit_home_z, "collet": pos["router"]["collet"], "nut_behind": nut_behind,
+                       "router_d": pos["router"]["d"], "size": pos["size"],
                        "length_beyond_face": pos["x"]["end"] - box_x[0]},
         "drawn": {"row": row["n"], "x": DRAWN_X, "psi": psi, "bit_z": bit_z},
         "calibration": {"drawn": {"tip_home": tip_home, "across_home": -z_travel / 2, "master_r": MASTER_R}, "rows": probing, "setting": setting, "built": bool(built),
