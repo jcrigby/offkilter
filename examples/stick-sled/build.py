@@ -19,7 +19,7 @@ did, and the stick's own mounting has nothing left to do but turn.
     cargo test -p ok-render --test stick_sled   # what CI runs
 
 Writes out/sled.okpart (every part in its own tab, and the sled at one
-row), sled.png, end.png, head.png, tail.png, sled.pdf, passes.csv (the rows the controller
+row), sled.png, end.png, drive.png, tail.png, sled.pdf, passes.csv (the rows the controller
 reads), steps.json (the controller's own run of it, simulated) and
 sled.json.
 """
@@ -59,33 +59,41 @@ WHEEL_W = 12.0
 # Bought parts, at the sizes they are usually sold in: check the ones in hand before drilling for them.
 KFL = (16.0, 38.0, 63.0, 48.0)                  # a KFL001 flange bearing unit, 12 bore: thick along the shaft, wide, long, and its two bolts apart
 HUB = (36.0, 5.0, 24.0, 14.0, 28.0)             # a 12 mm flanged hub: its flange across and thick, its boss across and long, its bolt circle
-SHF = (13.0, 47.0, 28.0, 36.0)                  # an SHF12 flange shaft clamp: thick along the shaft, long, wide, and its two bolts apart
 SENSOR = (13.0, 24.0, 11.0)                     # an optical endstop: how far it stands off what it is screwed to, long, wide
-SPUR = (16.0, 6.0, 1.5)                         # the spur: a steel ring on the rod's end, its rim filed into teeth. Across, long, and the teeth past the rod's end
-TAIL_D, TAIL_L = 12.0, 80.0                     # the tail centre: a length of the spindle's rod with a point on it
 FLAG_R = 34.0                                   # the home flag, a fin on the wheel's face, this far from the axis
+# The blank's socket, printed: a pocket for the blank's end on one side, a boss the spindle's rod is epoxied into on
+# the other. The owner's idea. It drives the blank by its flats and says which way round it is.
+SOCKET_IN, SOCKET_SLIDE = 12.0, 8.0             # how far the blank stands in the pocket, and how much further it can be pushed to get it onto the tail centre
+SOCKET_WALL, SOCKET_FIT, SOCKET_FLOOR = 4.0, 0.3, 6.0
+SOCKET_BOSS = (26.0, 22.0)                      # the boss: across, and long, which is how far the rod's roughened end goes into it
+NUT_CLEAR = 2.0                                 # a pass ends with the collet nut this short of the socket
 
-# The sled. x along the stick from its spindle end, y across toward the positioner from the stick's axis, z up from the base.
-MASTER_R = SPINDLE_D / 2                        # the master: the ground rod itself, bare between the headstock and the spur. With the sled back the bit is beside it
-SPUR_R = SPUR[0] / 2
-HEAD_X = ((-95.0, -76.0), (-56.0, -37.0))       # the headstock's two uprights
-KFL_X = tuple((x[1], x[1] + KFL[0]) for x in HEAD_X)   # a flange bearing on the stick's side of each
-MASTER_X = (KFL_X[1][1], -SPUR[1])
-WHEEL_X = (-122.0, -110.0)                      # the wheel, outboard: clear of the positioner's box with the sled back
-HUB_X = (WHEEL_X[0] - HUB[1] - HUB[3], WHEEL_X[0])     # its hub, on its outer face
-ROD_X = (HUB_X[0] - 1.0, -SPUR[2])              # the spindle, end to end: its end is a stop the teeth bite up to
-TAIL_X = (232.0, 251.0)                         # the tailstock's upright
+# The sled. x along the stick from its tail end, where the bit waits, toward the socket and the drive; y across toward
+# the positioner from the stick's axis; z up from the base.
+MASTER_R = SPINDLE_D / 2                        # the master: the tail spindle's ground rod, bare between its bearing and the stick. With the sled back the bit is beside it
+TAIL_X = ((-95.0, -76.0), (-56.0, -37.0))       # the tailstock's two uprights
+TAIL_KFL_X = tuple((x[1], x[1] + KFL[0]) for x in TAIL_X)     # a flange bearing on the stick's side of each
+TAIL_ROD_X = (TAIL_X[0][0] - 5.0, 0.0)          # the tail spindle: a rod in those two bearings, its end a three-flat point in the stick's end
+MASTER_X = (TAIL_KFL_X[1][1], 0.0)
+SOCKET_X = (STICK - SOCKET_IN, STICK + SOCKET_SLIDE)          # the socket's pocket
+BOSS_X = (SOCKET_X[1] + SOCKET_FLOOR, SOCKET_X[1] + SOCKET_FLOOR + SOCKET_BOSS[1])
+_K = BOSS_X[1] + 4.0
+HEAD_X = ((_K + KFL[0], _K + KFL[0] + PLY), (_K + 2 * KFL[0] + PLY + 4.0, _K + 2 * KFL[0] + 2 * PLY + 4.0))   # the headstock's two uprights, past the socket
+KFL_X = tuple((x[0] - KFL[0], x[0]) for x in HEAD_X)          # a flange bearing on the stick's side of each
+WHEEL_X = (HEAD_X[1][1] + SENSOR[0] + 2.0, HEAD_X[1][1] + SENSOR[0] + 2.0 + WHEEL_W)   # the wheel, outboard, past the home sensor
+HUB_X = (WHEEL_X[1], WHEEL_X[1] + HUB[1] + HUB[3])            # its hub, on its outer face
+ROD_X = (BOSS_X[0], HUB_X[1] + 1.0)             # the spindle, from the bottom of the socket's boss to past the hub
 STOCK_HALF = 30.0                               # the uprights are this wide each side of the axis: they pass the positioner's face
 STOCK_ABOVE = 40.0                              # and this high over it: a flange bearing's upper bolt, and the home sensor
-PLATE_X = (-97.0, 262.0)                        # the sled's plate: the wheel hangs off its head end
+PLATE_X = (TAIL_X[0][0] - 2.0, WHEEL_X[0] - 2.0)   # the sled's plate: the wheel hangs off its far end
 RAIL_Y = (0.0, -150.0)                          # the two shafts: under the stick, and out to the left
-BLOCKS_X = ((-8.0, 172.0), (30.0, 134.0))       # the bearing blocks on each, as far apart as its shaft lets the sled travel
+BLOCKS_X = ((22.0, 232.0), (60.0, 194.0))       # the bearing blocks on each, as far apart as its shaft lets the sled travel, and toward the drive's weight
 BACK_X = -12.0                                  # the bit along the sled with the sled back: beside the master, 9 mm of the straight bit clear of the stick's end
-RUN = 6.0                                       # the bit past the stick's far end
 DRAWN_X = 100.0                                 # where the bit is drawn: mid stick, mid pass
 FACE_CLEAR = 2.5                                # the uncut blank turns this clear of the positioner's face
 BED_CLEAR = 2.5                                 # and of the sled's plate
-PLINTH = PLY                                    # what the positioner lies on
+PACK = 6.0                                      # packing between each bearing block and the plate: the shafts' supports stand 2 mm higher than the blocks, and the plate's ends pass over them
+PLINTH = PLY + PACK                             # what the positioner lies on: the stick's axis is as much higher
 SAFE_CLEAR = 2.0                                # drawn back to the safe depth, the bit's tip is this clear of the master whatever its height
 MOVE_CLEAR = 1.5                                # a move may go straight to its row if the bit passes the master by this much all the way
 BIT_MARGIN = 2.0                                # a bit may stand this much further out of the collet, or less far, than the table takes it to
@@ -139,6 +147,15 @@ def tf(fr, pts):
     return [(oy + y * c - z * s, oz + y * s + z * c) for y, z in pts]
 
 
+def grown(c, d):
+    """A rectangle given by its four corners in order, grown by d on every side."""
+    def unit(p, q):
+        n = math.hypot(q[0] - p[0], q[1] - p[1])
+        return ((q[0] - p[0]) / n, (q[1] - p[1]) / n)
+    a, b = unit(c[0], c[1]), unit(c[0], c[3])
+    return [(c[k][0] + d * (sa * a[0] + sb * b[0]), c[k][1] + d * (sa * a[1] + sb * b[1])) for k, (sa, sb) in enumerate(((-1, -1), (1, -1), (1, 1), (-1, 1)))]
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "sled.okpart")
@@ -151,8 +168,8 @@ def main():
     centre = P.widest(raw)                           # the axis where the tile is fattest: room there for a spur and a master that every pass stays clear of
     outline = [(x - centre[0], y - centre[1]) for x, y in raw]
     circle = P.room((0.0, 0.0), outline)
-    if circle < SPUR_R + 1.0 or TAIL_D / 2 > SPUR_R:
-        raise SystemExit(f"the spur, {SPUR_R} radius, does not fit in the tile's {circle:.1f} about the axis")
+    if circle < MASTER_R + 1.0:
+        raise SystemExit(f"the tail spindle, {MASTER_R} radius, does not fit in the tile's {circle:.1f} about the axis")
     swing_r = max(math.hypot(x, y) for x, y in outline)
 
     # -- the cuts ------------------------------------------------------------
@@ -180,7 +197,9 @@ def main():
     face = max(near, math.ceil(blank + x_travel - BIT_MARGIN - nut_behind))   # the positioner's face, from the stick's axis
     bit_home_z = PLINTH + lid - pos["axis_z"]                    # the bit's axis over the base, the stage at home
     za = bit_home_z + z_travel / 2                               # the stick's axis: level with the middle of the height's travel
-    sled_top = SK_H + (BLK_H - BLK_C) + PLY
+    sled_top = SK_H + (BLK_H - BLK_C) + PACK + PLY
+    if sled_top - PLY < SK_HTOT + 3.0:
+        raise SystemExit(f"the sled's plate, {sled_top - PLY:.0f} over the base underneath, does not pass over the shafts' supports, {SK_HTOT:.0f} high")
     if za - sled_top - blank < BED_CLEAR:
         raise SystemExit(f"the blank turns into the sled's plate: {za - sled_top - blank:.1f}")
     deep = cands + passes
@@ -217,7 +236,7 @@ def main():
     load_t = blank_of["turn"] + wide * math.pi / 2
     under, toward = (blank_of["axis"][1], blank_of["size"][0] - blank_of["axis"][0]) if wide == 0 else (blank_of["size"][0] - blank_of["axis"][0], blank_of["size"][1] - blank_of["axis"][1])
     label = lambda *text: "".join(t.ljust(16) for t in text).rstrip()
-    cuts.append(("load", "none", load_t, 0.0, blank, label("blank on centres", f"{under:.1f} up from its", f"wide face {toward:.1f}", "in from router")))
+    cuts.append(("load", "none", load_t, 0.0, blank, label("blank in socket", f"tail ctr {under:.1f} up", f"{toward:.1f} from router", "tail mark up")))
     # A bit is set by touch: run out at the master, level with the stick's axis, until the clip on it reads.
     setting = (0.0, ecc[1], master_r + ecc[0])        # level with the master's middle, at its near side
     cuts.append(("set", "straight") + setting + ("set the straight bit on the master",))
@@ -348,32 +367,38 @@ def main():
     mesh = PINION_T * (math.pi - 2 * math.asin((WHEEL_D - PINION_D) / 2 / centres)) / (2 * math.pi)
     if mesh < 6.0:
         raise SystemExit(f"only {mesh:.1f} of the pulley's teeth are in the belt")
-    # With the sled back the bit is beside the bare rod, between the inner flange bearing and the spur.
+    # With the sled back the bit is beside the tail spindle's bare rod, between its inner flange bearing and the stick.
     if BACK_X - ROUGH_R < MASTER_X[0] + 5.0 or BACK_X + ROUGH_R > MASTER_X[1] - 2.0:
         raise SystemExit("the bit is not beside the bare rod with the sled back")
     # The collet nut is beside that bearing there, and nearest the axis at the deepest cut.
     if nut_face_home - (x_travel - BIT_MARGIN) - KFL[1] / 2 < 5.0:
-        raise SystemExit("the collet nut meets the inner flange bearing")
-    # The tail centre's clamp is past where the bit runs out to, and the home sensor is short of the wheel.
-    if TAIL_X[0] - SHF[0] < STICK + RUN + ROUGH_R + 5.0 or WHEEL_X[1] > HEAD_X[0][0] - SENSOR[0] - 1.5 or FLAG_R + SENSOR[2] / 2 > STOCK_ABOVE:
-        raise SystemExit("the tail clamp or the home sensor is in the way")
+        raise SystemExit("the collet nut meets the tail's inner flange bearing")
+    # The socket, turning: its corners clear the sled's plate and the positioner's face. A pass ends with the collet
+    # nut short of it, so the last of the stick is not cut.
+    blank_m = tf(((0.0, za), psi), blank_of["corners"])
+    socket_out, socket_in = grown(blank_m, SOCKET_FIT + SOCKET_WALL), grown(blank_m, SOCKET_FIT)
+    socket_swing = max(math.hypot(y, z - za) for y, z in socket_out)
+    if za - sled_top - socket_swing < BED_CLEAR or face - socket_swing < 5.0:
+        raise SystemExit(f"the socket, swinging {socket_swing:.1f}, meets the plate or the positioner")
+    forward_x = STICK - SOCKET_IN - pos["router"]["collet"][0] / 2 - NUT_CLEAR
+    cut_to = forward_x + ROUGH_R                     # how much of the stick the bit reaches
+    half_box = pos["box"]["y"]
+    if WHEEL_X[0] - (forward_x + half_box) < 5.0 or FLAG_R + SENSOR[2] / 2 > STOCK_ABOVE:
+        raise SystemExit("the wheel meets the positioner's box with the sled forward, or the home sensor is off its upright")
     # The base, fixed, in the sled's frame where the sled is drawn: the bit at DRAWN_X along it.
     base = lambda u: u + DRAWN_X                     # from the base's own frame, the bit at 0
-    travel = STICK + RUN - BACK_X
+    travel = forward_x - BACK_X
     spans = []
     for shaft, xs in zip(SHAFTS, BLOCKS_X):
-        lo, hi = xs[0] - BLK_L / 2 - (STICK + RUN), xs[1] + BLK_L / 2 - BACK_X      # the blocks' ends, in the base's frame, over the sled's travel
+        lo, hi = xs[0] - BLK_L / 2 - forward_x, xs[1] + BLK_L / 2 - BACK_X          # the blocks' ends, in the base's frame, over the sled's travel
         free = shaft - 2 * SK_T
         if hi - lo > free - 4.0:
             raise SystemExit(f"a {shaft:.0f} shaft is too short for blocks {xs[1] - xs[0]:.0f} apart")
         mid = (lo + hi) / 2
         spans.append((mid - shaft / 2, mid + shaft / 2))
-    stops_x = (PLATE_X[0] - (STICK + RUN), PLATE_X[1] - BACK_X)  # the plate's two ends at the ends of the travel, in the base's frame
+    stops_x = (PLATE_X[0] - forward_x, PLATE_X[1] - BACK_X)      # the plate's two ends at the ends of the travel, in the base's frame
     base_x = (min(spans[0][0], stops_x[0] - STOP[0]) - 15.0, max(spans[0][1], stops_x[1] + STOP[0]) + 15.0)
     base_y = (plate_y[0] - 25.0, face + (box_x[1] - box_x[0]) + 10.0)
-    half_box = pos["box"]["y"]
-    if BACK_X - half_box - WHEEL_X[1] < 5.0:
-        raise SystemExit("the wheel meets the positioner's box with the sled back")
     if za - WHEEL_RIM < SK_HTOT + 3.0:
         raise SystemExit("the wheel meets a shaft support")
     if STOCK_HALF + FACE_CLEAR > face:
@@ -404,26 +429,40 @@ def main():
 
     def plate(p):
         box(p, "sled plate", PLATE_X, plate_y, (sled_top - PLY, sled_top))
+        for xs, y in zip(BLOCKS_X, RAIL_Y):         # and its packing on each block
+            for x in xs:
+                box(p, "packing", (x - BLK_L / 2, x + BLK_L / 2), (y - BLK_W / 2, y + BLK_W / 2), (sled_top - PLY - PACK, sled_top - PLY), op="add")
 
-    def headstock(p):
-        # The uprights only carry the flange bearings: the rod passes through them in a slack hole.
-        for x in HEAD_X:
+    def stock(p, uprights):
+        # Two uprights tied at the foot. They only carry the flange bearings: the rod passes them in a slack hole.
+        for x in uprights:
             box(p, "upright", x, (-STOCK_HALF, STOCK_HALF), (sled_top, stock_top))
             xcyl(p, "the rod's way", (x[0] - 1.0, x[1] + 1.0), (0.0, za), SPINDLE_D + 8.0, op="remove")
-        box(p, "tie", (HEAD_X[0][1], HEAD_X[1][0]), (-STOCK_HALF, STOCK_HALF), (sled_top, sled_top + 10.0), op="add")
+        box(p, "tie", (uprights[0][1], uprights[1][0]), (-STOCK_HALF, STOCK_HALF), (sled_top, sled_top + 10.0), op="add")
 
-    def bearings(p):
-        # Bolted to the uprights' faces, long way up. Their set screws hold the rod endways: the tail centre's push
-        # goes through the nearer one into its upright.
-        for x in KFL_X:
+    def flange_bearings(p, where):
+        # Bolted to the uprights' faces, long way up, each on the stick's side of its upright. Their set screws hold
+        # the rod endways.
+        for x in where:
             box(p, "KFL001", x, (-KFL[1] / 2, KFL[1] / 2), (za - KFL[2] / 2, za + KFL[2] / 2))
             xcyl(p, "bore", (x[0] - 0.5, x[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
+    def tail_spindle(p):
+        # Where the bit waits. The same rod as the drive's, turning with the stick: three flats ground on its end make
+        # a point that bites. Bare beside the stick, it is the master a bit is set against.
+        xcyl(p, "tail spindle, 12 mm ground rod", TAIL_ROD_X, (0.0, za), SPINDLE_D)
+
     def spindle(p):
-        # The spur: a ring on the rod's end, fixed with retaining compound, its teeth standing past the rod's end.
-        xcyl(p, "spur ring", (-SPUR[1], 0.0), (0.0, za), SPUR[0])
-        xcyl(p, "bore", (-SPUR[1] - 0.5, 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
-        xcyl(p, "12 mm ground rod", ROD_X, (0.0, za), SPINDLE_D)       # last: a bore cut after it would take it too
+        xcyl(p, "12 mm ground rod", ROD_X, (0.0, za), SPINDLE_D)
+
+    def socket(p):
+        # Printed. The blank's end stands SOCKET_IN in the pocket and can be pushed SOCKET_SLIDE further; a jack screw
+        # through the floor presses it back onto the tail spindle's point, and a screw through a wall locks it against
+        # the wall opposite. The rod's end, roughened, is epoxied into the boss.
+        slab(p, "blank socket", (SOCKET_X[0], BOSS_X[0]), socket_out)
+        slab(p, "pocket", (SOCKET_X[0] - 0.5, SOCKET_X[1]), socket_in, op="remove")
+        xcyl(p, "boss", BOSS_X, (0.0, za), SOCKET_BOSS[0], op="add")
+        xcyl(p, "the rod's socket", (BOSS_X[0], BOSS_X[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
     def wheel(p):
         xcyl(p, f"{WHEEL_T}-tooth wheel", WHEEL_X, (0.0, za), 2 * WHEEL_RIM)
@@ -431,46 +470,38 @@ def main():
         # The home flag: a fin on the face toward the headstock, in the sensor's slot at turn 0 and drawn where this row has it.
         a = math.radians(90.0 + row["turn"])
         cs, sn = math.cos(a), math.sin(a)
-        fin = p.sketch("right", WHEEL_X[1], "home flag")
+        fin = p.sketch("right", WHEEL_X[0] - 7.0, "home flag")
         p.polygon(fin, [(r * cs - t * sn, za + r * sn + t * cs) for r, t in ((FLAG_R - 0.75, -3.0), (FLAG_R + 0.75, -3.0), (FLAG_R + 0.75, 3.0), (FLAG_R - 0.75, 3.0))])
         p.extrude(fin, 7.0, op="add", name="home flag")
 
     def hub(p):
         # A flanged hub on the rod, its set screws on a flat. The wheel is bolted to its flange through slack holes,
         # so it can be tapped true under an indicator before the bolts are tightened.
-        xcyl(p, "hub's flange", (HUB_X[1] - HUB[1], HUB_X[1]), (0.0, za), HUB[0])
-        xcyl(p, "hub's boss", (HUB_X[0], HUB_X[1] - HUB[1]), (0.0, za), HUB[2], op="add")
+        xcyl(p, "hub's flange", (HUB_X[0], HUB_X[0] + HUB[1]), (0.0, za), HUB[0])
+        xcyl(p, "hub's boss", (HUB_X[0] + HUB[1], HUB_X[1]), (0.0, za), HUB[2], op="add")
         xcyl(p, "bore", (HUB_X[0] - 0.5, HUB_X[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
     def home_sensor(p):
         # On the outer upright's outer face, over the axis: the wheel's fin passes through its slot once a turn.
-        x, z = (HEAD_X[0][0] - SENSOR[0], HEAD_X[0][0]), za + FLAG_R
+        x, z = (HEAD_X[1][1], HEAD_X[1][1] + SENSOR[0]), za + FLAG_R
         box(p, "optical endstop", x, (-SENSOR[1] / 2, SENSOR[1] / 2), (z - SENSOR[2] / 2, z + SENSOR[2] / 2))
-        box(p, "its slot", (x[0] - 0.5, x[0] + 8.0), (-SENSOR[1] / 2 - 0.5, SENSOR[1] / 2 + 0.5), (z - 1.6, z + 1.6), op="remove")
+        box(p, "its slot", (x[1] - 8.0, x[1] + 0.5), (-SENSOR[1] / 2 - 0.5, SENSOR[1] / 2 + 0.5), (z - 1.6, z + 1.6), op="remove")
 
     def drive_motor(p):
         m = MOTOR[0] / 2
-        x0 = WHEEL_X[1] + 6.0                           # the motor's face: its shaft back through the bracket to the pulley, in the wheel's plane
-        box(p, "bracket", (x0 - 4.0, x0), (motor_y - m - 4.0, motor_y + m + 4.0), (sled_top, za + m + 4.0))
-        box(p, "bracket's foot", (x0 - 4.0, x0 + 40.0), (motor_y - m - 4.0, motor_y + m + 4.0), (sled_top, sled_top + 6.0), op="add")
-        xcyl(p, "motor's pilot", (x0 - 5.0, x0 + 1.0), (motor_y, za), 22.5, op="remove")
-        box(p, "spindle motor", (x0, x0 + MOTOR[1]), (motor_y - m, motor_y + m), (za - m, za + m))
+        x0 = WHEEL_X[0] - 6.0                           # the motor's face: its shaft out through the bracket to the pulley, in the wheel's plane
+        box(p, "bracket", (x0, x0 + 4.0), (motor_y - m - 4.0, motor_y + m + 4.0), (sled_top, za + m + 4.0))
+        box(p, "bracket's foot", (x0 - 40.0, x0 + 4.0), (motor_y - m - 4.0, motor_y + m + 4.0), (sled_top, sled_top + 6.0), op="add")
+        xcyl(p, "motor's pilot", (x0 - 1.0, x0 + 5.0), (motor_y, za), 22.5, op="remove")
+        box(p, "spindle motor", (x0 - MOTOR[1], x0), (motor_y - m, motor_y + m), (za - m, za + m))
         xcyl(p, f"{PINION_T}-tooth pulley", WHEEL_X, (motor_y, za), PINION_D + 3.0)
         xcyl(p, "bore", (WHEEL_X[0] - 0.5, WHEEL_X[1] + 0.5), (motor_y, za), 5.2, op="remove")
-        xcyl(p, "motor shaft", (WHEEL_X[0], x0), (motor_y, za), 5.0)       # last: a bore cut after it would take it too
-
-    def tailstock(p):
-        # The tail centre is a pointed length of the spindle's rod in two flange clamps, one on each face of the
-        # upright. It is slid up to the stick and clamped, never turned, so its point stays where it was set.
-        box(p, "upright", TAIL_X, (-STOCK_HALF, STOCK_HALF), (sled_top, stock_top))
-        xcyl(p, "the centre's way", (TAIL_X[0] - 1.0, TAIL_X[1] + 1.0), (0.0, za), TAIL_D + 4.0, op="remove")
-        for x in ((TAIL_X[0] - SHF[0], TAIL_X[0]), (TAIL_X[1], TAIL_X[1] + SHF[0])):
-            box(p, "SHF12", x, (-SHF[1] / 2, SHF[1] / 2), (za - SHF[2] / 2, za + SHF[2] / 2))
-            xcyl(p, "bore", (x[0] - 0.5, x[1] + 0.5), (0.0, za), TAIL_D + 0.2, op="remove")
-        xcyl(p, "tail centre", (STICK, STICK + TAIL_L), (0.0, za), TAIL_D)
+        xcyl(p, "motor shaft", (x0, WHEEL_X[1]), (motor_y, za), 5.0)       # last: a bore cut after it would take it too
 
     def stick(p):
-        slab(p, "stick, milled", (0.0, STICK), section)
+        # Milled as far as the bit reaches; the rest, into the socket, is still the blank.
+        slab(p, "stick, milled", (0.0, cut_to), section)
+        slab(p, "the end the bit does not reach", (cut_to, STICK), blank_m, op="add")
 
     def stops(p):
         """Posts on the base that the plate's ends meet, out at its left where the wheel does not pass."""
@@ -513,8 +544,10 @@ def main():
             ycyl(p, name, (y, y + long), (base(0.0), bit_z), d, op="add" if k else "new")
             y += long
 
-    parts = [("Base", base_board), ("Shafts", rails), ("Shaft supports SK20", supports), ("Bearing blocks SC20UU", blocks), ("Sled plate", plate), ("Headstock", headstock),
-             ("Flange bearings KFL001", bearings), ("Spindle", spindle), ("Wheel", wheel), ("Wheel hub", hub), ("Turn home sensor", home_sensor), ("Spindle drive", drive_motor), ("Tailstock", tailstock), ("Stick", stick),
+    parts = [("Base", base_board), ("Shafts", rails), ("Shaft supports SK20", supports), ("Bearing blocks SC20UU", blocks), ("Sled plate", plate), ("Tailstock", lambda p: stock(p, TAIL_X)),
+             ("Tail bearings KFL001", lambda p: flange_bearings(p, TAIL_KFL_X)), ("Tail spindle", tail_spindle), ("Headstock", lambda p: stock(p, HEAD_X)),
+             ("Flange bearings KFL001", lambda p: flange_bearings(p, KFL_X)), ("Spindle", spindle), ("Blank socket", socket), ("Wheel", wheel), ("Wheel hub", hub),
+             ("Turn home sensor", home_sensor), ("Spindle drive", drive_motor), ("Stick", stick),
              ("Stops", stops), ("Sled-back switch", back_switch), ("Controller", controller), ("Router positioner", positioner), ("Bit", bit)]
 
     mcp.call("create_document", {"name": "sled"})
@@ -536,8 +569,8 @@ def main():
     top_z = PLINTH + lid + wall
     mcp.call("screenshot", {"tab": asm, "view": "-0.55,-0.7,0.5", "width": 1700, "height": 1100, "path": os.path.join(OUT, "sled.png")})
     mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{DRAWN_X}", "fit": f"{DRAWN_X},{base_y[0] - 10},-30,{DRAWN_X + 1},{face + 200},{top_z * 0.62}", "width": 1600, "height": 1000, "path": os.path.join(OUT, "end.png")})
-    # the stick's own chain, cut along its axis: the head end from the hub to the spur, and the tail centre in its clamps
-    for name, x in (("head.png", (ROD_X[0] - 8.0, 14.0)), ("tail.png", (STICK - 12.0, STICK + TAIL_L + 8.0))):
+    # the stick's own chain, cut along its axis: the drive end from the socket to the hub, and the tail spindle where the bit waits
+    for name, x in (("drive.png", (cut_to - 14.0, ROD_X[1] + 8.0)), ("tail.png", (TAIL_ROD_X[0] - 8.0, 14.0))):
         mcp.call("screenshot", {"tab": asm, "view": "0,-1,0", "section": "y:0", "fit": f"{x[0]},-1,{sled_top - PLY - 4.0},{x[1]},1,{stock_top + 8.0}", "width": 1500, "height": 900, "path": os.path.join(OUT, name)})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "sled.pdf"),
                               "note": f"stick sled: the stick turns on a sled on two shafts, the router positioner beside it sets depth and height; {len(rows)} rows a stick"}))
@@ -558,11 +591,14 @@ def main():
                  "move_clear": MOVE_CLEAR, "bit_margin": BIT_MARGIN, "bit_out": bit_out, "past": FW.PAST_MM, "turn_past": FW.TURN_PAST_DEG, "nearest_master": nearest, "probe": [FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM]},
         "straight": straight,
         "sled": {"za": za, "face": face, "face_clear": FACE_CLEAR, "bed_clear": BED_CLEAR, "top": sled_top, "plate_x": PLATE_X, "plate_y": plate_y, "stock_half": STOCK_HALF, "stock_top": stock_top,
-                 "head_x": HEAD_X, "tail_x": TAIL_X, "master_x": MASTER_X, "master_r": MASTER_R, "spur_r": SPUR_R, "wheel_x": WHEEL_X, "wheel_rim": WHEEL_RIM, "wheel": [WHEEL_T, PINION_T, BELT, centres], "mesh": mesh,
-                 "kfl": KFL, "kfl_x": KFL_X, "hub": HUB, "hub_x": HUB_X, "rod_x": ROD_X, "spur": SPUR, "shf": SHF, "tail": [TAIL_D, TAIL_L], "flag_r": FLAG_R, "sensor": SENSOR, "stock_above": STOCK_ABOVE,
+                 "head_x": HEAD_X, "tail_x": TAIL_X, "tail_kfl_x": TAIL_KFL_X, "tail_rod_x": TAIL_ROD_X, "master_x": MASTER_X, "master_r": MASTER_R, "wheel_x": WHEEL_X, "wheel_rim": WHEEL_RIM, "wheel": [WHEEL_T, PINION_T, BELT, centres], "mesh": mesh,
+                 "kfl": KFL, "kfl_x": KFL_X, "hub": HUB, "hub_x": HUB_X, "rod_x": ROD_X, "flag_r": FLAG_R,
+                 "socket": {"in": SOCKET_IN, "slide": SOCKET_SLIDE, "wall": SOCKET_WALL, "fit": SOCKET_FIT, "floor": SOCKET_FLOOR, "boss": SOCKET_BOSS, "x": SOCKET_X, "boss_x": BOSS_X,
+                            "swing": socket_swing, "nut_clear": NUT_CLEAR},
+                 "forward_x": forward_x, "cut_to": cut_to, "sensor": SENSOR, "stock_above": STOCK_ABOVE,
                  "homing": {"fin_deg": fin_deg, "step_deg": 1.0 / FW.TURN_STEPS_PER_DEG, "clear_deg": FW.TURN_CLEAR_DEG, "ends": homed},
                  "motor_y": motor_y, "rail_y": RAIL_Y, "blocks_x": BLOCKS_X, "shafts": SHAFTS, "spans": spans, "sk": [SK_W, SK_T, SK_H, SK_HTOT], "blk": [BLK_W, BLK_L, BLK_H, BLK_C],
-                 "back_x": BACK_X, "run": RUN, "travel": travel, "drawn_x": DRAWN_X, "stops_x": stops_x, "stop": STOP, "switch": SWITCH, "base_x": base_x, "base_y": base_y, "ply": PLY, "plinth": PLINTH},
+                 "back_x": BACK_X, "travel": travel, "drawn_x": DRAWN_X, "stops_x": stops_x, "stop": STOP, "switch": SWITCH, "base_x": base_x, "base_y": base_y, "ply": PLY, "plinth": PLINTH, "pack": PACK},
         "positioner": {"half_box": half_box, "box_y": [face, face + box_x[1] - box_x[0]], "top": top_z, "bit_home_z": bit_home_z, "collet": pos["router"]["collet"], "nut_behind": nut_behind,
                        "router_d": pos["router"]["d"], "size": pos["size"],
                        "length_beyond_face": pos["x"]["end"] - box_x[0]},

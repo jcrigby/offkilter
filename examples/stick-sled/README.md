@@ -1,8 +1,9 @@
 # A stick sled
 
 The leaning half-ellipse Spectre milled round one solid stick. The
-stick is held between a spindle and a tail centre on a sled that
-slides on two shafts, and it only turns. Beside it, fixed to the base,
+stick is held between a printed socket on a spindle and the point of
+a second, idle spindle, on a sled that slides on two shafts, and it
+only turns. Beside it, fixed to the base,
 lies the [two-axis router positioner](../router-positioner/) with its
 bit pointing at the stick: the positioner's X sets how deep the bit
 reaches, its Z how high. Three motors go to the next row of a table,
@@ -19,7 +20,7 @@ python3 examples/stick-sled/build.py
 cargo test -p ok-render --test stick_sled   # what CI runs
 ```
 
-![The sled on its two shafts with the stick between headstock and tailstock, the wheel hanging off its head end, and the positioner standing beside it on its lid with its column out behind](out/sled.png)
+![The sled on its two shafts: the tail spindle at the near end where the bit waits, the stick, its far end in the socket, the headstock, and the wheel and motor hanging off the far end; the positioner standing beside it on its lid with its column out behind](out/sled.png)
 
 Nothing here has been built or run on a motor, and the positioner's
 sizes rest on a router nobody has measured yet. What is checked is
@@ -29,9 +30,9 @@ checked by calculation and by the test.
 
 ![Cut across the middle of the stick, looking along it: the positioner's box on its plinth, the bit reaching out of its slot to the tile's section, the sled's plate on its bearing blocks and the two shafts under it](out/end.png)
 
-- **The stick turns and does nothing else.** A spindle in two bearings
-  in a headstock, a spur on its end, a tail centre in a tailstock,
-  both standing on the sled's plate. A motor turns the spindle through
+- **The stick turns and does nothing else.** Its far end sits in a
+  printed socket on a spindle; its near end is on the point of a
+  second spindle that turns with it. A motor turns the first through
   a belt, 20 teeth to a wheel of 160. Every joint of that chain is in
   [The stick's drive](#the-sticks-drive-joint-by-joint).
 - **The positioner places the bit.** It lies on its lid with its Z
@@ -45,7 +46,7 @@ checked by calculation and by the test.
 - **The sled rides the two 20 mm shafts** on four bearing blocks: the
   set the duplicator had, doing what it was made for. The longer
   shaft is under the stick, the shorter 150 mm out to the left.
-- **The wheel hangs off the sled's head end.** At 105 mm across it
+- **The wheel hangs off the sled's far end.** At 105 mm across it
   comes lower than the sled's plate and within 2 mm of the
   positioner's face, so it sits beyond both. At 2.7 times the radius of the
   60-tooth pulley it replaces, the same runout turns the stick 2.7
@@ -55,9 +56,11 @@ checked by calculation and by the test.
 ## A pass
 
 1. Draw the sled back to its stop. The bit is beside the master: the
-   spindle's own rod, bare between the headstock and the spur.
+   tail spindle's rod, bare between the tailstock and the stick.
 2. Press the foot switch. The motors go to the next row and stop.
-3. Push the sled past the bit and draw it back.
+3. Push the sled to its forward stop and draw it back. The bit comes
+   onto the stick from its near end and stops 21 mm short of its far
+   end, with the collet nut 2 mm short of the socket.
 
 The controller will not move a motor unless the sled is back: a
 switch on the back stop. With the sled back the bit is beside the
@@ -69,15 +72,18 @@ marks it straight if the whole bit passes the master by 1.5 mm. 430
 of the 485 are.
 
 A stop post on the base meets the sled's plate at each end of its
-218 mm. The shafts set how far apart the bearing blocks can be: 180 mm
-on the 490 shaft and 104 on the 416, with 3.5 and 4.5 mm to spare at
-each end.
+188 mm. The shafts set how far apart the bearing blocks can be: 210 mm
+on the 490 shaft and 134 on the 416, with 3.5 and 4.5 mm to spare at
+each end. The plate is longer than the shafts' supports are apart, so
+its ends pass over them: it rides on 6 mm of packing on each block,
+which puts it 4 mm over the supports, and the positioner's plinth is
+6 mm thicker to match.
 
 ## The stick's drive, joint by joint
 
-| the head end, cut along the stick's axis | the tail end |
+| the drive end, cut along the stick's axis | the tail end, where the bit waits |
 |---|---|
-| ![From the left: the hub and the wheel with its fin in the sensor, the outer upright, a flange bearing, the inner upright, the second flange bearing, the bare rod, the spur ring and the stick](out/head.png) | ![The stick's end, the pointed rod, and a flange clamp on each face of the tailstock's upright](out/tail.png) |
+| ![From the left: the stick's uncut end in the socket's pocket with room behind it, the socket's boss with the rod in it, a flange bearing and its upright twice, the home sensor with the wheel's fin in it, the wheel and its hub](out/drive.png) | ![From the left: the tail spindle's rod through two uprights with a flange bearing on the stick's side of each, bare for 21 mm, and its end at the stick's end](out/tail.png) |
 
 From the motor to the far end of the stick, what each part is joined
 to the next by:
@@ -88,42 +94,51 @@ to the next by:
 | pulley | wheel, 160 teeth, printed | a closed GT2 belt of 400 mm, 7.1 of the pulley's teeth in it. The bracket's slots tension it |
 | wheel | hub | four M4 bolts through slack holes into the flange of a bought 12 mm hub on the wheel's outer face. The wheel's own bore is 13 and does not touch the rod |
 | hub | spindle, a 12 mm ground rod | the hub's set screws, on a flat ground on the rod |
-| spindle | headstock | two KFL001 flange bearing units, each bolted through its upright on the stick's side, long way up. Their set screws hold the rod endways, and the tail centre's push goes through the nearer one into its upright. The uprights are drilled 20 mm for the rod to pass: no plywood is bored to a fit |
-| spindle | the bit, when it is set | nothing: the rod is the master, 15 mm of it bare between the inner bearing and the spur |
-| spindle | stick | the spur: a ring of steel tube, 16 across, 2 thick and 6 long, held on the rod's end with retaining compound. Teeth filed into its rim stand 1.5 mm past the rod's end, which stops them going deeper |
-| stick | tail centre | a point on an 80 mm length of the same rod |
-| tail centre | tailstock | two SHF12 flange clamps, one on each face of the upright, on the same two bolts through slack holes |
+| spindle | headstock | two KFL001 flange bearing units, each bolted through its upright on the stick's side, long way up. Their set screws hold the rod endways. The uprights are drilled 20 mm for the rod to pass: no plywood is bored to a fit |
+| spindle | socket, printed | the rod's end, roughened, epoxied 22 mm into the socket's boss |
+| socket | stick | a pocket the blank's end stands 12 mm into, 0.3 mm slack all round, with two screws: one through the floor that jacks the blank toward the tail, one through a wall that locks it against the wall opposite |
+| stick | tail spindle | a point of three flats ground on the end of a second length of the rod |
+| tail spindle | tailstock | two more KFL001, the same way. The rod is bare for 21 mm between the inner one and the stick, and that is the master a bit is set against |
 | spindle | controller | a fin on the wheel's inner face, 34 mm from the axis, through an optical endstop on the outer upright once a turn |
 
-To buy: two KFL001, a 12 mm flanged hub, two SHF12, a 20-tooth GT2
-pulley of 5 mm bore, a 400 mm closed GT2 belt, an optical endstop,
-12 mm ground rod for a 141 mm length and an 80, a short end of
-16 x 2 steel tube, retaining compound. The sizes in `build.py` are the catalogue's:
-measure the ones that come before drilling for them. To make: the
-printed wheel, two or three flats on the rod, the teeth on the ring,
-and the point on the tail centre.
+The socket is the owner's idea, and it does three things a spur did
+not: it cannot slip, it puts the blank on the axis without a centre
+mark at that end, and it says which way round the blank is. What it
+costs is the stick's far end. A socket big enough for the blank
+cannot be where the bit comes onto the stick, so the bit waits at the
+tail and each pass stops before the socket: 21 mm of every stick is
+not cut.
 
+To buy: four KFL001, a 12 mm flanged hub, a 20-tooth GT2 pulley of
+5 mm bore, a 400 mm closed GT2 belt, an optical endstop, 12 mm ground
+rod for a 147 mm length and a 100, two M5 set screws and threaded
+inserts for the socket, epoxy. The sizes in `build.py` are the
+catalogue's: measure the ones that come before drilling for them. To
+make: the printed wheel and socket, a flat on the rod for the hub,
+and three flats for the tail's point.
+
+- **Gluing the socket on.** Which way round it is on the rod is which
+  way round the blank is to the controller, so glue it with the
+  spindle where the table's first row puts it: run that row, turn the
+  socket until a wide wall of its pocket lies flat on a block stood
+  on the plate, and leave it there while the epoxy sets.
+- **Putting a blank on.** Mark the tail end's centre, 19.5 mm from one
+  wide face and 24.8 from one narrow face. Push the other end into
+  the socket as far as it goes, bring the mark to the tail spindle's
+  point, turn the jack screw until the point is 2 or 3 mm into the
+  wood, then tighten the lock screw. Before the jack screw, turn the
+  tail spindle so the line scribed on it is uppermost: the master's
+  runout was measured that way round.
+- **The tail spindle turns with the stick,** which is why its point
+  has flats. It is the master, and the half turn that finds its
+  runout is the motor's, through the stick.
 - **Truing the wheel.** Snug its four bolts, hold a dial indicator on
   the wheel where the belt runs, turn the spindle, and tap the wheel
   until the needle moves 0.04 mm or less. Then tighten. That 0.04 is
   0.02 off centre, and what it buys is in Setting up.
-- **The spur bites a ring** 6 to 8 mm from the axis, inside the
-  9.8 mm the tile leaves there, and 1.8 mm clear of every cut. By my
-  estimate the straight bit can put 0.7 N m on the stick at its
-  worst; twelve teeth 1.5 mm into hardwood hold about 2, and half
-  that in pine. Neither figure is measured. Draw a pencil line across
-  the ring and the stick's end: if it has parted, the spur slipped
-  and the stick is scrap.
-- **The tail centre slides and is clamped; it is never screwed in.**
-  A screwed centre whose point is not dead on its thread puts the
-  stick's end somewhere new with every stick. Push the rod up to the
-  stick's centre mark, tap its end to seat the spur's teeth and its
-  own point, and tighten the two clamps. Grind the point by spinning
-  the rod in a drill against a grinder, and keep a mark on the rod
-  upward so that it goes back the same way round.
-- **Moving the tail centre** to line the stick up with the shafts
-  (`out/bands.csv`) is loosening the clamps' two bolts and tapping
-  the pair: their holes in the upright are slack.
+- **Lining the stick up with the shafts** (`out/bands.csv`) is moving
+  the tail spindle's two bearings on their uprights: their bolt holes
+  are slack.
 - **The home fin** is read 34 mm from the axis, so 0.02 mm there is
   0.017 mm at the tile's edge. It matters only when a stick is taken
   up again after the controller has been off. The sensor says home
@@ -152,11 +167,12 @@ from its dead centre, roughing to 0.4 mm of the tile, the order
 settled before the bites are counted. Its README has the reasons.
 What changed is where the three numbers of a row come from.
 
-- **The blank is a plain rectangle,** 49 x 42 mm. Mark the centre on
-  each end 19.5 mm from one wide face and 24.8 from one narrow face.
-  The first row turns the spindle to where the blank goes on with
-  that wide face level and underneath and that narrow face toward
-  the router.
+- **The blank is a plain rectangle,** 49 x 42 mm, and 200 long of
+  which 179 are cut. Its far end goes in the socket; the centre is
+  marked on its near end only, 19.5 mm from one wide face and 24.8
+  from one narrow face. The first row turns the spindle to where the
+  socket holds it with that wide face level and underneath and that
+  narrow face toward the router.
 - **A bit is set by touch, by the controller.** The probe's clip goes
   on the bit with the router off; the bit is run out at the master,
   level with the stick's axis, until it touches, three times; from
@@ -236,7 +252,8 @@ one goes in.
 ### 1. Where the bit's height is: `out/probe.csv`
 
 A ground 1/4 in pin goes in the collet in place of a bit, with the probe's
-clip on it, and no stick on the sled. The controller brings the pin
+clip on it, and a scrap blank on the sled, put on as any blank is, so
+that the motor turns the tail spindle. The controller brings the pin
 against the master from the front, from below and from above, and
 again with the spindle half a turn round: six places, three touches
 each, a few minutes.
@@ -297,7 +314,7 @@ square.
 ### 2. Whether the stick runs true: `out/bands.csv`
 
 The stick's axis has to run parallel to the sled's shafts. A scrap
-stick goes between the centres with a stop clamped 25 mm in from each
+stick goes on with a stop clamped 25 mm in from each
 end. The table sets the straight bit and, in three bites, has the
 sled pushed to the far stop and drawn back to the near one, the
 spindle turning the stick once round at each while the foot switch is
@@ -308,7 +325,7 @@ its side over the stick. Four bands, four diameters:
 python3 calibrate.py align FRONT_NEAR FRONT_FAR TOP_NEAR TOP_FAR
 ```
 
-says how far to move the tail centre, toward or away from the router
+says how far to move the tail spindle, toward or away from the router
 and up or down. All of it is simulation.
 
 ## Measure these first
@@ -318,27 +335,28 @@ and up or down. All of it is simulation.
 | the router | its body is 70.71 mm, measured; the rest is read off two photographs, with allowances where it matters | see the positioner's own table |
 | the probe's pin | 6.35 mm, a 1/4 in dowel pin or drill rod | measure it and give `fit` what it is with `--pin` |
 | the two shafts | 490 and 416 long | they set the blocks' spacing and the travel; shorter ones want a shorter stick |
-| the shafts' supports and blocks | SK20 51 to the centre, 70 high; SC20UU 25 to the centre, 42 high | they set the sled's height, and with the plinth, the blank's 10 mm over the plate |
+| the shafts' supports and blocks | SK20 51 to the centre, 70 high; SC20UU 25 to the centre, 42 high | they set the sled's height, and with the plinth, the blank's 10 mm and the socket's 4 over the plate. The supports are higher than the blocks: the plate passes over them only because of its packing |
 | the bit's length | 45.5 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach |
 | the wheel | 160 teeth, printed; a closed belt of 400; the motor 100.1 from the spindle, in slots | it has to run true: 0.1 mm off centre is 0.11° once a turn, 0.06 mm at the tile's edge. True it on its hub under an indicator |
-| the spindle | a 12 mm ground rod, 141 long, and 80 more for the tail centre | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
-| the bought parts | KFL001 16 thick, 38 x 63, bolts 48 apart; the hub's flange 36 across, bolts on a 28 circle; SHF12 13 thick, 47 x 28, bolts 36 apart | catalogue sizes, and makers differ: measure before drilling, and before printing the wheel's bolt holes |
+| the two spindles | 12 mm ground rod, 147 long for the drive and 100 for the tail | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
+| the bought parts | KFL001 16 thick, 38 x 63, bolts 48 apart; the hub's flange 36 across, bolts on a 28 circle | catalogue sizes, and makers differ: measure before drilling, and before printing the wheel's bolt holes |
+| the blank's end in the socket | 49 x 42 with 0.3 mm all round | saw and plane the blanks to one size and print the pocket to that; the lock screw takes up what is left |
 | the shafts, parallel | 150 apart | a stick cut to fit between them at one end, tried at the other |
 
 ## Parts
 
 | part | size, mm | |
 |---|---|---|
-| base | 687 x 413 ply, and a 19 plinth 176 x 144 under the positioner | the positioner's column overhangs it behind |
+| base | 722 x 413 ply, and a 25 plinth 176 x 144 under the positioner | the positioner's column overhangs it behind |
 | shafts, supports, blocks | the 20 mm set: two shafts, four SK20, four SC20UU | the sled's rails |
-| sled plate | 359 x 214 ply | on the four blocks; its edge 20 mm short of the positioner's face |
-| headstock | two uprights 60 wide, 19 thick, 84 high, tied at the foot | a KFL001 flange bearing on the stick's side of each, 39 apart |
-| tailstock | an upright 60 wide | two SHF12 clamps and the tail centre, 12 x 80, pointed |
-| spindle | 12 mm ground rod, 141 long | the hub and wheel outboard; 15 mm bare as the master; the spur on its end |
-| spur | a ring of steel tube, 16 x 2, 6 long | teeth filed in its rim; retaining compound |
+| sled plate | 424 x 214 ply | on 6 mm of packing on each of the four blocks; its edge 20 mm short of the positioner's face |
+| tailstock, headstock | each two uprights 60 wide, 19 thick, 84 high, tied at the foot | a KFL001 flange bearing on the stick's side of each upright |
+| tail spindle | 12 mm ground rod, 100 long | a three-flat point on its end; 21 mm bare as the master |
+| spindle | 12 mm ground rod, 147 long | its end in the socket's boss; the wheel and hub outboard |
+| blank socket | printed, 58 x 51 x 26 with a boss 26 across and 22 long | a pocket 20 deep for the blank's end; a jack screw in its floor, a lock screw in a wall |
 | wheel | 160 teeth, 105 across, 12 wide, bore 13, a fin on its inner face | on a 12 mm flanged hub; a 20-tooth pulley on a NEMA 17 on a bracket on the plate |
 | home sensor | an optical endstop | on the outer upright's outer face, over the axis |
-| stops, 2 | posts 40 x 40 x 87 on the base | the back one carries the sled-back switch |
+| stops, 2 | posts 40 x 40 x 93 on the base | the back one carries the sled-back switch |
 | router positioner | 440 x 176 x 453 | its own example |
 
 ## What the test checks
@@ -370,17 +388,22 @@ written a second time, in Rust, and works every row forward:
 - the blank is a rectangle with the tile 2 mm inside every face, and
   the first row hangs it with a wide face level and underneath;
 - the document is the sled at one finishing row, the bit's tip on the
-  stick and none of its 40 bodies through another;
-- the stick's drive, from the motor to the tail centre: seven of the
+  stick and none of its 40 bodies through another; and with the sled
+  at each end of its travel nothing that rides on it is through
+  anything that stands on the base, the plate passing over the
+  shafts' supports, which it would be in without its packing;
+- the stick's drive, from the motor to the tail spindle: seven of the
   pulley's teeth in the belt and the controller's steps for a turn
   the two pulleys' ratio; the hub on the wheel's outer face; each
   flange bearing against the stick's side of its upright; the rod its
-  whole length and bare where the bit is set; the spur ring on its
-  end and inside the circle the tile leaves; the tail centre in two
-  clamps past where the bit runs out to; the sensor short of the
-  wheel at the fin's radius;
+  whole length, its end in the socket's boss; the socket's pocket
+  round the blank's end with its fit, holding it across, and its
+  corners clear of the plate and the positioner as it turns; the tail
+  spindle's end at the stick's end, bare where the bit is set; the
+  sensor short of the wheel at the fin's radius;
 - every bearing block stays on its shaft over the whole travel, and
-  the stops leave the bit beside the master and past the stick;
+  the stops leave the bit beside the master at one end and its collet
+  nut 2 mm short of the socket at the other;
 - for setting up: a recorded machine built wrong, its six touches
   touches on it, the arithmetic made again, the height found within
   2 µm at the depth it was probed, and the table planned for it run

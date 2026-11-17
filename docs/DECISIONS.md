@@ -1967,3 +1967,44 @@ read that was not drawn at all.
 What the spur holds is an estimate, not a measurement, and so is what
 the cut asks of it. A pencil line across the ring and the stick is
 the check until someone cuts a stick.
+
+## 2026-11 · The owner's socket, and the sled turned end for end
+
+The ring spur was a part to file and an estimate to trust. The owner
+proposed a printed part instead: a socket for the rod on one side,
+epoxied onto its roughened end, and a socket for the blank on the
+other.
+
+- **It is the better spur.** It drives the blank by its flats, so
+  there is nothing to slip and nothing to estimate; it puts the blank
+  on the axis with no centre mark at that end; and it fixes which way
+  round the blank is, which had been done by eye.
+- **It cannot be where the bit comes onto the stick,** which is why
+  the last entry kept everything there inside 8 mm of the axis. So
+  the sled is turned end for end: the bit waits at the tail, where
+  there is only a rod, and a pass stops short of the socket. The cost
+  is the stick's last 21 mm, uncut.
+- **The tail becomes a spindle.** The bit is set against the rod it
+  waits beside, and that rod has to turn with the stick for its
+  runout to be found and allowed for. So it is the drive's rod over
+  again in two more flange bearings, with three flats for a point so
+  that the stick turns it. Lost: the sliding centre in two clamps,
+  which did not turn; and keeping the master on the drive's rod
+  behind the socket, which wants a third place for the sled to stop
+  and a controller that knows which it is at.
+- **Neither spindle slides.** The pocket is 8 mm deeper than the
+  blank stands in it. The blank goes in, comes back onto the tail's
+  point on a jack screw through the socket's floor, and is locked by
+  a screw through a wall, which also takes up the pocket's fit.
+- **The plate was in the shafts' supports.** Checking the new layout
+  at one pose found the plate through a support, and it was not the
+  new layout's doing: the supports are 2 mm higher than the bearing
+  blocks, and the plate had always passed over them at the ends of
+  its travel. The test only ever looked at the pose that was drawn.
+  The plate is packed up 6 mm, and the test now moves the sled to
+  both ends of its travel.
+
+The socket's angle on the rod is set when it is glued, on the table's
+first row with a wide wall of the pocket flat on a block. If that is
+a degree out the tile is a degree round in its blank, which the 2 mm
+all round allows.

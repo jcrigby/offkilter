@@ -1,6 +1,6 @@
 #safe,38.0212
 n,kind,tool,depth,height,turn,via,label
-1,load,none,12.5609,40.0,24.6832,s,blank on centres19.5 up from itswide face 24.8  in from router
+1,load,none,12.5609,40.0,24.6832,s,blank in socket tail ctr 19.5 up24.8 from routertail mark up
 2,set,straight,40.0212,40.0,0.0,s,set the straight bit on the master
 3,rough,straight,28.3944,22.0,0.0,s,rough 0 deg -18 bite 1 of 3
 4,rough,straight,31.1047,22.0,0.0,d,rough 0 deg -18 bite 2 of 3
