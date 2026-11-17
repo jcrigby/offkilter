@@ -3,9 +3,12 @@ three motors stand for each. Pure Python, no kernel: build.py hands it
 the tile's outline and writes what it returns.
 
 A cut is (t, across, tip): the stick turned so that the direction t of
-its section points down at the cutter, the cutter `across` from the
-axis, its tip `tip` from the axis toward the router (negative: past the
-axis). The sled's two hinges and its spindle put the stick there.
+its section points at the router, the bit's axis `across` above the
+stick's, its tip `tip` from the stick's axis toward the router
+(negative: past the axis). The stick only turns. The router is held in
+the two-axis positioner (examples/router-positioner), lying on its
+side with the bit pointing at the stick: the positioner's X is the
+depth, its Z the height.
 """
 import math
 
@@ -16,7 +19,7 @@ SHANK = 6.0                     # its shank: the taper stops at this diameter
 RIDGE = 0.05                    # what a pass may leave standing between it and the next, to sand
 FACE_MIN = 0.2                  # the ball cuts no further round its side than this: the cosine between the bit and the face (78 deg)
 OFF_CENTRE = 15.0               # degrees: a pass meets its face this far round the ball from its tip, where it can. The tip's dead centre does not turn; 15 deg round, the edge passes at a metre a second
-Y_LIM = 19.0                    # the planner keeps the cutter this near the axis; the hinge has a little more
+Y_LIM = 19.0                    # the planner keeps the cutter this near the axis; the positioner's height travel has twice that
 ROUGH_BIT, ROUGH_BITE = 6.0, 3.0   # roughing: a straight bit, and the most it takes at a bite
 ROUGH_STEP = 3.0                # its places across, half its width apart
 ROUGH_ANGLES = 24               # the directions it roughs from, 15 deg apart
@@ -345,122 +348,46 @@ def bites(outline, places, passes):
     return kept, {"waste": waste, "rough_area": rough_area, "left_after_rough": left_after_rough, "left_at_end": sum(alive) * CELL * CELL}
 
 
-# -- the two hinges and the spindle ------------------------------------------
+# -- the positioner's two axes and the spindle --------------------------------
 
 def rot(a, v):
-    c, s = math.cos(a), math.sin(a)
-    return (v[0] * c - v[1] * s, v[0] * s + v[1] * c)
-
-
-def meet(a, ra, b, rb):
-    """Where two circles meet: both points."""
-    dx, dy = b[0] - a[0], b[1] - a[1]
-    d = math.hypot(dx, dy)
-    k = (ra * ra - rb * rb + d * d) / (2 * d)
-    h2 = ra * ra - k * k
-    if h2 < 0:
-        raise ValueError("out of a link's reach")
-    h = math.sqrt(h2)
-    mx, my = a[0] + k * dx / d, a[1] + k * dy / d
-    return (mx - h * dy / d, my + h * dx / d), (mx + h * dy / d, my - h * dx / d)
+    return (v[0] * math.cos(a) - v[1] * math.sin(a), v[0] * math.sin(a) + v[1] * math.cos(a))
 
 
 def turned(a):
     return math.atan2(math.sin(a), math.cos(a))
 
 
-class Sled:
-    """The sled's geometry in its own frame: y to the right (the lift
-    hinge's side), z up from the table. A lift plate swings on hinge 1;
-    under it, on hinge 2, hangs the frame that carries the stick; the
-    spindle turns the stick in that frame. Each of the two is moved
-    by a screw's nose through a short link pinned at both ends, so the
-    screw holds it both ways: an upright one under the plate's free
-    edge for the lift, a level one on the sled for the swing."""
+class Axes:
+    """Where the bit's tip is from the stick's axis, by the positioner's two screws. `depth` is the quill run out
+    from its home, drawn back; `height` the stage run up from its home, down. With both at home the tip is
+    `tip_home` from the stick's axis toward the router and the bit's axis `across_home` above the stick's.
 
-    def __init__(self, h1, arm, drop_len, p1_y, e1, l1, p2_z, e2, l2):
-        self.h1 = h1                    # hinge 1
-        self.arm = arm                  # hinge 1 to hinge 2 in the plate's frame
-        self.drop = drop_len            # hinge 2 down to the stick's axis
-        self.p1_y = p1_y                # screw 1's line, upright
-        self.e1, self.l1 = e1, l1       # link 1's pin on the plate, in the plate's frame from hinge 1, and its length
-        self.p2_z = p2_z                # screw 2's line over the table, level
-        self.e2, self.l2 = e2, l2       # link 2's pin on the hanging frame, from hinge 2, and its length
-        self.cutter_y = 0.0             # where the cutter is across the sled: 0 as drawn, as found on a built one
+    As drawn a millimetre of screw is a millimetre and the two travels are square. A built one is not quite:
+    `scale` is each screw's true travel for one asked, depth then height, and `shear` how far the bit rises for
+    a millimetre run out. Taking the height's travel as straight up loses nothing: a tile turned about its axis is
+    the same tile."""
 
-    def axis(self, alpha, beta):
-        h2 = rot(alpha, self.arm)
-        p = rot(alpha + beta, (0.0, -self.drop))
-        return (self.h1[0] + h2[0] + p[0], self.h1[1] + h2[1] + p[1])
+    def __init__(self, tip_home, across_home, scale=(1.0, 1.0), shear=0.0):
+        self.tip_home, self.across_home = tip_home, across_home
+        self.scale, self.shear = scale, shear
 
-    def hinge2(self, alpha):
-        h2 = rot(alpha, self.arm)
-        return (self.h1[0] + h2[0], self.h1[1] + h2[1])
+    def tip(self, depth, height):
+        """(tip, across) of the bit's tip."""
+        return self.tip_home - self.scale[0] * depth, self.across_home + self.scale[1] * height + self.shear * depth
 
-    def angles(self, ya, za):
-        """The plate's and the frame's angles that put the axis at (ya, za)."""
-        v = (ya - self.h1[0], za - self.h1[1])
-        la = math.hypot(*self.arm)
-        c = (v[0] ** 2 + v[1] ** 2 - la * la - self.drop ** 2) / (2 * la * self.drop)
-        if abs(c) > 1:
-            raise ValueError("out of the hinges' reach")
-        base = math.atan2(-self.drop, 0.0) - math.atan2(self.arm[1], self.arm[0])      # the frame against the arm, hanging square
-        turn = math.acos(c)
-        beta = min((s * turn - base for s in (1.0, -1.0)), key=lambda b: abs(math.atan2(math.sin(b), math.cos(b))))
-        beta = math.atan2(math.sin(beta), math.cos(beta))
-        w = (self.arm[0] + rot(beta, (0.0, -self.drop))[0], self.arm[1] + rot(beta, (0.0, -self.drop))[1])
-        alpha = math.atan2(v[1], v[0]) - math.atan2(w[1], w[0])
-        return math.atan2(math.sin(alpha), math.cos(alpha)), beta
+    def screws(self, tip, across):
+        """(depth, height) that put the tip there."""
+        depth = (self.tip_home - tip) / self.scale[0]
+        return depth, (across - self.across_home - self.shear * depth) / self.scale[1]
 
-    def pin1(self, alpha):
-        q = rot(alpha, self.e1)
-        return (self.h1[0] + q[0], self.h1[1] + q[1])
+    def row(self, t, across, tip):
+        """A cut as the table has it: depth, height, and the spindle's angle in degrees."""
+        depth, height = self.screws(tip, across)
+        return depth, height, math.degrees(-t) % 360.0
 
-    def pin2(self, alpha, beta):
-        h2, q = self.hinge2(alpha), rot(alpha + beta, self.e2)
-        return (h2[0] + q[0], h2[1] + q[1])
-
-    def pusher1(self, alpha):
-        """The height of nose 1's pin, under the plate's: a link's length from it along the screw's line."""
-        q = self.pin1(alpha)
-        return q[1] - math.sqrt(self.l1 ** 2 - (q[0] - self.p1_y) ** 2)
-
-    def pusher2(self, alpha, beta):
-        """Nose 2's pin along its line, right of the frame's."""
-        q = self.pin2(alpha, beta)
-        return q[0] + math.sqrt(self.l2 ** 2 - (q[1] - self.p2_z) ** 2)
-
-    def lean(self, alpha, beta):
-        """How far each link leans off its screw's line, radians."""
-        q1, q2 = self.pin1(alpha), self.pin2(alpha, beta)
-        return math.asin((q1[0] - self.p1_y) / self.l1), math.asin((q2[1] - self.p2_z) / self.l2)
-
-    def alpha_of(self, c1):
-        """The plate's angle with nose 1's pin at c1: the plate's pin is where its circle about hinge 1 meets the link's about the nose, over the nose."""
-        pin = max(meet(self.h1, math.hypot(*self.e1), (self.p1_y, c1), self.l1), key=lambda q: q[1])
-        return turned(math.atan2(pin[1] - self.h1[1], pin[0] - self.h1[0]) - math.atan2(self.e1[1], self.e1[0]))
-
-    def beta_of(self, c2, alpha):
-        """The frame's angle against the plate with nose 2's pin at c2: the frame's pin left of the nose, the frame hanging the nearer upright."""
-        h2 = self.hinge2(alpha)
-        hangs = [turned(math.atan2(q[1] - h2[1], q[0] - h2[0]) - math.atan2(self.e2[1], self.e2[0]))
-                 for q in meet(h2, math.hypot(*self.e2), (c2, self.p2_z), self.l2) if q[0] < c2]
-        return min(hangs, key=abs) - alpha
-
-    def pose(self, t, across, tip, bit_up):
-        """The joints for a cut: the two noses' pins along their screws and the spindle's angle in its frame, degrees."""
-        ya, za = self.cutter_y - across, bit_up + tip
-        alpha, beta = self.angles(ya, za)
-        psi = -t - math.pi / 2                           # the stick's section in the sled's frame
-        gamma = math.degrees(psi - alpha - beta) % 360.0
-        return {"c1": self.pusher1(alpha), "c2": self.pusher2(alpha, beta), "gamma": gamma, "alpha": alpha, "beta": beta, "ya": ya, "za": za}
-
-    def cutter(self, c1, c2, gamma, bit_up):
-        """Back from the joints to where the cutter's tip is in the stick's section: (across, tip, t)."""
-        alpha = self.alpha_of(c1)
-        beta = self.beta_of(c2, alpha)
-        ya, za = self.axis(alpha, beta)
-        psi = math.radians(gamma) + alpha + beta
-        t = -psi - math.pi / 2
-        # the tip is at (cutter_y, bit_up) in the sled's frame; a point p of the section is at (ya + p.e, za - p.d)
-        return (self.cutter_y - ya, za - bit_up, t % (2 * math.pi))
+    def cutter(self, depth, height, turn):
+        """Back from a row to the cut: (across, tip, t). The section sits in the machine turned by the spindle's
+        angle, with d toward the router and e up, so t is that angle the other way."""
+        tip, across = self.tip(depth, height)
+        return across, tip, (-math.radians(turn)) % (2 * math.pi)

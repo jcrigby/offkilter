@@ -23,6 +23,11 @@ cargo test -p ok-render --test router_positioner   # what CI runs
 
 Nothing here is built, and every dimension of the router is a guess.
 
+Its second use is already drawn: the [stick sled](../stick-sled/) lays
+it on its lid beside a turning stick and reads its sizes from
+`out/positioner.json`, so that example is built again after this one.
+What that job asks of it is in the sled's README.
+
 ## What is in it
 
 | | home: drawn back, up | plunged, down |

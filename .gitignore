@@ -25,5 +25,7 @@ examples/turntable-scan/out/**/scan-frame.png
 examples/turntable-scan/out/scan-frame-test.png
 examples/spectre-sticks/out/*.stl
 # the stick sled as one built sled was found to be: a machine's own numbers, not the design's
+examples/stick-sled-hinged/built.json
 examples/stick-sled/built.json
+examples/stick-sled-hinged/probe_log.csv
 examples/stick-sled/probe_log.csv

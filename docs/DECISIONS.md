@@ -1774,3 +1774,57 @@ The router's size is a guess three ways (65 across the housing, 80
 across the cap, 190 long): Bosch publishes none of it. The model is
 parametric so that the owner's callipers replace the guesses, and the
 README says which box grows with which number.
+
+## 2026-11 · The stick sled holds its router in the positioner; the hinges go
+
+Asked whether the router might come in from the side, or the work stay
+put under a router above, the answer given was a fourth layout: the
+hinged frame fixed, the router sliding beneath it. The owner's answer
+was a design brief for a two-axis router positioner, and then: that is
+the stick sled's router.
+
+It is a better answer than the one given. The hinged sled moved the
+stick on two arcs and worked the arcs backwards for every cut; a
+sled built half a millimetre out cut 1.6 mm out, and it took 40
+touches and a fit in 22 unknowns to plan for the sled as built. With
+the router on two straight screws the stick has only to turn. A row is
+a depth, a height and an angle, and none moves another.
+
+What followed from it:
+
+- **The hinged sled is parked, not deleted** (`examples/stick-sled-hinged`,
+  its tests with it). The pass planner came across unchanged; the
+  probing and the fit stay there as the worked example of measuring a
+  machine with its own motors.
+- **The sled slides, the positioner stays.** The positioner is the
+  heavy, wired thing with a datum face; the sled is now a plate, a
+  spindle and a centre. It rides the duplicator's two shafts, which
+  the hinged sled had as hinges.
+- **The positioner lies on its lid.** Upright, its bit is 185 to 265 mm
+  over what it stands on, with its Z column wanting a hole below.
+  Turned over, the bit is 70 to 150 up and the column is out of the
+  way on top. The brief says not to count on gravity for Z, so
+  turning it over is allowed; it puts the stage's weight on the side
+  of the bulkhead with no thrust bearing yet.
+- **Its face is a wall beside the stick.** The blank's corners swing
+  33.5 mm, so the wall is 36 from the axis and the bit has to reach
+  48 past it: 45.5 mm out of the collet nut. That is no shorter than
+  the bit over the router table was. The earlier finding stands: the
+  bit's length was never what limited anything.
+- **A bit is set by the controller, by touch.** The router is inside
+  three boxes; raising it by hand to a master is gone. The probe's
+  clip goes on the bit and the quill is run out until it touches the
+  master. Depth then needs no calibration at all: it is measured at
+  every bit change.
+- **The clip has to be parked before a cut.** A clip left on a bit is
+  the one new way to get hurt that setting by touch brings. Its
+  parking post is wired to ground, so the probe reads closed only
+  when the clip is there, and the controller waits for that.
+- **The wheel the owner first proposed is in**: 160 teeth, hanging off
+  the sled's head end where neither plate nor positioner is.
+
+What it costs: the positioner is 472 mm long and unbuilt, its router
+unmeasured, and its boxes slide on strips under gib pressure where
+the hinged sled had ball bushings and rails. Whether that holds a
+few hundredths is the open question, and it is the positioner's to
+answer.

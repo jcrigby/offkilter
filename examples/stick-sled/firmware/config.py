@@ -2,24 +2,24 @@
 # Pins are the Pico's GP numbers.
 
 # Each motor's driver: step pin, direction pin, and which way is positive.
-LIFT_PINS = (2, 3)              # pusher 1, under the lift plate's free edge
-SWING_PINS = (4, 5)             # pusher 2, against the hanging frame
+DEPTH_PINS = (2, 3)             # the positioner's X: the quill, along the bit. Positive runs the bit out toward the stick
+HEIGHT_PINS = (4, 5)            # the positioner's Z: the stage. Positive is away from its home, which in this machine is up
 TURN_PINS = (6, 7)              # the spindle's motor
 ENABLE_PIN = 8                  # all three drivers' enable, low to run
-LIFT_FLIP = False               # True if the motor runs the wrong way
-SWING_FLIP = False
+DEPTH_FLIP = False              # True if the motor runs the wrong way
+HEIGHT_FLIP = False
 TURN_FLIP = False
 
 # Switches, each from its pin to ground: closed reads 0.
 # The three home switches are wired normally closed: they open at home, so a wire that comes off
 # reads as home and the motor stops instead of driving into its end. Set False for switches that close at home.
 HOME_OPENS = True
-LIFT_HOME_PIN = 10              # pusher 1 at the top of its travel
-SWING_HOME_PIN = 11             # pusher 2 drawn right back
+DEPTH_HOME_PIN = 10             # the quill drawn right back
+HEIGHT_HOME_PIN = 11            # the stage at its home end
 TURN_HOME_PIN = 12              # once a turn of the spindle, at its mark
-LIFT_MOST_MM = 110.0            # homing gives up if the switch has not spoken in this much travel
-SWING_MOST_MM = 70.0
-SLED_BACK_PIN = 13              # closed with the sled pulled right back, the stick clear of the cutter
+DEPTH_MOST_MM = 70.0            # homing gives up if the switch has not spoken in this much travel
+HEIGHT_MOST_MM = 90.0
+SLED_BACK_PIN = 13              # closed with the sled against its back stop, the bit beside the master and clear of the stick
 NEXT_PIN = 14                   # the foot switch
 LED_PIN = 25
 
@@ -28,36 +28,39 @@ LED_PIN = 25
 OLED = True
 OLED_I2C, OLED_SDA_PIN, OLED_SCL_PIN = 0, 16, 17
 
-# Probing, to find out what a built sled is: the pin or block in the router's place is clipped to this pin,
-# the spindle to ground; the master touching it closes the contact.
+# The probe: a lead from this pin with a clip on its end, and the spindle wired to ground. Clipped on a bit (the
+# router off), the bit touching the master closes the contact: that is how a bit is set, and how a built machine is
+# measured, with a pin in the collet. Its home is a post wired to ground: parked there the contact is closed, and the
+# controller will not go to a cut until it is, so the router is never started with the clip on its bit.
 PROBE_PIN = 15
-PROBE_LIFT_MM = 8.0             # a probe starts this much of its screw short of where the drawn sled would touch, and gives up
-PROBE_SWING_MM = 6.0            # this much past it: the lift coming down on a thing, the swing coming against its side
+PROBE_DEPTH_MM = 8.0            # a probe starts this much of its screw short of where the touch is expected, and gives up
+PROBE_HEIGHT_MM = 6.0           # this much past it: the bit run out at the master, or brought up or down against it
 PROBE_US = 1200                 # the pause between steps coming up to a touch
 PROBE_TOUCHES = 3               # each place is touched this many times, the screw backed off this far between,
 PROBE_BACK_MM = 0.5
-PROBE_AGREE_MM = 0.08           # and the touches must agree this well: a chip, or a clip that slips, stops the probing
+PROBE_AGREE_MM = 0.05           # and the touches must agree this well: a chip, or a clip that slips, stops the probing
 PROBE_FILE = "probe_log.csv"
-ROUND_US = 1500                 # turning a band under the cutter
+ROUND_US = 1500                 # turning a band past the cutter
 
 # Where the controller keeps its place in a stick.
 PLACE_FILE = "at.txt"
 
-# Steps for a millimetre of pusher and a degree of spindle.
-# 200-step motors; a T8 screw of 2 mm lead; the drivers at 8 microsteps for the pushers
-# and 16 for the spindle; a 16-tooth pulley driving a 60-tooth one.
-LIFT_STEPS_PER_MM = 200 * 8 / 2.0
-SWING_STEPS_PER_MM = 200 * 8 / 2.0
-TURN_STEPS_PER_DEG = 200 * 16 * (60 / 16) / 360.0
+# Steps for a millimetre of screw and a degree of spindle.
+# 200-step motors; the positioner's screws M8 rod, 1.25 mm a turn (a T8 of 2 mm lead: 200 * 8 / 2.0);
+# the drivers at 8 microsteps for the screws and 16 for the spindle; a 16-tooth pulley driving a wheel of 160.
+DEPTH_STEPS_PER_MM = 200 * 8 / 1.25
+HEIGHT_STEPS_PER_MM = 200 * 8 / 1.25
+TURN_STEPS_PER_DEG = 200 * 16 * (160 / 16) / 360.0
 
-# A nudge to every row: positive moves it further from home. Leave these at nothing. What a built sled is, its
-# home switches' places with the rest, is found by probing (calibrate.py) and planned for in the table itself;
-# these are for a switch that has been moved since, until the sled is probed again.
-LIFT_TRIM_MM = 0.0
-SWING_TRIM_MM = 0.0
+# A nudge to every row: positive moves it further from home. Leave these at nothing: where the stick's axis is
+# from the positioner's home switches is found by touching (calibrate.py) and planned for in the table itself.
+DEPTH_TRIM_MM = 0.0
+HEIGHT_TRIM_MM = 0.0
 TURN_TRIM_DEG = 0.0
 
-# Turning back to an angle, the spindle goes this far past it and comes up to it forwards.
+# Every move ends going the same way, away from home: one that goes back goes this far past and comes up to its
+# place. The spindle the same, in degrees.
+PAST_MM = 0.5
 TURN_PAST_DEG = 3.0
 
 # Speeds: the pause between steps, microseconds, at the start of a move and at its fastest.

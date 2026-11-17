@@ -83,9 +83,12 @@ works today, all in the browser:
   scrape those sticks' outer faces round, into a curvy Spectre
   (`examples/spectre-planes/`), and an indexed mill that cuts a
   one-handed curvy tile round one solid stick, set by its own bit on
-  a pattern (`examples/stick-mill/`), the sled that replaces it, the
-  stick hung over a router table's cutter and placed for each pass by
-  three motors from a table of rows (`examples/stick-sled/`), a mini
+  a pattern (`examples/stick-mill/`), the sled that replaced it, the
+  stick hung from two hinges over a router table's cutter
+  (`examples/stick-sled-hinged/`), and the sled that replaced that,
+  the stick only turning beside a router held in the two-axis
+  positioner, three motors going to the next row of a table
+  (`examples/stick-sled/`), a mini
   chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`), the Edwardian
