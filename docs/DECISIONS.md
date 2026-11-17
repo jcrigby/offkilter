@@ -1908,5 +1908,14 @@ pass had guessed 65, and guessed the rest too.
   flank made four such points; all four end within 0.05 mm. The
   count is now of what still stands when the passes are all made.
 
-Not settled by this: the cap's width the other way across, where the
-brush caps are, and whether a thumb through the slot works the lock.
+- **Two readings stay estimates, with room for being wrong.** Asked
+  for the cap's width the other way across and for where the cord's
+  boot leaves it, the owner said to go with what there is. So the
+  design is made not to care much: the quill's bore is 86 for a cap
+  the photograph has at 81, and the cord's slots run 12 mm further
+  each way than the reading needs, forward into the edge of the
+  stage's floor and back under the quill's back strip, which bears
+  either side of a slot a quarter its width. That costs 2 mm on
+  every box. The README says which numbers are measured.
+
+Not settled by this: whether a thumb through the slot works the lock.

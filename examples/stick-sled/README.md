@@ -243,10 +243,10 @@ and up or down. All of it is simulation.
 
 | what | in the model | check |
 |---|---|---|
-| the router | its body is 70.71 mm, measured; the rest of the positioner rests on two photographs of it | see the positioner's own table |
+| the router | its body is 70.71 mm, measured; the rest is read off two photographs, with allowances where it matters | see the positioner's own table |
 | the probe's pin | 6.35 mm, a 1/4 in dowel pin or drill rod | measure it and give `fit` what it is with `--pin` |
 | the two shafts | 490 and 416 long | they set the blocks' spacing and the travel; shorter ones want a shorter stick |
-| the shafts' supports and blocks | SK20 51 to the centre, 70 high; SC20UU 25 to the centre, 42 high | they set the sled's height, and with the plinth, the blank's 9 mm over the plate |
+| the shafts' supports and blocks | SK20 51 to the centre, 70 high; SC20UU 25 to the centre, 42 high | they set the sled's height, and with the plinth, the blank's 10 mm over the plate |
 | the bit's length | 45.5 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach |
 | the wheel | 160 teeth, printed; a closed belt of 400; the motor 101.7 from the spindle, in slots | it has to run true: 0.1 mm off centre is 0.11° once a turn, 0.06 mm at the tile's edge. Bolted to a hub through slack holes it can be tapped true under an indicator |
 | the spindle | a 12 mm ground rod | not studding: see the hinged sled |
@@ -256,7 +256,7 @@ and up or down. All of it is simulation.
 
 | part | size, mm | |
 |---|---|---|
-| base | 687 x 411 ply, and a 19 plinth 174 x 142 under the positioner | the positioner's column overhangs it behind |
+| base | 687 x 413 ply, and a 19 plinth 176 x 144 under the positioner | the positioner's column overhangs it behind |
 | shafts, supports, blocks | the 20 mm set: two shafts, four SK20, four SC20UU | the sled's rails |
 | sled plate | 359 x 214 ply | on the four blocks; its edge 20 mm short of the positioner's face |
 | headstock | two uprights 60 wide, 19 thick, tied at the foot | a 6201 bearing in each, 43 apart |
@@ -265,7 +265,7 @@ and up or down. All of it is simulation.
 | master | ground steel sleeve, 16 x 12 x 29 | a bit is set on it; with the sled back the bit is beside it |
 | wheel | 160 teeth, 105 across, 12 wide | and a 16-tooth pulley on a NEMA 17 on a bracket on the plate |
 | stops, 2 | posts 40 x 40 x 87 on the base | the back one carries the sled-back switch |
-| router positioner | 440 x 174 x 451 | its own example |
+| router positioner | 440 x 176 x 453 | its own example |
 
 ## What the test checks
 
@@ -280,7 +280,7 @@ written a second time, in Rust, and works every row forward:
 - the waste, on a grid of the test's own, with the table's rows run
   over it in the table's order: no row meets more than a hair-wide
   fin standing higher than its bit's bite;
-- the blank turns clear of the positioner's face and 9 mm clear of
+- the blank turns clear of the positioner's face and 10 mm clear of
   the sled's plate; the uprights pass that face; the wheel is clear
   of the positioner's box with the sled back; every row is within the
   positioner's travel with the bit's margin; the collet nut, which

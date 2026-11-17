@@ -44,13 +44,14 @@ OUT = os.path.join(HERE, "out")
 ROUTER_D = 70.71                # the round body a clamp grips. Measured
 ROUTER_HOUSING = 58.0           # how far back it stays round and bare, to the nearest edge of the rubber grip. Photo
 ROUTER_GRIP = (73.0, 105.0)     # the grip behind that: across, and where it ends. Photo
-ROUTER_ENV = 82.0               # the widest thing on it, the top cap: 81 across as the photo sees it. The quill has to pass it
+ROUTER_ENV = 84.0               # the widest thing on it, the top cap: 81 across as the photo sees it, and 3 allowed for the way it does not. An estimate the owner said to go with. The quill has to pass it
 ROUTER_L = 159.0                # to the top of the cap. Photo; with the nose and the nut 193, and retailers give 7.5 in
 NOSE_D, NOSE_L = 44.0, 13.0     # the bearing's boss, in front of the body. Photo
 SHAFT_D, SHAFT_L = 13.0, 6.0    # the spindle showing between the boss and the nut. Photo
 COLLET_D, COLLET_L = 20.0, 15.0  # the collet nut, 17 across its flats. Photo
 NUT_FACE = NOSE_L + SHAFT_L + COLLET_L  # the collet nut's face, in front of the body's
 CORD_AT, CORD_D, CORD_L = 133.0, 16.0, 35.0  # the cord's boot leaves the cap's side 127 back, leaning back: where it is through the quill's wall, across, long. Photo
+CORD_SLACK = 12.0               # that place is an estimate the owner said to go with: the slots run this much further each way than it needs
 RACK = (18.0, 6.0, 12.0)        # the depth rack's end: wide, thick, and how far it stands out of the body's front face, at the rim. Photo
 RACK_TURN = 100.0               # and how far round from the cord it is, degrees. The two photos together, so roughly
 FACE_PROUD = 3.0                # three screw heads and the spindle lock, also at the rim of that face, stand out about this much. Photo
@@ -123,6 +124,7 @@ SLOT_Z = (AZ - Z_TRAVEL - SLOT_W / 2, AZ + SLOT_W / 2)
 COL_SLOT_Z = (1.0 + MH - CO - 1.5, IH)          # the column's way through the outer box's right wall
 CORD_SLOT = CORD_D + 6.0                        # the cord's slots, across
 CORD_PLUG = 40.0                                # the quill's slot, along: the plug goes through it flat, as the router goes in
+CORD_X = (XQ - X_TRAVEL + CORD_AT - CORD_SLOT / 2 - CORD_SLACK, XQ + CORD_AT + CORD_SLOT / 2 + CORD_SLACK)   # the slot in the stage's floor and the column's
 CORD_HANG = CORD_L - (CO - ROUTER_ENV) / 2      # the boot's end, below the column's underside
 CORD_NOTCH = CORD_HANG + 1.5 + 8.0              # the notch under the column's slot: that, the slot's clearance, and room for the cord to turn
 
@@ -152,18 +154,22 @@ def rules():
     found["rack_in_wall"] = RACK[2] - GAP                # the rack's end is this far into the face's thickness, in the slot
     found["slot_past_body"] = (SLOT_W - ROUTER_D) / 2
     found["collet_proud"] = NOSE_L + SHAFT_L - (GAP + OUTER_WALL)
-    # The cord's boot comes down through the quill's floor and the column's: it runs between the stage and where the
-    # quill's back strip runs, and at full plunge it is in the outer box's right wall, which is notched for it.
+    # The cord's boot comes down through the quill's floor and the column's. Where it is drawn it runs between the
+    # stage and where the quill's back strip runs, and at full plunge it is in the outer box's right wall, which is
+    # notched for it. The slots run CORD_SLACK further each way: into the edge of the stage's own floor, and under
+    # where the back strip runs, which is far wider than the slot and bears either side of it.
     boot = (XQ - X_TRAVEL + CORD_AT - CORD_D / 2, XQ + CORD_AT + CORD_D / 2)
     found["cord_past_stage"] = boot[0] - MX
     found["cord_short_of_strip"] = back[0] - boot[1]
     found["cord_in_wall"] = (MX + GAP + OUTER_WALL) - boot[0]
     found["cord_slot_short_of_strip"] = (QL - 2.0 - STRIP_L) - (CORD_AT - CORD_SLOT / 2 + CORD_PLUG)   # the quill's own slot and its own back strip
+    found["strip_beside_slot"] = (QO - 8.0 - CORD_SLOT) / 2                                           # the back strip's bearing each side of the column's slot
+    found["cap_in_bore"] = (QI - 81.0) / 2                                                            # round the cap as the photo sees it
     bad = []
     if min(found["x_engaged"], found["z_engaged"]) < ENGAGE:
         bad.append(f"a box is under {ENGAGE} widths in its guide: {found['x_engaged']:.2f} along X, {found['z_engaged']:.2f} along Z")
     for key, least in (("front_strip_in_sleeve", 0.0), ("back_strip_in_column", 0.0), ("x_tip_to_router", 3.0), ("x_through_nut", 2.0), ("z_tip_to_sleeve", 3.0),
-                       ("z_through_nut", 2.0), ("column_in_slot", 1.0), ("cord_past_stage", 3.0), ("cord_short_of_strip", 3.0), ("cord_slot_short_of_strip", 10.0), ("slot_past_body", 2.0)):
+                       ("z_through_nut", 2.0), ("column_in_slot", 1.0), ("cord_past_stage", 0.0), ("cord_short_of_strip", 0.0), ("cord_slot_short_of_strip", 10.0), ("slot_past_body", 2.0), ("strip_beside_slot", 25.0)):
         if found[key] < least - 1e-9:
             bad.append(f"{key} is {found[key]:.1f}, under {least}")
     if bad:
@@ -265,6 +271,8 @@ def z_stage(p):
     box(p, "sleeve: the X guide", (-1.0, MX + 1.0), (-SB / 2, SB / 2), (top - WALL - SB, top - WALL), op="remove")
     box(p, "the Z screw's room", (WALL, MX + 1.0), (-SB / 2, SB / 2), (ZB + BOSS, ZB + BOSS + Z_CLEAR), op="remove")
     zhex(p, "nut pocket", (ZB - 1.0, ZB + 2.0 + NUT_L + 0.5), (MX / 2, 0.0), NUT_AF + 2 * NUT_FLOAT, op="remove")
+    if CORD_X[0] < MX:      # the cord's slot begins in the edge of the sleeve's floor, over the screw's room
+        zbox(p, "the cord's slot", (CORD_X[0], MX + 1.0), (-CORD_SLOT / 2, CORD_SLOT / 2), (top - 2 * WALL - SB - 1.0, top - WALL - SB + 1.0), op="remove")
     zcyl(p, "the screw's way", (ZB + NUT_L, ZB + BOSS + 1.0), (MX / 2, 0.0), SCREW_D + 1.0, op="remove")
     # bearing strips on the two reference sides, one near each end: against the rails, and against the back wall
     for z in ((ZB + 2.0, ZB + 2.0 + STRIP_L), (top - 2.0 - STRIP_L, top - 2.0)):
@@ -284,7 +292,7 @@ def x_column(p):
     box(p, "X column", (MX, X_COL_END), (-CO / 2, CO / 2), (AZ - CO / 2, AZ + CO / 2))
     box(p, "bore: the sleeve carried on", (MX - 1.0, X_COL_END + 1.0), (-SB / 2, SB / 2), (AZ - SB / 2, AZ + SB / 2), op="remove")
     # the cord's slot, in the floor: as long as the travel, between the stage and where the quill's back strip runs
-    zbox(p, "the cord's slot", (XQ - X_TRAVEL + CORD_AT - CORD_SLOT / 2, XQ + CORD_AT + CORD_SLOT / 2), (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - CO / 2 - 1.0, AZ - SB / 2 + 1.0), op="remove")
+    zbox(p, "the cord's slot", (max(CORD_X[0], MX - 1.0), CORD_X[1]), (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - CO / 2 - 1.0, AZ - SB / 2 + 1.0), op="remove")
     for y in ((-SB / 2 + 6.0, -GIB[1] / 2 - 6.0), (GIB[1] / 2 + 6.0, SB / 2 - 6.0)):   # air in through the lid at the back, each side of the gib; the spider lets it through to the router
         zbox(p, "vent", (X_COL_END - 70.0, X_COL_END - 20.0), y, (AZ + SB / 2 - 1.0, AZ + CO / 2 + 1.0), op="remove")
     lo, hi = XQ + QL - X_TRAVEL - STRIP_L - 10.0, X_COL_END - 8.0       # the gibs lie where the quill's back end runs
@@ -307,7 +315,7 @@ def quill(p):
     box(p, "X quill", (XQ, XQ + QL), (-QO / 2, QO / 2), (AZ - QO / 2, AZ + QO / 2))
     box(p, "bore: the router's", (XQ - 1.0, XQ + QL + 1.0), (-QI / 2, QI / 2), (AZ - QI / 2, AZ + QI / 2), op="remove")
     # the cord's slot, in the floor between the two strips: the plug is fed through it as the router goes in
-    zbox(p, "the cord's slot", (XQ + CORD_AT - CORD_SLOT / 2, XQ + CORD_AT - CORD_SLOT / 2 + CORD_PLUG), (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - QO / 2 - 1.0, AZ - QI / 2 + 1.0), op="remove")
+    zbox(p, "the cord's slot", (XQ + CORD_AT - CORD_SLOT / 2 - CORD_SLACK, XQ + CORD_AT - CORD_SLOT / 2 + CORD_PLUG), (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - QO / 2 - 1.0, AZ - QI / 2 + 1.0), op="remove")
     for x in ((XQ + 2.0, XQ + 2.0 + STRIP_L), (XQ + QL - 2.0 - STRIP_L, XQ + QL - 2.0)):
         box(p, "strip underneath", x, (-QO / 2 + 4.0, QO / 2 - 4.0), (AZ - QO / 2 - GAP, AZ - QO / 2), op="add")
         box(p, "strip behind", x, (QO / 2, QO / 2 + GAP), (AZ - QO / 2 + 4.0, AZ + QO / 2 - 4.0), op="add")
@@ -482,7 +490,7 @@ def main():
         "travel": {"x": X_TRAVEL, "z": Z_TRAVEL}, "wall": WALL, "outer_wall": OUTER_WALL, "gap": GAP, "strip_l": STRIP_L, "gib": GIB, "engage": ENGAGE, "rail": RAIL,
         "screw": {"d": SCREW_D, "pitch": SCREW_PITCH, "per_step": SCREW_PITCH / 200, "nut": [NUT_AF, NUT_L], "float": NUT_FLOAT, "lead": NUT_LEAD, "tip_clear": TIP_CLEAR},
         "quill": {"bore": QI, "outside": QO, "length": QL, "front": XQ}, "sleeve": {"bore": SB, "outside": CO},
-        "stage": {"x": MX, "y": MD, "height": MH, "foot": ZB, "screw_room": Z_CLEAR, "boss": BOSS}, "box": {"x": BOX_X, "y": BOX_Y, "inside_height": IH, "slot_z": SLOT_Z, "slot_w": SLOT_W, "column_slot_z": COL_SLOT_Z, "cord_slot": [CORD_SLOT, CORD_PLUG], "cord_notch": CORD_NOTCH},
+        "stage": {"x": MX, "y": MD, "height": MH, "foot": ZB, "screw_room": Z_CLEAR, "boss": BOSS}, "box": {"x": BOX_X, "y": BOX_Y, "inside_height": IH, "slot_z": SLOT_Z, "slot_w": SLOT_W, "column_slot_z": COL_SLOT_Z, "cord_slot": [CORD_SLOT, CORD_PLUG], "cord_x": CORD_X, "cord_slack": CORD_SLACK, "cord_notch": CORD_NOTCH},
         "axis_z": AZ, "x": {"router_back": X_ROUTER_BACK, "tip": X_TIP, "nut": X_NUT, "spider": X_SPIDER, "column_end": X_COL_END, "end": X_END},
         "z": {"nut": Z_NUT, "tip": Z_TIP, "end": Z_END}, "drive": {"recess": REC, "bulkhead": BULKHEAD, "chamber": CHAMBER, "length": DRIVE, "cap": CAP, "motor": MOTOR},
         "rules": found, "envelope": envelope, "size": [envelope[k][1] - envelope[k][0] for k in "xyz"],
@@ -496,7 +504,8 @@ def main():
           f"{numbers['behind_router']['drawn_back']:.0f} behind the router drawn back")
     print(f"quill {QO:.0f} square x {QL:.0f}, in its guide {found['x_engaged']:.2f} widths; Z stage {MX:.0f} x {MD:.0f} x {MH:.0f}, {found['z_engaged']:.2f} widths; outer box {sizes['Outer box'][0]:.0f} x {sizes['Outer box'][1]:.0f} x {sizes['Outer box'][2]:.0f}")
     print(f"X screw tip {found['x_tip_to_router']:.0f} from the router's back, drawn back; Z screw tip {found['z_tip_to_sleeve']:.0f} under the sleeve, down; at full plunge the router's nose {found['nose_proud']:.1f} out of the box's face and the collet nut {found['collet_proud']:.1f} clear of it")
-    print(f"the cord's boot: {found['cord_past_stage']:.0f} past the stage at full plunge and {found['cord_in_wall']:.1f} into the outer box's right wall, {found['cord_short_of_strip']:.0f} short of where the quill's back strip runs")
+    print(f"the cord's boot: {found['cord_past_stage']:.0f} past the stage at full plunge and {found['cord_in_wall']:.1f} into the outer box's right wall, {found['cord_short_of_strip']:.0f} short of where the quill's back strip runs; "
+          f"its slots allow {CORD_SLACK:.0f} either way, and the bore {found['cap_in_bore']:.1f} round the cap as photographed")
     print(f"over the printer's {BED:.0f}: {', '.join(too_long) or 'nothing'}")
 
 
