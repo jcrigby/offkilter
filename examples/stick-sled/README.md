@@ -24,6 +24,7 @@ Two straight screws now do what the hinges and their links did.
 cargo build --release -p ok-mcp
 python3 examples/router-positioner/build.py   # this reads the positioner's sizes from its out/positioner.json
 python3 examples/stick-sled/build.py
+python3 examples/stick-sled/animate.py        # out/passes.gif: every pass, a frame each
 cargo test -p ok-render --test stick_sled   # what CI runs
 ```
 
@@ -401,6 +402,37 @@ under half an hour of the motors (3.3 m of the depth's screw and
 4.7 m of the height's, at 1280 steps a millimetre; the wheel turns
 the stick 744° in all). Estimated.
 
+## Every pass, animated
+
+![The blank's section in tan on white; a blue cutter comes at it from one side after another, each pass leaving a notch, the passes before it drawn as blue outlines that fade to white; first the square-ended roughing bit in steps, then the tapered ball-nose all the way round, until what is left is the tile](out/passes.gif)
+
+`animate.py` draws the table: all 482 cutting rows, one frame each,
+looking along the stick from its tail. What is left of the blank is
+tan, the pass being made is solid blue, and the passes before it are
+blue outlines that fade to white over the next 48. It runs 39 seconds:
+185 roughing passes, a pause where the bit is changed and set, 297
+finishing passes, and then the tile.
+
+The picture is fixed to the stick, so the bit seems to come from every
+side. On the machine it is the other way about: the bit always comes
+from the positioner's side and the stick is turned to meet it.
+
+| part way through roughing | part way through finishing | done |
+|---|---|---|
+| ![The blank with square notches cut into two of its sides, a wide blue bar reaching into one, and the outlines of the notches before it](out/passes_rough.png) | ![The tile's shape emerging: a tapered blue bit with a round tip in one of its hollows, and a fan of fading outlines behind it](out/passes_finish.png) | ![The tile alone, tan on white](out/passes_done.png) |
+
+```sh
+python3 examples/stick-sled/animate.py   # after build.py: it reads out/sled.json
+```
+
+It is made with a tool that is not the sled's: `flipbook` in `ok-mcp`
+draws any frames of flat shapes to an animated GIF, and
+`cutting_book` in `examples/okmcp.py` makes the frames for any blank
+and any list of cuts in this style. `animate.py` only turns the
+table's rows into the bit's outline at each. A roughing cut is drawn
+as the bit's whole width to where its end stops; a finishing cut as
+the ball, its tapered flank and the shank.
+
 ## What the positioner has to be, for this job
 
 | | here | |
@@ -670,4 +702,9 @@ written a second time, in Rust, and works every row forward:
   centre, a star off centre and a star not quite home each cost,
   worked from the furthest cut and compared with the study's; and the
   probing table and the bands are where the reading of them assumes,
-  the bands' twelve turns made by hand with no motor moved.
+  the bands' twelve turns made by hand with no motor moved;
+- the animation, read back frame by frame: a frame for each of the
+  482 cutting rows; the first is the whole blank and the last is the
+  tile, to the area the planner says is left; the cutter is in every
+  pass's frame; what is left never grows; and the tile's middle is
+  never cut.

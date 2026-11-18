@@ -900,6 +900,19 @@ returns it as MCP image content from its `screenshot` tool (a base64
 encoder is inlined rather than pulled in). The crate is not part of the
 wasm build; the browser has its own renderer.
 
+`ok_render::flipbook` is the other thing the crate draws: flat
+animations. A `Book` is frames of filled and outlined polygons in the
+caller's own units; each frame paints its `keep` shapes onto the page,
+where they stay, and its `draw` shapes over it for that frame alone,
+which is all a picture of something being made needs. The page is
+painted at nine samples to a pixel by a scanline fill (an outline is a
+strip a side and a round a corner) and averaged down. `gif` writes the
+frames as an animated GIF: each frame in its own colour table (median
+cut when it has more than 255 colours), only the box of pixels that
+changed, the unchanged ones inside it see-through, LZW with an
+open-addressed table. `read_gif` reads that subset back for tests, and
+the `ok-mcp` `flipbook` tool is the module with JSON in front.
+
 ## Performance
 
 `scripts/bench.sh` prints regeneration timings (release build) for the demo

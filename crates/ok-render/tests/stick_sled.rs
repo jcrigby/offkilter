@@ -1630,6 +1630,120 @@ fn the_star_goes_home_in_the_index_wheel_and_a_clamp_keeps_the_angle_when_it_lea
     );
 }
 
+/// The animation, `out/passes.gif`, read back frame by frame: a frame
+/// for every cutting row of the table and no fewer; the first is the
+/// blank and nothing else; the cutter is in every pass's frame; what is
+/// left of the blank never grows; the tile's middle is never cut; and
+/// the last frame is the tile, to the area the planner says is left.
+#[test]
+fn the_animation_has_a_frame_for_every_pass_and_ends_on_the_tile() {
+    let n = numbers();
+    let a: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/passes_anim.json")).unwrap())
+            .unwrap();
+    let cuts = rows(&n)
+        .iter()
+        .filter(|r| r.kind == "rough" || r.kind == "finish")
+        .count();
+    let whole = |k: &str| a[k].as_u64().unwrap() as usize;
+    assert_eq!(whole("cuts"), cuts, "a frame for every cutting row");
+    let (first, tail) = (whole("first_cut"), whole("tail"));
+    assert!(whole("frames") > first + cuts && whole("frames") <= first + cuts + tail + 1);
+    let colour = |k: &str| {
+        let v = u32::from_str_radix(&a[k].as_str().unwrap()[1..], 16).unwrap();
+        [(v >> 16) as u8, (v >> 8) as u8, v as u8]
+    };
+    let (tan, blue) = (colour("blank"), colour("cut"));
+    assert_eq!(colour("background"), [255, 255, 255]);
+    let near = |c: ok_render::Rgb, want: [u8; 3]| {
+        [c.0, c.1, c.2]
+            .iter()
+            .zip(want)
+            .all(|(p, q)| (*p as i32 - q as i32).abs() <= 8)
+    };
+    let size = whole("size");
+    let per_mm = size as f64 / (f(&a["view"][2]) - f(&a["view"][0]));
+    // What a frame shows of each: the blank's colour as area, and how many pixels are the cutter's. The first
+    // frame and the last are read pixel by pixel; the passes between, every third pixel each way, which is
+    // enough to see a cutter and to see what is left shrink.
+    let mut seen: Vec<(f64, usize, bool, u32)> = Vec::new();
+    let bytes = std::fs::read(dir().join("out/passes.gif")).unwrap();
+    let ends = [0, whole("frames") - 1];
+    let (w, h, frames) = ok_render::flipbook::read_gif(&bytes, |k, image, ms| {
+        let step = if ends.contains(&k) { 1 } else { 3 };
+        let (mut left, mut cutter) = (0.0, 0usize);
+        for y in (0..size).step_by(step) {
+            for x in (0..size).step_by(step) {
+                let c = image.pixel(x, y);
+                if near(c, blue) {
+                    cutter += 1;
+                } else if c.2 < 255 && c.0 >= tan[0] {
+                    // between white and the blank's colour: an edge pixel is part blank
+                    left += (255.0 - c.2 as f64) / (255.0 - tan[2] as f64);
+                }
+            }
+        }
+        let middle = image.pixel(size / 2, size / 2);
+        let each = (step * step) as f64 / per_mm / per_mm;
+        seen.push((left * each, cutter * step * step, near(middle, tan), ms));
+    })
+    .unwrap();
+    assert_eq!((w, h, frames), (size, size, whole("frames")));
+    // the first frame: the blank, whole, and no cutter
+    let blank = pair(&n["blank"]["size"]);
+    println!(
+        "{frames} frames, {} bytes; the blank {:.0} mm2 in the first ({:.0} drawn), {:.0} left in the last (the tile {:.0} and {:.1} standing)",
+        bytes.len(),
+        blank.0 * blank.1,
+        seen[0].0,
+        seen[frames - 1].0,
+        f(&n["tile"]["area"]),
+        f(&n["rough"]["left_at_end"])
+    );
+    assert!((seen[0].0 - blank.0 * blank.1).abs() < 0.005 * blank.0 * blank.1 && seen[0].1 == 0);
+    // every pass: the cutter is there, and the tile's middle is still the blank's colour
+    for (k, s) in seen.iter().enumerate().skip(first).take(cuts) {
+        assert!(s.1 > 100, "no cutter in frame {k}");
+        assert!(s.2, "the tile's middle is cut in frame {k}");
+    }
+    // What is left only ever shrinks: frame by frame, give or take the outlines drawn over its edges and the
+    // pixels not looked at, which together are under a hundredth of the blank.
+    let slack = 0.01 * blank.0 * blank.1;
+    let mut least = seen[0].0;
+    for (k, s) in seen.iter().enumerate().skip(first) {
+        assert!(
+            s.0 <= least + slack,
+            "more is left in frame {k} than before it: {} after {least}",
+            s.0
+        );
+        least = least.min(s.0);
+    }
+    // and by the end of roughing most of the waste is gone
+    let roughed = seen[first + whole("last_rough")].0;
+    assert!(
+        roughed < seen[0].0 - 0.75 * (seen[0].0 - seen[frames - 1].0),
+        "{roughed}"
+    );
+    // the last frame: no cutter, no outlines, and the tile
+    let last = seen[frames - 1];
+    let want = f(&n["tile"]["area"]) + f(&n["rough"]["left_at_end"]);
+    assert!(
+        last.1 == 0 && last.2 && (last.0 - want).abs() < 0.015 * want,
+        "{} for {want}",
+        last.0
+    );
+    // a pass is on the screen long enough to see, and the whole of it is under a minute
+    let ms = f(&a["ms"]);
+    assert!(seen[first..first + cuts].iter().all(|s| s.3 as f64 >= ms) && ms >= 40.0);
+    let total: f64 = seen.iter().map(|s| s.3 as f64).sum::<f64>() / 1000.0;
+    assert!(
+        (total - f(&a["seconds"])).abs() < 0.5 && total < 60.0,
+        "{total} s"
+    );
+    // the file is small enough to keep: every frame is only what changed
+    assert!(bytes.len() < 4_000_000, "{} bytes", bytes.len());
+}
+
 /// The sled is a flat plate on the base, between two fences. Its far
 /// edge runs on the datum fence and spring plungers in its near edge
 /// keep it there; it rides on two slips; each fence has a lip over it,

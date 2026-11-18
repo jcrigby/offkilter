@@ -1,0 +1,26 @@
+{
+ "size": 640,
+ "view": [
+  -40,
+  -40,
+  40,
+  40
+ ],
+ "blank": "#e2be8a",
+ "cut": "#1f4fd8",
+ "background": "#ffffff",
+ "ms": 70,
+ "tail": 48,
+ "shades": 8,
+ "tool_change": 900,
+ "frames": 492,
+ "first_cut": 1,
+ "cuts": 482,
+ "last_rough": 184,
+ "stills": {
+  "rough": 111,
+  "finish": 334,
+  "done": 491
+ },
+ "seconds": 39.33
+}

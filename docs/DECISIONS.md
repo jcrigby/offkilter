@@ -2248,3 +2248,51 @@ faces of plywood uprights.
   riser, which is pushed the other way, was drawn 4 mm short of the
   post; butted and glued to it, the pinch closes through the two of
   them and the deck only holds them down.
+
+## 2026-11 · Flip books: an animation is frames of flat shapes, written as a GIF
+
+The owner asked for an animation of every pass of the stick sled's
+table: white behind, the cut being made solid, the blank another
+colour, the cuts before it outlines fading to white. And for it to be
+done in offkilter, so the code is there to use again.
+
+- **In the kernel, not in a script with a picture library.** The
+  examples run on Python's standard library and `ok-mcp` and nothing
+  else, and that is worth keeping. So the drawing and the file format
+  are a module of `ok-render` and a tool of `ok-mcp`; a script only
+  says what is in each frame.
+- **A GIF.** It plays wherever a picture is shown: a README on GitHub,
+  a phone, a chat. A video wants a player and an encoder nobody should
+  have to install; an animated PNG is smaller and truer in colour but
+  is a still picture in too many places. GIF's 256 colours a frame are
+  enough for flat shapes, and its LZW is a page of code.
+- **`keep` and `draw`.** A cut animation is the same thing again and
+  again: something is done, and then it has been done. Shapes a frame
+  keeps are painted onto the page and stay; shapes it draws are over
+  the page for that frame only. With that there is no boolean to
+  work out: what is left of the blank is the blank with every cut so
+  far painted over in the background's colour. The other way, a list
+  of everything to draw in every frame, is 482 times as much to send
+  by the end.
+- **Only what changed is written.** Each frame is the box of pixels
+  that differ from the frame before, the unchanged ones inside it
+  see-through. That is what keeps 492 frames under 3 MB, and it is
+  also why the fading is in eight shades: an outline that changes
+  shade every frame is rewritten every frame, and eight steps over 48
+  passes look the same as 48 and are less than half the file.
+- **The module reads its own files.** A written file that only its
+  writer has looked at is not tested. Reading the sled's animation
+  back found a real fault at once: when a frame's last code lands
+  where the codes grow a bit wider, the end marker has to be written
+  wider too. Forgiving readers never notice; a strict one stops.
+- **The picture is fixed to the stick.** On the machine the stick
+  turns and the bit always comes from one side. Drawn that way the
+  whole picture would turn at every new angle and the fading outlines
+  with it. Fixed to the stick, the tile stays still and comes out of
+  the blank where the eye can follow it. The README says which way
+  round the machine is.
+- **An old cut's outline is the bit's, cut off at the blank.** The
+  true outline of what one pass removed is the bit less everything
+  before it, which is the boolean again. The bit's own outline inside
+  the blank's rectangle is near enough for a line that is fading.
+

@@ -24,6 +24,7 @@ did, and the stick's own mounting has nothing left to do but turn.
     cargo build --release -p ok-mcp
     python3 examples/router-positioner/build.py     # the positioner's sizes are read from its out/positioner.json
     python3 examples/stick-sled/build.py
+    python3 examples/stick-sled/animate.py          # out/passes.gif: every pass, a frame each
     cargo test -p ok-render --test stick_sled   # what CI runs
 
 Writes out/sled.okpart (every part in its own tab, the sled at one

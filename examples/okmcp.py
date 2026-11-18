@@ -373,3 +373,83 @@ def mate_parameters(target, moving):
     flip = _dot(zt, zm) > 0.0
     z = zt if flip else tuple(-c for c in zt)
     return _dot(_sub(om, ot), zt), math.degrees(math.atan2(_dot(_cross(xt, xm), z), _dot(xt, xm))), flip
+
+
+# -- flip books: the `flipbook` tool's frames -------------------------------------
+
+
+def clip_to(poly, convex):
+    """`poly` cut down to what of it is inside the convex polygon
+    `convex`, either way round (Sutherland and Hodgman)."""
+    area = sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(convex, convex[1:] + convex[:1]))
+    edge = list(convex) if area > 0 else list(convex)[::-1]
+    out = list(poly)
+    for a, b in zip(edge, edge[1:] + edge[:1]):
+        side = lambda p: (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
+        was, out = out, []
+        for p, q in zip(was, was[1:] + was[:1]):
+            sp, sq = side(p), side(q)
+            if sp >= 0:
+                out.append(p)
+            if (sp >= 0) != (sq >= 0):
+                t = sp / (sp - sq)
+                out.append((p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])))
+        if not out:
+            return []
+    return out
+
+
+def tint(colour, toward, t):
+    """A colour "#rrggbb" mixed toward another by t, 0 to 1."""
+    a, b = (tuple(int(c[k:k + 2], 16) for k in (1, 3, 5)) for c in (colour, toward))
+    return "#" + "".join(f"{round(x + (y - x) * t):02x}" for x, y in zip(a, b))
+
+
+def cutting_book(blank, cuts, tail=48, shades=12, ms=70, hold=(1200, 3000), blank_colour="#e2be8a", cut_colour="#1f4fd8",
+                 background="#ffffff", line=1.5):
+    """Frames for the `flipbook` tool that show a blank being cut, a
+    frame a cut. The background is plain; what is left of the blank is
+    one colour; the cut being made is solid in another; the cuts before
+    it are outlines in that colour, fainter the older they are, gone
+    into the background after `tail` of them. The fading is in `shades`
+    steps: an outline then changes only now and then, and since the
+    file holds only what changes from frame to frame, a dozen shades
+    make it a third the size of a shade a cut.
+
+    `blank` is a convex polygon. `cuts` is a list of polygons, each the
+    cutter's section where that cut has it (it may run on past the
+    blank and out of the picture), or of (polygon, ms) to hold a cut
+    longer than the rest. After the last cut the outlines fade away, a
+    shade a frame, and the finished piece is held.
+
+    Returns the frames and the number of the first cut's frame: cut k
+    is frame k + that. Pass the frames to `flipbook` with `background`
+    and a `view` about the blank."""
+    r3 = lambda poly: [[round(x, 3), round(y, 3)] for x, y in poly]
+    shapes, times = [], []
+    for c in cuts:
+        held = len(c) == 2 and isinstance(c[1], (int, float))
+        shapes.append(r3(c[0] if held else c))
+        times.append(int(c[1]) if held else ms)
+    edges = [r3(clip_to(s, blank)) for s in shapes]         # what of each cut is in the blank: its outline once it is made
+    rubbed = lambda k: {"points": shapes[k], "fill": background}
+
+    each = max(1, round(tail / max(1, shades)))             # cuts to a shade
+    most = -(-tail // each)                                 # shades, in the end
+
+    def before(k, older=0):
+        """The cuts before cut k, the oldest first, each as faint as it is old."""
+        out = []
+        for j in range(max(0, k - tail + older), k):
+            shade = -(-(k - j + older) // each)
+            if len(edges[j]) > 1 and shade <= most:
+                out.append({"points": edges[j], "stroke": tint(cut_colour, background, shade / (most + 1)), "width": line})
+        return out
+
+    frames = [{"keep": [{"points": r3(blank), "fill": blank_colour}], "ms": hold[0]}]
+    for k, s in enumerate(shapes):
+        frames.append({"keep": [rubbed(k - 1)] if k else [], "draw": before(k) + [{"points": s, "fill": cut_colour}], "ms": times[k]})
+    for older in range(0, tail, each):
+        frames.append({"keep": [rubbed(len(shapes) - 1)] if older == 0 and shapes else [], "draw": before(len(shapes), older), "ms": ms})
+    frames.append({"ms": hold[1]})
+    return frames, 1

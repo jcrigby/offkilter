@@ -14,6 +14,9 @@
 //! `create_document`, `open_document`, `report`, `apply`, `screenshot`,
 //! `import`, `export`, `document_url`. See docs/MCP.md.
 
+// The list of tools is one `json!` of every tool's schema, and it is long.
+#![recursion_limit = "256"]
+
 use ok_math::{Vec2, Vec3};
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};
@@ -702,6 +705,154 @@ fn duplicator_map(report: &ok_brep::DuplicateReport) -> ok_render::Image {
         }
     }
     image
+}
+
+/// The `flipbook` tool: frames of flat shapes written as an animated
+/// GIF, and any of its frames as a PNG.
+fn flipbook(args: &Value) -> Result<String, String> {
+    use ok_render::flipbook::{Book, Frame, Shape};
+    let path = args
+        .get("path")
+        .and_then(|p| p.as_str())
+        .ok_or("flipbook needs path: where to write the GIF")?;
+    let colour = |v: &Value, what: &str| -> Result<ok_render::Rgb, String> {
+        let bad = || format!("{what} is a colour like \"#1f4fd8\"");
+        let hex = v
+            .as_str()
+            .and_then(|t| t.strip_prefix('#'))
+            .filter(|h| h.len() == 6)
+            .ok_or_else(bad)?;
+        let n = u32::from_str_radix(hex, 16).map_err(|_| bad())?;
+        Ok(ok_render::Rgb((n >> 16) as u8, (n >> 8) as u8, n as u8))
+    };
+    let view: Vec<f64> = args
+        .get("view")
+        .and_then(|v| v.as_array())
+        .map(|a| a.iter().filter_map(|x| x.as_f64()).collect())
+        .unwrap_or_default();
+    let view: [f64; 4] = view.try_into().map_err(|_| {
+        "flipbook needs view: [x0, y0, x1, y1], what a frame shows, in the shapes' units, y up"
+    })?;
+    let whole = |k: &str, d: u64| args.get(k).and_then(|v| v.as_u64()).unwrap_or(d);
+    let width = whole("width", 640) as usize;
+    let height = whole("height", width as u64) as usize;
+    let every = whole("ms", 80) as u32;
+    let shape = |v: &Value, frame: usize| -> Result<Shape, String> {
+        let points: Vec<(f64, f64)> = v
+            .get("points")
+            .and_then(|p| p.as_array())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|q| Some((q.get(0)?.as_f64()?, q.get(1)?.as_f64()?)))
+                    .filter(|q| q.0.is_finite() && q.1.is_finite())
+                    .collect()
+            })
+            .unwrap_or_default();
+        let given = v
+            .get("points")
+            .and_then(|p| p.as_array())
+            .map_or(0, |a| a.len());
+        if points.is_empty() || points.len() != given {
+            return Err(format!(
+                "frame {frame}: a shape's points are [[x, y], ...], at least one, all numbers"
+            ));
+        }
+        let fill = v.get("fill").filter(|f| !f.is_null());
+        let stroke = v.get("stroke").filter(|f| !f.is_null());
+        if fill.is_none() && stroke.is_none() {
+            return Err(format!(
+                "frame {frame}: a shape with neither fill nor stroke draws nothing"
+            ));
+        }
+        Ok(Shape {
+            points,
+            fill: fill.map(|f| colour(f, "fill")).transpose()?,
+            stroke: stroke.map(|f| colour(f, "stroke")).transpose()?,
+            width: v.get("width").and_then(|w| w.as_f64()).unwrap_or(1.5),
+            closed: v.get("closed").and_then(|c| c.as_bool()).unwrap_or(true),
+        })
+    };
+    let shapes = |v: Option<&Value>, frame: usize| -> Result<Vec<Shape>, String> {
+        match v.and_then(|l| l.as_array()) {
+            Some(list) => list.iter().map(|s| shape(s, frame)).collect(),
+            None => Ok(Vec::new()),
+        }
+    };
+    let mut frames = Vec::new();
+    for (n, f) in args
+        .get("frames")
+        .and_then(|f| f.as_array())
+        .ok_or("flipbook needs frames: [{keep?, draw?, ms?}, ...]")?
+        .iter()
+        .enumerate()
+    {
+        frames.push(Frame {
+            keep: shapes(f.get("keep"), n)?,
+            draw: shapes(f.get("draw"), n)?,
+            ms: f
+                .get("ms")
+                .and_then(|m| m.as_u64())
+                .map_or(every, |m| m as u32),
+        });
+    }
+    let book = Book {
+        width,
+        height,
+        view,
+        background: match args.get("background") {
+            Some(b) => colour(b, "background")?,
+            None => ok_render::Rgb(255, 255, 255),
+        },
+        frames,
+        repeat: args.get("repeat").and_then(|r| r.as_bool()).unwrap_or(true),
+    };
+    let mut stills: Vec<(usize, String)> = Vec::new();
+    for s in args
+        .get("stills")
+        .and_then(|s| s.as_array())
+        .into_iter()
+        .flatten()
+    {
+        let frame = s.get("frame").and_then(|f| f.as_u64());
+        let to = s.get("path").and_then(|p| p.as_str());
+        match (frame, to) {
+            (Some(frame), Some(to)) if (frame as usize) < book.frames.len() => {
+                stills.push((frame as usize, to.to_string()))
+            }
+            _ => {
+                return Err(format!(
+                    "a still is {{frame, path}}, the frame one of the book's {}",
+                    book.frames.len()
+                ))
+            }
+        }
+    }
+    let bytes = ok_render::flipbook::gif_each(&book, |n, image| {
+        for (_, to) in stills.iter().filter(|s| s.0 == n) {
+            std::fs::write(to, ok_render::to_png(image))
+                .map_err(|e| format!("could not write {to}: {e}"))?;
+        }
+        Ok(())
+    })?;
+    std::fs::write(path, &bytes).map_err(|e| format!("could not write {path}: {e}"))?;
+    let seconds: f64 = book
+        .frames
+        .iter()
+        .map(|f| f.ms.max(20) as f64 / 1000.0)
+        .sum();
+    Ok(format!(
+        "wrote {} bytes of GIF to {path}: {} x {}, {} frames, {seconds:.1} s{}{}",
+        bytes.len(),
+        book.width,
+        book.height,
+        book.frames.len(),
+        if book.repeat { ", repeating" } else { "" },
+        if stills.is_empty() {
+            String::new()
+        } else {
+            format!("; {} stills as PNG", stills.len())
+        }
+    ))
 }
 
 fn tabs_of(doc: &ok_model::Document) -> Value {
@@ -1396,6 +1547,7 @@ impl Server {
         }
         Ok(ToolOut::Text(match name {
             "offkilter_reference" => Ok(REFERENCE.to_string()),
+            "flipbook" => flipbook(args),
             "measuring_sheet" => {
                 let path = args
                     .get("path")
@@ -2815,6 +2967,11 @@ fn tool_list() -> Value {
             "inputSchema": { "type": "object", "properties": { "edge": { "type": "number" }, "gap": { "type": "number" }, "kerf": { "type": "number" }, "margin": { "type": "number" }, "floor": { "type": "number" }, "bias": { "type": "number" } }, "required": ["edge"] }
         },
         {
+            "name": "flipbook",
+            "description": "Writes a flat animation as an animated GIF: frames of filled and outlined polygons, for showing a thing being made step by step (the passes of a cut, the order of an assembly, a mechanism's positions drawn in section). `view` [x0, y0, x1, y1] is what a frame shows, in the shapes' own units with y up, scaled the same both ways and centred. Each frame has `keep`, shapes painted onto the page itself, there in that frame and every later one, and `draw`, shapes painted over it for that frame only: keep what has been done, draw what is being done. A shape is {points: [[x, y], ...], fill?, stroke?, width?, closed?}: colours are \"#rrggbb\", opaque, painted in order (fill something with the background's colour to rub it out); `width` is the outline's in pixels (1.5), and `closed: false` leaves a polyline open. `ms` is every frame's time, or a frame's own. Only what changes between frames is written, so hundreds of frames of small changes make a small file. `stills` [{frame, path}] also writes those frames as PNGs, to look at or to put in a page.",
+            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "width": { "type": "integer", "description": "pixels; 640 by default" }, "height": { "type": "integer", "description": "pixels; the width by default" }, "view": { "type": "array", "items": { "type": "number" }, "description": "x0, y0, x1, y1" }, "background": { "type": "string", "description": "#rrggbb; white by default" }, "ms": { "type": "integer", "description": "milliseconds a frame; 80 by default" }, "repeat": { "type": "boolean", "description": "true by default" }, "frames": { "type": "array", "items": { "type": "object", "properties": { "keep": { "type": "array" }, "draw": { "type": "array" }, "ms": { "type": "integer" } } } }, "stills": { "type": "array", "items": { "type": "object", "properties": { "frame": { "type": "integer" }, "path": { "type": "string" } } } } }, "required": ["path", "view", "frames"] }
+        },
+        {
             "name": "measuring_sheet",
             "description": "Writes the printable measuring sheet as a PDF: a light 10 mm grid with four bullseye marks in the corners (the origin's double-ringed, with dots beside it that encode the sheet size) and a 100 mm bar to check the print. Print it at 100 %, lay parts on it, photograph it straight down with all four marks in view, and measure_photo reads sizes off the picture. With `tiles` (\"2x2\", \"1x1\", \"3x2\"), a measuring field instead: a page per tile that cut and tape into one big sheet carrying a lattice of marks 50 mm apart, each mark's dots saying where it is, so a photograph needs any four marks rather than the corners, and parts may lie across marks. Prefer the field for anything bigger than a hand, for a turntable, or when parts will cover the corners; \"1x1\" is a single page with the same marks.",
             "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "sheet": { "type": "string", "description": "Letter (default), A4, A3, A2 or Tabloid" }, "tiles": { "type": "string", "description": "Tiles across by up for a measuring field, like 2x2; absent for the single classic sheet" } }, "required": ["path"] }
@@ -3333,6 +3490,97 @@ mod tests {
         assert!(caption.contains("marks that read fitted"), "{caption}");
         assert!(caption.contains("Part 1: 64.0 x 38.0 mm"), "{caption}");
         assert!(caption.contains("round, 25.0 mm across"), "{caption}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_flip_book_is_written_as_a_gif_and_its_stills_as_pngs() {
+        let dir = std::env::temp_dir().join(format!("ok-mcp-flipbook-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let mut server = local_server(&dir);
+        let (gif, png) = (dir.join("made.gif"), dir.join("last.png"));
+        // a blank, a cut taken out of it and kept, and the next cut shown over it
+        let square =
+            |x: f64, y: f64, s: f64| json!([[x, y], [x + s, y], [x + s, y + s], [x, y + s]]);
+        let book = json!({
+            "path": gif.display().to_string(), "width": 120, "view": [0, 0, 60, 60], "ms": 50,
+            "frames": [
+                { "keep": [{ "points": square(10.0, 10.0, 40.0), "fill": "#e2be8a" }], "ms": 400 },
+                { "draw": [{ "points": square(10.0, 10.0, 10.0), "fill": "#1f4fd8" }] },
+                { "keep": [{ "points": square(10.0, 10.0, 10.0), "fill": "#ffffff" }],
+                  "draw": [{ "points": square(40.0, 40.0, 10.0), "fill": "#1f4fd8" },
+                           { "points": square(10.0, 10.0, 10.0), "stroke": "#8fa7ec", "width": 2 }] },
+                {}
+            ],
+            "stills": [{ "frame": 3, "path": png.display().to_string() }]
+        });
+        let (err, text) = tool_text(&mut server, "flipbook", book.clone());
+        assert!(
+            !err && text.contains("120 x 120, 4 frames") && text.contains("1 stills"),
+            "{text}"
+        );
+        let mut seen = Vec::new();
+        let (w, h, n) =
+            ok_render::flipbook::read_gif(&std::fs::read(&gif).unwrap(), |_, image, ms| {
+                // the blank's middle, the first cut's place, the second cut's place
+                seen.push((
+                    image.pixel(60, 60),
+                    image.pixel(30, 90),
+                    image.pixel(90, 30),
+                    ms,
+                ));
+            })
+            .unwrap();
+        assert_eq!((w, h, n), (120, 120, 4));
+        let (tan, blue, white) = (
+            ok_render::Rgb(0xe2, 0xbe, 0x8a),
+            ok_render::Rgb(0x1f, 0x4f, 0xd8),
+            ok_render::Rgb(255, 255, 255),
+        );
+        assert_eq!(
+            seen,
+            vec![
+                (tan, tan, tan, 400),
+                (tan, blue, tan, 50),
+                (tan, white, blue, 50),
+                (tan, white, tan, 50)
+            ]
+        );
+        // the still is the last frame: what is kept, and nothing that was only drawn
+        let last = ok_render::from_png(&std::fs::read(&png).unwrap()).unwrap();
+        assert_eq!(
+            (last.pixel(60, 60), last.pixel(30, 90), last.pixel(90, 30)),
+            (tan, white, tan)
+        );
+        // what is left of the blank is its 40 x 40 less one 10 x 10, at two pixels to a unit
+        let left = last
+            .data
+            .chunks_exact(3)
+            .filter(|c| c == &[0xe2, 0xbe, 0x8a])
+            .count();
+        assert_eq!(left, 4 * (1600 - 100));
+        for (change, says) in [
+            (json!({ "view": [0, 0, 60] }), "view"),
+            (
+                json!({ "frames": [{ "draw": [{ "points": [[0, 0], [1, 1]] }] }] }),
+                "neither fill nor stroke",
+            ),
+            (
+                json!({ "frames": [{ "draw": [{ "points": [[0, 0], [1, 1]], "fill": "tan" }] }] }),
+                "#1f4fd8",
+            ),
+            (
+                json!({ "stills": [{ "frame": 9, "path": "x.png" }] }),
+                "one of the book's 4",
+            ),
+        ] {
+            let mut bad = book.clone();
+            for (k, v) in change.as_object().unwrap() {
+                bad[k] = v.clone();
+            }
+            let (err, text) = tool_text(&mut server, "flipbook", bad);
+            assert!(err && text.contains(says), "{text}");
+        }
         let _ = std::fs::remove_dir_all(&dir);
     }
 

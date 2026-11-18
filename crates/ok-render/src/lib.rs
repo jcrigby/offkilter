@@ -14,6 +14,7 @@ use ok_math::Vec3;
 use ok_mesh::TriMesh;
 use ok_model::{Body, Document, TabId};
 
+pub mod flipbook;
 mod png;
 mod raster;
 
