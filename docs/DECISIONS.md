@@ -2330,3 +2330,74 @@ changing, and the piece turning. That is what the machine does.
   decision above this one, that the picture is fixed to the stick,
   still describes the first.
 
+## 2026-11 · The router as measured, and a mount that comes out of the front
+
+The owner photographed the Colt three times so that the positioner's
+mount could be settled: the nose from the side, the router on the
+measuring sheet, and the rear end on. What they showed changed three
+things the two earlier photographs had wrong, and decided how the
+router is held.
+
+- **The rear is not a cylinder.** It was drawn as a cap 81 across with
+  84 allowed. It is a 76 mm circle with two things standing out of it
+  on opposite sides: the speed dial's housing, 45 mm from the axis,
+  and the chin the cord leaves, 46. The quill's bore went from 86 to
+  98. A window in the quill for each was the alternative and keeps
+  the boxes smaller, but the router goes in rear first and both would
+  have to pass the whole length of the bore in front of them: a
+  window would be a slot the length of the quill. A bore that is tall
+  and narrow would do it too, and every tube here is square by the
+  same `tube()`; 12 mm on each box is cheaper than a second kind of
+  tube.
+- **The allowance is the reading's error, said as such.** The bore is
+  twice (46 + 2) + 2: the side photograph is good to 2 mm, and a
+  millimetre a side past that. The dial's housing and the chin are
+  drawn as boxes of the sizes read, so the model's router is as wide
+  as the photograph's and the interference test sees it.
+- **One block, not two collars.** Two separate 3/4 in collars on
+  54 mm of body are two bores to get in line. Three squares glued
+  face to face and bored once are in line by construction, and the
+  thin layer between them, relieved, leaves the same two lands. It
+  also gives the four holding screws solid wood all the way through.
+- **Tightened on the bench.** Anything across a kerf is tangent to
+  the body, and nothing tangent to the body can be reached once the
+  block is in a tube in a tube in a box. So the block is not part of
+  the quill: it is clamped on the router outside, and the two go in
+  together against stop plates, held by screws along the bit's axis,
+  which is the one direction a driver can come from. The stop plates
+  are on the side walls because the dial's housing and the chin pass
+  above and below.
+- **Ordinary bolts in notches, not inserts in an edge.** A bolt across
+  the kerf needs a nut. A threaded insert in the edge of a 3/4 in
+  layer splits the plies; a cross dowel wants a 10 mm hole 3 mm from
+  the top edge. Notching the block's top corners gives a head and a
+  nut a face each and room inside the quill, with hardware from any
+  bin. The holding screws do go into inserts, but in the stop plates'
+  faces, which is where an insert holds.
+- **Out of the front.** The brief asked whether the router comes out
+  without disassembly. It did not: the bit slot was 77 mm wide and
+  the router went in before the stage went into the outer box. Three
+  changes make it come out: the slot is 100 mm, the block's width;
+  the cord's slots in the quill's floor and the tube's are open at
+  their front ends, so the boot rides out along them; and the quill's
+  front bearing strip is in two pieces either side of its slot. The
+  rear's two widest things are up and down, the way the bit slot is
+  long, which is luck.
+- **What it costs.** The tube's floor slot is now over the Z screw,
+  whose tip stops 14 mm under it; the test's post had to be made
+  wider than the slot to find the floor. The spindle lock's button is
+  under the front land, so a bit is changed with two wrenches. And
+  the stage has to be in the top 49 mm of its travel for the boot to
+  pass the bit slot's end: the test draws the router out with the
+  stage down and sees it meet the face.
+- **80 mm of plunge.** The owner's suggestion, for bits that sit
+  deeper or shallower in the collet and for later jobs. The sled's
+  plan uses the far end of it, 32.6 to 78, so at home the bit's tip
+  is 32 mm clear of the blank's corners where it was 12.
+- **The sled followed without being touched.** It reads the
+  positioner's sizes, so its axis rose 6 mm with the bigger box and
+  its box's rails grew by as much. The index wheel's rim, which
+  dipped 3 mm into the slot in the head's plate, now passes 3 mm over
+  it; the slot stays, and the test's wording changed from "dips into"
+  to "in it or just over it".
+

@@ -111,7 +111,7 @@ SEAT = 3.0                                      # the star pushes the index head
 HEAD_FOOT = (6.0, 14.0)                         # the three feet: how far they hold the plate off the base, and across
 HEAD_HALF = 55.0                                # its uprights, each side of the axis
 HEAD_NEAR = 26.0                                # the plate starts this far short of the wheel
-SLOT = (4.0, (-45.0, 75.0))                     # the slot in the plate that the wheel's rim and the belt dip into: clear each side of the wheel, and across
+SLOT = (4.0, (-45.0, 75.0))                     # the slot in the plate under the wheel's rim and the belt: clear each side of the wheel, and across
 BOLT = (5.0, 8.0, 40.0, 10.0, 4.0)              # the two bolts the head hangs back on: across, their slack holes in the post, each side of the axis, and their heads
 SPRING_L = 25.0                                 # between the head and the post: a spring on each bolt
 CATCH = (16.0, 5.0, 2.0)                        # a pot magnet in the back stop's face, and how thick the steel it meets in the sled's end
@@ -475,7 +475,7 @@ def main():
     motor_y = math.sqrt(centres ** 2 - (za - motor_z) ** 2)
     head_x = (WHEEL_X[0] - HEAD_NEAR, IDX_X[1][1])
     head_y = (-HEAD_HALF - 15.0, motor_y + MOTOR[0] / 2 + 10.0)
-    # The wheel's rim and the belt's lower run dip below the plate's top: they go through a slot in it. The owner's
+    # The wheel's rim and the belt's lower run come down to the plate's top or below it: there is a slot in it for them. The owner's
     # point: a wheel that stays at the end can be any size, because a slot takes what does not fit over the board.
     lean = math.atan2(motor_z - za, motor_y) - (math.pi / 2 - math.asin((WHEEL_D - PINION_D) / 2 / centres))    # where the lower run leaves both pulleys
     run = [(r * math.cos(lean), zc + r * math.sin(lean)) for r, zc in ((WHEEL_D / 2 + 0.8, za), (PINION_D / 2 + 0.8, motor_z))]

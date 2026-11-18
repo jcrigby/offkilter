@@ -8,9 +8,12 @@
 //! screw is through its nut at one end of its travel and short of what
 //! it runs toward at the other; the envelope and the length behind
 //! the router are what the build reported; and every box is pieces of
-//! one of two plywoods, each of them on the cut list. And the printed
-//! clips that hold two panels while they are nailed: each grips its
-//! own sheets and no others.
+//! one of two plywoods, each of them on the cut list. The router's
+//! mount: a split block on the body's bare round, seated on two stop
+//! plates in the quill, with a clear way for every bolt and screw, and
+//! block and router together out through the front of the box. And
+//! the printed clips that hold two panels while they are nailed: each
+//! grips its own sheets and no others.
 
 use ok_brep::{BoolOp, Solid, Transform};
 use ok_math::{Plane, Vec2, Vec3};
@@ -296,7 +299,9 @@ fn each_screw_is_through_its_nut_and_short_of_what_it_runs_toward() {
     assert!(to_router >= 3.0 && through >= 2.0);
     assert!((to_router - f(&n["rules"]["x_tip_to_router"])).abs() < 1e-6);
     // Z: up, the nut is nearest the tip; down, the tip is nearest the tube's floor. The floor is found with a
-    // post stood on the tip: what of the stage or the tube it meets first.
+    // post stood on the tip: what of the stage or the tube it meets first. The cord's slot is in that floor,
+    // over the screw, so the post is wider than the slot.
+    let half = f(&n["box"]["cord_slot"][0]) / 2.0 + 2.0;
     let screw = bounds(named(&pieces, &home, "Z drive 7"));
     let nut = bounds(named(&pieces, &home, "Z nut 1"));
     let through = screw.1.z - nut.1.z;
@@ -312,8 +317,8 @@ fn each_screw_is_through_its_nut_and_short_of_what_it_runs_toward() {
     for k in 1..=400 {
         let reach = k as f64 * 0.25;
         let post = slab(
-            Vec3::new(cx - 2.0, -2.0, tip),
-            Vec3::new(cx + 2.0, 2.0, tip + reach),
+            Vec3::new(cx - 2.0, -half, tip),
+            Vec3::new(cx + 2.0, half, tip + reach),
         );
         let met = over
             .iter()
@@ -331,6 +336,184 @@ fn each_screw_is_through_its_nut_and_short_of_what_it_runs_toward() {
     println!("Z screw: {through:.1} mm through the nut up, its tip {to_floor:.2} mm under the tube's floor down");
     assert!(through >= 2.0 && to_floor >= 3.0);
     assert!((to_floor - f(&n["rules"]["z_tip_to_sleeve"])).abs() <= 0.25 + 1e-6);
+}
+
+/// How much a probe shares with each of some bodies: the most.
+fn met(probe: &Solid, bodies: &[&Solid]) -> f64 {
+    bodies
+        .iter()
+        .map(|s| {
+            ok_brep::boolean(probe, s, BoolOp::Intersection)
+                .map(|s| s.volume().abs())
+                .unwrap_or(f64::MAX)
+        })
+        .fold(0.0, f64::max)
+}
+
+/// The router's mount. A block of three layers is clamped on the
+/// body's bare round on the bench: a kerf through its top, a bolt
+/// across the kerf in each thick layer. Block and router go into the
+/// quill from the front as far as two stop plates, and four screws
+/// through the block go into the plates. So: the block is on the bare
+/// round and nowhere else; every bolt and screw has a clear way where
+/// the build says it is, and wood beside it; and the two come out of
+/// the front of the box together with the stage up, the cord's boot
+/// riding out along the slots. With the stage down the boot meets the
+/// face under the bit slot's end, which is how the check can tell.
+#[test]
+fn the_router_s_block_is_on_its_bare_round_and_both_come_out_of_the_front() {
+    let (mut doc, n) = (load(), numbers());
+    let pieces = pieces(&mut doc, &n);
+    let (tx, tz, axis) = (f(&n["travel"]["x"]), f(&n["travel"]["z"]), f(&n["axis_z"]));
+    let (m, home) = (&n["mount"], at(&pieces, 0.0, 0.0));
+    let block = whole(&pieces, &home, "Router block");
+    let rim = f(&n["quill"]["front"]);
+    let (front, back) = (block.0.x - rim, block.1.x - rim);
+    let bare = f(&n["router"]["housing"]);
+    println!(
+        "the block is from {front:.1} to {back:.1} mm behind the rim, the bare round {bare:.0}"
+    );
+    assert!(front >= 1.0 && back <= bare - 1.0);
+    assert!((back - front - f(&m["block"][1])).abs() < 1e-6);
+    // square, and a little under the quill's bore
+    let side = block.1.y - block.0.y;
+    let slack = f(&n["quill"]["bore"]) - side;
+    assert!((side - (block.1.z - block.0.z)).abs() < 1e-6 && slack > 0.1 && slack < 1.0);
+    // three layers: thin between thick, face to face
+    let layers: Vec<&Solid> = (1..=3)
+        .map(|k| named(&pieces, &home, &format!("Router block {k}")))
+        .collect();
+    let mut spans: Vec<(f64, f64)> = layers
+        .iter()
+        .map(|s| (bounds(s).0.x, bounds(s).1.x))
+        .collect();
+    spans.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let ply = [f(&n["ply"][0]), f(&n["ply"][1])];
+    for (k, t) in [ply[1], ply[0], ply[1]].iter().enumerate() {
+        assert!((spans[k].1 - spans[k].0 - t).abs() < 1e-6);
+        assert!(k == 0 || (spans[k].0 - spans[k - 1].1).abs() < 1e-6);
+    }
+    // the stop plates: against the block's back, on the quill's side walls
+    let stops = [
+        named(&pieces, &home, "X quill 5"),
+        named(&pieces, &home, "X quill 6"),
+    ];
+    let quill = whole(&pieces, &home, "X quill");
+    for (s, wall) in stops.iter().zip([quill.0.y + ply[0], quill.1.y - ply[0]]) {
+        let b = bounds(s);
+        assert!((b.0.x - block.1.x).abs() < 1e-6 && (b.1.x - b.0.x - ply[1]).abs() < 1e-6);
+        assert!((b.0.y - wall).abs() < 1e-6 || (b.1.y - wall).abs() < 1e-6);
+    }
+    // The four screws: a pin where each goes is through block and plate without touching wood, and a pin
+    // 8 mm nearer the middle is in the wood of every layer and of the plate on its side.
+    let hold = &m["hold"];
+    let mut wood: Vec<&Solid> = layers.clone();
+    wood.extend(stops);
+    for (sy, sz) in [(-1.0, -1.0), (-1.0, 1.0), (1.0, -1.0), (1.0, 1.0)] {
+        let (y, z) = (sy * f(&hold[2]), axis + sz * f(&hold[3]));
+        let pin = |y: f64| {
+            slab(
+                Vec3::new(block.0.x - 5.0, y - 1.5, z - 1.5),
+                Vec3::new(block.1.x + ply[1] + 5.0, y + 1.5, z + 1.5),
+            )
+        };
+        assert!(met(&pin(y), &wood) < 1e-6);
+        let beside = pin(y - sy * 8.0);
+        assert!(layers.iter().all(|s| met(&beside, &[*s]) > 1.0));
+        assert_eq!(
+            stops.iter().filter(|s| met(&beside, &[**s]) > 1.0).count(),
+            1
+        );
+    }
+    // The two bolts across the kerf, one through the middle of each thick layer from notch to notch; and the
+    // kerf itself, from the bore out of the top.
+    let pinch = axis + f(&m["pinch_z"]);
+    let lug = side - 2.0 * f(&m["notch"][0]);
+    for span in [spans[0], spans[2]] {
+        let xc = (span.0 + span.1) / 2.0;
+        let pin = |z: f64| {
+            slab(
+                Vec3::new(xc - 1.5, -side / 2.0 - 5.0, z - 1.5),
+                Vec3::new(xc + 1.5, side / 2.0 + 5.0, z + 1.5),
+            )
+        };
+        assert!(met(&pin(pinch), &layers) < 1e-6);
+        assert!(met(&pin(pinch + 5.0), &layers) > 1.0);
+        // what the bolt squeezes: the lug between the notches, less the kerf
+        let seat = slab(
+            Vec3::new(xc - 1.0, -side / 2.0, pinch + 3.5),
+            Vec3::new(xc + 1.0, side / 2.0, pinch + 4.5),
+        );
+        let held = met(&seat, &layers) / 2.0;
+        println!("a bolt across the kerf squeezes {held:.1} mm of lug");
+        assert!((held - (lug - f(&m["kerf"]))).abs() < 0.01);
+    }
+    let kerf = slab(
+        Vec3::new(
+            block.0.x - 1.0,
+            -0.5,
+            axis + f(&n["router"]["d"]) / 2.0 + 0.5,
+        ),
+        Vec3::new(block.1.x + 1.0, 0.5, block.1.z + 1.0),
+    );
+    assert!(met(&kerf, &layers) < 1e-6);
+    // The router is under the quill's lid by what the build said, as photographed.
+    let router = bounds(named(&pieces, &home, "Router 1"));
+    let lid = bounds(named(&pieces, &home, "X quill 1"));
+    assert!(
+        (lid.0.z - router.1.z - (f(&n["quill"]["bore"]) / 2.0 - f(&n["router"]["hump"][3]))).abs()
+            < 1e-6
+    );
+    assert!(lid.0.z - router.1.z >= 2.0);
+    // Out of the front. The quill at full plunge; router and block go on from there, a step at a time, and
+    // share nothing with anything that stays.
+    let out = |dz: f64, by: f64| -> (f64, String) {
+        let placed = at(&pieces, tx, dz);
+        let mut worst = (0.0f64, String::new());
+        for (i, p) in pieces.iter().enumerate() {
+            if !p.name.starts_with("Router ") {
+                continue;
+            }
+            let moved = placed[i].transformed(&Transform::translation(Vec3::new(-by, 0.0, 0.0)));
+            let a = bounds(&moved);
+            for (k, q) in pieces.iter().enumerate() {
+                let b = bounds(&placed[k]);
+                if q.name.starts_with("Router ")
+                    || a.0.x >= b.1.x
+                    || b.0.x >= a.1.x
+                    || a.0.y >= b.1.y
+                    || b.0.y >= a.1.y
+                    || a.0.z >= b.1.z
+                    || b.0.z >= a.1.z
+                {
+                    continue;
+                }
+                let common = met(&moved, &[&placed[k]]);
+                if common > worst.0 {
+                    worst = (common, format!("{} and {}", p.name, q.name));
+                }
+            }
+        }
+        worst
+    };
+    let steps: Vec<f64> = (1..=13).map(|k| 20.0 * k as f64).collect();
+    for by in &steps {
+        let (most, which) = out(0.0, *by);
+        assert!(
+            most < 0.5,
+            "{by} mm out, the stage up: {which} share {most:.2} mm3"
+        );
+    }
+    assert!(steps[12] > router.1.x - router.0.x + ply[0]);
+    let (most, which) = steps
+        .iter()
+        .map(|by| out(tz, *by))
+        .fold((0.0, String::new()), |a, b| if b.0 > a.0 { b } else { a });
+    println!("the stage down, router and block drawn out: {which} share {most:.0} mm3");
+    assert!(most > 50.0 && which.contains("Outer box"));
+    // and how far down the stage may be: the boot's end over the bit slot's
+    let room = router.0.z - f(&n["box"]["slot_z"][0]);
+    assert!((room - f(&n["rules"]["boot_through_face"])).abs() < 1e-6 && room >= 5.0);
 }
 
 /// What the brief asks to be reported before anything is detailed:

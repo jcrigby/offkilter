@@ -1970,7 +1970,7 @@
   "left_at_end": 4.0
  },
  "axes": {
-  "tip_home": 46.021197059799015,
+  "tip_home": 66.02119705979902,
   "across_home": -40.0,
   "scale": [
    1.0,
@@ -1978,17 +1978,17 @@
   ],
   "shear": 0.0,
   "travel": [
-   60.0,
+   80.0,
    80.0
   ],
-  "safe": 38.021197059799015,
+  "safe": 58.02119705979902,
   "safe_clear": 2.0,
   "move_clear": 1.5,
   "bit_margin": 2.0,
-  "bit_out": 45.87880294020099,
+  "bit_out": 46.378802940200984,
   "past": 0.5,
   "turn_past": 3.0,
-  "nearest_master": 3.789881317671348,
+  "nearest_master": 3.7898813176713553,
   "probe": [
    8.0,
    6.0
@@ -1996,18 +1996,18 @@
  },
  "straight": 430,
  "sled": {
-  "za": 137.65000000000003,
-  "face": 50,
+  "za": 143.65000000000003,
+  "face": 51,
   "face_clear": 2.5,
   "bed_clear": 2.5,
-  "top": 93.25000000000003,
+  "top": 99.25000000000003,
   "plate_top": 22.05,
   "axis_over": 44.4,
   "deck_y": [
    -168.0,
-   40.0
+   41.0
   ],
-  "rail_near": 26.0,
+  "rail_near": 27.0,
   "deck_clear": 10.0,
   "plate_x": [
    -97.0,
@@ -2015,9 +2015,9 @@
   ],
   "plate_y": [
    -180.0,
-   35.0
+   36.0
   ],
-  "stock_top": 177.65000000000003,
+  "stock_top": 183.65000000000003,
   "kp": [
    16.0,
    71.0,
@@ -2178,7 +2178,7 @@
     ]
    ]
   },
-  "motor_y": 190.32933896367916,
+  "motor_y": 187.58426711841025,
   "motor_z": 54.199999999999996,
   "slip": 3.0,
   "fence": [
@@ -2226,7 +2226,7 @@
   ],
   "base_y": [
    -225.0,
-   241.35000000000002
+   254.35000000000002
   ],
   "ply": 19.05,
   "plinth": 0.0
@@ -2610,7 +2610,7 @@
   ],
   "head_y": [
    -70.0,
-   221.47933896367917
+   218.73426711841026
   ],
   "head_z": [
    6.0,
@@ -2628,7 +2628,7 @@
    ],
    [
     392.5,
-    190.32933896367916
+    187.58426711841025
    ]
   ],
   "foot": [
@@ -2642,9 +2642,9 @@
     75.0
    ]
   ],
-  "belt_over": 6.307898864970799,
-  "rim_chord": 34.95256450276904,
-  "stance": 334.51331501859715,
+  "belt_over": 10.33253521621862,
+  "rim_chord": 0.0,
+  "stance": 330.0498543002994,
   "bolt": [
    5.0,
    8.0,
@@ -2703,35 +2703,35 @@
   ]
  },
  "positioner": {
-  "half_box": 112.9,
+  "half_box": 118.9,
   "box_y": [
-   50,
-   231.35000000000002
+   51,
+   244.35000000000002
   ],
-  "top": 398.1,
-  "bit_home_z": 97.65000000000003,
+  "top": 416.1,
+  "bit_home_z": 103.65000000000003,
   "collet": [
    20.0,
-   15.0
+   12.5
   ],
-  "nut_behind": 41.900000000000006,
+  "nut_behind": 61.400000000000006,
   "router_d": 70.71,
   "size": [
-   459.19999999999993,
-   225.8,
-   515.0
+   496.19999999999993,
+   237.8,
+   533.0
   ],
-  "length_beyond_face": 459.19999999999993
+  "length_beyond_face": 496.19999999999993
  },
  "drawn": {
   "row": 193,
   "x": 100.0,
   "psi": -6.239552075879729,
-  "bit_z": 137.46280000000004
+  "bit_z": 143.46280000000004
  },
  "calibration": {
   "drawn": {
-   "tip_home": 46.021197059799015,
+   "tip_home": 66.02119705979902,
    "across_home": -40.0,
    "master_r": 6.0
   },
@@ -2770,7 +2770,7 @@
     "n": 4,
     "kind": "in",
     "tool": "pin",
-    "depth": 40.0212,
+    "depth": 60.0212,
     "height": 40.0,
     "turn": 0.0,
     "via": "h",
@@ -2780,7 +2780,7 @@
     "n": 5,
     "kind": "up",
     "tool": "pin",
-    "depth": 50.0212,
+    "depth": 70.0212,
     "height": 30.825,
     "turn": 0.0,
     "via": "h",
@@ -2790,7 +2790,7 @@
     "n": 6,
     "kind": "dn",
     "tool": "pin",
-    "depth": 50.0212,
+    "depth": 70.0212,
     "height": 49.175,
     "turn": 0.0,
     "via": "h",
@@ -2800,7 +2800,7 @@
     "n": 7,
     "kind": "in",
     "tool": "pin",
-    "depth": 40.0212,
+    "depth": 60.0212,
     "height": 40.0,
     "turn": 180.0,
     "via": "h",
@@ -2810,7 +2810,7 @@
     "n": 8,
     "kind": "up",
     "tool": "pin",
-    "depth": 50.0212,
+    "depth": 70.0212,
     "height": 30.825,
     "turn": 180.0,
     "via": "h",
@@ -2820,7 +2820,7 @@
     "n": 9,
     "kind": "dn",
     "tool": "pin",
-    "depth": 50.0212,
+    "depth": 70.0212,
     "height": 49.175,
     "turn": 180.0,
     "via": "h",
@@ -2880,7 +2880,7 @@
     "n": 3,
     "kind": "set",
     "tool": "straight",
-    "depth": 40.0212,
+    "depth": 60.0212,
     "height": 40.0,
     "turn": 0.0,
     "via": "s",
@@ -2893,7 +2893,7 @@
     "n": 4,
     "kind": "place",
     "tool": "straight",
-    "depth": 28.0212,
+    "depth": 48.0212,
     "height": 40.0,
     "turn": 0.0,
     "via": "s",
@@ -2945,7 +2945,7 @@
     "n": 8,
     "kind": "place",
     "tool": "straight",
-    "depth": 32.0212,
+    "depth": 52.0212,
     "height": 40.0,
     "turn": 0.0,
     "via": "s",
@@ -2997,7 +2997,7 @@
     "n": 12,
     "kind": "place",
     "tool": "straight",
-    "depth": 36.0212,
+    "depth": 56.0212,
     "height": 40.0,
     "turn": 0.0,
     "via": "s",
@@ -3062,7 +3062,7 @@
     "n": 17,
     "kind": "place",
     "tool": "straight",
-    "depth": 49.1962,
+    "depth": 69.1962,
     "height": 61.175,
     "turn": 0.0,
     "via": "s",
@@ -3114,7 +3114,7 @@
     "n": 21,
     "kind": "place",
     "tool": "straight",
-    "depth": 49.1962,
+    "depth": 69.1962,
     "height": 57.175,
     "turn": 0.0,
     "via": "s",
@@ -3166,7 +3166,7 @@
     "n": 25,
     "kind": "place",
     "tool": "straight",
-    "depth": 49.1962,
+    "depth": 69.1962,
     "height": 53.175,
     "turn": 0.0,
     "via": "s",
@@ -3244,7 +3244,7 @@
    "across": 0.0,
    "tip": 33.460281335126226,
    "label": "blank in socket tail ctr 19.5 up24.8 from routertail mark up",
-   "depth": 12.5609,
+   "depth": 32.5609,
    "height": 40.0,
    "turn": 24.6832,
    "via": "s"
@@ -3257,7 +3257,7 @@
    "across": 0.0,
    "tip": 6.0,
    "label": "set the straight bit on the master",
-   "depth": 40.0212,
+   "depth": 60.0212,
    "height": 40.0,
    "turn": 0.0,
    "via": "s"
@@ -3270,7 +3270,7 @@
    "across": -18.0,
    "tip": 17.62681189868908,
    "label": "rough 0 deg -18 bite 1 of 3",
-   "depth": 28.3944,
+   "depth": 48.3944,
    "height": 22.0,
    "turn": 0.0,
    "via": "s"
@@ -3283,7 +3283,7 @@
    "across": -18.0,
    "tip": 14.916521885522043,
    "label": "rough 0 deg -18 bite 2 of 3",
-   "depth": 31.1047,
+   "depth": 51.1047,
    "height": 22.0,
    "turn": 0.0,
    "via": "d"
@@ -3296,7 +3296,7 @@
    "across": -18.0,
    "tip": 12.206231872355007,
    "label": "rough 0 deg -18 bite 3 of 3",
-   "depth": 33.815,
+   "depth": 53.815,
    "height": 22.0,
    "turn": 0.0,
    "via": "d"
@@ -3309,7 +3309,7 @@
    "across": -15.0,
    "tip": 19.354384401980845,
    "label": "rough 0 deg -15 bite 1 of 4",
-   "depth": 26.6668,
+   "depth": 46.6668,
    "height": 25.0,
    "turn": 0.0,
    "via": "d"
@@ -3322,7 +3322,7 @@
    "across": -15.0,
    "tip": 16.971666892105564,
    "label": "rough 0 deg -15 bite 2 of 4",
-   "depth": 29.0495,
+   "depth": 49.0495,
    "height": 25.0,
    "turn": 0.0,
    "via": "d"
@@ -3335,7 +3335,7 @@
    "across": -15.0,
    "tip": 14.588949382230286,
    "label": "rough 0 deg -15 bite 3 of 4",
-   "depth": 31.4322,
+   "depth": 51.4322,
    "height": 25.0,
    "turn": 0.0,
    "via": "d"
@@ -3348,7 +3348,7 @@
    "across": -15.0,
    "tip": 12.206231872355007,
    "label": "rough 0 deg -15 bite 4 of 4",
-   "depth": 33.815,
+   "depth": 53.815,
    "height": 25.0,
    "turn": 0.0,
    "via": "d"
@@ -3361,7 +3361,7 @@
    "across": -12.0,
    "tip": 20.35559863714534,
    "label": "rough 0 deg -12 bite 1 of 4",
-   "depth": 25.6656,
+   "depth": 45.6656,
    "height": 28.0,
    "turn": 0.0,
    "via": "d"
@@ -3374,7 +3374,7 @@
    "across": -12.0,
    "tip": 17.574095362434562,
    "label": "rough 0 deg -12 bite 2 of 4",
-   "depth": 28.4471,
+   "depth": 48.4471,
    "height": 28.0,
    "turn": 0.0,
    "via": "d"
@@ -3387,7 +3387,7 @@
    "across": -12.0,
    "tip": 14.792592087723785,
    "label": "rough 0 deg -12 bite 3 of 4",
-   "depth": 31.2286,
+   "depth": 51.2286,
    "height": 28.0,
    "turn": 0.0,
    "via": "d"
@@ -3400,7 +3400,7 @@
    "across": -12.0,
    "tip": 12.011088813013005,
    "label": "rough 0 deg -12 bite 4 of 4",
-   "depth": 34.0101,
+   "depth": 54.0101,
    "height": 28.0,
    "turn": 0.0,
    "via": "d"
@@ -3413,7 +3413,7 @@
    "across": -9.0,
    "tip": 21.664142124600488,
    "label": "rough 0 deg -9 bite 1 of 1",
-   "depth": 24.3571,
+   "depth": 44.3571,
    "height": 31.0,
    "turn": 0.0,
    "via": "d"
@@ -3426,7 +3426,7 @@
    "across": -6.0,
    "tip": 24.04897097654353,
    "label": "rough 0 deg -6 bite 1 of 2",
-   "depth": 21.9722,
+   "depth": 41.9722,
    "height": 34.0,
    "turn": 0.0,
    "via": "d"
@@ -3439,7 +3439,7 @@
    "across": -6.0,
    "tip": 22.360840041230936,
    "label": "rough 0 deg -6 bite 2 of 2",
-   "depth": 23.6604,
+   "depth": 43.6604,
    "height": 34.0,
    "turn": 0.0,
    "via": "d"
@@ -3452,7 +3452,7 @@
    "across": -3.0,
    "tip": 24.74897097654353,
    "label": "rough 0 deg -3 bite 1 of 2",
-   "depth": 21.2722,
+   "depth": 41.2722,
    "height": 37.0,
    "turn": 0.0,
    "via": "d"
@@ -3465,7 +3465,7 @@
    "across": -3.0,
    "tip": 22.360840041230936,
    "label": "rough 0 deg -3 bite 2 of 2",
-   "depth": 23.6604,
+   "depth": 43.6604,
    "height": 37.0,
    "turn": 0.0,
    "via": "d"
@@ -3478,7 +3478,7 @@
    "across": 0.0,
    "tip": 26.244142788760016,
    "label": "rough 0 deg +0 bite 1 of 3",
-   "depth": 19.7771,
+   "depth": 39.7771,
    "height": 40.0,
    "turn": 0.0,
    "via": "d"
@@ -3491,7 +3491,7 @@
    "across": 0.0,
    "tip": 23.95118366566391,
    "label": "rough 0 deg +0 bite 2 of 3",
-   "depth": 22.07,
+   "depth": 42.07,
    "height": 40.0,
    "turn": 0.0,
    "via": "d"
@@ -3504,7 +3504,7 @@
    "across": 0.0,
    "tip": 21.658224542567805,
    "label": "rough 0 deg +0 bite 3 of 3",
-   "depth": 24.363,
+   "depth": 44.363,
    "height": 40.0,
    "turn": 0.0,
    "via": "d"
@@ -3517,7 +3517,7 @@
    "across": 3.0,
    "tip": 28.081524634526648,
    "label": "rough 0 deg +3 bite 1 of 1",
-   "depth": 17.9397,
+   "depth": 37.9397,
    "height": 43.0,
    "turn": 0.0,
    "via": "d"
@@ -3530,7 +3530,7 @@
    "across": 6.0,
    "tip": 29.791537788312986,
    "label": "rough 0 deg +6 bite 1 of 2",
-   "depth": 16.2297,
+   "depth": 36.2297,
    "height": 46.0,
    "turn": 0.0,
    "via": "d"
@@ -3543,7 +3543,7 @@
    "across": 6.0,
    "tip": 28.245973664769856,
    "label": "rough 0 deg +6 bite 2 of 2",
-   "depth": 17.7752,
+   "depth": 37.7752,
    "height": 46.0,
    "turn": 0.0,
    "via": "d"
@@ -3556,7 +3556,7 @@
    "across": 9.0,
    "tip": 29.99153778831299,
    "label": "rough 0 deg +9 bite 1 of 2",
-   "depth": 16.0297,
+   "depth": 36.0297,
    "height": 49.0,
    "turn": 0.0,
    "via": "d"
@@ -3569,7 +3569,7 @@
    "across": 9.0,
    "tip": 28.245973664769856,
    "label": "rough 0 deg +9 bite 2 of 2",
-   "depth": 17.7752,
+   "depth": 37.7752,
    "height": 49.0,
    "turn": 0.0,
    "via": "d"
@@ -3582,7 +3582,7 @@
    "across": 12.0,
    "tip": 27.873192011972552,
    "label": "rough 0 deg +12 bite 1 of 1",
-   "depth": 18.148,
+   "depth": 38.148,
    "height": 52.0,
    "turn": 0.0,
    "via": "d"
@@ -3595,7 +3595,7 @@
    "across": 15.0,
    "tip": 24.80040534849457,
    "label": "rough 0 deg +15 bite 1 of 6",
-   "depth": 21.2208,
+   "depth": 41.2208,
    "height": 55.0,
    "turn": 0.0,
    "via": "d"
@@ -3608,7 +3608,7 @@
    "across": 15.0,
    "tip": 21.863708785133024,
    "label": "rough 0 deg +15 bite 2 of 6",
-   "depth": 24.1575,
+   "depth": 44.1575,
    "height": 55.0,
    "turn": 0.0,
    "via": "d"
@@ -3621,7 +3621,7 @@
    "across": 15.0,
    "tip": 18.927012221771477,
    "label": "rough 0 deg +15 bite 3 of 6",
-   "depth": 27.0942,
+   "depth": 47.0942,
    "height": 55.0,
    "turn": 0.0,
    "via": "d"
@@ -3634,7 +3634,7 @@
    "across": 15.0,
    "tip": 15.990315658409926,
    "label": "rough 0 deg +15 bite 4 of 6",
-   "depth": 30.0309,
+   "depth": 50.0309,
    "height": 55.0,
    "turn": 0.0,
    "via": "d"
@@ -3647,7 +3647,7 @@
    "across": 15.0,
    "tip": 13.05361909504838,
    "label": "rough 0 deg +15 bite 5 of 6",
-   "depth": 32.9676,
+   "depth": 52.9676,
    "height": 55.0,
    "turn": 0.0,
    "via": "d"
@@ -3660,7 +3660,7 @@
    "across": 15.0,
    "tip": 10.11692253168683,
    "label": "rough 0 deg +15 bite 6 of 6",
-   "depth": 35.9043,
+   "depth": 55.9043,
    "height": 55.0,
    "turn": 0.0,
    "via": "d"
@@ -3673,7 +3673,7 @@
    "across": 18.0,
    "tip": 11.186109757520603,
    "label": "rough 0 deg +18 bite 1 of 7",
-   "depth": 34.8351,
+   "depth": 54.8351,
    "height": 58.0,
    "turn": 0.0,
    "via": "d"
@@ -3686,7 +3686,7 @@
    "across": 18.0,
    "tip": 8.235117603185087,
    "label": "rough 0 deg +18 bite 2 of 7",
-   "depth": 37.7861,
+   "depth": 57.7861,
    "height": 58.0,
    "turn": 0.0,
    "via": "d"
@@ -3699,7 +3699,7 @@
    "across": 18.0,
    "tip": 5.284125448849569,
    "label": "rough 0 deg +18 bite 3 of 7",
-   "depth": 40.7371,
+   "depth": 60.7371,
    "height": 58.0,
    "turn": 0.0,
    "via": "d"
@@ -3712,7 +3712,7 @@
    "across": 18.0,
    "tip": 2.333133294514049,
    "label": "rough 0 deg +18 bite 4 of 7",
-   "depth": 43.6881,
+   "depth": 63.6881,
    "height": 58.0,
    "turn": 0.0,
    "via": "d"
@@ -3725,7 +3725,7 @@
    "across": 18.0,
    "tip": -0.6178588598214683,
    "label": "rough 0 deg +18 bite 5 of 7",
-   "depth": 46.6391,
+   "depth": 66.6391,
    "height": 58.0,
    "turn": 0.0,
    "via": "d"
@@ -3738,7 +3738,7 @@
    "across": 18.0,
    "tip": -3.5688510141569867,
    "label": "rough 0 deg +18 bite 6 of 7",
-   "depth": 49.59,
+   "depth": 69.59,
    "height": 58.0,
    "turn": 0.0,
    "via": "d"
@@ -3751,7 +3751,7 @@
    "across": 18.0,
    "tip": -6.519843168492505,
    "label": "rough 0 deg +18 bite 7 of 7",
-   "depth": 52.541,
+   "depth": 72.541,
    "height": 58.0,
    "turn": 0.0,
    "via": "d"
@@ -3764,7 +3764,7 @@
    "across": -18.0,
    "tip": 20.178928080477803,
    "label": "rough 345 deg -18 bite 1 of 3",
-   "depth": 25.8423,
+   "depth": 45.8423,
    "height": 22.0,
    "turn": 15.0,
    "via": "s"
@@ -3777,7 +3777,7 @@
    "across": -18.0,
    "tip": 18.03095978194111,
    "label": "rough 345 deg -18 bite 2 of 3",
-   "depth": 27.9902,
+   "depth": 47.9902,
    "height": 22.0,
    "turn": 15.0,
    "via": "d"
@@ -3790,7 +3790,7 @@
    "across": -18.0,
    "tip": 15.882991483404417,
    "label": "rough 345 deg -18 bite 3 of 3",
-   "depth": 30.1382,
+   "depth": 50.1382,
    "height": 22.0,
    "turn": 15.0,
    "via": "d"
@@ -3803,7 +3803,7 @@
    "across": -6.0,
    "tip": 21.349915417441572,
    "label": "rough 345 deg -6 bite 1 of 2",
-   "depth": 24.6713,
+   "depth": 44.6713,
    "height": 34.0,
    "turn": 15.0,
    "via": "d"
@@ -3816,7 +3816,7 @@
    "across": -6.0,
    "tip": 19.628929762766838,
    "label": "rough 345 deg -6 bite 2 of 2",
-   "depth": 26.3923,
+   "depth": 46.3923,
    "height": 34.0,
    "turn": 15.0,
    "via": "d"
@@ -3829,7 +3829,7 @@
    "across": 9.0,
    "tip": 24.4605242806129,
    "label": "rough 345 deg +9 bite 1 of 2",
-   "depth": 21.5607,
+   "depth": 41.5607,
    "height": 49.0,
    "turn": 15.0,
    "via": "d"
@@ -3842,7 +3842,7 @@
    "across": 9.0,
    "tip": 22.774050742089717,
    "label": "rough 345 deg +9 bite 2 of 2",
-   "depth": 23.2471,
+   "depth": 43.2471,
    "height": 49.0,
    "turn": 15.0,
    "via": "d"
@@ -3855,7 +3855,7 @@
    "across": -18.0,
    "tip": 23.480927193647315,
    "label": "rough 330 deg -18 bite 1 of 3",
-   "depth": 22.5403,
+   "depth": 42.5403,
    "height": 22.0,
    "turn": 30.0,
    "via": "d"
@@ -3868,7 +3868,7 @@
    "across": -18.0,
    "tip": 20.564780843764108,
    "label": "rough 330 deg -18 bite 2 of 3",
-   "depth": 25.4564,
+   "depth": 45.4564,
    "height": 22.0,
    "turn": 30.0,
    "via": "d"
@@ -3881,7 +3881,7 @@
    "across": -18.0,
    "tip": 17.648634493880905,
    "label": "rough 330 deg -18 bite 3 of 3",
-   "depth": 28.3726,
+   "depth": 48.3726,
    "height": 22.0,
    "turn": 30.0,
    "via": "d"
@@ -3894,7 +3894,7 @@
    "across": -15.0,
    "tip": 18.993917574269954,
    "label": "rough 330 deg -15 bite 1 of 1",
-   "depth": 27.0273,
+   "depth": 47.0273,
    "height": 25.0,
    "turn": 30.0,
    "via": "d"
@@ -3907,7 +3907,7 @@
    "across": -3.0,
    "tip": 15.352249281988712,
    "label": "rough 330 deg -3 bite 1 of 2",
-   "depth": 30.6689,
+   "depth": 50.6689,
    "height": 37.0,
    "turn": 30.0,
    "via": "d"
@@ -3920,7 +3920,7 @@
    "across": -3.0,
    "tip": 13.041399616662476,
    "label": "rough 330 deg -3 bite 2 of 2",
-   "depth": 32.9798,
+   "depth": 52.9798,
    "height": 37.0,
    "turn": 30.0,
    "via": "d"
@@ -3933,7 +3933,7 @@
    "across": 3.0,
    "tip": 21.799902963414926,
    "label": "rough 330 deg +3 bite 1 of 1",
-   "depth": 24.2213,
+   "depth": 44.2213,
    "height": 43.0,
    "turn": 30.0,
    "via": "d"
@@ -3946,7 +3946,7 @@
    "across": 12.0,
    "tip": 18.873099145712256,
    "label": "rough 330 deg +12 bite 1 of 1",
-   "depth": 27.1481,
+   "depth": 47.1481,
    "height": 52.0,
    "turn": 30.0,
    "via": "d"
@@ -3959,7 +3959,7 @@
    "across": -18.0,
    "tip": 13.374220398591792,
    "label": "rough 315 deg -18 bite 1 of 4",
-   "depth": 32.647,
+   "depth": 52.647,
    "height": 22.0,
    "turn": 45.0,
    "via": "d"
@@ -3972,7 +3972,7 @@
    "across": -18.0,
    "tip": 10.839485705184607,
    "label": "rough 315 deg -18 bite 2 of 4",
-   "depth": 35.1817,
+   "depth": 55.1817,
    "height": 22.0,
    "turn": 45.0,
    "via": "d"
@@ -3985,7 +3985,7 @@
    "across": -18.0,
    "tip": 8.304751011777421,
    "label": "rough 315 deg -18 bite 3 of 4",
-   "depth": 37.7164,
+   "depth": 57.7164,
    "height": 22.0,
    "turn": 45.0,
    "via": "d"
@@ -3998,7 +3998,7 @@
    "across": -18.0,
    "tip": 5.770016318370237,
    "label": "rough 315 deg -18 bite 4 of 4",
-   "depth": 40.2512,
+   "depth": 60.2512,
    "height": 22.0,
    "turn": 45.0,
    "via": "d"
@@ -4011,7 +4011,7 @@
    "across": -15.0,
    "tip": 18.573438588337467,
    "label": "rough 315 deg -15 bite 1 of 1",
-   "depth": 27.4478,
+   "depth": 47.4478,
    "height": 25.0,
    "turn": 45.0,
    "via": "d"
@@ -4024,7 +4024,7 @@
    "across": -9.0,
    "tip": 21.445345182162228,
    "label": "rough 315 deg -9 bite 1 of 1",
-   "depth": 24.5759,
+   "depth": 44.5759,
    "height": 31.0,
    "turn": 45.0,
    "via": "d"
@@ -4037,7 +4037,7 @@
    "across": 9.0,
    "tip": 19.5938788994198,
    "label": "rough 315 deg +9 bite 1 of 1",
-   "depth": 26.4273,
+   "depth": 46.4273,
    "height": 49.0,
    "turn": 45.0,
    "via": "d"
@@ -4050,7 +4050,7 @@
    "across": 18.0,
    "tip": 14.455793757925639,
    "label": "rough 315 deg +18 bite 1 of 1",
-   "depth": 31.5654,
+   "depth": 51.5654,
    "height": 58.0,
    "turn": 45.0,
    "via": "d"
@@ -4063,7 +4063,7 @@
    "across": -18.0,
    "tip": 8.692903563972832,
    "label": "rough 300 deg -18 bite 1 of 1",
-   "depth": 37.3283,
+   "depth": 57.3283,
    "height": 22.0,
    "turn": 60.0,
    "via": "d"
@@ -4076,7 +4076,7 @@
    "across": -15.0,
    "tip": 11.194418978955948,
    "label": "rough 300 deg -15 bite 1 of 2",
-   "depth": 34.8268,
+   "depth": 54.8268,
    "height": 25.0,
    "turn": 60.0,
    "via": "d"
@@ -4089,7 +4089,7 @@
    "across": -15.0,
    "tip": 9.631146762869772,
    "label": "rough 300 deg -15 bite 2 of 2",
-   "depth": 36.3901,
+   "depth": 56.3901,
    "height": 25.0,
    "turn": 60.0,
    "via": "d"
@@ -4102,7 +4102,7 @@
    "across": -12.0,
    "tip": 18.30660647305409,
    "label": "rough 300 deg -12 bite 1 of 4",
-   "depth": 27.7146,
+   "depth": 47.7146,
    "height": 28.0,
    "turn": 60.0,
    "via": "d"
@@ -4115,7 +4115,7 @@
    "across": -12.0,
    "tip": 15.432574409116306,
    "label": "rough 300 deg -12 bite 2 of 4",
-   "depth": 30.5886,
+   "depth": 50.5886,
    "height": 28.0,
    "turn": 60.0,
    "via": "d"
@@ -4128,7 +4128,7 @@
    "across": -12.0,
    "tip": 12.558542345178527,
    "label": "rough 300 deg -12 bite 3 of 4",
-   "depth": 33.4627,
+   "depth": 53.4627,
    "height": 28.0,
    "turn": 60.0,
    "via": "d"
@@ -4141,7 +4141,7 @@
    "across": -12.0,
    "tip": 9.684510281240746,
    "label": "rough 300 deg -12 bite 4 of 4",
-   "depth": 36.3367,
+   "depth": 56.3367,
    "height": 28.0,
    "turn": 60.0,
    "via": "d"
@@ -4154,7 +4154,7 @@
    "across": -6.0,
    "tip": 22.823620334955184,
    "label": "rough 300 deg -6 bite 1 of 1",
-   "depth": 23.1976,
+   "depth": 43.1976,
    "height": 34.0,
    "turn": 60.0,
    "via": "d"
@@ -4167,7 +4167,7 @@
    "across": -18.0,
    "tip": 10.409909331633715,
    "label": "rough 285 deg -18 bite 1 of 1",
-   "depth": 35.6113,
+   "depth": 55.6113,
    "height": 22.0,
    "turn": 75.0,
    "via": "d"
@@ -4180,7 +4180,7 @@
    "across": -12.0,
    "tip": 12.48439459204136,
    "label": "rough 285 deg -12 bite 1 of 1",
-   "depth": 33.5368,
+   "depth": 53.5368,
    "height": 28.0,
    "turn": 75.0,
    "via": "d"
@@ -4193,7 +4193,7 @@
    "across": -6.0,
    "tip": 20.198355564232955,
    "label": "rough 285 deg -6 bite 1 of 4",
-   "depth": 25.8228,
+   "depth": 45.8228,
    "height": 34.0,
    "turn": 75.0,
    "via": "d"
@@ -4206,7 +4206,7 @@
    "across": -6.0,
    "tip": 17.59879255089342,
    "label": "rough 285 deg -6 bite 2 of 4",
-   "depth": 28.4224,
+   "depth": 48.4224,
    "height": 34.0,
    "turn": 75.0,
    "via": "d"
@@ -4219,7 +4219,7 @@
    "across": -6.0,
    "tip": 14.999229537553889,
    "label": "rough 285 deg -6 bite 3 of 4",
-   "depth": 31.022,
+   "depth": 51.022,
    "height": 34.0,
    "turn": 75.0,
    "via": "d"
@@ -4232,7 +4232,7 @@
    "across": -6.0,
    "tip": 12.399666524214355,
    "label": "rough 285 deg -6 bite 4 of 4",
-   "depth": 33.6215,
+   "depth": 53.6215,
    "height": 34.0,
    "turn": 75.0,
    "via": "d"
@@ -4245,7 +4245,7 @@
    "across": 12.0,
    "tip": 12.461868780450072,
    "label": "rough 285 deg +12 bite 1 of 1",
-   "depth": 33.5593,
+   "depth": 53.5593,
    "height": 52.0,
    "turn": 75.0,
    "via": "d"
@@ -4258,7 +4258,7 @@
    "across": -18.0,
    "tip": 12.02744326045421,
    "label": "rough 270 deg -18 bite 1 of 5",
-   "depth": 33.9938,
+   "depth": 53.9938,
    "height": 22.0,
    "turn": 90.0,
    "via": "d"
@@ -4271,7 +4271,7 @@
    "across": -18.0,
    "tip": 9.493328378475073,
    "label": "rough 270 deg -18 bite 2 of 5",
-   "depth": 36.5279,
+   "depth": 56.5279,
    "height": 22.0,
    "turn": 90.0,
    "via": "d"
@@ -4284,7 +4284,7 @@
    "across": -18.0,
    "tip": 6.959213496495939,
    "label": "rough 270 deg -18 bite 3 of 5",
-   "depth": 39.062,
+   "depth": 59.062,
    "height": 22.0,
    "turn": 90.0,
    "via": "d"
@@ -4297,7 +4297,7 @@
    "across": -18.0,
    "tip": 4.425098614516803,
    "label": "rough 270 deg -18 bite 4 of 5",
-   "depth": 41.5961,
+   "depth": 61.5961,
    "height": 22.0,
    "turn": 90.0,
    "via": "d"
@@ -4310,7 +4310,7 @@
    "across": -18.0,
    "tip": 1.8909837325376673,
    "label": "rough 270 deg -18 bite 5 of 5",
-   "depth": 44.1302,
+   "depth": 64.1302,
    "height": 22.0,
    "turn": 90.0,
    "via": "d"
@@ -4323,7 +4323,7 @@
    "across": -15.0,
    "tip": 13.79750175493991,
    "label": "rough 270 deg -15 bite 1 of 1",
-   "depth": 32.2237,
+   "depth": 52.2237,
    "height": 25.0,
    "turn": 90.0,
    "via": "d"
@@ -4336,7 +4336,7 @@
    "across": -12.0,
    "tip": 15.030093786252102,
    "label": "rough 270 deg -12 bite 1 of 1",
-   "depth": 30.9911,
+   "depth": 50.9911,
    "height": 28.0,
    "turn": 90.0,
    "via": "d"
@@ -4349,7 +4349,7 @@
    "across": 6.0,
    "tip": 22.098880875498658,
    "label": "rough 270 deg +6 bite 1 of 1",
-   "depth": 23.9223,
+   "depth": 43.9223,
    "height": 46.0,
    "turn": 90.0,
    "via": "d"
@@ -4362,7 +4362,7 @@
    "across": 15.0,
    "tip": 16.004999119378944,
    "label": "rough 270 deg +15 bite 1 of 4",
-   "depth": 30.0162,
+   "depth": 50.0162,
    "height": 55.0,
    "turn": 90.0,
    "via": "d"
@@ -4375,7 +4375,7 @@
    "across": 15.0,
    "tip": 13.448440096324553,
    "label": "rough 270 deg +15 bite 2 of 4",
-   "depth": 32.5728,
+   "depth": 52.5728,
    "height": 55.0,
    "turn": 90.0,
    "via": "d"
@@ -4388,7 +4388,7 @@
    "across": 15.0,
    "tip": 10.891881073270161,
    "label": "rough 270 deg +15 bite 3 of 4",
-   "depth": 35.1293,
+   "depth": 55.1293,
    "height": 55.0,
    "turn": 90.0,
    "via": "d"
@@ -4401,7 +4401,7 @@
    "across": 15.0,
    "tip": 8.335322050215769,
    "label": "rough 270 deg +15 bite 4 of 4",
-   "depth": 37.6859,
+   "depth": 57.6859,
    "height": 55.0,
    "turn": 90.0,
    "via": "d"
@@ -4414,7 +4414,7 @@
    "across": -18.0,
    "tip": 14.139312802578509,
    "label": "rough 255 deg -18 bite 1 of 4",
-   "depth": 31.8819,
+   "depth": 51.8819,
    "height": 22.0,
    "turn": 105.0,
    "via": "d"
@@ -4427,7 +4427,7 @@
    "across": -18.0,
    "tip": 11.556011214931871,
    "label": "rough 255 deg -18 bite 2 of 4",
-   "depth": 34.4652,
+   "depth": 54.4652,
    "height": 22.0,
    "turn": 105.0,
    "via": "d"
@@ -4440,7 +4440,7 @@
    "across": -18.0,
    "tip": 8.972709627285234,
    "label": "rough 255 deg -18 bite 3 of 4",
-   "depth": 37.0485,
+   "depth": 57.0485,
    "height": 22.0,
    "turn": 105.0,
    "via": "d"
@@ -4453,7 +4453,7 @@
    "across": -18.0,
    "tip": 6.389408039638597,
    "label": "rough 255 deg -18 bite 4 of 4",
-   "depth": 39.6318,
+   "depth": 59.6318,
    "height": 22.0,
    "turn": 105.0,
    "via": "d"
@@ -4466,7 +4466,7 @@
    "across": -15.0,
    "tip": 10.430627836663817,
    "label": "rough 255 deg -15 bite 1 of 3",
-   "depth": 35.5906,
+   "depth": 55.5906,
    "height": 25.0,
    "turn": 105.0,
    "via": "d"
@@ -4479,7 +4479,7 @@
    "across": -15.0,
    "tip": 8.410017938151206,
    "label": "rough 255 deg -15 bite 2 of 3",
-   "depth": 37.6112,
+   "depth": 57.6112,
    "height": 25.0,
    "turn": 105.0,
    "via": "d"
@@ -4492,7 +4492,7 @@
    "across": -15.0,
    "tip": 6.389408039638597,
    "label": "rough 255 deg -15 bite 3 of 3",
-   "depth": 39.6318,
+   "depth": 59.6318,
    "height": 25.0,
    "turn": 105.0,
    "via": "d"
@@ -4505,7 +4505,7 @@
    "across": -12.0,
    "tip": 15.623268329365812,
    "label": "rough 255 deg -12 bite 1 of 1",
-   "depth": 30.3979,
+   "depth": 50.3979,
    "height": 28.0,
    "turn": 105.0,
    "via": "d"
@@ -4518,7 +4518,7 @@
    "across": 3.0,
    "tip": 14.654208295546606,
    "label": "rough 255 deg +3 bite 1 of 2",
-   "depth": 31.367,
+   "depth": 51.367,
    "height": 43.0,
    "turn": 105.0,
    "via": "d"
@@ -4531,7 +4531,7 @@
    "across": 3.0,
    "tip": 12.988034254769952,
    "label": "rough 255 deg +3 bite 2 of 2",
-   "depth": 33.0332,
+   "depth": 53.0332,
    "height": 43.0,
    "turn": 105.0,
    "via": "d"
@@ -4544,7 +4544,7 @@
    "across": -18.0,
    "tip": 18.886926920225818,
    "label": "rough 240 deg -18 bite 1 of 4",
-   "depth": 27.1343,
+   "depth": 47.1343,
    "height": 22.0,
    "turn": 120.0,
    "via": "d"
@@ -4557,7 +4557,7 @@
    "across": -18.0,
    "tip": 16.274288110568683,
    "label": "rough 240 deg -18 bite 2 of 4",
-   "depth": 29.7469,
+   "depth": 49.7469,
    "height": 22.0,
    "turn": 120.0,
    "via": "d"
@@ -4570,7 +4570,7 @@
    "across": -18.0,
    "tip": 13.661649300911549,
    "label": "rough 240 deg -18 bite 3 of 4",
-   "depth": 32.3595,
+   "depth": 52.3595,
    "height": 22.0,
    "turn": 120.0,
    "via": "d"
@@ -4583,7 +4583,7 @@
    "across": -18.0,
    "tip": 11.049010491254412,
    "label": "rough 240 deg -18 bite 4 of 4",
-   "depth": 34.9722,
+   "depth": 54.9722,
    "height": 22.0,
    "turn": 120.0,
    "via": "d"
@@ -4596,7 +4596,7 @@
    "across": -9.0,
    "tip": 15.553574633049005,
    "label": "rough 240 deg -9 bite 1 of 4",
-   "depth": 30.4676,
+   "depth": 50.4676,
    "height": 31.0,
    "turn": 120.0,
    "via": "d"
@@ -4609,7 +4609,7 @@
    "across": -9.0,
    "tip": 13.243481921077304,
    "label": "rough 240 deg -9 bite 2 of 4",
-   "depth": 32.7777,
+   "depth": 52.7777,
    "height": 31.0,
    "turn": 120.0,
    "via": "d"
@@ -4622,7 +4622,7 @@
    "across": -9.0,
    "tip": 10.933389209105604,
    "label": "rough 240 deg -9 bite 3 of 4",
-   "depth": 35.0878,
+   "depth": 55.0878,
    "height": 31.0,
    "turn": 120.0,
    "via": "d"
@@ -4635,7 +4635,7 @@
    "across": -9.0,
    "tip": 8.623296497133904,
    "label": "rough 240 deg -9 bite 4 of 4",
-   "depth": 37.3979,
+   "depth": 57.3979,
    "height": 31.0,
    "turn": 120.0,
    "via": "d"
@@ -4648,7 +4648,7 @@
    "across": 9.0,
    "tip": 13.582430210316963,
    "label": "rough 240 deg +9 bite 1 of 2",
-   "depth": 32.4388,
+   "depth": 52.4388,
    "height": 49.0,
    "turn": 120.0,
    "via": "d"
@@ -4661,7 +4661,7 @@
    "across": 9.0,
    "tip": 11.319400006851497,
    "label": "rough 240 deg +9 bite 2 of 2",
-   "depth": 34.7018,
+   "depth": 54.7018,
    "height": 49.0,
    "turn": 120.0,
    "via": "d"
@@ -4674,7 +4674,7 @@
    "across": 12.0,
    "tip": 16.55250513019702,
    "label": "rough 240 deg +12 bite 1 of 1",
-   "depth": 29.4687,
+   "depth": 49.4687,
    "height": 52.0,
    "turn": 120.0,
    "via": "d"
@@ -4687,7 +4687,7 @@
    "across": -18.0,
    "tip": 23.805619201194666,
    "label": "rough 225 deg -18 bite 1 of 4",
-   "depth": 22.2156,
+   "depth": 42.2156,
    "height": 22.0,
    "turn": 135.0,
    "via": "d"
@@ -4700,7 +4700,7 @@
    "across": -18.0,
    "tip": 21.006730263291722,
    "label": "rough 225 deg -18 bite 2 of 4",
-   "depth": 25.0145,
+   "depth": 45.0145,
    "height": 22.0,
    "turn": 135.0,
    "via": "d"
@@ -4713,7 +4713,7 @@
    "across": -18.0,
    "tip": 18.207841325388777,
    "label": "rough 225 deg -18 bite 3 of 4",
-   "depth": 27.8134,
+   "depth": 47.8134,
    "height": 22.0,
    "turn": 135.0,
    "via": "d"
@@ -4726,7 +4726,7 @@
    "across": -18.0,
    "tip": 15.408952387485831,
    "label": "rough 225 deg -18 bite 4 of 4",
-   "depth": 30.6122,
+   "depth": 50.6122,
    "height": 22.0,
    "turn": 135.0,
    "via": "d"
@@ -4739,7 +4739,7 @@
    "across": -6.0,
    "tip": 10.033983791682507,
    "label": "rough 225 deg -6 bite 1 of 1",
-   "depth": 35.9872,
+   "depth": 55.9872,
    "height": 34.0,
    "turn": 135.0,
    "via": "d"
@@ -4752,7 +4752,7 @@
    "across": 12.0,
    "tip": 8.308539244449362,
    "label": "rough 225 deg +12 bite 1 of 1",
-   "depth": 37.7127,
+   "depth": 57.7127,
    "height": 52.0,
    "turn": 135.0,
    "via": "d"
@@ -4765,7 +4765,7 @@
    "across": -18.0,
    "tip": 17.636266318782912,
    "label": "rough 210 deg -18 bite 1 of 1",
-   "depth": 28.3849,
+   "depth": 48.3849,
    "height": 22.0,
    "turn": 150.0,
    "via": "d"
@@ -4778,7 +4778,7 @@
    "across": -15.0,
    "tip": 19.01588559310431,
    "label": "rough 210 deg -15 bite 1 of 1",
-   "depth": 27.0053,
+   "depth": 47.0053,
    "height": 25.0,
    "turn": 150.0,
    "via": "d"
@@ -4791,7 +4791,7 @@
    "across": -3.0,
    "tip": 11.119904091119148,
    "label": "rough 210 deg -3 bite 1 of 1",
-   "depth": 34.9013,
+   "depth": 54.9013,
    "height": 37.0,
    "turn": 150.0,
    "via": "d"
@@ -4804,7 +4804,7 @@
    "across": 0.0,
    "tip": 14.961451956146204,
    "label": "rough 210 deg +0 bite 1 of 2",
-   "depth": 31.0597,
+   "depth": 51.0597,
    "height": 40.0,
    "turn": 150.0,
    "via": "d"
@@ -4817,7 +4817,7 @@
    "across": 0.0,
    "tip": 13.029323249695963,
    "label": "rough 210 deg +0 bite 2 of 2",
-   "depth": 32.9919,
+   "depth": 52.9919,
    "height": 40.0,
    "turn": 150.0,
    "via": "d"
@@ -4830,7 +4830,7 @@
    "across": -18.0,
    "tip": 16.97785470198876,
    "label": "rough 195 deg -18 bite 1 of 3",
-   "depth": 29.0433,
+   "depth": 49.0433,
    "height": 22.0,
    "turn": 165.0,
    "via": "d"
@@ -4843,7 +4843,7 @@
    "across": -18.0,
    "tip": 14.894249681428882,
    "label": "rough 195 deg -18 bite 2 of 3",
-   "depth": 31.1269,
+   "depth": 51.1269,
    "height": 22.0,
    "turn": 165.0,
    "via": "d"
@@ -4856,7 +4856,7 @@
    "across": -18.0,
    "tip": 12.810644660869004,
    "label": "rough 195 deg -18 bite 3 of 3",
-   "depth": 33.2106,
+   "depth": 53.2106,
    "height": 22.0,
    "turn": 165.0,
    "via": "d"
@@ -4869,7 +4869,7 @@
    "across": -15.0,
    "tip": 18.64112366864412,
    "label": "rough 195 deg -15 bite 1 of 3",
-   "depth": 27.3801,
+   "depth": 47.3801,
    "height": 25.0,
    "turn": 165.0,
    "via": "d"
@@ -4882,7 +4882,7 @@
    "across": -15.0,
    "tip": 15.988506704586346,
    "label": "rough 195 deg -15 bite 2 of 3",
-   "depth": 30.0327,
+   "depth": 50.0327,
    "height": 25.0,
    "turn": 165.0,
    "via": "d"
@@ -4895,7 +4895,7 @@
    "across": -15.0,
    "tip": 13.33588974052857,
    "label": "rough 195 deg -15 bite 3 of 3",
-   "depth": 32.6853,
+   "depth": 52.6853,
    "height": 25.0,
    "turn": 165.0,
    "via": "d"
@@ -4908,7 +4908,7 @@
    "across": 3.0,
    "tip": 11.584702851324755,
    "label": "rough 195 deg +3 bite 1 of 1",
-   "depth": 34.4365,
+   "depth": 54.4365,
    "height": 43.0,
    "turn": 165.0,
    "via": "d"
@@ -4921,7 +4921,7 @@
    "across": -18.0,
    "tip": 17.03651740118531,
    "label": "rough 180 deg -18 bite 1 of 1",
-   "depth": 28.9847,
+   "depth": 48.9847,
    "height": 22.0,
    "turn": 180.0,
    "via": "d"
@@ -4934,7 +4934,7 @@
    "across": -9.0,
    "tip": 21.473154565536685,
    "label": "rough 180 deg -9 bite 1 of 3",
-   "depth": 24.548,
+   "depth": 44.548,
    "height": 31.0,
    "turn": 180.0,
    "via": "d"
@@ -4947,7 +4947,7 @@
    "across": -9.0,
    "tip": 19.283411042929483,
    "label": "rough 180 deg -9 bite 2 of 3",
-   "depth": 26.7378,
+   "depth": 46.7378,
    "height": 31.0,
    "turn": 180.0,
    "via": "d"
@@ -4960,7 +4960,7 @@
    "across": -9.0,
    "tip": 17.093667520322285,
    "label": "rough 180 deg -9 bite 3 of 3",
-   "depth": 28.9275,
+   "depth": 48.9275,
    "height": 31.0,
    "turn": 180.0,
    "via": "d"
@@ -4973,7 +4973,7 @@
    "across": -6.0,
    "tip": 22.987210505295636,
    "label": "rough 180 deg -6 bite 1 of 1",
-   "depth": 23.034,
+   "depth": 43.034,
    "height": 34.0,
    "turn": 180.0,
    "via": "d"
@@ -4986,7 +4986,7 @@
    "across": 6.0,
    "tip": 9.850146891948645,
    "label": "rough 180 deg +6 bite 1 of 1",
-   "depth": 36.1711,
+   "depth": 56.1711,
    "height": 46.0,
    "turn": 180.0,
    "via": "d"
@@ -4999,7 +4999,7 @@
    "across": -18.0,
    "tip": 19.466741560833576,
    "label": "rough 165 deg -18 bite 1 of 3",
-   "depth": 26.5545,
+   "depth": 46.5545,
    "height": 22.0,
    "turn": 195.0,
    "via": "d"
@@ -5012,7 +5012,7 @@
    "across": -18.0,
    "tip": 17.148261111207614,
    "label": "rough 165 deg -18 bite 2 of 3",
-   "depth": 28.8729,
+   "depth": 48.8729,
    "height": 22.0,
    "turn": 195.0,
    "via": "d"
@@ -5025,7 +5025,7 @@
    "across": -18.0,
    "tip": 14.82978066158165,
    "label": "rough 165 deg -18 bite 3 of 3",
-   "depth": 31.1914,
+   "depth": 51.1914,
    "height": 22.0,
    "turn": 195.0,
    "via": "d"
@@ -5038,7 +5038,7 @@
    "across": -15.0,
    "tip": 19.697380320668028,
    "label": "rough 165 deg -15 bite 1 of 1",
-   "depth": 26.3238,
+   "depth": 46.3238,
    "height": 25.0,
    "turn": 195.0,
    "via": "d"
@@ -5051,7 +5051,7 @@
    "across": -3.0,
    "tip": 20.725838962099104,
    "label": "rough 165 deg -3 bite 1 of 2",
-   "depth": 25.2954,
+   "depth": 45.2954,
    "height": 37.0,
    "turn": 195.0,
    "via": "d"
@@ -5064,7 +5064,7 @@
    "across": -3.0,
    "tip": 19.067589051150467,
    "label": "rough 165 deg -3 bite 2 of 2",
-   "depth": 26.9536,
+   "depth": 46.9536,
    "height": 37.0,
    "turn": 195.0,
    "via": "d"
@@ -5077,7 +5077,7 @@
    "across": -18.0,
    "tip": 23.30018318082699,
    "label": "rough 150 deg -18 bite 1 of 8",
-   "depth": 22.721,
+   "depth": 42.721,
    "height": 22.0,
    "turn": 210.0,
    "via": "d"
@@ -5090,7 +5090,7 @@
    "across": -18.0,
    "tip": 20.414754003004653,
    "label": "rough 150 deg -18 bite 2 of 8",
-   "depth": 25.6064,
+   "depth": 45.6064,
    "height": 22.0,
    "turn": 210.0,
    "via": "d"
@@ -5103,7 +5103,7 @@
    "across": -18.0,
    "tip": 17.529324825182314,
    "label": "rough 150 deg -18 bite 3 of 8",
-   "depth": 28.4919,
+   "depth": 48.4919,
    "height": 22.0,
    "turn": 210.0,
    "via": "d"
@@ -5116,7 +5116,7 @@
    "across": -18.0,
    "tip": 14.643895647359976,
    "label": "rough 150 deg -18 bite 4 of 8",
-   "depth": 31.3773,
+   "depth": 51.3773,
    "height": 22.0,
    "turn": 210.0,
    "via": "d"
@@ -5129,7 +5129,7 @@
    "across": -18.0,
    "tip": 11.758466469537638,
    "label": "rough 150 deg -18 bite 5 of 8",
-   "depth": 34.2627,
+   "depth": 54.2627,
    "height": 22.0,
    "turn": 210.0,
    "via": "d"
@@ -5142,7 +5142,7 @@
    "across": -18.0,
    "tip": 8.873037291715299,
    "label": "rough 150 deg -18 bite 6 of 8",
-   "depth": 37.1482,
+   "depth": 57.1482,
    "height": 22.0,
    "turn": 210.0,
    "via": "d"
@@ -5155,7 +5155,7 @@
    "across": -18.0,
    "tip": 5.987608113892961,
    "label": "rough 150 deg -18 bite 7 of 8",
-   "depth": 40.0336,
+   "depth": 60.0336,
    "height": 22.0,
    "turn": 210.0,
    "via": "d"
@@ -5168,7 +5168,7 @@
    "across": -18.0,
    "tip": 3.1021789360706227,
    "label": "rough 150 deg -18 bite 8 of 8",
-   "depth": 42.919,
+   "depth": 62.919,
    "height": 22.0,
    "turn": 210.0,
    "via": "d"
@@ -5181,7 +5181,7 @@
    "across": -15.0,
    "tip": 16.636142140114774,
    "label": "rough 150 deg -15 bite 1 of 6",
-   "depth": 29.3851,
+   "depth": 49.3851,
    "height": 25.0,
    "turn": 210.0,
    "via": "d"
@@ -5194,7 +5194,7 @@
    "across": -15.0,
    "tip": 14.031158294447307,
    "label": "rough 150 deg -15 bite 2 of 6",
-   "depth": 31.99,
+   "depth": 51.99,
    "height": 25.0,
    "turn": 210.0,
    "via": "d"
@@ -5207,7 +5207,7 @@
    "across": -15.0,
    "tip": 11.42617444877984,
    "label": "rough 150 deg -15 bite 3 of 6",
-   "depth": 34.595,
+   "depth": 54.595,
    "height": 25.0,
    "turn": 210.0,
    "via": "d"
@@ -5220,7 +5220,7 @@
    "across": -15.0,
    "tip": 8.821190603112374,
    "label": "rough 150 deg -15 bite 4 of 6",
-   "depth": 37.2,
+   "depth": 57.2,
    "height": 25.0,
    "turn": 210.0,
    "via": "d"
@@ -5233,7 +5233,7 @@
    "across": -15.0,
    "tip": 6.216206757444908,
    "label": "rough 150 deg -15 bite 5 of 6",
-   "depth": 39.805,
+   "depth": 59.805,
    "height": 25.0,
    "turn": 210.0,
    "via": "d"
@@ -5246,7 +5246,7 @@
    "across": -15.0,
    "tip": 3.6112229117774426,
    "label": "rough 150 deg -15 bite 6 of 6",
-   "depth": 42.41,
+   "depth": 62.41,
    "height": 25.0,
    "turn": 210.0,
    "via": "d"
@@ -5259,7 +5259,7 @@
    "across": -12.0,
    "tip": 20.598564299479122,
    "label": "rough 150 deg -12 bite 1 of 1",
-   "depth": 25.4226,
+   "depth": 45.4226,
    "height": 28.0,
    "turn": 210.0,
    "via": "d"
@@ -5272,7 +5272,7 @@
    "across": 3.0,
    "tip": 19.477178568710166,
    "label": "rough 150 deg +3 bite 1 of 1",
-   "depth": 26.544,
+   "depth": 46.544,
    "height": 43.0,
    "turn": 210.0,
    "via": "d"
@@ -5285,7 +5285,7 @@
    "across": -18.0,
    "tip": 16.39017771070173,
    "label": "rough 135 deg -18 bite 1 of 5",
-   "depth": 29.631,
+   "depth": 49.631,
    "height": 22.0,
    "turn": 225.0,
    "via": "d"
@@ -5298,7 +5298,7 @@
    "across": -18.0,
    "tip": 13.61681416654968,
    "label": "rough 135 deg -18 bite 2 of 5",
-   "depth": 32.4044,
+   "depth": 52.4044,
    "height": 22.0,
    "turn": 225.0,
    "via": "d"
@@ -5311,7 +5311,7 @@
    "across": -18.0,
    "tip": 10.84345062239763,
    "label": "rough 135 deg -18 bite 3 of 5",
-   "depth": 35.1777,
+   "depth": 55.1777,
    "height": 22.0,
    "turn": 225.0,
    "via": "d"
@@ -5324,7 +5324,7 @@
    "across": -18.0,
    "tip": 8.070087078245578,
    "label": "rough 135 deg -18 bite 4 of 5",
-   "depth": 37.9511,
+   "depth": 57.9511,
    "height": 22.0,
    "turn": 225.0,
    "via": "d"
@@ -5337,7 +5337,7 @@
    "across": -18.0,
    "tip": 5.296723534093527,
    "label": "rough 135 deg -18 bite 5 of 5",
-   "depth": 40.7245,
+   "depth": 60.7245,
    "height": 22.0,
    "turn": 225.0,
    "via": "d"
@@ -5350,7 +5350,7 @@
    "across": -12.0,
    "tip": 9.50502125861245,
    "label": "rough 135 deg -12 bite 1 of 2",
-   "depth": 36.5162,
+   "depth": 56.5162,
    "height": 28.0,
    "turn": 225.0,
    "via": "d"
@@ -5363,7 +5363,7 @@
    "across": -12.0,
    "tip": 7.200411786711209,
    "label": "rough 135 deg -12 bite 2 of 2",
-   "depth": 38.8208,
+   "depth": 58.8208,
    "height": 28.0,
    "turn": 225.0,
    "via": "d"
@@ -5376,7 +5376,7 @@
    "across": -3.0,
    "tip": 23.063824522036583,
    "label": "rough 135 deg -3 bite 1 of 1",
-   "depth": 22.9574,
+   "depth": 42.9574,
    "height": 37.0,
    "turn": 225.0,
    "via": "s"
@@ -5389,7 +5389,7 @@
    "across": 6.0,
    "tip": 18.913098367869683,
    "label": "rough 135 deg +6 bite 1 of 1",
-   "depth": 27.1081,
+   "depth": 47.1081,
    "height": 46.0,
    "turn": 225.0,
    "via": "d"
@@ -5402,7 +5402,7 @@
    "across": -18.0,
    "tip": 5.907637241986588,
    "label": "rough 120 deg -18 bite 1 of 4",
-   "depth": 40.1136,
+   "depth": 60.1136,
    "height": 22.0,
    "turn": 240.0,
    "via": "d"
@@ -5415,7 +5415,7 @@
    "across": -18.0,
    "tip": 3.5065629194270387,
    "label": "rough 120 deg -18 bite 2 of 4",
-   "depth": 42.5146,
+   "depth": 62.5146,
    "height": 22.0,
    "turn": 240.0,
    "via": "d"
@@ -5428,7 +5428,7 @@
    "across": -18.0,
    "tip": 1.1054885968674886,
    "label": "rough 120 deg -18 bite 3 of 4",
-   "depth": 44.9157,
+   "depth": 64.9157,
    "height": 22.0,
    "turn": 240.0,
    "via": "d"
@@ -5441,7 +5441,7 @@
    "across": -18.0,
    "tip": -1.2955857256920615,
    "label": "rough 120 deg -18 bite 4 of 4",
-   "depth": 47.3168,
+   "depth": 67.3168,
    "height": 22.0,
    "turn": 240.0,
    "via": "d"
@@ -5454,7 +5454,7 @@
    "across": -6.0,
    "tip": 15.5967771684547,
    "label": "rough 120 deg -6 bite 1 of 3",
-   "depth": 30.4244,
+   "depth": 50.4244,
    "height": 34.0,
    "turn": 240.0,
    "via": "s"
@@ -5467,7 +5467,7 @@
    "across": -6.0,
    "tip": 12.759971641766834,
    "label": "rough 120 deg -6 bite 2 of 3",
-   "depth": 33.2612,
+   "depth": 53.2612,
    "height": 34.0,
    "turn": 240.0,
    "via": "d"
@@ -5480,7 +5480,7 @@
    "across": -6.0,
    "tip": 9.923166115078969,
    "label": "rough 120 deg -6 bite 3 of 3",
-   "depth": 36.098,
+   "depth": 56.098,
    "height": 34.0,
    "turn": 240.0,
    "via": "d"
@@ -5493,7 +5493,7 @@
    "across": -15.0,
    "tip": 8.974403628434262,
    "label": "rough 90 deg -15 bite 1 of 2",
-   "depth": 37.0468,
+   "depth": 57.0468,
    "height": 25.0,
    "turn": 270.0,
    "via": "d"
@@ -5506,7 +5506,7 @@
    "across": -15.0,
    "tip": 6.310365399301859,
    "label": "rough 90 deg -15 bite 2 of 2",
-   "depth": 39.7108,
+   "depth": 59.7108,
    "height": 25.0,
    "turn": 270.0,
    "via": "d"
@@ -5519,7 +5519,7 @@
    "across": 3.0,
    "tip": 12.190907065931357,
    "label": "rough 90 deg +3 bite 1 of 1",
-   "depth": 33.8303,
+   "depth": 53.8303,
    "height": 43.0,
    "turn": 270.0,
    "via": "s"
@@ -5532,7 +5532,7 @@
    "across": 12.0,
    "tip": 18.501329369891813,
    "label": "rough 90 deg +12 bite 1 of 1",
-   "depth": 27.5199,
+   "depth": 47.5199,
    "height": 52.0,
    "turn": 270.0,
    "via": "d"
@@ -5545,7 +5545,7 @@
    "across": -12.0,
    "tip": 13.742173084296802,
    "label": "rough 75 deg -12 bite 1 of 3",
-   "depth": 32.279,
+   "depth": 52.279,
    "height": 28.0,
    "turn": 285.0,
    "via": "d"
@@ -5558,7 +5558,7 @@
    "across": -12.0,
    "tip": 11.392955775791028,
    "label": "rough 75 deg -12 bite 2 of 3",
-   "depth": 34.6282,
+   "depth": 54.6282,
    "height": 28.0,
    "turn": 285.0,
    "via": "d"
@@ -5571,7 +5571,7 @@
    "across": -12.0,
    "tip": 9.043738467285257,
    "label": "rough 75 deg -12 bite 3 of 3",
-   "depth": 36.9775,
+   "depth": 56.9775,
    "height": 28.0,
    "turn": 285.0,
    "via": "d"
@@ -5584,7 +5584,7 @@
    "across": -6.0,
    "tip": 15.700304736893479,
    "label": "rough 75 deg -6 bite 1 of 1",
-   "depth": 30.3209,
+   "depth": 50.3209,
    "height": 34.0,
    "turn": 285.0,
    "via": "d"
@@ -5597,7 +5597,7 @@
    "across": -18.0,
    "tip": 22.48241266488951,
    "label": "rough 60 deg -18 bite 1 of 1",
-   "depth": 23.5388,
+   "depth": 43.5388,
    "height": 22.0,
    "turn": 300.0,
    "via": "d"
@@ -5610,7 +5610,7 @@
    "across": 15.0,
    "tip": 11.260743226208726,
    "label": "rough 60 deg +15 bite 1 of 1",
-   "depth": 34.7605,
+   "depth": 54.7605,
    "height": 55.0,
    "turn": 300.0,
    "via": "d"
@@ -5623,7 +5623,7 @@
    "across": 3.0,
    "tip": 20.58429618795248,
    "label": "rough 30 deg +3 bite 1 of 3",
-   "depth": 25.4369,
+   "depth": 45.4369,
    "height": 43.0,
    "turn": 330.0,
    "via": "d"
@@ -5636,7 +5636,7 @@
    "across": 3.0,
    "tip": 17.736924552101154,
    "label": "rough 30 deg +3 bite 2 of 3",
-   "depth": 28.2843,
+   "depth": 48.2843,
    "height": 43.0,
    "turn": 330.0,
    "via": "d"
@@ -5649,7 +5649,7 @@
    "across": 3.0,
    "tip": 14.889552916249832,
    "label": "rough 30 deg +3 bite 3 of 3",
-   "depth": 31.1316,
+   "depth": 51.1316,
    "height": 43.0,
    "turn": 330.0,
    "via": "d"
@@ -5662,7 +5662,7 @@
    "across": 15.0,
    "tip": 2.1025910272651127,
    "label": "rough 30 deg +15 bite 1 of 1",
-   "depth": 43.9186,
+   "depth": 63.9186,
    "height": 55.0,
    "turn": 330.0,
    "via": "d"
@@ -5675,7 +5675,7 @@
    "across": 0.0,
    "tip": 6.0,
    "label": "set the ball-nose on the master",
-   "depth": 40.0212,
+   "depth": 60.0212,
    "height": 40.0,
    "turn": 0.0,
    "via": "s"
@@ -5688,7 +5688,7 @@
    "across": -10.027432513113771,
    "tip": 8.612349339339321,
    "label": "finish bite 1 of 2",
-   "depth": 37.4088,
+   "depth": 57.4088,
    "height": 29.9726,
    "turn": 0.0,
    "via": "s"
@@ -5701,7 +5701,7 @@
    "across": -10.027432513113771,
    "tip": 7.408629284821478,
    "label": "finish bite 2 of 2",
-   "depth": 38.6126,
+   "depth": 58.6126,
    "height": 29.9726,
    "turn": 0.0,
    "via": "d"
@@ -5714,7 +5714,7 @@
    "across": -14.807837158748114,
    "tip": 11.93235481548269,
    "label": "finish bite 1 of 1",
-   "depth": 34.0888,
+   "depth": 54.0888,
    "height": 25.1922,
    "turn": 1.0,
    "via": "d"
@@ -5727,7 +5727,7 @@
    "across": -4.714623853492364,
    "tip": 21.921635037056962,
    "label": "finish bite 1 of 1",
-   "depth": 24.0996,
+   "depth": 44.0996,
    "height": 35.2854,
    "turn": 1.0,
    "via": "d"
@@ -5740,7 +5740,7 @@
    "across": -0.1872035926889235,
    "tip": 20.39653919673647,
    "label": "finish bite 1 of 1",
-   "depth": 25.6247,
+   "depth": 45.6247,
    "height": 39.8128,
    "turn": 2.5,
    "via": "d"
@@ -5753,7 +5753,7 @@
    "across": 7.398153661247555,
    "tip": 27.071543669040373,
    "label": "finish bite 1 of 1",
-   "depth": 18.9497,
+   "depth": 38.9497,
    "height": 47.3982,
    "turn": 4.0,
    "via": "d"
@@ -5766,7 +5766,7 @@
    "across": 4.2085043139136085,
    "tip": 21.71273042392248,
    "label": "finish bite 1 of 2",
-   "depth": 24.3085,
+   "depth": 44.3085,
    "height": 44.2085,
    "turn": 5.0,
    "via": "d"
@@ -5779,7 +5779,7 @@
    "across": 4.2085043139136085,
    "tip": 20.707927293020035,
    "label": "finish bite 2 of 2",
-   "depth": 25.3133,
+   "depth": 45.3133,
    "height": 44.2085,
    "turn": 5.0,
    "via": "d"
@@ -5792,7 +5792,7 @@
    "across": -16.46147610958658,
    "tip": 13.50027456551323,
    "label": "finish bite 1 of 1",
-   "depth": 32.5209,
+   "depth": 52.5209,
    "height": 23.5385,
    "turn": 7.0,
    "via": "d"
@@ -5805,7 +5805,7 @@
    "across": -7.85314186386231,
    "tip": 9.742738058420382,
    "label": "finish bite 1 of 2",
-   "depth": 36.2785,
+   "depth": 56.2785,
    "height": 32.1469,
    "turn": 7.5,
    "via": "d"
@@ -5818,7 +5818,7 @@
    "across": -7.85314186386231,
    "tip": 8.359316956793752,
    "label": "finish bite 2 of 2",
-   "depth": 37.6619,
+   "depth": 57.6619,
    "height": 32.1469,
    "turn": 7.5,
    "via": "d"
@@ -5831,7 +5831,7 @@
    "across": 4.165449165149656,
    "tip": 19.943692481174438,
    "label": "finish bite 1 of 1",
-   "depth": 26.0775,
+   "depth": 46.0775,
    "height": 44.1654,
    "turn": 12.0,
    "via": "d"
@@ -5844,7 +5844,7 @@
    "across": -12.359512365643958,
    "tip": 15.295023414365087,
    "label": "finish bite 1 of 1",
-   "depth": 30.7262,
+   "depth": 50.7262,
    "height": 27.6405,
    "turn": 14.0,
    "via": "d"
@@ -5857,7 +5857,7 @@
    "across": -0.3381846714600023,
    "tip": 22.231028205814635,
    "label": "finish bite 1 of 1",
-   "depth": 23.7902,
+   "depth": 43.7902,
    "height": 39.6618,
    "turn": 14.0,
    "via": "d"
@@ -5870,7 +5870,7 @@
    "across": -5.370725236210993,
    "tip": 10.458908064948329,
    "label": "finish bite 1 of 2",
-   "depth": 35.5623,
+   "depth": 55.5623,
    "height": 34.6293,
    "turn": 16.0,
    "via": "d"
@@ -5883,7 +5883,7 @@
    "across": -5.370725236210993,
    "tip": 9.092476947153827,
    "label": "finish bite 2 of 2",
-   "depth": 36.9287,
+   "depth": 56.9287,
    "height": 34.6293,
    "turn": 16.0,
    "via": "d"
@@ -5896,7 +5896,7 @@
    "across": 8.110169084302887,
    "tip": 18.883726948437385,
    "label": "finish bite 1 of 1",
-   "depth": 27.1375,
+   "depth": 47.1375,
    "height": 48.1102,
    "turn": 20.5,
    "via": "d"
@@ -5909,7 +5909,7 @@
    "across": 11.499119817832678,
    "tip": 20.10140467135369,
    "label": "finish bite 1 of 2",
-   "depth": 25.9198,
+   "depth": 45.9198,
    "height": 51.4991,
    "turn": 20.5,
    "via": "d"
@@ -5922,7 +5922,7 @@
    "across": 11.499119817832678,
    "tip": 19.042677374400455,
    "label": "finish bite 2 of 2",
-   "depth": 26.9785,
+   "depth": 46.9785,
    "height": 51.4991,
    "turn": 20.5,
    "via": "d"
@@ -5935,7 +5935,7 @@
    "across": -3.900266409895837,
    "tip": 10.650693235189035,
    "label": "finish bite 1 of 2",
-   "depth": 35.3705,
+   "depth": 55.3705,
    "height": 36.0997,
    "turn": 21.0,
    "via": "d"
@@ -5948,7 +5948,7 @@
    "across": -3.900266409895837,
    "tip": 9.384572850935182,
    "label": "finish bite 2 of 2",
-   "depth": 36.6366,
+   "depth": 56.6366,
    "height": 36.0997,
    "turn": 21.0,
    "via": "d"
@@ -5961,7 +5961,7 @@
    "across": 18.230459774286054,
    "tip": 22.214599132099398,
    "label": "finish bite 1 of 1",
-   "depth": 23.8066,
+   "depth": 43.8066,
    "height": 58.2305,
    "turn": 25.5,
    "via": "d"
@@ -5974,7 +5974,7 @@
    "across": -9.427945921195867,
    "tip": 17.95392516841398,
    "label": "finish bite 1 of 1",
-   "depth": 28.0673,
+   "depth": 48.0673,
    "height": 30.5721,
    "turn": 26.5,
    "via": "d"
@@ -5987,7 +5987,7 @@
    "across": 3.7522003709432967,
    "tip": 21.57420360938853,
    "label": "finish bite 1 of 1",
-   "depth": 24.447,
+   "depth": 44.447,
    "height": 43.7522,
    "turn": 26.5,
    "via": "d"
@@ -6000,7 +6000,7 @@
    "across": 11.590815832983797,
    "tip": 17.4234941586509,
    "label": "finish bite 1 of 1",
-   "depth": 28.5977,
+   "depth": 48.5977,
    "height": 51.5908,
    "turn": 28.0,
    "via": "d"
@@ -6013,7 +6013,7 @@
    "across": -1.556886182077954,
    "tip": 10.747595847183069,
    "label": "finish bite 1 of 2",
-   "depth": 35.2736,
+   "depth": 55.2736,
    "height": 38.4431,
    "turn": 30.5,
    "via": "d"
@@ -6026,7 +6026,7 @@
    "across": -1.556886182077954,
    "tip": 9.765417745303147,
    "label": "finish bite 2 of 2",
-   "depth": 36.2558,
+   "depth": 56.2558,
    "height": 38.4431,
    "turn": 30.5,
    "via": "d"
@@ -6039,7 +6039,7 @@
    "across": 15.375586876400963,
    "tip": 16.88249321578702,
    "label": "finish bite 1 of 1",
-   "depth": 29.1387,
+   "depth": 49.1387,
    "height": 55.3756,
    "turn": 30.5,
    "via": "d"
@@ -6052,7 +6052,7 @@
    "across": 18.958267124111533,
    "tip": 17.712071357428027,
    "label": "finish bite 1 of 1",
-   "depth": 28.3091,
+   "depth": 48.3091,
    "height": 58.9583,
    "turn": 35.5,
    "via": "d"
@@ -6065,7 +6065,7 @@
    "across": 18.94975180957445,
    "tip": 17.020436731913588,
    "label": "finish bite 1 of 1",
-   "depth": 29.0008,
+   "depth": 49.0008,
    "height": 58.9498,
    "turn": 36.0,
    "via": "d"
@@ -6078,7 +6078,7 @@
    "across": 18.849758517794,
    "tip": 16.384447934367124,
    "label": "finish bite 1 of 1",
-   "depth": 29.6367,
+   "depth": 49.6367,
    "height": 58.8498,
    "turn": 36.5,
    "via": "d"
@@ -6091,7 +6091,7 @@
    "across": 6.8138596007059835,
    "tip": 20.313350284854558,
    "label": "finish bite 1 of 1",
-   "depth": 25.7078,
+   "depth": 45.7078,
    "height": 46.8139,
    "turn": 37.0,
    "via": "d"
@@ -6104,7 +6104,7 @@
    "across": 18.96779271659741,
    "tip": 15.48019721743503,
    "label": "finish bite 1 of 1",
-   "depth": 30.541,
+   "depth": 50.541,
    "height": 58.9678,
    "turn": 38.0,
    "via": "d"
@@ -6117,7 +6117,7 @@
    "across": -10.916768072782578,
    "tip": 19.83583779216533,
    "label": "finish bite 1 of 1",
-   "depth": 26.1854,
+   "depth": 46.1854,
    "height": 29.0832,
    "turn": 38.5,
    "via": "d"
@@ -6130,7 +6130,7 @@
    "across": 18.85960436308263,
    "tip": 14.822399852275161,
    "label": "finish bite 1 of 1",
-   "depth": 31.1988,
+   "depth": 51.1988,
    "height": 58.8596,
    "turn": 39.0,
    "via": "d"
@@ -6143,7 +6143,7 @@
    "across": 1.0189430938861284,
    "tip": 10.657110889669124,
    "label": "finish bite 1 of 2",
-   "depth": 35.3641,
+   "depth": 55.3641,
    "height": 41.0189,
    "turn": 41.0,
    "via": "d"
@@ -6156,7 +6156,7 @@
    "across": 1.0189430938861284,
    "tip": 9.743578148503895,
    "label": "finish bite 2 of 2",
-   "depth": 36.2776,
+   "depth": 56.2776,
    "height": 41.0189,
    "turn": 41.0,
    "via": "d"
@@ -6169,7 +6169,7 @@
    "across": 18.95664125973588,
    "tip": 13.920223136417533,
    "label": "finish bite 1 of 1",
-   "depth": 32.101,
+   "depth": 52.101,
    "height": 58.9566,
    "turn": 41.0,
    "via": "d"
@@ -6182,7 +6182,7 @@
    "across": 17.684228634332815,
    "tip": 13.450555560008556,
    "label": "finish bite 1 of 1",
-   "depth": 32.5706,
+   "depth": 52.5706,
    "height": 57.6842,
    "turn": 42.0,
    "via": "d"
@@ -6195,7 +6195,7 @@
    "across": -4.231026275967928,
    "tip": 20.927024017465207,
    "label": "finish bite 1 of 1",
-   "depth": 25.0942,
+   "depth": 45.0942,
    "height": 35.769,
    "turn": 46.5,
    "via": "d"
@@ -6208,7 +6208,7 @@
    "across": 9.202922070231416,
    "tip": 18.684959442006594,
    "label": "finish bite 1 of 1",
-   "depth": 27.3362,
+   "depth": 47.3362,
    "height": 49.2029,
    "turn": 46.5,
    "via": "d"
@@ -6221,7 +6221,7 @@
    "across": 3.4585161727573253,
    "tip": 10.256889517829567,
    "label": "finish bite 1 of 2",
-   "depth": 35.7643,
+   "depth": 55.7643,
    "height": 43.4585,
    "turn": 51.0,
    "via": "d"
@@ -6234,7 +6234,7 @@
    "across": 3.4585161727573253,
    "tip": 9.278550309245434,
    "label": "finish bite 2 of 2",
-   "depth": 36.7426,
+   "depth": 56.7426,
    "height": 43.4585,
    "turn": 51.0,
    "via": "d"
@@ -6247,7 +6247,7 @@
    "across": -13.462493245711526,
    "tip": 7.925306890193834,
    "label": "finish bite 1 of 1",
-   "depth": 38.0959,
+   "depth": 58.0959,
    "height": 26.5375,
    "turn": 54.5,
    "via": "d"
@@ -6260,7 +6260,7 @@
    "across": -2.1820562463709727,
    "tip": 21.682109784205753,
    "label": "finish bite 1 of 1",
-   "depth": 24.3391,
+   "depth": 44.3391,
    "height": 37.8179,
    "turn": 54.5,
    "via": "d"
@@ -6273,7 +6273,7 @@
    "across": -6.36481622822043,
    "tip": 21.913145213305143,
    "label": "finish bite 1 of 1",
-   "depth": 24.1081,
+   "depth": 44.1081,
    "height": 33.6352,
    "turn": 55.5,
    "via": "d"
@@ -6286,7 +6286,7 @@
    "across": -13.40417894307714,
    "tip": 9.251691252760068,
    "label": "finish bite 1 of 1",
-   "depth": 36.7695,
+   "depth": 56.7695,
    "height": 26.5958,
    "turn": 61.5,
    "via": "d"
@@ -6299,7 +6299,7 @@
    "across": -0.49378301159053883,
    "tip": 22.15925138537972,
    "label": "finish bite 1 of 1",
-   "depth": 23.8619,
+   "depth": 43.8619,
    "height": 39.5062,
    "turn": 61.5,
    "via": "d"
@@ -6312,7 +6312,7 @@
    "across": 5.8655980953797595,
    "tip": 9.269352365047794,
    "label": "finish bite 1 of 2",
-   "depth": 36.7518,
+   "depth": 56.7518,
    "height": 45.8656,
    "turn": 61.5,
    "via": "d"
@@ -6325,7 +6325,7 @@
    "across": 5.8655980953797595,
    "tip": 8.346132485415158,
    "label": "finish bite 2 of 2",
-   "depth": 37.6751,
+   "depth": 57.6751,
    "height": 45.8656,
    "turn": 61.5,
    "via": "d"
@@ -6338,7 +6338,7 @@
    "across": 11.747736200847715,
    "tip": 15.2901318290019,
    "label": "finish bite 1 of 1",
-   "depth": 30.7311,
+   "depth": 50.7311,
    "height": 51.7477,
    "turn": 61.5,
    "via": "d"
@@ -6351,7 +6351,7 @@
    "across": -8.655239784870993,
    "tip": 16.314899309149286,
    "label": "finish bite 1 of 6",
-   "depth": 29.7063,
+   "depth": 49.7063,
    "height": 31.3448,
    "turn": 62.5,
    "via": "d"
@@ -6364,7 +6364,7 @@
    "across": -8.655239784870993,
    "tip": 14.924597617410729,
    "label": "finish bite 2 of 6",
-   "depth": 31.0966,
+   "depth": 51.0966,
    "height": 31.3448,
    "turn": 62.5,
    "via": "d"
@@ -6377,7 +6377,7 @@
    "across": -8.655239784870993,
    "tip": 13.534295925672172,
    "label": "finish bite 3 of 6",
-   "depth": 32.4869,
+   "depth": 52.4869,
    "height": 31.3448,
    "turn": 62.5,
    "via": "d"
@@ -6390,7 +6390,7 @@
    "across": -8.655239784870993,
    "tip": 12.143994233933613,
    "label": "finish bite 4 of 6",
-   "depth": 33.8772,
+   "depth": 53.8772,
    "height": 31.3448,
    "turn": 62.5,
    "via": "d"
@@ -6403,7 +6403,7 @@
    "across": -8.655239784870993,
    "tip": 10.753692542195054,
    "label": "finish bite 5 of 6",
-   "depth": 35.2675,
+   "depth": 55.2675,
    "height": 31.3448,
    "turn": 62.5,
    "via": "d"
@@ -6416,7 +6416,7 @@
    "across": -8.655239784870993,
    "tip": 9.363390850456497,
    "label": "finish bite 6 of 6",
-   "depth": 36.6578,
+   "depth": 56.6578,
    "height": 31.3448,
    "turn": 62.5,
    "via": "d"
@@ -6429,7 +6429,7 @@
    "across": 7.538654690210173,
    "tip": 9.797324216789944,
    "label": "finish bite 1 of 3",
-   "depth": 36.2239,
+   "depth": 56.2239,
    "height": 47.5387,
    "turn": 66.5,
    "via": "d"
@@ -6442,7 +6442,7 @@
    "across": 7.538654690210173,
    "tip": 8.788715272160774,
    "label": "finish bite 2 of 3",
-   "depth": 37.2325,
+   "depth": 57.2325,
    "height": 47.5387,
    "turn": 66.5,
    "via": "d"
@@ -6455,7 +6455,7 @@
    "across": 7.538654690210173,
    "tip": 7.780106327531602,
    "label": "finish bite 3 of 3",
-   "depth": 38.2411,
+   "depth": 58.2411,
    "height": 47.5387,
    "turn": 66.5,
    "via": "d"
@@ -6468,7 +6468,7 @@
    "across": -8.807228942536065,
    "tip": 10.384049128616613,
    "label": "finish bite 1 of 1",
-   "depth": 35.6371,
+   "depth": 55.6371,
    "height": 31.1928,
    "turn": 67.0,
    "via": "d"
@@ -6481,7 +6481,7 @@
    "across": -13.211797093434406,
    "tip": 10.555426719460112,
    "label": "finish bite 1 of 1",
-   "depth": 35.4658,
+   "depth": 55.4658,
    "height": 26.7882,
    "turn": 68.5,
    "via": "d"
@@ -6494,7 +6494,7 @@
    "across": 7.542002828904311,
    "tip": 10.147720809776633,
    "label": "finish bite 1 of 3",
-   "depth": 35.8735,
+   "depth": 55.8735,
    "height": 47.542,
    "turn": 68.5,
    "via": "d"
@@ -6507,7 +6507,7 @@
    "across": 7.542002828904311,
    "tip": 8.805837553483347,
    "label": "finish bite 2 of 3",
-   "depth": 37.2154,
+   "depth": 57.2154,
    "height": 47.542,
    "turn": 68.5,
    "via": "d"
@@ -6520,7 +6520,7 @@
    "across": 7.542002828904311,
    "tip": 7.4639542971900585,
    "label": "finish bite 3 of 3",
-   "depth": 38.5572,
+   "depth": 58.5572,
    "height": 47.542,
    "turn": 68.5,
    "via": "d"
@@ -6533,7 +6533,7 @@
    "across": -6.474744308641788,
    "tip": 10.59013644528256,
    "label": "finish bite 1 of 2",
-   "depth": 35.4311,
+   "depth": 55.4311,
    "height": 33.5253,
    "turn": 69.0,
    "via": "s"
@@ -6546,7 +6546,7 @@
    "across": -6.474744308641788,
    "tip": 9.680694127585673,
    "label": "finish bite 2 of 2",
-   "depth": 36.3405,
+   "depth": 56.3405,
    "height": 33.5253,
    "turn": 69.0,
    "via": "d"
@@ -6559,7 +6559,7 @@
    "across": 8.366077966516979,
    "tip": 7.268676610481512,
    "label": "finish bite 1 of 1",
-   "depth": 38.7525,
+   "depth": 58.7525,
    "height": 48.3661,
    "turn": 71.0,
    "via": "d"
@@ -6572,7 +6572,7 @@
    "across": 8.510704227003101,
    "tip": 7.679665458868996,
    "label": "finish bite 1 of 1",
-   "depth": 38.3415,
+   "depth": 58.3415,
    "height": 48.5107,
    "turn": 71.5,
    "via": "d"
@@ -6585,7 +6585,7 @@
    "across": 8.769245972852538,
    "tip": 8.325267772387672,
    "label": "finish bite 1 of 1",
-   "depth": 37.6959,
+   "depth": 57.6959,
    "height": 48.7692,
    "turn": 72.5,
    "via": "d"
@@ -6598,7 +6598,7 @@
    "across": -5.095414859805488,
    "tip": 10.459548247394775,
    "label": "finish bite 1 of 2",
-   "depth": 35.5616,
+   "depth": 55.5616,
    "height": 34.9046,
    "turn": 73.0,
    "via": "d"
@@ -6611,7 +6611,7 @@
    "across": -5.095414859805488,
    "tip": 9.406236922685435,
    "label": "finish bite 2 of 2",
-   "depth": 36.615,
+   "depth": 56.615,
    "height": 34.9046,
    "turn": 73.0,
    "via": "d"
@@ -6624,7 +6624,7 @@
    "across": -4.610219998986837,
    "tip": 9.312963175224684,
    "label": "finish bite 1 of 1",
-   "depth": 36.7082,
+   "depth": 56.7082,
    "height": 35.3898,
    "turn": 74.5,
    "via": "d"
@@ -6637,7 +6637,7 @@
    "across": -12.986480503477257,
    "tip": 11.719383227099787,
    "label": "finish bite 1 of 1",
-   "depth": 34.3018,
+   "depth": 54.3018,
    "height": 27.0135,
    "turn": 75.0,
    "via": "d"
@@ -6650,7 +6650,7 @@
    "across": 2.72814439181837,
    "tip": 22.53654850117172,
    "label": "finish bite 1 of 1",
-   "depth": 23.4846,
+   "depth": 43.4846,
    "height": 42.7281,
    "turn": 75.0,
    "via": "d"
@@ -6663,7 +6663,7 @@
    "across": 12.880131180313107,
    "tip": 11.719383227099797,
    "label": "finish bite 1 of 1",
-   "depth": 34.3018,
+   "depth": 54.3018,
    "height": 52.8801,
    "turn": 75.0,
    "via": "d"
@@ -6676,7 +6676,7 @@
    "across": 9.581648560335308,
    "tip": 8.725229982859878,
    "label": "finish bite 1 of 1",
-   "depth": 37.296,
+   "depth": 57.296,
    "height": 49.5816,
    "turn": 75.5,
    "via": "d"
@@ -6689,7 +6689,7 @@
    "across": -7.795303819127185,
    "tip": 12.056335572966987,
    "label": "finish bite 1 of 1",
-   "depth": 33.9649,
+   "depth": 53.9649,
    "height": 32.2047,
    "turn": 76.5,
    "via": "d"
@@ -6702,7 +6702,7 @@
    "across": 10.781676628763394,
    "tip": 8.80232375313197,
    "label": "finish bite 1 of 1",
-   "depth": 37.2189,
+   "depth": 57.2189,
    "height": 50.7817,
    "turn": 79.5,
    "via": "d"
@@ -6715,7 +6715,7 @@
    "across": -18.226644703306235,
    "tip": -0.36300106578378055,
    "label": "finish bite 1 of 1",
-   "depth": 46.3842,
+   "depth": 66.3842,
    "height": 21.7734,
    "turn": 84.5,
    "via": "d"
@@ -6728,7 +6728,7 @@
    "across": 12.32981020813954,
    "tip": 8.433632874581953,
    "label": "finish bite 1 of 1",
-   "depth": 37.5876,
+   "depth": 57.5876,
    "height": 52.3298,
    "turn": 84.5,
    "via": "s"
@@ -6741,7 +6741,7 @@
    "across": 18.565658960311463,
    "tip": 9.124579498090679,
    "label": "finish bite 1 of 1",
-   "depth": 36.8966,
+   "depth": 56.8966,
    "height": 58.5657,
    "turn": 84.5,
    "via": "d"
@@ -6754,7 +6754,7 @@
    "across": 14.160579878540457,
    "tip": 8.99542994144439,
    "label": "finish bite 1 of 1",
-   "depth": 37.0258,
+   "depth": 57.0258,
    "height": 54.1606,
    "turn": 85.5,
    "via": "d"
@@ -6767,7 +6767,7 @@
    "across": -1.1767753042678613,
    "tip": 10.131714069306923,
    "label": "finish bite 1 of 1",
-   "depth": 35.8895,
+   "depth": 55.8895,
    "height": 38.8232,
    "turn": 91.5,
    "via": "d"
@@ -6780,7 +6780,7 @@
    "across": 14.287587150957643,
    "tip": 7.235241100092013,
    "label": "finish bite 1 of 1",
-   "depth": 38.786,
+   "depth": 58.786,
    "height": 54.2876,
    "turn": 91.5,
    "via": "d"
@@ -6793,7 +6793,7 @@
    "across": -14.52653636792103,
    "tip": 11.018456783943444,
    "label": "finish bite 1 of 8",
-   "depth": 35.0027,
+   "depth": 55.0027,
    "height": 25.4735,
    "turn": 92.5,
    "via": "s"
@@ -6806,7 +6806,7 @@
    "across": -14.52653636792103,
    "tip": 9.704218081887525,
    "label": "finish bite 2 of 8",
-   "depth": 36.317,
+   "depth": 56.317,
    "height": 25.4735,
    "turn": 92.5,
    "via": "d"
@@ -6819,7 +6819,7 @@
    "across": -14.52653636792103,
    "tip": 8.389979379831605,
    "label": "finish bite 3 of 8",
-   "depth": 37.6312,
+   "depth": 57.6312,
    "height": 25.4735,
    "turn": 92.5,
    "via": "d"
@@ -6832,7 +6832,7 @@
    "across": -14.52653636792103,
    "tip": 7.075740677775687,
    "label": "finish bite 4 of 8",
-   "depth": 38.9455,
+   "depth": 58.9455,
    "height": 25.4735,
    "turn": 92.5,
    "via": "d"
@@ -6845,7 +6845,7 @@
    "across": -14.52653636792103,
    "tip": 5.761501975719768,
    "label": "finish bite 5 of 8",
-   "depth": 40.2597,
+   "depth": 60.2597,
    "height": 25.4735,
    "turn": 92.5,
    "via": "d"
@@ -6858,7 +6858,7 @@
    "across": -14.52653636792103,
    "tip": 4.447263273663848,
    "label": "finish bite 6 of 8",
-   "depth": 41.5739,
+   "depth": 61.5739,
    "height": 25.4735,
    "turn": 92.5,
    "via": "d"
@@ -6871,7 +6871,7 @@
    "across": -14.52653636792103,
    "tip": 3.1330245716079297,
    "label": "finish bite 7 of 8",
-   "depth": 42.8882,
+   "depth": 62.8882,
    "height": 25.4735,
    "turn": 92.5,
    "via": "d"
@@ -6884,7 +6884,7 @@
    "across": -14.52653636792103,
    "tip": 1.818785869552011,
    "label": "finish bite 8 of 8",
-   "depth": 44.2024,
+   "depth": 64.2024,
    "height": 25.4735,
    "turn": 92.5,
    "via": "d"
@@ -6897,7 +6897,7 @@
    "across": 9.309613094386581,
    "tip": 20.841340037904292,
    "label": "finish bite 1 of 1",
-   "depth": 25.1799,
+   "depth": 45.1799,
    "height": 49.3096,
    "turn": 95.5,
    "via": "s"
@@ -6910,7 +6910,7 @@
    "across": -15.252369162092295,
    "tip": 3.323358267639726,
    "label": "finish bite 1 of 1",
-   "depth": 42.6978,
+   "depth": 62.6978,
    "height": 24.7476,
    "turn": 97.0,
    "via": "d"
@@ -6923,7 +6923,7 @@
    "across": 0.4510776889142256,
    "tip": 10.060856722009824,
    "label": "finish bite 1 of 1",
-   "depth": 35.9603,
+   "depth": 55.9603,
    "height": 40.4511,
    "turn": 97.5,
    "via": "s"
@@ -6936,7 +6936,7 @@
    "across": 18.307198281998357,
    "tip": 5.2319170140690545,
    "label": "finish bite 1 of 1",
-   "depth": 40.7893,
+   "depth": 60.7893,
    "height": 58.3072,
    "turn": 98.5,
    "via": "d"
@@ -6949,7 +6949,7 @@
    "across": -13.162372880338166,
    "tip": 2.84923659854737,
    "label": "finish bite 1 of 1",
-   "depth": 43.172,
+   "depth": 63.172,
    "height": 26.8376,
    "turn": 99.0,
    "via": "s"
@@ -6962,7 +6962,7 @@
    "across": 3.295959343411866,
    "tip": 11.232079746664446,
    "label": "finish bite 1 of 2",
-   "depth": 34.7891,
+   "depth": 54.7891,
    "height": 43.296,
    "turn": 102.0,
    "via": "s"
@@ -6975,7 +6975,7 @@
    "across": 3.295959343411866,
    "tip": 10.240793022444969,
    "label": "finish bite 2 of 2",
-   "depth": 35.7804,
+   "depth": 55.7804,
    "height": 43.296,
    "turn": 102.0,
    "via": "d"
@@ -6988,7 +6988,7 @@
    "across": -12.24329109217871,
    "tip": 3.057925867712026,
    "label": "finish bite 1 of 1",
-   "depth": 42.9633,
+   "depth": 62.9633,
    "height": 27.7567,
    "turn": 103.0,
    "via": "d"
@@ -7001,7 +7001,7 @@
    "across": -11.92182624302575,
    "tip": 3.1539371145431137,
    "label": "finish bite 1 of 1",
-   "depth": 42.8673,
+   "depth": 62.8673,
    "height": 28.0782,
    "turn": 104.5,
    "via": "d"
@@ -7014,7 +7014,7 @@
    "across": 12.361498675242048,
    "tip": 19.08899937800712,
    "label": "finish bite 1 of 1",
-   "depth": 26.9322,
+   "depth": 46.9322,
    "height": 52.3615,
    "turn": 106.0,
    "via": "s"
@@ -7027,7 +7027,7 @@
    "across": -15.317402939890611,
    "tip": 6.156232802554084,
    "label": "finish bite 1 of 1",
-   "depth": 39.865,
+   "depth": 59.865,
    "height": 24.6826,
    "turn": 106.5,
    "via": "d"
@@ -7040,7 +7040,7 @@
    "across": 3.590859791250878,
    "tip": 9.54394206791638,
    "label": "finish bite 1 of 1",
-   "depth": 36.4773,
+   "depth": 56.4773,
    "height": 43.5909,
    "turn": 110.5,
    "via": "s"
@@ -7053,7 +7053,7 @@
    "across": 5.810105196412124,
    "tip": 10.802072615078632,
    "label": "finish bite 1 of 2",
-   "depth": 35.2191,
+   "depth": 55.2191,
    "height": 45.8101,
    "turn": 110.5,
    "via": "d"
@@ -7066,7 +7066,7 @@
    "across": 5.810105196412124,
    "tip": 9.854461176395489,
    "label": "finish bite 2 of 2",
-   "depth": 36.1667,
+   "depth": 56.1667,
    "height": 45.8101,
    "turn": 110.5,
    "via": "d"
@@ -7079,7 +7079,7 @@
    "across": -2.1579889563566637,
    "tip": 17.308039488612827,
    "label": "finish bite 1 of 1",
-   "depth": 28.7132,
+   "depth": 48.7132,
    "height": 37.842,
    "turn": 115.5,
    "via": "d"
@@ -7092,7 +7092,7 @@
    "across": 11.971394246503376,
    "tip": 17.055861193599902,
    "label": "finish bite 1 of 1",
-   "depth": 28.9653,
+   "depth": 48.9653,
    "height": 51.9714,
    "turn": 115.5,
    "via": "d"
@@ -7105,7 +7105,7 @@
    "across": -4.726797993818607,
    "tip": 17.338430835624024,
    "label": "finish bite 1 of 1",
-   "depth": 28.6828,
+   "depth": 48.6828,
    "height": 35.2732,
    "turn": 116.0,
    "via": "d"
@@ -7118,7 +7118,7 @@
    "across": 14.882851746528127,
    "tip": 16.945979588672273,
    "label": "finish bite 1 of 1",
-   "depth": 29.0752,
+   "depth": 49.0752,
    "height": 54.8829,
    "turn": 116.0,
    "via": "d"
@@ -7131,7 +7131,7 @@
    "across": -15.02536262889392,
    "tip": 10.761128097976714,
    "label": "finish bite 1 of 1",
-   "depth": 35.2601,
+   "depth": 55.2601,
    "height": 24.9746,
    "turn": 121.5,
    "via": "d"
@@ -7144,7 +7144,7 @@
    "across": -9.96962407796455,
    "tip": 6.379514937207918,
    "label": "finish bite 1 of 1",
-   "depth": 39.6417,
+   "depth": 59.6417,
    "height": 30.0304,
    "turn": 121.5,
    "via": "d"
@@ -7157,7 +7157,7 @@
    "across": 6.44115369409634,
    "tip": 8.402530139107448,
    "label": "finish bite 1 of 1",
-   "depth": 37.6187,
+   "depth": 57.6187,
    "height": 46.4412,
    "turn": 122.5,
    "via": "s"
@@ -7170,7 +7170,7 @@
    "across": 13.710273020431842,
    "tip": 14.908134492696036,
    "label": "finish bite 1 of 1",
-   "depth": 31.1131,
+   "depth": 51.1131,
    "height": 53.7103,
    "turn": 124.0,
    "via": "d"
@@ -7183,7 +7183,7 @@
    "across": -18.399582887349375,
    "tip": 12.146288294697339,
    "label": "finish bite 1 of 1",
-   "depth": 33.8749,
+   "depth": 53.8749,
    "height": 21.6004,
    "turn": 125.5,
    "via": "d"
@@ -7196,7 +7196,7 @@
    "across": 0.27644307813460145,
    "tip": 17.711639198924654,
    "label": "finish bite 1 of 1",
-   "depth": 28.3096,
+   "depth": 48.3096,
    "height": 40.2764,
    "turn": 125.5,
    "via": "d"
@@ -7209,7 +7209,7 @@
    "across": -2.293669390824288,
    "tip": 17.71274331752544,
    "label": "finish bite 1 of 1",
-   "depth": 28.3085,
+   "depth": 48.3085,
    "height": 37.7063,
    "turn": 126.0,
    "via": "d"
@@ -7222,7 +7222,7 @@
    "across": 16.991681636027348,
    "tip": 14.397519668707805,
    "label": "finish bite 1 of 1",
-   "depth": 31.6237,
+   "depth": 51.6237,
    "height": 56.9917,
    "turn": 126.0,
    "via": "d"
@@ -7235,7 +7235,7 @@
    "across": -8.685814548341723,
    "tip": 7.248315499414922,
    "label": "finish bite 1 of 1",
-   "depth": 38.7729,
+   "depth": 58.7729,
    "height": 31.3142,
    "turn": 127.5,
    "via": "d"
@@ -7248,7 +7248,7 @@
    "across": -14.598624809680581,
    "tip": 12.893552237185759,
    "label": "finish bite 1 of 1",
-   "depth": 33.1276,
+   "depth": 53.1276,
    "height": 25.4014,
    "turn": 128.5,
    "via": "d"
@@ -7261,7 +7261,7 @@
    "across": -6.033436345382333,
    "tip": 8.153794228499013,
    "label": "finish bite 1 of 1",
-   "depth": 37.8674,
+   "depth": 57.8674,
    "height": 33.9666,
    "turn": 132.0,
    "via": "d"
@@ -7274,7 +7274,7 @@
    "across": -14.062765562013649,
    "tip": 14.845686158679204,
    "label": "finish bite 1 of 1",
-   "depth": 31.1755,
+   "depth": 51.1755,
    "height": 25.9372,
    "turn": 135.0,
    "via": "d"
@@ -7287,7 +7287,7 @@
    "across": -16.511704479768085,
    "tip": 15.114696635537072,
    "label": "finish bite 1 of 1",
-   "depth": 30.9065,
+   "depth": 50.9065,
    "height": 23.4883,
    "turn": 136.0,
    "via": "d"
@@ -7300,7 +7300,7 @@
    "across": 0.16540592968163814,
    "tip": 17.659561782376954,
    "label": "finish bite 1 of 1",
-   "depth": 28.3616,
+   "depth": 48.3616,
    "height": 40.1654,
    "turn": 136.0,
    "via": "d"
@@ -7313,7 +7313,7 @@
    "across": 2.9092472488780583,
    "tip": 17.657870153644946,
    "label": "finish bite 1 of 1",
-   "depth": 28.3633,
+   "depth": 48.3633,
    "height": 42.9092,
    "turn": 136.0,
    "via": "d"
@@ -7326,7 +7326,7 @@
    "across": 18.624481098599354,
    "tip": 11.523232815289042,
    "label": "finish bite 1 of 1",
-   "depth": 34.498,
+   "depth": 54.498,
    "height": 58.6245,
    "turn": 136.0,
    "via": "d"
@@ -7339,7 +7339,7 @@
    "across": -5.94453860330822,
    "tip": 8.858839636842442,
    "label": "finish bite 1 of 1",
-   "depth": 37.1624,
+   "depth": 57.1624,
    "height": 34.0555,
    "turn": 140.5,
    "via": "d"
@@ -7352,7 +7352,7 @@
    "across": -3.725293198146975,
    "tip": 9.16935874532155,
    "label": "finish bite 1 of 1",
-   "depth": 36.8518,
+   "depth": 56.8518,
    "height": 36.2747,
    "turn": 140.5,
    "via": "d"
@@ -7365,7 +7365,7 @@
    "across": -11.716812892447464,
    "tip": 17.456608808599828,
    "label": "finish bite 1 of 1",
-   "depth": 28.5646,
+   "depth": 48.5646,
    "height": 28.2832,
    "turn": 145.5,
    "via": "d"
@@ -7378,7 +7378,7 @@
    "across": -14.28396146373896,
    "tip": 17.57040991494757,
    "label": "finish bite 1 of 1",
-   "depth": 28.4508,
+   "depth": 48.4508,
    "height": 25.716,
    "turn": 146.0,
    "via": "d"
@@ -7391,7 +7391,7 @@
    "across": -1.4171121539512228,
    "tip": 9.81232769173532,
    "label": "finish bite 1 of 1",
-   "depth": 36.2089,
+   "depth": 56.2089,
    "height": 38.5829,
    "turn": 148.0,
    "via": "d"
@@ -7404,7 +7404,7 @@
    "across": 12.409919584920821,
    "tip": 3.7442967173048443,
    "label": "finish bite 1 of 1",
-   "depth": 42.2769,
+   "depth": 62.2769,
    "height": 52.4099,
    "turn": 148.0,
    "via": "d"
@@ -7417,7 +7417,7 @@
    "across": 15.59723281102369,
    "tip": 3.1805865354950145,
    "label": "finish bite 1 of 1",
-   "depth": 42.8406,
+   "depth": 62.8406,
    "height": 55.5972,
    "turn": 150.5,
    "via": "d"
@@ -7430,7 +7430,7 @@
    "across": -17.697660513570952,
    "tip": 8.011213031387673,
    "label": "finish bite 1 of 1",
-   "depth": 38.01,
+   "depth": 58.01,
    "height": 22.3023,
    "turn": 152.5,
    "via": "s"
@@ -7443,7 +7443,7 @@
    "across": -3.028314172410573,
    "tip": 9.714919642729312,
    "label": "finish bite 1 of 1",
-   "depth": 36.3063,
+   "depth": 56.3063,
    "height": 36.9717,
    "turn": 152.5,
    "via": "d"
@@ -7456,7 +7456,7 @@
    "across": -18.93255983628421,
    "tip": 8.65670642126348,
    "label": "finish bite 1 of 1",
-   "depth": 37.3645,
+   "depth": 57.3645,
    "height": 21.0674,
    "turn": 155.0,
    "via": "d"
@@ -7469,7 +7469,7 @@
    "across": 13.893660719108684,
    "tip": 1.9515299841363722,
    "label": "finish bite 1 of 1",
-   "depth": 44.0697,
+   "depth": 64.0697,
    "height": 53.8937,
    "turn": 155.0,
    "via": "d"
@@ -7482,7 +7482,7 @@
    "across": -17.99930117526588,
    "tip": 9.379872170863853,
    "label": "finish bite 1 of 1",
-   "depth": 36.6413,
+   "depth": 56.6413,
    "height": 22.0007,
    "turn": 157.5,
    "via": "s"
@@ -7495,7 +7495,7 @@
    "across": 16.677601548567893,
    "tip": 0.4073643866679062,
    "label": "finish bite 1 of 1",
-   "depth": 45.6138,
+   "depth": 65.6138,
    "height": 56.6776,
    "turn": 161.0,
    "via": "d"
@@ -7508,7 +7508,7 @@
    "across": 3.27599942021059,
    "tip": 10.223893539239914,
    "label": "finish bite 1 of 1",
-   "depth": 35.7973,
+   "depth": 55.7973,
    "height": 43.276,
    "turn": 162.0,
    "via": "s"
@@ -7521,7 +7521,7 @@
    "across": 15.169704128921396,
    "tip": -0.020470388576478094,
    "label": "finish bite 1 of 1",
-   "depth": 46.0417,
+   "depth": 66.0417,
    "height": 55.1697,
    "turn": 162.0,
    "via": "d"
@@ -7534,7 +7534,7 @@
    "across": -8.736048540688362,
    "tip": 21.146293231163,
    "label": "finish bite 1 of 1",
-   "depth": 24.8749,
+   "depth": 44.8749,
    "height": 31.264,
    "turn": 166.0,
    "via": "s"
@@ -7547,7 +7547,7 @@
    "across": -14.544987063738729,
    "tip": 13.033222724617477,
    "label": "finish bite 1 of 1",
-   "depth": 32.988,
+   "depth": 52.988,
    "height": 25.455,
    "turn": 170.5,
    "via": "d"
@@ -7560,7 +7560,7 @@
    "across": 15.749603691247948,
    "tip": -2.409963311733138,
    "label": "finish bite 1 of 1",
-   "depth": 48.4312,
+   "depth": 68.4312,
    "height": 55.7496,
    "turn": 170.5,
    "via": "d"
@@ -7573,7 +7573,7 @@
    "across": -16.434388840959052,
    "tip": 14.196820370074153,
    "label": "finish bite 1 of 1",
-   "depth": 31.8244,
+   "depth": 51.8244,
    "height": 23.5656,
    "turn": 171.0,
    "via": "s"
@@ -7586,7 +7586,7 @@
    "across": 17.249237254484775,
    "tip": -2.367531619345196,
    "label": "finish bite 1 of 1",
-   "depth": 48.3887,
+   "depth": 68.3887,
    "height": 57.2492,
    "turn": 171.0,
    "via": "d"
@@ -7599,7 +7599,7 @@
    "across": 11.441562434026867,
    "tip": 13.492226832880782,
    "label": "finish bite 1 of 1",
-   "depth": 32.529,
+   "depth": 52.529,
    "height": 51.4416,
    "turn": 175.5,
    "via": "d"
@@ -7612,7 +7612,7 @@
    "across": 7.852318503885606,
    "tip": 8.785003566651024,
    "label": "finish bite 1 of 1",
-   "depth": 37.2362,
+   "depth": 57.2362,
    "height": 47.8523,
    "turn": 180.5,
    "via": "d"
@@ -7625,7 +7625,7 @@
    "across": 17.32950448547273,
    "tip": -5.200001437337079,
    "label": "finish bite 1 of 1",
-   "depth": 51.2212,
+   "depth": 71.2212,
    "height": 57.3295,
    "turn": 181.0,
    "via": "d"
@@ -7638,7 +7638,7 @@
    "across": 17.671630192158887,
    "tip": -5.5817008986735255,
    "label": "finish bite 1 of 1",
-   "depth": 51.6029,
+   "depth": 71.6029,
    "height": 57.6716,
    "turn": 183.0,
    "via": "d"
@@ -7651,7 +7651,7 @@
    "across": 12.689184968808854,
    "tip": 11.921504160108933,
    "label": "finish bite 1 of 1",
-   "depth": 34.0997,
+   "depth": 54.0997,
    "height": 52.6892,
    "turn": 184.0,
    "via": "d"
@@ -7664,7 +7664,7 @@
    "across": 6.612338890391269,
    "tip": 8.146329440992664,
    "label": "finish bite 1 of 1",
-   "depth": 37.8749,
+   "depth": 57.8749,
    "height": 46.6123,
    "turn": 185.0,
    "via": "d"
@@ -7677,7 +7677,7 @@
    "across": 17.970894068521535,
    "tip": -5.908706159781057,
    "label": "finish bite 1 of 1",
-   "depth": 51.9299,
+   "depth": 71.9299,
    "height": 57.9709,
    "turn": 185.0,
    "via": "d"
@@ -7690,7 +7690,7 @@
    "across": 0.447897008209607,
    "tip": 22.606491031628156,
    "label": "finish bite 1 of 1",
-   "depth": 23.4147,
+   "depth": 43.4147,
    "height": 40.4479,
    "turn": 186.0,
    "via": "s"
@@ -7703,7 +7703,7 @@
    "across": 18.219426431332295,
    "tip": -6.184915148741248,
    "label": "finish bite 1 of 1",
-   "depth": 52.2061,
+   "depth": 72.2061,
    "height": 58.2194,
    "turn": 187.0,
    "via": "d"
@@ -7716,7 +7716,7 @@
    "across": 10.083700430161949,
    "tip": 7.329333465240024,
    "label": "finish bite 1 of 1",
-   "depth": 38.6919,
+   "depth": 58.6919,
    "height": 50.0837,
    "turn": 191.0,
    "via": "d"
@@ -7729,7 +7729,7 @@
    "across": -6.871764843730217,
    "tip": 16.913477684606967,
    "label": "finish bite 1 of 1",
-   "depth": 29.1077,
+   "depth": 49.1077,
    "height": 33.1282,
    "turn": 192.0,
    "via": "s"
@@ -7742,7 +7742,7 @@
    "across": -11.474428079081875,
    "tip": 19.587852548135256,
    "label": "finish bite 1 of 1",
-   "depth": 26.4333,
+   "depth": 46.4333,
    "height": 28.5256,
    "turn": 194.0,
    "via": "d"
@@ -7755,7 +7755,7 @@
    "across": -3.253704922476536,
    "tip": 17.518200548402167,
    "label": "finish bite 1 of 1",
-   "depth": 28.503,
+   "depth": 48.503,
    "height": 36.7463,
    "turn": 200.5,
    "via": "d"
@@ -7768,7 +7768,7 @@
    "across": 10.388588384463896,
    "tip": 5.505382717623423,
    "label": "finish bite 1 of 1",
-   "depth": 40.5158,
+   "depth": 60.5158,
    "height": 50.3886,
    "turn": 200.5,
    "via": "d"
@@ -7781,7 +7781,7 @@
    "across": 11.95749962684362,
    "tip": 5.5942961082705285,
    "label": "finish bite 1 of 1",
-   "depth": 40.4269,
+   "depth": 60.4269,
    "height": 51.9575,
    "turn": 201.0,
    "via": "d"
@@ -7794,7 +7794,7 @@
    "across": 6.790815271313187,
    "tip": 21.844695851831677,
    "label": "finish bite 1 of 1",
-   "depth": 24.1765,
+   "depth": 44.1765,
    "height": 46.7908,
    "turn": 205.5,
    "via": "d"
@@ -7807,7 +7807,7 @@
    "across": -7.69215752115234,
    "tip": 21.404005992545972,
    "label": "finish bite 1 of 1",
-   "depth": 24.6172,
+   "depth": 44.6172,
    "height": 32.3078,
    "turn": 206.5,
    "via": "d"
@@ -7820,7 +7820,7 @@
    "across": -18.915578212717556,
    "tip": -11.978802940200984,
    "label": "finish bite 1 of 1",
-   "depth": 58.0,
+   "depth": 78.0,
    "height": 21.0844,
    "turn": 208.0,
    "via": "d"
@@ -7833,7 +7833,7 @@
    "across": 0.14592438229038507,
    "tip": 17.552933229239038,
    "label": "finish bite 1 of 1",
-   "depth": 28.4683,
+   "depth": 48.4683,
    "height": 40.1459,
    "turn": 208.0,
    "via": "s"
@@ -7846,7 +7846,7 @@
    "across": -13.19021712108897,
    "tip": 4.0204162774545384,
    "label": "finish bite 1 of 2",
-   "depth": 42.0008,
+   "depth": 62.0008,
    "height": 26.8098,
    "turn": 210.5,
    "via": "d"
@@ -7859,7 +7859,7 @@
    "across": -13.19021712108897,
    "tip": 3.020787308504117,
    "label": "finish bite 2 of 2",
-   "depth": 43.0004,
+   "depth": 63.0004,
    "height": 26.8098,
    "turn": 210.5,
    "via": "d"
@@ -7872,7 +7872,7 @@
    "across": 3.9472344793484737,
    "tip": 17.511028242603338,
    "label": "finish bite 1 of 1",
-   "depth": 28.5102,
+   "depth": 48.5102,
    "height": 43.9472,
    "turn": 210.5,
    "via": "s"
@@ -7885,7 +7885,7 @@
    "across": -17.926201623471897,
    "tip": -3.024897167241474,
    "label": "finish bite 1 of 7",
-   "depth": 49.0461,
+   "depth": 69.0461,
    "height": 22.0738,
    "turn": 211.0,
    "via": "d"
@@ -7898,7 +7898,7 @@
    "across": -17.926201623471897,
    "tip": -4.354650850065637,
    "label": "finish bite 2 of 7",
-   "depth": 50.3758,
+   "depth": 70.3758,
    "height": 22.0738,
    "turn": 211.0,
    "via": "d"
@@ -7911,7 +7911,7 @@
    "across": -17.926201623471897,
    "tip": -5.684404532889799,
    "label": "finish bite 3 of 7",
-   "depth": 51.7056,
+   "depth": 71.7056,
    "height": 22.0738,
    "turn": 211.0,
    "via": "d"
@@ -7924,7 +7924,7 @@
    "across": -17.926201623471897,
    "tip": -7.014158215713961,
    "label": "finish bite 4 of 7",
-   "depth": 53.0354,
+   "depth": 73.0354,
    "height": 22.0738,
    "turn": 211.0,
    "via": "d"
@@ -7937,7 +7937,7 @@
    "across": -17.926201623471897,
    "tip": -8.343911898538124,
    "label": "finish bite 5 of 7",
-   "depth": 54.3651,
+   "depth": 74.3651,
    "height": 22.0738,
    "turn": 211.0,
    "via": "d"
@@ -7950,7 +7950,7 @@
    "across": -17.926201623471897,
    "tip": -9.673665581362286,
    "label": "finish bite 6 of 7",
-   "depth": 55.6949,
+   "depth": 75.6949,
    "height": 22.0738,
    "turn": 211.0,
    "via": "d"
@@ -7963,7 +7963,7 @@
    "across": -17.926201623471897,
    "tip": -11.003419264186448,
    "label": "finish bite 7 of 7",
-   "depth": 57.0246,
+   "depth": 77.0246,
    "height": 22.0738,
    "turn": 211.0,
    "via": "d"
@@ -7976,7 +7976,7 @@
    "across": -3.794598815072156,
    "tip": 21.86928388401444,
    "label": "finish bite 1 of 1",
-   "depth": 24.1519,
+   "depth": 44.1519,
    "height": 36.2054,
    "turn": 211.0,
    "via": "s"
@@ -7989,7 +7989,7 @@
    "across": 13.500717118663806,
    "tip": 3.559768832697859,
    "label": "finish bite 1 of 1",
-   "depth": 42.4614,
+   "depth": 62.4614,
    "height": 53.5007,
    "turn": 211.0,
    "via": "d"
@@ -8002,7 +8002,7 @@
    "across": 14.150886792817191,
    "tip": 3.306355908076508,
    "label": "finish bite 1 of 1",
-   "depth": 42.7148,
+   "depth": 62.7148,
    "height": 54.1509,
    "turn": 213.0,
    "via": "d"
@@ -8015,7 +8015,7 @@
    "across": 9.324095775569052,
    "tip": 20.86965271752373,
    "label": "finish bite 1 of 1",
-   "depth": 25.1515,
+   "depth": 45.1515,
    "height": 49.3241,
    "turn": 214.0,
    "via": "d"
@@ -8028,7 +8028,7 @@
    "across": 3.4039289420199657,
    "tip": 17.151844056338962,
    "label": "finish bite 1 of 1",
-   "depth": 28.8694,
+   "depth": 48.8694,
    "height": 43.4039,
    "turn": 215.0,
    "via": "d"
@@ -8041,7 +8041,7 @@
    "across": 14.762484120150237,
    "tip": 3.0968084555652453,
    "label": "finish bite 1 of 1",
-   "depth": 42.9244,
+   "depth": 62.9244,
    "height": 54.7625,
    "turn": 215.0,
    "via": "d"
@@ -8054,7 +8054,7 @@
    "across": -17.953218602938257,
    "tip": -10.20032047709532,
    "label": "finish bite 1 of 1",
-   "depth": 56.2215,
+   "depth": 76.2215,
    "height": 22.0468,
    "turn": 216.5,
    "via": "s"
@@ -8067,7 +8067,7 @@
    "across": 15.3272588872358,
    "tip": 2.9270854428356987,
    "label": "finish bite 1 of 1",
-   "depth": 43.0941,
+   "depth": 63.0941,
    "height": 55.3273,
    "turn": 217.0,
    "via": "s"
@@ -8080,7 +8080,7 @@
    "across": -12.069425172209009,
    "tip": 4.50191180457546,
    "label": "finish bite 1 of 1",
-   "depth": 41.5193,
+   "depth": 61.5193,
    "height": 27.9306,
    "turn": 217.5,
    "via": "s"
@@ -8093,7 +8093,7 @@
    "across": -17.88815612943077,
    "tip": -9.894957678970558,
    "label": "finish bite 1 of 1",
-   "depth": 55.9162,
+   "depth": 75.9162,
    "height": 22.1118,
    "turn": 218.5,
    "via": "d"
@@ -8106,7 +8106,7 @@
    "across": -17.765583257833416,
    "tip": -9.409444995700678,
    "label": "finish bite 1 of 1",
-   "depth": 55.4306,
+   "depth": 75.4306,
    "height": 22.2344,
    "turn": 221.0,
    "via": "d"
@@ -8119,7 +8119,7 @@
    "across": 7.834199090865846,
    "tip": 16.620885090696817,
    "label": "finish bite 1 of 1",
-   "depth": 29.4003,
+   "depth": 49.4003,
    "height": 47.8342,
    "turn": 221.0,
    "via": "s"
@@ -8132,7 +8132,7 @@
    "across": -9.627553595807852,
    "tip": 10.499293957849616,
    "label": "finish bite 1 of 5",
-   "depth": 35.5219,
+   "depth": 55.5219,
    "height": 30.3724,
    "turn": 222.0,
    "via": "d"
@@ -8145,7 +8145,7 @@
    "across": -9.627553595807852,
    "tip": 9.295201005456526,
    "label": "finish bite 2 of 5",
-   "depth": 36.726,
+   "depth": 56.726,
    "height": 30.3724,
    "turn": 222.0,
    "via": "d"
@@ -8158,7 +8158,7 @@
    "across": -9.627553595807852,
    "tip": 8.091108053063435,
    "label": "finish bite 3 of 5",
-   "depth": 37.9301,
+   "depth": 57.9301,
    "height": 30.3724,
    "turn": 222.0,
    "via": "d"
@@ -8171,7 +8171,7 @@
    "across": -9.627553595807852,
    "tip": 6.887015100670344,
    "label": "finish bite 4 of 5",
-   "depth": 39.1342,
+   "depth": 59.1342,
    "height": 30.3724,
    "turn": 222.0,
    "via": "d"
@@ -8184,7 +8184,7 @@
    "across": -9.627553595807852,
    "tip": 5.682922148277253,
    "label": "finish bite 5 of 5",
-   "depth": 40.3383,
+   "depth": 60.3383,
    "height": 30.3724,
    "turn": 222.0,
    "via": "d"
@@ -8197,7 +8197,7 @@
    "across": 6.6106135173536575,
    "tip": 16.344919571697538,
    "label": "finish bite 1 of 1",
-   "depth": 29.6763,
+   "depth": 49.6763,
    "height": 46.6106,
    "turn": 222.0,
    "via": "s"
@@ -8210,7 +8210,7 @@
    "across": -17.62742563463256,
    "tip": -8.592741864442619,
    "label": "finish bite 1 of 1",
-   "depth": 54.6139,
+   "depth": 74.6139,
    "height": 22.3726,
    "turn": 224.5,
    "via": "d"
@@ -8223,7 +8223,7 @@
    "across": -1.6094676039099909,
    "tip": 22.439226923909093,
    "label": "finish bite 1 of 1",
-   "depth": 23.582,
+   "depth": 43.582,
    "height": 38.3905,
    "turn": 226.5,
    "via": "s"
@@ -8236,7 +8236,7 @@
    "across": -17.368211329579445,
    "tip": -7.611732285739826,
    "label": "finish bite 1 of 1",
-   "depth": 53.6329,
+   "depth": 73.6329,
    "height": 22.6318,
    "turn": 228.5,
    "via": "d"
@@ -8249,7 +8249,7 @@
    "across": -9.864395725915944,
    "tip": 6.946352307481233,
    "label": "finish bite 1 of 1",
-   "depth": 39.0748,
+   "depth": 59.0748,
    "height": 30.1356,
    "turn": 230.5,
    "via": "d"
@@ -8262,7 +8262,7 @@
    "across": -7.6451503207547065,
    "tip": 7.256871415960344,
    "label": "finish bite 1 of 1",
-   "depth": 38.7643,
+   "depth": 58.7643,
    "height": 32.3548,
    "turn": 230.5,
    "via": "d"
@@ -8275,7 +8275,7 @@
    "across": 9.703485953389963,
    "tip": 15.040781112182522,
    "label": "finish bite 1 of 1",
-   "depth": 30.9804,
+   "depth": 50.9804,
    "height": 49.7035,
    "turn": 230.5,
    "via": "s"
@@ -8288,7 +8288,7 @@
    "across": -11.807093016481423,
    "tip": 8.069336375849286,
    "label": "finish bite 1 of 1",
-   "depth": 37.9519,
+   "depth": 57.9519,
    "height": 28.1929,
    "turn": 231.0,
    "via": "d"
@@ -8301,7 +8301,7 @@
    "across": -17.067243326186713,
    "tip": -6.177486037361278,
    "label": "finish bite 1 of 1",
-   "depth": 52.1987,
+   "depth": 72.1987,
    "height": 22.9328,
    "turn": 234.0,
    "via": "d"
@@ -8314,7 +8314,7 @@
    "across": -5.553064044250794,
    "tip": 8.427845980858265,
    "label": "finish bite 1 of 1",
-   "depth": 37.5934,
+   "depth": 57.5934,
    "height": 34.4469,
    "turn": 238.0,
    "via": "s"
@@ -8327,7 +8327,7 @@
    "across": -16.581663379147827,
    "tip": -3.816213668752502,
    "label": "finish bite 1 of 2",
-   "depth": 49.8374,
+   "depth": 69.8374,
    "height": 23.4183,
    "turn": 240.0,
    "via": "d"
@@ -8340,7 +8340,7 @@
    "across": -16.581663379147827,
    "tip": -4.626046919817021,
    "label": "finish bite 2 of 2",
-   "depth": 50.6472,
+   "depth": 70.6472,
    "height": 23.4183,
    "turn": 240.0,
    "via": "d"
@@ -8353,7 +8353,7 @@
    "across": -11.477890538883875,
    "tip": 10.003178872853502,
    "label": "finish bite 1 of 1",
-   "depth": 36.018,
+   "depth": 56.018,
    "height": 28.5221,
    "turn": 241.0,
    "via": "d"
@@ -8366,7 +8366,7 @@
    "across": 2.275445695418723,
    "tip": 21.714928119306393,
    "label": "finish bite 1 of 1",
-   "depth": 24.3063,
+   "depth": 44.3063,
    "height": 42.2754,
    "turn": 241.5,
    "via": "d"
@@ -8379,7 +8379,7 @@
    "across": 14.691248735092842,
    "tip": 12.932681420593385,
    "label": "finish bite 1 of 1",
-   "depth": 33.0885,
+   "depth": 53.0885,
    "height": 54.6912,
    "turn": 241.5,
    "via": "d"
@@ -8392,7 +8392,7 @@
    "across": -7.260141486423671,
    "tip": 8.659208872206255,
    "label": "finish bite 1 of 1",
-   "depth": 37.362,
+   "depth": 57.362,
    "height": 32.7399,
    "turn": 242.5,
    "via": "d"
@@ -8405,7 +8405,7 @@
    "across": -3.369676868241638,
    "tip": 9.290285523977099,
    "label": "finish bite 1 of 1",
-   "depth": 36.7309,
+   "depth": 56.7309,
    "height": 36.6303,
    "turn": 245.0,
    "via": "d"
@@ -8418,7 +8418,7 @@
    "across": 7.994758130759012,
    "tip": 21.28708230221522,
    "label": "finish bite 1 of 1",
-   "depth": 24.7341,
+   "depth": 44.7341,
    "height": 47.9948,
    "turn": 247.0,
    "via": "d"
@@ -8431,7 +8431,7 @@
    "across": -15.922140835842116,
    "tip": -1.3130370991623481,
    "label": "finish bite 1 of 2",
-   "depth": 47.3342,
+   "depth": 67.3342,
    "height": 24.0779,
    "turn": 247.5,
    "via": "d"
@@ -8444,7 +8444,7 @@
    "across": -15.922140835842116,
    "tip": -2.716902126718213,
    "label": "finish bite 2 of 2",
-   "depth": 48.7381,
+   "depth": 68.7381,
    "height": 24.0779,
    "turn": 247.5,
    "via": "d"
@@ -8457,7 +8457,7 @@
    "across": 3.8698404943139533,
    "tip": 21.014898948812256,
    "label": "finish bite 1 of 1",
-   "depth": 25.0063,
+   "depth": 45.0063,
    "height": 43.8698,
    "turn": 248.5,
    "via": "s"
@@ -8470,7 +8470,7 @@
    "across": 17.48287743767694,
    "tip": 10.309329808756328,
    "label": "finish bite 1 of 1",
-   "depth": 35.7119,
+   "depth": 55.7119,
    "height": 57.4829,
    "turn": 251.5,
    "via": "d"
@@ -8483,7 +8483,7 @@
    "across": -1.0720334629486605,
    "tip": 10.90396232219705,
    "label": "finish bite 1 of 2",
-   "depth": 35.1172,
+   "depth": 55.1172,
    "height": 38.928,
    "turn": 252.0,
    "via": "d"
@@ -8496,7 +8496,7 @@
    "across": -1.0720334629486605,
    "tip": 9.88111417347893,
    "label": "finish bite 2 of 2",
-   "depth": 36.1401,
+   "depth": 56.1401,
    "height": 38.928,
    "turn": 252.0,
    "via": "d"
@@ -8509,7 +8509,7 @@
    "across": -9.609178550153441,
    "tip": 12.139445272647277,
    "label": "finish bite 1 of 1",
-   "depth": 33.8818,
+   "depth": 53.8818,
    "height": 30.3908,
    "turn": 254.0,
    "via": "d"
@@ -8522,7 +8522,7 @@
    "across": 18.92593067664754,
    "tip": 10.043504161431121,
    "label": "finish bite 1 of 1",
-   "depth": 35.9777,
+   "depth": 55.9777,
    "height": 58.9259,
    "turn": 254.0,
    "via": "d"
@@ -8535,7 +8535,7 @@
    "across": -14.988262641226488,
    "tip": 1.488103737377166,
    "label": "finish bite 1 of 3",
-   "depth": 44.5331,
+   "depth": 64.5331,
    "height": 25.0117,
    "turn": 256.0,
    "via": "d"
@@ -8548,7 +8548,7 @@
    "across": -14.988262641226488,
    "tip": 0.40934914565971425,
    "label": "finish bite 2 of 3",
-   "depth": 45.6118,
+   "depth": 65.6118,
    "height": 25.0117,
    "turn": 256.0,
    "via": "d"
@@ -8561,7 +8561,7 @@
    "across": -14.988262641226488,
    "tip": -0.6694054460577374,
    "label": "finish bite 3 of 3",
-   "depth": 46.6906,
+   "depth": 66.6906,
    "height": 25.0117,
    "turn": 256.0,
    "via": "d"
@@ -8574,7 +8574,7 @@
    "across": 18.946023281569367,
    "tip": 8.931715070855077,
    "label": "finish bite 1 of 1",
-   "depth": 37.0895,
+   "depth": 57.0895,
    "height": 58.946,
    "turn": 256.5,
    "via": "s"
@@ -8587,7 +8587,7 @@
    "across": -14.332010292066967,
    "tip": 1.844116793046539,
    "label": "finish bite 1 of 2",
-   "depth": 44.1771,
+   "depth": 64.1771,
    "height": 25.668,
    "turn": 261.0,
    "via": "d"
@@ -8600,7 +8600,7 @@
    "across": -14.332010292066967,
    "tip": 0.4980609833601781,
    "label": "finish bite 2 of 2",
-   "depth": 45.5231,
+   "depth": 65.5231,
    "height": 25.668,
    "turn": 261.0,
    "via": "d"
@@ -8613,7 +8613,7 @@
    "across": 18.149818617213143,
    "tip": 7.229255158913821,
    "label": "finish bite 1 of 1",
-   "depth": 38.7919,
+   "depth": 58.7919,
    "height": 58.1498,
    "turn": 261.0,
    "via": "s"
@@ -8626,7 +8626,7 @@
    "across": 12.35673748157699,
    "tip": 18.7397544243237,
    "label": "finish bite 1 of 1",
-   "depth": 27.2814,
+   "depth": 47.2814,
    "height": 52.3567,
    "turn": 264.5,
    "via": "d"
@@ -8639,7 +8639,7 @@
    "across": 8.120411989398965,
    "tip": 18.717501051148044,
    "label": "finish bite 1 of 1",
-   "depth": 27.3037,
+   "depth": 47.3037,
    "height": 48.1204,
    "turn": 265.5,
    "via": "d"
@@ -8652,7 +8652,7 @@
    "across": -18.944858507322195,
    "tip": 10.90593611174996,
    "label": "finish bite 1 of 1",
-   "depth": 35.1153,
+   "depth": 55.1153,
    "height": 21.0551,
    "turn": 270.0,
    "via": "d"
@@ -8665,7 +8665,7 @@
    "across": -13.312262480183184,
    "tip": 3.8142452369809328,
    "label": "finish bite 1 of 2",
-   "depth": 42.207,
+   "depth": 62.207,
    "height": 26.6877,
    "turn": 270.5,
    "via": "d"
@@ -8678,7 +8678,7 @@
    "across": -13.312262480183184,
    "tip": 2.7225133951283027,
    "label": "finish bite 2 of 2",
-   "depth": 43.2987,
+   "depth": 63.2987,
    "height": 26.6877,
    "turn": 270.5,
    "via": "d"
@@ -8691,7 +8691,7 @@
    "across": 3.620210578295721,
    "tip": 10.65142815880866,
    "label": "finish bite 1 of 2",
-   "depth": 35.3698,
+   "depth": 55.3698,
    "height": 43.6202,
    "turn": 270.5,
    "via": "s"
@@ -8704,7 +8704,7 @@
    "across": 3.620210578295721,
    "tip": 9.839588865612198,
    "label": "finish bite 2 of 2",
-   "depth": 36.1816,
+   "depth": 56.1816,
    "height": 43.6202,
    "turn": 270.5,
    "via": "d"
@@ -8717,7 +8717,7 @@
    "across": -18.97145093725725,
    "tip": 12.705968664140679,
    "label": "finish bite 1 of 1",
-   "depth": 33.3152,
+   "depth": 53.3152,
    "height": 21.0285,
    "turn": 274.0,
    "via": "d"
@@ -8730,7 +8730,7 @@
    "across": -18.958617418352738,
    "tip": 14.38776500394827,
    "label": "finish bite 1 of 1",
-   "depth": 31.6334,
+   "depth": 51.6334,
    "height": 21.0414,
    "turn": 278.0,
    "via": "d"
@@ -8743,7 +8743,7 @@
    "across": -11.823055716731863,
    "tip": 5.99868206607492,
    "label": "finish bite 1 of 2",
-   "depth": 40.0225,
+   "depth": 60.0225,
    "height": 28.1769,
    "turn": 281.0,
    "via": "d"
@@ -8756,7 +8756,7 @@
    "across": -11.823055716731863,
    "tip": 4.9608550597340955,
    "label": "finish bite 2 of 2",
-   "depth": 41.0603,
+   "depth": 61.0603,
    "height": 28.1769,
    "turn": 281.0,
    "via": "d"
@@ -8769,7 +8769,7 @@
    "across": 15.315793576687234,
    "tip": 14.68893318654801,
    "label": "finish bite 1 of 1",
-   "depth": 31.3323,
+   "depth": 51.3323,
    "height": 55.3158,
    "turn": 285.0,
    "via": "s"
@@ -8782,7 +8782,7 @@
    "across": 12.859644445497846,
    "tip": 14.445240983012416,
    "label": "finish bite 1 of 1",
-   "depth": 31.576,
+   "depth": 51.576,
    "height": 52.8596,
    "turn": 286.0,
    "via": "d"
@@ -8795,7 +8795,7 @@
    "across": -17.472306765031924,
    "tip": 17.397170676928322,
    "label": "finish bite 1 of 1",
-   "depth": 28.624,
+   "depth": 48.624,
    "height": 22.5277,
    "turn": 286.5,
    "via": "d"
@@ -8808,7 +8808,7 @@
    "across": -4.038358418832573,
    "tip": 15.15510610146972,
    "label": "finish bite 1 of 1",
-   "depth": 30.8661,
+   "depth": 50.8661,
    "height": 35.9616,
    "turn": 286.5,
    "via": "d"
@@ -8821,7 +8821,7 @@
    "across": 6.772397211517372,
    "tip": 7.943834900326486,
    "label": "finish bite 1 of 1",
-   "depth": 38.0774,
+   "depth": 58.0774,
    "height": 46.7724,
    "turn": 290.5,
    "via": "d"
@@ -8834,7 +8834,7 @@
    "across": -10.018894968763258,
    "tip": 7.7882038983321635,
    "label": "finish bite 1 of 2",
-   "depth": 38.233,
+   "depth": 58.233,
    "height": 29.9811,
    "turn": 291.0,
    "via": "d"
@@ -8847,7 +8847,7 @@
    "across": -10.018894968763258,
    "tip": 6.7984772219791445,
    "label": "finish bite 2 of 2",
-   "depth": 39.2227,
+   "depth": 59.2227,
    "height": 29.9811,
    "turn": 291.0,
    "via": "d"
@@ -8860,7 +8860,7 @@
    "across": -15.78573413927857,
    "tip": 20.02943880007635,
    "label": "finish bite 1 of 1",
-   "depth": 25.9918,
+   "depth": 45.9918,
    "height": 24.2143,
    "turn": 294.5,
    "via": "d"
@@ -8873,7 +8873,7 @@
    "across": -2.8376353443250153,
    "tip": 15.331314245900206,
    "label": "finish bite 1 of 1",
-   "depth": 30.6899,
+   "depth": 50.6899,
    "height": 37.1624,
    "turn": 294.5,
    "via": "d"
@@ -8886,7 +8886,7 @@
    "across": 14.524920920199973,
    "tip": 11.810843581551456,
    "label": "finish bite 1 of 1",
-   "depth": 34.2104,
+   "depth": 54.2104,
    "height": 54.5249,
    "turn": 296.0,
    "via": "d"
@@ -8899,7 +8899,7 @@
    "across": 1.1335343605652861,
    "tip": 15.4298436024993,
    "label": "finish bite 1 of 1",
-   "depth": 30.5914,
+   "depth": 50.5914,
    "height": 41.1335,
    "turn": 296.5,
    "via": "d"
@@ -8912,7 +8912,7 @@
    "across": -14.197471080064702,
    "tip": 22.176770452856587,
    "label": "finish bite 1 of 1",
-   "depth": 23.8444,
+   "depth": 43.8444,
    "height": 25.8025,
    "turn": 301.5,
    "via": "d"
@@ -8925,7 +8925,7 @@
    "across": -7.838089973094393,
    "tip": 9.317898274730991,
    "label": "finish bite 1 of 2",
-   "depth": 36.7033,
+   "depth": 56.7033,
    "height": 32.1619,
    "turn": 301.5,
    "via": "d"
@@ -8938,7 +8938,7 @@
    "across": -7.838089973094393,
    "tip": 8.363651552892021,
    "label": "finish bite 2 of 2",
-   "depth": 37.6575,
+   "depth": 57.6575,
    "height": 32.1619,
    "turn": 301.5,
    "via": "d"
@@ -8951,7 +8951,7 @@
    "across": -1.9559518676264442,
    "tip": 15.307650896478776,
    "label": "finish bite 1 of 1",
-   "depth": 30.7135,
+   "depth": 50.7135,
    "height": 38.044,
    "turn": 301.5,
    "via": "d"
@@ -8964,7 +8964,7 @@
    "across": 10.45985117204767,
    "tip": 6.525404197765775,
    "label": "finish bite 1 of 1",
-   "depth": 39.4958,
+   "depth": 59.4958,
    "height": 50.4599,
    "turn": 301.5,
    "via": "d"
@@ -8977,7 +8977,7 @@
    "across": -16.777393084522934,
    "tip": 23.476371923459997,
    "label": "finish bite 1 of 1",
-   "depth": 22.5448,
+   "depth": 42.5448,
    "height": 23.2226,
    "turn": 305.5,
    "via": "s"
@@ -8990,7 +8990,7 @@
    "across": 18.351821205402437,
    "tip": 9.082409363530651,
    "label": "finish bite 1 of 1",
-   "depth": 36.9388,
+   "depth": 56.9388,
    "height": 58.3518,
    "turn": 305.5,
    "via": "d"
@@ -9003,7 +9003,7 @@
    "across": -6.11135982056869,
    "tip": 10.176808393044617,
    "label": "finish bite 1 of 2",
-   "depth": 35.8444,
+   "depth": 55.8444,
    "height": 33.8886,
    "turn": 306.5,
    "via": "d"
@@ -9016,7 +9016,7 @@
    "across": -6.11135982056869,
    "tip": 8.991913841657642,
    "label": "finish bite 2 of 2",
-   "depth": 37.0293,
+   "depth": 57.0293,
    "height": 33.8886,
    "turn": 306.5,
    "via": "d"
@@ -9029,7 +9029,7 @@
    "across": 3.1687307756960976,
    "tip": 15.314864396370307,
    "label": "finish bite 1 of 1",
-   "depth": 30.7063,
+   "depth": 50.7063,
    "height": 43.1687,
    "turn": 307.0,
    "via": "d"
@@ -9042,7 +9042,7 @@
    "across": -12.385687400576577,
    "tip": 24.123209525568964,
    "label": "finish bite 1 of 1",
-   "depth": 21.898,
+   "depth": 41.898,
    "height": 27.6143,
    "turn": 308.5,
    "via": "d"
@@ -9055,7 +9055,7 @@
    "across": -6.057404989502325,
    "tip": 9.151402247328457,
    "label": "finish bite 1 of 1",
-   "depth": 36.8698,
+   "depth": 56.8698,
    "height": 33.9426,
    "turn": 308.5,
    "via": "d"
@@ -9068,7 +9068,7 @@
    "across": -5.146780783232655,
    "tip": 9.547716321649494,
    "label": "finish bite 1 of 1",
-   "depth": 36.4735,
+   "depth": 56.4735,
    "height": 34.8532,
    "turn": 311.0,
    "via": "d"
@@ -9081,7 +9081,7 @@
    "across": 10.612035754865657,
    "tip": 4.655511060573456,
    "label": "finish bite 1 of 1",
-   "depth": 41.3657,
+   "depth": 61.3657,
    "height": 50.612,
    "turn": 311.0,
    "via": "d"
@@ -9094,7 +9094,7 @@
    "across": 12.203152297962248,
    "tip": 4.7341679998242565,
    "label": "finish bite 1 of 1",
-   "depth": 41.287,
+   "depth": 61.287,
    "height": 52.2032,
    "turn": 311.5,
    "via": "d"
@@ -9107,7 +9107,7 @@
    "across": -4.981751873549339,
    "tip": 10.07653883275235,
    "label": "finish bite 1 of 1",
-   "depth": 35.9447,
+   "depth": 55.9447,
    "height": 35.0182,
    "turn": 311.5,
    "via": "s"
@@ -9120,7 +9120,7 @@
    "across": -4.679323952983905,
    "tip": 10.957251918550705,
    "label": "finish bite 1 of 1",
-   "depth": 35.0639,
+   "depth": 55.0639,
    "height": 35.3207,
    "turn": 312.5,
    "via": "d"
@@ -9133,7 +9133,7 @@
    "across": -10.592819939396858,
    "tip": 25.75264596273241,
    "label": "finish bite 1 of 1",
-   "depth": 20.2686,
+   "depth": 40.2686,
    "height": 29.4072,
    "turn": 315.0,
    "via": "d"
@@ -9146,7 +9146,7 @@
    "across": -0.44083315090212505,
    "tip": 14.93548068866049,
    "label": "finish bite 1 of 1",
-   "depth": 31.0857,
+   "depth": 51.0857,
    "height": 39.5592,
    "turn": 315.0,
    "via": "d"
@@ -9159,7 +9159,7 @@
    "across": -3.710743160711373,
    "tip": 12.057450853392828,
    "label": "finish bite 1 of 1",
-   "depth": 33.9637,
+   "depth": 53.9637,
    "height": 36.2893,
    "turn": 315.5,
    "via": "d"
@@ -9172,7 +9172,7 @@
    "across": -12.85193465118123,
    "tip": 25.959436355461914,
    "label": "finish bite 1 of 1",
-   "depth": 20.0618,
+   "depth": 40.0618,
    "height": 27.1481,
    "turn": 316.0,
    "via": "d"
@@ -9185,7 +9185,7 @@
    "across": -2.245891516459138,
    "tip": 13.05365787518696,
    "label": "finish bite 1 of 1",
-   "depth": 32.9675,
+   "depth": 52.9675,
    "height": 37.7541,
    "turn": 319.5,
    "via": "d"
@@ -9198,7 +9198,7 @@
    "across": 12.02233462298828,
    "tip": 2.6019593344361898,
    "label": "finish bite 1 of 1",
-   "depth": 43.4192,
+   "depth": 63.4192,
    "height": 52.0223,
    "turn": 321.0,
    "via": "d"
@@ -9211,7 +9211,7 @@
    "across": 13.578302748265283,
    "tip": 2.7856817342076416,
    "label": "finish bite 1 of 1",
-   "depth": 43.2355,
+   "depth": 63.2355,
    "height": 53.5783,
    "turn": 321.0,
    "via": "d"
@@ -9224,7 +9224,7 @@
    "across": -15.674505484695048,
    "tip": 14.815960253904692,
    "label": "finish bite 1 of 1",
-   "depth": 31.2052,
+   "depth": 51.2052,
    "height": 24.3255,
    "turn": 323.0,
    "via": "s"
@@ -9237,7 +9237,7 @@
    "across": -0.2776559240838976,
    "tip": 13.804216764682277,
    "label": "finish bite 1 of 1",
-   "depth": 32.217,
+   "depth": 52.217,
    "height": 39.7223,
    "turn": 324.5,
    "via": "d"
@@ -9250,7 +9250,7 @@
    "across": -6.317336278616079,
    "tip": 27.548583198571198,
    "label": "finish bite 1 of 1",
-   "depth": 18.4726,
+   "depth": 38.4726,
    "height": 33.6827,
    "turn": 325.5,
    "via": "d"
@@ -9263,7 +9263,7 @@
    "across": 1.6487635373301437,
    "tip": 14.585226488689091,
    "label": "finish bite 1 of 1",
-   "depth": 31.436,
+   "depth": 51.436,
    "height": 41.6488,
    "turn": 325.5,
    "via": "d"
@@ -9276,7 +9276,7 @@
    "across": 16.446499329429603,
    "tip": 2.9134634964477675,
    "label": "finish bite 1 of 1",
-   "depth": 43.1077,
+   "depth": 63.1077,
    "height": 56.4465,
    "turn": 325.5,
    "via": "d"
@@ -9289,7 +9289,7 @@
    "across": 14.634816999260172,
    "tip": 0.5123572576785982,
    "label": "finish bite 1 of 1",
-   "depth": 45.5088,
+   "depth": 65.5088,
    "height": 54.6348,
    "turn": 331.0,
    "via": "d"
@@ -9302,7 +9302,7 @@
    "across": -18.028268943455625,
    "tip": 2.6998998906007268,
    "label": "finish bite 1 of 1",
-   "depth": 43.3213,
+   "depth": 63.3213,
    "height": 21.9717,
    "turn": 331.0,
    "via": "s"
@@ -9315,7 +9315,7 @@
    "across": 2.428604691859757,
    "tip": 14.102257091814666,
    "label": "finish bite 1 of 1",
-   "depth": 31.9189,
+   "depth": 51.9189,
    "height": 42.4286,
    "turn": 331.5,
    "via": "s"
@@ -9328,7 +9328,7 @@
    "across": 16.04557557335652,
    "tip": -0.1713006453809438,
    "label": "finish bite 1 of 1",
-   "depth": 46.1925,
+   "depth": 66.1925,
    "height": 56.0456,
    "turn": 335.5,
    "via": "d"
@@ -9341,7 +9341,7 @@
    "across": -4.517177193389283,
    "tip": 28.539789021441496,
    "label": "finish bite 1 of 1",
-   "depth": 17.4814,
+   "depth": 37.4814,
    "height": 35.4828,
    "turn": 336.0,
    "via": "s"
@@ -9354,7 +9354,7 @@
    "across": 18.814603394619482,
    "tip": -0.32358539815784537,
    "label": "finish bite 1 of 1",
-   "depth": 46.3448,
+   "depth": 66.3448,
    "height": 58.8146,
    "turn": 336.0,
    "via": "d"
@@ -9367,7 +9367,7 @@
    "across": -16.741411088812207,
    "tip": 3.449694033683521,
    "label": "finish bite 1 of 1",
-   "depth": 42.5715,
+   "depth": 62.5715,
    "height": 23.2586,
    "turn": 336.5,
    "via": "s"
@@ -9380,7 +9380,7 @@
    "across": -10.619576621119936,
    "tip": 18.128698394768715,
    "label": "finish bite 1 of 1",
-   "depth": 27.8925,
+   "depth": 47.8925,
    "height": 29.3804,
    "turn": 337.5,
    "via": "d"
@@ -9393,7 +9393,7 @@
    "across": 7.3734896099026965,
    "tip": 13.492993715656207,
    "label": "finish bite 1 of 1",
-   "depth": 32.5282,
+   "depth": 52.5282,
    "height": 47.3735,
    "turn": 338.5,
    "via": "d"
@@ -9406,7 +9406,7 @@
    "across": -16.20070817929238,
    "tip": 3.704450139436105,
    "label": "finish bite 1 of 1",
-   "depth": 42.3167,
+   "depth": 62.3167,
    "height": 23.7993,
    "turn": 338.5,
    "via": "d"
@@ -9419,7 +9419,7 @@
    "across": 15.297786013951244,
    "tip": -1.6466225119258495,
    "label": "finish bite 1 of 1",
-   "depth": 47.6678,
+   "depth": 67.6678,
    "height": 55.2978,
    "turn": 340.0,
    "via": "s"
@@ -9432,7 +9432,7 @@
    "across": -15.486543546665416,
    "tip": 4.10341375404894,
    "label": "finish bite 1 of 1",
-   "depth": 41.9178,
+   "depth": 61.9178,
    "height": 24.5135,
    "turn": 341.0,
    "via": "s"
@@ -9445,7 +9445,7 @@
    "across": -14.527696500317454,
    "tip": 4.755780633933146,
    "label": "finish bite 1 of 1",
-   "depth": 41.2654,
+   "depth": 61.2654,
    "height": 25.4723,
    "turn": 344.5,
    "via": "d"
@@ -9458,7 +9458,7 @@
    "across": -0.14422503716591262,
    "tip": 28.708228411754618,
    "label": "finish bite 1 of 1",
-   "depth": 17.313,
+   "depth": 37.313,
    "height": 39.8558,
    "turn": 346.0,
    "via": "s"
@@ -9471,7 +9471,7 @@
    "across": 17.863415511490917,
    "tip": -3.290772628876474,
    "label": "finish bite 1 of 1",
-   "depth": 49.312,
+   "depth": 69.312,
    "height": 57.8634,
    "turn": 346.0,
    "via": "d"
@@ -9484,7 +9484,7 @@
    "across": -13.344887120462866,
    "tip": 5.488047708752534,
    "label": "finish bite 1 of 1",
-   "depth": 40.5331,
+   "depth": 60.5331,
    "height": 26.6551,
    "turn": 348.5,
    "via": "s"
@@ -9497,7 +9497,7 @@
    "across": -5.386346688479706,
    "tip": 19.897740279976,
    "label": "finish bite 1 of 1",
-   "depth": 26.1235,
+   "depth": 46.1235,
    "height": 34.6137,
    "turn": 350.5,
    "via": "s"
@@ -9510,7 +9510,7 @@
    "across": -7.216193742535836,
    "tip": 20.98115334528669,
    "label": "finish bite 1 of 1",
-   "depth": 25.04,
+   "depth": 45.04,
    "height": 32.7838,
    "turn": 351.0,
    "via": "d"
@@ -9523,7 +9523,7 @@
    "across": -11.80688343221195,
    "tip": 6.47636663214723,
    "label": "finish bite 1 of 1",
-   "depth": 39.5448,
+   "depth": 59.5448,
    "height": 28.1931,
    "turn": 354.0,
    "via": "d"
@@ -9536,7 +9536,7 @@
    "across": 6.939342125724494,
    "tip": 28.112538078196533,
    "label": "finish bite 1 of 1",
-   "depth": 17.9087,
+   "depth": 37.9087,
    "height": 46.9393,
    "turn": 356.0,
    "via": "s"
@@ -9546,7 +9546,7 @@
   "Base": [
    [
     "Part 1",
-    8205676.577031608
+    8434418.496416792
    ]
   ],
   "Fences": [
@@ -9556,7 +9556,7 @@
    ],
    [
     "Part 2",
-    287850.3034553528
+    287850.30345535284
    ]
   ],
   "Slips": [
@@ -9572,31 +9572,31 @@
   "Sled plate": [
    [
     "Part 1",
-    1691143.0684885685
+    1699010.718173474
    ]
   ],
   "Sled box": [
    [
     "Part 1",
-    410297.9952209827
+    457503.90278323856
    ],
    [
     "Part 2",
-    410297.9336004161
+    457503.83407305705
    ],
    [
     "Part 3",
-    1636471.4621582031
+    1644339.113418579
    ]
   ],
   "Spring plungers": [
    [
     "Part 1",
-    28.23846082722354
+    28.2384608272233
    ],
    [
     "Part 2",
-    28.23846657214758
+    28.238466572147466
    ]
   ],
   "Tailstock": [
@@ -9608,17 +9608,17 @@
   "Tail bearings KP001": [
    [
     "Part 1",
-    21238.589566248902
+    21238.584158994072
    ],
    [
     "Part 2",
-    21238.58956624885
+    21238.584158994057
    ]
   ],
   "Tail spindle": [
    [
     "Part 1",
-    10278.799811743374
+    10278.799811743382
    ]
   ],
   "Headstock": [
@@ -9630,45 +9630,45 @@
   "Head bearings KP001": [
    [
     "Part 1",
-    21238.589566248902
+    21238.584158994112
    ],
    [
     "Part 2",
-    21238.58956624873
+    21238.58415899389
    ]
   ],
   "Spindle": [
    [
     "Part 1",
-    16604.215080508468
+    16604.21508050851
    ]
   ],
   "Blank socket": [
    [
     "Part 1",
-    42616.467423620226
+    42616.46454239018
    ]
   ],
   "Star hub": [
    [
     "Part 1",
-    9190.080756513134
+    9190.081549102175
    ]
   ],
   "Index star and lock disc": [
    [
     "Part 1",
-    364981.7008997215
+    364981.7011196278
    ]
   ],
   "Lock post": [
    [
     "Part 1",
-    100512.62774688157
+    100512.62774688163
    ],
    [
     "Part 2",
-    104976.02274170007
+    104975.99802245757
    ]
   ],
   "Lock anvil": [
@@ -9680,7 +9680,7 @@
   "Toggle clamp": [
    [
     "Part 1",
-    81513.34877821789
+    81513.37349746034
    ]
   ],
   "Lock switch": [
@@ -9698,21 +9698,21 @@
   "Stick": [
    [
     "Part 1",
-    193930.936958957
+    193930.9376891334
    ]
   ],
   "Index head": [
    [
     "Part 1",
-    715552.4583750796
+    708383.005955528
    ],
    [
     "Part 2",
-    313795.94685422844
+    326368.9384262046
    ],
    [
     "Part 3",
-    313795.94685422676
+    326368.9384262031
    ]
   ],
   "Head feet": [
@@ -9732,29 +9732,29 @@
   "Index bearings KFL001": [
    [
     "Part 1",
-    36435.989756171824
+    36435.989756171766
    ],
    [
     "Part 2",
-    36435.98975617187
+    36435.98975617184
    ]
   ],
   "Index shaft": [
    [
     "Part 1",
-    10171.492281031406
+    10171.492281031446
    ]
   ],
   "Index wheel": [
    [
     "Part 1",
-    502171.2859509017
+    502171.2880991582
    ]
   ],
   "Wheel hub": [
    [
     "Part 1",
-    9190.080756513209
+    9190.081549101955
    ]
   ],
   "Turn home sensor": [
@@ -9766,7 +9766,7 @@
   "Wheel drive": [
    [
     "Part 1",
-    21408.747596824625
+    21408.74759682469
    ],
    [
     "Part 2",
@@ -9774,37 +9774,37 @@
    ],
    [
     "Part 3",
-    2075.228403949226
+    2075.228256758546
    ],
    [
     "Part 4",
-    352.98056525852417
+    352.9805652585387
    ]
   ],
   "Head bolts": [
    [
     "Part 1",
-    1177.583811861764
+    1177.583811861773
    ],
    [
     "Part 2",
-    1177.5838118617826
+    1177.5838118617608
    ]
   ],
   "Head springs": [
    [
     "Part 1",
-    1333.4837005485438
+    1333.4837005485356
    ],
    [
     "Part 2",
-    1333.4837005485222
+    1333.4837005485108
    ]
   ],
   "Spring post": [
    [
     "Part 1",
-    734921.246352669
+    747494.2785792301
    ]
   ],
   "Catch magnet": [
@@ -9838,11 +9838,11 @@
   "Router positioner": [
    [
     "Part 1",
-    15099607.16602175
+    17331708.382123303
    ],
    [
     "Part 2",
-    4877409.685954409
+    6331279.062307786
    ],
    [
     "Part 3",
@@ -9850,7 +9850,7 @@
    ],
    [
     "Part 4",
-    1576929.852662317
+    1852293.3610154334
    ],
    [
     "Part 5",
@@ -9860,11 +9860,11 @@
   "Bit": [
    [
     "Part 1",
-    323.88678438758785
+    327.41659279558723
    ],
    [
     "Part 2",
-    25243.615309997494
+    26520.157258679556
    ]
   ]
  }

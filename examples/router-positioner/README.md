@@ -30,9 +30,12 @@ cargo test -p ok-render --test router_positioner   # what CI runs
 
 Nothing here is built. The router is the owner's Bosch Colt, out of
 its base: its body is 70.71 mm across by the owner's callipers, and
-every other dimension of it is read off the owner's two photographs of
-it, one from the side and one end on, scaled by that body. That is
-good to 2 or 3 mm, and across the cap only one way.
+every other dimension of it is read off three photographs the owner
+took for the purpose: the nose from the side, the whole router lying
+on the measuring sheet, and the rear end on. The nose is good to half
+a millimetre and the rest to 2. [The router, as
+measured](#the-router-as-measured) has the numbers and
+[The router's mount](#the-routers-mount) what holds it.
 
 Its second use is already drawn: the [stick sled](../stick-sled/) lays
 it on its lid beside a turning stick and reads its sizes from
@@ -62,8 +65,8 @@ From the outside in:
   stage's whole height, and between them at the bottom a foot of four
   1/2 in layers with the Z nut caged in the middle two. The cheeks'
   edges are the stage's bearing faces, left and right.
-- **X quill**, a square tube of 1/2 in, the router clamped in its
-  front by two 3/4 in collars. Behind the router is empty tube as
+- **X quill**, a square tube of 1/2 in, the router in its front in a
+  block that comes out with it. Behind the router is empty tube as
   long as the travel, where the X screw goes as the quill is drawn
   back; across its back end is a 3/4 in bar with the X nut caged
   behind it.
@@ -72,89 +75,132 @@ From the outside in:
 
 ## What came out
 
-With 60 mm of X, 80 mm of Z, the two plywoods and an M8 screw:
+With 80 mm of X, 80 mm of Z, the two plywoods and an M8 screw:
 
 | | mm |
 |---|---|
-| the module, long x deep x tall | 459 x 226 x 515 |
-| of its length, tube and motor out of the box's right side | 278 |
-| behind the router's back cap, drawn back | 224 |
-| the outer box | 181 x 226 x 398 |
-| the Z stage | 143 x 181 x 272 |
-| the quill | 111 square x 225 |
-| the tube | 143 square x 391, and its cap |
+| the module, long x deep x tall | 496 x 238 x 533 |
+| of its length, tube and motor out of the box's right side | 303 |
+| behind the router's rear end, drawn back | 244 |
+| the outer box | 193 x 238 x 416 |
+| the Z stage | 155 x 193 x 290 |
+| the quill | 123 square x 242 |
+| the tube | 155 square x 428, and its cap |
 
-The 224 mm behind the router is, in order: 4 to the screw's tip, 63 of
+The 244 mm behind the router is, in order: 4 to the screw's tip, 83 of
 screw for the travel, the nut's cage and its keeper, 37, 3 of air, 16
 of collar and thrust bearing, the 12.7 bulkhead, 35.5 for the coupling,
-the 12.7 cap and 40 of motor. Only the 63 scales with the travel.
+the 12.7 cap and 40 of motor. Only the 83 scales with the travel.
 
 | the brief's rule | here |
 |---|---|
-| a box in its guide by 1.5 to 2 of its widths, everywhere | the quill 2.0, the stage 1.50: the stage is made 272 tall for it |
-| the bit close to the sleeve's mouth at full plunge | the quill's front is level with the mouth; the router's nose stops 2.9 mm inside the box's face and the collet nut is 3.1 clear of it |
-| the X screw's tip short of the router's back cap, drawn back | 4 mm |
-| the Z screw clear of the tube, the stage down | 8.4 mm under its floor |
+| a box in its guide by 1.5 to 2 of its widths, everywhere | the quill 1.96, the stage 1.50: the stage is made 290 tall for it |
+| the bit close to the sleeve's mouth at full plunge | the quill's front is level with the mouth; the router's nose stops 1.7 mm inside the box's face and the collet nut is 6.1 clear of it |
+| the X screw's tip short of the router's rear end, drawn back | 4 mm |
+| the Z screw clear of the tube, the stage down | 14.4 mm under its floor |
 | each screw right through its nut at the far end | 3 mm through |
 | the tube clear of the outer box across Z | 1.5 mm below and at the sides; above it is the home switch's room under the lid |
+
+The plunge was 60 mm. It is 80 at the owner's word: 20 mm more of
+quill, tube and screw, so that a bit may sit deeper or shallower in
+the collet than the one job it was drawn for, and for whatever the
+module is put to next.
+
+## The router, as measured
+
+| | mm | from |
+|---|---|---|
+| the body, across | 70.71 | callipers |
+| how far back it stays that round and bare | 54 on the cord's side, 64 on the other | side photo |
+| of that, the aluminium ring at the front | 18, the spindle lock's red button flush in its side | side photo |
+| the rubber grip behind, across, and where it ends | 76.5, 105 back | side and rear photos |
+| the vented cap behind that, across | 76: a true circle from the rear but for the next two | rear photo |
+| the speed dial's housing | stands 45 from the axis, 101 to 119 back, 44 wide, on the button's side | side and rear photos |
+| the chin the cord comes out of | 46 from the axis, 88 to 130 back, opposite the dial | side photo |
+| the cord's boot | leaves the chin 124 back, leaning to the rear; 18 across | side photo |
+| rim to rear end | 156 | side photo |
+| in front of the rim: bearing boss, bare spindle, collet nut | 44 x 14.2, 13 x 7.8, a 17 mm hexagon 12.5 long: the nut's face 34.5 out, with no bit in it | nose photo |
+| on the front face: three screw heads, and a sprung block on the cord's side | 3.2 proud, and 9.4 | nose photo |
+
+Lengths are from the rim, the front edge of the aluminium ring. The
+nose photograph is scaled by the body and checked against the
+router's own millimetre scale, which is in the picture: half a
+millimetre. The side photograph has the router lying on the
+[measuring sheet](../measuring-sheet/); the camera's place is worked
+out from the sheet's grid, so that the router's height off the paper
+is allowed for: 2 mm. The first two photographs, which this replaced,
+had the cap at 81 mm and the body round for 58; the cap is 76 with
+two things standing out of it, 91 mm from one to the other, and that
+is what the quill's bore has to pass.
+
+So the quill's bore is 98 mm, where it was 86: twice the chin's 46,
+the 2 mm that reading is good to, and a millimetre each side. Every
+box outside it grew by the same 12.
 
 ## The plywood
 
 Two thicknesses and no other, nominal: 12.7 and 19.05 mm. Sheet goods
 run thin, so measure the sheets and put what they are in `T12` and
-`T34` at the top of `build.py`; every size follows. 38 pieces: 0.38 m2
-of 3/4 in, 13 % of a sheet, and 0.55 m2 of 1/2 in, 18 %.
+`T34` at the top of `build.py`; every size follows. 41 pieces: 0.43 m2
+of 3/4 in, 14 % of a sheet, and 0.65 m2 of 1/2 in, 22 %.
 
 **3/4 in**
 
 | part | piece | long x wide, mm | how many |
 |---|---|---|---|
-| Outer box | front | 360.0 x 181.3 | 1 |
-| Outer box | back | 360.0 x 181.3 | 1 |
-| Outer box | right wall | 360.0 x 187.7 | 1 |
-| Outer box | floor | 225.8 x 181.3 | 1 |
-| Outer box | lid | 225.8 x 181.3 | 1 |
-| Z stage | front cheek | 272.0 x 143.2 | 1 |
-| Z stage | back cheek | 272.0 x 143.2 | 1 |
-| Spider | bar | 85.6 x 54.0 | 1 |
-| Router clamps | collar | 85.6 x 85.6 | 2 |
+| Outer box | front | 378.0 x 193.3 | 1 |
+| Outer box | back | 378.0 x 193.3 | 1 |
+| Outer box | right wall | 378.0 x 199.7 | 1 |
+| Outer box | floor | 237.8 x 193.3 | 1 |
+| Outer box | lid | 237.8 x 193.3 | 1 |
+| Z stage | front cheek | 290.0 x 155.2 | 1 |
+| Z stage | back cheek | 290.0 x 155.2 | 1 |
+| X quill | stop plate | 98.0 x 17.0 | 2 |
+| Spider | bar | 97.6 x 54.0 | 1 |
+| Router block | front land | 97.6 x 97.6 | 1 |
+| Router block | back land | 97.6 x 97.6 | 1 |
 
 **1/2 in**
 
 | part | piece | long x wide, mm | how many |
 |---|---|---|---|
-| Outer box | face | 360.0 x 187.7 | 1 |
-| Z drive housing | motor's cap | 143.2 x 143.2 | 1 |
-| Z drive housing | right | 130.5 x 64.2 | 1 |
-| Z drive housing | back | 130.5 x 64.2 | 1 |
-| Z drive housing | left | 130.5 x 64.2 | 1 |
-| Z drive housing | front | 130.5 x 64.2 | 1 |
-| Z drive housing | bulkhead | 117.8 x 117.8 | 1 |
-| X tube | lid | 390.6 x 130.5 | 1 |
-| X tube | back | 390.6 x 130.5 | 1 |
-| X tube | floor | 390.6 x 130.5 | 1 |
-| X tube | front | 390.6 x 130.5 | 1 |
-| X tube | motor's cap | 143.2 x 143.2 | 1 |
-| X tube | bulkhead | 117.8 x 117.8 | 1 |
-| Z stage | foot under the nut | 143.2 x 143.2 | 1 |
-| Z stage | foot beside the nut | 143.2 x 64.6 | 4 |
-| Z stage | foot over the nut | 143.2 x 143.2 | 1 |
-| X quill | lid | 225.3 x 98.7 | 1 |
-| X quill | back | 225.3 x 98.7 | 1 |
-| X quill | floor | 225.3 x 98.7 | 1 |
-| X quill | front | 225.3 x 98.7 | 1 |
+| Outer box | face | 378.0 x 199.7 | 1 |
+| Z drive housing | motor's cap | 155.2 x 155.2 | 1 |
+| Z drive housing | right | 142.5 x 64.2 | 1 |
+| Z drive housing | back | 142.5 x 64.2 | 1 |
+| Z drive housing | left | 142.5 x 64.2 | 1 |
+| Z drive housing | front | 142.5 x 64.2 | 1 |
+| Z drive housing | bulkhead | 129.8 x 129.8 | 1 |
+| X tube | lid | 427.6 x 142.5 | 1 |
+| X tube | back | 427.6 x 142.5 | 1 |
+| X tube | floor | 427.6 x 142.5 | 1 |
+| X tube | front | 427.6 x 142.5 | 1 |
+| X tube | motor's cap | 155.2 x 155.2 | 1 |
+| X tube | bulkhead | 129.8 x 129.8 | 1 |
+| Z stage | foot under the nut | 155.2 x 155.2 | 1 |
+| Z stage | foot beside the nut | 155.2 x 70.6 | 4 |
+| Z stage | foot over the nut | 155.2 x 155.2 | 1 |
+| X quill | lid | 242.3 x 110.7 | 1 |
+| X quill | back | 242.3 x 110.7 | 1 |
+| X quill | floor | 242.3 x 110.7 | 1 |
+| X quill | front | 242.3 x 110.7 | 1 |
 | Spider | keeper | 54.0 x 40.0 | 1 |
 | Spider | beside the nut | 40.0 x 20.0 | 4 |
+| Router block | between the lands | 97.6 x 97.6 | 1 |
 
 A tube's four panels are one width, bore and a thickness, so each tube
 is one rip. "Beside the nut" pieces are glued up two thick. Every
-piece is a rectangle off the saw.
+piece is a rectangle off the saw; the stop plates and the block's
+three squares are then cut further, as [The router's
+mount](#the-routers-mount) says.
 
 Not plywood: the seven gibs, lengths of 1/8 x 3/4 in bar; the bearing
 strips, 1/8 in thick, of UHMW or hardboard; and what is bought, per
 axis: M8 rod, a brass coupling nut, an F8-16M thrust bearing and a
 steel washer under it, two collars, a rigid 5 to 8 coupling, a NEMA 17,
-a limit switch.
+a limit switch. And for the router's mount: two M5 x 80 bolts with a
+washer each end and a locking nut, four M5 x 70 screws with washers,
+and four M5 threaded inserts, the kind the gibs' set screws go in.
 
 ## How it goes together
 
@@ -177,18 +223,88 @@ joint is an edge on a face.
   sit in dimples drilled in the gib's back and keep it in place.
 - **What is cut out, with a jigsaw or a drill:** the bit slot in the
   face; the tube's way in the right wall, open to its top edge; the
-  cord's slot in the quill's floor and the tube's; a hole for each
-  screw, each motor's boss and each set screw; six 25 mm air holes in
-  the tube's lid; the bore in each collar.
+  cord's slot in the quill's floor and in the tube's, each open at
+  its front end; a hole for each screw, each motor's boss and each
+  set screw; six 25 mm air holes in the tube's lid; and the router's
+  block: its bore, its kerf, its two notches.
 - **What is screwed, not glued,** because it has to come off: the
-  outer box's lid, the two motors' caps, and the router's collars in
-  the quill.
+  outer box's lid, the two motors' caps, and the router's block
+  against its stop plates.
 - **The order.** The quill, with the nut's bar and cage at its back
-  and the nut in the cage. The tube round a spacer, with its bulkhead
-  glued in; then the cheeks and the foot onto it, the Z nut in the
-  foot. The quill into the tube from the mouth. The outer box without
-  its lid; the stage lowered into it, the tube down the right wall's
-  slot. Then the screws, the motors' caps, the gibs, and the lid.
+  and the nut in the cage, and the two stop plates glued in behind
+  where the block comes to. The tube round a spacer, with its
+  bulkhead glued in; then the cheeks and the foot onto it, the Z nut
+  in the foot. The quill into the tube from the mouth. The outer box
+  without its lid; the stage lowered into it, the tube down the right
+  wall's slot. Then the screws, the motors' caps, the gibs, and the
+  lid. The router goes in last, from the front.
+
+## The router's mount
+
+| cut through the front land, from the bit's side | cut through the stop plates | cut down the middle, at full plunge |
+|---|---|---|
+| ![The block square in the quill, the router's body in its bore, the kerf at the top with a bolt across it between two notches, four screw holes, the cord's boot down through both floors](out/mount-land.png) | ![The two stop plates on the quill's side walls, hollowed for the grip, an insert's hole near each end; the dial's housing above and the chin below pass between them](out/mount-stops.png) | ![The router in its block in the quill's front, the collet nut out through the box's face, the dial's housing on top and the cord's boot down through the slots](out/mount-side.png) |
+
+The brief's sixth question was how the router is clamped, and whether
+it comes out without taking the module apart. It is clamped as its
+own base clamps it, by the bare round of its body and nothing else,
+and it comes out of the front.
+
+- **The block** is three squares glued face to face: 3/4 in, 1/2 in,
+  3/4 in, 97.6 across and 50.8 long, on the body's 54 mm of bare
+  round with 1.6 to spare at each end. It is bored 71.3 for the body
+  through the two thick layers, which are the lands that hold it,
+  and 75 through the thin one between them. A saw kerf opens its top
+  from the bore out, and a bolt across the kerf in the middle of each
+  thick layer closes it: M5 x 80, a washer each end, a locking nut.
+  The top corners are notched 14 x 16 so that the bolts' heads and
+  nuts have a face to bear on and room inside the quill; the lug left
+  between the notches is 70 wide.
+- **Two stop plates** of 3/4 in are glued to the quill's side walls,
+  the bore's whole height and 17 wide, their front faces 52.4 mm
+  behind the quill's mouth. They are hollowed to an 80.5 circle: the
+  grip, 76.5 across, passes between them, and so do the dial's
+  housing and the chin, which are 10 mm inside the plates' edges.
+  Each has two M5 inserts in its face.
+- **On the bench:** the block over the router's nose and onto its
+  body until the rim stands 1.6 mm out of the block's front face;
+  the router turned in it until the cord points square down from the
+  block's bottom edge, the kerf at the top; the two bolts tightened.
+- **Into the quill, from the front,** with the stage up and the
+  quill at full plunge. The cord first: through the bit slot under
+  the tube, across the stage's open room and out under the tube
+  through the right wall. Then the router, rear end first: the cord's
+  boot rides in along the slot in the quill's floor and the one in
+  the tube's, both open at the front, until the block is against the
+  stop plates. Four M5 x 70 screws through the block into the
+  inserts.
+- **Out again** the same way: four screws, and the router and its
+  block come out through the bit slot, which is 100 mm wide for that,
+  1.2 mm more than the block each side. The stage has to be in the
+  top 49 mm of its travel: lower than that the boot meets the face
+  under the slot's end.
+- **A bit is changed with two wrenches**, at full plunge: the collet
+  nut is clear of the box's face by 6 mm there, with the bare
+  spindle behind it in the slot's mouth. The spindle lock's button
+  is in the aluminium ring, under the front land, and cannot be
+  reached.
+
+Making the block. Glue the three squares, bore them, then saw the
+kerf and the notches. The bore is the one cut here that is not a
+straight line: a circle cutter, or a jigsaw and a drum, to a hole the
+body pushes into by hand. The kerf closes on up to half a millimetre
+of slack; more than that and the block bends instead of gripping.
+Glue the stop plates in with the block itself as the jig: the block
+in the quill's mouth 1.6 mm in, waxed paper behind it, the plates
+pushed up against it.
+
+What is not known. Whether the plastic of the body behind the
+aluminium ring is the same 70.71: the back land is on it, and the
+callipers were on the ring. How wide the chin is: it is drawn 30,
+and the stop plates stand 64 apart. And the block is tightened on the
+bench, not in the quill, so
+the router's height off the quill's floor is the block's fit in the
+bore, 0.2 mm a side.
 
 ## Clips to hold it while it is nailed
 
@@ -235,43 +351,47 @@ T 19-19 are theirs too. Nothing here is queued to print.
 1. **The outer box's right wall is cut away just where the stage needs
    it.** The router's weight and the plunge both tip the stage with its
    top to the right, and the tube's slot takes all of that wall above
-   128 mm. So the stage is the tube and a 3/4 in cheek each side, and
+   134 mm. So the stage is the tube and a 3/4 in cheek each side, and
    the cheeks' right edges bear on the 21 mm of wall left either side
    of the slot. Their left edges take two of the stage's three gibs,
    straight across.
 2. **Plywood makes it bigger, not harder.** Printed walls were 8 and
    10 mm and stood 1.5 apart; 12.7 and 19 standing 1/8 in apart add
    19 mm to its length, 50 to its depth and 62 to its height. Nothing in it
-   is longer than 391 mm, and all of it comes out of offcuts of two
+   is longer than 428 mm, and all of it comes out of offcuts of two
    sheets.
-3. **The bit slot is as wide as the router's body, and a bit is
-   changed through it.** The end-on photograph shows what stands out
-   of the body's front face at its rim: three screw heads, the red
-   spindle lock, and the end of the depth rack, 12 mm proud. A slot
-   77 mm wide passes all of it and puts the lock under a thumb. The
+3. **The bit slot is as wide as the router's block, and both come
+   out through it.** It was the body's width and a little, 77 mm,
+   which let a bit be changed and nothing else: the router went in
+   before the stage went into the outer box and stayed there. At
+   100 mm the block passes, and the rear of the router with it, whose
+   two widest things stand up and down, the way the slot is long. The
    face is the thin plywood so that the collet nut, whose face is
-   34 mm out of the quill, is still 3.1 mm clear of it at full plunge.
+   34.5 mm out of the quill, is 6.1 mm clear of it at full plunge.
 4. **The quill's front gibs are inside the outer box.** Their set
    screws are drawn, through the tube and the stage's front cheek, but
    nothing reaches them once the stage is in: set them before it goes
    in. The two at the back are outside and easy.
-5. **The body is round for only 58 mm.** Behind that is a rubber grip
-   73 across and the cap, 81. Both collars are on those 58 mm, pushed
-   on from the front, and 100 mm of router overhangs behind them,
-   2.5 mm clear of the quill's bore. Something to steady the cap is
-   not drawn. The router goes in from the front, cap first, so it
-   goes in before the stage goes into the outer box.
-6. **The cord leaves the cap's side and comes down through two
-   floors.** The router is turned in its collars so the cord points
-   down. It is the one way open: to the front and the back are the
-   stage's cheeks, and above is the lid. The quill's floor has a slot
-   long enough to feed the plug through; the tube's floor has one as
-   long as the travel and 12 mm more each way, because where the boot
-   leaves the cap is the least sure reading of the photograph. Near
-   full plunge the boot is over the stage's own room, at its open
-   side, and the cord trails out under the tube through a notch in
-   the right wall. That room has the Z screw turning in it, 55 mm
-   away: tie the cord to the tube's underside.
+5. **The body is bare and round for only 54 mm.** Behind that is a
+   rubber grip 76.5 across, and behind that the cap with the dial's
+   housing and the chin. The block is on those 54 mm, and 100 mm of
+   router overhangs behind it, 3 mm clear of the quill's bore at the
+   chin. Nothing steadies the rear: the router's own base holds it by
+   the same length of the same cylinder.
+6. **The cord leaves the chin and comes down through two floors.**
+   The router is turned in its block so the cord points down. It is
+   the one way open: to the front and the back are the stage's
+   cheeks, and above is the lid. The quill's floor has a slot from
+   its front end to 8 mm past the boot; the tube's floor has one from
+   its mouth to 8 mm past where the boot is with the quill drawn
+   back, 224 mm. Both are open at the front so that the boot rides in
+   and out with the router. The quill's front bearing strip is in two
+   pieces, either side of its slot. Near full plunge the boot is over
+   the stage's own room, at its open side, and the cord trails out
+   under the tube through a notch in the right wall; drawn back, the
+   boot is outside the box. That room has the Z screw turning in it,
+   46 mm from the boot at the nearest and right under the slot: tie
+   the cord to the tube's underside.
 7. **What plywood asks for that printing did not.** A thrust bearing
    on plywood wants a steel washer under it. A NEMA 17's shaft through
    a 12.7 cap has 10.8 mm left for the coupling, which is why the
@@ -290,12 +410,12 @@ T 19-19 are theirs too. Nothing here is queued to print.
 
 | the brief's question | this model takes | to change it |
 |---|---|---|
-| 1. the router | the owner's Bosch Colt, base off. Body 70.71 across, measured. From the photographs: round for 58, a grip 73 across, the cap 81 with 84 allowed for, 159 from the body's front face to the cap's top, and 193 with the boss, spindle and collet nut | `ROUTER_*`, `NOSE_*`, `COLLET_*`, `CORD_*` in `build.py` |
-| 2. travel | X 60, Z 80 | `X_TRAVEL`, `Z_TRAVEL` |
+| 1. the router | the owner's Bosch Colt, base off, as [measured](#the-router-as-measured) | `ROUTER_*`, `HUMP`, `CHIN`, `NOSE_*`, `COLLET_*`, `CORD_*` in `build.py` |
+| 2. travel | X 80, Z 80 | `X_TRAVEL`, `Z_TRAVEL` |
 | 3. screw | M8 x 1.25 rod, a 13 across-flats coupling nut 24 long: 0.00625 mm a full step | `SCREW_*`, `NUT_*`; a T8 goes in the same holes |
 | 4. motor | NEMA 17, 40 long | `MOTOR` |
 | 5. material | plywood, 1/2 in and 3/4 in, butted, glued and brad-nailed, the owner's choice | `T12`, `T34` |
-| 6. the router's clamp | two 3/4 in collars round the body's 58 mm, a close fit in the quill; a saw kerf and a bolt across it would tighten one, and is not drawn | |
+| 6. the router's clamp | a split block of three layers on the body's bare 54 mm, closed by two bolts on the bench, screwed against two stop plates in the quill; block and router come out of the front | `BLOCK_*`, `KERF`, `NOTCH`, `PINCH`, `STOP_*`, `HOLD` |
 | 7. Z screw and tube | checked: 8.4 mm apart at the worst | |
 | 8. reference faces | the quill bears down and back, gibs over it and before it; the stage bears on the right wall and the back wall, gibs in the face and the front wall | `Z_GIBS` and the strips in `build.py` |
 | 9. dust | nothing drawn | |
@@ -305,23 +425,23 @@ Back is the side the feed is taken to push the bit toward.
 ## What is measured and what is estimated
 
 The body's 70.71 mm is measured, and the collet is 1/4 in. Everything
-else about the router is read off the two photographs, and the owner
-has said to go with those readings. So the two that the design is
-most sensitive to carry an allowance, and the rest are listed for
-whoever has the router and callipers in hand before cutting.
+else about the router is read off the three photographs. The readings
+the design is most sensitive to carry an allowance, and are listed
+for whoever has the router and callipers in hand before cutting.
 
 | what | in the model | if it is wrong |
 |---|---|---|
 | the two plywoods | 12.7 and 19.05 mm | measure the sheets first: every size follows from these two |
-| the widest thing on the router, both ways across | the cap: 81 mm as the photo sees it one way, 84 allowed, the bore 86 | up to 85 either way still goes in; past that the quill and every box outside it grow |
-| where the cord's boot leaves the cap | on the side, 127 mm back from the body's front face, leaning back; 16 across, 35 long | the slots take it 12 mm further forward or back |
-| the body's front face to the top of the cap | 159 mm | the X screw's tip is 4 mm behind the cap, drawn back: a longer router wants the quill longer by as much |
-| how far back the body stays round and bare | 58 mm | both collars are on it; under 42 they do not both fit |
-| in front of the body: boss, spindle, collet nut | 44 x 13, 13 x 6, 20 x 15: the nut's face 34 out | where the nut is at full plunge; in the stick sled, how far the positioner stands from the stick |
-| on the front face's rim: the rack's end, the lock, three screw heads | the rack 18 wide and 12 proud, about 100° round from the cord; the rest 3 proud | nothing: the slot is as wide as the body, wherever round they are |
-| whether a thumb through the slot works the lock | not tried | how a bit is changed |
+| across the rear, from the dial's housing to the chin | 91 mm: 45 one way and 46 the other. The bore is 98 | up to 48 either way from the axis still goes in; past that the quill and every box outside it grow |
+| how far back the body stays round and bare | 54 mm on the cord's side | the block is 50.8 long; under 53 it is not on bare round with a millimetre to spare at each end |
+| the body behind the aluminium ring | 70.71, the same as the ring | the back land is on it: calliper it 40 mm back |
+| where the cord's boot leaves the chin | 124 mm back from the rim, leaning to the rear; 18 across | the slots are 3 mm wider each side and run 8 mm past it |
+| the rim to the rear end | 156 mm | the X screw's tip is 4 mm behind it, drawn back: a longer router wants the quill longer by as much |
+| in front of the rim: boss, spindle, collet nut | 44 x 14.2, 13 x 7.8, 20 x 12.5: the nut's face 34.5 out | where the nut is at full plunge; in the stick sled, how far the positioner stands from the stick. A nut tightened on a bit sits a millimetre or two nearer |
+| on the front face's rim: a sprung block, three screw heads | the block 18 wide and 9.4 proud, on the cord's side; the heads 3.2 | nothing: the slot is wider than the body |
+| whether the spindle has flats for a second wrench | taken to: the Colt's kit has a shaft wrench | how a bit is changed. If not, the front land wants a hole over the lock's button and the quill a way to it |
 
-Not drawn yet: any fastener, the second thrust face (drawing the quill back pulls the screw
+Not drawn yet: any fastener but the holes for the mount's, the second thrust face (drawing the quill back pulls the screw
 against a plain collar), the connector panel, and the datum faces'
 bolt patterns.
 
@@ -331,8 +451,9 @@ bolt patterns.
 from the document and, with the kernel's solids:
 
 - at each of the four corners of the travel, no piece is through
-  another, over some 37 pairs that are near each other, the router
-  with its boss, its rack's end and its cord's boot among them; and
+  another, over some 42 pairs that are near each other, the router
+  with its boss, its dial's housing, its chin and its cord's boot
+  among them; and
   run past either end of either travel, something is hit, so the
   check can tell;
 - the quill is wholly between the tube's mouth and the screw's collar,
@@ -341,7 +462,18 @@ from the document and, with the kernel's solids:
   stage's top, one piece of work;
 - each screw is through its nut at one end and short of what it runs
   toward at the other, the Z screw's distance to the tube's floor
-  found with a post stood on its tip;
+  found with a post stood on its tip, wider than the cord's slot
+  that is now over it;
+- the router's block is on the body's bare round and nowhere else,
+  three layers face to face, a little under the quill's bore; the
+  stop plates are against its back; a pin where each of the four
+  screws goes is through block and plate without touching wood, and
+  8 mm aside it is in the wood of all of them; the same for the two
+  bolts across the kerf, which squeeze 66.6 mm of lug; and with the
+  quill at full plunge and the stage up, router and block go out of
+  the front 20 mm at a time for 260 mm and share nothing with
+  anything that stays, while with the stage down the cord's boot
+  meets the face, so the check can tell;
 - the envelope and the length behind the router are what the build
   reported;
 - every body of every box is a piece of one of the two plywoods, or

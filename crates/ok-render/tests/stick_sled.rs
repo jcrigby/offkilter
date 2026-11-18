@@ -596,15 +596,16 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
     assert!((f(&a["across_home"]) + travel.1 / 2.0).abs() < 1e-9);
     // The lock disc is wider than the stick is from that wall: it is past the positioner's box with the sled
     // forward, which is as near as it comes, and well over the fences' lips. The index wheel never moves: it is
-    // clear of the base, and its rim and its belt dip into the slot in its own plate.
+    // clear of the base, and its rim and its belt are in the slot in its own plate or within a few millimetres
+    // over it, which is what the slot is for: the head floats on its feet.
     let ix = &n["index"];
     let (rim, disc, disc_x) = (f(&s["wheel_rim"]), f(&ix["disc"][0]), pair(&ix["disc_x"]));
     assert!(disc / 2.0 > face && disc_x.0 - (f(&s["forward_x"]) + f(&p["half_box"])) >= 5.0);
     assert!(za - disc / 2.0 >= f(&s["lip_top"]) + 10.0 && f(&s["lip_top"]) > f(&s["plate_top"]));
     let slot = pair(&ix["slot"][1]);
     assert!(
-        za - rim >= 5.0 && za - rim < f(&ix["head_z"][1]),
-        "the wheel dips into its plate's slot and clears the base"
+        za - rim >= 5.0 && za - rim < f(&ix["head_z"][1]) + 5.0,
+        "the wheel is in its plate's slot or just over it, and clears the base"
     );
     assert!(f(&ix["rim_chord"]) + 3.0 <= slot.1.min(-slot.0) && f(&ix["belt_over"]) >= 2.0);
     // the sled is a box, and its deck is where the uprights stand: the stick's axis the same height over it always
