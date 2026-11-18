@@ -8,7 +8,9 @@
 //! screw is through its nut at one end of its travel and short of what
 //! it runs toward at the other; the envelope and the length behind
 //! the router are what the build reported; and every box is pieces of
-//! one of two plywoods, each of them on the cut list.
+//! one of two plywoods, each of them on the cut list. And the printed
+//! clips that hold two panels while they are nailed: each grips its
+//! own sheets and no others.
 
 use ok_brep::{BoolOp, Solid, Transform};
 use ok_math::{Plane, Vec2, Vec3};
@@ -445,4 +447,127 @@ fn the_envelope_is_as_reported_and_every_box_is_pieces_on_the_cut_list() {
         "left on the list: {:?}",
         list.iter().filter(|r| r.4 != 0).collect::<Vec<_>>()
     );
+}
+
+/// The clips are printed caps that push onto the ends of two panels
+/// where they meet. A sheet of the thickness a slot is for is nipped
+/// by the slot's ribs, which is the friction that holds it; a sheet a
+/// little thinner slides free, and one a little thicker does not go
+/// in. So a clip also says whether the plywood is the thickness the
+/// build was told. Four L clips on the end of the quill's four panels
+/// hold each corner by its two sheets.
+#[test]
+fn each_clip_grips_its_own_sheets_and_four_hold_a_tube_s_end() {
+    let (mut doc, n) = (load(), numbers());
+    let c = &n["clips"];
+    let (plate, deep, fit, rib) = (f(&c["plate"]), f(&c["deep"]), f(&c["fit"]), f(&c["rib"][1]));
+    // the ribs stand a little further into a slot than the slot is wider than its sheet
+    assert!(rib > fit && rib - fit <= 0.2 && fit >= 0.2);
+    let ply = [f(&n["ply"][0]), f(&n["ply"][1])];
+    let common = |a: &Solid, b: &Solid| {
+        ok_brep::boolean(a, b, BoolOp::Intersection)
+            .map(|s| s.volume().abs())
+            .unwrap_or(f64::NAN)
+    };
+    let set = c["set"].as_array().unwrap();
+    assert!(set.len() >= 6);
+    let (mut ls, mut ts) = (0, 0);
+    for clip in set {
+        let name = clip["tab"].as_str().unwrap();
+        match clip["kind"].as_str().unwrap() {
+            "L" => ls += 1,
+            "T" => ts += 1,
+            other => panic!("{name} is a {other}"),
+        }
+        let mut made = bodies_of(&mut doc, name);
+        assert_eq!(made.len(), 1, "{name} is one piece");
+        let body = made.remove(0);
+        assert!((body.volume() - f(&clip["volume"])).abs() < 1e-3 * body.volume());
+        let (lo, hi) = bounds(&body);
+        // flat on its plate, as it prints, and small
+        assert!(lo.z.abs() < 1e-6 && (hi.z - plate - deep).abs() < 1e-6);
+        assert!((hi.x - lo.x - f(&clip["size"][0])).abs() < 1e-6 && hi.x - lo.x < 90.0);
+        assert!((hi.y - lo.y - f(&clip["size"][1])).abs() < 1e-6 && hi.y - lo.y < 90.0);
+        assert!(clip["count"].as_i64().unwrap() >= 4);
+        let mut held: Vec<f64> = Vec::new();
+        for hold in clip["holds"].as_array().unwrap() {
+            let at = [
+                f(&hold["at"][0]),
+                f(&hold["at"][1]),
+                f(&hold["at"][2]),
+                f(&hold["at"][3]),
+            ];
+            let grows = hold["grows"].as_str().unwrap();
+            // the sheet where the clip holds it, made thicker or thinner on the side away from the square wall
+            let sheet = |more: f64| {
+                let (du, dv) = if grows == "u" {
+                    (more, 0.0)
+                } else {
+                    (0.0, more)
+                };
+                slab(
+                    Vec3::new(at[0], at[2], plate),
+                    Vec3::new(at[1] + du, at[3] + dv, plate + deep),
+                )
+            };
+            let thick = if grows == "u" {
+                at[1] - at[0]
+            } else {
+                at[3] - at[2]
+            };
+            held.push(thick);
+            assert!(
+                ply.iter().any(|t| (t - thick).abs() < 1e-9),
+                "{name} holds a {thick} sheet"
+            );
+            let (nip, free, jam) = (
+                common(&body, &sheet(0.0)),
+                common(&body, &sheet(-(rib - fit) - 0.2)),
+                common(&body, &sheet(fit + 0.2)),
+            );
+            println!("{name}, its {thick} sheet: nipped by {nip:.1} mm3 of rib; 0.3 thinner {free:.2}, 0.6 thicker {jam:.0}");
+            assert!(
+                nip > 0.5 && nip < 15.0,
+                "{name} does not grip a {thick} sheet: {nip}"
+            );
+            assert!(free < 1e-6 && jam > 30.0);
+        }
+        // the two sheets it holds are the two it is named for
+        let mut named = [f(&clip["sheets"][0]), f(&clip["sheets"][1])];
+        held.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        named.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        assert!(
+            held.len() == 2
+                && (held[0] - named[0]).abs() < 1e-9
+                && (held[1] - named[1]).abs() < 1e-9
+        );
+    }
+    assert!(ls >= 3 && ts >= 3);
+    // In use: the quill's four panels and a clip on each corner of one end. Each clip holds two of them, by its
+    // ribs and nothing more.
+    let used = bodies_of(&mut doc, c["in_use"]["tab"].as_str().unwrap());
+    assert_eq!(used.len(), 8);
+    let (clips, panels) = used.split_at(4);
+    let (mut lo, mut hi) = (bounds(&panels[0]).0, bounds(&panels[0]).1);
+    for p in panels {
+        let b = bounds(p);
+        lo = Vec3::new(lo.x.min(b.0.x), lo.y.min(b.0.y), lo.z.min(b.0.z));
+        hi = Vec3::new(hi.x.max(b.1.x), hi.y.max(b.1.y), hi.z.max(b.1.z));
+    }
+    let outside = f(&n["quill"]["outside"]);
+    assert!((hi.y - lo.y - outside).abs() < 1e-6 && (hi.z - lo.z - outside).abs() < 1e-6);
+    assert!((hi.x - lo.x - f(&n["quill"]["length"])).abs() < 1e-6);
+    for (k, clip) in clips.iter().enumerate() {
+        let nips: Vec<f64> = panels.iter().map(|p| common(clip, p)).collect();
+        let held = nips.iter().filter(|v| **v > 0.5).count();
+        let total: f64 = nips.iter().sum();
+        println!(
+            "clip {} on the tube's end: holds {held} panels, nipped by {total:.1} mm3",
+            k + 1
+        );
+        assert!(held == 2 && total < 30.0, "clip {k}: {nips:?}");
+        // its plate is over the panels' ends, outside the tube's length
+        let b = bounds(clip);
+        assert!((b.0.x - lo.x + plate).abs() < 1e-6 && (b.1.x - lo.x - deep).abs() < 1e-6);
+    }
 }

@@ -2118,3 +2118,31 @@ things in it were not a saw's work.
 The README's assembly section is where the method is written down:
 nail from the outside in, because the inside faces are where things
 slide.
+
+## 2026-11 · Clips that hold a joint until it is nailed
+
+The owner asked for L and T shaped things that slide onto the pieces
+by friction and hold them together until they are nailed.
+
+- **A clip is a cap over the ends of the two panels.** Two panels at a
+  corner have nothing between them to join an inside wall to an
+  outside one, so the walls stand on a plate that lies across the
+  panels' ends. It pushes on along the joint, which is the one way
+  open, and it prints flat with no supports.
+- **The outer walls are the reference and the ribs are inside.** The
+  ribs push each sheet out against a wall that is square to the other
+  one. Ribs on the outside would push the sheets against the inner
+  elbow, which is shorter.
+- **Friction is a tenth of a millimetre of rib,** not a tight slot. A
+  slot printed to the sheet's size either falls off or will not go on,
+  depending on the day's print. A slot 0.4 over with ribs 0.5 high
+  that stop 3 mm short of the mouth starts easily and then nips.
+- **One clip per pairing of the two sheets,** three L and three T,
+  because a slot fits one thickness. That makes each a gauge for the
+  number the build was given, which was worth saying in the README.
+- **In the picture the clips are drawn before the panels.** A wall
+  added after a panel it touches is joined to it by the kernel, and
+  the first picture was one body.
+
+Nothing is printed and nothing is queued: the owner said to hold
+prints.

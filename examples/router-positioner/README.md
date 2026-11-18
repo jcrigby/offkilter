@@ -190,6 +190,46 @@ joint is an edge on a face.
   its lid; the stage lowered into it, the tube down the right wall's
   slot. Then the screws, the motors' caps, the gibs, and the lid.
 
+## Clips to hold it while it is nailed
+
+![The quill's four panels with an L clip pushed over each corner of one end](out/clips.png)
+
+Printed caps that push onto the ends of two panels where they meet
+and hold them square until the joint is nailed. The owner's idea. An
+L for a corner, a T for an edge on the middle of a face. Each is a
+plate with walls standing on it: the outer walls are the square the
+panels are pushed against, and ribs on the inner walls nip each sheet
+by a tenth of a millimetre, which is the friction.
+
+| clip | for | print | size, mm | file |
+|---|---|---|---|---|
+| L 12-12 | a corner of two 1/2 in | 8 | 40 x 40 x 22 | [`clip_L_12_12.stl`](out/clips/clip_L_12_12.stl) |
+| L 12-19 | a corner of 1/2 in and 3/4 in | 4 | 46 x 46 x 22 | [`clip_L_12_19.stl`](out/clips/clip_L_12_19.stl) |
+| L 19-19 | a corner of two 3/4 in | 4 | 46 x 46 x 22 | [`clip_L_19_19.stl`](out/clips/clip_L_19_19.stl) |
+| T 12-12 | a 1/2 in edge on the middle of a 1/2 in face | 4 | 61 x 40 x 22 | [`clip_T_12_12.stl`](out/clips/clip_T_12_12.stl) |
+| T 12-19 | a 1/2 in edge on the middle of a 3/4 in face | 4 | 61 x 46 x 22 | [`clip_T_12_19.stl`](out/clips/clip_T_12_19.stl) |
+| T 19-19 | a 3/4 in edge on the middle of a 3/4 in face | 4 | 67 x 46 x 22 | [`clip_T_19_19.stl`](out/clips/clip_T_19_19.stl) |
+
+- **Use:** glue the joint, push a clip over each end of it, nail
+  between the clips, pull them off. A tube takes four at each end.
+  They are used again for the next box, so eight L clips for 1/2 in
+  do all three tubes.
+- **Printing:** flat on the plate, walls up, no supports. PETG, or
+  wax them: wood glue lets go of either.
+- **They fit one thickness.** A slot is its sheet and 0.4 mm; the ribs
+  stand 0.5 into it and stop 3 mm short of its mouth, so a sheet
+  starts easily and then tightens. A sheet 0.3 mm thinner than the
+  build was told slides free and one 0.6 thicker does not go in. So
+  print one first and try it on the plywood: it is a gauge for `T12`
+  and `T34` as well as a clip. If it is loose or will not go on, put
+  the sheet's real thickness in and print again.
+- **Where they do not reach:** the corner of a box where three panels
+  meet. Nail the four walls into a ring with clips at both ends of
+  each corner, then lay the ring on the floor panel.
+
+The sled's box and uprights are 3/4 in on 3/4 in: the L 19-19 and the
+T 19-19 are theirs too. Nothing here is queued to print.
+
 ## What the proportions showed
 
 1. **The outer box's right wall is cut away just where the stage needs
@@ -306,4 +346,8 @@ from the document and, with the kernel's solids:
   reported;
 - every body of every box is a piece of one of the two plywoods, or
   two layers of one, and is on the cut list at its size, with nothing
-  on the list left over.
+  on the list left over;
+- each clip is one piece that prints flat; a sheet of the thickness a
+  slot is for is nipped by its ribs, one 0.3 mm thinner slides free
+  and one 0.6 thicker does not go in; and four L clips on the end of
+  the quill's four panels each hold two of them.

@@ -28,7 +28,8 @@ let in. What is not plywood is thin or bought.
 Writes out/positioner.okpart (every part in its own tab, and the module
 assembled at the four corners of its travel), positioner.png,
 section-home.png and section-plunged-down.png, positioner.pdf and
-positioner.json, and cutlist.csv, the panels to saw.
+positioner.json, cutlist.csv, the panels to saw, and clips/*.stl, printed
+caps that hold two panels square while they are nailed, with clips.png.
 """
 import json
 import math
@@ -91,6 +92,16 @@ COUPLING = (19.0, 25.0)         # a rigid coupling, 5 to 8 mm
 MOTOR = (42.3, 40.0, 24.0)      # NEMA 17: square, long, and its shaft. Assumed, as the brief does
 BULKHEAD, CAP = T12, T12        # the panel the thrust bearing sits against, and the end cap the motor is on
 SWITCH = (20.0, 10.0, 6.0)      # a limit switch
+
+# Clips: printed caps that push onto the ends of two panels where they meet and hold them square until the joint is
+# nailed. The owner's idea. An L for a corner, a T for an edge on the middle of a face.
+CLIP_WALL = 3.2                 # a clip's walls
+CLIP_REACH = 24.0               # how far along each panel a clip reaches past the other panel
+CLIP_DEEP = 20.0                # how far onto the panels' ends it pushes
+CLIP_PLATE = 2.0                # the plate across the ends, which is what joins its walls
+CLIP_FIT = 0.4                  # a slot is this much wider than its sheet, so the sheet starts easily
+CLIP_RIB = (1.2, 0.5, 3.0)      # ribs on one side of each slot: wide, high, and how far short of the slot's mouth they stop. They are the friction: 0.1 mm of crush
+CLIPS = (("L", T12, T12, 8), ("L", T12, T34, 4), ("L", T34, T34, 4), ("T", T12, T12, 4), ("T", T12, T34, 4), ("T", T34, T34, 4))   # kind; an arm's sheet, or the stem's; the other arm's, or the bar's; how many to print
 
 SLOT_W = ROUTER_D + 6.0         # the bit slot: as wide as the body, so all that stands out of its front face passes, and the lock can be reached
 
@@ -484,6 +495,65 @@ def z_switch(p):
     box(p, "Z home switch", (8.0, 8.0 + SWITCH[0]), Z_SWITCH_Y, (IH - SWITCH[2], IH))
 
 
+def clip_shape(kind, ta, tb):
+    """A clip, seen from the panels' ends: its plate's outline, its walls, its ribs as (u0, u1, v0, v1), and the
+    two sheets it holds, each as its rectangle and the way a thicker sheet would grow. An L holds one sheet along
+    u and one along v from a corner at the origin; a T holds a bar along u and a stem up from the middle of it.
+    The outer walls are the square the sheets are pushed against; the ribs are on the walls inside."""
+    w, fit, (rw, rh, _) = CLIP_WALL, CLIP_FIT, CLIP_RIB
+    bite = lambda a, b, c, d: (min(a, b), max(a, b), min(c, d), max(c, d))
+    if kind == "L":
+        sa, sb, reach = ta + fit, tb + fit, max(ta, tb) + CLIP_REACH        # the sheet along u is ta thick, the one along v tb
+        plate = [(-w, -w), (reach, -w), (reach, sa + w), (sb + w, sa + w), (sb + w, reach), (-w, reach)]
+        walls = [[(-w, -w), (reach, -w), (reach, 0.0), (0.0, 0.0), (0.0, reach), (-w, reach)],
+                 [(sb, sa), (reach, sa), (reach, sa + w), (sb + w, sa + w), (sb + w, reach), (sb, reach)]]
+        ribs = [bite(c - rw / 2, c + rw / 2, sa - rh, sa + 0.5) for c in (sb + 5.0, reach - 5.0)] + [bite(sb - rh, sb + 0.5, c - rw / 2, c + rw / 2) for c in (sa + 5.0, reach - 5.0)]
+        sheets = [{"at": (0.0, reach, 0.0, ta), "grows": "v"}, {"at": (0.0, tb, ta, reach), "grows": "u"}]
+        return plate, walls, ribs, sheets
+    ss, sb, half, up = ta + fit, tb + fit, ta / 2 + CLIP_REACH, tb + CLIP_REACH   # the stem is ta thick, the bar tb
+    left, right = -ta / 2, -ta / 2 + ss                                      # the stem's slot: its left face is the square one
+    plate = [(-half, -w), (half, -w), (half, sb + w), (right + w, sb + w), (right + w, up), (left - w, up), (left - w, sb + w), (-half, sb + w)]
+    walls = [[(-half, -w), (half, -w), (half, 0.0), (-half, 0.0)],
+             [(-half, sb), (left, sb), (left, up), (left - w, up), (left - w, sb + w), (-half, sb + w)],
+             [(right, sb), (half, sb), (half, sb + w), (right + w, sb + w), (right + w, up), (right, up)]]
+    ribs = [bite(c - rw / 2, c + rw / 2, sb - rh, sb + 0.5) for c in (-half + 6.0, half - 6.0)] + [bite(right - rh, right + 0.5, c - rw / 2, c + rw / 2) for c in (sb + 8.0, up - 5.0)]
+    sheets = [{"at": (-half, half, 0.0, tb), "grows": "v"}, {"at": (left, left + ta, tb, up), "grows": "u"}]
+    return plate, walls, ribs, sheets
+
+
+def clip(p, kind, ta, tb, plane="top", at=0.0, place=lambda q: q):
+    """Draw a clip: its plate, its walls standing on it, its ribs. On `plane` at `at`, each point of its outline
+    put where `place` says. Flat on its plate is how it prints."""
+    plate, walls, ribs, _ = clip_shape(kind, ta, tb)
+
+    def prism(name, pts, lo, hi, op):
+        sk = p.sketch(plane, at + lo, name)
+        p.polygon(sk, [place(q) for q in pts])
+        p.extrude(sk, hi - lo, op=op, name=name)
+    prism("plate", plate, 0.0, CLIP_PLATE, "new")
+    for k, wall in enumerate(walls):
+        prism(f"wall {k + 1}", wall, CLIP_PLATE, CLIP_PLATE + CLIP_DEEP, "add")
+    for k, (u0, u1, v0, v1) in enumerate(ribs):
+        prism(f"rib {k + 1}", [(u0, v0), (u1, v0), (u1, v1), (u0, v1)], CLIP_PLATE, CLIP_PLATE + CLIP_DEEP - CLIP_RIB[2], "add")
+
+
+def clip_name(kind, ta, tb):
+    return f"Clip {kind} {int(ta)}-{int(tb)}"                # by its sheets' whole millimetres: 12 is the 1/2 in, 19 the 3/4
+
+
+def clips_in_use(p):
+    """The quill's four panels as they are glued up, with an L clip pushed onto each corner of one end. The clips
+    are drawn first: a wall added after a panel it touches would be joined to it."""
+    b, t = QI / 2, T12
+    h = b + t
+    for k in range(4):                              # a quarter turn on at each corner, its plate over the panels' ends
+        c, sn = (1, 0, -1, 0)[k], (0, 1, 0, -1)[k]
+        corner = ((-h, -h), (h, -h), (h, h), (-h, h))[k]
+        clip(p, "L", T12, T12, plane="right", at=-CLIP_PLATE, place=lambda q, c=c, sn=sn, corner=corner: (corner[0] + c * q[0] - sn * q[1], corner[1] + sn * q[0] + c * q[1]))
+    for name, (y, z) in zip(("lid", "back", "floor", "front"), (((-b - t, b), (b, b + t)), ((b, b + t), (-b, b + t)), ((-b, b + t), (-b - t, -b)), ((-b - t, -b), (-b - t, b)))):
+        box(p, name, (0.0, QL), y, z)
+
+
 # Every part: its tab, what draws it, and what it moves with.
 PARTS = [("Outer box", outer_box, "fixed"), ("Z gibs", z_gibs, "fixed"), ("Z drive housing", z_drive_housing, "fixed"),
          ("Z drive", lambda p: drive_parts(p, "z"), "fixed"), ("Z home switch", z_switch, "fixed"),
@@ -546,6 +616,31 @@ def main():
     mcp.call("screenshot", {"tab": far, "view": "0,-1,0", "section": "y:0", "fit": fit, "width": 1500, "height": 1100, "path": os.path.join(OUT, "section-plunged-down.png")})
     print(mcp.call("export", {"tab": home, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "positioner.pdf"),
                               "note": f"two-axis router positioner in 1/2 and 3/4 in plywood, butted, glued and nailed, first pass: X {X_TRAVEL:.0f}, Z {Z_TRAVEL:.0f} of travel; the router's body {ROUTER_D:.0f} as measured, the rest of it off a photograph"}))
+    # -- the clips: each in a tab of its own, flat as it prints, and its STL -------------
+    os.makedirs(os.path.join(OUT, "clips"), exist_ok=True)
+    clip_set = []
+    for kind, ta, tb, count in CLIPS:
+        title = clip_name(kind, ta, tb)
+        tab = new_tab(mcp, {"type": "add_part_studio", "name": title})
+        part = Part(mcp, tab, title)
+        clip(part, kind, ta, tb)
+        made = part.bodies()
+        if len(made) != 1:
+            raise SystemExit(f"{title} is {len(made)} bodies")
+        file = f"clips/clip_{kind}_{int(ta)}_{int(tb)}.stl"
+        mcp.call("export", {"tab": tab, "format": "stl", "path": os.path.join(OUT, file)})
+        plate, _, ribs, sheets = clip_shape(kind, ta, tb)
+        clip_set.append({"tab": title, "kind": kind, "sheets": [ta, tb], "count": count, "file": file, "volume": made[0][1],
+                         "size": [max(q[0] for q in plate) - min(q[0] for q in plate), max(q[1] for q in plate) - min(q[1] for q in plate), CLIP_PLATE + CLIP_DEEP],
+                         "ribs": len(ribs), "holds": sheets})
+        print(f"{title}: {made[0][1]:.0f} mm3, {count} to print")
+    use = new_tab(mcp, {"type": "add_part_studio", "name": "Clips in use"})
+    part = Part(mcp, use, "Clips in use")
+    clips_in_use(part)
+    used = part.bodies()
+    if len(used) != 8:
+        raise SystemExit(f"the clips in use are {len(used)} bodies, not four clips and four panels")
+    mcp.call("screenshot", {"tab": use, "view": "-0.8,-0.45,0.4", "width": 1500, "height": 1000, "path": os.path.join(OUT, "clips.png")})
     mcp.close()
 
     # -- the cut list ---------------------------------------------------------------
@@ -573,6 +668,8 @@ def main():
         "rules": found, "envelope": envelope, "size": [envelope[k][1] - envelope[k][0] for k in "xyz"],
         "behind_router": {"drawn_back": X_END - X_ROUTER_BACK, "plunged": X_END - X_ROUTER_BACK + X_TRAVEL},
         "out_of_the_box": X_END - BOX_X[1], "sizes": sizes,
+        "clips": {"wall": CLIP_WALL, "reach": CLIP_REACH, "deep": CLIP_DEEP, "plate": CLIP_PLATE, "fit": CLIP_FIT, "rib": CLIP_RIB, "set": clip_set,
+                  "in_use": {"tab": "Clips in use", "bodies": [list(b) for b in used], "clips": 4, "panels": 4}},
         "plywood": PLYWOOD, "panels": panels, "area": {"t34": area[T34], "t12": area[T12], "sheet": sheet},
         "parts": [{"tab": t, "moves": m, "bodies": [list(b) for b in bodies[t]]} for t, _, m in PARTS], "corners": [[c[0], c[1], c[2]] for c in CORNERS],
     }
