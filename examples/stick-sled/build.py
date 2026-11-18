@@ -9,6 +9,13 @@ pointing at the stick: its X sets how deep the bit reaches, its Z how
 high. For each pass three motors go to the next row of a table and
 stop, and the sled is pushed past the bit and drawn back by hand.
 
+The motor that turns the stick is not on the sled. It drives a wheel
+of 360 teeth on an index head at the end of the base; a tapered
+twelve-point star on the sled's spindle goes into the wheel's face
+when the sled is drawn back. There the stick is turned to its angle,
+a clamp on the sled locks the spindle, and the sled leaves the wheel
+behind for as many passes as that angle has.
+
 It replaces the hinged sled (examples/stick-sled-hinged), which hung
 the stick from two hinges over a cutter fixed in a router table: the
 positioner's two straight screws do what the hinges and their links
@@ -19,8 +26,8 @@ did, and the stick's own mounting has nothing left to do but turn.
     python3 examples/stick-sled/build.py
     cargo test -p ok-render --test stick_sled   # what CI runs
 
-Writes out/sled.okpart (every part in its own tab, and the sled at one
-row), sled.png, end.png, drive.png, tail.png, sled.pdf, passes.csv (the rows the controller
+Writes out/sled.okpart (every part in its own tab, the sled at one
+row, and the sled home in the index), sled.png, end.png, drive.png, tail.png, index.png, home.png, sled.pdf, passes.csv (the rows the controller
 reads), steps.json (the controller's own run of it, simulated) and
 sled.json.
 """
@@ -59,19 +66,47 @@ PLUNGER = (6.0, (0.0, 250.0))                   # those plungers: across, and wh
 PLATE_LEFT = -180.0                             # the sled's far edge, on the datum fence. Its width is what keeps it from tipping
 MOTOR = (42.3, 40.0)                            # a NEMA 17: square, and long
 SPINDLE_D = 12.0                                # a ground rod, flats ground on it for set screws and nothing threaded: see DECISIONS, the pulley's runout
-WHEEL_T, PINION_T, BELT = 160, 20, 400.0        # the spindle's wheel, the motor's pulley, and a closed GT2 belt: eight to one
+WHEEL_T, PINION_T, BELT = 360, 20, 852.0        # the index wheel, the motor's pulley, and a closed GT2 belt: eighteen to one
 WHEEL_W = 12.0
 # Bought parts, at the sizes they are usually sold in: check the ones in hand before drilling for them.
 KFL = (16.0, 38.0, 63.0, 48.0)                  # a KFL001 flange bearing unit, 12 bore: thick along the shaft, wide, long, and its two bolts apart
 HUB = (36.0, 5.0, 24.0, 14.0, 28.0)             # a 12 mm flanged hub: its flange across and thick, its boss across and long, its bolt circle
 SENSOR = (13.0, 24.0, 11.0)                     # an optical endstop: how far it stands off what it is screwed to, long, wide
-FLAG_R = 34.0                                   # the home flag, a fin on the wheel's face, this far from the axis
+FLAG_R = 34.0                                   # the home flag, a fin on the wheel's back, this far from the axis
+FIN_L = HUB[1] + HUB[3] + 2.0 - SENSOR[0] + 6.0  # and this long: past the wheel's hub into the sensor's slot
 # The blank's socket, printed: a pocket for the blank's end on one side, a boss the spindle's rod is epoxied into on
 # the other. The owner's idea. It drives the blank by its flats and says which way round it is.
 SOCKET_IN, SOCKET_SLIDE = 12.0, 8.0             # how far the blank stands in the pocket, and how much further it can be pushed to get it onto the tail centre
 SOCKET_WALL, SOCKET_FIT, SOCKET_FLOOR = 4.0, 0.3, 6.0
 SOCKET_BOSS = (26.0, 22.0)                      # the boss: across, and long, which is how far the rod's roughened end goes into it
 NUT_CLEAR = 2.0                                 # a pass ends with the collet nut this short of the socket
+# The index, the owner's idea. On the sled's spindle, the stick mill's tapered twelve-point star with a disc behind it
+# for a clamp to pinch. On the base past the sled's back stop, a wheel far larger than a sled could carry, the star's
+# negative in its face. With the sled back the star is in the wheel and the motor turns the stick; the clamp is thrown;
+# the sled leaves the wheel behind.
+STAR_AF, STAR_T = 100.0, 20.0                   # the star: across the flats of the two hexagons it is made of, and thick
+STAR_R = STAR_AF / math.sqrt(3.0)               # its points' radius at the large end
+STAR_IN = STAR_AF / 2.0 / math.cos(math.radians(15.0))      # and its inside corners'
+STAR_TAPER = 10.0                               # degrees a side, at the points
+STAR_K = 1.0 - STAR_T * math.tan(math.radians(STAR_TAPER)) / STAR_R     # the small end's scale
+TIP_FLAT, EASE = 1.5, 1.0                       # the star's points blunted; the pocket's inside corners cut back
+BACK_GAP = 1.5                                  # between the star's small end and the pocket's floor: the flanks seat first
+STAND_OFF = 1.5                                 # and between the lock disc and the pocket's face
+DISC = (176.0, 8.0)                             # the lock disc: across, thick. Printed in one with the star, and a handwheel besides
+LOCK_R = 80.0                                   # where the clamp pinches it: outside the pocket's boss
+LOCK_Y = -(DISC[0] / 2 + 25.0)                  # the lock post's far edge: 25 mm of it outside the disc's rim, for the anvil's spacer
+ANVIL = (6.0, 20.0, 0.3)                        # the anvil behind the disc: 6 mm steel, this far above and below the axis, and clear of the disc until the clamp closes
+CLAMP = (36.0, 24.0, 90.0, 10.0, 16.0)          # a push-pull toggle clamp: its body across, high and long; its plunger, and the pad on it
+POCKET_BOSS = (134.0, 12.0)                     # the boss on the wheel's face that the pocket is in: across, long
+SEAT = 3.0                                      # the star pushes the index head this far back as it goes home
+# The index head: a plate on three screws' heads, sprung toward the sled, free to shift a millimetre or two any way.
+HEAD_FOOT = (6.0, 14.0)                         # the three feet: how far they hold the plate off the base, and across
+HEAD_HALF = 55.0                                # its uprights, each side of the axis
+HEAD_NEAR = 26.0                                # the plate starts this far short of the wheel
+SLOT = (4.0, (-45.0, 75.0))                     # the slot in the plate that the wheel's rim and the belt dip into: clear each side of the wheel, and across
+BOLT = (5.0, 8.0, 40.0, 10.0, 4.0)              # the two bolts the head hangs back on: across, their slack holes in the post, each side of the axis, and their heads
+SPRING_L = 25.0                                 # between the head and the post: a spring on each bolt
+CATCH = (16.0, 5.0, 2.0)                        # a pot magnet in the back stop's face, and how thick the steel it meets in the sled's end
 
 # The sled. x along the stick from its tail end, where the bit waits, toward the socket and the drive; y across toward
 # the positioner from the stick's axis; z up from the base.
@@ -85,12 +120,20 @@ BOSS_X = (SOCKET_X[1] + SOCKET_FLOOR, SOCKET_X[1] + SOCKET_FLOOR + SOCKET_BOSS[1
 _K = BOSS_X[1] + 4.0
 HEAD_X = ((_K + KFL[0], _K + KFL[0] + PLY), (_K + 2 * KFL[0] + PLY + 4.0, _K + 2 * KFL[0] + 2 * PLY + 4.0))   # the headstock's two uprights, past the socket
 KFL_X = tuple((x[0] - KFL[0], x[0]) for x in HEAD_X)          # a flange bearing on the stick's side of each
-WHEEL_X = (HEAD_X[1][1] + SENSOR[0] + 2.0, HEAD_X[1][1] + SENSOR[0] + 2.0 + WHEEL_W)   # the wheel, outboard, past the home sensor
-HUB_X = (WHEEL_X[1], WHEEL_X[1] + HUB[1] + HUB[3])            # its hub, on its outer face
-ROD_X = (BOSS_X[0], HUB_X[1] + 1.0)             # the spindle, from the bottom of the socket's boss to past the hub
+STAR_HUB_X = (HEAD_X[1][1] + 2.0, HEAD_X[1][1] + 2.0 + HUB[1] + HUB[3])   # the star's hub: its boss toward the headstock, where its set screws can be got at
+DISC_X = (STAR_HUB_X[1], STAR_HUB_X[1] + DISC[1])             # the lock disc, on the hub's flange
+STAR_X = (DISC_X[1], DISC_X[1] + STAR_T)        # the star, its large end on the disc
+ROD_X = (BOSS_X[0], STAR_X[1] - 2.0)            # the spindle, from the bottom of the socket's boss to just short of the star's small end
+# The index head, along the stick as it stands with the sled back and the star home in it.
+POCKET_X = (STAR_X[0] + STAND_OFF, STAR_X[0] + STAND_OFF + POCKET_BOSS[1])   # the pocket's boss
+WHEEL_X = (POCKET_X[1], POCKET_X[1] + WHEEL_W)  # the wheel behind it
+HUB_X = (WHEEL_X[1], WHEEL_X[1] + HUB[1] + HUB[3])            # its hub, on its back
+IDX_X = ((HUB_X[1] + 2.0, HUB_X[1] + 2.0 + PLY), (HUB_X[1] + 2.0 + PLY + 2 * KFL[0] + 8.0, HUB_X[1] + 2.0 + 2 * PLY + 2 * KFL[0] + 8.0))   # the head's two uprights
+IDX_KFL_X = ((IDX_X[0][1], IDX_X[0][1] + KFL[0]), (IDX_X[1][0] - KFL[0], IDX_X[1][0]))     # a flange bearing on each, between them
+IDX_ROD_X = (WHEEL_X[1] - 2.0, IDX_X[1][0] + 8.0)             # the wheel's own shaft
 STOCK_HALF = 25.0                               # the uprights are this wide each side of the axis: a flange bearing's width and a margin, inside the near fence's lip
-STOCK_ABOVE = 40.0                              # and this high over it: a flange bearing's upper bolt, and the home sensor
-PLATE_X = (TAIL_X[0][0] - 2.0, WHEEL_X[0] - 2.0)   # the sled's plate: the wheel hangs off its far end
+STOCK_ABOVE = 40.0                              # and this high over it: a flange bearing's upper bolt, and on the index head the home sensor
+PLATE_X = (TAIL_X[0][0] - 2.0, HEAD_X[1][1] + 2.0)   # the sled's plate: the lock disc and the star hang off its far end
 BACK_X = -12.0                                  # the bit along the sled with the sled back: beside the master, 9 mm of the straight bit clear of the stick's end
 DRAWN_X = 100.0                                 # where the bit is drawn: mid stick, mid pass
 FACE_CLEAR = 2.5                                # the uncut blank turns this clear of the positioner's face
@@ -135,6 +178,13 @@ def xcyl(p, name, x, c, d, op="new"):
     return p.extrude(s, x[1] - x[0], op=op, name=name)
 
 
+def zcyl(p, name, z, c, d, op="new"):
+    """A cylinder standing from z[0] to z[1], about (x, y)."""
+    s = p.sketch("top", z[0], name)
+    p.circle(s, c, d / 2)
+    return p.extrude(s, z[1] - z[0], op=op, name=name)
+
+
 def ycyl(p, name, y, c, d, op="new"):
     """A cylinder along y, from y[0] to y[1], about (x, z)."""
     s = p.sketch("front", -y[1], name)
@@ -147,6 +197,26 @@ def tf(fr, pts):
     (oy, oz), a = fr
     c, s = math.cos(a), math.sin(a)
     return [(oy + y * c - z * s, oz + y * s + z * c) for y, z in pts]
+
+
+def star_section(k=1.0, cutter=False):
+    """The star's section about the axis at scale k, a point straight down: its points blunted, or, as the pocket's
+    cutter, its points sharp and its inside corners cut back instead. The stick mill's."""
+    at = lambda r, deg: (k * r * math.cos(math.radians(deg)), k * r * math.sin(math.radians(deg)))
+    flank = math.dist(at(STAR_R, 0.0), at(STAR_IN, 15.0)) / k
+    out = []
+    for i in range(24):
+        here, a = (STAR_R, STAR_IN)[i % 2], -90.0 + 15.0 * i
+        q = at(here, a)
+        if (i % 2 == 1) != cutter:
+            out.append(q)
+            continue
+        other = (STAR_IN, STAR_R)[i % 2]
+        back = (EASE if cutter else TIP_FLAT) / flank
+        for side in (-15.0, 15.0):
+            n = at(other, a + side)
+            out.append((q[0] + (n[0] - q[0]) * back, q[1] + (n[1] - q[1]) * back))
+    return out
 
 
 def grown(c, d):
@@ -320,9 +390,24 @@ def main():
         raise SystemExit("taken up half way, the controller does not end the rows where it does run through")
     with open(steps, "w") as f:
         json.dump(sim, f)
-    # -- homing the spindle ------------------------------------------------------
+    # -- the lock ------------------------------------------------------------------
+    # The wheel can only turn the stick with the sled back and the clamp open. Homing opens it once; after that it is
+    # opened for every row at a new angle and for no other, and the controller's own count has to be this one.
+    per_turn = round(360.0 * FW.TURN_STEPS_PER_DEG)
+    if abs(per_turn - 360.0 * FW.TURN_STEPS_PER_DEG) > 1e-9:
+        raise SystemExit("a turn of the stick is not a whole number of steps")
+    at_steps, locked, unlocks, angles = 0, False, 1, 0
+    for r in rows:
+        to = round(r["turn"] * FW.TURN_STEPS_PER_DEG) % per_turn
+        if to != at_steps:
+            unlocks, angles, at_steps = unlocks + locked, angles + 1, to
+        locked = True
+    if sim["unlocks"] != unlocks:
+        raise SystemExit(f"the controller opened the lock {sim['unlocks']} times, the table has {unlocks}")
+    print(f"the stick is turned to a new angle {angles} times in {len(rows)} rows: the clamp is opened {unlocks} times, homing included")
+    # -- homing the wheel --------------------------------------------------------
     # The home fin is 6 mm wide where the sensor reads it, so the sensor says home over ten degrees. Wherever the
-    # spindle is left, in the fin or out of it, the controller's own homing has to end on the same edge of it.
+    # wheel is left, in the fin or out of it, the controller's own homing has to end on the same edge of it.
     import main as fw
     fin_deg = math.degrees(6.0 / FLAG_R)
     at = {"steps": 0, "way": 1}
@@ -341,8 +426,8 @@ def main():
         homed.append([start, (at["steps"] / FW.TURN_STEPS_PER_DEG) % 360.0])
     fw.PINS.set, fw.HOME = keep, None
     if max(h[1] for h in homed) - min(h[1] for h in homed) > 1.5 / FW.TURN_STEPS_PER_DEG:
-        raise SystemExit(f"homing the spindle ends in different places: {homed}")
-    print(f"homing the spindle from {len(homed)} places, in the fin and out of it, ends within a step of {homed[0][1]:.2f} deg: the fin's edge at {fin_deg:.2f}")
+        raise SystemExit(f"homing the wheel ends in different places: {homed}")
+    print(f"homing the wheel from {len(homed)} places, in the fin and out of it, ends within a step of {homed[0][1]:.2f} deg: the fin's edge at {fin_deg:.2f}")
 
     # -- the two tables that set a built machine up ------------------------------
     probing = K.probe_rows(drawn_axes, MASTER_R, (FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM), (x_travel, z_travel))
@@ -353,7 +438,8 @@ def main():
     K.write_table(os.path.join(OUT, "bands.csv"), bands, safe)
     banded = os.path.join(OUT, "steps_bands.json")
     subprocess.run([sys.executable, os.path.join(HERE, "firmware", "main.py"), "--sim", os.path.join(OUT, "bands.csv"), banded], check=True, cwd=os.path.join(HERE, "firmware"))
-    sim["bands"] = json.load(open(banded))["rows"]
+    banded_run = json.load(open(banded))
+    sim["bands"], sim["band_rounds"] = banded_run["rows"], banded_run["rounds"]
     os.remove(banded)
     with open(steps, "w") as f:
         json.dump(sim, f)
@@ -366,12 +452,34 @@ def main():
     psi = -row["t"]                                  # the section in the machine: d toward the router, e up
     section = tf(((0.0, za), psi), outline)
     centres = belt_centres(BELT, WHEEL_D, PINION_D)
-    motor_z, motor_y = za, -centres                  # the spindle's motor: level with the spindle, out to the left, on a bracket on the deck
     plate_y = (PLATE_LEFT, face - FENCE_R - SPRING_GAP)        # from the datum fence to the near one, which stands against the positioner's face
     deck_y = (plate_y[0] + BOX_IN, plate_y[1] - LIP[2] - 2.0)  # the box and its deck: inside both lips
     lip_top = plate_top + LIP[3] + LIP[0]
-    if motor_y - MOTOR[0] / 2 - 4.0 < deck_y[0]:
-        raise SystemExit("the motor's bracket is off the deck")
+    if LOCK_Y < deck_y[0]:
+        raise SystemExit("the lock post is off the deck")
+    # The index head's plate stands on its feet. The motor is as low on it as its bracket's foot lets it be, out on
+    # the positioner's side where the controller is, and the belt's length from the wheel's shaft.
+    head_z = (HEAD_FOOT[0], HEAD_FOOT[0] + PLY)
+    motor_z = head_z[1] + 8.0 + MOTOR[0] / 2
+    motor_y = math.sqrt(centres ** 2 - (za - motor_z) ** 2)
+    head_x = (WHEEL_X[0] - HEAD_NEAR, IDX_X[1][1])
+    head_y = (-HEAD_HALF - 15.0, motor_y + MOTOR[0] / 2 + 10.0)
+    # The wheel's rim and the belt's lower run dip below the plate's top: they go through a slot in it. The owner's
+    # point: a wheel that stays at the end can be any size, because a slot takes what does not fit over the board.
+    lean = math.atan2(motor_z - za, motor_y) - (math.pi / 2 - math.asin((WHEEL_D - PINION_D) / 2 / centres))    # where the lower run leaves both pulleys
+    run = [(r * math.cos(lean), zc + r * math.sin(lean)) for r, zc in ((WHEEL_D / 2 + 0.8, za), (PINION_D / 2 + 0.8, motor_z))]
+    run = [(run[0][0], run[0][1]), (motor_y + run[1][0], run[1][1])]
+    belt_over = run[0][1] + (run[1][1] - run[0][1]) * (SLOT[1][1] - run[0][0]) / (run[1][0] - run[0][0]) - head_z[1]     # the belt over the plate where the slot ends
+    rim_chord = math.sqrt(max(0.0, WHEEL_RIM ** 2 - (za - head_z[1] - 2.0) ** 2))
+    if belt_over < 2.0 or rim_chord > min(-SLOT[1][0], SLOT[1][1]) - 3.0 or za - WHEEL_RIM < 5.0:
+        raise SystemExit(f"the wheel or its belt meets the head's plate or the base: the belt {belt_over:.1f} over the plate at the slot's end, the rim's chord {rim_chord:.1f}")
+    feet = ((head_x[0] + 10.0, -40.0), (head_x[1] - 12.0, -40.0), (WHEEL_X[1] + 24.0, motor_y))     # the near one only carries the head while the sled is away
+    # Home, the head stands on the star and the other two feet. A star a little off the spindle's centre takes the
+    # wheel's end up and down as it turns, and the head rocks about the line through those two feet: how much of
+    # that is roll about the stick's axis, which is the only part that turns the stick, is the lift over this length.
+    seat_x = (STAR_X[0] + STAR_X[1]) / 2
+    (bx, by), (cx, cy) = feet[1], feet[2]
+    stance = abs((cx - bx) * (0.0 - by) - (cy - by) * (seat_x - bx)) / abs(cx - bx)
     if STOCK_HALF > plate_y[1] - LIP[2] - 2.0:
         raise SystemExit("an upright is under the near fence's lip")
     stock_top = za + STOCK_ABOVE
@@ -395,17 +503,29 @@ def main():
     forward_x = STICK - SOCKET_IN - pos["router"]["collet"][0] / 2 - NUT_CLEAR
     cut_to = forward_x + ROUGH_R                     # how much of the stick the bit reaches
     half_box = pos["box"]["y"]
-    if WHEEL_X[0] - (forward_x + half_box) < 5.0 or FLAG_R + SENSOR[2] / 2 > STOCK_ABOVE:
-        raise SystemExit("the wheel meets the positioner's box with the sled forward, or the home sensor is off its upright")
+    if DISC_X[0] - (forward_x + half_box) < 5.0 or FLAG_R + SENSOR[2] / 2 > STOCK_ABOVE:
+        raise SystemExit("the lock disc meets the positioner's box with the sled forward, or the home sensor is off its upright")
+    # The pocket has to end inside the wheel, the clamp's pad has to be on the disc, and the anvil outside the pocket's boss.
+    if STAR_X[1] + BACK_GAP > WHEEL_X[1] - 3.0 or LOCK_R + CLAMP[4] / 2 > DISC[0] / 2 + 1e-9 or LOCK_R - 9.0 < POCKET_BOSS[0] / 2 + 3.0 or POCKET_BOSS[0] / 2 < STAR_R + 6.0:
+        raise SystemExit("the star, its pocket and the lock do not fit one another")
     # The base, fixed, in the sled's frame where the sled is drawn: the bit at DRAWN_X along it.
     base = lambda u: u + DRAWN_X                     # from the base's own frame, the bit at 0
     travel = forward_x - BACK_X
     stops_x = (PLATE_X[0] - forward_x, PLATE_X[1] - BACK_X)      # the plate's two ends at the ends of the travel, in the base's frame
-    base_x = (stops_x[0] - STOP[0] - 15.0, stops_x[1] + STOP[0] + 15.0)
+    # The index head stands past the back stop. Along the base it is where the star, with the sled back, puts it, and
+    # SEAT nearer the sled than that while the sled is away: that is how it is drawn.
+    head_at = -BACK_X - SEAT                         # from along the sled, the sled back, to along the base, the head waiting
+    H = lambda x: (base(x[0] + head_at), base(x[1] + head_at))
+    post_x = (IDX_X[1][1] + head_at + SPRING_L, IDX_X[1][1] + head_at + SPRING_L + PLY)        # the spring post, behind the head
+    base_x = (stops_x[0] - STOP[0] - 15.0, post_x[1] + 60.0 + 15.0)
     base_y = (plate_y[0] - FENCE_L - 15.0, face + (box_x[1] - box_x[0]) + 10.0)
-    fence_x = (stops_x[0] - STOP[0], stops_x[1] + STOP[0])       # the fences, end to end: the sled's whole travel and both stops
-    if za - WHEEL_RIM < lip_top + 10.0:
-        raise SystemExit("the wheel meets a fence's lip")
+    fence_x = (stops_x[0] - STOP[0], stops_x[1] + 6.0)           # the fences, end to end: the sled's whole travel, and short of the index head
+    if head_x[0] + head_at - fence_x[1] < 3.0 or head_y[1] > base_y[1] - 5.0:
+        raise SystemExit("the index head's plate meets the fences, or is off the base")
+    if za - DISC[0] / 2 < lip_top + 10.0:
+        raise SystemExit("the lock disc meets a fence's lip")
+    clamp_x = (HEAD_X[1][0] - 4.0 - CLAMP[2], HEAD_X[1][0] - 4.0)         # the clamp's body, on its riser beside the headstock
+    catch_at = (plate_y[0] + STOP[1] / 2, SLIP + PLY / 2)        # the catch, across and up: in the middle of the back stop's face
     if STOCK_HALF + FACE_CLEAR > face:
         raise SystemExit("an upright meets the positioner's face")
     bit_z = bit_home_z + row["height"]
@@ -434,6 +554,7 @@ def main():
 
     def plate(p):
         box(p, "sled's bottom", PLATE_X, plate_y, (SLIP, plate_top))
+        xcyl(p, "the strike's recess", (PLATE_X[1] - CATCH[2], PLATE_X[1] + 0.5), catch_at, CATCH[0], op="remove")
 
     def sled_box(p):
         # On the bottom: a rail on edge along each side, and the deck across them.
@@ -477,39 +598,145 @@ def main():
         xcyl(p, "boss", BOSS_X, (0.0, za), SOCKET_BOSS[0], op="add")
         xcyl(p, "the rod's socket", (BOSS_X[0], BOSS_X[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
+    def star_loft(p, x, cutter, op, name):
+        ends = []
+        for at, k in ((x[0], 1.0), (x[1], STAR_K)):
+            sk = p.sketch("right", at, name)
+            p.polygon(sk, [(y, za + z) for y, z in star_section(k, cutter)])
+            ends.append(sk)
+        return p.feature({"type": "add_loft", "sketch": ends[0], "sketch_b": ends[1], "op": op, "name": name})
+
+    # -- on the sled: the star, the disc and the lock --------------------------------------
+    def star(p):
+        # Printed in one: the lock disc and, on its outer face, the star. Bolted to the hub's flange through slack
+        # holes and trued by the disc's rim under an indicator. The disc is also what a hand turns the stick by.
+        xcyl(p, "lock disc", DISC_X, (0.0, za), DISC[0])
+        star_loft(p, STAR_X, False, "add", "index star, tapered")
+        xcyl(p, "bore, clear of the rod", (DISC_X[0] - 0.5, STAR_X[1] + 0.5), (0.0, za), SPINDLE_D + 1.0, op="remove")
+
+    def star_hub(p):
+        # A flanged hub on the rod, its set screws on a flat, its boss toward the headstock where a key reaches them.
+        xcyl(p, "hub's boss", (STAR_HUB_X[0], STAR_HUB_X[1] - HUB[1]), (0.0, za), HUB[2])
+        xcyl(p, "hub's flange", (STAR_HUB_X[1] - HUB[1], STAR_HUB_X[1]), (0.0, za), HUB[0], op="add")
+        xcyl(p, "bore", (STAR_HUB_X[0] - 0.5, STAR_HUB_X[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
+
+    def lock_post(p):
+        # Beside the headstock's outer upright, glued and nailed to it and to the deck: the clamp's plunger goes
+        # through it and the anvil is bolted to its face. The riser brings the clamp up to the axis's height.
+        box(p, "lock post", HEAD_X[1], (LOCK_Y, -STOCK_HALF), (sled_top, za + 28.0))
+        xcyl(p, "the plunger's way", (HEAD_X[1][0] - 1.0, HEAD_X[1][1] + 1.0), (-LOCK_R, za), CLAMP[3] + 4.0, op="remove")
+        box(p, "clamp's riser", clamp_x, (-LOCK_R - CLAMP[0] / 2, -LOCK_R + CLAMP[0] / 2), (sled_top, za - CLAMP[1] / 2))
+
+    def lock_anvil(p):
+        # A spacer on the post's face, outside the disc's rim, and on it a steel plate that reaches in behind the
+        # disc: what the clamp pinches the disc against. The spindle's bearings feel none of the clamp's push.
+        z = (za - ANVIL[1], za + ANVIL[1])
+        box(p, "spacer", (HEAD_X[1][1], DISC_X[1] + ANVIL[2]), (LOCK_Y, -(DISC[0] / 2 + 3.0)), z)
+        box(p, "anvil", (DISC_X[1] + ANVIL[2], DISC_X[1] + ANVIL[2] + ANVIL[0]), (LOCK_Y, -(LOCK_R - 9.0)), z, op="add")
+
+    def clamp(p):
+        # A push-pull toggle clamp. Its plunger moves straight along the spindle, so closing it pushes the disc onto
+        # the anvil and does not drag it round. Drawn closed.
+        y = (-LOCK_R - CLAMP[0] / 2, -LOCK_R + CLAMP[0] / 2)
+        box(p, "toggle clamp", clamp_x, y, (za - CLAMP[1] / 2, za + CLAMP[1] / 2))
+        xcyl(p, "plunger", (clamp_x[1], DISC_X[0] - 5.0), (-LOCK_R, za), CLAMP[3], op="add")
+        xcyl(p, "pad", (DISC_X[0] - 5.0, DISC_X[0]), (-LOCK_R, za), CLAMP[4], op="add")
+
+    def lock_switch(p):
+        # On the post's top, where the clamp's handle comes down on it. Its lead goes to the controller with the probe's.
+        box(p, "lock switch", (HEAD_X[1][0], HEAD_X[1][0] + SWITCH[1]), (-LOCK_R - SWITCH[0] / 2, -LOCK_R + SWITCH[0] / 2), (za + 28.0, za + 28.0 + SWITCH[2]))
+
+    def catch_strike(p):
+        xcyl(p, "steel strike", (PLATE_X[1] - CATCH[2], PLATE_X[1]), catch_at, CATCH[0])
+
+    # -- on the base: the index head, drawn waiting for the sled ---------------------------
+    def index_head(p):
+        # A plate on three screws' heads, and two uprights for the wheel's shaft. Nothing fastens it to the base.
+        box(p, "head plate", H(head_x), head_y, head_z)
+        box(p, "slot for the wheel's rim and the belt", (H(WHEEL_X)[0] - SLOT[0], H(WHEEL_X)[1] + SLOT[0]), SLOT[1], (head_z[0] - 1.0, head_z[1] + 1.0), op="remove")
+        for x in IDX_X:
+            box(p, "upright", H(x), (-HEAD_HALF, HEAD_HALF), (head_z[1], stock_top))
+            xcyl(p, "the shaft's way", (H(x)[0] - 1.0, H(x)[1] + 1.0), (0.0, za), SPINDLE_D + 8.0, op="remove")
+
+    def head_feet(p):
+        # Round-headed screws through threaded inserts in the plate, each turned until it bears. Two always carry
+        # the head. The one by the wheel carries it only while the sled is away: home, the star does.
+        for x, y in feet:
+            zcyl(p, "foot", (0.0, head_z[0]), (base(x + head_at), y), HEAD_FOOT[1])
+
+    def index_shaft(p):
+        xcyl(p, "the wheel's shaft, 12 mm ground rod", H(IDX_ROD_X), (0.0, za), SPINDLE_D)
+
     def wheel(p):
-        xcyl(p, f"{WHEEL_T}-tooth wheel", WHEEL_X, (0.0, za), 2 * WHEEL_RIM)
-        xcyl(p, "bore, clear of the rod", (WHEEL_X[0] - 0.5, WHEEL_X[1] + 0.5), (0.0, za), SPINDLE_D + 1.0, op="remove")
-        # The home flag: a fin on the face toward the headstock, in the sensor's slot at turn 0 and drawn where this row has it.
+        # Printed in one: the toothed rim, a boss on its face, and in the boss the star's negative.
+        xcyl(p, f"{WHEEL_T}-tooth wheel", H(WHEEL_X), (0.0, za), 2 * WHEEL_RIM)
+        xcyl(p, "the pocket's boss", H(POCKET_X), (0.0, za), POCKET_BOSS[0], op="add")
+        star_loft(p, H(STAR_X), True, "remove", "pocket: the star, its inside corners cut back")
+        end = p.sketch("right", H(STAR_X)[1], "pocket's end")
+        p.polygon(end, [(y, za + z) for y, z in star_section(STAR_K, True)])
+        p.cut(end, BACK_GAP, name="clear of the star's small end")
+        xcyl(p, "bore, clear of the shaft", (H(STAR_X)[1] + BACK_GAP - 0.5, H(WHEEL_X)[1] + 0.5), (0.0, za), SPINDLE_D + 1.0, op="remove")
+        # The home flag: a fin on the wheel's back, in the sensor's slot at turn 0 and drawn where this row has it.
         a = math.radians(90.0 + row["turn"])
         cs, sn = math.cos(a), math.sin(a)
-        fin = p.sketch("right", WHEEL_X[0] - 7.0, "home flag")
+        fin = p.sketch("right", H(WHEEL_X)[1], "home flag")
         p.polygon(fin, [(r * cs - t * sn, za + r * sn + t * cs) for r, t in ((FLAG_R - 0.75, -3.0), (FLAG_R + 0.75, -3.0), (FLAG_R + 0.75, 3.0), (FLAG_R - 0.75, 3.0))])
-        p.extrude(fin, 7.0, op="add", name="home flag")
+        p.extrude(fin, FIN_L, op="add", name="home flag")
 
     def hub(p):
-        # A flanged hub on the rod, its set screws on a flat. The wheel is bolted to its flange through slack holes,
-        # so it can be tapped true under an indicator before the bolts are tightened.
-        xcyl(p, "hub's flange", (HUB_X[0], HUB_X[0] + HUB[1]), (0.0, za), HUB[0])
-        xcyl(p, "hub's boss", (HUB_X[0] + HUB[1], HUB_X[1]), (0.0, za), HUB[2], op="add")
-        xcyl(p, "bore", (HUB_X[0] - 0.5, HUB_X[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
+        # A flanged hub on the wheel's shaft, its set screws on a flat. The wheel is bolted to its flange through
+        # slack holes, so it can be tapped true under an indicator before the bolts are tightened.
+        x = H(HUB_X)
+        xcyl(p, "hub's flange", (x[0], x[0] + HUB[1]), (0.0, za), HUB[0])
+        xcyl(p, "hub's boss", (x[0] + HUB[1], x[1]), (0.0, za), HUB[2], op="add")
+        xcyl(p, "bore", (x[0] - 0.5, x[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
     def home_sensor(p):
-        # On the outer upright's outer face, over the axis: the wheel's fin passes through its slot once a turn.
-        x, z = (HEAD_X[1][1], HEAD_X[1][1] + SENSOR[0]), za + FLAG_R
+        # On the first upright's face, over the axis: the wheel's fin passes through its slot once a turn.
+        x, z = (H(IDX_X[0])[0] - SENSOR[0], H(IDX_X[0])[0]), za + FLAG_R
         box(p, "optical endstop", x, (-SENSOR[1] / 2, SENSOR[1] / 2), (z - SENSOR[2] / 2, z + SENSOR[2] / 2))
-        box(p, "its slot", (x[1] - 8.0, x[1] + 0.5), (-SENSOR[1] / 2 - 0.5, SENSOR[1] / 2 + 0.5), (z - 1.6, z + 1.6), op="remove")
+        box(p, "its slot", (x[0] - 0.5, x[0] + 8.0), (-SENSOR[1] / 2 - 0.5, SENSOR[1] / 2 + 0.5), (z - 1.6, z + 1.6), op="remove")
 
     def drive_motor(p):
+        # On the head's plate with the wheel, so the belt's pull stays inside the head.
         m = MOTOR[0] / 2
-        x0 = WHEEL_X[0] - 6.0                           # the motor's face: its shaft out through the bracket to the pulley, in the wheel's plane
-        box(p, "bracket", (x0, x0 + 4.0), (motor_y - m - 4.0, motor_y + m + 4.0), (sled_top, motor_z + m + 4.0))
-        box(p, "bracket's foot", (x0 - 40.0, x0 + 4.0), (motor_y - m - 4.0, motor_y + m + 4.0), (sled_top, sled_top + 6.0), op="add")
+        x0 = H(WHEEL_X)[1] + 2.0                        # the bracket: the motor behind it, its shaft out through it to the pulley, in the wheel's plane
+        y = (motor_y - m - 4.0, motor_y + m + 4.0)
+        box(p, "bracket", (x0, x0 + 4.0), y, (head_z[1], motor_z + m + 4.0))
+        box(p, "bracket's foot", (x0, x0 + 44.0), y, (head_z[1], head_z[1] + 6.0), op="add")
         xcyl(p, "motor's pilot", (x0 - 1.0, x0 + 5.0), (motor_y, motor_z), 22.5, op="remove")
-        box(p, "spindle motor", (x0 - MOTOR[1], x0), (motor_y - m, motor_y + m), (motor_z - m, motor_z + m))
-        xcyl(p, f"{PINION_T}-tooth pulley", WHEEL_X, (motor_y, motor_z), PINION_D + 3.0)
-        xcyl(p, "bore", (WHEEL_X[0] - 0.5, WHEEL_X[1] + 0.5), (motor_y, motor_z), 5.2, op="remove")
-        xcyl(p, "motor shaft", (x0, WHEEL_X[1]), (motor_y, motor_z), 5.0)       # last: a bore cut after it would take it too
+        box(p, "wheel's motor", (x0 + 4.0, x0 + 4.0 + MOTOR[1]), (motor_y - m, motor_y + m), (motor_z - m, motor_z + m))
+        xcyl(p, f"{PINION_T}-tooth pulley", H(WHEEL_X), (motor_y, motor_z), PINION_D + 3.0)
+        xcyl(p, "bore", (H(WHEEL_X)[0] - 0.5, H(WHEEL_X)[1] + 0.5), (motor_y, motor_z), 5.2, op="remove")
+        xcyl(p, "motor shaft", (H(WHEEL_X)[0], x0 + 4.0), (motor_y, motor_z), 5.0)       # last: a bore cut after it would take it too
+
+    def spring_post(p):
+        # Screwed to the base behind the head. The head hangs back on two bolts through slack holes in it, level with
+        # the axis, a spring on each: pushed there, the head neither tips nor is steered.
+        x = (base(post_x[0]), base(post_x[1]))
+        box(p, "spring post", x, (-HEAD_HALF, HEAD_HALF), (0.0, za + 25.0))
+        box(p, "its foot", (x[1], x[1] + 60.0), (-HEAD_HALF, HEAD_HALF), (0.0, 60.0), op="add")
+        for y in (-BOLT[2], BOLT[2]):
+            xcyl(p, "slack hole", (x[0] - 1.0, x[1] + 1.0), (y, za), BOLT[1], op="remove")
+
+    def head_bolts(p):
+        # Screwed into the head's back upright. Their heads, behind the post, are the stop the springs push the head up to.
+        x = (H(IDX_X[1])[1], base(post_x[1]))
+        for y in (-BOLT[2], BOLT[2]):
+            xcyl(p, "bolt", x, (y, za), BOLT[0])
+            xcyl(p, "its head", (x[1], x[1] + BOLT[4]), (y, za), BOLT[3], op="add")
+
+    def head_springs(p):
+        # Drawn as short as they get: the star home, and 2 mm more.
+        x = (H(IDX_X[1])[1], H(IDX_X[1])[1] + SPRING_L - SEAT - 2.0)
+        for y in (-BOLT[2], BOLT[2]):
+            xcyl(p, "spring", x, (y, za), BOLT[0] + 6.0)
+        for y in (-BOLT[2], BOLT[2]):
+            xcyl(p, "the bolt's way", (x[0] - 0.5, x[1] + 0.5), (y, za), BOLT[0] + 1.0, op="remove")
+
+    def catch_magnet(p):
+        # Flush in the back stop's face: it holds the sled home against the head's springs.
+        xcyl(p, "pot magnet", (base(stops_x[1]), base(stops_x[1]) + CATCH[1]), catch_at, CATCH[0])
 
     def stick(p):
         # Milled as far as the bit reaches; the rest, into the socket, is still the blank.
@@ -521,14 +748,15 @@ def main():
         y = (plate_y[0], plate_y[0] + STOP[1])
         box(p, "forward stop", (base(stops_x[0] - STOP[0]), base(stops_x[0])), y, (0.0, plate_top))
         box(p, "back stop", (base(stops_x[1]), base(stops_x[1] + STOP[0])), y, (0.0, plate_top), op="new")
+        xcyl(p, "the magnet's pocket", (base(stops_x[1]) - 0.5, base(stops_x[1]) + CATCH[1]), catch_at, CATCH[0], op="remove")
 
     def back_switch(p):
         # on the back stop's side, its end level with the stop's face: the plate's end closes it
         box(p, "sled-back switch", (base(stops_x[1]), base(stops_x[1]) + SWITCH[0]), (plate_y[0] + STOP[1], plate_y[0] + STOP[1] + SWITCH[2]), (plate_top - SWITCH[1], plate_top))
 
     def controller(p):
-        # on the base, where nothing passes: beside the positioner, past the near fence
-        box(p, "controller box", (base(base_x[1] - 95.0), base(base_x[1] - 5.0)), (face + 6.0, face + 76.0), (0.0, 40.0))
+        # on the base, where nothing passes: beside the positioner, between it and the index head, under where the lock disc goes by
+        box(p, "controller box", (base(half_box + 12.0), base(half_box + 102.0)), (face + 6.0, face + 76.0), (0.0, 40.0))
 
     # The positioner as its own example draws it, by its outside: the box on its lid, the X column and its drive out
     # of the far side, level with the bit; the Z column on top; the collet nut and the bit at this row.
@@ -559,9 +787,17 @@ def main():
 
     parts = [("Base", base_board), ("Fences", fences), ("Slips", slips), ("Sled plate", plate), ("Sled box", sled_box), ("Spring plungers", plungers), ("Tailstock", lambda p: stock(p, TAIL_X)),
              ("Tail bearings KFL001", lambda p: flange_bearings(p, TAIL_KFL_X)), ("Tail spindle", tail_spindle), ("Headstock", lambda p: stock(p, HEAD_X)),
-             ("Flange bearings KFL001", lambda p: flange_bearings(p, KFL_X)), ("Spindle", spindle), ("Blank socket", socket), ("Wheel", wheel), ("Wheel hub", hub),
-             ("Turn home sensor", home_sensor), ("Spindle drive", drive_motor), ("Stick", stick),
+             ("Flange bearings KFL001", lambda p: flange_bearings(p, KFL_X)), ("Spindle", spindle), ("Blank socket", socket),
+             ("Star hub", star_hub), ("Index star and lock disc", star), ("Lock post", lock_post), ("Lock anvil", lock_anvil), ("Toggle clamp", clamp), ("Lock switch", lock_switch),
+             ("Catch strike", catch_strike), ("Stick", stick),
+             ("Index head", index_head), ("Head feet", head_feet), ("Index bearings KFL001", lambda p: flange_bearings(p, [H(x) for x in IDX_KFL_X])), ("Index shaft", index_shaft),
+             ("Index wheel", wheel), ("Wheel hub", hub), ("Turn home sensor", home_sensor), ("Wheel drive", drive_motor), ("Head bolts", head_bolts), ("Head springs", head_springs),
+             ("Spring post", spring_post), ("Catch magnet", catch_magnet),
              ("Stops", stops), ("Sled-back switch", back_switch), ("Controller", controller), ("Router positioner", positioner), ("Bit", bit)]
+    # What goes with the sled, and what is the index head: the head is pushed back SEAT when the star comes home in it.
+    rides = ("Sled plate", "Sled box", "Spring plungers", "Tailstock", "Tail bearings KFL001", "Tail spindle", "Headstock", "Flange bearings KFL001", "Spindle", "Blank socket",
+             "Star hub", "Index star and lock disc", "Lock post", "Lock anvil", "Toggle clamp", "Lock switch", "Catch strike", "Stick")
+    floats = ("Index head", "Head feet", "Index bearings KFL001", "Index shaft", "Index wheel", "Wheel hub", "Turn home sensor", "Wheel drive", "Head bolts", "Head springs")
 
     mcp.call("create_document", {"name": "sled"})
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "Stick sled for the leaning half-ellipse Spectre"}, {"type": "rename_tab", "tab": 1, "name": parts[0][0]}]})
@@ -579,14 +815,27 @@ def main():
     text = mcp.call("apply", {"ops": ops})
     if "ERROR:" in text:
         raise SystemExit(text)
+    # And again with the sled drawn back: the star home in the wheel, the head pushed back on its springs.
+    home = new_tab(mcp, {"type": "add_assembly", "name": "Sled home"})
+    moved = lambda t: DRAWN_X - BACK_X if t in rides else SEAT if t in floats else 0.0
+    ops = [{"type": "assembly", "tab": home, "op": {"type": "add_instance", "studio": tabs[t], "body": k, "name": t if len(bodies[t]) == 1 else f"{t} {k + 1}", "fixed": True,
+                                                    "placement": {"position": {"x": moved(t), "y": 0.0, "z": 0.0}, "rotation": zero["rotation"]}}}
+           for t, _ in parts for k in range(len(bodies[t]))]
+    text = mcp.call("apply", {"ops": ops})
+    if "ERROR:" in text:
+        raise SystemExit(text)
+    seated = DRAWN_X - BACK_X                        # from along the sled to where it is drawn there
+    mcp.call("screenshot", {"tab": home, "view": "0,-1,0", "section": "y:0", "fit": f"{HEAD_X[1][0] + seated - 12.0},-1,{-PLY - 4.0},{base(post_x[1]) + 75.0},1,{za + WHEEL_RIM + 8.0}", "width": 1600, "height": 1000,
+                            "path": os.path.join(OUT, "index.png")})
+    mcp.call("screenshot", {"tab": home, "view": "0.6,-0.65,0.45", "width": 1700, "height": 1100, "path": os.path.join(OUT, "home.png")})
     top_z = PLINTH + lid + wall
     mcp.call("screenshot", {"tab": asm, "view": "-0.55,-0.7,0.5", "width": 1700, "height": 1100, "path": os.path.join(OUT, "sled.png")})
     mcp.call("screenshot", {"tab": asm, "view": "-1,0,0", "section": f"x:{DRAWN_X}", "fit": f"{DRAWN_X},{base_y[0] - 10},-30,{DRAWN_X + 1},{face + 200},{top_z * 0.62}", "width": 1600, "height": 1000, "path": os.path.join(OUT, "end.png")})
-    # the stick's own chain, cut along its axis: the drive end from the socket to the hub, and the tail spindle where the bit waits
-    for name, x in (("drive.png", (cut_to - 14.0, ROD_X[1] + 8.0)), ("tail.png", (TAIL_ROD_X[0] - 8.0, 14.0))):
-        mcp.call("screenshot", {"tab": asm, "view": "0,-1,0", "section": "y:0", "fit": f"{x[0]},-1,{sled_top - PLY - 4.0},{x[1]},1,{stock_top + 8.0}", "width": 1500, "height": 900, "path": os.path.join(OUT, name)})
+    # the stick's own chain, cut along its axis: the head end from the socket to the star, and the tail spindle where the bit waits
+    for name, x in (("drive.png", (cut_to - 14.0, STAR_X[1] + 10.0)), ("tail.png", (TAIL_ROD_X[0] - 8.0, 14.0))):
+        mcp.call("screenshot", {"tab": asm, "view": "0,-1,0", "section": "y:0", "fit": f"{x[0]},-1,{sled_top - PLY - 4.0},{x[1]},1,{za + (DISC[0] / 2 + 6.0 if name == 'drive.png' else STOCK_ABOVE + 8.0)}", "width": 1500, "height": 900, "path": os.path.join(OUT, name)})
     print(mcp.call("export", {"tab": asm, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "sled.pdf"),
-                              "note": f"stick sled: the stick turns on a sled between two fences, the router positioner beside it sets depth and height; {len(rows)} rows a stick"}))
+                              "note": f"stick sled: the stick turns on a sled between two fences, the router positioner beside it sets depth and height, an index wheel at the end sets the angle; {len(rows)} rows a stick"}))
     mcp.close()
 
     count = {k: sum(1 for r in rows if r["kind"] == k) for k in ("load", "set", "rough", "finish")}
@@ -605,13 +854,20 @@ def main():
         "straight": straight,
         "sled": {"za": za, "face": face, "face_clear": FACE_CLEAR, "bed_clear": BED_CLEAR, "top": sled_top, "plate_top": plate_top, "axis_over": AXIS_OVER, "deck_y": deck_y, "plate_x": PLATE_X, "plate_y": plate_y, "stock_half": STOCK_HALF, "stock_top": stock_top,
                  "head_x": HEAD_X, "tail_x": TAIL_X, "tail_kfl_x": TAIL_KFL_X, "tail_rod_x": TAIL_ROD_X, "master_x": MASTER_X, "master_r": MASTER_R, "wheel_x": WHEEL_X, "wheel_rim": WHEEL_RIM, "wheel": [WHEEL_T, PINION_T, BELT, centres], "mesh": mesh,
-                 "kfl": KFL, "kfl_x": KFL_X, "hub": HUB, "hub_x": HUB_X, "rod_x": ROD_X, "flag_r": FLAG_R,
+                 "kfl": KFL, "kfl_x": KFL_X, "hub": HUB, "hub_x": HUB_X, "rod_x": ROD_X, "flag_r": FLAG_R, "fin_l": FIN_L,
                  "socket": {"in": SOCKET_IN, "slide": SOCKET_SLIDE, "wall": SOCKET_WALL, "fit": SOCKET_FIT, "floor": SOCKET_FLOOR, "boss": SOCKET_BOSS, "x": SOCKET_X, "boss_x": BOSS_X,
                             "swing": socket_swing, "nut_clear": NUT_CLEAR},
                  "forward_x": forward_x, "cut_to": cut_to, "sensor": SENSOR, "stock_above": STOCK_ABOVE,
                  "homing": {"fin_deg": fin_deg, "step_deg": 1.0 / FW.TURN_STEPS_PER_DEG, "clear_deg": FW.TURN_CLEAR_DEG, "ends": homed},
                  "motor_y": motor_y, "motor_z": motor_z, "slip": SLIP, "fence": [FENCE_L, FENCE_R], "fence_x": fence_x, "lip": LIP, "lip_top": lip_top, "spring_gap": SPRING_GAP, "plunger": PLUNGER,
                  "back_x": BACK_X, "travel": travel, "drawn_x": DRAWN_X, "stops_x": stops_x, "stop": STOP, "switch": SWITCH, "base_x": base_x, "base_y": base_y, "ply": PLY, "plinth": PLINTH},
+        "index": {"star": {"af": STAR_AF, "r": STAR_R, "inside": STAR_IN, "t": STAR_T, "taper": STAR_TAPER, "k": STAR_K, "tip_flat": TIP_FLAT, "ease": EASE, "back_gap": BACK_GAP, "stand_off": STAND_OFF,
+                           "section": star_section(), "cutter": star_section(cutter=True)},
+                  "star_x": STAR_X, "star_hub_x": STAR_HUB_X, "disc": DISC, "disc_x": DISC_X, "lock_r": LOCK_R, "lock_y": LOCK_Y, "anvil": ANVIL, "clamp": CLAMP, "clamp_x": clamp_x,
+                  "pocket_boss": POCKET_BOSS, "pocket_x": POCKET_X, "seat": SEAT, "head_at": head_at, "idx_x": IDX_X, "idx_kfl_x": IDX_KFL_X, "idx_rod_x": IDX_ROD_X,
+                  "head_x": head_x, "head_y": head_y, "head_z": head_z, "head_half": HEAD_HALF, "feet": feet, "foot": HEAD_FOOT, "slot": SLOT, "belt_over": belt_over, "rim_chord": rim_chord,
+                  "stance": stance, "bolt": BOLT, "spring_l": SPRING_L, "post_x": post_x, "catch": CATCH, "catch_at": catch_at,
+                  "steps_per_turn": 360.0 * FW.TURN_STEPS_PER_DEG, "unlocks": unlocks, "angles": angles, "rides": rides, "floats": floats},
         "positioner": {"half_box": half_box, "box_y": [face, face + box_x[1] - box_x[0]], "top": top_z, "bit_home_z": bit_home_z, "collet": pos["router"]["collet"], "nut_behind": nut_behind,
                        "router_d": pos["router"]["d"], "size": pos["size"],
                        "length_beyond_face": pos["x"]["end"] - box_x[0]},
@@ -624,7 +880,9 @@ def main():
     }
     with open(os.path.join(OUT, "sled.json"), "w") as f:
         json.dump(numbers, f, indent=1)
-    print(f"base {base_x[1] - base_x[0]:.0f} x {base_y[1] - base_y[0]:.0f}; the sled's plate {PLATE_X[1] - PLATE_X[0]:.0f} x {plate_y[1] - plate_y[0]:.0f}, {travel:.0f} of travel; the wheel {2 * WHEEL_RIM:.0f} across, its motor {centres:.1f} from the spindle; rows: {count}")
+    print(f"base {base_x[1] - base_x[0]:.0f} x {base_y[1] - base_y[0]:.0f}; the sled's plate {PLATE_X[1] - PLATE_X[0]:.0f} x {plate_y[1] - plate_y[0]:.0f}, {travel:.0f} of travel; "
+          f"the index wheel {2 * WHEEL_RIM:.0f} across, {za - WHEEL_RIM:.1f} over the base, its motor {centres:.1f} from its shaft, {mesh:.1f} teeth in the belt; "
+          f"the star {2 * STAR_R:.1f} over its points, the lock disc {DISC[0]:.0f}; rows: {count}")
 
 
 if __name__ == "__main__":

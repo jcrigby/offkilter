@@ -8,6 +8,14 @@ is against its back stop and the foot switch pressed, moves, and waits
 while the sled is pushed past the bit and drawn back by hand. Nothing
 moves while the stick is beside the bit.
 
+The stick's motor is not on the sled. It turns a large wheel that
+stays at the end of the base, and a tapered star on the sled's spindle
+is in that wheel only while the sled is back. So a row at a new angle
+goes: sled back, unlock the spindle's clamp, the wheel turns the stick,
+lock the clamp, make the pass. Rows at the same angle need neither.
+The clamp's switch says which it is, and the wheel is never turned
+with the clamp thrown.
+
 A bit is set by touch. The probe's clip goes on the bit, the router
 off; the controller runs the bit out until it touches the master on
 the spindle, and from then on every depth is taken from where that
@@ -22,8 +30,8 @@ The same program runs the two tables that set a built machine up,
 copied to the Pico as passes.csv in their turn: probe.csv, which
 touches a pin in the collet on the master from in front, above and
 below, and writes where the screws stood to probe_log.csv; and
-bands.csv, which turns round bands on a scrap stick to show whether
-the stick runs true to the sled's rails. calibrate.py reads both.
+bands.csv, which has round bands turned by hand on a scrap stick to
+show whether the stick runs true to the sled's fence. calibrate.py reads both.
 
 Copy main.py, config.py and passes.csv to the Pico. On a computer,
 `python3 main.py --sim passes.csv steps.json [row]` runs the same code
@@ -284,7 +292,10 @@ class Sled:
         self.probed = []            # what a probing table found: row, kind, depth, height, turn, how far apart its touches
         self.row = 0                # the row being done
         self.touch = 0              # and, probing, which of its touches
-        for n in (C.DEPTH_HOME_PIN, C.HEIGHT_HOME_PIN, C.TURN_HOME_PIN, C.SLED_BACK_PIN, C.NEXT_PIN, C.PROBE_PIN):
+        self.locked = None          # the spindle's clamp, as last seen: on a computer, as last asked for
+        self.unlocks = 0            # how many times it has been let go
+        self.rounds = 0             # bands turned by hand
+        for n in (C.DEPTH_HOME_PIN, C.HEIGHT_HOME_PIN, C.TURN_HOME_PIN, C.SLED_BACK_PIN, C.LOCK_PIN, C.NEXT_PIN, C.PROBE_PIN):
             PINS.input(n)
         PINS.output(C.ENABLE_PIN)
         PINS.output(C.LED_PIN)
@@ -293,6 +304,33 @@ class Sled:
     def back(self):
         return PINS.closed(C.SLED_BACK_PIN)
 
+    def is_locked(self):
+        """What the clamp's switch says. On a computer, what was last asked for; None before anything was."""
+        return self.locked if SIM else PINS.closed(C.LOCK_PIN)
+
+    def unlock(self, head=""):
+        """The spindle let go, with the sled back: the star is then in the index wheel, and only there can the motor
+        turn the stick."""
+        if self.is_locked() is not False:
+            SCREEN.show(head, "sled back, then", "UNLOCK the", "spindle")
+            while not SIM and (PINS.closed(C.LOCK_PIN) or not self.back()):
+                utime.sleep_ms(20)
+            self.unlocks += 1
+        self.locked = False
+
+    def lock(self, head=""):
+        """The spindle clamped where the wheel has put it. Nothing goes on until it is: the sled takes the stick away
+        from the wheel, and the clamp is then all that holds its angle."""
+        if self.is_locked() is not True:
+            SCREEN.show(head, "LOCK the", "spindle")
+            while not SIM and not PINS.closed(C.LOCK_PIN):
+                utime.sleep_ms(20)
+        self.locked = True
+
+    def turns(self, degrees):
+        """Whether going to this angle moves the wheel at all."""
+        return (self.turn.steps_for(degrees) - self.turn.at) % int(round(360.0 * self.turn.per_unit)) != 0
+
     def home(self):
         SCREEN.show("sled back,", "then foot switch", "to find home")
         wait(C.SLED_BACK_PIN)
@@ -300,6 +338,8 @@ class Sled:
         SCREEN.show("finding home")
         self.depth.seek(C.DEPTH_HOME_PIN, C.DEPTH_MOST_MM, C.HOME_CLEAR_MM)     # the bit drawn back first: away from everything
         self.height.seek(C.HEIGHT_HOME_PIN, C.HEIGHT_MOST_MM, C.HOME_CLEAR_MM)
+        self.unlock()               # the wheel takes the stick round with it to its mark
+        SCREEN.show("finding home")
         self.turn.seek(C.TURN_HOME_PIN, 400.0, C.TURN_CLEAR_DEG)
 
     def turn_on_to(self, degrees, guard, slow=None):
@@ -307,6 +347,11 @@ class Sled:
         a move back goes a little past and comes up to the angle."""
         per_turn = int(round(360.0 * self.turn.per_unit))
         ahead = (self.turn.steps_for(degrees) - self.turn.at) % per_turn
+        if ahead == 0:
+            return
+        self.unlock()
+        if self.is_locked():
+            raise RuntimeError("the spindle is locked")
         if ahead > per_turn // 2:
             past = int(round(C.TURN_PAST_DEG * self.turn.per_unit))
             self.turn.run(ahead - per_turn - past, guard, slow)
@@ -330,6 +375,7 @@ class Sled:
             self.deepest_crossing = max(self.deepest_crossing, self.depth.at)
         self.height.to(height, guard)
         self.turn_on_to(turn, guard)
+        self.lock()
         self.depth.to(depth, guard)
 
     def probe(self, axis, expected, way, window):
@@ -402,14 +448,16 @@ class Sled:
                 wait(C.NEXT_PIN)
                 if not SIM and PINS.touching():
                     raise RuntimeError("still touching")
-            elif kind == "round":           # a band turned past the cutter, the sled at a stop: only while the foot switch is held
-                SCREEN.show(head, label[:16], label[16:32], "hold foot switch")
-                while not SIM and not PINS.closed(C.NEXT_PIN):
+            elif kind == "round":           # a band turned past the cutter by hand, the sled held at a stop: away from its back
+                # stop the star is out of the wheel, and the motor cannot reach the stick. One whole turn of the lock
+                # disc, back to its mark, so that the star goes home in the wheel as it left it.
+                SCREEN.show(head, label[:16], label[16:32], "UNLOCK. disc one", "turn to its mark", "LOCK. then foot")
+                while not SIM and PINS.closed(C.LOCK_PIN):
                     utime.sleep_ms(20)
-                self.turn.run(int(round(360.0 * self.turn.per_unit)), lambda: PINS.closed(C.NEXT_PIN), C.ROUND_US)
-                SCREEN.show(head, "round. let go")
-                while not SIM and PINS.closed(C.NEXT_PIN):
+                while not SIM and not PINS.closed(C.LOCK_PIN):
                     utime.sleep_ms(20)
+                wait(C.NEXT_PIN)
+                self.rounds += 1
             elif kind == "set":             # a bit set by touch: run out at the master until the clip on it reads
                 SCREEN.show(head, tool, "router OFF. clip", "on the bit. sled", "back, then foot")
                 wait(C.SLED_BACK_PIN)
@@ -454,9 +502,15 @@ class Sled:
                 while not SIM and kind in ("rough", "finish") and not PINS.touching():
                     SCREEN.show(head, "PARK THE CLIP on", "its post")
                     utime.sleep_ms(200)
-                SCREEN.show(head, tool, "sled back,", "then foot switch")
+                # A row at a new angle is begun by letting the clamp go, which no one does by accident; a row at the
+                # angle the stick is already at, by the foot switch.
+                turning = self.turns(turn) and self.is_locked()
+                SCREEN.show(head, tool, "sled back, then", "UNLOCK spindle" if turning else "foot switch")
                 wait(C.SLED_BACK_PIN)
-                wait(C.NEXT_PIN)
+                if turning:
+                    self.unlock(head)
+                else:
+                    wait(C.NEXT_PIN)
                 SCREEN.show(head, "moving")
                 self.go(depth + self.bit, height, turn, "s" if from_home and via == "d" else via)
                 from_home = False
@@ -490,7 +544,7 @@ def main(path="passes.csv", out=None, after=None):
     if out:
         import json
         with open(out, "w") as f:
-            json.dump({"rows": record, "after": after or 0, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight,
+            json.dump({"rows": record, "after": after or 0, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight, "unlocks": sled.unlocks, "rounds": sled.rounds,
                        "probed": sled.probed, "bits": sled.bits, "stepped": [sled.depth.stepped, sled.height.stepped, sled.turn.stepped],
                        "safe_steps": sled.depth.steps_for(rows.safe), "per": [C.DEPTH_STEPS_PER_MM, C.HEIGHT_STEPS_PER_MM, C.TURN_STEPS_PER_DEG]}, f)
 

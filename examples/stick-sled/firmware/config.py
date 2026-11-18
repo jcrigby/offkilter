@@ -4,7 +4,7 @@
 # Each motor's driver: step pin, direction pin, and which way is positive.
 DEPTH_PINS = (2, 3)             # the positioner's X: the quill, along the bit. Positive runs the bit out toward the stick
 HEIGHT_PINS = (4, 5)            # the positioner's Z: the stage. Positive is away from its home, which in this machine is up
-TURN_PINS = (6, 7)              # the spindle's motor
+TURN_PINS = (6, 7)              # the index wheel's motor: it turns the stick while the sled is back and the star is in the wheel
 ENABLE_PIN = 8                  # all three drivers' enable, low to run
 DEPTH_FLIP = False              # True if the motor runs the wrong way
 HEIGHT_FLIP = False
@@ -16,14 +16,15 @@ TURN_FLIP = False
 HOME_OPENS = True
 DEPTH_HOME_PIN = 10             # the quill drawn right back
 HEIGHT_HOME_PIN = 11            # the stage at its home end
-TURN_HOME_PIN = 12              # once a turn of the spindle, at its mark
+TURN_HOME_PIN = 12              # once a turn of the index wheel, at its mark
 DEPTH_MOST_MM = 70.0            # homing gives up if the switch has not spoken in this much travel
 HEIGHT_MOST_MM = 90.0
 # An axis found already at home is first run away until its switch lets go and this much further, then brought
-# back: home is the same edge from the same side every time. The spindle's fin is 10 degrees wide.
+# back: home is the same edge from the same side every time. The wheel's fin is 10 degrees wide.
 HOME_CLEAR_MM = 1.0
 TURN_CLEAR_DEG = 5.0
 SLED_BACK_PIN = 13              # closed with the sled against its back stop, the bit beside the master and clear of the stick
+LOCK_PIN = 9                    # closed with the spindle's clamp thrown: the stick held at its angle, free to leave the wheel
 NEXT_PIN = 14                   # the foot switch
 LED_PIN = 25
 
@@ -44,17 +45,16 @@ PROBE_TOUCHES = 3               # each place is touched this many times, the scr
 PROBE_BACK_MM = 0.5
 PROBE_AGREE_MM = 0.05           # and the touches must agree this well: a chip, or a clip that slips, stops the probing
 PROBE_FILE = "probe_log.csv"
-ROUND_US = 1500                 # turning a band past the cutter
 
 # Where the controller keeps its place in a stick.
 PLACE_FILE = "at.txt"
 
 # Steps for a millimetre of screw and a degree of spindle.
 # 200-step motors; the positioner's screws M8 rod, 1.25 mm a turn (a T8 of 2 mm lead: 200 * 8 / 2.0);
-# the drivers at 8 microsteps for the screws and 16 for the spindle; a 20-tooth pulley driving a wheel of 160.
+# the drivers at 8 microsteps for the screws and 16 for the wheel; a 20-tooth pulley driving a wheel of 360.
 DEPTH_STEPS_PER_MM = 200 * 8 / 1.25
 HEIGHT_STEPS_PER_MM = 200 * 8 / 1.25
-TURN_STEPS_PER_DEG = 200 * 16 * (160 / 20) / 360.0
+TURN_STEPS_PER_DEG = 200 * 16 * (360 / 20) / 360.0
 
 # A nudge to every row: positive moves it further from home. Leave these at nothing: where the stick's axis is
 # from the positioner's home switches is found by touching (calibrate.py) and planned for in the table itself.

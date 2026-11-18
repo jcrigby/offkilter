@@ -2146,3 +2146,62 @@ by friction and hold them together until they are nailed.
 
 Nothing is printed and nothing is queued: the owner said to hold
 prints.
+
+## 2026-11 · An index wheel that stays behind, a star and a lock
+
+The owner's idea: the tapered self-centring star from the stick mill
+on the sled's spindle, its negative on a much larger wheel that does
+not go with the sled, and a lock on the shaft. Unlock, engage, the
+motor turns to the angle, lock, make the passes at that angle.
+
+- **The index head floats; nothing is lined up to a fit.** A star on
+  one shaft seated in a pocket on another joins two axes that are
+  never quite one. Fixed, the head would hold the star off its seat by
+  whatever the two axes differ, and a seat that is not home has play:
+  0.05 mm is 0.05° at the star's radius. So the head stands on three
+  feet and hangs back on two bolts through slack holes, sprung toward
+  the sled, and the star puts it where it wants it. Lost: a spring
+  post, and a head that has to be set on its feet once.
+- **The springs push level with the axis.** Pushed at the plate, with
+  the star pushing back 130 mm higher, the head tips: about 1.3 N m
+  against the 1.4 its weight resists. Two bolts in a post at the
+  axis's height cost one more piece of plywood.
+- **Home, the head stands on the star and two feet, not three.** On
+  three feet the base says how high the wheel is and the star says so
+  too. With the near foot set short, the star carries that end; a
+  star off its centre then lifts it as it turns, and the two feet
+  that bear are far enough apart that 0.03 mm of lift is 0.005° of
+  roll, which is the only part that turns the stick.
+- **The lock is a pinch on a disc, not a brake on the rod.** At 80 mm
+  it holds eight times what a cut asks, by estimate, and the pinch is
+  between a plunger and an anvil on the same post, so the spindle's
+  bearings are not loaded. A plunger that moves along the spindle does
+  not drag the disc round as a swinging clamp arm would.
+- **The clamp has a switch, and opening it is the go-ahead.** The
+  controller cannot see the star, only the sled-back switch; turning
+  the wheel with the clamp closed would slip the star's angle against
+  the motor's count for the rest of the stick. A row at a new angle is
+  begun by opening the clamp rather than by the foot switch: it is as
+  deliberate, the hand is 300 mm from the bit, and it saves 200 presses.
+- **A star with twelve ways in, and a mark.** One point cut off would
+  make it go in one way only, and then a spindle turned by hand could
+  not come home at all. Twelve ways and a painted mark: a blank put on
+  a point out is 30° round and plainly not level.
+- **Three hundred and sixty teeth, not more.** It prints on a 256 mm
+  bed, clears the base by 22 mm and gives a whole number of steps to a
+  degree. The owner's slot is in the head's own plate, 3 mm deep in
+  use; a larger wheel would need it through the base as well. Larger
+  buys little: the wheel's runout is already the smallest term.
+- **A worm was asked about earlier and is still not used.** The star
+  takes the worm's place as the thing that makes the wheel's angle the
+  stick's, and it has no backlash while it is seated.
+- **The bands are turned by hand.** They were turned by the motor with
+  the sled held at a stop, which is where the motor now cannot reach.
+  One whole turn of the disc back to its mark keeps the star's angle.
+- **Kept: arriving forwards, homing off one edge, the same table.**
+  The 485 rows did not change; only how the third number gets to the
+  stick.
+
+Not measured, and the largest guess in it: how nearly a printed star
+comes home in a printed pocket twice running. The study takes 0.01 mm
+at its flanks.

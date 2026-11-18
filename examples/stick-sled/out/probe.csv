@@ -1,7 +1,7 @@
 #safe,38.0212
 n,kind,tool,depth,height,turn,via,label
 1,say,pin,0.0,0.0,0.0,h,router OFF. pin in the collet asfar out as a bitclip on the pin
-2,say,pin,0.0,0.0,0.0,h,no stick on.    sled back at itsstop
+2,say,pin,0.0,0.0,0.0,h,scrap blank on: it turns the    master. sled    back at its stop
 3,leads,pin,0.0,0.0,0.0,h,pin
 4,in,pin,40.0212,40.0,0.0,h,pin at the front
 5,up,pin,50.0212,30.825,0.0,h,pin from below
