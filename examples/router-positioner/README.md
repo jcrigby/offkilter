@@ -14,8 +14,11 @@ checked, and the envelope reported, so the trade-offs can be looked at
 before anything is detailed.
 
 It is drawn in plywood, as the owner asked: every box is flat panels
-of 1/2 in or 3/4 in sheet, butted and glued, and the build writes the
-[cut list](out/cutlist.csv). What is not plywood is thin or bought.
+of 1/2 in or 3/4 in sheet, and the build writes the
+[cut list](out/cutlist.csv). There is no joinery in it. Every joint is
+one panel's edge on another's face, glued and nailed with an air brad
+nailer; nothing is grooved, rebated or let in. What is not plywood is
+thin or bought.
 
 ```sh
 cargo build --release -p ok-mcp
@@ -51,7 +54,7 @@ From the outside in:
 - **The tube**, 1/2 in, four panels the same width each lapping the
   next. One piece from the sleeve's mouth to the X motor: the quill's
   guide where it passes through the stage, the column beyond, and the
-  motor's housing at its end, with a bulkhead let in for the thrust
+  motor's housing at its end, with a bulkhead glued in for the thrust
   bearing and a cap for the motor. Its being one piece is what joins
   the column to the stage.
 - **Z stage**: what is glued to the tube to make it slide up and
@@ -73,13 +76,13 @@ With 60 mm of X, 80 mm of Z, the two plywoods and an M8 screw:
 
 | | mm |
 |---|---|
-| the module, long x deep x tall | 457 x 219 x 504 |
-| of its length, tube and motor out of the box's right side | 283 |
+| the module, long x deep x tall | 459 x 226 x 515 |
+| of its length, tube and motor out of the box's right side | 278 |
 | behind the router's back cap, drawn back | 224 |
-| the outer box | 175 x 219 x 387 |
-| the Z stage | 140 x 178 x 267 |
+| the outer box | 181 x 226 x 398 |
+| the Z stage | 143 x 181 x 272 |
 | the quill | 111 square x 225 |
-| the tube | 140 square x 391, and its cap |
+| the tube | 143 square x 391, and its cap |
 
 The 224 mm behind the router is, in order: 4 to the screw's tip, 63 of
 screw for the travel, the nut's cage and its keeper, 37, 3 of air, 16
@@ -88,31 +91,31 @@ the 12.7 cap and 40 of motor. Only the 63 scales with the travel.
 
 | the brief's rule | here |
 |---|---|
-| a box in its guide by 1.5 to 2 of its widths, everywhere | the quill 2.0, the stage 1.50: the stage is made 267 tall for it |
-| the bit close to the sleeve's mouth at full plunge | the quill's front is level with the mouth; the router's nose stops 1.2 mm inside the box's face and the collet nut is 4.8 clear of it |
+| a box in its guide by 1.5 to 2 of its widths, everywhere | the quill 2.0, the stage 1.50: the stage is made 272 tall for it |
+| the bit close to the sleeve's mouth at full plunge | the quill's front is level with the mouth; the router's nose stops 2.9 mm inside the box's face and the collet nut is 3.1 clear of it |
 | the X screw's tip short of the router's back cap, drawn back | 4 mm |
-| the Z screw clear of the tube, the stage down | 6.8 mm under its floor |
+| the Z screw clear of the tube, the stage down | 8.4 mm under its floor |
 | each screw right through its nut at the far end | 3 mm through |
-| the tube clear of the outer box across Z | 1 mm top, 1.5 mm bottom and sides |
+| the tube clear of the outer box across Z | 1.5 mm below and at the sides; above it is the home switch's room under the lid |
 
 ## The plywood
 
 Two thicknesses and no other, nominal: 12.7 and 19.05 mm. Sheet goods
 run thin, so measure the sheets and put what they are in `T12` and
-`T34` at the top of `build.py`; every size follows. 38 pieces: 0.36 m2
-of 3/4 in, 12 % of a sheet, and 0.53 m2 of 1/2 in, 18 %.
+`T34` at the top of `build.py`; every size follows. 38 pieces: 0.38 m2
+of 3/4 in, 13 % of a sheet, and 0.55 m2 of 1/2 in, 18 %.
 
 **3/4 in**
 
 | part | piece | long x wide, mm | how many |
 |---|---|---|---|
-| Outer box | front | 349.0 x 174.6 | 1 |
-| Outer box | back | 349.0 x 174.6 | 1 |
-| Outer box | right wall | 349.0 x 180.9 | 1 |
-| Outer box | floor | 219.0 x 174.6 | 1 |
-| Outer box | lid | 219.0 x 174.6 | 1 |
-| Z stage | front cheek | 267.0 x 139.8 | 1 |
-| Z stage | back cheek | 267.0 x 139.8 | 1 |
+| Outer box | front | 360.0 x 181.3 | 1 |
+| Outer box | back | 360.0 x 181.3 | 1 |
+| Outer box | right wall | 360.0 x 187.7 | 1 |
+| Outer box | floor | 225.8 x 181.3 | 1 |
+| Outer box | lid | 225.8 x 181.3 | 1 |
+| Z stage | front cheek | 272.0 x 143.2 | 1 |
+| Z stage | back cheek | 272.0 x 143.2 | 1 |
 | Spider | bar | 85.6 x 54.0 | 1 |
 | Router clamps | collar | 85.6 x 85.6 | 2 |
 
@@ -120,22 +123,22 @@ of 3/4 in, 12 % of a sheet, and 0.53 m2 of 1/2 in, 18 %.
 
 | part | piece | long x wide, mm | how many |
 |---|---|---|---|
-| Outer box | face | 349.0 x 180.9 | 1 |
-| Z drive housing | motor's cap | 139.8 x 139.8 | 1 |
-| Z drive housing | right | 127.1 x 64.2 | 1 |
-| Z drive housing | back | 127.1 x 64.2 | 1 |
-| Z drive housing | left | 127.1 x 64.2 | 1 |
-| Z drive housing | front | 127.1 x 64.2 | 1 |
-| Z drive housing | bulkhead | 114.4 x 114.4 | 1 |
-| X tube | lid | 390.6 x 127.1 | 1 |
-| X tube | back | 390.6 x 127.1 | 1 |
-| X tube | floor | 390.6 x 127.1 | 1 |
-| X tube | front | 390.6 x 127.1 | 1 |
-| X tube | motor's cap | 139.8 x 139.8 | 1 |
-| X tube | bulkhead | 114.4 x 114.4 | 1 |
-| Z stage | foot under the nut | 139.8 x 139.8 | 1 |
-| Z stage | foot beside the nut | 139.8 x 62.9 | 4 |
-| Z stage | foot over the nut | 139.8 x 139.8 | 1 |
+| Outer box | face | 360.0 x 187.7 | 1 |
+| Z drive housing | motor's cap | 143.2 x 143.2 | 1 |
+| Z drive housing | right | 130.5 x 64.2 | 1 |
+| Z drive housing | back | 130.5 x 64.2 | 1 |
+| Z drive housing | left | 130.5 x 64.2 | 1 |
+| Z drive housing | front | 130.5 x 64.2 | 1 |
+| Z drive housing | bulkhead | 117.8 x 117.8 | 1 |
+| X tube | lid | 390.6 x 130.5 | 1 |
+| X tube | back | 390.6 x 130.5 | 1 |
+| X tube | floor | 390.6 x 130.5 | 1 |
+| X tube | front | 390.6 x 130.5 | 1 |
+| X tube | motor's cap | 143.2 x 143.2 | 1 |
+| X tube | bulkhead | 117.8 x 117.8 | 1 |
+| Z stage | foot under the nut | 143.2 x 143.2 | 1 |
+| Z stage | foot beside the nut | 143.2 x 64.6 | 4 |
+| Z stage | foot over the nut | 143.2 x 143.2 | 1 |
 | X quill | lid | 225.3 x 98.7 | 1 |
 | X quill | back | 225.3 x 98.7 | 1 |
 | X quill | floor | 225.3 x 98.7 | 1 |
@@ -144,39 +147,74 @@ of 3/4 in, 12 % of a sheet, and 0.53 m2 of 1/2 in, 18 %.
 | Spider | beside the nut | 40.0 x 20.0 | 4 |
 
 A tube's four panels are one width, bore and a thickness, so each tube
-is one rip. "Beside the nut" pieces are glued up two thick. Sizes are
-the blanks: the slots, grooves and holes are cut after, and the tests
-and pictures show where.
+is one rip. "Beside the nut" pieces are glued up two thick. Every
+piece is a rectangle off the saw.
 
-Not plywood: the seven gib strips, 4 x 20, in hardwood or UHMW; the
-bearing strips, 1.5 thick; and what is bought, per axis: M8 rod, a
-brass coupling nut, an F8-16M thrust bearing and a steel washer under
-it, two collars, a rigid 5 to 8 coupling, a NEMA 17, a limit switch.
+Not plywood: the seven gibs, lengths of 1/8 x 3/4 in bar; the bearing
+strips, 1/8 in thick, of UHMW or hardboard; and what is bought, per
+axis: M8 rod, a brass coupling nut, an F8-16M thrust bearing and a
+steel washer under it, two collars, a rigid 5 to 8 coupling, a NEMA 17,
+a limit switch.
+
+## How it goes together
+
+Glue and an air brad nailer, and nothing else to make a joint. Every
+joint is an edge on a face.
+
+- **Nail from the outside in.** The inside faces are where things
+  slide. A brad through the lapping panel into the next one's edge has
+  its head outside and its point in the edge. Set the heads.
+- **Brads:** 18 gauge, 1-1/4 in through 1/2 in plywood, 1-1/2 in
+  through 3/4, and 1 in for a cheek onto the tube, so that the point
+  stops short of the tube's bore.
+- **A tube is a pinwheel:** each of its four panels laps the next
+  one's edge and is lapped by the one before. Glue it up round a
+  spacer cut to the bore.
+- **Nothing is grooved.** The boxes stand 1/8 in apart all round. On
+  two sides of each that gap is filled by bearing strips glued to the
+  sliding box, one near each end. On the other two a gib lies loose
+  in it, pushed by three set screws through the wall, whose points
+  sit in dimples drilled in the gib's back and keep it in place.
+- **What is cut out, with a jigsaw or a drill:** the bit slot in the
+  face; the tube's way in the right wall, open to its top edge; the
+  cord's slot in the quill's floor and the tube's; a hole for each
+  screw, each motor's boss and each set screw; six 25 mm air holes in
+  the tube's lid; the bore in each collar.
+- **What is screwed, not glued,** because it has to come off: the
+  outer box's lid, the two motors' caps, and the router's collars in
+  the quill.
+- **The order.** The quill, with the nut's bar and cage at its back
+  and the nut in the cage. The tube round a spacer, with its bulkhead
+  glued in; then the cheeks and the foot onto it, the Z nut in the
+  foot. The quill into the tube from the mouth. The outer box without
+  its lid; the stage lowered into it, the tube down the right wall's
+  slot. Then the screws, the motors' caps, the gibs, and the lid.
 
 ## What the proportions showed
 
 1. **The outer box's right wall is cut away just where the stage needs
    it.** The router's weight and the plunge both tip the stage with its
    top to the right, and the tube's slot takes all of that wall above
-   127 mm. So the stage is the tube and a 3/4 in cheek each side, and
-   the cheeks' right edges bear on the 19 mm of wall left either side
+   128 mm. So the stage is the tube and a 3/4 in cheek each side, and
+   the cheeks' right edges bear on the 21 mm of wall left either side
    of the slot. Their left edges take two of the stage's three gibs,
    straight across.
 2. **Plywood makes it bigger, not harder.** Printed walls were 8 and
-   10 mm; 12.7 and 19 add 17 mm to its length, 43 to its depth and 51
-   to its height. Nothing in it is longer than 391 mm, and all of it
-   comes out of offcuts of two sheets.
+   10 mm and stood 1.5 apart; 12.7 and 19 standing 1/8 in apart add
+   19 mm to its length, 50 to its depth and 62 to its height. Nothing in it
+   is longer than 391 mm, and all of it comes out of offcuts of two
+   sheets.
 3. **The bit slot is as wide as the router's body, and a bit is
    changed through it.** The end-on photograph shows what stands out
    of the body's front face at its rim: three screw heads, the red
    spindle lock, and the end of the depth rack, 12 mm proud. A slot
    77 mm wide passes all of it and puts the lock under a thumb. The
    face is the thin plywood so that the collet nut, whose face is
-   34 mm out of the quill, is still 4.8 mm clear of it at full plunge.
+   34 mm out of the quill, is still 3.1 mm clear of it at full plunge.
 4. **The quill's front gibs are inside the outer box.** Their set
    screws are drawn, through the tube and the stage's front cheek, but
-   nothing reaches them once the stage is in. The two at the back are
-   outside and easy.
+   nothing reaches them once the stage is in: set them before it goes
+   in. The two at the back are outside and easy.
 5. **The body is round for only 58 mm.** Behind that is a rubber grip
    73 across and the cap, 81. Both collars are on those 58 mm, pushed
    on from the front, and 100 mm of router overhangs behind them,
@@ -200,8 +238,10 @@ it, two collars, a rigid 5 to 8 coupling, a NEMA 17, a limit switch.
    coupling is drawn right up to the cap. A gib's set screws want
    threaded inserts. A nut in a pocket becomes a nut in a cage: two
    strips two layers thick either side of its flats, a keeper each
-   end, and half a millimetre of float.
-8. **Plywood moves.** The boxes are 1.5 mm apart all round and bear on
+   end, and half a millimetre of float. And the Z home switch, which
+   sat in a pocket in the lid, is screwed under the lid, with the
+   stage stopping 7 mm short of it.
+8. **Plywood moves.** The boxes are 1/8 in apart all round and bear on
    strips and gibs, so a change in the weather is taken up at the
    gibs, not in the fit. Expect to set them again when the season
    turns. That is my caution, not a measurement.
@@ -214,9 +254,9 @@ it, two collars, a rigid 5 to 8 coupling, a NEMA 17, a limit switch.
 | 2. travel | X 60, Z 80 | `X_TRAVEL`, `Z_TRAVEL` |
 | 3. screw | M8 x 1.25 rod, a 13 across-flats coupling nut 24 long: 0.00625 mm a full step | `SCREW_*`, `NUT_*`; a T8 goes in the same holes |
 | 4. motor | NEMA 17, 40 long | `MOTOR` |
-| 5. material | plywood, 1/2 in and 3/4 in, the owner's choice | `T12`, `T34` |
+| 5. material | plywood, 1/2 in and 3/4 in, butted, glued and brad-nailed, the owner's choice | `T12`, `T34` |
 | 6. the router's clamp | two 3/4 in collars round the body's 58 mm, a close fit in the quill; a saw kerf and a bolt across it would tighten one, and is not drawn | |
-| 7. Z screw and tube | checked: 6.8 mm apart at the worst | |
+| 7. Z screw and tube | checked: 8.4 mm apart at the worst | |
 | 8. reference faces | the quill bears down and back, gibs over it and before it; the stage bears on the right wall and the back wall, gibs in the face and the front wall | `Z_GIBS` and the strips in `build.py` |
 | 9. dust | nothing drawn | |
 
@@ -241,8 +281,7 @@ whoever has the router and callipers in hand before cutting.
 | on the front face's rim: the rack's end, the lock, three screw heads | the rack 18 wide and 12 proud, about 100° round from the cord; the rest 3 proud | nothing: the slot is as wide as the body, wherever round they are |
 | whether a thumb through the slot works the lock | not tried | how a bit is changed |
 
-Not drawn yet: any fastener, the nuts' and bolts' places in the
-joints, the second thrust face (drawing the quill back pulls the screw
+Not drawn yet: any fastener, the second thrust face (drawing the quill back pulls the screw
 against a plain collar), the connector panel, and the datum faces'
 bolt patterns.
 
@@ -252,7 +291,7 @@ bolt patterns.
 from the document and, with the kernel's solids:
 
 - at each of the four corners of the travel, no piece is through
-  another, over some 46 pairs that are near each other, the router
+  another, over some 37 pairs that are near each other, the router
   with its boss, its rack's end and its cord's boot among them; and
   run past either end of either travel, something is hit, so the
   check can tell;

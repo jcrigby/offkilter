@@ -16,8 +16,10 @@ the travel checked, and the envelope reported, so the trade-offs can be
 looked at before anything is detailed. What is a guess says so.
 
 It is made of plywood, as the owner asked: every box is flat panels of
-1/2 in or 3/4 in sheet, butted and glued, and the build writes the cut
-list. What is not plywood is thin or bought.
+1/2 in or 3/4 in sheet, and the build writes the cut list. There is no
+joinery in it: every joint is one panel's edge on another's face, glued
+and nailed with an air brad nailer, and nothing is grooved, rebated or
+let in. What is not plywood is thin or bought.
 
     cargo build --release -p ok-mcp
     python3 examples/router-positioner/build.py
@@ -70,10 +72,11 @@ T12 = 12.7                      # 1/2 in: the sliding tubes, the motor housings,
 T34 = 19.05                     # 3/4 in: the rest of the outer box, the stage's two cheeks, the bar the X nut is on, the router's collars
 SHEET = (1220.0, 2440.0)        # a sheet, for saying how much of one the panels take
 
-GAP = 1.5                       # between a box and its guide all round: a bearing strip thick, and room for dust
-STRIP_L = 25.0                  # a bearing strip along the travel, one near each end of a box
-GIB = (4.0, 20.0)               # a gib strip: thick, wide. It stands GAP out of its groove. Hardwood or UHMW, not plywood
+GAP = 3.2                       # between a box and its guide all round: 1/8 in, the thickness of the strips that lie in it. Nothing is grooved for them
+STRIP_L = 25.0                  # a bearing strip along the travel, one near each end of a box: 1/8 in thick, glued on
+GIB = (GAP - 0.2, 19.05)        # a gib: a length of 1/8 x 3/4 in bar loose in the gap, held by its set screws' points in dimples drilled in its back
 SET_SCREW = 4.2                 # an M5 set screw's hole, three to a gib: a threaded insert in plywood
+VENT = 25.0                     # an air hole: a drill's, not a window
 ENGAGE = 1.5                    # a box is in its guide at least this many of its own widths, everywhere in its travel
 RAIL = T34                      # the Z stage is this much wider than the tube each side: its cheeks, whose edges ride the outer box's right wall
 
@@ -108,7 +111,7 @@ MD = CO + 2 * RAIL                              # and across: the tube and a che
 Z_NEED = (T12 + NUT_END) + NUT_L + NUT_LEAD + Z_TRAVEL + TIP_CLEAR - FOOT   # the Z screw's room over the foot: what its tip needs with the stage down
 MH = max(T12 + SB + T12 + Z_NEED + FOOT, float(math.ceil(ENGAGE * max(MX, MD))))   # the stage: the tube, the screw's room, the foot; and tall enough for its width
 Z_CLEAR = MH - (2 * T12 + SB + FOOT)
-IH = MH + Z_TRAVEL + 2.0                        # the outer box inside: the stage, its travel, a millimetre each end
+IH = MH + Z_TRAVEL + 2.0 + SWITCH[2]            # the outer box inside: the stage, its travel, a millimetre each end, and the home switch under the lid
 
 # Where things are with both axes at home: X drawn back, Z up. x along the bit from the sleeve's mouth, the bit pointing to -x;
 # y front (-) to back (+) from the bit's axis; z up from the outer box's floor.
@@ -275,7 +278,6 @@ Z_GIBS = [("left", -(CO / 2 + T34 / 2)), ("left", CO / 2 + T34 / 2), ("front", M
 Z_SWITCH_Y = (MD / 2 + GAP - 3.0 - SWITCH[1], MD / 2 + GAP - 3.0)
 STRIP_Z = ((ZB + 2.0, ZB + 2.0 + STRIP_L), (ZB + MH - 2.0 - STRIP_L, ZB + MH - 2.0))      # the stage's bearing strips, one near each end
 QUILL_STRIP_X = ((XQ + 2.0, XQ + 2.0 + STRIP_L), (XQ + QL - 2.0 - STRIP_L, XQ + QL - 2.0))
-SINK = GIB[0] - GAP + 0.5                       # how deep a gib's groove is
 
 
 def outer_box(p):
@@ -292,17 +294,13 @@ def outer_box(p):
     box(p, "the tube's way", (MX + GAP - 1.0, BOX_X[1] + 1.0), (-CO / 2 - 1.5, CO / 2 + 1.5), COL_SLOT_Z, op="remove")
     # With the stage down and the quill near full plunge the cord trails out under the tube, through this wall.
     box(p, "the cord's notch", (MX + GAP - 1.0, BOX_X[1] + 1.0), (-CORD_SLOT / 2, CORD_SLOT / 2), (COL_SLOT_Z[0] - CORD_NOTCH, COL_SLOT_Z[0] + 1.0), op="remove")
-    box(p, "the Z switch's pocket", (7.5, 8.5 + SWITCH[0]), (Z_SWITCH_Y[0] - 0.5, Z_SWITCH_Y[1] + 0.5), (IH - 1.0, IH + SWITCH[2]), op="remove")
     zcyl(p, "the Z screw's way", (-T34 - 1.0, 1.0), (MX / 2, 0.0), SCREW_D + 1.0, op="remove")
-    for wall, at in Z_GIBS:
-        if wall == "left":
-            box(p, "gib groove", (-GAP - SINK, -GAP + 0.5), (at - GIB[1] / 2 - 0.25, at + GIB[1] / 2 + 0.25), (8.0, IH - 8.0), op="remove")
-            for z in spread(8.0, IH - 8.0):
-                xcyl(p, "set screw", (BOX_X[0] - 1.0, -GAP), (at, z), SET_SCREW, op="remove")
-        else:
-            box(p, "gib groove", (at - GIB[1] / 2 - 0.25, at + GIB[1] / 2 + 0.25), (-wy - SINK, -wy + 0.5), (8.0, IH - 8.0), op="remove")
-            for z in spread(8.0, IH - 8.0):
-                ybore(p, "set screw", (at, z), SET_SCREW, -wy, T34 + 1.0)
+    for wall, at in Z_GIBS:                     # the gibs' set screws: holes, and nothing else, in the walls the gibs lie against
+        for z in spread(8.0, IH - 8.0):
+            if wall == "left":
+                xcyl(p, "set screw", (BOX_X[0] - 1.0, -GAP + 1.0), (at, z), SET_SCREW, op="remove")
+            else:
+                ybore(p, "set screw", (at, z), SET_SCREW, -wy + 1.0, T34 + 2.0)
 
 
 def z_gibs(p):
@@ -326,15 +324,15 @@ def x_tube(p):
     xcyl(p, "motor's pilot", (X_TUBE_END - 0.5, X_TUBE_END + CAP + 0.5), (0.0, AZ), 22.5, op="remove")
     # the cord's slot, in the floor: as long as the travel and the slack each way
     zbox(p, "the cord's slot", CORD_X, (-CORD_SLOT / 2, CORD_SLOT / 2), (AZ - CO / 2 - 1.0, AZ - SB / 2 + 1.0), op="remove")
-    for y in ((-SB / 2 + 6.0, -GIB[1] / 2 - 6.0), (GIB[1] / 2 + 6.0, SB / 2 - 6.0)):   # air in through the lid at the back, each side of the gib; it passes the nut's bar to the router
-        zbox(p, "vent", (X_COL_END - 70.0, X_COL_END - 20.0), y, (AZ + SB / 2 - 1.0, AZ + CO / 2 + 1.0), op="remove")
-    # the quill's gibs: grooves in the lid and the front panel, where the quill's front end runs and where its back end does
+    for sy in (-1, 1):                          # air in through the lid at the back, three drilled holes each side of the gib; it passes the nut's bar to the router
+        for k in range(3):
+            zcyl(p, "air hole", (AZ + SB / 2 - 1.0, AZ + CO / 2 + 1.0), (X_COL_END - 20.0 - 30.0 * k, sy * (SB / 2 - 6.0 - VENT / 2)), VENT, op="remove")
+    # the quill's gibs lie in the gap over it and before it, where its front end runs and where its back end does:
+    # all the tube has for them is their set screws' holes
     for lo, hi in X_GIB_X:
-        box(p, "gib groove", (lo - 1.0, hi + 1.0), (-GIB[1] / 2 - 0.25, GIB[1] / 2 + 0.25), (AZ + SB / 2 - 0.5, AZ + SB / 2 + SINK), op="remove")
-        box(p, "gib groove", (lo - 1.0, hi + 1.0), (-SB / 2 - SINK, -SB / 2 + 0.5), (AZ - GIB[1] / 2 - 0.25, AZ + GIB[1] / 2 + 0.25), op="remove")
         for x in spread(lo, hi):
-            zcyl(p, "set screw", (AZ + SB / 2, AZ + CO / 2 + 1.0), (x, 0.0), SET_SCREW, op="remove")
-            ybore(p, "set screw", (x, AZ), SET_SCREW, -SB / 2, T12 + 1.0)
+            zcyl(p, "set screw", (AZ + SB / 2 - 1.0, AZ + CO / 2 + 1.0), (x, 0.0), SET_SCREW, op="remove")
+            ybore(p, "set screw", (x, AZ), SET_SCREW, -SB / 2 + 1.0, T12 + 2.0)
 
 
 X_GIB_X = ((9.0, MX - 9.0), (XQ + QL - X_TRAVEL - STRIP_L - 9.0, X_COL_END - 9.0))
@@ -354,7 +352,7 @@ def z_stage(p):
     panel(p, part, "foot over the nut", (0.0, MX), (-CO / 2, CO / 2), (ZB + T12 + CAGE, ZB + FOOT))
     zcyl(p, "the screw's way", (ZB - 1.0, ZB + FOOT + 1.0), (MX / 2, 0.0), SCREW_D + 1.0, op="remove")
     for x in spread(*X_GIB_X[0]):                    # the quill's front gib's set screws come through the front cheek too
-        ybore(p, "set screw", (x, AZ), SET_SCREW, -CO / 2, T34 + 1.0)
+        ybore(p, "set screw", (x, AZ), SET_SCREW, -CO / 2 + 1.0, T34 + 2.0)
 
 
 def stage_strips(p):
@@ -481,8 +479,9 @@ def x_switch(p):
 
 
 def z_switch(p):
-    """Home is the stage up, away from the end where its screw would meet the tube: its top closes the switch."""
-    box(p, "Z home switch", (8.0, 8.0 + SWITCH[0]), Z_SWITCH_Y, (IH - 0.5, IH - 0.5 + SWITCH[2]))
+    """Home is the stage up, away from the end where its screw would meet the tube: its top closes the switch,
+    which is screwed to the lid's underside. The stage stops that much short of the lid."""
+    box(p, "Z home switch", (8.0, 8.0 + SWITCH[0]), Z_SWITCH_Y, (IH - SWITCH[2], IH))
 
 
 # Every part: its tab, what draws it, and what it moves with.
@@ -546,7 +545,7 @@ def main():
     mcp.call("screenshot", {"tab": home, "view": "0,-1,0", "section": "y:0", "fit": fit, "width": 1500, "height": 1100, "path": os.path.join(OUT, "section-home.png")})
     mcp.call("screenshot", {"tab": far, "view": "0,-1,0", "section": "y:0", "fit": fit, "width": 1500, "height": 1100, "path": os.path.join(OUT, "section-plunged-down.png")})
     print(mcp.call("export", {"tab": home, "format": "pdf", "sheet": "A3", "path": os.path.join(OUT, "positioner.pdf"),
-                              "note": f"two-axis router positioner in 1/2 and 3/4 in plywood, first pass: X {X_TRAVEL:.0f}, Z {Z_TRAVEL:.0f} of travel; the router's body {ROUTER_D:.0f} as measured, the rest of it off a photograph"}))
+                              "note": f"two-axis router positioner in 1/2 and 3/4 in plywood, butted, glued and nailed, first pass: X {X_TRAVEL:.0f}, Z {Z_TRAVEL:.0f} of travel; the router's body {ROUTER_D:.0f} as measured, the rest of it off a photograph"}))
     mcp.close()
 
     # -- the cut list ---------------------------------------------------------------

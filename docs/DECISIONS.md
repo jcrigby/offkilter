@@ -2088,3 +2088,33 @@ against a printer's bed.
 Not settled: screws, glue and joints are not drawn, and plywood's
 movement with the weather is left to the gibs. The sheet's real
 thickness goes in two numbers at the top of the build.
+
+## 2026-11 · The positioner with no joinery
+
+The owner's method is glue and an air brad nailer, and no joinery. The
+plywood model's panels were already butted, an edge on a face. Three
+things in it were not a saw's work.
+
+- **The gibs' grooves go, and the gap grows to take the gibs.** Seven
+  stopped grooves 3 mm deep held the gib strips. With the boxes 1/8 in
+  apart all round, where they were 1.5 mm, a gib is a length of
+  1/8 x 3/4 in bar lying in the gap, kept in place by its set screws'
+  points in dimples in its back, and the bearing strips are 1/8 in
+  stock glued on. It costs 3.4 mm on each box outside another. Lost:
+  keeping the 1.5 mm gap and making the tube 3 mm off centre round the
+  quill to leave room on the gib sides only, which puts the screw off
+  the middle of everything it passes through.
+- **The switch's pocket goes.** The Z home switch sat in a recess in
+  the lid with the stage coming within a millimetre of it. It is
+  screwed under the lid and the box is 6 mm taller inside.
+- **Cutouts stay.** The bit slot, the tube's way and the cord's slots
+  are holes through one panel, a jigsaw's or a drill's work, and
+  piecing a wall out of four rectangles to avoid one is weaker. The
+  air windows became drilled holes because they could.
+- **Some things are screwed.** The lid and the two motors' caps have
+  to come off, and the router's collars have to come out. That is in
+  the README as the exception it is.
+
+The README's assembly section is where the method is written down:
+nail from the outside in, because the inside faces are where things
+slide.

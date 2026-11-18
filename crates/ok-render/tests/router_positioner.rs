@@ -208,7 +208,7 @@ fn nothing_is_through_anything_at_the_four_corners_of_the_travel() {
             "{}: {tried} pairs near each other, the most in common {most:.3} mm3 ({which}); {failed} the kernel could not intersect",
             corner[0].as_str().unwrap()
         );
-        assert!(tried > 40);
+        assert!(tried > 30);
         assert_eq!(failed, 0);
         assert!(most < 0.5, "{which} share {most:.2} mm3");
     }

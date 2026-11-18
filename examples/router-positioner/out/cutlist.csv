@@ -1,29 +1,29 @@
 thickness_mm,part,piece,long_mm,wide_mm,count
-19.05,Outer box,front,349.0,174.6,1
-19.05,Outer box,back,349.0,174.6,1
-19.05,Outer box,right wall,349.0,180.9,1
-19.05,Outer box,floor,219.0,174.6,1
-19.05,Outer box,lid,219.0,174.6,1
-19.05,Z stage,front cheek,267.0,139.8,1
-19.05,Z stage,back cheek,267.0,139.8,1
+19.05,Outer box,front,360.0,181.3,1
+19.05,Outer box,back,360.0,181.3,1
+19.05,Outer box,right wall,360.0,187.7,1
+19.05,Outer box,floor,225.8,181.3,1
+19.05,Outer box,lid,225.8,181.3,1
+19.05,Z stage,front cheek,272.0,143.2,1
+19.05,Z stage,back cheek,272.0,143.2,1
 19.05,Spider,bar,85.6,54.0,1
 19.05,Router clamps,collar,85.6,85.6,2
-12.7,Outer box,face,349.0,180.9,1
-12.7,Z drive housing,motor's cap,139.8,139.8,1
-12.7,Z drive housing,right,127.1,64.2,1
-12.7,Z drive housing,back,127.1,64.2,1
-12.7,Z drive housing,left,127.1,64.2,1
-12.7,Z drive housing,front,127.1,64.2,1
-12.7,Z drive housing,bulkhead,114.4,114.4,1
-12.7,X tube,lid,390.6,127.1,1
-12.7,X tube,back,390.6,127.1,1
-12.7,X tube,floor,390.6,127.1,1
-12.7,X tube,front,390.6,127.1,1
-12.7,X tube,motor's cap,139.8,139.8,1
-12.7,X tube,bulkhead,114.4,114.4,1
-12.7,Z stage,foot under the nut,139.8,139.8,1
-12.7,Z stage,foot beside the nut,139.8,62.9,4
-12.7,Z stage,foot over the nut,139.8,139.8,1
+12.7,Outer box,face,360.0,187.7,1
+12.7,Z drive housing,motor's cap,143.2,143.2,1
+12.7,Z drive housing,right,130.5,64.2,1
+12.7,Z drive housing,back,130.5,64.2,1
+12.7,Z drive housing,left,130.5,64.2,1
+12.7,Z drive housing,front,130.5,64.2,1
+12.7,Z drive housing,bulkhead,117.8,117.8,1
+12.7,X tube,lid,390.6,130.5,1
+12.7,X tube,back,390.6,130.5,1
+12.7,X tube,floor,390.6,130.5,1
+12.7,X tube,front,390.6,130.5,1
+12.7,X tube,motor's cap,143.2,143.2,1
+12.7,X tube,bulkhead,117.8,117.8,1
+12.7,Z stage,foot under the nut,143.2,143.2,1
+12.7,Z stage,foot beside the nut,143.2,64.6,4
+12.7,Z stage,foot over the nut,143.2,143.2,1
 12.7,X quill,lid,225.3,98.7,1
 12.7,X quill,back,225.3,98.7,1
 12.7,X quill,floor,225.3,98.7,1
