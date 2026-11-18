@@ -24,7 +24,7 @@ Two straight screws now do what the hinges and their links did.
 cargo build --release -p ok-mcp
 python3 examples/router-positioner/build.py   # this reads the positioner's sizes from its out/positioner.json
 python3 examples/stick-sled/build.py
-python3 examples/stick-sled/animate.py        # out/passes.gif: every pass, a frame each
+python3 examples/stick-sled/animate.py        # out/passes_machine.gif and out/passes.gif: every pass, a frame each
 cargo test -p ok-render --test stick_sled   # what CI runs
 ```
 
@@ -404,31 +404,43 @@ the stick 744° in all). Estimated.
 
 ## Every pass, animated
 
-![The blank's section in tan on white; a blue cutter comes at it from one side after another, each pass leaving a notch, the passes before it drawn as blue outlines that fade to white; first the square-ended roughing bit in steps, then the tapered ball-nose all the way round, until what is left is the tile](out/passes.gif)
+![Seen along the stick with the positioner on the right: a level blue cutter comes in from the right, moving up and down and in and out from one pass to the next, while the tan blank turns to a new angle between them; notches appear where the cutter has been, their outlines fading, until the blank has become the tile](out/passes_machine.gif)
 
-`animate.py` draws the table: all 482 cutting rows, one frame each,
-looking along the stick from its tail. What is left of the blank is
-tan, the pass being made is solid blue, and the passes before it are
-blue outlines that fade to white over the next 48. It runs 39 seconds:
-185 roughing passes, a pause where the bit is changed and set, 297
+`animate.py` draws the table: all 482 cutting rows, a frame each. What
+is left of the blank is tan, the pass being made is solid blue, and
+the passes before it are blue outlines that fade to white.
+
+This first one is **what the machine does**, seen from the
+headstock's end with the positioner on the right. The bit stays level.
+From one pass to the next it moves up or down (the positioner's Z) and
+in or out (its X), and the stick turns to a new angle (the index
+wheel). It starts with the blank as the table's first row hangs it, a
+wide face level and underneath. A turn of more than 6° is shown on the
+way round, with the bit out of the picture. It runs 41 seconds: 185
+roughing passes, a pause where the bit is changed and set, 297
 finishing passes, and then the tile.
 
-The picture is fixed to the stick, so the bit seems to come from every
-side. On the machine it is the other way about: the bit always comes
-from the positioner's side and the stick is turned to meet it.
+![The same passes with the tile held still: the cutter comes at it from one side after another](out/passes.gif)
 
-| part way through roughing | part way through finishing | done |
-|---|---|---|
-| ![The blank with square notches cut into two of its sides, a wide blue bar reaching into one, and the outlines of the notches before it](out/passes_rough.png) | ![The tile's shape emerging: a tapered blue bit with a round tip in one of its hollows, and a fan of fading outlines behind it](out/passes_finish.png) | ![The tile alone, tan on white](out/passes_done.png) |
+The second is the same passes **fixed to the stick**: the tile stays
+still and the bit seems to come from every side. It is the easier one
+to judge the plan by, because the tile comes out of the blank in one
+place.
+
+| | part way through roughing | part way through finishing | done |
+|---|---|---|---|
+| as the machine has it | ![The blank turned on its corner with notches in two sides, a wide level blue bar reaching in from the right](out/passes_machine_rough.png) | ![The tile's shape emerging, a tapered level bit with a round tip in one of its hollows](out/passes_machine_finish.png) | ![The tile, as the last pass left it](out/passes_machine_done.png) |
+| fixed to the stick | ![The blank with square notches cut into two of its sides, a wide blue bar reaching into one](out/passes_rough.png) | ![The tile's shape emerging, a tapered bit with a round tip in one of its hollows](out/passes_finish.png) | ![The tile alone, tan on white](out/passes_done.png) |
 
 ```sh
 python3 examples/stick-sled/animate.py   # after build.py: it reads out/sled.json
 ```
 
-It is made with a tool that is not the sled's: `flipbook` in `ok-mcp`
-draws any frames of flat shapes to an animated GIF, and
-`cutting_book` in `examples/okmcp.py` makes the frames for any blank
-and any list of cuts in this style. `animate.py` only turns the
+They are made with a tool that is not the sled's: `flipbook` in
+`ok-mcp` draws any frames of flat shapes to an animated GIF, and can
+show a frame turned; `cutting_book` in `examples/okmcp.py` makes the
+frames for any blank and any list of cuts in this style, with an
+angle for each cut if the work turns. `animate.py` only turns the
 table's rows into the bit's outline at each. A roughing cut is drawn
 as the bit's whole width to where its end stops; a finishing cut as
 the ball, its tapered flank and the shank.
@@ -703,8 +715,12 @@ written a second time, in Rust, and works every row forward:
   worked from the furthest cut and compared with the study's; and the
   probing table and the bands are where the reading of them assumes,
   the bands' twelve turns made by hand with no motor moved;
-- the animation, read back frame by frame: a frame for each of the
-  482 cutting rows; the first is the whole blank and the last is the
-  tile, to the area the planner says is left; the cutter is in every
-  pass's frame; what is left never grows; and the tile's middle is
-  never cut.
+- the two animations, read back frame by frame: a frame for each of
+  the 482 cutting rows; the first is the whole blank and the last is
+  the tile, to the area the planner says is left; the cutter is in
+  every pass's frame; what is left never grows; and the tile's middle
+  is never cut. In the machine's version the cutter is level in every
+  pass, in from the right edge, within a quarter of a millimetre of
+  its row's height and depth; each pass's frame is turned by its row's own angle; the
+  frames between two angles far apart have no cutter in them; and the
+  tile at the end lies where the last pass's angle puts it.

@@ -911,7 +911,12 @@ frames as an animated GIF: each frame in its own colour table (median
 cut when it has more than 255 colours), only the box of pixels that
 changed, the unchanged ones inside it see-through, LZW with an
 open-addressed table. `read_gif` reads that subset back for tests, and
-the `ok-mcp` `flipbook` tool is the module with JSON in front.
+the `ok-mcp` `flipbook` tool is the module with JSON in front. A frame
+may be turned about a point, for work that turns under a tool that
+does not. A picture turned is a picture blurred, so a book with a
+turn in it remembers what it keeps as shapes and paints them all
+again whenever the turn changes; a book that never turns keeps only
+the pixels, as before.
 
 ## Performance
 

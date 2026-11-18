@@ -78,8 +78,10 @@ For an animation of a thing being cut, `cutting_book(blank, cuts)`
 makes the frames the `flipbook` tool draws: the blank in one colour,
 the cut being made solid in another, the cuts before it as outlines
 fading into the background. `blank` is a convex polygon and each cut a
-polygon, the cutter's section where that cut has it.
-`stick-sled/animate.py` is the whole of a use: the table's rows to
+polygon, the cutter's section where that cut has it. With `turns`, an
+angle for each cut, the work is shown turning under a cutter that
+stays where the machine has it.
+`stick-sled/animate.py` is the whole of a use, both ways: the table's rows to
 polygons, then `mcp.call("flipbook", {...})`. `clip_to(poly, convex)`
 and `tint(colour, toward, t)` are the two helpers it is made of.
 

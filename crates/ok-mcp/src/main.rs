@@ -770,6 +770,7 @@ fn flipbook(args: &Value) -> Result<String, String> {
             stroke: stroke.map(|f| colour(f, "stroke")).transpose()?,
             width: v.get("width").and_then(|w| w.as_f64()).unwrap_or(1.5),
             closed: v.get("closed").and_then(|c| c.as_bool()).unwrap_or(true),
+            still: v.get("still").and_then(|c| c.as_bool()).unwrap_or(false),
         })
     };
     let shapes = |v: Option<&Value>, frame: usize| -> Result<Vec<Shape>, String> {
@@ -793,6 +794,12 @@ fn flipbook(args: &Value) -> Result<String, String> {
                 .get("ms")
                 .and_then(|m| m.as_u64())
                 .map_or(every, |m| m as u32),
+            turn: f.get("turn").and_then(|t| t.as_f64()).unwrap_or(0.0),
+            about: match f.get("about") {
+                Some(a) => (|| Some((a.get(0)?.as_f64()?, a.get(1)?.as_f64()?)))()
+                    .ok_or_else(|| format!("frame {n}: about is [x, y]"))?,
+                None => (0.0, 0.0),
+            },
         });
     }
     let book = Book {
@@ -2968,8 +2975,8 @@ fn tool_list() -> Value {
         },
         {
             "name": "flipbook",
-            "description": "Writes a flat animation as an animated GIF: frames of filled and outlined polygons, for showing a thing being made step by step (the passes of a cut, the order of an assembly, a mechanism's positions drawn in section). `view` [x0, y0, x1, y1] is what a frame shows, in the shapes' own units with y up, scaled the same both ways and centred. Each frame has `keep`, shapes painted onto the page itself, there in that frame and every later one, and `draw`, shapes painted over it for that frame only: keep what has been done, draw what is being done. A shape is {points: [[x, y], ...], fill?, stroke?, width?, closed?}: colours are \"#rrggbb\", opaque, painted in order (fill something with the background's colour to rub it out); `width` is the outline's in pixels (1.5), and `closed: false` leaves a polyline open. `ms` is every frame's time, or a frame's own. Only what changes between frames is written, so hundreds of frames of small changes make a small file. `stills` [{frame, path}] also writes those frames as PNGs, to look at or to put in a page.",
-            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "width": { "type": "integer", "description": "pixels; 640 by default" }, "height": { "type": "integer", "description": "pixels; the width by default" }, "view": { "type": "array", "items": { "type": "number" }, "description": "x0, y0, x1, y1" }, "background": { "type": "string", "description": "#rrggbb; white by default" }, "ms": { "type": "integer", "description": "milliseconds a frame; 80 by default" }, "repeat": { "type": "boolean", "description": "true by default" }, "frames": { "type": "array", "items": { "type": "object", "properties": { "keep": { "type": "array" }, "draw": { "type": "array" }, "ms": { "type": "integer" } } } }, "stills": { "type": "array", "items": { "type": "object", "properties": { "frame": { "type": "integer" }, "path": { "type": "string" } } } } }, "required": ["path", "view", "frames"] }
+            "description": "Writes a flat animation as an animated GIF: frames of filled and outlined polygons, for showing a thing being made step by step (the passes of a cut, the order of an assembly, a mechanism's positions drawn in section). `view` [x0, y0, x1, y1] is what a frame shows, in the shapes' own units with y up, scaled the same both ways and centred. Each frame has `keep`, shapes painted onto the page itself, there in that frame and every later one, and `draw`, shapes painted over it for that frame only: keep what has been done, draw what is being done. A shape is {points: [[x, y], ...], fill?, stroke?, width?, closed?}: colours are \"#rrggbb\", opaque, painted in order (fill something with the background's colour to rub it out); `width` is the outline's in pixels (1.5), and `closed: false` leaves a polyline open. A frame's `turn` shows it turned that many degrees anticlockwise about `about` ([x, y]; the origin): the page as kept so far and all the frame's shapes but those marked `still: true`, which is how work that turns under a tool that does not is drawn; what was kept is painted afresh at each new turn, not a picture of it turned. `ms` is every frame's time, or a frame's own. Only what changes between frames is written, so hundreds of frames of small changes make a small file. `stills` [{frame, path}] also writes those frames as PNGs, to look at or to put in a page.",
+            "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "width": { "type": "integer", "description": "pixels; 640 by default" }, "height": { "type": "integer", "description": "pixels; the width by default" }, "view": { "type": "array", "items": { "type": "number" }, "description": "x0, y0, x1, y1" }, "background": { "type": "string", "description": "#rrggbb; white by default" }, "ms": { "type": "integer", "description": "milliseconds a frame; 80 by default" }, "repeat": { "type": "boolean", "description": "true by default" }, "frames": { "type": "array", "items": { "type": "object", "properties": { "keep": { "type": "array" }, "draw": { "type": "array" }, "ms": { "type": "integer" }, "turn": { "type": "number", "description": "degrees anticlockwise" }, "about": { "type": "array", "items": { "type": "number" } } } } }, "stills": { "type": "array", "items": { "type": "object", "properties": { "frame": { "type": "integer" }, "path": { "type": "string" } } } } }, "required": ["path", "view", "frames"] }
         },
         {
             "name": "measuring_sheet",
@@ -3559,8 +3566,34 @@ mod tests {
             .filter(|c| c == &[0xe2, 0xbe, 0x8a])
             .count();
         assert_eq!(left, 4 * (1600 - 100));
+        // The same blank and cut with the second frame turned half round about the blank's middle: the cut that was
+        // rubbed out of one corner is in the opposite corner, and a shape marked still has not moved.
+        let turned = json!({
+            "path": gif.display().to_string(), "width": 120, "view": [0, 0, 60, 60],
+            "frames": [
+                { "keep": [{ "points": square(10.0, 10.0, 40.0), "fill": "#e2be8a" }, { "points": square(10.0, 10.0, 10.0), "fill": "#ffffff" }] },
+                { "turn": 180, "about": [30, 30], "draw": [{ "points": square(0.0, 0.0, 6.0), "fill": "#1f4fd8", "still": true }] }
+            ]
+        });
+        let (err, text) = tool_text(&mut server, "flipbook", turned);
+        assert!(!err && text.contains("2 frames"), "{text}");
+        let mut corners = Vec::new();
+        ok_render::flipbook::read_gif(&std::fs::read(&gif).unwrap(), |_, image, _| {
+            // (15, 15), (45, 45) and (3, 3) in the book's units
+            corners.push((
+                image.pixel(30, 90),
+                image.pixel(90, 30),
+                image.pixel(6, 114),
+            ));
+        })
+        .unwrap();
+        assert_eq!(corners, vec![(white, tan, white), (tan, white, blue)]);
         for (change, says) in [
             (json!({ "view": [0, 0, 60] }), "view"),
+            (
+                json!({ "frames": [{ "turn": 90, "about": [1] }] }),
+                "about is [x, y]",
+            ),
             (
                 json!({ "frames": [{ "draw": [{ "points": [[0, 0], [1, 1]] }] }] }),
                 "neither fill nor stroke",

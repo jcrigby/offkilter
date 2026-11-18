@@ -406,7 +406,7 @@ def tint(colour, toward, t):
 
 
 def cutting_book(blank, cuts, tail=48, shades=12, ms=70, hold=(1200, 3000), blank_colour="#e2be8a", cut_colour="#1f4fd8",
-                 background="#ffffff", line=1.5):
+                 background="#ffffff", line=1.5, turns=None, first_turn=None, turn_step=None):
     """Frames for the `flipbook` tool that show a blank being cut, a
     frame a cut. The background is plain; what is left of the blank is
     one colour; the cut being made is solid in another; the cuts before
@@ -422,9 +422,17 @@ def cutting_book(blank, cuts, tail=48, shades=12, ms=70, hold=(1200, 3000), blan
     longer than the rest. After the last cut the outlines fade away, a
     shade a frame, and the finished piece is held.
 
-    Returns the frames and the number of the first cut's frame: cut k
-    is frame k + that. Pass the frames to `flipbook` with `background`
-    and a `view` about the blank."""
+    With `turns`, an angle in degrees for every cut, each cut's frame is
+    shown turned by its angle about the origin: give the blank and the
+    cuts in the work's own frame, as before, and the work is seen
+    turning under a cutter that stays where the machine has it.
+    `first_turn` is how the blank lies before the first cut. With
+    `turn_step`, a turn of more than that many degrees is shown on the
+    way, in frames of that much with no cutter in them.
+
+    Returns the frames and, for every cut, the number of its frame.
+    Pass the frames to `flipbook` with `background` and a `view` about
+    the blank."""
     r3 = lambda poly: [[round(x, 3), round(y, 3)] for x, y in poly]
     shapes, times = [], []
     for c in cuts:
@@ -432,7 +440,7 @@ def cutting_book(blank, cuts, tail=48, shades=12, ms=70, hold=(1200, 3000), blan
         shapes.append(r3(c[0] if held else c))
         times.append(int(c[1]) if held else ms)
     edges = [r3(clip_to(s, blank)) for s in shapes]         # what of each cut is in the blank: its outline once it is made
-    rubbed = lambda k: {"points": shapes[k], "fill": background}
+    rubbed = lambda k: [{"points": edges[k], "fill": background}] if len(edges[k]) > 2 else []     # a cut made: gone from the blank
 
     each = max(1, round(tail / max(1, shades)))             # cuts to a shade
     most = -(-tail // each)                                 # shades, in the end
@@ -446,10 +454,27 @@ def cutting_book(blank, cuts, tail=48, shades=12, ms=70, hold=(1200, 3000), blan
                 out.append({"points": edges[j], "stroke": tint(cut_colour, background, shade / (most + 1)), "width": line})
         return out
 
-    frames = [{"keep": [{"points": r3(blank), "fill": blank_colour}], "ms": hold[0]}]
+    angle = lambda k: turns[min(max(k, 0), len(turns) - 1)] if turns else 0.0
+    at = angle(0) if first_turn is None else first_turn
+    frames = [{"keep": [{"points": r3(blank), "fill": blank_colour}], "ms": hold[0], "turn": at}]
+    where = []
     for k, s in enumerate(shapes):
-        frames.append({"keep": [rubbed(k - 1)] if k else [], "draw": before(k) + [{"points": s, "fill": cut_colour}], "ms": times[k]})
+        keep = rubbed(k - 1) if k else []
+        # a long turn is shown on the way: the cut before is gone, the cutter is not yet there
+        swing = (angle(k) - at + 180.0) % 360.0 - 180.0
+        if turn_step and abs(swing) > turn_step:
+            steps = math.ceil(abs(swing) / turn_step)
+            for j in range(1, steps):
+                frames.append({"keep": keep, "draw": before(k), "ms": max(20, ms // 2), "turn": at + swing * j / steps})
+                keep = []
+        at = angle(k)
+        where.append(len(frames))
+        frames.append({"keep": keep, "draw": before(k) + [{"points": s, "fill": cut_colour}], "ms": times[k], "turn": at})
     for older in range(0, tail, each):
-        frames.append({"keep": [rubbed(len(shapes) - 1)] if older == 0 and shapes else [], "draw": before(len(shapes), older), "ms": ms})
-    frames.append({"ms": hold[1]})
-    return frames, 1
+        frames.append({"keep": rubbed(len(shapes) - 1) if older == 0 and shapes else [], "draw": before(len(shapes), older), "ms": ms, "turn": at})
+    frames.append({"ms": hold[1], "turn": at})
+    if not turns and first_turn is None:
+        for f in frames:
+            del f["turn"]
+    return frames, where
+

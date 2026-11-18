@@ -2296,3 +2296,37 @@ done in offkilter, so the code is there to use again.
   before it, which is the boolean again. The bit's own outline inside
   the blank's rectangle is near enough for a line that is fading.
 
+## 2026-11 · A flip book frame can be turned
+
+The owner, having seen every pass drawn fixed to the stick, asked for
+the other picture: the bit staying level, its height and depth
+changing, and the piece turning. That is what the machine does.
+
+- **The frame turns, not the shapes.** The script still gives the
+  blank and every cut in the stick's own frame, as for the first
+  animation, and says how far each frame is turned. A cut that comes
+  from angle t, shown turned by minus t, is a level bit at its row's
+  height and depth without a line of arithmetic in the script; the
+  test measures that it is.
+- **What is kept is painted again, not turned as a picture.** The
+  first book kept only pixels. Turning pixels blurs them, and 200
+  turns would leave a smudge. A book with a turn in it remembers its
+  kept shapes and repaints them at each new angle; one without keeps
+  only pixels and costs what it did.
+- **`still` shapes.** Nothing in the sled's animation uses one. A
+  fence, a table or a scale that does not turn with the work is the
+  next thing anyone will want, and it is a flag and one branch.
+- **A long turn is shown on the way.** Roughing comes from 24
+  directions 15 degrees apart, and a blank that jumps 15 degrees reads
+  as a different blank. Turns over 6 degrees get frames in between
+  with no cutter in them, which is also true to the machine: the bit
+  is drawn back while the wheel turns the stick.
+- **A shorter trail than the first.** With the stick turning, every
+  outline moves at every new angle and is written again: at 48 passes
+  of trail the file was 6 MB. At 24 it is 4.1 MB, and the picture is
+  less crowded.
+- **Both are kept.** Fixed to the stick is the one to judge a plan by;
+  as the machine has it is the one to learn the machine from. The
+  decision above this one, that the picture is fixed to the stick,
+  still describes the first.
+

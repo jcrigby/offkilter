@@ -7,6 +7,12 @@
 //! thing being made: what has been done is kept, what is being done is
 //! drawn. Shapes are opaque and painted in order.
 //!
+//! A frame can also be turned: the page and what is drawn over it are
+//! shown turned about a point, for work that turns under a tool that
+//! does not. What was kept is then remembered as shapes and painted
+//! afresh whenever the turn changes, so nothing is blurred by turning
+//! a picture of it.
+//!
 //! The GIF is written with each frame's own colours (up to 255 of them,
 //! the commonest if there are more) and only the pixels that changed
 //! since the frame before, so a long animation of small changes stays
@@ -16,7 +22,7 @@ use crate::raster::{Image, Rgb};
 use std::collections::BTreeMap;
 
 /// One polygon or polyline, in the book's own units, y up.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Shape {
     pub points: Vec<(f64, f64)>,
     /// Filled with this, by the even-odd rule.
@@ -27,6 +33,8 @@ pub struct Shape {
     pub width: f64,
     /// Whether the outline goes back from the last point to the first.
     pub closed: bool,
+    /// Left where it is given when its frame is turned.
+    pub still: bool,
 }
 
 /// One frame of a book.
@@ -38,6 +46,12 @@ pub struct Frame {
     pub draw: Vec<Shape>,
     /// How long the frame is shown, in milliseconds.
     pub ms: u32,
+    /// The frame is shown turned this many degrees anticlockwise about
+    /// `about`: the page as it has been kept so far, and every shape of
+    /// this frame that is not `still`.
+    pub turn: f64,
+    /// What a turned frame turns about, in the shapes' units.
+    pub about: (f64, f64),
 }
 
 /// A flat animation.
@@ -136,10 +150,30 @@ impl Page {
         }
     }
 
-    fn paint(&mut self, shape: &Shape) {
+    fn clear(&mut self, c: Rgb) {
+        for cell in self.data.chunks_exact_mut(3) {
+            cell[0] = c.0;
+            cell[1] = c.1;
+            cell[2] = c.2;
+        }
+    }
+
+    /// Paints a shape, turned as its frame is unless it is `still`.
+    fn paint(&mut self, shape: &Shape, turn: (f64, (f64, f64))) {
+        let (sin, cos) = turn.0.to_radians().sin_cos();
+        let about = turn.1;
+        let turned = turn.0 != 0.0 && !shape.still;
         let pts: Vec<(f64, f64)> = shape
             .points
             .iter()
+            .map(|p| {
+                if turned {
+                    let (x, y) = (p.0 - about.0, p.1 - about.1);
+                    (about.0 + x * cos - y * sin, about.1 + x * sin + y * cos)
+                } else {
+                    *p
+                }
+            })
             .map(|p| (self.left + self.scale * p.0, self.top - self.scale * p.1))
             .collect();
         if let Some(c) = shape.fill {
@@ -218,20 +252,40 @@ pub fn play(
     mut each: impl FnMut(usize, &Image, u32) -> Result<(), String>,
 ) -> Result<(), String> {
     let mut page = Page::new(book)?;
+    // A book any of whose frames is turned has what it keeps remembered as shapes, to be painted again each time
+    // the turn changes. One that never turns keeps only the picture.
+    let turns = book.frames.iter().any(|f| f.turn != 0.0);
+    let mut kept: Vec<&Shape> = Vec::new();
+    let mut showing = (0.0, (0.0, 0.0));
     for (n, frame) in book.frames.iter().enumerate() {
+        let turn = if frame.turn == 0.0 {
+            (0.0, (0.0, 0.0))
+        } else {
+            (frame.turn, frame.about)
+        };
+        if turn != showing {
+            page.clear(book.background);
+            for shape in &kept {
+                page.paint(shape, turn);
+            }
+            showing = turn;
+        }
         for shape in &frame.keep {
-            page.paint(shape);
+            page.paint(shape, turn);
+            if turns {
+                kept.push(shape);
+            }
         }
         if frame.draw.is_empty() {
             each(n, &page.image(), frame.ms)?;
             continue;
         }
-        let kept = page.data.clone();
+        let before = page.data.clone();
         for shape in &frame.draw {
-            page.paint(shape);
+            page.paint(shape, turn);
         }
         each(n, &page.image(), frame.ms)?;
-        page.data = kept;
+        page.data = before;
     }
     Ok(())
 }
@@ -698,6 +752,7 @@ mod tests {
             stroke: None,
             width: 0.0,
             closed: true,
+            still: false,
         }
     }
 
@@ -743,6 +798,7 @@ mod tests {
                 keep: vec![],
                 draw: vec![shape(&points, black)],
                 ms: 100,
+                ..Frame::default()
             }]);
             let got = ink(&still(&b, 0).unwrap()) / 4.0;
             assert!(
@@ -762,6 +818,7 @@ mod tests {
                 Some(Rgb(0, 0, 0)),
             )],
             ms: 100,
+            ..Frame::default()
         }]);
         b.view = [0.0, 0.0, 200.0, 100.0];
         let image = still(&b, 0).unwrap();
@@ -780,11 +837,13 @@ mod tests {
             stroke: Some(Rgb(0, 0, 0)),
             width: 6.0,
             closed: false,
+            still: false,
         };
         let b = book(vec![Frame {
             keep: vec![],
             draw: vec![line],
             ms: 100,
+            ..Frame::default()
         }]);
         let image = still(&b, 0).unwrap();
         // 120 pixels long and 6 wide, with a round end of radius 3 at each end
@@ -811,6 +870,7 @@ mod tests {
                 keep: vec![left],
                 draw: vec![right],
                 ms: 100,
+                ..Frame::default()
             },
             Frame::default(),
         ]);
@@ -821,6 +881,99 @@ mod tests {
         })
         .unwrap();
         assert_eq!(seen, vec![(red, blue), (red, Rgb(255, 255, 255))]);
+    }
+
+    #[test]
+    fn a_frame_can_be_turned_and_what_was_kept_turns_with_it() {
+        let (red, blue, white) = (Rgb(200, 30, 30), Rgb(30, 30, 200), Rgb(255, 255, 255));
+        // a square kept to the right of the middle, and a mark that stays in its corner
+        let square = shape(
+            &[(20.0, -10.0), (40.0, -10.0), (40.0, 10.0), (20.0, 10.0)],
+            Some(red),
+        );
+        let mark = Shape {
+            still: true,
+            ..shape(
+                &[(-45.0, 35.0), (-35.0, 35.0), (-35.0, 45.0), (-45.0, 45.0)],
+                Some(blue),
+            )
+        };
+        let frame = |keep: Vec<Shape>, turn: f64, about: (f64, f64)| Frame {
+            keep,
+            draw: vec![mark.clone()],
+            ms: 100,
+            turn,
+            about,
+        };
+        let mut b = book(vec![
+            frame(vec![square], 0.0, (0.0, 0.0)),
+            frame(vec![], 90.0, (0.0, 0.0)),
+            frame(vec![], 180.0, (0.0, 0.0)),
+            frame(vec![], 180.0, (30.0, 0.0)), // about the square's own middle: it stays where it was
+            frame(vec![], 45.0, (0.0, 0.0)),
+            frame(vec![], 0.0, (0.0, 0.0)),
+        ]);
+        b.view = [-50.0, -50.0, 50.0, 50.0];
+        // a unit is two pixels: (x, y) is pixel (100 + 2x, 100 - 2y)
+        let at = |image: &Image, x: f64, y: f64| {
+            image.pixel((100.0 + 2.0 * x) as usize, (100.0 - 2.0 * y) as usize)
+        };
+        let count = |image: &Image, c: Rgb| {
+            image
+                .data
+                .chunks_exact(3)
+                .filter(|p| Rgb(p[0], p[1], p[2]) == c)
+                .count()
+        };
+        let mut seen = Vec::new();
+        play(&b, |_, image, _| {
+            seen.push(image.clone());
+            Ok(())
+        })
+        .unwrap();
+        // where the square's middle is in each frame, and that it is nowhere it was
+        for (k, middle) in [
+            (30.0, 0.0),
+            (0.0, 30.0),
+            (-30.0, 0.0),
+            (30.0, 0.0),
+            (21.2, 21.2),
+            (30.0, 0.0),
+        ]
+        .iter()
+        .enumerate()
+        {
+            assert_eq!(at(&seen[k], middle.0, middle.1), red, "frame {k}");
+            assert_eq!(at(&seen[k], -40.0, 40.0), blue, "the mark stays, frame {k}");
+            assert_eq!(count(&seen[k], blue), 400, "frame {k}");
+        }
+        assert_eq!(at(&seen[1], 30.0, 0.0), white);
+        assert_eq!(at(&seen[2], 30.0, 0.0), white);
+        // turned by quarter turns it is the same square, pixel for pixel; turned 45 degrees, the same area
+        for k in [0, 1, 2, 3, 5] {
+            assert_eq!(count(&seen[k], red), 1600, "frame {k}");
+        }
+        // red and the mark's blue are equally far from white in green, and the mark is 400 pixels
+        let red_ink: f64 = seen[4]
+            .data
+            .chunks_exact(3)
+            .map(|p| (255.0 - p[1] as f64) / 225.0)
+            .sum::<f64>()
+            - 400.0;
+        assert!((red_ink - 1600.0).abs() < 16.0, "{red_ink}");
+        // and turned back, the frame is the first frame again, and what a book that never turned would show
+        assert!(seen[5] == seen[0] && seen[3] == seen[0]);
+        let mut flat = b.clone();
+        flat.frames.truncate(1);
+        assert!(still(&flat, 0).unwrap() == seen[0]);
+        // it reads back from the file the same
+        let mut k = 0;
+        read_gif(&gif(&b).unwrap(), |n, image, _| {
+            assert!(*image == seen[n], "frame {n}");
+            k += 1;
+        })
+        .unwrap();
+        assert_eq!(k, 6);
     }
 
     #[test]
@@ -883,19 +1036,23 @@ mod tests {
                     stroke: Some(*c),
                     width: 3.0,
                     closed: false,
+                    still: false,
                 }],
                 ms: 70 + 30 * k as u32,
+                ..Frame::default()
             });
         }
         frames.push(Frame {
             keep: vec![],
             draw: vec![],
             ms: 500,
+            ..Frame::default()
         });
         frames.push(Frame {
             keep: vec![],
             draw: vec![],
             ms: 250,
+            ..Frame::default()
         }); // the same picture again: a frame all the same
         let b = book(frames);
         let mut rendered = Vec::new();
@@ -941,6 +1098,7 @@ mod tests {
             keep: vec![],
             draw,
             ms: 100,
+            ..Frame::default()
         }]);
         let want = still(&b, 0).unwrap();
         let mut worst = 0i32;
