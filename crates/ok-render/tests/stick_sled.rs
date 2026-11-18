@@ -561,7 +561,35 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
     assert!(za - top - swing >= f(&s["bed_clear"]));
     assert!((f(&p["box_y"][0]) - face).abs() < 1e-9);
     // the uprights and the plate stay on the stick's side of that face
-    assert!(f(&s["stock_half"]) + f(&s["face_clear"]) <= face && f(&s["plate_y"][1]) < face - 1.0);
+    // The deck reaches out over the near fence toward that face and stops short of it; the risers are on the deck
+    // and the pillow blocks' feet on the risers.
+    let (deck_near, riser_half, kp) = (f(&s["deck_y"][1]), f(&s["riser_half"]), &s["kp"]);
+    assert!(deck_near + 5.0 <= face && f(&s["plate_y"][1]) < face - 1.0);
+    assert!(f(&kp[1]) / 2.0 <= riser_half && riser_half < deck_near);
+    // The stick's axis is a riser and a pillow block's centre height over the deck: two layers of 1/2 in and 19.
+    assert!((f(&s["riser"]) - 2.0 * f(&s["t12"])).abs() < 1e-9);
+    assert!((f(&s["axis_over"]) - f(&s["riser"]) - f(&kp[3])).abs() < 1e-9);
+    // The collet nut goes lower than a riser's top and comes nearer the axis than a riser is wide, so along the
+    // sled it must never be over one: past the tail's inner block with the sled back, short of the headstock with
+    // it forward. It is always well over the deck.
+    let nut_r = f(&p["collet"][0]) / 2.0;
+    let lowest = rows.iter().map(|r| r.across).fold(f64::MAX, f64::min) - nut_r;
+    let (tail_end, head_start) = (f(&s["tail_riser_x"][1]), f(&s["head_riser_x"][0]));
+    println!(
+        "the collet nut comes {:.1} below the axis, {:.1} under a riser's top; it is {:.1} past the tail's riser with the sled back and {:.1} short of the head's with it forward",
+        -lowest,
+        -lowest - f(&kp[3]),
+        f(&s["back_x"]) - nut_r - tail_end,
+        head_start - f(&s["forward_x"]) - nut_r
+    );
+    assert!(
+        f(&s["back_x"]) - nut_r - tail_end >= 3.0 && head_start - f(&s["forward_x"]) - nut_r >= 3.0
+    );
+    assert!((f(&s["nut_past"]) - (f(&s["back_x"]) - nut_r - tail_end)).abs() < 1e-9);
+    assert!(
+        lowest + f(&s["axis_over"]) >= 10.0,
+        "the nut passes over the deck"
+    );
     // the stick's axis is level with the middle of the height's travel
     let travel = pair(&a["travel"]);
     assert!((f(&p["bit_home_z"]) + travel.1 / 2.0 - za).abs() < 1e-9);
@@ -884,10 +912,10 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
         "Sled box",
         "Spring plungers",
         "Tailstock",
-        "Tail bearings KFL001",
+        "Tail bearings KP001",
         "Tail spindle",
         "Headstock",
-        "Flange bearings KFL001",
+        "Head bearings KP001",
         "Spindle",
         "Blank socket",
         "Star hub",
@@ -1142,12 +1170,12 @@ fn the_blank_is_a_rectangle_about_the_tile_and_goes_on_a_wide_face_down() {
 /// pulley in it; the index wheel is on a hub on its own shaft, in two
 /// flange bearings on the index head; the star on the sled's spindle
 /// goes into the wheel's face (the next test); that spindle runs in
-/// two flange bearings bolted to the headstock's uprights; its end is
-/// in the boss of a printed socket whose pocket holds the blank's end
-/// by its flats; the other end of the stick is on the point of a
-/// second rod in two more flange bearings, bare where the bit is set
-/// against it; and a fin on the wheel passes through a sensor once a
-/// turn.
+/// two pillow blocks bolted down on a riser on the sled's deck; its
+/// end is in the boss of a printed socket whose pocket holds the
+/// blank's end by its flats; the other end of the stick is on the
+/// point of a second rod in two more pillow blocks, bare where the
+/// bit is set against it; and a fin on the wheel passes through a
+/// sensor once a turn.
 #[test]
 fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     let n = numbers();
@@ -1185,9 +1213,9 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     let ix = &n["index"];
     let (disc_x, star_x) = (pair(&ix["disc_x"]), pair(&ix["star_x"]));
     let star_hub = x_of(&bodies_of(&mut doc, "Star hub")[0]);
-    let head = [pair(&s["head_x"][0]), pair(&s["head_x"][1])];
+    let head_riser = pair(&s["head_riser_x"]);
     assert!(
-        (star_hub.1 - disc_x.0).abs() < 1e-6 && star_hub.0 > head[1].1,
+        (star_hub.1 - disc_x.0).abs() < 1e-6 && star_hub.0 > head_riser.1,
         "the star's hub is on the disc's inner face, its boss clear of the headstock"
     );
     assert!(
@@ -1230,18 +1258,53 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     // the sled's rod and the wheel's shaft never meet: with the star home there is this much between their ends
     let between = sh_x.0 - rod_x.1;
     assert!(between > 3.0, "{between}");
-    let bearings: Vec<(f64, f64)> = bodies_of(&mut doc, "Flange bearings KFL001")
-        .iter()
-        .map(x_of)
-        .collect();
-    assert_eq!(bearings.len(), 2);
-    for (b, up) in bearings.iter().zip(head.iter()) {
-        // the stick pushes the rod away from it, and so each bearing onto its upright
-        assert!((b.1 - up.0).abs() < 1e-6 && b.1 < disc_x.0);
-    }
+    // On the sled each spindle runs in two pillow blocks bolted down on a riser: a solid block glued face down on
+    // the deck. Each block stands on its riser with its foot inside the riser's edges, the shaft's centre its
+    // catalogue height over the foot, and the two of a pair are well apart.
+    let kp: Vec<f64> = s["kp"].as_array().unwrap().iter().map(f).collect();
+    let deck_top = f(&s["top"]);
+    let mut on_blocks = |blocks: &str, riser: &str, want: &Value| -> Vec<(f64, f64)> {
+        let riser = bodies_of(&mut doc, riser).remove(0);
+        let (r_lo, r_hi) = riser.bounds().unwrap();
+        assert!(
+            (r_lo.z - deck_top).abs() < 1e-6 && (r_hi.z - r_lo.z - f(&s["riser"])).abs() < 1e-6
+        );
+        let glue = (r_hi.x - r_lo.x) * (r_hi.y - r_lo.y);
+        assert!(
+            (riser.volume() - glue * f(&s["riser"])).abs() < 1.0,
+            "a solid block"
+        );
+        let found = bodies_of(&mut doc, blocks);
+        assert_eq!(found.len(), 2);
+        let mut along = Vec::new();
+        for (block, x) in found.iter().zip(want.as_array().unwrap()) {
+            let (lo, hi) = block.bounds().unwrap();
+            let x = pair(x);
+            assert!(
+                (lo.x - x.0).abs() < 1e-6
+                    && (hi.x - x.1).abs() < 1e-6
+                    && (hi.x - lo.x - kp[0]).abs() < 1e-6
+            );
+            assert!((lo.z - r_hi.z).abs() < 1e-6, "it stands on the riser");
+            assert!((za - lo.z - kp[3]).abs() < 1e-6 && (hi.z - lo.z - kp[2]).abs() < 0.05);
+            assert!((hi.y - lo.y - kp[1]).abs() < 1e-6 && lo.y >= r_lo.y && hi.y <= r_hi.y);
+            assert!(lo.x >= r_lo.x - 1e-6 && hi.x <= r_hi.x + 1e-6 && kp[4] / 2.0 + 8.0 <= r_hi.y);
+            assert!(overlap(block, &riser) < 1e-6);
+            along.push((lo.x, hi.x));
+        }
+        // a push of 200 N along the rod, which is more than the jack screw needs, on the riser's glue
+        println!(
+            "{riser_name}: {glue:.0} mm2 of glue under it, {:.3} MPa for 200 N along the rod",
+            200.0 / glue,
+            riser_name = blocks
+        );
+        assert!(glue > 4000.0 && along[1].0 - along[0].1 >= 25.0);
+        along
+    };
+    let bearings = on_blocks("Head bearings KP001", "Headstock", &s["head_pb_x"]);
+    let tail_bearings = on_blocks("Tail bearings KP001", "Tailstock", &s["tail_pb_x"]);
     assert!(
-        bearings[1].0 > head[0].1,
-        "the outer bearing fits between the uprights"
+        bearings[0].0 > rod.0 && bearings[1].1 < disc_x.0 && bearings[1].1 <= head_riser.1 + 1e-6
     );
     // The socket: its boss on the rod's end, its pocket round the stick's end with room behind it to push the blank
     // in further, and a fit loose enough to go on by hand. Turning, its corners clear the plate and the positioner.
@@ -1290,19 +1353,10 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
         overlap(&pushed, &body) > 1.0,
         "the pocket holds the blank across"
     );
-    // The tail spindle, where the bit waits: the same rod in two flange bearings, its end at the stick's end, bare
-    // from its inner bearing to the stick. That is the master.
+    // The tail spindle, where the bit waits: the same rod in two pillow blocks, its end at the stick's end, bare
+    // from its inner block to the stick. That is the master.
     let tail = x_of(&bodies_of(&mut doc, "Tail spindle")[0]);
-    let tail_bearings: Vec<(f64, f64)> = bodies_of(&mut doc, "Tail bearings KFL001")
-        .iter()
-        .map(x_of)
-        .collect();
-    let tail_up = [pair(&s["tail_x"][0]), pair(&s["tail_x"][1])];
-    assert_eq!(tail_bearings.len(), 2);
-    for (b, up) in tail_bearings.iter().zip(tail_up.iter()) {
-        assert!((b.0 - up.1).abs() < 1e-6);
-    }
-    assert!(tail.1.abs() < 1e-6 && tail.0 < tail_up[0].0);
+    assert!(tail.1.abs() < 1e-6 && tail.0 < tail_bearings[0].0);
     let master = pair(&s["master_x"]);
     assert!((master.0 - tail_bearings[1].1).abs() < 1e-6 && master.1.abs() < 1e-6);
     assert!(
@@ -1640,16 +1694,23 @@ fn the_sled_slides_between_two_fences_and_its_stops_put_the_bit_beside_the_maste
         // and reaches past the plate at both ends of its travel
         assert!(fence.0.x - drawn <= plate.0 - forward && fence.1.x - drawn >= plate.1 - back);
     }
-    // the near fence stands against the positioner's face, and the uprights are inside its lip
+    // the near fence stands against the positioner's face, and the near rail is inside its lip
     assert!((near.1.y - f(&s["face"])).abs() < 1e-6);
-    assert!(f(&s["stock_half"]) + 2.0 <= near.0.y);
-    // The box on the sled's bottom: two rails on edge and a deck, inside both lips, the deck's top where the
-    // uprights stand.
+    assert!(f(&s["rail_near"]) + 2.0 <= near.0.y);
+    // The box on the sled's bottom: two rails on edge, inside both lips, and a deck whose top is where the risers
+    // stand. The deck is far over the fences, and reaches out over the near one to short of the positioner's face.
     let boxed = bodies_of(&mut doc, "Sled box");
     assert_eq!(boxed.len(), 3);
     let deck = boxed[2].bounds().unwrap();
     assert!((deck.1.z - f(&s["top"])).abs() < 1e-6 && (deck.1.z - deck.0.z - ply).abs() < 1e-6);
-    assert!(deck.0.y >= datum.1.y + 1.5 && deck.1.y <= near.0.y - 1.5);
+    assert!(deck.0.y >= datum.1.y + 1.5 && deck.0.z > f(&s["lip_top"]) + 20.0);
+    assert!(
+        (f(&s["face"]) - deck.1.y - f(&s["deck_clear"])).abs() < 1e-6 && f(&s["deck_clear"]) >= 8.0
+    );
+    assert!(
+        deck.1.y - f(&s["rail_near"]) <= 2.0 * ply,
+        "the deck overhangs its rail by less than two thicknesses"
+    );
     for rail in &boxed[..2] {
         let r = rail.bounds().unwrap();
         assert!(
@@ -1658,6 +1719,10 @@ fn the_sled_slides_between_two_fences_and_its_stops_put_the_bit_beside_the_maste
                 && (r.1.y - r.0.y - ply).abs() < 1e-6
         );
         assert!(r.0.y >= deck.0.y - 1e-6 && r.1.y <= deck.1.y + 1e-6 && r.1.z - r.0.z >= 20.0);
+        assert!(
+            r.0.y >= datum.1.y + 1.5 && r.1.y <= near.0.y - 1.5,
+            "inside both lips"
+        );
     }
     // the plungers' noses fill the gap, and both stay on the fence over the whole travel
     let plungers = bodies_of(&mut doc, "Spring plungers");

@@ -120,16 +120,16 @@ a fence's lip is a strip nailed along the top of it.
   height is the bit's height on the stick: brush them, or fix a felt
   wiper to each end of the sled.
 - **The near fence stands against the positioner's face.** It is
-  14 mm wide, which is all the room there is, and the uprights are
-  50 mm wide to stay inside its lip.
+  14 mm wide, which is all the room there is, and the box's near rail
+  stands inside its lip. The deck is 46 mm over the fences and
+  reaches out over that one, to 10 mm short of the positioner's face.
 - **A stop block** on the base meets the sled at each end of its
   188 mm; the back one carries the sled-back switch and the magnet.
 
 The positioner lies on the base itself, and in plywood its bit is
 138 mm over the base. The box is what brings the sled's deck up to
-it: the stick's axis is 43.5 mm over the deck, the uprights are 84 mm
-tall, and the box stands inside both lips on a bottom that reaches
-under them. How straight the datum fence is and how flat the base is
+it: the stick's axis is 44.4 mm over the deck, and the box's rails
+stand inside both lips on a bottom that reaches under them. How straight the datum fence is and how flat the base is
 are not in the study under Setting up: the ground shafts this
 replaces were taken to be true, and a fence is as true as it is made.
 
@@ -176,7 +176,10 @@ board it goes through a slot.
 - **The lock** is a push-pull toggle clamp on a riser beside the
   headstock. Its plunger goes through a post and presses the disc,
   80 mm from the axis, against a steel plate that reaches in behind
-  the disc from a spacer on the same post. The spindle's bearings
+  the disc from a spacer on the same post. The clamp's riser is glued
+  hard against that post: the anvil pulls the post one way and the
+  clamp pushes its riser the other, and a post standing alone on its
+  edge would be bent at its foot by the whole pinch. The spindle's bearings
   feel none of it, and a plunger that moves along the spindle does
   not drag the disc round as it closes. The motor is still holding
   the stick through the star while the clamp goes on. By my estimate
@@ -203,11 +206,76 @@ Printed fits are untested. A star that prints a quarter of a
 millimetre small all round goes 1.5 mm further in, which is all the
 room there is: print the star, then the pocket to it.
 
+## What carries the stick
+
+Along the stick's axis, from the tail to the post behind the index
+head, and what each thing stands on:
+
+| | what | carried by |
+|---|---|---|
+| tail spindle | a 12 mm ground rod 91 long, a three-flat point on its end, bare for 26 mm beside the stick: the master | two KP001 pillow blocks, 44 mm between centres, bolted down on a riser |
+| the stick | the blank, 49 x 42 x 200 | the tail's point at one end, the socket at the other |
+| socket | printed, epoxied on the spindle's end | the spindle |
+| spindle | a 12 mm ground rod 147 long | two KP001 pillow blocks, 58 mm between centres, bolted down on a second riser |
+| star's hub, lock disc, star | on the spindle's far end, 49 mm out from the last block | the spindle; the disc is pinched between the clamp and its anvil, both on a post glued to the riser, the deck and the clamp's own riser |
+| *the sled ends here* | | |
+| index wheel, its hub | the pocket in the wheel's face is round the star when the sled is back | the wheel's own shaft, a 12 mm rod 90 long |
+| the wheel's shaft | | two KFL001 flange bearings on two uprights, 110 wide, on the index head's plate |
+| index head | plate, uprights, motor, home sensor | home, the star and two screw feet; away, three feet |
+| two bolts and springs | level with the axis, 40 mm each side of it | a post screwed to the base |
+
+From the base up to the axis on the sled:
+
+| | mm |
+|---|---|
+| slip | 3 |
+| sled's bottom, 3/4 in | 19.05 |
+| rail on edge | 52.15 |
+| deck, 3/4 in | 19.05 |
+| riser, two layers of 1/2 in | 25.4 |
+| pillow block, foot to the shaft's centre | 19 |
+| the stick's axis | 137.65 |
+
+- **Pillow blocks on the sled.** The two spindles used to run in
+  flange bearings on the faces of four thin uprights stood on their
+  ends on the deck. A push along the rod, which is what the socket's
+  jack screw makes, bent those uprights at glue lines 50 x 19 mm: by
+  my estimate 1.4 MPa for 200 N. A pillow block bolts down on a flat,
+  so each pair now stands on one solid block glued face down, and the
+  same push is 0.04 MPa of shear. There is nothing to stand square
+  and no 20 mm hole to bore for the rod.
+- **Both risers are sawn from one glued-up strip,** so the two
+  spindles start at one height. The blocks are castings, and makers
+  differ by a few tenths in the 19: measure the four and put the two
+  most alike on the tail.
+- **Each block is held by two M6 bolts** through the riser and the
+  deck, 56 mm apart, in holes drilled a size over. Sideways it is
+  set by sliding in those holes, up by shims under its feet.
+- **The foot is 71 mm long,** so the risers are 76 wide and the deck
+  was widened to carry them: it now overhangs the near rail by 14 mm.
+- **The collet nut is the one thing in their way.** At the deepest,
+  lowest cut it comes within 33.5 mm of the axis and 10 mm lower than
+  a riser's top, and a riser is 38 mm wide that side. So along the
+  sled the nut must never be over one. With the sled back it is 4 mm
+  past the tail's riser, which is why the master is 26 mm long where
+  it was 21; with the sled forward it is 52 mm short of the head's.
+- **The index head keeps its flange bearings.** Its shaft is 113 mm
+  over its plate, so blocks would want a pedestal of five layers.
+  The uprights there are 110 wide, the loads on them are the belt's
+  pull, in their own plane, and 15 N of spring; and their faces are
+  where the home sensor and the two bolts are fixed, level with the
+  axis.
+- **How high the stack comes out does not matter.** Six plywood
+  thicknesses are between the base and the axis. The positioner's
+  height has 80 mm of travel and the six touches find where the bit
+  is level with the stick; the index head's three feet take up the
+  rest.
+
 ## The stick's drive, joint by joint
 
 | the sled's far end, cut along the stick's axis | the tail end, where the bit waits |
 |---|---|
-| ![From the left: the stick's uncut end in the socket's pocket with room behind it, the socket's boss with the rod in it, a flange bearing and its upright twice, the star's hub, and the lock disc with the star on its outer face, the rod ending inside it](out/drive.png) | ![From the left: the tail spindle's rod through two uprights with a flange bearing on the stick's side of each, bare for 21 mm, and its end at the stick's end](out/tail.png) |
+| ![From the left: the stick's uncut end in the socket's pocket with room behind it, the socket's boss with the rod in it, two pillow blocks on their riser, the star's hub, and the lock disc with the star on its outer face, the rod ending inside it](out/drive.png) | ![From the left: the tail spindle's rod through two pillow blocks on their riser, bare for 26 mm, and its end at the stick's end](out/tail.png) |
 
 From the motor to the far end of the stick, what each part is joined
 to the next by:
@@ -223,11 +291,11 @@ to the next by:
 | star and lock disc, printed in one | their hub | four M4 bolts through slack holes into the flange of a second hub, on the disc's inner face, its boss toward the headstock where a key reaches its set screws |
 | hub | spindle, a 12 mm ground rod | the hub's set screws, on a flat ground on the rod |
 | lock disc | sled | the toggle clamp, pinching the disc against its anvil whenever the sled is away from the wheel |
-| spindle | headstock | two KFL001 flange bearing units, each bolted through its upright on the stick's side, long way up. Their set screws hold the rod endways. The uprights are drilled 20 mm for the rod to pass: no plywood is bored to a fit |
+| spindle | headstock | two KP001 pillow blocks bolted down on a riser. Their set screws hold the rod endways. No plywood is bored to a fit |
 | spindle | socket, printed | the rod's end, roughened, epoxied 22 mm into the socket's boss |
 | socket | stick | a pocket the blank's end stands 12 mm into, 0.3 mm slack all round, with two screws: one through the floor that jacks the blank toward the tail, one through a wall that locks it against the wall opposite |
 | stick | tail spindle | a point of three flats ground on the end of a second length of the rod |
-| tail spindle | tailstock | two more KFL001, the same way. The rod is bare for 21 mm between the inner one and the stick, and that is the master a bit is set against |
+| tail spindle | tailstock | two more KP001 on a second riser. The rod is bare for 26 mm between the inner one and the stick, and that is the master a bit is set against |
 | wheel | controller | a fin on the wheel's back, 34 mm from the axis, through an optical endstop on the head's first upright once a turn |
 | clamp | controller | a switch on the lock post that the clamp's handle closes |
 
@@ -239,9 +307,10 @@ cannot be where the bit comes onto the stick, so the bit waits at the
 tail and each pass stops before the socket: 21 mm of every stick is
 not cut.
 
-To buy: six KFL001, two 12 mm flanged hubs, a 20-tooth GT2 pulley of
+To buy: four KP001 pillow blocks and two KFL001 flange bearings, two
+12 mm flanged hubs, a 20-tooth GT2 pulley of
 5 mm bore, an 852 mm closed GT2 belt, an optical endstop, 12 mm
-ground rod for lengths of 147, 100 and 90 mm, a push-pull toggle
+ground rod for lengths of 147, 91 and 90 mm, a push-pull toggle
 clamp with a 10 mm plunger, a lever microswitch for it, a 16 mm pot
 magnet and a steel disc, two M5 bolts 50 long with a compression
 spring each, three round-headed M6 screws and inserts for the head's
@@ -274,8 +343,8 @@ flats for the tail's point.
   indicator on the lock disc's rim, to 0.06. What both buy is in
   Setting up.
 - **Lining the stick up with the sled's travel** (`out/bands.csv`) is
-  moving the tail spindle's two bearings on their uprights: their
-  bolt holes are slack.
+  moving the tail's two pillow blocks: sideways in their bolt holes,
+  up by shims under their feet.
 - **The home fin** is on the wheel and is read 34 mm from the axis,
   so 0.02 mm there is 0.017 mm at the tile's edge. It matters only
   when a stick is taken up again after the controller has been off.
@@ -496,7 +565,8 @@ and up or down. All of it is simulation.
 | the bit's length | 45.9 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach |
 | the wheel | 360 teeth, printed, 232 across; a closed belt of 852; the motor 207.8 from the wheel's shaft, in slots | it fits a 256 mm bed with 12 to spare each side. 0.1 mm off centre is 0.05° once a turn, 0.027 mm at the furthest cut: true it on its hub under an indicator |
 | the star and its pocket | 115.5 over the points, 10° a side, 20 deep; printed | try the star in the pocket before anything is bolted up: its flanks must seat with the disc still 1.5 mm off the boss |
-| the three rods | 12 mm ground rod: 147 long for the sled's spindle, 100 for the tail, 90 for the wheel's shaft | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
+| the three rods | 12 mm ground rod: 147 long for the sled's spindle, 91 for the tail, 90 for the wheel's shaft | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
+| the four pillow blocks | KP001: the shaft's centre 19 over the foot, 71 long, 38 high, 16 along the shaft, bolts 56 apart | the 19 is a casting's, and it is the stick's height: measure all four, pair the two most alike on the tail, and shim the rest to them |
 | the bought parts | KFL001 16 thick, 38 x 63, bolts 48 apart; the hub's flange 36 across, bolts on a 28 circle; the clamp's body 36 x 24 x 90 with a 10 mm plunger | catalogue sizes, and makers differ: measure before drilling, and before printing the bolt holes in the wheel and the disc. The clamp's riser and the hole in the lock post are made to the clamp in hand |
 | the blank's end in the socket | 49 x 42 with 0.3 mm all round | saw and plane the blanks to one size and print the pocket to that; the lock screw takes up what is left |
 
@@ -509,15 +579,15 @@ and up or down. All of it is simulation.
 | near fence | 647 long, 14 wide, 22 high, and a lip 6 thick reaching 7 over the sled | against the positioner's face |
 | slips, 2 | 601 x 30 x 3 | something slippery: UHMW tape on a strip, or HDPE |
 | sled's bottom | 413 x 215, 3/4 in ply | between the fences; two M6 spring plungers in its near edge, a steel disc let into its far end |
-| sled's box | two rails 413 x 53 on edge and a deck 413 x 194, 3/4 in ply | on the bottom, 12 mm in from its far edge and 9 from its near one |
-| tailstock, headstock | each two uprights 50 wide, 19 thick, 84 high, tied at the foot, on the deck | a KFL001 flange bearing on the stick's side of each upright |
-| tail spindle | 12 mm ground rod, 100 long | a three-flat point on its end; 21 mm bare as the master |
+| sled's box | two rails 413 x 52 on edge and a deck 413 x 208, 3/4 in ply | on the bottom, 12 mm in from its far edge; the near rail 9 in from the near edge, the deck 14 out over it |
+| tailstock, headstock | each a riser of two 1/2 in layers, 76 wide: 69 long for the tail, 76 for the head | glued face down on the deck; two KP001 pillow blocks bolted down on each |
+| tail spindle | 12 mm ground rod, 91 long | a three-flat point on its end; 26 mm bare as the master |
 | spindle | 12 mm ground rod, 147 long | its end in the socket's boss; the star's hub outboard, the rod ending inside the star |
 | blank socket | printed, 58 x 51 x 26 with a boss 26 across and 22 long | a pocket 20 deep for the blank's end; a jack screw in its floor, a lock screw in a wall |
 | star and lock disc | printed in one: a disc 176 across and 8 thick, the star 115.5 over its points and 20 long on its face, bore 13 | on a 12 mm flanged hub, trued by the disc's rim |
-| lock post, riser | 3/4 in ply: a post 88 x 72 beside the outer upright, a riser 90 x 36 x 31 for the clamp | glued and nailed to the deck; the plunger's hole through the post is 14 |
+| lock post, riser | 3/4 in ply: a post 75 x 72 beside the headstock's riser, a riser 90 x 36 x 32 for the clamp, hard against the post | glued and nailed to the deck and to each other; the plunger's hole through the post is 14 |
 | lock | a push-pull toggle clamp; a spacer 29 thick and a 6 mm steel plate 42 x 40 on the post's face | the plate reaches in behind the disc, 0.3 mm clear of it until the clamp closes |
-| index wheel | printed: 360 teeth, 232 across, 12 wide, a boss 134 across and 12 long on its face with the star's pocket in it, a fin on its back | on a 12 mm flanged hub on a 90 mm rod in two KFL001 |
+| index wheel | printed: 360 teeth, 232 across, 12 wide, a boss 134 across and 12 long on its face with the star's pocket in it, a fin on its back | on a 12 mm flanged hub on a 90 mm rod in two KFL001 flange bearings |
 | index head | 3/4 in ply: a plate 137 x 291 with a slot 20 x 120 for the wheel's rim and the belt, two uprights 110 wide and 153 high | on three round-headed screws, 6 mm off the base; the motor on a bracket at its far side, low |
 | home sensor | an optical endstop | on the head's first upright, facing the wheel's back, over the axis |
 | spring post | 3/4 in ply, 110 wide and 163 high, on a foot 60 long | screwed to the base 25 mm behind the head; two 8 mm holes, level with the axis and 80 apart, for the head's M5 bolts and springs |
@@ -537,8 +607,10 @@ written a second time, in Rust, and works every row forward:
 - the waste, on a grid of the test's own, with the table's rows run
   over it in the table's order: no row meets more than a hair-wide
   fin standing higher than its bit's bite;
-- the blank turns clear of the positioner's face and 10 mm clear of
-  the sled's plate; the uprights pass that face; the lock disc is
+- the blank turns clear of the positioner's face and 11 mm clear of
+  the sled's deck; the deck stops short of that face, and the collet
+  nut, which comes lower than a riser's top, is never over a riser;
+  the lock disc is
   clear of the positioner's box with the sled forward; the index
   wheel clears the base and dips into its plate's slot; every row is within the
   positioner's travel with the bit's margin; the collet nut, which
@@ -576,7 +648,9 @@ written a second time, in Rust, and works every row forward:
   shaft whole through two bearings between the head's uprights; the
   star's hub on the disc's inner face and the sled's rod ending
   inside the star, 5.5 mm short of the wheel's shaft; each
-  flange bearing against the stick's side of its upright; the rod its
+  pillow block standing on its riser inside the riser's edges, the
+  shaft's centre 19 mm over its foot, and each riser a solid block on
+  the deck; the rod its
   whole length, its end in the socket's boss; the socket's pocket
   round the blank's end with its fit, holding it across, and its
   corners clear of the plate and the positioner as it turns; the tail

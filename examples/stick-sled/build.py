@@ -57,7 +57,7 @@ STICK = 200.0                                   # the stick's length
 # sled's edge so that it cannot lift. No shafts and no bearing blocks.
 PLY = 19.05                                     # 3/4 in plywood, nominal, as the positioner's
 SLIP = 3.0                                      # two low-friction strips on the base that the sled rides on
-AXIS_OVER = 43.5                                # the stick's axis over the sled's deck: the socket turns 4 mm clear of it
+T12 = 12.7                                      # 1/2 in plywood, nominal, as the positioner's
 BOX_IN = 12.0                                   # the sled's box stands this far in from its bottom's far edge: the flange the datum fence's lip is over
 FENCE_L, FENCE_R = 30.0, 14.0                   # the fences, across. The far one is the datum; the near one stands between the sled and the positioner
 LIP = (6.0, 10.0, 7.0, 0.3)                     # a fence's lip: thick, how far over the sled at the datum fence and at the near one, and clear of the sled's top
@@ -70,6 +70,13 @@ WHEEL_T, PINION_T, BELT = 360, 20, 852.0        # the index wheel, the motor's p
 WHEEL_W = 12.0
 # Bought parts, at the sizes they are usually sold in: check the ones in hand before drilling for them.
 KFL = (16.0, 38.0, 63.0, 48.0)                  # a KFL001 flange bearing unit, 12 bore: thick along the shaft, wide, long, and its two bolts apart
+KP = (16.0, 71.0, 38.0, 19.0, 56.0, 6.0)        # a KP001 pillow block, 12 bore: along the shaft, long across it, high, the shaft's centre over its foot, its two bolts apart, its foot thick
+# On the sled both spindles run in pillow blocks bolted down on a riser: a solid block under each pair, glued face
+# down on the deck, in place of two thin uprights stood on their ends with a flange bearing on the face of each.
+RISER = 2 * T12                                 # the riser: two layers of 1/2 in glued face to face
+RISER_HALF = 38.0                               # and this wide each side of the axis: the block's foot and a margin
+AXIS_OVER = RISER + KP[3]                       # the stick's axis over the sled's deck: the socket turns 5 mm clear of it
+DECK_CLEAR = 10.0                               # the deck's near edge from the positioner's face: it reaches out over the near fence, which is far below it
 HUB = (36.0, 5.0, 24.0, 14.0, 28.0)             # a 12 mm flanged hub: its flange across and thick, its boss across and long, its bolt circle
 SENSOR = (13.0, 24.0, 11.0)                     # an optical endstop: how far it stands off what it is screwed to, long, wide
 FLAG_R = 34.0                                   # the home flag, a fin on the wheel's back, this far from the axis
@@ -111,16 +118,17 @@ CATCH = (16.0, 5.0, 2.0)                        # a pot magnet in the back stop'
 # The sled. x along the stick from its tail end, where the bit waits, toward the socket and the drive; y across toward
 # the positioner from the stick's axis; z up from the base.
 MASTER_R = SPINDLE_D / 2                        # the master: the tail spindle's ground rod, bare between its bearing and the stick. With the sled back the bit is beside it
-TAIL_X = ((-95.0, -76.0), (-56.0, -37.0))       # the tailstock's two uprights
-TAIL_KFL_X = tuple((x[1], x[1] + KFL[0]) for x in TAIL_X)     # a flange bearing on the stick's side of each
-TAIL_ROD_X = (TAIL_X[0][0] - 5.0, 0.0)          # the tail spindle: a rod in those two bearings, its end a three-flat point in the stick's end
-MASTER_X = (TAIL_KFL_X[1][1], 0.0)
+TAIL_PB_X = ((-86.0, -70.0), (-42.0, -26.0))    # the tail's two pillow blocks. The inner one ends short of where the collet nut is with the sled back: its foot is as far out as the nut comes in
+TAIL_RISER_X = (TAIL_PB_X[0][0] - 9.0, TAIL_PB_X[1][1])       # the block they stand on
+TAIL_ROD_X = (TAIL_PB_X[0][0] - 5.0, 0.0)       # the tail spindle: a rod in those two bearings, its end a three-flat point in the stick's end
+MASTER_X = (TAIL_PB_X[1][1], 0.0)
 SOCKET_X = (STICK - SOCKET_IN, STICK + SOCKET_SLIDE)          # the socket's pocket
 BOSS_X = (SOCKET_X[1] + SOCKET_FLOOR, SOCKET_X[1] + SOCKET_FLOOR + SOCKET_BOSS[1])
 _K = BOSS_X[1] + 4.0
-HEAD_X = ((_K + KFL[0], _K + KFL[0] + PLY), (_K + 2 * KFL[0] + PLY + 4.0, _K + 2 * KFL[0] + 2 * PLY + 4.0))   # the headstock's two uprights, past the socket
-KFL_X = tuple((x[0] - KFL[0], x[0]) for x in HEAD_X)          # a flange bearing on the stick's side of each
-STAR_HUB_X = (HEAD_X[1][1] + 2.0, HEAD_X[1][1] + 2.0 + HUB[1] + HUB[3])   # the star's hub: its boss toward the headstock, where its set screws can be got at
+HEAD_PB_X = ((_K, _K + KP[0]), (_K + 58.0, _K + 58.0 + KP[0]))            # the headstock's two pillow blocks, past the socket
+HEAD_RISER_X = (_K - 2.0, HEAD_PB_X[1][1])      # the block they stand on
+POST_X = (HEAD_RISER_X[1] - PLY, HEAD_RISER_X[1])             # the lock's post, beside the riser's far end
+STAR_HUB_X = (HEAD_RISER_X[1] + 2.0, HEAD_RISER_X[1] + 2.0 + HUB[1] + HUB[3])   # the star's hub: its boss toward the headstock, where its set screws can be got at
 DISC_X = (STAR_HUB_X[1], STAR_HUB_X[1] + DISC[1])             # the lock disc, on the hub's flange
 STAR_X = (DISC_X[1], DISC_X[1] + STAR_T)        # the star, its large end on the disc
 ROD_X = (BOSS_X[0], STAR_X[1] - 2.0)            # the spindle, from the bottom of the socket's boss to just short of the star's small end
@@ -131,9 +139,8 @@ HUB_X = (WHEEL_X[1], WHEEL_X[1] + HUB[1] + HUB[3])            # its hub, on its 
 IDX_X = ((HUB_X[1] + 2.0, HUB_X[1] + 2.0 + PLY), (HUB_X[1] + 2.0 + PLY + 2 * KFL[0] + 8.0, HUB_X[1] + 2.0 + 2 * PLY + 2 * KFL[0] + 8.0))   # the head's two uprights
 IDX_KFL_X = ((IDX_X[0][1], IDX_X[0][1] + KFL[0]), (IDX_X[1][0] - KFL[0], IDX_X[1][0]))     # a flange bearing on each, between them
 IDX_ROD_X = (WHEEL_X[1] - 2.0, IDX_X[1][0] + 8.0)             # the wheel's own shaft
-STOCK_HALF = 25.0                               # the uprights are this wide each side of the axis: a flange bearing's width and a margin, inside the near fence's lip
-STOCK_ABOVE = 40.0                              # and this high over it: a flange bearing's upper bolt, and on the index head the home sensor
-PLATE_X = (TAIL_X[0][0] - 2.0, HEAD_X[1][1] + 2.0)   # the sled's plate: the lock disc and the star hang off its far end
+STOCK_ABOVE = 40.0                              # the index head's uprights stand this high over the axis: a flange bearing's upper bolt, and the home sensor
+PLATE_X = (TAIL_RISER_X[0] - 2.0, HEAD_RISER_X[1] + 2.0)   # the sled's plate: the lock disc and the star hang off its far end
 BACK_X = -12.0                                  # the bit along the sled with the sled back: beside the master, 9 mm of the straight bit clear of the stick's end
 DRAWN_X = 100.0                                 # where the bit is drawn: mid stick, mid pass
 FACE_CLEAR = 2.5                                # the uncut blank turns this clear of the positioner's face
@@ -269,9 +276,9 @@ def main():
     face = max(near, math.ceil(blank + x_travel - BIT_MARGIN - nut_behind))   # the positioner's face, from the stick's axis
     bit_home_z = PLINTH + lid - pos["axis_z"]                    # the bit's axis over the base, the stage at home
     za = bit_home_z + z_travel / 2                               # the stick's axis: level with the middle of the height's travel
-    # The sled is a box: a bottom that slides between the fences, two rails on edge, and a deck that the uprights
+    # The sled is a box: a bottom that slides between the fences, two rails on edge, and a deck that the risers
     # stand on. The positioner's bit is high over the base, and a box brings the deck up to it where a single
-    # plate would want uprights twice as tall.
+    # plate would want the spindles on tall posts.
     plate_top = SLIP + PLY
     sled_top = za - AXIS_OVER
     if sled_top - PLY - plate_top < 20.0:
@@ -453,7 +460,10 @@ def main():
     section = tf(((0.0, za), psi), outline)
     centres = belt_centres(BELT, WHEEL_D, PINION_D)
     plate_y = (PLATE_LEFT, face - FENCE_R - SPRING_GAP)        # from the datum fence to the near one, which stands against the positioner's face
-    deck_y = (plate_y[0] + BOX_IN, plate_y[1] - LIP[2] - 2.0)  # the box and its deck: inside both lips
+    rail_near = plate_y[1] - LIP[2] - 2.0            # the near rail's outer face: inside the near fence's lip
+    deck_y = (plate_y[0] + BOX_IN, face - DECK_CLEAR)          # the deck: from inside the datum fence's lip to out over the near fence, short of the positioner's face
+    if RISER_HALF > deck_y[1] - 1.0 or KP[1] / 2 > RISER_HALF or deck_y[1] - rail_near > 2 * PLY:
+        raise SystemExit("a riser is off the deck, a pillow block off its riser, or the deck too far over its rail")
     lip_top = plate_top + LIP[3] + LIP[0]
     if LOCK_Y < deck_y[0]:
         raise SystemExit("the lock post is off the deck")
@@ -480,8 +490,6 @@ def main():
     seat_x = (STAR_X[0] + STAR_X[1]) / 2
     (bx, by), (cx, cy) = feet[1], feet[2]
     stance = abs((cx - bx) * (0.0 - by) - (cy - by) * (seat_x - bx)) / abs(cx - bx)
-    if STOCK_HALF > plate_y[1] - LIP[2] - 2.0:
-        raise SystemExit("an upright is under the near fence's lip")
     stock_top = za + STOCK_ABOVE
     # The belt on the motor's pulley: teeth in mesh. Six is the least a toothed belt is usually given.
     mesh = PINION_T * (math.pi - 2 * math.asin((WHEEL_D - PINION_D) / 2 / centres)) / (2 * math.pi)
@@ -490,9 +498,11 @@ def main():
     # With the sled back the bit is beside the tail spindle's bare rod, between its inner flange bearing and the stick.
     if BACK_X - ROUGH_R < MASTER_X[0] + 5.0 or BACK_X + ROUGH_R > MASTER_X[1] - 2.0:
         raise SystemExit("the bit is not beside the bare rod with the sled back")
-    # The collet nut is beside that bearing there, and nearest the axis at the deepest cut.
-    if nut_face_home - (x_travel - BIT_MARGIN) - KFL[1] / 2 < 5.0:
-        raise SystemExit("the collet nut meets the tail's inner flange bearing")
+    # The collet nut is beside the tail's inner pillow block there. Run out for the deepest cut its face is nearer the
+    # axis than the block's foot is long, and low enough to meet it, so along the sled it has to be past the block.
+    nut_past = BACK_X - pos["router"]["collet"][0] / 2 - TAIL_PB_X[1][1]
+    if nut_past < 3.0:
+        raise SystemExit(f"the collet nut meets the tail's inner pillow block: {nut_past:.1f} along the sled")
     # The socket, turning: its corners clear the sled's plate and the positioner's face. A pass ends with the collet
     # nut short of it, so the last of the stick is not cut.
     blank_m = tf(((0.0, za), psi), blank_of["corners"])
@@ -524,10 +534,10 @@ def main():
         raise SystemExit("the index head's plate meets the fences, or is off the base")
     if za - DISC[0] / 2 < lip_top + 10.0:
         raise SystemExit("the lock disc meets a fence's lip")
-    clamp_x = (HEAD_X[1][0] - 4.0 - CLAMP[2], HEAD_X[1][0] - 4.0)         # the clamp's body, on its riser beside the headstock
+    clamp_x = (POST_X[0] - CLAMP[2], POST_X[0])      # the clamp's body, on its riser beside the headstock: riser and body hard up against the post, which the anvil pulls the other way
     catch_at = (plate_y[0] + STOP[1] / 2, SLIP + PLY / 2)        # the catch, across and up: in the middle of the back stop's face
-    if STOCK_HALF + FACE_CLEAR > face:
-        raise SystemExit("an upright meets the positioner's face")
+    if deck_y[1] + 5.0 > face:
+        raise SystemExit("the deck meets the positioner's face")
     bit_z = bit_home_z + row["height"]
     col = pos["sleeve"]["outside"] / 2
     drive = pos["drive"]
@@ -558,7 +568,7 @@ def main():
 
     def sled_box(p):
         # On the bottom: a rail on edge along each side, and the deck across them.
-        for y in ((deck_y[0], deck_y[0] + PLY), (deck_y[1] - PLY, deck_y[1])):
+        for y in ((deck_y[0], deck_y[0] + PLY), (rail_near - PLY, rail_near)):
             box(p, "rail", PLATE_X, y, (plate_top, sled_top - PLY))
         box(p, "deck", PLATE_X, deck_y, (sled_top - PLY, sled_top))
 
@@ -567,16 +577,22 @@ def main():
         for x in PLUNGER[1]:
             ycyl(p, "spring plunger's nose", (plate_y[1], plate_y[1] + SPRING_GAP), (x, plate_top - PLY / 2), PLUNGER[0])
 
-    def stock(p, uprights):
-        # Two uprights tied at the foot. They only carry the flange bearings: the rod passes them in a slack hole.
-        for x in uprights:
-            box(p, "upright", x, (-STOCK_HALF, STOCK_HALF), (sled_top, stock_top))
-            xcyl(p, "the rod's way", (x[0] - 1.0, x[1] + 1.0), (0.0, za), SPINDLE_D + 8.0, op="remove")
-        box(p, "tie", (uprights[0][1], uprights[1][0]), (-STOCK_HALF, STOCK_HALF), (sled_top, sled_top + 10.0), op="add")
+    def riser(p, name, x):
+        # Two layers of 1/2 in glued face to face, and that glued and nailed face down on the deck. Both are sawn from
+        # one glued-up strip, so the two spindles start at one height.
+        box(p, name, x, (-RISER_HALF, RISER_HALF), (sled_top, sled_top + RISER))
+
+    def pillow_blocks(p, where):
+        # Bolted down through the riser and the deck, M6 in holes drilled a size over. Their set screws hold the rod
+        # endways, and what pushes along the rod goes into the riser's glue in shear.
+        for x in where:
+            box(p, "KP001's foot", x, (-KP[1] / 2, KP[1] / 2), (za - KP[3], za - KP[3] + KP[5]))
+            xcyl(p, "its housing", x, (0.0, za), KP[2], op="add")
+        xcyl(p, "bore", (where[0][0] - 0.5, where[1][1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
     def flange_bearings(p, where):
-        # Bolted to the uprights' faces, long way up, each on the stick's side of its upright. Their set screws hold
-        # the rod endways.
+        # On the index head, where the shaft is far over its plate: bolted to the uprights' faces, long way up. Their
+        # set screws hold the rod endways.
         for x in where:
             box(p, "KFL001", x, (-KFL[1] / 2, KFL[1] / 2), (za - KFL[2] / 2, za + KFL[2] / 2))
             xcyl(p, "bore", (x[0] - 0.5, x[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
@@ -621,17 +637,18 @@ def main():
         xcyl(p, "bore", (STAR_HUB_X[0] - 0.5, STAR_HUB_X[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
     def lock_post(p):
-        # Beside the headstock's outer upright, glued and nailed to it and to the deck: the clamp's plunger goes
-        # through it and the anvil is bolted to its face. The riser brings the clamp up to the axis's height.
-        box(p, "lock post", HEAD_X[1], (LOCK_Y, -STOCK_HALF), (sled_top, za + 28.0))
-        xcyl(p, "the plunger's way", (HEAD_X[1][0] - 1.0, HEAD_X[1][1] + 1.0), (-LOCK_R, za), CLAMP[3] + 4.0, op="remove")
+        # Beside the headstock's riser, glued and nailed to it, to the deck and to the clamp's riser: the clamp's
+        # plunger goes through it and the anvil is bolted to its face. The anvil pulls the post one way and the clamp
+        # pushes its riser the other, so the two are hard together and the pinch stays between them.
+        box(p, "lock post", POST_X, (LOCK_Y, -RISER_HALF), (sled_top, za + 28.0))
+        xcyl(p, "the plunger's way", (POST_X[0] - 1.0, POST_X[1] + 1.0), (-LOCK_R, za), CLAMP[3] + 4.0, op="remove")
         box(p, "clamp's riser", clamp_x, (-LOCK_R - CLAMP[0] / 2, -LOCK_R + CLAMP[0] / 2), (sled_top, za - CLAMP[1] / 2))
 
     def lock_anvil(p):
         # A spacer on the post's face, outside the disc's rim, and on it a steel plate that reaches in behind the
         # disc: what the clamp pinches the disc against. The spindle's bearings feel none of the clamp's push.
         z = (za - ANVIL[1], za + ANVIL[1])
-        box(p, "spacer", (HEAD_X[1][1], DISC_X[1] + ANVIL[2]), (LOCK_Y, -(DISC[0] / 2 + 3.0)), z)
+        box(p, "spacer", (POST_X[1], DISC_X[1] + ANVIL[2]), (LOCK_Y, -(DISC[0] / 2 + 3.0)), z)
         box(p, "anvil", (DISC_X[1] + ANVIL[2], DISC_X[1] + ANVIL[2] + ANVIL[0]), (LOCK_Y, -(LOCK_R - 9.0)), z, op="add")
 
     def clamp(p):
@@ -644,7 +661,7 @@ def main():
 
     def lock_switch(p):
         # On the post's top, where the clamp's handle comes down on it. Its lead goes to the controller with the probe's.
-        box(p, "lock switch", (HEAD_X[1][0], HEAD_X[1][0] + SWITCH[1]), (-LOCK_R - SWITCH[0] / 2, -LOCK_R + SWITCH[0] / 2), (za + 28.0, za + 28.0 + SWITCH[2]))
+        box(p, "lock switch", (POST_X[0], POST_X[0] + SWITCH[1]), (-LOCK_R - SWITCH[0] / 2, -LOCK_R + SWITCH[0] / 2), (za + 28.0, za + 28.0 + SWITCH[2]))
 
     def catch_strike(p):
         xcyl(p, "steel strike", (PLATE_X[1] - CATCH[2], PLATE_X[1]), catch_at, CATCH[0])
@@ -785,9 +802,9 @@ def main():
             ycyl(p, name, (y, y + long), (base(0.0), bit_z), d, op="add" if k else "new")
             y += long
 
-    parts = [("Base", base_board), ("Fences", fences), ("Slips", slips), ("Sled plate", plate), ("Sled box", sled_box), ("Spring plungers", plungers), ("Tailstock", lambda p: stock(p, TAIL_X)),
-             ("Tail bearings KFL001", lambda p: flange_bearings(p, TAIL_KFL_X)), ("Tail spindle", tail_spindle), ("Headstock", lambda p: stock(p, HEAD_X)),
-             ("Flange bearings KFL001", lambda p: flange_bearings(p, KFL_X)), ("Spindle", spindle), ("Blank socket", socket),
+    parts = [("Base", base_board), ("Fences", fences), ("Slips", slips), ("Sled plate", plate), ("Sled box", sled_box), ("Spring plungers", plungers), ("Tailstock", lambda p: riser(p, "tail riser", TAIL_RISER_X)),
+             ("Tail bearings KP001", lambda p: pillow_blocks(p, TAIL_PB_X)), ("Tail spindle", tail_spindle), ("Headstock", lambda p: riser(p, "head riser", HEAD_RISER_X)),
+             ("Head bearings KP001", lambda p: pillow_blocks(p, HEAD_PB_X)), ("Spindle", spindle), ("Blank socket", socket),
              ("Star hub", star_hub), ("Index star and lock disc", star), ("Lock post", lock_post), ("Lock anvil", lock_anvil), ("Toggle clamp", clamp), ("Lock switch", lock_switch),
              ("Catch strike", catch_strike), ("Stick", stick),
              ("Index head", index_head), ("Head feet", head_feet), ("Index bearings KFL001", lambda p: flange_bearings(p, [H(x) for x in IDX_KFL_X])), ("Index shaft", index_shaft),
@@ -795,7 +812,7 @@ def main():
              ("Spring post", spring_post), ("Catch magnet", catch_magnet),
              ("Stops", stops), ("Sled-back switch", back_switch), ("Controller", controller), ("Router positioner", positioner), ("Bit", bit)]
     # What goes with the sled, and what is the index head: the head is pushed back SEAT when the star comes home in it.
-    rides = ("Sled plate", "Sled box", "Spring plungers", "Tailstock", "Tail bearings KFL001", "Tail spindle", "Headstock", "Flange bearings KFL001", "Spindle", "Blank socket",
+    rides = ("Sled plate", "Sled box", "Spring plungers", "Tailstock", "Tail bearings KP001", "Tail spindle", "Headstock", "Head bearings KP001", "Spindle", "Blank socket",
              "Star hub", "Index star and lock disc", "Lock post", "Lock anvil", "Toggle clamp", "Lock switch", "Catch strike", "Stick")
     floats = ("Index head", "Head feet", "Index bearings KFL001", "Index shaft", "Index wheel", "Wheel hub", "Turn home sensor", "Wheel drive", "Head bolts", "Head springs")
 
@@ -825,7 +842,7 @@ def main():
     if "ERROR:" in text:
         raise SystemExit(text)
     seated = DRAWN_X - BACK_X                        # from along the sled to where it is drawn there
-    mcp.call("screenshot", {"tab": home, "view": "0,-1,0", "section": "y:0", "fit": f"{HEAD_X[1][0] + seated - 12.0},-1,{-PLY - 4.0},{base(post_x[1]) + 75.0},1,{za + WHEEL_RIM + 8.0}", "width": 1600, "height": 1000,
+    mcp.call("screenshot", {"tab": home, "view": "0,-1,0", "section": "y:0", "fit": f"{POST_X[0] + seated - 12.0},-1,{-PLY - 4.0},{base(post_x[1]) + 75.0},1,{za + WHEEL_RIM + 8.0}", "width": 1600, "height": 1000,
                             "path": os.path.join(OUT, "index.png")})
     mcp.call("screenshot", {"tab": home, "view": "0.6,-0.65,0.45", "width": 1700, "height": 1100, "path": os.path.join(OUT, "home.png")})
     top_z = PLINTH + lid + wall
@@ -852,9 +869,10 @@ def main():
         "axes": {"tip_home": tip_home, "across_home": axes.across_home, "scale": list(axes.scale), "shear": axes.shear, "travel": [x_travel, z_travel], "safe": safe, "safe_clear": SAFE_CLEAR,
                  "move_clear": MOVE_CLEAR, "bit_margin": BIT_MARGIN, "bit_out": bit_out, "past": FW.PAST_MM, "turn_past": FW.TURN_PAST_DEG, "nearest_master": nearest, "probe": [FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM]},
         "straight": straight,
-        "sled": {"za": za, "face": face, "face_clear": FACE_CLEAR, "bed_clear": BED_CLEAR, "top": sled_top, "plate_top": plate_top, "axis_over": AXIS_OVER, "deck_y": deck_y, "plate_x": PLATE_X, "plate_y": plate_y, "stock_half": STOCK_HALF, "stock_top": stock_top,
-                 "head_x": HEAD_X, "tail_x": TAIL_X, "tail_kfl_x": TAIL_KFL_X, "tail_rod_x": TAIL_ROD_X, "master_x": MASTER_X, "master_r": MASTER_R, "wheel_x": WHEEL_X, "wheel_rim": WHEEL_RIM, "wheel": [WHEEL_T, PINION_T, BELT, centres], "mesh": mesh,
-                 "kfl": KFL, "kfl_x": KFL_X, "hub": HUB, "hub_x": HUB_X, "rod_x": ROD_X, "flag_r": FLAG_R, "fin_l": FIN_L,
+        "sled": {"za": za, "face": face, "face_clear": FACE_CLEAR, "bed_clear": BED_CLEAR, "top": sled_top, "plate_top": plate_top, "axis_over": AXIS_OVER, "deck_y": deck_y, "rail_near": rail_near, "deck_clear": DECK_CLEAR, "plate_x": PLATE_X, "plate_y": plate_y, "stock_top": stock_top,
+                 "kp": KP, "riser": RISER, "riser_half": RISER_HALF, "t12": T12, "head_pb_x": HEAD_PB_X, "head_riser_x": HEAD_RISER_X, "tail_pb_x": TAIL_PB_X, "tail_riser_x": TAIL_RISER_X,
+                 "lock_post_x": POST_X, "nut_past": nut_past, "tail_rod_x": TAIL_ROD_X, "master_x": MASTER_X, "master_r": MASTER_R, "wheel_x": WHEEL_X, "wheel_rim": WHEEL_RIM, "wheel": [WHEEL_T, PINION_T, BELT, centres], "mesh": mesh,
+                 "kfl": KFL, "hub": HUB, "hub_x": HUB_X, "rod_x": ROD_X, "flag_r": FLAG_R, "fin_l": FIN_L,
                  "socket": {"in": SOCKET_IN, "slide": SOCKET_SLIDE, "wall": SOCKET_WALL, "fit": SOCKET_FIT, "floor": SOCKET_FLOOR, "boss": SOCKET_BOSS, "x": SOCKET_X, "boss_x": BOSS_X,
                             "swing": socket_swing, "nut_clear": NUT_CLEAR},
                  "forward_x": forward_x, "cut_to": cut_to, "sensor": SENSOR, "stock_above": STOCK_ABOVE,

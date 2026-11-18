@@ -2205,3 +2205,46 @@ motor turns to the angle, lock, make the passes at that angle.
 Not measured, and the largest guess in it: how nearly a printed star
 comes home in a printed pocket twice running. The study takes 0.01 mm
 at its flanks.
+
+## 2026-11 · Pillow blocks on the sled, flange bearings on the index head
+
+The owner asked to be taken through what carries the work piece and
+everything else on its axis, and to use bearing blocks where they
+suit. Six bearings carry three rods. All six were flange units on the
+faces of plywood uprights.
+
+- **On the sled, pillow blocks on risers.** An upright there was
+  50 x 19 at its foot, stood on its end and butt-glued, with no
+  joinery by the owner's rule. The socket's jack screw pushes along
+  the rod, and that bent two such feet: about 1.4 MPa for 200 N by my
+  estimate, on a glue line that is half end grain. A pillow block
+  bolts down on a flat, so the pair stands on one solid block glued
+  face to face, and the push is 0.04 MPa of shear. Lost: a flange
+  unit could be slid up its upright to set the height, and a block
+  wants shims. That is the better trade: shims do not creep.
+- **The riser is two layers of 1/2 in,** and the axis is whatever
+  that and the block's 19 mm come to, 44.4 over the deck. The other
+  choice was to keep 43.5 and plane a riser to 24.5. Nothing needs
+  43.5: the positioner's height is found by touch.
+- **The deck was widened, not the block turned.** A KP001's foot is
+  71 mm long across the shaft and the deck ended 26 mm from the axis,
+  inside the near fence's lip. The deck is 46 mm above the fences, so
+  it now overhangs its rail to 10 mm short of the positioner's face.
+- **The tail's inner block moved 5 mm away from the stick.** The
+  collet nut comes lower than a riser's top and nearer the axis than
+  a riser's edge, so with the sled back it has to be past the riser's
+  end. The master is 26 mm long for it. The build stops if the nut is
+  ever over a riser, and the test works the same sum from the rows.
+- **On the index head, the flange units stay.** The wheel's shaft is
+  113 mm over the head's plate: blocks would stand on a pedestal of
+  five layers, and the sensor and the two spring bolts would still
+  want faces at the axis's height. The uprights there are 110 wide,
+  and what loads them is the belt, in their own plane, and 15 N.
+- **The lock's post is glued to the clamp's riser.** Found on the way
+  through. The clamp pushes the disc onto an anvil that hangs from the
+  post, so the post is pulled along the spindle 44 mm over the deck
+  with whatever the clamp makes, 500 N if it is a good one. Alone on
+  its 75 x 19 edge that is about 5 MPa at the glue. The clamp's own
+  riser, which is pushed the other way, was drawn 4 mm short of the
+  post; butted and glued to it, the pinch closes through the two of
+  them and the deck only holds them down.

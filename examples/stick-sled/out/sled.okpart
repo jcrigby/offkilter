@@ -125,7 +125,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 923.75,
+              "depth": 923.65,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -264,7 +264,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 647.1,
+              "depth": 647.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -390,7 +390,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 647.1,
+              "depth": 647.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -516,7 +516,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 647.1,
+              "depth": 647.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -642,7 +642,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 647.1,
+              "depth": 647.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -781,7 +781,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 601.1,
+              "depth": 601.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -907,7 +907,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 601.1,
+              "depth": 601.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1046,7 +1046,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 413.1,
+              "depth": 413.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1063,7 +1063,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 314.1
+                "offset": 314.0
               },
               "sketch": {
                 "entities": [
@@ -1167,7 +1167,7 @@
                     "type": "point",
                     "pos": {
                       "x": -148.95,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1181,7 +1181,7 @@
                     "type": "point",
                     "pos": {
                       "x": -148.95,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1189,7 +1189,7 @@
                     "type": "point",
                     "pos": {
                       "x": -168.0,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1203,7 +1203,7 @@
                     "type": "point",
                     "pos": {
                       "x": -168.0,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1237,7 +1237,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 413.1,
+              "depth": 413.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1293,7 +1293,7 @@
                     "type": "point",
                     "pos": {
                       "x": 26.0,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1307,7 +1307,7 @@
                     "type": "point",
                     "pos": {
                       "x": 26.0,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1315,7 +1315,7 @@
                     "type": "point",
                     "pos": {
                       "x": 6.949999999999999,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1329,7 +1329,7 @@
                     "type": "point",
                     "pos": {
                       "x": 6.949999999999999,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1363,7 +1363,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 413.1,
+              "depth": 413.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1389,15 +1389,15 @@
                     "type": "point",
                     "pos": {
                       "x": -168.0,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 26.0,
-                      "y": 75.10000000000004
+                      "x": 40.0,
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1410,16 +1410,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 26.0,
-                      "y": 75.10000000000004
+                      "x": 40.0,
+                      "y": 74.20000000000003
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 26.0,
-                      "y": 94.15000000000003
+                      "x": 40.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -1432,8 +1432,8 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 26.0,
-                      "y": 94.15000000000003
+                      "x": 40.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -1441,7 +1441,7 @@
                     "type": "point",
                     "pos": {
                       "x": -168.0,
-                      "y": 94.15000000000003
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -1455,7 +1455,7 @@
                     "type": "point",
                     "pos": {
                       "x": -168.0,
-                      "y": 94.15000000000003
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -1463,7 +1463,7 @@
                     "type": "point",
                     "pos": {
                       "x": -168.0,
-                      "y": 75.10000000000004
+                      "y": 74.20000000000003
                     }
                   },
                   {
@@ -1489,7 +1489,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 413.1,
+              "depth": 413.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -1629,7 +1629,7 @@
         "features": [
           {
             "id": 1,
-            "name": "upright",
+            "name": "tail riser",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -1644,16 +1644,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
+                      "x": -38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
+                      "x": 38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -1666,16 +1666,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
+                      "x": 38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 25.0,
-                      "y": 177.65000000000003
+                      "x": 38.0,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -1688,16 +1688,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 25.0,
-                      "y": 177.65000000000003
+                      "x": 38.0,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 177.65000000000003
+                      "x": -38.0,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -1710,16 +1710,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 177.65000000000003
+                      "x": -38.0,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
+                      "x": -38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -1737,7 +1737,7 @@
           },
           {
             "id": 2,
-            "name": "upright",
+            "name": "tail riser",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -1745,372 +1745,16 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 19.0,
+              "depth": 69.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
               },
               "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "the rod's way",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -96.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 137.65000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 10.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "the rod's way",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 21.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 5,
-            "name": "upright",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -56.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 177.65000000000003
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 177.65000000000003
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 177.65000000000003
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 177.65000000000003
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "upright",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 19.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 7,
-            "name": "the rod's way",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -57.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 137.65000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 10.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "the rod's way",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 7,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 21.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 9,
-            "name": "tie",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": -76.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 104.15000000000003
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 104.15000000000003
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 104.15000000000003
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 104.15000000000003
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 10,
-            "name": "tie",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 9,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 20.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
             }
           }
         ],
-        "next_id": 11,
+        "next_id": 3,
         "settings": {
           "facet_angle": 5.0
         }
@@ -2120,18 +1764,18 @@
       "id": 8,
       "kind": {
         "type": "part_studio",
-        "name": "Tail bearings KFL001",
+        "name": "Tail bearings KP001",
         "features": [
           {
             "id": 1,
-            "name": "KFL001",
+            "name": "KP001's foot",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -76.0
+                "offset": -86.0
               },
               "sketch": {
                 "entities": [
@@ -2139,16 +1783,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 106.15000000000003
+                      "x": -35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 106.15000000000003
+                      "x": 35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -2161,16 +1805,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 106.15000000000003
+                      "x": 35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 169.15000000000003
+                      "x": 35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
@@ -2183,16 +1827,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 169.15000000000003
+                      "x": 35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 169.15000000000003
+                      "x": -35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
@@ -2205,16 +1849,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 169.15000000000003
+                      "x": -35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 106.15000000000003
+                      "x": -35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -2232,7 +1876,7 @@
           },
           {
             "id": 2,
-            "name": "KFL001",
+            "name": "KP001's foot",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -2250,14 +1894,14 @@
           },
           {
             "id": 3,
-            "name": "bore",
+            "name": "its housing",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -76.5
+                "offset": -86.0
               },
               "sketch": {
                 "entities": [
@@ -2273,7 +1917,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 6.1
+                    "radius": 19.0
                   }
                 ],
                 "constraints": [],
@@ -2284,7 +1928,7 @@
           },
           {
             "id": 4,
-            "name": "bore",
+            "name": "its housing",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -2292,24 +1936,24 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 17.0,
+              "depth": 16.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
               },
-              "op": "remove"
+              "op": "add"
             }
           },
           {
             "id": 5,
-            "name": "KFL001",
+            "name": "KP001's foot",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -37.0
+                "offset": -42.0
               },
               "sketch": {
                 "entities": [
@@ -2317,16 +1961,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 106.15000000000003
+                      "x": -35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 106.15000000000003
+                      "x": 35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -2339,16 +1983,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 106.15000000000003
+                      "x": 35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 169.15000000000003
+                      "x": 35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
@@ -2361,16 +2005,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 169.15000000000003
+                      "x": 35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 169.15000000000003
+                      "x": -35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
@@ -2383,16 +2027,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 169.15000000000003
+                      "x": -35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 106.15000000000003
+                      "x": -35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -2410,7 +2054,7 @@
           },
           {
             "id": 6,
-            "name": "KFL001",
+            "name": "KP001's foot",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -2428,6 +2072,58 @@
           },
           {
             "id": 7,
+            "name": "its housing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -42.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 137.65000000000003
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 19.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "its housing",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 16.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 9,
             "name": "bore",
             "suppressed": false,
             "kind": {
@@ -2435,7 +2131,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -37.5
+                "offset": -86.5
               },
               "sketch": {
                 "entities": [
@@ -2461,16 +2157,16 @@
             }
           },
           {
-            "id": 8,
+            "id": 10,
             "name": "bore",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 7,
+              "sketch": 9,
               "profiles": {
                 "type": "all"
               },
-              "depth": 17.0,
+              "depth": 61.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2479,7 +2175,7 @@
             }
           }
         ],
-        "next_id": 9,
+        "next_id": 11,
         "settings": {
           "facet_angle": 5.0
         }
@@ -2500,7 +2196,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": -100.0
+                "offset": -91.0
               },
               "sketch": {
                 "entities": [
@@ -2535,7 +2231,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 100.0,
+              "depth": 91.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -2558,14 +2254,14 @@
         "features": [
           {
             "id": 1,
-            "name": "upright",
+            "name": "head riser",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 256.0
+                "offset": 238.0
               },
               "sketch": {
                 "entities": [
@@ -2573,16 +2269,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
+                      "x": -38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
+                      "x": 38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -2595,16 +2291,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
+                      "x": 38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 25.0,
-                      "y": 177.65000000000003
+                      "x": 38.0,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -2617,16 +2313,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 25.0,
-                      "y": 177.65000000000003
+                      "x": 38.0,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 177.65000000000003
+                      "x": -38.0,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -2639,16 +2335,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 177.65000000000003
+                      "x": -38.0,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
+                      "x": -38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -2666,7 +2362,7 @@
           },
           {
             "id": 2,
-            "name": "upright",
+            "name": "head riser",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -2674,372 +2370,16 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 19.05000000000001,
+              "depth": 76.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
               },
               "op": "new"
-            }
-          },
-          {
-            "id": 3,
-            "name": "the rod's way",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 255.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 137.65000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 10.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "the rod's way",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 21.05000000000001,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 5,
-            "name": "upright",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 295.05
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 177.65000000000003
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 177.65000000000003
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 177.65000000000003
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 177.65000000000003
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "upright",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 19.05000000000001,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 7,
-            "name": "the rod's way",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 294.05
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 137.65000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 10.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "the rod's way",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 7,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 21.05000000000001,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 9,
-            "name": "tie",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 275.05
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 104.15000000000003
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 25.0,
-                      "y": 104.15000000000003
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 104.15000000000003
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 104.15000000000003
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 10,
-            "name": "tie",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 9,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 20.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
             }
           }
         ],
-        "next_id": 11,
+        "next_id": 3,
         "settings": {
           "facet_angle": 5.0
         }
@@ -3049,11 +2389,11 @@
       "id": 11,
       "kind": {
         "type": "part_studio",
-        "name": "Flange bearings KFL001",
+        "name": "Head bearings KP001",
         "features": [
           {
             "id": 1,
-            "name": "KFL001",
+            "name": "KP001's foot",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -3068,16 +2408,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 106.15000000000003
+                      "x": -35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 106.15000000000003
+                      "x": 35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -3090,16 +2430,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 106.15000000000003
+                      "x": 35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 169.15000000000003
+                      "x": 35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
@@ -3112,16 +2452,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 19.0,
-                      "y": 169.15000000000003
+                      "x": 35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 169.15000000000003
+                      "x": -35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
@@ -3134,16 +2474,16 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 169.15000000000003
+                      "x": -35.5,
+                      "y": 124.65000000000003
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -19.0,
-                      "y": 106.15000000000003
+                      "x": -35.5,
+                      "y": 118.65000000000003
                     }
                   },
                   {
@@ -3161,7 +2501,7 @@
           },
           {
             "id": 2,
-            "name": "KFL001",
+            "name": "KP001's foot",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -3179,6 +2519,236 @@
           },
           {
             "id": 3,
+            "name": "its housing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 240.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 137.65000000000003
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 19.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "its housing",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 16.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 5,
+            "name": "KP001's foot",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 298.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.5,
+                      "y": 118.65000000000003
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 35.5,
+                      "y": 118.65000000000003
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 35.5,
+                      "y": 118.65000000000003
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 35.5,
+                      "y": 124.65000000000003
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 35.5,
+                      "y": 124.65000000000003
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.5,
+                      "y": 124.65000000000003
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.5,
+                      "y": 124.65000000000003
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -35.5,
+                      "y": 118.65000000000003
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "KP001's foot",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 16.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 7,
+            "name": "its housing",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 298.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 137.65000000000003
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 19.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "its housing",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 16.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 9,
             "name": "bore",
             "suppressed": false,
             "kind": {
@@ -3212,194 +2782,16 @@
             }
           },
           {
-            "id": 4,
+            "id": 10,
             "name": "bore",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 3,
+              "sketch": 9,
               "profiles": {
                 "type": "all"
               },
-              "depth": 17.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 5,
-            "name": "KFL001",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 279.05
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": -19.0,
-                      "y": 106.15000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 19.0,
-                      "y": 106.15000000000003
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 19.0,
-                      "y": 106.15000000000003
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 19.0,
-                      "y": 169.15000000000003
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 19.0,
-                      "y": 169.15000000000003
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -19.0,
-                      "y": 169.15000000000003
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -19.0,
-                      "y": 169.15000000000003
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -19.0,
-                      "y": 106.15000000000003
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 12,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 6,
-            "name": "KFL001",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 5,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 16.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "new"
-            }
-          },
-          {
-            "id": 7,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 278.55
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 137.65000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 6.1
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 8,
-            "name": "bore",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 7,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 17.0,
+              "depth": 75.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3408,7 +2800,7 @@
             }
           }
         ],
-        "next_id": 9,
+        "next_id": 11,
         "settings": {
           "facet_angle": 5.0
         }
@@ -3464,7 +2856,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 147.10000000000002,
+              "depth": 147.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3863,7 +3255,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 316.1
+                "offset": 316.0
               },
               "sketch": {
                 "entities": [
@@ -3915,7 +3307,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 330.1
+                "offset": 330.0
               },
               "sketch": {
                 "entities": [
@@ -3967,7 +3359,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 315.6
+                "offset": 315.5
               },
               "sketch": {
                 "entities": [
@@ -4032,7 +3424,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 335.1
+                "offset": 335.0
               },
               "sketch": {
                 "entities": [
@@ -4084,7 +3476,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 343.1
+                "offset": 343.0
               },
               "sketch": {
                 "entities": [
@@ -4896,7 +4288,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 363.1
+                "offset": 363.0
               },
               "sketch": {
                 "entities": [
@@ -5719,7 +5111,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 334.6
+                "offset": 334.5
               },
               "sketch": {
                 "entities": [
@@ -5784,7 +5176,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 295.05
+                "offset": 294.95
               },
               "sketch": {
                 "entities": [
@@ -5793,15 +5185,15 @@
                     "type": "point",
                     "pos": {
                       "x": -113.0,
-                      "y": 94.15000000000003
+                      "y": 93.25000000000004
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
+                      "x": -38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -5814,15 +5206,15 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
-                      "y": 94.15000000000003
+                      "x": -38.0,
+                      "y": 93.25000000000004
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
+                      "x": -38.0,
                       "y": 165.65000000000003
                     }
                   },
@@ -5836,7 +5228,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -25.0,
+                      "x": -38.0,
                       "y": 165.65000000000003
                     }
                   },
@@ -5867,7 +5259,7 @@
                     "type": "point",
                     "pos": {
                       "x": -113.0,
-                      "y": 94.15000000000003
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -5910,7 +5302,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 294.05
+                "offset": 293.95
               },
               "sketch": {
                 "entities": [
@@ -5962,7 +5354,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 201.05
+                "offset": 204.95
               },
               "sketch": {
                 "entities": [
@@ -5971,7 +5363,7 @@
                     "type": "point",
                     "pos": {
                       "x": -98.0,
-                      "y": 94.15000000000003
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -5979,7 +5371,7 @@
                     "type": "point",
                     "pos": {
                       "x": -62.0,
-                      "y": 94.15000000000003
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -5993,7 +5385,7 @@
                     "type": "point",
                     "pos": {
                       "x": -62.0,
-                      "y": 94.15000000000003
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -6045,7 +5437,7 @@
                     "type": "point",
                     "pos": {
                       "x": -98.0,
-                      "y": 94.15000000000003
+                      "y": 93.25000000000004
                     }
                   },
                   {
@@ -6101,7 +5493,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 314.1
+                "offset": 314.0
               },
               "sketch": {
                 "entities": [
@@ -6227,7 +5619,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 343.40000000000003
+                "offset": 343.3
               },
               "sketch": {
                 "entities": [
@@ -6366,7 +5758,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 201.05
+                "offset": 204.95
               },
               "sketch": {
                 "entities": [
@@ -6492,7 +5884,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 291.05
+                "offset": 294.95
               },
               "sketch": {
                 "entities": [
@@ -6527,7 +5919,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 39.05000000000001,
+              "depth": 35.05000000000001,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -6544,7 +5936,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 330.1
+                "offset": 330.0
               },
               "sketch": {
                 "entities": [
@@ -6609,7 +6001,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 295.05
+                "offset": 294.95
               },
               "sketch": {
                 "entities": [
@@ -6748,7 +6140,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 314.1
+                "offset": 314.0
               },
               "sketch": {
                 "entities": [
@@ -17374,7 +16766,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 439.6
+                "offset": 439.5
               },
               "sketch": {
                 "entities": [
@@ -17500,7 +16892,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 461.6
+                "offset": 461.5
               },
               "sketch": {
                 "entities": [
@@ -17626,7 +17018,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 498.6
+                "offset": 498.5
               },
               "sketch": {
                 "entities": [
@@ -17735,7 +17127,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 19.050000000000068,
+              "depth": 19.049999999999955,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -17752,7 +17144,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 497.6
+                "offset": 497.5
               },
               "sketch": {
                 "entities": [
@@ -17787,7 +17179,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 21.050000000000068,
+              "depth": 21.049999999999955,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -17804,7 +17196,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 557.6500000000001
+                "offset": 557.55
               },
               "sketch": {
                 "entities": [
@@ -17913,7 +17305,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 19.049999999999955,
+              "depth": 19.050000000000068,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -17930,7 +17322,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 556.6500000000001
+                "offset": 556.55
               },
               "sketch": {
                 "entities": [
@@ -17965,7 +17357,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 21.049999999999955,
+              "depth": 21.050000000000068,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -18003,7 +17395,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 449.6,
+                      "x": 449.5,
                       "y": -40.0
                     }
                   },
@@ -18055,7 +17447,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 564.7,
+                      "x": 564.6,
                       "y": -40.0
                     }
                   },
@@ -18107,7 +17499,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 501.6,
+                      "x": 501.5,
                       "y": 190.32933896367916
                     }
                   },
@@ -18164,7 +17556,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 517.6500000000001
+                "offset": 517.55
               },
               "sketch": {
                 "entities": [
@@ -18290,7 +17682,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 517.1500000000001
+                "offset": 517.05
               },
               "sketch": {
                 "entities": [
@@ -18342,7 +17734,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 541.6500000000001
+                "offset": 541.55
               },
               "sketch": {
                 "entities": [
@@ -18468,7 +17860,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 541.1500000000001
+                "offset": 541.05
               },
               "sketch": {
                 "entities": [
@@ -18533,7 +17925,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 475.6
+                "offset": 475.5
               },
               "sketch": {
                 "entities": [
@@ -18568,7 +17960,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 90.05000000000007,
+              "depth": 90.04999999999995,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -18598,7 +17990,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 465.6
+                "offset": 465.5
               },
               "sketch": {
                 "entities": [
@@ -18650,7 +18042,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 453.6
+                "offset": 453.5
               },
               "sketch": {
                 "entities": [
@@ -18702,7 +18094,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 452.1
+                "offset": 452.0
               },
               "sketch": {
                 "entities": [
@@ -19514,7 +18906,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 472.1
+                "offset": 472.0
               },
               "sketch": {
                 "entities": [
@@ -20337,7 +19729,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 472.1
+                "offset": 472.0
               },
               "sketch": {
                 "entities": [
@@ -21167,7 +20559,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 473.1
+                "offset": 473.0
               },
               "sketch": {
                 "entities": [
@@ -21219,7 +20611,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 477.6
+                "offset": 477.5
               },
               "sketch": {
                 "entities": [
@@ -21358,7 +20750,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 477.6
+                "offset": 477.5
               },
               "sketch": {
                 "entities": [
@@ -21410,7 +20802,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 482.6
+                "offset": 482.5
               },
               "sketch": {
                 "entities": [
@@ -21462,7 +20854,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 477.1
+                "offset": 477.0
               },
               "sketch": {
                 "entities": [
@@ -21527,7 +20919,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 485.6
+                "offset": 485.5
               },
               "sketch": {
                 "entities": [
@@ -21653,7 +21045,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 485.1
+                "offset": 485.0
               },
               "sketch": {
                 "entities": [
@@ -21792,7 +21184,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 479.6
+                "offset": 479.5
               },
               "sketch": {
                 "entities": [
@@ -21918,7 +21310,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 479.6
+                "offset": 479.5
               },
               "sketch": {
                 "entities": [
@@ -22044,7 +21436,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 478.6
+                "offset": 478.5
               },
               "sketch": {
                 "entities": [
@@ -22096,7 +21488,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 483.6
+                "offset": 483.5
               },
               "sketch": {
                 "entities": [
@@ -22222,7 +21614,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 465.6
+                "offset": 465.5
               },
               "sketch": {
                 "entities": [
@@ -22274,7 +21666,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 465.1
+                "offset": 465.0
               },
               "sketch": {
                 "entities": [
@@ -22326,7 +21718,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 465.6
+                "offset": 465.5
               },
               "sketch": {
                 "entities": [
@@ -22391,7 +21783,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 576.7
+                "offset": 576.6
               },
               "sketch": {
                 "entities": [
@@ -22443,7 +21835,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 620.75
+                "offset": 620.65
               },
               "sketch": {
                 "entities": [
@@ -22495,7 +21887,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 576.7
+                "offset": 576.6
               },
               "sketch": {
                 "entities": [
@@ -22547,7 +21939,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 620.75
+                "offset": 620.65
               },
               "sketch": {
                 "entities": [
@@ -22612,7 +22004,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 576.7
+                "offset": 576.6
               },
               "sketch": {
                 "entities": [
@@ -22664,7 +22056,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 576.7
+                "offset": 576.6
               },
               "sketch": {
                 "entities": [
@@ -22716,7 +22108,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 576.2
+                "offset": 576.1
               },
               "sketch": {
                 "entities": [
@@ -22768,7 +22160,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 576.2
+                "offset": 576.1
               },
               "sketch": {
                 "entities": [
@@ -22833,7 +22225,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 601.7
+                "offset": 601.6
               },
               "sketch": {
                 "entities": [
@@ -22959,7 +22351,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 620.75
+                "offset": 620.65
               },
               "sketch": {
                 "entities": [
@@ -23085,7 +22477,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 600.7
+                "offset": 600.6
               },
               "sketch": {
                 "entities": [
@@ -23137,7 +22529,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 600.7
+                "offset": 600.6
               },
               "sketch": {
                 "entities": [
@@ -23202,7 +22594,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 428.1
+                "offset": 428.0
               },
               "sketch": {
                 "entities": [
@@ -23393,7 +22785,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 428.1
+                "offset": 428.0
               },
               "sketch": {
                 "entities": [
@@ -23519,7 +22911,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 427.6
+                "offset": 427.5
               },
               "sketch": {
                 "entities": [
@@ -23584,7 +22976,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 428.1
+                "offset": 428.0
               },
               "sketch": {
                 "entities": [
@@ -25073,7 +24465,7 @@
           },
           {
             "id": 52,
-            "name": "Tail bearings KFL001 1",
+            "name": "Tail bearings KP001 1",
             "studio": 8,
             "body": 0,
             "fixed": true,
@@ -25092,7 +24484,7 @@
           },
           {
             "id": 53,
-            "name": "Tail bearings KFL001 2",
+            "name": "Tail bearings KP001 2",
             "studio": 8,
             "body": 1,
             "fixed": true,
@@ -25149,7 +24541,7 @@
           },
           {
             "id": 56,
-            "name": "Flange bearings KFL001 1",
+            "name": "Head bearings KP001 1",
             "studio": 11,
             "body": 0,
             "fixed": true,
@@ -25168,7 +24560,7 @@
           },
           {
             "id": 57,
-            "name": "Flange bearings KFL001 2",
+            "name": "Head bearings KP001 2",
             "studio": 11,
             "body": 1,
             "fixed": true,
@@ -26261,7 +25653,7 @@
           },
           {
             "id": 115,
-            "name": "Tail bearings KFL001 1",
+            "name": "Tail bearings KP001 1",
             "studio": 8,
             "body": 0,
             "fixed": true,
@@ -26280,7 +25672,7 @@
           },
           {
             "id": 116,
-            "name": "Tail bearings KFL001 2",
+            "name": "Tail bearings KP001 2",
             "studio": 8,
             "body": 1,
             "fixed": true,
@@ -26337,7 +25729,7 @@
           },
           {
             "id": 119,
-            "name": "Flange bearings KFL001 1",
+            "name": "Head bearings KP001 1",
             "studio": 11,
             "body": 0,
             "fixed": true,
@@ -26356,7 +25748,7 @@
           },
           {
             "id": 120,
-            "name": "Flange bearings KFL001 2",
+            "name": "Head bearings KP001 2",
             "studio": 11,
             "body": 1,
             "fixed": true,
