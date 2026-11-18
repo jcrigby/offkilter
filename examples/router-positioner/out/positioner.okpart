@@ -1033,7 +1033,7 @@
                     "type": "point",
                     "pos": {
                       "x": -12.0,
-                      "y": 121.4
+                      "y": 121.9
                     }
                   },
                   {
@@ -1041,7 +1041,7 @@
                     "type": "point",
                     "pos": {
                       "x": 12.0,
-                      "y": 121.4
+                      "y": 121.9
                     }
                   },
                   {
@@ -1055,7 +1055,7 @@
                     "type": "point",
                     "pos": {
                       "x": 12.0,
-                      "y": 121.4
+                      "y": 121.9
                     }
                   },
                   {
@@ -1107,7 +1107,7 @@
                     "type": "point",
                     "pos": {
                       "x": -12.0,
-                      "y": 121.4
+                      "y": 121.9
                     }
                   },
                   {
@@ -9606,7 +9606,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 132.4
+                "offset": 119.1
               },
               "sketch": {
                 "entities": [
@@ -9732,7 +9732,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 132.4
+                "offset": 119.1
               },
               "sketch": {
                 "entities": [
@@ -9858,7 +9858,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 131.9
+                "offset": 118.6
               },
               "sketch": {
                 "entities": [
@@ -9910,7 +9910,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 131.9
+                "offset": 118.6
               },
               "sketch": {
                 "entities": [
@@ -9962,7 +9962,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 131.9
+                "offset": 118.6
               },
               "sketch": {
                 "entities": [
@@ -10014,7 +10014,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 131.9
+                "offset": 118.6
               },
               "sketch": {
                 "entities": [
@@ -10066,7 +10066,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 131.9
+                "offset": 118.6
               },
               "sketch": {
                 "entities": [
@@ -11571,7 +11571,7 @@
         "features": [
           {
             "id": 1,
-            "name": "router body",
+            "name": "ring",
             "suppressed": false,
             "kind": {
               "type": "sketch",
@@ -11605,7 +11605,7 @@
           },
           {
             "id": 2,
-            "name": "router body",
+            "name": "ring",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -11613,7 +11613,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 54.0,
+              "depth": 18.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -11623,6 +11623,58 @@
           },
           {
             "id": 3,
+            "name": "plastic body",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 98.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 293.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 34.5
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "plastic body",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 33.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 5,
             "name": "grip",
             "suppressed": false,
             "kind": {
@@ -11630,7 +11682,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 134.0
+                "offset": 131.0
               },
               "sketch": {
                 "entities": [
@@ -11656,16 +11708,16 @@
             }
           },
           {
-            "id": 4,
+            "id": 6,
             "name": "grip",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 3,
+              "sketch": 5,
               "profiles": {
                 "type": "all"
               },
-              "depth": 51.0,
+              "depth": 54.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -11674,7 +11726,7 @@
             }
           },
           {
-            "id": 5,
+            "id": 7,
             "name": "cap",
             "suppressed": false,
             "kind": {
@@ -11708,12 +11760,12 @@
             }
           },
           {
-            "id": 6,
+            "id": 8,
             "name": "cap",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 5,
+              "sketch": 7,
               "profiles": {
                 "type": "all"
               },
@@ -11726,7 +11778,7 @@
             }
           },
           {
-            "id": 7,
+            "id": 9,
             "name": "dial's housing",
             "suppressed": false,
             "kind": {
@@ -11773,7 +11825,7 @@
                     "type": "point",
                     "pos": {
                       "x": 22.0,
-                      "y": 338.4
+                      "y": 337.9
                     }
                   },
                   {
@@ -11787,7 +11839,7 @@
                     "type": "point",
                     "pos": {
                       "x": 22.0,
-                      "y": 338.4
+                      "y": 337.9
                     }
                   },
                   {
@@ -11795,7 +11847,7 @@
                     "type": "point",
                     "pos": {
                       "x": -22.0,
-                      "y": 338.4
+                      "y": 337.9
                     }
                   },
                   {
@@ -11809,7 +11861,7 @@
                     "type": "point",
                     "pos": {
                       "x": -22.0,
-                      "y": 338.4
+                      "y": 337.9
                     }
                   },
                   {
@@ -11834,12 +11886,12 @@
             }
           },
           {
-            "id": 8,
+            "id": 10,
             "name": "dial's housing",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 7,
+              "sketch": 9,
               "profiles": {
                 "type": "all"
               },
@@ -11852,7 +11904,7 @@
             }
           },
           {
-            "id": 9,
+            "id": 11,
             "name": "chin",
             "suppressed": false,
             "kind": {
@@ -11869,7 +11921,7 @@
                     "type": "point",
                     "pos": {
                       "x": -15.0,
-                      "y": 247.4
+                      "y": 247.9
                     }
                   },
                   {
@@ -11877,7 +11929,7 @@
                     "type": "point",
                     "pos": {
                       "x": 15.0,
-                      "y": 247.4
+                      "y": 247.9
                     }
                   },
                   {
@@ -11891,7 +11943,7 @@
                     "type": "point",
                     "pos": {
                       "x": 15.0,
-                      "y": 247.4
+                      "y": 247.9
                     }
                   },
                   {
@@ -11943,7 +11995,7 @@
                     "type": "point",
                     "pos": {
                       "x": -15.0,
-                      "y": 247.4
+                      "y": 247.9
                     }
                   },
                   {
@@ -11960,12 +12012,12 @@
             }
           },
           {
-            "id": 10,
+            "id": 12,
             "name": "chin",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 9,
+              "sketch": 11,
               "profiles": {
                 "type": "all"
               },
@@ -11978,7 +12030,7 @@
             }
           },
           {
-            "id": 11,
+            "id": 13,
             "name": "nose",
             "suppressed": false,
             "kind": {
@@ -12012,12 +12064,12 @@
             }
           },
           {
-            "id": 12,
+            "id": 14,
             "name": "nose",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 11,
+              "sketch": 13,
               "profiles": {
                 "type": "all"
               },
@@ -12030,7 +12082,7 @@
             }
           },
           {
-            "id": 13,
+            "id": 15,
             "name": "spindle",
             "suppressed": false,
             "kind": {
@@ -12038,7 +12090,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 58.0
+                "offset": 62.5
               },
               "sketch": {
                 "entities": [
@@ -12064,16 +12116,16 @@
             }
           },
           {
-            "id": 14,
+            "id": 16,
             "name": "spindle",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 13,
+              "sketch": 15,
               "profiles": {
                 "type": "all"
               },
-              "depth": 7.799999999999997,
+              "depth": 3.299999999999997,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -12082,7 +12134,7 @@
             }
           },
           {
-            "id": 15,
+            "id": 17,
             "name": "collet nut",
             "suppressed": false,
             "kind": {
@@ -12090,7 +12142,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 45.5
+                "offset": 50.0
               },
               "sketch": {
                 "entities": [
@@ -12116,12 +12168,12 @@
             }
           },
           {
-            "id": 16,
+            "id": 18,
             "name": "collet nut",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 15,
+              "sketch": 17,
               "profiles": {
                 "type": "all"
               },
@@ -12134,7 +12186,7 @@
             }
           },
           {
-            "id": 17,
+            "id": 19,
             "name": "bit",
             "suppressed": false,
             "kind": {
@@ -12142,7 +12194,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 5.5
+                "offset": 10.0
               },
               "sketch": {
                 "entities": [
@@ -12168,12 +12220,12 @@
             }
           },
           {
-            "id": 18,
+            "id": 20,
             "name": "bit",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 17,
+              "sketch": 19,
               "profiles": {
                 "type": "all"
               },
@@ -12186,7 +12238,7 @@
             }
           },
           {
-            "id": 19,
+            "id": 21,
             "name": "cord's boot",
             "suppressed": false,
             "kind": {
@@ -12194,7 +12246,7 @@
               "plane": {
                 "type": "standard",
                 "base": "top",
-                "offset": 212.4
+                "offset": 212.9
               },
               "sketch": {
                 "entities": [
@@ -12220,12 +12272,12 @@
             }
           },
           {
-            "id": 20,
+            "id": 22,
             "name": "cord's boot",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 19,
+              "sketch": 21,
               "profiles": {
                 "type": "all"
               },
@@ -12238,7 +12290,7 @@
             }
           },
           {
-            "id": 21,
+            "id": 23,
             "name": "screw heads",
             "suppressed": false,
             "kind": {
@@ -12272,12 +12324,12 @@
             }
           },
           {
-            "id": 22,
+            "id": 24,
             "name": "screw heads",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 21,
+              "sketch": 23,
               "profiles": {
                 "type": "all"
               },
@@ -12290,7 +12342,7 @@
             }
           },
           {
-            "id": 23,
+            "id": 25,
             "name": "sprung block",
             "suppressed": false,
             "kind": {
@@ -12398,12 +12450,12 @@
             }
           },
           {
-            "id": 24,
+            "id": 26,
             "name": "sprung block",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 23,
+              "sketch": 25,
               "profiles": {
                 "type": "all"
               },
@@ -12416,7 +12468,7 @@
             }
           }
         ],
-        "next_id": 25,
+        "next_id": 27,
         "settings": {
           "facet_angle": 5.0
         }
@@ -12426,18 +12478,261 @@
       "id": 18,
       "kind": {
         "type": "part_studio",
-        "name": "Router block",
+        "name": "Body liner",
         "features": [
           {
             "id": 1,
-            "name": "between the lands",
+            "name": "liner",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 100.65
+                "offset": 98.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 293.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 35.355
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "liner",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 32.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "bore",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 98.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 293.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 34.55
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "bore",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 33.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 5,
+            "name": "gap",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 98.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 281.4
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 36.355,
+                      "y": 281.4
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 36.355,
+                      "y": 281.4
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 36.355,
+                      "y": 305.4
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 36.355,
+                      "y": 305.4
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 305.4
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 305.4
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 281.4
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "gap",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 33.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          }
+        ],
+        "next_id": 7,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 19,
+      "kind": {
+        "type": "part_studio",
+        "name": "Router block",
+        "features": [
+          {
+            "id": 1,
+            "name": "front land",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 81.0
               },
               "sketch": {
                 "entities": [
@@ -12538,7 +12833,7 @@
           },
           {
             "id": 2,
-            "name": "between the lands",
+            "name": "front land",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -12546,7 +12841,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 12.700000000000005,
+              "depth": 19.049999999999997,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -12556,66 +12851,14 @@
           },
           {
             "id": 3,
-            "name": "the body's bore",
+            "name": "back land",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 100.15
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 293.4
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 37.654999999999994
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "the body's bore",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 13.700000000000005,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 5,
-            "name": "front land",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 81.6
+                "offset": 100.05
               },
               "sketch": {
                 "entities": [
@@ -12715,12 +12958,12 @@
             }
           },
           {
-            "id": 6,
-            "name": "front land",
+            "id": 4,
+            "name": "back land",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 5,
+              "sketch": 3,
               "profiles": {
                 "type": "all"
               },
@@ -12733,7 +12976,7 @@
             }
           },
           {
-            "id": 7,
+            "id": 5,
             "name": "the body's bore",
             "suppressed": false,
             "kind": {
@@ -12741,7 +12984,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 81.1
+                "offset": 80.5
               },
               "sketch": {
                 "entities": [
@@ -12767,16 +13010,16 @@
             }
           },
           {
-            "id": 8,
+            "id": 6,
             "name": "the body's bore",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 7,
+              "sketch": 5,
               "profiles": {
                 "type": "all"
               },
-              "depth": 20.049999999999997,
+              "depth": 39.099999999999994,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -12785,15 +13028,15 @@
             }
           },
           {
-            "id": 9,
-            "name": "back land",
+            "id": 7,
+            "name": "kerf",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 113.35
+                "offset": 80.5
               },
               "sketch": {
                 "entities": [
@@ -12801,16 +13044,16 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -48.8,
-                      "y": 244.59999999999997
+                      "x": -1.5,
+                      "y": 326.755
                     }
                   },
                   {
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": 48.8,
-                      "y": 244.59999999999997
+                      "x": 1.5,
+                      "y": 326.755
                     }
                   },
                   {
@@ -12823,16 +13066,16 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": 48.8,
-                      "y": 244.59999999999997
+                      "x": 1.5,
+                      "y": 326.755
                     }
                   },
                   {
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": 48.8,
-                      "y": 342.2
+                      "x": 1.5,
+                      "y": 343.2
                     }
                   },
                   {
@@ -12845,16 +13088,16 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": 48.8,
-                      "y": 342.2
+                      "x": 1.5,
+                      "y": 343.2
                     }
                   },
                   {
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -48.8,
-                      "y": 342.2
+                      "x": -1.5,
+                      "y": 343.2
                     }
                   },
                   {
@@ -12867,16 +13110,142 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -48.8,
-                      "y": 342.2
+                      "x": -1.5,
+                      "y": 343.2
                     }
                   },
                   {
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -48.8,
-                      "y": 244.59999999999997
+                      "x": -1.5,
+                      "y": 326.755
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "kerf",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 39.099999999999994,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 9,
+            "name": "notch",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 80.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -49.8,
+                      "y": 326.2
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.8,
+                      "y": 326.2
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.8,
+                      "y": 326.2
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.8,
+                      "y": 343.2
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": -34.8,
+                      "y": 343.2
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -49.8,
+                      "y": 343.2
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -49.8,
+                      "y": 343.2
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -49.8,
+                      "y": 326.2
                     }
                   },
                   {
@@ -12894,7 +13263,7 @@
           },
           {
             "id": 10,
-            "name": "back land",
+            "name": "notch",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -12902,24 +13271,24 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 19.05000000000001,
+              "depth": 39.099999999999994,
               "direction": "normal",
               "end": {
                 "type": "blind"
               },
-              "op": "new"
+              "op": "remove"
             }
           },
           {
             "id": 11,
-            "name": "the body's bore",
+            "name": "holding screw",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 112.85
+                "offset": 80.5
               },
               "sketch": {
                 "entities": [
@@ -12927,15 +13296,15 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 0.0,
-                      "y": 293.4
+                      "x": -41.0,
+                      "y": 268.4
                     }
                   },
                   {
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 35.654999999999994
+                    "radius": 2.75
                   }
                 ],
                 "constraints": [],
@@ -12946,7 +13315,7 @@
           },
           {
             "id": 12,
-            "name": "the body's bore",
+            "name": "holding screw",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -12954,7 +13323,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 20.05000000000001,
+              "depth": 39.099999999999994,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -12964,14 +13333,14 @@
           },
           {
             "id": 13,
-            "name": "kerf",
+            "name": "holding screw",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 81.1
+                "offset": 80.5
               },
               "sketch": {
                 "entities": [
@@ -12979,100 +13348,26 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -1.5,
-                      "y": 326.755
+                      "x": -41.0,
+                      "y": 318.4
                     }
                   },
                   {
                     "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 1.5,
-                      "y": 326.755
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 1.5,
-                      "y": 326.755
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 1.5,
-                      "y": 343.2
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 1.5,
-                      "y": 343.2
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": -1.5,
-                      "y": 343.2
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": -1.5,
-                      "y": 343.2
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": -1.5,
-                      "y": 326.755
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 2.75
                   }
                 ],
                 "constraints": [],
-                "next_entity": 12,
+                "next_entity": 2,
                 "next_constraint": 0
               }
             }
           },
           {
             "id": 14,
-            "name": "kerf",
+            "name": "holding screw",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -13080,7 +13375,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 51.79999999999998,
+              "depth": 39.099999999999994,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -13097,7 +13392,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 81.1
+                "offset": 80.5
               },
               "sketch": {
                 "entities": [
@@ -13105,7 +13400,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -49.8,
+                      "x": 34.8,
                       "y": 326.2
                     }
                   },
@@ -13113,7 +13408,7 @@
                     "id": 1,
                     "type": "point",
                     "pos": {
-                      "x": -34.8,
+                      "x": 49.8,
                       "y": 326.2
                     }
                   },
@@ -13127,7 +13422,7 @@
                     "id": 3,
                     "type": "point",
                     "pos": {
-                      "x": -34.8,
+                      "x": 49.8,
                       "y": 326.2
                     }
                   },
@@ -13135,7 +13430,7 @@
                     "id": 4,
                     "type": "point",
                     "pos": {
-                      "x": -34.8,
+                      "x": 49.8,
                       "y": 343.2
                     }
                   },
@@ -13149,7 +13444,7 @@
                     "id": 6,
                     "type": "point",
                     "pos": {
-                      "x": -34.8,
+                      "x": 49.8,
                       "y": 343.2
                     }
                   },
@@ -13157,7 +13452,7 @@
                     "id": 7,
                     "type": "point",
                     "pos": {
-                      "x": -49.8,
+                      "x": 34.8,
                       "y": 343.2
                     }
                   },
@@ -13171,7 +13466,7 @@
                     "id": 9,
                     "type": "point",
                     "pos": {
-                      "x": -49.8,
+                      "x": 34.8,
                       "y": 343.2
                     }
                   },
@@ -13179,7 +13474,7 @@
                     "id": 10,
                     "type": "point",
                     "pos": {
-                      "x": -49.8,
+                      "x": 34.8,
                       "y": 326.2
                     }
                   },
@@ -13206,7 +13501,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 51.79999999999998,
+              "depth": 39.099999999999994,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -13223,7 +13518,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 81.1
+                "offset": 80.5
               },
               "sketch": {
                 "entities": [
@@ -13231,7 +13526,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -41.0,
+                      "x": 41.0,
                       "y": 268.4
                     }
                   },
@@ -13258,7 +13553,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 51.79999999999998,
+              "depth": 39.099999999999994,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -13275,7 +13570,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 81.1
+                "offset": 80.5
               },
               "sketch": {
                 "entities": [
@@ -13283,7 +13578,7 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": -41.0,
+                      "x": 41.0,
                       "y": 318.4
                     }
                   },
@@ -13310,7 +13605,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 51.79999999999998,
+              "depth": 39.099999999999994,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -13320,14 +13615,14 @@
           },
           {
             "id": 21,
-            "name": "notch",
+            "name": "pinch bolt",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
-                "base": "right",
-                "offset": 81.1
+                "base": "front",
+                "offset": -49.8
               },
               "sketch": {
                 "entities": [
@@ -13335,100 +13630,26 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 34.8,
-                      "y": 326.2
+                      "x": 90.525,
+                      "y": 334.05499999999995
                     }
                   },
                   {
                     "id": 1,
-                    "type": "point",
-                    "pos": {
-                      "x": 49.8,
-                      "y": 326.2
-                    }
-                  },
-                  {
-                    "id": 2,
-                    "type": "line",
-                    "start": 0,
-                    "end": 1
-                  },
-                  {
-                    "id": 3,
-                    "type": "point",
-                    "pos": {
-                      "x": 49.8,
-                      "y": 326.2
-                    }
-                  },
-                  {
-                    "id": 4,
-                    "type": "point",
-                    "pos": {
-                      "x": 49.8,
-                      "y": 343.2
-                    }
-                  },
-                  {
-                    "id": 5,
-                    "type": "line",
-                    "start": 3,
-                    "end": 4
-                  },
-                  {
-                    "id": 6,
-                    "type": "point",
-                    "pos": {
-                      "x": 49.8,
-                      "y": 343.2
-                    }
-                  },
-                  {
-                    "id": 7,
-                    "type": "point",
-                    "pos": {
-                      "x": 34.8,
-                      "y": 343.2
-                    }
-                  },
-                  {
-                    "id": 8,
-                    "type": "line",
-                    "start": 6,
-                    "end": 7
-                  },
-                  {
-                    "id": 9,
-                    "type": "point",
-                    "pos": {
-                      "x": 34.8,
-                      "y": 343.2
-                    }
-                  },
-                  {
-                    "id": 10,
-                    "type": "point",
-                    "pos": {
-                      "x": 34.8,
-                      "y": 326.2
-                    }
-                  },
-                  {
-                    "id": 11,
-                    "type": "line",
-                    "start": 9,
-                    "end": 10
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 2.75
                   }
                 ],
                 "constraints": [],
-                "next_entity": 12,
+                "next_entity": 2,
                 "next_constraint": 0
               }
             }
           },
           {
             "id": 22,
-            "name": "notch",
+            "name": "pinch bolt",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -13436,7 +13657,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 51.79999999999998,
+              "depth": 99.6,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -13446,14 +13667,14 @@
           },
           {
             "id": 23,
-            "name": "holding screw",
+            "name": "pinch bolt",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
-                "base": "right",
-                "offset": 81.1
+                "base": "front",
+                "offset": -49.8
               },
               "sketch": {
                 "entities": [
@@ -13461,8 +13682,8 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 41.0,
-                      "y": 268.4
+                      "x": 109.575,
+                      "y": 334.05499999999995
                     }
                   },
                   {
@@ -13480,167 +13701,11 @@
           },
           {
             "id": 24,
-            "name": "holding screw",
+            "name": "pinch bolt",
             "suppressed": false,
             "kind": {
               "type": "extrude",
               "sketch": 23,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 51.79999999999998,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 25,
-            "name": "holding screw",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 81.1
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 41.0,
-                      "y": 318.4
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 2.75
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 26,
-            "name": "holding screw",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 25,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 51.79999999999998,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 27,
-            "name": "pinch bolt",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "front",
-                "offset": -49.8
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 91.125,
-                      "y": 334.05499999999995
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 2.75
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 28,
-            "name": "pinch bolt",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 27,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 99.6,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "remove"
-            }
-          },
-          {
-            "id": 29,
-            "name": "pinch bolt",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "front",
-                "offset": -49.8
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 122.87499999999996,
-                      "y": 334.05499999999995
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 2.75
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 30,
-            "name": "pinch bolt",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 29,
               "profiles": {
                 "type": "all"
               },
@@ -13653,20 +13718,20 @@
             }
           }
         ],
-        "next_id": 31,
+        "next_id": 25,
         "settings": {
           "facet_angle": 5.0
         }
       }
     },
     {
-      "id": 19,
+      "id": 20,
       "kind": {
         "type": "assembly",
         "name": "Home: drawn back, up",
         "instances": [
           {
-            "id": 20,
+            "id": 21,
             "name": "Outer box 1",
             "studio": 1,
             "body": 0,
@@ -13685,7 +13750,7 @@
             }
           },
           {
-            "id": 21,
+            "id": 22,
             "name": "Outer box 2",
             "studio": 1,
             "body": 1,
@@ -13704,7 +13769,7 @@
             }
           },
           {
-            "id": 22,
+            "id": 23,
             "name": "Outer box 3",
             "studio": 1,
             "body": 2,
@@ -13723,7 +13788,7 @@
             }
           },
           {
-            "id": 23,
+            "id": 24,
             "name": "Outer box 4",
             "studio": 1,
             "body": 3,
@@ -13742,7 +13807,7 @@
             }
           },
           {
-            "id": 24,
+            "id": 25,
             "name": "Outer box 5",
             "studio": 1,
             "body": 4,
@@ -13761,7 +13826,7 @@
             }
           },
           {
-            "id": 25,
+            "id": 26,
             "name": "Outer box 6",
             "studio": 1,
             "body": 5,
@@ -13780,7 +13845,7 @@
             }
           },
           {
-            "id": 26,
+            "id": 27,
             "name": "Z gibs 1",
             "studio": 2,
             "body": 0,
@@ -13799,7 +13864,7 @@
             }
           },
           {
-            "id": 27,
+            "id": 28,
             "name": "Z gibs 2",
             "studio": 2,
             "body": 1,
@@ -13818,7 +13883,7 @@
             }
           },
           {
-            "id": 28,
+            "id": 29,
             "name": "Z gibs 3",
             "studio": 2,
             "body": 2,
@@ -13837,7 +13902,7 @@
             }
           },
           {
-            "id": 29,
+            "id": 30,
             "name": "Z drive housing 1",
             "studio": 3,
             "body": 0,
@@ -13856,7 +13921,7 @@
             }
           },
           {
-            "id": 30,
+            "id": 31,
             "name": "Z drive housing 2",
             "studio": 3,
             "body": 1,
@@ -13875,7 +13940,7 @@
             }
           },
           {
-            "id": 31,
+            "id": 32,
             "name": "Z drive housing 3",
             "studio": 3,
             "body": 2,
@@ -13894,7 +13959,7 @@
             }
           },
           {
-            "id": 32,
+            "id": 33,
             "name": "Z drive housing 4",
             "studio": 3,
             "body": 3,
@@ -13913,7 +13978,7 @@
             }
           },
           {
-            "id": 33,
+            "id": 34,
             "name": "Z drive housing 5",
             "studio": 3,
             "body": 4,
@@ -13932,7 +13997,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 35,
             "name": "Z drive housing 6",
             "studio": 3,
             "body": 5,
@@ -13951,7 +14016,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 36,
             "name": "Z drive 1",
             "studio": 4,
             "body": 0,
@@ -13970,7 +14035,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 37,
             "name": "Z drive 2",
             "studio": 4,
             "body": 1,
@@ -13989,7 +14054,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 38,
             "name": "Z drive 3",
             "studio": 4,
             "body": 2,
@@ -14008,7 +14073,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 39,
             "name": "Z drive 4",
             "studio": 4,
             "body": 3,
@@ -14027,7 +14092,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 40,
             "name": "Z drive 5",
             "studio": 4,
             "body": 4,
@@ -14046,7 +14111,7 @@
             }
           },
           {
-            "id": 40,
+            "id": 41,
             "name": "Z drive 6",
             "studio": 4,
             "body": 5,
@@ -14065,7 +14130,7 @@
             }
           },
           {
-            "id": 41,
+            "id": 42,
             "name": "Z drive 7",
             "studio": 4,
             "body": 6,
@@ -14084,7 +14149,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 43,
             "name": "Z home switch",
             "studio": 5,
             "body": 0,
@@ -14103,7 +14168,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 44,
             "name": "X tube 1",
             "studio": 6,
             "body": 0,
@@ -14122,7 +14187,7 @@
             }
           },
           {
-            "id": 44,
+            "id": 45,
             "name": "X tube 2",
             "studio": 6,
             "body": 1,
@@ -14141,7 +14206,7 @@
             }
           },
           {
-            "id": 45,
+            "id": 46,
             "name": "X tube 3",
             "studio": 6,
             "body": 2,
@@ -14160,7 +14225,7 @@
             }
           },
           {
-            "id": 46,
+            "id": 47,
             "name": "X tube 4",
             "studio": 6,
             "body": 3,
@@ -14179,7 +14244,7 @@
             }
           },
           {
-            "id": 47,
+            "id": 48,
             "name": "X tube 5",
             "studio": 6,
             "body": 4,
@@ -14198,7 +14263,7 @@
             }
           },
           {
-            "id": 48,
+            "id": 49,
             "name": "X tube 6",
             "studio": 6,
             "body": 5,
@@ -14217,7 +14282,7 @@
             }
           },
           {
-            "id": 49,
+            "id": 50,
             "name": "Z stage 1",
             "studio": 7,
             "body": 0,
@@ -14236,7 +14301,7 @@
             }
           },
           {
-            "id": 50,
+            "id": 51,
             "name": "Z stage 2",
             "studio": 7,
             "body": 1,
@@ -14255,7 +14320,7 @@
             }
           },
           {
-            "id": 51,
+            "id": 52,
             "name": "Z stage 3",
             "studio": 7,
             "body": 2,
@@ -14274,7 +14339,7 @@
             }
           },
           {
-            "id": 52,
+            "id": 53,
             "name": "Z stage 4",
             "studio": 7,
             "body": 3,
@@ -14293,7 +14358,7 @@
             }
           },
           {
-            "id": 53,
+            "id": 54,
             "name": "Z stage 5",
             "studio": 7,
             "body": 4,
@@ -14312,7 +14377,7 @@
             }
           },
           {
-            "id": 54,
+            "id": 55,
             "name": "Z stage 6",
             "studio": 7,
             "body": 5,
@@ -14331,7 +14396,7 @@
             }
           },
           {
-            "id": 55,
+            "id": 56,
             "name": "Stage strips 1",
             "studio": 8,
             "body": 0,
@@ -14350,7 +14415,7 @@
             }
           },
           {
-            "id": 56,
+            "id": 57,
             "name": "Stage strips 2",
             "studio": 8,
             "body": 1,
@@ -14369,7 +14434,7 @@
             }
           },
           {
-            "id": 57,
+            "id": 58,
             "name": "Stage strips 3",
             "studio": 8,
             "body": 2,
@@ -14388,7 +14453,7 @@
             }
           },
           {
-            "id": 58,
+            "id": 59,
             "name": "Stage strips 4",
             "studio": 8,
             "body": 3,
@@ -14407,7 +14472,7 @@
             }
           },
           {
-            "id": 59,
+            "id": 60,
             "name": "Stage strips 5",
             "studio": 8,
             "body": 4,
@@ -14426,7 +14491,7 @@
             }
           },
           {
-            "id": 60,
+            "id": 61,
             "name": "Stage strips 6",
             "studio": 8,
             "body": 5,
@@ -14445,28 +14510,9 @@
             }
           },
           {
-            "id": 61,
+            "id": 62,
             "name": "Z nut",
             "studio": 9,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 62,
-            "name": "X gibs 1",
-            "studio": 10,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -14484,6 +14530,25 @@
           },
           {
             "id": 63,
+            "name": "X gibs 1",
+            "studio": 10,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 64,
             "name": "X gibs 2",
             "studio": 10,
             "body": 1,
@@ -14502,7 +14567,7 @@
             }
           },
           {
-            "id": 64,
+            "id": 65,
             "name": "X gibs 3",
             "studio": 10,
             "body": 2,
@@ -14521,7 +14586,7 @@
             }
           },
           {
-            "id": 65,
+            "id": 66,
             "name": "X gibs 4",
             "studio": 10,
             "body": 3,
@@ -14540,7 +14605,7 @@
             }
           },
           {
-            "id": 66,
+            "id": 67,
             "name": "X drive 1",
             "studio": 11,
             "body": 0,
@@ -14559,7 +14624,7 @@
             }
           },
           {
-            "id": 67,
+            "id": 68,
             "name": "X drive 2",
             "studio": 11,
             "body": 1,
@@ -14578,7 +14643,7 @@
             }
           },
           {
-            "id": 68,
+            "id": 69,
             "name": "X drive 3",
             "studio": 11,
             "body": 2,
@@ -14597,7 +14662,7 @@
             }
           },
           {
-            "id": 69,
+            "id": 70,
             "name": "X drive 4",
             "studio": 11,
             "body": 3,
@@ -14616,7 +14681,7 @@
             }
           },
           {
-            "id": 70,
+            "id": 71,
             "name": "X drive 5",
             "studio": 11,
             "body": 4,
@@ -14635,7 +14700,7 @@
             }
           },
           {
-            "id": 71,
+            "id": 72,
             "name": "X drive 6",
             "studio": 11,
             "body": 5,
@@ -14654,7 +14719,7 @@
             }
           },
           {
-            "id": 72,
+            "id": 73,
             "name": "X drive 7",
             "studio": 11,
             "body": 6,
@@ -14673,7 +14738,7 @@
             }
           },
           {
-            "id": 73,
+            "id": 74,
             "name": "X home switch",
             "studio": 12,
             "body": 0,
@@ -14692,7 +14757,7 @@
             }
           },
           {
-            "id": 74,
+            "id": 75,
             "name": "X quill 1",
             "studio": 13,
             "body": 0,
@@ -14711,7 +14776,7 @@
             }
           },
           {
-            "id": 75,
+            "id": 76,
             "name": "X quill 2",
             "studio": 13,
             "body": 1,
@@ -14730,7 +14795,7 @@
             }
           },
           {
-            "id": 76,
+            "id": 77,
             "name": "X quill 3",
             "studio": 13,
             "body": 2,
@@ -14749,7 +14814,7 @@
             }
           },
           {
-            "id": 77,
+            "id": 78,
             "name": "X quill 4",
             "studio": 13,
             "body": 3,
@@ -14768,7 +14833,7 @@
             }
           },
           {
-            "id": 78,
+            "id": 79,
             "name": "X quill 5",
             "studio": 13,
             "body": 4,
@@ -14787,7 +14852,7 @@
             }
           },
           {
-            "id": 79,
+            "id": 80,
             "name": "X quill 6",
             "studio": 13,
             "body": 5,
@@ -14806,7 +14871,7 @@
             }
           },
           {
-            "id": 80,
+            "id": 81,
             "name": "Quill strips 1",
             "studio": 14,
             "body": 0,
@@ -14825,7 +14890,7 @@
             }
           },
           {
-            "id": 81,
+            "id": 82,
             "name": "Quill strips 2",
             "studio": 14,
             "body": 1,
@@ -14844,7 +14909,7 @@
             }
           },
           {
-            "id": 82,
+            "id": 83,
             "name": "Quill strips 3",
             "studio": 14,
             "body": 2,
@@ -14863,7 +14928,7 @@
             }
           },
           {
-            "id": 83,
+            "id": 84,
             "name": "Quill strips 4",
             "studio": 14,
             "body": 3,
@@ -14882,7 +14947,7 @@
             }
           },
           {
-            "id": 84,
+            "id": 85,
             "name": "Quill strips 5",
             "studio": 14,
             "body": 4,
@@ -14901,7 +14966,7 @@
             }
           },
           {
-            "id": 85,
+            "id": 86,
             "name": "Spider 1",
             "studio": 15,
             "body": 0,
@@ -14920,7 +14985,7 @@
             }
           },
           {
-            "id": 86,
+            "id": 87,
             "name": "Spider 2",
             "studio": 15,
             "body": 1,
@@ -14939,7 +15004,7 @@
             }
           },
           {
-            "id": 87,
+            "id": 88,
             "name": "Spider 3",
             "studio": 15,
             "body": 2,
@@ -14958,7 +15023,7 @@
             }
           },
           {
-            "id": 88,
+            "id": 89,
             "name": "Spider 4",
             "studio": 15,
             "body": 3,
@@ -14977,28 +15042,9 @@
             }
           },
           {
-            "id": 89,
+            "id": 90,
             "name": "X nut",
             "studio": 16,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 90,
-            "name": "Router",
-            "studio": 17,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -15016,8 +15062,8 @@
           },
           {
             "id": 91,
-            "name": "Router block 1",
-            "studio": 18,
+            "name": "Router",
+            "studio": 17,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -15035,9 +15081,9 @@
           },
           {
             "id": 92,
-            "name": "Router block 2",
+            "name": "Body liner",
             "studio": 18,
-            "body": 1,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
@@ -15054,9 +15100,28 @@
           },
           {
             "id": 93,
-            "name": "Router block 3",
-            "studio": 18,
-            "body": 2,
+            "name": "Router block 1",
+            "studio": 19,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 94,
+            "name": "Router block 2",
+            "studio": 19,
+            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
@@ -15076,13 +15141,13 @@
       }
     },
     {
-      "id": 94,
+      "id": 95,
       "kind": {
         "type": "assembly",
         "name": "Plunged, up",
         "instances": [
           {
-            "id": 95,
+            "id": 96,
             "name": "Outer box 1",
             "studio": 1,
             "body": 0,
@@ -15101,7 +15166,7 @@
             }
           },
           {
-            "id": 96,
+            "id": 97,
             "name": "Outer box 2",
             "studio": 1,
             "body": 1,
@@ -15120,7 +15185,7 @@
             }
           },
           {
-            "id": 97,
+            "id": 98,
             "name": "Outer box 3",
             "studio": 1,
             "body": 2,
@@ -15139,7 +15204,7 @@
             }
           },
           {
-            "id": 98,
+            "id": 99,
             "name": "Outer box 4",
             "studio": 1,
             "body": 3,
@@ -15158,7 +15223,7 @@
             }
           },
           {
-            "id": 99,
+            "id": 100,
             "name": "Outer box 5",
             "studio": 1,
             "body": 4,
@@ -15177,7 +15242,7 @@
             }
           },
           {
-            "id": 100,
+            "id": 101,
             "name": "Outer box 6",
             "studio": 1,
             "body": 5,
@@ -15196,7 +15261,7 @@
             }
           },
           {
-            "id": 101,
+            "id": 102,
             "name": "Z gibs 1",
             "studio": 2,
             "body": 0,
@@ -15215,7 +15280,7 @@
             }
           },
           {
-            "id": 102,
+            "id": 103,
             "name": "Z gibs 2",
             "studio": 2,
             "body": 1,
@@ -15234,7 +15299,7 @@
             }
           },
           {
-            "id": 103,
+            "id": 104,
             "name": "Z gibs 3",
             "studio": 2,
             "body": 2,
@@ -15253,7 +15318,7 @@
             }
           },
           {
-            "id": 104,
+            "id": 105,
             "name": "Z drive housing 1",
             "studio": 3,
             "body": 0,
@@ -15272,7 +15337,7 @@
             }
           },
           {
-            "id": 105,
+            "id": 106,
             "name": "Z drive housing 2",
             "studio": 3,
             "body": 1,
@@ -15291,7 +15356,7 @@
             }
           },
           {
-            "id": 106,
+            "id": 107,
             "name": "Z drive housing 3",
             "studio": 3,
             "body": 2,
@@ -15310,7 +15375,7 @@
             }
           },
           {
-            "id": 107,
+            "id": 108,
             "name": "Z drive housing 4",
             "studio": 3,
             "body": 3,
@@ -15329,7 +15394,7 @@
             }
           },
           {
-            "id": 108,
+            "id": 109,
             "name": "Z drive housing 5",
             "studio": 3,
             "body": 4,
@@ -15348,7 +15413,7 @@
             }
           },
           {
-            "id": 109,
+            "id": 110,
             "name": "Z drive housing 6",
             "studio": 3,
             "body": 5,
@@ -15367,7 +15432,7 @@
             }
           },
           {
-            "id": 110,
+            "id": 111,
             "name": "Z drive 1",
             "studio": 4,
             "body": 0,
@@ -15386,7 +15451,7 @@
             }
           },
           {
-            "id": 111,
+            "id": 112,
             "name": "Z drive 2",
             "studio": 4,
             "body": 1,
@@ -15405,7 +15470,7 @@
             }
           },
           {
-            "id": 112,
+            "id": 113,
             "name": "Z drive 3",
             "studio": 4,
             "body": 2,
@@ -15424,7 +15489,7 @@
             }
           },
           {
-            "id": 113,
+            "id": 114,
             "name": "Z drive 4",
             "studio": 4,
             "body": 3,
@@ -15443,7 +15508,7 @@
             }
           },
           {
-            "id": 114,
+            "id": 115,
             "name": "Z drive 5",
             "studio": 4,
             "body": 4,
@@ -15462,7 +15527,7 @@
             }
           },
           {
-            "id": 115,
+            "id": 116,
             "name": "Z drive 6",
             "studio": 4,
             "body": 5,
@@ -15481,7 +15546,7 @@
             }
           },
           {
-            "id": 116,
+            "id": 117,
             "name": "Z drive 7",
             "studio": 4,
             "body": 6,
@@ -15500,7 +15565,7 @@
             }
           },
           {
-            "id": 117,
+            "id": 118,
             "name": "Z home switch",
             "studio": 5,
             "body": 0,
@@ -15519,7 +15584,7 @@
             }
           },
           {
-            "id": 118,
+            "id": 119,
             "name": "X tube 1",
             "studio": 6,
             "body": 0,
@@ -15538,7 +15603,7 @@
             }
           },
           {
-            "id": 119,
+            "id": 120,
             "name": "X tube 2",
             "studio": 6,
             "body": 1,
@@ -15557,7 +15622,7 @@
             }
           },
           {
-            "id": 120,
+            "id": 121,
             "name": "X tube 3",
             "studio": 6,
             "body": 2,
@@ -15576,7 +15641,7 @@
             }
           },
           {
-            "id": 121,
+            "id": 122,
             "name": "X tube 4",
             "studio": 6,
             "body": 3,
@@ -15595,7 +15660,7 @@
             }
           },
           {
-            "id": 122,
+            "id": 123,
             "name": "X tube 5",
             "studio": 6,
             "body": 4,
@@ -15614,7 +15679,7 @@
             }
           },
           {
-            "id": 123,
+            "id": 124,
             "name": "X tube 6",
             "studio": 6,
             "body": 5,
@@ -15633,7 +15698,7 @@
             }
           },
           {
-            "id": 124,
+            "id": 125,
             "name": "Z stage 1",
             "studio": 7,
             "body": 0,
@@ -15652,7 +15717,7 @@
             }
           },
           {
-            "id": 125,
+            "id": 126,
             "name": "Z stage 2",
             "studio": 7,
             "body": 1,
@@ -15671,7 +15736,7 @@
             }
           },
           {
-            "id": 126,
+            "id": 127,
             "name": "Z stage 3",
             "studio": 7,
             "body": 2,
@@ -15690,7 +15755,7 @@
             }
           },
           {
-            "id": 127,
+            "id": 128,
             "name": "Z stage 4",
             "studio": 7,
             "body": 3,
@@ -15709,7 +15774,7 @@
             }
           },
           {
-            "id": 128,
+            "id": 129,
             "name": "Z stage 5",
             "studio": 7,
             "body": 4,
@@ -15728,7 +15793,7 @@
             }
           },
           {
-            "id": 129,
+            "id": 130,
             "name": "Z stage 6",
             "studio": 7,
             "body": 5,
@@ -15747,7 +15812,7 @@
             }
           },
           {
-            "id": 130,
+            "id": 131,
             "name": "Stage strips 1",
             "studio": 8,
             "body": 0,
@@ -15766,7 +15831,7 @@
             }
           },
           {
-            "id": 131,
+            "id": 132,
             "name": "Stage strips 2",
             "studio": 8,
             "body": 1,
@@ -15785,7 +15850,7 @@
             }
           },
           {
-            "id": 132,
+            "id": 133,
             "name": "Stage strips 3",
             "studio": 8,
             "body": 2,
@@ -15804,7 +15869,7 @@
             }
           },
           {
-            "id": 133,
+            "id": 134,
             "name": "Stage strips 4",
             "studio": 8,
             "body": 3,
@@ -15823,7 +15888,7 @@
             }
           },
           {
-            "id": 134,
+            "id": 135,
             "name": "Stage strips 5",
             "studio": 8,
             "body": 4,
@@ -15842,7 +15907,7 @@
             }
           },
           {
-            "id": 135,
+            "id": 136,
             "name": "Stage strips 6",
             "studio": 8,
             "body": 5,
@@ -15861,28 +15926,9 @@
             }
           },
           {
-            "id": 136,
+            "id": 137,
             "name": "Z nut",
             "studio": 9,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 137,
-            "name": "X gibs 1",
-            "studio": 10,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -15900,6 +15946,25 @@
           },
           {
             "id": 138,
+            "name": "X gibs 1",
+            "studio": 10,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 139,
             "name": "X gibs 2",
             "studio": 10,
             "body": 1,
@@ -15918,7 +15983,7 @@
             }
           },
           {
-            "id": 139,
+            "id": 140,
             "name": "X gibs 3",
             "studio": 10,
             "body": 2,
@@ -15937,7 +16002,7 @@
             }
           },
           {
-            "id": 140,
+            "id": 141,
             "name": "X gibs 4",
             "studio": 10,
             "body": 3,
@@ -15956,7 +16021,7 @@
             }
           },
           {
-            "id": 141,
+            "id": 142,
             "name": "X drive 1",
             "studio": 11,
             "body": 0,
@@ -15975,7 +16040,7 @@
             }
           },
           {
-            "id": 142,
+            "id": 143,
             "name": "X drive 2",
             "studio": 11,
             "body": 1,
@@ -15994,7 +16059,7 @@
             }
           },
           {
-            "id": 143,
+            "id": 144,
             "name": "X drive 3",
             "studio": 11,
             "body": 2,
@@ -16013,7 +16078,7 @@
             }
           },
           {
-            "id": 144,
+            "id": 145,
             "name": "X drive 4",
             "studio": 11,
             "body": 3,
@@ -16032,7 +16097,7 @@
             }
           },
           {
-            "id": 145,
+            "id": 146,
             "name": "X drive 5",
             "studio": 11,
             "body": 4,
@@ -16051,7 +16116,7 @@
             }
           },
           {
-            "id": 146,
+            "id": 147,
             "name": "X drive 6",
             "studio": 11,
             "body": 5,
@@ -16070,7 +16135,7 @@
             }
           },
           {
-            "id": 147,
+            "id": 148,
             "name": "X drive 7",
             "studio": 11,
             "body": 6,
@@ -16089,7 +16154,7 @@
             }
           },
           {
-            "id": 148,
+            "id": 149,
             "name": "X home switch",
             "studio": 12,
             "body": 0,
@@ -16108,7 +16173,7 @@
             }
           },
           {
-            "id": 149,
+            "id": 150,
             "name": "X quill 1",
             "studio": 13,
             "body": 0,
@@ -16127,7 +16192,7 @@
             }
           },
           {
-            "id": 150,
+            "id": 151,
             "name": "X quill 2",
             "studio": 13,
             "body": 1,
@@ -16146,7 +16211,7 @@
             }
           },
           {
-            "id": 151,
+            "id": 152,
             "name": "X quill 3",
             "studio": 13,
             "body": 2,
@@ -16165,7 +16230,7 @@
             }
           },
           {
-            "id": 152,
+            "id": 153,
             "name": "X quill 4",
             "studio": 13,
             "body": 3,
@@ -16184,7 +16249,7 @@
             }
           },
           {
-            "id": 153,
+            "id": 154,
             "name": "X quill 5",
             "studio": 13,
             "body": 4,
@@ -16203,7 +16268,7 @@
             }
           },
           {
-            "id": 154,
+            "id": 155,
             "name": "X quill 6",
             "studio": 13,
             "body": 5,
@@ -16222,7 +16287,7 @@
             }
           },
           {
-            "id": 155,
+            "id": 156,
             "name": "Quill strips 1",
             "studio": 14,
             "body": 0,
@@ -16241,7 +16306,7 @@
             }
           },
           {
-            "id": 156,
+            "id": 157,
             "name": "Quill strips 2",
             "studio": 14,
             "body": 1,
@@ -16260,7 +16325,7 @@
             }
           },
           {
-            "id": 157,
+            "id": 158,
             "name": "Quill strips 3",
             "studio": 14,
             "body": 2,
@@ -16279,7 +16344,7 @@
             }
           },
           {
-            "id": 158,
+            "id": 159,
             "name": "Quill strips 4",
             "studio": 14,
             "body": 3,
@@ -16298,7 +16363,7 @@
             }
           },
           {
-            "id": 159,
+            "id": 160,
             "name": "Quill strips 5",
             "studio": 14,
             "body": 4,
@@ -16317,7 +16382,7 @@
             }
           },
           {
-            "id": 160,
+            "id": 161,
             "name": "Spider 1",
             "studio": 15,
             "body": 0,
@@ -16336,7 +16401,7 @@
             }
           },
           {
-            "id": 161,
+            "id": 162,
             "name": "Spider 2",
             "studio": 15,
             "body": 1,
@@ -16355,7 +16420,7 @@
             }
           },
           {
-            "id": 162,
+            "id": 163,
             "name": "Spider 3",
             "studio": 15,
             "body": 2,
@@ -16374,7 +16439,7 @@
             }
           },
           {
-            "id": 163,
+            "id": 164,
             "name": "Spider 4",
             "studio": 15,
             "body": 3,
@@ -16393,28 +16458,9 @@
             }
           },
           {
-            "id": 164,
+            "id": 165,
             "name": "X nut",
             "studio": 16,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -80.0,
-                "y": 0.0,
-                "z": -0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 165,
-            "name": "Router",
-            "studio": 17,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -16432,8 +16478,8 @@
           },
           {
             "id": 166,
-            "name": "Router block 1",
-            "studio": 18,
+            "name": "Router",
+            "studio": 17,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -16451,9 +16497,9 @@
           },
           {
             "id": 167,
-            "name": "Router block 2",
+            "name": "Body liner",
             "studio": 18,
-            "body": 1,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
@@ -16470,9 +16516,28 @@
           },
           {
             "id": 168,
-            "name": "Router block 3",
-            "studio": 18,
-            "body": 2,
+            "name": "Router block 1",
+            "studio": 19,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -80.0,
+                "y": 0.0,
+                "z": -0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 169,
+            "name": "Router block 2",
+            "studio": 19,
+            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
@@ -16492,13 +16557,13 @@
       }
     },
     {
-      "id": 169,
+      "id": 170,
       "kind": {
         "type": "assembly",
         "name": "Drawn back, down",
         "instances": [
           {
-            "id": 170,
+            "id": 171,
             "name": "Outer box 1",
             "studio": 1,
             "body": 0,
@@ -16517,7 +16582,7 @@
             }
           },
           {
-            "id": 171,
+            "id": 172,
             "name": "Outer box 2",
             "studio": 1,
             "body": 1,
@@ -16536,7 +16601,7 @@
             }
           },
           {
-            "id": 172,
+            "id": 173,
             "name": "Outer box 3",
             "studio": 1,
             "body": 2,
@@ -16555,7 +16620,7 @@
             }
           },
           {
-            "id": 173,
+            "id": 174,
             "name": "Outer box 4",
             "studio": 1,
             "body": 3,
@@ -16574,7 +16639,7 @@
             }
           },
           {
-            "id": 174,
+            "id": 175,
             "name": "Outer box 5",
             "studio": 1,
             "body": 4,
@@ -16593,7 +16658,7 @@
             }
           },
           {
-            "id": 175,
+            "id": 176,
             "name": "Outer box 6",
             "studio": 1,
             "body": 5,
@@ -16612,7 +16677,7 @@
             }
           },
           {
-            "id": 176,
+            "id": 177,
             "name": "Z gibs 1",
             "studio": 2,
             "body": 0,
@@ -16631,7 +16696,7 @@
             }
           },
           {
-            "id": 177,
+            "id": 178,
             "name": "Z gibs 2",
             "studio": 2,
             "body": 1,
@@ -16650,7 +16715,7 @@
             }
           },
           {
-            "id": 178,
+            "id": 179,
             "name": "Z gibs 3",
             "studio": 2,
             "body": 2,
@@ -16669,7 +16734,7 @@
             }
           },
           {
-            "id": 179,
+            "id": 180,
             "name": "Z drive housing 1",
             "studio": 3,
             "body": 0,
@@ -16688,7 +16753,7 @@
             }
           },
           {
-            "id": 180,
+            "id": 181,
             "name": "Z drive housing 2",
             "studio": 3,
             "body": 1,
@@ -16707,7 +16772,7 @@
             }
           },
           {
-            "id": 181,
+            "id": 182,
             "name": "Z drive housing 3",
             "studio": 3,
             "body": 2,
@@ -16726,7 +16791,7 @@
             }
           },
           {
-            "id": 182,
+            "id": 183,
             "name": "Z drive housing 4",
             "studio": 3,
             "body": 3,
@@ -16745,7 +16810,7 @@
             }
           },
           {
-            "id": 183,
+            "id": 184,
             "name": "Z drive housing 5",
             "studio": 3,
             "body": 4,
@@ -16764,7 +16829,7 @@
             }
           },
           {
-            "id": 184,
+            "id": 185,
             "name": "Z drive housing 6",
             "studio": 3,
             "body": 5,
@@ -16783,7 +16848,7 @@
             }
           },
           {
-            "id": 185,
+            "id": 186,
             "name": "Z drive 1",
             "studio": 4,
             "body": 0,
@@ -16802,7 +16867,7 @@
             }
           },
           {
-            "id": 186,
+            "id": 187,
             "name": "Z drive 2",
             "studio": 4,
             "body": 1,
@@ -16821,7 +16886,7 @@
             }
           },
           {
-            "id": 187,
+            "id": 188,
             "name": "Z drive 3",
             "studio": 4,
             "body": 2,
@@ -16840,7 +16905,7 @@
             }
           },
           {
-            "id": 188,
+            "id": 189,
             "name": "Z drive 4",
             "studio": 4,
             "body": 3,
@@ -16859,7 +16924,7 @@
             }
           },
           {
-            "id": 189,
+            "id": 190,
             "name": "Z drive 5",
             "studio": 4,
             "body": 4,
@@ -16878,7 +16943,7 @@
             }
           },
           {
-            "id": 190,
+            "id": 191,
             "name": "Z drive 6",
             "studio": 4,
             "body": 5,
@@ -16897,7 +16962,7 @@
             }
           },
           {
-            "id": 191,
+            "id": 192,
             "name": "Z drive 7",
             "studio": 4,
             "body": 6,
@@ -16916,7 +16981,7 @@
             }
           },
           {
-            "id": 192,
+            "id": 193,
             "name": "Z home switch",
             "studio": 5,
             "body": 0,
@@ -16935,7 +17000,7 @@
             }
           },
           {
-            "id": 193,
+            "id": 194,
             "name": "X tube 1",
             "studio": 6,
             "body": 0,
@@ -16954,7 +17019,7 @@
             }
           },
           {
-            "id": 194,
+            "id": 195,
             "name": "X tube 2",
             "studio": 6,
             "body": 1,
@@ -16973,7 +17038,7 @@
             }
           },
           {
-            "id": 195,
+            "id": 196,
             "name": "X tube 3",
             "studio": 6,
             "body": 2,
@@ -16992,7 +17057,7 @@
             }
           },
           {
-            "id": 196,
+            "id": 197,
             "name": "X tube 4",
             "studio": 6,
             "body": 3,
@@ -17011,7 +17076,7 @@
             }
           },
           {
-            "id": 197,
+            "id": 198,
             "name": "X tube 5",
             "studio": 6,
             "body": 4,
@@ -17030,7 +17095,7 @@
             }
           },
           {
-            "id": 198,
+            "id": 199,
             "name": "X tube 6",
             "studio": 6,
             "body": 5,
@@ -17049,7 +17114,7 @@
             }
           },
           {
-            "id": 199,
+            "id": 200,
             "name": "Z stage 1",
             "studio": 7,
             "body": 0,
@@ -17068,7 +17133,7 @@
             }
           },
           {
-            "id": 200,
+            "id": 201,
             "name": "Z stage 2",
             "studio": 7,
             "body": 1,
@@ -17087,7 +17152,7 @@
             }
           },
           {
-            "id": 201,
+            "id": 202,
             "name": "Z stage 3",
             "studio": 7,
             "body": 2,
@@ -17106,7 +17171,7 @@
             }
           },
           {
-            "id": 202,
+            "id": 203,
             "name": "Z stage 4",
             "studio": 7,
             "body": 3,
@@ -17125,7 +17190,7 @@
             }
           },
           {
-            "id": 203,
+            "id": 204,
             "name": "Z stage 5",
             "studio": 7,
             "body": 4,
@@ -17144,7 +17209,7 @@
             }
           },
           {
-            "id": 204,
+            "id": 205,
             "name": "Z stage 6",
             "studio": 7,
             "body": 5,
@@ -17163,7 +17228,7 @@
             }
           },
           {
-            "id": 205,
+            "id": 206,
             "name": "Stage strips 1",
             "studio": 8,
             "body": 0,
@@ -17182,7 +17247,7 @@
             }
           },
           {
-            "id": 206,
+            "id": 207,
             "name": "Stage strips 2",
             "studio": 8,
             "body": 1,
@@ -17201,7 +17266,7 @@
             }
           },
           {
-            "id": 207,
+            "id": 208,
             "name": "Stage strips 3",
             "studio": 8,
             "body": 2,
@@ -17220,7 +17285,7 @@
             }
           },
           {
-            "id": 208,
+            "id": 209,
             "name": "Stage strips 4",
             "studio": 8,
             "body": 3,
@@ -17239,7 +17304,7 @@
             }
           },
           {
-            "id": 209,
+            "id": 210,
             "name": "Stage strips 5",
             "studio": 8,
             "body": 4,
@@ -17258,7 +17323,7 @@
             }
           },
           {
-            "id": 210,
+            "id": 211,
             "name": "Stage strips 6",
             "studio": 8,
             "body": 5,
@@ -17277,28 +17342,9 @@
             }
           },
           {
-            "id": 211,
+            "id": 212,
             "name": "Z nut",
             "studio": 9,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 212,
-            "name": "X gibs 1",
-            "studio": 10,
             "body": 0,
             "fixed": true,
             "placement": {
@@ -17316,1403 +17362,6 @@
           },
           {
             "id": 213,
-            "name": "X gibs 2",
-            "studio": 10,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 214,
-            "name": "X gibs 3",
-            "studio": 10,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 215,
-            "name": "X gibs 4",
-            "studio": 10,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 216,
-            "name": "X drive 1",
-            "studio": 11,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 217,
-            "name": "X drive 2",
-            "studio": 11,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 218,
-            "name": "X drive 3",
-            "studio": 11,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 219,
-            "name": "X drive 4",
-            "studio": 11,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 220,
-            "name": "X drive 5",
-            "studio": 11,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 221,
-            "name": "X drive 6",
-            "studio": 11,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 222,
-            "name": "X drive 7",
-            "studio": 11,
-            "body": 6,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 223,
-            "name": "X home switch",
-            "studio": 12,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 224,
-            "name": "X quill 1",
-            "studio": 13,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 225,
-            "name": "X quill 2",
-            "studio": 13,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 226,
-            "name": "X quill 3",
-            "studio": 13,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 227,
-            "name": "X quill 4",
-            "studio": 13,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 228,
-            "name": "X quill 5",
-            "studio": 13,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 229,
-            "name": "X quill 6",
-            "studio": 13,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 230,
-            "name": "Quill strips 1",
-            "studio": 14,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 231,
-            "name": "Quill strips 2",
-            "studio": 14,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 232,
-            "name": "Quill strips 3",
-            "studio": 14,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 233,
-            "name": "Quill strips 4",
-            "studio": 14,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 234,
-            "name": "Quill strips 5",
-            "studio": 14,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 235,
-            "name": "Spider 1",
-            "studio": 15,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 236,
-            "name": "Spider 2",
-            "studio": 15,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 237,
-            "name": "Spider 3",
-            "studio": 15,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 238,
-            "name": "Spider 4",
-            "studio": 15,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 239,
-            "name": "X nut",
-            "studio": 16,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 240,
-            "name": "Router",
-            "studio": 17,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 241,
-            "name": "Router block 1",
-            "studio": 18,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 242,
-            "name": "Router block 2",
-            "studio": 18,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 243,
-            "name": "Router block 3",
-            "studio": 18,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": -0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          }
-        ],
-        "mates": []
-      }
-    },
-    {
-      "id": 244,
-      "kind": {
-        "type": "assembly",
-        "name": "Plunged, down",
-        "instances": [
-          {
-            "id": 245,
-            "name": "Outer box 1",
-            "studio": 1,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 246,
-            "name": "Outer box 2",
-            "studio": 1,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 247,
-            "name": "Outer box 3",
-            "studio": 1,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 248,
-            "name": "Outer box 4",
-            "studio": 1,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 249,
-            "name": "Outer box 5",
-            "studio": 1,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 250,
-            "name": "Outer box 6",
-            "studio": 1,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 251,
-            "name": "Z gibs 1",
-            "studio": 2,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 252,
-            "name": "Z gibs 2",
-            "studio": 2,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 253,
-            "name": "Z gibs 3",
-            "studio": 2,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 254,
-            "name": "Z drive housing 1",
-            "studio": 3,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 255,
-            "name": "Z drive housing 2",
-            "studio": 3,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 256,
-            "name": "Z drive housing 3",
-            "studio": 3,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 257,
-            "name": "Z drive housing 4",
-            "studio": 3,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 258,
-            "name": "Z drive housing 5",
-            "studio": 3,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 259,
-            "name": "Z drive housing 6",
-            "studio": 3,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 260,
-            "name": "Z drive 1",
-            "studio": 4,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 261,
-            "name": "Z drive 2",
-            "studio": 4,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 262,
-            "name": "Z drive 3",
-            "studio": 4,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 263,
-            "name": "Z drive 4",
-            "studio": 4,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 264,
-            "name": "Z drive 5",
-            "studio": 4,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 265,
-            "name": "Z drive 6",
-            "studio": 4,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 266,
-            "name": "Z drive 7",
-            "studio": 4,
-            "body": 6,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 267,
-            "name": "Z home switch",
-            "studio": 5,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 268,
-            "name": "X tube 1",
-            "studio": 6,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 269,
-            "name": "X tube 2",
-            "studio": 6,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 270,
-            "name": "X tube 3",
-            "studio": 6,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 271,
-            "name": "X tube 4",
-            "studio": 6,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 272,
-            "name": "X tube 5",
-            "studio": 6,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 273,
-            "name": "X tube 6",
-            "studio": 6,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 274,
-            "name": "Z stage 1",
-            "studio": 7,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 275,
-            "name": "Z stage 2",
-            "studio": 7,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 276,
-            "name": "Z stage 3",
-            "studio": 7,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 277,
-            "name": "Z stage 4",
-            "studio": 7,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 278,
-            "name": "Z stage 5",
-            "studio": 7,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 279,
-            "name": "Z stage 6",
-            "studio": 7,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 280,
-            "name": "Stage strips 1",
-            "studio": 8,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 281,
-            "name": "Stage strips 2",
-            "studio": 8,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 282,
-            "name": "Stage strips 3",
-            "studio": 8,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 283,
-            "name": "Stage strips 4",
-            "studio": 8,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 284,
-            "name": "Stage strips 5",
-            "studio": 8,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 285,
-            "name": "Stage strips 6",
-            "studio": 8,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 286,
-            "name": "Z nut",
-            "studio": 9,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": -80.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 287,
             "name": "X gibs 1",
             "studio": 10,
             "body": 0,
@@ -18731,7 +17380,7 @@
             }
           },
           {
-            "id": 288,
+            "id": 214,
             "name": "X gibs 2",
             "studio": 10,
             "body": 1,
@@ -18750,7 +17399,7 @@
             }
           },
           {
-            "id": 289,
+            "id": 215,
             "name": "X gibs 3",
             "studio": 10,
             "body": 2,
@@ -18769,7 +17418,7 @@
             }
           },
           {
-            "id": 290,
+            "id": 216,
             "name": "X gibs 4",
             "studio": 10,
             "body": 3,
@@ -18788,7 +17437,7 @@
             }
           },
           {
-            "id": 291,
+            "id": 217,
             "name": "X drive 1",
             "studio": 11,
             "body": 0,
@@ -18807,7 +17456,7 @@
             }
           },
           {
-            "id": 292,
+            "id": 218,
             "name": "X drive 2",
             "studio": 11,
             "body": 1,
@@ -18826,7 +17475,7 @@
             }
           },
           {
-            "id": 293,
+            "id": 219,
             "name": "X drive 3",
             "studio": 11,
             "body": 2,
@@ -18845,7 +17494,7 @@
             }
           },
           {
-            "id": 294,
+            "id": 220,
             "name": "X drive 4",
             "studio": 11,
             "body": 3,
@@ -18864,7 +17513,7 @@
             }
           },
           {
-            "id": 295,
+            "id": 221,
             "name": "X drive 5",
             "studio": 11,
             "body": 4,
@@ -18883,7 +17532,7 @@
             }
           },
           {
-            "id": 296,
+            "id": 222,
             "name": "X drive 6",
             "studio": 11,
             "body": 5,
@@ -18902,7 +17551,7 @@
             }
           },
           {
-            "id": 297,
+            "id": 223,
             "name": "X drive 7",
             "studio": 11,
             "body": 6,
@@ -18921,7 +17570,7 @@
             }
           },
           {
-            "id": 298,
+            "id": 224,
             "name": "X home switch",
             "studio": 12,
             "body": 0,
@@ -18940,7 +17589,1423 @@
             }
           },
           {
+            "id": 225,
+            "name": "X quill 1",
+            "studio": 13,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 226,
+            "name": "X quill 2",
+            "studio": 13,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 227,
+            "name": "X quill 3",
+            "studio": 13,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 228,
+            "name": "X quill 4",
+            "studio": 13,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 229,
+            "name": "X quill 5",
+            "studio": 13,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 230,
+            "name": "X quill 6",
+            "studio": 13,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 231,
+            "name": "Quill strips 1",
+            "studio": 14,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 232,
+            "name": "Quill strips 2",
+            "studio": 14,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 233,
+            "name": "Quill strips 3",
+            "studio": 14,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 234,
+            "name": "Quill strips 4",
+            "studio": 14,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 235,
+            "name": "Quill strips 5",
+            "studio": 14,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 236,
+            "name": "Spider 1",
+            "studio": 15,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 237,
+            "name": "Spider 2",
+            "studio": 15,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 238,
+            "name": "Spider 3",
+            "studio": 15,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 239,
+            "name": "Spider 4",
+            "studio": 15,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 240,
+            "name": "X nut",
+            "studio": 16,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 241,
+            "name": "Router",
+            "studio": 17,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 242,
+            "name": "Body liner",
+            "studio": 18,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 243,
+            "name": "Router block 1",
+            "studio": 19,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 244,
+            "name": "Router block 2",
+            "studio": 19,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    },
+    {
+      "id": 245,
+      "kind": {
+        "type": "assembly",
+        "name": "Plunged, down",
+        "instances": [
+          {
+            "id": 246,
+            "name": "Outer box 1",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 247,
+            "name": "Outer box 2",
+            "studio": 1,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 248,
+            "name": "Outer box 3",
+            "studio": 1,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 249,
+            "name": "Outer box 4",
+            "studio": 1,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 250,
+            "name": "Outer box 5",
+            "studio": 1,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 251,
+            "name": "Outer box 6",
+            "studio": 1,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 252,
+            "name": "Z gibs 1",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 253,
+            "name": "Z gibs 2",
+            "studio": 2,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 254,
+            "name": "Z gibs 3",
+            "studio": 2,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 255,
+            "name": "Z drive housing 1",
+            "studio": 3,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 256,
+            "name": "Z drive housing 2",
+            "studio": 3,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 257,
+            "name": "Z drive housing 3",
+            "studio": 3,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 258,
+            "name": "Z drive housing 4",
+            "studio": 3,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 259,
+            "name": "Z drive housing 5",
+            "studio": 3,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 260,
+            "name": "Z drive housing 6",
+            "studio": 3,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 261,
+            "name": "Z drive 1",
+            "studio": 4,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 262,
+            "name": "Z drive 2",
+            "studio": 4,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 263,
+            "name": "Z drive 3",
+            "studio": 4,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 264,
+            "name": "Z drive 4",
+            "studio": 4,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 265,
+            "name": "Z drive 5",
+            "studio": 4,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 266,
+            "name": "Z drive 6",
+            "studio": 4,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 267,
+            "name": "Z drive 7",
+            "studio": 4,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 268,
+            "name": "Z home switch",
+            "studio": 5,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 269,
+            "name": "X tube 1",
+            "studio": 6,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 270,
+            "name": "X tube 2",
+            "studio": 6,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 271,
+            "name": "X tube 3",
+            "studio": 6,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 272,
+            "name": "X tube 4",
+            "studio": 6,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 273,
+            "name": "X tube 5",
+            "studio": 6,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 274,
+            "name": "X tube 6",
+            "studio": 6,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 275,
+            "name": "Z stage 1",
+            "studio": 7,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 276,
+            "name": "Z stage 2",
+            "studio": 7,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 277,
+            "name": "Z stage 3",
+            "studio": 7,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 278,
+            "name": "Z stage 4",
+            "studio": 7,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 279,
+            "name": "Z stage 5",
+            "studio": 7,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 280,
+            "name": "Z stage 6",
+            "studio": 7,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 281,
+            "name": "Stage strips 1",
+            "studio": 8,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 282,
+            "name": "Stage strips 2",
+            "studio": 8,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 283,
+            "name": "Stage strips 3",
+            "studio": 8,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 284,
+            "name": "Stage strips 4",
+            "studio": 8,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 285,
+            "name": "Stage strips 5",
+            "studio": 8,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 286,
+            "name": "Stage strips 6",
+            "studio": 8,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 287,
+            "name": "Z nut",
+            "studio": 9,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 288,
+            "name": "X gibs 1",
+            "studio": 10,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 289,
+            "name": "X gibs 2",
+            "studio": 10,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 290,
+            "name": "X gibs 3",
+            "studio": 10,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 291,
+            "name": "X gibs 4",
+            "studio": 10,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 292,
+            "name": "X drive 1",
+            "studio": 11,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 293,
+            "name": "X drive 2",
+            "studio": 11,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 294,
+            "name": "X drive 3",
+            "studio": 11,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 295,
+            "name": "X drive 4",
+            "studio": 11,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 296,
+            "name": "X drive 5",
+            "studio": 11,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 297,
+            "name": "X drive 6",
+            "studio": 11,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 298,
+            "name": "X drive 7",
+            "studio": 11,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
             "id": 299,
+            "name": "X home switch",
+            "studio": 12,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -80.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 300,
             "name": "X quill 1",
             "studio": 13,
             "body": 0,
@@ -18959,7 +19024,7 @@
             }
           },
           {
-            "id": 300,
+            "id": 301,
             "name": "X quill 2",
             "studio": 13,
             "body": 1,
@@ -18978,7 +19043,7 @@
             }
           },
           {
-            "id": 301,
+            "id": 302,
             "name": "X quill 3",
             "studio": 13,
             "body": 2,
@@ -18997,7 +19062,7 @@
             }
           },
           {
-            "id": 302,
+            "id": 303,
             "name": "X quill 4",
             "studio": 13,
             "body": 3,
@@ -19016,7 +19081,7 @@
             }
           },
           {
-            "id": 303,
+            "id": 304,
             "name": "X quill 5",
             "studio": 13,
             "body": 4,
@@ -19035,7 +19100,7 @@
             }
           },
           {
-            "id": 304,
+            "id": 305,
             "name": "X quill 6",
             "studio": 13,
             "body": 5,
@@ -19054,7 +19119,7 @@
             }
           },
           {
-            "id": 305,
+            "id": 306,
             "name": "Quill strips 1",
             "studio": 14,
             "body": 0,
@@ -19073,7 +19138,7 @@
             }
           },
           {
-            "id": 306,
+            "id": 307,
             "name": "Quill strips 2",
             "studio": 14,
             "body": 1,
@@ -19092,7 +19157,7 @@
             }
           },
           {
-            "id": 307,
+            "id": 308,
             "name": "Quill strips 3",
             "studio": 14,
             "body": 2,
@@ -19111,7 +19176,7 @@
             }
           },
           {
-            "id": 308,
+            "id": 309,
             "name": "Quill strips 4",
             "studio": 14,
             "body": 3,
@@ -19130,7 +19195,7 @@
             }
           },
           {
-            "id": 309,
+            "id": 310,
             "name": "Quill strips 5",
             "studio": 14,
             "body": 4,
@@ -19149,7 +19214,7 @@
             }
           },
           {
-            "id": 310,
+            "id": 311,
             "name": "Spider 1",
             "studio": 15,
             "body": 0,
@@ -19168,7 +19233,7 @@
             }
           },
           {
-            "id": 311,
+            "id": 312,
             "name": "Spider 2",
             "studio": 15,
             "body": 1,
@@ -19187,7 +19252,7 @@
             }
           },
           {
-            "id": 312,
+            "id": 313,
             "name": "Spider 3",
             "studio": 15,
             "body": 2,
@@ -19206,7 +19271,7 @@
             }
           },
           {
-            "id": 313,
+            "id": 314,
             "name": "Spider 4",
             "studio": 15,
             "body": 3,
@@ -19225,7 +19290,7 @@
             }
           },
           {
-            "id": 314,
+            "id": 315,
             "name": "X nut",
             "studio": 16,
             "body": 0,
@@ -19244,7 +19309,7 @@
             }
           },
           {
-            "id": 315,
+            "id": 316,
             "name": "Router",
             "studio": 17,
             "body": 0,
@@ -19263,8 +19328,8 @@
             }
           },
           {
-            "id": 316,
-            "name": "Router block 1",
+            "id": 317,
+            "name": "Body liner",
             "studio": 18,
             "body": 0,
             "fixed": true,
@@ -19282,10 +19347,10 @@
             }
           },
           {
-            "id": 317,
-            "name": "Router block 2",
-            "studio": 18,
-            "body": 1,
+            "id": 318,
+            "name": "Router block 1",
+            "studio": 19,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
@@ -19301,10 +19366,10 @@
             }
           },
           {
-            "id": 318,
-            "name": "Router block 3",
-            "studio": 18,
-            "body": 2,
+            "id": 319,
+            "name": "Router block 2",
+            "studio": 19,
+            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
@@ -19324,7 +19389,7 @@
       }
     },
     {
-      "id": 319,
+      "id": 320,
       "kind": {
         "type": "part_studio",
         "name": "Clip L 12-12",
@@ -20351,7 +20416,7 @@
       }
     },
     {
-      "id": 320,
+      "id": 321,
       "kind": {
         "type": "part_studio",
         "name": "Clip L 12-19",
@@ -21378,7 +21443,7 @@
       }
     },
     {
-      "id": 321,
+      "id": 322,
       "kind": {
         "type": "part_studio",
         "name": "Clip L 19-19",
@@ -22405,7 +22470,7 @@
       }
     },
     {
-      "id": 322,
+      "id": 323,
       "kind": {
         "type": "part_studio",
         "name": "Clip T 12-12",
@@ -23602,7 +23667,7 @@
       }
     },
     {
-      "id": 323,
+      "id": 324,
       "kind": {
         "type": "part_studio",
         "name": "Clip T 12-19",
@@ -24799,7 +24864,7 @@
       }
     },
     {
-      "id": 324,
+      "id": 325,
       "kind": {
         "type": "part_studio",
         "name": "Clip T 19-19",
@@ -25996,7 +26061,250 @@
       }
     },
     {
-      "id": 325,
+      "id": 326,
+      "kind": {
+        "type": "part_studio",
+        "name": "Liner, to print",
+        "features": [
+          {
+            "id": 1,
+            "name": "liner",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 35.355
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "liner",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 32.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "bore",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -0.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 34.55
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "bore",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 33.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 5,
+            "name": "gap",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -0.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -12.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.0,
+                      "y": 36.355
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.0,
+                      "y": 36.355
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -12.0,
+                      "y": 36.355
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -12.0,
+                      "y": 36.355
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -12.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "gap",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 33.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          }
+        ],
+        "next_id": 7,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 327,
       "kind": {
         "type": "part_studio",
         "name": "Clips in use",
@@ -30569,5 +30877,5 @@
       }
     }
   ],
-  "next_id": 326
+  "next_id": 328
 }

@@ -44,7 +44,7 @@ checked by calculation and by the test.
   the tail is in [The stick's drive](#the-sticks-drive-joint-by-joint).
 - **The positioner places the bit.** It lies on its lid with its Z
   column standing up, so the bit's axis is a stick's height over the
-  base. Its face is a wall 51 mm from the stick's axis; the bit comes
+  base. Its face is a wall 46 mm from the stick's axis; the bit comes
   out of the slot in it, and for the deeper cuts the collet nut too.
 - **Depth** is the positioner's X: the quill run out along the bit.
   **Height** is its Z. A cut is a direction round the stick, a height
@@ -95,7 +95,7 @@ of the 485 are.
 
 ## The slide
 
-The sled is a shallow box of 3/4 in plywood: a bottom, 413 x 216,
+The sled is a shallow box of 3/4 in plywood: a bottom, 413 x 211,
 that slides on the base between two fences; a rail on edge along each
 side; and a deck across the rails that everything holding the stick
 is fixed to. There are no shafts and no bearing blocks under it. Like
@@ -122,8 +122,8 @@ a fence's lip is a strip nailed along the top of it.
   wiper to each end of the sled.
 - **The near fence stands against the positioner's face.** It is
   14 mm wide, which is all the room there is, and the box's near rail
-  stands inside its lip. The deck is 46 mm over the fences and
-  reaches out over that one, to 10 mm short of the positioner's face.
+  stands inside its lip. The deck is 52 mm over the fences and
+  reaches out over that one, to 6 mm short of the positioner's face.
 - **A stop block** on the base meets the sled at each end of its
   188 mm; the back one carries the sled-back switch and the magnet.
 
@@ -452,8 +452,9 @@ the ball, its tapered flank and the shank.
 | X travel | 32.6 to 78.0 mm used of 80 | the far end of it: the deepest cut is 2 mm short of the end, and at home the bit's tip is 66 mm from the stick's axis, 32 clear of the blank's corners |
 | Z travel | 21.0 to 59.0 mm used of 80 | 60 would do |
 | how it lies | on its lid, on the base | the stage's weight then pulls away from its column, onto the collar that has no thrust bearing yet |
-| its face from the stick's axis | 51 mm | the Colt's collet nut is 34.5 mm in front of the quill, so at the deepest cut it is 16.6 out of the face, and the uncut blank's corners swing 33.5. The nut sets the distance, not the face |
-| the bit out of the collet nut | 46.4 mm | the blank's swing, and 12 mm past the stick's axis. The router does not change it: the positioner stands back by what the nut stands out. A 3 in tapered ball-nose on a 1/4 in shank does; the 1/4 in straight bit must be as long, 3 in overall |
+| its face from the stick's axis | 46 mm | the Colt's collet nut, tightened on a bit, is 30 mm in front of the quill by the owner's callipers, so at the deepest cut it is 12.1 out of the face, and the uncut blank's corners swing 33.5. The nut sets the distance, not the face |
+| the bit out of the collet nut | 45.9 mm | the blank's swing, and 12 mm past the stick's axis. The router does not change it: the positioner stands back by what the nut stands out |
+| how long a bit that takes, end to end | 64.9 to 76.4 mm | 19 mm of shank or more in the collet, and 1.5 off its bottom, which the owner measured 32 mm in from the nut's face. A 2-7/8 in bit, 73 mm, is 27 in; a 2-1/2 in one, 63.5, is 17.6 in, which is too little |
 | the depth's screw | M8 rod, as the positioner draws | a rod's pitch is nobody's promise, but it matters little here: 0.2 % off costs under a hundredth of a millimetre in the study |
 | its two travels, square | not known until it is built | 2 mm in a metre out is 0.07 mm on the tile: the largest thing left. See Setting up |
 
@@ -569,7 +570,7 @@ printed to measure it.
 
 **What the touches do not find is whether the two travels are
 square**, and that is most of what is left. The pin is level with
-the stick's axis at the depth the touches were made, 51 mm out; a
+the stick's axis at the depth the touches were made, 46 mm out; a
 bit run in or out from there rises or falls with whatever the quill's
 travel is out of square with the stage's. Two millimetres in a metre
 is 0.07 mm over the cuts' 45 mm of depth. It can be measured, with
@@ -606,7 +607,7 @@ and up or down. All of it is simulation.
 | the probe's pin | 6.35 mm, a 1/4 in dowel pin or drill rod | measure it and give `fit` what it is with `--pin` |
 | the datum fence, and the sled's edge on it | straight | lay a straightedge along each: their bow is cut into the stick, one for one |
 | the base under the two slips | flat along the travel | the sled's height is the bit's height on the stick, so a hump is cut in too |
-| the bit's length | 46.4 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach |
+| the bit's length | 45.9 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach |
 | the wheel | 360 teeth, printed, 232 across; a closed belt of 852; the motor 207.8 from the wheel's shaft, in slots | it fits a 256 mm bed with 12 to spare each side. 0.1 mm off centre is 0.05° once a turn, 0.027 mm at the furthest cut: true it on its hub under an indicator |
 | the star and its pocket | 115.5 over the points, 10° a side, 20 deep; printed | try the star in the pocket before anything is bolted up: its flanks must seat with the disc still 1.5 mm off the boss |
 | the three rods | 12 mm ground rod: 147 long for the sled's spindle, 91 for the tail, 90 for the wheel's shaft | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
@@ -618,12 +619,12 @@ and up or down. All of it is simulation.
 
 | part | size, mm | |
 |---|---|---|
-| base | 924 x 479 ply | the positioner lies on it, its tube overhanging behind; the index head stands on its far end |
+| base | 924 x 474 ply | the positioner lies on it, its tube overhanging behind; the index head stands on its far end |
 | datum fence | 647 long, 30 wide, 22 high, and a lip 6 thick reaching 10 over the sled | as straight as can be had: metal for choice |
 | near fence | 647 long, 14 wide, 22 high, and a lip 6 thick reaching 7 over the sled | against the positioner's face |
 | slips, 2 | 601 x 30 x 3 | something slippery: UHMW tape on a strip, or HDPE |
-| sled's bottom | 413 x 216, 3/4 in ply | between the fences; two M6 spring plungers in its near edge, a steel disc let into its far end |
-| sled's box | two rails 413 x 58 on edge and a deck 413 x 209, 3/4 in ply | on the bottom, 12 mm in from its far edge; the near rail 9 in from the near edge, the deck 14 out over it |
+| sled's bottom | 413 x 211, 3/4 in ply | between the fences; two M6 spring plungers in its near edge, a steel disc let into its far end |
+| sled's box | two rails 413 x 58 on edge and a deck 413 x 208, 3/4 in ply | on the bottom, 12 mm in from its far edge; the near rail 9 in from the near edge, the deck 18 out over it |
 | tailstock, headstock | each a riser of two 1/2 in layers, 76 wide: 69 long for the tail, 76 for the head | glued face down on the deck; two KP001 pillow blocks bolted down on each |
 | tail spindle | 12 mm ground rod, 91 long | a three-flat point on its end; 26 mm bare as the master |
 | spindle | 12 mm ground rod, 147 long | its end in the socket's boss; the star's hub outboard, the rod ending inside the star |
@@ -658,7 +659,7 @@ written a second time, in Rust, and works every row forward:
   clear of the positioner's box with the sled forward; the index
   wheel clears the base and is in its plate's slot or just over it; every row is within the
   positioner's travel with the bit's margin; the collet nut, which
-  comes 16.6 mm out of that face, never comes within the blank's
+  comes 12.1 mm out of that face, never comes within the blank's
   swing, and the face stands no further off than that takes;
 - every move marked straight, followed along the controller's own
   path, passes the master by 1.5 mm, and drawn back to the safe depth

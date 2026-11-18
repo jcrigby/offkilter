@@ -594,6 +594,12 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
     let travel = pair(&a["travel"]);
     assert!((f(&p["bit_home_z"]) + travel.1 / 2.0 - za).abs() < 1e-9);
     assert!((f(&a["across_home"]) + travel.1 / 2.0).abs() < 1e-9);
+    // A bit that stands that far out of the nut has its shank in the collet by enough and is off the collet's
+    // bottom, which the owner measured: there are bits that long, and a 2-7/8 in one is among them.
+    let (out, long, shank) = (f(&a["bit_out"]), pair(&a["bit_long"]), &a["shank"]);
+    assert!((long.0 - out - f(&shank[1])).abs() < 1e-9 && f(&shank[1]) >= 19.0);
+    assert!((long.1 - out - f(&shank[0]) + f(&shank[2])).abs() < 1e-9 && f(&shank[2]) >= 1.0);
+    assert!(long.0 < 73.0 && 73.0 < long.1, "a 2-7/8 in bit is {long:?}");
     // The lock disc is wider than the stick is from that wall: it is past the positioner's box with the sled
     // forward, which is as near as it comes, and well over the fences' lips. The index wheel never moves: it is
     // clear of the base, and its rim and its belt are in the slot in its own plate or within a few millimetres
@@ -1934,7 +1940,7 @@ fn the_sled_slides_between_two_fences_and_its_stops_put_the_bit_beside_the_maste
     assert!((deck.1.z - f(&s["top"])).abs() < 1e-6 && (deck.1.z - deck.0.z - ply).abs() < 1e-6);
     assert!(deck.0.y >= datum.1.y + 1.5 && deck.0.z > f(&s["lip_top"]) + 20.0);
     assert!(
-        (f(&s["face"]) - deck.1.y - f(&s["deck_clear"])).abs() < 1e-6 && f(&s["deck_clear"]) >= 8.0
+        (f(&s["face"]) - deck.1.y - f(&s["deck_clear"])).abs() < 1e-6 && f(&s["deck_clear"]) >= 5.0
     );
     assert!(
         deck.1.y - f(&s["rail_near"]) <= 2.0 * ply,

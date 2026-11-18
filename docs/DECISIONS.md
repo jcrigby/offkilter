@@ -2401,3 +2401,57 @@ router is held.
   it; the slot stays, and the test's wording changed from "dips into"
   to "in it or just over it".
 
+## 2026-11 · Callipers after photographs: a liner, and a shorter block
+
+The mount drawn from the photographs hung on six sizes. They were
+marked on the owner's own photographs, lettered, and the owner put
+callipers on each. Three were not what the photographs said.
+
+- **Photographs first, callipers on what matters.** Three photographs
+  gave nearly thirty dimensions good to 2 mm, enough to draw the
+  whole mount and see which few it was sensitive to. Six calliper
+  readings then settled those. Asking for thirty at the start would
+  not have said which six mattered.
+- **What a photograph cannot see.** The plastic of the body is
+  1.7 mm smaller across than the aluminium ring in front of it: under
+  the photograph's error, and the one that mattered most. A nut
+  tightened on a bit sits 4.5 mm nearer the rim than the slack nut
+  photographed; the note had guessed a millimetre or two.
+- **A liner, not a second bore.** A land bored for the plastic
+  cannot pass the ring to get there, and one that has passed the ring
+  cannot close 1.7 mm on a 3 mm kerf. The alternatives were a block
+  in two halves, each land bored to its own size, or bringing the
+  plastic up to the ring's size. Two halves is four bolts, two bores
+  that have to be concentric, and a relief filed for the slotted
+  metal plate if that plate is proud. A printed band 0.8 mm thick
+  leaves the block one piece with one bore, and its gap takes the
+  plate whether it is proud or not. Its thickness is the thing to
+  get right, and callipers over it on the router say whether it is.
+- **Two layers, not three.** With 51 mm of bare round a block of
+  3/4, 1/2 and 3/4 in is 50.8 mm and fits with nothing to spare. Two
+  3/4 in layers are 38.1. The relieved layer between two lands is
+  gone; the step from ring to liner is its own relief, half a
+  millimetre long.
+- **The front land is on the ring.** The ring is the turned metal
+  the router's own base locates on; the back land, on a printed band
+  over plastic, steadies it. The block's front face is 1 mm behind
+  the rim so that 17 of the ring's 18 mm are in the land.
+- **The nut's face moves the positioner, not the bit.** The sled
+  stands the positioner off by what the nut stands out, so that at
+  the deepest cut the nut is just outside the blank's swing. A nut
+  4.5 mm nearer the rim brings the positioner 5 mm nearer the stick
+  and leaves the bit where it was, 45.9 mm out. The deck's edge came
+  to 6 mm from the positioner's face, from 10, so that the risers
+  under the pillow blocks stay on it.
+- **The collet's depth is a limit on the bit, said as one.** 32 mm
+  of shank, 19 at the least and 1.5 off the bottom: a bit 65 to 76 mm
+  long. The 2-7/8 in straight bit is inside that. The 2-1/2 in
+  tapered one is not, by 1.4 mm, which is the case for planning its
+  passes with less of it out; that is the next piece of work and is
+  not in this one.
+- **The wrench.** 9.49 mm across the flats is 3/8 in, not 10 mm.
+  With the nut where it is on a bit, its back is 1.6 mm out of the
+  box's face at full plunge and the flats are in the slot's mouth:
+  the rule that wanted the nut 2 mm clear now wants 1, and the
+  README says where each wrench goes.
+

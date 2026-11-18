@@ -45,24 +45,28 @@ from okmcp import Mcp, Part, new_tab  # noqa: E402
 OUT = os.path.join(HERE, "out")
 
 # -- the numbers to set -------------------------------------------------------
-# The router: the owner's Bosch Colt, out of its base (the brief's first open question). Its body is 70.71 mm across by
-# the owner's callipers. The rest is read off three photographs the owner took for the purpose. The nose from the side,
-# scaled by that body and checked against the router's own millimetre scale: good to half a millimetre. The whole
-# router from the side, lying on the measuring sheet, with the camera's place worked out from the sheet's grid so that
-# the router's height off the paper is allowed for: good to 2 mm. And the rear end on, for the shape the quill has to
-# pass. Lengths are from the rim: the front edge of the aluminium ring, the end the spindle comes out of.
-ROUTER_D = 70.71                # the round body a clamp grips. Measured
-ROUTER_HOUSING = 54.0           # how far back it stays that round and bare, to the nearest edge of the rubber grip: 54 on one side, 64 on the other. The first 18 is the aluminium ring, the spindle lock's button flush in it; the rest is plastic of the same size
+# The router: the owner's Bosch Colt, out of its base (the brief's first open question). What is marked measured is by
+# the owner's callipers on the router. The rest is read off three photographs the owner took for the purpose. The nose
+# from the side, scaled by the body and checked against the router's own millimetre scale: good to half a millimetre.
+# The whole router from the side, lying on the measuring sheet, with the camera's place worked out from the sheet's
+# grid so that the router's height off the paper is allowed for: good to 2 mm. And the rear end on, for the shape the
+# quill has to pass. Lengths are from the rim: the front edge of the aluminium ring, the end the spindle comes out of.
+ROUTER_D = 70.71                # the aluminium ring at the front, across. Measured
+RING_L = 18.0                   # and how far back it goes, the spindle lock's button flush in its side. Photo
+PLASTIC_D = 69.0                # the plastic body behind the ring: the metal stands a little proud of it. Measured
+ROUTER_HOUSING = 51.0           # how far back the body stays round and bare, to the nearest edge of the rubber grip, which is on the cord's side. Measured; the photo had 54, and 64 on the other side
 ROUTER_GRIP = (76.5, 105.0)     # the grip behind that: across, and where it ends
 ROUTER_CAP = 76.0               # the vented cap behind the grip, across: a true circle from the rear but for the two things below
-HUMP = (101.0, 119.0, 22.0, 45.0)   # the speed dial's housing, on the side the spindle lock's button is on: from and to behind the rim, half its width, and how far it stands from the axis
-CHIN = (88.0, 130.0, 15.0, 46.0)    # and opposite it the swelling the cord comes out of, the same four. Its width is a guess: the rear photograph has the cord across it
-ROUTER_ENV = 96.0               # what the quill has to pass, twice 48: the chin's 46 and the 2 mm that reading is good to
-ROUTER_L = 156.0                # to its rear end; with the nose and the nut, 190
+HUMP = (101.0, 119.0, 22.0, 44.5)   # the speed dial's housing, on the side the spindle lock's button is on: from and to behind the rim, half its width, and how far it stands from the axis
+CHIN = (88.0, 130.0, 15.0, 45.5)    # and opposite it the swelling the cord comes out of, the same four. From one to the other is 90, measured; how that is shared between them is the photo's, and the chin's width is a guess
+ROUTER_ENV = 96.0               # what the quill has to pass, twice 48: the chin's 45.5 and 2.5 for not knowing how the 90 is shared
+ROUTER_L = 156.0                # to its rear end; with the nose and the nut, 186
 NOSE_D, NOSE_L = 44.0, 14.2     # the bearing's boss, in front of the rim
-SHAFT_D, SHAFT_L = 13.0, 7.8    # the spindle showing between the boss and the nut, as photographed with no bit in it
 COLLET_D, COLLET_L = 20.0, 12.5  # the collet nut, 17 across its flats
-NUT_FACE = NOSE_L + SHAFT_L + COLLET_L  # the collet nut's face, in front of the rim: 34.5. A nut tightened on a bit sits a millimetre or two nearer
+NUT_FACE = 30.0                 # the collet nut's face, in front of the rim, tightened on a 1/4 in bit. Measured; with no bit in it and the nut slack, as photographed, 34.5
+SHAFT_D, SHAFT_L = 13.0, NUT_FACE - NOSE_L - COLLET_L   # what shows of the spindle between the boss and the nut: 3.3, with its two flats
+FLATS = 9.49                    # across those flats. Measured: a 3/8 in wrench, which is 9.525
+SHANK_IN = 32.0                 # how far a 1/4 in shank goes in from the nut's face before it bottoms. Measured
 CORD_AT, CORD_D, CORD_L = 124.0, 18.0, 35.0  # the cord's boot leaves the chin this far back, opposite the dial's hump: where it is through the quill's wall, across, long
 CORD_SLACK = 8.0                # that place is good to 3 mm: the slots run this much further each way than it needs
 SPRUNG = (18.0, 10.0, 9.4)      # a sprung block at the rim, on the cord's side and opposite the spindle lock's button: wide (a guess, no photo shows it across), thick, and how far it stands out of the rim
@@ -109,28 +113,30 @@ CLIP_FIT = 0.4                  # a slot is this much wider than its sheet, so t
 CLIP_RIB = (1.2, 0.5, 3.0)      # ribs on one side of each slot: wide, high, and how far short of the slot's mouth they stop. They are the friction: 0.1 mm of crush
 CLIPS = (("L", T12, T12, 8), ("L", T12, T34, 4), ("L", T34, T34, 4), ("T", T12, T12, 4), ("T", T12, T34, 4), ("T", T34, T34, 4))   # kind; an arm's sheet, or the stem's; the other arm's, or the bar's; how many to print
 
-# The router's mount: a block of three layers, thick, thin, thick, glued up and bored for the body, which it holds by
-# two lands with the thin layer's bore relieved between them. It is on the body's bare round and nothing else, which
-# is all the router's own base holds it by. A saw kerf opens its top and a bolt across the kerf in each thick layer
-# closes it: the top corners are notched so that the bolts' heads and nuts have a face to bear on and room inside the
-# quill. That is done on the bench. Block and router then go into the quill together from the front, as far as two
-# stop plates glued inside it, and four screws through the block into inserts in the plates keep them there.
+# The router's mount: a block of two thick layers glued up and bored once for the body. The front land is on the
+# aluminium ring. The plastic behind the ring is 1.7 mm smaller across, and a land that has passed the ring cannot
+# close on it, so a printed liner brings the plastic up to the ring's size and the back land is on that. A saw kerf
+# opens the block's top and a bolt across the kerf in each layer closes it: the top corners are notched so that the
+# bolts' heads and nuts have a face to bear on and room inside the quill. That is done on the bench. Block and router
+# then go into the quill together from the front, as far as two stop plates glued inside it, and four screws through
+# the block into inserts in the plates keep them there.
 BLOCK_FIT = 0.4                 # the block is this much smaller across than the quill's bore
 BODY_FIT = 0.6                  # and its bore this much larger than the body: the kerf closes on what is left
-RELIEF = 4.0                    # the thin layer's bore, larger again by this
+LINER = (0.5, 0.5, 0.1, 24.0)   # the liner: it starts this far behind the ring and stops this far short of the grip; its bore is this much over the plastic; and the gap in it, which goes over the slotted metal plate in the body's side
 KERF = 3.0                      # a saw's
 NOTCH = (14.0, 16.0)            # cut from each top corner: across and down
 PINCH = (5.5, 5.0)              # the bolts across the kerf, M5 x 80 with a washer each end and a locking nut: their hole, and its centre over the top of the bore
 STOP_W = 17.0                   # a stop plate: the thick plywood, the bore's whole height, this wide, on each side wall
 STOP_RELIEF = 4.0               # and hollowed to a circle this much larger across than the grip, which passes between them
-HOLD = (5.5, 8.0, 41.0, 25.0)   # the four screws, M5 x 70: their hole through the block, the hole for an M5 insert in a stop plate, and where they are from the axis, across and up or down
+HOLD = (5.5, 8.0, 41.0, 25.0)   # the four screws, M5 x 60: their hole through the block, the hole for an M5 insert in a stop plate, and where they are from the axis, across and up or down
 
 # -- what follows from them ---------------------------------------------------
 QI = ROUTER_ENV + 2.0                           # the quill's bore: the router goes in from the front, its cap first
 SLOT_W = QI + 2.0                               # the bit slot: wide enough for the router's block, so block and router come out through it
 BLOCK = QI - BLOCK_FIT                          # the block, square
-BLOCK_L = 2 * T34 + T12                         # and long
-BLOCK_AT = (ROUTER_HOUSING - BLOCK_L) / 2       # its front face, behind the rim: it is in the middle of the bare round
+BLOCK_L = 2 * T34                               # and long
+BLOCK_AT = 1.0                                  # its front face, behind the rim: the front land is on the ring
+LINER_X = (RING_L + LINER[0], ROUTER_HOUSING - LINER[1])   # the liner, behind the rim: it is pushed back against the grip's edge
 PINCH_Z = (ROUTER_D + BODY_FIT) / 2 + PINCH[1]  # the bolts across the kerf, over the axis
 STOP_AT = BLOCK_AT + BLOCK_L                    # the stop plates' front faces, behind the rim: the block's back
 QO = QI + 2 * T12                               # the quill, a square tube of the thin plywood
@@ -201,17 +207,20 @@ def rules():
     # At full plunge the quill's front is at the sleeve's mouth. The outer box's face is the thin plywood so that
     # the collet nut is still clear of it there, for a wrench; the router's nose stays in the slot.
     found["nose_proud"] = NOSE_L - (GAP + T12)
-    found["collet_proud"] = NOSE_L + SHAFT_L - (GAP + T12)
+    found["collet_proud"] = NOSE_L + SHAFT_L - (GAP + T12)             # the nut's back face out of the box's face: the spindle's flats are in the slot's mouth
     found["sprung_in_wall"] = SPRUNG[2] - GAP            # the sprung block's end is this far into the face's thickness, in the slot
     # The mount. The block is on the bare round and passes the bit slot; the stop plates behind it pass the grip, the
     # dial's housing and the chin, and are in front of both; the screws have wood round them in block and plate.
-    found["block_on_body"] = BLOCK_AT
+    found["block_on_body"] = min(BLOCK_AT, ROUTER_HOUSING - (BLOCK_AT + BLOCK_L))
+    found["front_land_on_ring"] = min(RING_L, BLOCK_AT + T34) - BLOCK_AT
+    found["back_land_on_liner"] = min(LINER_X[1], BLOCK_AT + BLOCK_L) - max(LINER_X[0], BLOCK_AT + T34)
+    found["liner_wall"] = (ROUTER_D - PLASTIC_D - LINER[2]) / 2
     found["slot_past_block"] = (SLOT_W - BLOCK) / 2
     found["stop_round_grip"] = STOP_RELIEF / 2
     found["stop_beside_rear"] = QI / 2 - STOP_W - max(HUMP[2], CHIN[2])
     found["stop_before_rear"] = min(HUMP[0], CHIN[0]) - (STOP_AT + T34)
     r_hold = math.hypot(HOLD[2], HOLD[3])
-    found["hold_in_block"] = min(r_hold - HOLD[0] / 2 - (ROUTER_D + BODY_FIT + RELIEF) / 2, BLOCK / 2 - HOLD[2] - HOLD[0] / 2, (BLOCK / 2 - NOTCH[1]) - HOLD[3] - HOLD[0] / 2)
+    found["hold_in_block"] = min(r_hold - HOLD[0] / 2 - (ROUTER_D + BODY_FIT) / 2, BLOCK / 2 - HOLD[2] - HOLD[0] / 2, (BLOCK / 2 - NOTCH[1]) - HOLD[3] - HOLD[0] / 2)
     found["hold_in_stop"] = min(r_hold - (ROUTER_GRIP[0] + STOP_RELIEF) / 2, QI / 2 - HOLD[2], HOLD[2] - (QI / 2 - STOP_W)) - HOLD[1] / 2
     found["pinch_under_edge"] = BLOCK / 2 - PINCH_Z - PINCH[0] / 2
     found["pinch_seat"] = min(BLOCK / 2 - PINCH_Z, PINCH_Z - (BLOCK / 2 - NOTCH[1])) - 5.0          # a 10 mm washer on the notch's face
@@ -233,7 +242,7 @@ def rules():
         bad.append(f"a box is under {ENGAGE} widths in its guide: {found['x_engaged']:.2f} along X, {found['z_engaged']:.2f} along Z")
     for key, least in (("front_strip_in_sleeve", 0.0), ("back_strip_in_column", 0.0), ("x_tip_to_router", 3.0), ("x_through_nut", 2.0), ("z_tip_to_sleeve", 3.0),
                        ("z_through_nut", 2.0), ("column_in_slot", 1.0), ("cord_slot_short_of_strip", 10.0), ("strip_beside_slot", 25.0),
-                       ("collet_proud", 2.0), ("motor_shaft_in_coupling", 8.0), ("block_on_body", 1.0), ("slot_past_block", 1.0), ("stop_round_grip", 1.5), ("stop_beside_rear", 5.0),
+                       ("collet_proud", 1.0), ("motor_shaft_in_coupling", 8.0), ("block_on_body", 1.0), ("front_land_on_ring", 15.0), ("back_land_on_liner", 15.0), ("liner_wall", 0.6), ("slot_past_block", 1.0), ("stop_round_grip", 1.5), ("stop_beside_rear", 5.0),
                        ("stop_before_rear", 5.0), ("hold_in_block", 4.0), ("hold_in_stop", 3.0), ("pinch_under_edge", 4.0), ("pinch_seat", 2.0), ("rear_in_bore", 2.0),
                        ("boot_through_face", 5.0)):
         if found[key] < least - 1e-9:
@@ -463,7 +472,8 @@ def spider(p):
 def router(p):
     """The Colt as the photographs have it, turned in its block so that the cord's boot points down and the speed
     dial up."""
-    xcyl(p, "router body", (XQ, XQ + ROUTER_HOUSING), (0.0, AZ), ROUTER_D)
+    xcyl(p, "ring", (XQ, XQ + RING_L), (0.0, AZ), ROUTER_D)
+    xcyl(p, "plastic body", (XQ + RING_L, XQ + ROUTER_HOUSING), (0.0, AZ), PLASTIC_D, op="add")
     xcyl(p, "grip", (XQ + ROUTER_HOUSING, XQ + ROUTER_GRIP[1]), (0.0, AZ), ROUTER_GRIP[0], op="add")
     xcyl(p, "cap", (XQ + ROUTER_GRIP[1], X_ROUTER_BACK), (0.0, AZ), ROUTER_CAP, op="add")
     box(p, "dial's housing", (XQ + HUMP[0], XQ + HUMP[1]), (-HUMP[2], HUMP[2]), (AZ, AZ + HUMP[3]), op="add")
@@ -484,22 +494,37 @@ def router(p):
 
 
 def block(p):
-    """The router's block: three layers square in the quill, bored for the body, kerfed through the top, its top
-    corners notched for the two bolts that close the kerf, and drilled for the four screws that hold it against the
-    stop plates. The layers are drawn apart as the three pieces of plywood they are cut from."""
+    """The router's block: two thick layers square in the quill, bored once for the body, kerfed through the top, its
+    top corners notched for the two bolts that close the kerf, and drilled for the four screws that hold it against
+    the stop plates. The layers are drawn apart as the two pieces of plywood they are cut from."""
     part, fit, x0 = "Router block", BLOCK / 2, XQ + BLOCK_AT
-    # the thin layer first: the lands' bores, cut a little long, then run out into its wider one
-    for name, x, t, bore in (("between the lands", x0 + T34, T12, ROUTER_D + BODY_FIT + RELIEF), ("front land", x0, T34, ROUTER_D + BODY_FIT), ("back land", x0 + T34 + T12, T34, ROUTER_D + BODY_FIT)):
-        panel(p, part, name, (x, x + t), (-fit, fit), (AZ - fit, AZ + fit))
-        xcyl(p, "the body's bore", (x - 0.5, x + t + 0.5), (0.0, AZ), bore, op="remove")
+    for name, x in (("front land", x0), ("back land", x0 + T34)):
+        panel(p, part, name, (x, x + T34), (-fit, fit), (AZ - fit, AZ + fit))
     ends = (x0 - 0.5, x0 + BLOCK_L + 0.5)
+    xcyl(p, "the body's bore", ends, (0.0, AZ), ROUTER_D + BODY_FIT, op="remove")
     box(p, "kerf", ends, (-KERF / 2, KERF / 2), (AZ + ROUTER_D / 2 - 2.0, AZ + fit + 1.0), op="remove")
     for sy in (-1, 1):
         box(p, "notch", ends, tuple(sorted((sy * (fit - NOTCH[0]), sy * (fit + 1.0)))), (AZ + fit - NOTCH[1], AZ + fit + 1.0), op="remove")
         for sz in (-1, 1):
             xcyl(p, "holding screw", ends, (sy * HOLD[2], AZ + sz * HOLD[3]), HOLD[0], op="remove")
-    for xc in (x0 + T34 / 2, x0 + BLOCK_L - T34 / 2):               # a bolt across the kerf in the middle of each thick layer
+    for xc in (x0 + T34 / 2, x0 + BLOCK_L - T34 / 2):               # a bolt across the kerf in the middle of each layer
         ybore(p, "pinch bolt", (xc, AZ + PINCH_Z), PINCH[0], fit + 1.0, BLOCK + 2.0)
+
+
+def liner(p, standing=False):
+    """The liner: a printed band round the plastic of the body, as thick as the ring stands proud of it, open where
+    the slotted metal plate is let into the body's side. In place on the router, or standing on its end as it
+    prints."""
+    long, bore, half = LINER_X[1] - LINER_X[0], PLASTIC_D + LINER[2], LINER[3] / 2
+    if standing:
+        zcyl(p, "liner", (0.0, long), (0.0, 0.0), ROUTER_D)
+        zcyl(p, "bore", (-0.5, long + 0.5), (0.0, 0.0), bore, op="remove")
+        zbox(p, "gap", (-half, half), (0.0, ROUTER_D / 2 + 1.0), (-0.5, long + 0.5), op="remove")
+        return
+    x = (XQ + LINER_X[0], XQ + LINER_X[1])
+    xcyl(p, "liner", x, (0.0, AZ), ROUTER_D)
+    xcyl(p, "bore", (x[0] - 0.5, x[1] + 0.5), (0.0, AZ), bore, op="remove")
+    box(p, "gap", (x[0] - 0.5, x[1] + 0.5), (0.0, ROUTER_D / 2 + 1.0), (AZ - half, AZ + half), op="remove")
 
 
 def z_drive_housing(p):
@@ -623,7 +648,7 @@ PARTS = [("Outer box", outer_box, "fixed"), ("Z gibs", z_gibs, "fixed"), ("Z dri
          ("Z drive", lambda p: drive_parts(p, "z"), "fixed"), ("Z home switch", z_switch, "fixed"),
          ("X tube", x_tube, "z"), ("Z stage", z_stage, "z"), ("Stage strips", stage_strips, "z"), ("Z nut", lambda p: nut(p, "z"), "z"), ("X gibs", x_gibs, "z"),
          ("X drive", lambda p: drive_parts(p, "x"), "z"), ("X home switch", x_switch, "z"),
-         ("X quill", quill, "xz"), ("Quill strips", quill_strips, "xz"), ("Spider", spider, "xz"), ("X nut", lambda p: nut(p, "x"), "xz"), ("Router", router, "xz"), ("Router block", block, "xz")]
+         ("X quill", quill, "xz"), ("Quill strips", quill_strips, "xz"), ("Spider", spider, "xz"), ("X nut", lambda p: nut(p, "x"), "xz"), ("Router", router, "xz"), ("Body liner", liner, "xz"), ("Router block", block, "xz")]
 PLYWOOD = ("Outer box", "Z drive housing", "X tube", "Z stage", "X quill", "Spider", "Router block")   # the tabs whose every body is a piece of plywood
 # The four corners of the travel: how far the quill is run out, and how far the stage is run down.
 CORNERS = [("Home: drawn back, up", 0.0, 0.0), ("Plunged, up", X_TRAVEL, 0.0), ("Drawn back, down", 0.0, Z_TRAVEL), ("Plunged, down", X_TRAVEL, Z_TRAVEL)]
@@ -682,7 +707,7 @@ def main():
     # front land where its bolt is and through the stop plates; and from the front, cut down the middle.
     plunged = corners[CORNERS[1][0]]
     across = f"-30,{-CO / 2 - 28},{AZ - CO / 2 - 28},150,{CO / 2 + 28},{AZ + CO / 2 + 28}"
-    for name, cut in (("mount-land", BLOCK_AT + T34 / 2), ("mount-stops", STOP_AT + T34 / 2)):
+    for name, cut in (("mount-land", BLOCK_AT + T34 + T34 / 2), ("mount-stops", STOP_AT + T34 / 2)):
         mcp.call("screenshot", {"tab": plunged, "view": "-1,0,0", "section": f"x:{cut:.2f}", "fit": across, "width": 1000, "height": 1000, "path": os.path.join(OUT, name + ".png")})
     mcp.call("screenshot", {"tab": plunged, "view": "0,-1,0", "section": "y:0", "fit": f"{-NUT_FACE - BIT_L - 10},-1,{AZ - CO / 2 - 45},{ROUTER_L + 25},1,{AZ + CO / 2 + 20}", "width": 1500, "height": 1000,
                             "path": os.path.join(OUT, "mount-side.png")})
@@ -706,6 +731,15 @@ def main():
                          "size": [max(q[0] for q in plate) - min(q[0] for q in plate), max(q[1] for q in plate) - min(q[1] for q in plate), CLIP_PLATE + CLIP_DEEP],
                          "ribs": len(ribs), "holds": sheets})
         print(f"{title}: {made[0][1]:.0f} mm3, {count} to print")
+    # -- the liner, standing on its end as it prints -----------------------------------
+    tab = new_tab(mcp, {"type": "add_part_studio", "name": "Liner, to print"})
+    part = Part(mcp, tab, "Liner, to print")
+    liner(part, standing=True)
+    lined = part.bodies()
+    if len(lined) != 1 or len(bodies["Body liner"]) != 1 or abs(lined[0][1] - bodies["Body liner"][0][1]) > 1e-3 * lined[0][1]:
+        raise SystemExit("the liner as it prints is not the liner as it is on the router")
+    mcp.call("export", {"tab": tab, "format": "stl", "path": os.path.join(OUT, "liner.stl")})
+    print(f"Liner: {lined[0][1]:.0f} mm3, {LINER_X[1] - LINER_X[0]:.1f} long")
     use = new_tab(mcp, {"type": "add_part_studio", "name": "Clips in use"})
     part = Part(mcp, use, "Clips in use")
     clips_in_use(part)
@@ -729,8 +763,8 @@ def main():
     envelope = {"x": (BOX_X[0], X_END), "y": (-BOX_Y, BOX_Y), "z": (Z_END, IH + T34)}
     numbers = {
         "router": {"d": ROUTER_D, "envelope": ROUTER_ENV, "length": ROUTER_L, "housing": ROUTER_HOUSING, "grip": ROUTER_GRIP, "nose": [NOSE_D, NOSE_L], "shaft": [SHAFT_D, SHAFT_L],
-                   "collet": [COLLET_D, COLLET_L], "nut_face": NUT_FACE, "overall": ROUTER_L + NUT_FACE, "cord": [CORD_AT, CORD_D, CORD_L], "cap": ROUTER_CAP, "hump": HUMP, "chin": CHIN, "sprung": SPRUNG, "sprung_turn": SPRUNG_TURN, "face_proud": FACE_PROUD, "bit": [BIT_D, BIT_L]},
-        "mount": {"block": [BLOCK, BLOCK_L], "at": BLOCK_AT, "layers": [T34, T12, T34], "body_fit": BODY_FIT, "relief": RELIEF, "kerf": KERF, "notch": NOTCH, "pinch": PINCH, "pinch_z": PINCH_Z,
+                   "collet": [COLLET_D, COLLET_L], "nut_face": NUT_FACE, "ring": RING_L, "plastic": PLASTIC_D, "flats": FLATS, "shank_in": SHANK_IN, "overall": ROUTER_L + NUT_FACE, "cord": [CORD_AT, CORD_D, CORD_L], "cap": ROUTER_CAP, "hump": HUMP, "chin": CHIN, "sprung": SPRUNG, "sprung_turn": SPRUNG_TURN, "face_proud": FACE_PROUD, "bit": [BIT_D, BIT_L]},
+        "mount": {"block": [BLOCK, BLOCK_L], "at": BLOCK_AT, "layers": [T34, T34], "body_fit": BODY_FIT, "liner": LINER, "liner_x": LINER_X, "liner_file": "liner.stl", "kerf": KERF, "notch": NOTCH, "pinch": PINCH, "pinch_z": PINCH_Z,
                   "stop": [STOP_W, STOP_RELIEF], "stop_at": STOP_AT, "hold": HOLD},
         "travel": {"x": X_TRAVEL, "z": Z_TRAVEL}, "ply": [T12, T34], "outer_wall": T34, "face_wall": T12, "gap": GAP, "strip_l": STRIP_L, "gib": GIB, "engage": ENGAGE, "rail": RAIL,
         "screw": {"d": SCREW_D, "pitch": SCREW_PITCH, "per_step": SCREW_PITCH / 200, "nut": [NUT_AF, NUT_L], "float": NUT_FLOAT, "lead": NUT_LEAD, "tip_clear": TIP_CLEAR},
@@ -755,7 +789,8 @@ def main():
     print(f"X screw tip {found['x_tip_to_router']:.0f} from the router's back, drawn back; Z screw tip {found['z_tip_to_sleeve']:.1f} under the tube, down; at full plunge the router's nose {found['nose_proud']:.1f} out of the box's face and the collet nut {found['collet_proud']:.1f} clear of it")
     print(f"the cord's boot: {-found['cord_past_stage']:.0f} inside the stage's end at full plunge, over its open room; the tube's slot runs {CORD_SLACK:.0f} past it and {found['slot_under_strip']:.0f} under "
           f"where the quill's back strip does, which bears {found['strip_beside_slot']:.0f} each side of it; the bore {found['rear_in_bore']:.1f} round the chin as photographed")
-    print(f"the block {BLOCK:.1f} square x {BLOCK_L:.1f}, {BLOCK_AT:.1f} behind the rim and as much short of the grip; it passes the bit slot by {found['slot_past_block']:.1f} a side; the stop plates {found['stop_beside_rear']:.0f} beside "
+    print(f"the block {BLOCK:.1f} square x {BLOCK_L:.1f}, {BLOCK_AT:.1f} behind the rim and {ROUTER_HOUSING - BLOCK_AT - BLOCK_L:.1f} short of the grip, {found['front_land_on_ring']:.1f} of its front land on the ring and "
+          f"{found['back_land_on_liner']:.1f} of its back land on a liner {found['liner_wall']:.2f} thick; it passes the bit slot by {found['slot_past_block']:.1f} a side; the stop plates {found['stop_beside_rear']:.0f} beside "
           f"the dial's housing and {found['stop_before_rear']:.1f} in front of the chin; the boot passes the slot's end with the stage in the top {found['boot_through_face']:.0f} of its travel")
     print(f"plywood: {sum(r['count'] for r in panels)} pieces; 3/4 in {area[T34] / 1e6:.2f} m2, {100 * area[T34] / sheet:.0f} % of a sheet; 1/2 in {area[T12] / 1e6:.2f} m2, {100 * area[T12] / sheet:.0f} % of a sheet")
 

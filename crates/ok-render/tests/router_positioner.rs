@@ -350,16 +350,20 @@ fn met(probe: &Solid, bodies: &[&Solid]) -> f64 {
         .fold(0.0, f64::max)
 }
 
-/// The router's mount. A block of three layers is clamped on the
+/// The router's mount. A block of two layers is clamped on the
 /// body's bare round on the bench: a kerf through its top, a bolt
-/// across the kerf in each thick layer. Block and router go into the
-/// quill from the front as far as two stop plates, and four screws
-/// through the block go into the plates. So: the block is on the bare
-/// round and nowhere else; every bolt and screw has a clear way where
-/// the build says it is, and wood beside it; and the two come out of
-/// the front of the box together with the stage up, the cord's boot
-/// riding out along the slots. With the stage down the boot meets the
-/// face under the bit slot's end, which is how the check can tell.
+/// across the kerf in each layer. The front land is on the aluminium
+/// ring; the plastic behind the ring is smaller, and a printed liner
+/// brings it up to the ring's size for the back land. Block and router
+/// go into the quill from the front as far as two stop plates, and
+/// four screws through the block go into the plates. So: the block is
+/// on the bare round and nowhere else; the liner is as thick as the
+/// ring is proud and is under the whole of the back land; every bolt
+/// and screw has a clear way where the build says it is, and wood
+/// beside it; and the two come out of the front of the box together
+/// with the stage up, the cord's boot riding out along the slots. With
+/// the stage down the boot meets the face under the bit slot's end,
+/// which is how the check can tell.
 #[test]
 fn the_router_s_block_is_on_its_bare_round_and_both_come_out_of_the_front() {
     let (mut doc, n) = (load(), numbers());
@@ -379,8 +383,9 @@ fn the_router_s_block_is_on_its_bare_round_and_both_come_out_of_the_front() {
     let side = block.1.y - block.0.y;
     let slack = f(&n["quill"]["bore"]) - side;
     assert!((side - (block.1.z - block.0.z)).abs() < 1e-6 && slack > 0.1 && slack < 1.0);
-    // three layers: thin between thick, face to face
-    let layers: Vec<&Solid> = (1..=3)
+    // its layers, face to face, each as thick as the build says
+    let thick: Vec<f64> = m["layers"].as_array().unwrap().iter().map(f).collect();
+    let layers: Vec<&Solid> = (1..=thick.len())
         .map(|k| named(&pieces, &home, &format!("Router block {k}")))
         .collect();
     let mut spans: Vec<(f64, f64)> = layers
@@ -389,10 +394,37 @@ fn the_router_s_block_is_on_its_bare_round_and_both_come_out_of_the_front() {
         .collect();
     spans.sort_by(|a, b| a.0.total_cmp(&b.0));
     let ply = [f(&n["ply"][0]), f(&n["ply"][1])];
-    for (k, t) in [ply[1], ply[0], ply[1]].iter().enumerate() {
-        assert!((spans[k].1 - spans[k].0 - t).abs() < 1e-6);
+    for (k, t) in thick.iter().enumerate() {
+        assert!((spans[k].1 - spans[k].0 - t).abs() < 1e-6 && ply.contains(t));
         assert!(k == 0 || (spans[k].0 - spans[k - 1].1).abs() < 1e-6);
     }
+    // The front land is on the aluminium ring. The plastic behind the ring is smaller across, and the liner is
+    // what the back land closes on: as far out as the ring, under the whole of that land, a band of the
+    // thickness the build says with a gap in it.
+    let (d, plastic, ring) = (
+        f(&n["router"]["d"]),
+        f(&n["router"]["plastic"]),
+        f(&n["router"]["ring"]),
+    );
+    assert!(spans[0].0 - rim >= 0.5 && ring - (spans[0].0 - rim) >= 15.0);
+    let liner = named(&pieces, &home, "Body liner 1");
+    let b = bounds(liner);
+    let last = spans[spans.len() - 1];
+    assert!(b.0.x - rim >= ring && b.1.x - rim <= bare);
+    assert!(b.0.x <= last.0.max(rim + ring + 1.0) && b.1.x >= last.1);
+    assert!(
+        (b.1.z - b.0.z - d).abs() < 0.05,
+        "the liner is as far out as the ring"
+    );
+    let (fit, gap) = (f(&m["liner"][2]), f(&m["liner"][3]));
+    let wall = (d - plastic - fit) / 2.0;
+    let round = std::f64::consts::PI * (d - wall) - gap;
+    let (long, volume) = (b.1.x - b.0.x, liner.volume());
+    println!(
+        "the liner is {long:.1} long and {:.3} thick over {round:.0} mm of the way round",
+        volume / long / round
+    );
+    assert!(wall > 0.6 && (volume / long / round - wall).abs() < 0.02 * wall);
     // the stop plates: against the block's back, on the quill's side walls
     let stops = [
         named(&pieces, &home, "X quill 5"),
@@ -429,7 +461,7 @@ fn the_router_s_block_is_on_its_bare_round_and_both_come_out_of_the_front() {
     // kerf itself, from the bore out of the top.
     let pinch = axis + f(&m["pinch_z"]);
     let lug = side - 2.0 * f(&m["notch"][0]);
-    for span in [spans[0], spans[2]] {
+    for span in spans.iter().filter(|s| (s.1 - s.0 - ply[1]).abs() < 1e-6) {
         let xc = (span.0 + span.1) / 2.0;
         let pin = |z: f64| {
             slab(
@@ -465,20 +497,21 @@ fn the_router_s_block_is_on_its_bare_round_and_both_come_out_of_the_front() {
             < 1e-6
     );
     assert!(lid.0.z - router.1.z >= 2.0);
-    // Out of the front. The quill at full plunge; router and block go on from there, a step at a time, and
-    // share nothing with anything that stays.
+    // Out of the front. The quill at full plunge; router, liner and block go on from there, a step at a time,
+    // and share nothing with anything that stays.
+    let goes = |name: &str| name.starts_with("Router ") || name.starts_with("Body liner ");
     let out = |dz: f64, by: f64| -> (f64, String) {
         let placed = at(&pieces, tx, dz);
         let mut worst = (0.0f64, String::new());
         for (i, p) in pieces.iter().enumerate() {
-            if !p.name.starts_with("Router ") {
+            if !goes(&p.name) {
                 continue;
             }
             let moved = placed[i].transformed(&Transform::translation(Vec3::new(-by, 0.0, 0.0)));
             let a = bounds(&moved);
             for (k, q) in pieces.iter().enumerate() {
                 let b = bounds(&placed[k]);
-                if q.name.starts_with("Router ")
+                if goes(&q.name)
                     || a.0.x >= b.1.x
                     || b.0.x >= a.1.x
                     || a.0.y >= b.1.y

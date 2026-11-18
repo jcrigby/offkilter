@@ -77,7 +77,7 @@ KP = (16.0, 71.0, 38.0, 19.0, 56.0, 6.0)        # a KP001 pillow block, 12 bore:
 RISER = 2 * T12                                 # the riser: two layers of 1/2 in glued face to face
 RISER_HALF = 38.0                               # and this wide each side of the axis: the block's foot and a margin
 AXIS_OVER = RISER + KP[3]                       # the stick's axis over the sled's deck: the socket turns 5 mm clear of it
-DECK_CLEAR = 10.0                               # the deck's near edge from the positioner's face: it reaches out over the near fence, which is far below it
+DECK_CLEAR = 6.0                                # the deck's near edge from the positioner's face: it reaches out over the near fence, which is far below it. It was 10 until the nut's face was measured and the positioner came 5 mm nearer: the risers are 38 each side of the axis and have to be on the deck
 HUB = (36.0, 5.0, 24.0, 14.0, 28.0)             # a 12 mm flanged hub: its flange across and thick, its boss across and long, its bolt circle
 SENSOR = (13.0, 24.0, 11.0)                     # an optical endstop: how far it stands off what it is screwed to, long, wide
 FLAG_R = 34.0                                   # the home flag, a fin on the wheel's back, this far from the axis
@@ -150,6 +150,8 @@ PLINTH = 0.0                                    # the positioner lies on the bas
 SAFE_CLEAR = 2.0                                # drawn back to the safe depth, the bit's tip is this clear of the master whatever its height
 MOVE_CLEAR = 1.5                                # a move may go straight to its row if the bit passes the master by this much all the way
 BIT_MARGIN = 2.0                                # a bit may stand this much further out of the collet, or less far, than the table takes it to
+SHANK_GRIP = 19.0                               # a 1/4 in shank is in the collet at least this far: 3/4 in
+SHANK_OFF = 1.5                                 # and stops this short of the bottom, so the nut can draw it down
 STOP = (40.0, 40.0)                             # a stop post on the base at each end of the sled's travel: along, across
 SWITCH = (28.0, 16.0, 10.0)                     # the sled-back switch, on the back stop
 ROUGH_R = P.ROUGH_BIT / 2
@@ -300,8 +302,11 @@ def main():
     nut_face_home = face + nut_behind                            # the collet nut's face from the axis, the quill at home
     bit_out = nut_face_home - tip_home                           # how far the bit stands out of the collet nut
     safe = tip_home - (MASTER_R + SAFE_CLEAR)                    # the depth at or short of which the bit clears the master at any height
+    # How long a bit has to be, end to end, to stand that far out: its shank in the collet by enough, and not on the bottom.
+    shank_in = pos["router"]["shank_in"]
+    bit_long = (bit_out + SHANK_GRIP, bit_out + shank_in - SHANK_OFF)
     print(f"the positioner's face {face:.0f} from the stick's axis, the blank's corners {face - blank:.1f} clear of it and {nut_face_home - (x_travel - BIT_MARGIN) - blank:.1f} of the collet nut at the deepest cut; the axis {za:.1f} over the base, {za - sled_top - blank:.1f} clear of the sled's plate; "
-          f"the bit {bit_out:.1f} out of the collet nut, its tip {tip_home:.1f} from the axis with the quill at home")
+          f"the bit {bit_out:.1f} out of the collet nut, its tip {tip_home:.1f} from the axis with the quill at home; a bit {bit_long[0]:.1f} to {bit_long[1]:.1f} long does it, {SHANK_GRIP:.0f} or more in a collet {shank_in:.0f} deep")
 
     # -- the order, and then the bites -----------------------------------------
     # Roughing, and then finishing, go round the stick in the order of the spindle's own angle, so it turns a little at a
@@ -868,7 +873,7 @@ def main():
         "rough": {"bit": P.ROUGH_BIT, "bite": P.ROUGH_BITE, "step": P.ROUGH_STEP, "allow": P.ALLOW, "angles": P.ROUGH_ANGLES, "places": len(places),
                   "runs": sum(q["bites"] for q in places), **waste},
         "axes": {"tip_home": tip_home, "across_home": axes.across_home, "scale": list(axes.scale), "shear": axes.shear, "travel": [x_travel, z_travel], "safe": safe, "safe_clear": SAFE_CLEAR,
-                 "move_clear": MOVE_CLEAR, "bit_margin": BIT_MARGIN, "bit_out": bit_out, "past": FW.PAST_MM, "turn_past": FW.TURN_PAST_DEG, "nearest_master": nearest, "probe": [FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM]},
+                 "move_clear": MOVE_CLEAR, "bit_margin": BIT_MARGIN, "bit_out": bit_out, "bit_long": bit_long, "shank": [shank_in, SHANK_GRIP, SHANK_OFF], "past": FW.PAST_MM, "turn_past": FW.TURN_PAST_DEG, "nearest_master": nearest, "probe": [FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM]},
         "straight": straight,
         "sled": {"za": za, "face": face, "face_clear": FACE_CLEAR, "bed_clear": BED_CLEAR, "top": sled_top, "plate_top": plate_top, "axis_over": AXIS_OVER, "deck_y": deck_y, "rail_near": rail_near, "deck_clear": DECK_CLEAR, "plate_x": PLATE_X, "plate_y": plate_y, "stock_top": stock_top,
                  "kp": KP, "riser": RISER, "riser_half": RISER_HALF, "t12": T12, "head_pb_x": HEAD_PB_X, "head_riser_x": HEAD_RISER_X, "tail_pb_x": TAIL_PB_X, "tail_riser_x": TAIL_RISER_X,
