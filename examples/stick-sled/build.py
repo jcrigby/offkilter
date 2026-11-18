@@ -152,6 +152,8 @@ MOVE_CLEAR = 1.5                                # a move may go straight to its 
 BIT_MARGIN = 2.0                                # a bit may stand this much further out of the collet, or less far, than the table takes it to
 SHANK_GRIP = 19.0                               # a 1/4 in shank is in the collet at least this far: 3/4 in
 SHANK_OFF = 1.5                                 # and stops this short of the bottom, so the nut can draw it down
+NUT_AIR = 1.0                                   # the collet nut passes the uncut blank by this much at every cut, the bit set as short as the margin lets it be
+BITS = (("straight", "Freud 04-110", P.ROUGH_LONG), ("ball", "Freud 72-405", P.BIT_LONG))   # the two bits: what the table calls each, what it is, how long end to end
 STOP = (40.0, 40.0)                             # a stop post on the base at each end of the sled's travel: along, across
 SWITCH = (28.0, 16.0, 10.0)                     # the sled-back switch, on the back stop
 ROUGH_R = P.ROUGH_BIT / 2
@@ -302,11 +304,12 @@ def main():
     nut_face_home = face + nut_behind                            # the collet nut's face from the axis, the quill at home
     bit_out = nut_face_home - tip_home                           # how far the bit stands out of the collet nut
     safe = tip_home - (MASTER_R + SAFE_CLEAR)                    # the depth at or short of which the bit clears the master at any height
-    # How long a bit has to be, end to end, to stand that far out: its shank in the collet by enough, and not on the bottom.
+    # How long a bit can be, end to end, and be set within the margin of that: its shank in the collet by enough, and
+    # not on the bottom. The owner bottomed a bit, tightened the nut and marked it at the nut's face: 32 mm.
     shank_in = pos["router"]["shank_in"]
-    bit_long = (bit_out + SHANK_GRIP, bit_out + shank_in - SHANK_OFF)
+    bit_long = (bit_out - BIT_MARGIN + SHANK_GRIP, bit_out + BIT_MARGIN + shank_in - SHANK_OFF)
     print(f"the positioner's face {face:.0f} from the stick's axis, the blank's corners {face - blank:.1f} clear of it and {nut_face_home - (x_travel - BIT_MARGIN) - blank:.1f} of the collet nut at the deepest cut; the axis {za:.1f} over the base, {za - sled_top - blank:.1f} clear of the sled's plate; "
-          f"the bit {bit_out:.1f} out of the collet nut, its tip {tip_home:.1f} from the axis with the quill at home; a bit {bit_long[0]:.1f} to {bit_long[1]:.1f} long does it, {SHANK_GRIP:.0f} or more in a collet {shank_in:.0f} deep")
+          f"the bit {bit_out:.1f} out of the collet nut, its tip {tip_home:.1f} from the axis with the quill at home; a bit {bit_long[0]:.1f} to {bit_long[1]:.1f} long can be set to that, {SHANK_GRIP:.0f} or more in a collet {shank_in:.0f} deep")
 
     # -- the order, and then the bites -----------------------------------------
     # Roughing, and then finishing, go round the stick in the order of the spindle's own angle, so it turns a little at a
@@ -344,6 +347,19 @@ def main():
     if back > 1e-3:
         raise SystemExit(f"the rows do not give the cuts back: {back}")
     cutting = [r for r in rows if r["kind"] in ("rough", "finish")]
+    # The two bits, each set as near what the table takes it to as its length and the collet's depth allow. And the
+    # collet nut: at every cut it has to pass the uncut blank, with the bit set as short as it may be.
+    nut_r, bits = pos["router"]["collet"][0] / 2, {}
+    for tool, name, long in BITS:
+        lo, hi = max(long - (shank_in - SHANK_OFF), bit_out - BIT_MARGIN), min(long - SHANK_GRIP, bit_out + BIT_MARGIN)
+        if lo > hi + 1e-9:
+            raise SystemExit(f"{name}, {long} long, cannot stand {bit_out:.1f} out of the nut give or take {BIT_MARGIN}: its shank allows {long - shank_in + SHANK_OFF:.1f} to {long - SHANK_GRIP:.1f}")
+        out = min(max(bit_out, lo), hi)
+        need = max(P.nut_need(outline, r["t"], r["across"], r["tip"], nut_r, NUT_AIR) for r in cutting if r["tool"] == tool)
+        if lo < need - 1e-9:
+            raise SystemExit(f"{name} set {lo:.1f} out of the nut: the nut meets the blank, which wants {need:.1f}")
+        bits[tool] = {"name": name, "long": long, "out": out, "in": long - out, "range": [lo, hi], "nut_need": need, "nut_air": NUT_AIR}
+        print(f"{name}, {long:.1f} long: set {out:.1f} out of the nut ({lo:.1f} to {hi:.1f} will do), {long - out:.1f} of its shank in the collet; the nut passes the uncut blank at every cut with {need:.1f} out or more")
     depths, heights = (min(r["depth"] for r in rows), max(r["depth"] for r in rows)), (min(r["height"] for r in rows), max(r["height"] for r in rows))
     if depths[0] < FW.PAST_MM + BIT_MARGIN or depths[1] > x_travel - BIT_MARGIN + 1e-6 or heights[0] < FW.PROBE_HEIGHT_MM + 2.0 or heights[1] > z_travel - FW.PROBE_HEIGHT_MM - 2.0:
         raise SystemExit(f"the rows do not fit the positioner's travel: depth {depths}, height {heights}")
@@ -873,7 +889,7 @@ def main():
         "rough": {"bit": P.ROUGH_BIT, "bite": P.ROUGH_BITE, "step": P.ROUGH_STEP, "allow": P.ALLOW, "angles": P.ROUGH_ANGLES, "places": len(places),
                   "runs": sum(q["bites"] for q in places), **waste},
         "axes": {"tip_home": tip_home, "across_home": axes.across_home, "scale": list(axes.scale), "shear": axes.shear, "travel": [x_travel, z_travel], "safe": safe, "safe_clear": SAFE_CLEAR,
-                 "move_clear": MOVE_CLEAR, "bit_margin": BIT_MARGIN, "bit_out": bit_out, "bit_long": bit_long, "shank": [shank_in, SHANK_GRIP, SHANK_OFF], "past": FW.PAST_MM, "turn_past": FW.TURN_PAST_DEG, "nearest_master": nearest, "probe": [FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM]},
+                 "move_clear": MOVE_CLEAR, "bit_margin": BIT_MARGIN, "bit_out": bit_out, "bit_long": bit_long, "shank": [shank_in, SHANK_GRIP, SHANK_OFF], "bits": bits, "tip_lim": P.TIP_LIM, "past": FW.PAST_MM, "turn_past": FW.TURN_PAST_DEG, "nearest_master": nearest, "probe": [FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM]},
         "straight": straight,
         "sled": {"za": za, "face": face, "face_clear": FACE_CLEAR, "bed_clear": BED_CLEAR, "top": sled_top, "plate_top": plate_top, "axis_over": AXIS_OVER, "deck_y": deck_y, "rail_near": rail_near, "deck_clear": DECK_CLEAR, "plate_x": PLATE_X, "plate_y": plate_y, "stock_top": stock_top,
                  "kp": KP, "riser": RISER, "riser_half": RISER_HALF, "t12": T12, "head_pb_x": HEAD_PB_X, "head_riser_x": HEAD_RISER_X, "tail_pb_x": TAIL_PB_X, "tail_riser_x": TAIL_RISER_X,

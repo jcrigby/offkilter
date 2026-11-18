@@ -111,8 +111,10 @@ def probe_rows(axes, master_r, windows, travel):
     for r in rows:
         if r["kind"] in ("up", "dn") and not windows[1] + 1.0 <= r["height"] <= travel[1] - windows[1] - 1.0:
             raise SystemExit("the probing does not fit the height's travel")
-        if r["kind"] in ("in", "up", "dn") and not windows[0] + 1.0 <= r["depth"] <= travel[0] - windows[0] - 1.0:
+        if r["kind"] == "in" and not windows[0] + 1.0 <= r["depth"] <= travel[0] - windows[0] - 1.0:
             raise SystemExit("the probing does not fit the depth's travel")
+        if r["kind"] in ("up", "dn") and not 1.0 <= r["depth"] <= travel[0] - 1.0:      # the depth stands still while the height feels for these
+            raise SystemExit("the probing from below and above does not fit the depth's travel")
     return rows
 
 

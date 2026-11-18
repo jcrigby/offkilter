@@ -1,30 +1,30 @@
-#safe,58.0212
+#safe,62.0158
 n,kind,tool,depth,height,turn,via,label
 1,say,,0.0,0.0,0.0,s,a scrap stick 30square or less  between centres.straight bit
 2,say,,0.0,0.0,0.0,s,a stop clamped  25 mm in from   each end of the stick
-3,set,straight,60.0212,40.0,0.0,s,set the straight bit on the master
-4,place,straight,48.0212,40.0,0.0,s,front 18
+3,set,straight,64.0158,40.0,0.0,s,set the straight bit on the master
+4,place,straight,52.0158,40.0,0.0,s,front 18
 5,round,,0.0,0.0,0.0,s,push to the far stop and hold
 6,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 7,say,,0.0,0.0,0.0,s,draw right back
-8,place,straight,52.0212,40.0,0.0,s,front 14
+8,place,straight,56.0158,40.0,0.0,s,front 14
 9,round,,0.0,0.0,0.0,s,push to the far stop and hold
 10,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 11,say,,0.0,0.0,0.0,s,draw right back
-12,place,straight,56.0212,40.0,0.0,s,front 10
+12,place,straight,60.0158,40.0,0.0,s,front 10
 13,round,,0.0,0.0,0.0,s,push to the far stop and hold
 14,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 15,say,,0.0,0.0,0.0,s,draw right back
 16,say,,0.0,0.0,0.0,s,move both stops 10 mm toward thetail
-17,place,straight,69.1962,61.175,0.0,s,top 18
+17,place,straight,73.1908,61.175,0.0,s,top 18
 18,round,,0.0,0.0,0.0,s,push to the far stop and hold
 19,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 20,say,,0.0,0.0,0.0,s,draw right back
-21,place,straight,69.1962,57.175,0.0,s,top 14
+21,place,straight,73.1908,57.175,0.0,s,top 14
 22,round,,0.0,0.0,0.0,s,push to the far stop and hold
 23,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 24,say,,0.0,0.0,0.0,s,draw right back
-25,place,straight,69.1962,53.175,0.0,s,top 10
+25,place,straight,73.1908,53.175,0.0,s,top 10
 26,round,,0.0,0.0,0.0,s,push to the far stop and hold
 27,round,,0.0,0.0,0.0,s,back to the nearstop and hold
 28,say,,0.0,0.0,0.0,s,draw right back

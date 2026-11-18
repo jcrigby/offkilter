@@ -2455,3 +2455,56 @@ callipers on each. Three were not what the photographs said.
   the rule that wanted the nut 2 mm clear now wants 1, and the
   README says where each wrench goes.
 
+## 2026-11 · Bits from a catalogue: the tip kept near the axis
+
+The owner asked for Freud part numbers and had not bought anything.
+The table was drawn for "the common tapered ball-nose", 3 mm at the
+tip and 3 in long, and for a bit standing 45.9 mm out of the collet
+nut. Freud makes one tapered ball tip an eighth of an inch across,
+72-405, and it is 2-1/2 in long; its 3 in ones have tips of 1/16 and
+1/32 in. The owner bottomed a bit in the collet, tightened the nut
+and marked it: 32 mm. So at 45.9 mm out the Freud bit had 17.6 mm of
+shank in the collet, under the 3/4 in that is the usual least.
+
+- **Why the bit stands out as far as it does.** Its tip reaches past
+  the stick's axis, and the collet nut behind it has to stay outside
+  what the blank's corners sweep: the swing, 33.5 mm, and how far
+  past the axis the tip goes. The second was 12 mm, and nothing had
+  asked for it: the planner picks, for each point of the outline, the
+  direction that meets the face 15 degrees round the ball from its
+  tip, and for two passes that direction happened to put the tip
+  12 mm past the axis.
+- **So the planner is told how far.** `TIP_LIM`, 8 mm. The 242 passes
+  still come within 0.05 mm of every point of the outline; at 7 mm
+  three points are out of reach. The bit stands 41.9 mm out and the
+  tapered one has 21.6 mm in the collet. Nothing on the machine
+  moved: the positioner's face is where it was.
+- **What I proposed first was wrong.** Checking the nut, pass by
+  pass, against what is left of the blank gave 37 mm, and I said the
+  bit could stand out no more than that. The nut is 20 mm across and the
+  bit 6.35 or less, so at the far end of every pass the nut is 7 mm
+  further along the stick than the bit ever cuts, beside the blank as
+  it was sawn. The check that counts is against the uncut blank. It
+  is in the build now, for every cut: 39.8 mm, and the table's 41.9
+  less the 2 mm a bit may be set short is 39.9.
+- **Each bit is set as its own length allows.** The straight bit is
+  73 mm and bottoms before it is down to 41.9: it is set 42.5 out,
+  1.5 off the bottom, and the controller's touch takes up the rest.
+  The build works out each bit's setting and stops if a bit cannot be
+  set within the margin, so a different bit is a change of one length
+  at the top of `plan.py` and an answer.
+- **What lost.** A 3 in bit of another make (Amana's 46284, by one
+  seller's listing) fits the table as it was, but it is an eighth of
+  an inch across for an inch and a half before it thickens, where
+  Freud's is at its shank in an inch, and the owner's shop sells
+  Freud. Sawing the blank's corners off would take 3 mm off the swing
+  for four more rips a blank: kept in reserve. Moving the router
+  forward in the quill does nothing: it is the nut and the blank that
+  set the length, not the positioner's reach.
+- **The probing.** With the bit 4 mm shorter the quill runs 4 mm
+  further for everything, and the two touches that bring the pin up
+  and down past the master were then 74 mm out, inside the 9 mm the
+  check kept free at the end of the depth's travel. That room is for
+  a touch made along the depth; for these the depth stands still and
+  the height feels. The check now asks each kind for what it uses.
+

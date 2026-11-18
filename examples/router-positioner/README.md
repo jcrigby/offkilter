@@ -125,7 +125,7 @@ module is put to next.
 | the collet nut's face from the rim, tightened on a 1/4 in bit | 30. Slack and with no bit in it, as photographed, 34.5 | callipers |
 | the collet nut | a 17 mm hexagon, 12.5 long | nose photo |
 | the spindle's flats, between the boss and the nut | 9.49 across: a 3/8 in wrench, which is 9.525 | callipers |
-| how far a 1/4 in shank goes into the collet | 32 from the nut's face | callipers |
+| how far a 1/4 in shank goes into the collet | 32 from the nut's face, the bit bottomed and the nut then tightened | callipers |
 | on the front face: three screw heads, and a sprung block on the cord's side | 3.2 proud, and 9.4 | nose photo |
 
 Lengths are from the rim, the front edge of the aluminium ring. The
@@ -327,11 +327,9 @@ level with the ring or with the plastic: the liner's gap is drawn for
 either. How the 90 mm across the rear is shared between the dial's
 housing and the chin: the photograph has it even to a millimetre, and
 the bore allows 2.5 either way. How wide the chin is: it is drawn 30,
-and the stop plates stand 64 apart. Whether the 32 mm of shank was
-marked with the nut slack: if it was, a bit tightened is 27.5 in at
-the most. And the block is tightened on the bench, not in the quill,
-so the router's height off the quill's floor is the block's fit in
-the bore, 0.2 mm a side.
+and the stop plates stand 64 apart. And the block is tightened on the
+bench, not in the quill, so the router's height off the quill's floor
+is the block's fit in the bore, 0.2 mm a side.
 
 ## Clips to hold it while it is nailed
 
@@ -455,7 +453,8 @@ Back is the side the feed is taken to push the bit toward.
 
 Measured on the router by the owner: the ring's 70.71 mm, the
 plastic's 69, the 51 of bare round, the 90 across the rear, the nut's
-face 30 from the rim on a bit, the 9.49 flats and the 32 of shank.
+face 30 from the rim on a bit, the 9.49 flats and the 32 of shank,
+marked at the nut's face with the bit bottomed and the nut tight.
 The rest of the router is read off the three photographs. What is
 left to check is listed for whoever has callipers in hand before
 cutting.
@@ -469,7 +468,6 @@ cutting.
 | where the cord's boot leaves the chin | 124 mm back from the rim, leaning to the rear; 18 across | the slots are 3 mm wider each side and run 8 mm past it |
 | the rim to the rear end | 156 mm | the X screw's tip is 4 mm behind it, drawn back: a longer router wants the quill longer by as much |
 | the bearing's boss | 44 x 14.2 | with the nut's face, how much of the spindle's flats is in the slot's mouth |
-| whether the 32 mm of shank was marked with the nut slack | taken as marked | how long a bit can be before it bottoms: in the stick sled, 76 mm or 72 |
 
 Not drawn yet: any fastener but the holes for the mount's, the second thrust face (drawing the quill back pulls the screw
 against a plain collar), the connector panel, and the datum faces'

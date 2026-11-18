@@ -594,12 +594,63 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
     let travel = pair(&a["travel"]);
     assert!((f(&p["bit_home_z"]) + travel.1 / 2.0 - za).abs() < 1e-9);
     assert!((f(&a["across_home"]) + travel.1 / 2.0).abs() < 1e-9);
-    // A bit that stands that far out of the nut has its shank in the collet by enough and is off the collet's
-    // bottom, which the owner measured: there are bits that long, and a 2-7/8 in one is among them.
-    let (out, long, shank) = (f(&a["bit_out"]), pair(&a["bit_long"]), &a["shank"]);
-    assert!((long.0 - out - f(&shank[1])).abs() < 1e-9 && f(&shank[1]) >= 19.0);
-    assert!((long.1 - out - f(&shank[0]) + f(&shank[2])).abs() < 1e-9 && f(&shank[2]) >= 1.0);
-    assert!(long.0 < 73.0 && 73.0 < long.1, "a 2-7/8 in bit is {long:?}");
+    // The two bits. Each is set as near what the table takes it to as its own length and the collet's depth allow:
+    // its shank in the collet by enough, off the collet's bottom, and within the margin of the table's length.
+    // And the collet nut. It is wider than the bit, so at the far end of a pass it is beside the end of the stick
+    // that no bit reaches, which is the blank as it was sawn: at every cut the nut has to pass the uncut blank,
+    // even with the bit set as short as it may be. Found here from the rows and the blank's corners.
+    let (out, shank, nut_r, m) = (
+        f(&a["bit_out"]),
+        &a["shank"],
+        f(&p["collet"][0]) / 2.0,
+        f(&a["bit_margin"]),
+    );
+    let (deep, grip, off) = (f(&shank[0]), f(&shank[1]), f(&shank[2]));
+    assert!(grip >= 19.0 && off >= 1.0 && deep > grip + off);
+    for (tool, long) in [("straight", 73.025), ("ball", 63.5)] {
+        let b = &a["bits"][tool];
+        let (set, within, range) = (f(&b["out"]), f(&b["in"]), pair(&b["range"]));
+        assert!((f(&b["long"]) - long).abs() < 1e-9 && (long - set - within).abs() < 1e-9);
+        assert!(
+            within >= grip - 1e-9 && within <= deep - off + 1e-9,
+            "{tool}: {within:.1} in the collet"
+        );
+        assert!(range.0 <= set && set <= range.1 && (set - out).abs() <= m + 1e-9);
+        assert!(range.0 >= out - m - 1e-9 && range.1 <= out + m + 1e-9);
+        let (air, mut need) = (f(&b["nut_air"]), f64::MIN);
+        for r in rows
+            .iter()
+            .filter(|r| r.tool == tool && (r.kind == "rough" || r.kind == "finish"))
+        {
+            let (d, e) = ((r.t.cos(), r.t.sin()), (-r.t.sin(), r.t.cos()));
+            for i in 0..stock.len() {
+                let (q0, q1) = (stock[i], stock[(i + 1) % stock.len()]);
+                for k in 0..=2000 {
+                    let s = k as f64 / 2000.0;
+                    let q = (q0.0 + s * (q1.0 - q0.0), q0.1 + s * (q1.1 - q0.1));
+                    if (q.0 * e.0 + q.1 * e.1 - r.across).abs() <= nut_r + air {
+                        need = need.max(q.0 * d.0 + q.1 * d.1 - r.tip + air);
+                    }
+                }
+            }
+        }
+        println!(
+            "{}: set {set:.1} out of the nut, {within:.1} in the collet; the nut passes the uncut blank with {need:.1} out, and {:.1} is the least it may be set",
+            b["name"].as_str().unwrap(),
+            range.0
+        );
+        assert!(air >= 1.0 && (need - f(&b["nut_need"])).abs() < 0.05);
+        assert!(range.0 >= need - 0.05, "{tool}: the nut meets the blank");
+    }
+    // and the ball's tip is never further past the axis than the planner was told to keep it
+    let lim = f(&a["tip_lim"]);
+    assert!(
+        lim < 0.0
+            && rows
+                .iter()
+                .filter(|r| r.kind == "finish")
+                .all(|r| r.tip >= lim - 1e-6)
+    );
     // The lock disc is wider than the stick is from that wall: it is past the positioner's box with the sled
     // forward, which is as near as it comes, and well over the fences' lips. The index wheel never moves: it is
     // clear of the base, and its rim and its belt are in the slot in its own plate or within a few millimetres

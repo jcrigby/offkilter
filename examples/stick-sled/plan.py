@@ -13,15 +13,18 @@ depth, its Z the height.
 import math
 
 # The tile's cuts.
-BIT = 3.0                       # the finishing bit: a ball-nose, 1.5 radius
+BIT = 3.175                     # the finishing bit: Freud 72-405, a tapered ball tip an eighth of an inch across
 SHANK = 6.35                    # its shank, a quarter inch: the owner's Colt is the North American one, and that is the collet it has. The taper stops at this diameter
-TAPER_L = 30.5                  # the length its flank takes to widen from the ball to the shank
-TAPER = math.degrees(math.atan((SHANK - BIT) / 2 / TAPER_L))   # degrees a side its flank leans out above the ball: the common tapered ball-nose, 3 mm at the tip to its shank over 30.5 (0 for a straight bit)
+TAPER_L = 25.4                  # the length its flank takes to widen from the ball to the shank: an inch of carbide
+TAPER = math.degrees(math.atan((SHANK - BIT) / 2 / TAPER_L))   # degrees a side its flank leans out above the ball: 3.6, which Freud calls 7.2 included (0 for a straight bit)
+BIT_LONG = 63.5                 # end to end: 2-1/2 in
+TIP_LIM = -8.0                  # the ball's tip goes no further past the stick's axis than this. Left to itself the planner sent two passes 12 past, for the angle they meet the face at, and how far the bit has to stand out of the collet nut is the blank's swing and this: 8 covers the whole outline as well, 7 does not
 RIDGE = 0.05                    # what a pass may leave standing between it and the next, to sand
 FACE_MIN = 0.2                  # the ball cuts no further round its side than this: the cosine between the bit and the face (78 deg)
 OFF_CENTRE = 15.0               # degrees: a pass meets its face this far round the ball from its tip, where it can. The tip's dead centre does not turn; 15 deg round, the edge passes at a metre a second
 Y_LIM = 19.0                    # the planner keeps the cutter this near the axis; the positioner's height travel has twice that
-ROUGH_BIT, ROUGH_BITE = 6.35, 3.0   # roughing: a straight quarter-inch bit, and the most it takes at a bite
+ROUGH_BIT, ROUGH_BITE = 6.35, 3.0   # roughing: a straight quarter-inch bit, Freud 04-110, and the most it takes at a bite
+ROUGH_LONG = 73.025             # end to end: 2-7/8 in
 ROUGH_STEP = 3.0                # its places across, a little under half its width apart
 ROUGH_ANGLES = 24               # the directions it roughs from, 15 deg apart
 ALLOW = 0.4                     # what roughing leaves on the tile for the ball-nose
@@ -166,7 +169,7 @@ def open_dirs(q, outline, r):
 
 
 def best_dir(q, n, outline, r, face_min):
-    """The open direction that meets the face nearest OFF_CENTRE round the ball from its tip, the cutter within Y_LIM of the axis and a degree clear of anything."""
+    """The open direction that meets the face nearest OFF_CENTRE round the ball from its tip, the cutter within Y_LIM of the axis, its tip no further past the axis than TIP_LIM, and a degree clear of anything."""
     shut = open_dirs(q, outline, r)
     if shut is None:
         return None
@@ -180,6 +183,8 @@ def best_dir(q, n, outline, r, face_min):
         if facing < face_min:
             continue
         if abs(q[0] * e[0] + q[1] * e[1]) > Y_LIM:
+            continue
+        if q[0] * d[0] + q[1] * d[1] - r < TIP_LIM:              # the tip, with the ball's centre at q: the tile never lets it deeper
             continue
         near_it = -abs(math.degrees(math.acos(min(1.0, facing))) - OFF_CENTRE)
         if best is None or near_it > best[0]:
@@ -257,6 +262,32 @@ def blank_reach(outline, t):
     """How far the blank stands toward the router when the stick is turned to t."""
     d, _ = frame(t)
     return max(q[0] * d[0] + q[1] * d[1] for q in stock(outline)["corners"])
+
+
+def nut_need(outline, t, across, tip, nut_r, air):
+    """How far a bit has to stand out of the collet nut for the nut to pass the blank by `air` at this cut. It is the
+    uncut blank that counts, whatever has been cut before: the nut is wider than the bit, so at the far end of a pass
+    it is beside the end of the stick that no bit reaches, and that is the blank as it was sawn. The stick does not
+    turn during a pass, so only what of the blank is level with the nut can meet it: the part of its edge within the
+    nut's width of the bit's axis, and of that the point nearest the router."""
+    d, e = frame(t)
+    c_, wide, top = stock(outline)["corners"], nut_r + air, None
+    for i in range(4):
+        a, b = c_[i], c_[(i + 1) % 4]
+        va, vb = a[0] * e[0] + a[1] * e[1] - across, b[0] * e[0] + b[1] * e[1] - across
+        lo, hi = 0.0, 1.0                                     # the stretch of this edge that is within the nut's width
+        if abs(vb - va) < 1e-12:
+            if abs(va) > wide:
+                continue
+        else:
+            s0, s1 = sorted(((-wide - va) / (vb - va), (wide - va) / (vb - va)))
+            lo, hi = max(lo, s0), min(hi, s1)
+            if lo > hi:
+                continue
+        for s in (lo, hi):                                    # how far toward the router is linear along it: an end has the most
+            u = (a[0] + s * (b[0] - a[0])) * d[0] + (a[1] + s * (b[1] - a[1])) * d[1]
+            top = u if top is None else max(top, u)
+    return None if top is None else top - tip + air
 
 
 def rough_places(outline):

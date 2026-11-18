@@ -78,8 +78,8 @@ checked by calculation and by the test.
    onto the stick from its near end and stops 21 mm short of its far
    end, with the collet nut 2 mm short of the socket.
 
-The stick goes to a new angle 201 times in the 485 rows; the other
-284 are further bites at the angle it has, and need only the foot
+The stick goes to a new angle 203 times in the 479 rows; the other
+276 are further bites at the angle it has, and need only the foot
 switch.
 
 The controller will not move a motor unless the sled is back: a
@@ -90,8 +90,8 @@ the master, so a move between passes must not carry it through the
 master. The safe way is to draw the bit back until its tip is 2 mm
 clear of the master, then up or down and round, then out. Most moves
 do not need it: the build follows each one along its own path and
-marks it straight if the whole bit passes the master by 1.5 mm. 430
-of the 485 are.
+marks it straight if the whole bit passes the master by 1.5 mm. 428
+of the 479 are.
 
 ## The slide
 
@@ -198,7 +198,7 @@ board it goes through a slot.
   been turned in between, open the clamp before pushing home and the
   star turns it to the nearest of its twelve. Do not open the clamp
   anywhere else during a stick.
-- **What it costs.** The clamp is thrown and let go 201 times a
+- **What it costs.** The clamp is thrown and let go 203 times a
   stick, where a motor on the sled needed nobody. The base is 200 mm
   longer. And the bands that line the stick up are turned by hand,
   because away from its back stop the sled has no motor.
@@ -356,18 +356,54 @@ flats for the tail's point.
   back: home is the same edge from the same side every time. The
   build runs the controller's homing from nine places to check it.
 
-## The table: 485 rows a stick
+## The table: 479 rows a stick
 
 | rows | what | bit |
 |---|---|---|
 | 1 | put the blank on | |
-| 1 | set the straight bit | 1/4 in straight |
+| 1 | set the straight bit | Freud 04-110: 1/4 in straight, two flutes |
 | 185 | roughing: 83 places from 24 directions, in bites of 3 mm | |
-| 1 | set the ball-nose | 3 mm ball-nose, tapered to a 1/4 in shank |
-| 297 | finishing: 244 passes, the deep ones in bites of 1.5 mm | |
+| 1 | set the ball-nose | Freud 72-405: a 1/8 in ball tip, tapered to a 1/4 in shank over an inch |
+| 291 | finishing: 242 passes, the deep ones in bites of 1.5 mm | |
 
 Both bits have 1/4 in shanks: the router is the North American Colt,
 and that is its collet.
+
+### The two bits
+
+| | Freud 04-110 | Freud 72-405 |
+|---|---|---|
+| what | 1/4 in double-flute straight, 1 in of carbide | 7.2° tapered ball tip, 1/8 in at the tip, 1 in of carbide |
+| long, end to end | 2-7/8 in, 73.0 mm | 2-1/2 in, 63.5 mm |
+| set, out of the collet nut | 42.5 mm | 41.9 mm |
+| of its shank in the collet | 30.5 mm | 21.6 mm |
+| what will do | 42.5 to 43.9 out | 39.9 to 43.9 out |
+| how | push it in until it bottoms, then draw it back 1.5 to 3 mm | 42 mm from the nut's face to the tip, by a rule |
+
+The table takes a bit to stand 41.9 mm out of the collet nut, and the
+controller's touch takes up 2 mm either way. What the owner measured
+on the router says which bits can: a 1/4 in shank bottoms 32 mm in
+from the tightened nut's face; it should be 1.5 mm off that bottom
+and at least 19 mm in. So a bit 58.9 to 74.4 mm long, and both of
+these are. The straight one is long for it and sits as deep as it
+may; the tapered one is short for it and has 21.6 mm in the collet,
+19.6 if it is set as far out as the margin allows.
+
+That 41.9 was 45.9, and at 45.9 the tapered bit had 17.6 mm in the
+collet. How far a bit has to stand out is the blank's swing, 33.5 mm,
+and how far past the stick's axis its tip goes; the planner, left to
+itself, sent two finishing passes 12 mm past, for the angle they met
+their faces at. It is now told 8 mm at the most (`TIP_LIM` in
+`plan.py`), and the 242 passes still come within 0.05 mm of the whole
+outline. At 7 mm three points of it are out of reach.
+
+The collet nut is 20 mm across and the bits 6.35 and less, so at the
+far end of a pass the nut is beside the last of the stick that no bit
+reaches, and that is the blank as it was sawn, whatever has been cut
+off the rest. So the build checks the nut against the uncut blank at
+every one of the 476 cuts: with either bit 39.8 mm out or more, the
+nut passes it by a millimetre. Set as short as the margin allows, the
+tapered bit is 39.9 out.
 
 The cuts are the hinged sled's, planned by the same `plan.py`: every
 finishing pass from its own direction, the whole of a tapered bit
@@ -387,7 +423,8 @@ What changed is where the three numbers of a row come from.
   level with the stick's axis, until it touches, three times; from
   then on every depth is taken from there. So a bit may stand 2 mm
   further out of the collet than the table takes it to, or less far,
-  and it makes no difference.
+  and the cut is the same. Further off than that it is the collet
+  nut or the bit's own shank that says no: see The two bits.
 - **The clip has a home.** It is a post wired to ground: parked there
   the probe reads closed, and the controller will not go to a cut
   until it does. The router is never started with the clip on its
@@ -406,7 +443,7 @@ the stick 744° in all). Estimated.
 
 ![Seen along the stick with the positioner on the right: a level blue cutter comes in from the right, moving up and down and in and out from one pass to the next, while the tan blank turns to a new angle between them; notches appear where the cutter has been, their outlines fading, until the blank has become the tile](out/passes_machine.gif)
 
-`animate.py` draws the table: all 482 cutting rows, a frame each. What
+`animate.py` draws the table: all 476 cutting rows, a frame each. What
 is left of the blank is tan, the pass being made is solid blue, and
 the passes before it are blue outlines that fade to white.
 
@@ -417,7 +454,7 @@ in or out (its X), and the stick turns to a new angle (the index
 wheel). It starts with the blank as the table's first row hangs it, a
 wide face level and underneath. A turn of more than 6° is shown on the
 way round, with the bit out of the picture. It runs 41 seconds: 185
-roughing passes, a pause where the bit is changed and set, 297
+roughing passes, a pause where the bit is changed and set, 291
 finishing passes, and then the tile.
 
 ![The same passes with the tile held still: the cutter comes at it from one side after another](out/passes.gif)
@@ -449,17 +486,21 @@ the ball, its tapered flank and the shank.
 
 | | here | |
 |---|---|---|
-| X travel | 32.6 to 78.0 mm used of 80 | the far end of it: the deepest cut is 2 mm short of the end, and at home the bit's tip is 66 mm from the stick's axis, 32 clear of the blank's corners |
+| X travel | 36.6 to 78.0 mm used of 80 | the far end of it: the deepest cut is 2 mm short of the end, and at home the bit's tip is 70 mm from the stick's axis, 36 clear of the blank's corners |
 | Z travel | 21.0 to 59.0 mm used of 80 | 60 would do |
 | how it lies | on its lid, on the base | the stage's weight then pulls away from its column, onto the collar that has no thrust bearing yet |
 | its face from the stick's axis | 46 mm | the Colt's collet nut, tightened on a bit, is 30 mm in front of the quill by the owner's callipers, so at the deepest cut it is 12.1 out of the face, and the uncut blank's corners swing 33.5. The nut sets the distance, not the face |
-| the bit out of the collet nut | 45.9 mm | the blank's swing, and 12 mm past the stick's axis. The router does not change it: the positioner stands back by what the nut stands out |
-| how long a bit that takes, end to end | 64.9 to 76.4 mm | 19 mm of shank or more in the collet, and 1.5 off its bottom, which the owner measured 32 mm in from the nut's face. A 2-7/8 in bit, 73 mm, is 27 in; a 2-1/2 in one, 63.5, is 17.6 in, which is too little |
+| the bit out of the collet nut | 41.9 mm | the blank's swing, and 8 mm past the stick's axis, which is as far as the planner may send the ball's tip. The router does not change it: the positioner stands back by what the nut stands out |
+| how long a bit that takes, end to end | 58.9 to 74.4 mm | 19 mm of shank or more in the collet and 1.5 off its bottom, which the owner measured 32 mm in from the tightened nut's face; and set within 2 mm of the table's length. See [The two bits](#the-two-bits) |
 | the depth's screw | M8 rod, as the positioner draws | a rod's pitch is nobody's promise, but it matters little here: 0.2 % off costs under a hundredth of a millimetre in the study |
 | its two travels, square | not known until it is built | 2 mm in a metre out is 0.07 mm on the tile: the largest thing left. See Setting up |
 
-The collet nut never comes within the blank's swing: at the deepest
-cut its face is 33.5 mm from the axis.
+With a bit set as the table takes it, the collet nut never comes
+within the blank's swing: at the deepest cut its face is 33.9 mm
+from the axis and the blank's corners swing 33.5. A bit set 2 mm
+short brings the nut that much nearer, inside the swing; it still
+passes the blank itself by a millimetre at every cut, which is what
+the build checks.
 
 ## The controller
 
@@ -476,7 +517,7 @@ the sled back and the clamp open; and after a turn nothing goes on
 until the clamp is closed. A row at a new angle is begun by opening
 the clamp, which nobody does by accident, so it needs no foot switch.
 The simulated run counts the openings, and the build checks the count
-against the table: 201.
+against the table: 203.
 
 | | |
 |---|---|
@@ -541,16 +582,16 @@ repeating to 0.01 mm. The worst finishing cut of each:
 
 | | median | 95 in 100 | worst of 300 |
 |---|---|---|---|
-| from the drawing's table | 1.62 mm | 2.99 | 3.22 |
-| after the six touches, the spindle turning true | 0.045 mm | 0.072 | 0.083 |
+| from the drawing's table | 1.63 mm | 3.00 | 3.22 |
+| after the six touches, the spindle turning true | 0.045 mm | 0.073 | 0.083 |
 | the same, were the depth's screw true | 0.040 | 0.068 | 0.077 |
 | and the two travels square as well | 0.015 | 0.028 | 0.038 |
-| after the six touches, with the turning as it would be: wheel trued to 0.02 off centre, pulley 0.03, star and pocket 0.03 each, the star home within 0.01 | 0.051 | 0.078 | 0.088 |
-| the same, the wheel left 0.1 off as printed | 0.056 | 0.084 | 0.101 |
+| after the six touches, with the turning as it would be: wheel trued to 0.02 off centre, pulley 0.03, star and pocket 0.03 each, the star home within 0.01 | 0.051 | 0.081 | 0.089 |
+| the same, the wheel left 0.1 off as printed | 0.055 | 0.084 | 0.104 |
 
 One machine is recorded in `out/calibration.json` as probed by the
-controller's own program on a computer: 0.80 mm out from the drawing's
-table, 0.039 planned for. The test works it again.
+controller's own program on a computer: 0.81 mm out from the drawing's
+table, 0.033 planned for. The test works it again.
 
 **The touches cannot find how far the stick has turned.** The
 master is round. A wheel off its turning centre lets the belt in and
@@ -607,7 +648,7 @@ and up or down. All of it is simulation.
 | the probe's pin | 6.35 mm, a 1/4 in dowel pin or drill rod | measure it and give `fit` what it is with `--pin` |
 | the datum fence, and the sled's edge on it | straight | lay a straightedge along each: their bow is cut into the stick, one for one |
 | the base under the two slips | flat along the travel | the sled's height is the bit's height on the stick, so a hump is cut in too |
-| the bit's length | 45.9 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach |
+| the bit's length | 41.9 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach. Shorter than 39.8 the nut meets the blank; longer than 44.5 the tapered bit has under 19 mm in the collet |
 | the wheel | 360 teeth, printed, 232 across; a closed belt of 852; the motor 207.8 from the wheel's shaft, in slots | it fits a 256 mm bed with 12 to spare each side. 0.1 mm off centre is 0.05° once a turn, 0.027 mm at the furthest cut: true it on its hub under an indicator |
 | the star and its pocket | 115.5 over the points, 10° a side, 20 deep; printed | try the star in the pocket before anything is bolted up: its flanks must seat with the disc still 1.5 mm off the boss |
 | the three rods | 12 mm ground rod: 147 long for the sled's spindle, 91 for the tail, 90 for the wheel's shaft | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
@@ -660,7 +701,14 @@ written a second time, in Rust, and works every row forward:
   wheel clears the base and is in its plate's slot or just over it; every row is within the
   positioner's travel with the bit's margin; the collet nut, which
   comes 12.1 mm out of that face, never comes within the blank's
-  swing, and the face stands no further off than that takes;
+  swing, and the face stands no further off than that takes; each of
+  the two bits is set within the margin of the table's length with
+  19 mm of its shank or more in the collet and off the collet's
+  bottom; the nut passes the uncut blank by a millimetre at every
+  cut with the bit as short as it may be set, which the test works
+  out for itself from the rows and the blank's corners; and the
+  ball's tip is never further past the axis than the planner was
+  told;
 - every move marked straight, followed along the controller's own
   path, passes the master by 1.5 mm, and drawn back to the safe depth
   the bit is clear of it at any height;
@@ -668,7 +716,7 @@ written a second time, in Rust, and works every row forward:
   steps, never changes height with the bit further out than the safe
   depth except where the table says, and taken up half way sets the
   bit again before it cuts; and it opens the clamp once for homing
-  and once for every row at a new angle, 201 times, which the test
+  and once for every row at a new angle, 203 times, which the test
   counts for itself from the table;
 - the blank is a rectangle with the tile 2 mm inside every face, and
   the first row hangs it with a wide face level and underneath;
@@ -717,7 +765,7 @@ written a second time, in Rust, and works every row forward:
   probing table and the bands are where the reading of them assumes,
   the bands' twelve turns made by hand with no motor moved;
 - the two animations, read back frame by frame: a frame for each of
-  the 482 cutting rows; the first is the whole blank and the last is
+  the 476 cutting rows; the first is the whole blank and the last is
   the tile, to the area the planner says is left; the cutter is in
   every pass's frame; what is left never grows; and the tile's middle
   is never cut. In the machine's version the cutter is level in every

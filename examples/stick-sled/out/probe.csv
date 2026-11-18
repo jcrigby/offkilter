@@ -1,12 +1,12 @@
-#safe,58.0212
+#safe,62.0158
 n,kind,tool,depth,height,turn,via,label
 1,say,pin,0.0,0.0,0.0,h,router OFF. pin in the collet asfar out as a bitclip on the pin
 2,say,pin,0.0,0.0,0.0,h,scrap blank on: it turns the    master. sled    back at its stop
 3,leads,pin,0.0,0.0,0.0,h,pin
-4,in,pin,60.0212,40.0,0.0,h,pin at the front
-5,up,pin,70.0212,30.825,0.0,h,pin from below
-6,dn,pin,70.0212,49.175,0.0,h,pin from above
-7,in,pin,60.0212,40.0,180.0,h,pin at the front
-8,up,pin,70.0212,30.825,180.0,h,pin from below
-9,dn,pin,70.0212,49.175,180.0,h,pin from above
+4,in,pin,64.0158,40.0,0.0,h,pin at the front
+5,up,pin,74.0158,30.825,0.0,h,pin from below
+6,dn,pin,74.0158,49.175,0.0,h,pin from above
+7,in,pin,64.0158,40.0,180.0,h,pin at the front
+8,up,pin,74.0158,30.825,180.0,h,pin from below
+9,dn,pin,74.0158,49.175,180.0,h,pin from above
 10,say,pin,0.0,0.0,0.0,h,done. park the  clip. copy      probe_log.csv   calibrate.py fit
