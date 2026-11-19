@@ -59,6 +59,11 @@ t = new_tab(mcp, {"type": "add_part_studio", "name": "gauge"}); g = Part(mcp, t,
 p.bodies(); p.report(); p.screenshot(path, view="iso", section="y:50"); p.export(path, "stl")   # read back, picture, write
 ```
 
+An `op="add"` is united with every body in the tab that it touches,
+not only the one drawn last: two bodies that share a face and must
+stay two are each drawn `new`, and a thing that is added to is drawn
+before the neighbours it stands on.
+
 Also on `Part`: `sketch_on(face, name)` for a sketch on a body's face
 (the face reference from a report), `hexagon`, `gear`, `split`,
 `plane_point(sketch, world_point)` for a world point in a sketch's
