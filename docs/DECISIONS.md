@@ -2588,3 +2588,38 @@ shapes with a pause between.
   needs the forms, which are built from the sled's tile, so it is in
   `examples/stick-finish` and takes the sled's passes by loading the
   sled's own script.
+
+## 2026-11 · An animation of the table showed nothing to sand
+
+The storyboard animation was first made from the sled's table: its
+roughing rows as the coarse passes and its finishing rows as the
+detail passes, then the forms. The owner's answer was that it looked
+perfect before any sanding. It did, and on the stick it nearly would.
+
+- **The table leaves nothing to see.** Its ridges are 0.05 mm, a third
+  of a pixel at that size. The sanding forms were asked for with a
+  different plan in mind, one the owner had already described: fewer
+  passes, and something by hand to finish. I had drawn the forms for
+  that plan and then animated the other one.
+- **So the planner takes a ridge for each point.** `plan.finish` had
+  one number for what a pass may leave. It now takes one for every
+  point of the outline, the old number at all of them unless given,
+  so the sled's own table is unchanged to the byte. The animation
+  gives 0.4 mm on the stretches a form covers and 0.05 at the
+  fourteen corners no form reaches: 167 detail passes for 291, and
+  ridges of 0.36 mm that show.
+- **The corners stay the machine's.** They were the open question of
+  the forms, five shapes of them and too short for a form each. Cut
+  fine, they need none: the forms sand where they fit and the machine
+  finishes where they do not.
+- **It is drawn, not yet the table.** Making the sled's table this way
+  changes its bites, its straight moves and every check that follows
+  from the passes, and 0.4 mm is a guess until a form has been along a
+  stick. The animation's file says what it would save, and the README
+  says in so many words that it is not the table.
+- **The test had to be able to say there is something to sand.** It
+  works out what the passes leave at every point of the outline and
+  wants a ridge over 0.15 mm where a form goes, and it wants less wood
+  in the frame after every use of a form. Made from the table, it
+  would have failed, which is the point.
+

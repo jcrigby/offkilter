@@ -29,7 +29,7 @@ the tile there means running this again.
 
 ## The whole job, animated
 
-![Seen along the stick: a level blue cutter roughs the turning blank; a caption says the coarse passes are done and the bit is changed next; a thinner cutter finishes the tile; a caption says sanding is next; then a teal wedge sits on each lobe in turn and a magenta T in each notch, each leaving its stretch of the outline in its colour, until only the corners are amber](out/whole.gif)
+![Seen along the stick: a level blue cutter roughs the turning blank; a caption says the coarse passes are done and the bit is changed next; a thinner cutter goes round the tile and leaves it scalloped; a caption says the ridges are sanded off next; then a teal wedge sits on each lobe in turn and a magenta T in each notch, each leaving its stretch of the edge smooth, until only the corners are still marked amber](out/whole.gif)
 
 `whole.py` puts the machine's work and the hand's in one animation, the
 owner's storyboard:
@@ -37,27 +37,51 @@ owner's storyboard:
 1. **Coarse passes.** The table's 185 roughing rows, the 1/4 in straight
    bit, as the machine makes them: the bit level, the stick turning.
 2. **A pause** that says so and says what is next: change the bit, then
-   291 detail passes.
-3. **Detail passes.** The finishing rows, the tapered ball tip.
-4. **A pause** that says sanding is next: two forms, fourteen edges.
+   the detail passes.
+3. **Detail passes.** The tapered ball tip, and 167 passes where the
+   sled's table has 291.
+4. **A pause** that says the ridges are sanded off next: two forms,
+   fourteen edges.
 5. **Sanding.** The bump form on each of the seven bumps and then the
-   flute form on each of the seven flutes, a pause after each. The
-   tile's outline is amber while it is still to do, and each stretch a
-   form has been along turns that form's colour: teal for the bump
-   form, magenta for the flute form.
+   flute form on each of the seven flutes, a pause after each. A line
+   just inside the tile's edge is amber while that edge is still to do;
+   where a form has been along, the ridges are gone and the line is
+   that form's colour, teal for the bump form and magenta for the flute
+   form.
 
 | after the coarse passes | after the detail passes | a form in use | at the end |
 |---|---|---|---|
-| ![The roughed blank, with COARSE PASSES DONE: 185 written over it and NEXT: CHANGE THE BIT, THEN 291 DETAIL PASSES under it](out/whole_coarse.png) | ![The tile, with DETAIL PASSES DONE: 291 over it and NEXT: SANDING BY HAND, TWO FORMS, 14 EDGES under it](out/whole_detail.png) | ![The tile outlined in amber, teal on its lobes and magenta in three notches, a pale magenta T in the next notch; FLUTE FORM: FLUTE 3 OF 7](out/whole_sanding.png) | ![The tile with teal round every lobe, magenta round every notch and a short amber stretch at each corner; LEFT: 14 CORNERS, 36 MM, FOR A FOLDED EDGE OF FILM](out/whole_done.png) |
+| ![The roughed blank, with COARSE PASSES DONE: 185 written over it and NEXT: CHANGE THE BIT, THEN 167 DETAIL PASSES under it](out/whole_coarse.png) | ![The tile with a scalloped edge, DETAIL PASSES DONE: 167 over it and NEXT: SAND THE RIDGES OFF, TWO FORMS, 14 EDGES under it](out/whole_detail.png) | ![The tile with smooth teal-lined lobes and three smooth magenta-lined notches, the other notches scalloped and lined amber, a pale magenta T in the next one; FLUTE FORM: FLUTE 3 OF 7](out/whole_sanding.png) | ![The tile smooth all round, teal inside every lobe, magenta inside every notch and a short amber stretch at each corner; NOT SANDED: 14 CORNERS, THE MACHINE CUT THEM FINE](out/whole_done.png) |
 
-The last frame is the answer to what the two forms do not reach: the
-fourteen amber stretches, 36 mm of the 205 mm round the tile. They are
-the corners, where a bump runs into a flute, 2.6 mm each on average,
-and no form is drawn for them.
+**This is not the sled's table.** The table finishes the whole outline
+to 0.05 mm, and a stick milled by it looks finished: drawn at this
+size its ridges are a third of a pixel, and the first version of this
+animation, made from the table, showed a perfect tile with nothing for
+the forms to do. What is drawn here is the plan the owner means to try
+once the machine cuts: fewer detail passes, and the forms to take off
+what they leave.
 
-It runs 76 seconds. The passes are the sled's own animation's, from the
-same table; the captions are strokes, since a flip book draws shapes
-and no text (`okmcp.lettering`).
+| | the sled's table | drawn here |
+|---|---|---|
+| what a detail pass may leave where a form goes along afterwards | 0.05 mm | 0.4 mm |
+| and at the fourteen corners the forms do not reach | 0.05 mm | 0.05 mm |
+| detail passes, counting every bite | 291 | 167 |
+| places they are made from | 242 | 132 |
+| the ridge they leave, where a form goes | under 0.05 | up to 0.36 mm |
+| and at the corners | under 0.05 | 0.06 |
+
+The 0.4 mm is `COARSE` in `whole.py`, and it is a guess at what the
+film takes off without labour: a stick and a form will say. `plan.py`
+in the sled now takes the ridge allowed at each point of the outline,
+so the table can be made this way when it is wanted; it is not, yet.
+
+The last frame shows what the two forms do not reach: the fourteen
+amber stretches, 36 mm of the 205 mm round the tile, where a bump runs
+into a flute. They are not sanded, and in this plan need not be: they
+are the part the machine still cuts fine.
+
+It runs 68 seconds. The captions are strokes, since a flip book draws
+shapes and no text (`okmcp.lettering`).
 
 ## What the tile is, cut
 
@@ -182,12 +206,17 @@ and numbers and the sled's own tile:
 - each blade template is a plate whose end is the tile's own curve: on
   every one of its seven, the stick drawn back 0.05 mm shares nothing
   with it but a sliver, and pushed 0.2 mm into it does;
-- the animation, read back frame by frame: as many coarse and detail
-  passes as the sled's table has roughing and finishing rows, each
-  with its cutter in the frame and its chapter's name over it; the two
-  pauses held, with no cutter, written on above and below; fourteen
-  uses of the forms, each form's body in its own frame and no other,
-  each followed by a pause in which more of the outline is that form's
-  colour and less of it amber; and at the end the amber that is left is
-  a little under the 18 % of the outline that the forms' lengths say
-  they do not cover.
+- the animation's plan, worked out again from its passes: as many
+  coarse passes as the sled's table has roughing rows and under three
+  quarters as many detail passes as it has finishing rows; they leave
+  a ridge of 0.36 mm on the stretches the forms cover, so there is
+  something to sand, and 0.06 at the corners, and no pass is into the
+  tile;
+- and its frames, read back: each pass with its cutter in the frame
+  and its chapter's name over it; the two pauses held, with no cutter,
+  written on above and below; fourteen uses of the forms, each form's
+  body in its own frame and no other, each followed by a pause in
+  which there is less wood, more of the line is that form's colour and
+  less of it amber; 16 mm2 of ridge gone from the section by the end;
+  and the amber that is left near the 18 % of the outline that the
+  forms' lengths say they do not cover.

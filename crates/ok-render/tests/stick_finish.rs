@@ -427,16 +427,115 @@ fn each_blade_template_ends_in_the_tile_s_own_curve() {
 /// The whole job as one animation, read back frame by frame: the
 /// machine's coarse passes, a held frame that says so and says what is
 /// next, its detail passes, another, and then the sanding: each form
-/// shown on each of its seven edges, a pause after each, the stretch
-/// it has been along left in its colour. The tile's outline is amber
-/// until it is done, so what is amber at the end is what the forms do
-/// not reach, and that is the share of the outline the numbers say.
+/// shown on each of its seven edges, a pause after each.
+///
+/// The detail passes are fewer than the sled's table has. Where a form
+/// goes along afterwards a pass may leave a ridge, and it does: worked
+/// out here from the passes themselves, the tile comes off the machine
+/// with ridges a third of a millimetre high on the stretches the forms
+/// cover and none to speak of at the corners. So there is something to
+/// sand, the frames show less wood after each use of a form, and what
+/// is still marked to do at the end is the corners.
 #[test]
-fn the_whole_job_s_animation_is_captioned_at_its_pauses_and_shows_every_use_of_the_two_forms() {
-    let n = numbers();
+fn the_whole_job_s_animation_leaves_ridges_for_the_forms_and_shows_every_use_of_them() {
+    let (n, outline) = (numbers(), tile());
     let a: Value =
         serde_json::from_str(&std::fs::read_to_string(dir().join("out/whole.json")).unwrap())
             .unwrap();
+    let sled: Value = serde_json::from_str(
+        &std::fs::read_to_string(dir().join("../stick-sled/out/sled.json")).unwrap(),
+    )
+    .unwrap();
+    let at = |v: &Value| v.as_u64().unwrap() as usize;
+    // -- the plan ----------------------------------------------------------------------------------------
+    // The coarse passes are the table's roughing rows. The detail passes are fewer than its finishing rows.
+    let rows = |kind: &str| {
+        sled["rows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|r| r["kind"].as_str() == Some(kind))
+            .count()
+    };
+    let (coarse, detail, plan) = (at(&a["coarse"]), at(&a["detail"]), &a["plan"]);
+    assert_eq!(coarse, rows("rough"));
+    assert_eq!(at(&plan["table_rows"]), rows("finish"));
+    assert_eq!(detail, at(&plan["rows"]));
+    assert!(
+        detail * 4 < rows("finish") * 3,
+        "{detail} detail passes save little"
+    );
+    assert!(at(&plan["passes"]) < at(&plan["table_passes"]));
+    // What the detail passes leave at each point of the outline: the least any pass's ball is from it. The points
+    // on a stretch a form covers, found here from the forms' own stretches, may have a ridge; the rest may not.
+    let r = f(&sled["bit"]) / 2.0;
+    let passes: Vec<(P2, f64)> = plan["detail"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|q| {
+            let (t, across, tip) = (f(&q[0]), f(&q[1]), f(&q[2]));
+            let (d, e) = ((t.cos(), t.sin()), (-t.sin(), t.cos()));
+            (
+                (
+                    across * e.0 + (tip + r) * d.0,
+                    across * e.1 + (tip + r) * d.1,
+                ),
+                r,
+            )
+        })
+        .collect();
+    assert_eq!(passes.len(), detail);
+    let mut stretches: Vec<Vec<P2>> = Vec::new();
+    for name in ["bump", "flute"] {
+        let work = points(&n["edges"][name]["work"]);
+        for m in &moves(&n["edges"][name]["places"]) {
+            stretches.push(work.iter().map(|q| onto(m, *q)).collect());
+        }
+    }
+    let along = |q: P2, line: &[P2]| {
+        line.windows(2)
+            .map(|w| {
+                let d = (w[1].0 - w[0].0, w[1].1 - w[0].1);
+                let l2 = d.0 * d.0 + d.1 * d.1;
+                let t = (((q.0 - w[0].0) * d.0 + (q.1 - w[0].1) * d.1) / l2).clamp(0.0, 1.0);
+                (q.0 - w[0].0 - d.0 * t).hypot(q.1 - w[0].1 - d.1 * t)
+            })
+            .fold(f64::MAX, f64::min)
+    };
+    let (ridge, fine) = (f(&plan["coarse_ridge"]), f(&plan["fine_ridge"]));
+    let (mut sanded, mut corners, mut on, mut into_the_tile) = (0.0f64, 0.0f64, 0, 0.0f64);
+    for q in &outline {
+        let left = passes
+            .iter()
+            .map(|(c, r)| (q.0 - c.0).hypot(q.1 - c.1) - r)
+            .fold(f64::MAX, f64::min);
+        into_the_tile = into_the_tile.min(left);
+        if stretches.iter().any(|s| along(*q, s) <= 0.03) {
+            on += 1;
+            sanded = sanded.max(left);
+        } else {
+            corners = corners.max(left);
+        }
+    }
+    println!(
+        "{detail} detail passes where the table has {}: they leave a ridge of up to {sanded:.2} mm where a form goes along, {corners:.3} at the corners",
+        rows("finish")
+    );
+    assert_eq!(on, at(&plan["on"]));
+    assert!(on * 10 > outline.len() * 6 && on < outline.len());
+    assert!(
+        ridge >= 0.2 && sanded <= ridge + 0.03 && sanded > 0.15,
+        "there is nothing to sand"
+    );
+    assert!(corners <= fine + 0.03 && fine <= 0.06);
+    assert!((sanded - f(&plan["ridge_where_sanded"])).abs() < 1e-6);
+    assert!(
+        into_the_tile > -0.02,
+        "a pass is {into_the_tile} into the tile"
+    );
+
+    // -- the frames --------------------------------------------------------------------------------------
     let colour = |v: &Value| {
         let c = u32::from_str_radix(&v.as_str().unwrap()[1..], 16).unwrap();
         [(c >> 16) as u8, (c >> 8) as u8, c as u8]
@@ -447,19 +546,24 @@ fn the_whole_job_s_animation_is_captioned_at_its_pauses_and_shows_every_use_of_t
             .zip(want)
             .all(|(p, q)| (*p as i32 - q as i32).abs() <= 8)
     };
-    let (cut, todo) = (colour(&a["cut"]), colour(&a["todo"]));
+    let (cut, todo, tan) = (colour(&a["cut"]), colour(&a["todo"]), colour(&a["blank"]));
     let lines = [colour(&a["form"]["bump"]), colour(&a["form"]["flute"])];
     let fills = [
         colour(&a["form_fill"]["bump"]),
         colour(&a["form_fill"]["flute"]),
     ];
     let size = a["size"].as_u64().unwrap() as usize;
-    let band = (f(&a["band"]) * size as f64 / (f(&a["view"][2]) - f(&a["view"][0]))) as usize;
-    /// What a frame shows: how long, and how many of its pixels are the cutter, each form's body, each
-    /// form's line, the outline still to do, and lettering in the band above and the band below.
+    let per_mm = size as f64 / (f(&a["view"][2]) - f(&a["view"][0]));
+    let bands = (
+        (f(&a["bands"][0]) * per_mm) as usize,
+        (f(&a["bands"][1]) * per_mm) as usize,
+    );
+    /// What a frame shows: how long, and how many of its pixels are wood, the cutter, each form's body, each
+    /// form's line, the line still to do, and lettering in the band above and the band below.
     #[derive(Default, Clone)]
     struct Seen {
         ms: u32,
+        wood: usize,
         cutter: usize,
         body: [usize; 2],
         line: [usize; 2],
@@ -479,11 +583,13 @@ fn the_whole_job_s_animation_is_captioned_at_its_pauses_and_shows_every_use_of_t
             for x in (0..image.width).step_by(3) {
                 let c = image.pixel(x, y);
                 if c.0 < 110 && c.1 < 110 && c.2 < 110 {
-                    if y < band {
+                    if y < bands.0 {
                         s.above += 1;
-                    } else if y >= image.height - band {
+                    } else if y >= image.height - bands.1 {
                         s.below += 1;
                     }
+                } else if near(c, tan) {
+                    s.wood += 1;
                 } else if near(c, cut) {
                     s.cutter += 1;
                 } else if near(c, todo) {
@@ -507,22 +613,6 @@ fn the_whole_job_s_animation_is_captioned_at_its_pauses_and_shows_every_use_of_t
     assert_eq!(seen.len(), frames);
     let seconds: f64 = seen.iter().map(|s| s.ms as f64 / 1000.0).sum();
     assert!((seconds - f(&a["seconds"])).abs() < 0.5 && seconds > 30.0 && seconds < 120.0);
-    let at = |v: &Value| v.as_u64().unwrap() as usize;
-    // The passes are the sled's table: as many coarse as it has roughing rows, as many detail as finishing.
-    let sled: Value = serde_json::from_str(
-        &std::fs::read_to_string(dir().join("../stick-sled/out/sled.json")).unwrap(),
-    )
-    .unwrap();
-    let rows = |kind: &str| {
-        sled["rows"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .filter(|r| r["kind"].as_str() == Some(kind))
-            .count()
-    };
-    let (coarse, detail) = (at(&a["coarse"]), at(&a["detail"]));
-    assert_eq!((coarse, detail), (rows("rough"), rows("finish")));
     let cuts: Vec<usize> = a["cut_frames"].as_array().unwrap().iter().map(at).collect();
     assert_eq!(cuts.len(), coarse + detail);
     // every pass has its cutter in the frame and the chapter's name over it, and nothing written under it
@@ -550,7 +640,8 @@ fn the_whole_job_s_animation_is_captioned_at_its_pauses_and_shows_every_use_of_t
         assert!(s.below > s.above);
     }
     // The sanding. Fourteen uses, the bump form's seven and then the flute form's seven; a form is in its frame
-    // and in no other; after each, more of the outline is in that form's colour and less of it is still to do.
+    // and in no other; after each there is less wood, more of the line is that form's colour and less of it is
+    // still to do.
     let uses = a["uses"].as_array().unwrap();
     assert_eq!(uses.len(), 14);
     let from = at(&a["sanding_from"]);
@@ -574,26 +665,25 @@ fn the_whole_job_s_animation_is_captioned_at_its_pauses_and_shows_every_use_of_t
         // a form's body is its own pale colour; the few pixels of that colour in other frames are the soft edges of
         // the lines already drawn
         assert!(
-            show.body[k] > 100 && show.body[1 - k] < 30,
+            show.body[k] > 100 && show.body[1 - k] < 40,
             "use {i}: {:?}",
             show.body
         );
-        assert!(rest.body[k] * 4 < show.body[k] && rest.body[1 - k] < 30 && show.cutter == 0);
+        assert!(rest.body[k] * 4 < show.body[k] && rest.body[1 - k] < 40 && show.cutter == 0);
         assert!(
             show.below > 40 && rest.below > show.below,
             "use {i}: it is named, and then said done"
         );
-        assert!(rest.line[k] > before.line[k] + 10 && rest.todo < before.todo);
-        assert_eq!(rest.line[1 - k], before.line[1 - k]);
+        assert!(rest.line[k] > before.line[k] + 5 && rest.todo < before.todo);
+        assert!(rest.wood < before.wood, "use {i}: no ridge came off");
         before = rest.clone();
     }
-    // The end: held longest, both colours on the tile, and amber where neither form has been. That is the
-    // corners: as much of the outline as the build's own lengths say, found here from the tile and the forms.
+    // The end: held longest, both colours on the tile, and amber where neither form has been, which is the
+    // corners. The ridges are gone: less wood than when the sanding began, by about what the ridges were.
     let last = &seen[frames - 1];
     assert_eq!(last.ms as u64, a["end"].as_u64().unwrap());
-    assert!(last.ms >= 4000 && last.line[0] > 100 && last.line[1] > 100);
-    assert!(last.body[0] < 30 && last.body[1] < 30);
-    let outline = tile();
+    assert!(last.ms >= 4000 && last.line[0] > 60 && last.line[1] > 60);
+    assert!(last.body[0] < 40 && last.body[1] < 40);
     let round: f64 = (0..outline.len())
         .map(|i| {
             let (p, q) = (outline[i], outline[(i + 1) % outline.len()]);
@@ -604,12 +694,16 @@ fn the_whole_job_s_animation_is_captioned_at_its_pauses_and_shows_every_use_of_t
     assert!((round - f(&a["round"])).abs() < 1e-6 && (covered - f(&a["covered"])).abs() < 1e-6);
     let left = (round - covered) / round;
     let shown = last.todo as f64 / whole as f64;
+    let off = (seen[from].wood - last.wood) as f64 * 9.0 / (per_mm * per_mm);
     println!(
-        "{frames} frames, {seconds:.0} s: {coarse} coarse passes, {detail} detail passes, 14 uses of the forms; the forms leave {:.1} of the {round:.1} mm round the tile, {:.0} % of it, and {:.0} % of the outline is still amber at the end",
+        "{frames} frames, {seconds:.0} s: {coarse} coarse passes, {detail} detail passes, 14 uses of the forms, which take {off:.1} mm2 of ridge off the section; the forms leave {:.1} of the {round:.1} mm round the tile, {:.0} % of it, and {:.0} % of the line is still amber at the end",
         round - covered,
         100.0 * left,
         100.0 * shown
     );
-    // a little less is amber than is left: each line is drawn with some width, and its ends go that much over
-    assert!(left > 0.1 && left < 0.25 && shown > 0.05 && shown < left);
+    assert!(
+        off > 3.0 && off < 0.5 * ridge * covered,
+        "{off} mm2 of ridge"
+    );
+    assert!(left > 0.1 && left < 0.25 && (shown - left).abs() < 0.08);
 }

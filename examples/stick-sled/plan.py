@@ -192,13 +192,19 @@ def best_dir(q, n, outline, r, face_min):
     return best[1] if best else None
 
 
-def finish(outline):
+def finish(outline, ridge=None):
     """The finishing passes: round the outline, a pass wherever the
     passes so far leave more than the ridge, each from the direction
     that meets the face a little off the ball's tip among those the
     whole bit can come from. No two need share a direction: a motor
-    turns the stick."""
+    turns the stick.
+
+    `ridge` is what may be left at each point of the outline, a number
+    for each: RIDGE at all of them unless it is given. Where something
+    else will take the ridges off afterwards it can be more, and the
+    passes there are fewer."""
     r, n = BIT / 2, len(outline)
+    allow = [RIDGE] * n if ridge is None else list(ridge)
     ns = normals(outline)
     left = [9.0] * n
     passes = []
@@ -221,13 +227,13 @@ def finish(outline):
         return True
 
     for i in range(n):
-        if left[i] > RIDGE:
+        if left[i] > allow[i]:
             add(i, FACE_MIN)
     for i in range(n):                                    # what is still standing: any direction that reaches it at all
-        if left[i] > RIDGE + 0.03:
+        if left[i] > allow[i] + 0.03:
             add(i, 0.02)
     # What nothing reached is counted at the end: a point its own pass could not better may be taken by its neighbour's.
-    orphans = sum(1 for v in left if v > RIDGE + 0.03)
+    orphans = sum(1 for v, a in zip(left, allow) if v > a + 0.03)
     return passes, left, orphans
 
 
