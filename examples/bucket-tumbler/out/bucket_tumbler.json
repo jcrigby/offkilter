@@ -1,0 +1,47 @@
+{
+ "units": "inches unless named",
+ "axis_above_deck": 7.5,
+ "rim_clearance": 1.2999999999999998,
+ "floor_x": 1.9586614173228347,
+ "rim_x": 16.458661417322833,
+ "caster_x": 11.25,
+ "wall_radius_at_casters": 5.6954509663564785,
+ "rim_to_casters": 5.208661417322833,
+ "wheel_reach": 6.716860057265569,
+ "wheel_spacing": 7.7052653102301365,
+ "axle_above_deck": 1.9978703528878352,
+ "axle_above_riser": 1.4978703528878352,
+ "axis_above_axles": 5.502129647112165,
+ "contact_deg": 35.0,
+ "wheel_d": 2.0,
+ "wheel_w": 0.75,
+ "r_bottom": 5.165,
+ "taper": 0.0570909090909091,
+ "wall": 0.09,
+ "shaft_end": 1.090551181102362,
+ "hub_x": 0.7893700787401575,
+ "flange_x": 1.2618110236220472,
+ "plate_in": 0.75,
+ "shaft_into_hub": 0.3011811023622045,
+ "hub_len": 0.47244094488188976,
+ "deck": [
+  20.0,
+  14.0
+ ],
+ "ply": 0.75,
+ "tilt_deg": 25.0,
+ "prop_leg_top": [
+  8.00937295956674,
+  8.359103703182988
+ ],
+ "far_end_rise": 8.452365234813989,
+ "batten": [
+  0.75,
+  12.0
+ ],
+ "torque_nm": 0.7475219999999999,
+ "torque_kgcm": 7.619999999999999,
+ "motor_margin": 2.6246719160104988,
+ "turning_kg_model": 1.5247135476451799,
+ "axial_kgf": 1.2782991817693503
+}

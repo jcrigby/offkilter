@@ -1,0 +1,4298 @@
+{
+  "name": "Bucket parts tumbler",
+  "tabs": [
+    {
+      "id": 1,
+      "kind": {
+        "type": "part_studio",
+        "name": "on the deck",
+        "features": [
+          {
+            "id": 1,
+            "name": "deck",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -209.55
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 508.0,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 508.0,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 508.0,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 508.0,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "deck",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "motor plate",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -190.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "motor plate",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 254.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 5,
+            "name": "gearbox pocket",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -20.508,
+                      "y": -29.508
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.508,
+                      "y": -29.508
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.508,
+                      "y": -29.508
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.508,
+                      "y": 29.508
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 20.508,
+                      "y": 29.508
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -20.508,
+                      "y": 29.508
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -20.508,
+                      "y": 29.508
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -20.508,
+                      "y": -29.508
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "gearbox pocket",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 12.7,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 7,
+            "name": "shaft hole",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 6.35
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "shaft hole",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 7,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 9,
+            "name": "gusset left",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 158.75
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -190.5
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 120.65,
+                      "y": -190.5
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 120.65,
+                      "y": -190.5
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -88.89999999999999
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -88.89999999999999
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -190.5
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 9,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 10,
+            "name": "gusset left",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 9,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 11,
+            "name": "gusset right",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": -177.79999999999998
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -190.5
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 120.65,
+                      "y": -190.5
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 120.65,
+                      "y": -190.5
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -88.89999999999999
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -88.89999999999999
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 19.049999999999997,
+                      "y": -190.5
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 9,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 12,
+            "name": "gusset right",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 11,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 13,
+            "name": "caster riser",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -190.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 247.65,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 323.84999999999997,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 323.84999999999997,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 323.84999999999997,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 323.84999999999997,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 247.65,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 247.65,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 247.65,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 14,
+            "name": "caster riser",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 13,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 12.7,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 15,
+            "name": "caster left",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -177.79999999999998
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 261.62,
+                      "y": -129.60686943992272
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 309.87999999999994,
+                      "y": -129.60686943992272
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 309.87999999999994,
+                      "y": -129.60686943992272
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 309.87999999999994,
+                      "y": -66.10686943992273
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 309.87999999999994,
+                      "y": -66.10686943992273
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 261.62,
+                      "y": -66.10686943992273
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 261.62,
+                      "y": -66.10686943992273
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 261.62,
+                      "y": -129.60686943992272
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 16,
+            "name": "caster left",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 15,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.5399999999999907,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 17,
+            "name": "caster left cheek",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -175.26
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 272.669,
+                      "y": -110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 274.70099999999996,
+                      "y": -110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 274.70099999999996,
+                      "y": -110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 274.70099999999996,
+                      "y": -85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 274.70099999999996,
+                      "y": -85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 272.669,
+                      "y": -85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 272.669,
+                      "y": -85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 272.669,
+                      "y": -110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 18,
+            "name": "caster left cheek",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 17,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 45.66590696335103,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 19,
+            "name": "caster left cheek",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -175.26
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 296.799,
+                      "y": -110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 298.831,
+                      "y": -110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 298.831,
+                      "y": -110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 298.831,
+                      "y": -85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 298.831,
+                      "y": -85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 296.799,
+                      "y": -85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 296.799,
+                      "y": -85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 296.799,
+                      "y": -110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 20,
+            "name": "caster left cheek",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 19,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 45.66590696335103,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 21,
+            "name": "caster left axle",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 271.145
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -97.85686943992272,
+                      "y": -139.75409303664898
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.96875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 22,
+            "name": "caster left axle",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 21,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 29.20999999999996,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 23,
+            "name": "caster left wheel",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 276.22499999999997
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -97.85686943992272,
+                      "y": -139.75409303664898
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 25.4
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 24,
+            "name": "caster left wheel",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 23,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 25,
+            "name": "caster right",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -177.79999999999998
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 261.62,
+                      "y": 66.10686943992273
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 309.87999999999994,
+                      "y": 66.10686943992273
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 309.87999999999994,
+                      "y": 66.10686943992273
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 309.87999999999994,
+                      "y": 129.60686943992272
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 309.87999999999994,
+                      "y": 129.60686943992272
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 261.62,
+                      "y": 129.60686943992272
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 261.62,
+                      "y": 129.60686943992272
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 261.62,
+                      "y": 66.10686943992273
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 26,
+            "name": "caster right",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 25,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 2.5399999999999907,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 27,
+            "name": "caster right cheek",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -175.26
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 272.669,
+                      "y": 85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 274.70099999999996,
+                      "y": 85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 274.70099999999996,
+                      "y": 85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 274.70099999999996,
+                      "y": 110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 274.70099999999996,
+                      "y": 110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 272.669,
+                      "y": 110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 272.669,
+                      "y": 110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 272.669,
+                      "y": 85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 28,
+            "name": "caster right cheek",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 27,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 45.66590696335103,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 29,
+            "name": "caster right cheek",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -175.26
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 296.799,
+                      "y": 85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 298.831,
+                      "y": 85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 298.831,
+                      "y": 85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 298.831,
+                      "y": 110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 298.831,
+                      "y": 110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 296.799,
+                      "y": 110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 296.799,
+                      "y": 110.55686943992272
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 296.799,
+                      "y": 85.15686943992273
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 30,
+            "name": "caster right cheek",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 29,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 45.66590696335103,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 31,
+            "name": "caster right axle",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 271.145
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 97.85686943992272,
+                      "y": -139.75409303664898
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.96875
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 32,
+            "name": "caster right axle",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 31,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 29.20999999999996,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 33,
+            "name": "caster right wheel",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 276.22499999999997
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 97.85686943992272,
+                      "y": -139.75409303664898
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 25.4
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 34,
+            "name": "caster right wheel",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 33,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 35,
+            "name": "bucket section",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": 0.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 49.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 49.75,
+                      "y": 131.191
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 49.75,
+                      "y": 131.191
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 398.99999999999994,
+                      "y": 151.13
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 398.99999999999994,
+                      "y": 151.13
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 398.99999999999994,
+                      "y": 157.48
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 398.99999999999994,
+                      "y": 157.48
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 418.0499999999999,
+                      "y": 157.48
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  },
+                  {
+                    "id": 12,
+                    "type": "point",
+                    "pos": {
+                      "x": 418.0499999999999,
+                      "y": 157.48
+                    }
+                  },
+                  {
+                    "id": 13,
+                    "type": "point",
+                    "pos": {
+                      "x": 418.0499999999999,
+                      "y": 148.844
+                    }
+                  },
+                  {
+                    "id": 14,
+                    "type": "line",
+                    "start": 12,
+                    "end": 13
+                  },
+                  {
+                    "id": 15,
+                    "type": "point",
+                    "pos": {
+                      "x": 418.0499999999999,
+                      "y": 148.844
+                    }
+                  },
+                  {
+                    "id": 16,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 128.905
+                    }
+                  },
+                  {
+                    "id": 17,
+                    "type": "line",
+                    "start": 15,
+                    "end": 16
+                  },
+                  {
+                    "id": 18,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 128.905
+                    }
+                  },
+                  {
+                    "id": 19,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 20,
+                    "type": "line",
+                    "start": 18,
+                    "end": 19
+                  },
+                  {
+                    "id": 21,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 22,
+                    "type": "point",
+                    "pos": {
+                      "x": 49.75,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 23,
+                    "type": "line",
+                    "start": 21,
+                    "end": 22
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 24,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 36,
+            "name": "bucket",
+            "suppressed": false,
+            "kind": {
+              "type": "revolve",
+              "sketch": 35,
+              "profiles": {
+                "type": "all"
+              },
+              "axis": {
+                "type": "x_axis"
+              },
+              "angle": 360.0,
+              "op": "new"
+            }
+          },
+          {
+            "id": 37,
+            "name": "outer disc",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 37.05
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 50.8
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 38,
+            "name": "outer disc",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 37,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 12.7,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 39,
+            "name": "inner disc",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 52.035999999999994
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 50.8
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 40,
+            "name": "inner disc",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 39,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 12.7,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 41,
+            "name": "flange coupling",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 32.05
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 15.999999999999998
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 42,
+            "name": "flange coupling",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 41,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 5.000000000000002,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 43,
+            "name": "flange coupling hub",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 20.05
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 7.499999999999999
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 44,
+            "name": "flange coupling hub",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 43,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 13.27,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 45,
+            "name": "coupling in one",
+            "suppressed": false,
+            "kind": {
+              "type": "boolean",
+              "op": "union",
+              "targets": [
+                42
+              ],
+              "tools": [
+                44
+              ],
+              "keep_tools": false
+            }
+          },
+          {
+            "id": 46,
+            "name": "coupling bore",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 20.05
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 4.1015999999999995
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 47,
+            "name": "coupling bore",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 46,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 12.253999999999998,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          },
+          {
+            "id": 48,
+            "name": "carriage bolt holes",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 36.796
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.94076836320746,
+                      "y": 26.940768363207457
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": -26.940768363207457,
+                      "y": 26.94076836320746
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": -26.94076836320746,
+                      "y": -26.940768363207457
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 26.94076836320745,
+                      "y": -26.94076836320746
+                    }
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 4,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 49,
+            "name": "carriage bolt holes",
+            "suppressed": false,
+            "kind": {
+              "type": "hole",
+              "sketch": 48,
+              "diameter": 7.112,
+              "depth": 28.194000000000003,
+              "through_all": false,
+              "direction": "normal",
+              "counterbore": null,
+              "countersink": null
+            }
+          },
+          {
+            "id": 50,
+            "name": "batten 1",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "rotated",
+                "base": "front",
+                "axis": "x",
+                "angle": 0.0,
+                "offset": -9.525
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 109.2486094639856
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 125.89321591245204
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 125.89321591245204
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 144.94321591245205
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 144.94321591245205
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 128.2986094639856
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 128.2986094639856
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 109.2486094639856
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 51,
+            "name": "batten 1",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 50,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 52,
+            "name": "batten 2",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "rotated",
+                "base": "front",
+                "axis": "x",
+                "angle": 120.0,
+                "offset": -9.525
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 109.2486094639856
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 125.89321591245204
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 125.89321591245204
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 144.94321591245205
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 144.94321591245205
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 128.2986094639856
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 128.2986094639856
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 109.2486094639856
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 53,
+            "name": "batten 2",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 52,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 54,
+            "name": "batten 3",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "rotated",
+                "base": "front",
+                "axis": "x",
+                "angle": 240.0,
+                "offset": -9.525
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 109.2486094639856
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 125.89321591245204
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 125.89321591245204
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 144.94321591245205
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 356.836,
+                      "y": 144.94321591245205
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 128.2986094639856
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 128.2986094639856
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 52.035999999999994,
+                      "y": 109.2486094639856
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 55,
+            "name": "batten 3",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 54,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 56,
+            "name": "gearmotor",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -28.999999999999996
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -22.299999999999997,
+                      "y": -19.999999999999996
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.7,
+                      "y": -19.999999999999996
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.7,
+                      "y": -19.999999999999996
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.7,
+                      "y": 19.999999999999996
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 12.7,
+                      "y": 19.999999999999996
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -22.299999999999997,
+                      "y": 19.999999999999996
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -22.299999999999997,
+                      "y": 19.999999999999996
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -22.299999999999997,
+                      "y": -19.999999999999996
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 57,
+            "name": "gearmotor",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 56,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 57.99999999999999,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 58,
+            "name": "motor can",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -86.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -16.77,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 15.5
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 59,
+            "name": "motor can",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 58,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 59.54,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "add"
+            }
+          },
+          {
+            "id": 60,
+            "name": "output shaft",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 11.43
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 4.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 61,
+            "name": "output shaft",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 60,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 16.269999999999996,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 62,
+            "name": "shaft into the gearbox",
+            "suppressed": false,
+            "kind": {
+              "type": "boolean",
+              "op": "union",
+              "targets": [
+                57
+              ],
+              "tools": [
+                61
+              ],
+              "keep_tools": false
+            }
+          }
+        ],
+        "next_id": 63,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "2": "deck",
+          "4": "motor plate",
+          "10": "gusset left",
+          "12": "gusset right",
+          "14": "caster riser",
+          "16": "caster left",
+          "24": "caster left wheel",
+          "26": "caster right",
+          "34": "caster right wheel",
+          "36": "bucket, 5 gal",
+          "38": "outer disc",
+          "40": "inner disc",
+          "42": "flange coupling",
+          "44": "flange coupling hub",
+          "51": "batten 1",
+          "53": "batten 2",
+          "55": "batten 3",
+          "57": "gearmotor",
+          "61": "output shaft"
+        },
+        "part_materials": {
+          "2": {
+            "name": "birch plywood",
+            "density": 0.68
+          },
+          "4": {
+            "name": "birch plywood",
+            "density": 0.68
+          },
+          "10": {
+            "name": "birch plywood",
+            "density": 0.68
+          },
+          "12": {
+            "name": "birch plywood",
+            "density": 0.68
+          },
+          "14": {
+            "name": "birch plywood",
+            "density": 0.68
+          },
+          "16": {
+            "name": "steel",
+            "density": 7.85
+          },
+          "24": {
+            "name": "polyurethane",
+            "density": 1.2
+          },
+          "26": {
+            "name": "steel",
+            "density": 7.85
+          },
+          "34": {
+            "name": "polyurethane",
+            "density": 1.2
+          },
+          "36": {
+            "name": "HDPE",
+            "density": 0.95
+          },
+          "38": {
+            "name": "birch plywood",
+            "density": 0.68
+          },
+          "40": {
+            "name": "birch plywood",
+            "density": 0.68
+          },
+          "42": {
+            "name": "steel",
+            "density": 7.85
+          },
+          "44": {
+            "name": "steel",
+            "density": 7.85
+          },
+          "51": {
+            "name": "hard maple",
+            "density": 0.71
+          },
+          "53": {
+            "name": "hard maple",
+            "density": 0.71
+          },
+          "55": {
+            "name": "hard maple",
+            "density": 0.71
+          },
+          "57": {
+            "name": "gearmotor (envelope, ~0.5 kg real)",
+            "density": 1.6
+          },
+          "61": {
+            "name": "steel",
+            "density": 7.85
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "kind": {
+        "type": "part_studio",
+        "name": "base",
+        "features": [
+          {
+            "id": 1,
+            "name": "base",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "top",
+                "offset": -19.049999999999997
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": -38.099999999999994,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 520.6999999999999,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 520.6999999999999,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 520.6999999999999,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 520.6999999999999,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": -38.099999999999994,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": -38.099999999999994,
+                      "y": 177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": -38.099999999999994,
+                      "y": -177.79999999999998
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [
+                  {
+                    "id": 0,
+                    "type": "coincident",
+                    "a": 1,
+                    "b": 3
+                  },
+                  {
+                    "id": 1,
+                    "type": "coincident",
+                    "a": 4,
+                    "b": 6
+                  },
+                  {
+                    "id": 2,
+                    "type": "coincident",
+                    "a": 7,
+                    "b": 9
+                  },
+                  {
+                    "id": 3,
+                    "type": "coincident",
+                    "a": 10,
+                    "b": 0
+                  },
+                  {
+                    "id": 4,
+                    "type": "horizontal",
+                    "line": 2
+                  },
+                  {
+                    "id": 5,
+                    "type": "vertical",
+                    "line": 5
+                  },
+                  {
+                    "id": 6,
+                    "type": "horizontal",
+                    "line": 8
+                  },
+                  {
+                    "id": 7,
+                    "type": "vertical",
+                    "line": 11
+                  }
+                ],
+                "next_entity": 12,
+                "next_constraint": 8
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "base",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 19.049999999999997,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "hinge",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": -38.099999999999994
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 3.81
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "hinge pin",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 76.19999999999999,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 5,
+            "name": "prop leg",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "front",
+                "offset": -38.099999999999994
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 436.2743558146181,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "point",
+                    "pos": {
+                      "x": 455.3243558146181,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 455.3243558146181,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 455.3243558146181,
+                      "y": 212.3212340608479
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 455.3243558146181,
+                      "y": 212.3212340608479
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 436.2743558146181,
+                      "y": 203.4380731729952
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 436.2743558146181,
+                      "y": 203.4380731729952
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 436.2743558146181,
+                      "y": 0.0
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 12,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "prop leg",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 76.19999999999999,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          }
+        ],
+        "next_id": 7,
+        "settings": {
+          "facet_angle": 5.0
+        },
+        "part_names": {
+          "2": "base",
+          "4": "hinge",
+          "6": "prop leg"
+        },
+        "part_materials": {
+          "2": {
+            "name": "birch plywood",
+            "density": 0.68
+          },
+          "4": {
+            "name": "steel",
+            "density": 7.85
+          },
+          "6": {
+            "name": "birch plywood",
+            "density": 0.68
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "kind": {
+        "type": "assembly",
+        "name": "propped at 25 deg",
+        "instances": [
+          {
+            "id": 4,
+            "name": "base",
+            "studio": 2,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 5,
+            "name": "hinge",
+            "studio": 2,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "prop leg",
+            "studio": 2,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 7,
+            "name": "deck",
+            "studio": 1,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 8,
+            "name": "motor plate",
+            "studio": 1,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 9,
+            "name": "gusset left",
+            "studio": 1,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 10,
+            "name": "gusset right",
+            "studio": 1,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 11,
+            "name": "caster riser",
+            "studio": 1,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 12,
+            "name": "caster left",
+            "studio": 1,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 13,
+            "name": "caster left wheel",
+            "studio": 1,
+            "body": 6,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 14,
+            "name": "caster right",
+            "studio": 1,
+            "body": 7,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 15,
+            "name": "caster right wheel",
+            "studio": 1,
+            "body": 8,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 16,
+            "name": "bucket, 5 gal",
+            "studio": 1,
+            "body": 9,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 17,
+            "name": "outer disc",
+            "studio": 1,
+            "body": 10,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 18,
+            "name": "inner disc",
+            "studio": 1,
+            "body": 11,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 19,
+            "name": "flange coupling",
+            "studio": 1,
+            "body": 12,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 20,
+            "name": "batten 1",
+            "studio": 1,
+            "body": 13,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 21,
+            "name": "batten 2",
+            "studio": 1,
+            "body": 14,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 22,
+            "name": "batten 3",
+            "studio": 1,
+            "body": 15,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 23,
+            "name": "gearmotor",
+            "studio": 1,
+            "body": 16,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": -88.55965674776355,
+                "y": 0.0,
+                "z": 189.91679677352997
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": -25.0,
+                "z": 0.0
+              }
+            }
+          }
+        ],
+        "mates": []
+      }
+    }
+  ],
+  "next_id": 24
+}

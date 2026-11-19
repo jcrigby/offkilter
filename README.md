@@ -93,7 +93,9 @@ works today, all in the browser:
   and one that feeds the sled past the bit on a screw, so that a
   stick is cut without a hand (`examples/stick-sled/`), the sanding forms and
   scraper templates that finish what it mills, each the negative of
-  one of the tile's edges (`examples/stick-finish/`), a mini
+  one of the tile's edges (`examples/stick-finish/`), a bucket
+  tumbler that eases the edges of the cut pieces
+  (`examples/bucket-tumbler/`), a mini
   chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`), the Edwardian
