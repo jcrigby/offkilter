@@ -34,8 +34,12 @@ It says what it wants on a small display if one is fitted (an SSD1306,
 over USB. It keeps its place in at.txt, so a stick stopped half way
 can be taken up again after homing and setting the bit.
 
-The same program runs the two tables that set a built machine up,
-copied to the Pico as passes.csv in their turn: probe.csv, which
+The same program runs the three tables that try a built machine and
+set it up, copied to the Pico as passes.csv in their turn:
+precheck.csv, which runs a sample of the table's own passes with no
+bit in the collet and then has a weight hung on the disc, looking for
+the wheel's mark before and after and writing what it finds to
+check_log.csv; probe.csv, which
 touches a pin in the collet on the master from in front, above and
 below, and writes where the screws stood to probe_log.csv; and
 bands.csv, which turns round bands on a scrap stick to show whether
@@ -325,6 +329,7 @@ class Sled:
         self.unlocks = 0            # how many times it has been let go
         self.rounds = 0             # bands turned
         self.passes = 0             # passes made
+        self.checks = []            # every look for the wheel's mark: row, kind, how far it was from where the steps said, and how far apart the looks were
         self.fed = 0                # steps the sled has been fed forward in them
         self.slip = 0.0             # the most the sled has come home from where its steps said, mm
         for n in (C.DEPTH_HOME_PIN, C.HEIGHT_HOME_PIN, C.TURN_HOME_PIN, C.TRAVEL_HOME_PIN, C.LOCK_PIN, C.NEXT_PIN, C.PROBE_PIN):
@@ -407,6 +412,21 @@ class Sled:
         self.come_home()
         self.passes += 1
         self.fed += steps
+
+    def look(self):
+        """Where the wheel's mark is, against where the steps say. The stick is turned to a little past the mark and
+        brought back until the sensor says home, as homing does, but that is not taken as the new home: the steps'
+        own count is kept. Degrees: more than nothing if the spindle is ahead of where the motor's steps put it."""
+        clear = int(round(C.TURN_CLEAR_DEG * self.turn.per_unit))
+        self.turn_on_to(C.TURN_CLEAR_DEG, self.back)
+        if SIM and HOME is None:            # nothing to find on a computer, unless something stands in for the sensor
+            self.turn.run(-clear, None, C.STEP_SLOW_US)
+            return 0.0
+        if PINS.home(C.TURN_HOME_PIN):
+            raise RuntimeError("the wheel's mark is not where it was")
+        taken = self.turn.find(C.TURN_HOME_PIN, 3 * C.TURN_CLEAR_DEG)
+        self.turn.at = clear - taken        # where the steps say it is, not where the mark was found
+        return (taken - clear) / self.turn.per_unit
 
     def turn_on_to(self, degrees, guard, slow=None):
         """The shorter way round, but always arriving forwards, so the belt is pulled from the same side:
@@ -517,6 +537,21 @@ class Sled:
                 wait(C.NEXT_PIN)
                 if not SIM and PINS.touching():
                     raise RuntimeError("still touching")
+            elif kind in ("check", "gauge"):    # the wheel's mark looked for again: has anything slipped between the motor and the spindle?
+                SCREEN.show(head, label[:16], label[16:32], "looking for the", "wheel's mark")
+                self.unlock(head)
+                found = [self.look() for _ in range(C.CHECK_TIMES)]
+                self.lock(head)
+                slip, apart = sum(found) / len(found), max(found) - min(found)
+                self.checks.append([n, kind, slip, apart])
+                if not SIM:
+                    with open(C.CHECK_FILE, "a") as f:
+                        f.write("%d,%s,%.4f,%.4f\n" % (n, kind, slip, apart))
+                if not SCREEN.quiet:
+                    print("check,%d,%s,%.4f,%.4f" % (n, kind, slip, apart))
+                SCREEN.show(head, label[:16], label[16:32], "mark %+.3f deg" % slip)
+                if kind == "check" and abs(slip) > C.TURN_SLIP_DEG:
+                    raise RuntimeError("the wheel's mark is %d.%02d deg off" % (int(abs(slip)), int(100 * abs(slip)) % 100))
             elif kind == "round":           # a band: the sled fed to where it goes, the bit where the row before left it, and the stick turned once round
                 SCREEN.show(head, label[:16], label[16:32], "turning a band")
                 self.travel.to(along, None, None, FEED_US)
@@ -582,8 +617,8 @@ class Sled:
                 elif kind == "load":        # the spindle turned to where the blank goes on with a wide face level and down
                     SCREEN.show(head, label[:16], label[16:32], label[32:48], label[48:64], "then foot switch")
                     wait(C.NEXT_PIN)
-                else:
-                    SCREEN.show(head, tool, label[:16], "cutting")
+                else:                       # a pass; "dry" is one made with no bit in the collet, to try the machine
+                    SCREEN.show(head, tool, label[:16], "dry pass" if kind == "dry" else "cutting")
                     self.cut(along)
                 PINS.set(C.LED_PIN, 0)
             if n > done:
@@ -609,7 +644,7 @@ def main(path="passes.csv", out=None, after=None):
         import json
         with open(out, "w") as f:
             json.dump({"rows": record, "after": after or 0, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight, "unlocks": sled.unlocks, "rounds": sled.rounds,
-                       "lock": C.LOCK, "probed": sled.probed, "bits": sled.bits, "stepped": [sled.depth.stepped, sled.height.stepped, sled.turn.stepped, sled.travel.stepped],
+                       "lock": C.LOCK, "probed": sled.probed, "bits": sled.bits, "checks": sled.checks, "stepped": [sled.depth.stepped, sled.height.stepped, sled.turn.stepped, sled.travel.stepped],
                        "passes": sled.passes, "fed": sled.fed, "seconds": PINS.clock / 1e6,
                        "safe_steps": sled.depth.steps_for(rows.safe), "per": [C.DEPTH_STEPS_PER_MM, C.HEIGHT_STEPS_PER_MM, C.TURN_STEPS_PER_DEG, C.TRAVEL_STEPS_PER_MM]}, f)
 

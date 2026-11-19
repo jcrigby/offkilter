@@ -16,6 +16,9 @@ each. From them:
     pin apart, whatever the screw says;
   - the master's runout on the spindle: what half a turn changes.
 
+    python3 calibrate.py holds check_log.csv [--kg 2.0] [--tail BEFORE AFTER]
+        what the precheck found -> whether the belt holds the stick as stiffly as the bites were sized for,
+        and whether anything slipped. Before anything else is set up, and before any real stick.
     python3 calibrate.py fit probe_log.csv [--master 15.98] [--pin 6.35]
         the log -> built.json. Then run build.py: it plans the table for that.
     python3 calibrate.py align FRONT_NEAR FRONT_FAR TOP_NEAR TOP_FAR [SPAN]
@@ -50,6 +53,9 @@ TOUCHES = 3                                     # each place is touched this man
 BAND_R = 10.0                                   # the bands turned on a scrap stick to see whether it runs true, in bites of 4
 BAND_SPAN = 150.0                               # between the near band and the far one
 BAND_AT = (25.0, 15.0)                          # the near band from the stick's tail end: for the two turned with the bit's end, and the two with its side
+PRECHECK_KG = 2.0                               # the weight hung from the disc's rim to try what holds the stick: two 1 kg bags in a carrier, say
+PRECHECK_DRY = 24                               # how many of the table's own passes the precheck makes with no bit in the collet, besides the four at the ends of the positioner's reach
+ROD_HELD = 0.05                                 # a rod's end may be this far, by callipers, from where it was before the jack screw and the passes
 
 
 def lines(*text):
@@ -141,6 +147,55 @@ def band_rows(axes, setting, back_x, radius=BAND_R):
             add("round", "", label=lines(name, "the near band"), at=near)
     add("say", "", label=lines("router OFF. the", "four bands: run", "calibrate.py", "align"))
     return rows
+
+
+def precheck_rows(rows):
+    """The table that tries a built machine before it cuts anything. A sample of the table's own passes is made with
+    no bit in the collet and a scrap blank on: the same moves, the same feed, nothing cut. Then the wheel's mark is
+    looked for: after those passes it has to be where it was. Then a weight is hung from the disc's rim and the mark
+    looked for again, and again with the weight off: how far the weight turned the stick is how stiffly it is held,
+    which until then is an estimate; and it has to come back. `rows` are the table's."""
+    cutting = [r for r in rows if r["kind"] in ("rough", "finish")]
+    pick = {round(k * (len(cutting) - 1) / (PRECHECK_DRY - 1)) for k in range(PRECHECK_DRY)}
+    for key in ("depth", "height"):                 # and the four passes at the ends of the positioner's reach
+        pick |= {min(range(len(cutting)), key=lambda i: cutting[i][key]), max(range(len(cutting)), key=lambda i: cutting[i][key])}
+    out = []
+
+    def add(kind, label, like=None):
+        like = like or {}
+        out.append({"n": len(out) + 1, "kind": kind, "tool": "none", "depth": like.get("depth", 0.0), "height": like.get("height", 0.0), "turn": like.get("turn", 0.0), "via": "s",
+                    "along": like.get("along", 0.0), "label": label, "of": like.get("n", 0)})
+
+    add("say", lines("PRECHECK. router", "OFF and NO BIT", "in the collet. a", "scrap blank on"))
+    add("measure", lines("callipers: tail", "rod's end from", "its block's face", "write it down"))
+    for i in sorted(pick):
+        add("dry", f"as row {cutting[i]['n']}", cutting[i])
+    add("check", lines("after the dry", "passes"))
+    add("gauge", lines("nothing hung"))
+    add("say", lines(f"hang {PRECHECK_KG:g} kg from a", "cord round the", "disc's rim: the", "positioner side"))
+    add("gauge", lines(f"{PRECHECK_KG:g} kg hung"))
+    add("say", lines("take the weight", "off"))
+    add("gauge", lines("nothing hung"))
+    add("measure", lines("callipers again:", "tail rod's end", "from its block.", "write it down"))
+    add("say", lines("done. copy", "check_log.csv", "calibrate.py", "holds"))
+    return out
+
+
+def holds_of(looks, kg, hold, disc_r, step_deg, swing):
+    """What the precheck's four looks for the wheel's mark say. `looks` are degrees: after the dry passes, with nothing
+    hung, with the weight hung, and with nothing hung again. `hold` is the build's own estimate of what holds the
+    stick; `disc_r` where the cord pulls; `step_deg` one step of the wheel's motor, which is as fine as a look can tell."""
+    dry, bare, hung, back = looks
+    torque = kg * 9.81 * disc_r / 1000.0                          # N m
+    give = abs(hung - (bare + back) / 2)                          # degrees the weight turned the stick
+    stiff = torque / math.radians(max(give, step_deg / 2))        # no stiffer than half a step can show
+    softer = hold["stiff"] / stiff                                # how many times softer than the estimate took it to be
+    moves = {k: hold["worst"][k][0] * softer for k in ("rough", "face")}
+    sure = max(0.0, give - step_deg) / give if give > 0.0 else 0.0       # a look is good to a step: it holds unless it is too soft even with a step taken off what the weight turned it
+    return {"torque": torque, "give": give, "stiff": stiff, "softer": softer, "moves": moves, "dry": dry, "returned": abs(back - bare),
+            "slipped": abs(dry) > 2 * step_deg + 0.02 or abs(back - bare) > 2 * step_deg + 0.02,
+            "holds": moves["rough"] * sure <= hold["limit"][0] + 1e-9 and moves["face"] * sure <= hold["limit"][1] + 1e-9,
+            "feed": hold["feed"] * min(1.0, hold["limit"][0] / moves["rough"], hold["limit"][1] / moves["face"])}
 
 
 def write_table(path, rows, safe):
@@ -359,6 +414,42 @@ def fit_log(path, master_d=None, pin_d=None):
     print(f"wrote {BUILT}. Now run build.py: it plans the table for this. Delete the file to go back to the drawing.")
 
 
+def holds(path, kg=None, tail=None):
+    numbers = json.load(open(os.path.join(OUT, "sled.json")))
+    kinds = {r["n"]: r["kind"] for r in numbers["precheck"]["rows"] if r["kind"] in ("check", "gauge")}
+    found = {}
+    for line in open(path):
+        p = line.strip().split(",")
+        if len(p) >= 4 and p[0].isdigit() and int(p[0]) in kinds:
+            found[int(p[0])] = float(p[2])                         # a row looked at twice: the later
+    if sorted(found) != sorted(kinds):
+        raise SystemExit(f"the log has rows {sorted(found)} of the precheck's {sorted(kinds)}: run out/precheck.csv to its end")
+    turn, hold = numbers["turn"], numbers["hold"]
+    got = holds_of([found[n] for n in sorted(found)], kg or numbers["precheck"]["kg"], hold, turn["disc"][0] / 2, turn["homing"]["step_deg"], numbers["tile"]["swing"])
+    bad = False
+    print(f"after the dry passes the wheel's mark was {got['dry']:+.3f} deg from where the steps said; with the weight off again it came back to within {got['returned']:.3f}.")
+    if got["slipped"]:
+        bad = True
+        print("   SOMETHING SLIPPED between the motor and the spindle. Look at the pulley's set screws on the motor's flat, the belt's tension, the hub's set screws on the rod's flat, and the four bolts and four screws of the disc and the wheel.")
+    print(f"{kg or numbers['precheck']['kg']:g} kg at the disc's rim is {got['torque']:.2f} N m, {got['torque'] / (hold['motor_hold'] * turn['ratio'] / hold['stall_over']):.1f} times the heaviest cut's estimate. It turned the stick {got['give']:.3f} deg: "
+          f"held {got['stiff']:.0f} N m a radian, where the bites were sized for {hold['stiff']:.0f}.")
+    print(f"   at that the tile's edge moves {got['moves']['rough']:.4f} mm at the heaviest cut (the limit is {hold['limit'][0]}) and {got['moves']['face']:.4f} where a face is left ({hold['limit'][1]}).")
+    if got["holds"]:
+        inside = got["moves"]["rough"] <= hold["limit"][0] and got["moves"]["face"] <= hold["limit"][1]
+        print("   The belt holds the stick as the table needs." if inside else
+              "   That is within one step of the wheel's motor of what the table needs, and a step is as fine as a look can tell: the belt holds the stick.")
+    else:
+        bad = True
+        print(f"   SOFTER THAN THE TABLE WAS SIZED FOR. Tension the belt and look at the bracket's foot. If it stays, set FEED_MM_S to {got['feed']:.0f} or less in firmware/config.py, or fit the lock.")
+    if tail:
+        moved = abs(tail[1] - tail[0])
+        print(f"the tail rod's end moved {moved:.2f} mm by callipers: " + ("held." if moved <= ROD_HELD else "ITS SET SCREWS LET IT SLIDE. Grind a small flat or a dimple under one screw of each pillow block, or put a collar on the rod between the two blocks."))
+        bad = bad or moved > ROD_HELD
+    else:
+        print("give the two calliper readings of the tail rod's end with --tail BEFORE AFTER to have them judged.")
+    print("DO NOT CUT A REAL STICK YET: fix what is in capitals and run the precheck again." if bad else "Next: out/probe.csv, then out/bands.csv, then one whole stick in scrap, measured.")
+
+
 def align(front_near, front_far, top_near, top_far, span=BAND_SPAN):
     stick = json.load(open(os.path.join(OUT, "sled.json")))["stick"]
     out = (front_far - front_near) / 2            # from the front, a band's radius is the axis's distance from the bit's tip
@@ -388,7 +479,9 @@ def bands(radius):
 if __name__ == "__main__":
     arg = sys.argv[1:]
     opt = lambda name: float(arg[arg.index(name) + 1]) if name in arg else None
-    if len(arg) >= 2 and arg[0] == "fit":
+    if len(arg) >= 2 and arg[0] == "holds":
+        holds(arg[1], opt("--kg"), [float(arg[arg.index("--tail") + 1]), float(arg[arg.index("--tail") + 2])] if "--tail" in arg else None)
+    elif len(arg) >= 2 and arg[0] == "fit":
         fit_log(arg[1], opt("--master"), opt("--pin"))
     elif len(arg) >= 5 and arg[0] == "align":
         align(*[float(a) for a in arg[1:6]])

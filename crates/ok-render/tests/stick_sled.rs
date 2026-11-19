@@ -211,7 +211,7 @@ fn every_row_puts_the_bit_where_the_plan_wants_it_and_never_in_the_tile() {
         taper > 0.03 && shank >= 2.0 * ball - 1e-9,
         "planned for a tapered bit"
     );
-    for r in &rows {
+    for (i, r) in rows.iter().enumerate() {
         let (across, tip, t) = axes.cutter(r.depth, r.height, r.turn);
         let miss = (across - r.across)
             .abs()
@@ -248,6 +248,13 @@ fn every_row_puts_the_bit_where_the_plan_wants_it_and_never_in_the_tile() {
             "load" => {
                 assert!(r.across.abs() < 1e-9 && (r.tip - f(&n["blank_swing"])).abs() < 1e-9);
             }
+            "check" => {
+                // the wheel's mark looked for again: the positioner stays where the row before left it, and the
+                // stick is turned to its mark
+                let was = &rows[i - 1];
+                assert!(r.depth == was.depth && r.height == was.height && r.turn == 0.0);
+                assert!(r.tool == "none" && !r.straight);
+            }
             other => panic!("row {} is a {other}", r.n),
         }
     }
@@ -257,7 +264,7 @@ fn every_row_puts_the_bit_where_the_plan_wants_it_and_never_in_the_tile() {
     );
     assert!(gouge < 1e-6);
     let count = |k: &str| rows.iter().filter(|r| r.kind == k).count() as u64;
-    for k in ["load", "set", "rough", "finish"] {
+    for k in ["load", "set", "check", "rough", "finish"] {
         assert_eq!(count(k), n["count"][k].as_u64().unwrap());
     }
     // Two settings of the bit, each on the master's radius: the straight bit before roughing, the ball-nose before the finish.
@@ -270,14 +277,23 @@ fn every_row_puts_the_bit_where_the_plan_wants_it_and_never_in_the_tile() {
         master < f(&n["tile"]["circle"]) - 1.0 && (master - f(&n["spindle_d"]) / 2.0).abs() < 1e-9
     );
     assert!(
-        rows[0].kind == "load" && rows[1].kind == "set" && rows.last().unwrap().kind == "finish"
+        rows[0].kind == "load" && rows[1].kind == "set" && rows.last().unwrap().kind == "check"
     );
     // the blank goes on with no bit in mind; then the straight bit's rows, then the ball-nose's
     assert!(rows
         .iter()
         .skip(1)
+        .filter(|r| r.kind != "check")
         .skip_while(|r| r.tool == "straight")
         .all(|r| r.tool == "ball"));
+    // The wheel's mark is looked for twice: straight after the last roughing row, before the ball-nose goes in,
+    // where a stick that has slipped can still be saved; and after the last finishing row.
+    let checks: Vec<usize> = (0..rows.len())
+        .filter(|i| rows[*i].kind == "check")
+        .collect();
+    assert_eq!(checks.len(), 2);
+    assert!(rows[checks[0] - 1].kind == "rough" && rows[checks[0] + 1].kind == "set");
+    assert!(rows[checks[1] - 1].kind == "finish" && checks[1] == rows.len() - 1);
 }
 
 /// The last bite of every finishing pass, together: the whole outline
@@ -857,9 +873,10 @@ fn the_controller_ends_every_row_on_the_table_and_sets_the_bit_again_when_taken_
     let (mut at, mut locked, mut unlocks, mut angles) = (0.0, false, 1u64, 0u64);
     for r in &rows {
         let to = (r.turn * per[2]).round().rem_euclid(turn_steps);
-        if to != at {
+        if to != at || r.kind == "check" {
+            // a look for the wheel's mark turns the stick wherever it stands
             unlocks += locked as u64;
-            angles += 1;
+            angles += (to != at) as u64;
             at = to;
         }
         locked = true;
@@ -2022,6 +2039,163 @@ fn a_lock_is_drawn_in_its_place_and_left_off_the_machine() {
             .unwrap();
     assert_eq!(sim["with_lock"]["unlocks"].as_u64(), lk["unlocks"].as_u64());
     assert!(lk["unlocks"].as_u64().unwrap() > 150);
+}
+
+/// Before a built machine cuts anything real it is tried, by a table
+/// of its own. A sample of the cutting table's passes is made with no
+/// bit in the collet: the same depths, heights, angles and feed, the
+/// ones at the ends of the positioner's reach among them. Then the
+/// controller looks for the wheel's mark, which has to be where it
+/// was; then a weight is hung from the disc's rim and it looks again,
+/// and again with the weight off. How far the weight turned the stick
+/// is how stiffly the stick is really held, which until then is the
+/// build's estimate, and the mark has to come back. The build tries
+/// the controller's own look on a wheel that has slipped, and the
+/// whole reading on a wheel held as the estimate says and on one half
+/// as stiff: this works both again. The cutting table itself has the
+/// mark looked for after the roughing and at the end.
+#[test]
+fn the_precheck_tries_a_built_machine_before_it_cuts_anything() {
+    let n = numbers();
+    let (pre, h, t) = (&n["precheck"], &n["hold"], &n["turn"]);
+    let all = n["rows"].as_array().unwrap();
+    let table = pre["rows"].as_array().unwrap();
+    let cuts = |r: &Value| matches!(r["kind"].as_str(), Some("rough") | Some("finish"));
+    // the dry passes are the table's own, each come to by the safe depth, with nothing in the collet
+    let dry: Vec<&Value> = table.iter().filter(|r| r["kind"] == "dry").collect();
+    assert!(dry.len() >= 24);
+    for d in &dry {
+        let of = &all[d["of"].as_u64().unwrap() as usize - 1];
+        assert!(cuts(of), "a dry pass is one of the table's cuts");
+        for key in ["depth", "height", "turn", "along"] {
+            assert!((f(&d[key]) - f(&of[key])).abs() < 1e-9, "{key}");
+        }
+        assert!(d["via"].as_str() == Some("s") && d["tool"].as_str() == Some("none"));
+    }
+    // among them the first and the last of the table's cuts, and the four at the ends of the positioner's reach
+    let cutting: Vec<&Value> = all.iter().filter(|r| cuts(r)).collect();
+    let of = |d: &&Value| d["of"].as_u64().unwrap();
+    assert!(of(&dry[0]) == cutting[0]["n"].as_u64().unwrap());
+    assert!(of(dry.last().unwrap()) == cutting.last().unwrap()["n"].as_u64().unwrap());
+    for key in ["depth", "height"] {
+        let lo = cutting.iter().map(|r| f(&r[key])).fold(f64::MAX, f64::min);
+        let hi = cutting.iter().map(|r| f(&r[key])).fold(f64::MIN, f64::max);
+        assert!(
+            dry.iter().any(|d| f(&d[key]) == lo) && dry.iter().any(|d| f(&d[key]) == hi),
+            "{key}"
+        );
+    }
+    // what is asked of a hand and when: the tail rod's end measured first and last, the weight on and off
+    let rest: Vec<&str> = table
+        .iter()
+        .map(|r| r["kind"].as_str().unwrap())
+        .filter(|k| *k != "dry")
+        .collect();
+    assert_eq!(
+        rest,
+        ["say", "measure", "check", "gauge", "say", "gauge", "say", "gauge", "measure", "say"]
+    );
+    assert!(table[1]["kind"] == "measure" && table[2]["kind"] == "dry");
+    for r in table {
+        let label = r["label"].as_str().unwrap();
+        assert!(label.len() <= 64 && !label.contains(','), "{label}");
+    }
+    // the controller, on a computer, runs it as written: a pass for every dry row, a look at each check and gauge
+    let ran = &pre["ran"];
+    assert_eq!(ran["passes"].as_u64().unwrap() as usize, dry.len());
+    let ran_looks = ran["checks"].as_array().unwrap();
+    assert_eq!(ran_looks.len(), 4);
+    assert!(ran_looks.iter().all(|c| f(&c[2]) == 0.0));
+    // The weight. At the disc's rim it is several times the heaviest cut's turning, well under what stalls the
+    // motor, and by the build's estimate turns the stick enough steps to read.
+    let (kg, step) = (f(&pre["kg"]), f(&t["homing"]["step_deg"]));
+    let torque = kg * 9.81 * f(&t["disc"][0]) / 2.0 / 1000.0;
+    let heaviest = all
+        .iter()
+        .filter_map(|r| r["torque"].as_f64())
+        .fold(0.0, f64::max);
+    let expect = (torque / f(&h["stiff"])).to_degrees();
+    println!(
+        "{kg} kg at the disc's rim is {torque:.2} N m, {:.1} times the heaviest cut; held as estimated it turns the stick {expect:.3} deg, {:.0} steps",
+        torque / heaviest,
+        expect / step
+    );
+    assert!(
+        (torque - f(&pre["torque"])).abs() < 1e-9 && (expect - f(&pre["expect_deg"])).abs() < 1e-9
+    );
+    assert!((torque / heaviest - f(&pre["over_heaviest"])).abs() < 0.01 && torque > 3.0 * heaviest);
+    assert!(torque < 0.5 * f(&h["motor_hold"]) * f(&t["ratio"]) && expect > 5.0 * step);
+    // The controller's own look, on a wheel so far ahead of its steps: found to a step and a half, and the steps'
+    // count kept. Where the table says check, more than the limit stops a stick: the limit is more than the weight
+    // turns a sound machine, and less than one full step of the motor lost or the belt over one tooth.
+    let limit = f(&pre["turn_slip"]);
+    let looked = pre["looked"].as_array().unwrap();
+    for k in looked {
+        assert!(
+            (f(&k["found"]) - f(&k["ahead"])).abs() <= 1.5 * step
+                && k["kept"].as_bool() == Some(true)
+        );
+    }
+    assert!(looked.iter().any(|k| f(&k["ahead"]).abs() > limit));
+    assert!(looked
+        .iter()
+        .any(|k| f(&k["ahead"]) != 0.0 && f(&k["ahead"]).abs() < limit));
+    assert!(limit > expect && limit < 1.8 / f(&t["ratio"]) && limit < 360.0 / f(&t["wheel"][0]));
+    assert!(pre["times"].as_u64().unwrap() >= 3);
+    // The reading, on a wheel held as the estimate says and on one half as stiff. From the four looks: what the
+    // weight turned the stick, so how stiffly it is held, so how far the tile's edge would move at the heaviest
+    // cut and at one that leaves a face. A look is good to a step, so it passes unless it is too soft even with a
+    // step taken off. Half as stiff does not pass, and the feed it is told to keep to is half.
+    let (lim, worst, feed) = (pair(&h["limit"]), &h["worst"], f(&h["feed"]));
+    let tried = pre["tried"].as_array().unwrap();
+    assert_eq!(tried.len(), 2);
+    for k in tried {
+        let made = f(&k["made"]);
+        let looks: Vec<f64> = k["looks"].as_array().unwrap().iter().map(f).collect();
+        let give = (looks[2] - (looks[1] + looks[3]) / 2.0).abs();
+        let stiff = torque / give.to_radians();
+        let softer = f(&h["stiff"]) / stiff;
+        let moves = (
+            f(&worst["rough"][0]) * softer,
+            f(&worst["face"][0]) * softer,
+        );
+        let sure = (give - step).max(0.0) / give;
+        let holds = moves.0 * sure <= lim.0 + 1e-9 && moves.1 * sure <= lim.1 + 1e-9;
+        println!(
+            "a wheel {made} times softer than the estimate reads {stiff:.0} N m a radian: the tile's edge moves {:.4} and {:.4}; {}",
+            moves.0,
+            moves.1,
+            if holds { "it holds" } else { "it does not" }
+        );
+        assert!(
+            (give - f(&k["give"])).abs() < 1e-9 && (stiff - f(&k["stiff"])).abs() < 1e-6 * stiff
+        );
+        assert!((softer - made).abs() < 0.15 * made, "found to a step or so");
+        assert_eq!(k["holds"].as_bool(), Some(holds));
+        assert_eq!(holds, made == 1.0);
+        assert_eq!(k["slipped"].as_bool(), Some(false));
+        let keep = feed * (lim.0 / moves.0).min(lim.1 / moves.1).min(1.0);
+        assert!((keep - f(&k["feed"])).abs() < 1e-9);
+        if made == 2.0 {
+            assert!(keep < 0.6 * feed && keep > 0.4 * feed);
+        }
+    }
+    // a rod's end may be this far, by callipers, from where it was: under what callipers can be trusted to, no less
+    assert!(f(&pre["rod_held"]) >= 0.03 && f(&pre["rod_held"]) <= 0.1);
+    // And the cutting table: the controller looks for the mark at each of its two check rows and finds it.
+    let sim: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/steps.json")).unwrap())
+            .unwrap();
+    let looks = sim["checks"].as_array().unwrap();
+    let at: Vec<u64> = all
+        .iter()
+        .filter(|r| r["kind"] == "check")
+        .map(|r| r["n"].as_u64().unwrap())
+        .collect();
+    assert_eq!(looks.len(), 2);
+    for (k, n_) in looks.iter().zip(&at) {
+        assert!(k[0].as_u64() == Some(*n_) && k[1].as_str() == Some("check") && f(&k[2]) == 0.0);
+    }
 }
 
 /// The two animations, read back frame by frame. Both have a frame

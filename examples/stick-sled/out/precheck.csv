@@ -1,0 +1,40 @@
+#safe,62.0158
+n,kind,tool,depth,height,turn,via,along,label
+1,say,none,0.0,0.0,0.0,s,0.0,PRECHECK. routerOFF and NO BIT  in the collet. ascrap blank on
+2,measure,none,0.0,0.0,0.0,s,0.0,callipers: tail rod's end from  its block's facewrite it down
+3,dry,none,51.3049,30.0,0.0,s,188.0,as row 3
+4,dry,none,46.6379,48.0,0.0,s,188.0,as row 28
+5,dry,none,40.0243,57.0,0.0,s,188.0,as row 33
+6,dry,none,72.7799,66.0,0.0,s,188.0,as row 53
+7,dry,none,60.8662,30.0,45.0,s,188.0,as row 78
+8,dry,none,54.1501,42.0,75.0,s,188.0,as row 102
+9,dry,none,63.6264,30.0,105.0,s,188.0,as row 127
+10,dry,none,49.0091,30.0,135.0,s,188.0,as row 152
+11,dry,none,51.2799,39.0,180.0,s,188.0,as row 177
+12,dry,none,56.6359,33.0,210.0,s,188.0,as row 202
+13,dry,none,69.3906,30.0,240.0,s,188.0,as row 227
+14,dry,none,67.9133,63.0,330.0,s,188.0,as row 252
+15,dry,none,58.8367,44.4118,22.5,s,188.0,as row 279
+16,dry,none,51.3338,57.1805,46.5,s,188.0,as row 303
+17,dry,none,59.4634,34.7656,68.5,s,188.0,as row 328
+18,dry,none,59.4701,33.5662,93.5,s,188.0,as row 353
+19,dry,none,60.1644,53.7873,110.5,s,188.0,as row 378
+20,dry,none,60.2066,46.5599,148.0,s,188.0,as row 403
+21,dry,none,61.5338,29.0187,154.5,s,188.0,as row 410
+22,dry,none,75.6235,65.9987,184.0,s,188.0,as row 428
+23,dry,none,77.8463,29.1428,224.0,s,188.0,as row 453
+24,dry,none,78.0,30.1782,226.5,s,188.0,as row 462
+25,dry,none,60.0157,36.4992,241.0,s,188.0,as row 478
+26,dry,none,59.5543,66.9804,254.5,s,188.0,as row 493
+27,dry,none,67.3866,33.751,262.5,s,188.0,as row 502
+28,dry,none,54.5889,49.156,296.5,s,188.0,as row 527
+29,dry,none,56.2426,47.2681,323.0,s,188.0,as row 552
+30,dry,none,41.9063,54.962,356.0,s,188.0,as row 577
+31,check,none,0.0,0.0,0.0,s,0.0,after the dry   passes
+32,gauge,none,0.0,0.0,0.0,s,0.0,nothing hung
+33,say,none,0.0,0.0,0.0,s,0.0,hang 2 kg from acord round the  disc's rim: the positioner side
+34,gauge,none,0.0,0.0,0.0,s,0.0,2 kg hung
+35,say,none,0.0,0.0,0.0,s,0.0,take the weight off
+36,gauge,none,0.0,0.0,0.0,s,0.0,nothing hung
+37,measure,none,0.0,0.0,0.0,s,0.0,callipers again:tail rod's end  from its block. write it down
+38,say,none,0.0,0.0,0.0,s,0.0,done. copy      check_log.csv   calibrate.py    holds

@@ -2708,3 +2708,52 @@ drop the indirect setting of the angle, and motorise the sled.
   The long moves are counted without being stepped, since four
   motors' worth of steps took minutes to simulate, unless something
   is listening to the pins.
+
+## 2026-11 · A precheck, so that what is trusted is tried before anything real is cut
+
+The owner asked whether the pillow blocks have set screws and whether
+that is all that stops a rod sliding endways. It is. I offered a flat
+or a collar; the owner's answer was to leave the set screws as they
+are, provided there is a precheck that finds a machine out before any
+production is done on it.
+
+- **A table, not a paragraph.** The machine already runs its set-up
+  from tables. `out/precheck.csv` is a third, run first: a sample of
+  the cutting table's own passes with nothing in the collet, then the
+  wheel's mark looked for, then a weight hung on the disc with the
+  mark looked for before, during and after. `calibrate.py holds`
+  reads the log and says what to fix, in capitals, and not to cut a
+  real stick until it passes.
+- **The set screws are tried with callipers.** Nothing on the machine
+  can feel a rod slide: the probe touches the master from the side.
+  So the tail rod's end is measured from its block before the
+  precheck, after it, and again after the trial stick, which shakes
+  what the precheck only pushes. 0.05 mm is the line.
+- **The belt's hold was an estimate, and the home sensor can measure
+  it.** The fin is on the disc, on the spindle's side of the belt, so
+  where the controller finds the mark against where its steps put it
+  is what has given between the motor and the stick. A 2 kg weight
+  at the disc's rim is 1.73 N m, 4.7 times the heaviest cut, and by
+  the estimate turns the stick 0.083°: nine steps of the motor. That
+  reads the stiffness to about a tenth, which is enough to tell a
+  machine as estimated from one half as stiff. The build tries both
+  on a computer.
+- **A look does not re-home.** It turns to 5° past the mark and comes
+  back until the sensor speaks, as homing does, and then keeps the
+  steps' own count. Taking the found edge as the new home would add
+  the sensor's repeat to every cut after it.
+- **The same look in the cutting table.** After the roughing and at
+  the end. A wheel more than 0.1° from its steps stops the stick:
+  that is more than the weight turns a sound machine and less than
+  one lost step of the motor, 0.15°, or a belt over a tooth, 1°.
+  After the roughing 0.4 mm is still on the tile, and taking the
+  stick up again homes the wheel afresh.
+- **The bites sit at the estimate's limits, so the reading allows a
+  step.** They were chosen as the deepest the limits pass, which
+  leaves a few per cent. A reading good to a tenth would fail a sound
+  machine half the time, so it passes unless it is too soft even
+  with one step taken off what the weight turned it.
+- **One way round only.** The weight hangs on the positioner's side;
+  the wheel's motor is under the disc's other side. Backlash that
+  only shows when the push changes direction is not found by it.
+  The trial stick is.

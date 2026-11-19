@@ -80,8 +80,8 @@ says so.
    2 mm short of the socket. Coming back, the sled runs fast to 3 mm
    short of home and then finds its switch.
 
-The stick goes to a new angle 203 times in the 576 rows; the other
-373 are at the angle it already has.
+The stick goes to a new angle 204 times in the 578 rows; the other
+374 are at the angle it already has.
 
 What wants a hand is putting the blank on, setting each of the two
 bits (the probe's clip on, then parked), and the router's own switch.
@@ -94,7 +94,7 @@ carry it through the master. The safe way is to draw the bit back
 until its tip is 2 mm clear of the master, then up or down and round,
 then out. Most moves do not need it: the build follows each one along
 its own path and marks it straight if the whole bit passes the master
-by 1.5 mm. 525 of the 576 are.
+by 1.5 mm. 525 of the 578 are.
 
 ## The slide
 
@@ -334,7 +334,7 @@ controller will not turn the stick until the lock's switch says it is
 let go, nor cut until it says it is thrown; it says so on the display
 for a hand, and raises a pin while it wants the spindle free, for
 whatever might work the clamp instead. The build runs the controller
-that way as well: it lets the lock go 203 times a stick. By hand that
+that way as well: it lets the lock go 204 times a stick. By hand that
 is the last machine again, at two and a half hours of standing by.
 
 ## What carries the stick
@@ -471,21 +471,31 @@ hub, and three flats for the tail's point.
   back: home is the same edge from the same side every time. The
   build runs the controller's homing from nine places to check it.
 
-## The table: 576 rows a stick
+## The table: 578 rows a stick
 
 | rows | what | bit |
 |---|---|---|
 | 1 | put the blank on | |
 | 1 | set the straight bit | Freud 04-110: 1/4 in straight, two flutes |
 | 250 | roughing: 83 places from 24 directions, in bites of 2 mm | |
+| 1 | the wheel's mark looked for again | |
 | 1 | set the ball-nose | Freud 72-405: a 1/8 in ball tip, tapered to a 1/4 in shank over an inch |
 | 323 | finishing: 242 passes, the deep ones in bites of 1 mm | |
+| 1 | the wheel's mark looked for again | |
 
 Both bits have 1/4 in shanks: the router is the North American Colt,
 and that is its collet. The bites are as deep as the belt's hold
 allows: see [What holds the stick](#what-holds-the-stick-the-belt).
 Each row also says how far the sled is fed: 188 mm for a cut, nothing
 for the rest.
+
+Twice the controller looks for the wheel's mark: it turns the stick
+to 5° past the mark and brings it back until the sensor says home,
+three times, and compares that with where its steps say the mark is.
+Lost steps, a belt over a tooth and a pulley round on its shaft all
+show there. More than 0.1° and it stops: after the roughing there is
+still 0.4 mm on the tile and the stick can be taken up again, which
+homes the wheel afresh.
 
 ### The two bits
 
@@ -645,7 +655,7 @@ The lock is an option, `LOCK` in `config.py`, and off. With it on,
 the wheel is turned only with the lock let go, and after a turn
 nothing goes on until it is thrown again. The simulated run counts
 how often that would be, and the build checks the count against the
-table: 203.
+table: 204.
 
 | | |
 |---|---|
@@ -675,11 +685,70 @@ the probe's ground lead to the spindle follow it.
 ## Setting up a built machine
 
 Two straight screws leave little to find, and none of it needs a fit.
-The controller runs both steps from tables `build.py` writes;
-`calibrate.py` reads the results.
+The controller runs each step from a table `build.py` writes;
+`calibrate.py` reads the results. **No real stick is cut until all
+four have been done, in this order:** the precheck, the two set-ups,
+and one whole stick in scrap.
 
 **Depth needs nothing.** Setting a bit by touch measures it every time
 one goes in.
+
+### 0. The precheck: `out/precheck.csv`
+
+Four things on this machine are trusted and not proven: that the sled
+does not lose steps; that nothing slips between the wheel's motor and
+the stick; that the belt holds the stick as stiffly as the bites were
+sized for; and that the pillow blocks' set screws, which are all that
+stops a rod sliding endways, hold against the socket's jack screw.
+The precheck tries all four before anything is cut, so that the
+machine can be put right first.
+
+It wants callipers and a weight of 2 kg that hangs within 150 mm: two
+1 kg bags on their sides in a carrier will do. Router off, **no bit
+in the collet**, a scrap blank on with its jack screw as tight as for
+a cut. Copy `out/precheck.csv` to the Pico as `passes.csv`.
+
+1. With the callipers' depth rod, measure how far the tail rod's end
+   stands out of its outer block: 5 mm as drawn. Write it down.
+2. The controller makes 28 of the table's own passes, spread through
+   it, with nothing in the collet: the same depths, heights, angles
+   and feed, the four at the ends of the positioner's reach among
+   them. Each ends with the sled finding its switch, and it stops if
+   the sled comes home half a millimetre out.
+3. It looks for the wheel's mark. More than 0.1° from where its steps
+   say, and it stops.
+4. It looks again; asks for the weight to be hung from a cord round
+   the disc's rim, on the positioner's side; looks; asks for it to be
+   taken off; and looks once more.
+5. Measure the tail rod's end again.
+
+```sh
+python3 calibrate.py holds check_log.csv --tail 5.02 5.03   # the two calliper readings
+```
+
+| it says | which means | so |
+|---|---|---|
+| the controller stopped: the sled came home out | the sled lost steps with nothing being cut | look at the lips and the slips, loosen and reset the nut's block, lower `RETURN_MM_S` |
+| the mark was off after the dry passes, or did not come back when the weight came off | something slipped between the motor and the spindle | the pulley's set screws on the motor's flat, the belt's tension, the hub's set screws on the rod's flat, the disc's four bolts and the wheel's four screws |
+| softer than the table was sized for | the weight turned the stick more than a sound machine's 0.083°, by more than one step of the motor | tension the belt and tighten the bracket's foot; if it stays, set `FEED_MM_S` to what it says, or fit the lock |
+| the tail rod's end moved more than 0.05 mm | the set screws let the rod slide | a small flat or a dimple under one screw of each pillow block, or a collar on the rod between the two blocks |
+
+Whatever is wrong it says in capitals, and that no real stick is to be
+cut until the precheck has been run again and passed.
+
+The weight is 1.73 N m at the disc's rim: 4.7 times the turning the
+heaviest cut is estimated to ask, and a third of what stalls the
+motor. A look is good to one step of the wheel's motor, 0.009°, so
+how stiffly the stick is held is read to about a tenth. The build
+tries the reading on a computer: on a wheel held as the estimate says
+it reads 1 172 N m a radian for 1 189 and passes; on one half as
+stiff it reads 586, does not pass, and says to feed at 10 mm a second.
+
+What it cannot try. The weight hangs, so it turns the stick one way
+only: the wheel's motor is under the disc's other side. Nothing is
+cut, so the rods are pushed by the jack screw and not shaken by a
+cut: that is why the rod's end is measured once more after the trial
+stick. And the bit's own bending is not in it at all.
 
 ### 1. Where the bit's height is: `out/probe.csv`
 
@@ -764,6 +833,26 @@ python3 calibrate.py align FRONT_NEAR FRONT_FAR TOP_NEAR TOP_FAR
 says how far to move the tail spindle, toward or away from the router
 and up or down. All of it is simulation.
 
+### 3. One whole stick, in scrap
+
+The real table, `out/passes.csv`, on a scrap blank of the real size.
+The machine checks itself as it goes: the sled's switch after every
+pass, and the wheel's mark after the roughing and at the end. Then:
+
+- **The tail rod's end,** by callipers, a third time. A cut shakes
+  what the precheck only pushed. More than 0.05 mm from the first
+  reading and the set screws want their flat or their collar.
+- **Callipers across the stick,** jaws flat on it and square to the
+  faces of the uncut end in the socket: 44.72 mm the way the blank is
+  49, and 37.85 the way it is 42. Within 0.2.
+- **The two sanding forms** from [stick-finish](../stick-finish/),
+  with no film on them, on each of their seven edges. Each should go
+  on with the film's 0.2 mm of rattle and no more.
+- **Two slices** sawn off the stick and put edge to edge. They are
+  made to meet with a line of 0.7 mm between them.
+
+If all of that is right, the next stick can be a real one.
+
 ## Measure these first
 
 | what | in the model | check |
@@ -775,7 +864,8 @@ and up or down. All of it is simulation.
 | the bit's length | 41.9 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach. Shorter than 39.8 the nut meets the blank; longer than 44.5 the tapered bit has under 19 mm in the collet |
 | the wheel | 360 teeth, printed, 232 across; a closed belt of 760; the motor 147.6 from the spindle, in slots | it fits a 256 mm bed with 12 to spare each side. 0.1 mm off centre is 0.05° once a turn, 0.027 mm at the furthest cut: true it on the disc's neck under an indicator |
 | the belt | a closed GT2 of 760 mm, 380 teeth | anything from 738 to 774 mm fits: the slots take up a tooth or two, and for more the bracket is screwed down somewhere else on the sled's bottom |
-| whether the belt holds the stick | estimated: the tile's edge moves 0.009 mm at the heaviest cut | cut a scrap stick, stop after a roughing bite, and look for a step where the bit came on. If there is one, halve `FEED_MM_S` |
+| whether the belt holds the stick | estimated: the tile's edge moves 0.009 mm at the heaviest cut | the precheck hangs a weight on the disc and reads how stiffly the stick is really held: see [The precheck](#0-the-precheck-outprecheckcsv) |
+| whether the set screws hold the rods endways | trusted: nothing but a pillow block's two set screws stops a rod sliding | the precheck has the tail rod's end measured before and after: the same link |
 | the two rods | 12 mm ground rod: 148 long for the sled's spindle, 91 for the tail | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
 | the travel's screw | a T8 of four starts, 8 mm a turn, 250 long | lead screws are sold with 2, 4 and 8 mm a turn under one name: `TRAVEL_STEPS_PER_MM` is 800 over what this one has |
 | the four pillow blocks | KP001: the shaft's centre 19 over the foot, 71 long, 38 high, 16 along the shaft, bolts 56 apart | the 19 is a casting's, and it is the stick's height: measure all four, pair the two most alike on the tail, and shim the rest to them |
@@ -821,76 +911,106 @@ written a second time, in Rust, and works every row forward:
 - the blank turns clear of the positioner's face and 11 mm clear of
   the sled's deck; the deck stops short of that face, and the collet
   nut, which comes lower than a riser's top, is never over a riser;
-  the lock disc is
-  clear of the positioner's box with the sled forward; the index
-  wheel clears the base and is in its plate's slot or just over it; every row is within the
-  positioner's travel with the bit's margin; the collet nut, which
-  comes 12.1 mm out of that face, never comes within the blank's
-  swing, and the face stands no further off than that takes; each of
-  the two bits is set within the margin of the table's length with
-  19 mm of its shank or more in the collet and off the collet's
-  bottom; the nut passes the uncut blank by a millimetre at every
-  cut with the bit as short as it may be set, which the test works
-  out for itself from the rows and the blank's corners; and the
-  ball's tip is never further past the axis than the planner was
-  told;
+  the disc is clear of the positioner's box with the sled forward;
+  the wheel's rim passes the sled's bottom, the near fence's lip and
+  the controller's box by what the build says, worked again from the
+  circle, and would have passed that lip by under 2 mm with the
+  stick's axis level with the middle of the height; every row is
+  within the positioner's travel with the bit's margin; the collet
+  nut, which comes 12.1 mm out of that face, never comes within the
+  blank's swing, and the face stands no further off than that takes;
+  each of the two bits is set within the margin of the table's length
+  with 19 mm of its shank or more in the collet and off the collet's
+  bottom; the nut passes the uncut blank by a millimetre at every cut
+  with the bit as short as it may be set, which the test works out
+  for itself from the rows and the blank's corners; and the ball's
+  tip is never further past the axis than the planner was told;
 - every move marked straight, followed along the controller's own
   path, passes the master by 1.5 mm, and drawn back to the safe depth
   the bit is clear of it at any height;
 - the controller's program, simulated, ends every row on the table's
-  steps, never changes height with the bit further out than the safe
-  depth except where the table says, and taken up half way sets the
-  bit again before it cuts; and it opens the clamp once for homing
-  and once for every row at a new angle, 203 times, which the test
-  counts for itself from the table;
+  steps with the sled drawn back, never changes height with the bit
+  further out than the safe depth except where the table says, and
+  taken up half way sets the bit again before it cuts; it makes a
+  pass for each of the 573 cutting rows and feeds the sled nowhere
+  else; its own pauses come to no less than the feeding alone and
+  not much more; and with no lock it lets nothing go, while run as if
+  one were fitted it lets it go 204 times, which the test counts for
+  itself from the table;
 - the blank is a rectangle with the tile 2 mm inside every face, and
   the first row hangs it with a wide face level and underneath;
 - the document is the sled at one finishing row, the bit's tip on the
-  stick and none of its 62 bodies through another; with the sled
-  forward nothing that rides on it is through anything else; with it
-  back and the index head pushed back 3 mm by the star, the same; and
-  with it back and the head not giving way, the star is 22 cm3 into
-  the wheel. Lifted a millimetre the plate is in a lip, and pushed a
-  millimetre across it is in a fence;
-- the index: the star's body is its frustum and its disc; home, the
-  star and the wheel share nothing, 0.5 mm deeper they share 439 mm3
-  and turned a degree 981, and turned to the next point nothing
-  again; the clamp's pad is on the disc and the anvil behind it,
-  outside the pocket's boss; the head's three feet are under its
-  plate and on the base, and its stance is 330 mm; its bolts pass the
-  post's holes clear, and pushed sideways past their slack they do
-  not; the magnet and its steel meet with the sled back;
-- the stick's drive, from the motor to the tail spindle: six and a
-  half of the pulley's teeth in the belt and the controller's steps
-  for a turn the two pulleys' ratio; the wheel's hub on its back, its
-  shaft whole through two bearings between the head's uprights; the
-  star's hub on the disc's inner face and the sled's rod ending
-  inside the star, 5.5 mm short of the wheel's shaft; each
-  pillow block standing on its riser inside the riser's edges, the
-  shaft's centre 19 mm over its foot, and each riser a solid block on
-  the deck; the rod its
-  whole length, its end in the socket's boss; the socket's pocket
-  round the blank's end with its fit, holding it across, and its
-  corners clear of the plate and the positioner as it turns; the tail
-  spindle's end at the stick's end, bare where the bit is set; the
-  sensor on the head's first upright with the wheel's fin in its
-  slot;
+  stick and none of its 54 bodies through another, a lock's four
+  among them; drawn back, forward and at three places between,
+  nothing that rides on the sled is through anything that stands on
+  the base; 60 mm further forward than it goes, the disc and the
+  wheel are in the positioner's box, so the check can tell. Lifted a
+  millimetre the plate is in a lip, and pushed a millimetre across
+  it is in a fence;
+- the belt alone holds the stick: for every cutting row the area its
+  bite removes is followed again on the planner's grid, and the push,
+  the turning and how far the tile's edge moves are worked again from
+  the same assumptions; each agrees with the figure the table carries
+  for the row and is within the build's limits;
+- the travel: the screw is where the build says, the nut on it from
+  one end of the travel to the other with the screw through the nut
+  and its block and in neither, and a millimetre off its line it is
+  in the nut; the stop blocks are a millimetre beyond the travel's
+  ends, which is less than the collet nut has to the socket; a step
+  is a hundredth of a millimetre; and of the build's six runs of the
+  controller's own pass on a sled that loses steps, those that lost
+  half a millimetre or less came home to a step and carried on, and
+  those that lost more stopped, going out and coming back both;
+- the precheck: its dry passes are the table's own, the first, the
+  last and the four at the ends of the positioner's reach among them,
+  each come to by the safe depth; the weight is more than three times
+  the heaviest cut and under half of what stalls the motor, and turns
+  a sound machine enough steps to read; the controller's own look
+  finds a wheel that is ahead of its steps to a step and a half and
+  keeps the steps' count; the limit that stops a stick is more than
+  the weight turns a sound machine and less than one lost step of the
+  motor; the reading, worked again from the four looks, passes a
+  wheel held as the estimate says and fails one half as stiff, with
+  the feed it is told to keep to; and the cutting table has the mark
+  looked for after the roughing and at the end;
+- a lock: its four parts are in the document and in neither assembly;
+  the post and the clamp's riser stand on the deck beside the
+  headstock; the clamp's pad is on the disc and the anvil behind it, a
+  hair off, short of the wheel and outside the disc's neck; and the
+  disc pushed that hair is on the anvil;
+- the stick's drive, from the motor to the tail spindle: 7.4 of the
+  pulley's teeth in the belt, where a pulley of 20 would have under
+  six, and the controller's steps for a turn the two pulleys' ratio;
+  the hub on the disc's inner face, the disc's neck against the
+  wheel, and the rod ending inside the wheel; the motor in the sled's
+  box, between the rails and under the deck, the belt's length from
+  the spindle, its shaft no longer than a NEMA 17's and its bracket
+  clear of the disc; each pillow block standing on its riser inside
+  the riser's edges, the shaft's centre 19 mm over its foot, and each
+  riser a solid block on the deck; the rod its whole length, its end
+  in the socket's boss; the socket's pocket round the blank's end
+  with its fit, holding it across, and its corners clear of the plate
+  and the positioner as it turns; the tail spindle's end at the
+  stick's end, bare where the bit is set; the sensor on the end of
+  the deck with the disc's fin in its slot, and homing ending on the
+  same edge of the fin from nine places;
 - the slide: the plate's far edge on the datum fence, a spring's gap
   at the near one with the plungers' noses in it, a lip over each
   edge a hair clear of its top, two slips under it, the fences
   reaching both ends of its travel and the near one against the
-  positioner's face; and the stops leave the bit beside the master at
-  one end and its collet nut 2 mm short of the socket at the other;
+  positioner's face; rails and deck the box's length and the bottom
+  going on under the wheel; and drawn back the bit is beside the
+  master, forward its collet nut 2 mm short of the socket;
 - for setting up: a recorded machine built wrong, its six touches
-  touches on it, the arithmetic made again, the height found within
-  2 µm at the depth it was probed, and the table planned for it run
-  on the real machine with the bit set by touch; what a wheel off
-  centre, a star off centre and a star not quite home each cost,
-  worked from the furthest cut and compared with the study's; and the
-  probing table and the bands are where the reading of them assumes,
-  the bands' twelve turns made by hand with no motor moved;
+  on it, the arithmetic made again, the height found within 2 µm at
+  the depth it was probed, and the table planned for it run on the
+  real machine with the bit set by touch; what a wheel off centre
+  costs, worked from the furthest cut and compared with the study's;
+  and the probing table and the bands are where the reading of them
+  assumes, each band where the sled's screw takes the stick and
+  turned by the wheel's own motor;
 - the two animations, read back frame by frame: a frame for each of
-  the 476 cutting rows; the first is the whole blank and the last is
+  the 573 cutting rows; the first is the whole blank and the last is
   the tile, to the area the planner says is left; the cutter is in
   every pass's frame; what is left never grows; and the tile's middle
   is never cut. In the machine's version the cutter is level in every

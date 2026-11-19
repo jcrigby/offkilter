@@ -40,6 +40,15 @@ HOME_SHORT_MM = 3.0
 HOME_SLIP_MM = 0.5
 BAND_US = 900                   # the pause between the wheel's steps while a band is turned on a scrap stick: 7 degrees a second
 
+# The wheel's mark is looked for again where the table says "check": after the roughing, at the end of a stick, and
+# all through the precheck. The stick is turned to a little past the mark and brought back until the sensor says
+# home, as homing does, CHECK_TIMES times; how far that was from where the steps said is what has slipped between
+# the motor and the spindle: lost steps, a belt over a tooth, a pulley round on its shaft. More than TURN_SLIP_DEG
+# and the controller stops. A row that says "gauge" looks the same way and only writes down what it finds.
+TURN_SLIP_DEG = 0.1
+CHECK_TIMES = 3
+CHECK_FILE = "check_log.csv"
+
 # A lock on the spindle, if one is ever fitted: a clamp that pinches the disc beside the wheel. Nothing in the plan
 # needs it: the wheel's belt holds the stick while it is cut. With LOCK True the controller will not turn the stick
 # until the lock's switch says it is let go, nor cut until it says it is thrown; it raises LOCK_OUT_PIN while it wants

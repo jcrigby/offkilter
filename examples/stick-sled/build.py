@@ -319,16 +319,22 @@ def main():
     for q in places:
         for b in range(1, q["bites"] + 1):
             cuts.append(("rough", "straight", q["t"], q["across"], q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], f"rough {math.degrees(q['t']):.0f} deg {q['across']:+.0f} bite {b} of {q['bites']}"))
+    # Twice in a stick the wheel's mark is looked for again: after the roughing, where a stick that has slipped can
+    # still be saved, and at the end. Nothing but the belt holds the stick, and this is how a slip would be seen.
+    cuts.append(("check", "none", 0.0, None, None, "after roughing"))
     cuts.append(("set", "ball") + setting + ("set the ball-nose on the master",))
     for q in passes:
         for b in range(1, q["bites"] + 1):
             cuts.append(("finish", "ball", q["t"], q["across"], q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], f"finish bite {b} of {q['bites']}"))
+    cuts.append(("check", "none", 0.0, None, None, "at the end"))
     # How far the sled is fed for a pass: from where the bit waits beside the master to where the collet nut is just
     # short of the socket.
     forward_x = STICK - SOCKET_IN - pos["router"]["collet"][0] / 2 - NUT_CLEAR
     travel = forward_x - BACK_X
     rows = []
     for n, c in enumerate(cuts):
+        if c[0] == "check":                              # the positioner stays where the row before left it
+            c = c[:3] + (rows[-1]["across"], rows[-1]["tip"]) + c[5:]
         depth, height, turn = axes.row(c[2], c[3], c[4])
         rows.append({"n": n + 1, "kind": c[0], "tool": c[1], "t": c[2], "across": c[3], "tip": c[4], "label": c[5], "depth": round(depth, 4), "height": round(height, 4), "turn": round(turn, 4),
                      "along": travel if c[0] in ("rough", "finish") else 0.0})
@@ -451,8 +457,8 @@ def main():
     at_steps, locked, unlocks, angles = 0, False, 1, 0
     for r in rows:
         to = round(r["turn"] * FW.TURN_STEPS_PER_DEG) % per_turn
-        if to != at_steps:
-            unlocks, angles, at_steps = unlocks + locked, angles + 1, to
+        if to != at_steps or r["kind"] == "check":       # a look for the wheel's mark turns the stick wherever it stands
+            unlocks, angles, at_steps = unlocks + locked, angles + (to != at_steps), to
         locked = True
     with_lock = simulated(table, "--lock")
     if sim["lock"] != FW.LOCK or sim["unlocks"] != (unlocks if FW.LOCK else 0) or with_lock["unlocks"] != unlocks or with_lock["rows"] != sim["rows"] or not with_lock["lock"]:
@@ -463,6 +469,7 @@ def main():
     # The home fin is 6 mm wide where the sensor reads it, so the sensor says home over six degrees. Wherever the
     # wheel is left, in the fin or out of it, the controller's own homing has to end on the same edge of it.
     import main as fw
+    fw.SCREEN.quiet = True
     fin_deg = math.degrees(FIN[1] / FLAG_R)
     at = {"steps": 0, "way": 1}
 
@@ -480,6 +487,26 @@ def main():
     if max(h[1] for h in homed) - min(h[1] for h in homed) > 1.5 / FW.TURN_STEPS_PER_DEG:
         raise SystemExit(f"homing the wheel ends in different places: {homed}")
     print(f"homing the wheel from {len(homed)} places, in the fin and out of it, ends within a step of {homed[0][1]:.2f} deg: the fin's edge at {fin_deg:.2f}")
+    # -- looking for the wheel's mark ------------------------------------------------
+    # Where the table says "check", and all through the precheck, the controller looks for the mark again and says
+    # how far it is from where its steps put it. Its own look, on a wheel that is so far ahead of the steps: it has
+    # to find that much to a step, keep the steps' count, and stop where the table says check and the slip is over
+    # the limit.
+    off = {"deg": 0.0}
+    fw.HOME = lambda n: (at["steps"] / FW.TURN_STEPS_PER_DEG + off["deg"]) % 360.0 < fin_deg
+    looked = []
+    for ahead in (0.0, 0.05, -0.05, 0.3, -0.3, 2.0):
+        machine = fw.Sled(safe)
+        at["steps"], off["deg"] = 0, 0.0
+        machine.turn.seek(FW.TURN_HOME_PIN, 400.0, FW.TURN_CLEAR_DEG)
+        machine.turn_on_to(137.0, None)                  # somewhere round the stick, as a row would leave it
+        off["deg"], apart = ahead, at["steps"] - machine.turn.at       # the motor's own steps against the controller's count of them
+        found = machine.look()
+        looked.append({"ahead": ahead, "found": found, "kept": at["steps"] - machine.turn.at == apart})
+        if abs(found - ahead) > 1.5 / FW.TURN_STEPS_PER_DEG or not looked[-1]["kept"]:
+            raise SystemExit(f"a wheel {ahead} deg ahead of its steps is found {found:.4f} ahead, or the steps' count is not kept: {looked[-1]}")
+    fw.STEPS = fw.HOME = None
+    print(f"looking for the wheel's mark on a wheel that has slipped: " + ", ".join(f"{k['ahead']:+.2f} found {k['found']:+.3f}" for k in looked) + f"; over {FW.TURN_SLIP_DEG} stops a stick")
     # -- the sled coming home ------------------------------------------------------
     # Every pass ends with the sled finding its switch. A sled that stalled on the way out comes to it sooner than
     # its steps say; one that stalled coming back does not come to it at all. The controller's own pass, on a sled
@@ -496,7 +523,6 @@ def main():
             else:
                 sled_at["steps"] = max(sled_at["steps"] + sled_at["way"], -round(GUARD * FW.TRAVEL_STEPS_PER_MM))      # no further back than its stop
     fw.STEPS, fw.HOME = travel_step, (lambda n: sled_at["steps"] <= 0)
-    fw.SCREEN.quiet = True
     came = []
     for lost_out, lost_back in ((0.0, 0.0), (0.3, 0.0), (2.0, 0.0), (10.0, 0.0), (0.0, 0.3), (0.0, 12.0)):
         sled_at.update(steps=0, way=1, out=round(lost_out * FW.TRAVEL_STEPS_PER_MM), back=round(lost_back * FW.TRAVEL_STEPS_PER_MM))
@@ -514,6 +540,37 @@ def main():
             raise SystemExit(f"the sled's coming home is not what it should be: {c}")
     print("the sled coming home, on a sled that loses steps: " + "; ".join(f"{max(c['lost_out'], c['lost_back']):.1f} mm {'out' if c['lost_out'] else 'back' if c['lost_back'] else 'lost'}: " + (f"stops ({c['stopped']})" if c["stopped"] else f"home, {c['slip']:.2f} out") for c in came))
 
+    # -- the table that tries a built machine before it cuts anything ---------------
+    # A sample of this table's own passes with no bit in the collet, the wheel's mark looked for after them, and a
+    # weight hung from the disc's rim with the mark looked for before, during and after. What holds the stick is an
+    # estimate until that has been done. Here the controller runs it on a computer, and its looks are tried on a
+    # wheel held exactly as stiffly as the estimate says and on one half as stiff: the reading has to say so.
+    prechecking = K.precheck_rows(rows)
+    K.write_table(os.path.join(OUT, "precheck.csv"), prechecking, safe)
+    pre_run = simulated(os.path.join(OUT, "precheck.csv"))
+    dry = [r for r in prechecking if r["kind"] == "dry"]
+    if pre_run["passes"] != len(dry) or [c[1] for c in pre_run["checks"]] != [r["kind"] for r in prechecking if r["kind"] in ("check", "gauge")] or pre_run["bits"]:
+        raise SystemExit("the controller does not run the precheck as it is written")
+    hung = K.PRECHECK_KG * 9.81 * DISC[0] / 2 / 1000.0             # N m: the weight at the disc's rim
+    hold = {"stiff": stiff, "worst": worst, "limit": GIVE, "feed": FW.FEED_MM_S}
+    fw.STEPS, fw.HOME = turn_step, (lambda n: (at["steps"] / FW.TURN_STEPS_PER_DEG + off["deg"]) % 360.0 < fin_deg)
+    tried = []
+    for softer in (1.0, 2.0):
+        machine = fw.Sled(safe)
+        at["steps"], off["deg"] = 0, 0.0
+        machine.turn.seek(FW.TURN_HOME_PIN, 400.0, FW.TURN_CLEAR_DEG)
+        looks = []
+        for load in (0.0, 0.0, hung, 0.0):                        # after the dry passes, nothing hung, the weight hung, nothing hung
+            off["deg"] = math.degrees(load / (stiff / softer))
+            looks.append(sum(machine.look() for _ in range(FW.CHECK_TIMES)) / FW.CHECK_TIMES)
+        said = K.holds_of(looks, K.PRECHECK_KG, hold, DISC[0] / 2, 1.0 / FW.TURN_STEPS_PER_DEG, swing_r)
+        tried.append({"made": softer, "looks": looks, **said})
+        if abs(said["softer"] - softer) > 0.15 * softer or said["slipped"] or said["holds"] != (softer == 1.0):
+            raise SystemExit(f"the precheck does not find a wheel {softer} times softer than the estimate: {said}")
+    fw.STEPS = fw.HOME = None
+    print(f"precheck: {len(prechecking)} rows, {len(dry)} dry passes; {K.PRECHECK_KG:g} kg at the disc's rim is {hung:.2f} N m, {hung / heaviest['torque']:.1f} times the heaviest cut, and should turn the stick {math.degrees(hung / stiff):.3f} deg. "
+          f"Tried on a computer: held as estimated it reads {tried[0]['stiff']:.0f} N m a radian and passes; half as stiff, {tried[1]['stiff']:.0f}, and says to feed at {tried[1]['feed']:.0f} mm/s or less")
+
     # -- the two tables that set a built machine up ------------------------------
     probing = K.probe_rows(drawn_axes, MASTER_R, (FW.PROBE_DEPTH_MM, FW.PROBE_HEIGHT_MM), (x_travel, z_travel))
     K.write_table(os.path.join(OUT, "probe.csv"), probing, safe)
@@ -526,6 +583,8 @@ def main():
     with open(steps, "w") as f:
         json.dump(sim, f)
     print(f"probing: {sum(1 for r in probing if r['kind'] in ('in', 'up', 'dn'))} touches in {len(probing)} rows; bands: {len(bands)} rows, {banded_run['rounds']} bands turned by the wheel's motor")
+    if [c[:2] for c in sim["checks"]] != [[r["n"], "check"] for r in rows if r["kind"] == "check"] or len(sim["checks"]) != 2:
+        raise SystemExit("the controller does not look for the wheel's mark where the table says")
     print(f"{len(rows)} rows; the controller, simulated, ends at {sim['rows'][-1][1:]} steps and never changes height with the bit further out than step {sim['deepest_crossing']} (safe {sim['safe_steps']})")
 
     # -- where things are ---------------------------------------------------------
@@ -876,10 +935,15 @@ def main():
                               "note": f"stick sled: the stick turns on a sled between two fences, a wheel on its own spindle sets the angle, the router positioner beside it sets depth and height, and a screw feeds the sled past the bit; {len(rows)} rows a stick"}))
     mcp.close()
 
-    count = {k: sum(1 for r in rows if r["kind"] == k) for k in ("load", "set", "rough", "finish")}
+    count = {k: sum(1 for r in rows if r["kind"] == k) for k in ("load", "set", "check", "rough", "finish")}
+    # What callipers should read across a milled stick, jaws flat on it: the tile's size along each of the blank's
+    # two sides, which the uncut end in the socket still shows.
+    ca, sa = math.cos(-blank_of["turn"]), math.sin(-blank_of["turn"])
+    lying = [(x * ca - y * sa, x * sa + y * ca) for x, y in outline]
+    widths = [max(q[k] for q in lying) - min(q[k] for q in lying) for k in (0, 1)]
     numbers = {
         "edge": EDGE, "bulge": BULGE, "gap": GAP, "spindle_d": SPINDLE_D, "bit": P.BIT, "taper": P.TAPER, "shank": P.SHANK, "ridge": P.RIDGE, "stick": STICK,
-        "tile": {"across": tile["across"], "area": tile["area"], "outline": outline, "swing": swing_r, "axis_in_tile": centre, "circle": circle},
+        "tile": {"across": tile["across"], "area": tile["area"], "outline": outline, "swing": swing_r, "axis_in_tile": centre, "circle": circle, "widths": widths},
         "blank_swing": blank,
         "blank": {"corners": blank_of["corners"], "size": blank_of["size"], "turn": blank_of["turn"], "axis": blank_of["axis"], "over": P.BLANK,
                   "load": {"t": load_t, "under": under, "toward": toward}},
@@ -919,6 +983,8 @@ def main():
         "calibration": {"drawn": {"tip_home": tip_home, "across_home": drawn_axes.across_home, "master_r": MASTER_R}, "rows": probing, "setting": setting, "built": bool(built),
                         "pin_d": K.PIN_D, "over": K.OVER},
         "bands": {"r": K.BAND_R, "span": K.BAND_SPAN, "at": K.BAND_AT, "rows": bands},
+        "precheck": {"rows": prechecking, "kg": K.PRECHECK_KG, "torque": hung, "over_heaviest": hung / heaviest["torque"], "expect_deg": math.degrees(hung / stiff), "rod_held": K.ROD_HELD,
+                     "turn_slip": FW.TURN_SLIP_DEG, "times": FW.CHECK_TIMES, "looked": looked, "tried": tried, "ran": {"passes": pre_run["passes"], "checks": pre_run["checks"], "seconds": pre_run["seconds"]}},
         "count": count, "rows": rows,
         "bodies": {k: [list(v) for v in b_] for k, b_ in bodies.items()},
     }
