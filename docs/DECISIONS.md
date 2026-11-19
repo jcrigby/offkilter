@@ -2556,3 +2556,35 @@ the right tool. What the negative of an edge is took three tries.
   thickness and a little more: nothing shared, then something. That
   is the film's room measured, not asserted.
 
+
+
+## 2026-11 · Captions in a flip book are strokes, and the story is one file
+
+The owner asked for the animation again as a storyboard: coarse
+passes, a pause that says what is done and what is next, detail
+passes, a pause that says sanding is next, and each use of the sanding
+shapes with a pause between.
+
+- **Text without a font.** A flip book draws filled and outlined
+  polygons. Captions needed either text in the renderer, with a font
+  to carry and a kernel crate to change, or letters made of the lines
+  it already draws. `okmcp.lettering` is forty characters as strokes
+  on a 4 by 6 grid: capitals, figures, a few marks. It is in the
+  script every example shares, it is marked not to turn with a turned
+  frame, and it costs the file nothing while it does not change.
+- **Coarse and detail are the table's own two kinds of row.** The
+  owner's words for roughing and finishing; nothing was planned
+  again. The pause between them is where the bit is changed, which
+  the sled's own animation already held a frame for.
+- **Amber is what is still to do.** The outline is drawn amber when
+  the sanding starts and each form leaves its stretch in its own
+  colour. So no frame has to explain what a form covers, and the last
+  one is the picture the owner had just asked for, the segments on
+  the tile itself, with the corners the forms leave still amber.
+- **Teal and magenta, not green and red.** The first pair drawn was
+  the one a twelfth of men cannot tell apart.
+- **It lives with the forms.** The sled's two animations stay as they
+  are, every pass and nothing else, and its test reads them. This one
+  needs the forms, which are built from the sled's tile, so it is in
+  `examples/stick-finish` and takes the sled's passes by loading the
+  sled's own script.

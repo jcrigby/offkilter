@@ -423,3 +423,193 @@ fn each_blade_template_ends_in_the_tile_s_own_curve() {
         assert!(b.1.y - b.0.y >= f(&n["plate"][0]) && b.1.x - b.0.x < 16.0);
     }
 }
+
+/// The whole job as one animation, read back frame by frame: the
+/// machine's coarse passes, a held frame that says so and says what is
+/// next, its detail passes, another, and then the sanding: each form
+/// shown on each of its seven edges, a pause after each, the stretch
+/// it has been along left in its colour. The tile's outline is amber
+/// until it is done, so what is amber at the end is what the forms do
+/// not reach, and that is the share of the outline the numbers say.
+#[test]
+fn the_whole_job_s_animation_is_captioned_at_its_pauses_and_shows_every_use_of_the_two_forms() {
+    let n = numbers();
+    let a: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/whole.json")).unwrap())
+            .unwrap();
+    let colour = |v: &Value| {
+        let c = u32::from_str_radix(&v.as_str().unwrap()[1..], 16).unwrap();
+        [(c >> 16) as u8, (c >> 8) as u8, c as u8]
+    };
+    let near = |c: ok_render::Rgb, want: [u8; 3]| {
+        [c.0, c.1, c.2]
+            .iter()
+            .zip(want)
+            .all(|(p, q)| (*p as i32 - q as i32).abs() <= 8)
+    };
+    let (cut, todo) = (colour(&a["cut"]), colour(&a["todo"]));
+    let lines = [colour(&a["form"]["bump"]), colour(&a["form"]["flute"])];
+    let fills = [
+        colour(&a["form_fill"]["bump"]),
+        colour(&a["form_fill"]["flute"]),
+    ];
+    let size = a["size"].as_u64().unwrap() as usize;
+    let band = (f(&a["band"]) * size as f64 / (f(&a["view"][2]) - f(&a["view"][0]))) as usize;
+    /// What a frame shows: how long, and how many of its pixels are the cutter, each form's body, each
+    /// form's line, the outline still to do, and lettering in the band above and the band below.
+    #[derive(Default, Clone)]
+    struct Seen {
+        ms: u32,
+        cutter: usize,
+        body: [usize; 2],
+        line: [usize; 2],
+        todo: usize,
+        above: usize,
+        below: usize,
+    }
+    let mut seen: Vec<Seen> = Vec::new();
+    let bytes = std::fs::read(dir().join("out/whole.gif")).unwrap();
+    assert!(bytes.len() < 5_000_000, "{} bytes", bytes.len());
+    let (w, h, frames) = ok_render::flipbook::read_gif(&bytes, |_, image, ms| {
+        let mut s = Seen {
+            ms,
+            ..Seen::default()
+        };
+        for y in (0..image.height).step_by(3) {
+            for x in (0..image.width).step_by(3) {
+                let c = image.pixel(x, y);
+                if c.0 < 110 && c.1 < 110 && c.2 < 110 {
+                    if y < band {
+                        s.above += 1;
+                    } else if y >= image.height - band {
+                        s.below += 1;
+                    }
+                } else if near(c, cut) {
+                    s.cutter += 1;
+                } else if near(c, todo) {
+                    s.todo += 1;
+                } else {
+                    for k in 0..2 {
+                        if near(c, lines[k]) {
+                            s.line[k] += 1;
+                        } else if near(c, fills[k]) {
+                            s.body[k] += 1;
+                        }
+                    }
+                }
+            }
+        }
+        seen.push(s);
+    })
+    .unwrap();
+    assert_eq!((w, h), (size, size));
+    assert_eq!(frames, a["frames"].as_u64().unwrap() as usize);
+    assert_eq!(seen.len(), frames);
+    let seconds: f64 = seen.iter().map(|s| s.ms as f64 / 1000.0).sum();
+    assert!((seconds - f(&a["seconds"])).abs() < 0.5 && seconds > 30.0 && seconds < 120.0);
+    let at = |v: &Value| v.as_u64().unwrap() as usize;
+    // The passes are the sled's table: as many coarse as it has roughing rows, as many detail as finishing.
+    let sled: Value = serde_json::from_str(
+        &std::fs::read_to_string(dir().join("../stick-sled/out/sled.json")).unwrap(),
+    )
+    .unwrap();
+    let rows = |kind: &str| {
+        sled["rows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|r| r["kind"].as_str() == Some(kind))
+            .count()
+    };
+    let (coarse, detail) = (at(&a["coarse"]), at(&a["detail"]));
+    assert_eq!((coarse, detail), (rows("rough"), rows("finish")));
+    let cuts: Vec<usize> = a["cut_frames"].as_array().unwrap().iter().map(at).collect();
+    assert_eq!(cuts.len(), coarse + detail);
+    // every pass has its cutter in the frame and the chapter's name over it, and nothing written under it
+    for (k, c) in cuts.iter().enumerate() {
+        let s = &seen[*c];
+        assert!(s.cutter > 20 && s.above > 20 && s.below == 0, "pass {k}");
+        assert!(s.ms < 1500);
+    }
+    // The two pauses: held, no cutter, and written on above and below. The first is between the last coarse
+    // pass and the first detail pass; the second after the last pass, the tile by then alone.
+    let pauses: Vec<usize> = a["pauses"].as_array().unwrap().iter().map(at).collect();
+    assert!(
+        cuts[coarse - 1] < pauses[0]
+            && pauses[0] < cuts[coarse]
+            && pauses[1] > cuts[cuts.len() - 1]
+    );
+    for p in &pauses {
+        let s = &seen[*p];
+        assert_eq!(s.ms as u64, a["pause"].as_u64().unwrap());
+        assert!(
+            s.ms >= 3000 && s.cutter == 0 && s.above > 40 && s.below > 60,
+            "{p}"
+        );
+        // two lines under, one over
+        assert!(s.below > s.above);
+    }
+    // The sanding. Fourteen uses, the bump form's seven and then the flute form's seven; a form is in its frame
+    // and in no other; after each, more of the outline is in that form's colour and less of it is still to do.
+    let uses = a["uses"].as_array().unwrap();
+    assert_eq!(uses.len(), 14);
+    let from = at(&a["sanding_from"]);
+    assert_eq!(from, pauses[1] + 1);
+    let whole = seen[from].todo;
+    assert!(whole > 300 && seen[from].line == [0, 0]);
+    let mut before = seen[from].clone();
+    for (i, u) in uses.iter().enumerate() {
+        let k = if u["form"].as_str() == Some("bump") {
+            0
+        } else {
+            1
+        };
+        assert_eq!(k, i / 7);
+        assert_eq!(at(&u["edge"]), i % 7 + 1);
+        let (show, rest) = (&seen[at(&u["show"])], &seen[at(&u["rest"])]);
+        assert_eq!(at(&u["rest"]), at(&u["show"]) + 1);
+        assert_eq!(show.ms as u64, a["use"].as_u64().unwrap());
+        assert_eq!(rest.ms as u64, a["rest"].as_u64().unwrap());
+        assert!(show.ms >= 800 && rest.ms >= 300);
+        // a form's body is its own pale colour; the few pixels of that colour in other frames are the soft edges of
+        // the lines already drawn
+        assert!(
+            show.body[k] > 100 && show.body[1 - k] < 30,
+            "use {i}: {:?}",
+            show.body
+        );
+        assert!(rest.body[k] * 4 < show.body[k] && rest.body[1 - k] < 30 && show.cutter == 0);
+        assert!(
+            show.below > 40 && rest.below > show.below,
+            "use {i}: it is named, and then said done"
+        );
+        assert!(rest.line[k] > before.line[k] + 10 && rest.todo < before.todo);
+        assert_eq!(rest.line[1 - k], before.line[1 - k]);
+        before = rest.clone();
+    }
+    // The end: held longest, both colours on the tile, and amber where neither form has been. That is the
+    // corners: as much of the outline as the build's own lengths say, found here from the tile and the forms.
+    let last = &seen[frames - 1];
+    assert_eq!(last.ms as u64, a["end"].as_u64().unwrap());
+    assert!(last.ms >= 4000 && last.line[0] > 100 && last.line[1] > 100);
+    assert!(last.body[0] < 30 && last.body[1] < 30);
+    let outline = tile();
+    let round: f64 = (0..outline.len())
+        .map(|i| {
+            let (p, q) = (outline[i], outline[(i + 1) % outline.len()]);
+            (q.0 - p.0).hypot(q.1 - p.1)
+        })
+        .sum();
+    let covered = 7.0 * (f(&n["edges"]["bump"]["covered"]) + f(&n["edges"]["flute"]["covered"]));
+    assert!((round - f(&a["round"])).abs() < 1e-6 && (covered - f(&a["covered"])).abs() < 1e-6);
+    let left = (round - covered) / round;
+    let shown = last.todo as f64 / whole as f64;
+    println!(
+        "{frames} frames, {seconds:.0} s: {coarse} coarse passes, {detail} detail passes, 14 uses of the forms; the forms leave {:.1} of the {round:.1} mm round the tile, {:.0} % of it, and {:.0} % of the outline is still amber at the end",
+        round - covered,
+        100.0 * left,
+        100.0 * shown
+    );
+    // a little less is amber than is left: each line is drawn with some width, and its ends go that much over
+    assert!(left > 0.1 && left < 0.25 && shown > 0.05 && shown < left);
+}

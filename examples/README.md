@@ -84,6 +84,11 @@ stays where the machine has it.
 `stick-sled/animate.py` is the whole of a use, both ways: the table's rows to
 polygons, then `mcp.call("flipbook", {...})`. `clip_to(poly, convex)`
 and `tint(colour, toward, t)` are the two helpers it is made of.
+A flip book draws no text: `lettering(text, at, height)` is a line of
+capitals and figures as strokes, to add to a frame's shapes for a
+caption, and it stays level in a frame that is turned.
+`stick-finish/whole.py` adds captioned pauses and more frames to the
+sled's passes that way.
 
 ## The shape of a regression test
 

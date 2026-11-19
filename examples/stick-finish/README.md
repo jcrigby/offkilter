@@ -15,6 +15,7 @@ the two blades a scraper would want.
 cargo build --release -p ok-mcp
 python3 examples/stick-sled/build.py           # the tile comes from its out/sled.json
 python3 examples/stick-finish/build.py
+python3 examples/stick-finish/whole.py         # the whole job as one animation
 cargo test -p ok-render --test stick_finish    # what CI runs
 ```
 
@@ -25,6 +26,38 @@ cargo test -p ok-render --test stick_finish    # what CI runs
 Nothing here is printed, and nothing is queued to print. It is built
 after the stick sled, like the sled after the positioner: a change to
 the tile there means running this again.
+
+## The whole job, animated
+
+![Seen along the stick: a level blue cutter roughs the turning blank; a caption says the coarse passes are done and the bit is changed next; a thinner cutter finishes the tile; a caption says sanding is next; then a teal wedge sits on each lobe in turn and a magenta T in each notch, each leaving its stretch of the outline in its colour, until only the corners are amber](out/whole.gif)
+
+`whole.py` puts the machine's work and the hand's in one animation, the
+owner's storyboard:
+
+1. **Coarse passes.** The table's 185 roughing rows, the 1/4 in straight
+   bit, as the machine makes them: the bit level, the stick turning.
+2. **A pause** that says so and says what is next: change the bit, then
+   291 detail passes.
+3. **Detail passes.** The finishing rows, the tapered ball tip.
+4. **A pause** that says sanding is next: two forms, fourteen edges.
+5. **Sanding.** The bump form on each of the seven bumps and then the
+   flute form on each of the seven flutes, a pause after each. The
+   tile's outline is amber while it is still to do, and each stretch a
+   form has been along turns that form's colour: teal for the bump
+   form, magenta for the flute form.
+
+| after the coarse passes | after the detail passes | a form in use | at the end |
+|---|---|---|---|
+| ![The roughed blank, with COARSE PASSES DONE: 185 written over it and NEXT: CHANGE THE BIT, THEN 291 DETAIL PASSES under it](out/whole_coarse.png) | ![The tile, with DETAIL PASSES DONE: 291 over it and NEXT: SANDING BY HAND, TWO FORMS, 14 EDGES under it](out/whole_detail.png) | ![The tile outlined in amber, teal on its lobes and magenta in three notches, a pale magenta T in the next notch; FLUTE FORM: FLUTE 3 OF 7](out/whole_sanding.png) | ![The tile with teal round every lobe, magenta round every notch and a short amber stretch at each corner; LEFT: 14 CORNERS, 36 MM, FOR A FOLDED EDGE OF FILM](out/whole_done.png) |
+
+The last frame is the answer to what the two forms do not reach: the
+fourteen amber stretches, 36 mm of the 205 mm round the tile. They are
+the corners, where a bump runs into a flute, 2.6 mm each on average,
+and no form is drawn for them.
+
+It runs 76 seconds. The passes are the sled's own animation's, from the
+same table; the captions are strokes, since a flip book draws shapes
+and no text (`okmcp.lettering`).
 
 ## What the tile is, cut
 
@@ -148,4 +181,13 @@ and numbers and the sled's own tile:
   grip's width;
 - each blade template is a plate whose end is the tile's own curve: on
   every one of its seven, the stick drawn back 0.05 mm shares nothing
-  with it but a sliver, and pushed 0.2 mm into it does.
+  with it but a sliver, and pushed 0.2 mm into it does;
+- the animation, read back frame by frame: as many coarse and detail
+  passes as the sled's table has roughing and finishing rows, each
+  with its cutter in the frame and its chapter's name over it; the two
+  pauses held, with no cutter, written on above and below; fourteen
+  uses of the forms, each form's body in its own frame and no other,
+  each followed by a pause in which more of the outline is that form's
+  colour and less of it amber; and at the end the amber that is left is
+  a little under the 18 % of the outline that the forms' lengths say
+  they do not cover.
