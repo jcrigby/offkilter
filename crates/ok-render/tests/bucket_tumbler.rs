@@ -1,9 +1,10 @@
 //! The bucket parts tumbler (examples/bucket-tumbler). The tests check
 //! the brief's numbers against the regenerated model:
-//! - the bucket's axis is 7.5 in above the deck and its rim clears the
-//!   deck by about 1.3 in;
+//! - the bucket (the 2-gallon unless the build was switched to the
+//!   5-gallon: every size comes from the build's JSON) turns on an axis
+//!   whose rim clears the deck by at least the brief's 1.3 in;
 //! - the two casters' wheels touch the wall about 35 deg either side of
-//!   bottom centre, about 7.7 in apart, their axles 2 in above the deck,
+//!   bottom centre, their axles on a riser that puts them there,
 //!   touching it without cutting into it;
 //! - the three battens lie on the inside wall at 120 deg without going
 //!   into it;
@@ -36,6 +37,10 @@ fn numbers() -> serde_json::Value {
 /// A number from the JSON, inches to mm.
 fn mm(n: &serde_json::Value, key: &str) -> f64 {
     n[key].as_f64().unwrap_or_else(|| panic!("no {key}")) * IN
+}
+
+fn bucket_name(n: &serde_json::Value) -> String {
+    format!("bucket, {}", n["bucket"].as_str().unwrap())
 }
 
 fn tab_named(doc: &Document, name: &str) -> TabId {
@@ -87,7 +92,7 @@ fn the_bucket_turns_on_its_axis_clear_of_the_deck() {
     let names: Vec<&str> = bodies.iter().map(|b| b.name.as_str()).collect();
     println!("{names:?}");
     assert_eq!(bodies.len(), 17, "the deck's parts");
-    let bucket = body(&bodies, "bucket, 5 gal");
+    let bucket = body(&bodies, &bucket_name(&n));
     let (lo, hi) = bucket.solid.bounds().unwrap();
     // Revolved about the world x axis: symmetric in y and z.
     assert!((hi.y + lo.y).abs() < 0.01 && (hi.z + lo.z).abs() < 0.01);
@@ -97,7 +102,7 @@ fn the_bucket_turns_on_its_axis_clear_of_the_deck() {
         (hi.x - lo.x) / IN,
         rim / IN
     );
-    assert!(((hi.x - lo.x) - 14.5 * IN).abs() < 0.01);
+    assert!(((hi.x - lo.x) - mm(&n, "bucket_h")).abs() < 0.01);
     assert!((lo.x - mm(&n, "floor_x")).abs() < 0.01);
     // The deck's top face is the axis height below the axis.
     let (_, dhi) = body(&bodies, "deck").solid.bounds().unwrap();
@@ -108,22 +113,51 @@ fn the_bucket_turns_on_its_axis_clear_of_the_deck() {
         axis_h / IN,
         clear / IN
     );
-    assert!((axis_h - 7.5 * IN).abs() < 0.01);
-    assert!((clear - 1.3 * IN).abs() < 0.01);
+    assert!((axis_h - mm(&n, "axis_above_deck")).abs() < 0.01);
+    assert!((clear - mm(&n, "rim_clearance")).abs() < 0.01);
+    assert!(clear >= 1.3 * IN - 0.01, "the brief's 1.3 in");
     // A wall that thin cannot hold much: a hollow shell, most of the
     // revolved envelope empty.
+    // Nothing that stands still touches what turns.
+    for still in [
+        "deck",
+        "motor plate",
+        "gusset left",
+        "gusset right",
+        "caster riser",
+        "caster left",
+        "caster right",
+        "gearmotor",
+    ] {
+        let c = common(&bucket.solid, &body(&bodies, still).solid);
+        assert!(c < 1e-6, "{still}: {c} mm3 in the bucket");
+    }
     let v = bucket.solid.volume();
     println!("bucket {:.0} cm3 of HDPE", v / 1000.0);
-    assert!(v > 900_000.0 && v < 1_500_000.0, "{v}");
+    let (rb, rr, h, t) = (
+        mm(&n, "r_bottom"),
+        mm(&n, "r_rim"),
+        mm(&n, "bucket_h"),
+        mm(&n, "wall"),
+    );
+    let shell = (std::f64::consts::PI * (rb + rr) * h + std::f64::consts::PI * rb * rb) * t;
+    println!("against a shell of {:.0} cm3", shell / 1000.0);
+    // The rim's lip is solid, so more than the wall alone.
+    assert!(v > 0.7 * shell && v < 1.8 * shell, "{v}");
 }
 
 #[test]
 fn the_wheels_touch_the_wall_at_35_degrees_without_cutting_it() {
     let (mut doc, n) = (load(), numbers());
     let bodies = deck_bodies(&mut doc);
-    let bucket = &body(&bodies, "bucket, 5 gal").solid;
+    let bucket = &body(&bodies, &bucket_name(&n)).solid;
     let reach = mm(&n, "wheel_reach");
-    let deck_top = -7.5 * IN;
+    let deck_top = -mm(&n, "axis_above_deck");
+    let riser = n["riser"][1].as_f64().unwrap() * IN;
+    assert!(
+        riser >= 0.25 * IN,
+        "a riser thick enough to screw into: {riser}"
+    );
     let mut ys = vec![];
     for side in ["left", "right"] {
         let wheel = &body(&bodies, &format!("caster {side} wheel")).solid;
@@ -155,7 +189,8 @@ fn the_wheels_touch_the_wall_at_35_degrees_without_cutting_it() {
         assert!((r - reach).abs() < 0.01);
         assert!((angle - 35.0).abs() < 0.01);
         assert!(
-            (z - deck_top - 2.0 * IN).abs() < 0.05 * IN,
+            (z - deck_top - mm(&n, "axle_above_deck")).abs() < 0.01
+                && (z - deck_top - riser - mm(&n, "caster_drop")).abs() < 0.01,
             "the brief's 2 in"
         );
         ys.push(y);
@@ -173,25 +208,27 @@ fn the_wheels_touch_the_wall_at_35_degrees_without_cutting_it() {
     }
     let spacing = (ys[1] - ys[0]).abs();
     println!("wheels {:.2} in apart", spacing / IN);
-    assert!((spacing - 7.7 * IN).abs() < 0.05 * IN);
     assert!((spacing - mm(&n, "wheel_spacing")).abs() < 0.01);
     // Under the smooth wall, about 5 in below the rim.
     let below_rim = mm(&n, "rim_to_casters");
-    assert!(below_rim > 4.5 * IN && below_rim < 5.5 * IN, "{below_rim}");
+    assert!(
+        (below_rim - mm(&n, "below_rim")).abs() < 0.01,
+        "{below_rim}"
+    );
 }
 
 #[test]
 fn three_battens_on_the_inside_wall_at_120_degrees() {
-    let mut doc = load();
+    let (mut doc, n) = (load(), numbers());
     let bodies = deck_bodies(&mut doc);
-    let bucket = &body(&bodies, "bucket, 5 gal").solid;
+    let bucket = &body(&bodies, &bucket_name(&n)).solid;
     let mut angles = vec![];
     for k in 1..=3 {
         let b = &body(&bodies, &format!("batten {k}")).solid;
         let v = b.volume();
         println!("batten {k}: {:.1} cm3", v / 1000.0);
         // 3/4 x 3/4 x 12, its ends cut square to the axis.
-        assert!((v - 0.75 * 0.75 * 12.0 * IN.powi(3)).abs() < 0.01 * v);
+        assert!((v - 0.75 * 0.75 * n["batten"][1].as_f64().unwrap() * IN.powi(3)).abs() < 0.01 * v);
         let inside = common(bucket, b);
         println!("batten {k}: {inside:.2} mm3 in the wall");
         assert!(inside < 1.0, "batten {k} in the wall");
@@ -227,7 +264,11 @@ fn the_shaft_reaches_through_the_plate_into_the_hub() {
     assert!(into > 6.0, "enough shaft under the set screws");
     assert!((into - mm(&n, "shaft_into_hub")).abs() < 0.01);
     // The pocket leaves a web of 1/4 in plywood around the shaft hole.
-    let full = 14.0 * 10.0 * 0.75 * IN.powi(3);
+    let plate_wh = (
+        n["plate"][0].as_f64().unwrap(),
+        n["plate"][1].as_f64().unwrap(),
+    );
+    let full = plate_wh.0 * plate_wh.1 * 0.75 * IN.powi(3);
     let pocket = full - plate.volume();
     println!(
         "pocket and hole take {:.0} cm3 from the plate",
@@ -257,7 +298,7 @@ fn propped_the_deck_rests_on_the_leg_and_nothing_goes_below_the_base() {
     );
     assert!(lo.z.abs() < 0.01, "the hinge end on the base");
     let rise = mm(&n, "far_end_rise");
-    assert!((rise - 20.0 * IN * 25f64.to_radians().sin()).abs() < 0.01);
+    assert!((rise - n["deck"][0].as_f64().unwrap() * IN * 25f64.to_radians().sin()).abs() < 0.01);
     assert!(common(deck, leg) < 1.0, "the leg does not go into the deck");
     assert!(
         common(deck, &moved(leg, Vec3::new(0.0, 0.0, 0.5))) > 1.0,
@@ -270,4 +311,39 @@ fn propped_the_deck_rests_on_the_leg_and_nothing_goes_below_the_base() {
         let (blo, _) = b.solid.bounds().unwrap();
         assert!(blo.z > -0.01, "{} below the base's top: {}", b.name, blo.z);
     }
+}
+
+#[test]
+fn room_for_the_batch_and_a_tumbling_speed() {
+    let n = numbers();
+    let f = |k: &str| n[k].as_f64().unwrap_or_else(|| panic!("no {k}"));
+    // A third full, a quarter of that the pieces: the brief's fill.
+    let (inside, fill, pieces) = (f("inside_litres"), f("fill_litres"), f("pieces_litres_max"));
+    println!(
+        "{} bucket: {inside:.1} L inside, {fill:.2} L of fill, up to {pieces:.2} L of pieces",
+        n["bucket"]
+    );
+    assert!((fill - inside / 3.0).abs() < 1e-9 && (pieces - fill / 4.0).abs() < 1e-9);
+    // 40 tiles of 15 cm3 each would be 0.6 L; the 2-gallon takes that.
+    if n["bucket"] == "2 gal" {
+        assert!(pieces > 0.6, "{pieces}");
+    }
+    // The speed tumbles rather than throws: well under the speed at
+    // which the load would ride the wall round, and the brief's 25-35
+    // rpm on the 5-gallon is the same fraction of its own.
+    let (lo, hi) = (n["rpm"][0].as_f64().unwrap(), n["rpm"][1].as_f64().unwrap());
+    let critical = f("critical_rpm");
+    println!(
+        "{lo:.0}-{hi:.0} rpm, {:.0}-{:.0} % of the critical {critical:.0}",
+        100.0 * lo / critical,
+        100.0 * hi / critical
+    );
+    assert!(hi / critical < 0.5);
+    assert!(
+        (lo / critical - 25.0 / 80.0).abs() < 0.03,
+        "the 5-gallon's fraction"
+    );
+    // The motor's margin over the worst-case torque, and the axial load.
+    assert!(f("motor_margin") > 2.5);
+    assert!(f("axial_kgf") < 1.3 + 1e-9);
 }

@@ -1,23 +1,23 @@
 {
  "units": "inches unless named",
- "axis_above_deck": 7.5,
- "rim_clearance": 1.2999999999999998,
+ "axis_above_deck": 6.5,
+ "rim_clearance": 1.375,
  "floor_x": 1.9586614173228347,
- "rim_x": 16.458661417322833,
- "caster_x": 11.25,
- "wall_radius_at_casters": 5.6954509663564785,
- "rim_to_casters": 5.208661417322833,
- "wheel_reach": 6.716860057265569,
- "wheel_spacing": 7.7052653102301365,
- "axle_above_deck": 1.9978703528878352,
- "axle_above_riser": 1.4978703528878352,
- "axis_above_axles": 5.502129647112165,
+ "rim_x": 11.208661417322835,
+ "caster_x": 8.208661417322835,
+ "wall_radius_at_casters": 4.6335260115606935,
+ "rim_to_casters": 3.0,
+ "wheel_reach": 5.659537572254335,
+ "wheel_spacing": 6.492354784176984,
+ "axle_above_deck": 1.863978227957504,
+ "axle_above_riser": 1.5,
+ "axis_above_axles": 4.636021772042496,
  "contact_deg": 35.0,
  "wheel_d": 2.0,
  "wheel_w": 0.75,
- "r_bottom": 5.165,
- "taper": 0.0570909090909091,
- "wall": 0.09,
+ "r_bottom": 4.2,
+ "taper": 0.06936416184971093,
+ "wall": 0.07,
  "shaft_end": 1.090551181102362,
  "hub_x": 0.7893700787401575,
  "flange_x": 1.2618110236220472,
@@ -25,23 +25,44 @@
  "shaft_into_hub": 0.3011811023622045,
  "hub_len": 0.47244094488188976,
  "deck": [
-  20.0,
-  14.0
+  13.5,
+  12.0
  ],
  "ply": 0.75,
  "tilt_deg": 25.0,
  "prop_leg_top": [
-  8.00937295956674,
-  8.359103703182988
+  5.262354258252194,
+  5.612085001868443
  ],
- "far_end_rise": 8.452365234813989,
+ "far_end_rise": 5.705346533499442,
  "batten": [
   0.75,
-  12.0
+  7.5
  ],
- "torque_nm": 0.7475219999999999,
- "torque_kgcm": 7.619999999999999,
- "motor_margin": 2.6246719160104988,
- "turning_kg_model": 1.5247135476451799,
- "axial_kgf": 1.2782991817693503
+ "torque_nm": 0.5980176,
+ "torque_kgcm": 6.096,
+ "motor_margin": 3.2808398950131235,
+ "turning_kg_model": 0.8522284292110907,
+ "axial_kgf": 0.9940946899702471,
+ "bucket": "2 gal",
+ "bucket_h": 9.25,
+ "r_rim": 5.125,
+ "below_rim": 3.0,
+ "plate": [
+  12.0,
+  9.0
+ ],
+ "riser": [
+  3.0,
+  0.3639782279575039
+ ],
+ "caster_drop": 1.5,
+ "inside_litres": 9.288905450374962,
+ "fill_litres": 3.096301816791654,
+ "pieces_litres_max": 0.7740754541979135,
+ "critical_rpm": 89.16751184179148,
+ "rpm": [
+  27.7736233412004,
+  38.88307267768056
+ ]
 }

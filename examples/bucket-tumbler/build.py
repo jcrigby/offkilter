@@ -40,33 +40,61 @@ OUT = os.path.join(HERE, "out")
 IN = 25.4
 MM = 1.0 / IN
 
-# -- the brief's numbers ----------------------------------------------
+# -- the bucket: which one, and its sizes (typical; measure yours) ------
+# "2gal" is the owner's choice: a Lowe's 2-gallon general bucket, listed
+# 10.25 x 10.25 x 9.25 in (rim across, rim across, height); the floor's
+# diameter is not listed. "5gal" is the brief's first design, kept so
+# the two can be compared: change BUCKET and run the script again.
+BUCKETS = {
+    "2gal": dict(
+        name="2 gal",
+        H=9.25,                 # outside, floor to the top of the rim (listing)
+        R_RIM=10.25 / 2,        # the rim's lip (listing)
+        R_TOP=9.6 / 2,          # wall just under the rim (fit)
+        R_BOTTOM=8.4 / 2,       # wall at the floor (fit: not listed)
+        RIM_BAND=0.6,           # how far down the wall the lip and its hoop reach
+        WALL=0.07,
+        BELOW_RIM=3.0,          # the casters' line below the rim, under the hoops (fit)
+        BATTEN_L=7.5,           # battens, floor up
+        LOAD_OFFSET=1.6,        # how far off the axis the load rides as it climbs (0.35 of the radius, as the brief's 2 in of 6)
+    ),
+    "5gal": dict(
+        name="5 gal", H=14.5, R_RIM=6.2, R_TOP=11.9 / 2, R_BOTTOM=10.33 / 2, RIM_BAND=0.75, WALL=0.09,
+        BELOW_RIM=5.2, BATTEN_L=12.0, LOAD_OFFSET=2.0,
+    ),
+}
+BUCKET = "2gal"
+B = BUCKETS[BUCKET]
+BUCKET_H, R_RIM, R_TOP, R_BOTTOM = B["H"], B["R_RIM"], B["R_TOP"], B["R_BOTTOM"]
+RIM_BAND, WALL = B["RIM_BAND"], B["WALL"]
+
+# -- the brief's rules ---------------------------------------------------
 PLY = 0.75                  # 3/4 in plywood: base, deck, motor plate, gussets
-AXIS_H = 7.5                # bucket axis above the deck's top face (brief: clears the rim by about 1.3)
+RIM_CLEAR = 1.3             # the rim clears the deck by about this (brief)
 TILT = 25.0                 # degrees, set by the prop leg
-DECK = (20.0, 14.0)         # deck length along the bucket, width
-BASE = (22.0, 14.0)
 BASE_BEHIND = 1.5           # how far the base runs past the hinge, under the motor
-PLATE_H = 10.0              # motor plate height above the deck
 GUSSET = 4.0                # the gussets' legs
-CASTER_LINE = 10.5          # caster axles from the motor plate's inner face (brief)
 CONTACT = 35.0              # degrees each side of bottom centre where the wheels touch (brief)
-RISER = (3.0, 0.5)          # caster riser: width along the deck, thickness (fit: shim it)
+CASTER_DROP = 1.5           # 2 in caster: mounting plate to axle (fit: measure yours)
+RISER_W = 3.0               # caster riser's width along the deck; its thickness makes up the axle height
 DISC = (4.0, 0.5)           # bottom discs: diameter, thickness (1/2 ply)
 BOLT_CIRCLE = 3.0           # the four 1/4 carriage bolts through discs and bucket bottom
 BOLT_HOLE = 0.28
-BATTEN = (0.75, 12.0)       # section, length; three at 120 deg
+BATTEN = (0.75, B["BATTEN_L"])   # section, length; three at 120 deg
 LOAD_KG = 1.5               # pieces plus media, worst case (brief)
-LOAD_OFFSET = 2.0           # how far off the axis the load rides as it climbs the wall (brief)
+LOAD_OFFSET = B["LOAD_OFFSET"]
 MOTOR_TORQUE_KGCM = 20.0    # the motor to buy, rated torque at least this
+FILL = 1 / 3                # pieces and media fill under a third of the bucket (brief)
+MEDIA_PER_PIECE = 3.0       # media volume per volume of pieces (brief)
 
-# -- a 5-gallon HDPE bucket (typical; measure yours) -------------------
-BUCKET_H = 14.5             # outside, floor to the top of the rim
-R_BOTTOM = 10.33 / 2        # outside radius of the wall at the floor
-R_TOP = 11.9 / 2            # outside radius of the wall just under the rim
-R_RIM = 6.2                 # the rim's lip (brief: about 6.2)
-RIM_BAND = 0.75             # how far down the wall the lip and its collar reach
-WALL = 0.09                 # wall and floor thickness
+
+def up_to_half(x):
+    return math.ceil(x * 2) / 2
+
+
+AXIS_H = up_to_half(R_RIM + RIM_CLEAR)     # bucket axis above the deck's top face
+PLATE_H = AXIS_H + 2.5                       # motor plate height above the deck
+WIDTH = up_to_half(2 * R_RIM + 1.5)          # deck, plate and base width
 
 # -- bought parts: envelopes from listings ------------------------------
 GEARBOX = (58 * MM, 40 * MM, 35 * MM)   # 5840-31ZY worm gearbox: along z, along y, depth along x (listings)
@@ -99,7 +127,10 @@ FLANGE_X = HUB_X + HUB[1]                           # the flange's face against 
 OUTER_DISC_X = FLANGE_X + FLANGE[1]
 FLOOR_X = OUTER_DISC_X + DISC[1]                    # the bucket floor's outside face
 RIM_X = FLOOR_X + BUCKET_H
-CASTER_X = PLATE_IN + CASTER_LINE
+CASTER_X = RIM_X - B["BELOW_RIM"]
+CASTER_LINE = CASTER_X - PLATE_IN                  # caster axles from the motor plate's inner face
+DECK = (up_to_half(RIM_X + 2.0), WIDTH)            # deck: 2 in past the rim
+BASE = (DECK[0] + 2.0, WIDTH)
 TAPER = (R_TOP - R_BOTTOM) / (BUCKET_H - RIM_BAND)  # radius per inch up the wall
 
 
@@ -114,6 +145,8 @@ def r_out(x):
 WHEEL_REACH = r_out(CASTER_X + WHEEL[1] / 2) + WHEEL[0] / 2     # bucket axis to wheel axle
 WHEEL_Y = WHEEL_REACH * math.sin(math.radians(CONTACT))
 WHEEL_Z = -WHEEL_REACH * math.cos(math.radians(CONTACT))
+RISER = (RISER_W, WHEEL_Z - CASTER_DROP - DECK_TOP)   # the riser's thickness puts the axles where the wheels touch
+assert RISER[1] >= 0.25, f"casters too tall for this bucket: riser {RISER[1]:.2f} in"
 RISER_TOP = DECK_TOP + RISER[1]
 GEARBOX_FACE = POCKET                                # the gearbox's shaft face, on the pocket floor
 SHAFT_END = GEARBOX_FACE + SHAFT[1]
@@ -197,7 +230,7 @@ def bucket(p):
     p.polygon(s, [v(FLOOR_X, 0), v(FLOOR_X, R_BOTTOM), v(band, r_out(band)), v(band, R_RIM), v(RIM_X, R_RIM),
                   v(RIM_X, r_out(band) - WALL), v(FLOOR_X + WALL, R_BOTTOM - WALL), v(FLOOR_X + WALL, 0)])
     f = p.feature({"type": "add_revolve", "sketch": s, "axis": {"type": "x_axis"}, "angle": 360, "op": "new", "name": "bucket"})
-    p.name_it(f, "bucket, 5 gal", HDPE)
+    p.name_it(f, f"bucket, {B['name']}", HDPE)
     return f
 
 
@@ -337,12 +370,31 @@ def main():
 
     # -- the brief's checks, from the model ------------------------------
     g = 9.81
-    turning = [bb for bb in deck_bodies if bb["name"] in ("bucket, 5 gal", "inner disc", "outer disc", "flange coupling")
+    turning = [bb for bb in deck_bodies if bb["name"] in (f"bucket, {B['name']}", "inner disc", "outer disc", "flange coupling")
                or bb["name"].startswith("batten")]
     turning_kg = sum(bb["volume"] / 1000 * p.density[bb["name"]] for bb in turning) / 1000
     torque_nm = LOAD_KG * g * LOAD_OFFSET * IN / 1000
     axial_kgf = (turning_kg + LOAD_KG) * math.sin(math.radians(TILT))
     gap_rim = AXIS_H - R_RIM
+
+    # Room: the inside as a frustum, a third of it for pieces and media,
+    # a quarter of that the pieces.
+    def inside_litres(bk):
+        h = bk["H"] - bk["WALL"]
+        r1, r2 = bk["R_BOTTOM"] - bk["WALL"], bk["R_TOP"] - bk["WALL"]
+        return math.pi * h / 3 * (r1 * r1 + r1 * r2 + r2 * r2) * IN ** 3 / 1e6
+
+    # Speed: the same tumble at the same fraction of the speed at which
+    # the load would stick to the wall, which goes as 1 / sqrt(diameter);
+    # the brief's 25-35 rpm was for the 5-gallon.
+    def mean_d(bk):
+        return bk["R_BOTTOM"] + bk["R_TOP"] - 2 * bk["WALL"]
+
+    def critical_rpm(bk):
+        return 42.3 / math.sqrt(mean_d(bk) * IN / 1000)
+
+    speed = math.sqrt(mean_d(BUCKETS["5gal"]) / mean_d(B))
+    litres = inside_litres(B)
     numbers = {
         "units": "inches unless named",
         "axis_above_deck": AXIS_H,
@@ -369,6 +421,12 @@ def main():
         "motor_margin": MOTOR_TORQUE_KGCM / (torque_nm / g * 100),
         "turning_kg_model": turning_kg,
         "axial_kgf": axial_kgf,
+        "bucket": B["name"], "bucket_h": BUCKET_H, "r_rim": R_RIM, "below_rim": B["BELOW_RIM"],
+        "plate": (WIDTH, PLATE_H), "riser": RISER, "caster_drop": CASTER_DROP,
+        "inside_litres": litres, "fill_litres": litres * FILL,
+        "pieces_litres_max": litres * FILL / (1 + MEDIA_PER_PIECE),
+        "critical_rpm": critical_rpm(B),
+        "rpm": (25 * speed, 35 * speed),
     }
     with open(os.path.join(OUT, "bucket_tumbler.json"), "w") as fh:
         json.dump(numbers, fh, indent=1)
