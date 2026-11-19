@@ -6,15 +6,19 @@ a second, idle spindle, on a flat sled that slides on the base
 between two fences, and it only turns. Beside it, fixed to the base,
 lies the [two-axis router positioner](../router-positioner/) with its
 bit pointing at the stick: the positioner's X sets how deep the bit
-reaches, its Z how high. Three motors go to the next row of a table,
-and the sled is pushed past the bit and drawn back by hand.
+reaches, its Z how high. Four motors do all of it: the positioner's
+two, one that turns the stick, and one that feeds the sled past the
+bit on a screw and brings it back. A blank is put on, two bits are
+set, and the rest runs by itself: 573 passes, a little over two and a
+half hours.
 
-The motor that turns the stick is not on the sled. It drives a wheel
-of 360 teeth on an index head at the end of the base, and a tapered
-star on the sled's spindle goes into that wheel's face when the sled
-is drawn back. There the stick is turned to its next angle, a clamp
-on the sled locks the spindle, and the sled leaves the wheel behind.
-The index is the owner's idea, as the fences and the socket are.
+The wheel that turns the stick rides on the sled, on the sled's own
+spindle, with its motor in the sled's box. That is the owner's idea,
+and it took three things off the machine: the star that carried the
+angle from a wheel on the base to the sled, the clamp that kept it
+there, and the hand that threw the clamp 203 times a stick. The belt
+holds the stick while it is cut. A lock is drawn, in case the belt
+turns out not to, and left off.
 
 It replaces the [hinged sled](../stick-sled-hinged/), which kept the
 cutter fixed in a router table and hung the stick from two hinges.
@@ -28,15 +32,15 @@ python3 examples/stick-sled/animate.py        # out/passes_machine.gif and out/p
 cargo test -p ok-render --test stick_sled   # what CI runs
 ```
 
-![The sled between its two fences, part way through a pass: the tail spindle at the near end, the stick, its far end in the socket, the headstock, the clamp beside it and the lock disc on the spindle's end; past the sled, standing on the base, the index wheel with the twelve-point pocket in its face, its uprights and the post behind them; the positioner beside the stick on its lid](out/sled.png)
+![The sled between its two fences, part way through a pass: the travel's motor and screw at the near end going in under the sled's deck, the tail spindle, the stick, its far end in the socket, the headstock, and past the end of the sled's box a disc and the large wheel on the same spindle; the positioner beside the stick on its lid](out/sled.png)
 
-Nothing here has been built or run on a motor, and the positioner's
-sizes rest on a router nobody has measured yet. What is checked is
-checked by calculation and by the test.
+Nothing here has been built or run on a motor. What is checked is
+checked by calculation and by the test, and what is only estimated
+says so.
 
 ## How it works
 
-![Cut across the middle of the stick, looking along it: the positioner's box on the base, the bit reaching out of its slot to the tile's section, the sled's plate on two slips between the fences with a lip over each of its edges](out/end.png)
+![Cut across the middle of the stick, looking along it toward its far end: the positioner's box on the base, the bit reaching out of its slot to the tile's section, the sled's bottom on two slips between the fences with a lip over each of its edges, its two rails and its deck; behind them the disc and the wheel on the stick's own spindle, the wheel's rim hanging below the deck and over the sled's bottom, and the wheel's motor in the box under the deck](out/end.png)
 
 - **The stick turns and does nothing else.** Its far end sits in a
   printed socket on a spindle; its near end is on the point of a
@@ -54,51 +58,53 @@ checked by calculation and by the test.
   base with its far edge along one fence, and each fence has a lip
   over the sled's edge so that it cannot lift. What holds the stick
   is fixed to it. More in [The slide](#the-slide).
-- **The wheel that turns the stick stays at the end of the base.** A
-  sled can only carry a small wheel: the last one was 105 mm across
-  and had to hang off the sled's end to clear the deck and the
-  positioner. One that stays behind can be any size. This one has 360
-  teeth and is 232 mm across, so the same runout turns the stick less
-  than half as far wrong, and the ratio is eighteen to one. The sled
-  carries a star to meet it and a clamp to keep the angle. More in
-  [The index](#the-index).
+- **A screw feeds it.** The screw lies along the base and goes in
+  under the sled's deck to a nut on the sled's bottom. More in
+  [The travel](#the-travel).
+- **The wheel that turns the stick goes with the sled.** It is on the
+  sled's own spindle, past the headstock and past the end of the
+  sled's box: 360 teeth, 232 mm across, its rim 36 mm over the base.
+  Its motor is in the box, under the deck. More in
+  [The wheel, on the sled](#the-wheel-on-the-sled).
 
 ## A pass
 
-1. Draw the sled back to its stop, where a magnet holds it. The bit
-   is beside the master: the tail spindle's rod, bare between the
-   tailstock and the stick. At the other end the star is in the
-   index wheel.
-2. If the next row is at a new angle the display says so: open the
-   clamp. The wheel turns the stick, the display asks for the clamp,
-   and you close it. If the row is at the angle the stick already
-   has, press the foot switch instead. Either way the positioner's
-   two motors go to the row and stop.
-3. Push the sled to its forward stop and draw it back. The bit comes
-   onto the stick from its near end and stops 21 mm short of its far
-   end, with the collet nut 2 mm short of the socket.
+1. The sled is drawn back, at its home switch. The bit is beside the
+   master: the tail spindle's rod, bare between the tailstock and the
+   stick. It is beside the stick's end, not in the stick.
+2. The positioner's two motors and the wheel's go to the next row and
+   stop.
+3. The sled's motor feeds the stick past the bit at 20 mm a second
+   and brings it back at 60. The bit comes onto the stick from its
+   near end and stops 21 mm short of its far end, with the collet nut
+   2 mm short of the socket. Coming back, the sled runs fast to 3 mm
+   short of home and then finds its switch.
 
-The stick goes to a new angle 203 times in the 479 rows; the other
-276 are further bites at the angle it has, and need only the foot
-switch.
+The stick goes to a new angle 203 times in the 576 rows; the other
+373 are at the angle it already has.
 
-The controller will not move a motor unless the sled is back: a
-switch on the back stop. It will not turn the wheel with the clamp
-closed, nor run the bit out for a cut until it is closed again: a
-switch under the clamp's handle. With the sled back the bit is beside
-the master, so a move between passes must not carry it through the
-master. The safe way is to draw the bit back until its tip is 2 mm
-clear of the master, then up or down and round, then out. Most moves
-do not need it: the build follows each one along its own path and
-marks it straight if the whole bit passes the master by 1.5 mm. 428
-of the 479 are.
+What wants a hand is putting the blank on, setting each of the two
+bits (the probe's clip on, then parked), and the router's own switch.
+The foot switch starts each of those. Held down while a pass is made,
+it stops the table after that pass until it is pressed again.
+
+The positioner and the wheel move only with the sled drawn back,
+where the bit is beside the master, so a move between passes must not
+carry it through the master. The safe way is to draw the bit back
+until its tip is 2 mm clear of the master, then up or down and round,
+then out. Most moves do not need it: the build follows each one along
+its own path and marks it straight if the whole bit passes the master
+by 1.5 mm. 525 of the 576 are.
 
 ## The slide
 
-The sled is a shallow box of 3/4 in plywood: a bottom, 413 x 211,
+The sled is a shallow box of 3/4 in plywood: a bottom, 465 x 211,
 that slides on the base between two fences; a rail on edge along each
 side; and a deck across the rails that everything holding the stick
-is fixed to. There are no shafts and no bearing blocks under it. Like
+is fixed to. Rails and deck are 413 long. The bottom goes on 52 mm
+past them, under the wheel, and the bracket of the wheel's motor is
+screwed to it there. There are no shafts and no bearing blocks under
+it. Like
 the positioner it has no joinery: edges on faces, glue and brads, and
 a fence's lip is a strip nailed along the top of it.
 
@@ -114,116 +120,236 @@ a fence's lip is a strip nailed along the top of it.
 - **Each fence has a lip over the sled's edge,** 0.3 mm clear of its
   top: 10 mm over at the datum, 7 at the near fence. They stop the
   sled lifting or tipping. They are not what holds it down: its
-  weight and the hand on it do that, and by my estimate a roughing
-  cut tips it with about two thirds of what its weight resists.
+  weight does that. Pushed by hand, a roughing cut was taken to tip
+  it with about two thirds of what its weight resists; fed by the
+  screw, the heaviest cut is estimated at under a quarter of that
+  push.
 - **It rides on two slippery strips** on the base, one under each
   edge, 3 mm thick. A chip on a strip lifts the sled, and the sled's
   height is the bit's height on the stick: brush them, or fix a felt
   wiper to each end of the sled.
 - **The near fence stands against the positioner's face.** It is
   14 mm wide, which is all the room there is, and the box's near rail
-  stands inside its lip. The deck is 52 mm over the fences and
+  stands inside its lip. The deck is 60 mm over the fences and
   reaches out over that one, to 6 mm short of the positioner's face.
-- **A stop block** on the base meets the sled at each end of its
-  188 mm; the back one carries the sled-back switch and the magnet.
+- **A stop block** stands on the base a millimetre beyond each end of
+  the sled's 188 mm. The screw puts the sled where it goes. Only a
+  sled that has lost its place meets a block, and it meets it before
+  the collet nut meets the socket. The travel's home switch is
+  beside the back one.
 
-The positioner lies on the base itself, and in plywood its bit is
-138 mm over the base. The box is what brings the sled's deck up to
-it: the stick's axis is 44.4 mm over the deck, and the box's rails
-stand inside both lips on a bottom that reaches under them. How straight the datum fence is and how flat the base is
+The positioner lies on the base itself, and its bit is 104 mm over
+the base at the bottom of its height and 184 at the top. The stick's
+axis is at 152, which is 8 mm above the middle: see
+[The wheel, on the sled](#the-wheel-on-the-sled). The box is what
+brings the sled's deck up to it: the stick's axis is 44.4 mm over the
+deck, and the box's rails stand inside both lips on a bottom that
+reaches under them. How straight the datum fence is and how flat the base is
 are not in the study under Setting up: the ground shafts this
 replaces were taken to be true, and a fence is as true as it is made.
 
-## The index
+## The wheel, on the sled
 
-| the sled home, cut along the axis | the same, from the head's end |
+| the sled drawn back, cut along the axis | the same, from the far end |
 |---|---|
-| ![From the left: the sled's deck and headstock, the star's hub, the lock disc, the star seated in the pocket in the index wheel's boss, the wheel reaching down into a slot in its plate, its hub, the home sensor, two uprights with a flange bearing each and the shaft through them, a foot under the plate, and the post behind with its foot](out/index.png) | ![The index wheel standing across the end of the base on its plate, its two uprights and the post behind them, the motor low at the far side of the plate; the sled drawn up to it](out/home.png) |
+| ![From the left: the socket's boss, two pillow blocks on their riser on the deck, the hub, the disc with its neck, and the wheel on the neck's end, the spindle's rod ending inside it; under the spindle, on the end of the deck, the home sensor with the disc's fin in its slot; the wheel's rim hanging below the deck beyond the end of the sled's box, over the sled's bottom](out/index.png) | ![The sled drawn back: the wheel standing across the far end of the sled on the sled's own spindle, its motor under the deck's end with a small pulley beside the wheel; the travel's motor and screw at the other end of the base](out/home.png) |
 
-The owner's idea: put the stick mill's tapered star on the sled's
-spindle, its negative in the face of a wheel that does not travel,
-and a lock on the spindle. A wheel that stays at the end can be far
-larger than one a sled carries, and where it is too large for the
-board it goes through a slot.
+The owner's idea, in two steps. A wheel that stays at the end of the
+base can be far larger than one a sled carries, and where it is too
+large for the board under it, it goes through a slot: that was the
+last machine. Then: if a slot is all a large wheel needs, the sled
+can carry it after all, and the star, the clamp and the hand that
+worked it are not needed. On the sled it does not even need the slot.
 
-- **The star** is twelve points, two hexagons 100 mm across their
-  flats, 115.5 mm over the points at its large end and tapering 10° a
-  side over its 20 mm. It is printed in one piece with a disc 176 mm
-  across behind it, which is what the clamp pinches and what a hand
-  turns the stick by.
-- **The wheel** has 360 teeth, 229 mm on the belt's pitch line. The
-  pocket is in a boss on its face: the star's own shape with the
-  inside corners cut back, and 1.5 mm to spare behind the star's small
-  end so that the flanks meet before anything else does. Its rim is
-  28 mm over the base and 3 mm over the head's own plate, which is
-  slotted under the rim and the belt's lower run to give them room.
-- **The head is not fastened down.** Wheel, shaft, bearings, motor
-  and home sensor are on one plywood plate that stands on three
-  round-headed screws. Behind it a post is screwed to the base, and
-  the head hangs back on two bolts through 8 mm holes in that post,
-  level with the axis, a spring on each. The star pushes the head
-  back 3 mm as it comes home. So the star seats fully every time and
-  the head goes where the star puts it: nothing here is lined up to a
-  fit, and the bolts' slack lets the head shift a millimetre and a
-  half any way.
-- **Home, the head stands on the star and two of its feet.** The
-  third, by the wheel, is set 0.3 mm short and carries the head only
-  while the sled is away. The two that always bear are one under the
-  shaft's far end and one out under the motor, and the star's seat is
-  330 mm from the line that matters between them: a star 0.03 mm off
-  the spindle's centre lifts the wheel's end that much as it turns
-  and rolls the head 0.005°. Set the feet once, with the sled home:
-  the two until the star's flanks show no light, then the third.
-- **The lock** is a push-pull toggle clamp on a riser beside the
-  headstock. Its plunger goes through a post and presses the disc,
-  80 mm from the axis, against a steel plate that reaches in behind
-  the disc from a spacer on the same post. The clamp's riser is glued
-  hard against that post: the anvil pulls the post one way and the
-  clamp pushes its riser the other, and a post standing alone on its
-  edge would be bent at its foot by the whole pinch. The spindle's bearings
-  feel none of it, and a plunger that moves along the spindle does
-  not drag the disc round as it closes. The motor is still holding
-  the stick through the star while the clamp goes on. By my estimate
-  a 500 N clamp holds 16 N m there, eight times what 60 N at the
-  blank's corner asks.
-- **A magnet in the back stop** holds the sled home against the
-  head's two springs: a 16 mm pot magnet, flush in the stop's face,
-  on a steel disc let into the sled's end.
-- **The star goes in twelve ways.** Paint a mark on the disc's rim
-  and one on the wheel's, and have them together when a blank goes
-  on. A blank put on with them a point apart is 30° round, and the
-  first row shows it: its wide face is not level.
-- **Come home locked.** The stick comes back at the angle the wheel
-  still holds, so the star goes in as it came out. If the spindle has
-  been turned in between, open the clamp before pushing home and the
-  star turns it to the nearest of its twelve. Do not open the clamp
-  anywhere else during a stick.
-- **What it costs.** The clamp is thrown and let go 203 times a
-  stick, where a motor on the sled needed nobody. The base is 200 mm
-  longer. And the bands that line the stick up are turned by hand,
-  because away from its back stop the sled has no motor.
+- **The wheel** has 360 teeth: 229 mm on the belt's pitch line, 232
+  over its flanges, 12 wide, printed. It is past the end of the
+  sled's box, so the deck and the rails are not in its way, and it
+  hangs 72 mm below the deck's top there.
+- **What it passes,** all the way along the travel:
 
-Printed fits are untested. A star that prints a quarter of a
-millimetre small all round goes 1.5 mm further in, which is all the
-room there is: print the star, then the pocket to it.
+  | under the wheel's rim | clear by |
+  |---|---|
+  | the sled's own bottom, which goes on under it | 13.6 mm |
+  | the back stop and the home switch, which are no higher than that bottom | 13.6 mm |
+  | the near fence's lip | 9.8 mm |
+  | the controller's box, on the base beside the positioner | 8.0 mm |
+  | the base | 35.7 mm |
+
+  Across the stick it is wider than the positioner's face is near, as
+  the disc is. With the sled forward, which is as near as they come,
+  the disc is 40 mm beyond the end of the positioner's box.
+- **The stick's axis is 8 mm above the middle of the positioner's
+  height.** Level with the middle, the rim passed the near fence's
+  lip by 1.8 mm. The height has the room: the rows use 29.0 to 67.0
+  of its 80.
+- **The motor is in the sled's box:** on the bottom, under the deck,
+  between the rails, 147.6 mm from the spindle. Its shaft comes out
+  past the box's end and through its bracket to a pulley of 30 teeth
+  in the wheel's plane. The belt is a closed GT2 of 760 mm. The
+  bracket's foot is screwed to the sled's bottom through slots across
+  the sled, which tension the belt, and the belt's pull stays inside
+  the sled. Any closed belt from 738 to 774 mm puts the motor
+  somewhere it fits.
+- **Twelve to one.** The pulley had 20 teeth while the motor stood
+  208 mm off on the base. At 148 mm a pulley of 20 would have 4.8
+  teeth in the belt, and six is the least a toothed belt is usually
+  given. Thirty has 7.4. The stick's step is 0.0094°, 38 400 to a
+  turn. Half a degree is not a whole number of those, so an angle can
+  be half a step out: 0.0024 mm at the tile's edge.
+- **The disc** is between the hub and the wheel: 176 across and 8
+  thick, printed in one with a neck 60 across and 9 long toward the
+  wheel. It is bolted to the hub's flange. The wheel is screwed to
+  the neck's end by four screws on a 44 mm circle, through slack
+  holes, so the disc and then the wheel are each trued under an
+  indicator by their own rims. The disc carries the home flag, is
+  what a hand turns the stick by, and is what a lock would pinch:
+  the neck is the room an anvil needs behind it.
+- **Home** is a fin on the disc's inner face, 54 mm from the axis,
+  through an optical endstop screwed to the end of the deck under the
+  spindle.
+- **A cable follows the sled:** the motor's four wires, the sensor's
+  three and the probe's ground lead. It wants 188 mm of slack and
+  somewhere to lie. It is not drawn.
+
+Printed fits are untested.
+
+## The travel
+
+![Cut along the screw: at the left a motor on its bracket on a block on the base, a coupler, and the screw running right, in through the end of the sled's box above the sled's bottom, through a flanged nut on a block that stands on that bottom, and on under the deck](out/travel.png)
+
+- **The screw** is a T8 lead screw of four starts, 8 mm a turn and
+  250 long. It lies along the base, 42 mm over it and 74 mm from the
+  stick's axis on the far side, which is under the middle of the
+  sled's bottom: it pushes where the slips' drag is.
+- **Its motor** is a NEMA 17 on its bracket on a block of 1/2 in
+  plywood at the tail end of the base, beyond where the sled's end
+  comes. A rigid coupler joins the two. The screw's other end is
+  free and is carried by the nut. What a cut pushes back along the
+  screw goes into the motor's own bearings.
+- **The nut** is the screw's flanged nut, bolted to the outer face of
+  a block that stands on the sled's bottom just inside the tail end
+  of its box. Screw the block down last, with the sled at the
+  motor's end, so that it takes its place from the screw.
+- **Inside the box** the screw is between the rails, under the deck
+  and over the bottom. With the sled forward the nut's flange is
+  8 mm from the coupler; with it back, 20 mm of screw are past the
+  nut's block. Forward, the screw's end is 166 mm short of the
+  wheel's motor at the box's other end.
+- **A step is a hundredth of a millimetre:** the driver at 4
+  microsteps. The feed is 20 mm a second and the return 60, both set
+  in `firmware/config.py`.
+- **Coming home is checked every pass.** The sled runs back fast to
+  3 mm short of home and then slowly until its switch opens. How far
+  that was from where its steps said is what it lost on the way. Up
+  to half a millimetre it carries on, home again at the switch; more
+  and it stops, because the pass was not the one the table asked for.
+  The build runs the controller's own pass on a sled that loses
+  steps:
+
+  | lost | going | the controller |
+  |---|---|---|
+  | nothing | | home, 0.00 mm out |
+  | 0.3 mm | out | home, 0.30 out, carries on |
+  | 2 mm | out | stops: "the sled came home 2.0 mm out" |
+  | 10 mm | out | stops |
+  | 0.3 mm | back | home, 0.30 out, carries on |
+  | 12 mm | back | stops: its switch never opens |
+
+By the pauses the controller asks for between steps, the 573 passes
+take 2 h 37 min, in which the sled's screw turns 26 900 times. A
+Pico's own overhead adds to that; nothing has been timed.
+
+## What holds the stick: the belt
+
+While a hand pushed the sled, a toggle clamp held the stick, and it
+was sized for 60 N at the blank's corner, which is what a hand can
+push. A motor feeds the sled now, at a speed it is told, and only the
+belt and the wheel's motor hold the stick. So the build works out
+what every cut asks of them. **It is an estimate: none of it has been
+measured.**
+
+For each cutting row, in the table's order:
+
+1. The area of section the bite removes, followed on a grid of the
+   waste, 0.2 mm a cell.
+2. How hard the bit pushes: the power the cut takes, which is that
+   area, the feed and what it costs to cut a cubic millimetre, over
+   how fast the bit's edge passes; doubled, for the most a two-flute
+   bit pushes over what it pushes on average.
+3. The turning that is on the stick, taking the whole push at the
+   furthest thing the bite cuts.
+4. How far the tile's edge moves: that turning over how stiffly the
+   stick is held, which is the belt's two runs and the motor's own
+   hold, one after the other.
+
+| taken as | | why |
+|---|---|---|
+| cutting hardwood | 0.15 J a cubic millimetre | published figures run from 0.03 to 0.15; chips this thin are at the dear end |
+| the router | 16 000 rpm | the Colt's slowest: the slower the bit, the harder each tooth pushes |
+| the feed | 20 mm a second | `FEED_MM_S` in the controller's config |
+| a 6 mm GT2 belt | 8 000 N to stretch it by its own length | within a factor of two |
+| the motor's hold | 0.40 N m | a 40 mm NEMA 17 standing still |
+
+| | |
+|---|---|
+| held by the belt's two runs, 104 mm each | 2 025 N m a radian |
+| by the motor, through 12 to 1 | 2 880 |
+| the two together | 1 189 |
+| the heaviest cut: row 192, a roughing bite of 11.8 mm² | 13.3 N, 0.37 N m |
+| what stalls the motor | 13 times that |
+| the tile's edge moves, roughing | 0.009 mm at most |
+| in a finishing pass's earlier bites | 0.003 mm |
+| in a bite that leaves a finished face | 0.005 mm |
+
+The limits the build holds the table to are 0.010 mm at any cut and
+0.005 at one that leaves a face: a twentieth of the 0.4 mm that
+roughing leaves on, and a fifth of the 0.05 mm ridge a pass may leave.
+The bites are the deepest that pass: 2 mm for the straight bit, where
+it was 3, and 1 mm for the ball-nose, where it was 1.5. That is 97
+more rows than the 479 the table had, and nobody has to make them.
+At the old bites the heaviest roughing cut would have moved the edge
+0.013 mm.
+
+What the estimate leaves out: the bit's own bending, which for the
+slender ball-nose is of the same order; the belt's teeth giving in
+the pulley; and any backlash between belt and teeth, which a cut that
+changes the way it pushes would take up. If the stick is found to
+turn in the cut, the first thing to change is `FEED_MM_S`: half the
+feed is half the push. The second is the lock.
+
+### A lock, if it is ever wanted
+
+The lock the last machine had is still drawn: a post beside the
+headstock's riser, a push-pull toggle clamp on its own riser against
+the post, its plunger through the post to a pad on the disc's inner
+face, and a steel anvil on a spacer that comes round the disc's rim
+and in behind it, between the disc and the wheel. Each part has its
+own tab in the document, and none is in the assembly. The test moves
+them with the sled along its whole travel, so their place on the deck
+and behind the disc stays clear of everything else.
+
+To fit it, build those four parts and set `LOCK = True` in
+`firmware/config.py`. The build then puts them on the machine. The
+controller will not turn the stick until the lock's switch says it is
+let go, nor cut until it says it is thrown; it says so on the display
+for a hand, and raises a pin while it wants the spindle free, for
+whatever might work the clamp instead. The build runs the controller
+that way as well: it lets the lock go 203 times a stick. By hand that
+is the last machine again, at two and a half hours of standing by.
 
 ## What carries the stick
 
-Along the stick's axis, from the tail to the post behind the index
-head, and what each thing stands on:
+Along the stick's axis, from the tail to the wheel, and what each
+thing stands on:
 
 | | what | carried by |
 |---|---|---|
 | tail spindle | a 12 mm ground rod 91 long, a three-flat point on its end, bare for 26 mm beside the stick: the master | two KP001 pillow blocks, 44 mm between centres, bolted down on a riser |
 | the stick | the blank, 49 x 42 x 200 | the tail's point at one end, the socket at the other |
 | socket | printed, epoxied on the spindle's end | the spindle |
-| spindle | a 12 mm ground rod 147 long | two KP001 pillow blocks, 58 mm between centres, bolted down on a second riser |
-| star's hub, lock disc, star | on the spindle's far end, 49 mm out from the last block | the spindle; the disc is pinched between the clamp and its anvil, both on a post glued to the riser, the deck and the clamp's own riser |
-| *the sled ends here* | | |
-| index wheel, its hub | the pocket in the wheel's face is round the star when the sled is back | the wheel's own shaft, a 12 mm rod 90 long |
-| the wheel's shaft | | two KFL001 flange bearings on two uprights, 110 wide, on the index head's plate |
-| index head | plate, uprights, motor, home sensor | home, the star and two screw feet; away, three feet |
-| two bolts and springs | level with the axis, 40 mm each side of it | a post screwed to the base |
+| spindle | a 12 mm ground rod 148 long | two KP001 pillow blocks, 58 mm between centres, bolted down on a second riser |
+| *the sled's box ends here; its bottom goes on under what follows* | | |
+| hub, disc, wheel | on the spindle's far end; the wheel's middle is 44 mm out from the last block | the spindle |
 
 From the base up to the axis on the sled:
 
@@ -231,11 +357,11 @@ From the base up to the axis on the sled:
 |---|---|
 | slip | 3 |
 | sled's bottom, 3/4 in | 19.05 |
-| rail on edge | 58.15 |
+| rail on edge | 66.15 |
 | deck, 3/4 in | 19.05 |
 | riser, two layers of 1/2 in | 25.4 |
 | pillow block, foot to the shaft's centre | 19 |
-| the stick's axis | 143.65 |
+| the stick's axis | 151.65 |
 
 - **Pillow blocks on the sled.** The two spindles used to run in
   flange bearings on the faces of four thin uprights stood on their
@@ -260,45 +386,35 @@ From the base up to the axis on the sled:
   sled the nut must never be over one. With the sled back it is 4 mm
   past the tail's riser, which is why the master is 26 mm long where
   it was 21; with the sled forward it is 52 mm short of the head's.
-- **The index head keeps its flange bearings.** Its shaft is 113 mm
-  over its plate, so blocks would want a pedestal of five layers.
-  The uprights there are 110 wide, the loads on them are the belt's
-  pull, in their own plane, and 15 N of spring; and their faces are
-  where the home sensor and the two bolts are fixed, level with the
-  axis.
 - **How high the stack comes out does not matter.** Six plywood
   thicknesses are between the base and the axis. The positioner's
   height has 80 mm of travel and the six touches find where the bit
-  is level with the stick; the index head's three feet take up the
-  rest.
+  is level with the stick.
 
 ## The stick's drive, joint by joint
 
 | the sled's far end, cut along the stick's axis | the tail end, where the bit waits |
 |---|---|
-| ![From the left: the stick's uncut end in the socket's pocket with room behind it, the socket's boss with the rod in it, two pillow blocks on their riser, the star's hub, and the lock disc with the star on its outer face, the rod ending inside it](out/drive.png) | ![From the left: the tail spindle's rod through two pillow blocks on their riser, bare for 26 mm, and its end at the stick's end](out/tail.png) |
+| ![From the left: the stick's uncut end in the socket's pocket with room behind it, the socket's boss with the rod in it, two pillow blocks on their riser, the hub, the disc with its neck and the wheel on the neck's end, the rod ending inside the wheel; under the spindle, the home sensor on the end of the deck](out/drive.png) | ![From the left: the tail spindle's rod through two pillow blocks on their riser, bare for 26 mm, and its end at the stick's end](out/tail.png) |
 
 From the motor to the far end of the stick, what each part is joined
 to the next by:
 
 | from | to | joined by |
 |---|---|---|
-| motor, a NEMA 17 on a bracket on the index head's plate | its pulley, 20 teeth | the pulley's two set screws, one on the shaft's flat |
-| pulley | index wheel, 360 teeth, printed | a closed GT2 belt of 852 mm, 6.5 of the pulley's teeth in it. The bracket's slots tension it. Motor and wheel are on the one plate, so the belt's pull stays inside the head |
-| wheel | its hub | four M4 bolts through slack holes into the flange of a bought 12 mm hub on the wheel's back. The wheel's own bore is 13 and does not touch the shaft |
-| hub | the wheel's shaft, a 12 mm ground rod | the hub's set screws, on a flat ground on the rod |
-| shaft | index head | two KFL001 flange bearing units, one on each of the head's two uprights, between them |
-| wheel | star | the star's twelve tapered points in their negative in the wheel's face, while the sled is back; the head's springs keep them seated |
-| star and lock disc, printed in one | their hub | four M4 bolts through slack holes into the flange of a second hub, on the disc's inner face, its boss toward the headstock where a key reaches its set screws |
+| motor, a NEMA 17 on a bracket on the sled's bottom, in the sled's box | its pulley, 30 teeth | the pulley's two set screws, one on the shaft's flat |
+| pulley | wheel, 360 teeth, printed | a closed GT2 belt of 760 mm, 7.4 of the pulley's teeth in it. The bracket's slots tension it. Motor and wheel are both on the sled, so the belt's pull stays inside it |
+| wheel | the disc's neck | four screws on a 44 mm circle, through slack holes, into inserts in the neck's end. The wheel's own bore is 13 and does not touch the rod |
+| disc, printed in one with its neck and the home fin | its hub | four M4 bolts through slack holes into the flange of a bought 12 mm hub on the disc's inner face, its boss toward the headstock where a key reaches its set screws |
 | hub | spindle, a 12 mm ground rod | the hub's set screws, on a flat ground on the rod |
-| lock disc | sled | the toggle clamp, pinching the disc against its anvil whenever the sled is away from the wheel |
 | spindle | headstock | two KP001 pillow blocks bolted down on a riser. Their set screws hold the rod endways. No plywood is bored to a fit |
 | spindle | socket, printed | the rod's end, roughened, epoxied 22 mm into the socket's boss |
 | socket | stick | a pocket the blank's end stands 12 mm into, 0.3 mm slack all round, with two screws: one through the floor that jacks the blank toward the tail, one through a wall that locks it against the wall opposite |
 | stick | tail spindle | a point of three flats ground on the end of a second length of the rod |
 | tail spindle | tailstock | two more KP001 on a second riser. The rod is bare for 26 mm between the inner one and the stick, and that is the master a bit is set against |
-| wheel | controller | a fin on the wheel's back, 34 mm from the axis, through an optical endstop on the head's first upright once a turn |
-| clamp | controller | a switch on the lock post that the clamp's handle closes |
+| disc | controller | a fin on the disc's inner face, 54 mm from the axis, through an optical endstop on the end of the deck once a turn |
+| sled | base | the screw's flanged nut, on a block on the sled's bottom; the screw, in a rigid coupler on a NEMA 17 on the base |
+| sled | controller | a switch beside the back stop, which the end of the sled's bottom opens with the sled drawn back |
 
 The socket is the owner's idea, and it does three things a spur did
 not: it cannot slip, it puts the blank on the axis without a centre
@@ -308,19 +424,18 @@ cannot be where the bit comes onto the stick, so the bit waits at the
 tail and each pass stops before the socket: 21 mm of every stick is
 not cut.
 
-To buy: four KP001 pillow blocks and two KFL001 flange bearings, two
-12 mm flanged hubs, a 20-tooth GT2 pulley of
-5 mm bore, an 852 mm closed GT2 belt, an optical endstop, 12 mm
-ground rod for lengths of 147, 91 and 90 mm, a push-pull toggle
-clamp with a 10 mm plunger, a lever microswitch for it, a 16 mm pot
-magnet and a steel disc, two M5 bolts 50 long with a compression
-spring each, three round-headed M6 screws and inserts for the head's
-feet, two M5 set screws and inserts for the socket, two M6 spring
-plungers and inserts for the sled, a piece of 6 mm steel flat for the
-anvil, epoxy. The sizes in `build.py` are the catalogue's: measure
-the ones that come before drilling for them. To make: the printed
-wheel, star and socket, a flat on each rod for its hub, and three
-flats for the tail's point.
+To buy: four KP001 pillow blocks, a 12 mm flanged hub, a 30-tooth GT2
+pulley of 5 mm bore, a 760 mm closed GT2 belt, an optical endstop,
+12 mm ground rod for lengths of 148 and 91 mm, two NEMA 17 motors
+with their angle brackets (one more motor than the last machine had,
+and a fourth driver for it), a T8 lead screw 250 long of 8 mm a turn
+with its flanged nut, a rigid coupler from 5 mm to 8, a lever
+microswitch for the travel's home, two M5 set screws and inserts for
+the socket, four inserts for the disc's neck, two M6 spring plungers
+and inserts for the sled, epoxy. The sizes in `build.py` are the
+catalogue's: measure the ones that come before drilling for them. To
+make: the printed wheel, disc and socket, a flat on each rod for its
+hub, and three flats for the tail's point.
 
 - **Gluing the socket on.** Which way round it is on the rod is which
   way round the blank is to the controller, so glue it with the
@@ -336,38 +451,41 @@ flats for the tail's point.
   runout was measured that way round.
 - **The tail spindle turns with the stick,** which is why its point
   has flats. It is the master, and the half turn that finds its
-  runout is the motor's, through the wheel, the star and the stick.
-- **Truing the wheel, and the star.** Snug the wheel's four bolts,
-  hold a dial indicator on it where the belt runs, turn it, and tap
-  it until the needle moves 0.04 mm or less. Then tighten. That 0.04
-  is 0.02 off centre. Do the same for the star on its hub, with the
-  indicator on the lock disc's rim, to 0.06. What both buy is in
-  Setting up.
+  runout is the motor's, through the wheel and the stick.
+- **Truing the disc, and then the wheel.** Snug the disc's four
+  bolts, hold a dial indicator on its rim, turn it, and tap it until
+  the needle moves 0.06 mm or less. Then tighten. Do the same for the
+  wheel on the disc's neck, with the indicator where the belt runs,
+  to 0.04: that is 0.02 off centre. What it buys is in Setting up.
 - **Lining the stick up with the sled's travel** (`out/bands.csv`) is
   moving the tail's two pillow blocks: sideways in their bolt holes,
   up by shims under their feet.
-- **The home fin** is on the wheel and is read 34 mm from the axis,
-  so 0.02 mm there is 0.017 mm at the tile's edge. It matters only
+- **The home fin** is on the disc and is read 54 mm from the axis,
+  so 0.02 mm there is 0.011 mm at the tile's edge. It matters only
   when a stick is taken up again after the controller has been off.
-  Homing wants the sled back and the clamp open, so that the wheel
-  takes the stick with it. The sensor says home
-  over the fin's whole 10°, so an axis found already at home is first
+  Homing wants nothing but the foot switch: the bit is drawn back
+  first, out of whatever it was left in, then the sled, then the
+  height, then the wheel. The sensor says home
+  over the fin's whole 6.4°, so an axis found already at home is first
   run away until the sensor lets go, and 5° more, and then brought
   back: home is the same edge from the same side every time. The
   build runs the controller's homing from nine places to check it.
 
-## The table: 479 rows a stick
+## The table: 576 rows a stick
 
 | rows | what | bit |
 |---|---|---|
 | 1 | put the blank on | |
 | 1 | set the straight bit | Freud 04-110: 1/4 in straight, two flutes |
-| 185 | roughing: 83 places from 24 directions, in bites of 3 mm | |
+| 250 | roughing: 83 places from 24 directions, in bites of 2 mm | |
 | 1 | set the ball-nose | Freud 72-405: a 1/8 in ball tip, tapered to a 1/4 in shank over an inch |
-| 291 | finishing: 242 passes, the deep ones in bites of 1.5 mm | |
+| 323 | finishing: 242 passes, the deep ones in bites of 1 mm | |
 
 Both bits have 1/4 in shanks: the router is the North American Colt,
-and that is its collet.
+and that is its collet. The bites are as deep as the belt's hold
+allows: see [What holds the stick](#what-holds-the-stick-the-belt).
+Each row also says how far the sled is fed: 188 mm for a cut, nothing
+for the rest.
 
 ### The two bits
 
@@ -401,7 +519,7 @@ The collet nut is 20 mm across and the bits 6.35 and less, so at the
 far end of a pass the nut is beside the last of the stick that no bit
 reaches, and that is the blank as it was sawn, whatever has been cut
 off the rest. So the build checks the nut against the uncut blank at
-every one of the 476 cuts: with either bit 39.8 mm out or more, the
+every one of the 573 cuts: with either bit 39.8 mm out or more, the
 nut passes it by a millimetre. Set as short as the margin allows, the
 tapered bit is 39.9 out.
 
@@ -410,7 +528,8 @@ finishing pass from its own direction, the whole of a tapered bit
 kept out of the tile, each pass meeting its face 15° round the ball
 from its dead centre, roughing to 0.4 mm of the tile, the order
 settled before the bites are counted. Its README has the reasons.
-What changed is where the three numbers of a row come from.
+What changed is where a row's numbers come from, and that there is a
+fourth.
 
 - **The blank is a plain rectangle,** 49 x 42 mm, and 200 long of
   which 179 are cut. Its far end goes in the socket; the centre is
@@ -433,28 +552,28 @@ What changed is where the three numbers of a row come from.
   positioner's brief asks: a move back goes half a millimetre past
   and comes up to its place.
 
-A stick is about three hours: 500 pushes at a quarter of a minute,
-the clamp opened and closed 200 times at five or six seconds, and
-under half an hour of the motors (3.3 m of the depth's screw and
-4.7 m of the height's, at 1280 steps a millimetre; the wheel turns
-the stick 744° in all). Estimated.
+A stick is 2 h 37 min of the machine's own moving, by the pauses the
+controller asks for between steps: 573 passes of 188 mm, out at 20 mm
+a second and back at 60, and between them 3.0 m of the depth's screw
+and 4.5 m of the height's at 1280 steps a millimetre, and 744° of the
+wheel. Add the blank and the two bits, a few minutes of a hand. Not
+timed: nothing has been built.
 
 ## Every pass, animated
 
 ![Seen along the stick with the positioner on the right: a level blue cutter comes in from the right, moving up and down and in and out from one pass to the next, while the tan blank turns to a new angle between them; notches appear where the cutter has been, their outlines fading, until the blank has become the tile](out/passes_machine.gif)
 
-`animate.py` draws the table: all 476 cutting rows, a frame each. What
+`animate.py` draws the table: all 573 cutting rows, a frame each. What
 is left of the blank is tan, the pass being made is solid blue, and
 the passes before it are blue outlines that fade to white.
 
 This first one is **what the machine does**, seen from the
 headstock's end with the positioner on the right. The bit stays level.
 From one pass to the next it moves up or down (the positioner's Z) and
-in or out (its X), and the stick turns to a new angle (the index
-wheel). It starts with the blank as the table's first row hangs it, a
+in or out (its X), and the stick turns to a new angle (the wheel). It starts with the blank as the table's first row hangs it, a
 wide face level and underneath. A turn of more than 6° is shown on the
-way round, with the bit out of the picture. It runs 41 seconds: 185
-roughing passes, a pause where the bit is changed and set, 291
+way round, with the bit out of the picture. It runs 47 seconds: 250
+roughing passes, a pause where the bit is changed and set, 323
 finishing passes, and then the tile.
 
 ![The same passes with the tile held still: the cutter comes at it from one side after another](out/passes.gif)
@@ -487,7 +606,7 @@ the ball, its tapered flank and the shank.
 | | here | |
 |---|---|---|
 | X travel | 36.6 to 78.0 mm used of 80 | the far end of it: the deepest cut is 2 mm short of the end, and at home the bit's tip is 70 mm from the stick's axis, 36 clear of the blank's corners |
-| Z travel | 21.0 to 59.0 mm used of 80 | 60 would do |
+| Z travel | 29.0 to 67.0 mm used of 80 | 60 would do. The stick's axis is 8 mm above the middle of it, to lift the wheel's rim over the near fence's lip |
 | how it lies | on its lid, on the base | the stage's weight then pulls away from its column, onto the collar that has no thrust bearing yet |
 | its face from the stick's axis | 46 mm | the Colt's collet nut, tightened on a bit, is 30 mm in front of the quill by the owner's callipers, so at the deepest cut it is 12.1 out of the face, and the uncut blank's corners swing 33.5. The nut sets the distance, not the face |
 | the bit out of the collet nut | 41.9 mm | the blank's swing, and 8 mm past the stick's axis, which is as far as the planner may send the ball's tip. The router does not change it: the positioner stands back by what the nut stands out |
@@ -506,42 +625,52 @@ the build checks.
 
 `firmware/main.py` and `firmware/config.py` are MicroPython for a
 Raspberry Pi Pico; `out/passes.csv` is the table. It is the hinged
-sled's program with its two screws renamed and three things added: a
-bit set by touch, every move ending the same way, and the spindle's
-lock. It reads the table a row at a time, says what it wants on a
-small display and over USB, and keeps its place: taken up part way
-through a stick, it homes and sets the bit again before it cuts.
+sled's program with its two screws renamed and these added: a bit set
+by touch, every move ending the same way, a fourth motor that feeds
+the sled and finds its switch after every pass, and a lock on the
+spindle that is switched off. It reads the table a row at a time,
+says what it wants on a small display and over USB, and keeps its
+place: taken up part way through a stick, it homes and sets the bit
+again before it cuts.
 
-The lock is one switch and two rules. The wheel is turned only with
-the sled back and the clamp open; and after a turn nothing goes on
-until the clamp is closed. A row at a new angle is begun by opening
-the clamp, which nobody does by accident, so it needs no foot switch.
-The simulated run counts the openings, and the build checks the count
-against the table: 203.
+What it waits for a foot on: finding home; the blank put on; each
+bit, with the probe's clip on it; the clip parked; and the router
+switched on. Then it cuts by itself to the next bit or the end. The
+foot switch held down while a pass is made stops it after that pass.
+It stops itself if a touch disagrees with the one before, if a home
+switch never speaks, or if the sled comes home more than half a
+millimetre from where its steps said.
+
+The lock is an option, `LOCK` in `config.py`, and off. With it on,
+the wheel is turned only with the lock let go, and after a turn
+nothing goes on until it is thrown again. The simulated run counts
+how often that would be, and the build checks the count against the
+table: 203.
 
 | | |
 |---|---|
 | controller | Raspberry Pi Pico |
-| drivers | three TMC2209 modules; 8 microsteps for the screws, 16 for the wheel |
-| a screw's step | 0.00078 mm (M8 x 1.25) |
-| the stick's step | 0.00625°: 57 600 to a turn |
-| home switches | the quill drawn back and the stage at its home end (down, as it lies here), wired normally closed; and an optical endstop that the wheel's fin passes once a turn, which has to read high with the fin in it, as an opened switch does |
+| drivers | four TMC2209 modules; 8 microsteps for the positioner's screws, 16 for the wheel, 4 for the sled's screw |
+| a positioner screw's step | 0.00078 mm (M8 x 1.25) |
+| the sled's step | 0.01 mm (a T8 of 8 mm a turn) |
+| the stick's step | 0.0094°: 38 400 to a turn |
+| home switches | the quill drawn back, the stage at its home end (down, as it lies here) and the sled drawn back, wired normally closed; and an optical endstop that the disc's fin passes once a turn, which has to read high with the fin in it, as an opened switch does |
 
 | pin (GP) | to |
 |---|---|
 | 2, 3 | depth driver: step, direction |
 | 4, 5 | height driver: step, direction |
-| 6, 7 | the index wheel's driver: step, direction |
-| 8 | all three drivers' enable |
-| 9 | the lock's switch, on the sled: closed with the clamp thrown |
-| 10, 11, 12 | home switches: depth, height, the wheel's mark |
-| 13 | sled-back switch, on the back stop |
+| 6, 7 | the wheel's driver: step, direction |
+| 18, 19 | the sled's driver: step, direction |
+| 8 | all four drivers' enable |
+| 10, 11, 12, 13 | home switches: depth, height, the wheel's mark, the sled drawn back |
 | 14 | foot switch |
 | 15 | the probe's lead and clip; the spindle and the clip's parking post to ground |
 | 16, 17 | display: SDA, SCL |
+| 9, 20 | if a lock is fitted: its switch, closed with the clamp thrown; and a pin raised while the controller wants it let go |
 
-No motor rides on the sled. Two wires do: the lock switch's, and the
-ground lead to the spindle that the probe needs.
+One motor rides on the sled, and the home sensor. Their wires and
+the probe's ground lead to the spindle follow it.
 
 ## Setting up a built machine
 
@@ -582,15 +711,15 @@ repeating to 0.01 mm. The worst finishing cut of each:
 
 | | median | 95 in 100 | worst of 300 |
 |---|---|---|---|
-| from the drawing's table | 1.63 mm | 3.00 | 3.22 |
+| from the drawing's table | 1.63 mm | 3.00 | 3.24 |
 | after the six touches, the spindle turning true | 0.045 mm | 0.073 | 0.083 |
 | the same, were the depth's screw true | 0.040 | 0.068 | 0.077 |
 | and the two travels square as well | 0.015 | 0.028 | 0.038 |
-| after the six touches, with the turning as it would be: wheel trued to 0.02 off centre, pulley 0.03, star and pocket 0.03 each, the star home within 0.01 | 0.051 | 0.081 | 0.089 |
-| the same, the wheel left 0.1 off as printed | 0.055 | 0.084 | 0.104 |
+| after the six touches, with the turning as it would be: wheel trued to 0.02 off centre, pulley 0.03 | 0.047 | 0.075 | 0.083 |
+| the same, the wheel left 0.1 off as printed | 0.052 | 0.082 | 0.094 |
 
 One machine is recorded in `out/calibration.json` as probed by the
-controller's own program on a computer: 0.81 mm out from the drawing's
+controller's own program on a computer: 0.83 mm out from the drawing's
 table, 0.033 planned for. The test works it again.
 
 **The touches cannot find how far the stick has turned.** The
@@ -599,15 +728,12 @@ out once a turn, and the stick is that much over the wheel's 114.6 mm
 pitch radius from where the motor sent it: 0.01 mm off centre is
 0.003 mm at the furthest cut. The motor's pulley does the same once a
 turn of its own, and the ratio brings it to the same figure. The
-index adds two things of its own. The star comes home in the wheel
-for every new angle and not quite where it did the time before:
-0.01 mm at its flanks is 0.006 mm at the furthest cut. And a star or
-a pocket off its centre rolls the head, by 0.03 mm over the head's
-330 mm stance: under 0.006 mm for the two together. So the last two
-rows: all of it costs 0.006 mm on the median, and a wheel left as
-printed, which on the sled's own small wheel cost 0.02, now costs
-0.005 more. The star's homecoming is my estimate; nothing has been
-printed to measure it.
+wheel is on the stick's own spindle, so there is nothing between the
+motor and the stick but the belt, and those two are all there is to
+add: the last two rows. Trued, they cost 0.002 mm on the median; with
+the wheel left as printed, 0.005 more. The star and its pocket, which
+the last machine had between the wheel and the stick, cost 0.004 of
+their own, and are gone.
 
 **What the touches do not find is whether the two travels are
 square**, and that is most of what is left. The pin is level with
@@ -623,15 +749,13 @@ square.
 ### 2. Whether the stick runs true: `out/bands.csv`
 
 The stick's axis has to run parallel to the sled's travel. A scrap
-stick goes on with a stop clamped 25 mm in from each
-end. The table sets the straight bit and, in three bites, has the
-sled pushed to the far stop and drawn back to the near one, and the
-stick turned once round at each: first with the bit's end at the
-stick from the front, then with its side over the stick. Away from
-its back stop the sled has no motor, so those turns are made by
-hand: open the clamp, turn the lock disc once round to its mark,
-close the clamp, foot switch. Twelve of them. Four bands, four
-diameters:
+stick goes on. The table sets the straight bit and, in three bites,
+has the sled's screw take the stick to a place near its far end and
+then to one 150 mm nearer the tail, and the wheel's motor turn it
+once round at each: first with the bit's end at the stick from the
+front, then with its side over the stick, 10 mm nearer the tail so
+that neither cuts where the other has. Twelve turns, by the machine.
+Four bands, four diameters:
 
 ```sh
 python3 calibrate.py align FRONT_NEAR FRONT_FAR TOP_NEAR TOP_FAR
@@ -649,35 +773,36 @@ and up or down. All of it is simulation.
 | the datum fence, and the sled's edge on it | straight | lay a straightedge along each: their bow is cut into the stick, one for one |
 | the base under the two slips | flat along the travel | the sled's height is the bit's height on the stick, so a hump is cut in too |
 | the bit's length | 41.9 mm out of the collet nut, give or take 2 | the controller measures what it is, and stops if a row is out of the quill's reach. Shorter than 39.8 the nut meets the blank; longer than 44.5 the tapered bit has under 19 mm in the collet |
-| the wheel | 360 teeth, printed, 232 across; a closed belt of 852; the motor 207.8 from the wheel's shaft, in slots | it fits a 256 mm bed with 12 to spare each side. 0.1 mm off centre is 0.05° once a turn, 0.027 mm at the furthest cut: true it on its hub under an indicator |
-| the star and its pocket | 115.5 over the points, 10° a side, 20 deep; printed | try the star in the pocket before anything is bolted up: its flanks must seat with the disc still 1.5 mm off the boss |
-| the three rods | 12 mm ground rod: 147 long for the sled's spindle, 91 for the tail, 90 for the wheel's shaft | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
+| the wheel | 360 teeth, printed, 232 across; a closed belt of 760; the motor 147.6 from the spindle, in slots | it fits a 256 mm bed with 12 to spare each side. 0.1 mm off centre is 0.05° once a turn, 0.027 mm at the furthest cut: true it on the disc's neck under an indicator |
+| the belt | a closed GT2 of 760 mm, 380 teeth | anything from 738 to 774 mm fits: the slots take up a tooth or two, and for more the bracket is screwed down somewhere else on the sled's bottom |
+| whether the belt holds the stick | estimated: the tile's edge moves 0.009 mm at the heaviest cut | cut a scrap stick, stop after a roughing bite, and look for a step where the bit came on. If there is one, halve `FEED_MM_S` |
+| the two rods | 12 mm ground rod: 148 long for the sled's spindle, 91 for the tail | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
+| the travel's screw | a T8 of four starts, 8 mm a turn, 250 long | lead screws are sold with 2, 4 and 8 mm a turn under one name: `TRAVEL_STEPS_PER_MM` is 800 over what this one has |
 | the four pillow blocks | KP001: the shaft's centre 19 over the foot, 71 long, 38 high, 16 along the shaft, bolts 56 apart | the 19 is a casting's, and it is the stick's height: measure all four, pair the two most alike on the tail, and shim the rest to them |
-| the bought parts | KFL001 16 thick, 38 x 63, bolts 48 apart; the hub's flange 36 across, bolts on a 28 circle; the clamp's body 36 x 24 x 90 with a 10 mm plunger | catalogue sizes, and makers differ: measure before drilling, and before printing the bolt holes in the wheel and the disc. The clamp's riser and the hole in the lock post are made to the clamp in hand |
+| the bought parts | the hub's flange 36 across, bolts on a 28 circle; the nut's flange 22 across and its body 10.2; a motor's shaft 24 long | catalogue sizes, and makers differ: measure before drilling, and before printing the bolt holes in the disc. A shaft shorter than 22 mm does not reach the wheel's plane: move the bracket out |
 | the blank's end in the socket | 49 x 42 with 0.3 mm all round | saw and plane the blanks to one size and print the pocket to that; the lock screw takes up what is left |
 
 ## Parts
 
 | part | size, mm | |
 |---|---|---|
-| base | 924 x 474 ply | the positioner lies on it, its tube overhanging behind; the index head stands on its far end |
-| datum fence | 647 long, 30 wide, 22 high, and a lip 6 thick reaching 10 over the sled | as straight as can be had: metal for choice |
-| near fence | 647 long, 14 wide, 22 high, and a lip 6 thick reaching 7 over the sled | against the positioner's face |
-| slips, 2 | 601 x 30 x 3 | something slippery: UHMW tape on a strip, or HDPE |
-| sled's bottom | 413 x 211, 3/4 in ply | between the fences; two M6 spring plungers in its near edge, a steel disc let into its far end |
-| sled's box | two rails 413 x 58 on edge and a deck 413 x 208, 3/4 in ply | on the bottom, 12 mm in from its far edge; the near rail 9 in from the near edge, the deck 18 out over it |
+| base | 807 x 474 ply | the positioner lies on it, its tube overhanging behind; the travel's motor stands on its tail end |
+| datum fence | 700 long, 30 wide, 22 high, and a lip 6 thick reaching 10 over the sled | as straight as can be had: metal for choice |
+| near fence | 700 long, 14 wide, 22 high, and a lip 6 thick reaching 7 over the sled | against the positioner's face |
+| slips, 2 | 653 x 30 x 3 | something slippery: UHMW tape on a strip, or HDPE |
+| sled's bottom | 465 x 211, 3/4 in ply | between the fences; two M6 spring plungers in its near edge |
+| sled's box | two rails 413 x 66 on edge and a deck 413 x 208, 3/4 in ply | on the bottom, 12 mm in from its far edge; the near rail 9 in from the near edge, the deck 18 out over it; the bottom 52 longer at the far end |
 | tailstock, headstock | each a riser of two 1/2 in layers, 76 wide: 69 long for the tail, 76 for the head | glued face down on the deck; two KP001 pillow blocks bolted down on each |
 | tail spindle | 12 mm ground rod, 91 long | a three-flat point on its end; 26 mm bare as the master |
-| spindle | 12 mm ground rod, 147 long | its end in the socket's boss; the star's hub outboard, the rod ending inside the star |
+| spindle | 12 mm ground rod, 148 long | its end in the socket's boss; the hub, the disc and the wheel outboard, the rod ending inside the wheel |
 | blank socket | printed, 58 x 51 x 26 with a boss 26 across and 22 long | a pocket 20 deep for the blank's end; a jack screw in its floor, a lock screw in a wall |
-| star and lock disc | printed in one: a disc 176 across and 8 thick, the star 115.5 over its points and 20 long on its face, bore 13 | on a 12 mm flanged hub, trued by the disc's rim |
-| lock post, riser | 3/4 in ply: a post 75 x 72 beside the headstock's riser, a riser 90 x 36 x 32 for the clamp, hard against the post | glued and nailed to the deck and to each other; the plunger's hole through the post is 14 |
-| lock | a push-pull toggle clamp; a spacer 29 thick and a 6 mm steel plate 42 x 40 on the post's face | the plate reaches in behind the disc, 0.3 mm clear of it until the clamp closes |
-| index wheel | printed: 360 teeth, 232 across, 12 wide, a boss 134 across and 12 long on its face with the star's pocket in it, a fin on its back | on a 12 mm flanged hub on a 90 mm rod in two KFL001 flange bearings |
-| index head | 3/4 in ply: a plate 137 x 289 with a slot 20 x 120 under the wheel's rim and the belt, two uprights 110 wide and 159 high | on three round-headed screws, 6 mm off the base; the motor on a bracket at its far side, low |
-| home sensor | an optical endstop | on the head's first upright, facing the wheel's back, over the axis |
-| spring post | 3/4 in ply, 110 wide and 169 high, on a foot 60 long | screwed to the base 25 mm behind the head; two 8 mm holes, level with the axis and 80 apart, for the head's M5 bolts and springs |
-| stops, 2 | blocks 40 x 40 x 22 on the base, between the fences | the back one carries the sled-back switch and the magnet |
+| disc | printed in one: 176 across and 8 thick, a neck 60 across and 9 long, a fin 12 long on its inner face, bore 13 | on a 12 mm flanged hub, trued by its rim |
+| wheel | printed: 360 teeth, 232 across, 12 wide, bore 13 | on the end of the disc's neck, four screws on a 44 circle, trued by its own rim |
+| wheel's motor | a NEMA 17 on its angle bracket, a 30-tooth pulley, a 760 mm closed belt | in the sled's box at its far end, the bracket's foot on the sled's bottom, slotted across the sled |
+| home sensor | an optical endstop | on the end of the deck, under the spindle, facing the disc |
+| travel | a T8 screw 250 long, 8 mm a turn; its flanged nut on a block 19 x 44 x 34; a NEMA 17 on its bracket on a block 54 x 50 of 1/2 in ply; a rigid coupler | the nut's block on the sled's bottom inside the box's tail end; the motor's on the base's tail end |
+| stops, 2 | blocks 40 x 40 x 22 on the base, between the fences | a millimetre beyond each end of the travel; the travel's home switch beside the back one |
+| a lock, not fitted | 3/4 in ply: a post 75 x 72 beside the headstock's riser, a riser 90 x 36 x 32 for a push-pull toggle clamp, hard against the post; a spacer 29 thick and a 6 mm steel plate 42 x 40 on the post's face | see [A lock, if it is ever wanted](#a-lock-if-it-is-ever-wanted) |
 | router positioner | 496 x 238 x 533, plywood | its own example |
 
 ## What the test checks

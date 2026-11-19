@@ -4,29 +4,49 @@
 # Each motor's driver: step pin, direction pin, and which way is positive.
 DEPTH_PINS = (2, 3)             # the positioner's X: the quill, along the bit. Positive runs the bit out toward the stick
 HEIGHT_PINS = (4, 5)            # the positioner's Z: the stage. Positive is away from its home, which in this machine is up
-TURN_PINS = (6, 7)              # the index wheel's motor: it turns the stick while the sled is back and the star is in the wheel
-ENABLE_PIN = 8                  # all three drivers' enable, low to run
+TURN_PINS = (6, 7)              # the index wheel's motor: on the sled, with the wheel on the sled's own spindle
+TRAVEL_PINS = (18, 19)          # the sled's own screw. Positive takes the stick past the bit, from its tail end toward the socket
+ENABLE_PIN = 8                  # all four drivers' enable, low to run
 DEPTH_FLIP = False              # True if the motor runs the wrong way
 HEIGHT_FLIP = False
 TURN_FLIP = False
+TRAVEL_FLIP = False
 
 # Switches, each from its pin to ground: closed reads 0.
-# The three home switches are wired normally closed: they open at home, so a wire that comes off
+# The four home switches are wired normally closed: they open at home, so a wire that comes off
 # reads as home and the motor stops instead of driving into its end. Set False for switches that close at home.
 HOME_OPENS = True
 DEPTH_HOME_PIN = 10             # the quill drawn right back
 HEIGHT_HOME_PIN = 11            # the stage at its home end
 TURN_HOME_PIN = 12              # once a turn of the index wheel, at its mark
+TRAVEL_HOME_PIN = 13            # the sled drawn back: the bit beside the master and clear of the stick
 DEPTH_MOST_MM = 70.0            # homing gives up if the switch has not spoken in this much travel
 HEIGHT_MOST_MM = 90.0
+TRAVEL_MOST_MM = 200.0
 # An axis found already at home is first run away until its switch lets go and this much further, then brought
-# back: home is the same edge from the same side every time. The wheel's fin is 10 degrees wide.
+# back: home is the same edge from the same side every time. The wheel's fin is 6 degrees wide.
 HOME_CLEAR_MM = 1.0
 TURN_CLEAR_DEG = 5.0
-SLED_BACK_PIN = 13              # closed with the sled against its back stop, the bit beside the master and clear of the stick
-LOCK_PIN = 9                    # closed with the spindle's clamp thrown: the stick held at its angle, free to leave the wheel
-NEXT_PIN = 14                   # the foot switch
+NEXT_PIN = 14                   # the foot switch: to go on, and held down between two passes to pause
 LED_PIN = 25
+
+# The sled is fed past the bit by its own motor and brought back, a pass a row. Coming back it runs fast to a little
+# short of home and then finds its switch, every time, and counts how far that was from where its steps said. More
+# than HOME_SLIP_MM and it stops: it stalled in a cut, or the screw's nut is loose, and the pass was not what the
+# table asked for.
+FEED_MM_S = 20.0                # past the bit, cutting
+RETURN_MM_S = 60.0              # and back
+HOME_SHORT_MM = 3.0
+HOME_SLIP_MM = 0.5
+BAND_US = 900                   # the pause between the wheel's steps while a band is turned on a scrap stick: 7 degrees a second
+
+# A lock on the spindle, if one is ever fitted: a clamp that pinches the disc beside the wheel. Nothing in the plan
+# needs it: the wheel's belt holds the stick while it is cut. With LOCK True the controller will not turn the stick
+# until the lock's switch says it is let go, nor cut until it says it is thrown; it raises LOCK_OUT_PIN while it wants
+# the spindle free, for whatever might work the clamp, and says so on the display for a hand.
+LOCK = False
+LOCK_PIN = 9                    # closed with the clamp thrown
+LOCK_OUT_PIN = 20
 
 # A display, if there is one: an SSD1306, 128 x 64, on I2C. Put MicroPython's ssd1306 driver on the Pico
 # (mpremote mip install ssd1306). Without it everything is still said over USB.
@@ -51,10 +71,12 @@ PLACE_FILE = "at.txt"
 
 # Steps for a millimetre of screw and a degree of spindle.
 # 200-step motors; the positioner's screws M8 rod, 1.25 mm a turn (a T8 of 2 mm lead: 200 * 8 / 2.0);
-# the drivers at 8 microsteps for the screws and 16 for the wheel; a 20-tooth pulley driving a wheel of 360.
+# the drivers at 8 microsteps for those screws and 16 for the wheel; a 30-tooth pulley driving a wheel of 360.
+# The sled's screw is a T8 of four starts, 8 mm a turn, its driver at 4 microsteps: a hundredth of a millimetre a step.
 DEPTH_STEPS_PER_MM = 200 * 8 / 1.25
 HEIGHT_STEPS_PER_MM = 200 * 8 / 1.25
-TURN_STEPS_PER_DEG = 200 * 16 * (360 / 20) / 360.0
+TURN_STEPS_PER_DEG = 200 * 16 * (360 / 30) / 360.0
+TRAVEL_STEPS_PER_MM = 200 * 4 / 8.0
 
 # A nudge to every row: positive moves it further from home. Leave these at nothing: where the stick's axis is
 # from the positioner's home switches is found by touching (calibrate.py) and planned for in the table itself.
@@ -62,8 +84,8 @@ DEPTH_TRIM_MM = 0.0
 HEIGHT_TRIM_MM = 0.0
 TURN_TRIM_DEG = 0.0
 
-# Every move ends going the same way, away from home: one that goes back goes this far past and comes up to its
-# place. The spindle the same, in degrees.
+# Every move of the positioner ends going the same way, away from home: one that goes back goes this far past and
+# comes up to its place. The spindle the same, in degrees.
 PAST_MM = 0.5
 TURN_PAST_DEG = 3.0
 

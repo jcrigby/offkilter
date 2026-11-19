@@ -1,5 +1,5 @@
 """The stick sled's planning: which cuts make the tile, and where the
-three motors stand for each. Pure Python, no kernel: build.py hands it
+positioner's two motors and the spindle's stand for each. Pure Python, no kernel: build.py hands it
 the tile's outline and writes what it returns.
 
 A cut is (t, across, tip): the stick turned so that the direction t of
@@ -23,12 +23,12 @@ RIDGE = 0.05                    # what a pass may leave standing between it and 
 FACE_MIN = 0.2                  # the ball cuts no further round its side than this: the cosine between the bit and the face (78 deg)
 OFF_CENTRE = 15.0               # degrees: a pass meets its face this far round the ball from its tip, where it can. The tip's dead centre does not turn; 15 deg round, the edge passes at a metre a second
 Y_LIM = 19.0                    # the planner keeps the cutter this near the axis; the positioner's height travel has twice that
-ROUGH_BIT, ROUGH_BITE = 6.35, 3.0   # roughing: a straight quarter-inch bit, Freud 04-110, and the most it takes at a bite
+ROUGH_BIT, ROUGH_BITE = 6.35, 2.0   # roughing: a straight quarter-inch bit, Freud 04-110, and the most it takes at a bite. It was 3 while a hand pushed the sled and a clamp held the stick; a motor feeds it now and only the belt holds, so the bites are the deepest that build.py's estimate of the belt's give allows
 ROUGH_LONG = 73.025             # end to end: 2-7/8 in
 ROUGH_STEP = 3.0                # its places across, a little under half its width apart
 ROUGH_ANGLES = 24               # the directions it roughs from, 15 deg apart
 ALLOW = 0.4                     # what roughing leaves on the tile for the ball-nose
-BALL_BITE = 1.5                 # the most the ball-nose takes at a bite
+BALL_BITE = 1.0                 # the most the ball-nose takes at a bite: it was 1.5
 BLANK = 2.0                     # the blank: a rectangle about the tile, at least this much over on every side
 CELL = 0.2                      # the grid the waste is followed on
 DIRS = 720                      # directions tried for a pass: every half degree
@@ -385,6 +385,49 @@ def bites(outline, places, passes):
         q["depth"] = depth
         q["bites"] = max(1, math.ceil(depth / BALL_BITE - 1e-9))
     return kept, {"waste": waste, "rough_area": rough_area, "left_after_rough": left_after_rough, "left_at_end": sum(alive) * CELL * CELL}
+
+
+def takes(outline, cuts):
+    """What each cut really takes, followed on the grid of the waste in the order given. `cuts` are (tool, t, across,
+    tip), the tool 'ball' or 'straight'. For each: the area of section it removes, how far the waste stood over it,
+    and how far from the stick's axis the furthest of what it removes was."""
+    cells, _ = waste_cells(outline)
+    live, out = list(range(len(cells))), []
+    for tool, t, y, tip in cuts:
+        d, e = frame(t)
+        ball, r = tool == "ball", (BIT if tool == "ball" else ROUGH_BIT) / 2
+        keep, count, top, far = [], 0, 0.0, 0.0
+        for i in live:
+            q = cells[i]
+            off = abs(q[0] * e[0] + q[1] * e[1] - y)
+            h = q[0] * d[0] + q[1] * d[1]
+            if ball:
+                f = flank(off, r)
+                if f is None or h < tip + r + f:
+                    keep.append(i)
+                    continue
+                top = max(top, h - (tip + r + f))
+            else:
+                if off > r or h < tip:
+                    keep.append(i)
+                    continue
+                top = max(top, h - tip)
+            count += 1
+            far = max(far, math.hypot(q[0], q[1]))
+        live = keep
+        out.append((count * CELL * CELL, top, far))
+    return out
+
+
+def cutting_dia(tool, top):
+    """The diameter a bit cuts at, for working out how fast its edge passes: the straight bit's own; the ball-nose's
+    half way up what it is cutting, which is small where it only skims and no less than a millimetre."""
+    if tool != "ball":
+        return ROUGH_BIT
+    r, a = BIT / 2, top / 2
+    if a < r:
+        return max(1.0, 2 * math.sqrt(max(0.0, 2 * r * a - a * a)))
+    return min(SHANK, BIT + 2 * (a - r) * math.tan(math.radians(TAPER)))
 
 
 # -- the positioner's two axes and the spindle --------------------------------

@@ -1,20 +1,28 @@
 """The stick sled's controller: MicroPython on a Raspberry Pi Pico.
 
-It reads passes.csv, a row a cut, each row where the three motors
-stand: the positioner's quill run out so many millimetres from its
-home (the depth), its stage so many from its (the height), and the
-spindle's degrees on from its mark. For a pass it waits until the sled
-is against its back stop and the foot switch pressed, moves, and waits
-while the sled is pushed past the bit and drawn back by hand. Nothing
-moves while the stick is beside the bit.
+It reads passes.csv, a row a cut, each row where three motors stand
+and how far the fourth goes: the positioner's quill run out so many
+millimetres from its home (the depth), its stage so many from its (the
+height), the spindle's degrees on from its mark, and how far along the
+sled is fed. For a pass the positioner and the spindle go to the row
+with the sled drawn back, where the bit is beside the stick's end and
+not in it; then the sled's own screw feeds the stick past the bit and
+brings it back. Nobody pushes anything. The positioner and the spindle
+do not move while the stick is beside the bit.
 
-The stick's motor is not on the sled. It turns a large wheel that
-stays at the end of the base, and a tapered star on the sled's spindle
-is in that wheel only while the sled is back. So a row at a new angle
-goes: sled back, unlock the spindle's clamp, the wheel turns the stick,
-lock the clamp, make the pass. Rows at the same angle need neither.
-The clamp's switch says which it is, and the wheel is never turned
-with the clamp thrown.
+Coming back, the sled runs fast to a little short of home and then
+finds its switch, every pass. If that is not where its steps said, it
+stalled in a cut, and the controller stops there.
+
+The stick's motor is on the sled, and its wheel is on the sled's own
+spindle: the belt holds the stick while it is cut. A lock on the
+spindle is an option (config.LOCK), for a machine whose belt turns out
+not to hold: with it the controller will not turn the stick until the
+lock is let go, nor cut until it is thrown.
+
+The foot switch starts each stage: homing, a bit set, the router on.
+Held down while a pass is made, it stops the table after that pass
+until it is pressed again.
 
 A bit is set by touch. The probe's clip goes on the bit, the router
 off; the controller runs the bit out until it touches the master on
@@ -30,13 +38,14 @@ The same program runs the two tables that set a built machine up,
 copied to the Pico as passes.csv in their turn: probe.csv, which
 touches a pin in the collet on the master from in front, above and
 below, and writes where the screws stood to probe_log.csv; and
-bands.csv, which has round bands turned by hand on a scrap stick to
-show whether the stick runs true to the sled's fence. calibrate.py reads both.
+bands.csv, which turns round bands on a scrap stick to show whether
+the stick runs true to the sled's fence. calibrate.py reads both.
 
 Copy main.py, config.py and passes.csv to the Pico. On a computer,
 `python3 main.py --sim passes.csv steps.json [row]` runs the same code
 on pins that do nothing and writes where every row left the motors;
-with a row, as if taken up again after that row.
+with a row, as if taken up again after that row. `--lock` anywhere
+after the script's name runs it as if a lock were fitted.
 """
 try:
     import machine
@@ -56,6 +65,7 @@ class Pins:
     def __init__(self):
         self.out = {}
         self.inp = {}
+        self.clock = 0              # on a computer: the pauses asked for, added up, microseconds
 
     def output(self, n):
         if not SIM:
@@ -68,6 +78,8 @@ class Pins:
     def set(self, n, v):
         if not SIM:
             self.out[n].value(1 if v else 0)
+        elif STEPS:
+            STEPS(n, v)
 
     def closed(self, n):
         return True if SIM else self.inp[n].value() == 0
@@ -87,11 +99,14 @@ class Pins:
     def pause(self, us):
         if not SIM:
             utime.sleep_us(us)
+        else:
+            self.clock += us
 
 
 PINS = Pins()
 CONTACT = None                      # on a computer: something to stand in for the probe's contact
 HOME = None                         # and for the home switches
+STEPS = None                        # and something to be told of every pin set, to follow a motor step by step
 
 
 class Axis:
@@ -108,37 +123,61 @@ class Axis:
         """The table's number as steps, moved by the trim."""
         return int(round((units + self.trim) * self.per_unit))
 
-    def run(self, steps, guard=None, slow=None):
-        """Step by `steps`, ramping up and down. `guard` is asked every step; while it says no, wait."""
+    def run(self, steps, guard=None, slow=None, fast=None):
+        """Step by `steps`, ramping up to a pause of `fast` between steps (the config's fastest, unless given) and
+        down again; or at a steady `slow`. `guard` is asked every step; while it says no, wait."""
         if steps == 0:
             return
         up = steps > 0
-        PINS.set(self.dir, up != self.flip)
         n = abs(steps)
-        for i in range(n):
-            while guard is not None and not guard():
-                PINS.pause(20000)
-            edge = min(i, n - 1 - i)
+        top = C.STEP_FAST_US if fast is None else fast
+
+        def pause(edge):
             if slow is not None:
-                us = slow
-            elif edge >= C.RAMP_STEPS:
-                us = C.STEP_FAST_US
-            else:
-                us = C.STEP_SLOW_US - (C.STEP_SLOW_US - C.STEP_FAST_US) * edge // C.RAMP_STEPS
-            PINS.set(self.step, 1)
-            PINS.pause(2)
-            PINS.set(self.step, 0)
-            PINS.pause(us)
+                return slow
+            if edge >= C.RAMP_STEPS or top >= C.STEP_SLOW_US:
+                return top
+            return C.STEP_SLOW_US - (C.STEP_SLOW_US - top) * edge // C.RAMP_STEPS
+        if SIM and STEPS is None:   # on a computer nothing is listening: the same steps and the same pauses, counted and not taken
+            ramp = min(C.RAMP_STEPS, (n + 1) // 2)
+            PINS.clock += 2 * n + sum(pause(e) * (2 if 2 * e + 1 < n else 1) for e in range(ramp)) + pause(C.RAMP_STEPS) * max(0, n - 2 * ramp)
+        else:
+            PINS.set(self.dir, up != self.flip)
+            for i in range(n):
+                while guard is not None and not guard():
+                    PINS.pause(20000)
+                PINS.set(self.step, 1)
+                PINS.pause(2)
+                PINS.set(self.step, 0)
+                PINS.pause(pause(min(i, n - 1 - i)))
         self.at += steps
         self.stepped += n
 
-    def to(self, units, guard=None, slow=None):
+    def to(self, units, guard=None, slow=None, fast=None):
         """To a place, arriving going away from home: a move back goes a little past and comes up to it."""
         steps = self.steps_for(units) - self.at
         if steps < 0 and self.past and self.at + steps - self.past >= 0:
-            self.run(steps - self.past, guard, slow)
+            self.run(steps - self.past, guard, slow, fast)
             steps = self.past
-        self.run(steps, guard, slow)
+        self.run(steps, guard, slow, fast)
+
+    def find(self, pin, most):
+        """Run toward home until its switch says so, and call that zero. How many steps it took. No further than
+        `most` of its units: a switch that never speaks is a fault."""
+        PINS.set(self.dir, self.flip)       # home is the negative way
+        left, taken = int(most * self.per_unit), 0
+        while not PINS.home(pin):
+            if left <= 0:
+                PINS.set(C.ENABLE_PIN, 1)
+                raise RuntimeError("the %s axis's home switch never changes" % self.name)
+            PINS.set(self.step, 1)
+            PINS.pause(2)
+            PINS.set(self.step, 0)
+            PINS.pause(C.STEP_SLOW_US)
+            left, taken = left - 1, taken + 1
+        self.stepped += taken
+        self.at = 0
+        return taken
 
     def seek(self, pin, most, clear):
         """Run toward home until its switch says so; that is zero. If it says so before a step is taken, first run
@@ -161,11 +200,7 @@ class Axis:
                 if not PINS.home(pin):
                     more -= 1
                 left = step(left)
-        PINS.set(self.dir, self.flip)       # home is the negative way
-        left = int(most * self.per_unit)
-        while not PINS.home(pin):
-            left = step(left)
-        self.at = 0
+        self.find(pin, most)
 
 
 class Screen:
@@ -215,16 +250,8 @@ def wait(pin):
     return held
 
 
-def wait_for_the_cut():
-    """Until the sled has left its back stop and come back to it: the cut has been made."""
-    if SIM:
-        return
-    while PINS.closed(C.SLED_BACK_PIN):
-        utime.sleep_ms(20)
-    utime.sleep_ms(300)
-    while not PINS.closed(C.SLED_BACK_PIN):
-        utime.sleep_ms(20)
-    utime.sleep_ms(100)
+FEED_US = int(round(1e6 / (C.FEED_MM_S * C.TRAVEL_STEPS_PER_MM)))        # the pause between the sled's steps, cutting
+RETURN_US = int(round(1e6 / (C.RETURN_MM_S * C.TRAVEL_STEPS_PER_MM)))    # and coming back
 
 
 def place(total):
@@ -244,9 +271,10 @@ def keep_place(n, total):
 
 
 class Table:
-    """passes.csv: '#safe,<mm>' then rows of n,kind,tool,depth,height,turn,via,label.
+    """passes.csv: '#safe,<mm>' then rows of n,kind,tool,depth,height,turn,via,along,label.
     via is 'd' for a move that may go straight to its row, 's' for one that must first draw the bit back to the safe
-    depth, 'h' for one that must draw it right back.
+    depth, 'h' for one that must draw it right back. along is how far the sled is fed for the row, millimetres from
+    where it is drawn back: the length of a pass, or where a band is turned.
     Read a row at a time, every time it is gone through: a Pico has not the memory for five hundred rows at once."""
 
     def __init__(self, path):
@@ -275,7 +303,7 @@ class Table:
                 p = line.split(",")
                 if p[0] == "n":
                     continue
-                yield (int(p[0]), p[1], p[2], float(p[3]), float(p[4]), float(p[5]), p[6], p[7] if len(p) > 7 else "")
+                yield (int(p[0]), p[1], p[2], float(p[3]), float(p[4]), float(p[5]), p[6], float(p[7]), p[8] if len(p) > 8 else "")
 
 
 class Sled:
@@ -283,6 +311,7 @@ class Sled:
         self.depth = Axis("depth", C.DEPTH_PINS, C.DEPTH_STEPS_PER_MM, C.DEPTH_FLIP, C.DEPTH_TRIM_MM, C.PAST_MM)
         self.height = Axis("height", C.HEIGHT_PINS, C.HEIGHT_STEPS_PER_MM, C.HEIGHT_FLIP, C.HEIGHT_TRIM_MM, C.PAST_MM)
         self.turn = Axis("turn", C.TURN_PINS, C.TURN_STEPS_PER_DEG, C.TURN_FLIP, C.TURN_TRIM_DEG)
+        self.travel = Axis("travel", C.TRAVEL_PINS, C.TRAVEL_STEPS_PER_MM, C.TRAVEL_FLIP, 0.0)
         self.safe = safe            # the depth at or short of which the bit clears the master whatever the height
         self.bit = 0.0              # how much further out than the table takes it to be the bit in the collet has to be run: found by touch
         self.bits = []              # every setting: row, and what was found
@@ -292,35 +321,47 @@ class Sled:
         self.probed = []            # what a probing table found: row, kind, depth, height, turn, how far apart its touches
         self.row = 0                # the row being done
         self.touch = 0              # and, probing, which of its touches
-        self.locked = None          # the spindle's clamp, as last seen: on a computer, as last asked for
+        self.locked = None          # the spindle's lock, if there is one, as last seen: on a computer, as last asked for
         self.unlocks = 0            # how many times it has been let go
-        self.rounds = 0             # bands turned by hand
-        for n in (C.DEPTH_HOME_PIN, C.HEIGHT_HOME_PIN, C.TURN_HOME_PIN, C.SLED_BACK_PIN, C.LOCK_PIN, C.NEXT_PIN, C.PROBE_PIN):
+        self.rounds = 0             # bands turned
+        self.passes = 0             # passes made
+        self.fed = 0                # steps the sled has been fed forward in them
+        self.slip = 0.0             # the most the sled has come home from where its steps said, mm
+        for n in (C.DEPTH_HOME_PIN, C.HEIGHT_HOME_PIN, C.TURN_HOME_PIN, C.TRAVEL_HOME_PIN, C.LOCK_PIN, C.NEXT_PIN, C.PROBE_PIN):
             PINS.input(n)
-        PINS.output(C.ENABLE_PIN)
-        PINS.output(C.LED_PIN)
+        for n in (C.ENABLE_PIN, C.LED_PIN, C.LOCK_OUT_PIN):
+            PINS.output(n)
         PINS.set(C.ENABLE_PIN, 0)
 
     def back(self):
-        return PINS.closed(C.SLED_BACK_PIN)
+        """The sled drawn back: the bit beside the master and clear of the stick. The controller put it there and
+        found its switch, or it is not there."""
+        return self.travel.at == 0
 
     def is_locked(self):
-        """What the clamp's switch says. On a computer, what was last asked for; None before anything was."""
+        """What the lock's switch says. On a computer, what was last asked for; None before anything was. With no
+        lock fitted the spindle is never locked."""
+        if not C.LOCK:
+            return False
         return self.locked if SIM else PINS.closed(C.LOCK_PIN)
 
     def unlock(self, head=""):
-        """The spindle let go, with the sled back: the star is then in the index wheel, and only there can the motor
-        turn the stick."""
+        """The spindle let go, if it has a lock: only then may the motor turn the stick."""
+        if not C.LOCK:
+            return
+        PINS.set(C.LOCK_OUT_PIN, 1)
         if self.is_locked() is not False:
-            SCREEN.show(head, "sled back, then", "UNLOCK the", "spindle")
-            while not SIM and (PINS.closed(C.LOCK_PIN) or not self.back()):
+            SCREEN.show(head, "UNLOCK the", "spindle")
+            while not SIM and PINS.closed(C.LOCK_PIN):
                 utime.sleep_ms(20)
             self.unlocks += 1
         self.locked = False
 
     def lock(self, head=""):
-        """The spindle clamped where the wheel has put it. Nothing goes on until it is: the sled takes the stick away
-        from the wheel, and the clamp is then all that holds its angle."""
+        """The spindle locked where the wheel has put it, if it has a lock. Nothing is cut until it is."""
+        if not C.LOCK:
+            return
+        PINS.set(C.LOCK_OUT_PIN, 0)
         if self.is_locked() is not True:
             SCREEN.show(head, "LOCK the", "spindle")
             while not SIM and not PINS.closed(C.LOCK_PIN):
@@ -332,15 +373,40 @@ class Sled:
         return (self.turn.steps_for(degrees) - self.turn.at) % int(round(360.0 * self.turn.per_unit)) != 0
 
     def home(self):
-        SCREEN.show("sled back,", "then foot switch", "to find home")
-        wait(C.SLED_BACK_PIN)
+        SCREEN.show("router OFF.", "foot switch", "to find home")
         wait(C.NEXT_PIN)
         SCREEN.show("finding home")
-        self.depth.seek(C.DEPTH_HOME_PIN, C.DEPTH_MOST_MM, C.HOME_CLEAR_MM)     # the bit drawn back first: away from everything
+        self.depth.seek(C.DEPTH_HOME_PIN, C.DEPTH_MOST_MM, C.HOME_CLEAR_MM)     # the bit drawn back first, out of whatever it was left in
+        self.travel.seek(C.TRAVEL_HOME_PIN, C.TRAVEL_MOST_MM, C.HOME_CLEAR_MM)  # then the sled: with the bit drawn back the stick passes it clear
         self.height.seek(C.HEIGHT_HOME_PIN, C.HEIGHT_MOST_MM, C.HOME_CLEAR_MM)
-        self.unlock()               # the wheel takes the stick round with it to its mark
+        self.unlock()
         SCREEN.show("finding home")
         self.turn.seek(C.TURN_HOME_PIN, 400.0, C.TURN_CLEAR_DEG)
+
+    def come_home(self):
+        """The sled drawn back: fast to a little short of home, then slowly until its switch says so. How far that
+        was from where its steps said is how many it lost on the way out and back. More than a few and the pass was
+        not the table's: stop."""
+        short = int(round(C.HOME_SHORT_MM * self.travel.per_unit))
+        if self.travel.at > short:
+            self.travel.run(short - self.travel.at, None, None, RETURN_US)
+        if SIM and HOME is None:            # nothing to find on a computer, unless something stands in for the switch
+            self.travel.run(-self.travel.at, None, C.STEP_SLOW_US)
+            return
+        expected = self.travel.at
+        taken = self.travel.find(C.TRAVEL_HOME_PIN, 2 * C.HOME_SHORT_MM + expected / self.travel.per_unit)
+        slip = abs(taken - expected) / self.travel.per_unit
+        self.slip = max(self.slip, slip)
+        if slip > C.HOME_SLIP_MM:
+            raise RuntimeError("the sled came home %d.%d mm out" % (int(slip), int(10 * slip) % 10))
+
+    def cut(self, along):
+        """A pass: the stick fed past the bit, and brought back with the bit where it was."""
+        steps = self.travel.steps_for(along)
+        self.travel.run(steps - self.travel.at, None, None, FEED_US)
+        self.come_home()
+        self.passes += 1
+        self.fed += steps
 
     def turn_on_to(self, degrees, guard, slow=None):
         """The shorter way round, but always arriving forwards, so the belt is pulled from the same side:
@@ -418,6 +484,7 @@ class Sled:
     def run(self, rows, record=None, after=None):
         """The whole table, or what is left of it after row `after`."""
         total = rows.total
+        per_turn = int(round(360.0 * self.turn.per_unit))
         done = place(total) if after is None else after
         # A touch that follows straight on from the one before it cannot be come to from home: go back to where
         # that run of touches began, and make them again.
@@ -432,11 +499,13 @@ class Sled:
         again = max([n for n in rows.sets if n <= done] or [0])
         self.home()
         from_home = True                    # the first move is from home, whatever the table took it to be from
-        for n, kind, tool, depth, height, turn, via, label in rows:
+        for n, kind, tool, depth, height, turn, via, along, label in rows:
             if n <= done and n != again:
                 continue
             self.row = n
             head = "%d/%d %s" % (n, total, kind)
+            if kind != "round" and not self.back():
+                self.come_home()            # a band was being turned: nothing else is done with the sled away
             if kind in ("measure", "say"):  # nothing moves: something to do or to read off, then the foot switch
                 SCREEN.show(head, label[:16], label[16:32], label[32:48], label[48:64], "then foot switch")
                 wait(C.NEXT_PIN)
@@ -448,19 +517,17 @@ class Sled:
                 wait(C.NEXT_PIN)
                 if not SIM and PINS.touching():
                     raise RuntimeError("still touching")
-            elif kind == "round":           # a band turned past the cutter by hand, the sled held at a stop: away from its back
-                # stop the star is out of the wheel, and the motor cannot reach the stick. One whole turn of the lock
-                # disc, back to its mark, so that the star goes home in the wheel as it left it.
-                SCREEN.show(head, label[:16], label[16:32], "UNLOCK. disc one", "turn to its mark", "LOCK. then foot")
-                while not SIM and PINS.closed(C.LOCK_PIN):
-                    utime.sleep_ms(20)
-                while not SIM and not PINS.closed(C.LOCK_PIN):
-                    utime.sleep_ms(20)
-                wait(C.NEXT_PIN)
+            elif kind == "round":           # a band: the sled fed to where it goes, the bit where the row before left it, and the stick turned once round
+                SCREEN.show(head, label[:16], label[16:32], "turning a band")
+                self.travel.to(along, None, None, FEED_US)
+                self.unlock(head)
+                if self.is_locked():
+                    raise RuntimeError("the spindle is locked")
+                self.turn.run(per_turn, None, C.BAND_US)
+                self.lock(head)
                 self.rounds += 1
             elif kind == "set":             # a bit set by touch: run out at the master until the clip on it reads
-                SCREEN.show(head, tool, "router OFF. clip", "on the bit. sled", "back, then foot")
-                wait(C.SLED_BACK_PIN)
+                SCREEN.show(head, tool, "router OFF. bit", "in, clip on it,", "then foot switch")
                 wait(C.NEXT_PIN)
                 if not SIM and PINS.touching():
                     raise RuntimeError("the clip reads before the bit has moved")
@@ -478,9 +545,10 @@ class Sled:
                 while not SIM and not PINS.touching():
                     utime.sleep_ms(20)
                 wait(C.NEXT_PIN)
+                SCREEN.show(head, "ROUTER ON.", "stand clear,", "then foot switch", "it cuts by", "itself from here")
+                wait(C.NEXT_PIN)
             elif kind in PROBES:
-                SCREEN.show(head, label[:16], "sled back,", "then foot switch")
-                wait(C.SLED_BACK_PIN)
+                SCREEN.show(head, label[:16], "foot switch")
                 if from_home:
                     wait(C.NEXT_PIN)        # the first probe waits to be told; the rest follow on by themselves
                 SCREEN.show(head, "probing")
@@ -502,34 +570,30 @@ class Sled:
                 while not SIM and kind in ("rough", "finish") and not PINS.touching():
                     SCREEN.show(head, "PARK THE CLIP on", "its post")
                     utime.sleep_ms(200)
-                # A row at a new angle is begun by letting the clamp go, which no one does by accident; a row at the
-                # angle the stick is already at, by the foot switch.
-                turning = self.turns(turn) and self.is_locked()
-                SCREEN.show(head, tool, "sled back, then", "UNLOCK spindle" if turning else "foot switch")
-                wait(C.SLED_BACK_PIN)
-                if turning:
-                    self.unlock(head)
-                else:
+                if not SIM and PINS.closed(C.NEXT_PIN):     # the foot switch held down through the last pass: stop here
+                    SCREEN.show(head, "PAUSED", "foot switch", "to go on")
                     wait(C.NEXT_PIN)
-                SCREEN.show(head, "moving")
+                SCREEN.show(head, tool, "moving")
                 self.go(depth + self.bit, height, turn, "s" if from_home and via == "d" else via)
                 from_home = False
                 PINS.set(C.LED_PIN, 1)
-                if kind == "place":         # brought to a place for turning bands: the rows after it say what to do
+                if kind == "place":         # brought to a place for turning bands: the rows after it say where
                     pass
                 elif kind == "load":        # the spindle turned to where the blank goes on with a wide face level and down
                     SCREEN.show(head, label[:16], label[16:32], label[32:48], label[48:64], "then foot switch")
                     wait(C.NEXT_PIN)
                 else:
-                    SCREEN.show(head, label[:16], "push past the", "bit and back")
-                    wait_for_the_cut()
+                    SCREEN.show(head, tool, label[:16], "cutting")
+                    self.cut(along)
                 PINS.set(C.LED_PIN, 0)
             if n > done:
                 keep_place(n, total)
             if record is not None and n > done:
-                record.append([n, self.depth.at, self.height.at, self.turn.at % int(round(360.0 * self.turn.per_unit))])
+                record.append([n, self.depth.at, self.height.at, self.turn.at % per_turn, self.travel.at])
+        if not self.back():
+            self.come_home()
         keep_place(0, total)
-        SCREEN.show("done")
+        SCREEN.show("done.", "ROUTER OFF")
 
 
 def main(path="passes.csv", out=None, after=None):
@@ -545,12 +609,16 @@ def main(path="passes.csv", out=None, after=None):
         import json
         with open(out, "w") as f:
             json.dump({"rows": record, "after": after or 0, "deepest_crossing": sled.deepest_crossing, "turned": sled.turned, "went_straight": sled.went_straight, "unlocks": sled.unlocks, "rounds": sled.rounds,
-                       "probed": sled.probed, "bits": sled.bits, "stepped": [sled.depth.stepped, sled.height.stepped, sled.turn.stepped],
-                       "safe_steps": sled.depth.steps_for(rows.safe), "per": [C.DEPTH_STEPS_PER_MM, C.HEIGHT_STEPS_PER_MM, C.TURN_STEPS_PER_DEG]}, f)
+                       "lock": C.LOCK, "probed": sled.probed, "bits": sled.bits, "stepped": [sled.depth.stepped, sled.height.stepped, sled.turn.stepped, sled.travel.stepped],
+                       "passes": sled.passes, "fed": sled.fed, "seconds": PINS.clock / 1e6,
+                       "safe_steps": sled.depth.steps_for(rows.safe), "per": [C.DEPTH_STEPS_PER_MM, C.HEIGHT_STEPS_PER_MM, C.TURN_STEPS_PER_DEG, C.TRAVEL_STEPS_PER_MM]}, f)
 
 
 if SIM:
     import sys
+    if "--lock" in sys.argv:
+        C.LOCK = True
+        sys.argv.remove("--lock")
     if len(sys.argv) >= 4 and sys.argv[1] == "--sim":
         SCREEN.quiet = True
         main(sys.argv[2], sys.argv[3], int(sys.argv[4]) if len(sys.argv) > 4 else None)

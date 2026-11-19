@@ -34,12 +34,12 @@ the tile there means running this again.
 `whole.py` puts the machine's work and the hand's in one animation, the
 owner's storyboard:
 
-1. **Coarse passes.** The table's 185 roughing rows, the 1/4 in straight
+1. **Coarse passes.** The table's 250 roughing rows, the 1/4 in straight
    bit, as the machine makes them: the bit level, the stick turning.
 2. **A pause** that says so and says what is next: change the bit, then
    the detail passes.
-3. **Detail passes.** The tapered ball tip, and 167 passes where the
-   sled's table has 291.
+3. **Detail passes.** The tapered ball tip, and 204 passes where the
+   sled's table has 323.
 4. **A pause** that says the ridges are sanded off next: two forms,
    fourteen edges.
 5. **Sanding.** The bump form on each of the seven bumps and then the
@@ -51,7 +51,7 @@ owner's storyboard:
 
 | after the coarse passes | after the detail passes | a form in use | at the end |
 |---|---|---|---|
-| ![The roughed blank, with COARSE PASSES DONE: 185 written over it and NEXT: CHANGE THE BIT, THEN 167 DETAIL PASSES under it](out/whole_coarse.png) | ![The tile with a scalloped edge, DETAIL PASSES DONE: 167 over it and NEXT: SAND THE RIDGES OFF, TWO FORMS, 14 EDGES under it](out/whole_detail.png) | ![The tile with smooth teal-lined lobes and three smooth magenta-lined notches, the other notches scalloped and lined amber, a pale magenta T in the next one; FLUTE FORM: FLUTE 3 OF 7](out/whole_sanding.png) | ![The tile smooth all round, teal inside every lobe, magenta inside every notch and a short amber stretch at each corner; NOT SANDED: 14 CORNERS, THE MACHINE CUT THEM FINE](out/whole_done.png) |
+| ![The roughed blank, with COARSE PASSES DONE: 250 written over it and NEXT: CHANGE THE BIT, THEN 204 DETAIL PASSES under it](out/whole_coarse.png) | ![The tile with a scalloped edge, DETAIL PASSES DONE: 204 over it and NEXT: SAND THE RIDGES OFF, TWO FORMS, 14 EDGES under it](out/whole_detail.png) | ![The tile with smooth teal-lined lobes and three smooth magenta-lined notches, the other notches scalloped and lined amber, a pale magenta T in the next one; FLUTE FORM: FLUTE 3 OF 7](out/whole_sanding.png) | ![The tile smooth all round, teal inside every lobe, magenta inside every notch and a short amber stretch at each corner; NOT SANDED: 14 CORNERS, THE MACHINE CUT THEM FINE](out/whole_done.png) |
 
 **This is not the sled's table.** The table finishes the whole outline
 to 0.05 mm, and a stick milled by it looks finished: drawn at this
@@ -65,7 +65,7 @@ what they leave.
 |---|---|---|
 | what a detail pass may leave where a form goes along afterwards | 0.05 mm | 0.4 mm |
 | and at the fourteen corners the forms do not reach | 0.05 mm | 0.05 mm |
-| detail passes, counting every bite | 291 | 167 |
+| detail passes, counting every bite | 323 | 204 |
 | places they are made from | 242 | 132 |
 | the ridge they leave, where a form goes | under 0.05 | up to 0.36 mm |
 | and at the corners | under 0.05 | 0.06 |
@@ -80,7 +80,7 @@ amber stretches, 36 mm of the 205 mm round the tile, where a bump runs
 into a flute. They are not sanded, and in this plan need not be: they
 are the part the machine still cuts fine.
 
-It runs 68 seconds. The captions are strokes, since a flip book draws
+It runs 75 seconds. The captions are strokes, since a flip book draws
 shapes and no text (`okmcp.lettering`).
 
 ## What the tile is, cut

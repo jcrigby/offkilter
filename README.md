@@ -87,10 +87,11 @@ works today, all in the browser:
   stick hung from two hinges over a router table's cutter
   (`examples/stick-sled-hinged/`), and the sled that replaced that,
   the stick only turning, on a flat sled between two fences, beside
-  a router held in the two-axis positioner, three motors going to
-  the next row of a table, the one that turns the stick left behind
-  at the end of the base with a large index wheel that a star on the
-  sled goes into (`examples/stick-sled/`), the sanding forms and
+  a router held in the two-axis positioner, four motors going to
+  the next row of a table: the positioner's two, one on the sled
+  that turns the stick by a large wheel on the sled's own spindle,
+  and one that feeds the sled past the bit on a screw, so that a
+  stick is cut without a hand (`examples/stick-sled/`), the sanding forms and
   scraper templates that finish what it mills, each the negative of
   one of the tile's edges (`examples/stick-finish/`), a mini
   chop saw from an angle

@@ -1,7 +1,8 @@
 //! The stick sled (examples/stick-sled) as a regression suite. The
 //! stick only turns; the router positioner beside it sets how deep
-//! the bit reaches and how high. The table the controller reads is
-//! three numbers a row: the positioner's two screws and the spindle.
+//! the bit reaches and how high; a screw feeds the sled past the bit.
+//! The table the controller reads is four numbers a row: the
+//! positioner's two screws, the spindle, and how far the sled is fed.
 //! This works them forward and checks the bit is where the plan wants
 //! it, the whole of it never in the tile; that the passes reach the
 //! whole outline; that run in the table's order no cut meets more
@@ -9,21 +10,19 @@
 //! and the sled's plate and the rows fit the positioner's travel;
 //! that every move marked straight passes the master clear; that the
 //! controller's own program, simulated, ends every row on the table's
-//! steps and sets the bit again when a stick is taken up part way;
-//! that the model is the sled at one row with nothing through
-//! anything; that the sled's travel fits its shafts and its stops
-//! leave the bit beside the master and past the stick; and, for
-//! setting a built machine up, that six touches of a pin on the
-//! master find where the bit's height is level with the stick's axis
-//! well enough that the table planned for it cuts true on a machine
-//! built wrong, and that the probing table and the bands are where
-//! the reading of them assumes.
-
-//! and comes at nothing blind, that a sled built wrong, probed by the
-//! controller's own program, is found well enough that the table
-//! planned for what was found cuts true on the sled as it really is,
-//! and that the bands turned to see whether the stick runs true are
-//! turned where the reading of them assumes.
+//! steps, makes a pass for every cutting row and sets the bit again
+//! when a stick is taken up part way; that the model is the sled at
+//! one row with nothing through anything, wherever along its travel
+//! the sled is; that the wheel, on the sled's own spindle, passes over
+//! everything it goes by; that the belt alone holds the stick at
+//! every cut, by an estimate made again here; that the screw's nut is
+//! on the screw the whole travel and a sled that loses steps is found
+//! out when it comes home; that a lock is drawn in its place and left
+//! off; and, for setting a built machine up, that six touches of a
+//! pin on the master find where the bit's height is level with the
+//! stick's axis well enough that the table planned for it cuts true
+//! on a machine built wrong, and that the probing table and the bands
+//! are where the reading of them assumes.
 
 use ok_brep::{BoolOp, Solid};
 use ok_model::{Document, TabId};
@@ -538,7 +537,8 @@ fn bit_edge(n: &Value, tool: &str) -> Vec<P2> {
 /// The positioner's face is a wall beside the stick and the sled's
 /// plate a floor under it: the uncut blank turns clear of both. The
 /// headstock and tailstock pass that wall as the sled travels, and
-/// the lock disc, hung off the plate's far end, never comes to it. Every
+/// the disc and the wheel, beyond the far end of the sled's box, never
+/// come to it; the wheel's rim passes over all it goes by. Every
 /// row is within the positioner's travel, with room for a bit set a
 /// little long or short. The collet nut never comes within the
 /// blank's swing, and that is what sets how far the positioner
@@ -590,10 +590,13 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
         lowest + f(&s["axis_over"]) >= 10.0,
         "the nut passes over the deck"
     );
-    // the stick's axis is level with the middle of the height's travel
+    // The stick's axis is a little above the middle of the height's travel: the wheel goes with the sled, and
+    // that lifts its rim over what it passes. The rows still have a probe's window and more at each end.
     let travel = pair(&a["travel"]);
-    assert!((f(&p["bit_home_z"]) + travel.1 / 2.0 - za).abs() < 1e-9);
-    assert!((f(&a["across_home"]) + travel.1 / 2.0).abs() < 1e-9);
+    let up = f(&s["axis_up"]);
+    assert!(up > 0.0 && up <= 10.0);
+    assert!((f(&p["bit_home_z"]) + travel.1 / 2.0 + up - za).abs() < 1e-9);
+    assert!((f(&a["across_home"]) + travel.1 / 2.0 + up).abs() < 1e-9);
     // The two bits. Each is set as near what the table takes it to as its own length and the collet's depth allow:
     // its shank in the collet by enough, off the collet's bottom, and within the margin of the table's length.
     // And the collet nut. It is wider than the bit, so at the far end of a pass it is beside the end of the stick
@@ -651,30 +654,71 @@ fn the_blank_turns_clear_and_the_rows_fit_the_positioner_s_travel() {
                 .filter(|r| r.kind == "finish")
                 .all(|r| r.tip >= lim - 1e-6)
     );
-    // The lock disc is wider than the stick is from that wall: it is past the positioner's box with the sled
-    // forward, which is as near as it comes, and well over the fences' lips. The index wheel never moves: it is
-    // clear of the base, and its rim and its belt are in the slot in its own plate or within a few millimetres
-    // over it, which is what the slot is for: the head floats on its feet.
-    let ix = &n["index"];
-    let (rim, disc, disc_x) = (f(&s["wheel_rim"]), f(&ix["disc"][0]), pair(&ix["disc_x"]));
-    assert!(disc / 2.0 > face && disc_x.0 - (f(&s["forward_x"]) + f(&p["half_box"])) >= 5.0);
-    assert!(za - disc / 2.0 >= f(&s["lip_top"]) + 10.0 && f(&s["lip_top"]) > f(&s["plate_top"]));
-    let slot = pair(&ix["slot"][1]);
-    assert!(
-        za - rim >= 5.0 && za - rim < f(&ix["head_z"][1]) + 5.0,
-        "the wheel is in its plate's slot or just over it, and clears the base"
+    // The disc and the wheel are on the sled's spindle and go where it goes. Both are wider than the stick is from
+    // that wall: with the sled forward, which is as near as they come, they are past the positioner's box. The
+    // wheel is wider than the sled's box is high and hangs beyond its end, so its rim passes over the sled's own
+    // bottom, the near fence's lip and the controller's box: each worked out here from the circle.
+    let t = &n["turn"];
+    let (rim, disc, disc_x, wheel_x) = (
+        f(&t["wheel_rim"]),
+        f(&t["disc"][0]),
+        pair(&t["disc_x"]),
+        pair(&t["wheel_x"]),
     );
-    assert!(f(&ix["rim_chord"]) + 3.0 <= slot.1.min(-slot.0) && f(&ix["belt_over"]) >= 2.0);
-    // the sled is a box, and its deck is where the uprights stand: the stick's axis the same height over it always
+    assert!(disc / 2.0 > face && rim > disc / 2.0 && wheel_x.0 > disc_x.1);
+    let beyond = disc_x.0 - (f(&s["forward_x"]) + f(&p["half_box"]));
+    assert!(beyond >= 5.0 && (beyond - f(&t["over"]["positioner"])).abs() < 1e-9);
+    assert!(
+        wheel_x.0 > f(&s["box_x"][1]) && wheel_x.1 < f(&s["plate_x"][1]),
+        "the wheel is beyond the box's end and over the bottom"
+    );
+    let under = |y: f64| za - (rim * rim - y * y).sqrt(); // the rim's underside, y from the axis
+    let lip_in = f(&s["plate_y"][1]) - f(&s["lip"][2]); // the near lip's inner edge: where the rim is lowest over it
+    let ctl = &s["controller"];
+    for (what, gap, said) in [
+        (
+            "the sled's bottom",
+            under(0.0) - f(&s["plate_top"]),
+            f(&t["over"]["bottom"]),
+        ),
+        ("the base", under(0.0), f(&t["over"]["base"])),
+        (
+            "the near fence's lip",
+            under(lip_in) - f(&s["lip_top"]),
+            f(&t["over"]["lip"]),
+        ),
+        (
+            "the controller's box",
+            under(f(&ctl["y"][0])) - f(&ctl["z"]),
+            f(&t["over"]["controller"]),
+        ),
+    ] {
+        println!("the wheel's rim passes {gap:.1} over {what}");
+        assert!(gap >= 5.0 && (gap - said).abs() < 1e-9, "{what}");
+    }
+    // level with the middle of the height's travel it would have passed that lip by under two millimetres
+    assert!(under(lip_in) - up - f(&s["lip_top"]) < 2.0);
+    // the controller's box is where the wheel goes by: beside the positioner, under the rim's reach
+    assert!(
+        f(&ctl["y"][0]) > face
+            && f(&ctl["y"][0]) < rim
+            && f(&ctl["x"][0]) > f(&p["half_box"])
+            && f(&ctl["x"][0]) < wheel_x.1 - f(&s["back_x"])
+    );
+    assert!(za - disc / 2.0 >= f(&s["lip_top"]) + 10.0 && f(&s["lip_top"]) > f(&s["plate_top"]));
+    // the sled is a box, and its deck is where the risers stand: the stick's axis the same height over it always
     assert!(
         (za - top - f(&s["axis_over"])).abs() < 1e-9
             && top > f(&s["plate_top"]) + 2.0 * f(&s["ply"])
     );
-    let w = &s["wheel"];
+    let w = &t["wheel"];
     let (big, small, c) = (f(&w[0]) * 2.0 / PI, f(&w[1]) * 2.0 / PI, f(&w[3]));
     let belt = 2.0 * c + PI * (big + small) / 2.0 + (big - small).powi(2) / (4.0 * c);
     assert!((belt - f(&w[2])).abs() < 0.01, "the belt is {belt}");
-    assert!(c > rim + small / 2.0 + 20.0, "the motor clears the wheel");
+    assert!(
+        c > rim + small / 2.0 + 15.0,
+        "the motor's pulley clears the wheel"
+    );
     // the rows in the travel
     let (margin, past, probe) = (f(&a["bit_margin"]), f(&a["past"]), pair(&a["probe"]));
     let (mut d, mut h) = ((f64::MAX, f64::MIN), (f64::MAX, f64::MIN));
@@ -784,7 +828,8 @@ fn every_move_marked_straight_passes_the_master_clear() {
 }
 
 /// The controller's own program, run on a computer over the table:
-/// it ends every row on the table's steps; a setting of the bit ends a
+/// it ends every row on the table's steps, the sled drawn back; it
+/// makes a pass for every cutting row; a setting of the bit ends a
 /// probe's window short of the master, where its touch begins; it
 /// turns the spindle little; and it never changes height or turns
 /// with the bit further out than the safe depth, except on the moves
@@ -797,12 +842,18 @@ fn the_controller_ends_every_row_on_the_table_and_sets_the_bit_again_when_taken_
     let sim: Value =
         serde_json::from_str(&std::fs::read_to_string(dir().join("out/steps.json")).unwrap())
             .unwrap();
-    let per = [f(&sim["per"][0]), f(&sim["per"][1]), f(&sim["per"][2])];
+    let per = [
+        f(&sim["per"][0]),
+        f(&sim["per"][1]),
+        f(&sim["per"][2]),
+        f(&sim["per"][3]),
+    ];
     let turn_steps = (360.0 * per[2]).round();
     // a turn of the stick is a whole number of steps
-    assert!((360.0 * per[2] - turn_steps).abs() < 1e-9);
-    // The clamp: opened once to find home, then for every row at a new angle and for no other. The controller will
-    // not turn the wheel with it thrown, and counts its openings; the table says how many there should be.
+    assert!((360.0 * per[2] - turn_steps).abs() < 1e-6);
+    // No lock is fitted: the belt holds the stick, and the controller lets nothing go. Run as if one were fitted,
+    // which the build also does, it lets it go once to find home, then for every row at a new angle and for no
+    // other, and ends every row on the same steps. The table says how many times that should be.
     let (mut at, mut locked, mut unlocks, mut angles) = (0.0, false, 1u64, 0u64);
     for r in &rows {
         let to = (r.turn * per[2]).round().rem_euclid(turn_steps);
@@ -814,11 +865,15 @@ fn the_controller_ends_every_row_on_the_table_and_sets_the_bit_again_when_taken_
         locked = true;
     }
     println!(
-        "{angles} new angles in {} rows: the clamp opened {unlocks} times",
+        "{angles} new angles in {} rows: a lock, were one fitted, let go {unlocks} times",
         rows.len()
     );
-    assert_eq!(sim["unlocks"].as_u64().unwrap(), unlocks);
-    assert_eq!(n["index"]["unlocks"].as_u64().unwrap(), unlocks);
+    assert_eq!(n["lock"]["fitted"].as_bool(), Some(false));
+    assert_eq!(sim["lock"].as_bool(), Some(false));
+    assert_eq!(sim["unlocks"].as_u64().unwrap(), 0);
+    assert_eq!(sim["with_lock"]["unlocks"].as_u64().unwrap(), unlocks);
+    assert_eq!(n["lock"]["unlocks"].as_u64().unwrap(), unlocks);
+    assert_eq!(n["turn"]["angles"].as_u64().unwrap(), angles);
     assert!(angles > 150 && (angles as usize) < rows.len() / 2);
     let window = f(&n["axes"]["probe"][0]);
     let check = |done: &[Value], rows: &[Row]| {
@@ -846,9 +901,32 @@ fn the_controller_ends_every_row_on_the_table_and_sets_the_bit_again_when_taken_
                 "row {} turn",
                 r.n
             );
+            assert!(f(&s[4]) == 0.0, "row {} ends with the sled drawn back", r.n);
         }
     };
     check(sim["rows"].as_array().unwrap(), &rows);
+    // Every cutting row is a pass: the sled fed the length of its travel past the bit and brought back, by its own
+    // motor. The table gives that length in every such row and nothing in any other. By the pauses the controller
+    // asks for between steps, a stick takes this long; no less than the feeding alone, and not much more.
+    let travel = f(&n["sled"]["travel"]);
+    let mut cutting = 0.0;
+    for (r, told) in rows.iter().zip(n["rows"].as_array().unwrap()) {
+        let pass = r.kind == "rough" || r.kind == "finish";
+        cutting += pass as u8 as f64;
+        assert!((f(&told["along"]) - if pass { travel } else { 0.0 }).abs() < 1e-9);
+    }
+    assert!(f(&sim["passes"]) == cutting && cutting > 500.0);
+    assert!((f(&sim["fed"]) - cutting * (travel * per[3]).round()).abs() < 1e-9);
+    assert!((f(&sim["stepped"][3]) - 2.0 * f(&sim["fed"])).abs() < 1e-9);
+    let h = &n["hold"];
+    let least = cutting * (travel / f(&h["feed"]) + travel / f(&h["return"]));
+    let seconds = f(&sim["seconds"]);
+    println!(
+        "{cutting:.0} passes of {travel:.0} mm: {:.2} h by the controller's own pauses, {:.2} h of it feeding and coming back",
+        seconds / 3600.0,
+        least / 3600.0
+    );
+    assert!(seconds > least && seconds < 1.6 * least && (seconds - f(&h["seconds"])).abs() < 1e-6);
     let turned = f(&sim["turned"]) / per[2];
     println!(
         "the spindle turns {turned:.0} deg in all, coming up to its {} angles",
@@ -882,7 +960,7 @@ fn the_controller_ends_every_row_on_the_table_and_sets_the_bit_again_when_taken_
 
 /// The document is the sled at one finishing row: the stick is the
 /// tile's prism, the bit's tip is on it, and no part is through
-/// another.
+/// another, there or anywhere along the sled's travel.
 #[test]
 fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
     let n = numbers();
@@ -962,9 +1040,10 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
     );
     assert!(all.len() >= 30 && tried >= 10);
     assert!(worst.0 < 1.0, "{} share {:.1} mm3", worst.1, worst.0);
-    // The sled at each end of its travel: all that rides on it, moved there, against all that stands on the base.
-    // It slides between two fences under their lips. Lifted a millimetre it is in a lip, and pushed a millimetre
-    // either way across it is in a fence: that is what holds it.
+    // The sled along its travel: all that rides on it, moved there, against all that stands on the base. It
+    // slides between two fences under their lips. Lifted a millimetre it is in a lip, and pushed a millimetre
+    // either way across it is in a fence: that is what holds it. A lock's four parts are drawn and not fitted;
+    // they are among what rides, so their place is kept clear wherever the sled is.
     let rides = [
         "Sled plate",
         "Sled box",
@@ -976,52 +1055,39 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
         "Head bearings KP001",
         "Spindle",
         "Blank socket",
-        "Star hub",
-        "Index star and lock disc",
+        "Wheel hub",
+        "Disc",
+        "Index wheel",
+        "Turn home sensor",
+        "Wheel drive",
+        "Travel nut",
+        "Stick",
         "Lock post",
         "Lock anvil",
         "Toggle clamp",
         "Lock switch",
-        "Catch strike",
-        "Stick",
-    ];
-    // The index head is on the base, but not fastened to it: the star pushes it back as it comes home.
-    let floats = [
-        "Index head",
-        "Head feet",
-        "Index bearings KFL001",
-        "Index shaft",
-        "Index wheel",
-        "Wheel hub",
-        "Turn home sensor",
-        "Wheel drive",
-        "Head bolts",
-        "Head springs",
     ];
     let stands = [
         "Base",
         "Fences",
         "Slips",
+        "Travel drive",
         "Stops",
-        "Sled-back switch",
-        "Catch magnet",
-        "Spring post",
+        "Travel home switch",
         "Controller",
         "Router positioner",
     ];
     assert!(rides
         .iter()
-        .chain(floats.iter())
         .chain(stands.iter())
         .all(|k| all.iter().any(|a| a.0 == *k)));
     assert!(
         all.iter().all(|a| a.0 == "Bit"
             || rides.contains(&a.0.as_str())
-            || floats.contains(&a.0.as_str())
             || stands.contains(&a.0.as_str())),
-        "every body rides, floats or stands"
+        "every body rides or stands"
     );
-    // the build's own second assembly, the sled home, moves the same parts
+    // the build's own second assembly, the sled drawn back, moves the same parts
     let named = |v: &Value| -> Vec<String> {
         v.as_array()
             .unwrap()
@@ -1029,9 +1095,9 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
             .map(|k| k.as_str().unwrap().to_string())
             .collect()
     };
-    assert_eq!(named(&n["index"]["rides"]), rides);
-    assert_eq!(named(&n["index"]["floats"]), floats);
+    assert_eq!(named(&s["rides"]), rides);
     assert!(doc.tabs.iter().any(|t| t.name() == "Sled home"));
+    assert!((f(&s["seated"]) - (f(&n["drawn"]["x"]) - f(&s["back_x"]))).abs() < 1e-9);
     let fences: Vec<&Solid> = all
         .iter()
         .filter(|a| a.0 == "Fences")
@@ -1047,9 +1113,6 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
             .map(|f| overlap(&moved, f))
             .fold(0.0, f64::max)
     };
-    // The sled back, the star home and the head pushed back by it; the sled back and the head not giving way, which
-    // cannot be; and the sled forward, the head waiting where its springs leave it.
-    let seat = f(&n["index"]["seat"]);
     let along = |solid: &Solid, dx: f64| {
         solid.transformed(&ok_brep::Transform::translation(ok_math::Vec3::new(
             dx, 0.0, 0.0,
@@ -1063,31 +1126,20 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
             || p.0.z >= q.1.z
             || q.0.z >= p.1.z
     };
-    for (end, at, head, fits) in [
-        ("back", f(&s["back_x"]), seat, true),
-        (
-            "back and the head not giving way",
-            f(&s["back_x"]),
-            0.0,
-            false,
-        ),
-        ("forward", f(&s["forward_x"]), 0.0, true),
-    ] {
+    let rest: Vec<&(String, Solid)> = all
+        .iter()
+        .filter(|b| b.0 != "Bit" && !rides.contains(&b.0.as_str()))
+        .collect();
+    // Drawn back, forward, and three places between; and 60 mm further forward than it goes, which cannot be:
+    // there the disc and the wheel would be in the positioner's box.
+    let (back, forward) = (f(&s["back_x"]), f(&s["forward_x"]));
+    let mut places: Vec<(f64, bool)> = (0..=4)
+        .map(|k| (back + (forward - back) * k as f64 / 4.0, true))
+        .collect();
+    places.push((forward + 60.0, false));
+    for (at, fits) in places {
         let shift = f(&n["drawn"]["x"]) - at;
         let (mut tried, mut worst) = (0, (0.0f64, String::new()));
-        // all that does not ride: what stands, and the head where this case has it
-        let rest: Vec<(&str, Solid)> = all
-            .iter()
-            .filter(|b| b.0 != "Bit" && !rides.contains(&b.0.as_str()))
-            .map(|b| {
-                let dx = if floats.contains(&b.0.as_str()) {
-                    head
-                } else {
-                    0.0
-                };
-                (b.0.as_str(), along(&b.1, dx))
-            })
-            .collect();
         for a in all.iter().filter(|a| rides.contains(&a.0.as_str())) {
             let moved = along(&a.1, shift);
             let p = moved.bounds().unwrap();
@@ -1101,44 +1153,31 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
                     worst = (common, format!("{} and {}", a.0, b.0));
                 }
             }
-            if a.0 == "Sled plate" && fits {
+            if a.0 == "Sled plate" && fits && (at == back || at == forward) {
                 let (up, far, near) = (
                     held(&moved, 0.0, 1.0),
                     held(&moved, -1.0, 0.0),
                     held(&moved, 2.0, 0.0),
                 );
-                println!("sled {end}: lifted 1 mm the plate is {up:.0} mm3 into a lip; pushed across, {far:.0} into the datum fence, {near:.0} into the near one");
+                println!("the bit {at:.0} along the sled: lifted 1 mm the plate is {up:.0} mm3 into a lip; pushed across, {far:.0} into the datum fence, {near:.0} into the near one");
                 assert!(up > 100.0 && far > 100.0 && near > 100.0);
             }
         }
-        // and the head itself, pushed back, against what stands behind it
-        for a in rest.iter().filter(|a| floats.contains(&a.0)) {
-            for b in rest.iter().filter(|b| stands.contains(&b.0)) {
-                if apart(&a.1.bounds().unwrap(), &b.1.bounds().unwrap()) {
-                    continue;
-                }
-                tried += 1;
-                let common = overlap(&a.1, &b.1);
-                if common > worst.0 {
-                    worst = (common, format!("{} and {}", a.0, b.0));
-                }
-            }
-        }
         println!(
-            "sled {end}: {tried} pairs near each other, the most in common {:.3} mm3 ({})",
+            "the bit {at:.0} along the sled: {tried} pairs near each other, the most in common {:.3} mm3 ({})",
             worst.0, worst.1
         );
         if fits {
             assert!(
                 tried >= 4 && worst.0 < 1.0,
-                "sled {end}: {} share {:.1} mm3",
+                "the bit {at:.0} along: {} share {:.1} mm3",
                 worst.1,
                 worst.0
             );
         } else {
             assert!(
-                worst.0 > 500.0 && worst.1 == "Index star and lock disc and Index wheel",
-                "sled {end}: {} share {:.1} mm3",
+                worst.0 > 500.0 && worst.1.ends_with("and Router positioner"),
+                "the bit {at:.0} along: {} share {:.1} mm3",
                 worst.1,
                 worst.0
             );
@@ -1225,15 +1264,15 @@ fn the_blank_is_a_rectangle_about_the_tile_and_goes_on_a_wide_face_down() {
 
 /// From the motor to the far end of the stick, every part is joined to
 /// the next by something drawn. The belt has six teeth of the motor's
-/// pulley in it; the index wheel is on a hub on its own shaft, in two
-/// flange bearings on the index head; the star on the sled's spindle
-/// goes into the wheel's face (the next test); that spindle runs in
-/// two pillow blocks bolted down on a riser on the sled's deck; its
-/// end is in the boss of a printed socket whose pocket holds the
-/// blank's end by its flats; the other end of the stick is on the
-/// point of a second rod in two more pillow blocks, bare where the
-/// bit is set against it; and a fin on the wheel passes through a
-/// sensor once a turn.
+/// pulley in it and more; the motor is in the sled's box, its shaft out
+/// past the box's end to the pulley; the wheel is screwed to the neck
+/// of a disc, the disc bolted to a hub on the sled's own spindle; that
+/// spindle runs in two pillow blocks bolted down on a riser on the
+/// sled's deck; its end is in the boss of a printed socket whose pocket
+/// holds the blank's end by its flats; the other end of the stick is on
+/// the point of a second rod in two more pillow blocks, bare where the
+/// bit is set against it; and a fin on the disc passes through a sensor
+/// on the end of the deck once a turn.
 #[test]
 fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     let n = numbers();
@@ -1245,21 +1284,25 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
         (lo.x, hi.x)
     };
     // the belt: teeth of the small pulley in mesh, and the controller's steps for a turn follow the two pulleys
-    let w = &s["wheel"];
+    let t = &n["turn"];
+    let w = &t["wheel"];
     let (big_t, small_t, c) = (f(&w[0]), f(&w[1]), f(&w[3]));
     let (big, small) = (big_t * 2.0 / PI, small_t * 2.0 / PI);
     let mesh = small_t * (PI - 2.0 * ((big - small) / 2.0 / c).asin()) / (2.0 * PI);
     println!(
-        "{small_t:.0} teeth on the motor, {big_t:.0} on the index wheel: {mesh:.1} of the pulley's teeth in the belt"
+        "{small_t:.0} teeth on the motor, {big_t:.0} on the wheel: {mesh:.1} of the pulley's teeth in the belt"
     );
-    assert!(mesh >= 6.0 && (mesh - f(&s["mesh"])).abs() < 1e-9);
+    assert!(mesh >= 6.0 && (mesh - f(&t["mesh"])).abs() < 1e-9);
     let sim: Value =
         serde_json::from_str(&std::fs::read_to_string(dir().join("out/steps.json")).unwrap())
             .unwrap();
     assert!((f(&sim["per"][2]) * 360.0 - 200.0 * 16.0 * big_t / small_t).abs() < 1e-6);
-    assert!(big_t >= 300.0 && big_t / small_t == 18.0);
-    // On the sled, from the stick outward: socket, two bearings each on the stick's side of its upright, the star's
-    // hub, the lock disc, the star. The rod is whole from the bottom of the socket's boss to inside the star.
+    assert!(big_t >= 300.0 && big_t / small_t == 12.0);
+    // a pulley of 20 teeth, as the wheel had while its motor stood further off, would have too few in the belt here
+    let small20 = 20.0 * 2.0 / PI;
+    assert!(20.0 * (PI - 2.0 * ((big - small20) / 2.0 / c).asin()) / (2.0 * PI) < 6.0);
+    // On the sled, from the stick outward: socket, two bearings, the hub, the disc, its neck, the wheel. The rod
+    // is whole from the bottom of the socket's boss to inside the wheel.
     let spindle = bodies_of(&mut doc, "Spindle");
     assert_eq!(spindle.len(), 1);
     let (rod, rod_x) = (x_of(&spindle[0]), pair(&s["rod_x"]));
@@ -1268,54 +1311,114 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     assert!(
         (spindle[0].volume() - PI * rod_d * rod_d / 4.0 * long).abs() < 0.01 * spindle[0].volume()
     );
-    let ix = &n["index"];
-    let (disc_x, star_x) = (pair(&ix["disc_x"]), pair(&ix["star_x"]));
-    let star_hub = x_of(&bodies_of(&mut doc, "Star hub")[0]);
+    let (disc_x, neck_x, wheel_x) = (pair(&t["disc_x"]), pair(&t["neck_x"]), pair(&t["wheel_x"]));
+    let hub = x_of(&bodies_of(&mut doc, "Wheel hub")[0]);
     let head_riser = pair(&s["head_riser_x"]);
     assert!(
-        (star_hub.1 - disc_x.0).abs() < 1e-6 && star_hub.0 > head_riser.1,
-        "the star's hub is on the disc's inner face, its boss clear of the headstock"
+        (hub.1 - disc_x.0).abs() < 1e-6 && hub.0 > head_riser.1,
+        "the hub is on the disc's inner face, its boss clear of the headstock"
+    );
+    let fin_l = f(&t["fin_l"]);
+    let disc = bodies_of(&mut doc, "Disc").remove(0);
+    let disc_b = disc.bounds().unwrap();
+    assert!(
+        (disc_b.0.x - (disc_x.0 - fin_l)).abs() < 1e-6 && (disc_b.1.x - neck_x.1).abs() < 1e-6,
+        "the disc, its fin toward the headstock and its neck toward the wheel"
+    );
+    assert!((disc_b.1.z - disc_b.0.z - f(&t["disc"][0])).abs() < 0.2);
+    let wheel = bodies_of(&mut doc, "Index wheel").remove(0);
+    let wheel_b = wheel.bounds().unwrap();
+    let rim = f(&t["wheel_rim"]);
+    assert!((wheel_b.0.x - wheel_x.0).abs() < 1e-6 && (wheel_b.1.x - wheel_x.1).abs() < 1e-6);
+    assert!(
+        ((wheel_b.0.z + wheel_b.1.z) / 2.0 - za).abs() < 1e-6
+            && (wheel_b.1.z - wheel_b.0.z - 2.0 * rim).abs() < 0.3
     );
     assert!(
-        (disc_x.1 - star_x.0).abs() < 1e-9 && rod.1 > star_x.0 && rod.1 < star_x.1,
-        "the rod ends inside the star"
-    );
-    // On the index head, drawn where it waits: the wheel, its hub on its back, the home sensor, an upright with a
-    // bearing, a bearing and its upright. Its shaft is whole from inside the wheel to the second upright.
-    let park = f(&ix["head_at"]) + f(&n["drawn"]["x"]);
-    let wheel = pair(&s["wheel_x"]);
-    let wheel = (wheel.0 + park, wheel.1 + park);
-    let hub = x_of(&bodies_of(&mut doc, "Wheel hub")[0]);
-    assert!(
-        (hub.0 - wheel.1).abs() < 1e-6,
-        "the hub is on the wheel's back"
-    );
-    let ups = [pair(&ix["idx_x"][0]), pair(&ix["idx_x"][1])];
-    let shaft = bodies_of(&mut doc, "Index shaft");
-    let (sh, sh_x) = (x_of(&shaft[0]), pair(&ix["idx_rod_x"]));
-    assert!((sh.0 - sh_x.0 - park).abs() < 1e-6 && (sh.1 - sh_x.1 - park).abs() < 1e-6);
-    assert!(
-        (shaft[0].volume() - PI * rod_d * rod_d / 4.0 * (sh.1 - sh.0)).abs()
-            < 0.01 * shaft[0].volume()
-    );
-    assert!(sh.0 < wheel.1 && sh.0 > wheel.0 && sh.1 > hub.1 && sh.1 > ups[1].0 + park);
-    let on_head: Vec<(f64, f64)> = bodies_of(&mut doc, "Index bearings KFL001")
-        .iter()
-        .map(x_of)
-        .collect();
-    assert_eq!(on_head.len(), 2);
-    assert!(
-        (on_head[0].0 - ups[0].1 - park).abs() < 1e-6,
-        "on the first upright's back"
+        (rim - big / 2.0 - 1.4).abs() < 1e-9
+            && (wheel_x.1 - wheel_x.0 - f(&t["wheel_w"])).abs() < 1e-9
     );
     assert!(
-        (on_head[1].1 - ups[1].0 - park).abs() < 1e-6,
-        "on the second upright's front"
+        (disc_x.1 - neck_x.0).abs() < 1e-9
+            && (neck_x.1 - wheel_x.0).abs() < 1e-9
+            && rod.1 > wheel_x.0
+            && rod.1 < wheel_x.1,
+        "the wheel is on the neck's end and the rod ends inside it"
     );
-    assert!(on_head[1].0 - on_head[0].1 > 4.0 && hub.1 < ups[0].0 + park);
-    // the sled's rod and the wheel's shaft never meet: with the star home there is this much between their ends
-    let between = sh_x.0 - rod_x.1;
-    assert!(between > 3.0, "{between}");
+    assert!(
+        overlap(&disc, &wheel) < 1e-6
+            && overlap(&disc, &spindle[0]) < 1e-6
+            && overlap(&wheel, &spindle[0]) < 1e-6
+    );
+    // the wheel's four screws go into the neck on a circle outside the hub's flange, which the disc is bolted to
+    let (neck, hub_d) = (&t["neck"], f(&t["hub"][0]));
+    assert!(f(&neck[2]) + 8.0 <= f(&neck[0]) && f(&neck[2]) >= hub_d + 6.0 && f(&neck[1]) >= 8.0);
+    // The motor: in the sled's box, between its rails and under its deck, on a bracket screwed to the sled's
+    // bottom; its shaft comes out past the box's end and through the bracket to the pulley, which is in the wheel's
+    // plane and the belt's length from the spindle. The bracket stands beside the disc, clear of it.
+    let drive = bodies_of(&mut doc, "Wheel drive");
+    assert_eq!(drive.len(), 4);
+    let (bracket, motor, pulley, shaft) = (
+        drive[0].bounds().unwrap(),
+        drive[1].bounds().unwrap(),
+        drive[2].bounds().unwrap(),
+        drive[3].bounds().unwrap(),
+    );
+    let (hollow_y, hollow_z, box_x) = (
+        pair(&s["hollow_y"]),
+        pair(&s["hollow_z"]),
+        pair(&s["box_x"]),
+    );
+    let (motor_y, motor_z, drive_x) = (f(&t["motor_y"]), f(&t["motor_z"]), pair(&t["drive_x"]));
+    assert!(
+        ((motor.0.y + motor.1.y) / 2.0 - motor_y).abs() < 1e-6
+            && ((motor.0.z + motor.1.z) / 2.0 - motor_z).abs() < 1e-6
+    );
+    assert!(
+        motor.0.y > hollow_y.0 + 2.0
+            && motor.1.y < hollow_y.1 - 2.0
+            && motor.0.z > hollow_z.0
+            && motor.1.z < hollow_z.1 - 2.0,
+        "the motor is in the box"
+    );
+    assert!(
+        motor.0.x < box_x.1 - 10.0
+            && (motor.1.x - drive_x.0).abs() < 1e-6
+            && (bracket.1.x - drive_x.1).abs() < 1e-6
+    );
+    assert!(
+        (bracket.0.z - f(&s["plate_top"])).abs() < 1e-6 && bracket.1.x < f(&s["plate_x"][1]),
+        "the bracket's foot is on the sled's bottom"
+    );
+    assert!(
+        (motor_y.hypot(za - motor_z) - c).abs() < 1e-6,
+        "the motor is the belt's length from the spindle"
+    );
+    assert!((pulley.0.x - wheel_x.0).abs() < 1e-6 && (pulley.1.x - wheel_x.1).abs() < 1e-6);
+    assert!(
+        ((pulley.0.y + pulley.1.y) / 2.0 - motor_y).abs() < 1e-6
+            && ((pulley.0.z + pulley.1.z) / 2.0 - motor_z).abs() < 1e-6
+    );
+    assert!(
+        (shaft.0.x - drive_x.0).abs() < 1e-6
+            && (shaft.1.x - wheel_x.1).abs() < 1e-6
+            && shaft.1.x - shaft.0.x <= f(&t["motor"][2]),
+        "a NEMA 17's shaft is long enough to reach"
+    );
+    let corner = (bracket.1.y).hypot(za - bracket.1.z);
+    println!(
+        "the wheel's motor {c:.1} from the spindle, {:.1} under the deck; its bracket's nearest corner {corner:.1} from the axis, the disc's rim {:.1}",
+        hollow_z.1 - motor.1.z,
+        f(&t["disc"][0]) / 2.0
+    );
+    assert!(
+        (corner - f(&t["bracket_r"])).abs() < 1e-6
+            && corner >= f(&t["disc"][0]) / 2.0 + 5.0
+            && bracket.1.x <= wheel_x.0 - 3.0
+    );
+    // the belt's lower run is over the sled's bottom all the way: at the wheel's rim and at the pulley
+    let belt_low = (za - rim).min(motor_z - small / 2.0 - 1.5);
+    assert!((belt_low - f(&t["belt_low"])).abs() < 1e-9 && belt_low - f(&s["plate_top"]) >= 5.0);
     // On the sled each spindle runs in two pillow blocks bolted down on a riser: a solid block glued face down on
     // the deck. Each block stands on its riser with its foot inside the riser's edges, the shaft's centre its
     // catalogue height over the foot, and the two of a pair are well apart.
@@ -1361,9 +1464,7 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     };
     let bearings = on_blocks("Head bearings KP001", "Headstock", &s["head_pb_x"]);
     let tail_bearings = on_blocks("Tail bearings KP001", "Tailstock", &s["tail_pb_x"]);
-    assert!(
-        bearings[0].0 > rod.0 && bearings[1].1 < disc_x.0 && bearings[1].1 <= head_riser.1 + 1e-6
-    );
+    assert!(bearings[0].0 > rod.0 && bearings[1].1 < hub.0 && bearings[1].1 <= head_riser.1 + 1e-6);
     // The socket: its boss on the rod's end, its pocket round the stick's end with room behind it to push the blank
     // in further, and a fit loose enough to go on by hand. Turning, its corners clear the plate and the positioner.
     let socket = &s["socket"];
@@ -1422,23 +1523,33 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
         "the master is the rod itself"
     );
     assert!(f(&s["master_r"]) + 1.0 <= f(&n["tile"]["circle"]));
-    // the home mark: the sensor on the index head's first upright, facing the wheel's back and short of it, its
+    // the home mark: the sensor on the end of the deck, under the spindle, facing the disc and short of it, its
     // slot at the fin's radius and the fin reaching into it
     let sensor = bodies_of(&mut doc, "Turn home sensor").remove(0);
     let (lo, hi) = sensor.bounds().unwrap();
-    assert!((hi.x - ups[0].0 - park).abs() < 1e-6 && lo.x >= wheel.1 + 1.5);
-    let fin_end = wheel.1 + f(&s["fin_l"]);
+    assert!((lo.x - box_x.1).abs() < 1e-6 && hi.x <= disc_x.0 - 1.5);
+    let fin_end = disc_x.0 - fin_l;
     assert!(
-        fin_end > lo.x + 3.0 && fin_end < lo.x + 8.0,
+        fin_end < hi.x - 3.0 && fin_end > hi.x - 8.0,
         "the fin is in the slot"
     );
+    let flag_r = f(&t["flag_r"]);
     assert!(
-        ((lo.z + hi.z) / 2.0 - za - f(&s["flag_r"])).abs() < 1e-6
-            && hi.z <= za + f(&s["stock_above"])
+        ((lo.z + hi.z) / 2.0 - (za - flag_r)).abs() < 1e-6 && ((lo.y + hi.y) / 2.0).abs() < 1e-6
     );
+    assert!(
+        hi.z <= f(&s["top"]) + 1e-6 && lo.z >= f(&s["top"]) - f(&s["ply"]) - 1e-6,
+        "it is on the end of the deck"
+    );
+    // the fin goes round outside the hub's flange and inside where a lock's pad would be
+    let lk = &n["lock"];
+    assert!(
+        flag_r > hub_d / 2.0 + 5.0 && flag_r < f(&lk["lock_r"]) - f(&lk["clamp"][4]) / 2.0 - 5.0
+    );
+    assert!(overlap(&sensor, &disc) < 1e-6);
     // The sensor says home over the fin's whole width. The controller's own homing, run by the build from nine
     // places in the fin and out of it, ends on the same edge of it every time, to a step.
-    let homing = &s["homing"];
+    let homing = &t["homing"];
     let ends: Vec<(f64, f64)> = homing["ends"]
         .as_array()
         .unwrap()
@@ -1447,7 +1558,8 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
         .collect();
     let (fin, step) = (f(&homing["fin_deg"]), f(&homing["step_deg"]));
     assert!(
-        (fin - (6.0 / f(&s["flag_r"])).to_degrees()).abs() < 1e-9 && f(&homing["clear_deg"]) > 1.0
+        (fin - (f(&t["fin"][1]) / flag_r).to_degrees()).abs() < 1e-9
+            && f(&homing["clear_deg"]) > 1.0
     );
     assert!(ends.len() >= 8 && ends.iter().filter(|e| e.0 >= 0.0 && e.0 < fin).count() >= 3);
     for e in &ends {
@@ -1459,233 +1571,457 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
         );
     }
     // a fin 0.02 mm out where the sensor reads it turns the stick this far wrong at the tile's edge
-    let at_edge = 0.02 / f(&s["flag_r"]) * f(&n["tile"]["swing"]);
-    println!(
-        "the home fin at {:.0} mm: 0.02 mm there is {at_edge:.3} mm at the tile's edge",
-        f(&s["flag_r"])
-    );
+    let at_edge = 0.02 / flag_r * f(&n["tile"]["swing"]);
+    println!("the home fin at {flag_r:.0} mm: 0.02 mm there is {at_edge:.3} mm at the tile's edge");
     assert!(at_edge < 0.02);
 }
 
-/// The owner's index. A tapered twelve-point star on the sled's
-/// spindle goes into its negative in the face of a wheel that stays
-/// at the end of the base: home, the star's flanks are on the
-/// pocket's with nothing to spare and nothing through, the head
-/// pushed back on its springs by the seat; a hair further in, or
-/// turned a degree, it is through the pocket's walls, which is what
-/// makes the wheel's angle the stick's. A clamp on the sled pinches
-/// the disc behind the star against an anvil, outside the pocket, so
-/// the stick keeps its angle when the sled takes it away. The head is
-/// not fastened down: it stands on three feet and hangs back on two
-/// bolts through slack holes in a post.
+/// Nothing but the belt holds the stick while it is cut. For every
+/// cutting row, in the table's order, the area of section its bite
+/// removes is followed again here on the planner's own grid; that, the
+/// feed and how fast the bit's edge passes give how hard the bit
+/// pushes; taken at the furthest thing it cuts, that is a turning on
+/// the stick; and the belt's two runs and the motor's hold, one after
+/// the other, give how far the tile's edge moves under it. It is an
+/// estimate, nothing in it measured, and the table carries it row by
+/// row: this is the same sum from the same assumptions by other code,
+/// held to the same limits.
 #[test]
-fn the_star_goes_home_in_the_index_wheel_and_a_clamp_keeps_the_angle_when_it_leaves() {
+fn the_belt_alone_holds_the_stick_at_every_cut() {
     let n = numbers();
-    let (s, ix) = (&n["sled"], &n["index"]);
-    let mut doc = load();
-    let za = f(&s["za"]);
-    let star = &ix["star"];
-    // the star: two hexagons, twelve points, tapered a side's angle at the points over its thickness
-    let (r, inside, t, k) = (
-        f(&star["r"]),
-        f(&star["inside"]),
-        f(&star["t"]),
-        f(&star["k"]),
+    let (rows, tile, stock) = (rows(&n), outline(&n), blank(&n));
+    let (h, t) = (&n["hold"], &n["turn"]);
+    // how stiffly the stick is held: the belt's two runs, one tightening as the other slackens, and the motor
+    let w = &t["wheel"];
+    let (big, small, c) = (f(&w[0]) * 2.0 / PI, f(&w[1]) * 2.0 / PI, f(&w[3]));
+    let span = (c * c - ((big - small) / 2.0).powi(2)).sqrt();
+    let ratio = f(&w[0]) / f(&w[1]);
+    let k_belt = 2.0 * f(&h["belt_ea"]) * (big / 2.0).powi(2) / span / 1000.0;
+    let k_motor = 50.0 * f(&h["motor_hold"]) * ratio * ratio;
+    let stiff = 1.0 / (1.0 / k_belt + 1.0 / k_motor);
+    assert!((stiff - f(&h["stiff"])).abs() < 1e-6 * stiff && (span - f(&h["span"])).abs() < 1e-9);
+    assert!((ratio - f(&t["ratio"])).abs() < 1e-12 && ratio >= 10.0);
+    // the waste, on the planner's grid
+    let cell = f(&h["cell"]);
+    let (mut lo, mut hi) = ((f64::MAX, f64::MAX), (f64::MIN, f64::MIN));
+    for q in &stock {
+        lo = (lo.0.min(q.0), lo.1.min(q.1));
+        hi = (hi.0.max(q.0), hi.1.max(q.1));
+    }
+    let mut cells: Vec<P2> = Vec::new();
+    for i in 0..((hi.0 - lo.0) / cell) as usize + 1 {
+        for k in 0..((hi.1 - lo.1) / cell) as usize + 1 {
+            let q = (
+                lo.0 + (i as f64 + 0.5) * cell,
+                lo.1 + (k as f64 + 0.5) * cell,
+            );
+            if inside(q, &stock) && !inside(q, &tile) {
+                cells.push(q);
+            }
+        }
+    }
+    let mut alive = vec![true; cells.len()];
+    let ball = f(&n["bit"]) / 2.0;
+    let (taper, shank) = (f(&n["taper"]).to_radians(), f(&n["shank"]) / 2.0);
+    let flat = f(&n["rough"]["bit"]) / 2.0;
+    let (energy, rpm, peak, feed) = (
+        f(&h["cut_energy"]),
+        f(&h["rpm"]),
+        f(&h["peak"]),
+        f(&h["feed"]),
     );
-    assert!((r - f(&star["af"]) / 3f64.sqrt()).abs() < 1e-9);
-    assert!((inside - f(&star["af"]) / 2.0 / 15f64.to_radians().cos()).abs() < 1e-9);
-    assert!(((r * (1.0 - k) / t).atan().to_degrees() - f(&star["taper"])).abs() < 1e-9);
-    assert_eq!(star["section"].as_array().unwrap().len(), 36);
-    // The body: the disc and the star in one, bored clear of the rod. The star's volume is a frustum's of its section.
-    let section: Vec<P2> = star["section"]
+    let (swing, limit) = (f(&n["tile"]["swing"]), pair(&h["limit"]));
+    let (mut worst, mut heaviest, mut cuts) = ([0.0f64; 3], (0.0f64, 0.0f64), 0);
+    for (r, told) in rows.iter().zip(n["rows"].as_array().unwrap()) {
+        if r.kind != "rough" && r.kind != "finish" {
+            continue;
+        }
+        cuts += 1;
+        let (mut count, mut over, mut far) = (0usize, 0.0f64, 0.0f64);
+        for (i, q) in cells.iter().enumerate() {
+            if !alive[i] {
+                continue;
+            }
+            let (u, up) = seen(*q, r.t);
+            let off = (u - r.across).abs();
+            let stands = if r.tool == "ball" {
+                match flank(off, ball, taper, shank) {
+                    Some(side) => up - (r.tip + ball + side),
+                    None => continue,
+                }
+            } else if off <= flat {
+                up - r.tip
+            } else {
+                continue;
+            };
+            if stands >= 0.0 {
+                alive[i] = false;
+                count += 1;
+                over = over.max(stands);
+                far = far.max(q.0.hypot(q.1));
+            }
+        }
+        let area = count as f64 * cell * cell;
+        // how fast the edge passes: the straight bit's own diameter; the ball-nose's half way up what it is cutting
+        let dia = if r.tool != "ball" {
+            2.0 * flat
+        } else if over / 2.0 < ball {
+            let a = over / 2.0;
+            (2.0 * (2.0 * ball * a - a * a).max(0.0).sqrt()).max(1.0)
+        } else {
+            (2.0 * shank).min(2.0 * ball + 2.0 * (over / 2.0 - ball) * taper.tan())
+        };
+        let push = peak * energy * 1000.0 * area * feed / (PI * dia * rpm / 60.0);
+        let torque = push * far / 1000.0;
+        let give = torque / stiff * swing;
+        let face = r.kind == "finish" && r.last_bite;
+        assert!(
+            (area - f(&told["area"])).abs() < 0.05 + 0.01 * area,
+            "row {}: {area:.2} mm2 here, {} in the table",
+            r.n,
+            told["area"]
+        );
+        assert!(
+            (give - f(&told["give"])).abs() < 2e-5 + 0.02 * give,
+            "row {}: {give:.5} here, {} in the table",
+            r.n,
+            told["give"]
+        );
+        assert_eq!(told["face"].as_bool(), Some(face));
+        assert!(
+            give <= if face { limit.1 } else { limit.0 } + 1e-9,
+            "row {} would move the tile's edge {give:.4}",
+            r.n
+        );
+        let k = if r.kind == "rough" {
+            0
+        } else if face {
+            2
+        } else {
+            1
+        };
+        worst[k] = worst[k].max(give);
+        if torque > heaviest.0 {
+            heaviest = (torque, push);
+        }
+    }
+    let stall = f(&h["motor_hold"]) * ratio / heaviest.0;
+    println!(
+        "held {stiff:.0} N m a radian ({k_belt:.0} the belt, {k_motor:.0} the motor). The heaviest of {cuts} cuts pushes {:.1} N, {:.2} N m: {stall:.0} times under what stalls the motor. \
+         The tile's edge moves at most {:.1} um roughing, {:.1} in a finishing pass's earlier bites, {:.1} in one that leaves a face",
+        heaviest.1,
+        heaviest.0,
+        1000.0 * worst[0],
+        1000.0 * worst[1],
+        1000.0 * worst[2]
+    );
+    assert!(cuts > 500 && stall > 10.0 && (stall - f(&h["stall_over"])).abs() < 0.02 * stall);
+    for (k, key) in ["rough", "bite", "face"].iter().enumerate() {
+        assert!((worst[k] - f(&h["worst"][*key][0])).abs() < 2e-5 + 0.02 * worst[k]);
+    }
+    // The limits are small beside what they guard: a fifth of the ridge a pass may leave where a face is left,
+    // a twentieth of what roughing leaves on anywhere else. And the assumptions are on the heavy side: the Colt
+    // on its slowest setting, and wood that takes as much to cut as any figure published for it.
+    assert!(limit.1 <= f(&n["ridge"]) / 5.0 && limit.0 <= f(&n["rough"]["allow"]) / 20.0);
+    assert!(rpm <= 16000.0 && energy >= 0.15 && peak >= 2.0);
+    // the bites the planner was given: shallower than when a hand pushed the sled and a clamp held the stick
+    assert!(f(&n["rough"]["bite"]) <= 2.0 && f(&n["plan"]["ball_bite"]) <= 1.0);
+}
+
+/// A screw feeds the sled. It lies along the base, its motor on a block
+/// at the tail end beyond where the sled's end comes, and goes in
+/// through the tail end of the sled's box to a nut on the sled's
+/// bottom; its far end is free. The nut is on the screw from one end
+/// of the travel to the other, the screw through the nut and through
+/// nothing else. A stop block stands a millimetre beyond each end of
+/// the travel, nearer than the collet nut comes to the socket. And
+/// every pass ends with the sled finding its switch: the controller's
+/// own pass, run by the build on a sled that loses steps, carries on
+/// after a little lost and stops after more, whichever way it was
+/// going.
+#[test]
+fn a_screw_feeds_the_sled_and_it_finds_its_switch_after_every_pass() {
+    let n = numbers();
+    let (s, tr, t) = (&n["sled"], &n["travel"], &n["turn"]);
+    let mut doc = load();
+    let drawn = f(&n["drawn"]["x"]);
+    let (back, forward) = (f(&s["back_x"]), f(&s["forward_x"]));
+    let (screw, nut) = (&tr["screw"], &tr["nut"]);
+    let (y, z) = (f(&tr["y"]), f(&tr["z"]));
+    // on the base: the motor's bracket, the block it stands on, the motor, a coupler, the motor's shaft, the screw
+    let drive = bodies_of(&mut doc, "Travel drive");
+    assert_eq!(drive.len(), 6);
+    let rod = drive[5].bounds().unwrap();
+    let screw_x = pair(&tr["screw_x"]);
+    assert!(
+        (rod.0.x - drawn - screw_x.0).abs() < 1e-6 && (rod.1.x - drawn - screw_x.1).abs() < 1e-6
+    );
+    assert!((rod.1.x - rod.0.x - f(&screw[2])).abs() < 1e-6);
+    assert!(
+        ((rod.0.y + rod.1.y) / 2.0 - y).abs() < 1e-6
+            && ((rod.0.z + rod.1.z) / 2.0 - z).abs() < 1e-6
+    );
+    let d = f(&screw[0]);
+    assert!((drive[5].volume() - PI * d * d / 4.0 * f(&screw[2])).abs() < 0.01 * drive[5].volume());
+    let block = drive[1].bounds().unwrap();
+    assert!(
+        block.0.z.abs() < 1e-6 && (block.1.z - f(&s["t12"])).abs() < 1e-6,
+        "the motor's block is on the base"
+    );
+    assert!(
+        overlap(&drive[0], &drive[1]) < 1e-6
+            && (drive[0].bounds().unwrap().0.z - block.1.z).abs() < 1e-6
+    );
+    // on the sled: the nut's block on the bottom, and the nut, flange and body, on its outer face and through it
+    let on_sled = bodies_of(&mut doc, "Travel nut");
+    assert_eq!(on_sled.len(), 3);
+    let (nb, nut_b) = (on_sled[0].bounds().unwrap(), on_sled[1].bounds().unwrap());
+    let nut_x = pair(&tr["nut_x"]);
+    assert!(
+        (nb.0.x - nut_x.0).abs() < 1e-6
+            && (nb.1.x - nut_x.1).abs() < 1e-6
+            && (nb.0.z - f(&s["plate_top"])).abs() < 1e-6
+    );
+    assert!(
+        (nut_b.0.x - (nut_x.0 - f(&nut[1]))).abs() < 1e-6,
+        "the nut's flange is on the block's outer face"
+    );
+    assert!(
+        nut_x.0 > f(&s["box_x"][0]) && nut_x.0 < f(&s["box_x"][0]) + 20.0,
+        "just inside the box's tail end"
+    );
+    // in the box: between the rails, under the deck, the nut's flange over the bottom
+    let (hy, hz, ply) = (pair(&s["hollow_y"]), pair(&s["hollow_z"]), f(&s["ply"]));
+    assert!(
+        (hy.0 - f(&s["deck_y"][0]) - ply).abs() < 1e-9
+            && (hy.1 - f(&s["rail_near"]) + ply).abs() < 1e-9
+    );
+    assert!((hz.0 - f(&s["plate_top"])).abs() < 1e-9 && (hz.1 - f(&s["top"]) + ply).abs() < 1e-9);
+    assert!(nb.0.y > hy.0 + 5.0 && nb.1.y < hy.1 - 5.0 && nb.1.z < hz.1 - 3.0);
+    assert!(z - f(&nut[0]) / 2.0 >= hz.0 + 3.0);
+    // The nut is on the screw wherever the sled is. Forward, its flange is as near the coupler as it comes;
+    // back, the far side of its block is as far along the screw as it goes. Both along the base, the bit at 0.
+    let fwd_flange = nut_x.0 - f(&nut[1]) - forward;
+    let back_far = nut_x.1 - back;
+    let coupler_x = pair(&tr["coupler_x"]);
+    println!(
+        "the screw from {:.0} to {:.0} along the base: the nut's flange {:.1} from the coupler with the sled forward, {:.1} of screw past the nut's block with it back",
+        screw_x.0,
+        screw_x.1,
+        fwd_flange - coupler_x.1,
+        screw_x.1 - back_far
+    );
+    assert!(
+        (fwd_flange - f(&tr["nut_fwd"])).abs() < 1e-9
+            && (back_far - f(&tr["nut_back"])).abs() < 1e-9
+    );
+    assert!(fwd_flange - coupler_x.1 >= 5.0 && screw_x.1 - back_far >= 10.0);
+    assert!(
+        screw_x.0 > coupler_x.0 && screw_x.0 < coupler_x.1,
+        "the screw's end is in the coupler"
+    );
+    // forward, the screw reaches furthest into the box: short of the wheel's motor at the other end
+    assert!(screw_x.1 + forward < f(&t["drive_x"][0]) - f(&t["motor"][1]) - 10.0);
+    // the sled at both ends of its travel: the screw through the nut and its block and in neither; a
+    // millimetre off its line, it is in the nut
+    let moved = |solid: &Solid, dx: f64, dy: f64| {
+        solid.transformed(&ok_brep::Transform::translation(ok_math::Vec3::new(
+            dx, dy, 0.0,
+        )))
+    };
+    for at in [back, forward] {
+        for part in &on_sled {
+            assert!(overlap(&moved(part, drawn - at, 0.0), &drive[5]) < 1e-3);
+        }
+        assert!(
+            overlap(&moved(&on_sled[1], drawn - at, 1.0), &drive[5]) > 5.0,
+            "the screw is in the nut"
+        );
+    }
+    // The motor is beyond where the sled's end comes, and beyond the forward stop's face. A stop block stands a
+    // little beyond each end of the travel: a sled that overruns meets one before the collet nut meets the socket.
+    let (stops, guard) = (pair(&s["stops_x"]), f(&s["guard"]));
+    assert!(coupler_x.1 <= stops.0 - guard - 3.0);
+    let blocks = bodies_of(&mut doc, "Stops");
+    assert_eq!(blocks.len(), 2);
+    let (fwd, bk) = (blocks[0].bounds().unwrap(), blocks[1].bounds().unwrap());
+    assert!(
+        (fwd.1.x - drawn - (stops.0 - guard)).abs() < 1e-6
+            && (bk.0.x - drawn - (stops.1 + guard)).abs() < 1e-6
+    );
+    assert!(guard > 0.0 && guard < f(&s["socket"]["nut_clear"]));
+    let switch = bodies_of(&mut doc, "Travel home switch")
+        .remove(0)
+        .bounds()
+        .unwrap();
+    assert!(
+        (switch.0.x - drawn - stops.1).abs() < 1e-6,
+        "the switch is where the bottom's end is with the sled back"
+    );
+    // a four-start screw of 8 mm a turn, its driver at 4 microsteps: a hundredth of a millimetre a step
+    let sim: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/steps.json")).unwrap())
+            .unwrap();
+    let per = f(&sim["per"][3]);
+    assert!(
+        (per - 200.0 * 4.0 / f(&screw[1])).abs() < 1e-9
+            && (per - f(&tr["steps_per_mm"])).abs() < 1e-9
+    );
+    // Coming home. The sled runs fast to a little short of home and then finds its switch; how far that was from
+    // where its steps said is what it lost. The build ran the controller's own pass on a sled that loses steps.
+    let (short, slip_max) = (f(&tr["home_short"]), f(&tr["home_slip"]));
+    assert!(slip_max < short && short <= 5.0 && slip_max <= 0.5);
+    let came = tr["came"].as_array().unwrap();
+    let (mut carried, mut stopped) = (0, 0);
+    for c in came {
+        let lost = f(&c["lost_out"]).max(f(&c["lost_back"]));
+        let said = c["stopped"].as_str().unwrap();
+        if lost > slip_max {
+            assert!(!said.is_empty(), "{lost} mm lost and it carried on");
+            stopped += 1;
+        } else {
+            assert!(
+                said.is_empty()
+                    && f(&c["ends"]).abs() <= 1.0 / per + 1e-9
+                    && f(&c["counted"]) == 0.0
+            );
+            assert!((f(&c["slip"]) - lost).abs() <= 1.0 / per + 1e-9);
+            carried += 1;
+        }
+    }
+    println!("coming home on a sled that loses steps: {carried} cases carried on, home to a step; {stopped} stopped");
+    assert!(carried >= 3 && stopped >= 3);
+    assert!(
+        came.iter().any(|c| f(&c["lost_out"]) > slip_max)
+            && came.iter().any(|c| f(&c["lost_back"]) > slip_max)
+    );
+}
+
+/// A lock on the spindle is an option nobody has fitted: the belt
+/// holds the stick. Its four parts are drawn, each in its own tab, and
+/// are in neither assembly. Their place is kept: the post and the
+/// clamp's riser stand on the deck beside the headstock, the clamp's
+/// pad is on the disc's inner face inside its rim, and the anvil comes
+/// in behind the disc, between it and the wheel and outside the disc's
+/// neck, a hair off until the clamp closes. (That they are through
+/// nothing, wherever the sled is, is the model's test: they are among
+/// what rides.) The controller, run as if a lock were fitted, lets it
+/// go once for every new angle.
+#[test]
+fn a_lock_is_drawn_in_its_place_and_left_off_the_machine() {
+    let n = numbers();
+    let (s, t, lk) = (&n["sled"], &n["turn"], &n["lock"]);
+    let mut doc = load();
+    assert_eq!(lk["fitted"].as_bool(), Some(false));
+    let parts: Vec<&str> = lk["parts"]
         .as_array()
         .unwrap()
         .iter()
-        .map(pair)
+        .map(|k| k.as_str().unwrap())
         .collect();
-    let area = section
-        .iter()
-        .zip(section.iter().cycle().skip(1))
-        .map(|(a, b)| a.0 * b.1 - b.0 * a.1)
-        .sum::<f64>()
-        .abs()
-        / 2.0;
-    let (disc, disc_x, star_x) = (
-        (f(&ix["disc"][0]), f(&ix["disc"][1])),
-        pair(&ix["disc_x"]),
-        pair(&ix["star_x"]),
+    assert_eq!(
+        parts,
+        ["Lock post", "Lock anvil", "Toggle clamp", "Lock switch"]
     );
-    let bore = f(&n["spindle_d"]) + 1.0;
-    let expect = PI * disc.0 * disc.0 / 4.0 * disc.1 + area * t * (1.0 + k + k * k) / 3.0
-        - PI * bore * bore / 4.0 * (disc.1 + t);
-    let body = bodies_of(&mut doc, "Index star and lock disc");
-    assert_eq!(body.len(), 1);
-    let body = &body[0];
-    println!(
-        "star {:.1} over its points, {:.1} at its small end; with its disc {:.0} mm3 (a frustum and a disc: {expect:.0})",
-        2.0 * r,
-        2.0 * r * k,
-        body.volume()
-    );
-    assert!((body.volume() - expect).abs() < 0.005 * expect);
-    let (lo, hi) = body.bounds().unwrap();
-    assert!((lo.x - disc_x.0).abs() < 1e-6 && (hi.x - star_x.1).abs() < 1e-6);
-    assert!((hi.z - za - disc.0 / 2.0).abs() < 0.05);
-    // Home. The sled back, the head pushed back by the seat: the star and the wheel share nothing.
-    let wheel = bodies_of(&mut doc, "Index wheel").remove(0);
-    let (seat, back) = (f(&ix["seat"]), f(&n["drawn"]["x"]) - f(&s["back_x"]));
-    assert!((f(&ix["head_at"]) + f(&s["back_x"]) + seat).abs() < 1e-9);
-    let shift = |solid: &Solid, dx: f64| {
-        solid.transformed(&ok_brep::Transform::translation(ok_math::Vec3::new(
-            dx, 0.0, 0.0,
-        )))
-    };
-    let home = shift(&wheel, seat);
-    let at_home = overlap(&shift(body, back), &home);
-    // a hair further in, and the flanks are through each other all round; so is a star turned a degree in its seat
-    let deeper = overlap(&shift(body, back + 0.5), &home);
-    let turned = |deg: f64| {
-        let about = ok_brep::Transform::rotation(
-            ok_math::Vec3::new(0.0, 0.0, za),
-            ok_math::Vec3::new(1.0, 0.0, 0.0),
-            deg.to_radians(),
+    // in the document, and in neither assembly
+    let saved: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/sled.okpart")).unwrap())
+            .unwrap();
+    let mut assemblies = 0;
+    for tab in saved["tabs"].as_array().unwrap() {
+        let kind = &tab["kind"];
+        if kind["type"].as_str() != Some("assembly") {
+            continue;
+        }
+        assemblies += 1;
+        let names: Vec<&str> = kind["instances"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|i| i["name"].as_str().unwrap())
+            .collect();
+        assert!(names.len() >= 40 && names.contains(&"Disc") && names.contains(&"Index wheel"));
+        assert!(
+            names
+                .iter()
+                .all(|k| !parts.iter().any(|p| k.starts_with(p))),
+            "a lock's part is on the machine"
         );
-        overlap(&shift(&body.transformed(&about), back), &home)
-    };
-    let (one, thirty) = (turned(1.0), turned(30.0));
-    // and short of home by the seat, where the head waits for it, it has a degree of play: the room it finds its way in by
-    let waiting = overlap(
-        &shift(body, back - seat).transformed(&ok_brep::Transform::rotation(
-            ok_math::Vec3::new(0.0, 0.0, za),
-            ok_math::Vec3::new(1.0, 0.0, 0.0),
-            1f64.to_radians(),
-        )),
-        &home,
+    }
+    assert_eq!(assemblies, 2);
+    let (za, top) = (f(&s["za"]), f(&s["top"]));
+    let (disc_d, disc_x, wheel_x, neck_d) = (
+        f(&t["disc"][0]),
+        pair(&t["disc_x"]),
+        pair(&t["wheel_x"]),
+        f(&t["neck"][0]),
     );
-    println!(
-        "home the star and the wheel share {at_home:.3} mm3; 0.5 mm deeper {deeper:.0}; turned a degree {one:.0}; turned to the next point {thirty:.3}; \
-         {seat} short of home and turned a degree, {waiting:.3}"
+    let (lock_r, pad, gap) = (f(&lk["lock_r"]), f(&lk["clamp"][4]), f(&lk["anvil"][2]));
+    // the post and the clamp's riser stand on the deck, beside the headstock's riser and hard against each other
+    let post = bodies_of(&mut doc, "Lock post");
+    assert_eq!(post.len(), 2);
+    let (p_lo, p_hi) = post[0].bounds().unwrap();
+    let post_x = pair(&lk["post_x"]);
+    assert!(
+        (p_lo.z - top).abs() < 1e-6
+            && (p_lo.x - post_x.0).abs() < 1e-6
+            && (p_hi.x - post_x.1).abs() < 1e-6
     );
     assert!(
-        at_home < 1.0 && deeper > 100.0 && one > 100.0,
-        "the star is on its seat"
+        p_lo.y >= f(&s["deck_y"][0])
+            && p_hi.y <= -f(&s["riser_half"]) + 1e-6
+            && (post_x.1 - f(&s["head_riser_x"][1])).abs() < 1e-9
     );
-    assert!(thirty < 1.0, "twelve ways in, a mark says which");
-    assert!(waiting < 1.0);
-    // the pocket ends inside the wheel, with a gap behind the star's small end so the flanks seat first
-    let (pocket_x, wheel_x) = (pair(&ix["pocket_x"]), pair(&s["wheel_x"]));
-    assert!((pocket_x.0 - star_x.0 - f(&star["stand_off"])).abs() < 1e-9);
-    assert!((wheel_x.0 - pocket_x.1).abs() < 1e-9);
-    assert!(star_x.1 + f(&star["back_gap"]) <= wheel_x.1 - 3.0);
+    let (r_lo, r_hi) = post[1].bounds().unwrap();
     assert!(
-        f(&ix["pocket_boss"][0]) / 2.0 >= r + 6.0,
-        "a wall round the pocket"
+        (r_lo.z - top).abs() < 1e-6
+            && (r_hi.x - post_x.0).abs() < 1e-6
+            && r_lo.x > f(&s["box_x"][0])
     );
-    // The lock. The clamp's pad is on the disc's inner face, inside its rim; the anvil is behind the disc, a hair
-    // clear of it until the clamp closes, and behind the pad; and the pinch is outside the pocket's boss, so the
-    // anvil passes the wheel's face as the star goes home.
-    let (lock_r, pad) = (f(&ix["lock_r"]), f(&ix["clamp"][4]));
+    // the clamp: level with the axis, its pad on the disc's inner face and inside the disc's rim
     let clamp = bodies_of(&mut doc, "Toggle clamp").remove(0);
-    let anvil = bodies_of(&mut doc, "Lock anvil").remove(0);
     let (c_lo, c_hi) = clamp.bounds().unwrap();
-    let (a_lo, a_hi) = anvil.bounds().unwrap();
     assert!((c_hi.x - disc_x.0).abs() < 1e-6, "the pad is on the disc");
-    assert!(lock_r + pad / 2.0 <= disc.0 / 2.0 + 1e-9);
-    assert!(((c_lo.z + c_hi.z) / 2.0 - za).abs() < 1e-6);
-    let gap = f(&ix["anvil"][2]);
-    assert!(overlap(&anvil, body) < 1e-6 && overlap(&clamp, body) < 1e-6);
     assert!(
-        overlap(&shift(&anvil, -gap - 0.2), body) > 10.0,
-        "the anvil is behind the disc"
+        lock_r + pad / 2.0 <= disc_d / 2.0 + 1e-9 && ((c_lo.z + c_hi.z) / 2.0 - za).abs() < 1e-6
+    );
+    // the anvil: behind the disc with a hair between, short of the wheel, and outside the disc's neck
+    let anvil = bodies_of(&mut doc, "Lock anvil").remove(0);
+    let (a_lo, a_hi) = anvil.bounds().unwrap();
+    assert!(
+        (a_hi.x - disc_x.1 - gap - f(&lk["anvil"][0])).abs() < 1e-6 && a_hi.x + 2.0 <= wheel_x.0
     );
     assert!(a_hi.y >= -(lock_r - pad / 2.0) && a_lo.y <= -(lock_r + pad / 2.0));
     assert!(
-        -a_hi.y >= f(&ix["pocket_boss"][0]) / 2.0 + 3.0,
-        "the anvil is outside the pocket's boss"
+        -a_hi.y >= neck_d / 2.0 + 5.0,
+        "the anvil is outside the disc's neck"
     );
-    assert!(
-        (a_hi.x - disc_x.1 - gap - f(&ix["anvil"][0])).abs() < 1e-6 && a_hi.x + 3.0 <= wheel_x.0
-    );
-    // what the clamp is asked to hold: a cut's push at the blank's corner, against friction at the pinch
+    assert!(gap > 0.0 && gap <= 0.5);
+    // the disc between them: clear of both, and on the anvil when pushed that hair and a little
+    let disc = bodies_of(&mut doc, "Disc").remove(0);
+    assert!(overlap(&disc, &anvil) < 1e-6 && overlap(&disc, &clamp) < 1e-3);
+    let pushed = disc.transformed(&ok_brep::Transform::translation(ok_math::Vec3::new(
+        gap + 0.5,
+        0.0,
+        0.0,
+    )));
+    assert!(overlap(&pushed, &anvil) > 10.0);
+    // What it would hold, by friction at the pinch, against the turning the heaviest cut is estimated to ask.
     let holds = 2.0 * 0.2 * 500.0 * lock_r / 1000.0;
-    let asked = 60.0 * f(&n["blank_swing"]) / 1000.0;
-    println!("a 500 N clamp at {lock_r:.0} mm holds {holds:.1} N m; 60 N at the blank's corner asks {asked:.1}");
-    assert!(holds > 5.0 * asked);
-    // The head. Three feet under its plate, on the base. Home, it stands on the star and the two that are not by
-    // the wheel, and the star's seat is inside them; what rolls it is the star's lift over the stance.
-    let feet = bodies_of(&mut doc, "Head feet");
-    let head = bodies_of(&mut doc, "Index head");
-    assert_eq!((feet.len(), head.len()), (3, 3));
-    let plate = head[0].bounds().unwrap();
-    let head_z = pair(&ix["head_z"]);
-    assert!((plate.0.z - head_z.0).abs() < 1e-6 && (plate.1.z - head_z.1).abs() < 1e-6);
-    for foot in &feet {
-        let (lo, hi) = foot.bounds().unwrap();
-        assert!(lo.z.abs() < 1e-6 && (hi.z - head_z.0).abs() < 1e-6);
-        assert!(lo.x > plate.0.x && hi.x < plate.1.x && lo.y > plate.0.y && hi.y < plate.1.y);
-    }
-    let at: Vec<P2> = ix["feet"].as_array().unwrap().iter().map(pair).collect();
-    let seat_x = (star_x.0 + star_x.1) / 2.0;
-    let (b, c) = (at[1], at[2]);
-    let stance =
-        ((c.0 - b.0) * (0.0 - b.1) - (c.1 - b.1) * (seat_x - b.0)).abs() / (c.0 - b.0).abs();
-    println!(
-        "the head's stance {stance:.0} mm: a star 0.03 off its centre rolls it {:.4} deg",
-        (0.03 / stance).to_degrees()
-    );
-    assert!((stance - f(&ix["stance"])).abs() < 1e-6 && stance > 200.0);
-    assert!(at[0].0 < seat_x + 5.0 && at[1].0 > seat_x + 80.0 && at[2].1 > 150.0);
-    // It hangs back on two bolts through slack holes in the post, level with the axis: their heads are the stop
-    // the springs push it up to, and behind the head there is room to be pushed back the seat and more.
-    let post = bodies_of(&mut doc, "Spring post").remove(0);
-    let bolts = bodies_of(&mut doc, "Head bolts");
-    let springs = bodies_of(&mut doc, "Head springs");
-    assert_eq!((bolts.len(), springs.len()), (2, 2));
-    let post_x = pair(&ix["post_x"]);
-    let drawn = f(&n["drawn"]["x"]);
-    let (bolt_d, slack, each_side) = (f(&ix["bolt"][0]), f(&ix["bolt"][1]), f(&ix["bolt"][2]));
-    assert!(
-        slack - bolt_d >= 3.0,
-        "the head can shift a millimetre and a half any way"
-    );
-    for (bolt, spring) in bolts.iter().zip(&springs) {
-        let (lo, hi) = bolt.bounds().unwrap();
-        assert!(
-            ((lo.z + hi.z) / 2.0 - za).abs() < 1e-6
-                && ((lo.y + hi.y) / 2.0).abs() - each_side < 1e-6
-        );
-        assert!(
-            (hi.x - post_x.1 - drawn - f(&ix["bolt"][4])).abs() < 1e-6,
-            "its head is on the post's back"
-        );
-        assert!(overlap(bolt, &post) < 1e-6 && overlap(&shift(bolt, seat + 2.0), &post) < 1e-6);
-        // sideways by more than the slack it is in the post
-        let aside = bolt.transformed(&ok_brep::Transform::translation(ok_math::Vec3::new(
-            0.0,
-            (slack - bolt_d) / 2.0 + 1.0,
-            0.0,
-        )));
-        assert!(overlap(&aside, &post) > 5.0);
-        let (s_lo, s_hi) = spring.bounds().unwrap();
-        assert!(s_hi.x - s_lo.x <= f(&ix["spring_l"]) - seat - 1.0);
-        assert!(overlap(&shift(spring, seat + 1.0), &post) < 1e-6);
-    }
-    // The catch: a magnet flush in the back stop's face and steel flush in the sled's end. With the sled back they meet.
-    let magnet = bodies_of(&mut doc, "Catch magnet").remove(0);
-    let strike = bodies_of(&mut doc, "Catch strike").remove(0);
-    let (m, k) = (magnet.bounds().unwrap(), strike.bounds().unwrap());
-    assert!(
-        (m.0.x - (k.1.x + back)).abs() < 1e-6,
-        "they meet with the sled back"
-    );
-    assert!(
-        ((m.0.y + m.1.y) - (k.0.y + k.1.y)).abs() < 1e-6
-            && ((m.0.z + m.1.z) - (k.0.z + k.1.z)).abs() < 1e-6
-    );
-    assert!(
-        (m.0.x - drawn - f(&s["stops_x"][1])).abs() < 1e-6
-            && (k.1.x - f(&s["plate_x"][1])).abs() < 1e-6
-    );
+    let asked = n["rows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|r| r["torque"].as_f64())
+        .fold(0.0, f64::max);
+    println!("a 500 N clamp at {lock_r:.0} mm would hold {holds:.1} N m; the heaviest cut is estimated to ask {asked:.2}");
+    assert!(asked > 0.0 && holds > 20.0 * asked);
+    // the controller, run as if it were fitted
+    let sim: Value =
+        serde_json::from_str(&std::fs::read_to_string(dir().join("out/steps.json")).unwrap())
+            .unwrap();
+    assert_eq!(sim["with_lock"]["unlocks"].as_u64(), lk["unlocks"].as_u64());
+    assert!(lk["unlocks"].as_u64().unwrap() > 150);
 }
 
 /// The two animations, read back frame by frame. Both have a frame
@@ -1920,16 +2256,17 @@ fn the_animations_have_a_frame_for_every_pass_and_end_on_the_tile() {
 /// edge runs on the datum fence and spring plungers in its near edge
 /// keep it there; it rides on two slips; each fence has a lip over it,
 /// a hair clear of its top. The fences reach past both ends of its
-/// travel. A stop on the base meets the plate at each end: against the
-/// back one the bit is beside the master, clear of the tailstock and
-/// of the stick's end, against the forward one its collet nut is
-/// short of the socket.
+/// travel. Drawn back, the bit is beside the master, clear of the
+/// tailstock and of the stick's end; forward, its collet nut is short
+/// of the socket. The sled's bottom is longer than its box: it goes on
+/// under the wheel.
 #[test]
-fn the_sled_slides_between_two_fences_and_its_stops_put_the_bit_beside_the_master() {
+fn the_sled_slides_between_two_fences_and_drawn_back_the_bit_is_beside_the_master() {
     let n = numbers();
     let s = &n["sled"];
     let (plate, stops, drawn) = (pair(&s["plate_x"]), pair(&s["stops_x"]), f(&s["drawn_x"]));
-    // The stops are in the base's frame, the bit at 0. With the plate's end against one, the bit is here along the sled:
+    // The ends of the travel are in the base's frame, the bit at 0: where the bottom's two ends come to. With the
+    // bottom's end at one, the bit is here along the sled:
     let back = plate.1 - stops.1;
     let forward = plate.0 - stops.0;
     let (master, bit_r) = (pair(&s["master_x"]), f(&n["rough"]["bit"]) / 2.0);
@@ -1988,6 +2325,13 @@ fn the_sled_slides_between_two_fences_and_its_stops_put_the_bit_beside_the_maste
     let boxed = bodies_of(&mut doc, "Sled box");
     assert_eq!(boxed.len(), 3);
     let deck = boxed[2].bounds().unwrap();
+    // rails and deck are the box's length; the bottom goes on past them, under the wheel and a little beyond it
+    let (box_x, wheel_x) = (pair(&s["box_x"]), pair(&n["turn"]["wheel_x"]));
+    for part in &boxed {
+        let b = part.bounds().unwrap();
+        assert!((b.0.x - box_x.0).abs() < 1e-6 && (b.1.x - box_x.1).abs() < 1e-6);
+    }
+    assert!((lo.x - box_x.0).abs() < 1e-6 && hi.x > wheel_x.1 && box_x.1 < wheel_x.0);
     assert!((deck.1.z - f(&s["top"])).abs() < 1e-6 && (deck.1.z - deck.0.z - ply).abs() < 1e-6);
     assert!(deck.0.y >= datum.1.y + 1.5 && deck.0.z > f(&s["lip_top"]) + 20.0);
     assert!(
@@ -2027,8 +2371,8 @@ fn the_sled_slides_between_two_fences_and_its_stops_put_the_bit_beside_the_maste
         assert!((a.x - drawn - stops.0).abs() < 1e-6 && (b.x - drawn - stops.1).abs() < 1e-6);
     }
     assert_eq!(bodies_of(&mut doc, "Stops").len(), 2);
-    assert_eq!(bodies_of(&mut doc, "Sled-back switch").len(), 1);
-    // drawn mid-pass, the plate is between its stops and touches neither
+    assert_eq!(bodies_of(&mut doc, "Travel home switch").len(), 1);
+    // drawn mid-pass, the plate is between the ends of its travel and at neither
     assert!(stops.0 + drawn < plate.0 - 50.0 && stops.1 + drawn > plate.1 + 50.0);
 }
 
@@ -2201,7 +2545,7 @@ fn six_touches_find_the_bit_s_height_and_the_table_planned_for_it_cuts_true() {
     // centre lets the belt in and out once a turn: that much over the wheel's pitch radius, as an angle, and at the
     // furthest finishing cut from the axis that angle is this far. The study adds it to the same machines.
     let turning = &s["turning"];
-    let wheel = &n["sled"]["wheel"];
+    let wheel = &n["turn"]["wheel"];
     assert!((f(&turning["wheel_r"]) - f(&wheel[0]) / PI).abs() < 1e-9);
     assert!((f(&turning["ratio"]) - f(&wheel[0]) / f(&wheel[1])).abs() < 1e-9);
     let far = rows(&n)
@@ -2219,25 +2563,9 @@ fn six_touches_find_the_bit_s_height_and_the_table_planned_for_it_cuts_true() {
         per < 0.004,
         "a wheel this large makes little of its own runout"
     );
-    // The index adds two things. The star comes home in the wheel for every new angle, and not quite where it did
-    // the time before: that much at its flanks' radius is this at the furthest cut. And a star or a pocket off its
-    // centre lifts the head's near end as they turn, which rolls the head by the lift over its feet's stance.
-    let ix = &n["index"];
-    let (seat, flank_r, stance) = (
-        f(&turning["star_seat"]),
-        f(&turning["flank_r"]),
-        f(&turning["stance"]),
-    );
-    assert!(
-        (flank_r - f(&ix["star"]["inside"])).abs() < 1e-9
-            && (stance - f(&ix["stance"])).abs() < 1e-9
-    );
-    let (homing, rolling) = (
-        seat / flank_r * far,
-        2.0 * f(&turning["star_off"]) / stance * far,
-    );
-    println!("the star home within {seat} is {homing:.4} mm at the furthest cut; star and pocket each {} off, {rolling:.4}", turning["star_off"]);
-    assert!(homing < 0.008 && rolling < 0.006);
+    // The wheel is on the stick's own spindle: between the motor and the stick there is the belt and nothing
+    // else, so the wheel's runout and the pulley's are all there is to add.
+    assert!(turning.get("star_seat").is_none() && turning.get("stance").is_none());
     // all of it together, trued, costs less than a hundredth; and the wheel left as printed no longer costs much more
     assert!(f(&turning["trued"][0]) >= f(&s["fitted"][0]));
     assert!(f(&turning["trued"][0]) < f(&s["fitted"][0]) + 0.01 && f(&turning["trued"][2]) < 0.1);
@@ -2260,7 +2588,8 @@ fn seen_back(q: P2, t: f64) -> P2 {
 /// from below and above with its end past it, at the spindle's mark
 /// and half a turn on, each come to by the quill's home. And the bands
 /// are turned with the bit's end at the stick from the front and with
-/// its side over the stick, in bites of 4 mm.
+/// its side over the stick, in bites of 4 mm, each where the sled's
+/// screw takes the stick and by the wheel's own motor.
 #[test]
 fn the_probing_table_and_the_bands_are_where_the_reading_of_them_assumes() {
     let n = numbers();
@@ -2320,10 +2649,12 @@ fn the_probing_table_and_the_bands_are_where_the_reading_of_them_assumes() {
     let sim: Value =
         serde_json::from_str(&std::fs::read_to_string(dir().join("out/steps.json")).unwrap())
             .unwrap();
-    let per = [f(&sim["per"][0]), f(&sim["per"][1])];
+    let per = [f(&sim["per"][0]), f(&sim["per"][1]), f(&sim["per"][3])];
     let done = sim["bands"].as_array().unwrap();
     assert_eq!(done.len(), rows.len());
     let (mut front, mut top, mut rounds) = (Vec::new(), Vec::new(), 0);
+    let mut spots = Vec::new();
+    let sled = &n["sled"];
     for (row, s) in rows.iter().zip(done) {
         match row["kind"].as_str().unwrap() {
             "place" => {
@@ -2341,17 +2672,37 @@ fn the_probing_table_and_the_bands_are_where_the_reading_of_them_assumes() {
                     depth < travel.0 - f(&n["axes"]["bit_margin"]) + 1e-6
                         && height < travel.1 - 2.0
                 );
+                assert!(
+                    f(&s[4]) == 0.0,
+                    "the bit is placed with the sled drawn back"
+                );
             }
-            "round" => rounds += 1,
-            _ => {}
+            "round" => {
+                // the sled's own screw takes the stick to where the band goes, and it is there while the wheel turns it
+                rounds += 1;
+                let along = f(&row["along"]);
+                assert!(along > 0.0 && along <= f(&sled["travel"]));
+                assert!((f(&s[4]) - along * per[2]).abs() <= 0.5 + 1e-6);
+                spots.push(along + f(&sled["back_x"]));
+            }
+            _ => assert!(f(&row["along"]) == 0.0),
         }
     }
     println!("bands from the front at {front:?}, from above at {top:?}; {rounds} turns");
     assert_eq!(rounds, 12);
-    // Away from its back stop the sled's star is out of the wheel, so those turns are made by hand, by the lock
-    // disc: the controller waits for each and moves no motor. It ends the table with the wheel where it began.
+    // The wheel's motor turns each band, the sled away from home where its screw has put it: a whole turn each, so
+    // the table ends with the wheel where it began. For each bite the far band is turned first and then the near
+    // one, the same distance apart every time: the bit's end makes its bands a little further along the stick
+    // than its side does, so that neither cuts where the other has.
     assert_eq!(sim["band_rounds"].as_u64().unwrap(), 12);
     assert!(done.iter().all(|s| f(&s[3]) == f(&done[0][3])));
+    let (span, at) = (f(&n["bands"]["span"]), pair(&n["bands"]["at"]));
+    assert_eq!(spots.len(), 12);
+    for (k, two) in spots.chunks(2).enumerate() {
+        let near = if k < 3 { at.0 } else { at.1 };
+        assert!((two[0] - near - span).abs() < 1e-3 && (two[1] - near).abs() < 1e-3);
+    }
+    assert!(at.0 != at.1 && at.1 > 5.0 && at.0 + span < f(&sled["cut_to"]));
     for bands in [&front, &top] {
         assert_eq!(bands.len(), 3);
         assert!(bands

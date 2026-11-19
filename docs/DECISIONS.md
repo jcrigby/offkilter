@@ -2623,3 +2623,88 @@ perfect before any sanding. It did, and on the stick it nearly would.
   in the frame after every use of a form. Made from the table, it
   would have failed, which is the point.
 
+
+## 2026-11 · The wheel rides on the sled, a screw feeds it, and the belt holds the stick
+
+The owner, after looking at buying a four-axis machine and deciding
+to keep this one: the large wheel only needed a slot where it stood,
+so make the slot a window in the sled, put the wheel on the sled,
+drop the indirect setting of the angle, and motorise the sled.
+
+- **The wheel on the sled's own spindle.** The reason it left the sled
+  was its size: the sled's deck is 44 mm under the axis and the
+  positioner's face 46 mm beside it, and the last wheel a sled carried
+  was 105 mm. Neither limit holds past the end of the sled's box,
+  where the lock disc already hung: there a 232 mm wheel has only the
+  sled's bottom under its rim, 13.6 mm as drawn, and the positioner's
+  box 40 mm behind it at the nearest. So it needs no window either. What it
+  took away is the star, its pocket, the head on three feet and two
+  springs, the clamp and 203 throws of it a stick; and the star's own
+  errors with them, 0.004 mm on the median in the study.
+- **One stage, not two.** The owner asked about a motor, a belt, a
+  wheel and a small wheel in one piece, a second belt and the wheel.
+  It gives any ratio from small wheels. But the two things the big
+  wheel is for both go by the last wheel's radius: its runout, and
+  the small pulley's, turn the stick wrong by that much over the
+  radius, and the belt's stretch under a cut goes by the radius
+  squared. A 76 mm last wheel, the largest that passes the deck and
+  the positioner anywhere on the spindle, is three times as sensitive
+  to runout and under half as stiff. The owner chose one stage.
+- **The axis 8 mm up, not a thinner lip.** At the middle of the
+  positioner's height the rim passed the near fence's lip by 1.8 mm.
+  The rows use 38 mm of the height's 80, so the stick's axis went up
+  8 and everything on the sled with it. A plinth under the positioner
+  would do the same with another board; a 3 mm lip would be a strip
+  of metal where there is plywood.
+- **The motor in the box, and so a pulley of 30.** A NEMA 17 fits
+  between the rails under the deck, its shaft out past the box's end
+  to the wheel's plane. That is 148 mm from the spindle, where the
+  old 852 mm belt wanted 208, and at 148 a pulley of 20 teeth has 4.8
+  in the belt. To keep 20 the motor would hang off a wing of the deck
+  beyond the datum fence. With 30 teeth it has 7.4 in mesh, the belt's
+  runs are 104 mm for 177 and so stiffer, and the ratio is 12 for 18:
+  the stick's step is 0.0094° and half a degree is not a whole number
+  of them, which costs 0.0024 mm at the tile's edge. A pulley of 40
+  keeps whole steps at nine to one, and by the estimate below is too
+  soft.
+- **Nothing holds the stick but the belt, so the build says what a
+  cut asks.** The clamp was sized for a hand's push, 60 N at the
+  blank's corner. A motor feeds at a speed it is told, and the push
+  follows from it: the area of the bite, the feed and the energy to
+  cut a cubic millimetre give the power, and the power over how fast
+  the bit's edge passes gives the force. Taken on the heavy side
+  (0.15 J/mm³, the Colt at its slowest, twice the average for the
+  peak) the heaviest cut is 13 N and 0.37 N m, and the belt's two
+  runs with the motor's hold give 1 189 N m a radian. None of it is
+  measured. The bites were set by it: the deepest for which the
+  tile's edge moves under 0.010 mm anywhere and under 0.005 where a
+  face is left, which is 2 mm and 1 mm. The owner had asked for
+  shallower passes in so many words; this is how shallow.
+- **A lock is drawn and left off.** The owner: allow space for it,
+  make it optional. The old lock's four parts keep their tabs and
+  their place on the deck; the disc they pinch stays on the spindle,
+  where it also carries the home flag; and a neck on the disc holds
+  the wheel off it by the room an anvil needs. They are in neither
+  assembly, the test moves them with the sled against everything on
+  the base, and one constant in the controller's config fits them.
+  An actuator for it is not drawn: fitted as it is, it is a hand
+  again.
+- **A screw, in the sled's box.** The sled's box is hollow and open
+  at its ends. A T8 screw along the base goes in at the tail end to a
+  nut on the sled's bottom; its motor stands beyond where the sled's
+  end comes and its far end is free. A belt along the base would be
+  faster and would lie in the chips. Eight millimetres a turn at 4
+  microsteps is a hundredth of a millimetre a step, and 60 mm/s back
+  is 450 rpm.
+- **The sled finds its switch after every pass.** A stepper that
+  stalls in a cut says nothing. Coming back, the sled runs fast to
+  3 mm short of home and then looks for its switch: how far that is
+  from where its steps said is what it lost. Over half a millimetre,
+  the controller stops, with the bit still beside the master. The
+  build runs that on a sled that loses steps going out and coming
+  back.
+- **The controller's time is its own count.** On a computer the
+  program's pauses are added up instead of slept: 2 h 37 min a stick.
+  The long moves are counted without being stepped, since four
+  motors' worth of steps took minutes to simulate, unless something
+  is listening to the pins.
