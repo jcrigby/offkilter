@@ -148,7 +148,7 @@ The model turned up three things the brief does not say:
 | Flange coupling | Rigid flange coupling, 8 mm bore | Check the shaft size on the listing |
 | Casters | 2 × fixed (non-swivel) 2 in casters, rubber or polyurethane wheel | Swivel casters will not track |
 | Bucket | Lowe's 2-gallon general bucket, with lid | Remove the handle |
-| Media | Walnut shell grit, 12/20 or 14/20 mesh, about 2.5 L (a few pounds) | Blasting or brass-tumbling media; weigh a litre of it, the model takes 0.75 kg |
+| Media | Walnut shell grit, 12-20 mesh, one 5 lb (2.3 kg) pail: about 3 L, a batch's 2.3 L and some over | Blasting or brass-tumbling media; weigh a litre of it, the model takes 0.75 kg |
 | Hardware | 4 × 1/4 in carriage bolts with nuts and washers; #8 × 3/4 in pan-head screws with washers; one hinge | |
 
 Prices have not been checked. Expect the motor, controller and supply
@@ -200,8 +200,12 @@ to be most of the cost.
 - **Fill:** the pieces plus about 3× their volume in media, under one
   third of the bucket: about 3 L in the 2-gallon.
 - **Media:** ground walnut shell grit, about 2.3 L for a full batch
-  (sold by mesh size for blasting and brass tumbling; 12/20 or 14/20
-  mesh is a reasonable start). Grit runs into the tiles' concave
+  (sold for blasting and brass tumbling by a mesh range: "12-20" passes
+  a 12-mesh screen, 1.7 mm openings, and stays on a 20-mesh one,
+  0.84 mm, so its granules are 0.84–1.7 mm; "18-40" is 0.42–1.0 mm.
+  These are screen sizes, not sandpaper grits. Start with 12-20: the
+  heavier granules cut faster, make less dust and part from the tiles
+  easily; 18-40 leaves a smoother surface but more slowly). Grit runs into the tiles' concave
   curves, which 2 in abrasive squares cannot reach. It is a gentle
   abrasive, though, closer to burnishing than sanding, so the
   0.3–0.5 mm edge may take hours. If it is too slow, add a few 2 in
