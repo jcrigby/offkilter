@@ -1,0 +1,603 @@
+n,tool,depth,height,turn,along,label
+1,straight,48.2461,30.0,0.0,188.0,rough 0 deg -18 bite 1 of 6
+2,straight,50.0347,30.0,0.0,188.0,rough 0 deg -18 bite 2 of 6
+3,straight,51.8233,30.0,0.0,188.0,rough 0 deg -18 bite 3 of 6
+4,straight,53.612,30.0,0.0,188.0,rough 0 deg -18 bite 4 of 6
+5,straight,55.4006,30.0,0.0,188.0,rough 0 deg -18 bite 5 of 6
+6,straight,57.1892,30.0,0.0,188.0,rough 0 deg -18 bite 6 of 6
+7,straight,46.8792,33.0,0.0,188.0,rough 0 deg -15 bite 1 of 7
+8,straight,48.7009,33.0,0.0,188.0,rough 0 deg -15 bite 2 of 7
+9,straight,50.5227,33.0,0.0,188.0,rough 0 deg -15 bite 3 of 7
+10,straight,52.3444,33.0,0.0,188.0,rough 0 deg -15 bite 4 of 7
+11,straight,54.1661,33.0,0.0,188.0,rough 0 deg -15 bite 5 of 7
+12,straight,55.9879,33.0,0.0,188.0,rough 0 deg -15 bite 6 of 7
+13,straight,57.8096,33.0,0.0,188.0,rough 0 deg -15 bite 7 of 7
+14,straight,45.4509,36.0,0.0,188.0,rough 0 deg -12 bite 1 of 8
+15,straight,47.2443,36.0,0.0,188.0,rough 0 deg -12 bite 2 of 8
+16,straight,49.0377,36.0,0.0,188.0,rough 0 deg -12 bite 3 of 8
+17,straight,50.8311,36.0,0.0,188.0,rough 0 deg -12 bite 4 of 8
+18,straight,52.6245,36.0,0.0,188.0,rough 0 deg -12 bite 5 of 8
+19,straight,54.4179,36.0,0.0,188.0,rough 0 deg -12 bite 6 of 8
+20,straight,56.2113,36.0,0.0,188.0,rough 0 deg -12 bite 7 of 8
+21,straight,58.0048,36.0,0.0,188.0,rough 0 deg -12 bite 8 of 8
+22,straight,43.781,39.0,0.0,188.0,rough 0 deg -9 bite 1 of 4
+23,straight,45.3046,39.0,0.0,188.0,rough 0 deg -9 bite 2 of 4
+24,straight,46.8281,39.0,0.0,188.0,rough 0 deg -9 bite 3 of 4
+25,straight,48.3517,39.0,0.0,188.0,rough 0 deg -9 bite 4 of 4
+26,straight,42.5568,42.0,0.0,188.0,rough 0 deg -6 bite 1 of 4
+27,straight,44.2562,42.0,0.0,188.0,rough 0 deg -6 bite 2 of 4
+28,straight,45.9556,42.0,0.0,188.0,rough 0 deg -6 bite 3 of 4
+29,straight,47.655,42.0,0.0,188.0,rough 0 deg -6 bite 4 of 4
+30,straight,41.0969,45.0,0.0,188.0,rough 0 deg -3 bite 1 of 5
+31,straight,42.7365,45.0,0.0,188.0,rough 0 deg -3 bite 2 of 5
+32,straight,44.376,45.0,0.0,188.0,rough 0 deg -3 bite 3 of 5
+33,straight,46.0155,45.0,0.0,188.0,rough 0 deg -3 bite 4 of 5
+34,straight,47.655,45.0,0.0,188.0,rough 0 deg -3 bite 5 of 5
+35,straight,39.7741,48.0,0.0,188.0,rough 0 deg +0 bite 1 of 6
+36,straight,41.4908,48.0,0.0,188.0,rough 0 deg +0 bite 2 of 6
+37,straight,43.2075,48.0,0.0,188.0,rough 0 deg +0 bite 3 of 6
+38,straight,44.9242,48.0,0.0,188.0,rough 0 deg +0 bite 4 of 6
+39,straight,46.6409,48.0,0.0,188.0,rough 0 deg +0 bite 5 of 6
+40,straight,48.3576,48.0,0.0,188.0,rough 0 deg +0 bite 6 of 6
+41,straight,38.5497,51.0,0.0,188.0,rough 0 deg +3 bite 1 of 3
+42,straight,40.242,51.0,0.0,188.0,rough 0 deg +3 bite 2 of 3
+43,straight,41.9343,51.0,0.0,188.0,rough 0 deg +3 bite 3 of 3
+44,straight,36.6821,54.0,0.0,188.0,rough 0 deg +6 bite 1 of 1
+45,straight,35.4489,57.0,0.0,188.0,rough 0 deg +9 bite 1 of 2
+46,straight,36.6403,57.0,0.0,188.0,rough 0 deg +9 bite 2 of 2
+47,straight,36.837,63.0,0.0,188.0,rough 0 deg +15 bite 1 of 2
+48,straight,38.0166,63.0,0.0,188.0,rough 0 deg +15 bite 2 of 2
+49,straight,43.4062,66.0,0.0,188.0,rough 0 deg +18 bite 1 of 18
+50,straight,45.355,66.0,0.0,188.0,rough 0 deg +18 bite 2 of 18
+51,straight,47.3038,66.0,0.0,188.0,rough 0 deg +18 bite 3 of 18
+52,straight,49.2526,66.0,0.0,188.0,rough 0 deg +18 bite 4 of 18
+53,straight,51.2014,66.0,0.0,188.0,rough 0 deg +18 bite 5 of 18
+54,straight,53.1502,66.0,0.0,188.0,rough 0 deg +18 bite 6 of 18
+55,straight,55.099,66.0,0.0,188.0,rough 0 deg +18 bite 7 of 18
+56,straight,57.0478,66.0,0.0,188.0,rough 0 deg +18 bite 8 of 18
+57,straight,58.9966,66.0,0.0,188.0,rough 0 deg +18 bite 9 of 18
+58,straight,60.9454,66.0,0.0,188.0,rough 0 deg +18 bite 10 of 18
+59,straight,62.8941,66.0,0.0,188.0,rough 0 deg +18 bite 11 of 18
+60,straight,64.8429,66.0,0.0,188.0,rough 0 deg +18 bite 12 of 18
+61,straight,66.7917,66.0,0.0,188.0,rough 0 deg +18 bite 13 of 18
+62,straight,68.7405,66.0,0.0,188.0,rough 0 deg +18 bite 14 of 18
+63,straight,70.6893,66.0,0.0,188.0,rough 0 deg +18 bite 15 of 18
+64,straight,72.6381,66.0,0.0,188.0,rough 0 deg +18 bite 16 of 18
+65,straight,74.5869,66.0,0.0,188.0,rough 0 deg +18 bite 17 of 18
+66,straight,76.5357,66.0,0.0,188.0,rough 0 deg +18 bite 18 of 18
+67,straight,45.8432,30.0,15.0,188.0,rough 15 deg -18 bite 1 of 2
+68,straight,47.1552,30.0,15.0,188.0,rough 15 deg -18 bite 2 of 2
+69,straight,48.6584,42.0,15.0,188.0,rough 15 deg -6 bite 1 of 2
+70,straight,50.3869,42.0,15.0,188.0,rough 15 deg -6 bite 2 of 2
+71,straight,45.5478,57.0,15.0,188.0,rough 15 deg +9 bite 1 of 2
+72,straight,47.2418,57.0,15.0,188.0,rough 15 deg +9 bite 2 of 2
+73,straight,41.8348,30.0,30.0,188.0,rough 30 deg -18 bite 1 of 1
+74,straight,53.8881,45.0,30.0,188.0,rough 30 deg -3 bite 1 of 3
+75,straight,55.4313,45.0,30.0,188.0,rough 30 deg -3 bite 2 of 3
+76,straight,56.9744,45.0,30.0,188.0,rough 30 deg -3 bite 3 of 3
+77,straight,48.2159,51.0,30.0,188.0,rough 30 deg +3 bite 1 of 1
+78,straight,51.1427,60.0,30.0,188.0,rough 30 deg +12 bite 1 of 1
+79,straight,47.2295,30.0,45.0,188.0,rough 45 deg -18 bite 1 of 10
+80,straight,49.1202,30.0,45.0,188.0,rough 45 deg -18 bite 2 of 10
+81,straight,51.0109,30.0,45.0,188.0,rough 45 deg -18 bite 3 of 10
+82,straight,52.9016,30.0,45.0,188.0,rough 45 deg -18 bite 4 of 10
+83,straight,54.7923,30.0,45.0,188.0,rough 45 deg -18 bite 5 of 10
+84,straight,56.683,30.0,45.0,188.0,rough 45 deg -18 bite 6 of 10
+85,straight,58.5737,30.0,45.0,188.0,rough 45 deg -18 bite 7 of 10
+86,straight,60.4644,30.0,45.0,188.0,rough 45 deg -18 bite 8 of 10
+87,straight,62.3551,30.0,45.0,188.0,rough 45 deg -18 bite 9 of 10
+88,straight,64.2458,30.0,45.0,188.0,rough 45 deg -18 bite 10 of 10
+89,straight,39.3582,33.0,45.0,188.0,rough 45 deg -15 bite 1 of 2
+90,straight,41.0144,33.0,45.0,188.0,rough 45 deg -15 bite 2 of 2
+91,straight,38.5123,39.0,45.0,188.0,rough 45 deg -9 bite 1 of 1
+92,straight,55.56,66.0,45.0,188.0,rough 45 deg +18 bite 1 of 1
+93,straight,59.4088,30.0,60.0,188.0,rough 60 deg -18 bite 1 of 2
+94,straight,61.3229,30.0,60.0,188.0,rough 60 deg -18 bite 2 of 2
+95,straight,58.9619,33.0,60.0,188.0,rough 60 deg -15 bite 1 of 2
+96,straight,60.3847,33.0,60.0,188.0,rough 60 deg -15 bite 2 of 2
+97,straight,48.3368,36.0,60.0,188.0,rough 60 deg -12 bite 1 of 7
+98,straight,50.3359,36.0,60.0,188.0,rough 60 deg -12 bite 2 of 7
+99,straight,52.335,36.0,60.0,188.0,rough 60 deg -12 bite 3 of 7
+100,straight,54.3341,36.0,60.0,188.0,rough 60 deg -12 bite 4 of 7
+101,straight,56.3332,36.0,60.0,188.0,rough 60 deg -12 bite 5 of 7
+102,straight,58.3322,36.0,60.0,188.0,rough 60 deg -12 bite 6 of 7
+103,straight,60.3313,36.0,60.0,188.0,rough 60 deg -12 bite 7 of 7
+104,straight,57.8669,30.0,75.0,188.0,rough 75 deg -18 bite 1 of 2
+105,straight,59.6059,30.0,75.0,188.0,rough 75 deg -18 bite 2 of 2
+106,straight,57.5314,36.0,75.0,188.0,rough 75 deg -12 bite 1 of 1
+107,straight,48.8025,42.0,75.0,188.0,rough 75 deg -6 bite 1 of 6
+108,straight,50.5653,42.0,75.0,188.0,rough 75 deg -6 bite 2 of 6
+109,straight,52.328,42.0,75.0,188.0,rough 75 deg -6 bite 3 of 6
+110,straight,54.0907,42.0,75.0,188.0,rough 75 deg -6 bite 4 of 6
+111,straight,55.8534,42.0,75.0,188.0,rough 75 deg -6 bite 5 of 6
+112,straight,57.6162,42.0,75.0,188.0,rough 75 deg -6 bite 6 of 6
+113,straight,55.2071,30.0,90.0,188.0,rough 90 deg -18 bite 1 of 7
+114,straight,57.1386,30.0,90.0,188.0,rough 90 deg -18 bite 2 of 7
+115,straight,59.0701,30.0,90.0,188.0,rough 90 deg -18 bite 3 of 7
+116,straight,61.0015,30.0,90.0,188.0,rough 90 deg -18 bite 4 of 7
+117,straight,62.933,30.0,90.0,188.0,rough 90 deg -18 bite 5 of 7
+118,straight,64.8645,30.0,90.0,188.0,rough 90 deg -18 bite 6 of 7
+119,straight,66.796,30.0,90.0,188.0,rough 90 deg -18 bite 7 of 7
+120,straight,56.2183,33.0,90.0,188.0,rough 90 deg -15 bite 1 of 1
+121,straight,54.9857,36.0,90.0,188.0,rough 90 deg -12 bite 1 of 1
+122,straight,42.648,54.0,90.0,188.0,rough 90 deg +6 bite 1 of 4
+123,straight,44.2204,54.0,90.0,188.0,rough 90 deg +6 bite 2 of 4
+124,straight,45.7928,54.0,90.0,188.0,rough 90 deg +6 bite 3 of 4
+125,straight,47.3652,54.0,90.0,188.0,rough 90 deg +6 bite 4 of 4
+126,straight,40.478,63.0,90.0,188.0,rough 90 deg +15 bite 1 of 1
+127,straight,51.9103,30.0,105.0,188.0,rough 105 deg -18 bite 1 of 5
+128,straight,53.7336,30.0,105.0,188.0,rough 105 deg -18 bite 2 of 5
+129,straight,55.557,30.0,105.0,188.0,rough 105 deg -18 bite 3 of 5
+130,straight,57.3803,30.0,105.0,188.0,rough 105 deg -18 bite 4 of 5
+131,straight,59.2037,30.0,105.0,188.0,rough 105 deg -18 bite 5 of 5
+132,straight,59.5627,33.0,105.0,188.0,rough 105 deg -15 bite 1 of 3
+133,straight,61.5348,33.0,105.0,188.0,rough 105 deg -15 bite 2 of 3
+134,straight,63.5068,33.0,105.0,188.0,rough 105 deg -15 bite 3 of 3
+135,straight,54.3926,36.0,105.0,188.0,rough 105 deg -12 bite 1 of 1
+136,straight,55.471,51.0,105.0,188.0,rough 105 deg +3 bite 1 of 2
+137,straight,57.0272,51.0,105.0,188.0,rough 105 deg +3 bite 2 of 2
+138,straight,46.6811,30.0,120.0,188.0,rough 120 deg -18 bite 1 of 1
+139,straight,54.0234,39.0,120.0,188.0,rough 120 deg -9 bite 1 of 5
+140,straight,55.8656,39.0,120.0,188.0,rough 120 deg -9 bite 2 of 5
+141,straight,57.7078,39.0,120.0,188.0,rough 120 deg -9 bite 3 of 5
+142,straight,59.5499,39.0,120.0,188.0,rough 120 deg -9 bite 4 of 5
+143,straight,61.3921,39.0,120.0,188.0,rough 120 deg -9 bite 5 of 5
+144,straight,55.6985,57.0,120.0,188.0,rough 120 deg +9 bite 1 of 3
+145,straight,57.1975,57.0,120.0,188.0,rough 120 deg +9 bite 2 of 3
+146,straight,58.6964,57.0,120.0,188.0,rough 120 deg +9 bite 3 of 3
+147,straight,53.4633,60.0,120.0,188.0,rough 120 deg +12 bite 1 of 1
+148,straight,40.7151,30.0,135.0,188.0,rough 135 deg -18 bite 1 of 2
+149,straight,41.8071,30.0,135.0,188.0,rough 135 deg -18 bite 2 of 2
+150,straight,45.2793,42.0,135.0,188.0,rough 135 deg -6 bite 1 of 9
+151,straight,47.1171,42.0,135.0,188.0,rough 135 deg -6 bite 2 of 9
+152,straight,48.9549,42.0,135.0,188.0,rough 135 deg -6 bite 3 of 9
+153,straight,50.7928,42.0,135.0,188.0,rough 135 deg -6 bite 4 of 9
+154,straight,52.6306,42.0,135.0,188.0,rough 135 deg -6 bite 5 of 9
+155,straight,54.4684,42.0,135.0,188.0,rough 135 deg -6 bite 6 of 9
+156,straight,56.3062,42.0,135.0,188.0,rough 135 deg -6 bite 7 of 9
+157,straight,58.144,42.0,135.0,188.0,rough 135 deg -6 bite 8 of 9
+158,straight,59.9819,42.0,135.0,188.0,rough 135 deg -6 bite 9 of 9
+159,straight,61.7073,60.0,135.0,188.0,rough 135 deg +12 bite 1 of 1
+160,straight,45.8376,30.0,150.0,188.0,rough 150 deg -18 bite 1 of 5
+161,straight,47.4731,30.0,150.0,188.0,rough 150 deg -18 bite 2 of 5
+162,straight,49.1086,30.0,150.0,188.0,rough 150 deg -18 bite 3 of 5
+163,straight,50.7441,30.0,150.0,188.0,rough 150 deg -18 bite 4 of 5
+164,straight,52.3796,30.0,150.0,188.0,rough 150 deg -18 bite 5 of 5
+165,straight,41.386,33.0,150.0,188.0,rough 150 deg -15 bite 1 of 6
+166,straight,43.1483,33.0,150.0,188.0,rough 150 deg -15 bite 2 of 6
+167,straight,44.9107,33.0,150.0,188.0,rough 150 deg -15 bite 3 of 6
+168,straight,46.673,33.0,150.0,188.0,rough 150 deg -15 bite 4 of 6
+169,straight,48.4353,33.0,150.0,188.0,rough 150 deg -15 bite 5 of 6
+170,straight,50.1977,33.0,150.0,188.0,rough 150 deg -15 bite 6 of 6
+171,straight,43.3657,48.0,150.0,188.0,rough 150 deg +0 bite 1 of 8
+172,straight,45.3115,48.0,150.0,188.0,rough 150 deg +0 bite 2 of 8
+173,straight,47.2573,48.0,150.0,188.0,rough 150 deg +0 bite 3 of 8
+174,straight,49.2032,48.0,150.0,188.0,rough 150 deg +0 bite 4 of 8
+175,straight,51.149,48.0,150.0,188.0,rough 150 deg +0 bite 5 of 8
+176,straight,53.0948,48.0,150.0,188.0,rough 150 deg +0 bite 6 of 8
+177,straight,55.0407,48.0,150.0,188.0,rough 150 deg +0 bite 7 of 8
+178,straight,56.9865,48.0,150.0,188.0,rough 150 deg +0 bite 8 of 8
+179,straight,49.5567,30.0,165.0,188.0,rough 165 deg -18 bite 1 of 5
+180,straight,51.4688,30.0,165.0,188.0,rough 165 deg -18 bite 2 of 5
+181,straight,53.3809,30.0,165.0,188.0,rough 165 deg -18 bite 3 of 5
+182,straight,55.2931,30.0,165.0,188.0,rough 165 deg -18 bite 4 of 5
+183,straight,57.2052,30.0,165.0,188.0,rough 165 deg -18 bite 5 of 5
+184,straight,49.5951,33.0,165.0,188.0,rough 165 deg -15 bite 1 of 5
+185,straight,51.3663,33.0,165.0,188.0,rough 165 deg -15 bite 2 of 5
+186,straight,53.1375,33.0,165.0,188.0,rough 165 deg -15 bite 3 of 5
+187,straight,54.9087,33.0,165.0,188.0,rough 165 deg -15 bite 4 of 5
+188,straight,56.68,33.0,165.0,188.0,rough 165 deg -15 bite 5 of 5
+189,straight,49.2426,30.0,180.0,188.0,rough 180 deg -18 bite 1 of 3
+190,straight,51.111,30.0,180.0,188.0,rough 180 deg -18 bite 2 of 3
+191,straight,52.9793,30.0,180.0,188.0,rough 180 deg -18 bite 3 of 3
+192,straight,48.0112,39.0,180.0,188.0,rough 180 deg -9 bite 1 of 4
+193,straight,49.6482,39.0,180.0,188.0,rough 180 deg -9 bite 2 of 4
+194,straight,51.2852,39.0,180.0,188.0,rough 180 deg -9 bite 3 of 4
+195,straight,52.9222,39.0,180.0,188.0,rough 180 deg -9 bite 4 of 4
+196,straight,47.0286,42.0,180.0,188.0,rough 180 deg -6 bite 1 of 1
+197,straight,38.3767,54.0,180.0,188.0,rough 180 deg +6 bite 1 of 1
+198,straight,46.8931,30.0,195.0,188.0,rough 195 deg -18 bite 1 of 3
+199,straight,48.6833,30.0,195.0,188.0,rough 195 deg -18 bite 2 of 3
+200,straight,50.4735,30.0,195.0,188.0,rough 195 deg -18 bite 3 of 3
+201,straight,50.3185,33.0,195.0,188.0,rough 195 deg -15 bite 1 of 1
+202,straight,49.2975,45.0,195.0,188.0,rough 195 deg -3 bite 1 of 2
+203,straight,50.9483,45.0,195.0,188.0,rough 195 deg -3 bite 2 of 2
+204,straight,42.2727,30.0,210.0,188.0,rough 210 deg -18 bite 1 of 3
+205,straight,43.8127,30.0,210.0,188.0,rough 210 deg -18 bite 2 of 3
+206,straight,45.3527,30.0,210.0,188.0,rough 210 deg -18 bite 3 of 3
+207,straight,49.318,51.0,210.0,188.0,rough 210 deg +3 bite 1 of 2
+208,straight,50.5387,51.0,210.0,188.0,rough 210 deg +3 bite 2 of 2
+209,straight,38.9734,30.0,225.0,188.0,rough 225 deg -18 bite 1 of 14
+210,straight,40.9539,30.0,225.0,188.0,rough 225 deg -18 bite 2 of 14
+211,straight,42.9343,30.0,225.0,188.0,rough 225 deg -18 bite 3 of 14
+212,straight,44.9148,30.0,225.0,188.0,rough 225 deg -18 bite 4 of 14
+213,straight,46.8952,30.0,225.0,188.0,rough 225 deg -18 bite 5 of 14
+214,straight,48.8756,30.0,225.0,188.0,rough 225 deg -18 bite 6 of 14
+215,straight,50.8561,30.0,225.0,188.0,rough 225 deg -18 bite 7 of 14
+216,straight,52.8365,30.0,225.0,188.0,rough 225 deg -18 bite 8 of 14
+217,straight,54.8169,30.0,225.0,188.0,rough 225 deg -18 bite 9 of 14
+218,straight,56.7974,30.0,225.0,188.0,rough 225 deg -18 bite 10 of 14
+219,straight,58.7778,30.0,225.0,188.0,rough 225 deg -18 bite 11 of 14
+220,straight,60.7582,30.0,225.0,188.0,rough 225 deg -18 bite 12 of 14
+221,straight,62.7387,30.0,225.0,188.0,rough 225 deg -18 bite 13 of 14
+222,straight,64.7191,30.0,225.0,188.0,rough 225 deg -18 bite 14 of 14
+223,straight,37.2467,36.0,225.0,188.0,rough 225 deg -12 bite 1 of 4
+224,straight,38.7731,36.0,225.0,188.0,rough 225 deg -12 bite 2 of 4
+225,straight,40.2995,36.0,225.0,188.0,rough 225 deg -12 bite 3 of 4
+226,straight,41.826,36.0,225.0,188.0,rough 225 deg -12 bite 4 of 4
+227,straight,46.0164,45.0,225.0,188.0,rough 225 deg -3 bite 1 of 1
+228,straight,51.1027,54.0,225.0,188.0,rough 225 deg +6 bite 1 of 1
+229,straight,50.9999,30.0,240.0,188.0,rough 240 deg -18 bite 1 of 12
+230,straight,52.8464,30.0,240.0,188.0,rough 240 deg -18 bite 2 of 12
+231,straight,54.6929,30.0,240.0,188.0,rough 240 deg -18 bite 3 of 12
+232,straight,56.5394,30.0,240.0,188.0,rough 240 deg -18 bite 4 of 12
+233,straight,58.3859,30.0,240.0,188.0,rough 240 deg -18 bite 5 of 12
+234,straight,60.2324,30.0,240.0,188.0,rough 240 deg -18 bite 6 of 12
+235,straight,62.0789,30.0,240.0,188.0,rough 240 deg -18 bite 7 of 12
+236,straight,63.9254,30.0,240.0,188.0,rough 240 deg -18 bite 8 of 12
+237,straight,65.7719,30.0,240.0,188.0,rough 240 deg -18 bite 9 of 12
+238,straight,67.6184,30.0,240.0,188.0,rough 240 deg -18 bite 10 of 12
+239,straight,69.4649,30.0,240.0,188.0,rough 240 deg -18 bite 11 of 12
+240,straight,71.3114,30.0,240.0,188.0,rough 240 deg -18 bite 12 of 12
+241,straight,40.0091,42.0,240.0,188.0,rough 240 deg -6 bite 1 of 1
+242,straight,49.3505,33.0,270.0,188.0,rough 270 deg -15 bite 1 of 9
+243,straight,51.1448,33.0,270.0,188.0,rough 270 deg -15 bite 2 of 9
+244,straight,52.9392,33.0,270.0,188.0,rough 270 deg -15 bite 3 of 9
+245,straight,54.7336,33.0,270.0,188.0,rough 270 deg -15 bite 4 of 9
+246,straight,56.528,33.0,270.0,188.0,rough 270 deg -15 bite 5 of 9
+247,straight,58.3224,33.0,270.0,188.0,rough 270 deg -15 bite 6 of 9
+248,straight,60.1167,33.0,270.0,188.0,rough 270 deg -15 bite 7 of 9
+249,straight,61.9111,33.0,270.0,188.0,rough 270 deg -15 bite 8 of 9
+250,straight,63.7055,33.0,270.0,188.0,rough 270 deg -15 bite 9 of 9
+251,straight,44.9897,51.0,270.0,188.0,rough 270 deg +3 bite 1 of 8
+252,straight,46.8233,51.0,270.0,188.0,rough 270 deg +3 bite 2 of 8
+253,straight,48.6569,51.0,270.0,188.0,rough 270 deg +3 bite 3 of 8
+254,straight,50.4905,51.0,270.0,188.0,rough 270 deg +3 bite 4 of 8
+255,straight,52.3241,51.0,270.0,188.0,rough 270 deg +3 bite 5 of 8
+256,straight,54.1577,51.0,270.0,188.0,rough 270 deg +3 bite 6 of 8
+257,straight,55.9913,51.0,270.0,188.0,rough 270 deg +3 bite 7 of 8
+258,straight,57.8249,51.0,270.0,188.0,rough 270 deg +3 bite 8 of 8
+259,straight,41.9549,60.0,270.0,188.0,rough 270 deg +12 bite 1 of 1
+260,straight,52.49,36.0,285.0,188.0,rough 285 deg -12 bite 1 of 6
+261,straight,54.1864,36.0,285.0,188.0,rough 285 deg -12 bite 2 of 6
+262,straight,55.8828,36.0,285.0,188.0,rough 285 deg -12 bite 3 of 6
+263,straight,57.5792,36.0,285.0,188.0,rough 285 deg -12 bite 4 of 6
+264,straight,59.2757,36.0,285.0,188.0,rough 285 deg -12 bite 5 of 6
+265,straight,60.9721,36.0,285.0,188.0,rough 285 deg -12 bite 6 of 6
+266,straight,46.9724,42.0,285.0,188.0,rough 285 deg -6 bite 1 of 5
+267,straight,48.8082,42.0,285.0,188.0,rough 285 deg -6 bite 2 of 5
+268,straight,50.644,42.0,285.0,188.0,rough 285 deg -6 bite 3 of 5
+269,straight,52.4798,42.0,285.0,188.0,rough 285 deg -6 bite 4 of 5
+270,straight,54.3155,42.0,285.0,188.0,rough 285 deg -6 bite 5 of 5
+271,straight,43.7704,30.0,300.0,188.0,rough 300 deg -18 bite 1 of 1
+272,straight,52.6769,63.0,300.0,188.0,rough 300 deg +15 bite 1 of 3
+273,straight,54.266,63.0,300.0,188.0,rough 300 deg +15 bite 2 of 3
+274,straight,55.855,63.0,300.0,188.0,rough 300 deg +15 bite 3 of 3
+275,straight,42.3736,51.0,330.0,188.0,rough 330 deg +3 bite 1 of 8
+276,straight,44.1954,51.0,330.0,188.0,rough 330 deg +3 bite 2 of 8
+277,straight,46.0172,51.0,330.0,188.0,rough 330 deg +3 bite 3 of 8
+278,straight,47.839,51.0,330.0,188.0,rough 330 deg +3 bite 4 of 8
+279,straight,49.6608,51.0,330.0,188.0,rough 330 deg +3 bite 5 of 8
+280,straight,51.4827,51.0,330.0,188.0,rough 330 deg +3 bite 6 of 8
+281,straight,53.3045,51.0,330.0,188.0,rough 330 deg +3 bite 7 of 8
+282,straight,55.1263,51.0,330.0,188.0,rough 330 deg +3 bite 8 of 8
+283,straight,62.9806,63.0,330.0,188.0,rough 330 deg +15 bite 1 of 4
+284,straight,64.6248,63.0,330.0,188.0,rough 330 deg +15 bite 2 of 4
+285,straight,66.269,63.0,330.0,188.0,rough 330 deg +15 bite 3 of 4
+286,straight,67.9133,63.0,330.0,188.0,rough 330 deg +15 bite 4 of 4
+287,ball,58.0864,33.2145,1.0,188.0,finish 1.0 deg bite 1 of 1
+288,ball,53.7475,38.1562,1.0,188.0,finish 1.0 deg bite 1 of 10
+289,ball,54.713,38.1562,1.0,188.0,finish 1.0 deg bite 2 of 10
+290,ball,55.6786,38.1562,1.0,188.0,finish 1.0 deg bite 3 of 10
+291,ball,56.6442,38.1562,1.0,188.0,finish 1.0 deg bite 4 of 10
+292,ball,57.6098,38.1562,1.0,188.0,finish 1.0 deg bite 5 of 10
+293,ball,58.5754,38.1562,1.0,188.0,finish 1.0 deg bite 6 of 10
+294,ball,59.541,38.1562,1.0,188.0,finish 1.0 deg bite 7 of 10
+295,ball,60.5065,38.1562,1.0,188.0,finish 1.0 deg bite 8 of 10
+296,ball,61.4721,38.1562,1.0,188.0,finish 1.0 deg bite 9 of 10
+297,ball,62.4377,38.1562,1.0,188.0,finish 1.0 deg bite 10 of 10
+298,ball,48.0973,43.2624,1.0,188.0,finish 1.0 deg bite 1 of 1
+299,ball,49.6223,47.8356,2.5,188.0,finish 2.5 deg bite 1 of 1
+300,ball,47.9628,52.1855,5.0,188.0,finish 5.0 deg bite 1 of 3
+301,ball,48.6369,52.1855,5.0,188.0,finish 5.0 deg bite 2 of 3
+302,ball,49.3109,52.1855,5.0,188.0,finish 5.0 deg bite 3 of 3
+303,ball,59.7987,40.4358,9.0,188.0,finish 9.0 deg bite 1 of 3
+304,ball,60.6288,40.4358,9.0,188.0,finish 9.0 deg bite 2 of 3
+305,ball,61.4589,40.4358,9.0,188.0,finish 9.0 deg bite 3 of 3
+306,ball,50.075,52.1879,12.0,188.0,finish 12.0 deg bite 1 of 1
+307,ball,54.7237,35.6628,14.0,188.0,finish 14.0 deg bite 1 of 1
+308,ball,47.7879,47.6388,14.0,188.0,finish 14.0 deg bite 1 of 1
+309,ball,58.9779,42.9391,17.5,188.0,finish 17.5 deg bite 1 of 3
+310,ball,59.8849,42.9391,17.5,188.0,finish 17.5 deg bite 2 of 3
+311,ball,60.7919,42.9391,17.5,188.0,finish 17.5 deg bite 3 of 3
+312,ball,51.135,56.1326,20.5,188.0,finish 20.5 deg bite 1 of 1
+313,ball,49.5629,59.4768,20.5,188.0,finish 20.5 deg bite 1 of 3
+314,ball,50.2695,59.4768,20.5,188.0,finish 20.5 deg bite 2 of 3
+315,ball,50.976,59.4768,20.5,188.0,finish 20.5 deg bite 3 of 3
+316,ball,58.8595,44.4118,22.5,188.0,finish 22.5 deg bite 1 of 3
+317,ball,59.6981,44.4118,22.5,188.0,finish 22.5 deg bite 2 of 3
+318,ball,60.5367,44.4118,22.5,188.0,finish 22.5 deg bite 3 of 3
+319,ball,49.7978,38.5946,26.5,188.0,finish 26.5 deg bite 1 of 4
+320,ball,50.5535,38.5946,26.5,188.0,finish 26.5 deg bite 2 of 4
+321,ball,51.3092,38.5946,26.5,188.0,finish 26.5 deg bite 3 of 4
+322,ball,52.0649,38.5946,26.5,188.0,finish 26.5 deg bite 4 of 4
+323,ball,48.4447,51.7294,26.5,188.0,finish 26.5 deg bite 1 of 1
+324,ball,52.5952,59.6131,28.0,188.0,finish 28.0 deg bite 1 of 1
+325,ball,58.8982,46.4656,30.5,188.0,finish 30.5 deg bite 1 of 3
+326,ball,59.5758,46.4656,30.5,188.0,finish 30.5 deg bite 2 of 3
+327,ball,60.2533,46.4656,30.5,188.0,finish 30.5 deg bite 3 of 3
+328,ball,52.5629,63.3528,30.5,188.0,finish 30.5 deg bite 1 of 2
+329,ball,53.1363,63.3528,30.5,188.0,finish 30.5 deg bite 2 of 2
+330,ball,52.3239,66.8759,35.5,188.0,finish 35.5 deg bite 1 of 1
+331,ball,53.0392,66.8739,36.0,188.0,finish 36.0 deg bite 1 of 1
+332,ball,49.7056,54.7909,37.0,188.0,finish 37.0 deg bite 1 of 1
+333,ball,53.827,66.9387,37.0,188.0,finish 37.0 deg bite 1 of 1
+334,ball,54.5545,66.9135,38.0,188.0,finish 38.0 deg bite 1 of 1
+335,ball,55.3678,66.9622,39.5,188.0,finish 39.5 deg bite 1 of 1
+336,ball,59.3801,49.0418,41.0,188.0,finish 41.0 deg bite 1 of 2
+337,ball,60.2752,49.0418,41.0,188.0,finish 41.0 deg bite 2 of 2
+338,ball,56.0985,66.9342,41.0,188.0,finish 41.0 deg bite 1 of 1
+339,ball,56.5682,65.707,42.0,188.0,finish 42.0 deg bite 1 of 1
+340,ball,51.3338,57.1805,46.5,188.0,finish 46.5 deg bite 1 of 1
+341,ball,59.4063,51.4811,51.0,188.0,finish 51.0 deg bite 1 of 3
+342,ball,60.0732,51.4811,51.0,188.0,finish 51.0 deg bite 2 of 3
+343,ball,60.7402,51.4811,51.0,188.0,finish 51.0 deg bite 3 of 3
+344,ball,62.0935,34.515,54.5,188.0,finish 54.5 deg bite 1 of 1
+345,ball,60.7672,34.5729,61.5,188.0,finish 61.5 deg bite 1 of 1
+346,ball,43.3083,53.8884,61.5,188.0,finish 61.5 deg bite 1 of 20
+347,ball,44.2749,53.8884,61.5,188.0,finish 61.5 deg bite 2 of 20
+348,ball,45.2414,53.8884,61.5,188.0,finish 61.5 deg bite 3 of 20
+349,ball,46.208,53.8884,61.5,188.0,finish 61.5 deg bite 4 of 20
+350,ball,47.1745,53.8884,61.5,188.0,finish 61.5 deg bite 5 of 20
+351,ball,48.1411,53.8884,61.5,188.0,finish 61.5 deg bite 6 of 20
+352,ball,49.1076,53.8884,61.5,188.0,finish 61.5 deg bite 7 of 20
+353,ball,50.0742,53.8884,61.5,188.0,finish 61.5 deg bite 8 of 20
+354,ball,51.0407,53.8884,61.5,188.0,finish 61.5 deg bite 9 of 20
+355,ball,52.0072,53.8884,61.5,188.0,finish 61.5 deg bite 10 of 20
+356,ball,52.9738,53.8884,61.5,188.0,finish 61.5 deg bite 11 of 20
+357,ball,53.9403,53.8884,61.5,188.0,finish 61.5 deg bite 12 of 20
+358,ball,54.9069,53.8884,61.5,188.0,finish 61.5 deg bite 13 of 20
+359,ball,55.8734,53.8884,61.5,188.0,finish 61.5 deg bite 14 of 20
+360,ball,56.84,53.8884,61.5,188.0,finish 61.5 deg bite 15 of 20
+361,ball,57.8065,53.8884,61.5,188.0,finish 61.5 deg bite 16 of 20
+362,ball,58.773,53.8884,61.5,188.0,finish 61.5 deg bite 17 of 20
+363,ball,59.7396,53.8884,61.5,188.0,finish 61.5 deg bite 18 of 20
+364,ball,60.7061,53.8884,61.5,188.0,finish 61.5 deg bite 19 of 20
+365,ball,61.6727,53.8884,61.5,188.0,finish 61.5 deg bite 20 of 20
+366,ball,54.7288,59.7249,61.5,188.0,finish 61.5 deg bite 1 of 1
+367,ball,54.0598,39.5682,63.5,188.0,finish 63.5 deg bite 1 of 8
+368,ball,54.9811,39.5682,63.5,188.0,finish 63.5 deg bite 2 of 8
+369,ball,55.9025,39.5682,63.5,188.0,finish 63.5 deg bite 3 of 8
+370,ball,56.8239,39.5682,63.5,188.0,finish 63.5 deg bite 4 of 8
+371,ball,57.7452,39.5682,63.5,188.0,finish 63.5 deg bite 5 of 8
+372,ball,58.6666,39.5682,63.5,188.0,finish 63.5 deg bite 6 of 8
+373,ball,59.588,39.5682,63.5,188.0,finish 63.5 deg bite 7 of 8
+374,ball,60.5093,39.5682,63.5,188.0,finish 63.5 deg bite 8 of 8
+375,ball,59.6347,39.2151,67.0,188.0,finish 67.0 deg bite 1 of 1
+376,ball,59.4634,34.7656,68.5,188.0,finish 68.5 deg bite 1 of 1
+377,ball,59.2931,41.8805,70.5,188.0,finish 70.5 deg bite 1 of 2
+378,ball,60.1937,41.8805,70.5,188.0,finish 70.5 deg bite 2 of 2
+379,ball,59.1703,43.2582,74.5,188.0,finish 74.5 deg bite 1 of 3
+380,ball,59.8429,43.2582,74.5,188.0,finish 74.5 deg bite 2 of 3
+381,ball,60.5156,43.2582,74.5,188.0,finish 74.5 deg bite 3 of 3
+382,ball,58.2994,34.991,75.0,188.0,finish 75.0 deg bite 1 of 1
+383,ball,60.5638,43.4179,75.0,188.0,finish 75.0 deg bite 1 of 1
+384,ball,58.2994,60.8576,75.0,188.0,finish 75.0 deg bite 1 of 1
+385,ball,57.9625,40.2276,76.5,188.0,finish 76.5 deg bite 1 of 1
+386,ball,59.9309,43.9336,76.5,188.0,finish 76.5 deg bite 1 of 2
+387,ball,60.5888,43.9336,76.5,188.0,finish 76.5 deg bite 2 of 2
+388,ball,70.3818,29.7509,84.5,188.0,finish 84.5 deg bite 1 of 1
+389,ball,60.8943,66.5885,84.5,188.0,finish 84.5 deg bite 1 of 1
+390,ball,58.5786,33.5662,93.5,188.0,finish 93.5 deg bite 1 of 11
+391,ball,59.5158,33.5662,93.5,188.0,finish 93.5 deg bite 2 of 11
+392,ball,60.453,33.5662,93.5,188.0,finish 93.5 deg bite 3 of 11
+393,ball,61.3902,33.5662,93.5,188.0,finish 93.5 deg bite 4 of 11
+394,ball,62.3273,33.5662,93.5,188.0,finish 93.5 deg bite 5 of 11
+395,ball,63.2645,33.5662,93.5,188.0,finish 93.5 deg bite 6 of 11
+396,ball,64.2017,33.5662,93.5,188.0,finish 93.5 deg bite 7 of 11
+397,ball,65.1388,33.5662,93.5,188.0,finish 93.5 deg bite 8 of 11
+398,ball,66.076,33.5662,93.5,188.0,finish 93.5 deg bite 9 of 11
+399,ball,67.0132,33.5662,93.5,188.0,finish 93.5 deg bite 10 of 11
+400,ball,67.9503,33.5662,93.5,188.0,finish 93.5 deg bite 11 of 11
+401,ball,49.1774,57.332,95.5,188.0,finish 95.5 deg bite 1 of 1
+402,ball,66.6954,32.77,97.0,188.0,finish 97.0 deg bite 1 of 1
+403,ball,59.9619,48.5731,98.0,188.0,finish 98.0 deg bite 1 of 1
+404,ball,66.8477,35.0163,100.5,188.0,finish 100.5 deg bite 1 of 1
+405,ball,58.8025,51.2731,102.0,188.0,finish 102.0 deg bite 1 of 2
+406,ball,59.778,51.2731,102.0,188.0,finish 102.0 deg bite 2 of 2
+407,ball,65.9526,35.9466,104.5,188.0,finish 104.5 deg bite 1 of 2
+408,ball,66.6746,35.9466,104.5,188.0,finish 104.5 deg bite 2 of 2
+409,ball,66.6588,36.0528,105.0,188.0,finish 105.0 deg bite 1 of 1
+410,ball,50.9299,60.3843,106.0,188.0,finish 106.0 deg bite 1 of 1
+411,ball,63.8627,32.7055,106.5,188.0,finish 106.5 deg bite 1 of 1
+412,ball,66.4889,36.4115,106.5,188.0,finish 106.5 deg bite 1 of 1
+413,ball,60.4747,51.6132,110.5,188.0,finish 110.5 deg bite 1 of 1
+414,ball,59.2298,53.7873,110.5,188.0,finish 110.5 deg bite 1 of 2
+415,ball,60.1644,53.7873,110.5,188.0,finish 110.5 deg bite 2 of 2
+416,ball,52.7109,45.8649,115.5,188.0,finish 115.5 deg bite 1 of 1
+417,ball,52.963,59.9486,115.5,188.0,finish 115.5 deg bite 1 of 1
+418,ball,52.6804,43.2506,116.0,188.0,finish 116.0 deg bite 1 of 1
+419,ball,52.5514,62.9055,116.0,188.0,finish 116.0 deg bite 1 of 2
+420,ball,53.0729,62.9055,116.0,188.0,finish 116.0 deg bite 2 of 2
+421,ball,61.6163,54.464,122.5,188.0,finish 122.5 deg bite 1 of 1
+422,ball,55.1106,61.6879,124.0,188.0,finish 124.0 deg bite 1 of 1
+423,ball,52.3071,48.2989,125.5,188.0,finish 125.5 deg bite 1 of 1
+424,ball,52.3061,45.6837,126.0,188.0,finish 126.0 deg bite 1 of 1
+425,ball,55.6213,65.0144,126.0,188.0,finish 126.0 deg bite 1 of 1
+426,ball,62.6946,39.412,128.0,188.0,finish 128.0 deg bite 1 of 1
+427,ball,61.0798,41.9437,132.0,188.0,finish 132.0 deg bite 1 of 2
+428,ball,61.865,41.9437,132.0,188.0,finish 132.0 deg bite 2 of 2
+429,ball,52.3592,48.143,136.0,188.0,finish 136.0 deg bite 1 of 1
+430,ball,52.361,50.9321,136.0,188.0,finish 136.0 deg bite 1 of 1
+431,ball,58.4956,66.6473,136.0,188.0,finish 136.0 deg bite 1 of 1
+432,ball,48.4757,42.0778,140.5,188.0,finish 140.5 deg bite 1 of 14
+433,ball,49.4514,42.0778,140.5,188.0,finish 140.5 deg bite 2 of 14
+434,ball,50.4271,42.0778,140.5,188.0,finish 140.5 deg bite 3 of 14
+435,ball,51.4028,42.0778,140.5,188.0,finish 140.5 deg bite 4 of 14
+436,ball,52.3785,42.0778,140.5,188.0,finish 140.5 deg bite 5 of 14
+437,ball,53.3542,42.0778,140.5,188.0,finish 140.5 deg bite 6 of 14
+438,ball,54.3299,42.0778,140.5,188.0,finish 140.5 deg bite 7 of 14
+439,ball,55.3056,42.0778,140.5,188.0,finish 140.5 deg bite 8 of 14
+440,ball,56.2813,42.0778,140.5,188.0,finish 140.5 deg bite 9 of 14
+441,ball,57.257,42.0778,140.5,188.0,finish 140.5 deg bite 10 of 14
+442,ball,58.2327,42.0778,140.5,188.0,finish 140.5 deg bite 11 of 14
+443,ball,59.2084,42.0778,140.5,188.0,finish 140.5 deg bite 12 of 14
+444,ball,60.1841,42.0778,140.5,188.0,finish 140.5 deg bite 13 of 14
+445,ball,61.1598,42.0778,140.5,188.0,finish 140.5 deg bite 14 of 14
+446,ball,60.8495,44.2519,140.5,188.0,finish 140.5 deg bite 1 of 1
+447,ball,59.4252,46.5599,148.0,188.0,finish 148.0 deg bite 1 of 2
+448,ball,60.2066,46.5599,148.0,188.0,finish 148.0 deg bite 2 of 2
+449,ball,65.745,60.4322,148.0,188.0,finish 148.0 deg bite 1 of 2
+450,ball,66.2744,60.4322,148.0,188.0,finish 148.0 deg bite 2 of 2
+451,ball,66.8382,63.5744,150.5,188.0,finish 150.5 deg bite 1 of 1
+452,ball,61.2772,30.2799,152.5,188.0,finish 152.5 deg bite 1 of 2
+453,ball,62.0075,30.2799,152.5,188.0,finish 152.5 deg bite 2 of 2
+454,ball,61.5338,29.0187,154.5,188.0,finish 154.5 deg bite 1 of 1
+455,ball,68.0672,61.916,155.0,188.0,finish 155.0 deg bite 1 of 1
+456,ball,69.6113,64.6551,161.0,188.0,finish 161.0 deg bite 1 of 1
+457,ball,70.0393,63.1925,162.0,188.0,finish 162.0 deg bite 1 of 1
+458,ball,48.0207,39.2415,166.0,188.0,finish 166.0 deg bite 1 of 2
+459,ball,48.8725,39.2415,166.0,188.0,finish 166.0 deg bite 2 of 2
+460,ball,56.7741,32.6919,170.5,188.0,finish 170.5 deg bite 1 of 1
+461,ball,56.9854,33.4774,170.5,188.0,finish 170.5 deg bite 1 of 1
+462,ball,72.4288,63.7726,170.5,188.0,finish 170.5 deg bite 1 of 1
+463,ball,55.8219,31.588,171.0,188.0,finish 171.0 deg bite 1 of 1
+464,ball,72.3863,65.2265,171.0,188.0,finish 171.0 deg bite 1 of 1
+465,ball,56.5265,59.464,175.5,188.0,finish 175.5 deg bite 1 of 1
+466,ball,74.9163,65.3668,180.0,188.0,finish 180.0 deg bite 1 of 1
+467,ball,75.2962,65.7042,182.0,188.0,finish 182.0 deg bite 1 of 1
+468,ball,75.6235,65.9987,184.0,188.0,finish 184.0 deg bite 1 of 1
+469,ball,47.4123,48.4706,186.0,188.0,finish 186.0 deg bite 1 of 1
+470,ball,75.8984,66.2424,186.0,188.0,finish 186.0 deg bite 1 of 1
+471,ball,53.1052,41.1507,192.0,188.0,finish 192.0 deg bite 1 of 1
+472,ball,50.4311,36.5026,194.0,188.0,finish 194.0 deg bite 1 of 1
+473,ball,52.5005,44.7687,200.5,188.0,finish 200.5 deg bite 1 of 1
+474,ball,48.1741,54.8133,205.5,188.0,finish 205.5 deg bite 1 of 1
+475,ball,48.6149,40.2851,206.5,188.0,finish 206.5 deg bite 1 of 1
+476,ball,52.4658,48.1682,208.0,188.0,finish 208.0 deg bite 1 of 1
+477,ball,52.5078,51.9244,210.5,188.0,finish 210.5 deg bite 1 of 1
+478,ball,48.1495,44.2278,211.0,188.0,finish 211.0 deg bite 1 of 1
+479,ball,49.1492,57.347,214.0,188.0,finish 214.0 deg bite 1 of 1
+480,ball,52.8669,51.4263,215.0,188.0,finish 215.0 deg bite 1 of 1
+481,ball,53.3978,55.8117,221.0,188.0,finish 221.0 deg bite 1 of 1
+482,ball,53.6739,54.6334,222.0,188.0,finish 222.0 deg bite 1 of 1
+483,ball,77.8463,29.1428,224.0,188.0,finish 224.0 deg bite 1 of 1
+484,ball,77.9314,29.3091,224.5,188.0,finish 224.5 deg bite 1 of 1
+485,ball,77.867,29.6687,226.0,188.0,finish 226.0 deg bite 1 of 1
+486,ball,71.8411,30.1782,226.5,188.0,finish 226.5 deg bite 1 of 8
+487,ball,72.721,30.1782,226.5,188.0,finish 226.5 deg bite 2 of 8
+488,ball,73.6008,30.1782,226.5,188.0,finish 226.5 deg bite 3 of 8
+489,ball,74.4806,30.1782,226.5,188.0,finish 226.5 deg bite 4 of 8
+490,ball,75.3605,30.1782,226.5,188.0,finish 226.5 deg bite 5 of 8
+491,ball,76.2403,30.1782,226.5,188.0,finish 226.5 deg bite 6 of 8
+492,ball,77.1202,30.1782,226.5,188.0,finish 226.5 deg bite 7 of 8
+493,ball,78.0,30.1782,226.5,188.0,finish 226.5 deg bite 8 of 8
+494,ball,46.7881,46.3681,226.5,188.0,finish 226.5 deg bite 1 of 2
+495,ball,47.5795,46.3681,226.5,188.0,finish 226.5 deg bite 2 of 2
+496,ball,75.6142,30.5117,230.0,188.0,finish 230.0 deg bite 1 of 3
+497,ball,76.3959,30.5117,230.0,188.0,finish 230.0 deg bite 2 of 3
+498,ball,77.1776,30.5117,230.0,188.0,finish 230.0 deg bite 3 of 3
+499,ball,54.9781,57.7264,230.5,188.0,finish 230.5 deg bite 1 of 1
+500,ball,75.8996,30.8827,235.0,188.0,finish 235.0 deg bite 1 of 1
+501,ball,72.6637,31.393,241.0,188.0,finish 241.0 deg bite 1 of 3
+502,ball,73.5099,31.393,241.0,188.0,finish 241.0 deg bite 2 of 3
+503,ball,74.3562,31.393,241.0,188.0,finish 241.0 deg bite 3 of 3
+504,ball,60.0157,36.4992,241.0,188.0,finish 241.0 deg bite 1 of 1
+505,ball,57.086,62.6688,241.5,188.0,finish 241.5 deg bite 1 of 1
+506,ball,48.7317,56.0171,247.0,188.0,finish 247.0 deg bite 1 of 1
+507,ball,70.8116,32.0796,249.0,188.0,finish 249.0 deg bite 1 of 3
+508,ball,71.5659,32.0796,249.0,188.0,finish 249.0 deg bite 2 of 3
+509,ball,72.3202,32.0796,249.0,188.0,finish 249.0 deg bite 3 of 3
+510,ball,59.7094,65.4605,251.5,188.0,finish 251.5 deg bite 1 of 1
+511,ball,56.1478,43.2748,252.0,188.0,finish 252.0 deg bite 1 of 6
+512,ball,57.015,43.2748,252.0,188.0,finish 252.0 deg bite 2 of 6
+513,ball,57.8823,43.2748,252.0,188.0,finish 252.0 deg bite 3 of 6
+514,ball,58.7495,43.2748,252.0,188.0,finish 252.0 deg bite 4 of 6
+515,ball,59.6168,43.2748,252.0,188.0,finish 252.0 deg bite 5 of 6
+516,ball,60.484,43.2748,252.0,188.0,finish 252.0 deg bite 6 of 6
+517,ball,57.8795,38.3678,254.0,188.0,finish 254.0 deg bite 1 of 1
+518,ball,59.537,66.9804,254.5,188.0,finish 254.5 deg bite 1 of 2
+519,ball,60.1478,66.9804,254.5,188.0,finish 254.5 deg bite 2 of 2
+520,ball,61.0891,66.9166,256.5,188.0,finish 256.5 deg bite 1 of 1
+521,ball,68.4085,33.0693,257.5,188.0,finish 257.5 deg bite 1 of 3
+522,ball,69.3536,33.0693,257.5,188.0,finish 257.5 deg bite 2 of 3
+523,ball,70.2987,33.0693,257.5,188.0,finish 257.5 deg bite 3 of 3
+524,ball,64.6147,29.0262,259.0,188.0,finish 259.0 deg bite 1 of 1
+525,ball,62.7895,66.1724,261.0,188.0,finish 261.0 deg bite 1 of 1
+526,ball,67.343,33.751,262.5,188.0,finish 262.5 deg bite 1 of 3
+527,ball,68.245,33.751,262.5,188.0,finish 262.5 deg bite 2 of 3
+528,ball,69.1471,33.751,262.5,188.0,finish 262.5 deg bite 3 of 3
+529,ball,61.2127,29.0544,265.5,188.0,finish 265.5 deg bite 1 of 1
+530,ball,59.1222,29.0999,270.0,188.0,finish 270.0 deg bite 1 of 1
+531,ball,65.9346,34.7102,270.5,188.0,finish 270.5 deg bite 1 of 3
+532,ball,66.6154,34.7102,270.5,188.0,finish 270.5 deg bite 2 of 3
+533,ball,67.2962,34.7102,270.5,188.0,finish 270.5 deg bite 3 of 3
+534,ball,59.203,51.5974,270.5,188.0,finish 270.5 deg bite 1 of 2
+535,ball,60.1792,51.5974,270.5,188.0,finish 270.5 deg bite 2 of 2
+536,ball,57.3165,29.0619,274.0,188.0,finish 274.0 deg bite 1 of 1
+537,ball,55.6314,29.0652,278.0,188.0,finish 278.0 deg bite 1 of 1
+538,ball,64.2422,36.1998,281.0,188.0,finish 281.0 deg bite 1 of 2
+539,ball,65.0579,36.1998,281.0,188.0,finish 281.0 deg bite 2 of 2
+540,ball,51.9082,30.5506,286.5,188.0,finish 286.5 deg bite 1 of 2
+541,ball,52.6217,30.5506,286.5,188.0,finish 286.5 deg bite 2 of 2
+542,ball,54.8637,43.9392,286.5,188.0,finish 286.5 deg bite 1 of 1
+543,ball,60.4314,54.7954,290.5,188.0,finish 290.5 deg bite 1 of 3
+544,ball,61.2532,54.7954,290.5,188.0,finish 290.5 deg bite 2 of 3
+545,ball,62.075,54.7954,290.5,188.0,finish 290.5 deg bite 3 of 3
+546,ball,62.3705,38.0037,291.0,188.0,finish 291.0 deg bite 1 of 2
+547,ball,63.2203,38.0037,291.0,188.0,finish 291.0 deg bite 2 of 2
+548,ball,48.1131,32.2371,294.5,188.0,finish 294.5 deg bite 1 of 3
+549,ball,49.0513,32.2371,294.5,188.0,finish 294.5 deg bite 2 of 3
+550,ball,49.9894,32.2371,294.5,188.0,finish 294.5 deg bite 3 of 3
+551,ball,54.6875,45.1399,294.5,188.0,finish 294.5 deg bite 1 of 1
+552,ball,54.5889,49.156,296.5,188.0,finish 296.5 deg bite 1 of 1
+553,ball,44.8569,33.8249,301.5,188.0,finish 301.5 deg bite 1 of 4
+554,ball,45.8519,33.8249,301.5,188.0,finish 301.5 deg bite 2 of 4
+555,ball,46.8469,33.8249,301.5,188.0,finish 301.5 deg bite 3 of 4
+556,ball,47.842,33.8249,301.5,188.0,finish 301.5 deg bite 4 of 4
+557,ball,60.8089,40.1847,301.5,188.0,finish 301.5 deg bite 1 of 2
+558,ball,61.6552,40.1847,301.5,188.0,finish 301.5 deg bite 2 of 2
+559,ball,54.7112,46.0212,301.5,188.0,finish 301.5 deg bite 1 of 1
+560,ball,63.4933,58.4374,301.5,188.0,finish 301.5 deg bite 1 of 1
+561,ball,54.7039,51.1911,307.0,188.0,finish 307.0 deg bite 1 of 1
+562,ball,60.0424,41.7762,307.5,188.0,finish 307.5 deg bite 1 of 2
+563,ball,60.9689,41.7762,307.5,188.0,finish 307.5 deg bite 2 of 2
+564,ball,42.5004,35.6371,308.5,188.0,finish 308.5 deg bite 1 of 5
+565,ball,43.3492,35.6371,308.5,188.0,finish 308.5 deg bite 2 of 5
+566,ball,44.198,35.6371,308.5,188.0,finish 308.5 deg bite 3 of 5
+567,ball,45.0468,35.6371,308.5,188.0,finish 308.5 deg bite 4 of 5
+568,ball,45.8956,35.6371,308.5,188.0,finish 308.5 deg bite 5 of 5
+569,ball,59.7817,42.308,309.0,188.0,finish 309.0 deg bite 1 of 2
+570,ball,60.7278,42.308,309.0,188.0,finish 309.0 deg bite 2 of 2
+571,ball,60.556,42.4956,309.5,188.0,finish 309.5 deg bite 1 of 1
+572,ball,65.3633,58.6349,311.0,188.0,finish 311.0 deg bite 1 of 1
+573,ball,59.2596,42.9097,311.0,188.0,finish 311.0 deg bite 1 of 1
+574,ball,65.2845,60.1808,311.5,188.0,finish 311.5 deg bite 1 of 1
+575,ball,58.1501,43.7375,313.5,188.0,finish 313.5 deg bite 1 of 1
+576,ball,55.0833,47.5366,315.0,188.0,finish 315.0 deg bite 1 of 1
+577,ball,57.0849,45.1772,317.5,188.0,finish 317.5 deg bite 1 of 1
+578,ball,67.4168,60.0449,321.0,188.0,finish 321.0 deg bite 1 of 1
+579,ball,67.2331,61.5555,321.0,188.0,finish 321.0 deg bite 1 of 1
+580,ball,56.2426,47.2681,323.0,188.0,finish 323.0 deg bite 1 of 1
+581,ball,55.4335,49.6264,325.5,188.0,finish 325.5 deg bite 1 of 1
+582,ball,67.1054,64.4237,325.5,188.0,finish 325.5 deg bite 1 of 1
+583,ball,55.861,49.9885,330.0,188.0,finish 330.0 deg bite 1 of 1
+584,ball,69.5063,62.6124,331.0,188.0,finish 331.0 deg bite 1 of 1
+585,ball,67.0107,30.0859,332.0,188.0,finish 332.0 deg bite 1 of 1
+586,ball,70.1901,64.023,335.5,188.0,finish 335.5 deg bite 1 of 1
+587,ball,69.5471,66.8373,336.0,188.0,finish 336.0 deg bite 1 of 2
+588,ball,70.3424,66.8373,336.0,188.0,finish 336.0 deg bite 2 of 2
+589,ball,65.788,31.4227,337.5,188.0,finish 337.5 deg bite 1 of 2
+590,ball,66.3172,31.4227,337.5,188.0,finish 337.5 deg bite 2 of 2
+591,ball,56.5259,55.3962,338.5,188.0,finish 338.5 deg bite 1 of 1
+592,ball,66.1097,31.808,339.0,188.0,finish 339.0 deg bite 1 of 1
+593,ball,71.6655,63.2749,340.0,188.0,finish 340.0 deg bite 1 of 1
+594,ball,65.6598,32.6653,342.0,188.0,finish 342.0 deg bite 1 of 1
+595,ball,65.0177,33.6249,345.5,188.0,finish 345.5 deg bite 1 of 1
+596,ball,73.3097,65.8863,346.0,188.0,finish 346.0 deg bite 1 of 1
+597,ball,64.1877,34.8765,350.0,188.0,finish 350.0 deg bite 1 of 1
+598,ball,49.3312,41.8505,350.5,188.0,finish 350.5 deg bite 1 of 2
+599,ball,49.9096,41.8505,350.5,188.0,finish 350.5 deg bite 2 of 2
+600,ball,50.1209,42.636,350.5,188.0,finish 350.5 deg bite 1 of 1
+601,ball,49.0376,40.8062,351.0,188.0,finish 351.0 deg bite 1 of 1
+602,ball,63.3395,36.3631,355.0,188.0,finish 355.0 deg bite 1 of 1

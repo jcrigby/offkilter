@@ -2757,3 +2757,65 @@ production is done on it.
   the wheel's motor is under the disc's other side. Backlash that
   only shows when the push changes direction is not found by it.
   The trial stick is.
+
+## 2026-11 · The billet: tabs to the rods, nuts only at the socket end, and a comb for the second stage
+
+The owner's idea for the stick sled (`examples/stick-billet`): saw
+the tiles' pieces first, 3 mm of solid wood, drill them in a jig,
+stack them on brass rods and let the sled mill the stack as it mills
+a stick. The tiles come off face grain, a wood each if wanted, with
+no kerf and nothing to saw. The cage of `examples/spectre-cage` held
+a dry stack in a tube; this holds it on rods through the pieces
+themselves, outside the tile, and moves the hold between two stages
+so that every edge is reached.
+
+- **A first try cut the rods free.** It kept every cut off the rods
+  and nowhere else, and three of the four ended on islands of wood
+  joined to nothing: a rod that holds nothing. The owner saw it in
+  the picture. So the first stage leaves a tab, a 4 mm strip of wood
+  from each rod to the tile, chosen of the straight runs to the edge
+  as the one that keeps back the fewest finishing passes. Roughing
+  goes as deep as it can short of the rods and tabs, finishing passes
+  that touch neither are made, and the rest wait. The build
+  flood-fills what is left and stops if a rod is not joined.
+- **The blank grew 3 mm a side, to 55 x 48.** At the sled's 49 x 42
+  the tile comes within 0.6 mm of one corner. The collet nut then
+  passes a bigger blank at the far end of every pass, and both bits
+  must stand further out: 0.9 and 1.9 mm, within the 2 mm the sled
+  already allows because a bit is set by touch. So the sled's
+  numbers stand and the sled is not changed.
+- **One rod 3 mm further in.** At 4 mm in, one corner rod shaded the
+  single pass that finishes a flute, and the second stage's finger
+  could only go outside the blank, bearing on 5 mm of edge. The owner
+  pointed at the flute; moved, the rod frees it, the finger bears on
+  43 mm, and two more passes come back into the first stage.
+- **No nuts at the tail end.** The bit comes onto the stick from the
+  tail end and sweeps all of it on every pass, so anything standing
+  out of the stack's section there is cut, and a nut is wider than
+  the wood kept round its rod. The rods thread into a tapped hardwood
+  cap instead, and are nutted at the far end, in notches in a printed
+  plate whose boss is the sled's own blank and sits in the sled's
+  socket. Heat-set inserts in the cap lost: an insert is wider than
+  its rod too, and the cap is cut down to the rod's wood.
+- **The second stage's hold is a comb, not loose fillers.** Fingers
+  alone, nutted at both ends, would squeeze only themselves. One
+  print, a plate over the cap and three fingers, lets the second
+  stage's rods (threaded into inserts in the far plate, nutted on the
+  comb's plate) pull the plate onto the cap and so clamp the stack.
+  The plate covers only the tile, 0.5 mm in from its edge: no cut
+  goes inside the tile, so the plate and its nuts are safe wherever
+  the bit is, and its middle is open for the tail spindle's point.
+  A finger fills a room that the first stage cut away and no
+  second-stage cut comes within 1 mm of, bears on finished edge to a
+  0.15 mm fit, and joins the plate over a 1 mm band of the tile's
+  edge.
+- **The spacer.** The straight bit reaches 2.2 mm past where the
+  ball-nose stops finishing, so one scrap piece sits between the last
+  real piece and the printed plate, and the bit never cuts print.
+- **Two tables, not one.** The stages are the sled's own cuts, never
+  moved: a cut goes into one stage or the other, and a roughing place
+  can be made shallower in the first and to its depth in the second.
+  787 runs where the stick takes 573. The tables are not yet the
+  controller's `passes.csv`: its loading, bit-setting and checking
+  rows and its path for each move past the master are still the
+  sled's build's, for one stick.

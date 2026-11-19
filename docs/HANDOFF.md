@@ -19,6 +19,7 @@ examples, each with a regression test in `crates/ok-render/tests/`:
 | `examples/router-positioner` | two-axis plywood positioner holding the owner's Bosch Colt | drawn to the owner's calliper readings; cut list written |
 | `examples/stick-sled` | the stick on a sled, a wheel on its own spindle, a screw feed, a Pico controller | automatic since 2026-11-19; a precheck table before any real stick |
 | `examples/stick-finish` | two printed sanding forms, two scraper blade templates, a captioned animation of the whole job | drawn; nothing printed |
+| `examples/stick-billet` | the tiles' 3 mm pieces stacked on brass rods and milled by the sled in two stages: no sawing, face grain | planned and drawn 2026-11-19; the comb, far plate and drilling jig are STLs; nothing printed |
 
 **Nothing has been built, and nothing is queued to print.** Every
 holding and timing figure in the sled is an estimate until the
@@ -61,6 +62,36 @@ The owner looked at buying a four-axis CNC instead (see below) and on
   belt, a 20-tooth pulley, two KFL001 flange bearings, a toggle clamp.
   The automatic sled needs none of them (the clamp only if the lock is
   fitted). Its shopping list is under "To buy" in its README.
+
+## The billet, as decided in chat on 2026-11-19
+
+The owner's idea, `examples/stick-billet`; its README and the last
+entry in `docs/DECISIONS.md` have the design. Decided in chat:
+
+- **Pieces 3 mm, solid wood.** The blank grown to **55 x 48** ("55 x
+  48 is fine").
+- **#6-32 brass rod everywhere**, the owner's "fine rod across the
+  board", for the four first-stage rods and the three in the comb.
+- **One corner rod moved in** toward the flute: the owner drew an
+  arrow on the picture. It frees the flute for a finger.
+- **The double-sided tape** the owner floated between pieces is not
+  used: a rod through every piece holds it against turning, and tape
+  would make taking the stack apart messier.
+- The owner caught the first plan's error (rods left on islands of
+  wood). Tabs fixed it.
+
+Open on the billet:
+
+- `out/stage1.csv` and `stage2.csv` are cuts only. They are not the
+  controller's `passes.csv`: no loading, bit-setting or check rows, and
+  no path worked out for each move past the master.
+- Stage 1's finishing passes take more bites where roughing stopped
+  short of a rod; their heaviest bite is not checked against the
+  belt's hold as the sled's table is.
+- To buy: about 1.3 m of #6-32 brass rod, seven small-pattern #6-32
+  nuts (1/4 in across: a standard 5/16 nut does not fit the flute
+  finger's plate), three #6-32 heat-set inserts, a #6-32 tap with its
+  #36 drill, a #27 drill.
 
 ## Open, and not asked for yet
 
@@ -158,6 +189,8 @@ python3 examples/stick-sled/calibrate.py study  # out/calibration.json, which th
 python3 examples/stick-sled/animate.py          # 19 s; only if the cutting rows changed
 python3 examples/stick-finish/build.py          # only if the tile's outline changed
 python3 examples/stick-finish/whole.py          # 16 s; only if the cutting rows changed
+python3 examples/stick-billet/build.py          # 1 min; whenever the sled's tile or table changed
+python3 examples/stick-billet/animate.py        # 25 s
 scripts/check.sh --quick                        # three minutes: fmt, clippy, the ok-render suite
 ```
 

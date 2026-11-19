@@ -93,7 +93,9 @@ works today, all in the browser:
   and one that feeds the sled past the bit on a screw, so that a
   stick is cut without a hand (`examples/stick-sled/`), the sanding forms and
   scraper templates that finish what it mills, each the negative of
-  one of the tile's edges (`examples/stick-finish/`), a mini
+  one of the tile's edges (`examples/stick-finish/`), a billet
+  of 3 mm pieces on brass rods that the sled mills in two stages
+  into face-grain tiles with nothing to saw (`examples/stick-billet/`), a mini
   chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`), the Edwardian
