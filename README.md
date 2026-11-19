@@ -90,7 +90,9 @@ works today, all in the browser:
   a router held in the two-axis positioner, three motors going to
   the next row of a table, the one that turns the stick left behind
   at the end of the base with a large index wheel that a star on the
-  sled goes into (`examples/stick-sled/`), a mini
+  sled goes into (`examples/stick-sled/`), the sanding forms and
+  scraper templates that finish what it mills, each the negative of
+  one of the tile's edges (`examples/stick-finish/`), a mini
   chop saw from an angle
   grinder (`examples/chop-saw/`), a sliding cutoff grinder adapted
   from a published plan (`examples/cutoff-grinder/`), the Edwardian

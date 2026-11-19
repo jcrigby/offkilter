@@ -2508,3 +2508,51 @@ shank in the collet, under the 3/4 in that is the usual least.
   a touch made along the depth; for these the depth stands still and
   the height feels. The check now asks each kind for what it uses.
 
+## 2026-11 · Finishing the stick: a form is what seven edges share
+
+The owner wants to take the sled's ridges off by hand: a small
+scraper plane, or printed sticks with abrasive film on them, and has
+bought 3M's 268L film and card scraper stock. The ridges run along the
+stick, so a tool that is the negative of an edge, pushed along it, is
+the right tool. What the negative of an edge is took three tries.
+
+- **Fourteen edges are not two shapes, and are.** I told the owner
+  every edge carried the same curve, so two tools would do, and that
+  turning a tool end for end gave the mirrored lean. Split where its
+  curvature changes sign, the outline's bumps measured 3.0 to 3.6 mm
+  high and its flutes 3.8 to 4.6 deep, which looked like several
+  shapes. The kernel's own code settles it: one curve on every edge,
+  never mirrored, so the differences are only where one edge runs
+  into the next. Two tools do; turning one end for end does not.
+- **The turn is known, so only the shift is fitted.** Laying one edge
+  on another by closest points, turn and shift together, went wrong:
+  the middle of a half ellipse is near enough an arc to slide round
+  itself, and the fit came out 0.1 mm off where the curves are in
+  fact the same to 0.003. Every edge of the tile is a whole number of
+  twelfths of a turn from every other. With the turn tried at each
+  twelfth and only the shift fitted, nothing can slide.
+- **A form is the stretch all seven share.** Out from the middle for
+  as long as all seven are within 0.03 mm of each other, less a
+  quarter millimetre at each end. That is a number the tile gives,
+  not a guess at how much to trim.
+- **The lobes next door decide the tool's shape.** Drawn on all
+  fourteen edges at once, the first forms went through the wood on
+  six of them: at some corners the next lobe hooks over a flute, or
+  stands beside a bump. So the seven flutes were laid over
+  each other and the space free of all seven mapped: one way out,
+  5.4 mm wide. The flute form's neck is that less air, and its grip
+  starts where the way opens. The bump form leans in. The same map
+  says a scraper's blade can be no wider near the stick, which is why
+  the templates are a blade's end and not a blade.
+- **Standing to print.** A bulb on a thin neck overhangs both ways
+  lying down. On end it is a plain extrusion with its curve in the
+  printer's best plane, and 60 mm tall on a 14 by 21 foot.
+- **Film first, scraper after.** A form's face can be exactly the
+  edge less the film; a blade has to be ground to a line by hand at
+  this size, and its holder waits for the stock's dimensions. The
+  templates are drawn so the grinding has a line.
+- **The check is made with solids.** Each form on each of its seven
+  edges, the stick moved toward it a little less than the film's
+  thickness and a little more: nothing shared, then something. That
+  is the film's room measured, not asserted.
+
