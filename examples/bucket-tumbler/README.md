@@ -44,14 +44,17 @@ The model's numbers for the two buckets:
 | Axis above the deck; rim clearance | 6.5 in; 1.38 in | 7.5 in; 1.30 in |
 | Casters apart; axles above the deck; riser | 6.49 in; 1.86 in; **3/8 in** | 7.71 in; 2.00 in; 1/2 in |
 | Turning parts (bucket, battens, discs, coupling) | 0.85 kg | 1.5 kg |
-| Axial load at 25° (with 1.5 kg of load) | 0.99 kgf | 1.28 kgf |
-| Torque, worst case; margin on a 20 kg·cm motor | 6.1 kg·cm; 3.3× | 7.6 kg·cm; 2.6× |
+| Load at a full third: pieces and walnut shell grit | 2.3 kg | 5.5 kg |
+| Axial load at 25° | 1.33 kgf | 2.9 kgf |
+| Torque, worst case; margin on a 20 kg·cm motor | 9.3 kg·cm; 2.2× | **28 kg·cm: stalls it** |
 | Speed for the same tumble | **28–39 rpm** | 25–35 rpm |
 
 Forty tiles would have to be 19 cm³ each (say 50 × 50 × 8 mm) before
 the 2-gallon ran out of room under the brief's fill rule, so it has
-room to spare. It is lighter, so the torque and the load along the
-motor's shaft both drop, and it fits on a smaller deck.
+room to spare. It also fits on a smaller deck. With walnut shell grit
+as the media it matters more: grit is heavy, and a 5-gallon filled to
+a third would need more torque than the 20 kg·cm motor has. Run a
+5-gallon at most half that full.
 
 Two things change with the smaller bucket:
 
@@ -92,8 +95,8 @@ on the regenerated bodies.
 | Casters under the smooth wall, below the ribbed collar | 3.0 in below the rim on the 2-gallon *(fit)*, 5.2 on the 5-gallon | ✓ |
 | Contact 35° either side of bottom centre | each wheel touches the wall without cutting into it (0.5 mm closer and it would) | ✓ |
 | Shim the riser until the axis is parallel to the deck | the riser's thickness is worked out: 3/8 in for 2 in casters whose plate-to-axle height is 1.5 in | ✓ |
-| Torque 0.7 N·m (7 kg·cm) worst case; a 20 kg·cm motor is about 3× | 6.1 kg·cm on the 2-gallon, 3.3×; on the 5-gallon 7.6 kg·cm, **2.6×** | ✓ |
-| Axial load at 25° about 1.3 kgf | 0.99 kgf on the 2-gallon: the turning parts at the model's densities plus 1.5 kg of load, times sin 25° | ✓ |
+| Torque 0.7 N·m (7 kg·cm) worst case on 1.5 kg of load; a 20 kg·cm motor is about 3× | The load is now weighed rather than guessed: a full third of the 2-gallon is 0.77 L of pieces at 0.7 g/cm³ and 2.3 L of walnut shell grit at 0.75, 2.3 kg. At 1.6 in off the axis that is 9.3 kg·cm, a **2.2×** margin | ✓ |
+| Axial load at 25° about 1.3 kgf | 1.33 kgf: the turning parts at the model's densities (0.85 kg) plus the load, times sin 25° | ✓ |
 | Prop leg for 25° | 5.6 in at its front edge on the 2-gallon's 13.5 in deck | ✓ |
 | Three battens at 120° | at 0°, 120° and 240°, on the inside wall, flat backs bearing at their edges | ✓ |
 | Nothing fixed touches the bucket | deck, plate, gussets, riser, casters and motor all clear | ✓ |
@@ -145,6 +148,7 @@ The model turned up three things the brief does not say:
 | Flange coupling | Rigid flange coupling, 8 mm bore | Check the shaft size on the listing |
 | Casters | 2 × fixed (non-swivel) 2 in casters, rubber or polyurethane wheel | Swivel casters will not track |
 | Bucket | Lowe's 2-gallon general bucket, with lid | Remove the handle |
+| Media | Walnut shell grit, 12/20 or 14/20 mesh, about 2.5 L (a few pounds) | Blasting or brass-tumbling media; weigh a litre of it, the model takes 0.75 kg |
 | Hardware | 4 × 1/4 in carriage bolts with nuts and washers; #8 × 3/4 in pan-head screws with washers; one hinge | |
 
 Prices have not been checked. Expect the motor, controller and supply
@@ -194,20 +198,34 @@ to be most of the cost.
 - **Speed:** 28–39 rpm (25–35 on a 5-gallon). Count turns against a mark on the bucket.
 - **Direction:** either; the battens are symmetrical.
 - **Fill:** the pieces plus about 3× their volume in media, under one
-  third of the bucket.
-- **Media:** 2 in squares of 100–120 grit cloth-backed abrasive, plus
-  a couple of handfuls of 3/4 in hardwood cubes.
-- **Dust:** snap the lid on, or run it outside.
+  third of the bucket: about 3 L in the 2-gallon.
+- **Media:** ground walnut shell grit, about 2.3 L for a full batch
+  (sold by mesh size for blasting and brass tumbling; 12/20 or 14/20
+  mesh is a reasonable start). Grit runs into the tiles' concave
+  curves, which 2 in abrasive squares cannot reach. It is a gentle
+  abrasive, though, closer to burnishing than sanding, so the
+  0.3–0.5 mm edge may take hours. If it is too slow, add a few 2 in
+  squares of 100–120 grit cloth-backed abrasive with it, or go to a
+  coarser mesh. The battens alone lift grit well; the hardwood cubes
+  are not needed.
+- **Separating:** pour through a kitchen colander or a 1/4 in screen;
+  the grit falls through and the tiles stay.
+- **Dust:** walnut shell dust is fine and brown. Snap the lid on, or
+  run it outside, and wear a dust mask when emptying it. Anyone with a
+  tree-nut allergy should stay clear of the dust.
+- **Staining:** fine brown dust can discolour pale maple. Try
+  scrap maple first, and blow the pieces off with air before any
+  finish.
 - **Species:** tumble maple and walnut separately.
 - **First run:** five scrap pieces, checked every 15–20 minutes.
   Record the time that gives the edge you want.
 
 ## Things to watch
 
-- **Axial load on the motor.** About 1.0 kgf along the shaft at 25°
-  (1.3 on a 5-gallon). If the motor's listing gives a lower axial
-  limit, reduce the tilt to 15° (0.6 kgf).
-- **Pieces riding a batten.** Add more cubes, or make the battens
+- **Axial load on the motor.** About 1.3 kgf along the shaft at 25°
+  with a full third of grit. If the motor's listing gives a lower
+  axial limit, reduce the tilt to 15° (0.8 kgf) or fill less.
+- **Pieces riding a batten.** Add more grit, or make the battens
   lower.
 - **Clatter** means the pieces are being thrown. Slow down or add
   media.

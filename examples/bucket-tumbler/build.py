@@ -81,7 +81,8 @@ DISC = (4.0, 0.5)           # bottom discs: diameter, thickness (1/2 ply)
 BOLT_CIRCLE = 3.0           # the four 1/4 carriage bolts through discs and bucket bottom
 BOLT_HOLE = 0.28
 BATTEN = (0.75, B["BATTEN_L"])   # section, length; three at 120 deg
-LOAD_KG = 1.5               # pieces plus media, worst case (brief)
+MEDIA = ("walnut shell grit", 0.75)   # bulk density, g/cm3 (typical 0.6-0.8; weigh a litre of yours)
+PIECE_WOOD = 0.70           # the pieces' wood, solid: maple 0.7, walnut 0.6
 LOAD_OFFSET = B["LOAD_OFFSET"]
 MOTOR_TORQUE_KGCM = 20.0    # the motor to buy, rated torque at least this
 FILL = 1 / 3                # pieces and media fill under a third of the bucket (brief)
@@ -373,8 +374,6 @@ def main():
     turning = [bb for bb in deck_bodies if bb["name"] in (f"bucket, {B['name']}", "inner disc", "outer disc", "flange coupling")
                or bb["name"].startswith("batten")]
     turning_kg = sum(bb["volume"] / 1000 * p.density[bb["name"]] for bb in turning) / 1000
-    torque_nm = LOAD_KG * g * LOAD_OFFSET * IN / 1000
-    axial_kgf = (turning_kg + LOAD_KG) * math.sin(math.radians(TILT))
     gap_rim = AXIS_H - R_RIM
 
     # Room: the inside as a frustum, a third of it for pieces and media,
@@ -395,6 +394,15 @@ def main():
 
     speed = math.sqrt(mean_d(BUCKETS["5gal"]) / mean_d(B))
     litres = inside_litres(B)
+
+    # The load at the full fill: a third of the bucket, a quarter of it
+    # pieces and the rest walnut shell grit (the brief's 1.5 kg was a
+    # guess for abrasive squares and wood cubes; grit is heavier).
+    pieces_l = litres * FILL / (1 + MEDIA_PER_PIECE)
+    media_l = litres * FILL - pieces_l
+    load_kg = pieces_l * PIECE_WOOD + media_l * MEDIA[1]
+    torque_nm = load_kg * g * LOAD_OFFSET * IN / 1000
+    axial_kgf = (turning_kg + load_kg) * math.sin(math.radians(TILT))
     numbers = {
         "units": "inches unless named",
         "axis_above_deck": AXIS_H,
@@ -424,7 +432,8 @@ def main():
         "bucket": B["name"], "bucket_h": BUCKET_H, "r_rim": R_RIM, "below_rim": B["BELOW_RIM"],
         "plate": (WIDTH, PLATE_H), "riser": RISER, "caster_drop": CASTER_DROP,
         "inside_litres": litres, "fill_litres": litres * FILL,
-        "pieces_litres_max": litres * FILL / (1 + MEDIA_PER_PIECE),
+        "pieces_litres_max": pieces_l,
+        "media": MEDIA[0], "media_litres": media_l, "media_kg": media_l * MEDIA[1], "load_kg": load_kg,
         "critical_rpm": critical_rpm(B),
         "rpm": (25 * speed, 35 * speed),
     }
