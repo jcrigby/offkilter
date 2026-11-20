@@ -303,6 +303,23 @@ here: the collet nut passing a blank 3 mm bigger all round, and the
 comb. The sled's own precheck, which tries what holds the stick, is
 the machine's and is run once as its README says.
 
+## If the stack slips in the second stage
+
+Not drawn, and kept in case it is wanted: the owner's dummy pieces.
+After stage 1, full-size scrap pieces are slipped into the stack at
+intervals. Each has three holes at the second stage's rods, and open
+slots where the four old rods are, so that it slides in sideways
+with the nuts eased. Stage 2 mills each down to the tile and three
+tabs round the new rods, and they tie the three rods and the fingers
+together along the stack.
+
+- **They cannot go in at stack-up.** Stage 1 would mill their tabs
+  off: the second stage's rods are in what stage 1 cuts away.
+- **The clamp is eased to get them in,** and that is when a piece can
+  shift in its rod holes, up to 0.08 mm.
+- **They do not replace the fingers.** The tiles between two dummies
+  are held sideways by the fingers and the clamp, as now.
+
 ## What is not done
 
 - **Nothing is built, printed or cut.** Every figure here is

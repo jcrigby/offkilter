@@ -122,6 +122,18 @@ Open on the billet:
   the collet, to see the collet nut pass the bigger blank and the comb.
 - The comb's 0.15 mm fit on the finished edge is a guess: print its
   plate alone first and try it.
+- **If the stack slips in stage 2: dummy pieces** (the owner's idea,
+  2026-11-20, set aside as possibly over-engineering; not drawn).
+  Full-size scrap pieces slipped into the stack at intervals after
+  stage 1, each with three holes at the stage-2 rods and open slots,
+  not holes, at the four old rods, so it slides in sideways with the
+  nuts eased. Stage 2 mills each down to the tile and three tabs
+  round the new rods. They would tie the three rods and fingers
+  together along the stack. They cannot go in at stack-up: stage 1
+  would mill their tabs off, the stage-2 rods being in what it cuts
+  away. What it costs: the clamp is eased to get them in, when a
+  piece can shift 0.08 mm in its holes; and the tiles between two
+  dummies are still held sideways only by the fingers and the clamp.
 - The holding figures (248 N in the middle, 2.5 times the heaviest
   turning) are from tables: the print's stiffness, friction 0.3, wood
   at 4 MPa across its grain. The owner can check them with a coupon:
