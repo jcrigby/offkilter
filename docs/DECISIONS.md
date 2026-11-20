@@ -2815,7 +2815,17 @@ so that every edge is reached.
 - **Two tables, not one.** The stages are the sled's own cuts, never
   moved: a cut goes into one stage or the other, and a roughing place
   can be made shallower in the first and to its depth in the second.
-  787 runs where the stick takes 573. The tables are not yet the
-  controller's `passes.csv`: its loading, bit-setting and checking
-  rows and its path for each move past the master are still the
-  sled's build's, for one stick.
+  795 runs where the stick takes 573, and 3 h 27 min by the
+  controller's own program where the stick takes 2 h 37 min. Each
+  stage is written as the controller's `passes.csv` is: loading, the
+  bits set on the master, the looks for the wheel's mark, and a move
+  straight wherever the bit clears the master. One table with a pause
+  for the swap lost: the billet comes off the sled for the swap, so
+  the wheel is homed and the bits set again anyway, which is what a
+  table's start does.
+- **Bites are sized by the belt, not only by depth.** The sled's
+  bites are the deepest its estimate of the belt's hold allows, for
+  its own blank and order. Here a finishing pass can meet more wood,
+  where roughing stopped short of a rod, so every bite is put through
+  the same estimate and a pass that fails is made in one bite more
+  until it passes. Eight runs come of it.

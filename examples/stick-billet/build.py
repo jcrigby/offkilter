@@ -33,12 +33,15 @@ each if the stack was made so, and nothing to saw.
 Writes out/billet.okpart, the printable parts as STL (the far plate, the
 comb, the drilling jig's box and lid), pictures, the two stages' pass
 tables (out/stage1.csv, out/stage2.csv) and out/billet.json with the
-numbers the test checks and the shapes the animation draws.
+numbers the test checks and the shapes the animation draws. Each stage's
+table is one the sled's controller takes as it is, and the build runs
+the controller's own program over it; out/dry1.csv and out/dry2.csv are
+a short dry run of each, no bit in the collet.
 """
-import csv
 import json
 import math
 import os
+import subprocess
 import sys
 import time
 
@@ -50,7 +53,11 @@ import billet as B  # noqa: E402
 
 P = B.P
 OUT = os.path.join(HERE, "out")
-SLED = os.path.join(os.path.dirname(HERE), "stick-sled", "out", "sled.json")
+SLED_DIR = os.path.join(os.path.dirname(HERE), "stick-sled")
+SLED = os.path.join(SLED_DIR, "out", "sled.json")
+sys.path.insert(0, os.path.join(SLED_DIR, "firmware"))
+import calibrate as K  # noqa: E402  the sled's: it writes a table as the controller reads it
+import config as FW  # noqa: E402  the controller's own
 
 # The pieces.
 PIECE = 3.0                     # a piece, and so a tile: 3 mm of solid wood, the owner's
@@ -78,7 +85,8 @@ GUIDE = HOLE + 0.1              # the lid's guide holes
 AWL = 1.6                       # the lid's hole over the stick's axis, for an awl: the tail centre's mark on the cap
 JIG_UNDER = 6.0                 # the box's floor has a hole this wide under each guide, for the drill to come out into
 
-INK = "#111111"
+DRY = 10                        # a dry run's passes, spread through its stage's table, besides the four at the ends of the positioner's reach
+ACROSS_GRAIN = 4.0              # MPa: what a hardwood takes pulled across its grain, at the low end (the Wood Handbook has sugar maple and cherry near 4, walnut 4.8, red oak 5.5)
 
 
 def main():
@@ -114,7 +122,21 @@ def main():
                 out.append({"t": r["t"], "across": r["across"], "tip": r["tip"]})
         return out
     places, passes = runs("rough"), runs("finish")
-    plan = B.stages(outline, stock, places, passes)
+    # Nothing but the belt holds the stick while it is cut, and the sled's bites are the deepest its estimate of that
+    # passes. The same estimate here, bite by bite, with the sled's own numbers: a bite that would move the tile's
+    # edge further than the sled allows is made in more, shallower ones.
+    hold, swing_r = n["hold"], n["tile"]["swing"]
+
+    def give(tool, area, over, far):
+        edge_speed = math.pi * P.cutting_dia("ball" if tool == "ball" else "straight", over) * hold["rpm"] / 60.0
+        push = hold["peak"] * hold["cut_energy"] * 1000.0 * area * hold["feed"] / edge_speed
+        return push * far / 1000.0 / hold["stiff"] * swing_r, push
+
+    def fits(tool, area, over, far, last):
+        return give(tool, area, over, far)[0] <= hold["limit"][1 if last else 0]
+    plan = B.stages(outline, stock, places, passes, fits)
+    if not all(q["ok"] for stage in ("first", "second") for part in plan[stage] for q in part):
+        raise SystemExit("a cut cannot be made in bites light enough for the belt")
     (p1, f1), (p2, f2) = plan["first"], plan["second"]
     rows1 = [c for q in p1 for c in B.bitten(q, "straight")] + [c for q in f1 for c in B.bitten(q, "ball")]
     rows2 = [c for q in p2 for c in B.bitten(q, "straight")] + [c for q in f2 for c in B.bitten(q, "ball")]
@@ -122,6 +144,15 @@ def main():
     print(f"first stage: {len(p1)} roughing places in {sum(q['bites'] for q in p1)} runs, {len(f1)} finishing passes in {sum(q['bites'] for q in f1)}; "
           f"second: {len(p2)} places in {sum(q['bites'] for q in p2)} runs, {len(f2)} passes in {sum(q['bites'] for q in f2)}. {len(rows1) + len(rows2)} runs where the sled's solid stick takes {sled_rows}")
     print(f"waste {plan['waste'].area:.0f} mm2: {plan['left_first']:.0f} left after the first stage, {plan['left_end']:.1f} at the end")
+    for r in rows1 + rows2:
+        r["give"], r["push"] = give(r["tool"], r["area"], r["over"], r["far"])
+        r["face"] = r["tool"] == "ball" and r["bite"] == r["of"]
+    worst = {stage: {"bite": max(r["give"] for r in rows if not r["face"]), "face": max(r["give"] for r in rows if r["face"])} for stage, rows in (("first", rows1), ("second", rows2))}
+    plain = lambda q, tool: max(1, math.ceil(q["depth"] / (P.BALL_BITE if tool == "ball" else P.ROUGH_BITE) - 1e-9))
+    extra = sum(q["bites"] - plain(q, tool) for stage in ("first", "second") for part, tool in zip(plan[stage], ("straight", "ball")) for q in part)
+    print(f"the belt holds every bite: the tile's edge moves at most {1000 * worst['first']['bite']:.1f} um in the first stage and {1000 * worst['second']['bite']:.1f} in the second, "
+          f"{1000 * max(worst['first']['face'], worst['second']['face']):.1f} in a bite that leaves a face (the sled's limits: {1000 * hold['limit'][0]:.0f} and {1000 * hold['limit'][1]:.0f}); "
+          f"{extra} runs are there only to keep a bite that light")
 
     grid = B.Grid(blank)
     wood = B.wood_after_first(outline, plan, grid)
@@ -195,24 +226,124 @@ def main():
           "; ".join(f"{v['name']} {v['set']:.1f} where the sled sets {v['sled_out']:.1f}" for v in bits.values()) + f" (the comb's plate wants {comb_need:.1f})")
 
     # -- the tables -----------------------------------------------------------
+    # Each stage as the controller takes it, like the sled's own passes.csv: the billet put on, the straight bit set
+    # on the master, the roughing, a look for the wheel's mark, the ball-nose set, the finishing, a last look.
     axes = P.Axes(ax["tip_home"], ax["across_home"], tuple(ax["scale"]), ax["shear"])
     along = next(r["along"] for r in n["rows"] if r["kind"] == "rough")
+    load = next(r for r in n["rows"] if r["kind"] == "load")
+    sets = {r["tool"]: r for r in n["rows"] if r["kind"] == "set"}
+    swing = max(math.hypot(*q) for q in blank)
+    label = lambda *text: "".join(t.ljust(16) for t in text).rstrip()
+    master_r, move_clear, past = sled["master_r"], ax["move_clear"], ax["past"]
+    # With the sled back the bit waits beside the master, past everything that stands out of the billet's tail end:
+    # in the second stage the comb's plate, its nuts and the ends of its rods.
+    stands_out = PLATE + NUT_T + 1.0
+    bit_waits = -sled["back_x"] - P.ROUGH_BIT / 2
+    if bit_waits - stands_out < 1.0:
+        raise SystemExit(f"drawn back, the bit is {bit_waits:.1f} from the billet's end and the comb's rods stand {stands_out:.1f} out of it")
 
-    def table(rows, path):
+    def bit_edge(tool):
+        """Points round a bit's outline from its tip: (toward the router, across). The sled's build has the same."""
+        if tool == "ball":
+            r, pts = P.BIT / 2, []
+            for k in range(61):
+                off = P.SHANK / 2 * k / 60
+                f = P.flank(off, r)
+                if f is not None:
+                    pts += [(r + f, off), (r + f, -off)]
+            far = max(u for u, _ in pts)
+            return pts + [(far + k, s * P.SHANK / 2) for s in (-1, 1) for k in range(1, 40)]
+        return [(0.0, P.ROUGH_BIT / 2 * k / 10) for k in range(-10, 11)] + [(float(k), s * P.ROUGH_BIT / 2) for s in (-1, 1) for k in range(1, 60)]
+    edges = {tool: bit_edge(tool) for tool in ("straight", "ball")}
+
+    def master_gap(depth, height, tool):
+        tip, across = axes.tip(depth, height)
+        return min(math.hypot(tip + u, across + v) for u, v in edges[tool]) - master_r
+
+    def straight_ok(prev, row):
+        """Whether the move to a row may go straight: height first, then depth, the whole bit clear of the master."""
+        steps = lambda a0, a1: [a0 + (a1 - a0) * k / max(1, math.ceil(abs(a1 - a0) / 0.25)) for k in range(max(1, math.ceil(abs(a1 - a0) / 0.25)) + 1)]
+        low = row["height"] - past if row["height"] < prev["height"] else row["height"]
+        if any(master_gap(prev["depth"], h, row["tool"]) < move_clear for h in steps(prev["height"], low)):
+            return False
+        return all(master_gap(d, row["height"], row["tool"]) >= move_clear for d in steps(prev["depth"], row["depth"]))
+
+    def table(cuts_, path, on):
+        seq = [("load", "none", load["t"], 0.0, swing, on)]
+        seq.append(("set", "straight", sets["straight"]["t"], sets["straight"]["across"], sets["straight"]["tip"], "set the straight bit on the master"))
+        for r in cuts_:
+            if r["tool"] == "straight":
+                seq.append(("rough", "straight", r["t"], r["across"], r["tip"], f"rough {math.degrees(r['t']):.0f} deg {r['across']:+.0f} bite {r['bite']} of {r['of']}"))
+        seq.append(("check", "none", 0.0, None, None, "after roughing"))
+        seq.append(("set", "ball", sets["ball"]["t"], sets["ball"]["across"], sets["ball"]["tip"], "set the ball-nose on the master"))
+        for r in cuts_:
+            if r["tool"] == "ball":
+                seq.append(("finish", "ball", r["t"], r["across"], r["tip"], f"finish bite {r['bite']} of {r['of']}"))
+        seq.append(("check", "none", 0.0, None, None, "at the end"))
         out = []
-        for k, r in enumerate(rows):
-            depth, height, turn = axes.row(r["t"], r["across"], r["tip"])
-            label = (f"rough {turn:.0f} deg {r['across']:+.0f}" if r["tool"] == "straight" else f"finish {turn:.1f} deg") + f" bite {r['bite']} of {r['of']}"
-            out.append({"n": k + 1, "tool": r["tool"], "depth": round(depth, 4), "height": round(height, 4), "turn": round(turn, 4), "along": along, "label": label})
-        if max(r["depth"] for r in out) > ax["travel"][0] - ax["bit_margin"] or max(abs(r["height"]) for r in out) > ax["travel"][1]:
-            raise SystemExit(f"{path}: a row is past the positioner's travel")
-        with open(path, "w", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=list(out[0].keys()))
-            w.writeheader()
-            w.writerows(out)
-        return out
-    t1 = table(rows1, os.path.join(OUT, "stage1.csv"))
-    t2 = table(rows2, os.path.join(OUT, "stage2.csv"))
+        for k, c in enumerate(seq):
+            if c[0] == "check":                              # the positioner stays where the row before left it
+                c = c[:3] + (out[-1]["across"], out[-1]["tip"]) + c[5:]
+            depth, height, turn = axes.row(c[2], c[3], c[4])
+            out.append({"n": k + 1, "kind": c[0], "tool": c[1], "t": c[2], "across": c[3], "tip": c[4], "label": c[5], "depth": round(depth, 4), "height": round(height, 4), "turn": round(turn, 4),
+                        "along": along if c[0] in ("rough", "finish") else 0.0})
+        for i, r in enumerate(out):
+            r["via"] = "d" if r["kind"] in ("rough", "finish") and out[i - 1]["kind"] in ("rough", "finish") and straight_ok(out[i - 1], r) else "s"
+        depths, heights = (min(r["depth"] for r in out), max(r["depth"] for r in out)), (min(r["height"] for r in out), max(r["height"] for r in out))
+        if depths[0] < past + ax["bit_margin"] or depths[1] > ax["travel"][0] - ax["bit_margin"] + 1e-6 or heights[0] < FW.PROBE_HEIGHT_MM + 2.0 or heights[1] > ax["travel"][1] - FW.PROBE_HEIGHT_MM - 2.0:
+            raise SystemExit(f"{path}: the rows do not fit the positioner's travel: depth {depths}, height {heights}")
+        K.write_table(path, out, ax["safe"])
+        # and the controller's own program run over it on a computer
+        scratch = os.path.join(OUT, "steps_scratch.json")
+        subprocess.run([sys.executable, os.path.join(SLED_DIR, "firmware", "main.py"), "--sim", path, scratch], check=True, cwd=os.path.join(SLED_DIR, "firmware"), stdout=subprocess.DEVNULL)
+        sim = json.load(open(scratch))
+        os.remove(scratch)
+        cutting = [r for r in out if r["kind"] in ("rough", "finish")]
+        if sim["passes"] != len(cutting) or any(r[4] for r in sim["rows"]) or len(sim["checks"]) != 2:
+            raise SystemExit(f"{path}: the controller made {sim['passes']} passes of the table's {len(cutting)}, or did not look for the wheel's mark twice")
+        return out, sim
+    (t1, sim1) = table(rows1, os.path.join(OUT, "stage1.csv"), label("billet in socket", "cap's mark on ctr", "marked corner", "to the tail mark"))
+    (t2, sim2) = table(rows2, os.path.join(OUT, "stage2.csv"), label("billet + comb on", "back in socket", "the same way up"))
+    # A dry run of each stage before it is cut: a sample of its own rows with no bit in the collet, the billet on. What
+    # it tries is what is new here: the collet nut passing a blank 3 mm bigger all round, and in the second stage
+    # the comb. The sled's own precheck, which tries what holds the stick, is the machine's and is not made again.
+    def dry_run(rows, path, on):
+        cutting = [r for r in rows if r["kind"] in ("rough", "finish")]
+        pick = {round(k * (len(cutting) - 1) / (DRY - 1)) for k in range(DRY)}
+        for key in ("depth", "height"):                 # and the passes at the ends of the positioner's reach
+            pick |= {min(range(len(cutting)), key=lambda i: cutting[i][key]), max(range(len(cutting)), key=lambda i: cutting[i][key])}
+        out = []
+
+        def add(kind, text, like=None):
+            like = like or {}
+            out.append({"n": len(out) + 1, "kind": kind, "tool": "none", "depth": like.get("depth", 0.0), "height": like.get("height", 0.0), "turn": like.get("turn", 0.0), "via": "s",
+                        "along": like.get("along", 0.0), "label": text})
+        add("say", K.lines("DRY RUN. router", "OFF and NO BIT", "in the collet.", on))
+        for i in sorted(pick):
+            add("dry", f"as row {cutting[i]['n']}", cutting[i])
+        add("say", K.lines("done. if nothing", "touched: fit the", "bit and run this", "stage"))
+        K.write_table(path, out, ax["safe"])
+        scratch = os.path.join(OUT, "steps_scratch.json")
+        subprocess.run([sys.executable, os.path.join(SLED_DIR, "firmware", "main.py"), "--sim", path, scratch], check=True, cwd=os.path.join(SLED_DIR, "firmware"), stdout=subprocess.DEVNULL)
+        sim = json.load(open(scratch))
+        os.remove(scratch)
+        if sim["passes"] != len(pick) or sim["bits"]:
+            raise SystemExit(f"{path}: the controller does not run the dry run as it is written")
+        return len(pick), sim["seconds"]
+    dry1 = dry_run(t1, os.path.join(OUT, "dry1.csv"), "the billet on")
+    dry2 = dry_run(t2, os.path.join(OUT, "dry2.csv"), "billet + comb on")
+    print(f"a dry run before each stage, no bit in the collet: {dry1[0]} passes in {dry1[1] / 60:.0f} min, and {dry2[0]} in {dry2[1] / 60:.0f}")
+    # A tab. The rods' clamp is what holds a piece; the tabs keep the rods' wood on it. But if a piece took the
+    # heaviest push of the first stage on one tab alone, pulled across its grain: how near is that to tearing it?
+    push1 = max(r["push"] for r in rows1)
+    tab_stress = push1 / (B.TAB * PIECE)
+    print(f"a tab is {B.TAB:.0f} x {PIECE:.0f} mm: the first stage's heaviest push, {push1:.1f} N, on one tab of one piece alone is {tab_stress:.2f} MPa, "
+          f"{ACROSS_GRAIN / tab_stress:.1f} times under the {ACROSS_GRAIN:.0f} MPa a hardwood takes pulled across its grain")
+    if ACROSS_GRAIN / tab_stress < 2.0:
+        raise SystemExit("a tab is too weak")
+    hm = lambda sec: f"{int(sec // 3600)} h {round(sec % 3600 / 60):02d} min"
+    print(f"the controller, simulated: the first stage {len(t1)} rows, {hm(sim1['seconds'])} of moving, {sum(1 for r in t1 if r['via'] == 'd')} moves straight; "
+          f"the second {len(t2)} rows, {hm(sim2['seconds'])}, {sum(1 for r in t2 if r['via'] == 'd')} straight. The sled's solid stick: {hm(hold['seconds'])}")
 
     # -- drawing ---------------------------------------------------------------
     # x along the stick from its tail end; y and z the section as the sled has it, the stick's axis at the origin.
@@ -379,9 +510,14 @@ def main():
         "bits": bits, "comb_nut_need": comb_need, "nut_need": need,
         "comb": {"plate": PLATE, "plate_in": PLATE_IN, "tail_hole": TAIL_HOLE, "band": BAND, "fit": B.FIT, "plate_loop": r4(B.offset(outline, -PLATE_IN))},
         "jig": {"fit": JIG_FIT, "wall": JIG_WALL, "floor": JIG_FLOOR, "deep": JIG_DEEP, "lid": JIG_LID, "guide": GUIDE, "awl": AWL},
-        "cuts": {"first": [[c["tool"][0], round(c["t"], 6), round(c["across"], 4), round(c["tip"], 4)] for c in rows1],
-                 "second": [[c["tool"][0], round(c["t"], 6), round(c["across"], 4), round(c["tip"], 4)] for c in rows2]},
-        "tables": {"first": len(t1), "second": len(t2), "along": along},
+        "cuts": {"first": [[c["tool"][0], round(c["t"], 6), round(c["across"], 4), round(c["tip"], 4), round(c["area"], 3), round(c["over"], 4), round(c["far"], 3), c["face"]] for c in rows1],
+                 "second": [[c["tool"][0], round(c["t"], 6), round(c["across"], 4), round(c["tip"], 4), round(c["area"], 3), round(c["over"], 4), round(c["far"], 3), c["face"]] for c in rows2]},
+        "tab": {"wide": B.TAB, "thick": PIECE, "push": push1, "stress": tab_stress, "across_grain": ACROSS_GRAIN},
+        "hold": {"worst": worst, "limit": hold["limit"], "extra_runs": extra, "stiff": hold["stiff"], "swing": swing_r, "peak": hold["peak"], "cut_energy": hold["cut_energy"], "rpm": hold["rpm"], "feed": hold["feed"]},
+        "tables": {"first": {"rows": len(t1), "seconds": sim1["seconds"], "straight": sum(1 for r in t1 if r["via"] == "d"), "passes": sim1["passes"]},
+                   "second": {"rows": len(t2), "seconds": sim2["seconds"], "straight": sum(1 for r in t2 if r["via"] == "d"), "passes": sim2["passes"]},
+                   "dry": {"first": {"passes": dry1[0], "seconds": dry1[1]}, "second": {"passes": dry2[0], "seconds": dry2[1]}},
+                   "along": along, "sled_seconds": hold["seconds"], "bit_waits": bit_waits, "stands_out": stands_out, "load_tip": swing},
         "outline": r4(outline),
         "bodies": {k: [list(v) for v in b_] for k, b_ in bodies.items()},
     }

@@ -23,7 +23,7 @@ tail end comes off as a 56th tile, 12 mm thick.
 ```sh
 cargo build --release -p ok-mcp
 python3 examples/stick-sled/build.py          # the sled's tile and table, which this reads
-python3 examples/stick-billet/build.py        # 1 minute
+python3 examples/stick-billet/build.py        # 1 minute; it runs the sled's controller over both tables
 python3 examples/stick-billet/animate.py      # out/billet.gif: every step, captioned
 cargo test -p ok-render --test stick_billet   # what CI runs
 ```
@@ -102,18 +102,27 @@ the table's numbers stand.
     or a tab, and the build flood-fills the wood that is left and
     finds all four rods joined to the tile.
 
-| | roughing | finishing | runs |
-|---|---|---|---|
-| first stage | 74 places, 286 runs | 179 passes, 316 runs | 602 |
-| second stage | 18 places, 85 runs | 63 passes, 100 runs | 185 |
-| the sled's solid stick | | | 573 |
+| | roughing | finishing | runs | the controller's time |
+|---|---|---|---|---|
+| first stage | 74 places, 286 runs | 179 passes, 324 runs | 610 | 2 h 39 min |
+| second stage | 18 places, 85 runs | 63 passes, 100 runs | 185 | 0 h 48 min |
+| the sled's solid stick | | | 573 | 2 h 37 min |
 
-So a billet is 787 runs where a solid stick is 573. Some of the
-difference is the bigger blank, 1797 mm² of waste where the stick
-has 1214. The rest is finishing passes in stage 1 that meet
-more wood than usual, where roughing had to stop short of a rod or
-tab. At the sled's own rate that is about 3 h 35 min against
-2 h 37 min. That is not timed; nothing has been built.
+So a billet is 795 runs and 3 h 27 min of the machine moving, where
+a solid stick is 573 and 2 h 37 min. The times are the controller's
+own program run over each table on a computer; nothing has been
+built. Some of the difference is the bigger blank, 1797 mm² of waste
+where the stick has 1214. The rest is finishing passes in stage 1
+that meet more wood than usual, where roughing had to stop short of a
+rod or tab.
+
+**The belt holds every bite.** Nothing but the belt holds the stick
+on the sled, and the sled's bites are the deepest its estimate of
+that allows: the tile's edge may move 0.010 mm in a bite and 0.005 in
+one that leaves a finished face. The build puts every bite of both
+stages through the same estimate and splits any that is too heavy.
+Eight runs are there only for that. The worst bites move the edge
+0.0094 mm, and 0.0049 at a finished face.
 
 Every finishing pass of the sled's table is made once, in one stage
 or the other, to its own depth. The test checks that pass by pass.
@@ -196,18 +205,52 @@ Brass #6-32 threaded rod, about 1.3 m (seven lengths of 190 to
 inserts. A #6-32 tap with its #36 drill, and a #27 drill. Thin CA.
 The wood: 56 pieces and a cap's block per billet.
 
+## The two tables
+
+`out/stage1.csv` and `out/stage2.csv` are tables the sled's
+controller takes as they are, like its own `passes.csv`. Copy one to
+the Pico as `passes.csv` for its stage. Each has, in order:
+
+1. the billet put on: the spindle turns to where it goes on, the bit
+   drawn back clear of its corners, which swing 37.7 mm where the
+   stick's swung 33.5;
+2. the straight bit set by touch on the master;
+3. the roughing;
+4. a look for the wheel's mark;
+5. the ball-nose set;
+6. the finishing;
+7. a last look.
+
+Moves between rows go straight where the whole bit passes the master
+by 1.5 mm, as the sled's do: 575 of the first stage's and 178 of the
+second's. The build runs the controller's own program over both
+tables on a computer and checks it makes every pass.
+
+For the second stage the billet goes back in the socket the same way
+round, with the comb on. Drawn back between passes the bit waits
+8.8 mm from the billet's tail end, and the comb's rods stand 7.4 mm
+out of it.
+
+**A dry run comes first.** `out/dry1.csv` and `out/dry2.csv` are 14
+rows each of their stage's own table, to run with the router off, no
+bit in the collet and the billet on (the comb too, for the second):
+ten spread through the table and the four at the ends of the
+positioner's reach. Five minutes each. What they try is what is new
+here: the collet nut passing a blank 3 mm bigger all round, and the
+comb. The sled's own precheck, which tries what holds the stick, is
+the machine's and is run once as its README says.
+
+**A tab is strong enough, by estimate.** The rods' clamp is what
+holds a piece; a tab only keeps the rod's wood joined to it. If one
+piece took the first stage's heaviest push, 14.4 N, on one tab alone,
+pulled across its grain, that is 1.2 MPa on its 4 x 3 mm: about a
+third of the 4 MPa a hardwood takes that way.
+
 ## What is not done
 
-- **The stage tables are not yet the controller's.** `out/stage1.csv`
-  and `out/stage2.csv` are the cuts in the controller's units (depth,
-  height, turn, along). The sled's `passes.csv` also has the loading
-  row, the bit-setting rows, the checks and the path each move takes
-  past the master, which its build works out row by row. That has not
-  been done for these two.
-- **Stage 1's finishing passes meet more wood than the sled's** where
-  roughing stopped short, in more bites of the ball-nose. Their
-  heaviest bite has not been checked against the belt's hold the way
-  the sled's table is.
+- **Nothing is built, printed or cut.** Every figure here is
+  calculated, and the holding figures rest on the sled's own
+  estimates, which its precheck is there to try.
 - **The pictures of the stack after stage 1 and of the comb are
   followed on a quarter-millimetre grid,** so their edges in cut-away
   wood are steps. The tile's edge and the comb's face on it are the

@@ -80,14 +80,17 @@ entry in `docs/DECISIONS.md` have the design. Decided in chat:
 - The owner caught the first plan's error (rods left on islands of
   wood). Tabs fixed it.
 
+`out/stage1.csv` and `out/stage2.csv` are tables the controller takes
+as they are; each is copied to the Pico as `passes.csv` for its stage.
+Every bite of both is within the sled's estimate of the belt's hold.
+
 Open on the billet:
 
-- `out/stage1.csv` and `stage2.csv` are cuts only. They are not the
-  controller's `passes.csv`: no loading, bit-setting or check rows, and
-  no path worked out for each move past the master.
-- Stage 1's finishing passes take more bites where roughing stopped
-  short of a rod; their heaviest bite is not checked against the
-  belt's hold as the sled's table is.
+- Nothing designed is left open; nothing is built. `out/dry1.csv` and
+  `dry2.csv` are a five-minute dry run before each stage, no bit in
+  the collet, to see the collet nut pass the bigger blank and the comb.
+- The comb's 0.15 mm fit on the finished edge is a guess: print its
+  plate alone first and try it.
 - To buy: about 1.3 m of #6-32 brass rod, seven small-pattern #6-32
   nuts (1/4 in across: a standard 5/16 nut does not fit the flute
   finger's plate), three #6-32 heat-set inserts, a #6-32 tap with its

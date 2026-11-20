@@ -1,0 +1,18 @@
+#safe,62.0158
+n,kind,tool,depth,height,turn,via,along,label
+1,say,none,0.0,0.0,0.0,s,0.0,DRY RUN. router OFF and NO BIT  in the collet.  billet + comb on
+2,dry,none,57.8096,30.0,0.0,s,188.0,as row 3
+3,dry,none,38.3616,57.0,0.0,s,188.0,as row 7
+4,dry,none,43.2761,33.0,30.0,s,188.0,as row 23
+5,dry,none,68.1249,30.0,90.0,s,188.0,as row 29
+6,dry,none,50.9723,30.0,135.0,s,188.0,as row 44
+7,dry,none,53.2053,30.0,210.0,s,188.0,as row 64
+8,dry,none,51.5145,60.0,270.0,s,188.0,as row 85
+9,dry,none,47.4823,50.7509,75.0,s,188.0,as row 107
+10,dry,none,57.8726,29.5775,125.5,s,188.0,as row 114
+11,dry,none,64.4245,59.9348,201.0,s,188.0,as row 128
+12,dry,none,48.4697,37.3725,230.5,s,188.0,as row 148
+13,dry,none,61.0009,42.424,238.0,s,188.0,as row 169
+14,dry,none,60.9364,66.3742,305.5,s,188.0,as row 182
+15,dry,none,41.9063,54.962,356.0,s,188.0,as row 189
+16,say,none,0.0,0.0,0.0,s,0.0,done. if nothingtouched: fit thebit and run thisstage

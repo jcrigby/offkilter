@@ -127,10 +127,11 @@ class Waste:
         self.area = len(self.cells) * P.CELL * P.CELL
 
     def cut(self, tool, t, y, tip, dry=False):
-        """What a cut takes: its area, and how far the waste stood over it."""
+        """What a cut takes: its area, how far the waste stood over it, and how far from the stick's axis the
+        furthest of what it takes is."""
         d, e = P.frame(t)
         ball, r = tool == "ball", (P.BIT if tool == "ball" else P.ROUGH_BIT) / 2
-        took, top = [], 0.0
+        took, top, far = [], 0.0, 0.0
         for i, q in enumerate(self.cells):
             if not self.alive[i]:
                 continue
@@ -146,29 +147,51 @@ class Waste:
                     continue
                 top = max(top, h - tip)
             took.append(i)
+            far = max(far, math.hypot(q[0], q[1]))
         if not dry:
             for i in took:
                 self.alive[i] = 0
-        return len(took) * P.CELL * P.CELL, top
+        return len(took) * P.CELL * P.CELL, top, far
 
     def left(self):
         return sum(self.alive) * P.CELL * P.CELL
 
-    def run(self, places, passes):
+    def bites(self, tool, q, depth, fits):
+        """A place or pass taken down to its depth in equal bites: as few as the sled's own most-at-a-bite allows,
+        and more if `fits(tool, area, over, far, last)` says a bite is too heavy for what holds the stick. The sled's
+        table is planned so that none is; here a cut can meet more than the sled's did, where the first stage's
+        roughing stopped short of a rod. Returns how many, and what each took."""
+        most = P.BALL_BITE if tool == "ball" else P.ROUGH_BITE
+        n = max(1, math.ceil(depth / most - 1e-9))
+        while True:
+            was, took, ok = bytearray(self.alive), [], True
+            for b in range(1, n + 1):
+                area, over, far = self.cut(tool, q["t"], q["across"], q["tip"] + depth * (n - b) / n)
+                took.append((area, over, far))
+                if fits is not None and not fits(tool, area, over, far, tool == "ball" and b == n):
+                    ok = False
+                    break
+            if ok or n >= 40:
+                return n, took, ok
+            self.alive = was
+            n += 1
+
+    def run(self, places, passes, fits=None):
         """The sled's way: a roughing place that would take under a square millimetre is dropped, the others go down
-        in bites of ROUGH_BITE; every finishing pass then takes what stands over it in bites of BALL_BITE. Returns
-        the places kept, with their depth and bites, and the passes with theirs."""
+        in bites; every finishing pass then takes what stands over it in bites. Returns the places kept and the
+        passes, each with its depth, its bites and what each bite took."""
         kept = []
         for q in places:
-            area, depth = self.cut("straight", q["t"], q["across"], q["tip"], dry=True)
+            area, depth, _ = self.cut("straight", q["t"], q["across"], q["tip"], dry=True)
             if area < 1.0:
                 continue
-            self.cut("straight", q["t"], q["across"], q["tip"])
-            kept.append(dict(q, depth=depth, bites=max(1, math.ceil(depth / P.ROUGH_BITE - 1e-9)), area=area))
+            n, took, ok = self.bites("straight", q, depth, fits)
+            kept.append(dict(q, depth=depth, bites=n, area=area, took=took, ok=ok))
         done = []
         for q in passes:
-            area, depth = self.cut("ball", q["t"], q["across"], q["tip"])
-            done.append(dict(q, depth=depth, bites=max(1, math.ceil(depth / P.BALL_BITE - 1e-9)), area=area))
+            area, depth, _ = self.cut("ball", q["t"], q["across"], q["tip"], dry=True)
+            n, took, ok = self.bites("ball", q, depth, fits)
+            done.append(dict(q, depth=depth, bites=n, area=area, took=took, ok=ok))
         return kept, done
 
 
@@ -176,7 +199,9 @@ def bitten(q, tool):
     """A place or pass as the rows the machine makes, a bite each, the last at its own depth."""
     out = []
     for b in range(1, q["bites"] + 1):
-        out.append({"tool": tool, "t": q["t"], "across": q["across"], "tip": q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], "bite": b, "of": q["bites"]})
+        area, over, far = q["took"][b - 1]
+        out.append({"tool": tool, "t": q["t"], "across": q["across"], "tip": q["tip"] + q["depth"] * (q["bites"] - b) / q["bites"], "bite": b, "of": q["bites"],
+                    "area": area, "over": over, "far": far})
     return out
 
 
@@ -208,7 +233,7 @@ def tabs(outline, centres, places, passes):
     return ends, rod_pts, tab_pts, held
 
 
-def stages(outline, stock, places, passes):
+def stages(outline, stock, places, passes, fits=None):
     """The two stages. The first: every roughing place made as deep as leaves the rods and the tabs, the finishing
     passes that do not touch them. The second: the roughing places to their own depth where the first stopped them
     short, the finishing passes the first left. Both in the sled's order."""
@@ -224,10 +249,10 @@ def stages(outline, stock, places, passes):
     first_passes = [q for i, q in enumerate(passes) if i not in held]
     second_passes = [q for i, q in enumerate(passes) if i in held]
     waste = Waste(outline, grown(stock, GROW))
-    p1, f1 = waste.run(first_places, first_passes)
+    p1, f1 = waste.run(first_places, first_passes, fits)
     after_first = bytearray(waste.alive)
     left_first = waste.left()
-    p2, f2 = waste.run(second_places, second_passes)
+    p2, f2 = waste.run(second_places, second_passes, fits)
     return {"rods": centres, "tab_ends": ends, "rod_pts": rod_pts, "tab_pts": tab_pts, "waste": waste, "after_first": after_first,
             "first": (p1, f1), "second": (p2, f2), "left_first": left_first, "left_end": waste.left()}
 

@@ -389,21 +389,197 @@ fn every_finishing_pass_of_the_sled_s_table_is_made_once_in_one_stage() {
              passes.len(), b["first"]["rows"].as_u64().unwrap() + b["second"]["rows"].as_u64().unwrap(), b["sled_rows"]);
     // what is left standing at the end is no more than the sled leaves of its own blank, near enough
     assert!(f(&b["second"]["left"]) < f(&n["rough"]["left_at_end"]) + 1.0);
-    let rows = |name: &str| {
-        std::fs::read_to_string(dir().join(name))
-            .unwrap()
-            .lines()
-            .count()
-            - 1
-    };
+}
+
+/// A stage's table as the controller reads it: the lines after the two of heading, split at their commas.
+fn table(name: &str) -> (f64, Vec<Vec<String>>) {
+    let text = std::fs::read_to_string(dir().join(name)).unwrap();
+    let mut lines = text.lines();
+    let safe: f64 = lines
+        .next()
+        .unwrap()
+        .strip_prefix("#safe,")
+        .unwrap()
+        .parse()
+        .unwrap();
     assert_eq!(
-        rows("out/stage1.csv") as u64,
-        b["first"]["rows"].as_u64().unwrap()
+        lines.next().unwrap(),
+        "n,kind,tool,depth,height,turn,via,along,label"
     );
-    assert_eq!(
-        rows("out/stage2.csv") as u64,
-        b["second"]["rows"].as_u64().unwrap()
+    (
+        safe,
+        lines
+            .map(|l| l.splitn(9, ',').map(String::from).collect())
+            .collect(),
+    )
+}
+
+#[test]
+fn each_stage_is_a_table_the_sled_s_controller_takes_and_its_rows_are_the_stage_s_cuts() {
+    let (b, n) = (numbers(), sled());
+    let (tip_home, across_home) = (f(&n["axes"]["tip_home"]), f(&n["axes"]["across_home"]));
+    for (stage, name) in [("first", "out/stage1.csv"), ("second", "out/stage2.csv")] {
+        let (safe, rows) = table(name);
+        assert!((safe - f(&n["axes"]["safe"])).abs() < 1e-3);
+        let kinds: Vec<&str> = rows.iter().map(|r| r[1].as_str()).collect();
+        let cutting: Vec<&Vec<String>> = rows
+            .iter()
+            .filter(|r| r[1] == "rough" || r[1] == "finish")
+            .collect();
+        let want = cuts(&b["cuts"][stage]);
+        assert_eq!(cutting.len(), want.len());
+        // the billet put on, the straight bit set, the roughing, a look, the ball-nose set, the finishing, a look
+        let rough = want.iter().filter(|c| !c.ball).count();
+        assert_eq!(&kinds[..2], ["load", "set"]);
+        assert!(kinds[2..2 + rough].iter().all(|k| *k == "rough"));
+        assert_eq!(&kinds[2 + rough..4 + rough], ["check", "set"]);
+        assert!(kinds[4 + rough..kinds.len() - 1]
+            .iter()
+            .all(|k| *k == "finish"));
+        assert_eq!(*kinds.last().unwrap(), "check");
+        assert_eq!(
+            rows.len() as u64,
+            b["tables"][stage]["rows"].as_u64().unwrap()
+        );
+        // every cutting row, read back through the positioner's two screws and the spindle, is its cut
+        for (r, c) in cutting.iter().zip(want.iter()) {
+            let (depth, height, turn): (f64, f64, f64) = (
+                r[3].parse().unwrap(),
+                r[4].parse().unwrap(),
+                r[5].parse().unwrap(),
+            );
+            let (tip, across) = (tip_home - depth, across_home + height);
+            let t = (-turn.to_radians()).rem_euclid(std::f64::consts::TAU);
+            let dt = (t - c.t.rem_euclid(std::f64::consts::TAU)).abs();
+            assert!(
+                (tip - c.tip).abs() < 1e-3 && (across - c.across).abs() < 1e-3,
+                "row {}",
+                r[0]
+            );
+            assert!(
+                dt < 1e-5 || (dt - std::f64::consts::TAU).abs() < 1e-5,
+                "row {}: {t} for {}",
+                r[0],
+                c.t
+            );
+            assert_eq!(r[2], if c.ball { "ball" } else { "straight" });
+            assert!((r[7].parse::<f64>().unwrap() - f(&b["tables"]["along"])).abs() < 1e-9);
+            assert!(depth <= f(&n["axes"]["travel"][0]) - f(&n["axes"]["bit_margin"]) + 1e-6);
+        }
+        // the billet goes on with the bit drawn back clear of its corners, which swing further than the stick's did
+        let load_tip = tip_home - rows[0][3].parse::<f64>().unwrap();
+        let swing = points(&b["piece"]["corners"])
+            .iter()
+            .map(|q| (q.0 * q.0 + q.1 * q.1).sqrt())
+            .fold(0.0, f64::max);
+        assert!((load_tip - swing).abs() < 1e-3 && swing > f(&n["blank_swing"]));
+        // the controller's own program made every pass of it
+        assert_eq!(
+            b["tables"][stage]["passes"].as_u64().unwrap() as usize,
+            want.len()
+        );
+        let straight = rows.iter().filter(|r| r[6] == "d").count();
+        println!("{stage} stage: {} rows, {} cutting, {straight} moves straight, {:.0} min by the controller's pauses",
+                 rows.len(), want.len(), f(&b["tables"][stage]["seconds"]) / 60.0);
+        assert!(straight * 10 > want.len() * 8);
+    }
+    // a dry run for each stage: rows of its own table, no tool, at the ends of the positioner's reach among them
+    for (stage, name, full) in [
+        ("first", "out/dry1.csv", "out/stage1.csv"),
+        ("second", "out/dry2.csv", "out/stage2.csv"),
+    ] {
+        let (_, rows) = table(name);
+        let (_, whole) = table(full);
+        let dry: Vec<&Vec<String>> = rows.iter().filter(|r| r[1] == "dry").collect();
+        assert_eq!(
+            dry.len() as u64,
+            b["tables"]["dry"][stage]["passes"].as_u64().unwrap()
+        );
+        assert!(rows.first().unwrap()[1] == "say" && rows.last().unwrap()[1] == "say");
+        let num = |r: &Vec<String>, k: usize| r[k].parse::<f64>().unwrap();
+        for r in &dry {
+            assert_eq!(r[2], "none");
+            let of: usize = r[8].strip_prefix("as row ").unwrap().parse().unwrap();
+            let like = &whole[of - 1];
+            assert!(like[1] == "rough" || like[1] == "finish");
+            assert!((3..=5)
+                .chain(7..=7)
+                .all(|k| (num(r, k) - num(like, k)).abs() < 1e-9));
+        }
+        let deepest = whole
+            .iter()
+            .filter(|r| r[1] == "rough" || r[1] == "finish")
+            .map(|r| num(r, 3))
+            .fold(0.0, f64::max);
+        assert!(
+            dry.iter().any(|r| (num(r, 3) - deepest).abs() < 1e-9),
+            "the deepest row is tried dry"
+        );
+    }
+    // a tab alone would take the stage's heaviest push with room to spare
+    let t = &b["tab"];
+    let stress = f(&t["push"]) / (f(&t["wide"]) * f(&t["thick"]));
+    println!(
+        "a tab: {:.1} N on {} x {} mm is {stress:.2} MPa",
+        f(&t["push"]),
+        t["wide"],
+        t["thick"]
     );
+    assert!((stress - f(&t["stress"])).abs() < 1e-9 && stress * 2.0 < f(&t["across_grain"]));
+    // drawn back between passes, the bit is past everything that stands out of the billet's tail end
+    assert!(f(&b["tables"]["bit_waits"]) - f(&b["tables"]["stands_out"]) >= 1.0);
+}
+
+#[test]
+fn the_belt_holds_every_bite_of_both_stages_by_the_sled_s_own_estimate() {
+    let (b, n) = (numbers(), sled());
+    let h = &n["hold"];
+    let (stiff, swing) = (f(&h["stiff"]), f(&n["tile"]["swing"]));
+    let limit = pair(&h["limit"]);
+    let (ball, shank, taper, straight) = (
+        f(&n["bit"]),
+        f(&n["shank"]),
+        f(&n["taper"]).to_radians(),
+        f(&n["rough"]["bit"]),
+    );
+    let mut worst = (0.0f64, 0.0f64);
+    for stage in ["first", "second"] {
+        for c in b["cuts"][stage].as_array().unwrap() {
+            let (is_ball, area, over, far, face) = (
+                c[0].as_str().unwrap() == "b",
+                f(&c[4]),
+                f(&c[5]),
+                f(&c[6]),
+                c[7].as_bool().unwrap(),
+            );
+            // the diameter the bit cuts at: the straight bit's own; the ball-nose's half way up what it is cutting
+            let dia = if !is_ball {
+                straight
+            } else {
+                let (r, a) = (ball / 2.0, over / 2.0);
+                if a < r {
+                    (2.0 * (2.0 * r * a - a * a).max(0.0).sqrt()).max(1.0)
+                } else {
+                    shank.min(ball + 2.0 * (a - r) * taper.tan())
+                }
+            };
+            let edge_speed = std::f64::consts::PI * dia * f(&h["rpm"]) / 60.0;
+            let push =
+                f(&h["peak"]) * f(&h["cut_energy"]) * 1000.0 * area * f(&h["feed"]) / edge_speed;
+            let give = push * far / 1000.0 / stiff * swing;
+            if face {
+                worst.1 = worst.1.max(give);
+            } else {
+                worst.0 = worst.0.max(give);
+            }
+            assert!(
+                give <= if face { limit.1 } else { limit.0 } + 2e-5,
+                "{stage}: a bite of {area} mm2 gives {give}"
+            );
+        }
+    }
+    println!("the tile's edge moves at most {:.4} mm in a bite and {:.4} in one that leaves a face; the sled allows {limit:?}", worst.0, worst.1);
+    assert!(b["hold"]["extra_runs"].as_u64().unwrap() < 40);
 }
 
 #[test]
