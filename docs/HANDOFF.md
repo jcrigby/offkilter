@@ -147,6 +147,33 @@ Open on the billet:
 
 ## Open, and not asked for yet
 
+- **Thrust collars on the sled's two rods** (talked over 2026-11-20,
+  not drawn, not asked for). The jack screws' push goes endways along
+  both rods, and all that resists it is the pillow blocks' set screws
+  on round hardened rod. A clamp collar on each rod, hard against its
+  bearing, would take the thrust properly: the same Ruland collar the
+  socket and the disc have, or a plain one. It would matter most if
+  the billet's four rods were ever dropped and the sled's squeeze
+  alone had to hold the pieces; the owner asked whether the rods were
+  needed and chose to keep them.
+- **An angle chip on the head rod** (talked over 2026-11-20, not
+  drawn, not asked for; figures from memory, no datasheet read). The
+  stick's angle is counted in motor steps from the home fin and
+  looked for again twice a stick; nothing reads it in between. A
+  magnetic absolute encoder (AS5048A, 14-bit over SPI, or AS5600,
+  12-bit over I2C) facing a diametric magnet on the rod's end would
+  let the controller compare angle with steps at every row, and would
+  see a slip at the disc's collar, which the fin cannot. It would not
+  see the socket's collar, the socket or the billet. Its resolution
+  is fine (0.02 deg) but its accuracy out of the box is half a degree
+  to a degree, so it wants one slow turn against the steps as a
+  table. The magnet must stand a few millimetres off the steel rod in
+  a printed holder, centred within about 0.25 mm; the board would
+  stand on a bracket from the sled's bottom, facing the rod's end
+  from outside the wheel. The optical choices were a bought 2000-line
+  incremental encoder (8000 counts, 0.045 deg) or a printed slotted
+  disc, which is too coarse at about 0.15 deg.
+
 - **The sled's printed parts are drawn as envelopes.** The wheel is a
   plain cylinder with no belt teeth; the disc, the wheel and the
   socket have no bolt holes, inserts or screw holes; and the build
