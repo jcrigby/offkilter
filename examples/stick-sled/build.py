@@ -67,7 +67,7 @@ PLUNGER = (6.0, (0.0, 250.0))                   # those plungers: across, and wh
 PLATE_LEFT = -180.0                             # the sled's far edge, on the datum fence. Its width is what keeps it from tipping
 MOTOR = (42.3, 40.0, 24.0, 5.0)                 # a NEMA 17: square, and long; its shaft, long and across
 BRACKET = (4.0, 6.0, 4.0)                       # the angle bracket such a motor is sold with: its face thick, its foot thick, and how far it stands out round the motor
-SPINDLE_D = 12.0                                # a ground rod, flats ground on it for set screws and nothing threaded: see DECISIONS, the pulley's runout
+SPINDLE_D = 12.0                                # a hardened ground rod, used as it is bought: nothing ground on it, nothing threaded. What turns with it is clamped on it
 # The wheel, its motor's pulley, and a closed GT2 belt. The owner's idea: the wheel on the sled's own spindle, so
 # that the motor turns the stick wherever the sled is and no hand is wanted at it. The pulley was 20 teeth while the
 # motor stood 208 mm off on the base; in the sled's box it is 148 off, and a pulley of 20 would have under five teeth
@@ -83,15 +83,22 @@ RISER_HALF = 38.0                               # and this wide each side of the
 AXIS_OVER = RISER + KP[3]                       # the stick's axis over the sled's deck: the socket turns 5 mm clear of it
 AXIS_UP = 8.0                                   # the stick's axis this far above the middle of the positioner's height. The wheel goes with the sled now, over the near fence's lip and the controller's box: level with the middle, its rim passed that lip by 1.8 mm. The height has the room: the rows use under half of it
 DECK_CLEAR = 6.0                                # the deck's near edge from the positioner's face: it reaches out over the near fence, which is far below it. It was 10 until the nut's face was measured and the positioner came 5 mm nearer: the risers are 38 each side of the axis and have to be on the deck
-HUB = (36.0, 5.0, 24.0, 14.0, 28.0)             # a 12 mm flanged hub: its flange across and thick, its boss across and long, its bolt circle
+COLLAR = (28.0, 11.0)                           # a face-mount clamp collar for a 12 mm shaft, Ruland FHT-MCL-12-F: across, wide. One piece, split, a clamp screw across the split, tapped holes in its face. It grips the round rod: the owner cannot grind flats on hardened rod
+HUB = COLLAR                                    # the disc's hub is one
+HUB_ROOM = 8.0                                  # between the box's end and that collar: where the home sensor stands, and a key reaches the collar's screw
 SENSOR = (13.0, 24.0, 11.0)                     # an optical endstop: how far it stands off what it is screwed to, long, wide
 FIN = (1.5, 6.0, 6.0)                           # the home flag, a fin on the disc's inner face: thick, wide, and how far it goes into the sensor's slot
 FLAG_R = AXIS_OVER + PLY / 2                    # it is this far from the axis: level with the middle of the deck's end, which the sensor is screwed to
-# The blank's socket, printed: a pocket for the blank's end on one side, a boss the spindle's rod is epoxied into on
-# the other. The owner's idea. It drives the blank by its flats and says which way round it is.
-SOCKET_IN, SOCKET_SLIDE = 12.0, 8.0             # how far the blank stands in the pocket, and how much further it can be pushed to get it onto the tail centre
+# The blank's socket, printed: a pocket for the blank's end, and its floor bolted to the face of a clamp collar on the
+# spindle's rod. The socket is the owner's idea. It drives the blank by its flats and says which way round it is.
+SOCKET_IN, SOCKET_SLIDE = 12.0, 8.0             # how far the blank stands in the pocket, and how much further it can be pushed in to get its other end onto the tail spindle
 SOCKET_WALL, SOCKET_FIT, SOCKET_FLOOR = 4.0, 0.3, 6.0
-SOCKET_BOSS = (26.0, 22.0)                      # the boss: across, and long, which is how far the rod's roughened end goes into it
+SOCKET_BOSS = COLLAR                            # behind the floor: the collar, the rod's end in it flush with the floor's back
+SOCKET_BEHIND = 26.0                            # from the floor's back to the headstock's riser, less 2: the collar and room for a key at its screw
+JACK = (19.0, 5.0)                              # two jack screws through the floor, M5 in inserts, this far either side of the stick's axis along the blank's long side: turned alike they push the blank squarely onto the tail spindle. One on the axis is not to be had: the rod is there
+JACK_HOLE, LOCK_HOLE = 6.4, 6.4                 # an M5 insert's hole, for the jack screws and for the lock screw through a wall
+TAIL_IN = 8.0                                   # the tail spindle's plain end goes this far into a hole in the stick's end
+TAIL_HOLE = 12.2                                # that hole: what a 12 mm drill makes in wood
 NUT_CLEAR = 2.0                                 # a pass ends with the collet nut this short of the socket
 # On the spindle's far end, past the headstock: a hub, a disc, and the wheel on the disc's neck. The disc carries the
 # home flag and is what a hand turns the stick by. It is also what a lock would pinch, if one is ever wanted: a post
@@ -126,22 +133,22 @@ GIVE = (0.010, 0.005)                           # the most the tile's edge may b
 MASTER_R = SPINDLE_D / 2                        # the master: the tail spindle's ground rod, bare between its bearing and the stick. With the sled back the bit is beside it
 TAIL_PB_X = ((-86.0, -70.0), (-42.0, -26.0))    # the tail's two pillow blocks. The inner one ends short of where the collet nut is with the sled back: its foot is as far out as the nut comes in
 TAIL_RISER_X = (TAIL_PB_X[0][0] - 9.0, TAIL_PB_X[1][1])       # the block they stand on
-TAIL_ROD_X = (TAIL_PB_X[0][0] - 5.0, 0.0)       # the tail spindle: a rod in those two bearings, its end a three-flat point in the stick's end
+TAIL_ROD_X = (TAIL_PB_X[0][0] - 5.0, TAIL_IN)   # the tail spindle: a rod in those two bearings, its plain end in a hole in the stick's end. It only centres and pushes, and turns with the stick in its own bearings
 MASTER_X = (TAIL_PB_X[1][1], 0.0)
 SOCKET_X = (STICK - SOCKET_IN, STICK + SOCKET_SLIDE)          # the socket's pocket
 BOSS_X = (SOCKET_X[1] + SOCKET_FLOOR, SOCKET_X[1] + SOCKET_FLOOR + SOCKET_BOSS[1])
-_K = BOSS_X[1] + 4.0
+_K = BOSS_X[0] + SOCKET_BEHIND
 HEAD_PB_X = ((_K, _K + KP[0]), (_K + 58.0, _K + 58.0 + KP[0]))            # the headstock's two pillow blocks, past the socket
 HEAD_RISER_X = (_K - 2.0, HEAD_PB_X[1][1])      # the block they stand on
 POST_X = (HEAD_RISER_X[1] - PLY, HEAD_RISER_X[1])             # the lock's post, if there is one: beside the riser's far end
 BOX_X = (TAIL_RISER_X[0] - 2.0, HEAD_RISER_X[1] + 2.0)        # the sled's box: its rails and its deck
-HUB_X = (BOX_X[1], BOX_X[1] + HUB[1] + HUB[3])  # the hub: its boss toward the headstock, where its set screws can be got at
+HUB_X = (BOX_X[1] + HUB_ROOM, BOX_X[1] + HUB_ROOM + HUB[1])   # the disc's collar, its face on the disc
 DISC_X = (HUB_X[1], HUB_X[1] + DISC[1])         # the disc, on the hub's flange
 NECK_X = (DISC_X[1], DISC_X[1] + NECK[1])       # its neck
 WHEEL_X = (NECK_X[1], NECK_X[1] + WHEEL_W)      # and the wheel on the neck's end
-ROD_X = (BOSS_X[0], WHEEL_X[1] - 2.0)           # the spindle, from the bottom of the socket's boss to just short of the wheel's outer face
+ROD_X = (BOSS_X[0], WHEEL_X[1] - 2.0)           # the spindle, from the back of the socket's floor to just short of the wheel's outer face
 PLATE_X = (BOX_X[0], WHEEL_X[1] + 4.0)          # the sled's bottom: longer than its box, it goes on under the wheel and carries the motor's bracket
-FIN_L = HUB_X[1] - HUB_X[0] - SENSOR[0] + FIN[2]              # the fin's length: from the disc back into the sensor's slot
+FIN_L = HUB_X[1] - BOX_X[1] - SENSOR[0] + FIN[2]              # the fin's length: from the disc back into the sensor's slot
 DRIVE_X = (WHEEL_X[0] - 10.0, WHEEL_X[0] - 10.0 + BRACKET[0])   # the face of the wheel's motor's bracket: the motor behind it in the box, its shaft through it to the pulley
 NUT_X = (BOX_X[0] + 6.0, BOX_X[0] + 6.0 + PLY)  # the travel nut's block, just inside the box's tail end
 BACK_X = -12.0                                  # the bit along the sled with the sled back: beside the master, 9 mm of the straight bit clear of the stick's end
@@ -646,6 +653,21 @@ def main():
     if za - sled_top - socket_swing < BED_CLEAR or face - socket_swing < 5.0:
         raise SystemExit(f"the socket, swinging {socket_swing:.1f}, meets the plate or the positioner")
     cut_to = forward_x + ROUGH_R                     # how much of the stick the bit reaches
+    # The jack screws: either side of the axis along the blank's long side, on the blank's end and outside the collar.
+    # The lock screw: through the middle of a long wall, half way down what of the blank is in the pocket.
+    long_side = 0 if blank_of["size"][0] >= blank_of["size"][1] else 1
+    ua = (blank_m[1][0] - blank_m[0][0], blank_m[1][1] - blank_m[0][1]) if long_side == 0 else (blank_m[3][0] - blank_m[0][0], blank_m[3][1] - blank_m[0][1])
+    ua = (ua[0] / math.hypot(*ua), ua[1] / math.hypot(*ua))
+    va = (-ua[1], ua[0])
+    jack_at = [(s_ * JACK[0] * ua[0], za + s_ * JACK[0] * ua[1]) for s_ in (-1, 1)]
+    jack_land = min(P.near(c, blank_m[i - 1], blank_m[i]) for i in range(4) for c in jack_at)     # each screw in from the blank's nearest edge
+    if jack_land < JACK[1] / 2 + 1.0 or JACK[0] - JACK_HOLE / 2 < SOCKET_BOSS[0] / 2 + 1.0:
+        raise SystemExit(f"a jack screw is {jack_land:.1f} in from the blank's edge, or under the collar")
+    wall_at = max((q[0]) * va[0] + (q[1] - za) * va[1] for q in blank_m) + SOCKET_FIT
+    lock_x = SOCKET_X[0] + SOCKET_IN / 2
+    lock_way = [(wa * va[0] + wu * ua[0], za + wa * va[1] + wu * ua[1]) for wa, wu in ((wall_at - 0.5, -LOCK_HOLE / 2), (wall_at + SOCKET_WALL + 0.5, -LOCK_HOLE / 2), (wall_at + SOCKET_WALL + 0.5, LOCK_HOLE / 2), (wall_at - 0.5, LOCK_HOLE / 2))]
+    if TAIL_HOLE / 2 + 2.0 > circle:
+        raise SystemExit(f"the tail spindle's hole, {TAIL_HOLE} across, leaves under 2 mm of the tile's {circle:.1f} about the axis")
     # A lock, if one is fitted: the clamp's pad has to be on the disc, the anvil outside the neck and short of the wheel.
     if LOCK_R + CLAMP[4] / 2 > DISC[0] / 2 + 1e-9 or LOCK_R - 9.0 < NECK[0] / 2 + 5.0 or DISC_X[1] + ANVIL[2] + ANVIL[0] > WHEEL_X[0] - 2.0 or LOCK_Y < deck_y[0] or NECK[2] + 8.0 > NECK[0] or NECK[2] < HUB[0] + 6.0:
         raise SystemExit("the disc, its neck and a lock do not fit one another")
@@ -722,27 +744,35 @@ def main():
         xcyl(p, "bore", (where[0][0] - 0.5, where[1][1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
     def tail_spindle(p):
-        # Where the bit waits. The same rod as the drive's, turning with the stick: three flats ground on its end make
-        # a point that bites. Bare beside the stick, it is the master a bit is set against.
+        # Where the bit waits. The same rod as the drive's, its plain end in a hole in the stick's end, turning with
+        # the stick in its own bearings. Bare beside the stick, it is the master a bit is set against.
         xcyl(p, "tail spindle, 12 mm ground rod", TAIL_ROD_X, (0.0, za), SPINDLE_D)
 
     def spindle(p):
         xcyl(p, "12 mm ground rod", ROD_X, (0.0, za), SPINDLE_D)
 
     def socket(p):
-        # Printed. The blank's end stands SOCKET_IN in the pocket and can be pushed SOCKET_SLIDE further; a jack screw
-        # through the floor presses it back onto the tail spindle's point, and a screw through a wall locks it against
-        # the wall opposite. The rod's end, roughened, is epoxied into the boss.
+        # Printed. The blank's end stands SOCKET_IN in the pocket and can be pushed SOCKET_SLIDE further. Two jack
+        # screws through the floor, either side of the axis, press it back onto the tail spindle; a screw through a
+        # wall locks it against the wall opposite. The floor is bolted to the collar's face with flat-head screws
+        # from inside the pocket, which are not drawn.
         slab(p, "blank socket", (SOCKET_X[0], BOSS_X[0]), socket_out)
         slab(p, "pocket", (SOCKET_X[0] - 0.5, SOCKET_X[1]), socket_in, op="remove")
-        xcyl(p, "boss", BOSS_X, (0.0, za), SOCKET_BOSS[0], op="add")
-        xcyl(p, "the rod's socket", (BOSS_X[0], BOSS_X[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
+        s_ = p.sketch("right", SOCKET_X[1] - 0.5, "jack screws' holes")
+        for c in jack_at:
+            p.circle(s_, c, JACK_HOLE / 2)
+        p.extrude(s_, SOCKET_FLOOR + 1.0, op="remove", name="jack screws' holes")
+        slab(p, "lock screw's way", (lock_x - LOCK_HOLE / 2, lock_x + LOCK_HOLE / 2), lock_way, op="remove")
+
+    def socket_collar(p):
+        # Bought: clamped on the rod's end, the socket bolted to its face.
+        xcyl(p, "socket's collar", BOSS_X, (0.0, za), SOCKET_BOSS[0])
+        xcyl(p, "bore", (BOSS_X[0] - 0.5, BOSS_X[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
     # -- on the spindle's far end: the hub, the disc and the wheel ---------------------------
     def wheel_hub(p):
-        # A flanged hub on the rod, its set screws on a flat, its boss toward the headstock where a key reaches them.
-        xcyl(p, "hub's boss", (HUB_X[0], HUB_X[1] - HUB[1]), (0.0, za), HUB[2])
-        xcyl(p, "hub's flange", (HUB_X[1] - HUB[1], HUB_X[1]), (0.0, za), HUB[0], op="add")
+        # The same collar, clamped on the rod, its face on the disc: the disc's four bolts go into its tapped holes.
+        xcyl(p, "disc's collar", HUB_X, (0.0, za), HUB[0])
         xcyl(p, "bore", (HUB_X[0] - 0.5, HUB_X[1] + 0.5), (0.0, za), SPINDLE_D + 0.2, op="remove")
 
     def disc(p):
@@ -840,6 +870,7 @@ def main():
         # Milled as far as the bit reaches; the rest, into the socket, is still the blank.
         slab(p, "stick, milled", (0.0, cut_to), section)
         slab(p, "the end the bit does not reach", (cut_to, STICK), blank_m, op="add")
+        xcyl(p, "the tail spindle's hole", (-0.5, TAIL_IN), (0.0, za), TAIL_HOLE, op="remove")
 
     def stops(p):
         """Blocks on the base beyond each end of the sled's travel. The screw puts the sled where it goes; only a
@@ -886,12 +917,12 @@ def main():
     lock = ("Lock post", "Lock anvil", "Toggle clamp", "Lock switch")       # a lock's parts: drawn, and on the machine only if the controller's config says one is fitted
     parts = [("Base", base_board), ("Fences", fences), ("Slips", slips), ("Sled plate", plate), ("Sled box", sled_box), ("Spring plungers", plungers), ("Tailstock", lambda p: riser(p, "tail riser", TAIL_RISER_X)),
              ("Tail bearings KP001", lambda p: pillow_blocks(p, TAIL_PB_X)), ("Tail spindle", tail_spindle), ("Headstock", lambda p: riser(p, "head riser", HEAD_RISER_X)),
-             ("Head bearings KP001", lambda p: pillow_blocks(p, HEAD_PB_X)), ("Spindle", spindle), ("Blank socket", socket),
+             ("Head bearings KP001", lambda p: pillow_blocks(p, HEAD_PB_X)), ("Spindle", spindle), ("Blank socket", socket), ("Socket collar", socket_collar),
              ("Wheel hub", wheel_hub), ("Disc", disc), ("Index wheel", wheel), ("Turn home sensor", home_sensor), ("Wheel drive", drive_motor), ("Travel nut", travel_nut), ("Stick", stick),
              ("Lock post", lock_post), ("Lock anvil", lock_anvil), ("Toggle clamp", clamp), ("Lock switch", lock_switch),
              ("Travel drive", travel_drive), ("Stops", stops), ("Travel home switch", home_switch), ("Controller", controller), ("Router positioner", positioner), ("Bit", bit)]
     # What goes with the sled.
-    rides = ("Sled plate", "Sled box", "Spring plungers", "Tailstock", "Tail bearings KP001", "Tail spindle", "Headstock", "Head bearings KP001", "Spindle", "Blank socket",
+    rides = ("Sled plate", "Sled box", "Spring plungers", "Tailstock", "Tail bearings KP001", "Tail spindle", "Headstock", "Head bearings KP001", "Spindle", "Blank socket", "Socket collar",
              "Wheel hub", "Disc", "Index wheel", "Turn home sensor", "Wheel drive", "Travel nut", "Stick") + lock
     fitted = [t for t, _ in parts if FW.LOCK or t not in lock]
 
@@ -960,14 +991,15 @@ def main():
         "sled": {"za": za, "axis_up": AXIS_UP, "face": face, "face_clear": FACE_CLEAR, "bed_clear": BED_CLEAR, "top": sled_top, "plate_top": plate_top, "axis_over": AXIS_OVER, "deck_y": deck_y, "rail_near": rail_near, "deck_clear": DECK_CLEAR,
                  "plate_x": PLATE_X, "box_x": BOX_X, "plate_y": plate_y, "hollow_y": hollow_y, "hollow_z": hollow_z,
                  "kp": KP, "riser": RISER, "riser_half": RISER_HALF, "t12": T12, "head_pb_x": HEAD_PB_X, "head_riser_x": HEAD_RISER_X, "tail_pb_x": TAIL_PB_X, "tail_riser_x": TAIL_RISER_X,
-                 "nut_past": nut_past, "tail_rod_x": TAIL_ROD_X, "master_x": MASTER_X, "master_r": MASTER_R, "rod_x": ROD_X,
-                 "socket": {"in": SOCKET_IN, "slide": SOCKET_SLIDE, "wall": SOCKET_WALL, "fit": SOCKET_FIT, "floor": SOCKET_FLOOR, "boss": SOCKET_BOSS, "x": SOCKET_X, "boss_x": BOSS_X,
+                 "nut_past": nut_past, "tail_rod_x": TAIL_ROD_X, "tail_in": TAIL_IN, "tail_hole": TAIL_HOLE, "collar": COLLAR, "master_x": MASTER_X, "master_r": MASTER_R, "rod_x": ROD_X,
+                 "socket": {"in": SOCKET_IN, "slide": SOCKET_SLIDE, "wall": SOCKET_WALL, "fit": SOCKET_FIT, "floor": SOCKET_FLOOR, "boss": SOCKET_BOSS, "x": SOCKET_X, "boss_x": BOSS_X, "behind": SOCKET_BEHIND,
+                            "jack": JACK, "jack_at": jack_at, "jack_land": jack_land, "jack_hole": JACK_HOLE, "lock_x": lock_x, "lock_hole": LOCK_HOLE,
                             "swing": socket_swing, "nut_clear": NUT_CLEAR},
                  "forward_x": forward_x, "cut_to": cut_to,
                  "slip": SLIP, "fence": [FENCE_L, FENCE_R], "fence_x": fence_x, "lip": LIP, "lip_top": lip_top, "spring_gap": SPRING_GAP, "plunger": PLUNGER,
                  "back_x": BACK_X, "travel": travel, "drawn_x": DRAWN_X, "seated": seated, "stops_x": stops_x, "stop": STOP, "guard": GUARD, "switch": SWITCH, "base_x": base_x, "base_y": base_y, "ply": PLY, "plinth": PLINTH,
                  "controller": {"x": [half_box + 12.0, half_box + 102.0], "y": controller_y, "z": controller_z}, "rides": rides},
-        "turn": {"wheel": [WHEEL_T, PINION_T, BELT, centres], "ratio": RATIO, "wheel_w": WHEEL_W, "wheel_x": WHEEL_X, "wheel_rim": WHEEL_RIM, "mesh": mesh, "hub": HUB, "hub_x": HUB_X,
+        "turn": {"wheel": [WHEEL_T, PINION_T, BELT, centres], "ratio": RATIO, "wheel_w": WHEEL_W, "wheel_x": WHEEL_X, "wheel_rim": WHEEL_RIM, "mesh": mesh, "hub": HUB, "hub_x": HUB_X, "hub_room": HUB_ROOM,
                  "disc": DISC, "disc_x": DISC_X, "neck": NECK, "neck_x": NECK_X, "flag_r": FLAG_R, "fin": FIN, "fin_l": FIN_L, "sensor": SENSOR, "sensor_z": sensor_z,
                  "motor": MOTOR, "bracket": BRACKET, "motor_y": motor_y, "motor_z": motor_z, "drive_x": DRIVE_X, "bracket_r": bracket_r, "belt_low": belt_low,
                  "over": {"bottom": za - WHEEL_RIM - plate_top, "base": za - WHEEL_RIM, "lip": lip_under, "controller": box_under, "positioner": DISC_X[0] - (forward_x + half_box)},

@@ -2179,7 +2179,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 91.0,
+              "depth": 99.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3079,14 +3079,14 @@
           },
           {
             "id": 5,
-            "name": "boss",
+            "name": "jack screws' holes",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 214.0
+                "offset": 207.5
               },
               "sketch": {
                 "entities": [
@@ -3094,26 +3094,40 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 0.0,
-                      "y": 151.65000000000003
+                      "x": -17.593639649296488,
+                      "y": 158.82383048940403
                     }
                   },
                   {
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 13.0
+                    "radius": 3.2
+                  },
+                  {
+                    "id": 2,
+                    "type": "point",
+                    "pos": {
+                      "x": 17.593639649296488,
+                      "y": 144.47616951059604
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "type": "circle",
+                    "center": 2,
+                    "radius": 3.2
                   }
                 ],
                 "constraints": [],
-                "next_entity": 2,
+                "next_entity": 4,
                 "next_constraint": 0
               }
             }
           },
           {
             "id": 6,
-            "name": "boss",
+            "name": "jack screws' holes",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -3121,24 +3135,24 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 22.0,
+              "depth": 7.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
               },
-              "op": "add"
+              "op": "remove"
             }
           },
           {
             "id": 7,
-            "name": "the rod's socket",
+            "name": "lock screw's way",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 214.0
+                "offset": 190.8
               },
               "sketch": {
                 "entities": [
@@ -3146,26 +3160,100 @@
                     "id": 0,
                     "type": "point",
                     "pos": {
-                      "x": 0.0,
-                      "y": 151.65000000000003
+                      "x": 5.456358166522542,
+                      "y": 173.5068308257198
                     }
                   },
                   {
                     "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 6.1
+                    "type": "point",
+                    "pos": {
+                      "x": 7.344208295313071,
+                      "y": 178.13673599658728
+                    }
+                  },
+                  {
+                    "id": 2,
+                    "type": "line",
+                    "start": 0,
+                    "end": 1
+                  },
+                  {
+                    "id": 3,
+                    "type": "point",
+                    "pos": {
+                      "x": 7.344208295313071,
+                      "y": 178.13673599658728
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.270486914023468,
+                      "y": 175.7202878317354
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "type": "line",
+                    "start": 3,
+                    "end": 4
+                  },
+                  {
+                    "id": 6,
+                    "type": "point",
+                    "pos": {
+                      "x": 13.270486914023468,
+                      "y": 175.7202878317354
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.38263678523294,
+                      "y": 171.0903826608679
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "type": "line",
+                    "start": 6,
+                    "end": 7
+                  },
+                  {
+                    "id": 9,
+                    "type": "point",
+                    "pos": {
+                      "x": 11.38263678523294,
+                      "y": 171.0903826608679
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "type": "point",
+                    "pos": {
+                      "x": 5.456358166522542,
+                      "y": 173.5068308257198
+                    }
+                  },
+                  {
+                    "id": 11,
+                    "type": "line",
+                    "start": 9,
+                    "end": 10
                   }
                 ],
                 "constraints": [],
-                "next_entity": 2,
+                "next_entity": 12,
                 "next_constraint": 0
               }
             }
           },
           {
             "id": 8,
-            "name": "the rod's socket",
+            "name": "lock screw's way",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -3173,7 +3261,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 22.5,
+              "depth": 6.399999999999977,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3192,18 +3280,18 @@
       "id": 14,
       "kind": {
         "type": "part_studio",
-        "name": "Wheel hub",
+        "name": "Socket collar",
         "features": [
           {
             "id": 1,
-            "name": "hub's boss",
+            "name": "socket's collar",
             "suppressed": false,
             "kind": {
               "type": "sketch",
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 316.0
+                "offset": 214.0
               },
               "sketch": {
                 "entities": [
@@ -3219,7 +3307,7 @@
                     "id": 1,
                     "type": "circle",
                     "center": 0,
-                    "radius": 12.0
+                    "radius": 14.0
                   }
                 ],
                 "constraints": [],
@@ -3230,7 +3318,7 @@
           },
           {
             "id": 2,
-            "name": "hub's boss",
+            "name": "socket's collar",
             "suppressed": false,
             "kind": {
               "type": "extrude",
@@ -3238,7 +3326,7 @@
               "profiles": {
                 "type": "all"
               },
-              "depth": 14.0,
+              "depth": 11.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3248,58 +3336,6 @@
           },
           {
             "id": 3,
-            "name": "hub's flange",
-            "suppressed": false,
-            "kind": {
-              "type": "sketch",
-              "plane": {
-                "type": "standard",
-                "base": "right",
-                "offset": 330.0
-              },
-              "sketch": {
-                "entities": [
-                  {
-                    "id": 0,
-                    "type": "point",
-                    "pos": {
-                      "x": 0.0,
-                      "y": 151.65000000000003
-                    }
-                  },
-                  {
-                    "id": 1,
-                    "type": "circle",
-                    "center": 0,
-                    "radius": 18.0
-                  }
-                ],
-                "constraints": [],
-                "next_entity": 2,
-                "next_constraint": 0
-              }
-            }
-          },
-          {
-            "id": 4,
-            "name": "hub's flange",
-            "suppressed": false,
-            "kind": {
-              "type": "extrude",
-              "sketch": 3,
-              "profiles": {
-                "type": "all"
-              },
-              "depth": 5.0,
-              "direction": "normal",
-              "end": {
-                "type": "blind"
-              },
-              "op": "add"
-            }
-          },
-          {
-            "id": 5,
             "name": "bore",
             "suppressed": false,
             "kind": {
@@ -3307,7 +3343,7 @@
               "plane": {
                 "type": "standard",
                 "base": "right",
-                "offset": 315.5
+                "offset": 213.5
               },
               "sketch": {
                 "entities": [
@@ -3333,16 +3369,16 @@
             }
           },
           {
-            "id": 6,
+            "id": 4,
             "name": "bore",
             "suppressed": false,
             "kind": {
               "type": "extrude",
-              "sketch": 5,
+              "sketch": 3,
               "profiles": {
                 "type": "all"
               },
-              "depth": 20.0,
+              "depth": 12.0,
               "direction": "normal",
               "end": {
                 "type": "blind"
@@ -3351,7 +3387,7 @@
             }
           }
         ],
-        "next_id": 7,
+        "next_id": 5,
         "settings": {
           "facet_angle": 5.0
         }
@@ -3359,6 +3395,123 @@
     },
     {
       "id": 15,
+      "kind": {
+        "type": "part_studio",
+        "name": "Wheel hub",
+        "features": [
+          {
+            "id": 1,
+            "name": "disc's collar",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 324.0
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 151.65000000000003
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 14.0
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 2,
+            "name": "disc's collar",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 1,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 11.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "new"
+            }
+          },
+          {
+            "id": 3,
+            "name": "bore",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": 323.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 151.65000000000003
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 6.1
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 4,
+            "name": "bore",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 3,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 12.0,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
+          }
+        ],
+        "next_id": 5,
+        "settings": {
+          "facet_angle": 5.0
+        }
+      }
+    },
+    {
+      "id": 16,
       "kind": {
         "type": "part_studio",
         "name": "Disc",
@@ -3653,7 +3806,7 @@
       }
     },
     {
-      "id": 16,
+      "id": 17,
       "kind": {
         "type": "part_studio",
         "name": "Index wheel",
@@ -3770,7 +3923,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 18,
       "kind": {
         "type": "part_studio",
         "name": "Turn home sensor",
@@ -4035,7 +4188,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 19,
       "kind": {
         "type": "part_studio",
         "name": "Wheel drive",
@@ -4634,7 +4787,7 @@
       }
     },
     {
-      "id": 19,
+      "id": 20,
       "kind": {
         "type": "part_studio",
         "name": "Travel nut",
@@ -4981,7 +5134,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 21,
       "kind": {
         "type": "part_studio",
         "name": "Stick",
@@ -15489,16 +15642,68 @@
               },
               "op": "add"
             }
+          },
+          {
+            "id": 5,
+            "name": "the tail spindle's hole",
+            "suppressed": false,
+            "kind": {
+              "type": "sketch",
+              "plane": {
+                "type": "standard",
+                "base": "right",
+                "offset": -0.5
+              },
+              "sketch": {
+                "entities": [
+                  {
+                    "id": 0,
+                    "type": "point",
+                    "pos": {
+                      "x": 0.0,
+                      "y": 151.65000000000003
+                    }
+                  },
+                  {
+                    "id": 1,
+                    "type": "circle",
+                    "center": 0,
+                    "radius": 6.1
+                  }
+                ],
+                "constraints": [],
+                "next_entity": 2,
+                "next_constraint": 0
+              }
+            }
+          },
+          {
+            "id": 6,
+            "name": "the tail spindle's hole",
+            "suppressed": false,
+            "kind": {
+              "type": "extrude",
+              "sketch": 5,
+              "profiles": {
+                "type": "all"
+              },
+              "depth": 8.5,
+              "direction": "normal",
+              "end": {
+                "type": "blind"
+              },
+              "op": "remove"
+            }
           }
         ],
-        "next_id": 5,
+        "next_id": 7,
         "settings": {
           "facet_angle": 5.0
         }
       }
     },
     {
-      "id": 21,
+      "id": 22,
       "kind": {
         "type": "part_studio",
         "name": "Lock post",
@@ -15815,7 +16020,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 23,
       "kind": {
         "type": "part_studio",
         "name": "Lock anvil",
@@ -16080,7 +16285,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 24,
       "kind": {
         "type": "part_studio",
         "name": "Toggle clamp",
@@ -16323,7 +16528,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 25,
       "kind": {
         "type": "part_studio",
         "name": "Lock switch",
@@ -16462,7 +16667,7 @@
       }
     },
     {
-      "id": 25,
+      "id": 26,
       "kind": {
         "type": "part_studio",
         "name": "Travel drive",
@@ -17239,7 +17444,7 @@
       }
     },
     {
-      "id": 26,
+      "id": 27,
       "kind": {
         "type": "part_studio",
         "name": "Stops",
@@ -17504,7 +17709,7 @@
       }
     },
     {
-      "id": 27,
+      "id": 28,
       "kind": {
         "type": "part_studio",
         "name": "Travel home switch",
@@ -17643,7 +17848,7 @@
       }
     },
     {
-      "id": 28,
+      "id": 29,
       "kind": {
         "type": "part_studio",
         "name": "Controller",
@@ -17782,7 +17987,7 @@
       }
     },
     {
-      "id": 29,
+      "id": 30,
       "kind": {
         "type": "part_studio",
         "name": "Router positioner",
@@ -18551,7 +18756,7 @@
       }
     },
     {
-      "id": 30,
+      "id": 31,
       "kind": {
         "type": "part_studio",
         "name": "Bit",
@@ -18772,13 +18977,13 @@
       }
     },
     {
-      "id": 31,
+      "id": 32,
       "kind": {
         "type": "assembly",
         "name": "Sled",
         "instances": [
           {
-            "id": 32,
+            "id": 33,
             "name": "Base",
             "studio": 1,
             "body": 0,
@@ -18797,7 +19002,7 @@
             }
           },
           {
-            "id": 33,
+            "id": 34,
             "name": "Fences 1",
             "studio": 2,
             "body": 0,
@@ -18816,7 +19021,7 @@
             }
           },
           {
-            "id": 34,
+            "id": 35,
             "name": "Fences 2",
             "studio": 2,
             "body": 1,
@@ -18835,7 +19040,7 @@
             }
           },
           {
-            "id": 35,
+            "id": 36,
             "name": "Slips 1",
             "studio": 3,
             "body": 0,
@@ -18854,7 +19059,7 @@
             }
           },
           {
-            "id": 36,
+            "id": 37,
             "name": "Slips 2",
             "studio": 3,
             "body": 1,
@@ -18873,7 +19078,7 @@
             }
           },
           {
-            "id": 37,
+            "id": 38,
             "name": "Sled plate",
             "studio": 4,
             "body": 0,
@@ -18892,7 +19097,7 @@
             }
           },
           {
-            "id": 38,
+            "id": 39,
             "name": "Sled box 1",
             "studio": 5,
             "body": 0,
@@ -18911,7 +19116,7 @@
             }
           },
           {
-            "id": 39,
+            "id": 40,
             "name": "Sled box 2",
             "studio": 5,
             "body": 1,
@@ -18930,7 +19135,7 @@
             }
           },
           {
-            "id": 40,
+            "id": 41,
             "name": "Sled box 3",
             "studio": 5,
             "body": 2,
@@ -18949,7 +19154,7 @@
             }
           },
           {
-            "id": 41,
+            "id": 42,
             "name": "Spring plungers 1",
             "studio": 6,
             "body": 0,
@@ -18968,7 +19173,7 @@
             }
           },
           {
-            "id": 42,
+            "id": 43,
             "name": "Spring plungers 2",
             "studio": 6,
             "body": 1,
@@ -18987,7 +19192,7 @@
             }
           },
           {
-            "id": 43,
+            "id": 44,
             "name": "Tailstock",
             "studio": 7,
             "body": 0,
@@ -19006,7 +19211,7 @@
             }
           },
           {
-            "id": 44,
+            "id": 45,
             "name": "Tail bearings KP001 1",
             "studio": 8,
             "body": 0,
@@ -19025,7 +19230,7 @@
             }
           },
           {
-            "id": 45,
+            "id": 46,
             "name": "Tail bearings KP001 2",
             "studio": 8,
             "body": 1,
@@ -19044,7 +19249,7 @@
             }
           },
           {
-            "id": 46,
+            "id": 47,
             "name": "Tail spindle",
             "studio": 9,
             "body": 0,
@@ -19063,7 +19268,7 @@
             }
           },
           {
-            "id": 47,
+            "id": 48,
             "name": "Headstock",
             "studio": 10,
             "body": 0,
@@ -19082,7 +19287,7 @@
             }
           },
           {
-            "id": 48,
+            "id": 49,
             "name": "Head bearings KP001 1",
             "studio": 11,
             "body": 0,
@@ -19101,7 +19306,7 @@
             }
           },
           {
-            "id": 49,
+            "id": 50,
             "name": "Head bearings KP001 2",
             "studio": 11,
             "body": 1,
@@ -19120,7 +19325,7 @@
             }
           },
           {
-            "id": 50,
+            "id": 51,
             "name": "Spindle",
             "studio": 12,
             "body": 0,
@@ -19139,7 +19344,7 @@
             }
           },
           {
-            "id": 51,
+            "id": 52,
             "name": "Blank socket",
             "studio": 13,
             "body": 0,
@@ -19158,8 +19363,8 @@
             }
           },
           {
-            "id": 52,
-            "name": "Wheel hub",
+            "id": 53,
+            "name": "Socket collar",
             "studio": 14,
             "body": 0,
             "fixed": true,
@@ -19177,8 +19382,8 @@
             }
           },
           {
-            "id": 53,
-            "name": "Disc",
+            "id": 54,
+            "name": "Wheel hub",
             "studio": 15,
             "body": 0,
             "fixed": true,
@@ -19196,8 +19401,8 @@
             }
           },
           {
-            "id": 54,
-            "name": "Index wheel",
+            "id": 55,
+            "name": "Disc",
             "studio": 16,
             "body": 0,
             "fixed": true,
@@ -19215,8 +19420,8 @@
             }
           },
           {
-            "id": 55,
-            "name": "Turn home sensor",
+            "id": 56,
+            "name": "Index wheel",
             "studio": 17,
             "body": 0,
             "fixed": true,
@@ -19234,29 +19439,10 @@
             }
           },
           {
-            "id": 56,
-            "name": "Wheel drive 1",
+            "id": 57,
+            "name": "Turn home sensor",
             "studio": 18,
             "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 57,
-            "name": "Wheel drive 2",
-            "studio": 18,
-            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
@@ -19273,45 +19459,7 @@
           },
           {
             "id": 58,
-            "name": "Wheel drive 3",
-            "studio": 18,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 59,
-            "name": "Wheel drive 4",
-            "studio": 18,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 60,
-            "name": "Travel nut 1",
+            "name": "Wheel drive 1",
             "studio": 19,
             "body": 0,
             "fixed": true,
@@ -19329,8 +19477,8 @@
             }
           },
           {
-            "id": 61,
-            "name": "Travel nut 2",
+            "id": 59,
+            "name": "Wheel drive 2",
             "studio": 19,
             "body": 1,
             "fixed": true,
@@ -19348,8 +19496,8 @@
             }
           },
           {
-            "id": 62,
-            "name": "Travel nut 3",
+            "id": 60,
+            "name": "Wheel drive 3",
             "studio": 19,
             "body": 2,
             "fixed": true,
@@ -19367,8 +19515,27 @@
             }
           },
           {
-            "id": 63,
-            "name": "Stick",
+            "id": 61,
+            "name": "Wheel drive 4",
+            "studio": 19,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 62,
+            "name": "Travel nut 1",
             "studio": 20,
             "body": 0,
             "fixed": true,
@@ -19386,28 +19553,9 @@
             }
           },
           {
-            "id": 64,
-            "name": "Travel drive 1",
-            "studio": 25,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 65,
-            "name": "Travel drive 2",
-            "studio": 25,
+            "id": 63,
+            "name": "Travel nut 2",
+            "studio": 20,
             "body": 1,
             "fixed": true,
             "placement": {
@@ -19424,9 +19572,9 @@
             }
           },
           {
-            "id": 66,
-            "name": "Travel drive 3",
-            "studio": 25,
+            "id": 64,
+            "name": "Travel nut 3",
+            "studio": 20,
             "body": 2,
             "fixed": true,
             "placement": {
@@ -19443,10 +19591,10 @@
             }
           },
           {
-            "id": 67,
-            "name": "Travel drive 4",
-            "studio": 25,
-            "body": 3,
+            "id": 65,
+            "name": "Stick",
+            "studio": 21,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
@@ -19462,46 +19610,8 @@
             }
           },
           {
-            "id": 68,
-            "name": "Travel drive 5",
-            "studio": 25,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 69,
-            "name": "Travel drive 6",
-            "studio": 25,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 70,
-            "name": "Stops 1",
+            "id": 66,
+            "name": "Travel drive 1",
             "studio": 26,
             "body": 0,
             "fixed": true,
@@ -19519,8 +19629,8 @@
             }
           },
           {
-            "id": 71,
-            "name": "Stops 2",
+            "id": 67,
+            "name": "Travel drive 2",
             "studio": 26,
             "body": 1,
             "fixed": true,
@@ -19538,8 +19648,84 @@
             }
           },
           {
+            "id": 68,
+            "name": "Travel drive 3",
+            "studio": 26,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 69,
+            "name": "Travel drive 4",
+            "studio": 26,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 70,
+            "name": "Travel drive 5",
+            "studio": 26,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 71,
+            "name": "Travel drive 6",
+            "studio": 26,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
             "id": 72,
-            "name": "Travel home switch",
+            "name": "Stops 1",
             "studio": 27,
             "body": 0,
             "fixed": true,
@@ -19558,7 +19744,26 @@
           },
           {
             "id": 73,
-            "name": "Controller",
+            "name": "Stops 2",
+            "studio": 27,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 74,
+            "name": "Travel home switch",
             "studio": 28,
             "body": 0,
             "fixed": true,
@@ -19576,29 +19781,10 @@
             }
           },
           {
-            "id": 74,
-            "name": "Router positioner 1",
+            "id": 75,
+            "name": "Controller",
             "studio": 29,
             "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 75,
-            "name": "Router positioner 2",
-            "studio": 29,
-            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
@@ -19615,64 +19801,7 @@
           },
           {
             "id": 76,
-            "name": "Router positioner 3",
-            "studio": 29,
-            "body": 2,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 77,
-            "name": "Router positioner 4",
-            "studio": 29,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 78,
-            "name": "Router positioner 5",
-            "studio": 29,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 79,
-            "name": "Bit 1",
+            "name": "Router positioner 1",
             "studio": 30,
             "body": 0,
             "fixed": true,
@@ -19690,9 +19819,104 @@
             }
           },
           {
-            "id": 80,
-            "name": "Bit 2",
+            "id": 77,
+            "name": "Router positioner 2",
             "studio": 30,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 78,
+            "name": "Router positioner 3",
+            "studio": 30,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 79,
+            "name": "Router positioner 4",
+            "studio": 30,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 80,
+            "name": "Router positioner 5",
+            "studio": 30,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 81,
+            "name": "Bit 1",
+            "studio": 31,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 82,
+            "name": "Bit 2",
+            "studio": 31,
             "body": 1,
             "fixed": true,
             "placement": {
@@ -19713,13 +19937,13 @@
       }
     },
     {
-      "id": 81,
+      "id": 83,
       "kind": {
         "type": "assembly",
         "name": "Sled home",
         "instances": [
           {
-            "id": 82,
+            "id": 84,
             "name": "Base",
             "studio": 1,
             "body": 0,
@@ -19738,7 +19962,7 @@
             }
           },
           {
-            "id": 83,
+            "id": 85,
             "name": "Fences 1",
             "studio": 2,
             "body": 0,
@@ -19757,7 +19981,7 @@
             }
           },
           {
-            "id": 84,
+            "id": 86,
             "name": "Fences 2",
             "studio": 2,
             "body": 1,
@@ -19776,7 +20000,7 @@
             }
           },
           {
-            "id": 85,
+            "id": 87,
             "name": "Slips 1",
             "studio": 3,
             "body": 0,
@@ -19795,7 +20019,7 @@
             }
           },
           {
-            "id": 86,
+            "id": 88,
             "name": "Slips 2",
             "studio": 3,
             "body": 1,
@@ -19814,7 +20038,7 @@
             }
           },
           {
-            "id": 87,
+            "id": 89,
             "name": "Sled plate",
             "studio": 4,
             "body": 0,
@@ -19833,7 +20057,7 @@
             }
           },
           {
-            "id": 88,
+            "id": 90,
             "name": "Sled box 1",
             "studio": 5,
             "body": 0,
@@ -19852,7 +20076,7 @@
             }
           },
           {
-            "id": 89,
+            "id": 91,
             "name": "Sled box 2",
             "studio": 5,
             "body": 1,
@@ -19871,7 +20095,7 @@
             }
           },
           {
-            "id": 90,
+            "id": 92,
             "name": "Sled box 3",
             "studio": 5,
             "body": 2,
@@ -19890,7 +20114,7 @@
             }
           },
           {
-            "id": 91,
+            "id": 93,
             "name": "Spring plungers 1",
             "studio": 6,
             "body": 0,
@@ -19909,7 +20133,7 @@
             }
           },
           {
-            "id": 92,
+            "id": 94,
             "name": "Spring plungers 2",
             "studio": 6,
             "body": 1,
@@ -19928,7 +20152,7 @@
             }
           },
           {
-            "id": 93,
+            "id": 95,
             "name": "Tailstock",
             "studio": 7,
             "body": 0,
@@ -19947,7 +20171,7 @@
             }
           },
           {
-            "id": 94,
+            "id": 96,
             "name": "Tail bearings KP001 1",
             "studio": 8,
             "body": 0,
@@ -19966,7 +20190,7 @@
             }
           },
           {
-            "id": 95,
+            "id": 97,
             "name": "Tail bearings KP001 2",
             "studio": 8,
             "body": 1,
@@ -19985,7 +20209,7 @@
             }
           },
           {
-            "id": 96,
+            "id": 98,
             "name": "Tail spindle",
             "studio": 9,
             "body": 0,
@@ -20004,7 +20228,7 @@
             }
           },
           {
-            "id": 97,
+            "id": 99,
             "name": "Headstock",
             "studio": 10,
             "body": 0,
@@ -20023,7 +20247,7 @@
             }
           },
           {
-            "id": 98,
+            "id": 100,
             "name": "Head bearings KP001 1",
             "studio": 11,
             "body": 0,
@@ -20042,7 +20266,7 @@
             }
           },
           {
-            "id": 99,
+            "id": 101,
             "name": "Head bearings KP001 2",
             "studio": 11,
             "body": 1,
@@ -20061,7 +20285,7 @@
             }
           },
           {
-            "id": 100,
+            "id": 102,
             "name": "Spindle",
             "studio": 12,
             "body": 0,
@@ -20080,7 +20304,7 @@
             }
           },
           {
-            "id": 101,
+            "id": 103,
             "name": "Blank socket",
             "studio": 13,
             "body": 0,
@@ -20099,8 +20323,8 @@
             }
           },
           {
-            "id": 102,
-            "name": "Wheel hub",
+            "id": 104,
+            "name": "Socket collar",
             "studio": 14,
             "body": 0,
             "fixed": true,
@@ -20118,8 +20342,8 @@
             }
           },
           {
-            "id": 103,
-            "name": "Disc",
+            "id": 105,
+            "name": "Wheel hub",
             "studio": 15,
             "body": 0,
             "fixed": true,
@@ -20137,8 +20361,8 @@
             }
           },
           {
-            "id": 104,
-            "name": "Index wheel",
+            "id": 106,
+            "name": "Disc",
             "studio": 16,
             "body": 0,
             "fixed": true,
@@ -20156,8 +20380,8 @@
             }
           },
           {
-            "id": 105,
-            "name": "Turn home sensor",
+            "id": 107,
+            "name": "Index wheel",
             "studio": 17,
             "body": 0,
             "fixed": true,
@@ -20175,48 +20399,10 @@
             }
           },
           {
-            "id": 106,
-            "name": "Wheel drive 1",
+            "id": 108,
+            "name": "Turn home sensor",
             "studio": 18,
             "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 112.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 107,
-            "name": "Wheel drive 2",
-            "studio": 18,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 112.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 108,
-            "name": "Wheel drive 3",
-            "studio": 18,
-            "body": 2,
             "fixed": true,
             "placement": {
               "position": {
@@ -20233,26 +20419,7 @@
           },
           {
             "id": 109,
-            "name": "Wheel drive 4",
-            "studio": 18,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 112.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 110,
-            "name": "Travel nut 1",
+            "name": "Wheel drive 1",
             "studio": 19,
             "body": 0,
             "fixed": true,
@@ -20270,8 +20437,8 @@
             }
           },
           {
-            "id": 111,
-            "name": "Travel nut 2",
+            "id": 110,
+            "name": "Wheel drive 2",
             "studio": 19,
             "body": 1,
             "fixed": true,
@@ -20289,8 +20456,8 @@
             }
           },
           {
-            "id": 112,
-            "name": "Travel nut 3",
+            "id": 111,
+            "name": "Wheel drive 3",
             "studio": 19,
             "body": 2,
             "fixed": true,
@@ -20308,8 +20475,27 @@
             }
           },
           {
+            "id": 112,
+            "name": "Wheel drive 4",
+            "studio": 19,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 112.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
             "id": 113,
-            "name": "Stick",
+            "name": "Travel nut 1",
             "studio": 20,
             "body": 0,
             "fixed": true,
@@ -20328,13 +20514,13 @@
           },
           {
             "id": 114,
-            "name": "Travel drive 1",
-            "studio": 25,
-            "body": 0,
+            "name": "Travel nut 2",
+            "studio": 20,
+            "body": 1,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 0.0,
+                "x": 112.0,
                 "y": 0.0,
                 "z": 0.0
               },
@@ -20347,13 +20533,13 @@
           },
           {
             "id": 115,
-            "name": "Travel drive 2",
-            "studio": 25,
-            "body": 1,
+            "name": "Travel nut 3",
+            "studio": 20,
+            "body": 2,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 0.0,
+                "x": 112.0,
                 "y": 0.0,
                 "z": 0.0
               },
@@ -20366,13 +20552,13 @@
           },
           {
             "id": 116,
-            "name": "Travel drive 3",
-            "studio": 25,
-            "body": 2,
+            "name": "Stick",
+            "studio": 21,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
-                "x": 0.0,
+                "x": 112.0,
                 "y": 0.0,
                 "z": 0.0
               },
@@ -20385,9 +20571,9 @@
           },
           {
             "id": 117,
-            "name": "Travel drive 4",
-            "studio": 25,
-            "body": 3,
+            "name": "Travel drive 1",
+            "studio": 26,
+            "body": 0,
             "fixed": true,
             "placement": {
               "position": {
@@ -20404,64 +20590,7 @@
           },
           {
             "id": 118,
-            "name": "Travel drive 5",
-            "studio": 25,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 119,
-            "name": "Travel drive 6",
-            "studio": 25,
-            "body": 5,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 120,
-            "name": "Stops 1",
-            "studio": 26,
-            "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 121,
-            "name": "Stops 2",
+            "name": "Travel drive 2",
             "studio": 26,
             "body": 1,
             "fixed": true,
@@ -20479,8 +20608,84 @@
             }
           },
           {
+            "id": 119,
+            "name": "Travel drive 3",
+            "studio": 26,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 120,
+            "name": "Travel drive 4",
+            "studio": 26,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 121,
+            "name": "Travel drive 5",
+            "studio": 26,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
             "id": 122,
-            "name": "Travel home switch",
+            "name": "Travel drive 6",
+            "studio": 26,
+            "body": 5,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 123,
+            "name": "Stops 1",
             "studio": 27,
             "body": 0,
             "fixed": true,
@@ -20498,8 +20703,27 @@
             }
           },
           {
-            "id": 123,
-            "name": "Controller",
+            "id": 124,
+            "name": "Stops 2",
+            "studio": 27,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 125,
+            "name": "Travel home switch",
             "studio": 28,
             "body": 0,
             "fixed": true,
@@ -20517,48 +20741,10 @@
             }
           },
           {
-            "id": 124,
-            "name": "Router positioner 1",
+            "id": 126,
+            "name": "Controller",
             "studio": 29,
             "body": 0,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 125,
-            "name": "Router positioner 2",
-            "studio": 29,
-            "body": 1,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 126,
-            "name": "Router positioner 3",
-            "studio": 29,
-            "body": 2,
             "fixed": true,
             "placement": {
               "position": {
@@ -20575,45 +20761,7 @@
           },
           {
             "id": 127,
-            "name": "Router positioner 4",
-            "studio": 29,
-            "body": 3,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 128,
-            "name": "Router positioner 5",
-            "studio": 29,
-            "body": 4,
-            "fixed": true,
-            "placement": {
-              "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              },
-              "rotation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-              }
-            }
-          },
-          {
-            "id": 129,
-            "name": "Bit 1",
+            "name": "Router positioner 1",
             "studio": 30,
             "body": 0,
             "fixed": true,
@@ -20631,9 +20779,104 @@
             }
           },
           {
-            "id": 130,
-            "name": "Bit 2",
+            "id": 128,
+            "name": "Router positioner 2",
             "studio": 30,
+            "body": 1,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 129,
+            "name": "Router positioner 3",
+            "studio": 30,
+            "body": 2,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 130,
+            "name": "Router positioner 4",
+            "studio": 30,
+            "body": 3,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 131,
+            "name": "Router positioner 5",
+            "studio": 30,
+            "body": 4,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 132,
+            "name": "Bit 1",
+            "studio": 31,
+            "body": 0,
+            "fixed": true,
+            "placement": {
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            }
+          },
+          {
+            "id": 133,
+            "name": "Bit 2",
+            "studio": 31,
             "body": 1,
             "fixed": true,
             "placement": {
@@ -20654,5 +20897,5 @@
       }
     }
   ],
-  "next_id": 131
+  "next_id": 134
 }

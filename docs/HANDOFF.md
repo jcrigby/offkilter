@@ -17,7 +17,7 @@ examples, each with a regression test in `crates/ok-render/tests/`:
 | | what | state |
 |---|---|---|
 | `examples/router-positioner` | two-axis plywood positioner holding the owner's Bosch Colt | drawn to the owner's calliper readings; cut list written |
-| `examples/stick-sled` | the stick on a sled, a wheel on its own spindle, a screw feed, a Pico controller | automatic since 2026-11-19; a precheck table before any real stick |
+| `examples/stick-sled` | the stick on a sled, a wheel on its own spindle, a screw feed, a Pico controller | automatic since 2026-11-19; a precheck table before any real stick; nothing ground on its rods since 2026-11-20 |
 | `examples/stick-finish` | two printed sanding forms, two scraper blade templates, a captioned animation of the whole job | drawn; nothing printed |
 | `examples/stick-billet` | the tiles' 3 mm pieces stacked on brass rods and milled by the sled in two stages: no sawing, face grain | planned and drawn 2026-11-19; the comb, far plate and drilling jig are STLs; nothing printed |
 
@@ -63,6 +63,28 @@ The owner looked at buying a four-axis CNC instead (see below) and on
   The automatic sled needs none of them (the clamp only if the lock is
   fitted). Its shopping list is under "To buy" in its README.
 
+## Nothing is ground on the rods (2026-11-20)
+
+The owner cannot grind hardened rod ("I don't think I can grind the
+hardened steel rods"), and the sled as first drawn wanted three
+grinding jobs: a three-flat point on the tail spindle, a flat for the
+disc's hub, a roughened end for the socket's epoxy. All three are
+gone, in `examples/stick-sled`:
+
+- **Tail:** the rod's plain end sits 8 mm into a 12 mm hole in the
+  stick's end (in the billet, in the cap). It only centres and pushes.
+- **Head:** two face-mount clamp collars (Ruland FHT-MCL-12-F: 12
+  bore, 28 across, 11 wide, found by search, its tapped holes' circle
+  not confirmed), one behind the socket and one on the disc. The
+  socket bolts to its collar; no epoxy. The owner remembered an idea
+  of a non-circular end for epoxy; it is in no file here, and the
+  collar took its place.
+- **Two jack screws** through the socket's floor, 19 mm either side
+  of the axis, since one on the axis is where the rod is.
+- The owner's understanding, confirmed in chat: every joint from the
+  wheel to the wood must not slip, and the look for the wheel's mark
+  sees only as far as the disc. The tail may turn freely.
+
 ## The billet, as decided in chat on 2026-11-19
 
 The owner's idea, `examples/stick-billet`; its README and the last
@@ -79,6 +101,15 @@ entry in `docs/DECISIONS.md` have the design. Decided in chat:
   would make taking the stack apart messier.
 - The owner caught the first plan's error (rods left on islands of
   wood). Tabs fixed it.
+- **Springy cauls**, the owner's idea (2026-11-20): the rods are at
+  the corners and the tile in the middle, so the far plate is crowned
+  0.3 mm and the cap has a paper shim, and the clamp goes down the
+  middle. The owner asked for a three-sided crowned caul at the tail
+  too; the comb's plate is that caul, but flat: a crown on it put
+  26 MPa in a 4 mm print.
+- **Tabs are 6 mm**, not 4: a holding model was asked for ("do you
+  have a way of predicting if the tabs are strong enough?"), and at 4
+  the tabs alone were at what wood takes across its grain.
 
 `out/stage1.csv` and `out/stage2.csv` are tables the controller takes
 as they are; each is copied to the Pico as `passes.csv` for its stage.
@@ -91,10 +122,16 @@ Open on the billet:
   the collet, to see the collet nut pass the bigger blank and the comb.
 - The comb's 0.15 mm fit on the finished edge is a guess: print its
   plate alone first and try it.
+- The holding figures (248 N in the middle, 2.5 times the heaviest
+  turning) are from tables: the print's stiffness, friction 0.3, wood
+  at 4 MPa across its grain. The owner can check them with a coupon:
+  one piece cut to the first stage's shape, its four corners held,
+  and a weight hung from the tile. 1.5 kg is the heaviest cut.
 - To buy: about 1.3 m of #6-32 brass rod, seven small-pattern #6-32
   nuts (1/4 in across: a standard 5/16 nut does not fit the flute
   finger's plate), three #6-32 heat-set inserts, a #6-32 tap with its
-  #36 drill, a #27 drill.
+  #36 drill, a #27 drill, a 12 mm brad-point drill, and 12 mm Baltic
+  birch plywood for the cap.
 
 ## Open, and not asked for yet
 

@@ -17,6 +17,7 @@ use ok_math::{Plane, Vec2};
 use ok_model::{Document, TabId};
 use ok_sketch::{Loop, Profile};
 use serde_json::Value;
+use std::f64::consts::{PI, TAU};
 use std::path::PathBuf;
 
 type P2 = (f64, f64);
@@ -206,7 +207,7 @@ impl Bits {
 fn ring(c: P2, r: f64, n: usize) -> Vec<P2> {
     (0..n)
         .map(|k| {
-            let a = std::f64::consts::TAU * k as f64 / n as f64;
+            let a = TAU * k as f64 / n as f64;
             (c.0 + r * a.cos(), c.1 + r * a.sin())
         })
         .chain(std::iter::once(c))
@@ -255,8 +256,7 @@ fn a_piece_is_the_grown_blank_with_four_holes_all_outside_the_tile() {
     assert_eq!(piece.len(), 1);
     let corners = points(&b["piece"]["corners"]);
     let (thick, hole) = (f(&b["piece"]["thick"]), f(&b["piece"]["hole"]) / 2.0);
-    let expect =
-        area2(&corners).abs() / 2.0 * thick - 4.0 * std::f64::consts::PI * hole * hole * thick;
+    let expect = area2(&corners).abs() / 2.0 * thick - 4.0 * PI * hole * hole * thick;
     let v = piece[0].volume();
     println!("a piece {v:.1} mm3, {expect:.1} expected");
     assert!((v - expect).abs() < 0.005 * expect);
@@ -449,15 +449,15 @@ fn each_stage_is_a_table_the_sled_s_controller_takes_and_its_rows_are_the_stage_
                 r[5].parse().unwrap(),
             );
             let (tip, across) = (tip_home - depth, across_home + height);
-            let t = (-turn.to_radians()).rem_euclid(std::f64::consts::TAU);
-            let dt = (t - c.t.rem_euclid(std::f64::consts::TAU)).abs();
+            let t = (-turn.to_radians()).rem_euclid(TAU);
+            let dt = (t - c.t.rem_euclid(TAU)).abs();
             assert!(
                 (tip - c.tip).abs() < 1e-3 && (across - c.across).abs() < 1e-3,
                 "row {}",
                 r[0]
             );
             assert!(
-                dt < 1e-5 || (dt - std::f64::consts::TAU).abs() < 1e-5,
+                dt < 1e-5 || (dt - TAU).abs() < 1e-5,
                 "row {}: {t} for {}",
                 r[0],
                 c.t
@@ -516,16 +516,6 @@ fn each_stage_is_a_table_the_sled_s_controller_takes_and_its_rows_are_the_stage_
             "the deepest row is tried dry"
         );
     }
-    // a tab alone would take the stage's heaviest push with room to spare
-    let t = &b["tab"];
-    let stress = f(&t["push"]) / (f(&t["wide"]) * f(&t["thick"]));
-    println!(
-        "a tab: {:.1} N on {} x {} mm is {stress:.2} MPa",
-        f(&t["push"]),
-        t["wide"],
-        t["thick"]
-    );
-    assert!((stress - f(&t["stress"])).abs() < 1e-9 && stress * 2.0 < f(&t["across_grain"]));
     // drawn back between passes, the bit is past everything that stands out of the billet's tail end
     assert!(f(&b["tables"]["bit_waits"]) - f(&b["tables"]["stands_out"]) >= 1.0);
 }
@@ -563,7 +553,7 @@ fn the_belt_holds_every_bite_of_both_stages_by_the_sled_s_own_estimate() {
                     shank.min(ball + 2.0 * (a - r) * taper.tan())
                 }
             };
-            let edge_speed = std::f64::consts::PI * dia * f(&h["rpm"]) / 60.0;
+            let edge_speed = PI * dia * f(&h["rpm"]) / 60.0;
             let push =
                 f(&h["peak"]) * f(&h["cut_energy"]) * 1000.0 * area * f(&h["feed"]) / edge_speed;
             let give = push * far / 1000.0 / stiff * swing;
@@ -695,4 +685,166 @@ fn the_animation_has_a_frame_for_every_pass_and_a_still_for_every_step() {
     );
     assert!(first2 - last1 > a["swap"].as_u64().unwrap());
     assert!(dir().join("out/billet.gif").exists());
+}
+
+/// What holds a piece while the first stage is cut. The rods are at
+/// the corners and the tile is in the middle, so the far plate is
+/// crowned and the cap has a paper shim: tightened, the plate's bend
+/// pushes down the middle of the stack, and friction on a piece's two
+/// faces has to hold the heaviest cut twice over, as a push and as a
+/// turning. Behind that, the four tabs of a piece taken alone are
+/// within what wood takes across its grain. The same sums by other
+/// code, from the same assumptions; none of it is measured.
+#[test]
+fn the_crowned_clamp_holds_a_piece_twice_over_and_the_tabs_stand_behind_it() {
+    let (b, n) = (numbers(), sled());
+    let c = &b["clamp"];
+    let mut doc = load();
+    // the far plate: bent by its crown and the shim, a beam between the rods
+    let rods = points(&b["first"]["rods"]);
+    let dist = |p: P2, q: P2| ((p.0 - q.0).powi(2) + (p.1 - q.1).powi(2)).sqrt();
+    let span = (dist(rods[0], rods[2]) + dist(rods[1], rods[3])) / 2.0;
+    let (w, t, e) = (f(&c["plate_w"]), f(&c["plate_t"]), f(&c["print_e"]));
+    let soft = span.powi(3) / (48.0 * e * w * t.powi(3) / 12.0);
+    let force = (f(&c["crown"]) + f(&c["shim"])) / soft;
+    let plate_stress = force * span / 4.0 / (w * t * t / 6.0);
+    assert!(
+        (force - f(&c["force"])).abs() < 1e-3 * force && (t - (8.0 - f(&c["crown"]))).abs() < 1e-9
+    );
+    // what it holds, against the heaviest cut of the first stage worked out again from each bite's area
+    let h = &n["hold"];
+    let (mut push, mut turn) = (0.0f64, 0.0f64);
+    for k in b["cuts"]["first"].as_array().unwrap() {
+        let (is_ball, area, over, far) =
+            (k[0].as_str().unwrap() == "b", f(&k[4]), f(&k[5]), f(&k[6]));
+        let dia = if !is_ball {
+            f(&n["rough"]["bit"])
+        } else {
+            let (r, a) = (f(&n["bit"]) / 2.0, over / 2.0);
+            if a < r {
+                (2.0 * (2.0 * r * a - a * a).max(0.0).sqrt()).max(1.0)
+            } else {
+                f(&n["shank"]).min(f(&n["bit"]) + 2.0 * (a - r) * f(&n["taper"]).to_radians().tan())
+            }
+        };
+        let p = f(&h["peak"]) * f(&h["cut_energy"]) * 1000.0 * area * f(&h["feed"])
+            / (PI * dia * f(&h["rpm"]) / 60.0);
+        push = push.max(p);
+        turn = turn.max(p * far / 1000.0);
+    }
+    let mu = f(&c["friction"]);
+    let arm = 2.0 / 3.0 * f(&c["crown_r"]);
+    let (holds_push, holds_turn) = (2.0 * mu * force, 2.0 * mu * force * arm / 1000.0);
+    println!(
+        "the clamp pushes {force:.0} N down the middle, {plate_stress:.0} MPa in the far plate; it holds {holds_push:.0} N and {holds_turn:.2} N m, the heaviest cut is {push:.1} N and {turn:.2} N m: {:.1} and {:.1} times over",
+        holds_push / push,
+        holds_turn / turn
+    );
+    assert!((push - f(&c["push"])).abs() < 0.01 && (turn - f(&c["turn"])).abs() < 0.001);
+    assert!(
+        holds_push >= f(&c["over"]) * push
+            && holds_turn >= f(&c["over"]) * turn
+            && f(&c["over"]) >= 2.0
+    );
+    assert!(
+        mu <= 0.3 && plate_stress <= f(&c["print_ok"]) && f(&c["cap_stress"]) <= f(&c["ply_ok"])
+    );
+    // the crown is a disc inside the tile, on the far plate's inner face, and the plate stands off the stack by
+    // the crown everywhere else: cut across just inside its face, only the disc is there
+    let tile = points(&n["tile"]["outline"]);
+    let (crown, crown_r) = (f(&c["crown"]), f(&c["crown_r"]));
+    for k in 0..24 {
+        let a = TAU * k as f64 / 24.0;
+        assert!(off_edge((crown_r * a.cos(), crown_r * a.sin()), &tile) < 0.0);
+    }
+    let plate = bodies_of(&mut doc, "Far plate").remove(0);
+    let x0 = f(&b["layout"]["far_plate"][0]);
+    let big: Vec<P2> = vec![(-60.0, -60.0), (60.0, -60.0), (60.0, 60.0), (-60.0, 60.0)];
+    let in_crown = common(&plate, &prism(&big, x0, x0 + crown)) / crown;
+    let disc = PI * crown_r * crown_r;
+    println!("the far plate cut across inside its crown: {in_crown:.0} mm2, a disc of {crown_r} is {disc:.0}");
+    assert!((in_crown - disc).abs() < 0.02 * disc);
+    // the shim on the cap is the same disc; the comb's plate is flat on the cap, and the second stage's clamp is
+    // within what the print takes
+    let shim = bodies_of(&mut doc, "Shim").remove(0);
+    assert!((shim.volume() - disc * f(&c["shim"])).abs() < 0.02 * disc * f(&c["shim"]));
+    assert!(
+        f(&c["second"]["comb_stress"]) <= f(&c["print_ok"]) && f(&c["second"]["force"]) >= 20.0
+    );
+    // the tabs alone: within what a hardwood takes across its grain, by half again or more; and a piece held only
+    // by them could shift by the rods' slack in their holes, which is why the clamp is what holds
+    let t = &b["tab"];
+    println!(
+        "the tabs alone: {:.2} MPa of {}; a piece could shift {:.2} mm in its holes",
+        f(&t["stress"]),
+        t["across_grain"],
+        f(&t["slop"])
+    );
+    assert!(f(&t["stress"]) * 1.5 <= f(&t["across_grain"]) && f(&t["across_grain"]) <= 4.0);
+    assert!((f(&t["slop"]) - (f(&b["piece"]["hole"]) - f(&b["rod"]["d"])) / 2.0).abs() < 1e-9);
+    assert!((f(&t["wide"]) - f(&b["rod"]["tab"])).abs() < 1e-9);
+}
+
+/// The two ends as the sled has them now, nothing ground on a rod: the
+/// tail spindle's plain end sits in a socket in the cap, on the axis,
+/// with wood left under it; and the sled's two jack screws land on the
+/// flat end of the far plate's boss, clear of the nuts' notches.
+#[test]
+fn the_cap_has_the_tail_spindle_s_socket_and_the_jack_screws_land_on_the_boss() {
+    let (b, n) = (numbers(), sled());
+    let mut doc = load();
+    let cap = bodies_of(&mut doc, "Near cap").remove(0);
+    let (tail_in, hole) = (f(&n["sled"]["tail_in"]), f(&n["sled"]["tail_hole"]));
+    assert!(
+        (f(&b["tail"]["in"]) - tail_in).abs() < 1e-9 && (f(&b["tail"]["hole"]) - hole).abs() < 1e-9
+    );
+    let thick = f(&b["layout"]["near_cap"][1]);
+    // a rod the hole's size, pushed in from the tail, meets no wood for the socket's depth and then does
+    let rod: Vec<P2> = (0..48)
+        .map(|k| {
+            let a = TAU * k as f64 / 48.0;
+            ((hole / 2.0 - 0.05) * a.cos(), (hole / 2.0 - 0.05) * a.sin())
+        })
+        .collect();
+    assert!(common(&cap, &prism(&rod, 0.0, tail_in)) < 1e-6);
+    let under = common(&cap, &prism(&rod, tail_in, thick));
+    println!(
+        "the cap under the tail spindle's end: {:.1} mm of wood",
+        thick - tail_in
+    );
+    assert!(under > 0.9 * PI * hole * hole / 4.0 * (thick - tail_in) && thick - tail_in >= 3.0);
+    // the comb's plate lets the rod through to it
+    assert!(f(&b["comb"]["plate_hole"]) > f(&n["spindle_d"]) + 1.0);
+    // the jack screws: the sled's, either side of the axis, on the boss and off the notches
+    let jack = &b["jack"];
+    let at = points(&jack["at"]);
+    let sled_jack = pair(&n["sled"]["socket"]["jack"]);
+    let boss = points(&b["piece"]["sled_blank"]);
+    let notch = f(&b["rod"]["notch"]);
+    for q in &at {
+        assert!((q.0.hypot(q.1) - sled_jack.0).abs() < 1e-3 && inside(*q, &boss));
+        for r in points(&b["first"]["rods"]) {
+            assert!(
+                ((q.0 - r.0).powi(2) + (q.1 - r.1).powi(2)).sqrt() - notch
+                    >= sled_jack.1 / 2.0 + 1.0
+            );
+        }
+    }
+    assert!((at[0].0 + at[1].0).abs() < 1e-3 && (at[0].1 + at[1].1).abs() < 1e-3);
+    let plate = bodies_of(&mut doc, "Far plate").remove(0);
+    let tip: Vec<P2> = (0..24)
+        .map(|k| {
+            let a = TAU * k as f64 / 24.0;
+            (
+                at[0].0 + sled_jack.1 / 2.0 * a.cos(),
+                at[0].1 + sled_jack.1 / 2.0 * a.sin(),
+            )
+        })
+        .collect();
+    let end = f(&b["layout"]["boss"][1]);
+    let land = common(&plate, &prism(&tip, end - 1.0, end));
+    assert!(
+        land > 0.95 * PI * sled_jack.1 * sled_jack.1 / 4.0,
+        "a jack screw's end is on solid boss"
+    );
 }

@@ -27,7 +27,7 @@ GROW = 3.0                      # the blank, grown this much on every side from 
 ROD = 3.505                     # a #6-32 brass rod, 0.138 in over the threads: the owner's "fine rod across the board"
 INSET = (4.0, 4.0, 4.0, 7.0)    # each corner rod's centre in from both of the blank's faces at its corner. The fourth is 3 mm further in on both: there it lets the ball-nose finish the flute where a finger goes, which at 4 it could not
 CLEAR = 1.0                     # no cut comes nearer a rod than this, nor nearer a finger in the second stage
-TAB = 4.0                       # the wood left from each rod to the tile in the first stage, wide
+TAB = 6.0                       # the wood left from each rod to the tile in the first stage, wide. It was 4: the four of a piece, taken alone with no clamp, were then at what wood takes across its grain; at 6 they are at half of it, for nine more runs
 WALL = 1.0                      # a finger's printed wall round its rod, at least
 FIT = 0.15                      # a finger stands this far off the finished edge it bears on
 NUT = 6.35 / math.sqrt(3.0)     # a small-pattern #6-32 hex nut, 1/4 in across its flats: its corners' radius, 3.67
@@ -451,3 +451,59 @@ def offset(outline, by):
     ns = P.normals(outline)
     moved = [(q[0] + by * n[0], q[1] + by * n[1]) for q, n in zip(outline, ns)]
     return [q for q in moved if abs(near_edge(q, outline) - by) < 0.02]
+
+
+# -- what holds a piece ---------------------------------------------------------------------------------------
+
+def plate_spring(span, wide, thick, modulus):
+    """How far the middle of a plate held at its rods moves for a newton pushed on its middle, mm: taken as a beam
+    `span` long between the rods, `wide` across and `thick`, simply held at its ends. An estimate, and a rough one."""
+    return span ** 3 / (48.0 * modulus * wide * thick ** 3 / 12.0)
+
+
+def tab_frame(rod_centres, tab_ends, wide, thick, loads):
+    """The four tabs of one piece taken together, the rods' clamp left out: the tile is rigid, each tab a beam built
+    into it and pinned on its rod (a round rod in a round hole turns), and a cut pushes on the tile. `loads` are
+    (point, newtons): where a cut pushes and how hard. The push is tried in 24 directions and the worst kept.
+    Returns the highest stress in any tab, pull or push along it and bending together, in MPa, and which load it is.
+    Every tab is taken to be as stiff along and across as every other, whatever its grain: the sharing of the load
+    between them is the roughest part of this."""
+    area, inertia, modulus_s = wide * thick, thick * wide ** 3 / 12.0, thick * wide ** 2 / 6.0
+    tabs = []
+    for c, e in zip(rod_centres, tab_ends):
+        ln = max(1.0, math.dist(c, e) - 0.5)                # to the tile's edge: its end is drawn half a millimetre inside
+        a = ((e[0] - c[0]) / math.dist(c, e), (e[1] - c[1]) / math.dist(c, e))
+        tabs.append({"c": c, "a": a, "n": (-a[1], a[0]), "ka": area / ln, "kn": 3.0 * inertia / ln ** 3, "L": ln})
+    # The tile's three freedoms, (ux, uy, turn): a tab pulls back at its pin with ka along it and kn across.
+    k = [[0.0] * 3 for _ in range(3)]
+    for t in tabs:
+        for vec, stiff in ((t["a"], t["ka"]), (t["n"], t["kn"])):
+            row = (vec[0], vec[1], -vec[0] * t["c"][1] + vec[1] * t["c"][0])     # that direction's movement at the pin, per freedom
+            for i in range(3):
+                for j in range(3):
+                    k[i][j] += stiff * row[i] * row[j]
+
+    def solve(m, b):
+        m = [r[:] + [v] for r, v in zip(m, b)]
+        for i in range(3):
+            p = max(range(i, 3), key=lambda r: abs(m[r][i]))
+            m[i], m[p] = m[p], m[i]
+            for r in range(3):
+                if r != i:
+                    f = m[r][i] / m[i][i]
+                    m[r] = [x - f * y for x, y in zip(m[r], m[i])]
+        return [m[i][3] / m[i][i] for i in range(3)]
+
+    worst = (0.0, None)
+    for index, (p, newtons) in enumerate(loads):
+        for d in range(24):
+            f = (newtons * math.cos(d * math.pi / 12), newtons * math.sin(d * math.pi / 12))
+            u = solve(k, [f[0], f[1], p[0] * f[1] - p[1] * f[0]])
+            for t in tabs:
+                at = (u[0] - u[2] * t["c"][1], u[1] + u[2] * t["c"][0])
+                along = t["ka"] * (at[0] * t["a"][0] + at[1] * t["a"][1])
+                across = t["kn"] * (at[0] * t["n"][0] + at[1] * t["n"][1])
+                stress = abs(along) / area + abs(across) * t["L"] / modulus_s
+                if stress > worst[0]:
+                    worst = (stress, index)
+    return worst

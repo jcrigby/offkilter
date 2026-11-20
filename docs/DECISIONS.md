@@ -2772,7 +2772,8 @@ so that every edge is reached.
 - **A first try cut the rods free.** It kept every cut off the rods
   and nowhere else, and three of the four ended on islands of wood
   joined to nothing: a rod that holds nothing. The owner saw it in
-  the picture. So the first stage leaves a tab, a 4 mm strip of wood
+  the picture. So the first stage leaves a tab, a strip of wood (4 mm
+  at first, 6 since the holding model below)
   from each rod to the tile, chosen of the straight runs to the edge
   as the one that keeps back the fewest finishing passes. Roughing
   goes as deep as it can short of the rods and tabs, finishing passes
@@ -2815,7 +2816,7 @@ so that every edge is reached.
 - **Two tables, not one.** The stages are the sled's own cuts, never
   moved: a cut goes into one stage or the other, and a roughing place
   can be made shallower in the first and to its depth in the second.
-  795 runs where the stick takes 573, and 3 h 27 min by the
+  804 runs where the stick takes 573, and 3 h 29 min by the
   controller's own program where the stick takes 2 h 37 min. Each
   stage is written as the controller's `passes.csv` is: loading, the
   bits set on the master, the looks for the wheel's mark, and a move
@@ -2828,4 +2829,82 @@ so that every edge is reached.
   its own blank and order. Here a finishing pass can meet more wood,
   where roughing stopped short of a rod, so every bite is put through
   the same estimate and a pass that fails is made in one bite more
-  until it passes. Eight runs come of it.
+  until it passes. Eleven runs come of it.
+
+## 2026-11 · Nothing ground on the rods: clamp collars, and a plain end in a hole
+
+The stick sled's rods are hardened linear shaft, and as first drawn
+they wanted grinding three times: three flats for a point on the tail
+spindle, a flat under the disc hub's set screws, and a roughened end
+for the socket's epoxy. The owner cannot grind hardened rod.
+
+- **What has to grip, clamps.** Every joint from the wheel to the
+  wood must hold, and the controller's look for the wheel's mark sees
+  only as far as the disc, so a slip at the disc's hub or at the
+  socket goes unseen. Both are now a face-mount clamp collar (one
+  piece, split, tapped holes in its face; Ruland FHT-MCL-12-F, 28
+  across and 11 wide), the disc and the socket bolted to a collar's
+  face. A clamp grips a round rod all the way round. Set screws on a
+  round hardened rod lost: their points do not bite it. Epoxy on a
+  smooth hardened rod would likely have held the 0.4 N m by area
+  alone, but its failure is sudden and unseen, and the owner wanted a
+  shape for it to key on, which a collar is. A collar can also be let
+  go and set again.
+- **What need not grip, sits.** The tail spindle only centres the
+  stick and takes the jack screws' push, and it runs in its own
+  bearings. Its plain end sits 8 mm into a 12 mm hole in the stick's
+  end. A printed cup on the rod's end lost: between passes the bit
+  waits 8.8 mm from the stick's end, beside the bare rod it is set
+  against, and a cup would be in its way. So the hole is in the wood.
+- **Two jack screws.** One on the axis would push squarely, but the
+  rod is there. Two, 19 mm either side along the blank's long side,
+  turned alike. They now only seat the stick on the tail spindle:
+  with no point to sink there is nothing to drive in, and less push
+  is less for the pillow blocks' set screws, which hold a round rod
+  endways, to resist.
+- **The layout did not move.** The socket's collar took the place of
+  its boss and the disc's collar of its hub, with the room left over
+  for a key at each collar's screw, so no other part of the sled
+  changed place and the tables are the same rows.
+
+## 2026-11 · The billet's clamp goes down the middle, and the tabs stand behind it
+
+Asked whether the tabs were strong enough, the first answer (one
+tab, a straight pull, a third of the wood's strength) was wrong three
+ways: a tab bends, one tab of the four always lies across the grain,
+and the rods' clamp, which was said to hold a piece, squeezes the
+stack only at its corners, where the tile is not.
+
+- **Springy cauls, the owner's idea.** The far plate's inner face is
+  crowned: a disc 19 mm across, inside the tile, 0.3 mm proud. The
+  cap has a disc of paper. Tightening the nuts until the plate's
+  corners meet the stack bends the plate 0.4 mm, and that bend pushes
+  an estimated 248 N down the middle. A crown the tile's own shape
+  lost: it comes within 2 mm of a rod, where the plate cannot bend,
+  so nothing would spring and the corners would never close. A thick
+  rigid shim on the cap lost for the same reason; the cap is too
+  stiff to bend, so its crown is a sheet of paper.
+- **The clamp holds; the tabs are behind it.** Friction at 0.3 on a
+  piece's two faces holds the heaviest first-stage cut 10 times over
+  as a push and 2.5 as a turning, the turning taken at an end piece
+  where the push is over the disc only. The build stops under 2. At a
+  crown of 0.2 it was 1.9.
+- **The tabs as a frame.** The tile rigid, each tab a beam built into
+  it and pinned on its rod, each cut's whole push on one piece in the
+  worst of 24 directions. At 4 mm wide the worst tab was at 4.5 MPa
+  against 4 across the grain; at 6 it is at 2.0, for nine more runs.
+  A piece held only so can still shift by the rods' slack in their
+  holes, 0.08 mm, which is why the clamp is the design and the tabs
+  the reserve.
+- **The cap is plywood.** Cut down to the tile and four tabs, its
+  tabs carry the clamp in bending, 4.8 MPa: more than a solid block
+  takes across its grain, and a sixth of what birch plywood does.
+- **The comb's plate is flat.** The owner asked for a three-sided
+  crowned caul at the tail for the second stage. Crowned, the 4 mm
+  plate was at 26 MPa, and it cannot be thicker beside the waiting
+  bit. The far plate's crown still shuts the stack, 106 N, and the
+  fingers hold a piece sideways whatever the clamp does.
+- **None of it is measured.** The print's stiffness, the friction and
+  the wood's strength are each from a table. A coupon, one piece cut
+  to the first stage's shape with a weight hung from the tile, would
+  say more than the sum does.

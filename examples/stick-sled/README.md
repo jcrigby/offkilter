@@ -1,8 +1,8 @@
 # A stick sled
 
 The leaning half-ellipse Spectre milled round one solid stick. The
-stick is held between a printed socket on a spindle and the point of
-a second, idle spindle, on a flat sled that slides on the base
+stick is held between a printed socket on a spindle and the plain end
+of a second, idle spindle, on a flat sled that slides on the base
 between two fences, and it only turns. Beside it, fixed to the base,
 lies the [two-axis router positioner](../router-positioner/) with its
 bit pointing at the stick: the positioner's X sets how deep the bit
@@ -43,8 +43,8 @@ says so.
 ![Cut across the middle of the stick, looking along it toward its far end: the positioner's box on the base, the bit reaching out of its slot to the tile's section, the sled's bottom on two slips between the fences with a lip over each of its edges, its two rails and its deck; behind them the disc and the wheel on the stick's own spindle, the wheel's rim hanging below the deck and over the sled's bottom, and the wheel's motor in the box under the deck](out/end.png)
 
 - **The stick turns and does nothing else.** Its far end sits in a
-  printed socket on a spindle; its near end is on the point of a
-  second spindle that turns with it. Every joint from the motor to
+  printed socket on a spindle; its near end has a hole that the plain
+  end of a second spindle sits in, and that spindle turns with it. Every joint from the motor to
   the tail is in [The stick's drive](#the-sticks-drive-joint-by-joint).
 - **The positioner places the bit.** It lies on its lid with its Z
   column standing up, so the bit's axis is a stick's height over the
@@ -152,7 +152,7 @@ replaces were taken to be true, and a fence is as true as it is made.
 
 | the sled drawn back, cut along the axis | the same, from the far end |
 |---|---|
-| ![From the left: the socket's boss, two pillow blocks on their riser on the deck, the hub, the disc with its neck, and the wheel on the neck's end, the spindle's rod ending inside it; under the spindle, on the end of the deck, the home sensor with the disc's fin in its slot; the wheel's rim hanging below the deck beyond the end of the sled's box, over the sled's bottom](out/index.png) | ![The sled drawn back: the wheel standing across the far end of the sled on the sled's own spindle, its motor under the deck's end with a small pulley beside the wheel; the travel's motor and screw at the other end of the base](out/home.png) |
+| ![From the left: the socket's collar, two pillow blocks on their riser on the deck, the disc's collar, the disc with its neck, and the wheel on the neck's end, the spindle's rod ending inside it; under the spindle, on the end of the deck, the home sensor with the disc's fin in its slot; the wheel's rim hanging below the deck beyond the end of the sled's box, over the sled's bottom](out/index.png) | ![The sled drawn back: the wheel standing across the far end of the sled on the sled's own spindle, its motor under the deck's end with a small pulley beside the wheel; the travel's motor and screw at the other end of the base](out/home.png) |
 
 The owner's idea, in two steps. A wheel that stays at the end of the
 base can be far larger than one a sled carries, and where it is too
@@ -196,9 +196,9 @@ worked it are not needed. On the sled it does not even need the slot.
   given. Thirty has 7.4. The stick's step is 0.0094°, 38 400 to a
   turn. Half a degree is not a whole number of those, so an angle can
   be half a step out: 0.0024 mm at the tile's edge.
-- **The disc** is between the hub and the wheel: 176 across and 8
+- **The disc** is between its clamp collar and the wheel: 176 across and 8
   thick, printed in one with a neck 60 across and 9 long toward the
-  wheel. It is bolted to the hub's flange. The wheel is screwed to
+  wheel. It is bolted to the collar's face. The wheel is screwed to
   the neck's end by four screws on a 44 mm circle, through slack
   holes, so the disc and then the wheel are each trued under an
   indicator by their own rims. The disc carries the home flag, is
@@ -344,12 +344,12 @@ thing stands on:
 
 | | what | carried by |
 |---|---|---|
-| tail spindle | a 12 mm ground rod 91 long, a three-flat point on its end, bare for 26 mm beside the stick: the master | two KP001 pillow blocks, 44 mm between centres, bolted down on a riser |
-| the stick | the blank, 49 x 42 x 200 | the tail's point at one end, the socket at the other |
-| socket | printed, epoxied on the spindle's end | the spindle |
+| tail spindle | a 12 mm ground rod 99 long, its plain end 8 mm into a hole in the stick's end, bare for 26 mm beside the stick: the master | two KP001 pillow blocks, 44 mm between centres, bolted down on a riser |
+| the stick | the blank, 49 x 42 x 200 | the tail spindle's end at one end, the socket at the other |
+| socket | printed, bolted to the face of a clamp collar on the spindle's end | the spindle |
 | spindle | a 12 mm ground rod 148 long | two KP001 pillow blocks, 58 mm between centres, bolted down on a second riser |
 | *the sled's box ends here; its bottom goes on under what follows* | | |
-| hub, disc, wheel | on the spindle's far end; the wheel's middle is 44 mm out from the last block | the spindle |
+| collar, disc, wheel | on the spindle's far end; the wheel's middle is 44 mm out from the last block | the spindle |
 
 From the base up to the axis on the sled:
 
@@ -366,7 +366,7 @@ From the base up to the axis on the sled:
 - **Pillow blocks on the sled.** The two spindles used to run in
   flange bearings on the faces of four thin uprights stood on their
   ends on the deck. A push along the rod, which is what the socket's
-  jack screw makes, bent those uprights at glue lines 50 x 19 mm: by
+  jack screws make, bent those uprights at glue lines 50 x 19 mm: by
   my estimate 1.4 MPa for 200 N. A pillow block bolts down on a flat,
   so each pair now stands on one solid block glued face down, and the
   same push is 0.04 MPa of shear. There is nothing to stand square
@@ -395,7 +395,7 @@ From the base up to the axis on the sled:
 
 | the sled's far end, cut along the stick's axis | the tail end, where the bit waits |
 |---|---|
-| ![From the left: the stick's uncut end in the socket's pocket with room behind it, the socket's boss with the rod in it, two pillow blocks on their riser, the hub, the disc with its neck and the wheel on the neck's end, the rod ending inside the wheel; under the spindle, the home sensor on the end of the deck](out/drive.png) | ![From the left: the tail spindle's rod through two pillow blocks on their riser, bare for 26 mm, and its end at the stick's end](out/tail.png) |
+| ![From the left: the stick's uncut end in the socket's pocket with room behind it, the socket's collar with the rod in it, two pillow blocks on their riser, the disc's collar, the disc with its neck and the wheel on the neck's end, the rod ending inside the wheel; under the spindle, the home sensor on the end of the deck](out/drive.png) | ![From the left: the tail spindle's rod through two pillow blocks on their riser, bare for 26 mm, and its end 8 mm into the stick's end](out/tail.png) |
 
 From the motor to the far end of the stick, what each part is joined
 to the next by:
@@ -405,12 +405,12 @@ to the next by:
 | motor, a NEMA 17 on a bracket on the sled's bottom, in the sled's box | its pulley, 30 teeth | the pulley's two set screws, one on the shaft's flat |
 | pulley | wheel, 360 teeth, printed | a closed GT2 belt of 760 mm, 7.4 of the pulley's teeth in it. The bracket's slots tension it. Motor and wheel are both on the sled, so the belt's pull stays inside it |
 | wheel | the disc's neck | four screws on a 44 mm circle, through slack holes, into inserts in the neck's end. The wheel's own bore is 13 and does not touch the rod |
-| disc, printed in one with its neck and the home fin | its hub | four M4 bolts through slack holes into the flange of a bought 12 mm hub on the disc's inner face, its boss toward the headstock where a key reaches its set screws |
-| hub | spindle, a 12 mm ground rod | the hub's set screws, on a flat ground on the rod |
+| disc, printed in one with its neck and the home fin | its collar | four M4 bolts through slack holes into the tapped face of a bought clamp collar on the disc's inner face, 8 mm clear of the box's end so a key reaches its screw |
+| collar | spindle, a 12 mm ground rod | the collar's clamp: one piece, split, a screw across the split. It grips the round rod as it is |
 | spindle | headstock | two KP001 pillow blocks bolted down on a riser. Their set screws hold the rod endways. No plywood is bored to a fit |
-| spindle | socket, printed | the rod's end, roughened, epoxied 22 mm into the socket's boss |
-| socket | stick | a pocket the blank's end stands 12 mm into, 0.3 mm slack all round, with two screws: one through the floor that jacks the blank toward the tail, one through a wall that locks it against the wall opposite |
-| stick | tail spindle | a point of three flats ground on the end of a second length of the rod |
+| spindle | socket, printed | a second clamp collar on the rod's end, the socket's floor bolted to its face by flat-head M4 screws from inside the pocket |
+| socket | stick | a pocket the blank's end stands 12 mm into, 0.3 mm slack all round, with three screws: two through the floor, 19 mm either side of the axis, that jack the blank toward the tail, and one through a wall that locks it against the wall opposite |
+| stick | tail spindle | a 12 mm hole 8 deep in the stick's end, on its centre mark, that the plain end of a second length of the rod sits in. This joint only centres and pushes: it need not grip |
 | tail spindle | tailstock | two more KP001 on a second riser. The rod is bare for 26 mm between the inner one and the stick, and that is the master a bit is set against |
 | disc | controller | a fin on the disc's inner face, 54 mm from the axis, through an optical endstop on the end of the deck once a turn |
 | sled | base | the screw's flanged nut, on a block on the sled's bottom; the screw, in a rigid coupler on a NEMA 17 on the base |
@@ -424,33 +424,51 @@ cannot be where the bit comes onto the stick, so the bit waits at the
 tail and each pass stops before the socket: 21 mm of every stick is
 not cut.
 
-To buy: four KP001 pillow blocks, a 12 mm flanged hub, a 30-tooth GT2
+To buy: four KP001 pillow blocks, two face-mount clamp collars for a
+12 mm shaft (Ruland FHT-MCL-12-F or its like: 28 across, 11 wide,
+tapped holes in the face), a 30-tooth GT2
 pulley of 5 mm bore, a 760 mm closed GT2 belt, an optical endstop,
-12 mm ground rod for lengths of 148 and 91 mm, two NEMA 17 motors
+12 mm ground rod for lengths of 148 and 99 mm, two NEMA 17 motors
 with their angle brackets (one more motor than the last machine had,
 and a fourth driver for it), a T8 lead screw 250 long of 8 mm a turn
 with its flanged nut, a rigid coupler from 5 mm to 8, a lever
-microswitch for the travel's home, two M5 set screws and inserts for
-the socket, four inserts for the disc's neck, two M6 spring plungers
-and inserts for the sled, epoxy. The sizes in `build.py` are the
+microswitch for the travel's home, three M5 set screws and inserts for
+the socket and flat-head M4 screws to bolt it to its collar, four inserts for the disc's neck, two M6 spring plungers
+and inserts for the sled. The sizes in `build.py` are the
 catalogue's: measure the ones that come before drilling for them. To
-make: the printed wheel, disc and socket, a flat on each rod for its
-hub, and three flats for the tail's point.
+make: the printed wheel, disc and socket. Nothing is ground on
+either rod: a hardened rod is used as it is bought, cut to length
+with an abrasive wheel, or bought cut.
 
-- **Gluing the socket on.** Which way round it is on the rod is which
-  way round the blank is to the controller, so glue it with the
-  spindle where the table's first row puts it: run that row, turn the
-  socket until a wide wall of its pocket lies flat on a block stood
-  on the deck, and leave it there while the epoxy sets.
+**Why collars.** Every joint from the wheel to the wood has to hold
+without slipping, and the controller's look for the wheel's mark
+sees only as far as the disc: a slip at the disc's collar, at the
+socket's, or in the socket goes unseen. The first design put set
+screws on ground flats and epoxied the socket on. The owner cannot
+grind hardened rod, and a clamp collar wants nothing ground: it
+grips the round rod all the way round, many times harder than the
+0.4 N m the heaviest cut turns the stick with. The tail end is the
+other way about. It only centres and pushes, so a plain end in a
+hole does.
+
+- **Clamping the socket on.** Which way round it is on the rod is
+  which way round the blank is to the controller, so clamp it with
+  the spindle where the table's first row puts it: run that row, turn
+  the socket until a wide wall of its pocket lies flat on a block
+  stood on the deck, and tighten the collar's screw. It can be let go
+  and set again.
 - **Putting a blank on.** Mark the tail end's centre, 19.5 mm from one
-  wide face and 24.8 from one narrow face. Push the other end into
-  the socket as far as it goes, bring the mark to the tail spindle's
-  point, turn the jack screw until the point is 2 or 3 mm into the
-  wood, then tighten the lock screw. Before the jack screw, turn the
-  tail spindle so the line scribed on it is uppermost: the master's
-  runout was measured that way round.
-- **The tail spindle turns with the stick,** which is why its point
-  has flats. It is the master, and the half turn that finds its
+  wide face and 24.8 from one narrow face, and drill a 12 mm hole
+  8 mm deep there. Push the other end into the socket as far as it
+  goes, bring the hole to the tail spindle's end, and turn the two
+  jack screws by turns, the same amount each, until the rod is on the
+  bottom of the hole and the blank is snug: no more than that, since
+  it is the pillow blocks' set screws on round rod that push back.
+  Then tighten the lock screw. Before the jack screws, turn the tail
+  spindle so the line scribed on it is uppermost: the master's runout
+  was measured that way round.
+- **The tail spindle turns with the stick,** carried round in its own
+  bearings by the stick's end on it. It is the master, and the half turn that finds its
   runout is the motor's, through the wheel and the stick.
 - **Truing the disc, and then the wheel.** Snug the disc's four
   bolts, hold a dial indicator on its rim, turn it, and tap it until
@@ -699,13 +717,13 @@ Four things on this machine are trusted and not proven: that the sled
 does not lose steps; that nothing slips between the wheel's motor and
 the stick; that the belt holds the stick as stiffly as the bites were
 sized for; and that the pillow blocks' set screws, which are all that
-stops a rod sliding endways, hold against the socket's jack screw.
+stops a rod sliding endways, hold against the socket's jack screws.
 The precheck tries all four before anything is cut, so that the
 machine can be put right first.
 
 It wants callipers and a weight of 2 kg that hangs within 150 mm: two
 1 kg bags on their sides in a carrier will do. Router off, **no bit
-in the collet**, a scrap blank on with its jack screw as tight as for
+in the collet**, a scrap blank on with its jack screws as tight as for
 a cut. Copy `out/precheck.csv` to the Pico as `passes.csv`.
 
 1. With the callipers' depth rod, measure how far the tail rod's end
@@ -746,7 +764,7 @@ stiff it reads 586, does not pass, and says to feed at 10 mm a second.
 
 What it cannot try. The weight hangs, so it turns the stick one way
 only: the wheel's motor is under the disc's other side. Nothing is
-cut, so the rods are pushed by the jack screw and not shaken by a
+cut, so the rods are pushed by the jack screws and not shaken by a
 cut: that is why the rod's end is measured once more after the trial
 stick. And the bit's own bending is not in it at all.
 
@@ -866,10 +884,11 @@ If all of that is right, the next stick can be a real one.
 | the belt | a closed GT2 of 760 mm, 380 teeth | anything from 738 to 774 mm fits: the slots take up a tooth or two, and for more the bracket is screwed down somewhere else on the sled's bottom |
 | whether the belt holds the stick | estimated: the tile's edge moves 0.009 mm at the heaviest cut | the precheck hangs a weight on the disc and reads how stiffly the stick is really held: see [The precheck](#0-the-precheck-outprecheckcsv) |
 | whether the set screws hold the rods endways | trusted: nothing but a pillow block's two set screws stops a rod sliding | the precheck has the tail rod's end measured before and after: the same link |
-| the two rods | 12 mm ground rod: 148 long for the sled's spindle, 91 for the tail | linear shaft or drill rod. Nothing on it is threaded. On a hardened shaft the flats are ground, not filed |
+| the two rods | 12 mm ground rod: 148 long for the sled's spindle, 99 for the tail | linear shaft, hardened, as bought. Nothing on it is threaded and nothing ground |
+| whether the tail spindle turns with the stick | trusted: its end sits in a hole in the stick and nothing grips it | put a mark on the rod and on the stick and look after a few dry passes. If it creeps, a drop of glue or a tighter hole: the master's runout is measured with it turning |
 | the travel's screw | a T8 of four starts, 8 mm a turn, 250 long | lead screws are sold with 2, 4 and 8 mm a turn under one name: `TRAVEL_STEPS_PER_MM` is 800 over what this one has |
 | the four pillow blocks | KP001: the shaft's centre 19 over the foot, 71 long, 38 high, 16 along the shaft, bolts 56 apart | the 19 is a casting's, and it is the stick's height: measure all four, pair the two most alike on the tail, and shim the rest to them |
-| the bought parts | the hub's flange 36 across, bolts on a 28 circle; the nut's flange 22 across and its body 10.2; a motor's shaft 24 long | catalogue sizes, and makers differ: measure before drilling, and before printing the bolt holes in the disc. A shaft shorter than 22 mm does not reach the wheel's plane: move the bracket out |
+| the bought parts | the two clamp collars 28 across and 11 wide, their tapped holes where the maker's sheet says; the nut's flange 22 across and its body 10.2; a motor's shaft 24 long | catalogue sizes, and makers differ: measure before drilling, and before printing the bolt holes in the disc and the socket. A shaft shorter than 22 mm does not reach the wheel's plane: move the bracket out |
 | the blank's end in the socket | 49 x 42 with 0.3 mm all round | saw and plane the blanks to one size and print the pocket to that; the lock screw takes up what is left |
 
 ## Parts
@@ -883,10 +902,11 @@ If all of that is right, the next stick can be a real one.
 | sled's bottom | 465 x 211, 3/4 in ply | between the fences; two M6 spring plungers in its near edge |
 | sled's box | two rails 413 x 66 on edge and a deck 413 x 208, 3/4 in ply | on the bottom, 12 mm in from its far edge; the near rail 9 in from the near edge, the deck 18 out over it; the bottom 52 longer at the far end |
 | tailstock, headstock | each a riser of two 1/2 in layers, 76 wide: 69 long for the tail, 76 for the head | glued face down on the deck; two KP001 pillow blocks bolted down on each |
-| tail spindle | 12 mm ground rod, 91 long | a three-flat point on its end; 26 mm bare as the master |
-| spindle | 12 mm ground rod, 148 long | its end in the socket's boss; the hub, the disc and the wheel outboard, the rod ending inside the wheel |
-| blank socket | printed, 58 x 51 x 26 with a boss 26 across and 22 long | a pocket 20 deep for the blank's end; a jack screw in its floor, a lock screw in a wall |
-| disc | printed in one: 176 across and 8 thick, a neck 60 across and 9 long, a fin 12 long on its inner face, bore 13 | on a 12 mm flanged hub, trued by its rim |
+| tail spindle | 12 mm ground rod, 99 long | its plain end 8 mm into the stick; 26 mm bare as the master |
+| spindle | 12 mm ground rod, 148 long | its end in the socket's collar; the disc's collar, the disc and the wheel outboard, the rod ending inside the wheel |
+| blank socket | printed, 58 x 51 x 26 | a pocket 20 deep for the blank's end; two jack screws in its floor, a lock screw in a wall; bolted to its collar |
+| two clamp collars | bought: 12 bore, 28 across, 11 wide, face-mount | one on the rod's end behind the socket, one on the disc's inner face |
+| disc | printed in one: 176 across and 8 thick, a neck 60 across and 9 long, a fin 12 long on its inner face, bore 13 | on its clamp collar, trued by its rim |
 | wheel | printed: 360 teeth, 232 across, 12 wide, bore 13 | on the end of the disc's neck, four screws on a 44 circle, trued by its own rim |
 | wheel's motor | a NEMA 17 on its angle bracket, a 30-tooth pulley, a 760 mm closed belt | in the sled's box at its far end, the bracket's foot on the sled's bottom, slotted across the sled |
 | home sensor | an optical endstop | on the end of the deck, under the spindle, facing the disc |
@@ -981,16 +1001,17 @@ written a second time, in Rust, and works every row forward:
 - the stick's drive, from the motor to the tail spindle: 7.4 of the
   pulley's teeth in the belt, where a pulley of 20 would have under
   six, and the controller's steps for a turn the two pulleys' ratio;
-  the hub on the disc's inner face, the disc's neck against the
+  the collar on the disc's inner face, the disc's neck against the
   wheel, and the rod ending inside the wheel; the motor in the sled's
   box, between the rails and under the deck, the belt's length from
   the spindle, its shaft no longer than a NEMA 17's and its bracket
   clear of the disc; each pillow block standing on its riser inside
   the riser's edges, the shaft's centre 19 mm over its foot, and each
   riser a solid block on the deck; the rod its whole length, its end
-  in the socket's boss; the socket's pocket round the blank's end
+  in the socket's collar; two jack screws either side of the axis,
+  outside the collar and on the blank's end; the socket's pocket round the blank's end
   with its fit, holding it across, and its corners clear of the plate
-  and the positioner as it turns; the tail spindle's end at the
+  and the positioner as it turns; the tail spindle's plain end in a hole in the
   stick's end, bare where the bit is set; the sensor on the end of
   the deck with the disc's fin in its slot, and homing ending on the
   same edge of the fin from nine places;

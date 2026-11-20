@@ -9,8 +9,8 @@ Writes out/billet.gif and seven stills (out/billet_1.png to
 billet_7.png), one for each step:
 
 1. the pieces sawn, 55 x 48 and 3 mm, a wood each if the owner likes;
-2. drilled in the jig: four holes outside the tile, and the tail
-   centre's mark on the cap;
+2. drilled in the jig: four holes outside the tile, and in the cap
+   a socket for the tail spindle's plain end;
 3. stacked on the four rods, seen from the side: the cap, the pieces
    one by one, the spacer and the far plate, the rods going in and the
    nuts going on;
@@ -133,7 +133,7 @@ def main():
     for k, c in enumerate(rods1):
         holes.append(disc(c, b["piece"]["hole"] / 2, HOLE, "#555555"))
         frames.append({"draw": jig + holes + [disc(c, 2.6, "#94a3b8", "#334155")] + caption(two, (f"HOLE {k + 1} OF 4, A #27 DRILL",)), "ms": STEP_MS * 3, "turn": lies})
-    frames.append({"draw": jig + holes + [disc((0.0, 0.0), 0.9, "#334155")] + caption(two, ("AND ON THE CAP, AN AWL", "WHERE THE TAIL CENTRE GOES")), "ms": PAUSE // 2, "turn": lies})
+    frames.append({"draw": jig + holes + [disc((0.0, 0.0), b["tail"]["hole"] / 2, HOLE, "#555555")] + caption(two, ("AND IN THE CAP, A 12 MM", "SOCKET FOR THE TAIL ROD")), "ms": PAUSE // 2, "turn": lies})
     still_2 = len(frames) - 1
 
     # -- 3: stacked, seen from the side ------------------------------------------
@@ -182,7 +182,7 @@ def main():
     for s in range(1, 9):
         frames.append({"draw": [cover] + whole + rods_side(rod_x[1] - (rod_x[1] - rod_x[0]) * s / 8, rod_x[1], rods1) + caption(three, ("FOUR #6-32 BRASS RODS",)), "ms": STEP_MS, "turn": lies})
     nuts = [rect(lay["boss"][0], lay["boss"][0] + 2.4, height(c) - 1.4, height(c) + 1.4, BRASS, BRASS_EDGE, 0.6) for c in rods1]
-    frames.append({"draw": [cover] + whole + rods_side(*rod_x, rods1) + nuts + caption(three, ("NUTS IN THE PLATE'S NOTCHES", "AND THE STACK IS ONE BILLET")), "ms": PAUSE, "turn": lies})
+    frames.append({"draw": [cover] + whole + rods_side(*rod_x, rods1) + nuts + caption(three, ("NUTS DOWN: THE CROWNED PLATE", "CLAMPS THE STACK'S MIDDLE")), "ms": PAUSE, "turn": lies})
     still_3 = len(frames) - 1
 
     # -- 4 to 6: the two stages on the sled, one book of passes -------------------

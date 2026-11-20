@@ -991,7 +991,10 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
     let stick = bodies_of(&mut doc, "Stick").remove(0);
     // milled as far as the bit reaches, and still the blank from there into the socket
     let (cut_to, size) = (f(&s["cut_to"]), pair(&n["blank"]["size"]));
-    let expect = f(&n["tile"]["area"]) * cut_to + size.0 * size.1 * (f(&n["stick"]) - cut_to);
+    // less the hole in its tail end that the tail spindle's plain end sits in
+    let (tail_in, tail_hole) = (f(&s["tail_in"]), f(&s["tail_hole"]));
+    let expect = f(&n["tile"]["area"]) * cut_to + size.0 * size.1 * (f(&n["stick"]) - cut_to)
+        - PI * tail_hole * tail_hole / 4.0 * tail_in;
     assert!((stick.volume() - expect).abs() < 0.002 * expect);
     // the bit: its tip where the row has it from the stick's axis, level with the row's height
     let bit = bodies_of(&mut doc, "Bit").remove(0);
@@ -1072,6 +1075,7 @@ fn the_model_is_the_sled_at_one_row_with_the_bit_on_the_stick() {
         "Head bearings KP001",
         "Spindle",
         "Blank socket",
+        "Socket collar",
         "Wheel hub",
         "Disc",
         "Index wheel",
@@ -1283,13 +1287,16 @@ fn the_blank_is_a_rectangle_about_the_tile_and_goes_on_a_wide_face_down() {
 /// the next by something drawn. The belt has six teeth of the motor's
 /// pulley in it and more; the motor is in the sled's box, its shaft out
 /// past the box's end to the pulley; the wheel is screwed to the neck
-/// of a disc, the disc bolted to a hub on the sled's own spindle; that
-/// spindle runs in two pillow blocks bolted down on a riser on the
-/// sled's deck; its end is in the boss of a printed socket whose pocket
-/// holds the blank's end by its flats; the other end of the stick is on
-/// the point of a second rod in two more pillow blocks, bare where the
-/// bit is set against it; and a fin on the disc passes through a sensor
-/// on the end of the deck once a turn.
+/// of a disc, the disc bolted to the face of a clamp collar on the
+/// sled's own spindle; that spindle runs in two pillow blocks bolted
+/// down on a riser on the sled's deck; its end is in a second clamp
+/// collar that a printed socket is bolted to, whose pocket holds the
+/// blank's end by its flats, with two jack screws through its floor
+/// either side of the axis; the other end of the stick has a hole that
+/// the plain end of a second rod sits in, a rod in two more pillow
+/// blocks, bare where the bit is set against it; and a fin on the disc
+/// passes through a sensor on the end of the deck once a turn. Nothing
+/// is ground on either rod.
 #[test]
 fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     let n = numbers();
@@ -1318,8 +1325,8 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     // a pulley of 20 teeth, as the wheel had while its motor stood further off, would have too few in the belt here
     let small20 = 20.0 * 2.0 / PI;
     assert!(20.0 * (PI - 2.0 * ((big - small20) / 2.0 / c).asin()) / (2.0 * PI) < 6.0);
-    // On the sled, from the stick outward: socket, two bearings, the hub, the disc, its neck, the wheel. The rod
-    // is whole from the bottom of the socket's boss to inside the wheel.
+    // On the sled, from the stick outward: socket, its collar, two bearings, the disc's collar, the disc, its neck,
+    // the wheel. The rod is whole from the back of the socket's floor to inside the wheel.
     let spindle = bodies_of(&mut doc, "Spindle");
     assert_eq!(spindle.len(), 1);
     let (rod, rod_x) = (x_of(&spindle[0]), pair(&s["rod_x"]));
@@ -1333,8 +1340,12 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     let head_riser = pair(&s["head_riser_x"]);
     assert!(
         (hub.1 - disc_x.0).abs() < 1e-6 && hub.0 > head_riser.1,
-        "the hub is on the disc's inner face, its boss clear of the headstock"
+        "the collar is on the disc's inner face, clear of the headstock"
     );
+    // both collars are the one bought part, a clamp on a round rod: as wide as it is, bored for the rod
+    let collar = pair(&s["collar"]);
+    assert!((hub.1 - hub.0 - collar.1).abs() < 1e-6 && (f(&t["hub"][0]) - collar.0).abs() < 1e-9);
+    assert!(hub.0 - f(&s["box_x"][1]) >= 6.0, "a key reaches its screw");
     let fin_l = f(&t["fin_l"]);
     let disc = bodies_of(&mut doc, "Disc").remove(0);
     let disc_b = disc.bounds().unwrap();
@@ -1482,22 +1493,71 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
     let bearings = on_blocks("Head bearings KP001", "Headstock", &s["head_pb_x"]);
     let tail_bearings = on_blocks("Tail bearings KP001", "Tailstock", &s["tail_pb_x"]);
     assert!(bearings[0].0 > rod.0 && bearings[1].1 < hub.0 && bearings[1].1 <= head_riser.1 + 1e-6);
-    // The socket: its boss on the rod's end, its pocket round the stick's end with room behind it to push the blank
-    // in further, and a fit loose enough to go on by hand. Turning, its corners clear the plate and the positioner.
+    // The socket: its floor on the face of a collar clamped on the rod's end, its pocket round the stick's end with
+    // room behind it to push the blank in further, and a fit loose enough to go on by hand. Turning, its corners
+    // clear the plate and the positioner.
     let socket = &s["socket"];
     let body = bodies_of(&mut doc, "Blank socket").remove(0);
     let (lo, hi) = body.bounds().unwrap();
     let (pocket, boss) = (pair(&socket["x"]), pair(&socket["boss_x"]));
-    assert!((lo.x - pocket.0).abs() < 1e-6 && (hi.x - boss.1).abs() < 1e-6);
+    assert!((lo.x - pocket.0).abs() < 1e-6 && (hi.x - boss.0).abs() < 1e-6);
+    let grip = bodies_of(&mut doc, "Socket collar").remove(0);
+    let (g_lo, g_hi) = grip.bounds().unwrap();
     assert!(
-        (boss.0 - rod.0).abs() < 1e-6 && boss.1 < bearings[0].0,
-        "the rod is in the boss"
+        (g_lo.x - boss.0).abs() < 1e-6
+            && (g_hi.x - boss.1).abs() < 1e-6
+            && (boss.0 - rod.0).abs() < 1e-6,
+        "the collar is on the rod's end, against the socket's floor"
     );
+    assert!((boss.1 - boss.0 - collar.1).abs() < 1e-9 && (g_hi.z - g_lo.z - collar.0).abs() < 0.1);
     assert!(
-        boss.1 - boss.0 >= 1.5 * rod_d,
-        "the rod is {} into the boss",
-        boss.1 - boss.0
+        bearings[0].0 - boss.1 >= 10.0,
+        "a key reaches the collar's screw: {} to the headstock's block",
+        bearings[0].0 - boss.1
     );
+    assert!(overlap(&grip, &spindle[0]) < 1e-6 && overlap(&grip, &body) < 1e-6);
+    // two jack screws through the floor, either side of the axis and as far from it, outside the collar and on
+    // the blank's end; and a lock screw's way through a wall, beside what of the blank is in the pocket
+    let jack = pair(&socket["jack"]);
+    let at: Vec<P2> = socket["jack_at"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(pair)
+        .collect();
+    assert_eq!(at.len(), 2);
+    for q in &at {
+        assert!((q.0.hypot(q.1 - za) - jack.0).abs() < 1e-6);
+    }
+    assert!((at[0].0 + at[1].0).abs() < 1e-6 && (at[0].1 + at[1].1 - 2.0 * za).abs() < 1e-6);
+    assert!(jack.0 - f(&socket["jack_hole"]) / 2.0 >= collar.0 / 2.0 + 1.0);
+    assert!(f(&socket["jack_land"]) >= jack.1 / 2.0 + 1.0);
+    // the floor is whole but for those two holes: cut across, it has the pocket's area more than the walls have,
+    // less the holes
+    let slice = |x0: f64, x1: f64| {
+        let profile = ok_sketch::Profile {
+            outer: ok_sketch::Loop::polygon(vec![
+                ok_math::Vec2::new(lo.y - 1.0, lo.z - 1.0),
+                ok_math::Vec2::new(hi.y + 1.0, lo.z - 1.0),
+                ok_math::Vec2::new(hi.y + 1.0, hi.z + 1.0),
+                ok_math::Vec2::new(lo.y - 1.0, hi.z + 1.0),
+            ]),
+            holes: Vec::new(),
+        };
+        let slab = ok_brep::extrude(&profile, &ok_math::Plane::YZ, x0, x1, 1).unwrap();
+        overlap(&body, &slab) / (x1 - x0)
+    };
+    let (floor, walls) = (
+        slice(pocket.1 + 0.5, boss.0 - 0.5),
+        slice(pocket.0 + 1.0, pocket.0 + 2.0),
+    );
+    let size = pair(&n["blank"]["size"]);
+    let fit = f(&socket["fit"]);
+    let pocket_area = (size.0 + 2.0 * fit) * (size.1 + 2.0 * fit);
+    let holes = PI * f(&socket["jack_hole"]).powi(2) / 4.0 * 2.0;
+    println!("the socket cut across: its floor {floor:.0} mm2, its walls {walls:.0}; the pocket {pocket_area:.0}, two jack holes {holes:.0}");
+    assert!((floor - walls - (pocket_area - holes)).abs() < 3.0);
+    assert!(f(&socket["lock_x"]) > pocket.0 && f(&socket["lock_x"]) < stick);
     assert!((stick - pocket.0 - f(&socket["in"])).abs() < 1e-9 && f(&socket["in"]) >= 10.0);
     assert!((pocket.1 - stick - f(&socket["slide"])).abs() < 1e-9 && f(&socket["slide"]) >= 5.0);
     let swing = f(&socket["swing"]);
@@ -1529,10 +1589,20 @@ fn the_stick_s_drive_is_joined_from_the_motor_to_the_tail_spindle() {
         overlap(&pushed, &body) > 1.0,
         "the pocket holds the blank across"
     );
-    // The tail spindle, where the bit waits: the same rod in two pillow blocks, its end at the stick's end, bare
-    // from its inner block to the stick. That is the master.
-    let tail = x_of(&bodies_of(&mut doc, "Tail spindle")[0]);
-    assert!(tail.1.abs() < 1e-6 && tail.0 < tail_bearings[0].0);
+    // The tail spindle, where the bit waits: the same rod in two pillow blocks, its plain end in a hole in the
+    // stick's end, bare from its inner block to the stick. That is the master.
+    let tail_rod = bodies_of(&mut doc, "Tail spindle").remove(0);
+    let tail = x_of(&tail_rod);
+    let tail_in = f(&s["tail_in"]);
+    assert!((tail.1 - tail_in).abs() < 1e-6 && tail.0 < tail_bearings[0].0);
+    assert!(
+        tail_in >= 0.5 * rod_d && f(&s["tail_hole"]) > rod_d && f(&s["tail_hole"]) < rod_d + 0.5
+    );
+    assert!(
+        overlap(&tail_rod, &wood) < 1e-6,
+        "the rod is in the stick's hole, not in its wood"
+    );
+    assert!(f(&s["tail_hole"]) / 2.0 + 2.0 <= f(&n["tile"]["circle"]));
     let master = pair(&s["master_x"]);
     assert!((master.0 - tail_bearings[1].1).abs() < 1e-6 && master.1.abs() < 1e-6);
     assert!(

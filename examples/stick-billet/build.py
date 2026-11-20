@@ -62,7 +62,7 @@ import config as FW  # noqa: E402  the controller's own
 # The pieces.
 PIECE = 3.0                     # a piece, and so a tile: 3 mm of solid wood, the owner's
 HOLE = 3.66                     # a #27 drill, 0.144 in: the rods' clearance through the pieces
-NEAR_CAP = 12.0                 # the cap at the tail end: a block of hardwood the size of a piece, which the tail centre bites into and the four rods thread into
+NEAR_CAP = 12.0                 # the cap at the tail end: 12 mm Baltic birch plywood the size of a piece. The tail spindle's plain end sits in a hole in it and the four rods thread into it. Plywood, not solid wood: once it is cut down to the tile and four tabs, its tabs carry the whole clamp in bending, and one of them would lie across a solid block's grain
 TAP = 2.71                      # a #36 drill, 0.1065 in: the #6-32 tap's
 TAP_DEEP = 10.0                 # how far the rods thread into the cap, from its inner face. Thin CA in the threads hardens them
 # The far plate, printed: the stack's end against the socket. A boss the size of the sled's own blank goes into the
@@ -74,18 +74,30 @@ NOTCH = B.NUT + 0.6             # the boss is notched this far round each corner
 # The comb, printed in one: a plate over the cap and three fingers along the grooves.
 PLATE = 4.0                     # the plate, thick
 PLATE_IN = 0.5                  # it lies over the tile this far in from the edge, and no further out: no cut goes inside the tile
-TAIL_HOLE = 14.0                # a hole in the middle for the tail spindle's 12 mm rod and its point
+PLATE_HOLE = 14.0               # a hole in the middle for the tail spindle's 12 mm rod, on its way to the cap's socket
 BAND = 1.0                      # a finger reaches this far over the tile's edge at the plate, where it joins it: twice PLATE_IN, so they overlap
 # The drilling jig, printed: a box the pieces lie in, a few at a time, and a lid that drops on them with a guide hole
-# over each rod and an awl's hole over the stick's axis for the cap.
+# over each rod and one over the stick's axis for the 12 mm drill that makes the cap's socket.
 JIG_FIT = 0.3                   # the box's pocket over a piece, all round
 JIG_WALL, JIG_FLOOR, JIG_DEEP = 5.0, 4.0, 18.0   # its walls and floor, and the pocket's depth: six pieces
 JIG_LID = 10.0                  # the lid: a plug that drops into the pocket onto the pieces
 GUIDE = HOLE + 0.1              # the lid's guide holes
-AWL = 1.6                       # the lid's hole over the stick's axis, for an awl: the tail centre's mark on the cap
+AXIS_GUIDE = 12.3               # the lid's hole over the stick's axis, a guide for a 12 mm brad-point drill: the cap's socket for the tail spindle
 JIG_UNDER = 6.0                 # the box's floor has a hole this wide under each guide, for the drill to come out into
 
 DRY = 10                        # a dry run's passes, spread through its stage's table, besides the four at the ends of the positioner's reach
+# The clamp. The rods are at the corners and the tile is in the middle, so the far plate is crowned and the cap has a
+# shim: each touches the stack over a small disc about the axis and stands off it everywhere else, and tightening the
+# nuts bends the far plate's corners down. That bend is a spring, and its push goes down the middle of the stack, through the tile of every
+# piece. The owner's idea: springy cauls.
+CROWN = 0.3                     # how far the far plate's face stands off the stack outside the disc: two printed layers of 0.15. At 0.2 the clamp held the heaviest turning 1.9 times over
+CROWN_R = 9.5                   # the disc: inside the tile everywhere, whose largest circle about the axis is 9.8
+SHIM = 0.1                      # a disc of paper glued on the cap's inner face, as wide: the cap's crown, for the first stage
+PRINT_E = 2500.0                # MPa: a printed plate's stiffness in bending, PLA or PETG, at the low end
+PRINT_OK = 20.0                 # MPa: what a printed plate may carry for hours without creeping much. A guess
+PLY_OK = 30.0                   # MPa: Baltic birch plywood in bending, either way of the sheet, well under what breaks it
+FRICTION = 0.3                  # wood on wood, at the low end
+HOLD_OVER = 2.0                 # the clamp's friction alone holds a piece against the heaviest cut this many times over, or the build stops
 ACROSS_GRAIN = 4.0              # MPa: what a hardwood takes pulled across its grain, at the low end (the Wood Handbook has sugar maple and cherry near 4, walnut 4.8, red oak 5.5)
 
 
@@ -97,6 +109,9 @@ def main():
     stock = [tuple(q) for q in n["blank"]["corners"]]
     blank = B.grown(stock, B.GROW)
     sled, ax = n["sled"], n["axes"]
+    tail_in, tail_hole = sled["tail_in"], sled["tail_hole"]         # the sled's tail spindle: its plain end, this far into a hole this wide
+    if tail_in > NEAR_CAP - 3.0 or tail_hole / 2 > CROWN_R - 2.0:
+        raise SystemExit("the tail spindle's hole leaves too little of the cap under it, or of the shim round it")
     stick, socket_in = n["stick"], sled["socket"]["in"]
     forward = sled["forward_x"]
     reach = forward + P.BIT / 2                      # the ball-nose finishes the edge this far along the stick and no further
@@ -169,6 +184,7 @@ def main():
     print("the four rods are each joined to the tile by wood after the first stage; the fingers: " +
           ", ".join(f"rod at ({f['rod'][0]:.1f}, {f['rod'][1]:.1f}) bearing on {f['bears']:.0f} mm of edge, {f['area']:.0f} mm2" for f in fingers))
 
+    rods1, rods2 = plan["rods"], [f["rod"] for f in fingers]
     # How near anything comes. A rod to the tile and to every first-stage cut; a finger's rod to its own wall; a nut.
     rod_tile = [B.near_edge(c, outline) - B.ROD / 2 for c in plan["rods"]]
     cuts1 = [dict(q, tool="straight") for q in p1] + [dict(q, tool="ball") for q in f1]
@@ -333,14 +349,66 @@ def main():
     dry1 = dry_run(t1, os.path.join(OUT, "dry1.csv"), "the billet on")
     dry2 = dry_run(t2, os.path.join(OUT, "dry2.csv"), "billet + comb on")
     print(f"a dry run before each stage, no bit in the collet: {dry1[0]} passes in {dry1[1] / 60:.0f} min, and {dry2[0]} in {dry2[1] / 60:.0f}")
-    # A tab. The rods' clamp is what holds a piece; the tabs keep the rods' wood on it. But if a piece took the
-    # heaviest push of the first stage on one tab alone, pulled across its grain: how near is that to tearing it?
+    # -- what holds a piece ------------------------------------------------------------------------------------
+    # The clamp first. Tightened until its corners meet the stack, the far plate has bent by its crown and the
+    # cap's shim together, and pushes on the middle with what that bend takes.
+    span1 = (math.dist(rods1[0], rods1[2]) + math.dist(rods1[1], rods1[3])) / 2
+    plate_t, plate_w = plate_x[1] - plate_x[0] - CROWN, 0.6 * min(math.dist(blank[0], blank[1]), math.dist(blank[0], blank[3]))
+    soft1 = B.plate_spring(span1, plate_w, plate_t, PRINT_E)
+    clamp1 = (CROWN + SHIM) / soft1
+    plate_stress1 = clamp1 * span1 / 4 / (plate_w * plate_t ** 2 / 6)
+    # The cap pushes back through its own wood: cut down to the tile and four tabs, each tab bends over its length.
+    cap_stress = max(clamp1 / 4 * math.dist(c, e) / (B.TAB * NEAR_CAP ** 2 / 6) for c, e in zip(rods1, plan["tab_ends"]))
+    # What that holds, by friction on a piece's two faces: a push, and a turning about the axis. Next to an end the
+    # push is spread over the crown's disc only, which is the least it can turn against.
+    arm = 2.0 / 3.0 * CROWN_R
     push1 = max(r["push"] for r in rows1)
-    tab_stress = push1 / (B.TAB * PIECE)
-    print(f"a tab is {B.TAB:.0f} x {PIECE:.0f} mm: the first stage's heaviest push, {push1:.1f} N, on one tab of one piece alone is {tab_stress:.2f} MPa, "
-          f"{ACROSS_GRAIN / tab_stress:.1f} times under the {ACROSS_GRAIN:.0f} MPa a hardwood takes pulled across its grain")
-    if ACROSS_GRAIN / tab_stress < 2.0:
-        raise SystemExit("a tab is too weak")
+    turn1 = max(r["push"] * r["far"] for r in rows1) / 1000.0
+    hold_push, hold_turn = 2 * FRICTION * clamp1, 2 * FRICTION * clamp1 * arm / 1000.0
+    print(f"the clamp: the far plate, {plate_t:.1f} thick over {span1:.0f} between rods, bends {1000 * soft1:.2f} um a newton; its corners down by its crown and the shim, {CROWN + SHIM:.1f}, "
+          f"it pushes {clamp1:.0f} N down the middle ({plate_stress1:.0f} MPa in the plate, {cap_stress:.1f} in the cap's tabs). At {FRICTION} that holds {hold_push:.0f} N and {hold_turn:.2f} N m; "
+          f"the first stage's heaviest cut is {push1:.1f} N and {turn1:.2f} N m: {hold_push / push1:.0f} and {hold_turn / turn1:.1f} times over")
+    if hold_turn / turn1 < HOLD_OVER or hold_push / push1 < HOLD_OVER or plate_stress1 > PRINT_OK or cap_stress > PLY_OK:
+        raise SystemExit("the clamp does not hold a piece with room to spare, or asks too much of the far plate or the cap")
+    # The tabs second, as if there were no clamp at all: the four of one piece together, the tile rigid, each tab
+    # pinned on its rod, and the whole of each cut's push on that one piece.
+    loads = []
+    for r in rows1:
+        if r["area"] <= 0.0:
+            continue
+        d, e = P.frame(r["t"])
+        q = (r["tip"] * d[0] + r["across"] * e[0], r["tip"] * d[1] + r["across"] * e[1])
+        ln = math.hypot(*q) or 1.0
+        loads.append(((q[0] / ln * r["far"], q[1] / ln * r["far"]), r["push"]))
+    tab_stress, tab_row = B.tab_frame(rods1, plan["tab_ends"], B.TAB, PIECE, loads)
+    slop = (HOLE - B.ROD) / 2
+    print(f"the tabs alone, no clamp: four of {B.TAB:.0f} x {PIECE:.0f} mm on their rods carry the heaviest cut at {tab_stress:.2f} MPa, {ACROSS_GRAIN / tab_stress:.1f} times under the {ACROSS_GRAIN:.0f} MPa "
+          f"a hardwood takes across its grain. But a piece held only so can shift {slop:.2f} mm in its holes: the clamp is what holds it, the tabs are what is behind the clamp")
+    if ACROSS_GRAIN / tab_stress < 1.5:
+        raise SystemExit("the tabs are too weak to stand behind the clamp")
+    # The second stage's clamp: the far plate again, now held at three inserts, bent by its crown, and the comb's
+    # plate, which is flat and bends with it. A crown on the comb's plate too was tried: at 4 mm, which is all the room
+    # there is beside the waiting bit, it put 26 MPa in the print. The fingers hold a piece sideways whatever the
+    # clamp does; this only keeps the stack shut.
+    span2 = sum(math.dist(rods2[i], rods2[(i + 1) % 3]) for i in range(3)) / 3
+    comb_w = 2 * CROWN_R + 6.0
+    soft2 = B.plate_spring(span2, plate_w, plate_t, PRINT_E) + B.plate_spring(span2, comb_w, PLATE, PRINT_E)
+    clamp2 = CROWN / soft2
+    comb_stress = clamp2 * span2 / 4 / (comb_w * PLATE ** 2 / 6)
+    print(f"the second stage's clamp: the far plate's crown, {CROWN:.1f}, against the comb's flat plate pushes {clamp2:.0f} N down the middle, {comb_stress:.0f} MPa in the comb's plate")
+    if comb_stress > PRINT_OK or clamp2 < 20.0:
+        raise SystemExit("the comb's plate is asked too much, or does not shut the stack")
+    # The jack screws: where the sled's socket has them, they land on the boss's flat end, clear of the nuts' notches.
+    ju = ((stock[1][0] - stock[0][0]) / math.dist(stock[0], stock[1]), (stock[1][1] - stock[0][1]) / math.dist(stock[0], stock[1]))
+    if math.dist(stock[0], stock[1]) < math.dist(stock[0], stock[3]):
+        ju = (-ju[1], ju[0])
+    jack = sled["socket"]["jack"]
+    jacks = [(s_ * jack[0] * ju[0], s_ * jack[0] * ju[1]) for s_ in (-1, 1)]
+    jack_edge = min(P.near(c, stock[i - 1], stock[i]) for i in range(4) for c in jacks)
+    jack_notch = min(math.dist(c, r) for c in jacks for r in rods1) - NOTCH
+    if jack_edge < jack[1] / 2 + 1.0 or jack_notch < jack[1] / 2 + 1.0:
+        raise SystemExit(f"a jack screw lands {jack_edge:.1f} from the boss's edge and {jack_notch:.1f} from a notch")
+    print(f"the sled's two jack screws land on the boss's end, {jack_edge:.1f} in from its edge and {jack_notch:.1f} clear of a nut's notch")
     hm = lambda sec: f"{int(sec // 3600)} h {round(sec % 3600 / 60):02d} min"
     print(f"the controller, simulated: the first stage {len(t1)} rows, {hm(sim1['seconds'])} of moving, {sum(1 for r in t1 if r['via'] == 'd')} moves straight; "
           f"the second {len(t2)} rows, {hm(sim2['seconds'])}, {sum(1 for r in t2 if r['via'] == 'd')} straight. The sled's solid stick: {hm(hold['seconds'])}")
@@ -364,7 +432,6 @@ def main():
             p.hexagon(s, c, B.NUT)
         return p.extrude(s, x[1] - x[0], op="new", name=name)
 
-    rods1, rods2 = plan["rods"], [f["rod"] for f in fingers]
 
     def piece(p, x, name="piece"):
         slab(p, name, x, blank)
@@ -373,10 +440,11 @@ def main():
     def near_cap(p, x=(0.0, NEAR_CAP)):
         slab(p, "near cap", x, blank)
         rodlike(p, "tapped for the rods", (x[1] - TAP_DEEP, x[1] + 0.5), rods1, TAP)
-        rodlike(p, "the tail centre's mark", (x[0] - 0.5, x[0] + 1.5), [(0.0, 0.0)], AWL)
+        rodlike(p, "the tail spindle's socket", (x[0] - 0.5, x[0] + tail_in), [(0.0, 0.0)], tail_hole)
 
     def far_plate(p):
-        slab(p, "far plate", plate_x, blank)
+        slab(p, "far plate", (plate_x[0] + CROWN, plate_x[1]), blank)
+        rodlike(p, "its crown", (plate_x[0], plate_x[0] + CROWN), [(0.0, 0.0)], 2 * CROWN_R, op="add")
         slab(p, "boss, the sled's blank", boss_x, stock, op="add")
         rodlike(p, "notches for the nuts", (boss_x[0], boss_x[1] + 0.5), rods1, 2 * NOTCH)
         # and from each notch out to the boss's corner, so no sliver of the corner stands
@@ -392,14 +460,14 @@ def main():
             p.polygon(s, [(round(a, 4), round(b, 4)) for a, b in sq])
         p.extrude(s, boss_x[1] - boss_x[0] + 0.5, op="remove", name="the notches out to the corners")
         rodlike(p, "the rods' holes", (plate_x[0] - 0.5, boss_x[0] + 0.5), rods1, HOLE)
-        rodlike(p, "inserts for the second stage's rods", (plate_x[0] - 0.5, plate_x[0] + INSERT[1]), rods2, INSERT[0])
+        rodlike(p, "inserts for the second stage's rods", (plate_x[0] - 0.5, plate_x[0] + CROWN + INSERT[1]), rods2, INSERT[0])
 
     def comb(p, x0=-PLATE):
-        slab(p, "plate", (x0, 0.0), B.offset(outline, -PLATE_IN))
+        slab(p, "plate", (x0, 0.0), B.offset(outline, -PLATE_IN))       # flat: see the second stage's clamp
         for k, f in enumerate(fingers):
             slab(p, f"finger {k + 1}", (x0, spacer[0]), f["loop"], op="add")
         slab(p, "the tile, and the fit off its finished edge", (0.0, spacer[0] + 0.5), B.offset(outline, B.FIT), op="remove")
-        rodlike(p, "the tail spindle's way", (x0 - 0.5, 0.5), [(0.0, 0.0)], TAIL_HOLE)
+        rodlike(p, "the tail spindle's way", (x0 - 0.5, 0.5), [(0.0, 0.0)], PLATE_HOLE)
         rodlike(p, "the rods' holes", (x0 - 0.5, spacer[0] + 0.5), rods2, HOLE)
 
     def jig(p):
@@ -422,11 +490,16 @@ def main():
         s = p.sketch("top", lid_z - 0.5, "guides")
         for c in rods1:
             p.circle(s, c, GUIDE / 2)
-        p.circle(s, (0.0, 0.0), AWL / 2)
+        p.circle(s, (0.0, 0.0), AXIS_GUIDE / 2)
         p.extrude(s, JIG_LID + 1.0, op="remove", name="guides")
 
     def tile(p):
         slab(p, "a tile", (0.0, PIECE), outline)
+
+    def shim(p):
+        # Paper, glued on the cap's inner face about the axis. Drawn where it is glued; in the stack it is squeezed
+        # between the cap and the first piece, which the model draws touching.
+        rodlike(p, "shim", (NEAR_CAP, NEAR_CAP + SHIM), [(0.0, 0.0)], 2 * CROWN_R, op="new")
 
     def pieces_body(p):
         piece(p, (NEAR_CAP, spacer[0]), name=f"{pieces} pieces")
@@ -452,7 +525,7 @@ def main():
     mcp.call("create_document", {"name": "billet"})
     # Each part in its own tab, where it is on the stick (the piece and the tile at the stick's tail end, the jig on
     # the printer's bed); the two stages are assemblies of them, so nothing drawn next to something else is joined to it.
-    parts = [("Piece", lambda p: piece(p, (0.0, PIECE))), ("Near cap", near_cap), ("Pieces", pieces_body), ("Far plate", far_plate), ("Rods, first stage", rods_first),
+    parts = [("Piece", lambda p: piece(p, (0.0, PIECE))), ("Near cap", near_cap), ("Shim", shim), ("Pieces", pieces_body), ("Far plate", far_plate), ("Rods, first stage", rods_first),
              ("Stack after the first stage", after_first), ("Comb", comb), ("Rods, second stage", rods_second), ("Drilling jig", jig), ("A tile", tile)]
     mcp.call("apply", {"ops": [{"type": "rename_document", "name": "A billet of tile pieces for the stick sled"}, {"type": "rename_tab", "tab": 1, "name": parts[0][0]}]})
     tabs, bodies = {}, {}
@@ -508,11 +581,16 @@ def main():
                    "places": len(p2), "passes": len(f2), "rows": len(rows2), "rough_rows": sum(q["bites"] for q in p2), "finish_rows": sum(q["bites"] for q in f2), "left": plan["left_end"]},
         "sled_rows": sled_rows, "waste": plan["waste"].area,
         "bits": bits, "comb_nut_need": comb_need, "nut_need": need,
-        "comb": {"plate": PLATE, "plate_in": PLATE_IN, "tail_hole": TAIL_HOLE, "band": BAND, "fit": B.FIT, "plate_loop": r4(B.offset(outline, -PLATE_IN))},
-        "jig": {"fit": JIG_FIT, "wall": JIG_WALL, "floor": JIG_FLOOR, "deep": JIG_DEEP, "lid": JIG_LID, "guide": GUIDE, "awl": AWL},
+        "comb": {"plate": PLATE, "plate_in": PLATE_IN, "plate_hole": PLATE_HOLE, "crown": CROWN, "crown_r": CROWN_R, "band": BAND, "fit": B.FIT, "plate_loop": r4(B.offset(outline, -PLATE_IN))},
+        "jig": {"fit": JIG_FIT, "wall": JIG_WALL, "floor": JIG_FLOOR, "deep": JIG_DEEP, "lid": JIG_LID, "guide": GUIDE, "axis_guide": AXIS_GUIDE},
         "cuts": {"first": [[c["tool"][0], round(c["t"], 6), round(c["across"], 4), round(c["tip"], 4), round(c["area"], 3), round(c["over"], 4), round(c["far"], 3), c["face"]] for c in rows1],
                  "second": [[c["tool"][0], round(c["t"], 6), round(c["across"], 4), round(c["tip"], 4), round(c["area"], 3), round(c["over"], 4), round(c["far"], 3), c["face"]] for c in rows2]},
-        "tab": {"wide": B.TAB, "thick": PIECE, "push": push1, "stress": tab_stress, "across_grain": ACROSS_GRAIN},
+        "clamp": {"crown": CROWN, "crown_r": CROWN_R, "shim": SHIM, "print_e": PRINT_E, "print_ok": PRINT_OK, "ply_ok": PLY_OK, "friction": FRICTION, "over": HOLD_OVER,
+                  "span": span1, "plate_w": plate_w, "plate_t": plate_t, "soft": soft1, "force": clamp1, "plate_stress": plate_stress1, "cap_stress": cap_stress, "arm": arm,
+                  "push": push1, "turn": turn1, "holds_push": hold_push, "holds_turn": hold_turn,
+                  "second": {"span": span2, "comb_w": comb_w, "soft": soft2, "force": clamp2, "comb_stress": comb_stress}},
+        "tab": {"wide": B.TAB, "thick": PIECE, "stress": tab_stress, "across_grain": ACROSS_GRAIN, "slop": slop},
+        "tail": {"in": tail_in, "hole": tail_hole}, "jack": {"at": r4(jacks), "edge": jack_edge, "notch": jack_notch, "d": jack[1]},
         "hold": {"worst": worst, "limit": hold["limit"], "extra_runs": extra, "stiff": hold["stiff"], "swing": swing_r, "peak": hold["peak"], "cut_energy": hold["cut_energy"], "rpm": hold["rpm"], "feed": hold["feed"]},
         "tables": {"first": {"rows": len(t1), "seconds": sim1["seconds"], "straight": sum(1 for r in t1 if r["via"] == "d"), "passes": sim1["passes"]},
                    "second": {"rows": len(t2), "seconds": sim2["seconds"], "straight": sum(1 for r in t2 if r["via"] == "d"), "passes": sim2["passes"]},
